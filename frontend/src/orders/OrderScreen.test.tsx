@@ -1,3 +1,4 @@
+import { browserBack } from "../test/history";
 import {
   cleanup,
   fireEvent,
@@ -118,7 +119,7 @@ function mount(initialId?: string, initialTab?: string) {
   );
 }
 function orderRow() {
-  return screen.findByRole("button", { name: "Quick preview REF-1" });
+  return screen.findByRole("button", { name: "REF-1" });
 }
 beforeEach(() => {
   window.history.replaceState(null, "", "#/orders");
@@ -144,9 +145,7 @@ test("directory exposes exact price, partial date, authoritative count and a hid
   const user = userEvent.setup();
   mount();
   const row = await orderRow();
-  expect(
-    screen.getByRole("complementary", { name: "Quick preview" }),
-  ).toHaveTextContent("Select an order");
+  expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
   expect(row.closest("li")).not.toHaveAttribute("data-selected");
   expect(screen.getByText("EUR 42.5000")).toBeVisible();
   expect(screen.getByText("2026-10 · Nursery")).toBeVisible();
@@ -158,14 +157,9 @@ test("directory exposes exact price, partial date, authoritative count and a hid
   );
 
   await user.click(row);
-  expect(row.closest("li")).toHaveAttribute("data-selected", "true");
-  expect(screen.getByRole("link", { name: "Open details" })).toHaveAttribute(
-    "href",
-    `#/orders/${id}`,
-  );
+  expect(window.location.hash).toBe(`#/orders/${id}`);
+  await browserBack();
 
-  if (screen.queryByRole("complementary", { name: "Order inspection" }))
-    await user.click(screen.getByRole("button", { name: "Close preview" }));
   fireEvent.change(screen.getByLabelText("Search Orders"), {
     target: { value: "ABC" },
   });
@@ -700,7 +694,7 @@ test("a missing Supplier filter UUID stays exact and visible", async () => {
   ).toBeVisible();
 });
 
-test("Order presentation preserves Supplier, query, current page and preview focus", async () => {
+test("Order Details and Back preserve Supplier, query, current page and gallery", async () => {
   window.history.replaceState(
     { review: true },
     "",
@@ -738,12 +732,13 @@ test("Order presentation preserves Supplier, query, current page and preview foc
   );
   expect(screen.getByRole("button", { name: "Previous page" })).toBeVisible();
   await user.click(await orderRow());
-  expect(
-    screen.getByRole("complementary", { name: "Order inspection" }),
-  ).toBeVisible();
-  expect(screen.getByRole("button", { name: "Close preview" })).toHaveFocus();
-  await user.keyboard("{Escape}");
-  expect(await orderRow()).toHaveFocus();
+  expect(window.location.hash).toBe(`#/orders/${id}`);
+  expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
+  await browserBack();
+  expect(window.location.hash).toBe(
+    `#/orders?q=REF&supplier_id=${supplierId}&view=gallery`,
+  );
+  expect(screen.getByRole("button", { name: "Previous page" })).toBeVisible();
   window.localStorage.removeItem("florabase.directory-view.v1.orders");
 });
 
@@ -760,29 +755,24 @@ test("Order row Edit keeps the existing contextual editor and focus return", asy
   ).not.toBeInTheDocument();
   await user.click(within(editor).getByRole("button", { name: "Cancel" }));
   await waitFor(() => {
-    expect(edit).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Edit REF-1" })).toHaveFocus();
   });
 });
 
-test("Order title click previews while the explicit Details action navigates directly", async () => {
+test("Order row and direct Details command navigate without a preview or creation menu", async () => {
   const user = userEvent.setup();
   mount();
-  const previewTrigger = await orderRow();
-  const row = previewTrigger.closest("li");
-  if (!row) throw new Error("Order preview must belong to a directory row");
+  const row = (await orderRow()).closest("li");
+  if (!row) throw new Error("Expected a directory row");
   expect(
-    within(row).queryByRole("link", { name: "REF-1" }),
+    within(row).queryByRole("button", { name: /Create or record/ }),
   ).not.toBeInTheDocument();
-  await user.click(within(row).getByText("REF-1", { exact: true }));
-  expect(
-    await screen.findByRole("complementary", { name: "Order inspection" }),
-  ).toBeVisible();
-  await user.click(screen.getByRole("button", { name: "Close preview" }));
-  await user.click(within(row).getByRole("button", { name: "Details REF-1" }));
-  await waitFor(() => {
-    expect(window.location.hash).toBe(`#/orders/${id}`);
-  });
-  expect(
-    screen.queryByRole("complementary", { name: "Order inspection" }),
-  ).not.toBeInTheDocument();
+  await user.click(await orderRow());
+  expect(window.location.hash).toBe(`#/orders/${id}`);
+  await browserBack();
+  await user.click(
+    within(row).getByRole("button", { name: "Open details REF-1" }),
+  );
+  expect(window.location.hash).toBe(`#/orders/${id}`);
+  expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
 });

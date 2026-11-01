@@ -7,13 +7,13 @@ export async function selectDirectoryFilter(
   value: string,
 ) {
   if (!screen.queryByRole("button", { name: /^Filters(?: \(\d+\))?$/ })) {
-    const back = screen.getByRole("button", {
+    const back = screen.queryByRole("button", {
       name: /Back to (seed lots|Sowings|Plants)/,
     });
-    await user.click(back);
+    if (back) await user.click(back);
   }
   await user.click(
-    screen.getByRole("button", { name: /^Filters(?: \(\d+\))?$/ }),
+    await screen.findByRole("button", { name: /^Filters(?: \(\d+\))?$/ }),
   );
   const drawer = screen.getByRole("dialog", { name: / filters$/ });
   await user.selectOptions(

@@ -1,80 +1,78 @@
-import { DirectoryInspectorPlaceholder } from "../components/DirectoryPage";
-import { DirectoryWorkspace } from "../components/DirectoryPage";
-import { useDirectoryPagination } from "../components/useDirectoryPagination";
-import { StatusBadge } from "../components/WorkspaceUI";
-import {
-  DirectoryRecords,
-  DirectoryTrigger,
-  DirectoryRecordContent,
-  DirectoryRow,
-  DirectoryCard,
-  DirectoryInspector,
-  DirectoryRecordActions,
-  DirectoryViewSwitcher,
-} from "../components/DirectoryPage";
-import { useDirectoryPresentation } from "../components/directoryPresentation";
-import { BotanicalName } from "../components/ReferenceUI";
-import { RecordIdentities } from "../components/recordPresentation";
-import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
-import { ActionButton, ActionLink } from "../components/Action";
-import "../components/collection-page.css";
-import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
-import "../components/collection-directory.css";
-import { DetailEmptyState } from "../components/DetailEmptyState";
-import { EditWorkspace } from "../components/EditWorkspace";
-import { useEditRoute } from "../components/useEditRoute";
-import "../components/collection-visual.css";
-import { FieldLabel } from "../components/FieldLabel";
-import "../components/directory-preview.css";
-import {
-  DirectoryTools,
-  DirectoryFilterSelect,
-} from "../components/DirectoryTools";
-import { UpcomingActivities } from "../schedule/UpcomingActivities";
-import { DirectoryResults } from "../components/DirectoryResults";
-import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
-import { useBulkSelection } from "../bulk/useBulkSelection";
-import { SavedViews } from "../saved-views/SavedViews";
-import { useDirectoryView } from "../saved-views/useDirectoryView";
-import { sowingFormPanels } from "./SowingFormFields";
-import { RecordVisual } from "../photos/RecordVisual";
-import { useRecordName } from "../components/recordPresentation";
-import { FormSections } from "../components/FormSections";
-import { firstValidationField } from "../components/formValidation";
-import { CreationReversal } from "../propagation/CreationReversal";
 import {
   useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type RefObject,
   type ReactNode,
+  type RefObject,
   type SyntheticEvent,
 } from "react";
+import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
+import { useBulkSelection } from "../bulk/useBulkSelection";
+import { ActionButton, ActionLink } from "../components/Action";
+import "../components/collection-directory.css";
+import "../components/collection-page.css";
+import "../components/collection-visual.css";
+import { DetailEmptyState } from "../components/DetailEmptyState";
+import {
+  DirectoryCard,
+  DirectoryRecordActions,
+  DirectoryRecordContent,
+  DirectoryRecords,
+  DirectoryRow,
+  DirectoryTrigger,
+  DirectoryViewSwitcher,
+  DirectoryWorkspace,
+} from "../components/DirectoryPage";
+import { useDirectoryPresentation } from "../components/directoryPresentation";
+import { DirectoryResults } from "../components/DirectoryResults";
+import {
+  DirectoryFilterSelect,
+  DirectoryTools,
+} from "../components/DirectoryTools";
+import { EditWorkspace } from "../components/EditWorkspace";
+import { FieldLabel } from "../components/FieldLabel";
+import { FormSections } from "../components/FormSections";
+import { firstValidationField } from "../components/formValidation";
+import {
+  RecordIdentities,
+  useRecordName,
+} from "../components/recordPresentation";
+import { BotanicalName } from "../components/ReferenceUI";
+import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
+import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { useEditRoute } from "../components/useEditRoute";
+import { LifecycleStatus, StatusBadge } from "../components/WorkspaceUI";
+import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
+import { RecordVisual } from "../photos/RecordVisual";
+import { CreationReversal } from "../propagation/CreationReversal";
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
+import { UpcomingActivities } from "../schedule/UpcomingActivities";
+import { sowingFormPanels } from "./SowingFormFields";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { useCreationDisclosure } from "../components/useCreationDisclosure";
-import { DirectorySearch, RecordPreview } from "../components/ReferenceUI";
-import {
-  setRecordRoute,
-  openCollectionPage,
-  closeCollectionPage,
-} from "../components/recordNavigation";
 import {
   Breadcrumbs,
-  DetailHeader,
   DetailContext,
+  DetailHeader,
   DetailTabs,
   WorkspaceIntro,
 } from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
+import {
+  closeCollectionPage,
+  openCollectionPage,
+  setRecordRoute,
+} from "../components/recordNavigation";
+import { DirectorySearch } from "../components/ReferenceUI";
+import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import { listLocations, type LocationResponse } from "../locations/api";
 import { PhotosSection } from "../photos/PhotosSection";
-import { listSeedLots, type SeedLotResponse } from "../seed-lots/api";
 import { PropagationPath } from "../propagation/PropagationPath";
-import { GerminationSection } from "./GerminationSection";
+import { listSeedLots, type SeedLotResponse } from "../seed-lots/api";
 import {
   createSowing,
   getSowing,
@@ -86,9 +84,10 @@ import {
   type PartialDate,
   type SowingCreate,
   type SowingLifecycle,
-  type SowingResponse,
   type SowingPropagationSummary,
+  type SowingResponse,
 } from "./api";
+import { GerminationSection } from "./GerminationSection";
 
 type CollectionState =
   | { status: "loading" }
@@ -397,11 +396,9 @@ function Detail({
         }
         status={
           <>
-            <span
-              className={`lifecycle-badge lifecycle-badge--${sowing.lifecycle}`}
-            >
+            <LifecycleStatus state={sowing.lifecycle}>
               {lifecycleLabels[sowing.lifecycle]}
-            </span>
+            </LifecycleStatus>
             {sowing.location && (
               <a href={`#/locations/${sowing.location.id}`}>
                 {sowing.location.display_path}
@@ -479,11 +476,9 @@ function Detail({
               <div>
                 <dt>Lifecycle</dt>
                 <dd>
-                  <span
-                    className={`lifecycle-badge lifecycle-badge--${sowing.lifecycle}`}
-                  >
+                  <LifecycleStatus state={sowing.lifecycle}>
                     {lifecycleLabels[sowing.lifecycle]}
-                  </span>
+                  </LifecycleStatus>
                 </dd>
               </div>
               <div>
@@ -1097,6 +1092,8 @@ export function SowingScreen({
   function startEdit(sowing: SowingResponse, trigger: HTMLButtonElement) {
     editTrigger.current = trigger;
     directEditHandled.current = true;
+    setSelectedId(sowing.id);
+    setDetail({ status: "ready", sowing });
     if (creationExpanded) closeCreation({ returnFocus: false });
     const values = formFrom(sowing);
     editBaseline.current = JSON.stringify(values);
@@ -1117,9 +1114,8 @@ export function SowingScreen({
       setDetailAttempt((value) => value + 1);
     }
     setSelectedId(id);
-    const isMobile = window.matchMedia("(max-width: 48rem)").matches;
-    setMobileDetail(isMobile);
-    if (isMobile) setRecordRoute(`#/sowings/${id}`);
+    setMobileDetail(true);
+    setRecordRoute(`#/sowings/${id}`);
     setEditing(false);
     setSave({ status: "idle" });
   }
@@ -1131,7 +1127,10 @@ export function SowingScreen({
     setMobileDetail(false);
     setEditing(false);
     setRecordRoute("#/sowings", true);
-    window.setTimeout(() => selectedTrigger.current?.focus(), 0);
+    window.setTimeout(() => {
+      const trigger = selectedTrigger.current;
+      (trigger?.isConnected ? trigger : directoryList.current)?.focus();
+    }, 0);
   }
 
   function updateForm<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -1728,189 +1727,194 @@ export function SowingScreen({
         <DirectoryWorkspace
           className={
             mobileDetail || (editing && !edit.modal)
-              ? "sowing-master-detail operational-layout is-detail-view"
+              ? "is-detail-view"
               : undefined
           }
         >
-          {collection.status === "ready" && (
-            <DirectoryResults
-              count={filtered.length}
-              total={sowings.length}
-              pagination={pagination}
-              actions={
-                <BulkSelect
-                  selection={bulk}
-                  visible={bulkChoices}
-                  onStart={() => {
-                    setSelectedId(null);
-                    setMobileDetail(false);
-                    setDetail({ status: "idle" });
-                  }}
-                />
-              }
-            />
-          )}
-          <section
-            className="seed-master sowing-master"
-            aria-labelledby="sowing-list-title"
-          >
-            <h3 className="sr-only" id="sowing-list-title">
-              Sowing collection
-            </h3>
-            <BulkToolbar
-              selection={bulk}
-              visible={bulkChoices}
-              onSuccess={() => {
-                setSelectedId(null);
-                setMobileDetail(false);
-                setDetail({ status: "idle" });
-                setAttempt((value) => value + 1);
-              }}
-            />
-            {sowings.length === 0 ? (
-              <div className="profile-empty">
-                <h4>No Sowings recorded yet</h4>
-                <p>
-                  {references.seedLots.length
-                    ? "Use New sowing to record the first attempt."
-                    : "Create a SeedLot from Seeds first."}
-                </p>
-              </div>
-            ) : visible.length === 0 ? (
-              <p>No Sowings match this search and lifecycle view.</p>
-            ) : (
-              <DirectoryRecords
-                view={presentation.view}
-                label="Sowing collection"
-                listRef={directoryList}
-              >
-                {visible.map((sowing, bulkIndex) => (
-                  <DirectoryItem
-                    onClick={(event) => {
-                      bulk.recordClick(event, bulkChoices[bulkIndex]);
+          {!(mobileDetail || (editing && !edit.modal)) &&
+            collection.status === "ready" && (
+              <DirectoryResults
+                count={filtered.length}
+                total={sowings.length}
+                pagination={pagination}
+                actions={
+                  <BulkSelect
+                    selection={bulk}
+                    visible={bulkChoices}
+                    onStart={() => {
+                      setSelectedId(null);
+                      setMobileDetail(false);
+                      setDetail({ status: "idle" });
                     }}
-                    key={sowing.id}
-                    selected={
-                      bulk.active
-                        ? bulk.checked({ kind: "sowing", id: sowing.id })
-                        : selectedId === sowing.id
-                    }
-                  >
-                    <BulkCheckbox
-                      selection={bulk}
-                      choice={bulkChoices[bulkIndex]}
-                    />
-                    <DirectoryTrigger
-                      type="button"
-                      className="ui-directory-trigger"
-                      description={`${lifecycleLabels[sowing.lifecycle]} · Open Quick Preview`}
-                      aria-pressed={selectedId === sowing.id}
-                      onClick={(event) => {
-                        if (bulk.recordClick(event, bulkChoices[bulkIndex]))
-                          return;
-                        selectedTrigger.current = event.currentTarget;
-                        if (selectedId !== sowing.id)
-                          setDetail({ status: "loading", id: sowing.id });
-                        setSelectedId(sowing.id);
-                        setMobileDetail(false);
-                      }}
-                    >
-                      <DirectoryRecordContent
-                        visual={
-                          <RecordVisual
-                            kind="sowing"
-                            label={recordName(sowing, "Sowing")}
-                            compact
-                            identity={{
-                              id: sowing.seed_lot.botanical_identity_id,
-                              display_label:
-                                sowing.seed_lot
-                                  .botanical_identity_display_label,
-                            }}
-                          />
-                        }
-                        name={<>{recordName(sowing, "Unlabelled sowing")}</>}
-                        secondary={
-                          <>
-                            <BotanicalName
-                              label={
-                                sowing.seed_lot.botanical_identity_display_label
-                              }
-                              scientificName={
-                                identities.get(
-                                  sowing.seed_lot.botanical_identity_id,
-                                )?.scientific_name
-                              }
-                            />
-                          </>
-                        }
-                        summary={
-                          <>
-                            <GerminationProgress sowing={sowing} />
-                          </>
-                        }
-                        status={
-                          sowing.lifecycle === "active" ? (
-                            <StatusBadge compactState="active">
-                              Active
-                            </StatusBadge>
-                          ) : (
-                            <>
-                              <span
-                                className={`lifecycle-badge lifecycle-badge--${sowing.lifecycle}`}
-                              >
-                                {lifecycleLabels[sowing.lifecycle]}
-                              </span>
-                            </>
-                          )
-                        }
-                      />
-                    </DirectoryTrigger>
-                    <DirectoryRecordActions
-                      label={recordName(sowing, "Unlabelled sowing")}
-                      extraActions={
-                        sowing.lifecycle !== "reversed" ? (
-                          <>
-                            <ActionLink
-                              className="ui-directory-quick-action"
-                              icon="plant"
-                              aria-label={`Create plant from ${recordName(sowing, "Unlabelled sowing")}`}
-                              title="Create Plant"
-                              href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=plant`}
-                            >
-                              <span className="sr-only">Create Plant</span>
-                            </ActionLink>
-                            <ActionLink
-                              className="ui-directory-quick-action"
-                              icon="sprout"
-                              aria-label={`Open germination for ${recordName(sowing, "Unlabelled sowing")}`}
-                              title="Germination"
-                              href={`#/sowings/${sowing.id}?tab=germination`}
-                            >
-                              <span className="sr-only">Germination</span>
-                            </ActionLink>
-                          </>
-                        ) : undefined
-                      }
-                      onDetails={(trigger) => {
-                        selectSowing(sowing.id, trigger);
-                        setMobileDetail(true);
-                        setRecordRoute(`#/sowings/${sowing.id}`);
-                      }}
-                      onEdit={(trigger) => {
-                        startEdit(sowing, trigger);
-                      }}
-                    />
-                  </DirectoryItem>
-                ))}
-              </DirectoryRecords>
+                  />
+                }
+              />
             )}
-          </section>
-          {(creationExpanded ||
-            editing ||
-            mobileDetail ||
-            Boolean(selectedId) ||
-            visible.length > 0) && (
+          {!(mobileDetail || (editing && !edit.modal)) && (
+            <section
+              className="seed-master sowing-master"
+              aria-labelledby="sowing-list-title"
+            >
+              <h3 className="sr-only" id="sowing-list-title">
+                Sowing collection
+              </h3>
+              <BulkToolbar
+                selection={bulk}
+                visible={bulkChoices}
+                onSuccess={() => {
+                  setSelectedId(null);
+                  setMobileDetail(false);
+                  setDetail({ status: "idle" });
+                  setAttempt((value) => value + 1);
+                }}
+              />
+              {sowings.length === 0 ? (
+                <div className="profile-empty">
+                  <h4>No Sowings recorded yet</h4>
+                  <p>
+                    {references.seedLots.length
+                      ? "Use New sowing to record the first attempt."
+                      : "Create a SeedLot from Seeds first."}
+                  </p>
+                </div>
+              ) : visible.length === 0 ? (
+                <p>No Sowings match this search and lifecycle view.</p>
+              ) : (
+                <DirectoryRecords
+                  view={presentation.view}
+                  label="Sowing collection"
+                  listRef={directoryList}
+                >
+                  {visible.map((sowing, bulkIndex) => (
+                    <DirectoryItem
+                      onClick={(event) => {
+                        bulk.recordClick(event, bulkChoices[bulkIndex]);
+                      }}
+                      key={sowing.id}
+                      selected={
+                        bulk.active
+                          ? bulk.checked({ kind: "sowing", id: sowing.id })
+                          : selectedId === sowing.id
+                      }
+                    >
+                      <BulkCheckbox
+                        selection={bulk}
+                        choice={bulkChoices[bulkIndex]}
+                      />
+                      <DirectoryTrigger
+                        type="button"
+                        className="ui-directory-trigger"
+                        description={`${lifecycleLabels[sowing.lifecycle]} · Open details`}
+                        aria-pressed={selectedId === sowing.id}
+                        onClick={(event) => {
+                          if (bulk.recordClick(event, bulkChoices[bulkIndex]))
+                            return;
+                          selectSowing(sowing.id, event.currentTarget);
+                        }}
+                      >
+                        <DirectoryRecordContent
+                          visual={
+                            <RecordVisual
+                              kind="sowing"
+                              label={recordName(sowing, "Sowing")}
+                              compact
+                              identity={{
+                                id: sowing.seed_lot.botanical_identity_id,
+                                display_label:
+                                  sowing.seed_lot
+                                    .botanical_identity_display_label,
+                              }}
+                            />
+                          }
+                          name={<>{recordName(sowing, "Unlabelled sowing")}</>}
+                          secondary={
+                            <>
+                              <BotanicalName
+                                label={
+                                  sowing.seed_lot
+                                    .botanical_identity_display_label
+                                }
+                                scientificName={
+                                  identities.get(
+                                    sowing.seed_lot.botanical_identity_id,
+                                  )?.scientific_name
+                                }
+                              />
+                            </>
+                          }
+                          summary={
+                            <>
+                              <GerminationProgress sowing={sowing} />
+                            </>
+                          }
+                          status={
+                            sowing.lifecycle === "active" ? (
+                              <StatusBadge compactState="active">
+                                Active
+                              </StatusBadge>
+                            ) : (
+                              <>
+                                <LifecycleStatus state={sowing.lifecycle}>
+                                  {lifecycleLabels[sowing.lifecycle]}
+                                </LifecycleStatus>
+                              </>
+                            )
+                          }
+                        />
+                      </DirectoryTrigger>
+                      <DirectoryRecordActions
+                        label={recordName(sowing, "Unlabelled sowing")}
+                        extraActions={
+                          sowing.lifecycle !== "reversed" ? (
+                            <>
+                              <ActionLink
+                                className="ui-directory-quick-action"
+                                icon="plant"
+                                aria-label={`Create plant from ${recordName(sowing, "Unlabelled sowing")}`}
+                                title="Create Plant"
+                                href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=plant`}
+                              >
+                                <span className="sr-only">Create Plant</span>
+                              </ActionLink>
+                              <ActionLink
+                                className="ui-directory-quick-action"
+                                icon="plant"
+                                aria-label={`Create plant group from ${recordName(sowing, "Unlabelled sowing")}`}
+                                title="Create Plant group"
+                                href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=group`}
+                              >
+                                <span className="sr-only">
+                                  Create Plant group
+                                </span>
+                              </ActionLink>
+                              <ActionLink
+                                className="ui-directory-quick-action"
+                                icon="sprout"
+                                aria-label={`Record germination for ${recordName(sowing, "Unlabelled sowing")}`}
+                                title="Record germination"
+                                href={`#/sowings/${sowing.id}?tab=germination`}
+                              >
+                                <span className="sr-only">
+                                  Record germination
+                                </span>
+                              </ActionLink>
+                            </>
+                          ) : undefined
+                        }
+                        onDetails={(trigger) => {
+                          selectSowing(sowing.id, trigger);
+                        }}
+                        onEdit={(trigger) => {
+                          startEdit(sowing, trigger);
+                        }}
+                      />
+                    </DirectoryItem>
+                  ))}
+                </DirectoryRecords>
+              )}
+            </section>
+          )}
+          {(creationExpanded || editing || mobileDetail) && (
             <section
               id={creationExpanded ? "new-sowing-panel" : undefined}
               className={`seed-detail-pane sowing-detail-pane${creationExpanded ? " seed-creation-panel" : ""}`}
@@ -1994,162 +1998,8 @@ export function SowingScreen({
                       }}
                     />
                   </div>
-                ) : (
-                  <DirectoryInspector
-                    mode="side"
-                    title="Sowing inspection"
-                    returnFocusTo={selectedTrigger}
-                    fallbackFocusTo={directoryList}
-                    onClose={() => {
-                      setSelectedId(null);
-                      setDetail({ status: "idle" });
-                    }}
-                  >
-                    {detail.status === "loading" && (
-                      <p role="status">Refreshing preview…</p>
-                    )}
-                    {detail.status === "error" && (
-                      <div role="alert">
-                        <p>Florabase could not load this Sowing.</p>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (selectedId)
-                              setDetail({ status: "loading", id: selectedId });
-                            setDetailAttempt((value) => value + 1);
-                          }}
-                        >
-                          Retry detail
-                        </button>
-                      </div>
-                    )}
-                    <RecordPreview
-                      visual={
-                        <RecordVisual
-                          kind="sowing"
-                          label={recordName(selected, "Sowing")}
-                          compact
-                          identity={{
-                            id: selected.seed_lot.botanical_identity_id,
-                            display_label:
-                              selected.seed_lot
-                                .botanical_identity_display_label,
-                          }}
-                        />
-                      }
-                      type="Sowing"
-                      title={recordName(selected, "Unlabelled sowing")}
-                      secondary={
-                        <>
-                          <a
-                            href={`#/identities/${selected.seed_lot.botanical_identity_id}`}
-                          >
-                            {selected.seed_lot.botanical_identity_display_label}
-                          </a>{" "}
-                          · From{" "}
-                          <a href={`#/seeds/${selected.seed_lot.id}`}>
-                            {recordName(
-                              selected.seed_lot,
-                              "Unlabelled seed lot",
-                            )}
-                          </a>
-                        </>
-                      }
-                      facts={[
-                        {
-                          label: "Lifecycle",
-                          value: lifecycleLabels[selected.lifecycle],
-                        },
-                        {
-                          label: "Sown",
-                          value: dateLabel(selected.sowing_date),
-                        },
-                        {
-                          label: "Sown quantity",
-                          value: quantityLabel(selected),
-                        },
-                        {
-                          label: "Germinated",
-                          value: <GerminationProgress sowing={selected} />,
-                        },
-                        {
-                          label: "Location",
-                          value: selected.location ? (
-                            <a href={`#/locations/${selected.location.id}`}>
-                              {selected.location.display_path}
-                            </a>
-                          ) : (
-                            "Not recorded"
-                          ),
-                        },
-                      ]}
-                      actions={
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setMobileDetail(true);
-                              setRecordRoute(`#/sowings/${selected.id}`);
-                            }}
-                          >
-                            Open details
-                          </button>
-                          <div
-                            className="preview-action-group"
-                            role="group"
-                            aria-label="Record maintenance"
-                          >
-                            <ActionButton
-                              icon="edit"
-                              type="button"
-                              className="button--secondary"
-                              onClick={(event) => {
-                                startEdit(selected, event.currentTarget);
-                              }}
-                            >
-                              Edit
-                            </ActionButton>
-                            {selected.lifecycle !== "reversed" && (
-                              <>
-                                <a
-                                  className="button-link button--secondary"
-                                  href={`#/sowings/${selected.id}?tab=germination`}
-                                >
-                                  Record germination
-                                </a>
-                              </>
-                            )}
-                          </div>
-                          {selected.lifecycle !== "reversed" && (
-                            <div
-                              className="preview-action-group preview-action-group--descendants"
-                              role="group"
-                              aria-label="Descendant creation"
-                            >
-                              <a
-                                className="button-link button--secondary"
-                                href={`#/plants?action=from-sowing&sowing=${selected.id}&kind=plant`}
-                              >
-                                Create Plant
-                              </a>
-                              <a
-                                className="button-link button--secondary"
-                                href={`#/plants?action=from-sowing&sowing=${selected.id}&kind=group`}
-                              >
-                                Create Plant group
-                              </a>
-                            </div>
-                          )}
-                        </>
-                      }
-                    />
-                  </DirectoryInspector>
-                )
-              ) : (
-                <DirectoryInspectorPlaceholder title="Select a Sowing">
-                  Choose a compact row to see its full record.
-                </DirectoryInspectorPlaceholder>
-              )}
+                ) : null
+              ) : null}
             </section>
           )}
         </DirectoryWorkspace>

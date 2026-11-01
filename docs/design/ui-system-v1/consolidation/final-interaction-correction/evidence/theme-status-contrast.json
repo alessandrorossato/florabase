@@ -1,0 +1,116 @@
+[
+  {
+    "colors": {
+      "danger": "#a13b3b",
+      "success": "#276d4c",
+      "surface": "#ffffff",
+      "text-muted": "#5c665e",
+      "warning-text": "#85520c"
+    },
+    "theme": [
+      "botanical",
+      "light"
+    ],
+    "contrast": {
+      "danger": 6.55,
+      "success": 6.22,
+      "text-muted": 5.97,
+      "warning-text": 6.54
+    }
+  },
+  {
+    "colors": {
+      "danger": "#f0a3a3",
+      "success": "#8bc8a3",
+      "surface": "#1d2721",
+      "text-muted": "#b1beb4",
+      "warning-text": "#e8c184"
+    },
+    "theme": [
+      "botanical",
+      "dark"
+    ],
+    "contrast": {
+      "danger": 7.68,
+      "success": 7.98,
+      "text-muted": 7.98,
+      "warning-text": 9.08
+    }
+  },
+  {
+    "colors": {
+      "danger": "#a13b3b",
+      "success": "#276d4c",
+      "surface": "#fffdf8",
+      "text-muted": "#655f50",
+      "warning-text": "#85520c"
+    },
+    "theme": [
+      "herbarium",
+      "light"
+    ],
+    "contrast": {
+      "danger": 6.45,
+      "success": 6.12,
+      "text-muted": 6.25,
+      "warning-text": 6.44
+    }
+  },
+  {
+    "colors": {
+      "danger": "#f0a3a3",
+      "success": "#8bc8a3",
+      "surface": "#28251f",
+      "text-muted": "#c4bba8",
+      "warning-text": "#e8c184"
+    },
+    "theme": [
+      "herbarium",
+      "dark"
+    ],
+    "contrast": {
+      "danger": 7.62,
+      "success": 7.92,
+      "text-muted": 8.02,
+      "warning-text": 9.01
+    }
+  },
+  {
+    "colors": {
+      "danger": "#a13b3b",
+      "success": "#276d4c",
+      "surface": "#fcfdff",
+      "text-muted": "#566571",
+      "warning-text": "#85520c"
+    },
+    "theme": [
+      "mineral",
+      "light"
+    ],
+    "contrast": {
+      "danger": 6.44,
+      "success": 6.11,
+      "text-muted": 5.9,
+      "warning-text": 6.43
+    }
+  },
+  {
+    "colors": {
+      "danger": "#f0a3a3",
+      "success": "#8bc8a3",
+      "surface": "#1d2832",
+      "text-muted": "#b2c2d0",
+      "warning-text": "#e8c184"
+    },
+    "theme": [
+      "mineral",
+      "dark"
+    ],
+    "contrast": {
+      "danger": 7.47,
+      "success": 7.77,
+      "text-muted": 8.22,
+      "warning-text": 8.84
+    }
+  }
+]

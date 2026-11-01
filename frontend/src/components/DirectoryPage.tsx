@@ -7,6 +7,7 @@ import {
   useRef,
   useCallback,
 } from "react";
+import { OverflowMenu } from "./ReferenceUI";
 import { Tooltip } from "./Tooltip";
 import { IconButton } from "./Action";
 import { ActionButton } from "./Action";
@@ -86,7 +87,7 @@ export function DirectoryViewSwitcher({
 
 /** A native record surface; status description is shared with pointer and keyboard users. */
 export function DirectoryTrigger({
-  description = "Open Quick Preview",
+  description = "Open details",
   children,
   ...props
 }: ComponentPropsWithRef<"button"> & { description?: string }) {
@@ -130,7 +131,11 @@ export function DirectoryWorkspace({
   className?: string;
 }) {
   return (
-    <div className={`ui-directory-workspace ${className}`}>{children}</div>
+    <div
+      className={`${className.includes("is-detail-view") ? "ui-record-detail-workspace" : "ui-directory-workspace"} ${className}`}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -154,7 +159,7 @@ export function DirectoryRecordContent({
       <span className="ui-record-identity">
         <span className="ui-record-title">
           <strong>{name}</strong>
-          {status}
+          <span className="ui-record-status">{status}</span>
         </span>
         {secondary && <span className="ui-record-secondary">{secondary}</span>}
       </span>
@@ -452,17 +457,29 @@ export function DirectoryRecordActions({
   onDetails: (trigger: HTMLButtonElement) => void;
   onEdit: (trigger: HTMLButtonElement) => void;
 }) {
+  const trigger = useRef<HTMLButtonElement>(null);
   return (
     <div
       className="ui-directory-record-actions"
       role="group"
       aria-label={`Actions for ${label}`}
     >
-      {extraActions}
+      {extraActions && (
+        <OverflowMenu
+          ariaLabel={`Create or record for ${label}`}
+          triggerRef={trigger}
+          keepMounted
+          closeOnAction={false}
+          popoverClassName="ui-directory-action-menu"
+        >
+          {extraActions}
+        </OverflowMenu>
+      )}
       <IconButton
         icon="document"
-        label={`Details ${label}`}
-        tooltip="Details"
+        label={`Open details ${label}`}
+        visibleLabel="Open details"
+        tooltip="Open details"
         onClick={(e) => {
           onDetails(e.currentTarget);
         }}
@@ -470,6 +487,7 @@ export function DirectoryRecordActions({
       <IconButton
         icon="edit"
         label={`Edit ${label}`}
+        visibleLabel="Edit"
         tooltip="Edit"
         onClick={(e) => {
           onEdit(e.currentTarget);

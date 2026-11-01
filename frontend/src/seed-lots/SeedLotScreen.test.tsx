@@ -310,7 +310,7 @@ test("Seeds navigation exposes the collection loading and global empty states", 
     name: "Seed lot detail and editor",
   });
   expect(creationPanel).toHaveClass("seed-creation-panel");
-  expect(creationPanel.parentElement).toHaveClass("seed-master-detail");
+  expect(creationPanel.parentElement).toHaveClass("ui-record-detail-workspace");
   await user.click(screen.getByRole("button", { name: "Cancel" }));
   expect(screen.getByRole("button", { name: "New seed lot" })).toHaveAttribute(
     "aria-expanded",
@@ -364,12 +364,14 @@ test("reselecting Seeds clears selection, search and lifecycle filter without re
   setViewportMatches(false);
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Blue packet/,
     }),
   );
-  expect(
-    screen.getByRole("complementary", { name: "Quick preview" }),
-  ).toBeInTheDocument();
+  await assertDedicatedDetails();
+  await browserBack();
+  await waitFor(() => {
+    expect(document.querySelector(".ui-directory-records")).toBeInTheDocument();
+  });
   await selectDirectoryFilter(user, "Lifecycle", "all");
   await user.type(screen.getByLabelText("Search seed inventory"), "Blue");
   await user.click(
@@ -383,8 +385,8 @@ test("reselecting Seeds clears selection, search and lifecycle filter without re
     screen.getByRole("button", { name: "Remove lifecycle filter" }),
   ).toHaveTextContent("Active");
   expect(
-    screen.getByRole("complementary", { name: "Quick preview" }),
-  ).toHaveTextContent("Select a seed lot");
+    screen.queryByRole("complementary", { name: /preview|inspection/i }),
+  ).not.toBeInTheDocument();
 });
 
 test("reselecting Seeds protects an edited form until changes are discarded", async () => {
@@ -393,10 +395,10 @@ test("reselecting Seeds protects an edited form until changes are discarded", as
   const user = await openSeeds();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Blue packet/,
     }),
   );
-  await openSelectedDetails(user);
+  await assertDedicatedDetails();
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   await user.type(screen.getByLabelText("Lot label"), " changed");
   await user.click(
@@ -418,7 +420,7 @@ test("reselecting Seeds protects an edited form until changes are discarded", as
   ).not.toBeInTheDocument();
 });
 
-test("inventory and preview distinguish exact, approximate, unknown and exhausted quantities", async () => {
+test("inventory and Details distinguish exact, approximate, unknown and exhausted quantities", async () => {
   const records = [
     lot(),
     lot({
@@ -451,47 +453,56 @@ test("inventory and preview distinguish exact, approximate, unknown and exhauste
   const list = await screen.findByRole("list", { name: "Seed inventory" });
   expect(
     within(list).getByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Blue packet/,
     }),
   ).toHaveTextContent("50 seeds remaining");
   expect(
     within(list).getByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Approximate packet/,
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Approximate packet/,
     }),
   ).toHaveTextContent("About 25 seeds");
   expect(
     within(list).getByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Unknown packet/,
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Unknown packet/,
     }),
   ).toHaveTextContent("Quantity unknown");
   expect(
     within(list).getByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Exhausted packet/,
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Exhausted packet/,
     }),
   ).toHaveTextContent("0 seedsRecorded quantity");
   expect(list).not.toHaveTextContent(/% used/);
   await user.click(
     within(list).getByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Blue packet/,
     }),
   );
-  const preview = screen.getByRole("complementary", { name: "Quick preview" });
-  expect(within(preview).getByText("50 seeds")).toBeInTheDocument();
+  await assertDedicatedDetails();
+  expect(screen.getByLabelText("Current inventory")).toHaveTextContent(
+    "50 seeds",
+  );
+  await browserBack();
+  await waitFor(() => {
+    expect(document.querySelector(".ui-directory-records")).toBeInTheDocument();
+  });
+  await user.click(
+    screen.getByRole("button", { name: "Create or record for Blue packet" }),
+  );
   expect(
     screen.getByRole("link", { name: "Start sowing from Blue packet" }),
   ).toHaveAttribute("href", `#/sowings?action=start&seedLot=${lot().id}`);
-  expect(
-    within(preview).getByRole("link", { name: "Start sowing" }),
-  ).toHaveAttribute("href", `#/sowings?action=start&seedLot=${lot().id}`);
+  await user.keyboard("{Escape}");
   await user.click(
-    within(list).getByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Exhausted packet/,
-    }),
+    within(screen.getByRole("list", { name: "Seed inventory" })).getByRole(
+      "button",
+      {
+        name: /^(?!Create or record for |Open details |Edit ).*Exhausted packet/,
+      },
+    ),
   );
+  await assertDedicatedDetails();
   expect(
-    within(
-      screen.getByRole("complementary", { name: "Quick preview" }),
-    ).queryByRole("link", { name: "Start sowing" }),
+    screen.queryByRole("link", { name: "Start sowing" }),
   ).not.toBeInTheDocument();
 });
 
@@ -502,10 +513,8 @@ test("selection shows complete details without internal identifiers and opens co
     name: "Seed lot inventory",
   });
   expect(
-    within(
-      screen.getByRole("region", { name: "Seed lot detail and editor" }),
-    ).getByRole("heading", { name: "Select a seed lot" }),
-  ).toBeInTheDocument();
+    screen.queryByRole("region", { name: "Seed lot detail and editor" }),
+  ).not.toBeInTheDocument();
   expect(inventory).toHaveClass("seed-master");
   expect(inventory.parentElement).toHaveClass("ui-directory-workspace");
   expect(screen.getByRole("button", { name: "New seed lot" })).toHaveAttribute(
@@ -516,8 +525,10 @@ test("selection shows complete details without internal identifiers and opens co
     name: /Clitoria ternatea/,
   });
   await user.click(selectedRow);
-  await openSelectedDetails(user);
-  expect(selectedRow).toHaveAttribute("aria-pressed", "true");
+  await assertDedicatedDetails();
+  expect(
+    document.querySelector(".ui-directory-records"),
+  ).not.toBeInTheDocument();
   expect(
     screen.getByRole("region", { name: "Seed lot detail and editor" }),
   ).toHaveClass("seed-detail-pane");
@@ -1073,7 +1084,7 @@ test("one PUT supports lost to active and exhausted zero to active positive corr
   await user.click(
     await screen.findByRole("button", { name: /Clitoria ternatea/ }),
   );
-  await openSelectedDetails(user);
+  await assertDedicatedDetails();
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   await user.selectOptions(screen.getByLabelText("Lifecycle"), "active");
   await openSection(user, "Seed details");
@@ -1289,7 +1300,7 @@ test("retired current references remain visible in edit while ordinary retired c
   await user.click(
     await screen.findByRole("button", { name: /Clitoria ternatea/ }),
   );
-  await openSelectedDetails(user);
+  await assertDedicatedDetails();
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   await openSection(user, "Acquisition");
   expect(screen.getByRole("combobox", { name: "Supplier" })).toHaveValue(
@@ -1404,7 +1415,7 @@ test("update and stale-reference failures retain the editable lot", async () => 
   await user.click(
     await screen.findByRole("button", { name: /Clitoria ternatea/ }),
   );
-  await openSelectedDetails(user);
+  await assertDedicatedDetails();
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   await user.clear(screen.getByLabelText("Lot label"));
   await user.type(screen.getByLabelText("Lot label"), "Unsaved correction");
@@ -1433,32 +1444,21 @@ test("reference combobox supports keyboard selection with accessible names", asy
   expect(picker).toHaveValue("Clitoria ternatea");
 });
 
-test("desktop selection offers a compact preview before opening SeedLot detail", async () => {
+test("desktop direct Details replaces the Seed directory and retains inventory and breadcrumb", async () => {
   mockApi(directoryHandler([lot()]));
   const user = await openSeeds();
   setViewportMatches(false);
   await user.click(
-    await screen.findByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
-    }),
+    screen.getByRole("button", { name: "Open details Blue packet" }),
   );
-  const preview = screen.getByRole("complementary", { name: "Quick preview" });
-  expect(
-    within(preview).getByRole("heading", { name: "Blue packet" }),
-  ).toBeInTheDocument();
-  expect(
-    screen.queryByRole("heading", { name: "Inventory" }),
-  ).not.toBeInTheDocument();
-  await user.click(
-    within(preview).getByRole("button", { name: "Open details" }),
-  );
+  await assertDedicatedDetails();
   expect(screen.getByLabelText("Current inventory")).toBeInTheDocument();
   expect(
-    within(screen.getByRole("navigation", { name: "Breadcrumb" })).getByRole(
-      "link",
-      { name: "Seeds" },
-    ),
-  ).toBeInTheDocument();
+    screen.getByRole("navigation", { name: "Breadcrumb" }),
+  ).toHaveTextContent("Seeds");
+  expect(
+    screen.queryByRole("complementary", { name: /preview|inspection/i }),
+  ).not.toBeInTheDocument();
 });
 
 test("BULK-001 seed selection is transient, visible-only and reset by search", async () => {
@@ -1482,7 +1482,7 @@ test("BULK-001 seed selection is transient, visible-only and reset by search", a
   expect(screen.getByText("2 selected")).toBeVisible();
   expect(
     screen.getByRole("checkbox", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Select Seed Lot.*Blue packet/i,
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Select Seed Lot.*Blue packet/i,
     }),
   ).toBeChecked();
   await user.type(
@@ -1588,22 +1588,23 @@ test("BULK-001 successful move refreshes the directory, clears preview and retai
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   expect(
-    screen.getByRole("complementary", { name: "Quick preview" }),
-  ).toHaveTextContent("Select a seed lot");
+    screen.queryByRole("complementary", { name: /preview|inspection/i }),
+  ).not.toBeInTheDocument();
   expect(
     screen.getByRole("searchbox", { name: "Search seed inventory" }),
   ).toHaveValue("Blue");
   expect(window.location.hash).toBe(hash);
   const refreshed = screen.getByRole("button", {
-    name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
+    name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Blue packet/,
   });
   expect(refreshed).toBeVisible();
   expect(refreshed).not.toHaveTextContent("New bench");
   setViewportMatches(false);
   await user.click(refreshed);
-  expect(
-    await screen.findByRole("complementary", { name: "Quick preview" }),
-  ).toHaveTextContent("New bench");
+  await assertDedicatedDetails();
+  expect(screen.getByLabelText("Current inventory")).toHaveTextContent(
+    target.display_path,
+  );
 });
 
 const purchaseOrder = {
@@ -1965,14 +1966,7 @@ test("directory modal cancellation retains search, inspector and focus; Escape p
     screen.getByRole("searchbox", { name: "Search seed inventory" }),
     "Blue",
   );
-  await user.click(
-    screen.getByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
-    }),
-  );
-  const trigger = within(
-    screen.getByRole("complementary", { name: "Quick preview" }),
-  ).getByRole("button", { name: "Edit" });
+  const trigger = screen.getByRole("button", { name: "Edit Blue packet" });
   const oldHash = window.location.hash;
   await user.click(trigger);
   const dialog = screen.getByRole("dialog", { name: "Edit Blue packet" });
@@ -2002,8 +1996,8 @@ test("directory modal cancellation retains search, inspector and focus; Escape p
     screen.getByRole("searchbox", { name: "Search seed inventory" }),
   ).toHaveValue("Blue");
   expect(
-    screen.getByRole("complementary", { name: "Quick preview" }),
-  ).toBeVisible();
+    screen.queryByRole("complementary", { name: "Quick preview" }),
+  ).not.toBeInTheDocument();
   expect(trigger).toHaveFocus();
 });
 
@@ -2354,10 +2348,10 @@ test("Overview keeps current-state facts and Sowings has one canonical start act
   const user = await openSeeds();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Blue packet/,
     }),
   );
-  await openSelectedDetails(user);
+  await assertDedicatedDetails();
   const inventory = screen.getByLabelText("Current inventory");
   expect(screen.getByRole("heading", { name: "At a glance" })).toBeVisible();
   expect(
@@ -2433,10 +2427,10 @@ test("Details empty Sowings and Lineage are plain messages while Photos retains 
   const user = await openSeeds();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Blue packet/,
     }),
   );
-  await openSelectedDetails(user);
+  await assertDedicatedDetails();
   await user.click(screen.getByRole("tab", { name: "Sowings" }));
   expect(
     (await screen.findByText("No sowings yet.")).closest(".empty-state"),
@@ -2487,19 +2481,19 @@ test("Create labels expose the real required identity and keep optional acquisit
   ).not.toBeInTheDocument();
 });
 
-test("Seed directory retains quantity and storage context in the row and Quick Preview", async () => {
+test("Seed row retains quantity and full Details retains storage context", async () => {
   mockApi(directoryHandler([lot()]));
   const user = await openSeeds();
-  setViewportMatches(false);
   const row = await screen.findByRole("button", {
-    name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
+    name: /^(?!Create or record for |Open details |Details |Edit ).*Blue packet/,
   });
-  expect(row).not.toHaveTextContent(location.display_path);
   expect(row).toHaveTextContent("remaining");
+  expect(row).not.toHaveTextContent(location.display_path);
   await user.click(row);
+  await assertDedicatedDetails();
   expect(
-    screen.getByRole("complementary", { name: "Quick preview" }),
-  ).toHaveTextContent(location.display_path);
+    screen.getAllByText(location.display_path, { exact: false }).length,
+  ).toBeGreaterThan(0);
 });
 
 test("New SeedLot Back keeps the Seeds parent and restores its create action", async () => {
@@ -2508,6 +2502,9 @@ test("New SeedLot Back keeps the Seeds parent and restores its create action", a
   await user.click(screen.getByRole("button", { name: "New seed lot" }));
   expect(window.location.hash).toBe("#/seeds?action=create");
   await browserBack();
+  await waitFor(() => {
+    expect(document.querySelector(".ui-directory-records")).toBeInTheDocument();
+  });
   expect(window.location.hash).toBe("#/seeds");
   await waitFor(() => {
     expect(screen.getByRole("button", { name: "New seed lot" })).toHaveFocus();
@@ -2534,12 +2531,12 @@ test("identity-scoped Seeds survives URL reload, composes search and clears with
   const view = render(<App />);
   expect(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Blue packet/,
     }),
   ).toBeVisible();
   expect(
     screen.queryByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Other packet/,
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Other packet/,
     }),
   ).toBeNull();
   expect(
@@ -2548,30 +2545,33 @@ test("identity-scoped Seeds survives URL reload, composes search and clears with
   view.unmount();
   render(<App />);
   await screen.findByRole("button", {
-    name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
+    name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Blue packet/,
   });
   await user.click(
     screen.getByRole("button", { name: "Remove botanical identity filter" }),
   );
   expect(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Other packet/,
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Other packet/,
     }),
   ).toBeVisible();
   expect(window.location.hash).toContain("lifecycle=all");
   expect(screen.getByLabelText("Search seed inventory")).toHaveValue("packet");
   await browserBack();
   await waitFor(() => {
+    expect(document.querySelector(".ui-directory-records")).toBeInTheDocument();
+  });
+  await waitFor(() => {
     expect(
       screen.queryByRole("button", {
-        name: /^(?!Quick preview |Preview |Details |Edit ).*Other packet/,
+        name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Other packet/,
       }),
     ).toBeNull();
   });
   expect(window.location.hash).toBe(hash);
 });
 
-test("Seeds List/Gallery keeps canonical filters, preview focus and bulk choices", async () => {
+test("Seeds List/Gallery keeps canonical filters, Details history and bulk choices", async () => {
   mockApi(directoryHandler([lot()]));
   const user = await openSeeds();
   setViewportMatches(false);
@@ -2582,34 +2582,40 @@ test("Seeds List/Gallery keeps canonical filters, preview focus and bulk choices
   await user.type(screen.getByLabelText("Search seed inventory"), "Blue");
   await user.click(
     screen.getByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Blue packet/,
     }),
   );
+  await assertDedicatedDetails();
+  await browserBack();
+  await waitFor(() => {
+    expect(document.querySelector(".ui-directory-records")).toBeInTheDocument();
+  });
   await user.click(screen.getByRole("button", { name: "Gallery" }));
   expect(screen.getByLabelText("Search seed inventory")).toHaveValue("Blue");
   expect(window.location.hash).toContain("lifecycle=all");
   expect(
-    screen.getByRole("complementary", { name: "Quick preview" }),
-  ).toHaveTextContent("50 seeds");
-  await user.click(screen.getByRole("button", { name: "Close preview" }));
-  expect(screen.getByRole("list", { name: "Seed inventory" })).toHaveFocus();
+    screen.queryByRole("complementary", { name: /preview|inspection/i }),
+  ).not.toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Select records" }));
   await user.click(screen.getByRole("button", { name: "Select visible" }));
   await user.click(screen.getByRole("button", { name: "List" }));
   expect(
     screen.getByRole("checkbox", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Select Seed Lot.*Blue packet/i,
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Select Seed Lot.*Blue packet/i,
     }),
   ).toBeChecked();
   expect(screen.getByText("1 selected")).toBeVisible();
   await browserBack();
+  await waitFor(() => {
+    expect(document.querySelector(".ui-directory-records")).toBeInTheDocument();
+  });
   expect(
     await screen.findByRole("button", { name: "Gallery", pressed: true }),
   ).toBeVisible();
   expect(screen.getByLabelText("Search seed inventory")).toHaveValue("Blue");
   expect(
     screen.getByRole("checkbox", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Select Seed Lot.*Blue packet/i,
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Select Seed Lot.*Blue packet/i,
     }),
   ).toBeChecked();
   await browserForward();
@@ -2619,40 +2625,26 @@ test("Seeds List/Gallery keeps canonical filters, preview focus and bulk choices
 });
 
 test.each(["list", "gallery"])(
-  "%s has distinct Preview/Details/Edit and modifier selection preserves presentation",
+  "%s direct commands and modifier selection preserve presentation without Preview",
   async (mode) => {
     localStorage.clear();
     mockApi(directoryHandler([lot()]));
     const user = await openSeeds();
     setViewportMatches(false);
     await user.click(
-      await screen.findByRole("button", {
+      screen.getByRole("button", {
         name: mode === "list" ? "List" : "Gallery",
       }),
     );
-    const preview = screen.getByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
-    });
-    await user.click(preview);
-    const overlay = screen.getByRole("complementary", {
-      name: "Seed lot inspection",
-    });
-    expect(screen.queryByRole("checkbox")).toBeNull();
-    expect(
-      within(overlay).getByRole("button", { name: "Close preview" }),
-    ).toHaveFocus();
-    await user.keyboard("{Escape}");
-    expect(preview).toHaveFocus();
-    const row = screen.getByRole("button", {
-      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
-    });
+    const row = screen
+      .getByRole("list", { name: "Seed inventory" })
+      .querySelector(".ui-directory-trigger");
+    if (!row) throw new Error("Expected a record trigger");
     fireEvent.click(row, { ctrlKey: true });
     expect(
       screen.getByRole("checkbox", { name: /Select Seed Lot/ }),
     ).toBeChecked();
-    expect(
-      screen.getByRole("group", { name: "Selected records" }),
-    ).toHaveTextContent("1 selected");
+    expect(window.location.hash).not.toContain(lot().id);
     await user.click(
       screen.getByRole("button", {
         name: mode === "list" ? "Gallery" : "List",
@@ -2662,13 +2654,14 @@ test.each(["list", "gallery"])(
       screen.getByRole("checkbox", { name: /Select Seed Lot/ }),
     ).toBeChecked();
     await user.click(screen.getByRole("button", { name: "Exit selection" }));
-    await user.click(
-      screen.getByRole("button", { name: "Details Blue packet" }),
-    );
-    expect(window.location.hash).toBe(`#/seeds/${lot().id}`);
     expect(
-      await screen.findByRole("button", { name: "Edit seed lot" }),
+      screen.getByRole("button", { name: "Edit Blue packet" }),
     ).toBeVisible();
+    await user.click(
+      screen.getByRole("button", { name: "Open details Blue packet" }),
+    );
+    await assertDedicatedDetails();
+    expect(screen.getByRole("button", { name: "Edit seed lot" })).toBeVisible();
   },
 );
 
@@ -2676,6 +2669,9 @@ test("directory Edit invokes the supported editor without opening Preview", asyn
   mockApi(directoryHandler([lot()]));
   const user = await openSeeds();
   setViewportMatches(false);
+  await user.click(
+    screen.getByRole("button", { name: "Create or record for Blue packet" }),
+  );
   await user.click(screen.getByRole("button", { name: "Edit Blue packet" }));
   expect(
     await screen.findByRole("dialog", { name: "Edit Blue packet" }),
@@ -2686,53 +2682,53 @@ test("directory Edit invokes the supported editor without opening Preview", asyn
   expect(window.location.hash).toContain("tab=edit");
 });
 
-/** Domain scenarios enter the explicit Details action after previewing a surface. */
-async function openSelectedDetails(user: ReturnType<typeof userEvent.setup>) {
-  const selected = document.querySelector<HTMLButtonElement>(
-    ".ui-directory-trigger[aria-pressed='true']",
-  );
-  const row = selected?.closest("li");
-  if (!row)
-    throw new Error(
-      "A record must be previewed before opening its Details action",
+/** Assert the dedicated route and exclusive list/detail rendering boundary. */
+async function assertDedicatedDetails() {
+  await waitFor(() => {
+    expect(window.location.hash).toMatch(
+      /^#\/(seeds|sowings|plants|plant-groups)\//,
     );
-  await user.click(within(row).getByRole("button", { name: /^Details / }));
+    expect(
+      document.querySelector(".ui-record-detail-workspace"),
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector(".ui-directory-records"),
+    ).not.toBeInTheDocument();
+  });
 }
 
-test("whole-record highlight follows preview and bulk selection, then restores the empty inspector", async () => {
+test("Seed selection highlights the whole row without navigation; normal click opens dedicated Details", async () => {
   mockApi(directoryHandler([lot()]));
   const user = await openSeeds();
   const list = screen.getByRole("list", { name: "Seed inventory" });
   const trigger = within(list).getByRole("button", {
-    name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
+    name: /^(?!Create or record for |Open details |Details |Edit ).*Blue packet/,
   });
   const row = trigger.closest("li");
-  if (!row) throw new Error("The Preview surface must belong to a record.");
+  if (!row) throw new Error("Record row missing");
   expect(
-    screen.getByRole("heading", { name: "Select a seed lot" }),
-  ).toBeVisible();
+    screen.queryByRole("complementary", { name: /Quick preview|inspection/i }),
+  ).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Select records" }));
   await user.click(trigger);
   expect(row).toHaveAttribute("data-selected", "true");
-  expect(
-    within(row).getByRole("group", { name: "Actions for Blue packet" }),
-  ).toBeVisible();
-  await user.click(screen.getByRole("button", { name: "Select records" }));
-  expect(row).not.toHaveAttribute("data-selected");
-  const checkbox = screen.getByRole("checkbox", {
-    name: /Select Seed Lot.*Blue packet/i,
-  });
-  await user.click(checkbox);
-  expect(row).toHaveAttribute("data-selected", "true");
-  await user.click(checkbox);
+  expect(window.location.hash.split("?", 1)[0]).toBe("#/seeds");
+  await user.click(trigger);
   expect(row).not.toHaveAttribute("data-selected");
   await user.click(screen.getByRole("button", { name: "Exit selection" }));
-  expect(
-    screen.getByRole("heading", { name: "Select a seed lot" }),
-  ).toBeVisible();
   await user.click(trigger);
-  await user.click(screen.getByRole("button", { name: "Close preview" }));
-  expect(row).not.toHaveAttribute("data-selected");
+  await assertDedicatedDetails();
   expect(
-    screen.getByRole("heading", { name: "Select a seed lot" }),
+    await screen.findByRole("heading", { name: "Blue packet" }),
   ).toBeVisible();
+  await browserBack();
+  await waitFor(() => {
+    expect(document.querySelector(".ui-directory-records")).toBeInTheDocument();
+  });
+  expect(
+    await screen.findByRole("list", { name: "Seed inventory" }),
+  ).toBeVisible();
+  expect(
+    screen.queryByRole("complementary", { name: /Quick preview|inspection/i }),
+  ).not.toBeInTheDocument();
 });

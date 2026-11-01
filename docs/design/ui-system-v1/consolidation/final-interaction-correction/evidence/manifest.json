@@ -1,0 +1,277 @@
+[
+  {
+    "file": "geography-dedicated-details.png",
+    "bytes": 57273,
+    "sha256": "37ab0b9677c70b466c7ab24e3befe0ef8cb4a3135b6fc86cb607e4a948e56772"
+  },
+  {
+    "file": "geography-hierarchy-1024.png",
+    "bytes": 58609,
+    "sha256": "1c78f0f00ea557f2c2d5e8dce7843a7c907012c88b89cde9b239c9c86682c1bf"
+  },
+  {
+    "file": "geography-hierarchy-1440.png",
+    "bytes": 66194,
+    "sha256": "e05f77d6c75dfa3b4c570abe56270facff7ff9247be5cbbd2dd5c081349d53cb"
+  },
+  {
+    "file": "geography-hierarchy-390.png",
+    "bytes": 33843,
+    "sha256": "9b8fb5a5738c3e5210b3cdb713fb17c7ee808884f4a878e2100523170bed15d4"
+  },
+  {
+    "file": "geography-missing-record.png",
+    "bytes": 28357,
+    "sha256": "aec5be701bf4dd25384af166bf60318994c8e09c136f0695f3b4b4726497fb07"
+  },
+  {
+    "file": "harvests-1024.png",
+    "bytes": 65567,
+    "sha256": "9ce4dc8a0e3d18d681524f30673ecd5e55e148654db672f8da88f895e154031a"
+  },
+  {
+    "file": "harvests-390.png",
+    "bytes": 34575,
+    "sha256": "4ddddb64bd110e9e50f604a7e8553a06514776e2691805843cd32ffb8e835e04"
+  },
+  {
+    "file": "harvests-directory-1440.png",
+    "bytes": 72281,
+    "sha256": "aca75b94032a1d6776e4173009140700f3ca6b8812995b9ec78a118af2ab405d"
+  },
+  {
+    "file": "identities-1024.png",
+    "bytes": 75400,
+    "sha256": "e69049157c7176d010e682a25831c5c1a895aa536e862a9c03217d8099f2a7f7"
+  },
+  {
+    "file": "identities-390.png",
+    "bytes": 37619,
+    "sha256": "544afb8495dd2ff4b5eb4cba5aa0671005f2e7a6be41193c103d494db8904143"
+  },
+  {
+    "file": "identities-directory-1440.png",
+    "bytes": 83915,
+    "sha256": "e97c3d4e09910b90d71dfe6eb473b1d8d5fad5e52517ea24365bf754fd4f2490"
+  },
+  {
+    "file": "identity-edit-back-regression.png",
+    "bytes": 67802,
+    "sha256": "6e544266925e381ddebbc883344f951f17d7fce31ad391881df245fcfc5f6023"
+  },
+  {
+    "file": "index.html",
+    "bytes": 13569,
+    "sha256": "ed3c15177996e9f607f0918a784e7c5244b83c72607a74a3384d71fd3b6e826c"
+  },
+  {
+    "file": "locations-hierarchy-1024.png",
+    "bytes": 59454,
+    "sha256": "6a9a168c57ffdedba464414d4671d8d1aa2a8dde7038de06f2c730412488747a"
+  },
+  {
+    "file": "locations-hierarchy-1440.png",
+    "bytes": 65650,
+    "sha256": "48c7ae311a81326f6ff6cae6719115c814859473533a8997c979514d58b3371c"
+  },
+  {
+    "file": "locations-hierarchy-390.png",
+    "bytes": 29163,
+    "sha256": "280a993dd4c9b87a48fce0f7a0c2b43fedaa4da78dbb7463d18a3e16e6ff8b56"
+  },
+  {
+    "file": "navigation-smoke.json",
+    "bytes": 4640,
+    "sha256": "c01e0d55935f52df0a260da9d442be1d0192c1dc469529511dd94e36497d6fcf"
+  },
+  {
+    "file": "orders-1024.png",
+    "bytes": 83761,
+    "sha256": "ec4e5e477265fd514bde369de76925eb095162b7a9d53a4dc48d5d0dcb754355"
+  },
+  {
+    "file": "orders-390.png",
+    "bytes": 32471,
+    "sha256": "2626133ec4546d212045a036b49218d23683feb7eb32246c7feec62eae31bbb5"
+  },
+  {
+    "file": "orders-gallery-1440.png",
+    "bytes": 106660,
+    "sha256": "e3c8894715fe04bcbf63c61e02dc0ad47544554c5a7227c8a2556e277a5270dd"
+  },
+  {
+    "file": "orders-list-1440.png",
+    "bytes": 97102,
+    "sha256": "d939044cd84a737c45ae640a3b5f86514c550410b882af1263b2e542efa64aed"
+  },
+  {
+    "file": "plants-1024.png",
+    "bytes": 79975,
+    "sha256": "0cc4e40960f7dc1ad2e741546b46d33f82afe67d25dc608ed369ac5e4a946da9"
+  },
+  {
+    "file": "plants-390.png",
+    "bytes": 30919,
+    "sha256": "f1cf9e0929231b79af8976116403bdfe155a4994fff422adc76839b6ae6efc9f"
+  },
+  {
+    "file": "plants-directory-1440.png",
+    "bytes": 28604,
+    "sha256": "82e72ad4e1ea970dc747ff4f1f8fd0a908840cf74bfd765352d2c24f6266ad9f"
+  },
+  {
+    "file": "plants-gallery-1440.png",
+    "bytes": 102895,
+    "sha256": "5e5ac574017afdd2214c4b1b21a61ba57c7d2041e446b100d4f62258dad4b10c"
+  },
+  {
+    "file": "responsive-smoke.json",
+    "bytes": 5459,
+    "sha256": "c901f16fafa76dfe8f82a80b41d8983ea9ced798f7094d30b5c3acb45cd62d73"
+  },
+  {
+    "file": "seeds-1024.png",
+    "bytes": 81705,
+    "sha256": "a44eba2e02536cc48884796167fd67556699a06e8aed013ad4ded649101f38de"
+  },
+  {
+    "file": "seeds-390.png",
+    "bytes": 35511,
+    "sha256": "a8e89a096390ab76e822d82a3224dd6a750b27e892f6e03966b8a2da6572cf06"
+  },
+  {
+    "file": "seeds-bulk-selection.png",
+    "bytes": 104036,
+    "sha256": "dc46ea8a949b2d9e85d6e52e4852a83fa7220072e05c84bcc0d0b021cfffda0e"
+  },
+  {
+    "file": "seeds-creation-menu.png",
+    "bytes": 107546,
+    "sha256": "9e10a504bdb2aa674d70ac7504cf6a21239843d3e261cedbf2bb35a13f202aa8"
+  },
+  {
+    "file": "seeds-dedicated-details.png",
+    "bytes": 67870,
+    "sha256": "eb6dfddc14ed74c868e062c99bc64cce10b50b65b5ed9ddd662a078647b45f30"
+  },
+  {
+    "file": "seeds-gallery-1440.png",
+    "bytes": 117233,
+    "sha256": "36e2242fb30b5c3996652e8a66748341639aa02762d8c7be6e6a203abca10481"
+  },
+  {
+    "file": "seeds-list-1440.png",
+    "bytes": 106295,
+    "sha256": "b9d5bfccabb239e163f11a18a63bda09a4a6a661b5ff2779c0f3b4b98d41d976"
+  },
+  {
+    "file": "seeds-mobile-details.png",
+    "bytes": 30048,
+    "sha256": "f1db63909c28cbdccb8f2560c8ebab0f4b80aa7dcf0636bb22126b629a80da8a"
+  },
+  {
+    "file": "sowings-1024.png",
+    "bytes": 86993,
+    "sha256": "91d66f2d52a67d82a081bef60be29469d2b35933f80a72ad7e413d155179e982"
+  },
+  {
+    "file": "sowings-390.png",
+    "bytes": 37571,
+    "sha256": "580f9bba927babd6074ebf21abcceec456b6b0073cb5209bd7fec209dbb6e82e"
+  },
+  {
+    "file": "sowings-creation-menu-1440.png",
+    "bytes": 103258,
+    "sha256": "94036ce03ed2588e97e34a3ab1a76179c9f23b7b031605b3596a9e63adfe53f2"
+  },
+  {
+    "file": "sowings-gallery-1440.png",
+    "bytes": 113173,
+    "sha256": "5e78f5397611c2bf76ad582ca6f0f3e49ebd44ec95d5ec2cde2d0c6c11d9df00"
+  },
+  {
+    "file": "sowings-germination-details.png",
+    "bytes": 69184,
+    "sha256": "f9bdf4d0df4c260bbb8077b11849c282a9f61366024db51a43ed02c28e7d703a"
+  },
+  {
+    "file": "sowings-status-botanical-dark.png",
+    "bytes": 98363,
+    "sha256": "66b724c5356b063807f6d9cb05e3e73482fc500f5b2737a30cf5351b98c9ad84"
+  },
+  {
+    "file": "sowings-status-botanical-light.png",
+    "bytes": 99310,
+    "sha256": "99e68bea4cda47ba292abf25b35cd62a9a73fc1ae1fb9aa9e2c9f4e2e9be87a6"
+  },
+  {
+    "file": "sowings-status-herbarium-dark.png",
+    "bytes": 99181,
+    "sha256": "6a2d041b821a28eaea8f6e3f9675645ae8d3b0122a1f71741c7f982a362a687b"
+  },
+  {
+    "file": "sowings-status-herbarium-light.png",
+    "bytes": 100548,
+    "sha256": "78e2a04097aa3ec12cd09eb2b90e16208a4d0bdc9d0cd0121e4eca2c2e56877d"
+  },
+  {
+    "file": "sowings-status-mineral-dark.png",
+    "bytes": 99992,
+    "sha256": "8b479c3c61ed4e3a0fe2a7a53ecab1b418ad74752e4f51c4ba89ed029b43f029"
+  },
+  {
+    "file": "sowings-status-mineral-light.png",
+    "bytes": 100303,
+    "sha256": "d6fd52bba7e31e73fa906b4f2d9ba783f43ca911b12309e7ada09abff20f0735"
+  },
+  {
+    "file": "stored-exact-inventory-edit.png",
+    "bytes": 81857,
+    "sha256": "83cf5d61b0287585889f2c14ced8d69a3058547b7e4a85ce8671579f71c52cf0"
+  },
+  {
+    "file": "stored-material-1024.png",
+    "bytes": 64094,
+    "sha256": "7590d0a6a1da9a40caf6c256c045be73ebf0dd062f3b90829584f729b38d5c2e"
+  },
+  {
+    "file": "stored-material-1440.png",
+    "bytes": 73846,
+    "sha256": "cf81cd825e9369e6d2d197fb689f14f985d3aa9a5002cb9d528057b0f4468911"
+  },
+  {
+    "file": "stored-material-390.png",
+    "bytes": 35599,
+    "sha256": "1bb559a7ab20d9e4231e83fe376033570ec8c031d59384162984f4a8ed50e320"
+  },
+  {
+    "file": "suppliers-1024.png",
+    "bytes": 84779,
+    "sha256": "71b6e12363af08f2b99891bba9c7387695db9cb92c9886c413d52902ad8eceae"
+  },
+  {
+    "file": "suppliers-390.png",
+    "bytes": 31064,
+    "sha256": "7741a645a9e54505cd484565e382768f4203c2db17661fd5260d1e9caa620e2f"
+  },
+  {
+    "file": "suppliers-gallery-1440.png",
+    "bytes": 101295,
+    "sha256": "08e5b056b0c8ec5d3d5d1d7d90533900d75e4ce18aed01aa609ad979d5ef0d43"
+  },
+  {
+    "file": "suppliers-list-1440.png",
+    "bytes": 93619,
+    "sha256": "4f67efc55cd5ab2d85800c1d17f725da661f33b0617d543e55fc16b0652a4048"
+  },
+  {
+    "file": "theme-rendered-statuses.json",
+    "bytes": 15116,
+    "sha256": "ad26395764be73bc6ad47451a99ac4eb61f3f5f1b90fee2a5f37cee07eaf3638"
+  },
+  {
+    "file": "theme-status-contrast.json",
+    "bytes": 2125,
+    "sha256": "dec1dd88bc2d4aeb916e2ebf1bceb8b38f1b97a5f77806658e170beb3e41171e"
+  }
+]

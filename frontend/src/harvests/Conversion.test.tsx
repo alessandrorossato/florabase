@@ -193,6 +193,9 @@ it("shows eligibility request failure inside Undo and keeps confirmation disable
 });
 it("exposes creation only on tracked active seed material", async () => {
   const view = wrap(<StoredMaterialDirectory />);
+  await userEvent.click(
+    await screen.findByRole("button", { name: /^Create or record for / }),
+  );
   expect(
     await screen.findByRole("button", { name: "Create Seed lot" }),
   ).toBeEnabled();
@@ -209,6 +212,9 @@ it("exposes creation only on tracked active seed material", async () => {
       await userEvent.click(screen.getByRole("button", { name: "Done" }));
     }
     await screen.findByLabelText("Directory results");
+    expect(
+      screen.queryByRole("button", { name: /^Create or record for / }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Create Seed lot" }),
     ).not.toBeInTheDocument();

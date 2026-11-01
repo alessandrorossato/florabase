@@ -25,6 +25,14 @@
   height: 100%;
   object-fit: cover;
 }
+/* A compact placeholder cannot fit a source banner; its icon, label and title remain. */
+.app-content
+  .ui-directory-records
+  .ui-record-visual
+  .record-visual:not(:has(img))
+  .record-visual__source {
+  display: none;
+}
 .app-content .ui-record-identity {
   display: grid;
   gap: var(--space-1);
@@ -326,4 +334,112 @@
     min-block-size: min-content;
     overflow: visible;
   }
+}
+
+/* Interaction cleanup: one textual lifecycle grammar and one bordered action trigger. */
+.app-content .ui-record-title :is(.ui-status-indicator, .lifecycle-badge) {
+  display: inline-flex;
+  width: auto;
+  height: auto;
+  padding: 0.125rem 0.375rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  font: var(--type-small);
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+}
+.app-content
+  .ui-directory-records
+  > :is(.ui-directory-row, .ui-directory-card)[data-selected="true"] {
+  box-shadow: none;
+}
+.app-content
+  .ui-directory-records
+  :is(.ui-directory-row, .ui-directory-card)
+  .ui-directory-record-actions
+  .control-icon-button {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  width: 2.75rem;
+  height: 2.75rem;
+}
+.ui-directory-action-menu[hidden] {
+  display: none;
+}
+.ui-directory-action-menu :is(button, a) {
+  display: flex;
+  width: 100%;
+  height: auto;
+  min-height: 2.75rem;
+  justify-content: flex-start;
+  gap: var(--space-2);
+}
+.ui-directory-action-menu :is(.sr-only, .control-icon-button__label) {
+  position: static;
+  width: auto;
+  height: auto;
+  clip-path: none;
+  overflow: visible;
+  white-space: normal;
+}
+.ui-directory-action-menu {
+  min-width: 14rem;
+}
+.ui-directory-action-menu :is(.sr-only, .control-icon-button__label) {
+  display: inline;
+}
+.ui-directory-action-menu a {
+  color: var(--text);
+  text-decoration: none;
+  padding: var(--space-2);
+  box-sizing: border-box;
+}
+.ui-directory-action-menu svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+}
+.ui-directory-action-menu > .tooltip-trigger {
+  display: block;
+  width: 100%;
+}
+.ui-record-status {
+  flex: none;
+}
+
+/* Directories have one content track; full records use their own composition. */
+.app-content .ui-directory-workspace:not(.is-detail-view) {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.app-content
+  .ui-directory-workspace
+  > :is(.seed-master, .harvest-directory-results),
+.app-content .ui-directory-workspace .identity-cards {
+  grid-column: 1;
+  grid-row: 2;
+}
+.app-content .ui-record-detail-workspace {
+  display: block;
+  min-width: 0;
+}
+.app-content .ui-record-detail-workspace > .seed-detail-pane {
+  width: 100%;
+  min-width: 0;
+}
+.ui-directory-action-menu :is(.sr-only, .control-icon-button__label) {
+  inline-size: auto;
+  block-size: auto;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.app-content .ui-directory-record-actions .ui-directory-quick-action {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+}
+.app-content .ui-directory-record-actions .ui-directory-quick-action:hover {
+  background: var(--surface-hover);
 }

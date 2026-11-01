@@ -1,18 +1,3 @@
-import { DirectoryInspectorPlaceholder } from "../components/DirectoryPage";
-import { DirectoryWorkspace } from "../components/DirectoryPage";
-import {
-  DirectoryPage,
-  DirectoryRecords,
-  DirectoryTrigger,
-  DirectoryRecordContent,
-  DirectoryRow,
-  DirectoryCard,
-  DirectoryRecordActions,
-  DirectoryInspector,
-  DirectoryViewSwitcher,
-} from "../components/DirectoryPage";
-import { useDirectoryPresentation } from "../components/directoryPresentation";
-import { ActionButton } from "../components/Action";
 import {
   useEffect,
   useLayoutEffect,
@@ -23,18 +8,22 @@ import {
   type RefObject,
   type SyntheticEvent,
 } from "react";
+import { ActionButton } from "../components/Action";
+import {
+  DirectoryCard,
+  DirectoryPage,
+  DirectoryRecordActions,
+  DirectoryRecordContent,
+  DirectoryRecords,
+  DirectoryRow,
+  DirectoryTrigger,
+  DirectoryViewSwitcher,
+  DirectoryWorkspace,
+} from "../components/DirectoryPage";
+import { useDirectoryPresentation } from "../components/directoryPresentation";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { DetailEmptyState } from "../components/DetailEmptyState";
-import { DirectoryResults } from "../components/DirectoryResults";
-import { DirectoryTools } from "../components/DirectoryTools";
-import { EditWorkspace } from "../components/EditWorkspace";
-import { FieldLabel } from "../components/FieldLabel";
-import { DirectorySearch, RecordPreview } from "../components/ReferenceUI";
-import { TaskDialog } from "../components/TaskDialog";
-import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
-import { useEditRoute } from "../components/useEditRoute";
 import {
   Breadcrumbs,
   CollectionCard,
@@ -42,11 +31,20 @@ import {
   DetailTabs,
   WorkspaceIntro,
 } from "../components/CollectionUI";
+import { DetailEmptyState } from "../components/DetailEmptyState";
+import { DirectoryResults } from "../components/DirectoryResults";
+import { DirectoryTools } from "../components/DirectoryTools";
+import { EditWorkspace } from "../components/EditWorkspace";
+import { FieldLabel } from "../components/FieldLabel";
+import { DirectorySearch } from "../components/ReferenceUI";
+import { TaskDialog } from "../components/TaskDialog";
 import {
   closeCollectionPage,
   openCollectionPage,
   setRecordRoute,
 } from "../components/recordNavigation";
+import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
+import { useEditRoute } from "../components/useEditRoute";
 import { RecordVisual } from "../photos/RecordVisual";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
@@ -55,6 +53,7 @@ import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import type { PartialDate } from "../seed-lots/api";
 import { listSuppliers, type SupplierListResponse } from "../suppliers/api";
 
+import { LinkExistingSeedLot } from "./PurchaseContext";
 import {
   deleteOrder,
   getOrder,
@@ -69,7 +68,6 @@ import {
   type OrderDetail,
   type OrderPage,
 } from "./api";
-import { LinkExistingSeedLot } from "./PurchaseContext";
 import "./orders.css";
 
 type OrderRecord = Order | OrderDetail;
@@ -330,66 +328,6 @@ function OrderForm({
         </button>
       </div>
     </form>
-  );
-}
-
-function OrderPreview({
-  order,
-  onOpen,
-  onEdit,
-}: {
-  order: Order;
-  onOpen: () => void;
-  onEdit: MouseEventHandler<HTMLButtonElement>;
-}) {
-  return (
-    <RecordPreview
-      visual={
-        <RecordVisual
-          photo={null}
-          label={orderTitle(order)}
-          kind="order"
-          className="quick-preview-media"
-        />
-      }
-      type="Purchase order"
-      title={orderTitle(order)}
-      secondary={order.supplier?.name ?? "Supplier unknown"}
-      facts={[
-        { label: "Order date", value: orderDate(order.ordered_on) },
-        { label: "Total price", value: orderPrice(order) },
-        {
-          label: "Physical seed lots",
-          value: String(order.seed_lot_count),
-        },
-      ]}
-      actions={
-        <>
-          <a
-            className="button-link"
-            href={`#/orders/${order.id}`}
-            onClick={onOpen}
-          >
-            Open details
-          </a>
-          <div
-            className="preview-action-group"
-            role="group"
-            aria-label="Order actions"
-          >
-            <ActionButton
-              icon="edit"
-              className="button--secondary"
-              type="button"
-              data-order-preview-edit
-              onClick={onEdit}
-            >
-              Edit
-            </ActionButton>
-          </div>
-        </>
-      }
-    />
   );
 }
 
@@ -690,7 +628,6 @@ export function OrderScreen({
 } = {}) {
   const auth = useAuth();
   const presentation = useDirectoryPresentation("orders");
-  const [previewOpen, setPreviewOpen] = useState(false);
   const selectedTrigger = useRef<HTMLButtonElement | null>(null);
   const directoryList = useRef<HTMLUListElement | null>(null);
   const DirectoryItem =
@@ -757,7 +694,7 @@ export function OrderScreen({
   const createTrigger = useRef<HTMLButtonElement>(null);
   const editTrigger = useRef<HTMLButtonElement>(null);
   const directEditHandled = useRef(false);
-  const restorePreviewEdit = useRef(false);
+  const restoreDirectoryEdit = useRef(false);
   const restoreDetailHeading = useRef(false);
   const previousCreateRoute = useRef(startCreating);
 
@@ -1016,30 +953,25 @@ export function OrderScreen({
     };
   }, [detail, edit.modal, editing]);
 
-  // Editing from Quick Preview changes the route, so restore focus once the
-  // directory and its preview have rendered again.
+  // A directory editor returns focus to its persistent direct Edit action.
   useEffect(() => {
     if (
       initialId ||
       editing ||
       edit.modal ||
-      !restorePreviewEdit.current ||
+      !restoreDirectoryEdit.current ||
       !selected
     )
       return;
-    restorePreviewEdit.current = false;
+    restoreDirectoryEdit.current = false;
     const frame = requestAnimationFrame(() => {
-      const trigger = previewOpen
-        ? document.querySelector<HTMLElement>("[data-order-preview-edit]")
-        : directoryList.current?.querySelector<HTMLElement>(
-            `[data-preview-id="${selected.id}"] button[aria-label^="Edit "]`,
-          );
+      const trigger = editTrigger.current;
       trigger?.focus();
     });
     return () => {
       cancelAnimationFrame(frame);
     };
-  }, [edit.modal, editing, initialId, selected, previewOpen]);
+  }, [edit.modal, editing, initialId, selected]);
 
   if (
     auth.state.status !== "authenticated" &&
@@ -1062,7 +994,7 @@ export function OrderScreen({
       setFormDirty(false);
       setSelectedId(result.id);
       setSuccess(existing ? "Order updated." : "Order created.");
-      if (existing && initialId && !restorePreviewEdit.current)
+      if (existing && initialId && !restoreDirectoryEdit.current)
         restoreDetailHeading.current = true;
       setAttempt((value) => value + 1);
       if (existing) {
@@ -1115,7 +1047,7 @@ export function OrderScreen({
     setSelectedId(record.id);
     editTrigger.current = trigger;
     directEditHandled.current = true;
-    restorePreviewEdit.current = !initialId;
+    restoreDirectoryEdit.current = !initialId;
     setFormOpen(false);
     setTarget(record);
     setEditing(true);
@@ -1503,7 +1435,6 @@ export function OrderScreen({
                         <DirectoryItem
                           key={order.id}
                           previewId={order.id}
-                          selected={previewOpen && selectedId === order.id}
 
                           onClick={(event) => {
                             if (
@@ -1524,18 +1455,17 @@ export function OrderScreen({
                               return;
                             const trigger =
                               event.currentTarget.querySelector<HTMLButtonElement>(
-                                ".sourcing-preview-trigger",
+                                ".sourcing-record-trigger",
                               );
                             if (!trigger) return;
                             event.preventDefault();
                             selectedTrigger.current = trigger;
-                            setSelectedId(order.id);
-                            setPreviewOpen(true);
+                            setRecordRoute(`#/orders/${order.id}`);
                           }}
                         >
                           <DirectoryTrigger
-                            className="sourcing-preview-trigger"
-                            aria-label={`Quick preview ${orderTitle(order)}`}
+                            className="sourcing-record-trigger"
+                            aria-label={orderTitle(order)}
                           >
                             <DirectoryRecordContent
                               visual={
@@ -1577,7 +1507,6 @@ export function OrderScreen({
                               setRecordRoute(`#/orders/${order.id}`);
                             }}
                             onEdit={(trigger) => {
-                              setPreviewOpen(false);
                               startEdit(order, trigger);
                             }}
                           />
@@ -1586,35 +1515,6 @@ export function OrderScreen({
                     </DirectoryRecords>
                   )}
                 </section>
-                {selected && previewOpen && !editing && !formOpen && (
-                  <DirectoryInspector
-                    title="Order inspection"
-                    returnFocusTo={selectedTrigger}
-                    fallbackFocusTo={directoryList}
-                    onClose={() => {
-                      setPreviewOpen(false);
-                    }}
-                  >
-                    <OrderPreview
-                      order={selected}
-                      onOpen={() => {
-                        setSuccess("");
-                      }}
-                      onEdit={(event) => {
-                        startEdit(selected, event.currentTarget);
-                      }}
-                    />
-                  </DirectoryInspector>
-                )}
-                {page &&
-                  page.total > 0 &&
-                  !previewOpen &&
-                  !editing &&
-                  !formOpen && (
-                    <DirectoryInspectorPlaceholder title="Select an order">
-                      Choose an order row to preview its details.
-                    </DirectoryInspectorPlaceholder>
-                  )}
               </DirectoryWorkspace>
               <div aria-live="polite">
                 {success && (

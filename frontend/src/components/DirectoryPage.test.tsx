@@ -1,6 +1,6 @@
 import { useDirectoryPagination } from "./useDirectoryPagination";
 import { DirectoryResults } from "./DirectoryResults";
-import { StatusBadge } from "./WorkspaceUI";
+import { LifecycleStatus, StatusBadge } from "./WorkspaceUI";
 import {
   cleanup,
   fireEvent,
@@ -472,17 +472,14 @@ test("default side inspection permits directory interaction and does not trap Ta
   expect(screen.getByRole("button", { name: "Inspect" })).toHaveFocus();
 });
 
-test("record surfaces support keyboard Preview while Details and Edit bypass it", async () => {
+test("record surfaces support keyboard activation while direct Details and Edit stay independent", async () => {
   const preview = vi.fn();
   const details = vi.fn();
   const edit = vi.fn();
   render(
     <DirectoryRecords label="Records" view="list">
       <DirectoryRow>
-        <DirectoryTrigger
-          onClick={preview}
-          description="Active · Open Quick Preview"
-        >
+        <DirectoryTrigger onClick={preview} description="Active · Open details">
           <strong>Record one</strong>
           <StatusBadge compactState="active">Active</StatusBadge>
         </DirectoryTrigger>
@@ -504,25 +501,26 @@ test("record surfaces support keyboard Preview while Details and Edit bypass it"
   await user.keyboard("{Enter}");
   await user.keyboard(" ");
   expect(preview).toHaveBeenCalledTimes(2);
-  await user.click(screen.getByRole("button", { name: "Details Record one" }));
+  await user.click(
+    screen.getByRole("button", { name: "Open details Record one" }),
+  );
   await user.click(screen.getByRole("button", { name: "Edit Record one" }));
   expect(preview).toHaveBeenCalledTimes(2);
   expect(details).toHaveBeenCalledOnce();
   expect(edit).toHaveBeenCalledOnce();
   expect(
-    screen.getByRole("img", { name: "Active" }).querySelector("svg"),
-  ).toHaveAttribute("data-icon", "check");
+    screen.queryByRole("button", { name: "Create or record for Record one" }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByText("Active", { exact: true })).toBeVisible();
 });
-test("binary inactive icons retain the exact accessible status and richer labels stay textual", () => {
+test("compact status chips retain precise active, inactive and richer lifecycle labels", () => {
   render(
     <>
       <StatusBadge compactState="inactive">Inactive</StatusBadge>
       <StatusBadge>Exhausted</StatusBadge>
     </>,
   );
-  expect(
-    screen.getByRole("img", { name: "Inactive" }).querySelector("svg"),
-  ).toHaveAttribute("data-icon", "close");
+  expect(screen.getByText("Inactive", { exact: true })).toBeVisible();
   expect(screen.getByText("Exhausted")).toHaveClass("ui-badge");
 });
 
@@ -579,4 +577,62 @@ test("directory pagination defaults to twenty and resets on filtering while All 
   expect(screen.getByLabelText("Directory results")).toHaveTextContent(
     "1–3 of 3 records · 50 total",
   );
+});
+
+test.each([
+  ["active", "Active", "success"],
+  ["dead", "Dead", "danger"],
+  ["failed", "Failed", "danger"],
+  ["abandoned", "Abandoned", "danger"],
+  ["transferred", "Transferred", "warning"],
+  ["completed", "Completed", "success"],
+  ["cancelled", "Cancelled", "warning"],
+  ["exhausted", "Exhausted", "muted"],
+  ["depleted", "Depleted", "muted"],
+  ["retired", "Retired", "muted"],
+  ["reintegrated", "Reintegrated", "muted"],
+])(
+  "domain state %s retains readable text and semantic tone",
+  (state, label, tone) => {
+    render(<LifecycleStatus state={state} />);
+    expect(screen.getByText(label)).toHaveClass(`ui-status-chip--${tone}`);
+    expect(screen.getByText(label)).toHaveAttribute("data-status", state);
+  },
+);
+
+test("creation menu excludes direct commands and returns focus without activating the record", async () => {
+  const create = vi.fn(),
+    details = vi.fn(),
+    edit = vi.fn();
+  render(
+    <DirectoryRecordActions
+      label="Record"
+      onDetails={details}
+      onEdit={edit}
+      extraActions={
+        <button type="button" onClick={create}>
+          Record germination
+        </button>
+      }
+    />,
+  );
+  const user = userEvent.setup();
+  const trigger = screen.getByRole("button", {
+    name: "Create or record for Record",
+  });
+  await user.click(trigger);
+  const menu = screen.getByRole("group", {
+    name: "Create or record for Record menu",
+  });
+  expect(
+    within(menu).queryByRole("button", { name: /details|edit/i }),
+  ).not.toBeInTheDocument();
+  await user.click(
+    within(menu).getByRole("button", { name: "Record germination" }),
+  );
+  expect(create).toHaveBeenCalledOnce();
+  expect(details).not.toHaveBeenCalled();
+  expect(edit).not.toHaveBeenCalled();
+  await user.keyboard("{Escape}");
+  expect(trigger).toHaveFocus();
 });

@@ -610,3 +610,30 @@ presentation and responsive inspector placement, with explicit Details at all wi
 Domain state, quantities, relationships, canonical filters, Saved Views, form ownership and
 safety guards remain with their existing capabilities. Operator acceptance and FULL remain
 pending; paired visual coverage and manual device/AT/actual-zoom limits are documented.
+
+### Final directory interaction correction (2026-11-01)
+
+The operator-confirmed [final interaction contract](design/ui-system-v1/consolidation/final-interaction-correction/README.md)
+supersedes the Quick Preview and action-menu directions in earlier directory sections and
+in the historical interaction-cleanup evidence. It applies to Seeds, Sowings, Plants/groups,
+Harvests, Stored material, Suppliers, Orders, Botanical identities, Locations and Geography Places.
+
+- Normal record activation opens dedicated Details. Bulk-selection mode selects instead.
+  Directory and full record content render exclusively; actual Overview and other record tabs stay.
+- Direct bordered document and pencil icon buttons expose Open details and eligible Edit.
+  A separate `Create or record` overflow contains supported contextual creation/recording only;
+  hide it if no eligible command exists. Print, destructive and correction operations remain on
+  their owning record workflows. Exact Stored inventory Edit opens its existing inventory editor.
+- No Quick Preview, idle inspector, preview toggle or reserved inspector column remains in these
+  workspaces. Hierarchy chevrons expand independently; canonical Geography records remain read-only.
+- `LifecycleStatus` owns compact textual semantic chips: Active/Completed green;
+  Dead/Failed/Abandoned/Lost red; Transferred/Cancelled amber; Exhausted/Depleted/Discarded/
+  Reintegrated/Archived/Retired/Reversed/Inactive/Unknown muted. Preserve exact domain labels.
+  Harvest occurrences and identities do not acquire invented lifecycle states.
+- Bulk selection uses a subtle fill without a second inset stripe. Hover and keyboard focus stay
+  distinct. Shared tooltip/menu/dialog layering dismisses the highest active layer first.
+
+Domain state, relationships, permissions, quantities, Saved Views and safety guards remain
+capability-owned. Specialist tools and actual record Overview sections are outside this removal.
+The shared inspector API remains for UI Lab/specialist consumers; it is not rendered in the
+listed production directories. Final operator UAT and canonical verification remain pending.

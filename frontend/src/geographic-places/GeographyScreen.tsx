@@ -1,12 +1,3 @@
-import "../components/hierarchy.css";
-import { Icon } from "../components/Icon";
-import { GeographyHeader } from "../geography/GeographyHeader";
-import { ActionButton } from "../components/Action";
-import { FieldLabel } from "../components/FieldLabel";
-import { DirectoryTools } from "../components/DirectoryTools";
-import { DirectoryResults } from "../components/DirectoryResults";
-import { SavedViews } from "../saved-views/SavedViews";
-import { useDirectoryView } from "../saved-views/useDirectoryView";
 import {
   useCallback,
   useEffect,
@@ -15,6 +6,16 @@ import {
   useState,
   type SyntheticEvent,
 } from "react";
+import { ActionButton, ActionLink } from "../components/Action";
+import { LifecycleStatus } from "../components/WorkspaceUI";
+import { DirectoryResults } from "../components/DirectoryResults";
+import { DirectoryTools } from "../components/DirectoryTools";
+import { FieldLabel } from "../components/FieldLabel";
+import "../components/hierarchy.css";
+import { Icon } from "../components/Icon";
+import { GeographyHeader } from "../geography/GeographyHeader";
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -22,7 +23,6 @@ import { DetailHeader } from "../components/CollectionUI";
 import {
   DirectorySearch,
   OverflowMenu,
-  QuickPreview,
   StatStrip,
 } from "../components/ReferenceUI";
 import { TaskDialog } from "../components/TaskDialog";
@@ -30,12 +30,12 @@ import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import { ProvenanceSiteManager } from "../provenance-sites/ProvenanceSiteManager";
 import {
   createGeographicPlace,
+  deleteGeographicPlace,
   geographyConflictMessage,
   geographyValidationMessages,
   listGeographicPlaces,
   setGeographicPlaceRetired,
   updateGeographicPlace,
-  deleteGeographicPlace,
   type GeographicPlaceResponse,
 } from "./api";
 
@@ -101,29 +101,53 @@ function PlaceButton({
   onSelect: (id: string) => void;
 }) {
   return (
-    <button
-      type="button"
-      className="identity-list-item geography-directory-row ui-hierarchy-record"
-      aria-pressed={selectedId === place.id}
-      onClick={() => {
-        onSelect(place.id);
-      }}
-    >
-      <span className="geography-row-title">
-        <strong>{place.name}</strong>
-        <span className="record-state">
-          {place.place_kind === "canonical" ? "Canonical" : "Local"}
+    <>
+      <button
+        type="button"
+        className="identity-list-item geography-directory-row ui-hierarchy-record"
+        aria-pressed={selectedId === place.id}
+        onClick={() => {
+          onSelect(place.id);
+        }}
+      >
+        <span className="geography-row-title">
+          <strong>{place.name}</strong>
+          <span className="record-state">
+            {place.place_kind === "canonical" ? "Canonical" : "Local"}
+          </span>
+          <LifecycleStatus state={place.retired_at ? "retired" : "active"} />
         </span>
-        {place.retired_at && <span className="record-state">Retired</span>}
-      </span>
-      <small>
-        {showPath
-          ? place.display_path
-          : place.source_code
-            ? `${place.source_code_type ?? "Reference"}: ${place.source_code}`
-            : placeTypeLabel(place.place_type, place.place_kind)}
-      </small>
-    </button>
+        <small>
+          {showPath
+            ? place.display_path
+            : place.source_code
+              ? `${place.source_code_type ?? "Reference"}: ${place.source_code}`
+              : placeTypeLabel(place.place_type, place.place_kind)}
+        </small>
+      </button>
+      <div className="ui-hierarchy-record-actions">
+        <ActionLink
+          className="ui-directory-quick-action"
+          icon="document"
+          title="Open details"
+          aria-label={`Open details ${place.name}`}
+          href={`#/geography/places?place=${place.id}`}
+        >
+          <span className="sr-only">Open details</span>
+        </ActionLink>
+        {place.place_kind === "custom" && (
+          <ActionLink
+            className="ui-directory-quick-action"
+            icon="edit"
+            title="Edit"
+            aria-label={`Edit ${place.name}`}
+            href={`#/geography/places?place=${place.id}&tab=edit`}
+          >
+            <span className="sr-only">Edit</span>
+          </ActionLink>
+        )}
+      </div>
+    </>
   );
 }
 
@@ -244,7 +268,12 @@ export function GeographyScreen({
     "city_town" | "locality" | "other_named_area"
   >("other_named_area");
   const [save, setSave] = useState<SaveState>({ status: "idle" });
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(
+    Boolean(initialPlaceId) &&
+      new URLSearchParams(window.location.hash.split("?", 2)[1] ?? "").get(
+        "tab",
+      ) === "edit",
+  );
   const [siteCreating, setSiteCreating] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const initialExpansionApplied = useRef(false);
@@ -397,6 +426,7 @@ export function GeographyScreen({
 
   function selectPlace(id: string) {
     setSelectedId(id);
+    window.location.hash = `#/geography/places?place=${id}`;
     setExpanded((current) => {
       const next = new Set(current);
       const byId = new Map(places.map((place) => [place.id, place]));
@@ -452,6 +482,7 @@ export function GeographyScreen({
         setCreateName("");
         setCreateParentId("");
         closeCreation({ returnFocus: false });
+        window.location.hash = `#/geography/places?place=${place.id}`;
         return `${place.display_path} was created and selected.`;
       },
     );
@@ -628,402 +659,430 @@ export function GeographyScreen({
       {mode === "places" && (
         <>
           <div className="reference-split">
-            <div className="directory-column">
-              <section
-                aria-labelledby="geography-directory-title"
-                className="identity-directory"
-              >
-                <h3 className="sr-only" id="geography-directory-title">
-                  Geography directory
-                </h3>
-                {directory.status === "ready" && !initialPlaceId && (
-                  <DirectoryResults count={matches.length} />
-                )}
-                {directory.status === "loading" && (
-                  <p className="notice">Loading geography…</p>
-                )}
-                {directory.status === "error" && (
-                  <div className="notice notice--error" role="alert">
-                    <p>Florabase could not load the geography directory.</p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDirectory({ status: "loading" });
-                        setAttempt((value) => value + 1);
-                      }}
-                    >
-                      Retry directory
-                    </button>
-                  </div>
-                )}
-                {directory.status === "ready" && places.length === 0 && (
-                  <p className="empty-state">
-                    No geographic places available. Canonical places must be
-                    initialized before adding local children.
-                  </p>
-                )}
-                {directory.status === "ready" &&
-                  filter.trim() &&
-                  matches.length === 0 && (
-                    <p role="status">No geographic places match this filter.</p>
-                  )}
-                {directory.status === "ready" &&
-                  (filter.trim() ? (
-                    <ul
-                      className="identity-list"
-                      aria-label="Matching places"
-                      tabIndex={0}
-                    >
-                      {matches.map((place) => (
-                        <li key={place.id}>
-                          <PlaceButton
-                            place={place}
-                            selectedId={selectedId}
-                            onSelect={selectPlace}
-                            showPath
-                          />
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <PlaceTree
-                      places={places}
-                      parentId={null}
-                      selectedId={selectedId}
-                      onSelect={selectPlace}
-                      expanded={expanded}
-                      onToggle={(id) => {
-                        setExpanded((current) => {
-                          const next = new Set(current);
-                          if (next.has(id)) next.delete(id);
-                          else next.add(id);
-                          return next;
-                        });
-                      }}
-                    />
-                  ))}
-              </section>
-            </div>
-            <QuickPreview>
-              {selected ? (
-                <article
-                  aria-label="Geographic place preview"
-                  className="geography-place-inspector"
+            {!initialPlaceId && (
+              <div className="directory-column">
+                <section
+                  aria-labelledby="geography-directory-title"
+                  className="identity-directory"
                 >
-                  <DetailHeader
-                    eyebrow="Geographic place"
-                    title={selected.name}
-                    secondary={
-                      <span className="record-path">
-                        {selected.display_path}
-                      </span>
-                    }
-                    status={
-                      <span className="record-badges">
-                        <span
-                          className={`lifecycle-badge lifecycle-badge--${selected.retired_at ? "retired" : "active"}`}
-                        >
-                          {selected.retired_at
-                            ? "Retired"
-                            : selected.place_kind === "canonical"
+                  <h3 className="sr-only" id="geography-directory-title">
+                    Geography directory
+                  </h3>
+                  {directory.status === "ready" && !initialPlaceId && (
+                    <DirectoryResults count={matches.length} />
+                  )}
+                  {directory.status === "loading" && (
+                    <p className="notice">Loading geography…</p>
+                  )}
+                  {directory.status === "error" && (
+                    <div className="notice notice--error" role="alert">
+                      <p>Florabase could not load the geography directory.</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDirectory({ status: "loading" });
+                          setAttempt((value) => value + 1);
+                        }}
+                      >
+                        Retry directory
+                      </button>
+                    </div>
+                  )}
+                  {directory.status === "ready" && places.length === 0 && (
+                    <p className="empty-state">
+                      No geographic places available. Canonical places must be
+                      initialized before adding local children.
+                    </p>
+                  )}
+                  {directory.status === "ready" &&
+                    filter.trim() &&
+                    matches.length === 0 && (
+                      <p role="status">
+                        No geographic places match this filter.
+                      </p>
+                    )}
+                  {directory.status === "ready" &&
+                    (filter.trim() ? (
+                      <ul
+                        className="identity-list"
+                        aria-label="Matching places"
+                        tabIndex={0}
+                      >
+                        {matches.map((place) => (
+                          <li key={place.id} className="ui-hierarchy-match">
+                            <PlaceButton
+                              place={place}
+                              selectedId={selectedId}
+                              onSelect={selectPlace}
+                              showPath
+                            />
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <PlaceTree
+                        places={places}
+                        parentId={null}
+                        selectedId={selectedId}
+                        onSelect={selectPlace}
+                        expanded={expanded}
+                        onToggle={(id) => {
+                          setExpanded((current) => {
+                            const next = new Set(current);
+                            if (next.has(id)) next.delete(id);
+                            else next.add(id);
+                            return next;
+                          });
+                        }}
+                      />
+                    ))}
+                </section>
+              </div>
+            )}
+            {initialPlaceId && (
+              <section aria-label="Geographic place detail">
+                <ActionLink
+                  icon="back"
+                  href={`#/geography/places${filter ? `?q=${encodeURIComponent(filter)}` : ""}`}
+                >
+                  Back to places
+                </ActionLink>
+                {selected ? (
+                  <article
+                    aria-label="Geographic place record"
+                    className="geography-place-inspector"
+                  >
+                    <DetailHeader
+                      eyebrow="Geographic place"
+                      title={selected.name}
+                      secondary={
+                        <span className="record-path">
+                          {selected.display_path}
+                        </span>
+                      }
+                      status={
+                        <span className="record-badges">
+                          <LifecycleStatus
+                            state={selected.retired_at ? "retired" : "active"}
+                          />
+                          <span className="record-state">
+                            {selected.place_kind === "canonical"
                               ? "Canonical"
                               : "Local"}
+                          </span>
                         </span>
-                      </span>
-                    }
-                    primaryActions={
-                      !selected.retired_at ? (
+                      }
+                      primaryActions={
+                        !selected.retired_at ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              beginCreate(selected.id);
+                            }}
+                          >
+                            Create local child
+                          </button>
+                        ) : undefined
+                      }
+                      editLabel="Edit geographic place"
+                      onEdit={
+                        selected.place_kind === "custom"
+                          ? () => {
+                              setEditing(true);
+                            }
+                          : undefined
+                      }
+                      overflow={
+                        selected.place_kind === "custom" ? (
+                          <OverflowMenu ariaLabel="More geographic place actions">
+                            <button
+                              className="button--secondary"
+                              type="button"
+                              disabled={pending}
+                              onClick={() =>
+                                void apply(
+                                  () =>
+                                    setGeographicPlaceRetired(
+                                      selected.id,
+                                      !selected.retired_at,
+                                      csrfToken,
+                                    ),
+                                  (place) =>
+                                    place.retired_at
+                                      ? `${place.display_path} was retired.`
+                                      : `${place.display_path} was reactivated.`,
+                                )
+                              }
+                            >
+                              {selected.retired_at
+                                ? "Reactivate local place"
+                                : "Retire local place"}
+                            </button>
+                            <button
+                              className="button--danger"
+                              type="button"
+                              disabled={pending}
+                              onClick={() => {
+                                setSave({ status: "saving" });
+                                void deleteGeographicPlace(
+                                  selected.id,
+                                  csrfToken,
+                                )
+                                  .then(async () => {
+                                    const refreshed =
+                                      await listGeographicPlaces();
+                                    setDirectory({
+                                      status: "ready",
+                                      places: refreshed,
+                                    });
+                                    setSelectedId(null);
+                                    setSave({
+                                      status: "success",
+                                      message:
+                                        "The local geographic place was deleted.",
+                                    });
+                                  })
+                                  .catch((error: unknown) => {
+                                    if (
+                                      error instanceof ApiError &&
+                                      error.status === 401
+                                    ) {
+                                      auth.sessionExpired();
+                                      return;
+                                    }
+                                    setSave({
+                                      status: "error",
+                                      message:
+                                        error instanceof ApiError &&
+                                        error.status === 409
+                                          ? (geographyConflictMessage(error) ??
+                                            "This place is still in use.")
+                                          : "Florabase could not delete this geographic place.",
+                                    });
+                                  });
+                              }}
+                            >
+                              Delete local place
+                            </button>
+                          </OverflowMenu>
+                        ) : undefined
+                      }
+                    />
+                    <div className="actions record-preview__actions">
+                      {!initialPlaceId && (
+                        <a
+                          className="button-link button--secondary"
+                          href={`#/geography?place=${selected.id}`}
+                        >
+                          Open details
+                        </a>
+                      )}
+                      <a href={`#/geography?mode=sites&place=${selected.id}`}>
+                        Associated provenance sites (
+                        {selected.provenance_site_count})
+                      </a>
+                    </div>
+                    <dl className="record-facts">
+                      <div>
+                        <dt>Type</dt>
+                        <dd>
+                          {placeTypeLabel(
+                            selected.place_type,
+                            selected.place_kind,
+                          )}
+                        </dd>
+                      </div>
+                      {selected.parent_id && (
+                        <div>
+                          <dt>Parent</dt>
+                          <dd>
+                            <button
+                              type="button"
+                              className="text-link"
+                              onClick={() => {
+                                if (selected.parent_id)
+                                  selectPlace(selected.parent_id);
+                              }}
+                            >
+                              {places.find(
+                                (place) => place.id === selected.parent_id,
+                              )?.name ?? "Parent geographic place"}
+                            </button>
+                          </dd>
+                        </div>
+                      )}
+                      {selected.source_code && selected.source_code_type && (
+                        <div>
+                          <dt>Reference code</dt>
+                          <dd>
+                            {selected.source_code_type}: {selected.source_code}
+                          </dd>
+                        </div>
+                      )}
+                      <div>
+                        <dt>Child places</dt>
+                        <dd>
+                          {
+                            places.filter(
+                              (place) => place.parent_id === selected.id,
+                            ).length
+                          }
+                        </dd>
+                      </div>
+                    </dl>
+                    {selected.retired_at && (
+                      <p className="record-empty">
+                        Retired place; retained for historical provenance.
+                      </p>
+                    )}
+                    <StatStrip
+                      label="Direct place relationships"
+                      items={[
+                        {
+                          label: "Collection references",
+                          value: selected.direct_usage_count,
+                        },
+                        {
+                          label: "Provenance sites",
+                          value: selected.provenance_site_count,
+                        },
+                        {
+                          label: "Native ranges",
+                          value: selected.native_range_count,
+                        },
+                      ]}
+                    />
+                    {selected.place_kind === "canonical" && (
+                      <p className="record-empty">
+                        Canonical names and ancestry are read-only. Local places
+                        can be added below.
+                      </p>
+                    )}
+                    {editing && selected.place_kind === "custom" && (
+                      <TaskDialog
+                        title="Edit local place"
+                        onClose={() => {
+                          setEditing(false);
+                        }}
+                      >
+                        <form
+                          key={`${selected.id}-${selected.updated_at}`}
+                          onSubmit={submitUpdate}
+                        >
+                          <h4>Edit local place</h4>
+                          <div className="field">
+                            <FieldLabel
+                              required
+                              htmlFor="edit-geographic-place-name"
+                            >
+                              Name
+                            </FieldLabel>
+                            <input
+                              id="edit-geographic-place-name"
+                              name="name"
+                              required
+                              maxLength={255}
+                              defaultValue={selected.name}
+                              disabled={pending}
+                            />
+                          </div>
+                          <div className="field">
+                            <label htmlFor="edit-geographic-place-type">
+                              Local place type
+                            </label>
+                            <select
+                              id="edit-geographic-place-type"
+                              name="place_type"
+                              defaultValue={
+                                selected.place_type ?? "other_named_area"
+                              }
+                              disabled={pending}
+                            >
+                              <option value="city_town">City or town</option>
+                              <option value="locality">Locality</option>
+                              <option value="other_named_area">
+                                Other named area
+                              </option>
+                            </select>
+                          </div>
+                          <div className="field">
+                            <FieldLabel
+                              required
+                              htmlFor="edit-geographic-place-parent"
+                            >
+                              Parent geographic place
+                            </FieldLabel>
+                            <select
+                              id="edit-geographic-place-parent"
+                              name="parent_id"
+                              required
+                              defaultValue={selected.parent_id ?? ""}
+                              disabled={pending}
+                            >
+                              {parentOptions.map((place) => (
+                                <option value={place.id} key={place.id}>
+                                  {place.display_path}
+                                </option>
+                              ))}
+                            </select>
+                            <small>
+                              This place and its descendants are excluded to
+                              prevent cycles.
+                            </small>
+                          </div>
+                          {save.status === "error" && (
+                            <div
+                              className="notice notice--error"
+                              role="alert"
+                              ref={feedback}
+                              tabIndex={-1}
+                            >
+                              {save.message}
+                            </div>
+                          )}
+                          <div className="actions">
+                            <button type="submit" disabled={pending}>
+                              Save local place
+                            </button>
+                            <button
+                              className="button--secondary"
+                              type="button"
+                              disabled={pending}
+                              onClick={() => {
+                                setEditing(false);
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      </TaskDialog>
+                    )}
+                  </article>
+                ) : (
+                  <div className="empty-state">
+                    {directory.status === "loading" ? (
+                      <p role="status">Loading geographic place…</p>
+                    ) : directory.status === "error" ? (
+                      <div role="alert">
+                        <h3>Could not load geographic place</h3>
                         <button
                           type="button"
                           onClick={() => {
-                            beginCreate(selected.id);
+                            setDirectory({ status: "loading" });
+                            setAttempt((value) => value + 1);
                           }}
                         >
-                          Create local child
+                          Retry place
                         </button>
-                      ) : undefined
-                    }
-                    editLabel="Edit geographic place"
-                    onEdit={
-                      selected.place_kind === "custom"
-                        ? () => {
-                            setEditing(true);
-                          }
-                        : undefined
-                    }
-                    overflow={
-                      selected.place_kind === "custom" ? (
-                        <OverflowMenu ariaLabel="More geographic place actions">
-                          <button
-                            className="button--secondary"
-                            type="button"
-                            disabled={pending}
-                            onClick={() =>
-                              void apply(
-                                () =>
-                                  setGeographicPlaceRetired(
-                                    selected.id,
-                                    !selected.retired_at,
-                                    csrfToken,
-                                  ),
-                                (place) =>
-                                  place.retired_at
-                                    ? `${place.display_path} was retired.`
-                                    : `${place.display_path} was reactivated.`,
-                              )
-                            }
-                          >
-                            {selected.retired_at
-                              ? "Reactivate local place"
-                              : "Retire local place"}
-                          </button>
-                          <button
-                            className="button--danger"
-                            type="button"
-                            disabled={pending}
-                            onClick={() => {
-                              setSave({ status: "saving" });
-                              void deleteGeographicPlace(selected.id, csrfToken)
-                                .then(async () => {
-                                  const refreshed =
-                                    await listGeographicPlaces();
-                                  setDirectory({
-                                    status: "ready",
-                                    places: refreshed,
-                                  });
-                                  setSelectedId(null);
-                                  setSave({
-                                    status: "success",
-                                    message:
-                                      "The local geographic place was deleted.",
-                                  });
-                                })
-                                .catch((error: unknown) => {
-                                  if (
-                                    error instanceof ApiError &&
-                                    error.status === 401
-                                  ) {
-                                    auth.sessionExpired();
-                                    return;
-                                  }
-                                  setSave({
-                                    status: "error",
-                                    message:
-                                      error instanceof ApiError &&
-                                      error.status === 409
-                                        ? (geographyConflictMessage(error) ??
-                                          "This place is still in use.")
-                                        : "Florabase could not delete this geographic place.",
-                                  });
-                                });
-                            }}
-                          >
-                            Delete local place
-                          </button>
-                        </OverflowMenu>
-                      ) : undefined
-                    }
-                  />
-                  <div className="actions record-preview__actions">
-                    {!initialPlaceId && (
-                      <a
-                        className="button-link button--secondary"
-                        href={`#/geography?place=${selected.id}`}
-                      >
-                        Open details
-                      </a>
+                      </div>
+                    ) : (
+                      <h3>Geographic place not found</h3>
                     )}
-                    <a href={`#/geography?mode=sites&place=${selected.id}`}>
-                      Associated provenance sites (
-                      {selected.provenance_site_count})
-                    </a>
                   </div>
-                  <dl className="record-facts">
-                    <div>
-                      <dt>Type</dt>
-                      <dd>
-                        {placeTypeLabel(
-                          selected.place_type,
-                          selected.place_kind,
-                        )}
-                      </dd>
-                    </div>
-                    {selected.parent_id && (
-                      <div>
-                        <dt>Parent</dt>
-                        <dd>
-                          <button
-                            type="button"
-                            className="text-link"
-                            onClick={() => {
-                              if (selected.parent_id)
-                                selectPlace(selected.parent_id);
-                            }}
-                          >
-                            {places.find(
-                              (place) => place.id === selected.parent_id,
-                            )?.name ?? "Parent geographic place"}
-                          </button>
-                        </dd>
-                      </div>
-                    )}
-                    {selected.source_code && selected.source_code_type && (
-                      <div>
-                        <dt>Reference code</dt>
-                        <dd>
-                          {selected.source_code_type}: {selected.source_code}
-                        </dd>
-                      </div>
-                    )}
-                    <div>
-                      <dt>Child places</dt>
-                      <dd>
-                        {
-                          places.filter(
-                            (place) => place.parent_id === selected.id,
-                          ).length
-                        }
-                      </dd>
-                    </div>
-                  </dl>
-                  {selected.retired_at && (
-                    <p className="record-empty">
-                      Retired place; retained for historical provenance.
-                    </p>
-                  )}
-                  <StatStrip
-                    label="Direct place relationships"
-                    items={[
-                      {
-                        label: "Collection references",
-                        value: selected.direct_usage_count,
-                      },
-                      {
-                        label: "Provenance sites",
-                        value: selected.provenance_site_count,
-                      },
-                      {
-                        label: "Native ranges",
-                        value: selected.native_range_count,
-                      },
-                    ]}
-                  />
-                  {selected.place_kind === "canonical" && (
-                    <p className="record-empty">
-                      Canonical names and ancestry are read-only. Local places
-                      can be added below.
-                    </p>
-                  )}
-                  {editing && selected.place_kind === "custom" && (
-                    <TaskDialog
-                      title="Edit local place"
-                      onClose={() => {
-                        setEditing(false);
-                      }}
-                    >
-                      <form
-                        key={`${selected.id}-${selected.updated_at}`}
-                        onSubmit={submitUpdate}
-                      >
-                        <h4>Edit local place</h4>
-                        <div className="field">
-                          <FieldLabel
-                            required
-                            htmlFor="edit-geographic-place-name"
-                          >
-                            Name
-                          </FieldLabel>
-                          <input
-                            id="edit-geographic-place-name"
-                            name="name"
-                            required
-                            maxLength={255}
-                            defaultValue={selected.name}
-                            disabled={pending}
-                          />
-                        </div>
-                        <div className="field">
-                          <label htmlFor="edit-geographic-place-type">
-                            Local place type
-                          </label>
-                          <select
-                            id="edit-geographic-place-type"
-                            name="place_type"
-                            defaultValue={
-                              selected.place_type ?? "other_named_area"
-                            }
-                            disabled={pending}
-                          >
-                            <option value="city_town">City or town</option>
-                            <option value="locality">Locality</option>
-                            <option value="other_named_area">
-                              Other named area
-                            </option>
-                          </select>
-                        </div>
-                        <div className="field">
-                          <FieldLabel
-                            required
-                            htmlFor="edit-geographic-place-parent"
-                          >
-                            Parent geographic place
-                          </FieldLabel>
-                          <select
-                            id="edit-geographic-place-parent"
-                            name="parent_id"
-                            required
-                            defaultValue={selected.parent_id ?? ""}
-                            disabled={pending}
-                          >
-                            {parentOptions.map((place) => (
-                              <option value={place.id} key={place.id}>
-                                {place.display_path}
-                              </option>
-                            ))}
-                          </select>
-                          <small>
-                            This place and its descendants are excluded to
-                            prevent cycles.
-                          </small>
-                        </div>
-                        {save.status === "error" && (
-                          <div
-                            className="notice notice--error"
-                            role="alert"
-                            ref={feedback}
-                            tabIndex={-1}
-                          >
-                            {save.message}
-                          </div>
-                        )}
-                        <div className="actions">
-                          <button type="submit" disabled={pending}>
-                            Save local place
-                          </button>
-                          <button
-                            className="button--secondary"
-                            type="button"
-                            disabled={pending}
-                            onClick={() => {
-                              setEditing(false);
-                            }}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    </TaskDialog>
-                  )}
-                </article>
-              ) : (
-                <div className="empty-state">
-                  <h3>Select a geographic place</h3>
-                  <p>
-                    Choose any known level—from a broad region to a local place.
-                  </p>
-                </div>
-              )}
-            </QuickPreview>
+                )}
+              </section>
+            )}
           </div>
           {creationExpanded && (
             <TaskDialog

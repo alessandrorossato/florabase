@@ -1,5 +1,10 @@
 # UI System v1 consolidation — operator UAT
 
+**Current contract:** [Final interaction correction](final-interaction-correction/README.md)
+supersedes earlier Preview and action-menu decisions. Direct Details/Edit, creation-only menus,
+textual semantic statuses and full-width directories await final operator UAT. Earlier galleries
+below are historical evidence of their named checkpoints, not proof of the current interaction contract.
+
 31 October 2026. Candidate awaiting operator acceptance; no canonical FULL or delivery.
 This specification supersedes earlier page-specific Wave 3 layout refinements.
 

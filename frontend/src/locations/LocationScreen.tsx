@@ -1,14 +1,3 @@
-import "../components/hierarchy.css";
-import { Icon } from "../components/Icon";
-import "./hierarchy.css";
-import { ActionButton } from "../components/Action";
-import { ReferencePicker } from "../seed-lots/ReferencePicker";
-import "../harvests/collection-visual.css";
-import { FieldLabel } from "../components/FieldLabel";
-import { DirectoryTools } from "../components/DirectoryTools";
-import { DirectoryResults } from "../components/DirectoryResults";
-import { SavedViews } from "../saved-views/SavedViews";
-import { useDirectoryView } from "../saved-views/useDirectoryView";
 import {
   useEffect,
   useId,
@@ -17,18 +6,29 @@ import {
   useState,
   type SyntheticEvent,
 } from "react";
+import { ActionButton, ActionLink } from "../components/Action";
+import { LifecycleStatus } from "../components/WorkspaceUI";
+import { DirectoryResults } from "../components/DirectoryResults";
+import { DirectoryTools } from "../components/DirectoryTools";
+import { FieldLabel } from "../components/FieldLabel";
+import "../components/hierarchy.css";
+import { Icon } from "../components/Icon";
+import "../harvests/collection-visual.css";
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
+import { ReferencePicker } from "../seed-lots/ReferencePicker";
+import "./hierarchy.css";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import { Breadcrumbs, DetailHeader } from "../components/CollectionUI";
 import {
   DirectorySearch,
-  PageHeader,
-  QuickPreview,
   OverflowMenu,
+  PageHeader,
 } from "../components/ReferenceUI";
 import { TaskDialog } from "../components/TaskDialog";
+import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import {
   createLocation,
   deleteLocation,
@@ -389,9 +389,9 @@ function LocationTree({
                   <strong className="location-record-name">
                     {location.name}
                   </strong>
-                  {location.retired_at && (
-                    <span className="record-state">Retired</span>
-                  )}
+                  <LifecycleStatus
+                    state={location.retired_at ? "retired" : "active"}
+                  />
                 </span>
                 {depth >= 3 && (
                   <small
@@ -407,6 +407,26 @@ function LocationTree({
                 )}
                 <CompactUsage location={location} />
               </button>
+              <div className="ui-hierarchy-record-actions">
+                <ActionLink
+                  className="ui-directory-quick-action"
+                  icon="document"
+                  title="Open details"
+                  aria-label={`Open details ${location.name}`}
+                  href={`#/locations/${location.id}`}
+                >
+                  <span className="sr-only">Open details</span>
+                </ActionLink>
+                <ActionLink
+                  className="ui-directory-quick-action"
+                  icon="edit"
+                  title="Edit"
+                  aria-label={`Edit ${location.name}`}
+                  href={`#/locations/${location.id}?tab=edit`}
+                >
+                  <span className="sr-only">Edit</span>
+                </ActionLink>
+              </div>
             </div>
             {hasChildren && isExpanded && (
               <LocationTree
@@ -441,7 +461,12 @@ export function LocationScreen({
   const [createParentId, setCreateParentId] = useState("");
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [attempt, setAttempt] = useState(0);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(
+    Boolean(initialId) &&
+      new URLSearchParams(window.location.hash.split("?", 2)[1] ?? "").get(
+        "tab",
+      ) === "edit",
+  );
   const view = useDirectoryView("locations", () => {
     setSelectedId(null);
   });
@@ -672,7 +697,7 @@ export function LocationScreen({
         setCreateNameValue("");
         setCreateParentId("");
         closeCreation({ returnFocus: false });
-        if (initialId) window.location.hash = `#/locations/${location.id}`;
+        window.location.hash = `#/locations/${location.id}`;
         return `${location.display_path} was created and selected.`;
       },
     );
@@ -881,6 +906,7 @@ export function LocationScreen({
                   selectedId={selectedId}
                   onSelect={(id) => {
                     setSelectedId(id);
+                    window.location.hash = `#/locations/${id}`;
                     setEditing(false);
                     setSave({ status: "idle" });
                   }}
@@ -911,69 +937,7 @@ export function LocationScreen({
             </section>
           </div>
         )}
-        {!initialId ? (
-          <QuickPreview>
-            {selected ? (
-              <>
-                <h3 className="location-record-name">{selected.name}</h3>
-                <p>{selected.display_path}</p>
-                <p>
-                  {selected.retired_at ? "Retired" : "Active"} ·{" "}
-                  {selected.usage_scopes
-                    .map((scope) => scopeLabels[scope])
-                    .join(", ")}
-                </p>
-                <p>
-                  {
-                    locations.filter(
-                      (location) => location.parent_id === selected.id,
-                    ).length
-                  }{" "}
-                  child locations
-                </p>
-                <CompactUsage location={selected} comparison />
-                <div className="actions record-preview__actions">
-                  <a
-                    className="button-link"
-                    href={`#/locations/${selected.id}`}
-                  >
-                    Open details
-                  </a>
-                  <ActionButton
-                    icon="edit"
-                    type="button"
-                    className="button--secondary"
-                    onClick={() => {
-                      setSave({ status: "idle" });
-                      setEditing(true);
-                    }}
-                  >
-                    Edit
-                  </ActionButton>
-                  {!selected.retired_at && (
-                    <button
-                      type="button"
-                      className="button--secondary"
-                      onClick={() => {
-                        setCreateParentId(selected.id);
-                        setCreateNameValue("");
-                        setSave({ status: "idle" });
-                        openCreation();
-                      }}
-                    >
-                      Create child
-                    </button>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="preview-empty">
-                <h3>Select a location</h3>
-                <p>Choose a place in the hierarchy.</p>
-              </div>
-            )}
-          </QuickPreview>
-        ) : (
+        {initialId && (
           <div className="identity-panel" aria-live="polite">
             {selected ? (
               <article
@@ -994,11 +958,11 @@ export function LocationScreen({
                   }
                   status={
                     <div className="record-badges">
-                      <span
-                        className={`lifecycle-badge lifecycle-badge--${selected.retired_at ? "retired" : "active"}`}
+                      <LifecycleStatus
+                        state={selected.retired_at ? "retired" : "active"}
                       >
                         {selected.retired_at ? "Retired" : "Active"}
-                      </span>
+                      </LifecycleStatus>
                       <span
                         aria-label="Usage scopes"
                         className="record-scope-badges"

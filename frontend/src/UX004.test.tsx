@@ -130,14 +130,14 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-test("directory hierarchy renders configured covers and shares them with Quick Preview", async () => {
+test("directory covers preserve protected media and keyboard activation opens dedicated Details", async () => {
   const requested = setup();
   const user = userEvent.setup();
   render(<App />);
   const card = await screen.findByRole(
     "button",
     {
-      name: /^Quick preview Abelmoschus.*Okra Burgundy/,
+      name: /^Open details Abelmoschus.*Okra Burgundy/,
     },
     { timeout: 3000 },
   );
@@ -150,12 +150,12 @@ test("directory hierarchy renders configured covers and shares them with Quick P
     `/api/v1/botanical-identities/${identity.id}/cover-image/thumbnail`,
   );
   const noCover = screen.getByRole("button", {
-    name: /^Quick preview Acer rubrum/,
+    name: /^Open details Acer rubrum/,
   });
   expect(within(noCover).getByText("No cover image")).toBeInTheDocument();
   expect(within(noCover).queryByRole("img")).not.toBeInTheDocument();
   const externalCard = screen.getByRole("button", {
-    name: /^Quick preview Acer palmatum/,
+    name: /^Open details Acer palmatum/,
   });
   const directoryExternalImage = within(externalCard).getByRole("img");
   expect(directoryExternalImage).toHaveAttribute(
@@ -167,42 +167,23 @@ test("directory hierarchy renders configured covers and shares them with Quick P
     "no-referrer",
   );
   expect(directoryExternalImage).toHaveAttribute("loading", "lazy");
+
   card.focus();
-  expect(card).toHaveFocus();
-  expect(card).toHaveAttribute("aria-pressed", "false");
   await user.keyboard("{Enter}");
-  expect(card).toHaveAttribute("aria-pressed", "true");
-  await user.tab();
-  expect(card).not.toHaveFocus();
-  expect(card).toHaveAttribute("aria-pressed", "true");
-  const preview = screen.getByRole("complementary", { name: "Quick preview" });
+  expect(window.location.hash).toBe(`#/identities/${identity.id}`);
   expect(
-    within(preview).getByRole("link", { name: "Open details" }),
-  ).toHaveAttribute("href", `#/identities/${identity.id}`);
+    await screen.findByRole("heading", {
+      name: identity.display_label,
+      level: 2,
+    }),
+  ).toBeVisible();
   expect(
-    within(preview).getByLabelText("Active collection records"),
-  ).toHaveTextContent("Seed lots1Sowings1Plants2Plant groups0");
-  expect(within(preview).queryByRole("tablist")).not.toBeInTheDocument();
-  await user.click(
-    screen.getByRole("button", { name: /^Quick preview Acer palmatum/ }),
-  );
-  const externalImage = await within(preview).findByRole("img", {
-    name: "Cover for Acer palmatum",
-  });
-  expect(externalImage).toHaveAttribute("src", externalCover.image_url);
-  expect(externalImage).toHaveAttribute("referrerpolicy", "no-referrer");
-  expect(externalImage).toHaveAttribute("loading", "lazy");
-  expect(within(externalCard).getByRole("img")).toHaveAttribute(
-    "src",
-    externalCover.image_url,
-  );
-  expect(within(externalCard).getByRole("img")).toHaveAttribute(
-    "referrerpolicy",
-    "no-referrer",
-  );
+    screen.queryByRole("region", { name: "Identity directory" }),
+  ).not.toBeInTheDocument();
   expect(
-    requested.filter((path) => path.startsWith("/api/v1/botanical-identities")),
-  ).toEqual(["/api/v1/botanical-identities"]);
+    screen.queryByRole("complementary", { name: /preview|inspection/i }),
+  ).not.toBeInTheDocument();
+  expect(requested).toContain("/api/v1/botanical-identities");
 });
 
 test("open details, browser back and forward preserve the directory and dedicated record boundary", async () => {
@@ -211,10 +192,10 @@ test("open details, browser back and forward preserve the directory and dedicate
   render(<App />);
   await user.click(
     await screen.findByRole("button", {
-      name: /^Quick preview Abelmoschus.*Okra Burgundy/,
+      name: /^Open details Abelmoschus.*Okra Burgundy/,
     }),
   );
-  await user.click(screen.getByRole("link", { name: "Open details" }));
+
   const title = await screen.findByRole("heading", {
     level: 2,
     name: identity.display_label,
@@ -234,10 +215,12 @@ test("open details, browser back and forward preserve the directory and dedicate
     window.history.back();
   });
   const card = await screen.findByRole("button", {
-    name: /^Quick preview Abelmoschus.*Okra Burgundy/,
+    name: /^Open details Abelmoschus.*Okra Burgundy/,
   });
-  expect(card).toHaveAttribute("aria-pressed", "true");
-  expect(card).toHaveFocus();
+  expect(card).toHaveAttribute("aria-pressed", "false");
+  await waitFor(() => {
+    expect(card).toHaveFocus();
+  });
   act(() => {
     window.history.forward();
   });
@@ -249,34 +232,27 @@ test("open details, browser back and forward preserve the directory and dedicate
   ).toBeInTheDocument();
 });
 
-test("mobile card activation exposes Quick Preview before explicit detail navigation", async () => {
+test("mobile identity activation opens full Details without an empty Preview", async () => {
   setup("#/identities", true);
   const user = userEvent.setup();
   render(<App />);
   await user.click(
     await screen.findByRole("button", {
-      name: /^Quick preview Abelmoschus.*Okra Burgundy/,
+      name: /^Open details Abelmoschus.*Okra Burgundy/,
     }),
   );
-  const preview = await screen.findByRole("complementary", {
-    name: "Botanical identity inspection",
-  });
-  expect(
-    within(preview).getByRole("button", { name: "Start sowing" }),
-  ).toBeInTheDocument();
-  expect(
-    within(preview).getByRole("button", { name: "Record harvest" }),
-  ).toBeInTheDocument();
-  await user.click(within(preview).getByRole("link", { name: "Open details" }));
   expect(
     await screen.findByRole("heading", {
-      level: 2,
       name: identity.display_label,
+      level: 2,
     }),
-  ).toBeInTheDocument();
+  ).toBeVisible();
   expect(window.location.hash).toBe(`#/identities/${identity.id}`);
   expect(
-    screen.queryByRole("complementary", { name: "Quick preview" }),
+    screen.queryByRole("region", { name: "Identity directory" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("complementary", { name: /preview|inspection/i }),
   ).not.toBeInTheDocument();
 });
 
@@ -457,7 +433,7 @@ test("broken thumbnails have an intentional local fallback", async () => {
   setup();
   render(<App />);
   const card = await screen.findByRole("button", {
-    name: /^Quick preview Abelmoschus.*Okra Burgundy/,
+    name: /^Open details Abelmoschus.*Okra Burgundy/,
   });
   fireEvent.error(within(card).getByRole("img"));
   expect(within(card).queryByRole("img")).not.toBeInTheDocument();
@@ -468,7 +444,7 @@ test("broken configured external covers fall back inside their directory card", 
   setup();
   render(<App />);
   const card = await screen.findByRole("button", {
-    name: /^Quick preview Acer palmatum/,
+    name: /^Open details Acer palmatum/,
   });
   fireEvent.error(within(card).getByRole("img"));
   expect(within(card).queryByRole("img")).not.toBeInTheDocument();
@@ -532,18 +508,18 @@ test("edit validation stays linked to the field and retains contextual help", as
   expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled();
 });
 
-test("Identity Quick Preview Add plant opens the normal direct Plant form with identity prefilled", async () => {
+test("Identity creation menu Add plant reaches the normal form with identity prefilled", async () => {
   setup();
   const user = userEvent.setup();
   render(<App />);
   await user.click(
     await screen.findByRole("button", {
-      name: /^Quick preview Abelmoschus.*Okra Burgundy/,
+      name: `Create or record for ${identity.display_label}`,
     }),
   );
-  const action = within(
-    screen.getByRole("complementary", { name: "Quick preview" }),
-  ).getByRole("link", { name: "Add plant" });
+  const action = screen.getByRole("link", {
+    name: `Add plant for ${identity.display_label}`,
+  });
   expect(action).toHaveAttribute(
     "href",
     `#/plants?action=create&identity=${identity.id}&kind=plant`,
@@ -569,4 +545,25 @@ test("Identity Quick Preview Add plant opens the normal direct Plant form with i
       )
       .every(([, init]) => !init?.method || init.method === "GET"),
   ).toBe(true);
+});
+
+test("direct identity Edit reopens on browser Back after closing the full-page editor", async () => {
+  setup(`#/identities/${identity.id}?tab=edit`);
+  const user = userEvent.setup();
+  render(<App />);
+  expect(await screen.findByLabelText("Scientific name")).toHaveValue(
+    identity.scientific_name,
+  );
+  await user.click(screen.getByRole("button", { name: "Close editor" }));
+  expect(await screen.findByRole("tab", { name: "Overview" })).toBeVisible();
+  act(() => {
+    window.history.back();
+  });
+  expect(await screen.findByLabelText("Scientific name")).toHaveValue(
+    identity.scientific_name,
+  );
+  expect(window.location.hash).toBe(`#/identities/${identity.id}?tab=edit`);
+  expect(
+    screen.queryByRole("region", { name: "Identity directory" }),
+  ).not.toBeInTheDocument();
 });

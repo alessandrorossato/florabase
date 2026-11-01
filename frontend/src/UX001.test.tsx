@@ -391,10 +391,15 @@ test("Botanical identity directory uses bounded local thumbnails and configured 
     name: "Identity directory",
   });
   await within(directory).findByRole("button", {
-    name: /^Quick preview Acer rubrum/,
+    name: /^Open details Acer rubrum/,
   });
+  await userEvent.click(
+    screen.getByRole("button", {
+      name: `Create or record for ${externalCoverIdentity.display_label}`,
+    }),
+  );
   expect(
-    within(directory).getByRole("link", {
+    screen.getByRole("link", {
       name: `Add seed lot for ${externalCoverIdentity.display_label}`,
     }),
   ).toHaveAttribute(
@@ -402,12 +407,12 @@ test("Botanical identity directory uses bounded local thumbnails and configured 
     `#/seeds?action=create&identity=${externalCoverIdentity.id}`,
   );
   expect(
-    within(directory).getByRole("button", {
+    screen.getByRole("button", {
       name: `Start sowing for ${externalCoverIdentity.display_label}`,
     }),
   ).toBeVisible();
   expect(
-    within(directory).getByRole("button", {
+    screen.getByRole("button", {
       name: `Record harvest for ${externalCoverIdentity.display_label}`,
     }),
   ).toBeVisible();
@@ -644,6 +649,9 @@ test("Botanical identity edit and guarded deletion stay explicit", async () => {
     }),
   );
   expect(
-    await screen.findByRole("heading", { name: "Select a botanical identity" }),
+    await screen.findByRole("region", { name: "Identity directory" }),
   ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("complementary", { name: /preview|inspection/i }),
+  ).not.toBeInTheDocument();
 });

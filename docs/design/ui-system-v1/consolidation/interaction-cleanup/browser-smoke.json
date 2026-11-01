@@ -1,0 +1,138 @@
+{
+  "previewAndMenu": [
+    {
+      "route": "seeds",
+      "preview": true,
+      "rowFocus": true,
+      "menuEscapeFocus": true,
+      "actions": "Start sowing\nOpen details\nEdit"
+    },
+    {
+      "route": "sowings",
+      "preview": true,
+      "rowFocus": true,
+      "menuEscapeFocus": true,
+      "actions": "Create Plant\nGermination\nOpen details\nEdit"
+    },
+    {
+      "route": "plants",
+      "preview": true,
+      "rowFocus": true,
+      "menuEscapeFocus": true,
+      "actions": "Open details\nEdit"
+    },
+    {
+      "route": "harvests",
+      "preview": true,
+      "rowFocus": true,
+      "menuEscapeFocus": true,
+      "actions": "Open details\nEdit"
+    },
+    {
+      "route": "harvests?tab=stored-material",
+      "preview": true,
+      "rowFocus": true,
+      "menuEscapeFocus": true,
+      "actions": "Details\nPrint label"
+    },
+    {
+      "route": "suppliers",
+      "preview": true,
+      "rowFocus": true,
+      "menuEscapeFocus": true,
+      "actions": "Open details\nEdit"
+    },
+    {
+      "route": "orders",
+      "preview": true,
+      "rowFocus": true,
+      "menuEscapeFocus": true,
+      "actions": "Open details\nEdit"
+    },
+    {
+      "route": "identities",
+      "preview": true,
+      "rowFocus": true,
+      "menuEscapeFocus": true,
+      "actions": "Details\nEdit\nAdd seed lot\nAdd plant\nStart sowing for Acer palmatum\nRecord harvest for Acer palmatum"
+    }
+  ],
+  "details": [
+    {
+      "route": "seeds",
+      "url": "http://localhost:15174/#/seeds/01a18ba5-0d14-77b4-9eec-7f524d93acac"
+    },
+    {
+      "route": "sowings",
+      "url": "http://localhost:15174/#/sowings/01a18ba5-0d50-72d2-a83c-4854f707a16e"
+    },
+    {
+      "route": "plants",
+      "url": "http://localhost:15174/#/plants/01a18ba5-0d68-728f-9b1c-0f35efafaf38"
+    },
+    {
+      "route": "harvests",
+      "url": "http://localhost:15174/#/harvests/01a18ba5-0e58-74ca-b97c-9346b84ede01"
+    },
+    {
+      "route": "harvests?tab=stored-material",
+      "url": "http://localhost:15174/#/harvests/01a18ba5-0e53-777a-b73f-e13a6ce1edf6?inventory=01a18ba5-0e56-71cb-b589-ad647e464839"
+    },
+    {
+      "route": "suppliers",
+      "url": "http://localhost:15174/#/suppliers/01a1899a-1bfa-7680-b457-e0b47f036795"
+    },
+    {
+      "route": "orders",
+      "url": "http://localhost:15174/#/orders/01a1899a-1c03-70fd-bf9c-443cead2b68f"
+    },
+    {
+      "route": "identities",
+      "url": "http://localhost:15174/#/identities/01a18ba5-0cc5-7559-8f56-555d9126388b"
+    }
+  ],
+  "edit": [
+    {
+      "route": "seeds",
+      "url": "http://localhost:15174/#/seeds/01a18ba5-0d14-77b4-9eec-7f524d93acac?tab=edit",
+      "dialogs": 1,
+      "preview": 0
+    },
+    {
+      "route": "sowings",
+      "url": "http://localhost:15174/#/sowings/01a18ba5-0d50-72d2-a83c-4854f707a16e?tab=edit",
+      "dialogs": 1,
+      "preview": 0
+    },
+    {
+      "route": "plants",
+      "url": "http://localhost:15174/#/plants/01a18ba5-0d68-728f-9b1c-0f35efafaf38?tab=edit",
+      "dialogs": 1,
+      "preview": 0
+    },
+    {
+      "route": "harvests",
+      "url": "http://localhost:15174/#/harvests/01a18ba5-0e58-74ca-b97c-9346b84ede01?action=edit",
+      "dialogs": 1,
+      "preview": 0
+    },
+    {
+      "route": "suppliers",
+      "url": "http://localhost:15174/#/suppliers/01a1899a-1bfa-7680-b457-e0b47f036795?tab=edit",
+      "dialogs": 1,
+      "preview": 0
+    },
+    {
+      "route": "orders",
+      "url": "http://localhost:15174/#/orders/01a1899a-1c03-70fd-bf9c-443cead2b68f?tab=edit",
+      "dialogs": 1,
+      "preview": 0
+    },
+    {
+      "route": "identities",
+      "url": "http://localhost:15174/#/identities/01a18ba5-0cc5-7559-8f56-555d9126388b?tab=edit",
+      "dialogs": 0,
+      "preview": 0
+    }
+  ]
+}

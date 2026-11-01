@@ -1,34 +1,7 @@
-import { DirectoryInspectorPlaceholder } from "../components/DirectoryPage";
-import { useDirectoryPagination } from "../components/useDirectoryPagination";
-import { DirectoryWorkspace } from "../components/DirectoryPage";
-import {
-  DirectoryRecordContent,
-  DirectoryTrigger,
-} from "../components/DirectoryPage";
-import {
-  DirectoryInspector,
-  DirectoryRecordActions,
-} from "../components/DirectoryPage";
-import "./directory.css";
-import { ActionButton } from "../components/Action";
-import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
-import { RecordIdentities } from "../components/recordPresentation";
-import "../components/collection-page.css";
-import "./collection-visual.css";
-import { useEditRoute } from "../components/useEditRoute";
-import {
-  closeCollectionPage,
-  collectionPageParent,
-  openCollectionPage,
-  setRecordRoute,
-} from "../components/recordNavigation";
-import { DirectoryTools } from "../components/DirectoryTools";
-import { DirectoryResults } from "../components/DirectoryResults";
-import { SavedViews } from "../saved-views/SavedViews";
-import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { useContext, useEffect, useId, useRef, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
+import { ActionButton } from "../components/Action";
 import {
   Breadcrumbs,
   DetailContext,
@@ -36,24 +9,43 @@ import {
   WorkspaceIntro,
 } from "../components/CollectionUI";
 import {
+  DirectoryRecordActions,
+  DirectoryRecordContent,
+  DirectoryTrigger,
+  DirectoryWorkspace,
+} from "../components/DirectoryPage";
+import { DirectoryResults } from "../components/DirectoryResults";
+import { DirectoryTools } from "../components/DirectoryTools";
+import {
   BotanicalName,
   DirectorySearch,
-  QuickPreview,
   OverflowMenu,
   PageHeader,
 } from "../components/ReferenceUI";
 import { TaskDialog } from "../components/TaskDialog";
+import "../components/collection-page.css";
+import {
+  closeCollectionPage,
+  collectionPageParent,
+  openCollectionPage,
+  setRecordRoute,
+} from "../components/recordNavigation";
+import { RecordIdentities } from "../components/recordPresentation";
+import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
+import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { useEditRoute } from "../components/useEditRoute";
 import { formatPartialDate } from "../events/eventData";
 import { PhotosSection } from "../photos/PhotosSection";
 import { RecordVisual } from "../photos/RecordVisual";
-import {
-  StoredMaterialSection,
-  StoredMaterialDirectory,
-} from "./StoredMaterial";
-import { BotanicalIdentityFilter } from "./BotanicalIdentityFilter";
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
 import type { ReferenceChoice } from "../seed-lots/ReferencePicker";
-import { inventoryError } from "./inventoryApi";
+import { BotanicalIdentityFilter } from "./BotanicalIdentityFilter";
 import { HarvestForm } from "./HarvestForm";
+import {
+  StoredMaterialDirectory,
+  StoredMaterialSection,
+} from "./StoredMaterial";
 import {
   deleteHarvest,
   getHarvest,
@@ -64,6 +56,9 @@ import {
   quantityLabel,
   type Harvest,
 } from "./api";
+import "./collection-visual.css";
+import "./directory.css";
+import { inventoryError } from "./inventoryApi";
 
 function directoryMaterialSummary(harvest: Harvest): string {
   const labels = materialSummary(harvest).split(" · ");
@@ -133,7 +128,6 @@ export function HarvestScreen({
   const auth = useAuth();
   const recordIdentities = useContext(RecordIdentities);
   const headingId = useId();
-  const previewTrigger = useRef<HTMLButtonElement>(null);
   const directoryList = useRef<HTMLUListElement>(null);
   const [records, setRecords] = useState<Harvest[] | null>(null);
   const [detail, setDetail] = useState<Harvest | null>(null);
@@ -210,7 +204,6 @@ export function HarvestScreen({
   const pagination = useDirectoryPagination(matching, pageFilterKey);
   const { visible: pageRecords } = pagination;
   useCollectionPageReturnFocus(Boolean(records) && !creating && !initialId);
-  const selected = matching.find((record) => record.id === selectedId);
   const [backgroundId, setBackgroundId] = useState<string | undefined>(
     undefined,
   );
@@ -689,9 +682,8 @@ export function HarvestScreen({
                           type="button"
 
                           aria-pressed={record.id === selectedId}
-                          onClick={(event) => {
-                            previewTrigger.current = event.currentTarget;
-                            setSelectedId(record.id);
+                          onClick={() => {
+                            setRecordRoute(`#/harvests/${record.id}`);
                           }}
                         >
                           <DirectoryRecordContent
@@ -735,69 +727,6 @@ export function HarvestScreen({
                   </ul>
                 )}
               </div>
-              {selected ? (
-                <DirectoryInspector
-                  mode="side"
-                  title="Harvest inspection"
-                  returnFocusTo={previewTrigger}
-                  fallbackFocusTo={directoryList}
-                  onClose={() => {
-                    setSelectedId(null);
-                  }}
-                >
-                  <QuickPreview compact>
-                    <Visual harvest={selected} />
-                    <h3>{selected.display_title}</h3>
-                    <p>
-                      <BotanicalName
-                        label={selected.source.botanical_identity.display_label}
-                        scientificName={
-                          recordIdentities.get(
-                            selected.source.botanical_identity.id,
-                          )?.scientific_name
-                        }
-                      />
-                    </p>
-                    <dl className="record-preview__facts">
-                      <div>
-                        <dt>Source</dt>
-                        <dd>
-                          <a href={sourceHref(selected)}>
-                            {selected.source.display_name}
-                          </a>
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Date</dt>
-                        <dd>{formatPartialDate(selected.occurred_on)}</dd>
-                      </div>
-                    </dl>
-                    <p>{directoryMaterialSummary(selected)}</p>
-                    <div className="actions record-preview__actions">
-                      <a
-                        className="button-link"
-                        href={`#/harvests/${selected.id}`}
-                      >
-                        Open details
-                      </a>
-                      <ActionButton
-                        icon="edit"
-                        type="button"
-                        className="button--secondary"
-                        onClick={() => {
-                          openEditor(selected);
-                        }}
-                      >
-                        Edit
-                      </ActionButton>
-                    </div>
-                  </QuickPreview>
-                </DirectoryInspector>
-              ) : matching.length > 0 ? (
-                <DirectoryInspectorPlaceholder title="Select a Harvest">
-                  Choose a Harvest row to preview its details.
-                </DirectoryInspectorPlaceholder>
-              ) : null}
             </DirectoryWorkspace>
           )}
         </>

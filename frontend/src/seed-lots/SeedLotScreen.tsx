@@ -1,99 +1,68 @@
-import { DirectoryInspectorPlaceholder } from "../components/DirectoryPage";
-import { DirectoryWorkspace } from "../components/DirectoryPage";
-import { useDirectoryPagination } from "../components/useDirectoryPagination";
-import { StatusBadge } from "../components/WorkspaceUI";
-import {
-  DirectoryPage,
-  DirectoryViewSwitcher,
-  DirectoryRecords,
-  DirectoryTrigger,
-  DirectoryRecordContent,
-  DirectoryRow,
-  DirectoryCard,
-  DirectoryInspector,
-  DirectoryRecordActions,
-} from "../components/DirectoryPage";
-import { useDirectoryPresentation } from "../components/directoryPresentation";
-import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
-import { ActionButton, ActionLink } from "../components/Action";
-import "../components/collection-page.css";
-import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
-import "../components/collection-directory.css";
-import { DetailEmptyState } from "../components/DetailEmptyState";
-import { FieldLabel } from "../components/FieldLabel";
-import "../components/directory-preview.css";
-import { useEditRoute } from "../components/useEditRoute";
-import "./seed-refinement.css";
-import { EditWorkspace } from "../components/EditWorkspace";
-import { TaskDialog } from "../components/TaskDialog";
-import {
-  DirectoryTools,
-  DirectoryFilterSelect,
-} from "../components/DirectoryTools";
-import { UpcomingActivities } from "../schedule/UpcomingActivities";
-import { PurchaseContextDialog } from "../orders/PurchaseContext";
-import {
-  applyPurchase,
-  previewPurchase,
-  createPurchaseLot,
-  type AcquisitionContext,
-  type PurchaseApply,
-} from "../orders/purchaseApi";
-import { OrderPicker } from "../orders/OrderPicker";
-import { getOrder, type OrderDetail } from "../orders/api";
-import { DirectoryResults } from "../components/DirectoryResults";
-import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
-import { useBulkSelection } from "../bulk/useBulkSelection";
-import { SavedViews } from "../saved-views/SavedViews";
-import { useDirectoryView } from "../saved-views/useDirectoryView";
-import { ConversionHistory } from "../harvests/ConversionHistory";
-import { usePublishRecordIdentities } from "../components/recordPresentation";
-import { useRecordName } from "../components/recordPresentation";
-import { FormSections } from "../components/FormSections";
-import { firstValidationField } from "../components/formValidation";
 import {
   useEffect,
   useMemo,
   useRef,
   useState,
-  type ReactNode,
   type MouseEventHandler,
+  type ReactNode,
   type RefObject,
   type SyntheticEvent,
 } from "react";
+import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
+import { useBulkSelection } from "../bulk/useBulkSelection";
+import { ActionButton, ActionLink } from "../components/Action";
+import { DetailEmptyState } from "../components/DetailEmptyState";
+import {
+  DirectoryCard,
+  DirectoryPage,
+  DirectoryRecordActions,
+  DirectoryRecordContent,
+  DirectoryRecords,
+  DirectoryRow,
+  DirectoryTrigger,
+  DirectoryViewSwitcher,
+  DirectoryWorkspace,
+} from "../components/DirectoryPage";
+import { DirectoryResults } from "../components/DirectoryResults";
+import {
+  DirectoryFilterSelect,
+  DirectoryTools,
+} from "../components/DirectoryTools";
+import { EditWorkspace } from "../components/EditWorkspace";
+import { FieldLabel } from "../components/FieldLabel";
+import { FormSections } from "../components/FormSections";
+import { TaskDialog } from "../components/TaskDialog";
+import { LifecycleStatus, StatusBadge } from "../components/WorkspaceUI";
+import "../components/collection-directory.css";
+import "../components/collection-page.css";
+import { useDirectoryPresentation } from "../components/directoryPresentation";
+import { firstValidationField } from "../components/formValidation";
+import {
+  usePublishRecordIdentities,
+  useRecordName,
+} from "../components/recordPresentation";
+import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
+import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { useEditRoute } from "../components/useEditRoute";
+import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
+import { ConversionHistory } from "../harvests/ConversionHistory";
+import { OrderPicker } from "../orders/OrderPicker";
+import { PurchaseContextDialog } from "../orders/PurchaseContext";
+import { getOrder, type OrderDetail } from "../orders/api";
+import {
+  applyPurchase,
+  createPurchaseLot,
+  previewPurchase,
+  type AcquisitionContext,
+  type PurchaseApply,
+} from "../orders/purchaseApi";
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
+import { UpcomingActivities } from "../schedule/UpcomingActivities";
+import "./seed-refinement.css";
 
 import { ApiError } from "../auth/api";
-import { labelComposerHref } from "../labels/labelData";
 import { useAuth } from "../auth/context";
-import { useCreationDisclosure } from "../components/useCreationDisclosure";
-import {
-  BotanicalName,
-  DirectorySearch,
-  QuickPreview,
-} from "../components/ReferenceUI";
-import {
-  setRecordRoute,
-  openCollectionPage,
-  closeCollectionPage,
-} from "../components/recordNavigation";
-import {
-  Breadcrumbs,
-  CollectionCard,
-  DetailHeader,
-  DetailContext,
-  DetailTabs,
-  WorkspaceIntro,
-} from "../components/CollectionUI";
-import { FieldHelp } from "../components/ContextualHelp";
-import { LineagePanel } from "../lineage/LineagePanel";
-import { PhotosSection } from "../photos/PhotosSection";
-import { RecordVisual } from "../photos/RecordVisual";
-import type { PrimaryPhoto } from "../photos/api";
-import { listSowings, type SowingResponse } from "../sowings/api";
-import {
-  listProvenanceSites,
-  type ProvenanceSiteResponse,
-} from "../provenance-sites/api";
 import {
   conflictExistingId,
   createBotanicalIdentity,
@@ -103,11 +72,29 @@ import {
   type BotanicalIdentityResponse,
 } from "../botanical-identities/api";
 import {
+  Breadcrumbs,
+  CollectionCard,
+  DetailContext,
+  DetailHeader,
+  DetailTabs,
+  WorkspaceIntro,
+} from "../components/CollectionUI";
+import { FieldHelp } from "../components/ContextualHelp";
+import { BotanicalName, DirectorySearch } from "../components/ReferenceUI";
+import {
+  closeCollectionPage,
+  openCollectionPage,
+  setRecordRoute,
+} from "../components/recordNavigation";
+import { useCreationDisclosure } from "../components/useCreationDisclosure";
+import {
   createGeographicPlace,
   geographyValidationMessages,
   listGeographicPlaces,
   type GeographicPlaceResponse,
 } from "../geographic-places/api";
+import { labelComposerHref } from "../labels/labelData";
+import { LineagePanel } from "../lineage/LineagePanel";
 import {
   createLocation,
   listLocations,
@@ -115,12 +102,22 @@ import {
   locationValidationMessages,
   type LocationResponse,
 } from "../locations/api";
+import { PhotosSection } from "../photos/PhotosSection";
+import { RecordVisual } from "../photos/RecordVisual";
+import type { PrimaryPhoto } from "../photos/api";
+import {
+  listProvenanceSites,
+  type ProvenanceSiteResponse,
+} from "../provenance-sites/api";
+import { listSowings, type SowingResponse } from "../sowings/api";
 import {
   createSupplier,
   listSuppliers,
   supplierValidationMessages,
   type SupplierResponse,
 } from "../suppliers/api";
+import { PartialDateField } from "./PartialDateField";
+import { ReferencePicker } from "./ReferencePicker";
 import {
   createSeedLot,
   listSeedLots,
@@ -133,8 +130,6 @@ import {
   type SeedLotResponse,
   type SeedLotSourceKind,
 } from "./api";
-import { PartialDateField } from "./PartialDateField";
-import { ReferencePicker } from "./ReferencePicker";
 
 type InventoryState =
   | { status: "loading" }
@@ -272,127 +267,6 @@ function quantityLabel(lot: SeedLotResponse): string {
 
 function inventoryLabel(lot: SeedLotResponse): string {
   return lot.lifecycle === "active" ? "Remaining" : "Recorded quantity";
-}
-
-function SeedLotPreview({
-  lot,
-  onOpen,
-  onEdit,
-}: {
-  lot: SeedLotResponse;
-  onOpen: () => void;
-  onEdit: MouseEventHandler<HTMLButtonElement>;
-}) {
-  const recordName = useRecordName();
-
-  return (
-    <QuickPreview compact>
-      <RecordVisual
-        showSource
-        photo={lot.primary_photo ?? null}
-        label={recordName(lot, "Seed lot")}
-        compact
-
-        identity={lot.botanical_identity}
-        kind={"seed"}
-      />
-      <p className="record-preview__type">Seed lot</p>
-      <h3>{recordName(lot, "Unlabelled seed lot")}</h3>
-      <p className="seed-preview__identity">
-        <a href={`#/identities/${lot.botanical_identity.id}`}>
-          {lot.botanical_identity.display_label}
-        </a>
-      </p>
-      <div className="seed-preview__inventory">
-        <span>{inventoryLabel(lot)}</span>
-        <strong>{quantityLabel(lot)}</strong>
-        {lot.lifecycle !== "active" && (
-          <small>
-            This lot is {lifecycleLabels[lot.lifecycle].toLowerCase()}.
-          </small>
-        )}
-      </div>
-      <dl className="record-preview__facts">
-        <div>
-          <dt>Source</dt>
-          <dd>
-            {sourceLabels[lot.source_kind]}
-            {lot.source_detail ? ` · ${lot.source_detail}` : ""}
-          </dd>
-        </div>
-        <div>
-          <dt>Material provenance</dt>
-          <dd>
-            {lot.material_provenance ? (
-              <a href={`#/geography?place=${lot.material_provenance.id}`}>
-                {lot.material_provenance.display_path}
-              </a>
-            ) : (
-              "Not recorded"
-            )}
-          </dd>
-        </div>
-        {lot.order && (
-          <div>
-            <dt>Order</dt>
-            <dd>
-              <a href={`#/orders/${lot.order.id}`}>
-                {lot.order.order_reference ?? "Purchase order"}
-              </a>
-            </dd>
-          </div>
-        )}
-
-        <div>
-          <dt>Status</dt>
-          <dd>{lifecycleLabels[lot.lifecycle]}</dd>
-        </div>
-        <div>
-          <dt>Storage</dt>
-          <dd>
-            {lot.location ? (
-              <a href={`#/locations/${lot.location.id}`}>
-                {lot.location.display_path}
-              </a>
-            ) : (
-              "Not recorded"
-            )}
-          </dd>
-        </div>
-        <div>
-          <dt>Supplier</dt>
-          <dd>
-            {lot.supplier ? (
-              <a href={`#/suppliers/${lot.supplier.id}`}>{lot.supplier.name}</a>
-            ) : (
-              "Not recorded"
-            )}
-          </dd>
-        </div>
-      </dl>
-      <div className="actions record-preview__actions seed-preview__actions">
-        {lot.lifecycle === "active" && (
-          <a
-            className="button-link"
-            href={`#/sowings?action=start&seedLot=${lot.id}`}
-          >
-            Start sowing
-          </a>
-        )}
-        <button className="button--secondary" type="button" onClick={onOpen}>
-          Open details
-        </button>
-        <ActionButton
-          icon="edit"
-          className="button--secondary"
-          type="button"
-          onClick={onEdit}
-        >
-          Edit
-        </ActionButton>
-      </div>
-    </QuickPreview>
-  );
 }
 
 function dateLabel(date: PartialDate | null): string {
@@ -557,11 +431,9 @@ function Detail({
         }
         status={
           <>
-            <span
-              className={`lifecycle-badge lifecycle-badge--${lot.lifecycle}`}
-            >
+            <LifecycleStatus state={lot.lifecycle}>
               {lifecycleLabels[lot.lifecycle]}
-            </span>
+            </LifecycleStatus>
             {lot.location && (
               <a href={`#/locations/${lot.location.id}`}>
                 {lot.location.display_path}
@@ -629,11 +501,9 @@ function Detail({
               <div className="seed-summary-lifecycle">
                 <dt>Lifecycle</dt>
                 <dd>
-                  <span
-                    className={`lifecycle-badge lifecycle-badge--${lot.lifecycle}`}
-                  >
+                  <LifecycleStatus state={lot.lifecycle}>
                     {lifecycleLabels[lot.lifecycle]}
-                  </span>
+                  </LifecycleStatus>
                 </dd>
               </div>
               <div className="seed-summary-quantity">
@@ -2176,187 +2046,189 @@ export function SeedLotScreen({
             <DirectoryWorkspace
               className={
                 detailOpen || (editing && !edit.modal)
-                  ? "seed-master-detail operational-layout is-detail-view"
+                  ? "is-detail-view"
                   : undefined
               }
             >
-              {inventory.status === "ready" && (
-                <DirectoryResults
-                  count={filtered.length}
-                  total={lots.length}
-                  pagination={pagination}
-                  actions={
-                    <BulkSelect
-                      selection={bulk}
-                      visible={bulkChoices}
-                      onStart={() => {
-                        setSelectedId(null);
-                        setDetailOpen(false);
-                      }}
-                    />
-                  }
-                />
-              )}
-              <section
-                className="seed-master"
-                aria-labelledby="seed-inventory-title"
-              >
-                <h3 className="sr-only" id="seed-inventory-title">
-                  Seed lot inventory
-                </h3>
-                <BulkToolbar
-                  selection={bulk}
-                  visible={bulkChoices}
-                  onSuccess={() => {
-                    setSelectedId(null);
-                    setDetailOpen(false);
-                    setAttempt((value) => value + 1);
-                  }}
-                />
-                {lots.length === 0 ? (
-                  <div className="empty-state">
-                    <h3>No seeds recorded yet</h3>
-                    <p>
-                      Add a seed lot with only its botanical identity;
-                      everything unknown can remain unknown.
-                    </p>
-                  </div>
-                ) : visible.length === 0 ? (
-                  <div className="empty-state">
-                    <h3>No matching seed lots</h3>
-                    <p>
-                      Try another search or lifecycle view. Historical records
-                      remain available under History or All.
-                    </p>
-                  </div>
-                ) : (
-                  <DirectoryRecords
-                    view={presentation.view}
-                    label="Seed inventory"
-                    listRef={directoryList}
-                  >
-                    {visible.map((lot, bulkIndex) => (
-                      <DirectoryItem
-                        onClick={(event) => {
-                          bulk.recordClick(event, bulkChoices[bulkIndex]);
+              {!(detailOpen || (editing && !edit.modal)) &&
+                inventory.status === "ready" && (
+                  <DirectoryResults
+                    count={filtered.length}
+                    total={lots.length}
+                    pagination={pagination}
+                    actions={
+                      <BulkSelect
+                        selection={bulk}
+                        visible={bulkChoices}
+                        onStart={() => {
+                          setSelectedId(null);
+                          setDetailOpen(false);
                         }}
-                        key={lot.id}
-                        selected={
-                          bulk.active
-                            ? bulk.checked({ kind: "seed_lot", id: lot.id })
-                            : selectedId === lot.id
-                        }
-                      >
-                        <BulkCheckbox
-                          selection={bulk}
-                          choice={bulkChoices[bulkIndex]}
-                        />
-                        <DirectoryTrigger
-                          type="button"
-                          className="ui-directory-trigger"
-                          description={`${lifecycleLabels[lot.lifecycle]} · Open Quick Preview`}
-                          aria-pressed={selectedId === lot.id}
-                          onClick={(event) => {
-                            if (bulk.recordClick(event, bulkChoices[bulkIndex]))
-                              return;
-                            if (creationExpanded)
-                              closeCreation({ returnFocus: false });
-                            selectedTrigger.current = event.currentTarget;
-                            setSelectedId(lot.id);
-                            setDetailOpen(false);
-                            setEditing(false);
-                            setSave({ status: "idle" });
-                          }}
-                        >
-                          <DirectoryRecordContent
-                            visual={
-                              <RecordVisual
-                                showSource={presentation.view === "gallery"}
-                                photo={lot.primary_photo ?? null}
-                                label={recordName(lot, "Seed lot")}
-                                compact
-
-                                identity={lot.botanical_identity}
-                                kind={"seed"}
-                              />
-                            }
-                            name={<>{recordName(lot, "Unlabelled seed lot")}</>}
-                            secondary={
-                              <>
-                                <BotanicalName
-                                  label={lot.botanical_identity.display_label}
-                                  scientificName={scientificNames.get(
-                                    lot.botanical_identity_id,
-                                  )}
-                                />
-                              </>
-                            }
-                            summary={
-                              <>
-                                <strong>
-                                  {quantityLabel(lot)}
-                                  {lot.quantity && lot.lifecycle === "active"
-                                    ? " remaining"
-                                    : ""}
-                                </strong>
-                                {lot.lifecycle !== "active" && (
-                                  <small>Recorded quantity</small>
-                                )}
-                              </>
-                            }
-                            status={
-                              lot.lifecycle === "active" ? (
-                                <StatusBadge compactState="active">
-                                  Active
-                                </StatusBadge>
-                              ) : (
-                                <>
-                                  <span
-                                    className={`lifecycle-badge lifecycle-badge--${lot.lifecycle}`}
-                                  >
-                                    {lifecycleLabels[lot.lifecycle]}
-                                  </span>
-                                </>
-                              )
-                            }
-                          />
-                        </DirectoryTrigger>
-                        <DirectoryRecordActions
-                          label={recordName(lot, "Unlabelled seed lot")}
-                          extraActions={
-                            lot.lifecycle === "active" ? (
-                              <ActionLink
-                                className="ui-directory-quick-action"
-                                icon="sprout"
-                                aria-label={`Start sowing from ${recordName(lot, "Unlabelled seed lot")}`}
-                                title="Start sowing"
-                                href={`#/sowings?action=start&seedLot=${lot.id}`}
-                              >
-                                <span className="sr-only">Start sowing</span>
-                              </ActionLink>
-                            ) : undefined
-                          }
-                          onDetails={(trigger) => {
-                            selectedTrigger.current = trigger;
-                            setSelectedId(lot.id);
-                            setDetailOpen(true);
-                            setRecordRoute(`#/seeds/${lot.id}`);
-                            setEditing(false);
-                          }}
-                          onEdit={(trigger) => {
-                            startEdit(lot, trigger);
-                          }}
-                        />
-                      </DirectoryItem>
-                    ))}
-                  </DirectoryRecords>
+                      />
+                    }
+                  />
                 )}
-              </section>
-              {(creationExpanded ||
-                editing ||
-                detailOpen ||
-                visible.length > 0 ||
-                visible.some((lot) => lot.id === selectedId)) && (
+              {!(detailOpen || (editing && !edit.modal)) && (
+                <section
+                  className="seed-master"
+                  aria-labelledby="seed-inventory-title"
+                >
+                  <h3 className="sr-only" id="seed-inventory-title">
+                    Seed lot inventory
+                  </h3>
+                  <BulkToolbar
+                    selection={bulk}
+                    visible={bulkChoices}
+                    onSuccess={() => {
+                      setSelectedId(null);
+                      setDetailOpen(false);
+                      setAttempt((value) => value + 1);
+                    }}
+                  />
+                  {lots.length === 0 ? (
+                    <div className="empty-state">
+                      <h3>No seeds recorded yet</h3>
+                      <p>
+                        Add a seed lot with only its botanical identity;
+                        everything unknown can remain unknown.
+                      </p>
+                    </div>
+                  ) : visible.length === 0 ? (
+                    <div className="empty-state">
+                      <h3>No matching seed lots</h3>
+                      <p>
+                        Try another search or lifecycle view. Historical records
+                        remain available under History or All.
+                      </p>
+                    </div>
+                  ) : (
+                    <DirectoryRecords
+                      view={presentation.view}
+                      label="Seed inventory"
+                      listRef={directoryList}
+                    >
+                      {visible.map((lot, bulkIndex) => (
+                        <DirectoryItem
+                          onClick={(event) => {
+                            bulk.recordClick(event, bulkChoices[bulkIndex]);
+                          }}
+                          key={lot.id}
+                          selected={
+                            bulk.active
+                              ? bulk.checked({ kind: "seed_lot", id: lot.id })
+                              : selectedId === lot.id
+                          }
+                        >
+                          <BulkCheckbox
+                            selection={bulk}
+                            choice={bulkChoices[bulkIndex]}
+                          />
+                          <DirectoryTrigger
+                            type="button"
+                            className="ui-directory-trigger"
+                            description={`${lifecycleLabels[lot.lifecycle]} · Open details`}
+                            aria-pressed={selectedId === lot.id}
+                            onClick={(event) => {
+                              if (
+                                bulk.recordClick(event, bulkChoices[bulkIndex])
+                              )
+                                return;
+                              if (creationExpanded)
+                                closeCreation({ returnFocus: false });
+                              selectedTrigger.current = event.currentTarget;
+                              setSelectedId(lot.id);
+                              setDetailOpen(true);
+                              setRecordRoute(`#/seeds/${lot.id}`);
+                              setEditing(false);
+                              setSave({ status: "idle" });
+                            }}
+                          >
+                            <DirectoryRecordContent
+                              visual={
+                                <RecordVisual
+                                  showSource={presentation.view === "gallery"}
+                                  photo={lot.primary_photo ?? null}
+                                  label={recordName(lot, "Seed lot")}
+                                  compact
+
+                                  identity={lot.botanical_identity}
+                                  kind={"seed"}
+                                />
+                              }
+                              name={
+                                <>{recordName(lot, "Unlabelled seed lot")}</>
+                              }
+                              secondary={
+                                <>
+                                  <BotanicalName
+                                    label={lot.botanical_identity.display_label}
+                                    scientificName={scientificNames.get(
+                                      lot.botanical_identity_id,
+                                    )}
+                                  />
+                                </>
+                              }
+                              summary={
+                                <>
+                                  <strong>
+                                    {quantityLabel(lot)}
+                                    {lot.quantity && lot.lifecycle === "active"
+                                      ? " remaining"
+                                      : ""}
+                                  </strong>
+                                  {lot.lifecycle !== "active" && (
+                                    <small>Recorded quantity</small>
+                                  )}
+                                </>
+                              }
+                              status={
+                                lot.lifecycle === "active" ? (
+                                  <StatusBadge compactState="active">
+                                    Active
+                                  </StatusBadge>
+                                ) : (
+                                  <>
+                                    <LifecycleStatus state={lot.lifecycle}>
+                                      {lifecycleLabels[lot.lifecycle]}
+                                    </LifecycleStatus>
+                                  </>
+                                )
+                              }
+                            />
+                          </DirectoryTrigger>
+                          <DirectoryRecordActions
+                            label={recordName(lot, "Unlabelled seed lot")}
+                            extraActions={
+                              lot.lifecycle === "active" ? (
+                                <ActionLink
+                                  className="ui-directory-quick-action"
+                                  icon="sprout"
+                                  aria-label={`Start sowing from ${recordName(lot, "Unlabelled seed lot")}`}
+                                  title="Start sowing"
+                                  href={`#/sowings?action=start&seedLot=${lot.id}`}
+                                >
+                                  <span className="sr-only">Start sowing</span>
+                                </ActionLink>
+                              ) : undefined
+                            }
+                            onDetails={(trigger) => {
+                              selectedTrigger.current = trigger;
+                              setSelectedId(lot.id);
+                              setDetailOpen(true);
+                              setRecordRoute(`#/seeds/${lot.id}`);
+                              setEditing(false);
+                            }}
+                            onEdit={(trigger) => {
+                              startEdit(lot, trigger);
+                            }}
+                          />
+                        </DirectoryItem>
+                      ))}
+                    </DirectoryRecords>
+                  )}
+                </section>
+              )}
+              {(creationExpanded || editing || detailOpen) && (
                 <section
                   id={creationExpanded ? "new-seed-lot-panel" : undefined}
                   className={
@@ -2417,33 +2289,8 @@ export function SeedLotScreen({
                           }}
                         />
                       </div>
-                    ) : (
-                      <DirectoryInspector
-                        title="Seed lot inspection"
-                        returnFocusTo={selectedTrigger}
-                        fallbackFocusTo={directoryList}
-                        onClose={() => {
-                          setSelectedId(null);
-                        }}
-                      >
-                        <SeedLotPreview
-                          lot={selected}
-                          onOpen={() => {
-                            setDetailOpen(true);
-                            setRecordRoute(`#/seeds/${selected.id}`);
-                          }}
-                          onEdit={(event) => {
-                            startEdit(selected, event.currentTarget);
-                          }}
-                        />
-                      </DirectoryInspector>
-                    )
-                  ) : (
-                    <DirectoryInspectorPlaceholder title="Select a seed lot">
-                      Choose a lot from the inventory to inspect or edit it
-                      without losing your place in the list.
-                    </DirectoryInspectorPlaceholder>
-                  )}
+                    ) : null
+                  ) : null}
                 </section>
               )}
             </DirectoryWorkspace>

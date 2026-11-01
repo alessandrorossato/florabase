@@ -22,30 +22,51 @@
   transform: rotate(-90deg);
 }
 
-/* Family B keeps the branch explorer and inspector together at every width. */
+/* Hierarchies use the full content width; expansion and record actions stay independent. */
 .app-content .ui-hierarchy-workspace > .reference-split {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(18rem, 30%, 25rem);
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
-  align-items: start;
 }
-.app-content .ui-hierarchy-workspace > .reference-split > .quick-preview {
-  display: block;
-  position: sticky;
-  top: 0;
-  max-height: 70dvh;
-  overflow: auto;
+.app-content .ui-hierarchy-workspace .location-tree-node {
+  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  align-items: center;
 }
-@media (max-width: 64rem) {
-  .app-content .ui-hierarchy-workspace > .reference-split {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .app-content .ui-hierarchy-workspace > .reference-split > .directory-column {
-    grid-row: 2;
-  }
-  .app-content .ui-hierarchy-workspace > .reference-split > .quick-preview {
-    grid-row: 1;
-    position: static;
-    max-height: 25dvh;
-  }
+.ui-hierarchy-workspace .ui-hierarchy-match {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+.ui-hierarchy-record-actions {
+  display: flex;
+  flex: none;
+  gap: var(--space-1);
+  align-items: center;
+}
+.ui-hierarchy-workspace .ui-hierarchy-record {
+  min-width: 0;
+}
+.ui-hierarchy-workspace .ui-hierarchy-record > :first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.ui-hierarchy-workspace .ui-hierarchy-record strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ui-hierarchy-workspace
+  .ui-hierarchy-record-actions
+  .ui-directory-quick-action {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+}
+.ui-hierarchy-workspace
+  .ui-hierarchy-record-actions
+  .ui-directory-quick-action:hover {
+  background: var(--surface-hover);
 }

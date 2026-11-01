@@ -378,9 +378,14 @@ it("directory defaults to active and retained depleted state remains reachable",
   expect(await screen.findByLabelText("Directory results")).toHaveTextContent(
     /1–1 of 1 record/,
   );
+  await userEvent.click(
+    await screen.findByRole("button", {
+      name: "Create or record for Coffee seed harvest",
+    }),
+  );
   expect(
     screen.getByRole("link", {
-      name: "Details Coffee seed harvest stored material",
+      name: "Open details Coffee seed harvest stored material",
     }),
   ).toHaveAttribute("href", "#/harvests/harvest?inventory=inventory");
   await userEvent.click(screen.getByRole("button", { name: /^Filters/ }));
@@ -506,17 +511,30 @@ it("BULK-001 selects only active Stored material and clears on search", async ()
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
 });
 
-it("each managed stored record enters the canonical label composer from its source Harvest and directory", async () => {
+it("Stored labels remain on the owning Harvest workflow and are excluded from the creation menu", async () => {
   vi.mocked(api.inventoryList).mockResolvedValue([inventory]);
-  const view = wrap(<StoredMaterialSection harvest={harvest} />);
+  const view = wrap(<StoredMaterialDirectory />);
+  const details = await screen.findByRole("link", {
+    name: "Open details Coffee seed harvest stored material",
+  });
+  expect(details).toHaveAttribute(
+    "href",
+    "#/harvests/harvest?inventory=inventory",
+  );
+  await userEvent.click(
+    await screen.findByRole("button", {
+      name: "Create or record for Coffee seed harvest",
+    }),
+  );
+  expect(
+    screen.queryByRole("link", { name: "Print label" }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Create Seed lot" })).toBeVisible();
+  view.unmount();
+  wrap(<StoredMaterialSection harvest={harvest} />);
   await userEvent.click(
     await screen.findByRole("button", { name: "More Seeds actions" }),
   );
-  expect(
-    await screen.findByRole("link", { name: "Print label" }),
-  ).toHaveAttribute("href", "#/labels?kind=stored-material&record=inventory");
-  view.unmount();
-  wrap(<StoredMaterialDirectory />);
   expect(
     await screen.findByRole("link", { name: "Print label" }),
   ).toHaveAttribute("href", "#/labels?kind=stored-material&record=inventory");
@@ -539,41 +557,37 @@ it("uses complete media, identity and metric columns with grouped tools and remo
   const row = within(
     screen.getByRole("list", { name: "Stored material directory" }),
   ).getByRole("button", {
-    name: "Quick preview Coffee seed harvest stored material",
+    name: "Open details Coffee seed harvest stored material",
   });
   const directoryRow = row.closest("li");
   if (!directoryRow) throw new Error("Stored material must be in a row");
   await user.click(
     within(directoryRow).getByRole("button", {
-      name: "Quick preview Coffee seed harvest stored material",
+      name: "Open details Coffee seed harvest stored material",
     }),
   );
+  expect(window.location.hash).toBe("#/harvests/harvest?inventory=inventory");
   expect(
-    screen.getByRole("complementary", {
-      name: "Stored material inspection",
+    within(directoryRow).getByRole("link", {
+      name: "Edit Coffee seed harvest stored material",
     }),
-  ).toBeVisible();
-  expect(
-    screen.getByRole("link", { name: "Open Harvest details" }),
-  ).toHaveAttribute("href", "#/harvests/harvest?inventory=inventory");
-  await user.keyboard("{Escape}");
+  ).toHaveAttribute(
+    "href",
+    "#/harvests/harvest?inventory=inventory&inventoryAction=edit",
+  );
   expect(
     screen.queryByRole("complementary", {
       name: "Stored material inspection",
     }),
   ).not.toBeInTheDocument();
-  expect(
-    within(directoryRow).getByRole("button", {
-      name: "Quick preview Coffee seed harvest stored material",
-    }),
-  ).toHaveFocus();
+
   expect(
     within(row).getByText("Coffee seed harvest", { exact: false }),
   ).toBeVisible();
   expect(row).toHaveTextContent("Unknown quantity");
   expect(row).toHaveTextContent("Storage Location not recorded");
   expect(row).not.toHaveTextContent("Depleted");
-  expect(within(row).getByRole("img", { name: "Active" })).toBeVisible();
+  expect(within(row).getByText("Active", { exact: true })).toBeVisible();
   await user.type(within(toolbar).getByRole("searchbox"), "Coffee");
   await user.click(screen.getByRole("button", { name: "Remove state filter" }));
   expect(within(toolbar).getByRole("searchbox")).toHaveValue("Coffee");
@@ -700,4 +714,45 @@ it("retains tracking removal through pending Escape and failure", async () => {
   });
   await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
   expect(more).toHaveFocus();
+});
+
+it("directory Edit opens the exact inventory's existing editor and returns focus without saving", async () => {
+  if (!item.quantity)
+    throw new Error("Expected a quantified inventory fixture");
+  const second = {
+    ...inventory,
+    id: "second-inventory",
+    harvest_item_id: "second-item",
+    quantity: { ...item.quantity, value: "7" },
+  };
+  vi.mocked(api.inventoryList).mockResolvedValue([inventory, second]);
+  window.history.replaceState(
+    null,
+    "",
+    "#/harvests/harvest?inventory=second-inventory&inventoryAction=edit",
+  );
+  const user = userEvent.setup();
+  wrap(
+    <StoredMaterialSection
+      harvest={{
+        ...harvest,
+        items: [
+          ...harvest.items,
+          { ...harvest.items[0], id: "second-item", display_order: 1 },
+        ],
+      }}
+    />,
+  );
+  const dialog = await screen.findByRole("dialog", {
+    name: "Edit stored material",
+  });
+  expect(within(dialog).getByLabelText("Remaining now amount")).toHaveValue(
+    "7",
+  );
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  await waitFor(() => {
+    expect(document.getElementById("inventory-second-inventory")).toHaveFocus();
+  });
+  expect(api.saveInventory).not.toHaveBeenCalled();
 });

@@ -6653,3 +6653,63 @@ Status remains implemented pending canonical verification.
   resource cleanup. Verification-impact planning selects FULL; it was deliberately not run.
   Candidate awaits operator UAT and independent final review. No delivery commit, push, PR,
   main merge or feature-finish.
+
+### 2026-11-01 — Shared directory interaction cleanup (operator review pending)
+
+- Followed checkpoint `db1e71fb85f1396408ed6f07800d4992dea0233d` with textual lifecycle
+  chips and one More actions menu per record across eight consolidated directories. Existing
+  Details/Edit, domain actions, exact inventory destinations and guards retain their owners.
+  Selected fill loses the inset stripe; hover, keyboard focus and bordered triggers stay distinct.
+- Reused OverflowMenu with opt-in mounted domain content. Fixed portal click propagation into
+  row Preview and nested Escape closing both association dialog and menu. A new regression
+  proves dialog Escape returns to its command, then menu Escape returns to More actions.
+  Existing tests now exercise the menu path and textual states. Hierarchies and specialists
+  are unchanged.
+- Final checks: **412/412 tests in 16 suites**, strict TypeScript, full frontend ESLint and
+  Prettier, production build, **123 valid features**, and `git diff --check` pass. Existing
+  JSDOM native confirm() warning remains; guard assertions pass. No canonical FULL was run.
+- Browser smoke verifies Preview/Escape/focus and Details across eight directories, Edit for
+  seven existing editor owners, exact Stored inventory URL, association dialog focus, and fill
+  without a stripe. At 1024/390, three representative stacked inspectors retain 147px of
+  scrollable content with no horizontal document overflow. Review is healthy and owned by this
+  worktree; code/DB `20261013_0042`, fixture v4 ready. No record was saved or deleted.
+- Results, screenshots, source fingerprint and exact file list:
+  `design/ui-system-v1/consolidation/interaction-cleanup/`. Focused Mineral Dark checks do not
+  replace the historical six-theme audit. Physical devices, screen readers, actual zoom and
+  native dirty-confirm rejection remain manual UAT. Final operator UAT remains pending.
+  No commit, push, PR, merge, feature-finish or resource cleanup.
+
+### 2026-11-01 — Final directory interaction contract correction (operator UAT pending)
+
+- Implemented the explicitly confirmed replacement of the earlier cleanup contract: direct
+  bordered Details/Edit, eligible creation-only overflow, textual semantic lifecycle chips,
+  and removal of Quick Preview/idle inspector columns from eight directories and both
+  hierarchy explorers. Full record Overview/tabs and domain workflow owners remain intact.
+- Fixed the actual appended-Details defect with exclusive directory/detail rendering in
+  Seeds/Sowings/Plants and Geography Places. Direct Sowings/Plants Edit now initializes its
+  record without Preview. Identity Edit reopens on browser history; duplicate selection and
+  connected focus targets remain available. Exact Stored inventory Edit enters its existing
+  guarded correction dialog. Shared hierarchy tracks align direct actions and wrap status/name;
+  compact gallery placeholders no longer show a clipped source banner over their icon.
+  Geography dedicated records now distinguish loading, retryable error and missing records.
+- Focused regression: **441/441 in 17 suites** on the final candidate, including RecordVisual
+  and the new Geography loading/error/retry/missing-record regression. The owning domain/App
+  suites include the original Batch 1 safeguards; earlier 69-case evidence is preserved.
+  Strict TypeScript, whole frontend ESLint, affected Prettier, production build, **123 valid
+  features** and `git diff --check` pass. One interrupted repeat produced no result and is
+  excluded from passing evidence. No canonical FULL was run.
+- Live Review verifies dedicated navigation, correct editors, source-prefilled creation,
+  exact inventory destinations, Escape/focus and bulk-mode selection without row navigation.
+  Evidence covers eight directories at 1024/390, five desktop galleries, desktop records,
+  both hierarchies at 1440/1024/390 and all six themes for status presentation. Semantic
+  status text/surface contrast is **5.90:1–9.08:1**. No Preview nodes or document horizontal
+  overflow were observed in the recorded directory/hierarchy states.
+- Current contract, matrix, exact file list, source fingerprint, 50 captures and UAT checklist:
+  `design/ui-system-v1/consolidation/final-interaction-correction/`. Prior Preview galleries
+  are explicitly historical. Physical devices, screen readers, actual zoom and native dirty-
+  confirm rejection remain operator checks; this is representative browser coverage.
+- Existing Review remains owned by `548f` at `http://localhost:15174`, code/DB
+  `20261013_0042`, fixture v4 ready with 80 managed baseline records; extended synthetic
+  records retained. No record was saved/deleted during live smoke. No foreign worktree,
+  DEV/UAT/Review provisioning, Docker cleanup, commit, push, PR, merge or feature-finish.
+  Checkpoint `db1e71f`, Batch 1 `3669869` and QA/Schedule ancestry remain preserved.

@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useState, useRef, type MouseEvent } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
@@ -27,6 +27,7 @@ export function IdentitySourceAction({
   triggerLabel?: string;
 }) {
   const auth = useAuth();
+  const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(dialogOnly);
   const [attempt, setAttempt] = useState(0);
   const [load, setLoad] = useState<
@@ -97,8 +98,10 @@ export function IdentitySourceAction({
       {!dialogOnly &&
         (triggerIcon ? (
           <IconButton
+            ref={trigger}
             icon={triggerIcon}
             label={triggerLabel ?? title}
+            visibleLabel={title}
             tooltip={title}
             className="ui-directory-quick-action"
             onClick={() => {
@@ -108,6 +111,7 @@ export function IdentitySourceAction({
           />
         ) : (
           <button
+            ref={trigger}
             type="button"
             className="button--secondary"
             onClick={() => {
@@ -120,6 +124,7 @@ export function IdentitySourceAction({
         ))}
       {open && (
         <TaskDialog
+          returnFocusTo={trigger}
           title={title}
           onClose={() => {
             setOpen(false);

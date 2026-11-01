@@ -1,0 +1,174 @@
+[
+  {
+    "details": 1,
+    "lists": 0,
+    "previews": 0,
+    "scrollY": 0,
+    "url": "http://localhost:15174/#/seeds/01a18ba5-0d14-77b4-9eec-7f524d93acac"
+  },
+  {
+    "commands": [
+      "Review seed usage"
+    ],
+    "heading": [
+      "Overview",
+      "Collection",
+      "Activity",
+      "Explore",
+      "Sourcing",
+      "Start sowing",
+      "Source seed lot",
+      "Sowing details",
+      "Essentials",
+      "Material & location",
+      "Cultivation",
+      "Notes"
+    ],
+    "url": "http://localhost:15174/#/sowings?action=start&seedLot=01a18ba5-0d14-77b4-9eec-7f524d93acac"
+  },
+  {
+    "dialogs": 0,
+    "focus": "Edit Review v5 — sowing 04",
+    "surface": "Sowings direct Edit/Escape",
+    "url": "http://localhost:15174/#/sowings"
+  },
+  {
+    "lists": 0,
+    "previews": 0,
+    "selectedTab": "Germination",
+    "surface": "Sowings germination command",
+    "url": "http://localhost:15174/#/sowings/01a18ba5-0d56-703c-bf53-32faa582d083?tab=germination"
+  },
+  {
+    "focus": "Edit Preview — Garden Seed Exchange",
+    "previews": 0,
+    "surface": "Suppliers direct Edit/Escape",
+    "url": "http://localhost:15174/#/suppliers"
+  },
+  {
+    "lists": 0,
+    "previews": 0,
+    "surface": "Suppliers Details",
+    "url": "http://localhost:15174/#/suppliers/01a1899a-1bfa-7680-b457-e0b47f036795"
+  },
+  {
+    "focus": null,
+    "surface": "Orders Edit/Escape",
+    "url": "http://localhost:15174/#/orders"
+  },
+  {
+    "lists": 0,
+    "surface": "Orders row Enter",
+    "url": "http://localhost:15174/#/orders/01a1899a-1c03-70fd-bf9c-443cead2b68f"
+  },
+  {
+    "editor": true,
+    "lists": 0,
+    "surface": "Identity direct Edit",
+    "url": "http://localhost:15174/#/identities/01a18ba5-0cc5-7559-8f56-555d9126388b?tab=edit"
+  },
+  {
+    "editorVisible": true,
+    "lists": 0,
+    "surface": "Identity Edit browser Back regression",
+    "url": "http://localhost:15174/#/identities/01a18ba5-0cc5-7559-8f56-555d9126388b?tab=edit"
+  },
+  {
+    "dialogCount": 0,
+    "focus": "Start sowing for Acer palmatum",
+    "surface": "Identity source dialog Escape"
+  },
+  {
+    "dialog": null,
+    "dialogs": 1,
+    "lists": 0,
+    "surface": "Stored exact inventory Edit",
+    "url": "http://localhost:15174/#/harvests/01a18ba5-0e4a-70fe-87a6-afc86db97279?inventory=01a18ba5-0e52-7504-a4bb-835bf7b67b81&inventoryAction=edit"
+  },
+  {
+    "submit": true,
+    "surface": "Sowing Create Plant group workflow",
+    "url": "http://localhost:15174/#/plants?action=from-sowing&sowing=01a18ba5-0d56-703c-bf53-32faa582d083&kind=group"
+  },
+  {
+    "focus": "Edit Review v5 — direct plant 04",
+    "surface": "Plants direct Edit/Escape",
+    "url": "http://localhost:15174/#/plants"
+  },
+  {
+    "lists": 0,
+    "surface": "Plants direct Details",
+    "tabs": [
+      "Overview",
+      "Journal",
+      "Photos",
+      "Lineage"
+    ],
+    "url": "http://localhost:15174/#/plants/01a18ba5-0d68-728f-9b1c-0f35efafaf38"
+  },
+  {
+    "focus": null,
+    "surface": "Harvest direct Edit/Escape",
+    "url": "http://localhost:15174/#/harvests"
+  },
+  {
+    "lists": 0,
+    "previews": 0,
+    "surface": "Harvest direct Details",
+    "url": "http://localhost:15174/#/harvests/01a18ba5-0e58-74ca-b97c-9346b84ede01"
+  },
+  {
+    "expanded": true,
+    "previews": 0,
+    "surface": "Locations expand",
+    "url": "http://localhost:15174/#/locations"
+  },
+  {
+    "dialogCount": 0,
+    "heading": [
+      "Activity",
+      "Explore",
+      "Sourcing",
+      "Review v5 collection"
+    ],
+    "hierarchyLists": 0,
+    "surface": "Locations direct Edit/Escape",
+    "url": "http://localhost:15174/#/locations/01a18ba5-0cdf-73fe-88be-c0f4ebac7c42?tab=edit"
+  },
+  {
+    "expanded": true,
+    "previews": 0,
+    "surface": "Geography expansion",
+    "url": "http://localhost:15174/#/geography/places"
+  },
+  {
+    "identityDirectories": 0,
+    "previews": 0,
+    "surface": "Geography Details",
+    "url": "http://localhost:15174/#/geography/places?place=019f3f06-3800-70f7-8a10-6e2f215ca415"
+  },
+  {
+    "lists": 0,
+    "overflow": false,
+    "surface": "Seeds mobile row Enter",
+    "url": "http://localhost:15174/#/seeds/01a18ba5-0d14-77b4-9eec-7f524d93acac"
+  },
+  {
+    "highlighted": 1,
+    "previews": 0,
+    "selected": 1,
+    "surface": "Seeds selection mode Space",
+    "url": "http://localhost:15174/#/seeds?view=gallery"
+  },
+  {
+    "checked": 0,
+    "surface": "Selection exit",
+    "url": "http://localhost:15174/#/seeds?view=gallery"
+  },
+  {
+    "heading": "Geographic place not found",
+    "previews": 0,
+    "surface": "Geography missing record",
+    "url": "http://localhost:15174/#/geography/places?place=missing-place"
+  }
+]

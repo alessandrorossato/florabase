@@ -591,3 +591,18 @@ operator UAT. Focused suites: **145/145** across Suppliers, Orders, Sowings, See
 shared directory tests. Strict TypeScript, affected ESLint, Prettier, feature graph
 (123), and `git diff --check` pass. FULL, push, PR, merge and feature-finish remain
 out of scope; operator acceptance is still pending.
+
+## 1 November — final interaction contract correction
+
+The operator-confirmed [final contract and current compliance matrix](../consolidation/final-interaction-correction/README.md)
+supersede the earlier Quick Preview and action-menu decisions in this document. All eight
+record directories and Locations/Geography Places now use direct Details/Edit with eligible
+creation-only menus and no inspector columns. Existing full record Overview/tabs, domain
+operations, Batch 1 guards and Schedule reconciliation remain intact. Dedicated Details
+rendering, direct editor initialization and identity Edit-history defects were corrected.
+
+Current evidence and verification: [gallery](../consolidation/final-interaction-correction/evidence/index.html),
+[checks](../consolidation/final-interaction-correction/verification.txt),
+and [operator UAT checklist](../consolidation/final-interaction-correction/README.md#operator-uat-checklist).
+Earlier pass counts and screenshots remain historical evidence. Final operator acceptance and
+canonical verification remain pending; no protected delivery was run.
