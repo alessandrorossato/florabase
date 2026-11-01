@@ -1,28 +1,3 @@
-import { IdentityTaskLink } from "./IdentityTaskLink";
-import {
-  identitySections,
-  identitySection,
-  identityAnchor,
-  type IdentitySection,
-} from "./identitySections";
-import { IdentityMaps } from "./IdentityMaps";
-import { IdentityMedia } from "./IdentityMedia";
-import { identityDirectory } from "./identityNavigation";
-import { IdentityReferenceSummary } from "./IdentityReferenceSummary";
-import "../components/collection-directory.css";
-import { ActionButton, ActionLink } from "../components/Action";
-import { IdentitySourceAction } from "./IdentitySourceAction";
-import { TaskDialog } from "../components/TaskDialog";
-import { EditWorkspace } from "../components/EditWorkspace";
-import { useEditRoute } from "../components/useEditRoute";
-import "./botanical-identities.css";
-import { FieldLabel } from "../components/FieldLabel";
-import { DirectoryTools } from "../components/DirectoryTools";
-import { DirectoryResults } from "../components/DirectoryResults";
-import { SavedViews } from "../saved-views/SavedViews";
-import { useDirectoryView } from "../saved-views/useDirectoryView";
-import { FormSections } from "../components/FormSections";
-import { usePublishRecordIdentities } from "../components/recordPresentation";
 import {
   useCallback,
   useEffect,
@@ -31,38 +6,72 @@ import {
   useState,
   type SyntheticEvent,
 } from "react";
+import { ActionButton, ActionLink } from "../components/Action";
+import {
+  DirectoryRecordContent,
+  DirectoryWorkspace,
+} from "../components/DirectoryPage";
+import { DirectoryResults } from "../components/DirectoryResults";
+import { DirectoryTools } from "../components/DirectoryTools";
+import { EditWorkspace } from "../components/EditWorkspace";
+import { FieldLabel } from "../components/FieldLabel";
+import { FormSections } from "../components/FormSections";
+import { Icon } from "../components/Icon";
+import "../components/collection-directory.css";
+import { usePublishRecordIdentities } from "../components/recordPresentation";
+import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { useEditRoute } from "../components/useEditRoute";
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
+import { IdentityMaps } from "./IdentityMaps";
+import { IdentityMedia } from "./IdentityMedia";
+import { IdentityReferenceSummary } from "./IdentityReferenceSummary";
+import { IdentitySourceAction } from "./IdentitySourceAction";
+import { IdentityTaskLink } from "./IdentityTaskLink";
+import "./botanical-identities.css";
+import { identityDirectory } from "./identityNavigation";
+import {
+  identityAnchor,
+  identitySection,
+  identitySections,
+  type IdentitySection,
+} from "./identitySections";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { BotanicalProfilePanel } from "../botanical-profiles/BotanicalProfilePanel";
 import { BotanicalNativeRangeManager } from "../botanical-profiles/BotanicalNativeRangeManager";
+import { BotanicalProfilePanel } from "../botanical-profiles/BotanicalProfilePanel";
 import {
   getIdentityCollection,
   type BotanicalIdentityCollectionResponse,
 } from "../collection/api";
-import { Breadcrumbs, DetailTabs } from "../components/CollectionUI";
 import {
-  PageHeader,
-  FormSection,
-  FormActions,
-  DirectorySearch,
-  QuickPreview,
-  OverflowMenu,
-} from "../components/ReferenceUI";
-import {
-  IdentityImage,
-  IdentityName,
-  IdentityStats,
-  IdentityCardContext,
-} from "./IdentitySummary";
-import { PhotoDialog } from "../photos/PhotosSection";
+  Breadcrumbs,
+  DetailHeader,
+  DetailPage,
+  DetailTabs,
+  DetailLoading,
+} from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
+import {
+  DirectorySearch,
+  FormActions,
+  FormSection,
+  OverflowMenu,
+  PageHeader,
+} from "../components/ReferenceUI";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import { EventFeed } from "../events/EventFeed";
 import { BotanicalIdentityCover } from "../photos/BotanicalIdentityCover";
+import { PhotoDialog } from "../photos/PhotosSection";
 import { IdentityTaxonomyPanel } from "../taxonomy/IdentityTaxonomyPanel";
 import { taxonomyReturnHash } from "../taxonomy/state";
 import { ExternalBotanicalDataPanel } from "./ExternalBotanicalDataPanel";
+import {
+  IdentityCardContext,
+  IdentityImage,
+  IdentityName,
+} from "./IdentitySummary";
 import {
   conflictExistingId,
   createBotanicalIdentity,
@@ -113,10 +122,6 @@ function IdentityDetails({
     identitySection(initialTab),
   );
   const [lastRouteTab, setLastRouteTab] = useState(initialTab);
-  if (lastRouteTab !== initialTab) {
-    setLastRouteTab(initialTab);
-    if (initialTab !== "edit") setTab(identitySection(initialTab));
-  }
   const [editorSection, setEditorSection] = useState("identity");
   const [collection, setCollection] = useState<
     | { status: "idle" }
@@ -184,6 +189,17 @@ function IdentityDetails({
     cultivar_name: identity.cultivar_name ?? "",
     common_name: identity.common_name ?? "",
   });
+  if (lastRouteTab !== initialTab) {
+    setLastRouteTab(initialTab);
+    if (initialTab === "edit" && !editing) {
+      setEditing(true);
+      setEditForm({
+        scientific_name: identity.scientific_name,
+        cultivar_name: identity.cultivar_name ?? "",
+        common_name: identity.common_name ?? "",
+      });
+    } else if (initialTab !== "edit") setTab(identitySection(initialTab));
+  }
 
   const isDirty = () =>
     editForm.scientific_name !== identity.scientific_name ||
@@ -385,7 +401,9 @@ function IdentityDetails({
     </div>
   );
   return (
-    <div
+    <DetailPage
+      as="section"
+      aria-labelledby="identity-summary-title"
       className={`identity-detail-stack${editing ? " identity-detail-stack--editing" : ""}`}
     >
       <Breadcrumbs
@@ -444,58 +462,30 @@ function IdentityDetails({
         />
       )}
       <div className="identity-detail-layout">
-        {tab === "overview" && !(editing && !edit.modal) ? (
-          <section
-            className="identity-summary"
-            aria-labelledby="identity-summary-title"
-          >
-            <div className="identity-summary-row">
-              <a
-                className="identity-header-visual"
-                href={`#/identities/${identity.id}?tab=media`}
-                aria-label="View identity media"
-              >
-                <IdentityImage identity={identity} />
-              </a>
-              <div className="entity-hero-copy">
-                <p className="eyebrow">Botanical identity</p>
-                <h2
-                  id="identity-summary-title"
-                  ref={titleRef}
-                  tabIndex={-1}
-                  className="entity-title"
-                >
-                  <IdentityName identity={identity} />
-                </h2>
-                {identity.common_name && (
-                  <p className="entity-common-name">{identity.common_name}</p>
-                )}
-
-                {!(editing && !edit.modal) && identityActions}
-              </div>
-            </div>
-          </section>
-        ) : (
-          <section
-            className="identity-work-header"
-            aria-labelledby="identity-summary-title"
-          >
-            <IdentityImage identity={identity} />
-            <div className="identity-work-header__copy">
-              <p className="eyebrow">Botanical identity</p>
-              <h2
-                id="identity-summary-title"
-                ref={titleRef}
-                tabIndex={-1}
-                className="identity-work-title"
-              >
-                <IdentityName identity={identity} />
-              </h2>
-              {identity.common_name && <p>{identity.common_name}</p>}
-            </div>
-            {!(editing && !edit.modal) && identityActions}
-          </section>
-        )}
+        <DetailHeader
+          eyebrow="Botanical identity"
+          title={<IdentityName identity={identity} />}
+          headingLevel={2}
+          titleId="identity-summary-title"
+          headingRef={titleRef}
+          visual={
+            <a
+              className="identity-header-visual"
+              href={`#/identities/${identity.id}?tab=media`}
+              aria-label="View identity media"
+            >
+              <IdentityImage identity={identity} />
+            </a>
+          }
+          secondary={
+            identity.common_name ? (
+              <p className="entity-common-name">{identity.common_name}</p>
+            ) : undefined
+          }
+          primaryActions={
+            !(editing && !edit.modal) ? identityActions : undefined
+          }
+        />
         <div className="identity-detail-main">
           {mutationError && !editing && (
             <div className="notice notice--error" role="alert">
@@ -1137,7 +1127,7 @@ function IdentityDetails({
           )}
         </div>
       </div>
-    </div>
+    </DetailPage>
   );
 }
 
@@ -1147,7 +1137,6 @@ export function BotanicalIdentityScreen({
   startCreating = false,
 }: { initialId?: string; initialTab?: string; startCreating?: boolean } = {}) {
   const auth = useAuth();
-  const [narrowPreview, setNarrowPreview] = useState(false);
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
   });
@@ -1161,6 +1150,7 @@ export function BotanicalIdentityScreen({
     setSelected(null);
   });
   const filter = view.state.q;
+
   const setFilter = (value: string) => {
     view.update("q", value);
   };
@@ -1168,11 +1158,20 @@ export function BotanicalIdentityScreen({
   const directoryRef = useRef<HTMLUListElement>(null);
   const previousDetail = useRef(initialId);
   useEffect(() => {
-    if (previousDetail.current && !initialId)
-      directoryRef.current
-        ?.querySelector<HTMLButtonElement>('[aria-pressed="true"]')
-        ?.focus();
+    const previousId = previousDetail.current;
     previousDetail.current = initialId;
+    if (!previousId || initialId) return;
+    const frame = requestAnimationFrame(() => {
+      const trigger = Array.from(
+        directoryRef.current?.querySelectorAll<HTMLButtonElement>(
+          "[data-record-id]",
+        ) ?? [],
+      ).find((element) => element.dataset.recordId === previousId);
+      trigger?.focus();
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+    };
   }, [initialId]);
   const [createState, setCreateState] = useState<CreateState>({
     status: "idle",
@@ -1233,7 +1232,7 @@ export function BotanicalIdentityScreen({
     return () => {
       controller.abort();
     };
-  }, [auth, initialId, loadAttempt]);
+  }, [auth, loadAttempt]);
 
   useEffect(() => {
     if (["validation", "duplicate", "error"].includes(createState.status)) {
@@ -1259,6 +1258,8 @@ export function BotanicalIdentityScreen({
       ].some((value) => value?.toLocaleLowerCase().includes(query)),
     );
   }, [directory, filter]);
+  const pagination = useDirectoryPagination(filteredIdentities, filter);
+  const { visible: pageIdentities } = pagination;
 
   if (
     auth.state.status !== "authenticated" &&
@@ -1272,7 +1273,12 @@ export function BotanicalIdentityScreen({
     identity: BotanicalIdentityResponse,
   ): Promise<void> {
     const identities = await listBotanicalIdentities();
-    setDirectory({ status: "ready", identities });
+    setDirectory({
+      status: "ready",
+      identities: identities.some(({ id }) => id === identity.id)
+        ? identities
+        : [...identities, identity],
+    });
     setSelected(identities.find(({ id }) => id === identity.id) ?? identity);
   }
 
@@ -1312,8 +1318,7 @@ export function BotanicalIdentityScreen({
         message: `${identity.display_label} was created and selected.`,
       });
       closeCreation();
-      if (window.matchMedia("(max-width: 68rem)").matches)
-        window.location.hash = `/identities/${identity.id}`;
+      window.location.hash = `/identities/${identity.id}`;
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();
@@ -1354,6 +1359,7 @@ export function BotanicalIdentityScreen({
       setFilter("");
       setCreateState({ status: "idle" });
       closeCreation();
+      window.location.hash = `/identities/${existingId}`;
       return;
     }
     setCreateState({ status: "loading-existing", existingId });
@@ -1363,6 +1369,7 @@ export function BotanicalIdentityScreen({
       setFilter("");
       setCreateState({ status: "idle" });
       closeCreation();
+      window.location.hash = `/identities/${existingId}`;
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();
@@ -1393,7 +1400,12 @@ export function BotanicalIdentityScreen({
         aria-label="Botanical identity detail"
       >
         {directory.status === "loading" ? (
-          <p role="status">Loading botanical identity…</p>
+          <DetailLoading
+            eyebrow="Botanical identity"
+            label="Loading botanical identity…"
+            parents={[{ label: "Botanical identities", href: "#/identities" }]}
+            className="identity-detail-stack"
+          />
         ) : directory.status === "error" ? (
           <div role="alert">
             <p>Florabase could not load this botanical identity.</p>
@@ -1437,75 +1449,6 @@ export function BotanicalIdentityScreen({
       </section>
     );
 
-  const preview = (
-    <QuickPreview>
-      {selected ? (
-        <>
-          <IdentityImage key={selected.id} identity={selected} />
-          <h3>
-            <IdentityName identity={selected} />
-          </h3>
-          {selected.common_name && <p>{selected.common_name}</p>}
-          <IdentityStats identity={selected} />
-          <div className="identity-preview-actions">
-            <a className="button-link" href={`#/identities/${selected.id}`}>
-              Open details
-            </a>
-            <div
-              className="preview-action-group"
-              role="group"
-              aria-label="Record maintenance"
-            >
-              <ActionLink
-                icon="edit"
-                className="button-link button--secondary"
-                href={`#/identities/${selected.id}?tab=edit`}
-              >
-                Edit
-              </ActionLink>
-            </div>
-            <div
-              className="identity-preview-creation"
-              role="group"
-              aria-label="Collection creation"
-            >
-              <a
-                className="button-link button--secondary"
-                href={`#/seeds?action=create&identity=${selected.id}`}
-              >
-                Add seed lot
-              </a>
-              <a
-                className="button-link button--secondary"
-                href={`#/plants?action=create&identity=${selected.id}&kind=plant`}
-              >
-                Add plant
-              </a>
-              <IdentitySourceAction
-                key={`sowing-${selected.id}`}
-                identityId={selected.id}
-                kind="sowing"
-              />
-              <IdentitySourceAction
-                key={`harvest-${selected.id}`}
-                identityId={selected.id}
-                kind="harvest"
-              />
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="preview-empty">
-          <h3>Select a botanical identity</h3>
-          <p>
-            A quick look at its name and collection. Open details for its full
-            story.
-          </p>
-        </div>
-      )}
-    </QuickPreview>
-  );
-
   return (
     <section
       aria-labelledby="botanical-identities-title"
@@ -1515,7 +1458,8 @@ export function BotanicalIdentityScreen({
         title="Botanical identities"
         titleId="botanical-identities-title"
         eyebrow="Explore"
-        description="Manage the botanical identities that connect collection records and reference data."
+        directory
+        description="Names that connect your collection."
         tools={
           <DirectoryTools
             name="Botanical identities"
@@ -1568,7 +1512,14 @@ export function BotanicalIdentityScreen({
           {createState.message}
         </p>
       )}
-      <div className="reference-split">
+      <DirectoryWorkspace>
+        {directory.status === "ready" && (
+          <DirectoryResults
+            count={filteredIdentities.length}
+            total={directory.identities.length}
+            pagination={filteredIdentities.length > 0 ? pagination : undefined}
+          />
+        )}
         <div className="directory-column">
           <section
             aria-labelledby="identity-directory-title"
@@ -1578,9 +1529,6 @@ export function BotanicalIdentityScreen({
               Identity directory
             </h3>
 
-            {directory.status === "ready" && (
-              <DirectoryResults count={filteredIdentities.length} />
-            )}
             {directory.status === "loading" && (
               <p aria-live="polite" className="notice">
                 Loading botanical identities…
@@ -1617,35 +1565,97 @@ export function BotanicalIdentityScreen({
               )}
             {filteredIdentities.length > 0 && (
               <ul
-                className="identity-cards"
+                className="identity-cards ui-directory-records ui-directory-records--list"
                 ref={directoryRef}
                 aria-label="Botanical identities"
                 tabIndex={0}
               >
-                {filteredIdentities.map((identity) => (
-                  <li key={identity.id}>
+                {pageIdentities.map((identity) => (
+                  <li
+                    className="identity-directory-item ui-directory-row ui-directory-row--composed"
+                    data-selected={selected?.id === identity.id || undefined}
+                    key={identity.id}
+                  >
                     <button
                       type="button"
-                      className="identity-card"
+                      className="identity-card ui-directory-trigger"
+                      data-record-id={identity.id}
+                      aria-label={`Open details ${identity.display_label}${identity.common_name ? ` · ${identity.common_name}` : ""}`}
                       aria-pressed={selected?.id === identity.id}
+                      title="Open details"
                       onClick={() => {
-                        setSelected(identity);
-                        setNarrowPreview(
-                          window.matchMedia("(max-width: 68rem)").matches,
-                        );
+                        window.location.hash = `#/identities/${identity.id}`;
                       }}
                     >
-                      <IdentityImage key={identity.id} identity={identity} />
-                      <span className="identity-card-copy">
-                        <strong>
-                          <IdentityName identity={identity} />
-                        </strong>
-                        {identity.common_name && (
-                          <span>{identity.common_name}</span>
-                        )}
-                        <IdentityCardContext identity={identity} />
-                      </span>
+                      <DirectoryRecordContent
+                        visual={
+                          <IdentityImage
+                            key={identity.id}
+                            identity={identity}
+                          />
+                        }
+                        name={<IdentityName identity={identity} />}
+                        secondary={identity.common_name}
+                        summary={<IdentityCardContext identity={identity} />}
+                      />
                     </button>
+                    <div className="ui-directory-record-actions">
+                      <IdentityTaskLink
+                        className="control-icon-button button--secondary"
+                        aria-label={`Open details ${identity.display_label}`}
+                        title="Open details"
+                        href={`#/identities/${identity.id}`}
+                      >
+                        <Icon name="document" />
+                        <span className="sr-only">Open details</span>
+                      </IdentityTaskLink>
+                      <IdentityTaskLink
+                        className="control-icon-button button--secondary"
+                        aria-label={`Edit ${identity.display_label}`}
+                        title="Edit"
+                        href={`#/identities/${identity.id}?tab=edit`}
+                      >
+                        <Icon name="edit" />
+                        <span className="sr-only">Edit</span>
+                      </IdentityTaskLink>
+                      <OverflowMenu
+                        ariaLabel={`Create or record for ${identity.display_label}`}
+                        keepMounted
+                        closeOnAction={false}
+                        popoverClassName="ui-directory-action-menu"
+                      >
+                        <IdentityTaskLink
+                          className="control-icon-button button--secondary"
+                          aria-label={`Add seed lot for ${identity.display_label}`}
+                          title="Add seed lot"
+                          href={`#/seeds?action=create&identity=${identity.id}`}
+                        >
+                          <Icon name="seed" />
+                          <span className="sr-only">Add seed lot</span>
+                        </IdentityTaskLink>
+                        <IdentityTaskLink
+                          className="ui-directory-quick-action"
+                          aria-label={`Add plant for ${identity.display_label}`}
+                          title="Add plant"
+                          href={`#/plants?action=create&identity=${identity.id}&kind=plant`}
+                        >
+                          <Icon name="plant" />
+                          <span className="sr-only">Add plant</span>
+                        </IdentityTaskLink>
+                        <IdentitySourceAction
+                          identityId={identity.id}
+                          kind="sowing"
+                          triggerIcon="sprout"
+                          triggerLabel={`Start sowing for ${identity.display_label}`}
+                        />
+                        <IdentitySourceAction
+                          identityId={identity.id}
+                          kind="harvest"
+                          triggerIcon="harvest"
+                          triggerLabel={`Record harvest for ${identity.display_label}`}
+                        />
+                      </OverflowMenu>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -1831,30 +1841,7 @@ export function BotanicalIdentityScreen({
             </PhotoDialog>
           )}
         </div>
-
-        {narrowPreview && selected ? (
-          <TaskDialog
-            title="Botanical identity preview"
-            className="identity-preview-dialog"
-            onClose={() => {
-              setNarrowPreview(false);
-            }}
-          >
-            <button
-              type="button"
-              className="button--secondary"
-              onClick={() => {
-                setNarrowPreview(false);
-              }}
-            >
-              Close preview
-            </button>
-            {preview}
-          </TaskDialog>
-        ) : (
-          preview
-        )}
-      </div>
+      </DirectoryWorkspace>
     </section>
   );
 }

@@ -1,0 +1,38 @@
+[
+  {
+    "width": 1024,
+    "route": "sowings?view=gallery",
+    "overflow": false,
+    "previewContentHeight": 147
+  },
+  {
+    "width": 1024,
+    "route": "harvests?tab=stored-material",
+    "overflow": false,
+    "previewContentHeight": 147
+  },
+  {
+    "width": 1024,
+    "route": "identities",
+    "overflow": false,
+    "previewContentHeight": 147
+  },
+  {
+    "width": 390,
+    "route": "sowings?view=gallery",
+    "overflow": false,
+    "previewContentHeight": 147
+  },
+  {
+    "width": 390,
+    "route": "harvests?tab=stored-material",
+    "overflow": false,
+    "previewContentHeight": 147
+  },
+  {
+    "width": 390,
+    "route": "identities",
+    "overflow": false,
+    "previewContentHeight": 147
+  }
+]

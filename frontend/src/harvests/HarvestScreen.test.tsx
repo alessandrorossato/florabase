@@ -153,27 +153,22 @@ beforeEach(() => {
   vi.mocked(api.saveHarvest).mockResolvedValue(harvest);
 });
 describe("Harvest directory and detail", () => {
-  it("shows minimal historical material rows and useful source preview", async () => {
+  it("historical rows retain material summaries and navigate directly without Preview", async () => {
     const user = userEvent.setup();
     wrap(<HarvestScreen />);
     const row = await screen.findByRole("button", {
-      name: /Coffee — Fruit harvest/,
+      name: /^(?!Open details |Edit ).*Coffee — Fruit harvest/,
     });
     expect(row).toHaveTextContent("Fruit");
     expect(row).not.toHaveTextContent("12 items");
     expect(
       within(row).queryByText("Coffee", { exact: true }),
     ).not.toBeInTheDocument();
-    await user.click(row);
-    expect(row).toHaveClass("is-selected");
-    expect(row).toHaveAttribute("aria-pressed", "true");
-    const preview = screen.getByRole("complementary", {
-      name: "Quick preview",
-    });
     expect(
-      within(preview).getByRole("link", { name: "Open details" }),
-    ).toHaveAttribute("href", "#/harvests/harvest-1");
-    expect(within(preview).getByText("Coffee")).toBeVisible();
+      screen.queryByRole("complementary", { name: /preview|inspection/i }),
+    ).not.toBeInTheDocument();
+    await user.click(row);
+    expect(window.location.hash).toBe("#/harvests/harvest-1");
     await selectDirectoryFilter(user, "Material", "leaf");
     expect(screen.getByText("No Harvests match these filters.")).toBeVisible();
     await selectDirectoryFilter(user, "Material", "");
@@ -190,7 +185,8 @@ describe("Harvest directory and detail", () => {
       screen.getByRole("link", { name: /View owned harvest Event/ }),
     ).toHaveAttribute("href", "#/plants/plant-1?tab=events&event=event-1");
     expect(screen.getByText("Picked ripe fruit")).toBeVisible();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/source.jpg");
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(screen.getByText("Harvest image placeholder")).toBeVisible();
     await user.click(
       screen.getByRole("button", { name: "Set primary test image" }),
     );
@@ -212,7 +208,9 @@ describe("Harvest directory and detail", () => {
     );
     await user.click(screen.getByRole("button", { name: "Retry" }));
     expect(
-      await screen.findByRole("button", { name: /Coffee — Fruit harvest/ }),
+      await screen.findByRole("button", {
+        name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Coffee — Fruit harvest/,
+      }),
     ).toBeVisible();
   });
 });
@@ -417,7 +415,9 @@ it("filters exact source identity across Plants and groups and composes search/m
   );
   const user = userEvent.setup();
   wrap(<HarvestScreen />);
-  await screen.findByRole("button", { name: /misleading title/ });
+  await screen.findByRole("button", {
+    name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*misleading title/,
+  });
   await user.click(screen.getByRole("button", { name: "Filters" }));
   const picker = screen.getByRole("combobox", { name: "Botanical identity" });
   expect(picker).toHaveAttribute("placeholder", "All botanical identities");
@@ -431,18 +431,26 @@ it("filters exact source identity across Plants and groups and composes search/m
     );
   });
   expect(
-    screen.queryByRole("button", { name: /misleading title/ }),
+    screen.queryByRole("button", {
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*misleading title/,
+    }),
   ).not.toBeInTheDocument();
-  expect(screen.getByText("2 records")).toBeVisible();
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    /1–2 of 2 records/,
+  );
   await selectDirectoryFilter(user, "Material", "seed");
-  expect(screen.getByText("1 record")).toBeVisible();
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    /1–1 of 1 record/,
+  );
   await selectDirectoryFilter(user, "Source type", "plant");
   expect(screen.getByText("No Harvests match these filters.")).toBeVisible();
   await selectDirectoryFilter(user, "Source type", "plant_group");
   await user.type(screen.getByLabelText("Search Harvests"), "missing");
   expect(screen.getByText("No Harvests match these filters.")).toBeVisible();
   await user.clear(screen.getByLabelText("Search Harvests"));
-  expect(screen.getByText("1 record")).toBeVisible();
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    /1–1 of 1 record/,
+  );
   await user.click(screen.getByRole("button", { name: /^Filters/ }));
   await user.click(
     screen.getByRole("button", { name: "Clear botanical identity filter" }),
@@ -453,7 +461,9 @@ it("filters exact source identity across Plants and groups and composes search/m
   await user.keyboard("{Escape}");
   await selectDirectoryFilter(user, "Material", "");
   await selectDirectoryFilter(user, "Source type", "");
-  await screen.findByRole("button", { name: /misleading title/ });
+  await screen.findByRole("button", {
+    name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*misleading title/,
+  });
 });
 
 it("distinguishes an empty collection from an empty identity result and retains choices", async () => {
@@ -462,7 +472,9 @@ it("distinguishes an empty collection from an empty identity result and retains 
     .mockResolvedValue([]);
   const user = userEvent.setup();
   const view = wrap(<HarvestScreen />);
-  await screen.findByRole("button", { name: /Coffee — Fruit harvest/ });
+  await screen.findByRole("button", {
+    name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Coffee — Fruit harvest/,
+  });
   await user.click(screen.getByRole("button", { name: /^Filters/ }));
   await user.type(
     screen.getByRole("combobox", { name: "Botanical identity" }),
@@ -479,7 +491,9 @@ it("distinguishes an empty collection from an empty identity result and retains 
 
 it("BULK-001 does not expose multi-selection for historical Harvest occurrences", async () => {
   wrap(<HarvestScreen />);
-  await screen.findByRole("button", { name: /Coffee — Fruit harvest/ });
+  await screen.findByRole("button", {
+    name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Coffee — Fruit harvest/,
+  });
   expect(
     screen.queryByRole("button", { name: "Select records" }),
   ).not.toBeInTheDocument();
@@ -507,10 +521,9 @@ it("opens generic Harvest creation as a full-page aggregate with accessible date
 it("guards every contextual Harvest editor dismissal and returns focus to Edit", async () => {
   const user = userEvent.setup();
   wrap(<HarvestScreen />);
-  await user.click(
-    await screen.findByRole("button", { name: /Coffee — Fruit harvest/ }),
-  );
-  const trigger = screen.getByRole("button", { name: "Edit" });
+  const trigger = await screen.findByRole("button", {
+    name: "Edit Coffee — Fruit harvest",
+  });
   await user.click(trigger);
   const dialog = screen.getByRole("dialog", { name: "Edit harvest" });
   await within(dialog).findByRole("combobox", { name: "Harvest source" });
@@ -594,4 +607,75 @@ it("saves contextual corrections and restores focus to the retained detail actio
     screen.queryByRole("dialog", { name: "Edit harvest" }),
   ).not.toBeInTheDocument();
   expect(edit).toHaveFocus();
+});
+
+it("Harvest deletion opens on Cancel and retains pending and failed confirmation", async () => {
+  const user = userEvent.setup();
+  let rejectDelete!: (reason: Error) => void;
+  vi.mocked(api.deleteHarvest).mockImplementation(
+    () =>
+      new Promise<void>((_, reject) => {
+        rejectDelete = reject;
+      }),
+  );
+  wrap(<HarvestScreen initialId={harvest.id} />);
+  const more = await screen.findByRole("button", {
+    name: "More harvest actions",
+  });
+  await user.click(more);
+  await user.click(screen.getByRole("button", { name: "Delete harvest" }));
+  let dialog = screen.getByRole("dialog", { name: "Delete harvest" });
+  expect(within(dialog).getByRole("button", { name: "Cancel" })).toHaveFocus();
+  await user.keyboard("{Enter}");
+  expect(api.deleteHarvest).not.toHaveBeenCalled();
+  expect(more).toHaveFocus();
+  await user.click(more);
+  await user.click(screen.getByRole("button", { name: "Delete harvest" }));
+  dialog = screen.getByRole("dialog", { name: "Delete harvest" });
+  const confirm = within(dialog).getByRole("button", {
+    name: "Delete harvest and Event",
+  });
+  expect(confirm).toHaveClass("button--danger");
+  await user.click(confirm);
+  await user.keyboard("{Escape}");
+  expect(dialog).toBeInTheDocument();
+  act(() => {
+    rejectDelete(new Error("offline"));
+  });
+  expect(await within(dialog).findByRole("alert")).toBeVisible();
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(more).toHaveFocus();
+});
+
+it("Harvest directory never substitutes source-record photos and navigates to the selected record", async () => {
+  const second = {
+    ...harvest,
+    id: "harvest-2",
+    display_title: "Second collection",
+    primary_photo: {
+      photo_id: "photo-2",
+      kind: "local" as const,
+      thumbnail_url: "/api/v1/collection-photos/photo-2/thumbnail",
+    },
+  };
+  vi.mocked(api.listHarvests).mockResolvedValue([harvest, second]);
+  const user = userEvent.setup();
+  wrap(<HarvestScreen />);
+  const first = await screen.findByRole("button", {
+    name: new RegExp(`^(?!Open details |Edit ).*${harvest.display_title}`),
+  });
+  expect(within(first).queryByRole("img")).not.toBeInTheDocument();
+  expect(within(first).getByText("Harvest image placeholder")).toBeVisible();
+  const next = screen.getByRole("button", {
+    name: /^(?!Open details |Edit ).*Second collection/,
+  });
+  expect(within(next).getByRole("img")).toHaveAttribute(
+    "src",
+    second.primary_photo.thumbnail_url,
+  );
+  await user.click(next);
+  expect(window.location.hash).toBe("#/harvests/harvest-2");
+  expect(
+    screen.queryByRole("complementary", { name: /preview|inspection/i }),
+  ).not.toBeInTheDocument();
 });

@@ -8,7 +8,7 @@
 | Heading/search/filters | Existing PageHeader, DirectoryTools, DirectorySearch, DirectoryFilterSelect | No competing page header or drawer                                                                           |
 | Presentation           | DirectoryViewSwitcher + `directoryPresentation.ts`                          | Controlled List/Gallery; native buttons with names and aria-pressed                                          |
 | Record list/gallery    | DirectoryRecords, DirectoryRow, DirectoryCard                               | Caller supplies stable key, label, formatted name, href, visual, metadata/status, selection, preview/actions |
-| Optional preview       | DirectoryInspector                                                          | Inline above 75rem; TaskDialog below; Close first; explicit trigger and connected fallback                   |
+| Optional preview       | DirectoryInspector                                                          | Nonmodal side panel; stacked bounded panel on narrow screens; Close first; explicit trigger and connected fallback                   |
 | Chronology             | `ActivityPage.tsx`                                                          | Header/tools/feedback/chronology/pagination composition; owning capability supplies ordered evidence         |
 | Photographs            | Existing PrimaryPhotoVisual supplied as the visual slot                     | Existing authenticated local thumbnails/external opt-in and broken-image behavior remain authoritative       |
 | Navigation             | `navigationIcons.ts` + existing typed Icon                                  | CurrentColor, unified strokes, decorative SVGs; text supplies accessible names                               |
@@ -32,7 +32,17 @@ scroll. Desktop previews cannot reduce the record list to an empty permanent pan
 Inline preview Close restores focus to the currently mounted row's trigger, or a
 connected page fallback if the trigger disappeared. Filtering which removes the
 selected record must close the preview without pulling focus away from the search.
-Compact preview uses native modal containment/Escape and the same focus fallback.
+Compact directory preview is nonmodal and stacks above results without a backdrop or focus trap; Escape uses the same connected focus fallback. Editing and destructive confirmation retain native modal containment.
+Eligible record directories use the bounded workspace rules in
+`frontend/src/styles/directory-workspace.css`: identity/tools remain outside the
+results scrollport, and the compact inspector occupies a stable adjacent column.
+Its body scrolls separately from its action footer. Mobile uses a short inline
+identity/action preview; full metadata remains in Details. At very short viewport
+heights, content flow takes priority over retaining a zero-height results region.
+Use `DirectoryTrigger` for native keyboard record-surface Preview; keep Details/Edit
+as sibling controls, without an eye action or nested interactive markup. Preserve
+domain bulk/modifier handling and native modified navigation links. A compact
+StatusBadge is only for truthful binary states; richer lifecycle labels stay exact.
 The caller supplies refs; it must reconnect the selected trigger after changing row
 representation. TaskDialog's optional fallback is backward compatible with callers
 which omit it. Do not replace domain-specific Media Quick Preview with this generic

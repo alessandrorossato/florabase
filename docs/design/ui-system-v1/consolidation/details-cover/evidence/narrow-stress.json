@@ -1,0 +1,37 @@
+[
+  {
+    "name": "location",
+    "clientWidth": 305,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 320
+  },
+  {
+    "name": "identity",
+    "clientWidth": 305,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 320
+  },
+  {
+    "name": "geography-canonical",
+    "clientWidth": 305,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 320
+  },
+  {
+    "name": "supplier",
+    "clientWidth": 305,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 320
+  },
+  {
+    "name": "order-partial-date",
+    "clientWidth": 305,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 320
+  }
+]

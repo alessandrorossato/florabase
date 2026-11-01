@@ -1,11 +1,4 @@
-import { ActionButton } from "../components/Action";
-import { ReferencePicker } from "../seed-lots/ReferencePicker";
-import "../harvests/collection-visual.css";
-import { FieldLabel } from "../components/FieldLabel";
-import { DirectoryTools } from "../components/DirectoryTools";
-import { DirectoryResults } from "../components/DirectoryResults";
-import { SavedViews } from "../saved-views/SavedViews";
-import { useDirectoryView } from "../saved-views/useDirectoryView";
+import { HierarchyRow } from "../components/HierarchyRow";
 import {
   useEffect,
   useId,
@@ -14,18 +7,35 @@ import {
   useState,
   type SyntheticEvent,
 } from "react";
+import { ActionButton, ActionLink } from "../components/Action";
+import { LifecycleStatus } from "../components/WorkspaceUI";
+import { DirectoryResults } from "../components/DirectoryResults";
+import { DirectoryTools } from "../components/DirectoryTools";
+import { FieldLabel } from "../components/FieldLabel";
+import "../components/hierarchy.css";
+import { Icon } from "../components/Icon";
+import "../harvests/collection-visual.css";
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
+import { ReferencePicker } from "../seed-lots/ReferencePicker";
+import "./hierarchy.css";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { useCreationDisclosure } from "../components/useCreationDisclosure";
-import { Breadcrumbs, DetailHeader } from "../components/CollectionUI";
+import {
+  Breadcrumbs,
+  DetailHeader,
+  DetailPage,
+  DetailSummary,
+  DetailLoading,
+} from "../components/CollectionUI";
 import {
   DirectorySearch,
-  PageHeader,
-  QuickPreview,
   OverflowMenu,
+  PageHeader,
 } from "../components/ReferenceUI";
 import { TaskDialog } from "../components/TaskDialog";
+import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import {
   createLocation,
   deleteLocation,
@@ -342,10 +352,12 @@ function LocationTree({
   if (children.length === 0) return null;
   return (
     <ul
+      tabIndex={parentId ? undefined : 0}
+      aria-label={parentId ? undefined : "Location hierarchy"}
       className={
         !parentId
           ? "location-tree"
-          : `location-tree location-tree--nested${depth > 3 ? " location-tree--compact-depth" : ""}`
+          : `location-tree location-tree--nested${depth >= 3 ? " location-tree--compact-depth" : ""}`
       }
     >
       {children.map((location) => {
@@ -366,42 +378,64 @@ function LocationTree({
                     onToggle(location.id);
                   }}
                 >
-                  {isExpanded ? "−" : "+"}
+                  <Icon name="chevron-down" />
                 </button>
               ) : (
                 <span className="location-tree-spacer" aria-hidden="true" />
               )}
-              <button
-                type="button"
-                className="identity-list-item location-directory-row"
-                title={location.display_path}
-                aria-pressed={selectedId === location.id}
-                onClick={() => {
-                  onSelect(location.id);
-                }}
-              >
-                <span>
-                  <strong className="location-record-name">
-                    {location.name}
-                  </strong>
-                  {location.retired_at && (
-                    <span className="record-state">Retired</span>
+              <HierarchyRow selected={selectedId === location.id}>
+                <button
+                  type="button"
+                  className="identity-list-item location-directory-row ui-hierarchy-record"
+                  title={location.display_path}
+                  aria-pressed={selectedId === location.id}
+                  onClick={() => {
+                    onSelect(location.id);
+                  }}
+                >
+                  <span>
+                    <strong className="location-record-name">
+                      {location.name}
+                    </strong>
+                    <LifecycleStatus
+                      state={location.retired_at ? "retired" : "active"}
+                    />
+                  </span>
+                  {depth >= 3 && (
+                    <small
+                      className="location-path"
+                      title={location.display_path}
+                    >
+                      Within{" "}
+                      {
+                        locations.find((item) => item.id === location.parent_id)
+                          ?.name
+                      }
+                    </small>
                   )}
-                </span>
-                {depth > 3 && (
-                  <small
-                    className="location-path"
-                    title={location.display_path}
+                  <CompactUsage location={location} />
+                </button>
+                <div className="ui-hierarchy-record-actions">
+                  <ActionLink
+                    className="ui-directory-quick-action"
+                    icon="document"
+                    title="Open details"
+                    aria-label={`Open details ${location.name}`}
+                    href={`#/locations/${location.id}`}
                   >
-                    Within{" "}
-                    {
-                      locations.find((item) => item.id === location.parent_id)
-                        ?.name
-                    }
-                  </small>
-                )}
-                <CompactUsage location={location} />
-              </button>
+                    <span className="sr-only">Open details</span>
+                  </ActionLink>
+                  <ActionLink
+                    className="ui-directory-quick-action"
+                    icon="edit"
+                    title="Edit"
+                    aria-label={`Edit ${location.name}`}
+                    href={`#/locations/${location.id}?tab=edit`}
+                  >
+                    <span className="sr-only">Edit</span>
+                  </ActionLink>
+                </div>
+              </HierarchyRow>
             </div>
             {hasChildren && isExpanded && (
               <LocationTree
@@ -436,7 +470,12 @@ export function LocationScreen({
   const [createParentId, setCreateParentId] = useState("");
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [attempt, setAttempt] = useState(0);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(
+    Boolean(initialId) &&
+      new URLSearchParams(window.location.hash.split("?", 2)[1] ?? "").get(
+        "tab",
+      ) === "edit",
+  );
   const view = useDirectoryView("locations", () => {
     setSelectedId(null);
   });
@@ -457,6 +496,8 @@ export function LocationScreen({
   }>({ key: "", overrides: new Map() });
   const createName = useRef<HTMLInputElement>(null);
   const editForm = useRef<HTMLFormElement>(null);
+  const createForm = useRef<HTMLFormElement>(null);
+  const createBaseline = useRef("");
   const feedback = useRef<HTMLDivElement>(null);
   const {
     expanded: creationExpanded,
@@ -480,6 +521,24 @@ export function LocationScreen({
     openCreation();
   }, [directory.status, openCreation, startCreating]);
   const pending = save.status === "saving";
+  useEffect(() => {
+    if (creationExpanded && createForm.current)
+      createBaseline.current = JSON.stringify(payloadFrom(createForm.current));
+  }, [creationExpanded]);
+  function dismissCreate() {
+    if (pending) return;
+    if (
+      createForm.current &&
+      JSON.stringify(payloadFrom(createForm.current)) !==
+        createBaseline.current &&
+      !window.confirm("Discard unsaved Location changes?")
+    )
+      return;
+    setCreateNameValue("");
+    setCreateParentId("");
+    setSave({ status: "idle" });
+    closeCreation({ returnFocus: false });
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -647,7 +706,7 @@ export function LocationScreen({
         setCreateNameValue("");
         setCreateParentId("");
         closeCreation({ returnFocus: false });
-        if (initialId) window.location.hash = `#/locations/${location.id}`;
+        window.location.hash = `#/locations/${location.id}`;
         return `${location.display_path} was created and selected.`;
       },
     );
@@ -687,14 +746,15 @@ export function LocationScreen({
   return (
     <section
       aria-labelledby={initialId ? undefined : "locations-title"}
-      className="workspace locations-workspace"
+      className="workspace locations-workspace ui-hierarchy-workspace"
     >
       {!initialId && (
         <PageHeader
           title="Locations"
           titleId="locations-title"
           eyebrow="Collection"
-          description="Manage where seeds, sowings, plants, groups, and harvested material are kept."
+          directory
+          description="Where your collection lives."
           tools={
             <DirectoryTools
               onReset={() => {
@@ -856,8 +916,7 @@ export function LocationScreen({
                   selectedId={selectedId}
                   onSelect={(id) => {
                     setSelectedId(id);
-                    if (window.innerWidth <= 1088)
-                      window.location.hash = `#/locations/${id}`;
+                    window.location.hash = `#/locations/${id}`;
                     setEditing(false);
                     setSave({ status: "idle" });
                   }}
@@ -888,74 +947,12 @@ export function LocationScreen({
             </section>
           </div>
         )}
-        {!initialId ? (
-          <QuickPreview>
+        {initialId && (
+          <div className="record-detail-container" aria-live="polite">
             {selected ? (
-              <>
-                <h3 className="location-record-name">{selected.name}</h3>
-                <p>{selected.display_path}</p>
-                <p>
-                  {selected.retired_at ? "Retired" : "Active"} ·{" "}
-                  {selected.usage_scopes
-                    .map((scope) => scopeLabels[scope])
-                    .join(", ")}
-                </p>
-                <p>
-                  {
-                    locations.filter(
-                      (location) => location.parent_id === selected.id,
-                    ).length
-                  }{" "}
-                  child locations
-                </p>
-                <CompactUsage location={selected} comparison />
-                <div className="actions record-preview__actions">
-                  <a
-                    className="button-link"
-                    href={`#/locations/${selected.id}`}
-                  >
-                    Open details
-                  </a>
-                  <ActionButton
-                    icon="edit"
-                    type="button"
-                    className="button--secondary"
-                    onClick={() => {
-                      setSave({ status: "idle" });
-                      setEditing(true);
-                    }}
-                  >
-                    Edit
-                  </ActionButton>
-                  {!selected.retired_at && (
-                    <button
-                      type="button"
-                      className="button--secondary"
-                      onClick={() => {
-                        setCreateParentId(selected.id);
-                        setCreateNameValue("");
-                        setSave({ status: "idle" });
-                        openCreation();
-                      }}
-                    >
-                      Create child
-                    </button>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="preview-empty">
-                <h3>Select a location</h3>
-                <p>Choose a place in the hierarchy.</p>
-              </div>
-            )}
-          </QuickPreview>
-        ) : (
-          <div className="identity-panel" aria-live="polite">
-            {selected ? (
-              <article
+              <DetailPage
                 aria-label="Location detail"
-                className="reference-detail location-detail"
+                className="location-detail"
               >
                 <Breadcrumbs
                   items={[
@@ -971,11 +968,11 @@ export function LocationScreen({
                   }
                   status={
                     <div className="record-badges">
-                      <span
-                        className={`lifecycle-badge lifecycle-badge--${selected.retired_at ? "retired" : "active"}`}
+                      <LifecycleStatus
+                        state={selected.retired_at ? "retired" : "active"}
                       >
                         {selected.retired_at ? "Retired" : "Active"}
-                      </span>
+                      </LifecycleStatus>
                       <span
                         aria-label="Usage scopes"
                         className="record-scope-badges"
@@ -1051,18 +1048,17 @@ export function LocationScreen({
                     Retired location remains available for historical records.
                   </p>
                 )}
-                <dl
-                  className="seed-overview-band"
-                  aria-label="Location overview"
-                >
-                  <div>
-                    <dt>State</dt>
-                    <dd>{selected.retired_at ? "Retired" : "Active"}</dd>
-                  </div>
-                  <div>
-                    <dt>Parent</dt>
-                    <dd>
-                      {selected.parent_id ? (
+                <DetailSummary
+                  id="location-summary-title"
+                  label="Location overview"
+                  metrics={[
+                    {
+                      label: "State",
+                      value: selected.retired_at ? "Retired" : "Active",
+                    },
+                    {
+                      label: "Parent",
+                      value: selected.parent_id ? (
                         <a href={`#/locations/${selected.parent_id}`}>
                           {
                             locations.find(
@@ -1072,20 +1068,16 @@ export function LocationScreen({
                         </a>
                       ) : (
                         "Root location"
-                      )}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Children</dt>
-                    <dd>
-                      {
-                        locations.filter(
-                          (location) => location.parent_id === selected.id,
-                        ).length
-                      }
-                    </dd>
-                  </div>
-                </dl>
+                      ),
+                    },
+                    {
+                      label: "Children",
+                      value: locations.filter(
+                        (location) => location.parent_id === selected.id,
+                      ).length,
+                    },
+                  ]}
+                />
                 <div className="record-detail-grid location-overview-grid">
                   <section
                     className="record-section"
@@ -1162,13 +1154,34 @@ export function LocationScreen({
                     </p>
                   </section>
                 </div>
-              </article>
+              </DetailPage>
+            ) : directory.status === "loading" ? (
+              <DetailLoading
+                eyebrow="Location"
+                label="Loading Location detail…"
+                parents={[{ label: "Locations", href: "#/locations" }]}
+                className="location-detail"
+                visual={false}
+              />
             ) : (
               <div className="empty-state">
-                <h3>Select a location</h3>
-                <p>
-                  Choose a location from the hierarchy to use or maintain it.
-                </p>
+                {directory.status === "error" ? (
+                  <div role="alert">
+                    <h3>Could not load Location</h3>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDirectory({ status: "loading" });
+                        setAttempt((value) => value + 1);
+                      }}
+                    >
+                      Retry Location
+                    </button>
+                  </div>
+                ) : (
+                  <h3>Location not found</h3>
+                )}
+                <a href="#/locations">Return to Locations</a>
               </div>
             )}
           </div>
@@ -1255,12 +1268,11 @@ export function LocationScreen({
       {creationExpanded && (
         <TaskDialog
           title={createParentId ? "New child location" : "New location"}
-          onClose={() => {
-            if (!pending) closeCreation({ returnFocus: false });
-          }}
+          onClose={dismissCreate}
         >
           <div ref={creationPanelRef}>
             <form
+              ref={createForm}
               className="identity-form"
               aria-busy={pending}
               onSubmit={submitCreate}
@@ -1324,12 +1336,7 @@ export function LocationScreen({
                   type="button"
                   className="button--secondary"
                   disabled={pending}
-                  onClick={() => {
-                    setCreateNameValue("");
-                    setCreateParentId("");
-                    setSave({ status: "idle" });
-                    closeCreation({ returnFocus: false });
-                  }}
+                  onClick={dismissCreate}
                 >
                   Cancel
                 </button>

@@ -1,0 +1,50 @@
+[
+  {
+    "name": "locations-hierarchy",
+    "actionsInside": true,
+    "focused": "Collapse Review v5 collection",
+    "overflow": false,
+    "url": "http://localhost:15174/#/locations",
+    "width": 1440
+  },
+  {
+    "name": "geography-hierarchy",
+    "actionsInside": true,
+    "focused": "Collapse Europe",
+    "overflow": false,
+    "url": "http://localhost:15174/#/geography/places",
+    "width": 1440
+  },
+  {
+    "name": "locations-hierarchy",
+    "actionsInside": true,
+    "focused": "Collapse Review v5 collection",
+    "overflow": false,
+    "url": "http://localhost:15174/#/locations",
+    "width": 1024
+  },
+  {
+    "name": "geography-hierarchy",
+    "actionsInside": true,
+    "focused": "Collapse Europe",
+    "overflow": false,
+    "url": "http://localhost:15174/#/geography/places",
+    "width": 1024
+  },
+  {
+    "name": "locations-hierarchy",
+    "actionsInside": true,
+    "focused": "Collapse Review v5 collection",
+    "overflow": false,
+    "url": "http://localhost:15174/#/locations",
+    "width": 390
+  },
+  {
+    "name": "geography-hierarchy",
+    "actionsInside": true,
+    "focused": "Collapse Europe",
+    "overflow": false,
+    "url": "http://localhost:15174/#/geography/places",
+    "width": 390
+  }
+]

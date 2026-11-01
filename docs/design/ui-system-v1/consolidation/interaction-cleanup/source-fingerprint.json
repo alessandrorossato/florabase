@@ -1,0 +1,21 @@
+{
+  "frontend/src/App.test.tsx": "793f494dcd672486993e069c2a45f237597af4a9f714ee6b02703b7bffd202be",
+  "frontend/src/UX001.test.tsx": "a5ab933c0bf05bcb1ac29c149d47a91022a001142a29997e9033b4bf15966705",
+  "frontend/src/botanical-identities/BotanicalIdentityScreen.tsx": "bfdc16375b2ef4893708f66a6bf58612165a8c82503a1a0577ed177525533c40",
+  "frontend/src/botanical-identities/IdentitySourceAction.test.tsx": "bbe34cda953ed40825232fc91160af621a2bafc828bc5b60140d14a4149e6c14",
+  "frontend/src/botanical-identities/IdentitySourceAction.tsx": "f22079b3f0723b61d0d078c0e8ef8e8d7c643ad455f17d91b68c8aeaa6b2c82e",
+  "frontend/src/components/DirectoryPage.test.tsx": "5b48edf755e9a80b8c9299d85f93b2117049685a378367d340f084c7faaa2bac",
+  "frontend/src/components/DirectoryPage.tsx": "6ff7b8c93de6d129152ce25a9d76b35fc7e04281fb6f2589c00a3c69bdab1d1f",
+  "frontend/src/components/ReferenceUI.tsx": "27483406d049d3a8ec0c2dbd709c0dd06d4e78bf8cecf4b083cf6f0d426addf9",
+  "frontend/src/components/WorkspaceUI.tsx": "f91017022f449abd9669446038fd7fab94e28c952cc345144da4298d22269d18",
+  "frontend/src/harvests/Conversion.test.tsx": "0031eca2f4d0bb7a1dd6912dd68af454f9803950eb69b8a7f73bb0fc1d104ce6",
+  "frontend/src/harvests/HarvestScreen.test.tsx": "622e47d8e7239a2bb7a3a553a6cb0a097489c481baa79c710def01480eab7c2b",
+  "frontend/src/harvests/StoredMaterial.test.tsx": "e65d85a4d568620ed2dc5840244abfd6f4b41e41973a5a723a69e5e552477f7e",
+  "frontend/src/harvests/StoredMaterial.tsx": "461a92e8e2d3b8c3fb6f7b849ce5faf5e96c5ee059742b0e902abeb970e02a20",
+  "frontend/src/orders/OrderScreen.test.tsx": "88f5626fe30680ab420ce5785237413d5c95297b3a0d8e1820bdc73383018c67",
+  "frontend/src/plants/PlantScreen.test.tsx": "ca54d71f000f296dc0cc533dfce54c83fc899c167aa87dcb5de7757131265657",
+  "frontend/src/seed-lots/SeedLotScreen.test.tsx": "d12eb9dd254a2b6bee057e898496c5ddcba76133c8b85baf4ce5d59b315bef6a",
+  "frontend/src/sowings/SowingScreen.test.tsx": "a5c3c39ebe725ac91d3129946a08df5eec717bb6d852f5dafcf74f4787fab430",
+  "frontend/src/styles/directory-system.css": "60f6a75ba4fa4a748d6bb0b6f724219271b034e8ba300fab5622f99e8a129da0",
+  "frontend/src/suppliers/SupplierScreen.test.tsx": "154ab3fec1cf5fd364329ef097c501c5e882fc5be27dc0da70fbd8fed6310bc9"
+}

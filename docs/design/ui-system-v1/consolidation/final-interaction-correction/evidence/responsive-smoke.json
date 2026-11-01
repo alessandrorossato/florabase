@@ -1,0 +1,259 @@
+[
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 20,
+    "surface": "plants",
+    "url": "http://localhost:15174/#/plants",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 5,
+    "surface": "harvests",
+    "url": "http://localhost:15174/#/harvests",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 20,
+    "surface": "identities",
+    "url": "http://localhost:15174/#/identities",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 20,
+    "surface": "seeds",
+    "url": "http://localhost:15174/#/seeds",
+    "width": 1024
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 12,
+    "surface": "sowings",
+    "url": "http://localhost:15174/#/sowings",
+    "width": 1024
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 20,
+    "surface": "plants",
+    "url": "http://localhost:15174/#/plants",
+    "width": 1024
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 5,
+    "surface": "harvests",
+    "url": "http://localhost:15174/#/harvests",
+    "width": 1024
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 3,
+    "surface": "stored-material",
+    "url": "http://localhost:15174/#/harvests?tab=stored-material",
+    "width": 1024
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 10,
+    "surface": "suppliers",
+    "url": "http://localhost:15174/#/suppliers",
+    "width": 1024
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 12,
+    "surface": "orders",
+    "url": "http://localhost:15174/#/orders",
+    "width": 1024
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 20,
+    "surface": "identities",
+    "url": "http://localhost:15174/#/identities",
+    "width": 1024
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 20,
+    "surface": "seeds",
+    "url": "http://localhost:15174/#/seeds",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 12,
+    "surface": "sowings",
+    "url": "http://localhost:15174/#/sowings",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 20,
+    "surface": "plants",
+    "url": "http://localhost:15174/#/plants",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 5,
+    "surface": "harvests",
+    "url": "http://localhost:15174/#/harvests",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 3,
+    "surface": "stored-material",
+    "url": "http://localhost:15174/#/harvests?tab=stored-material",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 10,
+    "surface": "suppliers",
+    "url": "http://localhost:15174/#/suppliers",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 12,
+    "surface": "orders",
+    "url": "http://localhost:15174/#/orders",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "records": 20,
+    "surface": "identities",
+    "url": "http://localhost:15174/#/identities",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "surface": "locations",
+    "url": "http://localhost:15174/#/locations",
+    "width": 1024
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "surface": "geography",
+    "url": "http://localhost:15174/#/geography/places",
+    "width": 1024
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "surface": "locations",
+    "url": "http://localhost:15174/#/locations",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "surface": "geography",
+    "url": "http://localhost:15174/#/geography/places",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "surface": "locations-final",
+    "url": "http://localhost:15174/#/locations",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "surface": "geography-final",
+    "url": "http://localhost:15174/#/geography/places",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "surface": "locations-final",
+    "url": "http://localhost:15174/#/locations",
+    "width": 1024
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "surface": "geography-final",
+    "url": "http://localhost:15174/#/geography/places",
+    "width": 1024
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "surface": "locations-final",
+    "url": "http://localhost:15174/#/locations",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "surface": "geography-final",
+    "url": "http://localhost:15174/#/geography/places",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "surface": "seeds-gallery",
+    "url": "http://localhost:15174/#/seeds?view=gallery",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "surface": "sowings-gallery",
+    "url": "http://localhost:15174/#/sowings?view=gallery",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "surface": "plants-gallery",
+    "url": "http://localhost:15174/#/plants?view=gallery",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "surface": "suppliers-gallery",
+    "url": "http://localhost:15174/#/suppliers?view=gallery",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "previews": 0,
+    "surface": "orders-gallery",
+    "url": "http://localhost:15174/#/orders?view=gallery",
+    "width": 1440
+  }
+]

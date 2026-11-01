@@ -193,6 +193,9 @@ it("shows eligibility request failure inside Undo and keeps confirmation disable
 });
 it("exposes creation only on tracked active seed material", async () => {
   const view = wrap(<StoredMaterialDirectory />);
+  await userEvent.click(
+    await screen.findByRole("button", { name: /^Create or record for / }),
+  );
   expect(
     await screen.findByRole("button", { name: "Create Seed lot" }),
   ).toBeEnabled();
@@ -208,7 +211,10 @@ it("exposes creation only on tracked active seed material", async () => {
       await userEvent.selectOptions(screen.getByLabelText("State"), "depleted");
       await userEvent.click(screen.getByRole("button", { name: "Done" }));
     }
-    await screen.findByText("1 record");
+    await screen.findByLabelText("Directory results");
+    expect(
+      screen.queryByRole("button", { name: /^Create or record for / }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Create Seed lot" }),
     ).not.toBeInTheDocument();
@@ -445,4 +451,34 @@ it("retains a conversion dialog on conflict and moves focus to the explanation",
     "Stock changed. Refresh and retry.",
   );
   expect(screen.getByRole("dialog")).toBeInTheDocument();
+});
+
+it("protects a changed conversion on Escape and Cancel while pristine dismissal is immediate", async () => {
+  const user = userEvent.setup();
+  const close = vi.fn();
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  wrap(
+    <ConversionDialog
+      inventory={inventory}
+      harvest={harvest}
+      onClose={close}
+      onSaved={vi.fn()}
+    />,
+  );
+  await screen.findByRole("combobox", { name: "Botanical identity" });
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(close).toHaveBeenCalledOnce();
+  expect(confirm).not.toHaveBeenCalled();
+  close.mockClear();
+  await user.type(screen.getByLabelText("Seed lot label"), "retain conversion");
+  await user.keyboard("{Escape}");
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(close).not.toHaveBeenCalled();
+  expect(screen.getByLabelText("Seed lot label")).toHaveValue(
+    "retain conversion",
+  );
+  confirm.mockReturnValue(true);
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(close).toHaveBeenCalledOnce();
+  confirm.mockRestore();
 });

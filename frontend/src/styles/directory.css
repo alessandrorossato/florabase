@@ -220,7 +220,7 @@
     padding: var(--space-2);
   }
   .ui-directory-card .ui-directory-record-actions {
-    justify-content: space-between;
+    justify-content: flex-end;
   }
   .ui-directory-card .ui-directory-record-actions button {
     padding-inline: var(--space-2);
@@ -366,19 +366,6 @@
   background: var(--surface);
   border-radius: var(--radius-small);
 }
-.app-content
-  .ui-directory-page
-  .operational-layout.directory-preview-layout:not(.is-detail-view) {
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-4);
-}
-.app-content
-  .ui-directory-page
-  .operational-layout.directory-preview-layout:not(.is-detail-view):has(
-    .ui-directory-inspector
-  ) {
-  grid-template-columns: minmax(0, 1fr) 22rem;
-}
 .ui-directory-page .seed-detail-pane:has(> dialog[open]) {
   display: contents;
 }
@@ -399,13 +386,6 @@
   font: var(--type-h3);
 }
 @media (max-width: 75rem) {
-  .app-content
-    .ui-directory-page
-    .operational-layout.directory-preview-layout:not(.is-detail-view):has(
-      .ui-directory-inspector
-    ) {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .ui-directory-trigger {
     grid-template-columns: minmax(0, 1fr) auto;
   }
@@ -516,7 +496,8 @@
 .ui-directory-card--composed > .ui-directory-record-actions {
   border-top: 1px solid var(--border);
   padding: var(--space-1) var(--space-2);
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: var(--space-1);
 }
 .ui-directory-card--composed .record-visual > svg {
   width: 2rem;
@@ -619,7 +600,7 @@
 
 /* Photographic presentation retains domain-owned interactions and image-source captions. */
 .ui-directory-records--photo-titles {
-  align-items: start;
+  align-items: stretch;
 }
 .ui-directory-records--photo-titles .ui-directory-record-identity {
   position: relative;
@@ -685,4 +666,88 @@
   .ui-directory-record-actions
   .control-icon-button:hover {
   background: var(--surface-hover);
+}
+
+/* Nonmodal directory inspection. Editors and destructive confirmations remain house dialogs. */
+.app-content .ui-directory-side-preview .quick-preview {
+  display: block;
+  position: static;
+  padding: 0;
+  border: 0;
+  max-height: none;
+  overflow: visible;
+}
+.ui-directory-side-preview .quick-preview > .eyebrow {
+  display: none;
+}
+.ui-directory-side-preview {
+  max-height: calc(100dvh - 3rem);
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+}
+.app-content .ui-directory-side-preview .quick-preview > .record-visual {
+  display: flex;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  aspect-ratio: 4 / 3;
+  box-sizing: border-box;
+}
+.app-content .ui-directory-side-preview .quick-preview > .record-visual img {
+  display: block;
+  object-fit: contain;
+  min-width: 0;
+  min-height: 0;
+}
+.app-content
+  .ui-directory-side-preview
+  .quick-preview
+  > .record-visual:not(:has(img)) {
+  width: 3rem;
+  height: 3rem;
+  aspect-ratio: 1;
+}
+@media (max-width: 48rem) {
+  .app-content .ui-directory-side-preview {
+    position: static;
+    width: 100%;
+    max-height: 42dvh;
+    box-sizing: border-box;
+  }
+}
+
+/* Source provenance remains in the accessible text and native title, without a photo band. */
+.ui-directory-records .record-visual:has(img) .record-visual__source {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.ui-directory-page:has(.ui-directory-side-preview)
+  .ui-directory-records--gallery {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+}
+@media (max-width: 48rem) {
+  .seed-detail-pane:has(.ui-directory-side-preview),
+  .ui-directory-frame > .ui-directory-side-preview,
+  .sourcing-directory-layout > .ui-directory-side-preview {
+    grid-row: 1;
+  }
+}
+
+.ui-directory-side-preview .record-visual {
+  position: relative;
+}
+.ui-directory-side-preview .record-visual__source {
+  background: transparent;
+  border: 0;
+  color: white;
+  text-shadow:
+    0 1px 3px black,
+    0 0 2px black;
 }

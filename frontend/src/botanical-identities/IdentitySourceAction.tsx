@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useState, useRef, type MouseEvent } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
@@ -7,6 +7,8 @@ import {
 } from "../collection/api";
 import { TaskDialog } from "../components/TaskDialog";
 import { openCollectionPage } from "../components/recordNavigation";
+import { IconButton } from "../components/Action";
+import type { IconName } from "../components/Icon";
 
 /** Source choices use the same eligibility as the existing Sowing and Harvest forms. */
 export function IdentitySourceAction({
@@ -14,13 +16,18 @@ export function IdentitySourceAction({
   kind,
   dialogOnly = false,
   onDismiss,
+  triggerIcon,
+  triggerLabel,
 }: {
   identityId: string;
   kind: "sowing" | "harvest";
   dialogOnly?: boolean;
   onDismiss?: () => void;
+  triggerIcon?: IconName;
+  triggerLabel?: string;
 }) {
   const auth = useAuth();
+  const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(dialogOnly);
   const [attempt, setAttempt] = useState(0);
   const [load, setLoad] = useState<
@@ -88,20 +95,36 @@ export function IdentitySourceAction({
   }
   return (
     <>
-      {!dialogOnly && (
-        <button
-          type="button"
-          className="button--secondary"
-          onClick={() => {
-            setLoad({ status: "loading" });
-            setOpen(true);
-          }}
-        >
-          {title}
-        </button>
-      )}
+      {!dialogOnly &&
+        (triggerIcon ? (
+          <IconButton
+            ref={trigger}
+            icon={triggerIcon}
+            label={triggerLabel ?? title}
+            visibleLabel={title}
+            tooltip={title}
+            className="ui-directory-quick-action"
+            onClick={() => {
+              setLoad({ status: "loading" });
+              setOpen(true);
+            }}
+          />
+        ) : (
+          <button
+            ref={trigger}
+            type="button"
+            className="button--secondary"
+            onClick={() => {
+              setLoad({ status: "loading" });
+              setOpen(true);
+            }}
+          >
+            {title}
+          </button>
+        ))}
       {open && (
         <TaskDialog
+          returnFocusTo={trigger}
           title={title}
           onClose={() => {
             setOpen(false);

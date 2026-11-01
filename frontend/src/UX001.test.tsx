@@ -390,7 +390,32 @@ test("Botanical identity directory uses bounded local thumbnails and configured 
   const directory = await screen.findByRole("region", {
     name: "Identity directory",
   });
-  await within(directory).findByRole("button", { name: /Acer rubrum/ });
+  await within(directory).findByRole("button", {
+    name: /^Open details Acer rubrum/,
+  });
+  await userEvent.click(
+    screen.getByRole("button", {
+      name: `Create or record for ${externalCoverIdentity.display_label}`,
+    }),
+  );
+  expect(
+    screen.getByRole("link", {
+      name: `Add seed lot for ${externalCoverIdentity.display_label}`,
+    }),
+  ).toHaveAttribute(
+    "href",
+    `#/seeds?action=create&identity=${externalCoverIdentity.id}`,
+  );
+  expect(
+    screen.getByRole("button", {
+      name: `Start sowing for ${externalCoverIdentity.display_label}`,
+    }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole("button", {
+      name: `Record harvest for ${externalCoverIdentity.display_label}`,
+    }),
+  ).toBeVisible();
   const images = Array.from(directory.querySelectorAll("img"));
   expect(images).toHaveLength(2);
   expect(images[0]).toHaveAttribute(
@@ -476,8 +501,10 @@ test("Botanical reference deep links use compact context and defer collection wo
   expect(requested).not.toContain(
     `/api/v1/botanical-identities/${identity.id}/cover-image`,
   );
-  expect(document.querySelector(".identity-work-header")).toBeInTheDocument();
-  expect(document.querySelector(".identity-summary")).not.toBeInTheDocument();
+  expect(document.querySelector(".detail-header")).toContainElement(
+    screen.getByRole("heading", { name: identity.display_label, level: 2 }),
+  );
+  expect(document.querySelectorAll(".detail-header")).toHaveLength(1);
   expect(requested).not.toContain(
     `/api/v1/botanical-identities/${identity.id}/collection`,
   );
@@ -624,6 +651,9 @@ test("Botanical identity edit and guarded deletion stay explicit", async () => {
     }),
   );
   expect(
-    await screen.findByRole("heading", { name: "Select a botanical identity" }),
+    await screen.findByRole("region", { name: "Identity directory" }),
   ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("complementary", { name: /preview|inspection/i }),
+  ).not.toBeInTheDocument();
 });

@@ -1,3 +1,4 @@
+import { browserBack } from "./test/history";
 import { selectDirectoryFilter } from "./test/directoryFilters";
 import { emptyOverview } from "./collection/dashboardFixtures";
 import {
@@ -891,10 +892,8 @@ test("authenticated owners see the labelled create form and truthful empty state
   expect(newIdentity).toHaveAttribute("aria-expanded", "false");
   expect(newIdentity).toHaveFocus();
   expect(
-    screen.getByRole("heading", {
-      name: "Select a botanical identity",
-    }),
-  ).toBeInTheDocument();
+    screen.queryByRole("complementary", { name: /preview|inspection/i }),
+  ).not.toBeInTheDocument();
   expect(
     await screen.findByText("No botanical identities yet."),
   ).toBeInTheDocument();
@@ -949,11 +948,12 @@ test("directory records are keyboard-selectable and reuse the existing profile p
   expect(annonaButton).toHaveAttribute("aria-pressed", "false");
   annonaButton.focus();
   await user.keyboard("{Enter}");
-  expect(annonaButton).toHaveAttribute("aria-pressed", "true");
+  await waitFor(() => {
+    expect(window.location.hash).toContain(annona.id);
+  });
   expect(
     screen.getByRole("heading", { name: "Annona cherimola" }),
   ).toBeInTheDocument();
-  await user.click(await screen.findByRole("link", { name: "Open details" }));
   await user.click(await screen.findByRole("tab", { name: "Reference" }));
   expect(
     await screen.findByText("No botanical profile yet."),
@@ -983,11 +983,11 @@ test("client-side filter matches loaded common names and distinguishes zero matc
 
   await user.type(filter, "cherimoya");
   expect(
-    screen.getByRole("button", { name: /Annona cherimola/i }),
+    screen.getByRole("button", { name: /^Open details Annona cherimola/i }),
   ).toBeInTheDocument();
   await waitFor(() => {
     expect(
-      screen.queryByRole("button", { name: /Acer palmatum/i }),
+      screen.queryByRole("button", { name: /^Open details Acer palmatum/i }),
     ).not.toBeInTheDocument();
   });
   await user.clear(filter);
@@ -1074,11 +1074,12 @@ test("keyboard creation sends generated-contract fields with CSRF and renders th
       name: "Acer palmatum ‘Bloodgood’",
     }),
   ).toBeInTheDocument();
-  expect(screen.getAllByText("Japanese maple")).toHaveLength(2);
+  expect(screen.getAllByText("Japanese maple")).toHaveLength(1);
   expect(screen.queryByText(botanicalIdentity.id)).not.toBeInTheDocument();
+  expect(window.location.hash).toBe(`#/identities/${botanicalIdentity.id}`);
   expect(
-    screen.getByRole("button", { name: /Acer palmatum.*Japanese maple/i }),
-  ).toHaveAttribute("aria-pressed", "true");
+    screen.queryByRole("region", { name: "Identity directory" }),
+  ).not.toBeInTheDocument();
   expect(directoryCalls).toBe(2);
   expect(createRequest?.method).toBe("POST");
   expect(new Headers(createRequest?.headers).get("X-CSRF-Token")).toBe(
@@ -1092,8 +1093,9 @@ test("keyboard creation sends generated-contract fields with CSRF and renders th
     }),
   );
   expect(screen.queryByLabelText("Scientific name")).not.toBeInTheDocument();
-  expect(newIdentity).toHaveAttribute("aria-expanded", "false");
-  expect(newIdentity).toHaveFocus();
+  expect(
+    screen.getByRole("heading", { name: botanicalIdentity.display_label }),
+  ).toHaveFocus();
 });
 
 test("creation exposes a busy state and prevents duplicate submissions", async () => {
@@ -1662,7 +1664,7 @@ test("structured native ranges distinguish paths and support add and remove with
 });
 
 test("native-range loading failure is explicit and retryable", async () => {
-  let nativeCalls = 0;
+  let failNativeRange = true;
   authenticatedThen((path, init) => {
     if (path === "/api/v1/botanical-identities" && init?.method === "POST")
       return jsonResponse(botanicalIdentity, 201);
@@ -1670,8 +1672,7 @@ test("native-range loading failure is explicit and retryable", async () => {
       return jsonResponse(botanicalProfile);
     if (path === "/api/v1/geographic-places") return jsonResponse([worldPlace]);
     if (path.endsWith("/profile/native-ranges")) {
-      nativeCalls += 1;
-      return nativeCalls === 1
+      return failNativeRange
         ? jsonResponse({ detail: "failure" }, 500)
         : jsonResponse([]);
     }
@@ -1691,6 +1692,7 @@ test("native-range loading failure is explicit and retryable", async () => {
       screen.getByRole("region", { name: "Native range" }),
     ).findByRole("alert"),
   ).toHaveTextContent(/could not load this native range/i);
+  failNativeRange = false;
   await user.click(screen.getByRole("button", { name: "Retry native range" }));
   expect(
     await screen.findByText("No structured native range recorded."),
@@ -1866,21 +1868,19 @@ test("supplier filtering, keyboard selection, optional details, editing, and lif
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await openSuppliers();
+  await screen.findByRole("button", { name: "Rare Palm Seeds" });
   const filter = await screen.findByLabelText("Filter suppliers");
   await user.type(filter, "sales@example.com");
   expect(screen.queryByText("Local nursery")).not.toBeInTheDocument();
   const record = screen.getByRole("button", {
-    name: "Quick preview Rare Palm Seeds",
+    name: /^(?!Create or record for |Open details |Details |Edit ).*Rare Palm Seeds/,
   });
   record.focus();
   await user.keyboard("{Enter}");
+  expect(window.location.hash).toBe(`#/suppliers/${supplier.id}`);
   expect(
-    await screen.findByRole("complementary", { name: "Quick preview" }),
-  ).toBeVisible();
-  expect(
-    screen.queryByRole("link", { name: "Visit supplier website" }),
+    screen.queryByRole("complementary", { name: /preview|inspection/i }),
   ).not.toBeInTheDocument();
-  await user.click(screen.getByRole("link", { name: "Open details" }));
   expect(
     await screen.findByRole("link", { name: "Visit supplier website" }),
   ).toHaveAttribute("href", supplier.website);
@@ -1917,7 +1917,7 @@ test("supplier filtering, keyboard selection, optional details, editing, and lif
   });
 });
 
-test("Quick Preview edit returns to the preview and restores its Edit trigger", async () => {
+test("Supplier directory edit saves and restores its direct Edit trigger", async () => {
   let updated = false;
   authenticatedThen((path, init) => {
     if (path === "/api/v1/suppliers" && !init?.method)
@@ -1938,14 +1938,8 @@ test("Quick Preview edit returns to the preview and restores its Edit trigger", 
   });
   const user = await openSuppliers();
   await user.click(
-    await screen.findByRole("button", {
-      name: "Quick preview Rare Palm Seeds",
-    }),
+    await screen.findByRole("button", { name: "Edit Rare Palm Seeds" }),
   );
-  const preview = await screen.findByRole("complementary", {
-    name: "Quick preview",
-  });
-  await user.click(within(preview).getByRole("button", { name: "Edit" }));
   expect(window.location.hash).toBe(`#/suppliers/${supplier.id}?tab=edit`);
   const dialog = await screen.findByRole("dialog", {
     name: "Edit Rare Palm Seeds",
@@ -1962,15 +1956,17 @@ test("Quick Preview edit returns to the preview and restores its Edit trigger", 
   await waitFor(() => {
     expect(window.location.hash).toBe("#/suppliers");
   });
-  const returned = await screen.findByRole("complementary", {
-    name: "Quick preview",
-  });
-  expect(returned).toHaveTextContent("Rare Palm Seeds Europe");
+  expect(
+    await screen.findByRole("button", { name: "Rare Palm Seeds Europe" }),
+  ).toBeVisible();
   await waitFor(() => {
     expect(
-      within(returned).getByRole("button", { name: "Edit" }),
+      screen.getByRole("button", { name: "Edit Rare Palm Seeds Europe" }),
     ).toHaveFocus();
   });
+  expect(
+    screen.queryByRole("complementary", { name: /preview|inspection/i }),
+  ).not.toBeInTheDocument();
 });
 
 test("supplier hub links direct material, identity context, counts, dates, and history", async () => {
@@ -2180,6 +2176,17 @@ test("location hierarchy renders paths and supports keyboard selection", async (
   expect(
     screen.queryByRole("button", { name: /Seed cabinet/ }),
   ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("list", { name: "Location hierarchy" }),
+  ).toHaveAttribute("tabindex", "0");
+  const expandHouse = await screen.findByRole("button", {
+    name: "Expand House",
+  });
+  expect(expandHouse.querySelector("svg")).toHaveAttribute(
+    "data-icon",
+    "chevron-down",
+  );
+  expect(expandHouse).toHaveAttribute("aria-expanded", "false");
   await user.click(await screen.findByRole("button", { name: "Expand House" }));
   await user.click(screen.getByRole("button", { name: "Expand Seed cabinet" }));
   const drawer = await screen.findByRole("button", {
@@ -2187,12 +2194,11 @@ test("location hierarchy renders paths and supports keyboard selection", async (
   });
   drawer.focus();
   await user.keyboard("{Enter}");
-  expect(drawer).toHaveAttribute("aria-pressed", "true");
-  expect(screen.getByRole("link", { name: "Open details" })).toHaveAttribute(
-    "href",
-    `#/locations/${drawerLocation.id}`,
-  );
-  await user.click(screen.getByRole("link", { name: "Open details" }));
+  await screen.findByRole("heading", { name: "Drawer A" });
+  expect(
+    screen.queryByRole("list", { name: "Location hierarchy" }),
+  ).not.toBeInTheDocument();
+  expect(window.location.hash).toBe(`#/locations/${drawerLocation.id}`);
   expect(
     await screen.findByRole("heading", { name: "Drawer A" }),
   ).toBeInTheDocument();
@@ -2228,7 +2234,6 @@ test("location hierarchy renders paths and supports keyboard selection", async (
     ),
   );
   await user.click(await screen.findByRole("button", { name: /^House/i }));
-  await user.click(screen.getByRole("link", { name: "Open details" }));
   await user.click(
     await screen.findByRole("button", { name: "Edit location" }),
   );
@@ -2317,8 +2322,11 @@ test("Location detail deep links stay synchronized with hash navigation", async 
   window.history.pushState(null, "", "#/locations/missing-location");
   window.dispatchEvent(new HashChangeEvent("hashchange"));
   expect(
-    await screen.findByRole("heading", { name: "Select a location" }),
+    await screen.findByRole("heading", { name: "Location not found" }),
   ).toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Return to Locations" }),
+  ).toHaveAttribute("href", "#/locations");
 });
 
 test("Botanical identity detail deep links stay synchronized with hash navigation", async () => {
@@ -2433,10 +2441,9 @@ test("location creation supports roots and the selected create-child shortcut", 
   expect(
     await screen.findByRole("heading", { name: "House" }),
   ).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "New location" })).toHaveAttribute(
-    "aria-haspopup",
-    "dialog",
-  );
+  expect(
+    screen.queryByRole("list", { name: "Location hierarchy" }),
+  ).not.toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Create child" }));
   expect(
     screen.getByLabelText("Parent location", {
@@ -2542,7 +2549,6 @@ test("location rename reparent retire and reactivate use hierarchy-aware control
   await user.click(
     await screen.findByRole("button", { name: /^Seed cabinet/i }),
   );
-  await user.click(screen.getByRole("link", { name: "Open details" }));
   await user.click(
     await screen.findByRole("button", { name: "Edit location" }),
   );
@@ -2624,7 +2630,6 @@ test("location deletion confirms safe leaves and explains blocked parents", asyn
   vi.spyOn(window, "confirm").mockReturnValue(true);
   const user = await openLocations();
   await user.click(await screen.findByRole("button", { name: /^House/i }));
-  await user.click(screen.getByRole("link", { name: "Open details" }));
   await user.click(await screen.findByLabelText("More location actions"));
   await user.click(screen.getByRole("button", { name: "Delete location" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -2638,7 +2643,6 @@ test("location deletion confirms safe leaves and explains blocked parents", asyn
     ),
   );
   await user.click(await screen.findByRole("button", { name: /^Garden/i }));
-  await user.click(screen.getByRole("link", { name: "Open details" }));
   await user.click(await screen.findByLabelText("More location actions"));
   await user.click(screen.getByRole("button", { name: "Delete location" }));
   expect(await screen.findByText(/Garden was deleted/)).toBeInTheDocument();
@@ -2788,10 +2792,9 @@ test("Geography navigation loads, filters, and selects broad and country canonic
   });
   brazil.focus();
   await user.keyboard("{Enter}");
-  expect(brazil).toHaveAttribute("aria-pressed", "true");
-  expect(screen.getAllByText(brazilPlace.display_path).length).toBeGreaterThan(
-    1,
-  );
+  await screen.findByRole("heading", { name: "Brazil" });
+  expect(window.location.hash).toContain(`place=${brazilPlace.id}`);
+  expect(screen.getByText(brazilPlace.display_path)).toBeVisible();
   expect(screen.getByText(/Canonical CLDR place/)).toBeInTheDocument();
   expect(screen.getByLabelText("Direct place relationships")).toHaveTextContent(
     "Native ranges",
@@ -2799,8 +2802,9 @@ test("Geography navigation loads, filters, and selects broad and country canonic
   expect(
     screen.queryByRole("heading", { name: "Edit local place" }),
   ).not.toBeInTheDocument();
-  await user.clear(filter);
-  await user.type(filter, "South America");
+  await browserBack();
+  await user.clear(screen.getByLabelText("Search places"));
+  await user.type(screen.getByLabelText("Search places"), "South America");
   await user.click(
     screen.getByRole("button", { name: /South America.*World/i }),
   );
@@ -2904,11 +2908,17 @@ test("local geography creation supports Thailand to Chiang Mai to Doi Suthep and
     "Doi Suthep{Enter}",
   );
   expect(
-    await screen.findByText(/Thailand → Chiang Mai → Doi Suthep was created/i),
-  ).toBeInTheDocument();
-
+    await screen.findByRole("heading", { name: "Doi Suthep" }),
+  ).toBeVisible();
+  expect(window.location.hash).toContain("place=local-doi-suthep");
+  await user.click(screen.getByRole("link", { name: "Back to places" }));
+  await screen.findByRole("region", { name: "Geography directory" });
+  await screen.findByLabelText("Search places");
   await user.clear(screen.getByLabelText("Search places"));
-  await user.click(screen.getByRole("button", { name: /Chiang Mai.*Local/i }));
+  await user.type(screen.getByLabelText("Search places"), "Chiang Mai");
+  await user.click(
+    await screen.findByRole("button", { name: /Chiang Mai.*Local/i }),
+  );
   await user.click(
     screen.getByRole("button", { name: "Edit geographic place" }),
   );
@@ -3071,7 +3081,6 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
   ).not.toBeInTheDocument();
   expect(newLocation).toHaveFocus();
   await user.click(await screen.findByRole("button", { name: /^House/i }));
-  await user.click(screen.getByRole("link", { name: "Open details" }));
   const editLocation = await screen.findByRole("button", {
     name: "Edit location",
   });
@@ -3106,10 +3115,9 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
   });
   await user.click(
     await screen.findByRole("button", {
-      name: "Quick preview Rare Palm Seeds",
+      name: /^(?!Create or record for |Open details |Details |Edit ).*Rare Palm Seeds/,
     }),
   );
-  await user.click(screen.getByRole("link", { name: "Open details" }));
   const editSupplier = await screen.findByRole("button", {
     name: "Edit supplier",
   });
@@ -3271,13 +3279,10 @@ test.each([
       ).not.toBeInTheDocument();
     row.focus();
     await user.keyboard("{Enter}");
+    await screen.findByRole("table");
     expect(
-      screen.getAllByLabelText(
-        `Plants: ${String(inclusive)} including sublocations, ${String(direct)} directly here`,
-      ),
-    ).toHaveLength(2);
-    expect(row).toHaveAttribute("aria-pressed", "true");
-    await user.click(screen.getByRole("link", { name: "Open details" }));
+      screen.queryByRole("list", { name: "Location hierarchy" }),
+    ).not.toBeInTheDocument();
     const table = await screen.findByRole("table");
     expect(
       within(table).getByRole("columnheader", { name: "Directly here" }),
@@ -3316,8 +3321,10 @@ test("Location empty usage avoids repeated zeroes in directory and preview, deta
   const row = await screen.findByRole("button", { name: /^House/ });
   expect(within(row).getByText("No collection records")).toBeInTheDocument();
   await user.click(row);
-  expect(screen.getAllByText("No collection records")).toHaveLength(2);
-  await user.click(screen.getByRole("link", { name: "Open details" }));
+  await screen.findByRole("table");
+  expect(
+    screen.queryByRole("list", { name: "Location hierarchy" }),
+  ).not.toBeInTheDocument();
   const table = await screen.findByRole("table");
   expect(
     within(table)
@@ -3365,7 +3372,6 @@ test("Location aggregates show separate Plant groups and descendant content beyo
     ),
   ).toBeInTheDocument();
   await user.click(row);
-  await user.click(screen.getByRole("link", { name: "Open details" }));
   expect(
     await screen.findByRole("columnheader", { name: "Including sublocations" }),
   ).toBeInTheDocument();
@@ -3929,7 +3935,9 @@ test("Location preview edits the complete location and guards dirty Escape and C
   });
   const user = await openLocations();
   await user.click(await screen.findByRole("button", { name: /^House/ }));
-  await user.click(screen.getByRole("button", { name: "Edit" }));
+  await user.click(
+    await screen.findByRole("button", { name: "Edit location" }),
+  );
   const dialog = screen.getByRole("dialog", { name: "Edit location" });
   expect(within(dialog).getByLabelText("Parent location")).toBeVisible();
   const group = within(dialog).getByRole("group", { name: /Used for/ });
@@ -3947,7 +3955,7 @@ test("Location preview edits the complete location and guards dirty Escape and C
   expect(
     screen.queryByRole("dialog", { name: "Edit location" }),
   ).not.toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Edit" })).toHaveFocus();
+  expect(screen.getByRole("button", { name: "Edit location" })).toHaveFocus();
   confirmation.mockRestore();
 });
 
@@ -4039,16 +4047,16 @@ test("Location state defaults to Active, composes with search/scope and keeps re
   ).not.toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Expand House" }));
   await user.click(screen.getByRole("button", { name: /^Garden/ }));
-  expect(screen.getByRole("link", { name: "Open details" })).toHaveAttribute(
-    "href",
-    `#/locations/${garden.id}`,
-  );
+  expect(window.location.hash).toBe(`#/locations/${garden.id}`);
+  await browserBack();
   await selectDirectoryFilter(user, "State", "retired");
   expect(
-    screen.getByRole("heading", { name: "Select a location" }),
-  ).toBeVisible();
+    screen.queryByRole("complementary", { name: /preview|inspection/i }),
+  ).not.toBeInTheDocument();
   expect(window.location.hash).toContain("state=retired");
   await selectDirectoryFilter(user, "State", "active");
+  // Back remounts the hierarchy with its collapsed root; filtering remains independent.
+  await user.click(screen.getByRole("button", { name: "Expand House" }));
   expect(screen.getByRole("button", { name: "Collapse House" })).toBeVisible();
   await selectDirectoryFilter(user, "State", "retired");
   const row = await screen.findByRole("button", { name: /^Seed cabinet/ });
@@ -4064,7 +4072,6 @@ test("Location state defaults to Active, composes with search/scope and keeps re
   await user.click(
     await screen.findByRole("button", { name: /^Seed cabinet/ }),
   );
-  await user.click(screen.getByRole("link", { name: "Open details" }));
   expect(
     await screen.findByRole("heading", { name: "Seed cabinet" }),
   ).toBeVisible();
@@ -4090,7 +4097,6 @@ test("Location parent search cannot silently reparent to root and explicit root 
   await user.click(
     await screen.findByRole("button", { name: /^Seed cabinet/ }),
   );
-  await user.click(screen.getByRole("link", { name: "Open details" }));
   await user.click(
     await screen.findByRole("button", { name: "Edit location" }),
   );
@@ -4529,44 +4535,35 @@ test.each(["seeds", "sowings", "plants", "harvests", "events"])(
   },
 );
 
-test("narrow identity selection opens the compact preview with creation actions and restores its row focus", async () => {
+test("narrow identity activation opens dedicated Details and Back restores row focus", async () => {
   window.history.replaceState(null, "", "#/identities");
-  vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
-    media: query,
-    matches: query === "(max-width: 68rem)",
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  }));
+  vi.spyOn(window, "matchMedia").mockReturnValue({
+    matches: true,
+  } as MediaQueryList);
   identityVisualFixture();
   const user = userEvent.setup();
   render(<App />);
   await vi.dynamicImportSettled();
   const row = await screen.findByRole("button", {
-    name: /Acer palmatum.*Bloodgood/,
+    name: /^Open details Acer palmatum.*Bloodgood/,
   });
   await user.click(row);
-  const preview = screen.getByRole("dialog", {
-    name: "Botanical identity preview",
+  expect(window.location.hash).toBe(`#/identities/${botanicalIdentity.id}`);
+  expect(await screen.findByRole("tab", { name: "Overview" })).toBeVisible();
+  expect(
+    screen.queryByRole("region", { name: "Identity directory" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("complementary", { name: /preview|inspection/i }),
+  ).not.toBeInTheDocument();
+  await browserBack();
+  await waitFor(() => {
+    expect(
+      screen.getByRole("button", {
+        name: /^Open details Acer palmatum.*Bloodgood/,
+      }),
+    ).toHaveFocus();
   });
-  expect(
-    within(preview).getByRole("button", { name: "Start sowing" }),
-  ).toBeInTheDocument();
-  expect(
-    within(preview).getByRole("button", { name: "Record harvest" }),
-  ).toBeInTheDocument();
-  expect(
-    within(preview).getByRole("link", { name: "Open details" }),
-  ).toHaveAttribute("href", `#/identities/${botanicalIdentity.id}`);
-  expect(window.location.hash).toBe("#/identities");
-  await user.click(
-    within(preview).getByRole("button", { name: "Close preview" }),
-  );
-  expect(row).toHaveFocus();
-  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 });
 
 test.each([
@@ -4705,4 +4702,119 @@ test("Dashboard Quick add keeps all destinations and labels with distinct decora
     return action.querySelector("svg")?.getAttribute("data-icon");
   });
   expect(new Set(icons).size).toBe(9);
+});
+
+test("Location creation protects changed names and scopes on Escape and Cancel", async () => {
+  authenticatedThen((path) => {
+    if (path === "/api/v1/locations") return jsonResponse([houseLocation]);
+    throw new Error(`unexpected request: ${path}`);
+  });
+  const user = await openLocations();
+  const trigger = screen.getByRole("button", { name: "New location" });
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  await user.click(trigger);
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(confirm).not.toHaveBeenCalled();
+  expect(trigger).toHaveFocus();
+  await user.click(trigger);
+  await user.type(screen.getByLabelText("Name"), "Keep this shelf");
+  await user.keyboard("{Escape}");
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.getByLabelText("Name")).toHaveValue("Keep this shelf");
+  confirm.mockReturnValue(true);
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(trigger).toHaveFocus();
+  await user.click(trigger);
+  confirm.mockReturnValue(false);
+  await user.click(screen.getByRole("checkbox", { name: "Plants" }));
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.getByRole("dialog", { name: "New location" })).toBeVisible();
+  confirm.mockRestore();
+});
+
+test.each([1024, 390])(
+  "Location expansion stays independent from dedicated Details at %ipx",
+  async (width) => {
+    const previousWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: width,
+    });
+    try {
+      authenticatedThen((path) => {
+        if (path === "/api/v1/locations")
+          return jsonResponse([houseLocation, cabinetLocation, drawerLocation]);
+        throw new Error(`unexpected request: ${path}`);
+      });
+      const user = await openLocations();
+      await user.click(
+        await screen.findByRole("button", { name: "Expand House" }),
+      );
+      expect(
+        screen.getByRole("button", { name: "Collapse House" }),
+      ).toBeVisible();
+      await user.click(await screen.findByRole("button", { name: /^House/ }));
+      expect(window.location.hash).toBe(`#/locations/${houseLocation.id}`);
+      expect(
+        await screen.findByRole("heading", { name: "House" }),
+      ).toBeVisible();
+      expect(
+        screen.queryByRole("list", { name: "Location hierarchy" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("complementary", { name: /preview|inspection/i }),
+      ).not.toBeInTheDocument();
+    } finally {
+      Object.defineProperty(window, "innerWidth", {
+        configurable: true,
+        value: previousWidth,
+      });
+    }
+  },
+);
+
+test("Geography dedicated record exposes loading, retryable error and missing-record states without a directory placeholder", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    "#/geography/places?place=missing-place",
+  );
+  let finish: ((response: Response) => void) | undefined;
+  let retry = false;
+  authenticatedThen((path) => {
+    if (path === "/api/v1/geographic-places") {
+      if (retry) return jsonResponse([]);
+      return new Promise<Response>((resolve) => {
+        finish = resolve;
+      });
+    }
+    throw new Error(`unexpected request: ${path}`);
+  });
+  const user = userEvent.setup();
+  render(<App />);
+  expect(await screen.findByText("Loading geographic place…")).toHaveAttribute(
+    "role",
+    "status",
+  );
+  act(() => {
+    finish?.(jsonResponse({ detail: "failure" }, 500));
+  });
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Could not load geographic place",
+  );
+  retry = true;
+  await user.click(screen.getByRole("button", { name: "Retry place" }));
+  expect(
+    await screen.findByRole("heading", { name: "Geographic place not found" }),
+  ).toBeVisible();
+  expect(
+    screen.queryByRole("region", { name: "Geography directory" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByText("Select a geographic place"),
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Back to places" })).toHaveAttribute(
+    "href",
+    "#/geography/places",
+  );
 });

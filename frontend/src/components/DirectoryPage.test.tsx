@@ -1,3 +1,6 @@
+import { useDirectoryPagination } from "./useDirectoryPagination";
+import { DirectoryResults } from "./DirectoryResults";
+import { LifecycleStatus, StatusBadge } from "./WorkspaceUI";
 import {
   cleanup,
   fireEvent,
@@ -9,6 +12,8 @@ import userEvent from "@testing-library/user-event";
 import { useRef, useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 import {
+  DirectoryRecordActions,
+  DirectoryTrigger,
   DirectoryCard,
   DirectoryInspector,
   DirectoryPage,
@@ -91,6 +96,7 @@ function Example() {
       inspector={
         selected ? (
           <DirectoryInspector
+            mode="modal"
             title="Aloe preview"
             returnFocusTo={ref}
             fallbackFocusTo={fallback}
@@ -233,7 +239,7 @@ test("gallery has an honest missing image and preserves scientific/cultivar form
   window.history.replaceState(null, "", "#/plants?view=gallery");
   render(<Example />);
   expect(screen.getByText("No image for Aloe")).toBeInTheDocument();
-  const link = screen.getByRole("link", { name: "Aloe vera ‘Tricolor’" });
+  const link = screen.getByRole("button", { name: "Quick preview Aloe" });
   expect(link.querySelector("i")?.textContent).toBe("Aloe vera");
   expect(link.querySelector("i")?.textContent).not.toContain("Tricolor");
 });
@@ -318,6 +324,7 @@ test.each([false, true])(
           )}
           {open && (
             <DirectoryInspector
+              mode="modal"
               title="Preview"
               returnFocusTo={trigger}
               fallbackFocusTo={fallback}
@@ -373,6 +380,7 @@ test("filtering away the selected row never steals focus from the search field",
         )}
         {open && !query && (
           <DirectoryInspector
+            mode="modal"
             title="Preview"
             returnFocusTo={trigger}
             fallbackFocusTo={fallback}
@@ -406,4 +414,225 @@ test("Back restores the displayed default even after persisting the opposite mod
   ).toBeVisible();
   expect(window.location.hash).toBe("#/plants?q=Aloe&view=gallery");
   expect(window.history.state).toEqual({ review: true });
+});
+
+test("default side inspection permits directory interaction and does not trap Tab", async () => {
+  function SideExample() {
+    const [open, setOpen] = useState(false);
+    const [count, setCount] = useState(0);
+    const trigger = useRef<HTMLButtonElement>(null);
+    return (
+      <>
+        <button
+          ref={trigger}
+          onClick={() => {
+            setOpen(true);
+          }}
+        >
+          Inspect
+        </button>
+        <button
+          onClick={() => {
+            setCount(count + 1);
+          }}
+        >
+          Other record {count}
+        </button>
+        {open && (
+          <DirectoryInspector
+            title="Side inspection"
+            onClose={() => {
+              setOpen(false);
+            }}
+            returnFocusTo={trigger}
+            fallbackFocusTo={trigger}
+          >
+            <a href="#/details">Details</a>
+          </DirectoryInspector>
+        )}
+      </>
+    );
+  }
+  render(<SideExample />);
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Inspect" }));
+  const panel = screen.getByRole("complementary", { name: "Side inspection" });
+  await user.tab();
+  expect(within(panel).getByRole("link", { name: "Details" })).toHaveFocus();
+  await user.tab();
+  expect(
+    screen.getByRole("button", { name: "Close preview" }),
+  ).not.toHaveFocus();
+  expect(panel).not.toHaveAttribute("aria-modal");
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Other record 0" }));
+  expect(screen.getByRole("button", { name: "Other record 1" })).toHaveFocus();
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Inspect" })).toHaveFocus();
+});
+
+test("record surfaces support keyboard activation while direct Details and Edit stay independent", async () => {
+  const preview = vi.fn();
+  const details = vi.fn();
+  const edit = vi.fn();
+  render(
+    <DirectoryRecords label="Records" view="list">
+      <DirectoryRow>
+        <DirectoryTrigger onClick={preview} description="Active · Open details">
+          <strong>Record one</strong>
+          <StatusBadge compactState="active">Active</StatusBadge>
+        </DirectoryTrigger>
+        <DirectoryRecordActions
+          label="Record one"
+          onDetails={details}
+          onEdit={edit}
+        />
+      </DirectoryRow>
+    </DirectoryRecords>,
+  );
+  const user = userEvent.setup();
+  const surface = screen.getByRole("button", { name: /Record one.*Active/ });
+  const actionGroup = screen.getByRole("group", {
+    name: "Actions for Record one",
+  });
+  expect(within(actionGroup).getAllByRole("button")).toHaveLength(2);
+  surface.focus();
+  await user.keyboard("{Enter}");
+  await user.keyboard(" ");
+  expect(preview).toHaveBeenCalledTimes(2);
+  await user.click(
+    screen.getByRole("button", { name: "Open details Record one" }),
+  );
+  await user.click(screen.getByRole("button", { name: "Edit Record one" }));
+  expect(preview).toHaveBeenCalledTimes(2);
+  expect(details).toHaveBeenCalledOnce();
+  expect(edit).toHaveBeenCalledOnce();
+  expect(
+    screen.queryByRole("button", { name: "Create or record for Record one" }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByText("Active", { exact: true })).toBeVisible();
+});
+test("compact status chips retain precise active, inactive and richer lifecycle labels", () => {
+  render(
+    <>
+      <StatusBadge compactState="inactive">Inactive</StatusBadge>
+      <StatusBadge>Exhausted</StatusBadge>
+    </>,
+  );
+  expect(screen.getByText("Inactive", { exact: true })).toBeVisible();
+  expect(screen.getByText("Exhausted")).toHaveClass("ui-badge");
+});
+
+test("directory pagination defaults to twenty and resets on filtering while All stays explicit", async () => {
+  function Paginated() {
+    const [narrow, setNarrow] = useState(false);
+    const records = Array.from(
+      { length: narrow ? 3 : 45 },
+      (_, index) => `Packet ${String(index + 1)}`,
+    );
+    const pagination = useDirectoryPagination(records, String(narrow));
+    return (
+      <>
+        <button
+          onClick={() => {
+            setNarrow(true);
+          }}
+        >
+          Narrow records
+        </button>
+        <DirectoryResults
+          count={records.length}
+          total={50}
+          pagination={pagination}
+          actions={<button>Select records</button>}
+        />
+        <ul aria-label="Paged records">
+          {pagination.visible.map((record) => (
+            <li key={record}>{record}</li>
+          ))}
+        </ul>
+      </>
+    );
+  }
+  const user = userEvent.setup();
+  render(<Paginated />);
+  const list = screen.getByRole("list", { name: "Paged records" });
+  expect(within(list).getAllByRole("listitem")).toHaveLength(20);
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    "1–20 of 45 records · 50 total",
+  );
+  await user.click(screen.getByRole("button", { name: "Next page" }));
+  expect(within(list).getByText("Packet 21")).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Next page" }));
+  expect(within(list).getAllByRole("listitem")).toHaveLength(5);
+  expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+  await user.selectOptions(screen.getByLabelText("Records per page"), "all");
+  expect(within(list).getAllByRole("listitem")).toHaveLength(45);
+  await user.selectOptions(screen.getByLabelText("Records per page"), "20");
+  await user.click(screen.getByRole("button", { name: "Next page" }));
+  await user.click(screen.getByRole("button", { name: "Narrow records" }));
+  expect(within(list).getAllByRole("listitem")).toHaveLength(3);
+  expect(screen.getByRole("button", { name: "Previous page" })).toBeDisabled();
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    "1–3 of 3 records · 50 total",
+  );
+});
+
+test.each([
+  ["active", "Active", "success"],
+  ["dead", "Dead", "danger"],
+  ["failed", "Failed", "danger"],
+  ["abandoned", "Abandoned", "danger"],
+  ["transferred", "Transferred", "warning"],
+  ["completed", "Completed", "success"],
+  ["cancelled", "Cancelled", "warning"],
+  ["exhausted", "Exhausted", "muted"],
+  ["depleted", "Depleted", "muted"],
+  ["retired", "Retired", "muted"],
+  ["reintegrated", "Reintegrated", "muted"],
+])(
+  "domain state %s retains readable text and semantic tone",
+  (state, label, tone) => {
+    render(<LifecycleStatus state={state} />);
+    expect(screen.getByText(label)).toHaveClass(`ui-status-chip--${tone}`);
+    expect(screen.getByText(label)).toHaveAttribute("data-status", state);
+  },
+);
+
+test("creation menu excludes direct commands and returns focus without activating the record", async () => {
+  const create = vi.fn(),
+    details = vi.fn(),
+    edit = vi.fn();
+  render(
+    <DirectoryRecordActions
+      label="Record"
+      onDetails={details}
+      onEdit={edit}
+      extraActions={
+        <button type="button" onClick={create}>
+          Record germination
+        </button>
+      }
+    />,
+  );
+  const user = userEvent.setup();
+  const trigger = screen.getByRole("button", {
+    name: "Create or record for Record",
+  });
+  await user.click(trigger);
+  const menu = screen.getByRole("group", {
+    name: "Create or record for Record menu",
+  });
+  expect(
+    within(menu).queryByRole("button", { name: /details|edit/i }),
+  ).not.toBeInTheDocument();
+  await user.click(
+    within(menu).getByRole("button", { name: "Record germination" }),
+  );
+  expect(create).toHaveBeenCalledOnce();
+  expect(details).not.toHaveBeenCalled();
+  expect(edit).not.toHaveBeenCalled();
+  await user.keyboard("{Escape}");
+  expect(trigger).toHaveFocus();
 });

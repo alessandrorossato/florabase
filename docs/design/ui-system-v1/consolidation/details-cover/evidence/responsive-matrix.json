@@ -1,0 +1,296 @@
+[
+  {
+    "name": "location",
+    "requestedWidth": 1440,
+    "actions": [
+      {
+        "name": "Create child",
+        "right": 1222.7109375
+      },
+      {
+        "name": "Edit location",
+        "right": 1364
+      },
+      {
+        "name": "More",
+        "right": 1416
+      }
+    ],
+    "clientWidth": 1440,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 1440
+  },
+  {
+    "name": "identity",
+    "requestedWidth": 1440,
+    "actions": [
+      {
+        "name": "Add to collection",
+        "right": 1194.5859375
+      },
+      {
+        "name": "Edit botanical identityEdit",
+        "right": 1401
+      }
+    ],
+    "clientWidth": 1425,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 1440
+  },
+  {
+    "name": "geography-canonical",
+    "requestedWidth": 1440,
+    "actions": [
+      {
+        "name": "Create local child",
+        "right": 1256
+      },
+      {
+        "name": "New local place",
+        "right": 1416
+      }
+    ],
+    "clientWidth": 1440,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 1440
+  },
+  {
+    "name": "supplier",
+    "requestedWidth": 1440,
+    "actions": [
+      {
+        "name": "Edit supplier",
+        "right": 1360
+      },
+      {
+        "name": "More",
+        "right": 1416
+      }
+    ],
+    "clientWidth": 1440,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 1440
+  },
+  {
+    "name": "order-partial-date",
+    "requestedWidth": 1440,
+    "actions": [
+      {
+        "name": "Add seed lot",
+        "right": 1113.5625
+      },
+      {
+        "name": "Link existing seed lot",
+        "right": 1286.0546875
+      },
+      {
+        "name": "Edit Order",
+        "right": 1416
+      }
+    ],
+    "clientWidth": 1440,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 1440
+  },
+  {
+    "name": "location",
+    "requestedWidth": 1024,
+    "actions": [
+      {
+        "name": "Create child",
+        "right": 346.5390625
+      },
+      {
+        "name": "Edit location",
+        "right": 487.828125
+      },
+      {
+        "name": "More",
+        "right": 539.828125
+      }
+    ],
+    "clientWidth": 1024,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 1024
+  },
+  {
+    "name": "identity",
+    "requestedWidth": 1024,
+    "actions": [
+      {
+        "name": "Add to collection",
+        "right": 430
+      },
+      {
+        "name": "Edit botanical identityEdit",
+        "right": 636.4140625
+      }
+    ],
+    "clientWidth": 1009,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 1024
+  },
+  {
+    "name": "geography-canonical",
+    "requestedWidth": 1024,
+    "actions": [
+      {
+        "name": "Create local child",
+        "right": 380.4296875
+      },
+      {
+        "name": "New local place",
+        "right": 540.4296875
+      }
+    ],
+    "clientWidth": 1024,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 1024
+  },
+  {
+    "name": "supplier",
+    "requestedWidth": 1024,
+    "actions": [
+      {
+        "name": "Edit supplier",
+        "right": 377.6484375
+      },
+      {
+        "name": "More",
+        "right": 433.6484375
+      }
+    ],
+    "clientWidth": 1024,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 1024
+  },
+  {
+    "name": "order-partial-date",
+    "requestedWidth": 1024,
+    "actions": [
+      {
+        "name": "Add seed lot",
+        "right": 348.8125
+      },
+      {
+        "name": "Link existing seed lot",
+        "right": 521.3046875
+      },
+      {
+        "name": "Edit Order",
+        "right": 651.25
+      }
+    ],
+    "clientWidth": 1024,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 1024
+  },
+  {
+    "name": "location",
+    "requestedWidth": 390,
+    "actions": [
+      {
+        "name": "Create child",
+        "right": 183.5
+      },
+      {
+        "name": "Edit location",
+        "right": 359
+      },
+      {
+        "name": "More",
+        "right": 100.4609375
+      }
+    ],
+    "clientWidth": 375,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 390
+  },
+  {
+    "name": "identity",
+    "requestedWidth": 390,
+    "actions": [
+      {
+        "name": "Add to collection",
+        "right": 202
+      },
+      {
+        "name": "Edit botanical identityEdit",
+        "right": 291.7265625
+      }
+    ],
+    "clientWidth": 375,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 390
+  },
+  {
+    "name": "geography-canonical",
+    "requestedWidth": 390,
+    "actions": [
+      {
+        "name": "Create local child",
+        "right": 152.4296875
+      },
+      {
+        "name": "New local place",
+        "right": 312.4296875
+      }
+    ],
+    "clientWidth": 375,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 390
+  },
+  {
+    "name": "supplier",
+    "requestedWidth": 390,
+    "actions": [
+      {
+        "name": "Edit supplier",
+        "right": 262.5390625
+      },
+      {
+        "name": "More",
+        "right": 359
+      }
+    ],
+    "clientWidth": 375,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 390
+  },
+  {
+    "name": "order-partial-date",
+    "requestedWidth": 390,
+    "actions": [
+      {
+        "name": "Add seed lot",
+        "right": 181.5
+      },
+      {
+        "name": "Link existing seed lot",
+        "right": 359
+      },
+      {
+        "name": "Edit Order",
+        "right": 359
+      }
+    ],
+    "clientWidth": 375,
+    "overflow": false,
+    "previewNodes": 0,
+    "width": 390
+  }
+]

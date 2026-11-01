@@ -10,8 +10,12 @@ export function listOrders(
   supplierId = "",
   offset = 0,
   signal?: AbortSignal,
+  limit = 50,
 ): Promise<OrderPage> {
-  const params = new URLSearchParams({ offset: String(offset) });
+  const params = new URLSearchParams({
+    offset: String(offset),
+    limit: String(limit),
+  });
   if (q.trim()) params.set("q", q.trim());
   if (supplierId) params.set("supplier_id", supplierId);
   return requestJson(`/api/v1/orders?${params}`, { signal });

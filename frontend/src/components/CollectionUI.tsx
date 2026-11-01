@@ -1,6 +1,28 @@
 import { ActionButton } from "./Action";
-import type { MouseEventHandler, ReactNode, RefObject } from "react";
+import type {
+  CSSProperties,
+  HTMLAttributes,
+  MouseEventHandler,
+  ReactNode,
+  RefObject,
+} from "react";
+import { Breadcrumbs } from "./Breadcrumbs";
 import { PageHeader } from "./ReferenceUI";
+import "./detail-page.css";
+
+/** Shared record presentation; routes, tabs, permissions and content remain domain-owned. */
+export function DetailPage({
+  as: Element = "article",
+  className = "",
+  ...props
+}: HTMLAttributes<HTMLElement> & { as?: "article" | "section" | "div" }) {
+  return (
+    <Element
+      {...props}
+      className={`collection-detail ui-detail-page ${className}`}
+    />
+  );
+}
 
 export interface TabItem<TabId extends string = string> {
   id: TabId;
@@ -16,6 +38,7 @@ export function WorkspaceIntro({
   tools,
   contextOnly = false,
   contextActions,
+  directory = false,
 }: {
   eyebrow: string;
   title: string;
@@ -25,6 +48,7 @@ export function WorkspaceIntro({
   tools?: ReactNode;
   contextOnly?: boolean;
   contextActions?: ReactNode;
+  directory?: boolean;
 }) {
   if (contextOnly)
     return (
@@ -48,11 +72,12 @@ export function WorkspaceIntro({
       description={description}
       tools={tools}
       actions={actions}
+      directory={directory}
     />
   );
 }
 
-export { Breadcrumbs } from "./Breadcrumbs";
+export { Breadcrumbs };
 
 export function DetailHeader({
   eyebrow,
@@ -66,9 +91,11 @@ export function DetailHeader({
   overflow,
   headingRef,
   visual,
+  headingLevel = 3,
+  titleId,
 }: {
   eyebrow: string;
-  title: string;
+  title: ReactNode;
   secondary?: ReactNode;
   status?: ReactNode;
   primaryActions?: ReactNode;
@@ -78,16 +105,23 @@ export function DetailHeader({
   overflow?: ReactNode;
   headingRef?: RefObject<HTMLHeadingElement | null>;
   visual?: ReactNode;
+  headingLevel?: 2 | 3;
+  titleId?: string;
 }) {
+  const Heading = headingLevel === 2 ? "h2" : "h3";
   return (
     <header className="detail-header">
       <div className="detail-identity">
         {visual && <div className="detail-visual">{visual}</div>}
         <div>
           <p className="eyebrow">{eyebrow}</p>
-          <h3 ref={headingRef} tabIndex={headingRef ? -1 : undefined}>
+          <Heading
+            id={titleId}
+            ref={headingRef}
+            tabIndex={headingRef ? -1 : undefined}
+          >
             {title}
-          </h3>
+          </Heading>
           {secondary && <div className="detail-secondary">{secondary}</div>}
           {status && <div className="detail-status">{status}</div>}
         </div>
@@ -114,6 +148,101 @@ export function DetailHeader({
         </div>
       )}
     </header>
+  );
+}
+
+/** Holds a record page's structure while it loads; it never shows record data. */
+export function DetailLoading({
+  eyebrow,
+  label,
+  parents,
+  className = "",
+  visual = true,
+}: {
+  eyebrow: string;
+  label: string;
+  parents: { label: string; href: string }[];
+  className?: string;
+  visual?: boolean;
+}) {
+  return (
+    <DetailPage as="div" className={`detail-loading ${className}`}>
+      <Breadcrumbs items={[...parents, { label: "Loading" }]} />
+      <div aria-hidden="true" className="detail-header">
+        <div className="detail-identity">
+          {visual && (
+            <div className="detail-visual">
+              <span className="detail-loading__visual" />
+            </div>
+          )}
+          <div>
+            <p className="eyebrow">{eyebrow}</p>
+            <span className="detail-loading__title" />
+          </div>
+        </div>
+      </div>
+      <p role="status">{label}</p>
+    </DetailPage>
+  );
+}
+
+export interface DetailMetric {
+  label: string;
+  value: ReactNode;
+  /** Takes two columns, for paths and other long values. */
+  wide?: boolean;
+  /** The record's primary figure. */
+  emphasis?: boolean;
+}
+
+/** One summary band for every record; each domain supplies its own metrics. */
+export function DetailSummary({
+  id,
+  label,
+  metrics,
+  title = "At a glance",
+  titleRef,
+  note,
+}: {
+  id: string;
+  label: string;
+  metrics: DetailMetric[];
+  title?: string;
+  titleRef?: RefObject<HTMLHeadingElement | null>;
+  note?: ReactNode;
+}) {
+  const shown = metrics.filter(
+    ({ value }) =>
+      value !== null && value !== undefined && value !== false && value !== "",
+  );
+  if (shown.length === 0) return null;
+  const columns = shown.reduce((sum, { wide }) => sum + (wide ? 2 : 1), 0);
+  return (
+    <section className="detail-summary" aria-labelledby={id}>
+      <h4 id={id} ref={titleRef} tabIndex={titleRef ? -1 : undefined}>
+        {title}
+      </h4>
+      <dl
+        aria-label={label}
+        style={{ "--detail-summary-columns": columns } as CSSProperties}
+      >
+        {shown.map((metric) => (
+          <div
+            key={metric.label}
+            className={[
+              metric.wide && "detail-summary__metric--wide",
+              metric.emphasis && "detail-summary__metric--emphasis",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            <dt>{metric.label}</dt>
+            <dd>{metric.value}</dd>
+          </div>
+        ))}
+      </dl>
+      {note}
+    </section>
   );
 }
 

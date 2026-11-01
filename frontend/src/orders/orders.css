@@ -131,16 +131,6 @@
   border-radius: 0;
   background: transparent;
 }
-.app-content .orders-workspace .order-overview > .collection-summary {
-  grid-column: 1 / -1;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-.app-content .orders-workspace .collection-summary > dl {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
 .app-content .orders-workspace .order-fact-group h4 {
   margin: 0 0 var(--space-3);
   font: var(--type-h3);
@@ -373,8 +363,7 @@
     padding-inline: var(--space-2);
     grid-template-columns: minmax(0, 1fr);
   }
-  .app-content .orders-workspace .order-overview,
-  .app-content .orders-workspace .collection-summary > dl {
+  .app-content .orders-workspace .order-overview {
     grid-template-columns: minmax(0, 1fr);
   }
   .app-content .orders-workspace .order-fact-group dl > div {

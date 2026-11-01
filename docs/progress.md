@@ -6162,6 +6162,26 @@ Status remains implemented pending canonical verification.
 - Focused checks passed: Propagation/UX/Dashboard **34/34**, bulk cap **1/1**, media return focus
   **1/1**, and UI Lab **4/4**. Canonical FULL verification passed on the final reconciled tree.
 
+### UI-SYSTEM-001 — Wave 3 Batch 1 safety handoff (2026-10-29)
+
+- Dedicated isolated `548f` checkout attached through `make feature-init` to
+  `feat/ui-system-v1-wave3`, base `5b2e2a1`. Wave 1 #129 is merged; Wave 2 is
+  still unmerged. Batches 2–4 deliberately remain unstarted.
+- Page-owned Cancel-first/danger confirmations correct Harvest deletion and Stored
+  material tracking removal. Existing pending locks, error retention and stable
+  More-trigger focus return remain. Location creation and inventory/disposition/
+  conversion tasks protect changed drafts while pristine dismissal remains immediate.
+  Shared TaskDialog/EditWorkspace, APIs, schema and domain rules are unchanged.
+- Focused baseline: 44 domain tests passed. Changed-tree checks cover 16 Harvest,
+  24 Stored material, 10 Conversion and 19 selected Location tests (69 distinct
+  cases; 99 unrelated App cases excluded). Final static results and exact limits
+  are in the Batch 1 handoff. Test-only lint corrections preserved all assertions.
+- One worktree-owned Quality project was used serially; Wave 2 and all Review,
+  DEV/UAT environments were preserved. No canonical gate, production build, live
+  browser/theme/viewport/zoom/device/AT acceptance, commit, push, PR or merge.
+  UI-SYSTEM-001 remains in_progress. See
+  [Batch 1 handoff and UAT checklist](design/ui-system-v1/wave3/README.md).
+
 ## 2026-10-29 — UI System v1 Wave 2 ready for operator UAT
 
 - Verified clean primary `main` and freshly fetched `origin/main` at `afcfbab` (Wave 1 PR #129).
@@ -6217,6 +6237,248 @@ Status remains implemented pending canonical verification.
 - `UI-SYSTEM-WAVE2-001` remains `implemented`; independent QA reconciles current main, reviews/fixes
   objective defects, freezes source/index and runs one CI-004-selected canonical **FULL** gate.
   No push, PR, merge or feature-finish in this local-commit task.
+
+### UI-SYSTEM-001 — Wave 3 reconciliation and adaptation in progress (2026-10-29)
+
+- Normal merge `13c3233` reconciles delivered Wave 2 #131 (`76c0911`) while
+  preserving Batch 1 checkpoint `3669869`. The progress-only conflict retained
+  both milestones. Shared Directory/dialog/Saved Views/navigation contracts were
+  inspected; only ActivityPage/shared Sourcing CSS changed in the delivered wave.
+- Initial page adaptations add shared Sowing records/presentation/actions/overlay,
+  Harvest explicit actions and overlay, exact stored inventory links and Location
+  loading/error/missing states. Shared components and SeedLots/Plants/PlantGroups
+  remain unchanged.
+- The original 10 failing cases were diagnosed and resolved. Three Sowing tests
+  queried rows by partial names that also matched newly explicit Preview/Details/Edit
+  actions; one additionally expected the former inline preview, while the approved
+  overlay contract now presents a modal. Six Harvest tests had the same action-name
+  ambiguity; retry itself succeeded. The Stored Material test expected the old
+  Harvest-only URL; the intended exact inventory URL is now asserted. Location's
+  deep-link test also now asserts its explicit missing-record state and return link.
+- Focused Wave 3 suites passed **83/83** (Sowing 33, Harvest 16, Stored Material 24,
+  Conversion 10). The preserved Batch 1 safety baseline passed **69/69** (50
+  Harvest/Stored Material/Conversion and 19 selected Location App cases).
+  `pnpm typecheck`, affected-file ESLint with zero warnings, Prettier write/check,
+  `python3 scripts/check-features.py` (121 valid) and `git diff --check` passed.
+- The prior Feature Review owner safely retired its project. Read-only status
+  showed no foreign owner, and Docker reported no remaining project containers,
+  volumes or networks. `make feature-review-up` provisioned the canonical Review
+  for this worktree; current health, ownership and migration head are verified at
+  `13c3233`. The Review database is clean and its v4 synthetic fixture and owner
+  are not yet provisioned. Owner password entry is handed off to the operator.
+- No FULL gate, push, PR, delivery, shared component change or resource cleanup.
+  Responsive/theme visual evidence and operator UAT remain pending.
+
+### UI-SYSTEM-001 — Wave 3 Review and visual handoff (2026-10-29)
+
+- The operator completed the canonical Review-only owner bootstrap interactively.
+  The UI showed `Signed in as owner`; no password was read, copied or recorded.
+  The canonical v4 Review seeder reported ready, 80 baseline records, and preserved
+  the owner and existing edits. The post-seed lifecycle check showed this worktree
+  as the Review source, healthy frontend/backend/database, and migration head
+  `20261013_0042`. An initial status refresh was blocked by Docker socket
+  permission; a read-only retry then confirmed source, health and fixture state.
+- Browser screenshots covered Harvests, Stored material and Locations in all six
+  themes at 1440×900, with all three surfaces also inspected at 1024×900 and
+  390×844. Sowings Gallery covered all six themes at 1440×900 and Botanical Light
+  at 1024×900 and 390×844; List and Gallery were both inspected in Botanical Light.
+  Captures show the populated pages and the in-flight loading states. Location's
+  missing-record state and return link were checked. The inline screenshots are
+  visible in the review conversation; no image archive or separate gallery URL
+  was created. All 12 surface/viewport combinations (four routes × three widths)
+  reported no horizontal page overflow.
+- Verified Harvest Preview Escape returns focus to its trigger; Delete opens with
+  Cancel focused, and Escape cancels without mutation. Location dirty Cancel opens
+  the discard prompt; rejecting preserves the entered text and accepting discards
+  the temporary draft. Stored Material opens the exact inventory query and scrolls
+  the target into view. Existing affected tests cover retryable Location errors,
+  pending operations and save failures; no live service outage was injected.
+- Review URL: `http://localhost:15174`. Viewports are browser-emulated CSS sizes;
+  physical devices, actual browser zoom and screen-reader/assistive-technology
+  checks remain unverified. The UAT checklist and current evidence notes are in
+  [Wave 3 progress and compliance matrix](design/ui-system-v1/wave3/README.md).
+- Preserved regression evidence remains Wave 3 focused **83/83** and Batch 1 safety
+  baseline **69/69**, with the previously passing strict TypeScript, affected ESLint,
+  Prettier and feature-registry checks. No application source changed during this
+  review; only documentation is being updated. No FULL gate, push, PR, merge,
+  feature-finish, additional Docker mutation beyond the authorized Review setup and
+  fixture seed, or resource cleanup was performed.
+
+### UI-SYSTEM-001 — Wave 3 final operator refinement candidate (2026-10-30)
+
+- Operator has **not accepted** Wave 3 and requested card/photo/preview/hierarchy
+  refinements. The operator clarified that the photo concerns affect **all**
+  galleries. This candidate supersedes the previous operator-UAT-ready handoff.
+- DirectoryInspector now defaults to an accessible nonmodal side panel across
+  Collection/Sourcing consumers. Desktop/tablet use separate columns; mobile
+  stacks a bounded inspector above results. No backdrop, inert list or Tab trap;
+  other records stay interactive. Close/Escape restore the latest connected
+  trigger/fallback; task dialogs and existing control layers retain priority.
+  Domain API/URL/Saved Views/selection/editor/deletion ownership is unchanged.
+- Reproduced an empty Harvest photo preview at 840px: the legacy <=1024px
+  QuickPreview hide rule suppressed nested content. The <=768px detail-pane hide
+  rule was also overridden for active nonmodal previews. Source captions lacked
+  an image-positioned containing block; side-panel visuals now anchor them.
+  Gallery source badges no longer form a dark strip; source text/alt/native titles
+  remain available. Mixed photo/placeholder card rows stretch to equal bottoms,
+  with existing bottom actions and compact placeholders retained.
+- Locations adopts Geography management's chevrons, branch-row presentation,
+  focusable hierarchy root and matching compact-depth threshold. Location-specific
+  usage counts, explicit scopes, ancestor retention/filter expansion overrides,
+  retired states, parent protection, actions and Batch 1 guards are preserved.
+- **377/377 tests in 11 files passed**, including the full 118-case App suite,
+  Seeds, Plants, Suppliers, Orders, shared directory/RecordVisual and the complete
+  Wave 3 domain regression set (33 Sowings, 17 Harvests, 24 Stored Material,
+  10 Conversion). All original **69 Batch 1 safety cases** pass within this run;
+  the additional Harvest photo/switching case expands that boundary to 70.
+  New assertions cover nonmodal interaction/free Tab/latest-trigger Escape,
+  photo-source switching/fallback and Location chevron/root semantics. An initial
+  82/83 run exposed one stale Harvest dialog-role expectation; it was corrected
+  for the requested nonmodal contract. Test callbacks were adjusted for lint
+  without changing assertions.
+- Strict TypeScript, affected-file ESLint (zero warnings), Prettier, 121-feature
+  validation and whitespace checks passed. Only focused checks ran; canonical
+  QA/FULL/feature-verify was not started. The existing local Batch 1 checkpoint
+  3669869 and reconciliation merge 13c3233 remain intact; source is uncommitted.
+- Canonical `make feature-review-extended-seed` added the standard v5 synthetic
+  dataset: **252 managed references**, ready, preserving v4/80, owner and existing
+  edits. Final owned Review status confirms healthy frontend/backend/database and
+  code/database head **20261013_0042** at http://localhost:15174. No DEV/UAT or
+  foreign Review worktree/resources were changed; no cleanup was performed.
+- Inline browser evidence includes the before blank photo dialog, fixed photo
+  side panel, record switching/Escape focus, mixed Plants cards and Sowing preview,
+  plus expanded Location hierarchy. Six settled 1440px mixed-card/side-preview
+  captures cover all six themes: loaded photos, no modal and no horizontal
+  overflow. Three mixed cards shared bottom 580.015625px/action baseline
+  579.015625px. Also checked 1024px columns and 390px stacked preview/hierarchy.
+  Screenshot binaries were emitted inline; no standalone archive is claimed.
+  Physical devices, actual browser zoom, AT and live outage injection remain limits.
+- Updated [operator checklist and refinement handoff](design/ui-system-v1/wave3/README.md),
+  UI contract and Gate B preview guidance. Operator review/acceptance is pending.
+  No commit, push, PR, merge or feature-finish in this refinement pass.
+
+### 2026-10-30 — UI System v1 global directory refinement (operator review pending)
+
+- Shared native record-surface Preview replaces the eye action; explicit Details/Edit,
+  bulk/modifier precedence and native modified Sourcing links remain. Compact status
+  indicators reuse StatusBadge/Icon without collapsing richer lifecycle states.
+- Eligible Collection/Sourcing directories now bound results scrolling separately
+  from identity/tools/chips. Compact nonmodal inspector has a stable reserved column,
+  independent body and footer; mobile stacks short identity/actions above results.
+  Short viewports deliberately fall back to flow. Specialized workspaces stay distinct.
+- Corrected real Sourcing trigger-focus reconnection, preview remount during refresh,
+  escaped accessibility labels inflating outer scroll, and compressed gallery rows.
+- Final focused combined run **381/381 across 11 files** includes all original
+  **69 Batch 1 safety cases**, full App118 and Wave 3 domain regressions. TypeScript,
+  zero-warning affected ESLint, formatting, API drift, 121-feature graph and diff
+  whitespace pass. Updated intentional click-to-Details expectations retain domain
+  assertions. Impact planner requires eventual **FULL**, deferred until acceptance.
+- Healthy owned Review at http://localhost:15174 uses this worktree and migration
+  20261013_0042; baseline fixture v4/80 ready and prior extended v5/252 preserved.
+  Measured long-list scroll keeps header/inspector and outer shell stationary.
+  Six-theme 1440px photo checks and 1024/390/320 layouts have no horizontal overflow;
+  final 320px screenshot shows visible results and accessible compact footer.
+- Updated UI contract, framework guidance, feature criterion and Wave 3 matrix,
+  evidence index and operator checklist. Browser evidence is inline, no standalone
+  image archive. Real browser zoom, physical devices, screen readers and live outage
+  injection remain unverified. Source remains uncommitted; no FULL, push, PR, merge,
+  feature-finish or foreign environment changes. Operator acceptance is pending.
+- The browser session expired during an extra final Supplier spot-check after
+  completed visual evidence and Seeds Escape/reopen scroll retention. Live UAT
+  requires operator sign-in; no credentials were accessed or recorded.
+- Final Supplier Active/Retired trigger description: TypeScript, affected lint/
+  formatting and 13/13 Supplier tests passed again; final responsive CSS format
+  check passed. No implementation commit was created.
+
+### 2026-10-30 — Operator browser annotations corrected
+
+- Themed thin native results/Preview scrollbars; whole-row/card hover, preview/bulk
+  highlight and keyboard focus now include Details/Edit. Native trigger and action
+  children remain transparent; accounted for Tooltip's intervening wrapper.
+- Restored existing idle inspector guidance in Seeds, Plants/groups and Sowings
+  (hidden on mobile). Seeds Gallery uses Plants' quiet right-aligned actions.
+  Corrected discarded Sowing selected prop and bulk visual precedence, retaining
+  actual selection membership, routes and domain operations.
+- **382/382 tests across 11 files pass**, including the original 69 Batch 1 cases;
+  added/extended placeholder, whole-record highlight and bulk deselection coverage.
+  Strict TypeScript, affected zero-warning lint, formatting, graph121 and whitespace
+  pass. Prior API drift evidence retained; no API/backend change.
+- Inline 1317px Seeds List/Gallery/idle and Plants selected screenshots plus six-theme
+  computed-style checks verify continuous highlight and themed scrollbars. 390px idle
+  pane hidden, 320px open Preview leaves ~149px of results, 1024px no horizontal
+  overflow. Keyboard Escape restores the whole-record focus outline without selection.
+  Owned Review remains healthy; operator signed in interactively, no credential access.
+- Updated Wave 3 evidence/UAT and UI contract. No FULL, commit, push, PR, merge or
+  environment cleanup. Operator acceptance remains pending; previous physical-device,
+  actual zoom and screen-reader limitations still apply.
+
+### 2026-10-30 — Text lifecycle and stable directory header follow-up
+
+- Restored Active text in compatible Collection/Supplier rows. Sowing Failed and
+  Abandoned now use danger colors; Completed remains distinct.
+- Moved Seeds/Plants/Sowings count and Select records into toolbar actions, removing
+  the separate line above results. Opt-in stable filter-summary lane preserves
+  header height whether filters exist or not; many chips scroll horizontally.
+- Final combined focused run: 382/382 across 11 files, including original Batch 1
+  cases. Strict TypeScript, affected zero-warning ESLint, Prettier, graph121 and
+  whitespace pass. First static attempt needed a formatting refresh after edits;
+  final run passed. Prior API evidence retained; no backend/API changes.
+- Browser control unavailable for this pass; fresh visual alignment evidence remains
+  pending and prior screenshots are historical. No FULL, commit, push, PR or merge.
+
+### 2026-10-30 — Collection pagination and photographic overlap correction
+
+- Seeds/Plants/Sowings count and Select records restored above results, with 20
+  default records/page, 50/100/All options, bounded navigation and explicit matching,
+  global and displayed-range counts. Filters/size reset pagination; bulk remains
+  displayed-page-only and retains the 100-record limit. Saved Views/API unchanged.
+- Shortened Collection subtitles. Removed absolute photo-title positioning causing
+  Plants title/Active/scientific-name collision; browser geometry confirms separation.
+- 383/383 combined focused tests pass, including Batch 1. Final mobile arrow/layout
+  refinement: shared16/16, strict typing, affected lint/formatting pass. Graph121 and
+  whitespace pass. Existing API no-drift evidence retained.
+- Real Review checks show Seeds pages 1–20/21–40, truthful 40 matching/43 total,
+  Plants 24 matching/26 total, All option and list/pane tops exactly aligned.
+  At <=400px, page-flow fallback avoids an unusably short list; measured422px list
+  at320x844 with Preview. Inline screenshots updated. Physical devices/AT/zoom remain
+  unverified. Owned Review healthy at migration20261013_0042. No FULL, commit,
+  push, PR, merge or cleanup; operator acceptance pending.
+
+### 2026-10-30 — Compact pagination composition
+
+- Replaced widely spaced full-size primary Previous/Next controls with one compact
+  cluster using existing IconButton chevrons, tooltips, page position and native
+  Per page select. Left range/count summary remains factual; Select records is
+  visually separate from navigation. Carbon pagination guidelines informed grouping.
+- Desktop first/second page and bulk mode verified in Review; mobile two-row grid
+  checked at320px with no horizontal overflow or exposed arrow labels. Existing
+  pagination/All/bulk safety semantics preserved. Browser viewport restored.
+- Combined383/383 focused tests pass, including Batch 1. TypeScript, affected ESLint,
+  formatting, graph121 and whitespace pass. Final stylesheet/shared16-case rerun
+  supplements that result; no backend/API change. Updated evidence/UAT notes.
+- No FULL, commit, push, PR, merge or cleanup. Operator acceptance remains pending;
+  actual device, zoom and screen-reader limits remain as previously documented.
+
+### 2026-10-30 — Directory quick actions and Carbon pagination follow-up
+
+- Added an explicit Preview icon beside Details/Edit in shared Collection/Sourcing
+  directory actions while retaining row/card Quick Preview. Stored Material now has
+  a nonmodal inspector with Escape/Close focus return and an exact Harvest inventory
+  destination. Preview action names are distinct from record-surface names for assistive
+  technology. Sowings gallery actions use the existing shared bottom-aligned layout.
+- Adopted shared compact Carbon pagination for Harvests, Stored Material, Suppliers,
+  Orders and Botanical identities: 20 by default, 50/100/All, matching/total/range,
+  and filter/size page reset. Orders keep server pagination, with All loading all API
+  pages; bulk semantics remain displayed-page-only. Saved Views, domain filters and
+  navigation contracts remain unchanged.
+- Focused regressions: **257/257** across 10 suites, including Seeds/Plants/Sowings
+  shared-action coverage and Stored Material preview dismissal/focus. Strict TypeScript
+  and zero-warning affected ESLint passed; Prettier, the 123-feature graph and
+  `git diff --check` pass. No canonical FULL or Review environment change was made.
+- Live browser capture was unavailable in the current session, so the annotated
+  1317×900 screenshots remain the visual reference, not new before/after evidence.
+  Responsive browser/device, actual zoom and screen-reader checks remain for operator
+  review. No push, PR, merge or feature-finish.
 
 ## 2026-10-30 — Activity concept and isolated Schedule UX review
 
@@ -6290,3 +6552,290 @@ Status remains implemented pending canonical verification.
   introduced. Per operator direction, canonical FULL and delivery await UAT. `SCHEDULE-UX-001` is
   implemented, not verified. No PR, push, merge or feature-finish performed.
   **FLORABASE_SCHEDULE_UX_READY_FOR_OPERATOR_UAT**.
+
+## 2026-10-30 — Wave 3 isolated cross-application QA
+
+- Created isolated branch `qa/wave3-independent` from the unchanged Wave 3 checkpoint
+  `81962b2407e3ff1187753b1eabcffe3b9dfefae0` (tree `9fee87874fd67af7bc6c359d8e38724948ea4f10`).
+  Confirmed local `origin/main` is `fbce3c4cfad26bdfa3297d53a1e65a7ec6a0ad65` and merged it
+  without rewriting history. The only conflict was the append-only progress log; both prior
+  milestones were retained. Integration commit: `2be886a1cfc997365e1cfe2ba7ab4bbe58079471`.
+- Cross-application review found the shared DirectoryPage, DirectoryTools, DirectoryResults,
+  DirectoryInspector, Saved Views, and status patterns consistently used by Collection and
+  Sourcing. Media and botanical identities use directory tools with their own content previews;
+  Taxonomy, Geography, Locations hierarchy, Journal, History, Schedule, labels/import-export,
+  and Settings retain justified specialized interactions. No bounded corrective code change
+  was supported by evidence; domain semantics and specialized navigation remain intact.
+- **557/557** focused tests pass across **32** suites covering Collection, Sourcing, shared
+  directory/visuals, Schedule, Reference, Explore, History, and Location routing. Strict
+  TypeScript, affected-file ESLint, Prettier, 123-feature validation, and staged/working diff
+  whitespace checks pass. One initial filtered run skipped 525 cases and lint initially included
+  an ignored CSS file; both commands were corrected and the full selected suites rerun cleanly.
+- Existing evidence records Wave 3 responsive widths 1440/1024/390 and all six themes, and
+  Schedule responsive/six-theme captures are checked in under `docs/design/schedule-ux/evidence/`.
+  An attempted read-only browser inspection could not attach because the in-app browser reported
+  its user handle unavailable; no new live visual, zoom, device, screen-reader, or operator UAT
+  evidence is claimed. No FULL, push, PR, main merge, feature-finish, Review reassignment, or
+  resource cleanup was performed. Additional short visual/UAT review remains appropriate before
+  operator acceptance.
+
+## 2026-10-30 — Wave 3 final UAT corrections: Suppliers and Sowings
+
+- Confirmed clean original feature and independent-QA worktrees, then fast-forwarded only
+  `feat/ui-system-v1-wave3` to the approved QA checkpoint `d09fd86118ecc9a17a9aef27e099d8a182ae073d`.
+  The QA branch remains unchanged. Suppliers and Orders shared a confirmed compact-row regression:
+  title links sat apart from preview triggers, thumbnails were oversized, and flexible fact columns
+  widened rows. Both now use a shared-trigger composition, bounded metadata and direct Details/Edit.
+  Active Suppliers use the existing compact accessible status indicator. No shared primitive changed.
+- Independently inspected Sowings List and Gallery; found no missing propagation. Toolbar, internal
+  scrolling, persistent nonmodal preview, explicit Details/Edit, lifecycle, selection, pagination,
+  germination and lineage behavior remain in place; no Sowings source changes were made.
+- Focused regression: **145/145** in 7 test files (Suppliers 13, Orders 20, Sowings 34, Seeds 56,
+  DirectoryPage 16, DirectoryResults 5, DirectoryTools 1). Strict TypeScript, affected-file ESLint,
+  Prettier, `python3 scripts/check-features.py` (123 valid), and `git diff --check` pass.
+- Refreshed only the owner-bound Feature Review using `make feature-review-up`; status reports healthy
+  frontend/backend/database, expected source worktree, code/DB head `20261013_0042`, and fixture v4
+  ready (80 records). Live visual comparison captured inline at 1320x900 in Mineral Dark and Light:
+  Suppliers List, Orders List/Gallery, Sowings List/Gallery. Preview opened a side inspector; direct
+  Supplier Details navigated to its record route. Theme restored to Dark, Mineral.
+- The connected browser offers no viewport override; exact 1440/1024/390 CSS-pixel captures were not
+  possible for this correction. Screen reader, physical device and actual browser zoom remain UAT.
+  Operator checklist: compare Supplier/Order List rows with Seeds; click titles/rows for Preview;
+  verify Details/Edit bypass preview; switch Orders and Sowings List/Gallery; scroll with Preview open;
+  verify pagination and multi-select; verify Sowings lifecycle and germination semantics; repeat at
+  1440/1024/390 and supported themes on operator's responsive test setup. No FULL, push, PR, merge or
+  feature-finish was run. Acceptance remains pending.
+
+### 2026-10-30 — Directory annotation follow-up
+
+- Removed redundant eye Preview controls from directory action groups while preserving
+  record-surface Quick Preview and direct Details/Edit. Kept domain operations visible
+  in their place: Start sowing for eligible SeedLots and Create Plant/Germination for
+  eligible Sowings, without duplicating operations already shown in the open inspector.
+- Added idle inspector guidance for Suppliers, Orders and Harvests; adjusted desktop
+  inspector alignment below pagination and the Stored Material/Harvest workspace height
+  so the results area can scroll instead of clipping lower content. Supplier status now
+  uses a text label. Botanical Identity Quick Preview retains its common name in the
+  accessible name.
+- Focused Collection regression: **180/180** across 7 files. Expanded integration
+  regression: **316/316** across 10 files, including App, UI Lab and Propagation. The
+  complete frontend suite then passed **1095/1095** across **100** files. Strict
+  TypeScript, full frontend ESLint, changed-file Prettier, 123-feature validation and
+  `git diff --check` pass.
+- No live browser comparison, updated visual evidence, Review refresh, FULL, commit,
+  push, PR or merge was performed. Operator visual review remains necessary for row
+  action balance, inspector sizing and the annotated Stored Material viewport; device,
+  zoom and assistive-technology verification remain open.
+
+### 2026-10-30 — Directory annotation corrections
+
+- Restored SeedLot Start sowing on selected and unselected active rows as a stylized,
+  labelled icon action. Sowings Create Plant and Germination use the same icon-only
+  treatment and remain directly operable alongside Details/Edit.
+- Put Seeds, Sowings and Harvests pagination in a full-width directory grid row above
+  both the results and inspector. Added an idle Harvest inspector, kept preview aligned
+  with the first row, and corrected Stored Material toolbar sizing and stable filter-chip
+  space. Botanical Identity now pages consistently, aligns its Quick Preview with the
+  list and provides contextual row actions for Add seed lot, Add plant, Start sowing and
+  Record harvest.
+- Fixed selected-filter chip dimensions to prevent clipped borders. The first targeted
+  run found tests querying identity cards by a partial species name also matched the new
+  contextual action names; updated those selectors to target Quick Preview explicitly.
+- Regression passed: **389/389** tests across 13 files, including App, UX-001/004,
+  Seeds, Sowings, Plants, Harvests, Stored Material, Botanical Identity actions, shared
+  DirectoryPage, Suppliers, Orders and UI Lab. The formerly failing App/UX-004 pair now
+  passes **130/130**. Affected-file ESLint, TypeScript, changed-source Prettier,
+  123-feature validation and `git diff --check` pass.
+- The existing Review tab was read only; it still shows the pre-refresh Harvest screen.
+  No Review refresh, responsive screenshot set, FULL, commit, push, PR or merge was
+  performed. Live visual confirmation of these corrections at 1440/1024/390 and across
+  themes remains outstanding; operator acceptance is pending.
+
+### 2026-10-31 — UI System v1 same-family consolidation candidate
+
+- Preserved feature HEAD `4b8c038f2373c37c5645125b22c06f019698b66b`, Batch 1 and the clean
+  independent-QA checkpoint `d09fd86118ecc9a17a9aef27e099d8a182ae073d` (already an ancestor).
+  Local and remotely checked main remain `fbce3c4cfad26bdfa3297d53a1e65a7ec6a0ad65`.
+- Documented four page families and moved eight record directories onto shared
+  `DirectoryWorkspace`, typed `DirectoryRecordContent` slots, status/actions and nonmodal
+  inspector geometry. Shared pagination replaces four local copies; Orders retains server
+  pagination. Removed parallel Sourcing/Sowings directory styles and obsolete geometry rules.
+  Domain/API/save/filter ownership, exact inventory routes, quantities and safety guards remain
+  with their existing pages. Locations/Geography share recursive presentation; Location selection
+  now retains the tree at tablet/mobile widths, with explicit Details navigation.
+- Corrected one real creation-focus regression; changed other test expectations only for the
+  documented compact states, idle inspectors, exact Details links and retired layout classes.
+  Complete frontend regression passed **1097/1097 in 100 files**. Later peer-tool changes passed
+  **171/171**, identity styling passed **145/145**. Final mobile comparison found Stored preview
+  content could collapse to zero height; shared minimum sizing/narrow-page flow and scrollable
+  metadata fix this. Stored Active now uses the same accessible check, retaining Depleted text.
+  Final affected cross-consumer regression passed **397/397 in 13 files**; strict TypeScript,
+  full frontend ESLint, Prettier and production build pass. Feature validation: **123 valid**;
+  `git diff --check` passes. Full results and limits: `design/ui-system-v1/consolidation/verification.txt`.
+- Captured **95 unique states**, including eight directories in six themes at 1440px, all eight
+  at 1024/390 in Mineral Dark, five galleries at three widths, two hierarchies at three widths,
+  photos, long names, rich lifecycle, pagination/All/selection, inspector persistence and 720×450
+  stress. Measurements report no horizontal overflow; all 79 list/inspector bounds checks report
+  no overlap. Comparison sheets, checksummed manifest and dirty-source fingerprint accompany
+  the gallery in `design/ui-system-v1/consolidation/evidence/`.
+- Browser smoke verifies Preview/Escape/focus return and direct Details for eight directories;
+  exact inventory destination and scroll persistence remain intact. Harvest confirmation focuses
+  Cancel; Escape returns to More actions without deletion. Unsaved Seed label was not persisted.
+  Native dirty-confirm rejection was not controllable through this browser and remains manual
+  UAT alongside physical devices, screen readers, actual zoom and full theme/width/state coverage.
+- Existing Review remains healthy and owned by `548f`, code/DB `20261013_0042`, fixture v4 ready
+  (80 managed baseline records), extended fixture retained; live source binds include these dirty
+  changes. No credentials recorded. No environment reprovisioning, foreign-worktree changes or
+  resource cleanup. Verification-impact planning selects FULL; it was deliberately not run.
+  Candidate awaits operator UAT and independent final review. No delivery commit, push, PR,
+  main merge or feature-finish.
+
+### 2026-11-01 — Shared directory interaction cleanup (operator review pending)
+
+- Followed checkpoint `db1e71fb85f1396408ed6f07800d4992dea0233d` with textual lifecycle
+  chips and one More actions menu per record across eight consolidated directories. Existing
+  Details/Edit, domain actions, exact inventory destinations and guards retain their owners.
+  Selected fill loses the inset stripe; hover, keyboard focus and bordered triggers stay distinct.
+- Reused OverflowMenu with opt-in mounted domain content. Fixed portal click propagation into
+  row Preview and nested Escape closing both association dialog and menu. A new regression
+  proves dialog Escape returns to its command, then menu Escape returns to More actions.
+  Existing tests now exercise the menu path and textual states. Hierarchies and specialists
+  are unchanged.
+- Final checks: **412/412 tests in 16 suites**, strict TypeScript, full frontend ESLint and
+  Prettier, production build, **123 valid features**, and `git diff --check` pass. Existing
+  JSDOM native confirm() warning remains; guard assertions pass. No canonical FULL was run.
+- Browser smoke verifies Preview/Escape/focus and Details across eight directories, Edit for
+  seven existing editor owners, exact Stored inventory URL, association dialog focus, and fill
+  without a stripe. At 1024/390, three representative stacked inspectors retain 147px of
+  scrollable content with no horizontal document overflow. Review is healthy and owned by this
+  worktree; code/DB `20261013_0042`, fixture v4 ready. No record was saved or deleted.
+- Results, screenshots, source fingerprint and exact file list:
+  `design/ui-system-v1/consolidation/interaction-cleanup/`. Focused Mineral Dark checks do not
+  replace the historical six-theme audit. Physical devices, screen readers, actual zoom and
+  native dirty-confirm rejection remain manual UAT. Final operator UAT remains pending.
+  No commit, push, PR, merge, feature-finish or resource cleanup.
+
+### 2026-11-01 — Final directory interaction contract correction (operator UAT pending)
+
+- Implemented the explicitly confirmed replacement of the earlier cleanup contract: direct
+  bordered Details/Edit, eligible creation-only overflow, textual semantic lifecycle chips,
+  and removal of Quick Preview/idle inspector columns from eight directories and both
+  hierarchy explorers. Full record Overview/tabs and domain workflow owners remain intact.
+- Fixed the actual appended-Details defect with exclusive directory/detail rendering in
+  Seeds/Sowings/Plants and Geography Places. Direct Sowings/Plants Edit now initializes its
+  record without Preview. Identity Edit reopens on browser history; duplicate selection and
+  connected focus targets remain available. Exact Stored inventory Edit enters its existing
+  guarded correction dialog. Shared hierarchy tracks align direct actions and wrap status/name;
+  compact gallery placeholders no longer show a clipped source banner over their icon.
+  Geography dedicated records now distinguish loading, retryable error and missing records.
+- Focused regression: **441/441 in 17 suites** on the final candidate, including RecordVisual
+  and the new Geography loading/error/retry/missing-record regression. The owning domain/App
+  suites include the original Batch 1 safeguards; earlier 69-case evidence is preserved.
+  Strict TypeScript, whole frontend ESLint, affected Prettier, production build, **123 valid
+  features** and `git diff --check` pass. One interrupted repeat produced no result and is
+  excluded from passing evidence. No canonical FULL was run.
+- Live Review verifies dedicated navigation, correct editors, source-prefilled creation,
+  exact inventory destinations, Escape/focus and bulk-mode selection without row navigation.
+  Evidence covers eight directories at 1024/390, five desktop galleries, desktop records,
+  both hierarchies at 1440/1024/390 and all six themes for status presentation. Semantic
+  status text/surface contrast is **5.90:1–9.08:1**. No Preview nodes or document horizontal
+  overflow were observed in the recorded directory/hierarchy states.
+- Current contract, matrix, exact file list, source fingerprint, 50 captures and UAT checklist:
+  `design/ui-system-v1/consolidation/final-interaction-correction/`. Prior Preview galleries
+  are explicitly historical. Physical devices, screen readers, actual zoom and native dirty-
+  confirm rejection remain operator checks; this is representative browser coverage.
+- Existing Review remains owned by `548f` at `http://localhost:15174`, code/DB
+  `20261013_0042`, fixture v4 ready with 80 managed baseline records; extended synthetic
+  records retained. No record was saved/deleted during live smoke. No foreign worktree,
+  DEV/UAT/Review provisioning, Docker cleanup, commit, push, PR, merge or feature-finish.
+  Checkpoint `db1e71f`, Batch 1 `3669869` and QA/Schedule ancestry remain preserved.
+
+### 2026-11-01 — Details and hierarchy consolidation, Part A (UAT pending)
+
+- Preserved the completed interaction correction in checkpoint `107f719273085ec7c2c51a3bb5ed720e31a245ba`.
+  Reconciled TX-001 `4ca5fe0ae85da0f48e3f4df4f370f98c3747a311` through normal merge
+  `31ef765f19d414a00a350167f08b3887898f7195`; both progress histories retained.
+  Scoped TX-001 infrastructure baseline: 13 passed with `--no-cov`; the initial scoped
+  default-coverage invocation passed its tests but failed the whole-application threshold.
+- Shared HierarchyRow now contains record and trailing Details/Edit in one bordered surface;
+  chevrons remain siblings. Locations and Geography reuse the same grid, wrapping and connectors.
+  Shared DetailPage extends existing CollectionUI/DetailHeader, Breadcrumbs and DetailTabs;
+  Locations, identities, places, Suppliers and Orders retain domain-owned sections and guards.
+  Identity formatted heading, focus target and actions remain stable across tabs. Place Details
+  no longer repeat the directory search/header. Canonical places still have no Edit.
+- Focused Part A regressions: 170/170 in six suites (App, UX004, Suppliers, Orders,
+  CollectionUI, HierarchyRow). Two initial UX004 findings were corrected: restored the named
+  identity detail region and replaced the superseded split-header assertion with stable-header
+  behavior coverage. Strict TypeScript, full frontend ESLint, production build, feature graph
+  (123) and diff checks pass. No FULL. Expanded browser/evidence checks continue with Part B.
+- Reproduced the reported Harvests blank page: Vite served an empty transformed StoredMaterial
+  module while the source export existed. Invalidating that module restored directory and Details
+  without source changes or environment restart. Production build includes both exports.
+- Review remains owner 548f; no foreign resources changed. No protected delivery; final UAT pending.
+
+### 2026-11-01 — Botanical cover fallback and final Details evidence, Part B (UAT pending)
+
+- Part A checkpoint `83e1c3bad6c4977bdf2a82f2fb3cc2b000f93add` remains standalone.
+  Collection fallback now follows own designated photo → exact eligible botanical cover → placeholder.
+  Removed the own-photo-only Details gates in Seeds/Plants/groups, added the Sowings Details visual,
+  and fixed summary enrichment based on cover metadata rather than the presence of a scientific name.
+  Harvest/Stored no longer substitute a physical source-record photo. Activity's explicit source-photo
+  compatibility is retained. No per-row request, API/schema change, media write or primary change.
+- Final affected run: **458/458 tests in 20 suites**, strict TypeScript, whole frontend ESLint,
+  affected Prettier, production build, **123 valid features**, and diff checks pass. Original Batch 1
+  safety coverage is included; historical 69-case evidence remains intact. No canonical FULL.
+  The earlier 449-case run passed tests but typing exposed the retained Activity caller; its optional
+  contract was restored and a regression added before the final run. Obsolete UX001/UX004 split-header
+  assertions were updated to the intentionally shared header; deferred reads and named regions remain.
+- Browser evidence: five Details families at 1440/1024/390 (15 layout checks), five families in all six
+  themes (30), both hierarchies at all three widths (6), and five 320px narrow-stress checks. Keyboard
+  expansion keeps its route; actions remain inside row boundaries. Location Edit/Escape restores focus.
+  Captures include long paths/cultivar, partial-date/unknown-price Order, missing images, own protected
+  photo, Gallery alignment, restored Harvests loading and exact Stored inventory navigation.
+- Current Review directory has 37/37 identities explicitly showing No cover image. Positive inherited
+  cover, external suppression, image-error and later-own-photo transitions are automated evidence only;
+  no Media/identity association was created for a screenshot. These cases, physical devices, screen
+  readers and actual browser zoom remain operator UAT. 320px stress is not browser zoom.
+- Review owner/source 548f, frontend/backend/db healthy, code/DB `20261013_0042`, fixture v4 ready with
+  80 managed baseline records and extended data retained. Reported Harvests blank page was an empty
+  Vite transformed module; invalidation restored access, including fresh reload/Details/Stored checks.
+  No record saved/deleted, foreign worktree/environment touched, push, PR, protected merge, FULL or cleanup.
+- Current compliance matrix, source fingerprint, exact file list, verification and visual gallery:
+  `design/ui-system-v1/consolidation/details-cover/`. Final operator UAT remains pending.
+
+### UI-FLICKER-001 C1/C3 stable headings — 1 November 2026
+
+- Directory pages declare `page-header--directory` from first render (Seeds, Sowings, Plants, Harvests,
+  Stored material, Suppliers, Orders, Botanical identities, Locations). Shared `DetailLoading` covers
+  Harvest, Supplier, Order, Location, Sowing, Plant, identity and direct Seed/Sowing/Plant loading.
+  The directory breadcrumb gap is fixed, removing the proven 8px movement; Suppliers, Orders, identities
+  and Locations settle 8px higher than before and Locations now uses the shared directory heading size.
+- Checks: 1125/1125 frontend tests in 101 files, strict TypeScript, ESLint and Prettier on changed files,
+  production build. Live delayed-network comparison against the checkpoint at 1440; patched build also
+  at 1024/390. Direct URL, record switching, and Back/Forward on Suppliers only. Sowings was re-traced
+  on the integrated Review (22px y63, stable). No canonical FULL, push, PR or merge.
+- Unresolved: 390 px shell movement of 4-12px, legacy Seeds/Sowings/Plants Details position after direct
+  loading, brief first-render gap on Supplier Details, operator UAT. UI-DETAIL-001 remains open.
+
+### UI System v1 Gate B canonical Details — 1 November 2026
+
+- Seeds, Sowings, Plants/PlantGroups, Harvests, Locations, identities, Suppliers, Orders and Geography
+  Places use one `DetailPage` contract: 32px title, 22px below 48rem, shared breadcrumb gap and flat
+  shell. `DetailSummary` replaces the Details metric patterns and omits absent values while keeping zero.
+- Mobile gutter no longer depends on loaded records. Nested workspaces no longer add a margin, so Plants,
+  Suppliers and Orders directories settle with Seeds. `DetailLoading` now matches the final title.
+- Checks: all 101 frontend test files, strict TypeScript, ESLint and Prettier on changed files, production
+  build, `check-features.py` and diff check. Geometry at 1440/1024/390 and gutter at 600/768/769 in one
+  browser. Real click Back/Forward on Orders; 500 responses reach real error states on Supplier, Harvest, Order.
+- Unresolved: UI-DETAIL-001 awaits operator acceptance; UI-FLICKER-001 stays partially resolved. See
+  `design/ui-system-v1/consolidation/details-cover/README.md`. No FULL, push, PR, merge or origin/main.
+
+### UI System v1 Wave 3 closure disposition — 1 November 2026
+
+- Operator reports the six Gate B UAT checks complete. UI-DETAIL-001 closed for Wave 3 with classified
+  exceptions; UI-FLICKER-001 stays partially resolved with three P3 observations. No application code changed.
+- `origin/main` is `4ca5fe0` (TX-001, #133) and already an ancestor through `31ef765`; no new merge was needed.
+- Migration head is `20261013_0042` on both. QA and canonical verification evidence follow this entry.
+- Independent QA in an isolated clone: PASS WITH FINDINGS, no P0/P1. Three P2 defects (blank unknown Seed id,
+  Plant Forward keeping the directory, focus on `body` after Details/Back) and P3s are deferred in the Details
+  closure matrix. Operator rule: only P0/P1 are corrected before closure.

@@ -1,31 +1,4 @@
 import {
-  DirectoryPage,
-  DirectoryRecords,
-  DirectoryRow,
-  DirectoryCard,
-  DirectoryRecordActions,
-  DirectoryInspector,
-  DirectoryViewSwitcher,
-} from "../components/DirectoryPage";
-import { useDirectoryPresentation } from "../components/directoryPresentation";
-import "../styles/sourcing-directory.css";
-import { ActionButton } from "../components/Action";
-import "../components/collection-page.css";
-import "../components/collection-directory.css";
-import "../components/collection-visual.css";
-import "../components/directory-preview.css";
-import "./supplier-refinement.css";
-import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
-import { FieldLabel } from "../components/FieldLabel";
-import { DirectoryTools } from "../components/DirectoryTools";
-import { DirectoryResults } from "../components/DirectoryResults";
-import { FormSections } from "../components/FormSections";
-import { EditWorkspace } from "../components/EditWorkspace";
-import { DetailEmptyState } from "../components/DetailEmptyState";
-import { useEditRoute } from "../components/useEditRoute";
-import { SavedViews } from "../saved-views/SavedViews";
-import { useDirectoryView } from "../saved-views/useDirectoryView";
-import {
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -35,30 +8,58 @@ import {
   type RefObject,
   type SyntheticEvent,
 } from "react";
+import { ActionButton } from "../components/Action";
+import "../components/collection-directory.css";
+import "../components/collection-page.css";
+import "../components/collection-visual.css";
+import { DetailEmptyState } from "../components/DetailEmptyState";
+import {
+  DirectoryCard,
+  DirectoryPage,
+  DirectoryRecordActions,
+  DirectoryRecordContent,
+  DirectoryRecords,
+  DirectoryRow,
+  DirectoryTrigger,
+  DirectoryViewSwitcher,
+  DirectoryWorkspace,
+} from "../components/DirectoryPage";
+import { useDirectoryPresentation } from "../components/directoryPresentation";
+import { DirectoryResults } from "../components/DirectoryResults";
+import { DirectoryTools } from "../components/DirectoryTools";
+import { EditWorkspace } from "../components/EditWorkspace";
+import { FieldLabel } from "../components/FieldLabel";
+import { FormSections } from "../components/FormSections";
+import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
+import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { useEditRoute } from "../components/useEditRoute";
+import { LifecycleStatus, StatusBadge } from "../components/WorkspaceUI";
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
+import "./supplier-refinement.css";
 
-import { PhotosSection } from "../photos/PhotosSection";
-import { RecordVisual } from "../photos/RecordVisual";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { useCreationDisclosure } from "../components/useCreationDisclosure";
-import {
-  OverflowMenu,
-  DirectorySearch,
-  RecordPreview,
-} from "../components/ReferenceUI";
 import {
   Breadcrumbs,
   CollectionCard,
   DetailContext,
   DetailHeader,
+  DetailPage,
+  DetailSummary,
   DetailTabs,
   WorkspaceIntro,
+  DetailLoading,
 } from "../components/CollectionUI";
 import {
-  setRecordRoute,
-  openCollectionPage,
   closeCollectionPage,
+  openCollectionPage,
+  setRecordRoute,
 } from "../components/recordNavigation";
+import { DirectorySearch, OverflowMenu } from "../components/ReferenceUI";
+import { useCreationDisclosure } from "../components/useCreationDisclosure";
+import { PhotosSection } from "../photos/PhotosSection";
+import { RecordVisual } from "../photos/RecordVisual";
 import {
   createSupplier,
   getSupplier,
@@ -102,6 +103,7 @@ type SupplierRecord = SupplierResponse | SupplierDetailResponse;
 const supplierPage = {
   eyebrow: "Sourcing",
   title: "Suppliers",
+  directory: true,
   titleId: "suppliers-title",
   description:
     "Manage the sources from which collection material was directly acquired.",
@@ -149,18 +151,6 @@ function recordTitle(record: {
   botanical_identity: { display_label: string };
 }): string {
   return record.label ?? record.botanical_identity.display_label;
-}
-
-function contactChannels(supplier: {
-  website: string | null;
-  email: string | null;
-  phone: string | null;
-}): string {
-  const channels: string[] = [];
-  if (supplier.website) channels.push("Website");
-  if (supplier.email) channels.push("Email");
-  if (supplier.phone) channels.push("Phone");
-  return channels.length > 0 ? channels.join(" · ") : "Not recorded";
 }
 
 function blankSupplierForm(): SupplierFormState {
@@ -321,70 +311,6 @@ function SupplierContactFields({
   );
 }
 
-function SupplierPreview({
-  supplier,
-  onOpen,
-  onEdit,
-}: {
-  supplier: SupplierListResponse;
-  onOpen: () => void;
-  onEdit: MouseEventHandler<HTMLButtonElement>;
-}) {
-  return (
-    <RecordPreview
-      visual={
-        <RecordVisual
-          photo={supplier.primary_photo ?? null}
-          label={supplier.name}
-          kind="supplier"
-          className="quick-preview-media"
-        />
-      }
-      type="Supplier"
-      title={supplier.name}
-      secondary={kindLabels[supplier.kind]}
-      facts={[
-        { label: "State", value: supplier.retired_at ? "Retired" : "Active" },
-        {
-          label: "Direct records",
-          value: String(supplier.usage_counts.direct_records_total),
-        },
-        {
-          label: "Seed lots",
-          value: String(supplier.usage_counts.seed_lots_total),
-        },
-        { label: "Contact", value: contactChannels(supplier) },
-      ]}
-      actions={
-        <>
-          <a
-            className="button-link"
-            href={`#/suppliers/${supplier.id}`}
-            onClick={onOpen}
-          >
-            Open details
-          </a>
-          <div
-            className="preview-action-group"
-            role="group"
-            aria-label="Supplier actions"
-          >
-            <ActionButton
-              icon="edit"
-              className="button--secondary"
-              type="button"
-              data-supplier-preview-edit
-              onClick={onEdit}
-            >
-              Edit
-            </ActionButton>
-          </div>
-        </>
-      }
-    />
-  );
-}
-
 function SupplierDetail({
   supplier,
   csrfToken,
@@ -415,7 +341,7 @@ function SupplierDetail({
     supplier.website ?? supplier.email ?? supplier.phone,
   );
   return (
-    <article
+    <DetailPage
       aria-label="Supplier detail"
       className="supplier-detail collection-detail"
     >
@@ -441,11 +367,9 @@ function SupplierDetail({
         title={supplier.name}
         secondary={<span>{kindLabels[supplier.kind]}</span>}
         status={
-          <span
-            className={`lifecycle-badge lifecycle-badge--${supplier.retired_at ? "retired" : "active"}`}
-          >
+          <LifecycleStatus state={supplier.retired_at ? "retired" : "active"}>
             {supplier.retired_at ? "Retired" : "Active"}
-          </span>
+          </LifecycleStatus>
         }
         editLabel="Edit supplier"
         onEdit={onEdit}
@@ -503,32 +427,24 @@ function SupplierDetail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <section
-            className="collection-summary"
-            aria-labelledby="supplier-summary-title"
-          >
-            <h4 id="supplier-summary-title">At a glance</h4>
-            <dl aria-label="Current Supplier state">
-              <div>
-                <dt>State</dt>
-                <dd>
-                  <span
-                    className={`lifecycle-badge lifecycle-badge--${supplier.retired_at ? "retired" : "active"}`}
+          <DetailSummary
+            id="supplier-summary-title"
+            label="Current Supplier state"
+            metrics={[
+              {
+                label: "State",
+                value: (
+                  <LifecycleStatus
+                    state={supplier.retired_at ? "retired" : "active"}
                   >
                     {supplier.retired_at ? "Retired" : "Active"}
-                  </span>
-                </dd>
-              </div>
-              <div>
-                <dt>Kind</dt>
-                <dd>{kindLabels[supplier.kind]}</dd>
-              </div>
-              <div>
-                <dt>Direct records</dt>
-                <dd>{counts.direct_records_total}</dd>
-              </div>
-            </dl>
-          </section>
+                  </LifecycleStatus>
+                ),
+              },
+              { label: "Kind", value: kindLabels[supplier.kind] },
+              { label: "Direct records", value: counts.direct_records_total },
+            ]}
+          />
           <section
             className="supplier-fact-group"
             aria-labelledby="supplier-about-title"
@@ -753,7 +669,7 @@ function SupplierDetail({
           </section>
         </div>
       )}
-    </article>
+    </DetailPage>
   );
 }
 
@@ -764,7 +680,6 @@ export function SupplierScreen({
 }: { initialId?: string; initialTab?: string; startCreating?: boolean } = {}) {
   const auth = useAuth();
   const presentation = useDirectoryPresentation("suppliers");
-  const [previewOpen, setPreviewOpen] = useState(false);
   const selectedTrigger = useRef<HTMLButtonElement | null>(null);
   const directoryList = useRef<HTMLUListElement | null>(null);
   const DirectoryItem =
@@ -805,7 +720,7 @@ export function SupplierScreen({
   const editTrigger = useRef<HTMLButtonElement>(null);
   const editBaseline = useRef(JSON.stringify(blankSupplierForm()));
   const directEditHandled = useRef(false);
-  const restorePreviewEdit = useRef(false);
+  const restoreDirectoryEdit = useRef(false);
   const restoreDetailHeading = useRef(false);
   const {
     expanded: creationExpanded,
@@ -835,7 +750,7 @@ export function SupplierScreen({
         current.status === "success" ? current : { status: "idle" },
       );
       if (!edit.modal && initialId) {
-        if (restorePreviewEdit.current) return;
+        if (restoreDirectoryEdit.current) return;
         restoreDetailHeading.current = true;
         setRecordRoute(`#/suppliers/${initialId}`, true);
       }
@@ -940,6 +855,9 @@ export function SupplierScreen({
     );
   }, [filter, suppliers]);
 
+  const pagination = useDirectoryPagination(visible, filter);
+  const { visible: pageVisible } = pagination;
+
   useEffect(() => {
     if (
       !startCreating ||
@@ -999,30 +917,30 @@ export function SupplierScreen({
     };
   }, [edit.modal, editing, initialId, initialTab, target]);
 
-  // Editing from Quick Preview changes the route, so restore focus once the
-  // directory and its preview have rendered again.
+  // A directory editor returns focus to its persistent direct Edit action.
   useEffect(() => {
     if (
       initialId ||
       editing ||
       edit.modal ||
-      !restorePreviewEdit.current ||
+      !restoreDirectoryEdit.current ||
       !selected
     )
       return;
-    restorePreviewEdit.current = false;
     const frame = requestAnimationFrame(() => {
-      const trigger = previewOpen
-        ? document.querySelector<HTMLElement>("[data-supplier-preview-edit]")
-        : directoryList.current?.querySelector<HTMLElement>(
-            `[data-preview-id="${selected.id}"] button[aria-label^="Edit "]`,
-          );
-      trigger?.focus();
+      const trigger =
+        directoryList.current?.querySelector<HTMLButtonElement>(
+          `[data-preview-id="${selected.id}"] .ui-directory-record-actions button[aria-label^="Edit "]`,
+        ) ?? editTrigger.current;
+      if (trigger?.isConnected) {
+        trigger.focus();
+        restoreDirectoryEdit.current = false;
+      }
     });
     return () => {
       cancelAnimationFrame(frame);
     };
-  }, [edit.modal, editing, initialId, selected, previewOpen]);
+  }, [edit.modal, editing, initialId, selected]);
 
   // A route change can mount the detail after save success; wait for its heading.
   useEffect(() => {
@@ -1116,7 +1034,7 @@ export function SupplierScreen({
   ) {
     editTrigger.current = trigger;
     directEditHandled.current = true;
-    restorePreviewEdit.current = !initialId;
+    restoreDirectoryEdit.current = !initialId;
     if (creationExpanded) closeCreation({ returnFocus: false });
     const values = supplierFormFrom(supplier);
     editBaseline.current = JSON.stringify(values);
@@ -1149,7 +1067,6 @@ export function SupplierScreen({
         setSelectedId(supplier.id);
         if (wasCreating) {
           selectedTrigger.current = creationTriggerRef.current;
-          setPreviewOpen(true);
         }
         if (edit.modal) edit.close(true);
         else {
@@ -1169,7 +1086,7 @@ export function SupplierScreen({
         });
         if (
           wasCreating ||
-          (initialTab === "edit" && !restorePreviewEdit.current)
+          (initialTab === "edit" && !restoreDirectoryEdit.current)
         )
           setRecordRoute(`#/suppliers/${supplier.id}`, true);
         if (!wasCreating && initialId === supplier.id)
@@ -1312,7 +1229,15 @@ export function SupplierScreen({
         >
           <WorkspaceIntro contextOnly {...supplierPage} />
           {detail.status === "loading" && (
-            <p role="status">Loading supplier…</p>
+            <DetailLoading
+              eyebrow="Supplier"
+              label="Loading supplier…"
+              parents={[
+                { label: "Sourcing", href: "#/dashboard" },
+                { label: "Suppliers", href: "#/suppliers" },
+              ]}
+              className="supplier-detail"
+            />
           )}
           {detail.status === "error" && (
             <div className="notice notice--error" role="alert">
@@ -1438,9 +1363,20 @@ export function SupplierScreen({
           }
           content={
             <>
-              <div
-                className={`supplier-master-detail operational-layout directory-preview-layout${creationExpanded ? " is-detail-view" : ""}`}
+              <DirectoryWorkspace
+                className={
+                  creationExpanded
+                    ? "supplier-master-detail operational-layout is-detail-view"
+                    : undefined
+                }
               >
+                {directory.status === "ready" && (
+                  <DirectoryResults
+                    count={visible.length}
+                    total={suppliers.length}
+                    pagination={visible.length > 0 ? pagination : undefined}
+                  />
+                )}
                 <section
                   className="seed-master supplier-master"
                   aria-labelledby="supplier-directory-title"
@@ -1448,9 +1384,7 @@ export function SupplierScreen({
                   <h3 className="sr-only" id="supplier-directory-title">
                     Supplier directory
                   </h3>
-                  {directory.status === "ready" && (
-                    <DirectoryResults count={visible.length} />
-                  )}
+
                   {directory.status === "loading" && (
                     <p aria-live="polite" className="notice">
                       Loading suppliers…
@@ -1492,54 +1426,100 @@ export function SupplierScreen({
                       label="Suppliers"
                       listRef={directoryList}
                     >
-                      {visible.map((supplier) => (
+                      {pageVisible.map((supplier) => (
                         <DirectoryItem
                           key={supplier.id}
-                          selected={previewOpen && selectedId === supplier.id}
+                          previewId={supplier.id}
+
+                          onClick={(event) => {
+                            if (
+                              event.defaultPrevented ||
+                              event.ctrlKey ||
+                              event.metaKey ||
+                              event.shiftKey ||
+                              event.altKey
+                            )
+                              return;
+                            const target = event.target;
+                            if (
+                              !(target instanceof Element) ||
+                              target.closest(
+                                ".ui-directory-record-actions, input, select, textarea, label",
+                              )
+                            )
+                              return;
+                            const trigger =
+                              event.currentTarget.querySelector<HTMLButtonElement>(
+                                ".sourcing-record-trigger",
+                              );
+                            if (!trigger) return;
+                            event.preventDefault();
+                            selectedTrigger.current = trigger;
+                            setRecordRoute(`#/suppliers/${supplier.id}`);
+                          }}
                         >
-                          <div className="sourcing-record-identity">
-                            <RecordVisual
-                              kind="supplier"
-                              label={supplier.name}
-                              photo={supplier.primary_photo ?? null}
-                              compact
-                              showSource={presentation.view === "gallery"}
+                          <DirectoryTrigger
+                            className="sourcing-record-trigger"
+                            aria-label={supplier.name}
+                            description={`${supplier.retired_at ? "Retired" : "Active"} · Open details`}
+                          >
+                            <DirectoryRecordContent
+                              visual={
+                                <RecordVisual
+                                  kind="supplier"
+                                  label={supplier.name}
+                                  photo={supplier.primary_photo ?? null}
+                                  compact
+                                  showSource={presentation.view === "gallery"}
+                                />
+                              }
+                              name={
+                                <>
+                                  <>
+                                    <span>{supplier.name}</span>
+                                  </>
+                                </>
+                              }
+                              secondary={<>{kindLabels[supplier.kind]}</>}
+                              summary={
+                                <>
+                                  <strong>
+                                    {supplier.usage_counts.direct_records_total}
+                                  </strong>
+                                  <small>direct records</small>
+                                  {supplier.retired_at && (
+                                    <LifecycleStatus
+                                      state={
+                                        supplier.retired_at
+                                          ? "retired"
+                                          : "active"
+                                      }
+                                    >
+                                      {supplier.retired_at
+                                        ? "Retired"
+                                        : "Active"}
+                                    </LifecycleStatus>
+                                  )}
+                                </>
+                              }
+                              status={
+                                !supplier.retired_at ? (
+                                  <StatusBadge compactState="active">
+                                    Active
+                                  </StatusBadge>
+                                ) : undefined
+                              }
                             />
-                            <div className="sourcing-record-name">
-                              <a href={`#/suppliers/${supplier.id}`}>
-                                {supplier.name}
-                              </a>
-                              <small>{kindLabels[supplier.kind]}</small>
-                            </div>
-                          </div>
-                          <div className="sourcing-record-facts">
-                            <strong>
-                              {supplier.usage_counts.direct_records_total}
-                            </strong>{" "}
-                            direct records
-                            <span
-                              className={`lifecycle-badge lifecycle-badge--${supplier.retired_at ? "retired" : "active"}`}
-                            >
-                              {supplier.retired_at ? "Retired" : "Active"}
-                            </span>
-                          </div>
-                          <div data-preview-id={supplier.id}>
-                            <DirectoryRecordActions
-                              label={supplier.name}
-                              onPreview={(trigger) => {
-                                selectedTrigger.current = trigger;
-                                setSelectedId(supplier.id);
-                                setPreviewOpen(true);
-                              }}
-                              onDetails={() => {
-                                setRecordRoute(`#/suppliers/${supplier.id}`);
-                              }}
-                              onEdit={(trigger) => {
-                                setPreviewOpen(false);
-                                startEdit(supplier, trigger);
-                              }}
-                            />
-                          </div>
+                          </DirectoryTrigger>
+                          <DirectoryRecordActions
+                            label={supplier.name}
+                            onDetails={() => {
+                              setRecordRoute(`#/suppliers/${supplier.id}`);
+                            }}
+                            onEdit={(trigger) => {
+                              startEdit(supplier, trigger);
+                            }}
+                          />
                         </DirectoryItem>
                       ))}
                     </DirectoryRecords>
@@ -1555,27 +1535,7 @@ export function SupplierScreen({
                     {editor}
                   </section>
                 )}
-                {selected && previewOpen && !editing && !edit.modal && (
-                  <DirectoryInspector
-                    title="Supplier inspection"
-                    returnFocusTo={selectedTrigger}
-                    fallbackFocusTo={directoryList}
-                    onClose={() => {
-                      setPreviewOpen(false);
-                    }}
-                  >
-                    <SupplierPreview
-                      supplier={selected}
-                      onOpen={() => {
-                        setSave({ status: "idle" });
-                      }}
-                      onEdit={(event) => {
-                        startEdit(selected, event.currentTarget);
-                      }}
-                    />
-                  </DirectoryInspector>
-                )}
-              </div>
+              </DirectoryWorkspace>
               <div aria-live="polite">
                 {save.status === "saving" && (
                   <p className="notice">Saving the supplier…</p>

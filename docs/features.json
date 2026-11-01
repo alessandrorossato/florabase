@@ -2109,7 +2109,8 @@
         "Focused accessibility, responsive, theme and behavior regressions plus the CI-004 policy-selected canonical gate verify the final implementation without weakening protected checks",
         "Progressive migration and Media/Taxonomy/map integration preserve production workflows, source semantics, URL state, quantities, date precision and independent form save boundaries",
         "Approved production Wave 1 migrates actual Dashboard, Seeds and Plants with retained domain behavior, real authenticated review evidence, List/Gallery history and focused checks before operator review and canonical FULL",
-        "Operator final refinements provide compact Lists/Galleries, three explicit record actions, accessible overlay previews, modifier-assisted existing bulk selection, Plant-level random Dashboard samples and a separate cross-domain bulk proposal before final production UI approval"
+        "Operator final refinements provide compact Lists/Galleries, record-surface nonmodal Preview with explicit Details/Edit actions, stable directory scrolling, semantic lifecycle indicators, modifier-assisted existing bulk selection, Plant-level random Dashboard samples and a separate cross-domain bulk proposal before final production UI approval",
+        "Operator-approved same-family consolidation shares directory workspace and typed row/card/inspector/action presentation across Collection, Sourcing and Botanical identities, shares Locations/Geography branch presentation, and supplies cross-page responsive/six-theme evidence with explicit specialized exceptions before acceptance"
       ],
       "dependencies": [
         "GLOBAL-VISUAL-001",

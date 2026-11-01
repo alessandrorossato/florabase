@@ -1,0 +1,936 @@
+[
+  {
+    "page": "seeds",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "sowings",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "plants",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "harvests",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 374,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "stored-material",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 270.953125,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "suppliers",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 587.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "orders",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 587.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "identities",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 558,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "seeds",
+    "theme": "mineral-dark",
+    "width": 1024,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 274.96875,
+    "imageWidth": 1024,
+    "imageHeight": 900
+  },
+  {
+    "page": "sowings",
+    "theme": "mineral-dark",
+    "width": 1024,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 274.96875,
+    "imageWidth": 1024,
+    "imageHeight": 900
+  },
+  {
+    "page": "plants",
+    "theme": "mineral-dark",
+    "width": 1024,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 274.96875,
+    "imageWidth": 1024,
+    "imageHeight": 900
+  },
+  {
+    "page": "harvests",
+    "theme": "mineral-dark",
+    "width": 1024,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 322.96875,
+    "imageWidth": 1024,
+    "imageHeight": 900
+  },
+  {
+    "page": "stored-material",
+    "theme": "mineral-dark",
+    "width": 1024,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 266.96875,
+    "imageWidth": 1024,
+    "imageHeight": 900
+  },
+  {
+    "page": "suppliers",
+    "theme": "mineral-dark",
+    "width": 1024,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 350.96875,
+    "imageWidth": 1024,
+    "imageHeight": 900
+  },
+  {
+    "page": "orders",
+    "theme": "mineral-dark",
+    "width": 1024,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 298.96875,
+    "imageWidth": 1024,
+    "imageHeight": 900
+  },
+  {
+    "page": "identities",
+    "theme": "mineral-dark",
+    "width": 1024,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 366.96875,
+    "imageWidth": 1024,
+    "imageHeight": 900
+  },
+  {
+    "page": "seeds",
+    "theme": "mineral-dark",
+    "width": 390,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 450,
+    "imageWidth": 390,
+    "imageHeight": 900
+  },
+  {
+    "page": "sowings",
+    "theme": "mineral-dark",
+    "width": 390,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 450,
+    "imageWidth": 390,
+    "imageHeight": 900
+  },
+  {
+    "page": "plants",
+    "theme": "mineral-dark",
+    "width": 390,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 450,
+    "imageWidth": 390,
+    "imageHeight": 900
+  },
+  {
+    "page": "harvests",
+    "theme": "mineral-dark",
+    "width": 390,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 450,
+    "imageWidth": 390,
+    "imageHeight": 900
+  },
+  {
+    "page": "stored-material",
+    "theme": "mineral-dark",
+    "width": 390,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 450,
+    "imageWidth": 390,
+    "imageHeight": 900
+  },
+  {
+    "page": "suppliers",
+    "theme": "mineral-dark",
+    "width": 390,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 450,
+    "imageWidth": 390,
+    "imageHeight": 900
+  },
+  {
+    "page": "orders",
+    "theme": "mineral-dark",
+    "width": 390,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 450,
+    "imageWidth": 390,
+    "imageHeight": 900
+  },
+  {
+    "page": "identities",
+    "theme": "mineral-dark",
+    "width": 390,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 450,
+    "imageWidth": 390,
+    "imageHeight": 900
+  },
+  {
+    "page": "seeds",
+    "theme": "mineral-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "sowings",
+    "theme": "mineral-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "plants",
+    "theme": "mineral-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "harvests",
+    "theme": "mineral-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 374,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "stored-material",
+    "theme": "mineral-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 270.953125,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "suppliers",
+    "theme": "mineral-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 587.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "orders",
+    "theme": "mineral-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 587.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "identities",
+    "theme": "mineral-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 558,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "seeds",
+    "theme": "botanical-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "sowings",
+    "theme": "botanical-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "plants",
+    "theme": "botanical-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "harvests",
+    "theme": "botanical-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 374,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "stored-material",
+    "theme": "botanical-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 270.953125,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "suppliers",
+    "theme": "botanical-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 587.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "orders",
+    "theme": "botanical-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 587.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "identities",
+    "theme": "botanical-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 558,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "seeds",
+    "theme": "botanical-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "sowings",
+    "theme": "botanical-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "plants",
+    "theme": "botanical-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "harvests",
+    "theme": "botanical-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 374,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "stored-material",
+    "theme": "botanical-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 270.953125,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "suppliers",
+    "theme": "botanical-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 587.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "orders",
+    "theme": "botanical-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 587.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "identities",
+    "theme": "botanical-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 558,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "seeds",
+    "theme": "herbarium-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "sowings",
+    "theme": "herbarium-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "plants",
+    "theme": "herbarium-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "harvests",
+    "theme": "herbarium-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 374,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "stored-material",
+    "theme": "herbarium-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 270.953125,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "suppliers",
+    "theme": "herbarium-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 587.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "orders",
+    "theme": "herbarium-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 587.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "identities",
+    "theme": "herbarium-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 558,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "seeds",
+    "theme": "herbarium-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "sowings",
+    "theme": "herbarium-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "plants",
+    "theme": "herbarium-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "harvests",
+    "theme": "herbarium-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 374,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "stored-material",
+    "theme": "herbarium-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 270.953125,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "suppliers",
+    "theme": "herbarium-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 587.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "orders",
+    "theme": "herbarium-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 587.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "identities",
+    "theme": "herbarium-light",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 558,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "seeds-gallery",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "sowings-gallery",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "plants-gallery",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 563.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "suppliers-gallery",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 587.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "orders-gallery",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 587.96875,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "seeds-gallery",
+    "theme": "mineral-dark",
+    "width": 1024,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 274.96875,
+    "imageWidth": 1024,
+    "imageHeight": 900
+  },
+  {
+    "page": "sowings-gallery",
+    "theme": "mineral-dark",
+    "width": 1024,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 274.96875,
+    "imageWidth": 1024,
+    "imageHeight": 900
+  },
+  {
+    "page": "plants-gallery",
+    "theme": "mineral-dark",
+    "width": 1024,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 274.96875,
+    "imageWidth": 1024,
+    "imageHeight": 900
+  },
+  {
+    "page": "suppliers-gallery",
+    "theme": "mineral-dark",
+    "width": 1024,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 350.96875,
+    "imageWidth": 1024,
+    "imageHeight": 900
+  },
+  {
+    "page": "orders-gallery",
+    "theme": "mineral-dark",
+    "width": 1024,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 298.96875,
+    "imageWidth": 1024,
+    "imageHeight": 900
+  },
+  {
+    "page": "seeds-gallery",
+    "theme": "mineral-dark",
+    "width": 390,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 450,
+    "imageWidth": 390,
+    "imageHeight": 900
+  },
+  {
+    "page": "sowings-gallery",
+    "theme": "mineral-dark",
+    "width": 390,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 450,
+    "imageWidth": 390,
+    "imageHeight": 900
+  },
+  {
+    "page": "plants-gallery",
+    "theme": "mineral-dark",
+    "width": 390,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 450,
+    "imageWidth": 390,
+    "imageHeight": 900
+  },
+  {
+    "page": "suppliers-gallery",
+    "theme": "mineral-dark",
+    "width": 390,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 450,
+    "imageWidth": 390,
+    "imageHeight": 900
+  },
+  {
+    "page": "orders-gallery",
+    "theme": "mineral-dark",
+    "width": 390,
+    "overflow": false,
+    "overlap": false,
+    "recordsHeight": 450,
+    "imageWidth": 390,
+    "imageHeight": 900
+  },
+  {
+    "page": "locations",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "url": "http://localhost:15174/#/locations",
+    "overflow": false,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "geography-places",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "url": "http://localhost:15174/#/geography/places",
+    "overflow": false,
+    "imageWidth": 1425,
+    "imageHeight": 891
+  },
+  {
+    "page": "locations",
+    "theme": "mineral-dark",
+    "width": 1024,
+    "url": "http://localhost:15174/#/locations",
+    "overflow": false,
+    "imageWidth": 1009,
+    "imageHeight": 887
+  },
+  {
+    "page": "geography-places",
+    "theme": "mineral-dark",
+    "width": 1024,
+    "url": "http://localhost:15174/#/geography/places",
+    "overflow": false,
+    "imageWidth": 1009,
+    "imageHeight": 887
+  },
+  {
+    "page": "locations",
+    "theme": "mineral-dark",
+    "width": 390,
+    "url": "http://localhost:15174/#/locations",
+    "overflow": false,
+    "imageWidth": 375,
+    "imageHeight": 865
+  },
+  {
+    "page": "geography-places",
+    "theme": "mineral-dark",
+    "width": 390,
+    "url": "http://localhost:15174/#/geography/places",
+    "overflow": false,
+    "imageWidth": 375,
+    "imageHeight": 865
+  },
+  {
+    "page": "seeds-page-two",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "seeds-selection",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "seeds-photo-preview",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "plants-photo-preview",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "sowings-rich-lifecycle",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "seeds-scroll-persistence",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "imageWidth": 1440,
+    "imageHeight": 900
+  },
+  {
+    "page": "seeds-short-viewport",
+    "theme": "mineral-dark",
+    "width": 720,
+    "height": 450,
+    "overflow": false,
+    "imageWidth": 705,
+    "imageHeight": 441
+  },
+  {
+    "page": "harvests-short-viewport",
+    "theme": "mineral-dark",
+    "width": 720,
+    "height": 450,
+    "overflow": false,
+    "imageWidth": 720,
+    "imageHeight": 450
+  },
+  {
+    "page": "identities-short-viewport",
+    "theme": "mineral-dark",
+    "width": 720,
+    "height": 450,
+    "overflow": false,
+    "imageWidth": 720,
+    "imageHeight": 450
+  },
+  {
+    "page": "harvest-destructive-cancel-focus",
+    "theme": "mineral-dark",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "imageWidth": 1425,
+    "imageHeight": 891
+  }
+]

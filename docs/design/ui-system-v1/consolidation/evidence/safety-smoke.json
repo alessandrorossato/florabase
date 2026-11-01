@@ -1,0 +1,6 @@
+{
+  "destructiveCancelInitiallyFocused": true,
+  "destructiveEscapeReturnedToMore": true,
+  "unsavedLabelWasNotPersisted": true,
+  "nativeDirtyConfirmation": "Editor closed without a controllable JS confirmation being exposed by IAB; reject-discard behavior is covered by automated regressions and remains manual UAT."
+}

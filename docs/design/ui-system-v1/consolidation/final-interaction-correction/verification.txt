@@ -1,0 +1,68 @@
+FLORABASE — Final interaction correction; 1 November 2026
+Pending final operator UAT; focused checks are not protected delivery verification.
+
+Identity:
+  Worktree /home/alessandro/.codex/worktrees/548f/florabase
+  Branch feat/ui-system-v1-wave3
+  HEAD db1e71fb85f1396408ed6f07800d4992dea0233d
+  HEAD tree 700e276a342cf5cb80afc3dd32423ca13eb7bd41 (committed checkpoint, not dirty candidate)
+  Batch 1 36698698b00916870dca27feb44b10ee2f3a7723 remains ancestor.
+  QA/Schedule d09fd86118ecc9a17a9aef27e099d8a182ae073d remains ancestor.
+  Current source is uncommitted. See source-fingerprint.json and changed-files.txt.
+
+Completed focused checks:
+  Isolated quality workflow: python3 scripts/workflow_environment.py quality compose --
+  run --rm --no-deps frontend pnpm test <affected suites> --reporter=verbose
+  441/441 tests, 17 files; final run start 16:55:37 UTC, duration 85.20s.
+  App, UX001, UX004, DirectoryPage, ReferenceInteractions, Controls, CollectionUI,
+  SeedLotScreen, SowingScreen, PlantScreen, SupplierScreen, OrderScreen,
+  HarvestScreen, StoredMaterial, Conversion, IdentitySourceAction, RecordVisual.
+  Includes direct navigation vs selection, full record boundaries, history, exact inventory
+  editor, menu eligibility/commands, semantic statuses, and owning domain/Batch 1 guards.
+  Final hierarchy wrapping and compact placeholder correction were reviewed in the real
+  browser. The combined result includes 14 RecordVisual tests and the new Geography
+  loading/error/retry/missing-record regression. No FULL/frontend release gate claimed.
+  Historical 69-case safety and prior 397/412-test evidence is retained as historical.
+  One repeat exited 143 without aggregate completion; excluded from passing evidence.
+  JSDOM's existing unimplemented native confirm() warning remains; guard assertions pass.
+
+Static checks:
+  Strict pnpm typecheck: PASS.
+  Whole frontend pnpm lint: PASS, zero warnings.
+  Affected TSX/TS/CSS Prettier check: PASS.
+  Final hierarchy/directory CSS formatting: PASS.
+  Production pnpm build (tsc -b and Vite): PASS.
+  python3 scripts/check-features.py: PASS, 123 valid features.
+  git diff --check: PASS.
+  Documentation/evidence formatting is checked separately; no canonical receipt created.
+
+Real Review:
+  http://localhost:15174, owner source worktree 548f, live dirty source binds.
+  frontend/backend/db healthy; code and DB 20261013_0042.
+  Managed fixture v4 ready, 80 baseline records; extended synthetic fixture retained.
+  No secrets or credentials read/recorded. No record saved/deleted during smoke.
+  Direct Seed Details: correct record route, zero list nodes, Overview retained.
+  Seed keyboard activation on 390px: correct full Details, zero list nodes/overflow;
+  Back retains gallery URL. Search/page return also verified during investigation.
+  Direct edits: Seeds/Sowings/Plants/Harvests/Suppliers/Orders and identity full editor.
+  Exact Stored inventory Edit: existing dialog, correct inventory URL and Escape focus.
+  Source-prefilled Start sowing, Sowing germination and Plant group creation inspected.
+  Identity association dialog and layered Escape/focus inspected. A visible tooltip is
+  dismissed before the underlying menu, per the established shared control-layer contract.
+  Hierarchy expansion stays separate from record navigation; canonical Geography has no Edit.
+  A live missing Geography record renders the explicit not-found state; retry/error are
+  covered by the focused regression without disrupting the Review service.
+  Eight directory layout states at 1024/390, five desktop galleries, six status themes,
+  both hierarchies at three widths: no recorded document horizontal overflow/Preview nodes.
+  50 screenshots, navigation/responsive JSON, contrast measurements and manifest in evidence/.
+  Status token text/surface contrast ranges 5.90:1–9.08:1 across all six themes.
+  During editing one Vite hot-module cache served an invalid lazy export; source invalidation
+  and reload restored it. Subsequent navigation and production build passed, no environment
+  reprovisioning or dependency/resource cleanup was used.
+
+Limits:
+  Representative browser checks, not every page × theme × state combination.
+  No physical-device, screen-reader, actual browser-zoom or native dirty-confirm rejection
+  certification. Native browser Back focus was specifically proven for identity; other
+  return scenarios verify route/context and editor/menu focus, not universal row-focus recovery.
+  No protected verification/acceptance, push, PR, merge or feature-finish.

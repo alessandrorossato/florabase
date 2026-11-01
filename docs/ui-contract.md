@@ -101,6 +101,11 @@ Rows use meaningful links, metadata and source labels; partial dates retain thei
 Empty sections remain visible with factual explanations. Loading does not show fabricated zeros;
 errors offer retry and authentication expiry returns to the existing session flow.
 
+Record pages use `DetailPage` with `DetailHeader`: 32px title, 22px below 48rem. `DetailLoading` holds
+that structure without record data and never replaces an error or not-found state. `DetailSummary`
+takes typed metrics, omits absent values and keeps meaningful zero. Directory headers declare
+`directory` so their heading holds from first render.
+
 ## Page archetypes
 
 | Archetype           | Primary organization                                          |
@@ -507,7 +512,6 @@ it. The [approved prototype](design/ui-system-v1/gate-b/README.md) remains histo
 No canonical verification receipt or delivery approval is implied. Preserve the Gate A alternatives as history. Structural page
 changes require desktop/tablet/mobile, long-content, state and keyboard evidence; delivery follows CI-004.
 
-
 ### Wave 1 final operator refinements — 29 October 2026
 
 The [final refinements](design/ui-system-v1/wave1/refinements/README.md) supersede the earlier
@@ -535,3 +539,106 @@ period/day/agenda controls and `view=list|calendar`; Suppliers keeps its search-
 Sourcing presentation is browser-local/URL-only and never enters Saved Views or domain requests.
 All six operator UAT scenarios have passed and the UI/UX scope is frozen. Independent correctness
 review, reconciliation with PR #130 and canonical FULL verification remain pending.
+
+### Wave 3 operator refinement — nonmodal directory inspection (2026-10-30)
+
+DirectoryInspector now defaults to a nonmodal side panel across its Collection and
+Sourcing consumers. Desktop/tablet keep the directory and inspector in separate
+columns; narrow screens stack a bounded, scrollable inspector above the directory
+so neither a backdrop nor the panel obscures records. Close receives initial focus;
+Tab remains free to enter the directory, and Close/Escape restore the current
+connected Preview trigger or its fallback. Active task dialogs and control layers
+retain Escape priority. Explicit Details and contextual editing remain separate
+intentions; TaskDialog still owns editing and destructive confirmation.
+
+Photographic gallery source captions remain accessible and available as native
+hover titles without a dark strip on the photo. Photo/placeholder cards stretch to
+a common row height with actions aligned at the bottom. Source labels in previews
+stay anchored inside their own image box. Locations adopts Geography management's
+chevrons, focusable hierarchy root, branch rows and compact deep indentation,
+retaining Location counts, filtering, scopes and parent protections.
+
+### UI System v1 global directory refinement (2026-10-30)
+
+This supersedes the historical Wave 1 three-action/modal contract above for
+compatible record directories. Seeds, Plants/groups, Sowings, Harvests, Suppliers
+and Orders open the same nonmodal Quick Preview from the record surface. A redundant
+sibling eye action is omitted; domain operations may occupy that action slot where
+appropriate. Details and Edit remain separate direct actions.
+Native keyboard activation, focus descriptions and existing Ctrl/Cmd selection
+remain available; selection mode takes precedence. Native route links retain their modifier navigation; command buttons retain route
+ownership. Preview never traps Tab or dims
+the directory. Escape/Close use the latest connected trigger without scrolling it.
+
+The shared workspace keeps identity, primary tools and filter summaries outside
+one bounded results scrollport. Desktop/tablet reserve a stable inspector column;
+compact Preview has a scrollable body and accessible footer. Mobile stacks a short
+photo/name/actions panel above results; full metadata is in Details. Very short
+viewports fall back to page flow so controls remain reachable. Navigation retains
+its own scroll region. Gallery rows grow to their content rather than compressing.
+
+Active records use a semantic check next to the name with a full accessible status
+and hover/focus description. Only genuine binary inactive states use a cross;
+exhausted, completed, retired, reversed, cancelled and unknown retain exact meaning.
+Stored Material keeps exact inventory navigation; Locations/Geography keep trees.
+Journal, History, Schedule, Maps, Taxonomy and Media keep their specialized models.
+No backend, Saved View schema or lifecycle semantics change.
+
+Record hover/selection fills the complete directory row or card, including its
+Details/Edit area. Keyboard Preview focus outlines that same complete record;
+individual action focus remains local. Bulk checked state takes visual precedence
+over the previous Preview identity. Reserved Collection inspector columns show
+their existing Select-a-record guidance when idle; mobile omits that empty panel.
+Seeds Gallery uses Plants' quiet, right-aligned icon actions. Bounded directory
+scrollbars use thin native controls and current semantic theme colors.
+
+Collection pagination refinement: Seeds, Plants/groups, Sowings, Harvests,
+Suppliers, Orders, Stored Material and Botanical identities place metadata and
+page controls above results. Default 20 records, 50/100/All choices, matching/global
+totals and displayed ranges are presentation state; Saved Views and APIs retain
+domain ownership. Bulk selection addresses the current page and preserves existing
+safety limits. Photo-card identity text stays in normal flow. At <=400px, workspace
+scrolling takes precedence over retaining a fixed toolbar when paging plus Preview
+would leave an unusable results region.
+
+### Same-family consolidation — current contract (2026-10-31)
+
+The [consolidation specification](design/ui-system-v1/consolidation/README.md) supersedes
+page-specific layout refinements above. Family A uses DirectoryWorkspace and typed
+DirectoryRecordContent slots across Collection, Sourcing and Botanical identities. Legacy
+master/detail geometry classes are reserved for full editor/detail compositions. Tools
+follow page identity; Harvest peer tabs precede each peer's own tools. Pagination spans
+the record and inspector columns. At <=64rem the bounded inspector stacks above records;
+its single content scrollport includes metadata and operations. Programmatic identity
+selection after creation preserves creation-trigger focus. Family B shares hierarchy
+presentation and responsive inspector placement, with explicit Details at all widths.
+Domain state, quantities, relationships, canonical filters, Saved Views, form ownership and
+safety guards remain with their existing capabilities. Operator acceptance and FULL remain
+pending; paired visual coverage and manual device/AT/actual-zoom limits are documented.
+
+### Final directory interaction correction (2026-11-01)
+
+The operator-confirmed [final interaction contract](design/ui-system-v1/consolidation/final-interaction-correction/README.md)
+supersedes the Quick Preview and action-menu directions in earlier directory sections and
+in the historical interaction-cleanup evidence. It applies to Seeds, Sowings, Plants/groups,
+Harvests, Stored material, Suppliers, Orders, Botanical identities, Locations and Geography Places.
+
+- Normal record activation opens dedicated Details. Bulk-selection mode selects instead.
+  Directory and full record content render exclusively; actual Overview and other record tabs stay.
+- Direct bordered document and pencil icon buttons expose Open details and eligible Edit.
+  A separate `Create or record` overflow contains supported contextual creation/recording only;
+  hide it if no eligible command exists. Print, destructive and correction operations remain on
+  their owning record workflows. Exact Stored inventory Edit opens its existing inventory editor.
+- No Quick Preview, idle inspector, preview toggle or reserved inspector column remains in these
+  workspaces. Hierarchy chevrons expand independently; canonical Geography records remain read-only.
+- `LifecycleStatus` owns compact textual semantic chips: Active/Completed green;
+  Dead/Failed/Abandoned/Lost red; Transferred/Cancelled amber; Exhausted/Depleted/Discarded/
+  Reintegrated/Archived/Retired/Reversed/Inactive/Unknown muted. Preserve exact domain labels.
+  Harvest occurrences and identities do not acquire invented lifecycle states.
+- Bulk selection uses a subtle fill without a second inset stripe. Hover and keyboard focus stay
+  distinct. Shared tooltip/menu/dialog layering dismisses the highest active layer first.
+
+Domain state, relationships, permissions, quantities, Saved Views and safety guards remain
+capability-owned. Specialist tools and actual record Overview sections are outside this removal.
+The shared inspector API remains for UI Lab/specialist consumers; it is not rendered in the
+listed production directories. Final operator UAT and canonical verification remain pending.

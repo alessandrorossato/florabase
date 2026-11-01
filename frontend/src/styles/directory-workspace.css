@@ -1,0 +1,721 @@
+/* Eligible directories own one results scrollport. Specialized workspaces never opt in. */
+.app-content
+  :is(.ui-directory-records, .harvest-directory, .quick-preview-body) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+/* Selection belongs to the complete record, including its sibling action controls. */
+.app-content
+  .ui-directory-records
+  > :is(.ui-directory-row, .ui-directory-card):hover {
+  background: var(--surface-hover);
+}
+.app-content
+  .ui-directory-records
+  > :is(.ui-directory-row, .ui-directory-card)[data-selected="true"] {
+  background: var(--primary-subtle);
+  box-shadow: inset 3px 0 var(--primary);
+}
+.app-content
+  .ui-directory-records
+  > :is(.ui-directory-row, .ui-directory-card)
+  .ui-directory-trigger {
+  background: transparent;
+  box-shadow: none;
+}
+.app-content
+  .ui-directory-records
+  > :is(.ui-directory-row, .ui-directory-card):has(
+    .ui-directory-trigger:focus-visible
+  ) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+.app-content
+  .ui-directory-records
+  > :is(.ui-directory-row, .ui-directory-card)
+  .ui-directory-trigger:focus-visible {
+  outline: none;
+}
+@media (forced-colors: active) {
+  .app-content .ui-directory-records > [data-selected="true"] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+
+.app-content
+  .ui-directory-page:has(.ui-directory-records):not(:has(.is-detail-view)),
+.app-content .harvest-workspace:has(.harvest-directory) {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+  min-block-size: 0;
+  overflow: hidden;
+}
+.app-content .ui-directory-page:has(.ui-directory-records) .ui-directory-frame,
+.app-content .ui-directory-page:has(.ui-directory-records) .ui-directory-main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-block-size: 0;
+  overflow: hidden;
+}
+.app-content .ui-directory-page:has(.ui-directory-records) .seed-master,
+.harvest-workspace .harvest-directory-results {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  overflow: hidden;
+}
+.app-content :is(.ui-directory-records, .harvest-directory) {
+  min-block-size: 0;
+  overflow: auto;
+  overflow-anchor: none;
+  align-content: start;
+  scrollbar-gutter: stable;
+  padding: var(--space-1);
+}
+.app-content
+  .ui-directory-page
+  .seed-detail-pane:has(.ui-directory-side-preview) {
+  min-block-size: 0;
+  overflow: hidden;
+}
+.app-content .ui-directory-side-preview {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  position: static;
+  min-block-size: 0;
+  max-block-size: min(100%, 70dvh);
+  overflow: hidden;
+  align-self: start;
+  padding: var(--space-3);
+}
+.app-content .ui-inspector-placeholder {
+  align-content: start;
+  min-block-size: 11rem;
+  background: var(--surface-subtle);
+  border-style: dashed;
+  color: var(--text-muted);
+}
+.app-content .ui-inspector-placeholder h3 {
+  margin: 0;
+  font: var(--type-strong);
+  color: var(--text);
+}
+.app-content .ui-inspector-placeholder p {
+  margin: 0;
+  font: var(--type-small);
+}
+.app-content
+  :is(.supplier-master-detail, .order-master-detail):has(
+    > .ui-directory-side-preview
+  )
+  > .ui-directory-side-preview {
+  margin-block-start: 3.25rem;
+}
+.ui-directory-side-preview .ui-inspector-content {
+  min-block-size: 0;
+  overflow: hidden;
+}
+.app-content .ui-directory-side-preview .quick-preview--compact {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  max-block-size: 100%;
+  gap: var(--space-2);
+}
+.quick-preview--compact .quick-preview-body {
+  min-block-size: 0;
+  overflow: auto;
+  flex: 1 1 auto;
+}
+.quick-preview--compact > .record-preview__actions {
+  flex: none;
+  margin: 0;
+  padding-block-start: var(--space-2);
+  border-block-start: 1px solid var(--border);
+}
+.app-content .ui-directory-side-preview .ui-inspector-heading {
+  margin-block-end: var(--space-2);
+  align-items: center;
+}
+.app-content .ui-directory-side-preview h3 {
+  font: var(--type-strong);
+  margin-block: var(--space-2);
+}
+.app-content .ui-directory-side-preview p,
+.app-content .ui-directory-side-preview dl {
+  font: var(--type-small);
+  margin-block: var(--space-2);
+}
+.app-content .ui-directory-side-preview .quick-preview-body > .record-visual {
+  position: relative;
+  display: flex;
+  inline-size: 100%;
+  block-size: clamp(4rem, 16dvh, 8rem);
+  max-block-size: 8rem;
+  max-inline-size: none;
+  box-sizing: border-box;
+}
+.app-content
+  .ui-directory-side-preview
+  .quick-preview-body
+  > .record-visual
+  img {
+  object-fit: contain;
+}
+.app-content
+  .ui-directory-side-preview
+  .quick-preview-body
+  > .record-visual:not(:has(img)) {
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+}
+.app-content
+  .ui-directory-side-preview
+  .quick-preview-body
+  > .record-visual:not(:has(img))
+  svg {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+}
+.ui-directory-row--composed .ui-directory-trigger {
+  flex: 1;
+}
+.ui-directory-record-name {
+  position: relative;
+}
+.ui-status-indicator {
+  display: inline-flex;
+  inline-size: 1rem;
+  block-size: 1rem;
+  vertical-align: middle;
+  margin-inline-start: var(--space-1);
+}
+.ui-status-indicator--active {
+  color: var(--success, var(--primary));
+}
+.ui-status-indicator--inactive {
+  color: var(--danger);
+}
+.ui-status-indicator svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+.ui-directory-record-name:has(.ui-status-indicator) {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+.ui-directory-record-name .ui-status-indicator {
+  grid-column: 2;
+  grid-row: 1;
+}
+.ui-directory-record-name small {
+  grid-column: 1 / -1;
+}
+.ui-directory-page .directory-filter-summary {
+  max-block-size: 18dvh;
+  overflow: auto;
+}
+@media (max-width: 48rem) {
+  main:has(.ui-directory-page .ui-directory-records),
+  main:has(.harvest-directory) {
+    block-size: 100dvh;
+    min-block-size: 0;
+    overflow: hidden;
+  }
+  .application-shell:has(.ui-directory-records),
+  .application-shell:has(.harvest-directory) {
+    block-size: 100dvh;
+    min-block-size: 0;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .app-content:has(.ui-directory-records),
+  .app-content:has(.harvest-directory) {
+    display: flex;
+    flex-direction: column;
+    min-block-size: 0;
+    overflow: hidden;
+    padding-block-end: calc(5rem + env(safe-area-inset-bottom));
+  }
+  .app-content .ui-directory-side-preview {
+    max-block-size: 25dvh;
+  }
+  .app-content .ui-directory-side-preview .quick-preview-body > .record-visual {
+    block-size: 4rem;
+  }
+}
+/* At extreme zoom/short landscape sizes, page flow is preferable to a zero-height list. */
+@media (max-height: 30rem) {
+  .app-content .ui-directory-page:has(.ui-directory-records),
+  .app-content .harvest-workspace:has(.harvest-directory) {
+    min-block-size: min-content;
+    overflow: visible;
+  }
+  .app-content:has(.ui-directory-records),
+  .app-content:has(.harvest-directory) {
+    overflow: auto;
+  }
+}
+
+/* Override the older document-flow normalization only for opted-in record directories. */
+main:has(.ui-directory-records),
+main:has(.harvest-directory) {
+  block-size: 100dvh;
+  min-block-size: 0;
+  overflow: hidden;
+}
+.application-shell:has(.ui-directory-records),
+.application-shell:has(.harvest-directory) {
+  block-size: 100dvh;
+  min-block-size: 0;
+  align-items: stretch;
+  overflow: hidden;
+}
+.application-shell > .app-content:has(.ui-directory-records),
+.application-shell > .app-content:has(.harvest-directory) {
+  block-size: 100%;
+  min-block-size: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.app-content .ui-directory-page:has(.ui-directory-records) .seed-context-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow: hidden;
+}
+.app-content
+  :is(.ui-directory-page, .harvest-workspace)
+  .quick-preview--compact {
+  position: static;
+  overflow: hidden;
+}
+@media (min-width: 48.01rem) {
+  .application-shell:has(.ui-directory-records),
+  .application-shell:has(.harvest-directory) {
+    grid-template-rows: minmax(0, 1fr);
+  }
+}
+.app-content .ui-directory-page .ui-directory-side-preview {
+  max-block-size: min(100%, 55dvh);
+}
+.app-content .ui-directory-page .ui-directory-side-preview .quick-preview h3 {
+  font: var(--type-strong);
+}
+.app-content
+  .ui-directory-page
+  .ui-directory-side-preview
+  .seed-preview__inventory
+  > strong {
+  font: var(--type-strong);
+}
+/* Keep absolutely positioned screen-reader labels inside their own scrollport. */
+.app-content :is(.ui-directory-records, .harvest-directory) {
+  position: relative;
+}
+.app-content :is(.ui-directory-records, .harvest-directory) .record-visual {
+  position: relative;
+}
+.app-content > .workspace:has(.ui-directory-records):not(:has(.is-detail-view)),
+.app-content
+  .collection-context-page:has(.ui-directory-records):not(
+    :has(.is-detail-view)
+  ) {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-block-size: 0;
+  block-size: 100%;
+  overflow: hidden;
+}
+.quick-preview-body .record-visual:not(:has(img)) .record-visual__source {
+  display: none;
+}
+.app-content .ui-directory-records--gallery {
+  grid-auto-rows: max-content;
+}
+.app-content .ui-directory-card--composed .ui-directory-trigger {
+  height: auto;
+  flex: 1 0 auto;
+}
+@media (max-width: 48rem) {
+  .application-shell > .app-content:has(.ui-directory-records),
+  .application-shell > .app-content:has(.harvest-directory) {
+    block-size: auto;
+    align-self: stretch;
+  }
+}
+@media (max-width: 48rem) {
+  .application-shell:has(.ui-directory-records),
+  .application-shell:has(.harvest-directory) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 48rem) {
+  .ui-directory-page .page-identity > p:not(.eyebrow) {
+    display: none;
+  }
+  .app-content .ui-directory-side-preview {
+    max-block-size: 20dvh;
+  }
+  .app-content .ui-directory-side-preview .quick-preview-body {
+    overflow: hidden;
+    min-block-size: 2.5rem;
+  }
+  .app-content .ui-directory-side-preview .quick-preview-body > .record-visual {
+    float: left;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    margin-inline-end: var(--space-2);
+  }
+  .app-content .ui-directory-side-preview .quick-preview-body h3 {
+    margin: 0;
+  }
+  .app-content .ui-directory-side-preview .record-preview__actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr));
+    gap: var(--space-1);
+  }
+  .app-content
+    .ui-directory-side-preview
+    .record-preview__actions
+    > .preview-action-group {
+    display: contents;
+  }
+  .app-content
+    .ui-directory-side-preview
+    .record-preview__actions
+    :is(button, a) {
+    min-block-size: 2.5rem;
+    padding: var(--space-1);
+    font: var(--type-small);
+  }
+}
+@media (max-width: 48rem) {
+  .app-content .ui-directory-side-preview .record-preview__actions > * {
+    grid-column: auto;
+    grid-row: auto;
+  }
+  .app-content .ui-directory-side-preview .record-visual__source {
+    display: none;
+  }
+}
+@media (max-width: 48rem) {
+  .app-content .ui-directory-side-preview .ui-inspector-heading {
+    flex-wrap: nowrap;
+    gap: var(--space-1);
+  }
+  .app-content
+    .ui-directory-side-preview
+    .ui-inspector-heading
+    .control-action
+    > span {
+    display: none;
+  }
+  .app-content .ui-directory-side-preview .quick-preview-body {
+    min-block-size: 0;
+  }
+  .harvest-workspace:has(.harvest-directory) .page-identity > p:not(.eyebrow) {
+    display: none;
+  }
+}
+@media (max-height: 30rem) {
+  .app-content > .workspace:has(.ui-directory-records),
+  .app-content .collection-context-page:has(.ui-directory-records),
+  .app-content .ui-directory-page:has(.ui-directory-records),
+  .app-content .harvest-workspace:has(.harvest-directory) {
+    min-block-size: min-content;
+    overflow: visible;
+  }
+  .application-shell > .app-content:has(.ui-directory-records),
+  .application-shell > .app-content:has(.harvest-directory) {
+    overflow: auto;
+  }
+  .app-content :is(.ui-directory-records, .harvest-directory) {
+    min-block-size: max-content;
+    overflow: visible;
+  }
+}
+@media (max-width: 48rem) {
+  .ui-directory-page .ui-view-switcher .control-action {
+    padding-inline: var(--space-1);
+    gap: var(--space-1);
+  }
+}
+
+/* Filter changes keep one stable summary lane; extra chips scroll horizontally. */
+.ui-directory-page .directory-filter-summary {
+  min-block-size: 2.5rem;
+  max-block-size: 2.5rem;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.ui-directory-page .directory-filter-summary > button {
+  flex: none;
+}
+.ui-directory-page .directory-tools > .directory-status {
+  margin: 0;
+  gap: var(--space-2);
+}
+.ui-directory-page .directory-tools > .directory-status .directory-results {
+  white-space: nowrap;
+}
+.ui-directory-page .directory-tools > button[aria-haspopup="dialog"] {
+  min-inline-size: 7rem;
+}
+.app-content
+  .ui-directory-page
+  .operational-layout.directory-preview-layout
+  > .directory-pagination {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+.app-content .ui-directory-record-actions .ui-directory-quick-action,
+.app-content .ui-directory-quick-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 2.75rem;
+  width: 2.75rem;
+  min-width: 2.75rem;
+  height: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.app-content .ui-directory-quick-action:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+.app-content .ui-directory-quick-action:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.app-content .ui-directory-quick-action .control-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.app-content
+  :is(.ui-directory-page, .stored-material-directory)
+  .directory-filter-summary {
+  min-block-size: 3rem;
+  max-block-size: 3rem;
+  align-items: center;
+  box-sizing: border-box;
+  overflow-y: hidden;
+}
+.app-content
+  :is(.ui-directory-page, .stored-material-directory)
+  .directory-filter-summary
+  > button {
+  min-block-size: 2.5rem;
+  box-sizing: border-box;
+}
+.sowings-workspace :is(.lifecycle-badge--failed, .lifecycle-badge--abandoned) {
+  color: var(--danger);
+  background: var(--danger-subtle);
+}
+
+/* Plain photo-card identity stays in normal flow, separate from lifecycle and taxonomy. */
+.ui-directory-records--photo-titles
+  .ui-directory-record-identity:has(.record-visual img)
+  .ui-directory-record-name
+  strong {
+  position: static;
+  color: var(--text);
+}
+.ui-directory-records--photo-titles .record-visual:has(img)::after {
+  content: none;
+}
+.ui-directory-records--photo-titles
+  .ui-directory-record-identity:has(.record-visual img)
+  .ui-directory-record-name {
+  min-block-size: auto;
+  padding-block-start: var(--space-2);
+}
+.ui-directory-page .seed-master > .directory-status {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block: 0 var(--space-2);
+}
+.ui-directory-page .directory-status label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: var(--type-small);
+}
+.ui-directory-page .directory-status select {
+  width: auto;
+}
+.ui-directory-page .directory-status > span {
+  font: var(--type-small);
+}
+.ui-directory-page .directory-status {
+  flex: none;
+  margin-block: 0 var(--space-2);
+}
+/* Narrow phones need page flow when toolbars, paging and Preview exceed the viewport. */
+@media (max-width: 25rem) {
+  .application-shell > .app-content:has(.ui-directory-records) {
+    overflow-y: auto;
+  }
+  .app-content > .workspace:has(.ui-directory-records),
+  .app-content .collection-context-page:has(.ui-directory-records),
+  .app-content .ui-directory-page:has(.ui-directory-records),
+  .app-content
+    .ui-directory-page:has(.ui-directory-records)
+    .ui-directory-frame,
+  .app-content .ui-directory-page:has(.ui-directory-records) .ui-directory-main,
+  .app-content
+    .ui-directory-page:has(.ui-directory-records)
+    .seed-context-page {
+    block-size: auto;
+    min-block-size: min-content;
+    overflow: visible;
+    flex: none;
+  }
+  .app-content .ui-directory-records {
+    min-block-size: 16rem;
+    max-block-size: 50dvh;
+  }
+}
+
+/* Compact metadata and one coherent pagination control cluster. */
+.directory-pagination {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-2);
+  margin-block-end: var(--space-2);
+  border-block-end: 1px solid var(--border);
+}
+.directory-pagination .directory-results {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.directory-pagination .directory-results strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.directory-pagination-total {
+  white-space: nowrap;
+}
+.directory-pagination-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.directory-pagination-size {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.directory-pagination-size select {
+  width: auto;
+  min-width: 4.5rem;
+  margin: 0;
+}
+.directory-pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-inline: var(--space-2);
+  border-inline: 1px solid var(--border);
+}
+.directory-pagination-position {
+  min-width: 3.5rem;
+  text-align: center;
+  font: var(--type-small);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+.directory-pagination-nav .control-icon-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: transparent;
+  border-color: transparent;
+}
+.directory-pagination-nav .control-icon-button__label {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.directory-pagination .directory-results {
+  text-align: left;
+  min-inline-size: 0;
+}
+.directory-pagination-nav .control-icon-button:disabled {
+  color: var(--text-muted);
+  opacity: 0.45;
+  background: transparent;
+}
+.directory-pagination-nav .control-icon-button:not(:disabled):hover {
+  background: var(--surface-hover);
+}
+.directory-pagination-back svg {
+  transform: rotate(90deg);
+}
+.directory-pagination-forward svg {
+  transform: rotate(-90deg);
+}
+.directory-pagination-controls > button {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+}
+@media (max-width: 48rem) {
+  .directory-pagination {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2);
+  }
+  .directory-pagination-controls {
+    display: contents;
+  }
+  .directory-pagination .directory-results {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .directory-pagination-controls > button {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .directory-pagination-size {
+    grid-column: 1;
+    grid-row: 2;
+    gap: var(--space-1);
+  }
+  .directory-pagination-nav {
+    grid-column: 2;
+    grid-row: 2;
+    border: 0;
+    padding-inline: var(--space-1);
+  }
+}

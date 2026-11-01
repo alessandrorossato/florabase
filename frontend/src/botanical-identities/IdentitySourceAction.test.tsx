@@ -11,6 +11,7 @@ import {
   getIdentityCollection,
   type BotanicalIdentityCollectionResponse,
 } from "../collection/api";
+import { OverflowMenu } from "../components/ReferenceUI";
 import { IdentitySourceAction } from "./IdentitySourceAction";
 
 const expired = vi.hoisted(() => vi.fn());
@@ -155,4 +156,36 @@ test("source errors have retry and cancellation aborts an outstanding request", 
   await waitFor(() => {
     expect(signal?.aborted).toBe(true);
   });
+});
+
+test("directory source dialog owns Escape and restores its menu action before menu dismissal", async () => {
+  vi.mocked(getIdentityCollection).mockResolvedValue(collection());
+  const user = userEvent.setup();
+  render(
+    <OverflowMenu
+      ariaLabel="More actions for identity"
+      keepMounted
+      closeOnAction={false}
+    >
+      <IdentitySourceAction
+        identityId="identity-a"
+        kind="sowing"
+        triggerIcon="sprout"
+      />
+    </OverflowMenu>,
+  );
+  const menu = screen.getByRole("button", {
+    name: "More actions for identity",
+  });
+  await user.click(menu);
+  const action = screen.getByRole("button", { name: "Start sowing" });
+  await user.click(action);
+  await screen.findByRole("dialog", { name: "Start sowing" });
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(action).toHaveFocus();
+  expect(menu).toHaveAttribute("aria-expanded", "true");
+  await user.keyboard("{Escape}");
+  expect(menu).toHaveFocus();
+  expect(menu).toHaveAttribute("aria-expanded", "false");
 });

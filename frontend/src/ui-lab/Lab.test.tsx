@@ -9,13 +9,13 @@ test("the active Sowing specimen excludes completed, failed and abandoned fixtur
   window.history.replaceState(null, "", "#/sowings?view=list");
   render(<Lab />);
   expect(
-    screen.getByRole("link", { name: "Ficus carica" }),
+    screen.getByRole("button", { name: /Quick preview Ficus carica/ }),
   ).toBeInTheDocument();
   expect(
-    screen.queryByRole("link", { name: "Daucus carota" }),
+    screen.queryByRole("button", { name: /Quick preview Daucus carota/ }),
   ).not.toBeInTheDocument();
   expect(
-    screen.queryByRole("link", { name: "Phaseolus vulgaris" }),
+    screen.queryByRole("button", { name: /Quick preview Phaseolus vulgaris/ }),
   ).not.toBeInTheDocument();
 });
 
@@ -53,7 +53,9 @@ test("directory search reaches identities beyond the bounded initial excerpt and
     "#/identities?q=Aloe%20vera&view=gallery",
   );
   render(<Lab />);
-  expect(screen.getByRole("link", { name: "Aloe vera" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: /Quick preview Aloe vera/ }),
+  ).toBeInTheDocument();
   const user = userEvent.setup();
   await user.click(screen.getByRole("checkbox", { name: /Select Aloe vera/ }));
   await user.click(screen.getByRole("button", { name: "List" }));

@@ -1,0 +1,78 @@
+{
+  "testsPassed": 412,
+  "testsFailed": 0,
+  "suites": [
+    {
+      "file": "src/App.test.tsx",
+      "tests": 120
+    },
+    {
+      "file": "src/UX001.test.tsx",
+      "tests": 7
+    },
+    {
+      "file": "src/UX004.test.tsx",
+      "tests": 12
+    },
+    {
+      "file": "src/botanical-identities/IdentitySourceAction.test.tsx",
+      "tests": 7
+    },
+    {
+      "file": "src/harvests/Conversion.test.tsx",
+      "tests": 10
+    },
+    {
+      "file": "src/harvests/HarvestScreen.test.tsx",
+      "tests": 17
+    },
+    {
+      "file": "src/harvests/StoredMaterial.test.tsx",
+      "tests": 24
+    },
+    {
+      "file": "src/components/CollectionUI.test.tsx",
+      "tests": 1
+    },
+    {
+      "file": "src/components/Controls.test.tsx",
+      "tests": 9
+    },
+    {
+      "file": "src/components/DirectoryPage.test.tsx",
+      "tests": 16
+    },
+    {
+      "file": "src/components/ReferenceInteractions.test.tsx",
+      "tests": 4
+    },
+    {
+      "file": "src/orders/OrderScreen.test.tsx",
+      "tests": 20
+    },
+    {
+      "file": "src/plants/PlantScreen.test.tsx",
+      "tests": 62
+    },
+    {
+      "file": "src/seed-lots/SeedLotScreen.test.tsx",
+      "tests": 56
+    },
+    {
+      "file": "src/sowings/SowingScreen.test.tsx",
+      "tests": 34
+    },
+    {
+      "file": "src/suppliers/SupplierScreen.test.tsx",
+      "tests": 13
+    }
+  ],
+  "typeScript": "pass",
+  "eslint": "pass (whole frontend)",
+  "formatting": "pass (whole frontend)",
+  "build": "pass",
+  "featureValidation": "123 valid",
+  "diffCheck": "pass",
+  "canonicalFull": "not run",
+  "operatorUAT": "pending"
+}

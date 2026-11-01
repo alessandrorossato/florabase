@@ -1,16 +1,4 @@
 import {
-  DirectoryPage,
-  DirectoryRecords,
-  DirectoryRow,
-  DirectoryCard,
-  DirectoryRecordActions,
-  DirectoryInspector,
-  DirectoryViewSwitcher,
-} from "../components/DirectoryPage";
-import { useDirectoryPresentation } from "../components/directoryPresentation";
-import "../styles/sourcing-directory.css";
-import { ActionButton } from "../components/Action";
-import {
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -20,30 +8,46 @@ import {
   type RefObject,
   type SyntheticEvent,
 } from "react";
+import { ActionButton } from "../components/Action";
+import {
+  DirectoryCard,
+  DirectoryPage,
+  DirectoryRecordActions,
+  DirectoryRecordContent,
+  DirectoryRecords,
+  DirectoryRow,
+  DirectoryTrigger,
+  DirectoryViewSwitcher,
+  DirectoryWorkspace,
+} from "../components/DirectoryPage";
+import { useDirectoryPresentation } from "../components/directoryPresentation";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
+import {
+  Breadcrumbs,
+  CollectionCard,
+  DetailHeader,
+  DetailPage,
+  DetailSummary,
+  DetailTabs,
+  WorkspaceIntro,
+  DetailLoading,
+} from "../components/CollectionUI";
 import { DetailEmptyState } from "../components/DetailEmptyState";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { DirectoryTools } from "../components/DirectoryTools";
 import { EditWorkspace } from "../components/EditWorkspace";
 import { FieldLabel } from "../components/FieldLabel";
-import { DirectorySearch, RecordPreview } from "../components/ReferenceUI";
+import { DirectorySearch } from "../components/ReferenceUI";
 import { TaskDialog } from "../components/TaskDialog";
-import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
-import { useEditRoute } from "../components/useEditRoute";
-import {
-  Breadcrumbs,
-  CollectionCard,
-  DetailHeader,
-  DetailTabs,
-  WorkspaceIntro,
-} from "../components/CollectionUI";
 import {
   closeCollectionPage,
   openCollectionPage,
   setRecordRoute,
 } from "../components/recordNavigation";
+import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
+import { useEditRoute } from "../components/useEditRoute";
 import { RecordVisual } from "../photos/RecordVisual";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
@@ -52,6 +56,7 @@ import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import type { PartialDate } from "../seed-lots/api";
 import { listSuppliers, type SupplierListResponse } from "../suppliers/api";
 
+import { LinkExistingSeedLot } from "./PurchaseContext";
 import {
   deleteOrder,
   getOrder,
@@ -66,7 +71,6 @@ import {
   type OrderDetail,
   type OrderPage,
 } from "./api";
-import { LinkExistingSeedLot } from "./PurchaseContext";
 import "./orders.css";
 
 type OrderRecord = Order | OrderDetail;
@@ -75,6 +79,7 @@ type OrderTab = "overview" | "seed-lots";
 const orderPage = {
   eyebrow: "Sourcing",
   title: "Orders",
+  directory: true,
   titleId: "orders-title",
   description:
     "Track purchase transactions and the physical seed lots acquired through them.",
@@ -330,66 +335,6 @@ function OrderForm({
   );
 }
 
-function OrderPreview({
-  order,
-  onOpen,
-  onEdit,
-}: {
-  order: Order;
-  onOpen: () => void;
-  onEdit: MouseEventHandler<HTMLButtonElement>;
-}) {
-  return (
-    <RecordPreview
-      visual={
-        <RecordVisual
-          photo={null}
-          label={orderTitle(order)}
-          kind="order"
-          className="quick-preview-media"
-        />
-      }
-      type="Purchase order"
-      title={orderTitle(order)}
-      secondary={order.supplier?.name ?? "Supplier unknown"}
-      facts={[
-        { label: "Order date", value: orderDate(order.ordered_on) },
-        { label: "Total price", value: orderPrice(order) },
-        {
-          label: "Physical seed lots",
-          value: String(order.seed_lot_count),
-        },
-      ]}
-      actions={
-        <>
-          <a
-            className="button-link"
-            href={`#/orders/${order.id}`}
-            onClick={onOpen}
-          >
-            Open details
-          </a>
-          <div
-            className="preview-action-group"
-            role="group"
-            aria-label="Order actions"
-          >
-            <ActionButton
-              icon="edit"
-              className="button--secondary"
-              type="button"
-              data-order-preview-edit
-              onClick={onEdit}
-            >
-              Edit
-            </ActionButton>
-          </div>
-        </>
-      }
-    />
-  );
-}
-
 function OrderDetailView({
   order,
   initialTab,
@@ -419,7 +364,7 @@ function OrderDetailView({
   }
 
   return (
-    <article
+    <DetailPage
       aria-label="Order detail"
       className="order-detail collection-detail"
     >
@@ -492,30 +437,21 @@ function OrderDetailView({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <section
-            className="collection-summary"
-            aria-labelledby="order-summary-title"
-          >
-            <h4 id="order-summary-title">At a glance</h4>
-            <dl aria-label="Current Order state">
-              <div>
-                <dt>Order date</dt>
-                <dd>{orderDate(order.ordered_on)}</dd>
-              </div>
-              <div>
-                <dt>Total price</dt>
-                <dd>{orderPrice(order)}</dd>
-              </div>
-              <div>
-                <dt>Physical seed lots</dt>
-                <dd>{order.seed_lots_total}</dd>
-              </div>
-            </dl>
-            <p className="field-help">
-              The total transaction price is never divided or allocated between
-              seed lots.
-            </p>
-          </section>
+          <DetailSummary
+            id="order-summary-title"
+            label="Current Order state"
+            metrics={[
+              { label: "Order date", value: orderDate(order.ordered_on) },
+              { label: "Total price", value: orderPrice(order) },
+              { label: "Physical seed lots", value: order.seed_lots_total },
+            ]}
+            note={
+              <p className="field-help">
+                The total transaction price is never divided or allocated
+                between seed lots.
+              </p>
+            }
+          />
           <section
             className="order-fact-group"
             aria-labelledby="order-transaction-title"
@@ -672,7 +608,7 @@ function OrderDetailView({
           </section>
         </div>
       )}
-    </article>
+    </DetailPage>
   );
 }
 
@@ -687,13 +623,13 @@ export function OrderScreen({
 } = {}) {
   const auth = useAuth();
   const presentation = useDirectoryPresentation("orders");
-  const [previewOpen, setPreviewOpen] = useState(false);
   const selectedTrigger = useRef<HTMLButtonElement | null>(null);
   const directoryList = useRef<HTMLUListElement | null>(null);
   const DirectoryItem =
     presentation.view === "gallery" ? DirectoryCard : DirectoryRow;
 
   const [offset, setOffset] = useState(0);
+  const [pageSize, setPageSize] = useState("20");
   const [lotOffsetState, setLotOffsetState] = useState({
     id: initialId ?? "",
     offset: 0,
@@ -733,7 +669,7 @@ export function OrderScreen({
     lotOffsetState.id === (initialId ?? "") ? lotOffsetState.offset : 0;
   const pageRequestKey = `${view.state.q}:${view.state.supplier_id}:${String(
     offset,
-  )}:${String(attempt)}`;
+  )}:${pageSize}:${String(attempt)}`;
   const detailRequestKey = `${initialId ?? ""}:${String(lotOffset)}:${String(
     attempt,
   )}`;
@@ -753,7 +689,7 @@ export function OrderScreen({
   const createTrigger = useRef<HTMLButtonElement>(null);
   const editTrigger = useRef<HTMLButtonElement>(null);
   const directEditHandled = useRef(false);
-  const restorePreviewEdit = useRef(false);
+  const restoreDirectoryEdit = useRef(false);
   const restoreDetailHeading = useRef(false);
   const previousCreateRoute = useRef(startCreating);
 
@@ -796,12 +732,36 @@ export function OrderScreen({
 
   useEffect(() => {
     const controller = new AbortController();
+    const limit = pageSize === "all" ? 100 : Number(pageSize);
     void listOrders(
       view.state.q,
       view.state.supplier_id,
       offset,
       controller.signal,
+      limit,
     )
+      .then(async (firstPage) => {
+        if (controller.signal.aborted || pageSize !== "all") return firstPage;
+        const pages = Math.ceil(firstPage.total / limit);
+        const remainder = await Promise.all(
+          Array.from({ length: Math.max(0, pages - 1) }, (_, index) =>
+            listOrders(
+              view.state.q,
+              view.state.supplier_id,
+              (index + 1) * limit,
+              controller.signal,
+              limit,
+            ),
+          ),
+        );
+        return {
+          ...firstPage,
+          items: [
+            ...firstPage.items,
+            ...remainder.flatMap((page) => page.items),
+          ],
+        };
+      })
       .then((item) => {
         if (controller.signal.aborted) return;
         setStoredPage(item);
@@ -825,6 +785,7 @@ export function OrderScreen({
     auth,
     attempt,
     offset,
+    pageSize,
     pageRequestKey,
     view.state.q,
     view.state.supplier_id,
@@ -987,30 +948,25 @@ export function OrderScreen({
     };
   }, [detail, edit.modal, editing]);
 
-  // Editing from Quick Preview changes the route, so restore focus once the
-  // directory and its preview have rendered again.
+  // A directory editor returns focus to its persistent direct Edit action.
   useEffect(() => {
     if (
       initialId ||
       editing ||
       edit.modal ||
-      !restorePreviewEdit.current ||
+      !restoreDirectoryEdit.current ||
       !selected
     )
       return;
-    restorePreviewEdit.current = false;
+    restoreDirectoryEdit.current = false;
     const frame = requestAnimationFrame(() => {
-      const trigger = previewOpen
-        ? document.querySelector<HTMLElement>("[data-order-preview-edit]")
-        : directoryList.current?.querySelector<HTMLElement>(
-            `[data-preview-id="${selected.id}"] button[aria-label^="Edit "]`,
-          );
+      const trigger = editTrigger.current;
       trigger?.focus();
     });
     return () => {
       cancelAnimationFrame(frame);
     };
-  }, [edit.modal, editing, initialId, selected, previewOpen]);
+  }, [edit.modal, editing, initialId, selected]);
 
   if (
     auth.state.status !== "authenticated" &&
@@ -1033,7 +989,7 @@ export function OrderScreen({
       setFormDirty(false);
       setSelectedId(result.id);
       setSuccess(existing ? "Order updated." : "Order created.");
-      if (existing && initialId && !restorePreviewEdit.current)
+      if (existing && initialId && !restoreDirectoryEdit.current)
         restoreDetailHeading.current = true;
       setAttempt((value) => value + 1);
       if (existing) {
@@ -1086,7 +1042,7 @@ export function OrderScreen({
     setSelectedId(record.id);
     editTrigger.current = trigger;
     directEditHandled.current = true;
-    restorePreviewEdit.current = !initialId;
+    restoreDirectoryEdit.current = !initialId;
     setFormOpen(false);
     setTarget(record);
     setEditing(true);
@@ -1213,7 +1169,15 @@ export function OrderScreen({
               />
             )
           ) : (
-            <p role="status">Loading Order…</p>
+            <DetailLoading
+              eyebrow="Purchase order"
+              label="Loading Order…"
+              parents={[
+                { label: "Sourcing", href: "#/dashboard" },
+                { label: "Orders", href: "#/orders" },
+              ]}
+              className="order-detail"
+            />
           )}
           <div aria-live="polite">
             {success && (
@@ -1396,7 +1360,33 @@ export function OrderScreen({
                   </button>
                 </div>
               )}
-              <div className="order-master-detail operational-layout directory-preview-layout">
+              <DirectoryWorkspace>
+                {page && (
+                  <DirectoryResults
+                    count={page.total}
+                    total={page.total}
+                    pagination={{
+                      page:
+                        pageSize === "all"
+                          ? 0
+                          : Math.floor(offset / page.limit),
+                      pages:
+                        pageSize === "all"
+                          ? 1
+                          : Math.max(1, Math.ceil(page.total / page.limit)),
+                      size: pageSize,
+                      from: page.items.length > 0 ? offset + 1 : 0,
+                      to: offset + page.items.length,
+                      setPage: (nextPage) => {
+                        setOffset(nextPage * page.limit);
+                      },
+                      setSize: (nextSize) => {
+                        setOffset(0);
+                        setPageSize(nextSize);
+                      },
+                    }}
+                  />
+                )}
                 <section
                   className="seed-master order-master"
                   aria-labelledby="order-directory-title"
@@ -1404,12 +1394,7 @@ export function OrderScreen({
                   <h3 className="sr-only" id="order-directory-title">
                     Order directory
                   </h3>
-                  {page && (
-                    <DirectoryResults
-                      count={page.items.length}
-                      total={page.total}
-                    />
-                  )}
+
                   {!page && !pageError && (
                     <p aria-live="polite" className="notice">
                       Loading Orders…
@@ -1452,102 +1437,88 @@ export function OrderScreen({
                       {visible.map((order) => (
                         <DirectoryItem
                           key={order.id}
-                          selected={previewOpen && selectedId === order.id}
+                          previewId={order.id}
+
+                          onClick={(event) => {
+                            if (
+                              event.defaultPrevented ||
+                              event.ctrlKey ||
+                              event.metaKey ||
+                              event.shiftKey ||
+                              event.altKey
+                            )
+                              return;
+                            const target = event.target;
+                            if (
+                              !(target instanceof Element) ||
+                              target.closest(
+                                ".ui-directory-record-actions, input, select, textarea, label",
+                              )
+                            )
+                              return;
+                            const trigger =
+                              event.currentTarget.querySelector<HTMLButtonElement>(
+                                ".sourcing-record-trigger",
+                              );
+                            if (!trigger) return;
+                            event.preventDefault();
+                            selectedTrigger.current = trigger;
+                            setRecordRoute(`#/orders/${order.id}`);
+                          }}
                         >
-                          <div className="sourcing-record-identity">
-                            <RecordVisual
-                              kind="order"
-                              label={orderTitle(order)}
-                              photo={null}
-                              compact
-                              showSource={presentation.view === "gallery"}
+                          <DirectoryTrigger
+                            className="sourcing-record-trigger"
+                            aria-label={orderTitle(order)}
+                          >
+                            <DirectoryRecordContent
+                              visual={
+                                <RecordVisual
+                                  kind="order"
+                                  label={orderTitle(order)}
+                                  photo={null}
+                                  compact
+                                  showSource={presentation.view === "gallery"}
+                                />
+                              }
+                              name={
+                                <>
+                                  <>{orderTitle(order)}</>
+                                </>
+                              }
+                              secondary={
+                                <>
+                                  {orderDate(order.ordered_on)} ·{" "}
+                                  {order.supplier?.name ?? "Supplier unknown"}
+                                </>
+                              }
+                              summary={
+                                <>
+                                  <strong>{orderPrice(order)}</strong>
+                                  <small>
+                                    {order.seed_lot_count} seed{" "}
+                                    {order.seed_lot_count === 1
+                                      ? "lot"
+                                      : "lots"}
+                                  </small>
+                                </>
+                              }
                             />
-                            <div className="sourcing-record-name">
-                              <a href={`#/orders/${order.id}`}>
-                                {orderTitle(order)}
-                              </a>
-                              <small>
-                                {orderDate(order.ordered_on)} ·{" "}
-                                {order.supplier?.name ?? "Supplier unknown"}
-                              </small>
-                            </div>
-                          </div>
-                          <div className="sourcing-record-facts">
-                            <strong>{orderPrice(order)}</strong>
-                            <small>
-                              {order.seed_lot_count} seed{" "}
-                              {order.seed_lot_count === 1 ? "lot" : "lots"}
-                            </small>
-                          </div>
-                          <div data-preview-id={order.id}>
-                            <DirectoryRecordActions
-                              label={orderTitle(order)}
-                              onPreview={(trigger) => {
-                                selectedTrigger.current = trigger;
-                                setSelectedId(order.id);
-                                setPreviewOpen(true);
-                              }}
-                              onDetails={() => {
-                                setRecordRoute(`#/orders/${order.id}`);
-                              }}
-                              onEdit={(trigger) => {
-                                setPreviewOpen(false);
-                                startEdit(order, trigger);
-                              }}
-                            />
-                          </div>
+                          </DirectoryTrigger>
+                          <DirectoryRecordActions
+                            label={orderTitle(order)}
+                            onDetails={() => {
+                              setRecordRoute(`#/orders/${order.id}`);
+                            }}
+                            onEdit={(trigger) => {
+                              startEdit(order, trigger);
+                            }}
+                          />
                         </DirectoryItem>
                       ))}
                     </DirectoryRecords>
                   )}
-                  {page && (
-                    <div className="actions order-pagination">
-                      {offset > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setOffset((value) =>
-                              Math.max(0, value - page.limit),
-                            );
-                          }}
-                        >
-                          Previous Orders
-                        </button>
-                      )}
-                      {offset + page.items.length < page.total && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setOffset((value) => value + page.limit);
-                          }}
-                        >
-                          Next Orders
-                        </button>
-                      )}
-                    </div>
-                  )}
                 </section>
-                {selected && previewOpen && !editing && !formOpen && (
-                  <DirectoryInspector
-                    title="Order inspection"
-                    returnFocusTo={selectedTrigger}
-                    fallbackFocusTo={directoryList}
-                    onClose={() => {
-                      setPreviewOpen(false);
-                    }}
-                  >
-                    <OrderPreview
-                      order={selected}
-                      onOpen={() => {
-                        setSuccess("");
-                      }}
-                      onEdit={(event) => {
-                        startEdit(selected, event.currentTarget);
-                      }}
-                    />
-                  </DirectoryInspector>
-                )}
-              </div>
+              </DirectoryWorkspace>
               <div aria-live="polite">
                 {success && (
                   <p className="notice notice--success" role="status">

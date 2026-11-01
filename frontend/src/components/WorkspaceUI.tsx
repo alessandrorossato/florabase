@@ -1,3 +1,4 @@
+import "./status.css";
 import { useId, type ReactNode } from "react";
 
 /** UI Foundation v0.1. PageHeader remains in ReferenceUI for existing consumers. */
@@ -65,13 +66,63 @@ export function Metric({
 export function StatusBadge({
   children,
   attention = false,
+  compactState,
 }: {
   children: ReactNode;
   attention?: boolean;
+  compactState?: "active" | "inactive";
 }) {
+  const statusLabel =
+    typeof children === "string"
+      ? children
+      : compactState === "active"
+        ? "Active"
+        : "Inactive";
+  if (compactState)
+    return (
+      <LifecycleStatus state={compactState}>{statusLabel}</LifecycleStatus>
+    );
   return (
     <span className={`ui-badge${attention ? " ui-badge--attention" : ""}`}>
       {children}
+    </span>
+  );
+}
+
+/** Preserve domain state text; color conveys a consistent secondary meaning. */
+export function LifecycleStatus({
+  state,
+  children,
+}: {
+  state: string;
+  children?: ReactNode;
+}) {
+  const tones: Record<string, string> = {
+    active: "success",
+    completed: "success",
+    dead: "danger",
+    failed: "danger",
+    abandoned: "danger",
+    lost: "danger",
+    transferred: "warning",
+    cancelled: "warning",
+    canceled: "warning",
+    exhausted: "muted",
+    discarded: "muted",
+    reintegrated: "muted",
+    depleted: "muted",
+    archived: "muted",
+    retired: "muted",
+    reversed: "muted",
+    inactive: "muted",
+    unknown: "muted",
+  };
+  return (
+    <span
+      className={`ui-status-chip ui-status-chip--${tones[state] ?? "muted"}`}
+      data-status={state}
+    >
+      {children ?? state.charAt(0).toUpperCase() + state.slice(1)}
     </span>
   );
 }

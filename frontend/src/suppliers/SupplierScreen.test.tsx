@@ -88,7 +88,7 @@ afterEach(() => {
   window.location.hash = "";
 });
 
-test("Supplier directory and Quick Preview use protected thumbnails and neutral absence", async () => {
+test("Supplier directory uses protected thumbnails, neutral absence and direct record navigation", async () => {
   vi.spyOn(globalThis, "fetch").mockResolvedValue(
     json([
       supplier,
@@ -102,34 +102,21 @@ test("Supplier directory and Quick Preview use protected thumbnails and neutral 
   );
   const user = userEvent.setup();
   mount();
-  const row = await screen.findByRole("button", {
-    name: "Quick preview Review nursery",
-  });
+  const row = await screen.findByRole("button", { name: "Review nursery" });
   const record = row.closest("li");
-  if (!record) throw new Error("Supplier action must belong to its record");
+  if (!record) throw new Error("Expected a directory record");
   expect(
     within(record).getByRole("img", {
       name: "Primary photo for Review nursery",
     }),
   ).toHaveAttribute("src", thumb);
+  expect(screen.getByText("Supplier image placeholder")).toBeVisible();
+  expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
+  expect(
+    within(record).queryByRole("button", { name: /Create or record/ }),
+  ).not.toBeInTheDocument();
   await user.click(row);
-  expect(
-    screen.getAllByRole("img", { name: "Primary photo for Review nursery" }),
-  ).toHaveLength(2);
-  expect(
-    screen
-      .getAllByRole("img")
-      .every((image) => image.getAttribute("src") === thumb),
-  ).toBe(true);
-  await user.click(screen.getByRole("button", { name: "Close preview" }));
-  await user.click(
-    screen.getByRole("button", { name: "Quick preview No image supplier" }),
-  );
-  expect(screen.getAllByText("Supplier image placeholder")).toHaveLength(2);
-  expect(screen.getByRole("link", { name: "Open details" })).toHaveAttribute(
-    "href",
-    `#/suppliers/${assetId}`,
-  );
+  expect(window.location.hash).toBe(`#/suppliers/${id}`);
 });
 
 test("reference-only Supplier primary does not contact its external host", async () => {
@@ -146,8 +133,12 @@ test("reference-only Supplier primary does not contact its external host", async
     ]),
   );
   mount();
-  await screen.findByRole("button", { name: "Quick preview Review nursery" });
-  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  await screen.findByRole("button", { name: "Open details Review nursery" });
+  expect(
+    screen.queryByRole("img", {
+      name: /Primary photo|Source primary photo|Cover/,
+    }),
+  ).not.toBeInTheDocument();
   expect(
     fetch.mock.calls.every(([url]) =>
       requestUrl(url).startsWith("/api/v1/suppliers"),
@@ -374,7 +365,7 @@ test("New supplier uses the full-width creation panel and saves a new record", a
     kind: "seller",
   });
   expect(
-    await screen.findByRole("heading", { name: "New nursery", level: 3 }),
+    await screen.findByRole("button", { name: "New nursery" }),
   ).toBeVisible();
 });
 
@@ -413,7 +404,7 @@ test("New supplier Cancel and Back return to the directory and its create action
   ).not.toBeInTheDocument();
 });
 
-test("Quick Preview contextual edit opens a modal, saves with PUT and returns focus", async () => {
+test("Supplier direct Edit opens a modal, saves with PUT and returns focus", async () => {
   let current = { ...supplier };
   const fetch = vi
     .spyOn(globalThis, "fetch")
@@ -439,12 +430,9 @@ test("Quick Preview contextual edit opens a modal, saves with PUT and returns fo
   const user = userEvent.setup();
   window.location.hash = "#/suppliers";
   mount();
-  await user.click(
-    await screen.findByRole("button", { name: "Quick preview Review nursery" }),
-  );
-  const trigger = within(
-    screen.getByRole("complementary", { name: "Quick preview" }),
-  ).getByRole("button", { name: "Edit" });
+  const trigger = await screen.findByRole("button", {
+    name: "Edit Review nursery",
+  });
   await user.click(trigger);
   expect(window.location.hash).toBe(`#/suppliers/${id}?tab=edit`);
   const dialog = screen.getByRole("dialog", { name: "Edit Review nursery" });
@@ -477,16 +465,14 @@ test("Quick Preview contextual edit opens a modal, saves with PUT and returns fo
     name: "Corrected nursery",
   });
   expect(
-    screen.getByRole("complementary", { name: "Quick preview" }),
-  ).toHaveTextContent("Corrected nursery");
+    screen.getByRole("button", { name: "Corrected nursery" }),
+  ).toBeVisible();
   await waitFor(() => {
     expect(window.location.hash).toBe("#/suppliers");
   });
   await waitFor(() => {
     expect(
-      within(
-        screen.getByRole("complementary", { name: "Quick preview" }),
-      ).getByRole("button", { name: "Edit" }),
+      screen.getByRole("button", { name: "Edit Corrected nursery" }),
     ).toHaveFocus();
   });
 });
@@ -512,12 +498,9 @@ test("Contextual edit guards dirty dismissal, closes on outside click and Escape
   const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
   window.location.hash = "#/suppliers";
   mount();
-  await user.click(
-    await screen.findByRole("button", { name: "Quick preview Review nursery" }),
-  );
-  const trigger = within(
-    screen.getByRole("complementary", { name: "Quick preview" }),
-  ).getByRole("button", { name: "Edit" });
+  const trigger = await screen.findByRole("button", {
+    name: "Edit Review nursery",
+  });
   await user.click(trigger);
   let dialog = screen.getByRole("dialog", { name: "Edit Review nursery" });
   fireEvent.change(within(dialog).getByLabelText("Name"), {
@@ -538,17 +521,11 @@ test("Contextual edit guards dirty dismissal, closes on outside click and Escape
   });
   await waitFor(() => {
     expect(
-      within(
-        screen.getByRole("complementary", { name: "Quick preview" }),
-      ).getByRole("button", { name: "Edit" }),
+      screen.getByRole("button", { name: "Edit Review nursery" }),
     ).toHaveFocus();
   });
 
-  await user.click(
-    within(
-      screen.getByRole("complementary", { name: "Quick preview" }),
-    ).getByRole("button", { name: "Edit" }),
-  );
+  await user.click(screen.getByRole("button", { name: "Edit Review nursery" }));
   dialog = screen.getByRole("dialog", { name: "Edit Review nursery" });
   fireEvent.click(dialog, { clientX: 4, clientY: 4 });
   await waitFor(() => {
@@ -578,19 +555,15 @@ test("Supplier details link to exact filtered purchase Orders", async () => {
   ).toHaveAttribute("href", `#/orders?supplier_id=${id}`);
 });
 
-test("Supplier presentation preserves canonical search and preview focus across history", async () => {
+test("Supplier Details and Back preserve canonical search and gallery history", async () => {
   const fetch = vi
     .spyOn(globalThis, "fetch")
     .mockResolvedValue(json([supplier]));
   window.history.replaceState({ review: true }, "", "#/suppliers?q=Review");
   const user = userEvent.setup();
   mount();
-  await screen.findByRole("button", { name: "Quick preview Review nursery" });
-  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  expect(screen.queryByText("Select a supplier")).not.toBeInTheDocument();
-  expect(
-    screen.queryByRole("button", { name: "Filters" }),
-  ).not.toBeInTheDocument();
+  await screen.findByRole("button", { name: "Review nursery" });
+  expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
   const requests = fetch.mock.calls.length;
   await user.click(screen.getByRole("button", { name: "Gallery" }));
   expect(window.location.hash).toBe("#/suppliers?q=Review&view=gallery");
@@ -599,29 +572,10 @@ test("Supplier presentation preserves canonical search and preview focus across 
     "ui-directory-records--gallery",
   );
   expect(fetch).toHaveBeenCalledTimes(requests);
-  await user.click(
-    screen.getByRole("button", { name: "Quick preview Review nursery" }),
-  );
-  expect(
-    screen.getByRole("dialog", { name: "Supplier inspection" }),
-  ).toBeVisible();
-  expect(screen.getByRole("button", { name: "Close preview" })).toHaveFocus();
-  window.history.replaceState(
-    { review: true },
-    "",
-    "#/suppliers?q=Review&view=list",
-  );
-  fireEvent.popState(window);
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: "List" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-  });
-  await user.click(screen.getByRole("button", { name: "Close preview" }));
-  expect(
-    screen.getByRole("button", { name: "Quick preview Review nursery" }),
-  ).toHaveFocus();
+  await user.click(screen.getByRole("button", { name: "Review nursery" }));
+  expect(window.location.hash).toBe(`#/suppliers/${id}`);
+  await browserBack();
+  expect(window.location.hash).toBe("#/suppliers?q=Review&view=gallery");
   expect(
     screen.getByRole("searchbox", { name: "Filter suppliers" }),
   ).toHaveValue("Review");
@@ -633,17 +587,44 @@ test("Supplier row Edit retains contextual guard and returns to its own action",
   window.history.replaceState(null, "", "#/suppliers?view=list");
   const user = userEvent.setup();
   mount();
+
   const edit = await screen.findByRole("button", {
     name: "Edit Review nursery",
   });
   await user.click(edit);
   const editor = screen.getByRole("dialog", { name: "Edit Review nursery" });
   expect(
-    screen.queryByRole("dialog", { name: "Supplier inspection" }),
+    screen.queryByRole("complementary", { name: "Supplier inspection" }),
   ).not.toBeInTheDocument();
   await user.click(within(editor).getByRole("button", { name: "Cancel" }));
   await waitFor(() => {
-    expect(edit).toHaveFocus();
+    expect(
+      screen.getByRole("button", { name: "Edit Review nursery" }),
+    ).toHaveFocus();
   });
   expect(window.location.hash).toBe("#/suppliers?view=list");
+});
+
+test("Supplier row and direct Details command navigate without a preview or creation menu", async () => {
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(json([supplier]));
+  const user = userEvent.setup();
+  mount();
+  const row = (
+    await screen.findByRole("button", { name: "Review nursery" })
+  ).closest("li");
+  if (!row) throw new Error("Expected a directory row");
+  const actions = within(row).getByRole("group", {
+    name: "Actions for Review nursery",
+  });
+  expect(within(actions).getAllByRole("button")).toHaveLength(2);
+  expect(within(row).getByText("Active", { exact: true })).toBeVisible();
+  expect(row.querySelector('[data-icon="eye"]')).not.toBeInTheDocument();
+  await user.click(within(row).getByText("Review nursery", { exact: true }));
+  expect(window.location.hash).toBe(`#/suppliers/${id}`);
+  await browserBack();
+  await user.click(
+    within(row).getByRole("button", { name: "Open details Review nursery" }),
+  );
+  expect(window.location.hash).toBe(`#/suppliers/${id}`);
+  expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
 });

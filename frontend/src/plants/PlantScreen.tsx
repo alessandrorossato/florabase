@@ -1,50 +1,4 @@
 import {
-  DirectoryPage,
-  DirectoryViewSwitcher,
-  DirectoryRecords,
-  DirectoryRow,
-  DirectoryCard,
-  DirectoryInspector,
-  DirectoryRecordActions,
-} from "../components/DirectoryPage";
-import { useDirectoryPresentation } from "../components/directoryPresentation";
-import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
-import { ActionLink, ActionButton } from "../components/Action";
-import "../components/collection-page.css";
-import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
-import { OverflowMenu } from "../components/ReferenceUI";
-import "../components/collection-directory.css";
-import { DetailEmptyState } from "../components/DetailEmptyState";
-import { FieldLabel } from "../components/FieldLabel";
-import { EditWorkspace } from "../components/EditWorkspace";
-import { useEditRoute } from "../components/useEditRoute";
-import "../components/collection-visual.css";
-import "../components/directory-preview.css";
-import {
-  DirectoryTools,
-  DirectoryFilterSelect,
-} from "../components/DirectoryTools";
-import { UpcomingActivities } from "../schedule/UpcomingActivities";
-import { DirectoryResults } from "../components/DirectoryResults";
-import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
-import { useBulkSelection } from "../bulk/useBulkSelection";
-import { SavedViews } from "../saved-views/SavedViews";
-import { useDirectoryView } from "../saved-views/useDirectoryView";
-import {
-  PlantEssentialsFields,
-  PlantEntryDateField,
-  PlantNotesField,
-} from "./PlantFormFields";
-import { usePublishRecordIdentities } from "../components/recordPresentation";
-import {
-  useRecordName,
-  recordDisplayName,
-} from "../components/recordPresentation";
-import { FormSections } from "../components/FormSections";
-import { firstValidationField } from "../components/formValidation";
-import { labelComposerHref } from "../labels/labelData";
-import { CreationReversal } from "../propagation/CreationReversal";
-import {
   useEffect,
   useMemo,
   useRef,
@@ -53,48 +7,95 @@ import {
   type RefObject,
   type SyntheticEvent,
 } from "react";
+import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
+import { useBulkSelection } from "../bulk/useBulkSelection";
+import { ActionButton, ActionLink } from "../components/Action";
+import "../components/collection-directory.css";
+import "../components/collection-page.css";
+import "../components/collection-visual.css";
+import { DetailEmptyState } from "../components/DetailEmptyState";
+import {
+  DirectoryCard,
+  DirectoryPage,
+  DirectoryRecordActions,
+  DirectoryRecordContent,
+  DirectoryRecords,
+  DirectoryRow,
+  DirectoryTrigger,
+  DirectoryViewSwitcher,
+  DirectoryWorkspace,
+} from "../components/DirectoryPage";
+import { useDirectoryPresentation } from "../components/directoryPresentation";
+import { DirectoryResults } from "../components/DirectoryResults";
+import {
+  DirectoryFilterSelect,
+  DirectoryTools,
+} from "../components/DirectoryTools";
+import { EditWorkspace } from "../components/EditWorkspace";
+import { FieldLabel } from "../components/FieldLabel";
+import { FormSections } from "../components/FormSections";
+import { firstValidationField } from "../components/formValidation";
+import {
+  usePublishRecordIdentities,
+  useRecordName,
+} from "../components/recordPresentation";
+import { OverflowMenu } from "../components/ReferenceUI";
+import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
+import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { useEditRoute } from "../components/useEditRoute";
+import { LifecycleStatus, StatusBadge } from "../components/WorkspaceUI";
+import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
+import { labelComposerHref } from "../labels/labelData";
+import { CreationReversal } from "../propagation/CreationReversal";
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
+import { UpcomingActivities } from "../schedule/UpcomingActivities";
+import {
+  PlantEntryDateField,
+  PlantEssentialsFields,
+  PlantNotesField,
+} from "./PlantFormFields";
 
+import { ApiError } from "../auth/api";
+import { useAuth } from "../auth/context";
 import {
   listBotanicalIdentities,
   type BotanicalIdentityResponse,
 } from "../botanical-identities/api";
-import { ApiError } from "../auth/api";
-import { useAuth } from "../auth/context";
-import { useCreationDisclosure } from "../components/useCreationDisclosure";
-import {
-  BotanicalName,
-  DirectorySearch,
-  RecordPreview,
-} from "../components/ReferenceUI";
-import {
-  setRecordRoute,
-  openCollectionPage,
-  closeCollectionPage,
-} from "../components/recordNavigation";
 import {
   Breadcrumbs,
-  DetailHeader,
   DetailContext,
+  DetailHeader,
   DetailTabs,
   WorkspaceIntro,
+  DetailLoading,
+  DetailPage,
+  DetailSummary,
 } from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
+import {
+  closeCollectionPage,
+  openCollectionPage,
+  setRecordRoute,
+} from "../components/recordNavigation";
+import { BotanicalName, DirectorySearch } from "../components/ReferenceUI";
+import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import { EventJournal } from "../events/EventJournal";
-import { LineagePanel } from "../lineage/LineagePanel";
-import { PhotosSection } from "../photos/PhotosSection";
-import { RecordVisual } from "../photos/RecordVisual";
-import type { PrimaryPhoto } from "../photos/api";
 import {
   listGeographicPlaces,
   type GeographicPlaceResponse,
 } from "../geographic-places/api";
+import { LineagePanel } from "../lineage/LineagePanel";
 import { listLocations, type LocationResponse } from "../locations/api";
-import { PartialDateField } from "../seed-lots/PartialDateField";
-import { ReferencePicker } from "../seed-lots/ReferencePicker";
+import type { PrimaryPhoto } from "../photos/api";
+import { PhotosSection } from "../photos/PhotosSection";
+import { RecordVisual } from "../photos/RecordVisual";
 import {
   listProvenanceSites,
   type ProvenanceSiteResponse,
 } from "../provenance-sites/api";
+import { PartialDateField } from "../seed-lots/PartialDateField";
+import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import { listSowings, type SowingResponse } from "../sowings/api";
 import { listSuppliers, type SupplierResponse } from "../suppliers/api";
 import {
@@ -330,20 +331,6 @@ function extractionQuantityExplanation(group: PlantGroupResponse): string {
   return `Group count: ${String(group.quantity.value)} → ${String(group.quantity.value - 1)}`;
 }
 
-function originSummary(record: PlantRecord): string {
-  const value = record.value;
-  const originatingGroup =
-    record.kind === "plant" ? record.value.originating_plant_group : null;
-  if (originatingGroup)
-    return `Extracted from group · ${recordDisplayName(originatingGroup, "Unlabelled plant group")}`;
-  if (value.originating_sowing)
-    return `From sowing${value.originating_sowing.label ? ` · ${value.originating_sowing.label}` : ""}`;
-  const kind = value.direct_origin_kind ?? "unknown";
-  if (kind === "purchased" && value.supplier)
-    return `Purchased · ${value.supplier.name}`;
-  return kind === "unknown" ? "Origin unknown" : originLabels[kind];
-}
-
 function lifecycleLabel(record: PlantRecord): string {
   return record.kind === "plant"
     ? plantLifecycleLabels[record.value.lifecycle]
@@ -399,7 +386,7 @@ function Detail({
   );
   const route = record.kind === "plant" ? "plants" : "plant-groups";
   return (
-    <article className="plant-detail collection-detail">
+    <DetailPage className="plant-detail">
       <Breadcrumbs
         items={[
           { label: "Collection", href: "#/dashboard" },
@@ -416,19 +403,18 @@ function Detail({
       />
       <DetailHeader
         visual={
-          value.primary_photo && (
-            <div className="collection-primary-detail">
-              <RecordVisual
-                photo={value.primary_photo}
-                label={
-                  value.label ??
-                  (record.kind === "plant" ? "plant" : "plant group")
-                }
-                identity={value.botanical_identity}
-                kind={record.kind}
-              />
-            </div>
-          )
+          <div className="collection-primary-detail">
+            <RecordVisual
+              photo={value.primary_photo}
+              showSource
+              label={
+                value.label ??
+                (record.kind === "plant" ? "plant" : "plant group")
+              }
+              identity={value.botanical_identity}
+              kind={record.kind}
+            />
+          </div>
         }
         eyebrow={record.kind === "plant" ? "Plant" : "Plant group"}
         title={recordName(
@@ -453,11 +439,9 @@ function Detail({
         }
         status={
           <>
-            <span
-              className={`lifecycle-badge lifecycle-badge--${value.lifecycle}`}
-            >
+            <LifecycleStatus state={value.lifecycle}>
               {lifecycleLabel(record)}
-            </span>
+            </LifecycleStatus>
             {value.location && (
               <a href={`#/locations/${value.location.id}`}>
                 {value.location.display_path}
@@ -529,46 +513,39 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <section
-            className="collection-summary"
-            aria-labelledby="plant-summary-title"
-          >
-            <h4 id="plant-summary-title" tabIndex={-1} ref={headingRef}>
-              At a glance
-            </h4>
-            <dl aria-label="Current Plant state">
-              <div>
-                <dt>Lifecycle</dt>
-                <dd>
-                  <span
-                    className={`lifecycle-badge lifecycle-badge--${value.lifecycle}`}
-                  >
+          <DetailSummary
+            id="plant-summary-title"
+            label="Current Plant state"
+            titleRef={headingRef}
+            metrics={[
+              {
+                label: "Lifecycle",
+                value: (
+                  <LifecycleStatus state={value.lifecycle}>
                     {lifecycleLabel(record)}
-                  </span>
-                </dd>
-              </div>
-              <div>
-                <dt>
-                  {value.lifecycle === "active"
+                  </LifecycleStatus>
+                ),
+              },
+              {
+                label:
+                  value.lifecycle === "active"
                     ? "Current location"
-                    : "Last recorded location"}
-                </dt>
-                <dd>
-                  {value.location ? (
-                    <a href={`#/locations/${value.location.id}`}>
-                      {value.location.display_path}
-                    </a>
-                  ) : (
-                    "Not recorded"
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt>Collection entry</dt>
-                <dd>{dateLabel(value.collection_entry_date)}</dd>
-              </div>
-            </dl>
-          </section>
+                    : "Last recorded location",
+                wide: true,
+                value: value.location ? (
+                  <a href={`#/locations/${value.location.id}`}>
+                    {value.location.display_path}
+                  </a>
+                ) : (
+                  "Not recorded"
+                ),
+              },
+              {
+                label: "Collection entry",
+                value: dateLabel(value.collection_entry_date),
+              },
+            ]}
+          />
           {record.kind === "group" && (
             <section
               className="plant-fact-group"
@@ -823,16 +800,16 @@ function Detail({
           />
         </div>
       )}
-    </article>
+    </DetailPage>
   );
 }
 
 const plantPage = {
   eyebrow: "Collection",
   title: "Plants",
+  directory: true,
   titleId: "plants-title",
-  description:
-    "Manage individual plants and groups, their locations, history, and lineage.",
+  description: "Your plants and growing groups.",
 };
 
 export function PlantScreen({
@@ -1277,7 +1254,7 @@ export function PlantScreen({
     () => (collection.status === "ready" ? collection.records : []),
     [collection],
   );
-  const visible = useMemo(() => {
+  const filtered = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     return records.filter((record) => {
       if (
@@ -1323,6 +1300,12 @@ export function PlantScreen({
     typeFilter,
   ]);
 
+  const pagination = useDirectoryPagination(
+    filtered,
+    JSON.stringify(view.state) +
+      filtered.map((record) => recordKey(record)).join(","),
+  );
+  const visible = pagination.visible;
   const bulkChoices = visible.map((record) => ({
     kind:
       record.kind === "plant" ? ("plant" as const) : ("plant_group" as const),
@@ -1338,7 +1321,9 @@ export function PlantScreen({
   const selected =
     detail.status === "ready" && recordKey(detail.record) === selectedKey
       ? detail.record
-      : null;
+      : !mobileDetail && !editing
+        ? (records.find((record) => recordKey(record) === selectedKey) ?? null)
+        : null;
   useEffect(() => {
     if (initialTab !== "edit") {
       directEditHandled.current = false;
@@ -1373,8 +1358,30 @@ export function PlantScreen({
         className="workspace plants-workspace"
         aria-labelledby="plants-title"
       >
-        <WorkspaceIntro {...plantPage} />
-        <p role="status">Loading Plants…</p>
+        <WorkspaceIntro {...plantPage} contextOnly={Boolean(initialId)} />
+        {initialId && (
+          <div className="workspace-context-actions">
+            <a
+              className="button-link button--secondary plant-back"
+              href="#/plants"
+            >
+              ← Back to Plants
+            </a>
+          </div>
+        )}
+        {initialId ? (
+          <DetailLoading
+            eyebrow="Plants"
+            label="Loading Plants…"
+            parents={[
+              { label: "Collection", href: "#/dashboard" },
+              { label: "Plants", href: "#/plants" },
+            ]}
+            className="plant-detail"
+          />
+        ) : (
+          <p role="status">Loading Plants…</p>
+        )}
       </section>
     );
   if (collection.status === "error" || !references)
@@ -1437,6 +1444,8 @@ export function PlantScreen({
   function startEdit(record: PlantRecord, trigger: HTMLButtonElement) {
     editTrigger.current = trigger;
     directEditHandled.current = true;
+    setSelectedKey(recordKey(record));
+    setDetail({ status: "ready", record });
     setExtractionSource(null);
     if (creationExpanded) closeCreation({ returnFocus: false });
     setCreationKind(null);
@@ -1474,11 +1483,7 @@ export function PlantScreen({
     }
   }
 
-  function selectRecord(
-    record: PlantRecord,
-    trigger: HTMLButtonElement,
-    preview = false,
-  ) {
+  function selectRecord(record: PlantRecord, trigger: HTMLButtonElement) {
     setExtractionSource(null);
     if (creationExpanded) closeCreation({ returnFocus: false });
     const key = recordKey(record);
@@ -1490,13 +1495,10 @@ export function PlantScreen({
       setDetailAttempt((value) => value + 1);
     }
     setSelectedKey(key);
-    const isMobile =
-      !preview && window.matchMedia("(max-width: 48rem)").matches;
-    setMobileDetail(isMobile);
-    if (isMobile)
-      setRecordRoute(
-        `#/${record.kind === "plant" ? "plants" : "plant-groups"}/${record.value.id}`,
-      );
+    setMobileDetail(true);
+    setRecordRoute(
+      `#/${record.kind === "plant" ? "plants" : "plant-groups"}/${record.value.id}`,
+    );
     setEditing(false);
     setCreationKind(null);
     setSave({ status: "idle" });
@@ -2524,6 +2526,7 @@ export function PlantScreen({
               tools={
                 !(mobileDetail || (editing && !edit.modal)) && (
                   <DirectoryTools
+                    stableFilterSummary
                     context={
                       identityFilter ? (
                         <a href={`#/identities/${identityFilter}?tab=overview`}>
@@ -2649,21 +2652,23 @@ export function PlantScreen({
                         : []),
                     ]}
                     actions={
-                      <ActionButton
-                        icon="add"
-                        type="button"
-                        ref={creationTriggerRef}
-                        data-collection-return="create"
-                        aria-expanded={creationExpanded}
-                        aria-controls="new-plant-panel"
-                        disabled={references.identities.length === 0}
-                        onClick={() => {
-                          if (creationExpanded) focusCreation();
-                          else startCreate();
-                        }}
-                      >
-                        New plant or group
-                      </ActionButton>
+                      <>
+                        <ActionButton
+                          icon="add"
+                          type="button"
+                          ref={creationTriggerRef}
+                          data-collection-return="create"
+                          aria-expanded={creationExpanded}
+                          aria-controls="new-plant-panel"
+                          disabled={references.identities.length === 0}
+                          onClick={() => {
+                            if (creationExpanded) focusCreation();
+                            else startCreate();
+                          }}
+                        >
+                          New plant or group
+                        </ActionButton>
+                      </>
                     }
                   />
                 )
@@ -2685,31 +2690,20 @@ export function PlantScreen({
                 </p>
               </div>
             )}
-            <div
-              className={`plant-master-detail operational-layout directory-preview-layout${mobileDetail || (editing && !edit.modal) ? " is-detail-view" : ""}`}
+
+            <DirectoryWorkspace
+              className={
+                mobileDetail || (editing && !edit.modal)
+                  ? "is-detail-view"
+                  : undefined
+              }
             >
-              <section
-                className="seed-master plant-master"
-                aria-labelledby="plant-list-title"
-              >
-                <div className="plant-directory-heading">
-                  <h3 className="sr-only" id="plant-list-title">
-                    Plants collection
-                  </h3>
-                </div>
-                <BulkToolbar
-                  selection={bulk}
-                  visible={bulkChoices}
-                  onSuccess={() => {
-                    setSelectedKey(null);
-                    setMobileDetail(false);
-                    setDetail({ status: "idle" });
-                    setAttempt((value) => value + 1);
-                  }}
-                />
-                {collection.status === "ready" && (
+              {!(mobileDetail || (editing && !edit.modal)) &&
+                collection.status === "ready" && (
                   <DirectoryResults
-                    count={visible.length}
+                    count={filtered.length}
+                    total={records.length}
+                    pagination={pagination}
                     actions={
                       <BulkSelect
                         selection={bulk}
@@ -2723,136 +2717,179 @@ export function PlantScreen({
                     }
                   />
                 )}
-                {records.length === 0 ? (
-                  <div className="profile-empty">
-                    <h4>No Plants recorded yet</h4>
-                    <p>
-                      Use New plant or group to record the first Plant or Plant
-                      group.
-                    </p>
+              {!(mobileDetail || (editing && !edit.modal)) && (
+                <section
+                  className="seed-master plant-master"
+                  aria-labelledby="plant-list-title"
+                >
+                  <div className="plant-directory-heading">
+                    <h3 className="sr-only" id="plant-list-title">
+                      Plants collection
+                    </h3>
                   </div>
-                ) : visible.length === 0 ? (
-                  <p>No Plants match this search and filter view.</p>
-                ) : (
-                  <DirectoryRecords
-                    view={presentation.view}
-                    label="Plants collection"
-                    photoTitles={presentation.view === "gallery"}
-                    listRef={directoryList}
-                  >
-                    {visible.map((record, bulkIndex) => {
-                      const value = record.value;
-                      return (
-                        <DirectoryItem
-                          onClick={(event) => {
-                            bulk.recordClick(event, bulkChoices[bulkIndex]);
-                          }}
-                          key={recordKey(record)}
-                          selected={
-                            bulk.checked({
-                              kind:
-                                record.kind === "plant"
-                                  ? "plant"
-                                  : "plant_group",
-                              id: value.id,
-                            }) || selectedKey === recordKey(record)
-                          }
-                        >
-                          <BulkCheckbox
-                            selection={bulk}
-                            choice={bulkChoices[bulkIndex]}
-                          />
-                          <button
-                            type="button"
-                            className="ui-directory-trigger"
-                            aria-pressed={selectedKey === recordKey(record)}
+                  <BulkToolbar
+                    selection={bulk}
+                    visible={bulkChoices}
+                    onSuccess={() => {
+                      setSelectedKey(null);
+                      setMobileDetail(false);
+                      setDetail({ status: "idle" });
+                      setAttempt((value) => value + 1);
+                    }}
+                  />
+                  {records.length === 0 ? (
+                    <div className="profile-empty">
+                      <h4>No Plants recorded yet</h4>
+                      <p>
+                        Use New plant or group to record the first Plant or
+                        Plant group.
+                      </p>
+                    </div>
+                  ) : visible.length === 0 ? (
+                    <p>No Plants match this search and filter view.</p>
+                  ) : (
+                    <DirectoryRecords
+                      view={presentation.view}
+                      label="Plants collection"
+                      photoTitles={presentation.view === "gallery"}
+                      listRef={directoryList}
+                    >
+                      {visible.map((record, bulkIndex) => {
+                        const value = record.value;
+                        return (
+                          <DirectoryItem
                             onClick={(event) => {
-                              if (
-                                bulk.recordClick(event, bulkChoices[bulkIndex])
-                              )
-                                return;
-                              selectRecord(record, event.currentTarget);
+                              bulk.recordClick(event, bulkChoices[bulkIndex]);
                             }}
+                            key={recordKey(record)}
+                            selected={
+                              bulk.active
+                                ? bulk.checked({
+                                    kind:
+                                      record.kind === "plant"
+                                        ? "plant"
+                                        : "plant_group",
+                                    id: value.id,
+                                  })
+                                : selectedKey === recordKey(record)
+                            }
                           >
-                            <span className="ui-directory-record-identity">
-                              <RecordVisual
-                                showSource={presentation.view === "gallery"}
-                                photo={value.primary_photo ?? null}
-                                label={
-                                  value.label ??
-                                  (record.kind === "plant"
-                                    ? "plant"
-                                    : "plant group")
-                                }
-                                compact
-
-                                identity={value.botanical_identity}
-                                kind={record.kind}
-                              />
-                              <span className="ui-directory-record-name">
-                                <strong>
-                                  {recordName(
-                                    value,
-                                    value.botanical_identity.display_label,
-                                  )}
-                                </strong>
-                                <small>
-                                  <BotanicalName
-                                    label={
-                                      value.botanical_identity.display_label
-                                    }
-                                    scientificName={scientificNames.get(
-                                      value.botanical_identity_id,
-                                    )}
-                                  />
-                                </small>
-                              </span>
-                            </span>
-                            <span className="ui-directory-record-facts">
-                              {record.kind === "plant" ? "Plant" : "Group"}
-                              {record.kind === "group" && (
-                                <strong>{quantityLabel(record)}</strong>
-                              )}
-                            </span>
-
-                            <span
-                              className={`lifecycle-badge lifecycle-badge--${value.lifecycle}`}
+                            <BulkCheckbox
+                              selection={bulk}
+                              choice={bulkChoices[bulkIndex]}
+                            />
+                            <DirectoryTrigger
+                              type="button"
+                              className="ui-directory-trigger"
+                              description={`${lifecycleLabel(record)} · Open details`}
+                              aria-pressed={selectedKey === recordKey(record)}
+                              onClick={(event) => {
+                                if (
+                                  bulk.recordClick(
+                                    event,
+                                    bulkChoices[bulkIndex],
+                                  )
+                                )
+                                  return;
+                                selectRecord(record, event.currentTarget);
+                              }}
                             >
-                              {lifecycleLabel(record)}
-                            </span>
-                          </button>
-                          <DirectoryRecordActions
-                            label={recordName(
-                              value,
-                              value.botanical_identity.display_label,
-                            )}
-                            onPreview={(trigger) => {
-                              selectRecord(record, trigger, true);
-                            }}
-                            onDetails={(trigger) => {
-                              selectRecord(record, trigger);
-                              setMobileDetail(true);
-                              setRecordRoute(
-                                `#/${record.kind === "plant" ? "plants" : "plant-groups"}/${value.id}`,
-                              );
-                            }}
-                            onEdit={(trigger) => {
-                              setSelectedKey(recordKey(record));
-                              startEdit(record, trigger);
-                            }}
-                          />
-                        </DirectoryItem>
-                      );
-                    })}
-                  </DirectoryRecords>
-                )}
-              </section>
-              {(creationExpanded ||
-                editing ||
-                mobileDetail ||
-                visible.some(
-                  (record) => recordKey(record) === selectedKey,
-                )) && (
+                              <DirectoryRecordContent
+                                visual={
+                                  <RecordVisual
+                                    showSource={presentation.view === "gallery"}
+                                    photo={value.primary_photo ?? null}
+                                    label={
+                                      value.label ??
+                                      (record.kind === "plant"
+                                        ? "plant"
+                                        : "plant group")
+                                    }
+                                    compact
+
+                                    identity={value.botanical_identity}
+                                    kind={record.kind}
+                                  />
+                                }
+                                name={
+                                  <>
+                                    {recordName(
+                                      value,
+                                      value.botanical_identity.display_label,
+                                    )}
+                                  </>
+                                }
+                                secondary={
+                                  <>
+                                    <BotanicalName
+                                      label={
+                                        value.botanical_identity.display_label
+                                      }
+                                      scientificName={scientificNames.get(
+                                        value.botanical_identity_id,
+                                      )}
+                                    />
+                                  </>
+                                }
+                                summary={
+                                  <>
+                                    {record.kind === "plant"
+                                      ? "Plant"
+                                      : "Group"}
+                                    {record.kind === "group" && (
+                                      <strong>{quantityLabel(record)}</strong>
+                                    )}
+                                  </>
+                                }
+                                status={
+                                  value.lifecycle === "active" ? (
+                                    <StatusBadge compactState="active">
+                                      Active
+                                    </StatusBadge>
+                                  ) : (
+                                    <>
+                                      <LifecycleStatus state={value.lifecycle}>
+                                        {lifecycleLabel(record)}
+                                      </LifecycleStatus>
+                                    </>
+                                  )
+                                }
+                              />
+                            </DirectoryTrigger>
+                            <DirectoryRecordActions
+                              label={recordName(
+                                value,
+                                value.botanical_identity.display_label,
+                              )}
+                              onDetails={(trigger) => {
+                                selectRecord(record, trigger);
+                              }}
+                              extraActions={
+                                <ActionLink
+                                  className="ui-directory-quick-action"
+                                  icon="harvest"
+                                  aria-label={`Record harvest from ${recordName(value, value.botanical_identity.display_label)}`}
+                                  title="Record harvest"
+                                  href={`#/harvests?action=create&sourceType=${record.kind === "plant" ? "plant" : "plant_group"}&source=${value.id}`}
+                                >
+                                  <span className="sr-only">
+                                    Record harvest
+                                  </span>
+                                </ActionLink>
+                              }
+                              onEdit={(trigger) => {
+                                setSelectedKey(recordKey(record));
+                                startEdit(record, trigger);
+                              }}
+                            />
+                          </DirectoryItem>
+                        );
+                      })}
+                    </DirectoryRecords>
+                  )}
+                </section>
+              )}
+              {(creationExpanded || editing || mobileDetail) && (
                 <section
                   id={creationExpanded ? "new-plant-panel" : undefined}
                   className={`seed-detail-pane plant-detail-pane${creationExpanded ? " seed-creation-panel" : ""}`}
@@ -2866,9 +2903,19 @@ export function PlantScreen({
                   )}
                   {editing && !edit.modal ? (
                     editor
-                  ) : detail.status === "loading" ? (
-                    <p role="status">Loading Plant detail…</p>
-                  ) : detail.status === "error" ? (
+                  ) : detail.status === "loading" &&
+                    (mobileDetail || !selected) ? (
+                    <DetailLoading
+                      eyebrow="Plants"
+                      label="Loading Plant detail…"
+                      parents={[
+                        { label: "Collection", href: "#/dashboard" },
+                        { label: "Plants", href: "#/plants" },
+                      ]}
+                      className="plant-detail"
+                    />
+                  ) : detail.status === "error" &&
+                    (mobileDetail || !selected) ? (
                     <div className="notice notice--error" role="alert">
                       <p>Florabase could not load this record.</p>
                       <button
@@ -3113,132 +3160,11 @@ export function PlantScreen({
                             </section>
                           )}
                       </div>
-                    ) : (
-                      <DirectoryInspector
-                        title="Plant inspection"
-                        returnFocusTo={selectedTrigger}
-                        fallbackFocusTo={directoryList}
-                        onClose={() => {
-                          setSelectedKey(null);
-                          setDetail({ status: "idle" });
-                        }}
-                      >
-                        <RecordPreview
-                          visual={
-                            <RecordVisual
-                              showSource
-                              photo={selected.value.primary_photo ?? null}
-                              label={recordName(
-                                selected.value,
-                                "collection record",
-                              )}
-                              className="quick-preview-media"
-
-                              identity={selected.value.botanical_identity}
-                              kind={selected.kind}
-                            />
-                          }
-                          type={
-                            selected.kind === "plant" ? "Plant" : "Plant group"
-                          }
-                          title={recordName(
-                            selected.value,
-                            selected.kind === "plant"
-                              ? "Unlabelled plant"
-                              : "Unlabelled plant group",
-                          )}
-                          secondary={
-                            <a
-                              href={`#/identities/${selected.value.botanical_identity.id}`}
-                            >
-                              {selected.value.botanical_identity.display_label}
-                            </a>
-                          }
-                          facts={[
-                            {
-                              label: "Lifecycle",
-                              value: lifecycleLabel(selected),
-                            },
-                            {
-                              label:
-                                selected.value.lifecycle === "active"
-                                  ? "Location"
-                                  : "Last location",
-                              value: selected.value.location ? (
-                                <a
-                                  href={`#/locations/${selected.value.location.id}`}
-                                >
-                                  {selected.value.location.display_path}
-                                </a>
-                              ) : (
-                                "Not recorded"
-                              ),
-                            },
-                            { label: "Origin", value: originSummary(selected) },
-                            ...(selected.kind === "group"
-                              ? [
-                                  {
-                                    label: "Quantity",
-                                    value: quantityLabel(selected),
-                                  },
-                                ]
-                              : []),
-                          ]}
-                          actions={
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setMobileDetail(true);
-                                  setRecordRoute(
-                                    `#/${selected.kind === "plant" ? "plants" : "plant-groups"}/${selected.value.id}`,
-                                  );
-                                }}
-                              >
-                                Open details
-                              </button>
-                              <div
-                                className="preview-action-group"
-                                role="group"
-                                aria-label="Plant actions"
-                              >
-                                <ActionButton
-                                  icon="edit"
-                                  type="button"
-                                  className="button--secondary"
-                                  onClick={(event) => {
-                                    startEdit(selected, event.currentTarget);
-                                  }}
-                                >
-                                  Edit
-                                </ActionButton>
-                                {
-                                  <a
-                                    className="button-link button--secondary"
-                                    data-collection-return="harvest"
-                                    href={`#/harvests?action=create&sourceType=${selected.kind === "plant" ? "plant" : "plant_group"}&source=${selected.value.id}`}
-                                  >
-                                    Record harvest
-                                  </a>
-                                }
-                              </div>
-                            </>
-                          }
-                        />
-                      </DirectoryInspector>
-                    )
-                  ) : (
-                    <div className="selected-seed seed-detail-empty">
-                      <h3>Select a Plant or group</h3>
-                      <p>
-                        Choose a row for a Quick Preview, then open details for
-                        photos, history and collection operations.
-                      </p>
-                    </div>
-                  )}
+                    ) : null
+                  ) : null}
                 </section>
               )}
-            </div>
+            </DirectoryWorkspace>
             {reintegrationOpen &&
               selected?.kind === "plant" &&
               selected.value.originating_plant_group &&

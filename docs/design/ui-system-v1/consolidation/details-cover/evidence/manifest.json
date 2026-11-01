@@ -1,0 +1,254 @@
+{
+  "captured_on": "2026-11-01",
+  "review": "http://localhost:15174",
+  "status": "pending final operator UAT",
+  "viewport_note": "Names are requested CSS widths; raster dimensions can exclude native scrollbars/chrome. See responsive-matrix.json.",
+  "screenshots": [
+    {
+      "path": "geography-canonical-1024.png",
+      "sha256": "be66b5ceb32c41b1a06fa3e815129fa6ab0f08a2d6d35e11d6f79dbef19f1fc4",
+      "raster_width": 1024,
+      "raster_height": 900
+    },
+    {
+      "path": "geography-canonical-1440.png",
+      "sha256": "af9cfc0eb827ee004bb49ce321b40412029a0364ff4b4ee29f7b77dabe8eb162",
+      "raster_width": 1440,
+      "raster_height": 900
+    },
+    {
+      "path": "geography-canonical-390.png",
+      "sha256": "7eaf1234e98a49929a4da6e05ad6a422bbd65cae162df7e6c3b26afd1a089390",
+      "raster_width": 375,
+      "raster_height": 865
+    },
+    {
+      "path": "geography-hierarchy-1024.png",
+      "sha256": "55621b7e8a36792194d68f9a3a382b9e69806f16080a523b6108dd76508f851c",
+      "raster_width": 1009,
+      "raster_height": 887
+    },
+    {
+      "path": "geography-hierarchy-1440.png",
+      "sha256": "48919f1816447d1ef6f319ba42b09230edfaa6743603cd7b275463daaaa5ee86",
+      "raster_width": 1425,
+      "raster_height": 891
+    },
+    {
+      "path": "geography-hierarchy-390.png",
+      "sha256": "91cf3c247158187b5ee5768b1f8ef061f1d4d0df77082f876558b1d2badb56c7",
+      "raster_width": 375,
+      "raster_height": 865
+    },
+    {
+      "path": "harvest-details-390.png",
+      "sha256": "e19feebbb0916d02e00c84e569788706d1ce9409573b5955f3b32bd30c6d71d2",
+      "raster_width": 375,
+      "raster_height": 865
+    },
+    {
+      "path": "harvests-restored-1440.png",
+      "sha256": "1af9bd5ebd92adac82237b28134822cbcaf2df66bf386d997e2d15cb03c7ad40",
+      "raster_width": 1440,
+      "raster_height": 900
+    },
+    {
+      "path": "harvests-restored-390.png",
+      "sha256": "fca2a719f55121c77b245334b873ba800d27c624b02dd8675a16235ec311f409",
+      "raster_width": 390,
+      "raster_height": 900
+    },
+    {
+      "path": "harvests-restored-default.png",
+      "sha256": "284f1b30e8233b8b8053e171f726bd7b4c15f5364b280f5f65f56184cdba59b8",
+      "raster_width": 1509,
+      "raster_height": 900
+    },
+    {
+      "path": "identity-1024.png",
+      "sha256": "394a953140d062d45dfa990f84aea32e08fa37361b81f38109801711b9e9f178",
+      "raster_width": 1009,
+      "raster_height": 900
+    },
+    {
+      "path": "identity-1440.png",
+      "sha256": "0dc066b99419390dbbfbbbdb3e773717a4ffc8b6f84b3d753e846b0d8d140e80",
+      "raster_width": 1425,
+      "raster_height": 891
+    },
+    {
+      "path": "identity-390.png",
+      "sha256": "44021f1d6b5a5617555ca76ac77d3e8890a05ba6b98b5618331457c9ad25b8a3",
+      "raster_width": 375,
+      "raster_height": 865
+    },
+    {
+      "path": "identity-long-cultivar-390.png",
+      "sha256": "1f87bcf647ddda71109d9bf6c5bf81abeb37406526efd92560f84444ae7a911b",
+      "raster_width": 375,
+      "raster_height": 865
+    },
+    {
+      "path": "identity-narrow-stress-320.png",
+      "sha256": "b42733dcfae07dbb022278f7f695c5b2c1ce7a7db13ed32d30f5a54a6c509bdc",
+      "raster_width": 305,
+      "raster_height": 858
+    },
+    {
+      "path": "location-1024.png",
+      "sha256": "2e4306481266b9037a3bd537fbe314b059c4c5f3a962e7d341e03955865baceb",
+      "raster_width": 1024,
+      "raster_height": 900
+    },
+    {
+      "path": "location-1440.png",
+      "sha256": "badf8a15e03705e67e60c68ba8cbd6ef5db9738946e8b9108047ad2a02bca2ab",
+      "raster_width": 1440,
+      "raster_height": 900
+    },
+    {
+      "path": "location-390.png",
+      "sha256": "9a10b87d60c36b4a5ffb0ea7305dbf543f5894404145da23834195f6d111b6c7",
+      "raster_width": 375,
+      "raster_height": 865
+    },
+    {
+      "path": "location-long-path-390.png",
+      "sha256": "cc6764e3dc33978f4a0078a5ddb00fad455214bdeeb4297a8608f2682d663e24",
+      "raster_width": 375,
+      "raster_height": 865
+    },
+    {
+      "path": "locations-hierarchy-1024.png",
+      "sha256": "ced9ccf2dabb25c0c12436ca2ac9cce4d6ad2fc517b631235bc0377c4d048294",
+      "raster_width": 1024,
+      "raster_height": 900
+    },
+    {
+      "path": "locations-hierarchy-1440.png",
+      "sha256": "043f6cd3ac690065ec9169222af546e5d0a3aa95a4c1f4a83b490fedc9647376",
+      "raster_width": 1440,
+      "raster_height": 900
+    },
+    {
+      "path": "locations-hierarchy-390.png",
+      "sha256": "9f4843defb397af9f16f4716fb6d2627bdca8a505038e7ec3a83b372d787f869",
+      "raster_width": 375,
+      "raster_height": 865
+    },
+    {
+      "path": "order-partial-date-1024.png",
+      "sha256": "962145bbf74c1f7049cbcaa88d4732ee379f5b73b64049ccb4d0bb1a044029a6",
+      "raster_width": 1024,
+      "raster_height": 900
+    },
+    {
+      "path": "order-partial-date-1440.png",
+      "sha256": "cd7674592a2edc2e2f3238bcd6160966ed0e52936324b51d41b004ce225c95af",
+      "raster_width": 1440,
+      "raster_height": 900
+    },
+    {
+      "path": "order-partial-date-390.png",
+      "sha256": "6559c2138a089fb3295c1a0db72e4b1e16c7ffc1562b588fc14f756850d02abe",
+      "raster_width": 375,
+      "raster_height": 865
+    },
+    {
+      "path": "seed-own-photo-1440.png",
+      "sha256": "955b1e0c313b22445c6e102366a966f1e8b458f3f39da2bd12b3df8546e57d02",
+      "raster_width": 1425,
+      "raster_height": 891
+    },
+    {
+      "path": "seed-own-photo-390.png",
+      "sha256": "a739f3100d697e7165d8f36b4f9c54f2e891e5535438324e6f767d6a8a84a29e",
+      "raster_width": 375,
+      "raster_height": 865
+    },
+    {
+      "path": "seeds-gallery-own-and-placeholder-1440.png",
+      "sha256": "4d3b4e21b42e777b339a20f047cdb50fe5f656b58a53cda3630f6b2b548bf346",
+      "raster_width": 1440,
+      "raster_height": 900
+    },
+    {
+      "path": "seeds-list-own-and-placeholder-1440.png",
+      "sha256": "5948f9ce84a99f53c7db2be65fc428e4c60c631519eac21113fb40af0948d97e",
+      "raster_width": 1440,
+      "raster_height": 900
+    },
+    {
+      "path": "sowing-cover-slot-390.png",
+      "sha256": "750b9ecb60d61e1f575b047fdccbcab54e9f528a74b3b112a06cfbac589752f8",
+      "raster_width": 375,
+      "raster_height": 865
+    },
+    {
+      "path": "stored-material-1440.png",
+      "sha256": "998efaa6ef0216c011b5affb52fc169bfd404be4be276fd7f563aac91b647a5a",
+      "raster_width": 1440,
+      "raster_height": 900
+    },
+    {
+      "path": "stored-material-390.png",
+      "sha256": "d11d8559e789def691a5800ddb0d28415eb892ca8275ddfb1eae34ac31715a5b",
+      "raster_width": 390,
+      "raster_height": 900
+    },
+    {
+      "path": "supplier-1024.png",
+      "sha256": "4259de92ea0944cb782f12abb0639d48470b76c89aa2f7075e9441cf0e541560",
+      "raster_width": 1024,
+      "raster_height": 900
+    },
+    {
+      "path": "supplier-1440.png",
+      "sha256": "b06c9f914aa4c4c746a41cb0d6ddc88e5ab9dccc6a1b0cf3799261147e806db4",
+      "raster_width": 1440,
+      "raster_height": 900
+    },
+    {
+      "path": "supplier-390.png",
+      "sha256": "070205b8ed0878b19c164b60b7c975db3ad054aa35af19d29eaba3958fe4c6f5",
+      "raster_width": 375,
+      "raster_height": 865
+    },
+    {
+      "path": "theme-botanical-dark.png",
+      "sha256": "1dcd49277182e5aef652e8a95c122f5b54a979add952f6bf145120450c7584be",
+      "raster_width": 1425,
+      "raster_height": 891
+    },
+    {
+      "path": "theme-botanical-light.png",
+      "sha256": "72da61fa0f30a6adf1a771eead30eda4a4c863eeaf344454d6a4f92e2de9374b",
+      "raster_width": 1425,
+      "raster_height": 891
+    },
+    {
+      "path": "theme-herbarium-dark.png",
+      "sha256": "dfda98429d7384318d621acb07b4013348bb065c84beb85aa9d610eb0769d207",
+      "raster_width": 1425,
+      "raster_height": 891
+    },
+    {
+      "path": "theme-herbarium-light.png",
+      "sha256": "592bea552d93e398c73aa517177a6974df38b38fc73e05bae486f27352d81a32",
+      "raster_width": 1425,
+      "raster_height": 891
+    },
+    {
+      "path": "theme-mineral-dark.png",
+      "sha256": "6c96214afc8f227b3a33841ddba283c990bf9d81440d9c007f2678386315e156",
+      "raster_width": 1425,
+      "raster_height": 891
+    },
+    {
+      "path": "theme-mineral-light.png",
+      "sha256": "d0addf507f0e63cdd3603273b9586dae28220ab4553267bf694329204e19d6f7",
+      "raster_width": 1425,
+      "raster_height": 891
+    }
+  ]
+}

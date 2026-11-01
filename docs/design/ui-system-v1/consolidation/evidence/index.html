@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width"
+  /><title>Florabase consolidation evidence</title
+  ><style>
+    body {
+      font: 16px system-ui;
+      margin: 24px;
+      background: #f3f4f5;
+      color: #182126;
+    }
+    main {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+    figure {
+      margin: 0;
+      padding: 12px;
+      background: white;
+    }
+    figure[hidden] {
+      display: none;
+    }
+    img {
+      width: 100%;
+      max-height: 480px;
+      object-fit: contain;
+    }
+    figcaption {
+      padding-top: 8px;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 20px 0;
+    }
+    select {
+      margin: 8px;
+      padding: 8px;
+    }
+  </style>
+  <h1>UI System v1 consolidation</h1>
+  <p>
+    Six themes at 1440px; paired List/Gallery and hierarchy checks at
+    1440/1024/390px in Mineral Dark. Additional states include photo previews,
+    lifecycle, selection, pagination, scroll persistence and 720×450
+    reduced-space stress. Capture labels are configured CSS viewport widths;
+    screenshot raster sizes are recorded separately because the browser may
+    normalize captures around its scrollbar. Physical devices, assistive
+    technology, native dirty-confirm rejection and actual browser zoom remain
+    operator UAT.
+  </p>
+  <nav>
+    <a href="comparison-mineral-dark.jpg">mineral-dark</a>
+    <a href="comparison-mineral-light.jpg">mineral-light</a>
+    <a href="comparison-botanical-light.jpg">botanical-light</a>
+    <a href="comparison-botanical-dark.jpg">botanical-dark</a>
+    <a href="comparison-herbarium-dark.jpg">herbarium-dark</a>
+    <a href="comparison-herbarium-light.jpg">herbarium-light</a>
+    <a href="comparison-1024.jpg">1024px</a>
+    <a href="comparison-390.jpg">390px</a>
+    <a href="comparison-galleries.jpg">Galleries</a>
+    <a href="comparison-hierarchies.jpg">Hierarchies</a>
+  </nav>
+  <label
+    >Theme<select id="theme">
+      <option value="">All</option>
+      <option>mineral-dark</option>
+      <option>mineral-light</option>
+      <option>botanical-light</option>
+      <option>botanical-dark</option>
+      <option>herbarium-dark</option>
+      <option>herbarium-light</option>
+    </select></label
+  ><label
+    >Width<select id="width">
+      <option value="">All</option>
+      <option>1440</option>
+      <option>1024</option>
+      <option>390</option>
+      <option>720</option>
+    </select></label
+  >
+  <main>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="seeds-1440-mineral-dark.jpg"
+        ><img loading="lazy" src="seeds-1440-mineral-dark.jpg" alt="seeds"
+      /></a>
+      <figcaption>seeds · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="sowings-1440-mineral-dark.jpg"
+        ><img loading="lazy" src="sowings-1440-mineral-dark.jpg" alt="sowings"
+      /></a>
+      <figcaption>sowings · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="plants-1440-mineral-dark.jpg"
+        ><img loading="lazy" src="plants-1440-mineral-dark.jpg" alt="plants"
+      /></a>
+      <figcaption>plants · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="harvests-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="harvests-1440-mineral-dark.jpg"
+          alt="harvests"
+      /></a>
+      <figcaption>harvests · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="stored-material-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="stored-material-1440-mineral-dark.jpg"
+          alt="stored-material"
+      /></a>
+      <figcaption>stored-material · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="suppliers-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="suppliers-1440-mineral-dark.jpg"
+          alt="suppliers"
+      /></a>
+      <figcaption>suppliers · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="orders-1440-mineral-dark.jpg"
+        ><img loading="lazy" src="orders-1440-mineral-dark.jpg" alt="orders"
+      /></a>
+      <figcaption>orders · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="identities-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="identities-1440-mineral-dark.jpg"
+          alt="identities"
+      /></a>
+      <figcaption>identities · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1024">
+      <a href="seeds-1024-mineral-dark.jpg"
+        ><img loading="lazy" src="seeds-1024-mineral-dark.jpg" alt="seeds"
+      /></a>
+      <figcaption>seeds · 1024px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1024">
+      <a href="sowings-1024-mineral-dark.jpg"
+        ><img loading="lazy" src="sowings-1024-mineral-dark.jpg" alt="sowings"
+      /></a>
+      <figcaption>sowings · 1024px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1024">
+      <a href="plants-1024-mineral-dark.jpg"
+        ><img loading="lazy" src="plants-1024-mineral-dark.jpg" alt="plants"
+      /></a>
+      <figcaption>plants · 1024px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1024">
+      <a href="harvests-1024-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="harvests-1024-mineral-dark.jpg"
+          alt="harvests"
+      /></a>
+      <figcaption>harvests · 1024px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1024">
+      <a href="stored-material-1024-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="stored-material-1024-mineral-dark.jpg"
+          alt="stored-material"
+      /></a>
+      <figcaption>stored-material · 1024px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1024">
+      <a href="suppliers-1024-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="suppliers-1024-mineral-dark.jpg"
+          alt="suppliers"
+      /></a>
+      <figcaption>suppliers · 1024px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1024">
+      <a href="orders-1024-mineral-dark.jpg"
+        ><img loading="lazy" src="orders-1024-mineral-dark.jpg" alt="orders"
+      /></a>
+      <figcaption>orders · 1024px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1024">
+      <a href="identities-1024-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="identities-1024-mineral-dark.jpg"
+          alt="identities"
+      /></a>
+      <figcaption>identities · 1024px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="390">
+      <a href="seeds-390-mineral-dark.jpg"
+        ><img loading="lazy" src="seeds-390-mineral-dark.jpg" alt="seeds"
+      /></a>
+      <figcaption>seeds · 390px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="390">
+      <a href="sowings-390-mineral-dark.jpg"
+        ><img loading="lazy" src="sowings-390-mineral-dark.jpg" alt="sowings"
+      /></a>
+      <figcaption>sowings · 390px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="390">
+      <a href="plants-390-mineral-dark.jpg"
+        ><img loading="lazy" src="plants-390-mineral-dark.jpg" alt="plants"
+      /></a>
+      <figcaption>plants · 390px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="390">
+      <a href="harvests-390-mineral-dark.jpg"
+        ><img loading="lazy" src="harvests-390-mineral-dark.jpg" alt="harvests"
+      /></a>
+      <figcaption>harvests · 390px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="390">
+      <a href="stored-material-390-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="stored-material-390-mineral-dark.jpg"
+          alt="stored-material"
+      /></a>
+      <figcaption>stored-material · 390px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="390">
+      <a href="suppliers-390-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="suppliers-390-mineral-dark.jpg"
+          alt="suppliers"
+      /></a>
+      <figcaption>suppliers · 390px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="390">
+      <a href="orders-390-mineral-dark.jpg"
+        ><img loading="lazy" src="orders-390-mineral-dark.jpg" alt="orders"
+      /></a>
+      <figcaption>orders · 390px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="390">
+      <a href="identities-390-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="identities-390-mineral-dark.jpg"
+          alt="identities"
+      /></a>
+      <figcaption>identities · 390px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-light" data-width="1440">
+      <a href="seeds-1440-mineral-light.jpg"
+        ><img loading="lazy" src="seeds-1440-mineral-light.jpg" alt="seeds"
+      /></a>
+      <figcaption>seeds · 1440px · mineral-light</figcaption>
+    </figure>
+    <figure data-theme="mineral-light" data-width="1440">
+      <a href="sowings-1440-mineral-light.jpg"
+        ><img loading="lazy" src="sowings-1440-mineral-light.jpg" alt="sowings"
+      /></a>
+      <figcaption>sowings · 1440px · mineral-light</figcaption>
+    </figure>
+    <figure data-theme="mineral-light" data-width="1440">
+      <a href="plants-1440-mineral-light.jpg"
+        ><img loading="lazy" src="plants-1440-mineral-light.jpg" alt="plants"
+      /></a>
+      <figcaption>plants · 1440px · mineral-light</figcaption>
+    </figure>
+    <figure data-theme="mineral-light" data-width="1440">
+      <a href="harvests-1440-mineral-light.jpg"
+        ><img
+          loading="lazy"
+          src="harvests-1440-mineral-light.jpg"
+          alt="harvests"
+      /></a>
+      <figcaption>harvests · 1440px · mineral-light</figcaption>
+    </figure>
+    <figure data-theme="mineral-light" data-width="1440">
+      <a href="stored-material-1440-mineral-light.jpg"
+        ><img
+          loading="lazy"
+          src="stored-material-1440-mineral-light.jpg"
+          alt="stored-material"
+      /></a>
+      <figcaption>stored-material · 1440px · mineral-light</figcaption>
+    </figure>
+    <figure data-theme="mineral-light" data-width="1440">
+      <a href="suppliers-1440-mineral-light.jpg"
+        ><img
+          loading="lazy"
+          src="suppliers-1440-mineral-light.jpg"
+          alt="suppliers"
+      /></a>
+      <figcaption>suppliers · 1440px · mineral-light</figcaption>
+    </figure>
+    <figure data-theme="mineral-light" data-width="1440">
+      <a href="orders-1440-mineral-light.jpg"
+        ><img loading="lazy" src="orders-1440-mineral-light.jpg" alt="orders"
+      /></a>
+      <figcaption>orders · 1440px · mineral-light</figcaption>
+    </figure>
+    <figure data-theme="mineral-light" data-width="1440">
+      <a href="identities-1440-mineral-light.jpg"
+        ><img
+          loading="lazy"
+          src="identities-1440-mineral-light.jpg"
+          alt="identities"
+      /></a>
+      <figcaption>identities · 1440px · mineral-light</figcaption>
+    </figure>
+    <figure data-theme="botanical-light" data-width="1440">
+      <a href="seeds-1440-botanical-light.jpg"
+        ><img loading="lazy" src="seeds-1440-botanical-light.jpg" alt="seeds"
+      /></a>
+      <figcaption>seeds · 1440px · botanical-light</figcaption>
+    </figure>
+    <figure data-theme="botanical-light" data-width="1440">
+      <a href="sowings-1440-botanical-light.jpg"
+        ><img
+          loading="lazy"
+          src="sowings-1440-botanical-light.jpg"
+          alt="sowings"
+      /></a>
+      <figcaption>sowings · 1440px · botanical-light</figcaption>
+    </figure>
+    <figure data-theme="botanical-light" data-width="1440">
+      <a href="plants-1440-botanical-light.jpg"
+        ><img loading="lazy" src="plants-1440-botanical-light.jpg" alt="plants"
+      /></a>
+      <figcaption>plants · 1440px · botanical-light</figcaption>
+    </figure>
+    <figure data-theme="botanical-light" data-width="1440">
+      <a href="harvests-1440-botanical-light.jpg"
+        ><img
+          loading="lazy"
+          src="harvests-1440-botanical-light.jpg"
+          alt="harvests"
+      /></a>
+      <figcaption>harvests · 1440px · botanical-light</figcaption>
+    </figure>
+    <figure data-theme="botanical-light" data-width="1440">
+      <a href="stored-material-1440-botanical-light.jpg"
+        ><img
+          loading="lazy"
+          src="stored-material-1440-botanical-light.jpg"
+          alt="stored-material"
+      /></a>
+      <figcaption>stored-material · 1440px · botanical-light</figcaption>
+    </figure>
+    <figure data-theme="botanical-light" data-width="1440">
+      <a href="suppliers-1440-botanical-light.jpg"
+        ><img
+          loading="lazy"
+          src="suppliers-1440-botanical-light.jpg"
+          alt="suppliers"
+      /></a>
+      <figcaption>suppliers · 1440px · botanical-light</figcaption>
+    </figure>
+    <figure data-theme="botanical-light" data-width="1440">
+      <a href="orders-1440-botanical-light.jpg"
+        ><img loading="lazy" src="orders-1440-botanical-light.jpg" alt="orders"
+      /></a>
+      <figcaption>orders · 1440px · botanical-light</figcaption>
+    </figure>
+    <figure data-theme="botanical-light" data-width="1440">
+      <a href="identities-1440-botanical-light.jpg"
+        ><img
+          loading="lazy"
+          src="identities-1440-botanical-light.jpg"
+          alt="identities"
+      /></a>
+      <figcaption>identities · 1440px · botanical-light</figcaption>
+    </figure>
+    <figure data-theme="botanical-dark" data-width="1440">
+      <a href="seeds-1440-botanical-dark.jpg"
+        ><img loading="lazy" src="seeds-1440-botanical-dark.jpg" alt="seeds"
+      /></a>
+      <figcaption>seeds · 1440px · botanical-dark</figcaption>
+    </figure>
+    <figure data-theme="botanical-dark" data-width="1440">
+      <a href="sowings-1440-botanical-dark.jpg"
+        ><img
+          loading="lazy"
+          src="sowings-1440-botanical-dark.jpg"
+          alt="sowings"
+      /></a>
+      <figcaption>sowings · 1440px · botanical-dark</figcaption>
+    </figure>
+    <figure data-theme="botanical-dark" data-width="1440">
+      <a href="plants-1440-botanical-dark.jpg"
+        ><img loading="lazy" src="plants-1440-botanical-dark.jpg" alt="plants"
+      /></a>
+      <figcaption>plants · 1440px · botanical-dark</figcaption>
+    </figure>
+    <figure data-theme="botanical-dark" data-width="1440">
+      <a href="harvests-1440-botanical-dark.jpg"
+        ><img
+          loading="lazy"
+          src="harvests-1440-botanical-dark.jpg"
+          alt="harvests"
+      /></a>
+      <figcaption>harvests · 1440px · botanical-dark</figcaption>
+    </figure>
+    <figure data-theme="botanical-dark" data-width="1440">
+      <a href="stored-material-1440-botanical-dark.jpg"
+        ><img
+          loading="lazy"
+          src="stored-material-1440-botanical-dark.jpg"
+          alt="stored-material"
+      /></a>
+      <figcaption>stored-material · 1440px · botanical-dark</figcaption>
+    </figure>
+    <figure data-theme="botanical-dark" data-width="1440">
+      <a href="suppliers-1440-botanical-dark.jpg"
+        ><img
+          loading="lazy"
+          src="suppliers-1440-botanical-dark.jpg"
+          alt="suppliers"
+      /></a>
+      <figcaption>suppliers · 1440px · botanical-dark</figcaption>
+    </figure>
+    <figure data-theme="botanical-dark" data-width="1440">
+      <a href="orders-1440-botanical-dark.jpg"
+        ><img loading="lazy" src="orders-1440-botanical-dark.jpg" alt="orders"
+      /></a>
+      <figcaption>orders · 1440px · botanical-dark</figcaption>
+    </figure>
+    <figure data-theme="botanical-dark" data-width="1440">
+      <a href="identities-1440-botanical-dark.jpg"
+        ><img
+          loading="lazy"
+          src="identities-1440-botanical-dark.jpg"
+          alt="identities"
+      /></a>
+      <figcaption>identities · 1440px · botanical-dark</figcaption>
+    </figure>
+    <figure data-theme="herbarium-dark" data-width="1440">
+      <a href="seeds-1440-herbarium-dark.jpg"
+        ><img loading="lazy" src="seeds-1440-herbarium-dark.jpg" alt="seeds"
+      /></a>
+      <figcaption>seeds · 1440px · herbarium-dark</figcaption>
+    </figure>
+    <figure data-theme="herbarium-dark" data-width="1440">
+      <a href="sowings-1440-herbarium-dark.jpg"
+        ><img
+          loading="lazy"
+          src="sowings-1440-herbarium-dark.jpg"
+          alt="sowings"
+      /></a>
+      <figcaption>sowings · 1440px · herbarium-dark</figcaption>
+    </figure>
+    <figure data-theme="herbarium-dark" data-width="1440">
+      <a href="plants-1440-herbarium-dark.jpg"
+        ><img loading="lazy" src="plants-1440-herbarium-dark.jpg" alt="plants"
+      /></a>
+      <figcaption>plants · 1440px · herbarium-dark</figcaption>
+    </figure>
+    <figure data-theme="herbarium-dark" data-width="1440">
+      <a href="harvests-1440-herbarium-dark.jpg"
+        ><img
+          loading="lazy"
+          src="harvests-1440-herbarium-dark.jpg"
+          alt="harvests"
+      /></a>
+      <figcaption>harvests · 1440px · herbarium-dark</figcaption>
+    </figure>
+    <figure data-theme="herbarium-dark" data-width="1440">
+      <a href="stored-material-1440-herbarium-dark.jpg"
+        ><img
+          loading="lazy"
+          src="stored-material-1440-herbarium-dark.jpg"
+          alt="stored-material"
+      /></a>
+      <figcaption>stored-material · 1440px · herbarium-dark</figcaption>
+    </figure>
+    <figure data-theme="herbarium-dark" data-width="1440">
+      <a href="suppliers-1440-herbarium-dark.jpg"
+        ><img
+          loading="lazy"
+          src="suppliers-1440-herbarium-dark.jpg"
+          alt="suppliers"
+      /></a>
+      <figcaption>suppliers · 1440px · herbarium-dark</figcaption>
+    </figure>
+    <figure data-theme="herbarium-dark" data-width="1440">
+      <a href="orders-1440-herbarium-dark.jpg"
+        ><img loading="lazy" src="orders-1440-herbarium-dark.jpg" alt="orders"
+      /></a>
+      <figcaption>orders · 1440px · herbarium-dark</figcaption>
+    </figure>
+    <figure data-theme="herbarium-dark" data-width="1440">
+      <a href="identities-1440-herbarium-dark.jpg"
+        ><img
+          loading="lazy"
+          src="identities-1440-herbarium-dark.jpg"
+          alt="identities"
+      /></a>
+      <figcaption>identities · 1440px · herbarium-dark</figcaption>
+    </figure>
+    <figure data-theme="herbarium-light" data-width="1440">
+      <a href="seeds-1440-herbarium-light.jpg"
+        ><img loading="lazy" src="seeds-1440-herbarium-light.jpg" alt="seeds"
+      /></a>
+      <figcaption>seeds · 1440px · herbarium-light</figcaption>
+    </figure>
+    <figure data-theme="herbarium-light" data-width="1440">
+      <a href="sowings-1440-herbarium-light.jpg"
+        ><img
+          loading="lazy"
+          src="sowings-1440-herbarium-light.jpg"
+          alt="sowings"
+      /></a>
+      <figcaption>sowings · 1440px · herbarium-light</figcaption>
+    </figure>
+    <figure data-theme="herbarium-light" data-width="1440">
+      <a href="plants-1440-herbarium-light.jpg"
+        ><img loading="lazy" src="plants-1440-herbarium-light.jpg" alt="plants"
+      /></a>
+      <figcaption>plants · 1440px · herbarium-light</figcaption>
+    </figure>
+    <figure data-theme="herbarium-light" data-width="1440">
+      <a href="harvests-1440-herbarium-light.jpg"
+        ><img
+          loading="lazy"
+          src="harvests-1440-herbarium-light.jpg"
+          alt="harvests"
+      /></a>
+      <figcaption>harvests · 1440px · herbarium-light</figcaption>
+    </figure>
+    <figure data-theme="herbarium-light" data-width="1440">
+      <a href="stored-material-1440-herbarium-light.jpg"
+        ><img
+          loading="lazy"
+          src="stored-material-1440-herbarium-light.jpg"
+          alt="stored-material"
+      /></a>
+      <figcaption>stored-material · 1440px · herbarium-light</figcaption>
+    </figure>
+    <figure data-theme="herbarium-light" data-width="1440">
+      <a href="suppliers-1440-herbarium-light.jpg"
+        ><img
+          loading="lazy"
+          src="suppliers-1440-herbarium-light.jpg"
+          alt="suppliers"
+      /></a>
+      <figcaption>suppliers · 1440px · herbarium-light</figcaption>
+    </figure>
+    <figure data-theme="herbarium-light" data-width="1440">
+      <a href="orders-1440-herbarium-light.jpg"
+        ><img loading="lazy" src="orders-1440-herbarium-light.jpg" alt="orders"
+      /></a>
+      <figcaption>orders · 1440px · herbarium-light</figcaption>
+    </figure>
+    <figure data-theme="herbarium-light" data-width="1440">
+      <a href="identities-1440-herbarium-light.jpg"
+        ><img
+          loading="lazy"
+          src="identities-1440-herbarium-light.jpg"
+          alt="identities"
+      /></a>
+      <figcaption>identities · 1440px · herbarium-light</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="seeds-gallery-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="seeds-gallery-1440-mineral-dark.jpg"
+          alt="seeds-gallery"
+      /></a>
+      <figcaption>seeds-gallery · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="sowings-gallery-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="sowings-gallery-1440-mineral-dark.jpg"
+          alt="sowings-gallery"
+      /></a>
+      <figcaption>sowings-gallery · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="plants-gallery-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="plants-gallery-1440-mineral-dark.jpg"
+          alt="plants-gallery"
+      /></a>
+      <figcaption>plants-gallery · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="suppliers-gallery-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="suppliers-gallery-1440-mineral-dark.jpg"
+          alt="suppliers-gallery"
+      /></a>
+      <figcaption>suppliers-gallery · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="orders-gallery-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="orders-gallery-1440-mineral-dark.jpg"
+          alt="orders-gallery"
+      /></a>
+      <figcaption>orders-gallery · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1024">
+      <a href="seeds-gallery-1024-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="seeds-gallery-1024-mineral-dark.jpg"
+          alt="seeds-gallery"
+      /></a>
+      <figcaption>seeds-gallery · 1024px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1024">
+      <a href="sowings-gallery-1024-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="sowings-gallery-1024-mineral-dark.jpg"
+          alt="sowings-gallery"
+      /></a>
+      <figcaption>sowings-gallery · 1024px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1024">
+      <a href="plants-gallery-1024-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="plants-gallery-1024-mineral-dark.jpg"
+          alt="plants-gallery"
+      /></a>
+      <figcaption>plants-gallery · 1024px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1024">
+      <a href="suppliers-gallery-1024-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="suppliers-gallery-1024-mineral-dark.jpg"
+          alt="suppliers-gallery"
+      /></a>
+      <figcaption>suppliers-gallery · 1024px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1024">
+      <a href="orders-gallery-1024-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="orders-gallery-1024-mineral-dark.jpg"
+          alt="orders-gallery"
+      /></a>
+      <figcaption>orders-gallery · 1024px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="390">
+      <a href="seeds-gallery-390-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="seeds-gallery-390-mineral-dark.jpg"
+          alt="seeds-gallery"
+      /></a>
+      <figcaption>seeds-gallery · 390px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="390">
+      <a href="sowings-gallery-390-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="sowings-gallery-390-mineral-dark.jpg"
+          alt="sowings-gallery"
+      /></a>
+      <figcaption>sowings-gallery · 390px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="390">
+      <a href="plants-gallery-390-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="plants-gallery-390-mineral-dark.jpg"
+          alt="plants-gallery"
+      /></a>
+      <figcaption>plants-gallery · 390px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="390">
+      <a href="suppliers-gallery-390-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="suppliers-gallery-390-mineral-dark.jpg"
+          alt="suppliers-gallery"
+      /></a>
+      <figcaption>suppliers-gallery · 390px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="390">
+      <a href="orders-gallery-390-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="orders-gallery-390-mineral-dark.jpg"
+          alt="orders-gallery"
+      /></a>
+      <figcaption>orders-gallery · 390px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="locations-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="locations-1440-mineral-dark.jpg"
+          alt="locations"
+      /></a>
+      <figcaption>locations · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="geography-places-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="geography-places-1440-mineral-dark.jpg"
+          alt="geography-places"
+      /></a>
+      <figcaption>geography-places · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1024">
+      <a href="locations-1024-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="locations-1024-mineral-dark.jpg"
+          alt="locations"
+      /></a>
+      <figcaption>locations · 1024px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1024">
+      <a href="geography-places-1024-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="geography-places-1024-mineral-dark.jpg"
+          alt="geography-places"
+      /></a>
+      <figcaption>geography-places · 1024px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="390">
+      <a href="locations-390-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="locations-390-mineral-dark.jpg"
+          alt="locations"
+      /></a>
+      <figcaption>locations · 390px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="390">
+      <a href="geography-places-390-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="geography-places-390-mineral-dark.jpg"
+          alt="geography-places"
+      /></a>
+      <figcaption>geography-places · 390px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="seeds-page-two-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="seeds-page-two-1440-mineral-dark.jpg"
+          alt="seeds-page-two"
+      /></a>
+      <figcaption>seeds-page-two · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="seeds-selection-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="seeds-selection-1440-mineral-dark.jpg"
+          alt="seeds-selection"
+      /></a>
+      <figcaption>seeds-selection · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="seeds-photo-preview-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="seeds-photo-preview-1440-mineral-dark.jpg"
+          alt="seeds-photo-preview"
+      /></a>
+      <figcaption>seeds-photo-preview · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="plants-photo-preview-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="plants-photo-preview-1440-mineral-dark.jpg"
+          alt="plants-photo-preview"
+      /></a>
+      <figcaption>plants-photo-preview · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="sowings-rich-lifecycle-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="sowings-rich-lifecycle-1440-mineral-dark.jpg"
+          alt="sowings-rich-lifecycle"
+      /></a>
+      <figcaption>sowings-rich-lifecycle · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="seeds-scroll-persistence-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="seeds-scroll-persistence-1440-mineral-dark.jpg"
+          alt="seeds-scroll-persistence"
+      /></a>
+      <figcaption>seeds-scroll-persistence · 1440px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="720">
+      <a href="seeds-short-viewport-720-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="seeds-short-viewport-720-mineral-dark.jpg"
+          alt="seeds-short-viewport"
+      /></a>
+      <figcaption>seeds-short-viewport · 720px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="720">
+      <a href="harvests-short-viewport-720-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="harvests-short-viewport-720-mineral-dark.jpg"
+          alt="harvests-short-viewport"
+      /></a>
+      <figcaption>harvests-short-viewport · 720px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="720">
+      <a href="identities-short-viewport-720-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="identities-short-viewport-720-mineral-dark.jpg"
+          alt="identities-short-viewport"
+      /></a>
+      <figcaption>identities-short-viewport · 720px · mineral-dark</figcaption>
+    </figure>
+    <figure data-theme="mineral-dark" data-width="1440">
+      <a href="harvest-destructive-cancel-focus-1440-mineral-dark.jpg"
+        ><img
+          loading="lazy"
+          src="harvest-destructive-cancel-focus-1440-mineral-dark.jpg"
+          alt="harvest-destructive-cancel-focus"
+      /></a>
+      <figcaption>
+        harvest-destructive-cancel-focus · 1440px · mineral-dark
+      </figcaption>
+    </figure>
+  </main>
+  <script>
+    for (const input of document.querySelectorAll("select"))
+      input.addEventListener("change", () => {
+        for (const f of document.querySelectorAll("figure"))
+          f.hidden = Boolean(
+            (theme.value && f.dataset.theme !== theme.value) ||
+            (width.value && f.dataset.width !== width.value),
+          );
+      });
+  </script>
+</html>

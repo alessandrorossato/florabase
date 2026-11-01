@@ -186,6 +186,27 @@ export function InventoryDialog({
   const [notes, setNotes] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const draft = JSON.stringify({
+    quantity,
+    state,
+    location,
+    kind,
+    mode,
+    used,
+    result,
+    date,
+    notes,
+  });
+  const baseline = useRef(draft);
+  function dismiss() {
+    if (pending) return;
+    if (
+      draft !== baseline.current &&
+      !window.confirm("Discard unsaved stored material changes?")
+    )
+      return;
+    onClose();
+  }
   const title = disposition
     ? "Record disposition"
     : inventory
@@ -257,13 +278,7 @@ export function InventoryDialog({
     }
   }
   return (
-    <TaskDialog
-      returnFocusTo={returnFocusTo}
-      title={title}
-      onClose={() => {
-        if (!pending) onClose();
-      }}
-    >
+    <TaskDialog returnFocusTo={returnFocusTo} title={title} onClose={dismiss}>
       <form
         onSubmit={(event) => {
           void submit(event);
@@ -460,7 +475,7 @@ export function InventoryDialog({
             type="button"
             className="button--secondary"
             disabled={pending}
-            onClick={onClose}
+            onClick={dismiss}
           >
             Cancel
           </button>

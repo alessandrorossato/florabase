@@ -4,6 +4,8 @@ import { Icon } from "./Icon";
 import { ActionButton, IconButton } from "./Action";
 import { registerControlLayer } from "./controlLayers";
 import {
+  Children,
+  isValidElement,
   useEffect,
   useLayoutEffect,
   useId,
@@ -40,6 +42,7 @@ export function PageHeader({
   actions,
   tools,
   eyebrow = "Collection reference",
+  directory = false,
 }: {
   title: string;
   titleId: string;
@@ -47,6 +50,7 @@ export function PageHeader({
   actions?: ReactNode;
   tools?: ReactNode;
   eyebrow?: string;
+  directory?: boolean;
 }) {
   const breadcrumbs = workspaceBreadcrumbs(
     title,
@@ -57,7 +61,7 @@ export function PageHeader({
     <>
       {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
       <header
-        className={`page-header${tools ? " page-header--with-tools" : ""}`}
+        className={`page-header${tools ? " page-header--with-tools" : ""}${directory ? " page-header--directory" : ""}`}
       >
         <div className="page-identity">
           {!breadcrumbs && <p className="eyebrow">{eyebrow}</p>}
@@ -156,18 +160,33 @@ export function StatStrip({
 export function QuickPreview({
   children,
   tabIndex,
+  compact = false,
 }: {
   children: ReactNode;
   tabIndex?: number;
+  compact?: boolean;
 }) {
+  const parts = Children.toArray(children);
+  const isFooter = (child: ReactNode) =>
+    isValidElement<{ className?: string }>(child) &&
+    child.props.className?.includes("record-preview__actions");
   return (
     <aside
-      className="quick-preview"
+      className={`quick-preview${compact ? " quick-preview--compact" : ""}`}
       aria-label="Quick preview"
       tabIndex={tabIndex}
     >
       <p className="eyebrow">Quick preview</p>
-      {children}
+      {compact ? (
+        <>
+          <div className="quick-preview-body">
+            {parts.filter((child) => !isFooter(child))}
+          </div>
+          {parts.filter(isFooter)}
+        </>
+      ) : (
+        children
+      )}
     </aside>
   );
 }
@@ -189,7 +208,7 @@ export function RecordPreview({
   actions: ReactNode;
 }) {
   return (
-    <QuickPreview>
+    <QuickPreview compact>
       {visual}
       <p className="record-preview__type">{type}</p>
       <h3>{title}</h3>
@@ -216,6 +235,7 @@ export function OverflowMenu({
   triggerContent,
   closeOnAction = true,
   popoverClassName = "",
+  keepMounted = false,
 }: {
   label?: string;
   ariaLabel?: string;
@@ -225,6 +245,7 @@ export function OverflowMenu({
   triggerContent?: ReactNode;
   closeOnAction?: boolean;
   popoverClassName?: string;
+  keepMounted?: boolean;
 }) {
   const id = useId();
   const internalTrigger = useRef<HTMLButtonElement>(null);
@@ -283,6 +304,12 @@ export function OverflowMenu({
     if (!open) return;
     const dismiss = (event: Event) => {
       if (
+        keepMounted &&
+        event.target instanceof Element &&
+        event.target.closest("dialog")
+      )
+        return;
+      if (
         event.target instanceof Node &&
         !trigger.current?.contains(event.target) &&
         !panel.current?.contains(event.target)
@@ -318,7 +345,7 @@ export function OverflowMenu({
       document.removeEventListener("focusin", dismiss);
       unregister?.();
     };
-  }, [open, trigger]);
+  }, [open, trigger, keepMounted]);
   const triggerProps = {
     ref: trigger,
     type: "button" as const,
@@ -374,16 +401,19 @@ export function OverflowMenu({
           {triggerContent ?? label.replace(/^\+\s*|\s*▾$/g, "")}
         </ActionButton>
       )}
-      {open &&
+      {portalHost &&
+        (open || keepMounted) &&
         createPortal(
           <div
             id={id}
+            hidden={!open}
             ref={panel}
             className={`overflow-popover ${popoverClassName}`}
             role="group"
             aria-label={`${ariaLabel ?? "More actions"} menu`}
             style={position}
             onClick={(event) => {
+              if (keepMounted) event.stopPropagation();
               if (
                 event.target instanceof Element &&
                 event.target.closest(
@@ -393,6 +423,7 @@ export function OverflowMenu({
                 close(true);
             }}
             onKeyDown={(event) => {
+              if (event.defaultPrevented) return;
               if (event.key === "Escape") {
                 event.preventDefault();
                 event.stopPropagation();
@@ -425,7 +456,7 @@ export function OverflowMenu({
           >
             {children}
           </div>,
-          portalHost ?? document.body,
+          portalHost,
         )}
     </>
   );
