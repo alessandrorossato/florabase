@@ -16,7 +16,7 @@ from florabase.db.session import get_database_session
 from florabase.events.service import EventDomainConflictError, EventReferenceNotFoundError
 
 router = APIRouter(prefix="/bulk/location", tags=["bulk location"])
-Database = Annotated[Session, Depends(get_database_session)]
+Database = Annotated[Session, Depends(get_database_session, scope="function")]
 Writer = Annotated[AuthenticatedActor, Depends(require_csrf)]
 
 

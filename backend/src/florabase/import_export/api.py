@@ -208,7 +208,7 @@ async def preview_import(
     kind: ImportKind,
     request: Request,
     actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> ImportPreviewResponse:
     require_owner(actor)
     _kind(kind)
@@ -242,7 +242,7 @@ async def apply_import(
     kind: ImportKind,
     request: Request,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     confirmation_token: Annotated[str | None, Header(alias="X-Import-Confirmation")] = None,
 ) -> ImportResultResponse:
     require_owner(actor)
@@ -364,7 +364,7 @@ def download_template(
 def export_records(
     kind: ImportKind,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> Response:
     _kind(kind)
     return _csv_response(export_csv(database, kind), f"florabase-{kind}.csv")

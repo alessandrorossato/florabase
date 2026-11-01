@@ -98,7 +98,7 @@ async def search(
     botanical_identity_id: UUID,
     query: Annotated[str, Query(min_length=1, max_length=255)],
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     provider: Annotated[GbifBotanicalProvider, Depends(get_provider)],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> TaxonSearchResponse:
@@ -125,7 +125,7 @@ async def search(
 def read_link(
     botanical_identity_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> ExternalTaxonLinkResponse | None:
     _require_identity(database, botanical_identity_id)
@@ -142,7 +142,7 @@ async def confirm(
     botanical_identity_id: UUID,
     payload: ExternalTaxonLinkCreate,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     provider: Annotated[GbifBotanicalProvider, Depends(get_provider)],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> ExternalTaxonLinkResponse:
@@ -170,7 +170,7 @@ async def confirm(
 async def refresh(
     botanical_identity_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     provider: Annotated[GbifBotanicalProvider, Depends(get_provider)],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> ExternalTaxonLinkResponse:
@@ -194,7 +194,7 @@ async def refresh(
 def remove_link(
     botanical_identity_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> Response:
     require_owner(actor)
     _require_identity(database, botanical_identity_id)
@@ -214,7 +214,7 @@ def remove_link(
 async def occurrence_summary(
     botanical_identity_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     provider: Annotated[GbifBotanicalProvider, Depends(get_provider)],
 ) -> OccurrenceMapSummary:
     link = _require_occurrence_link(database, botanical_identity_id)
@@ -239,7 +239,7 @@ async def occurrence_tile(
     x: Annotated[int, Path(ge=0)],
     y: Annotated[int, Path(ge=0)],
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     provider: Annotated[GbifBotanicalProvider, Depends(get_provider)],
     settings: Annotated[Settings, Depends(get_settings)],
     generation: Annotated[UUID | None, Query()] = None,
@@ -296,7 +296,7 @@ async def occurrence_tile(
 def cached_occurrences(
     botanical_identity_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     response: Response,
 ) -> OccurrenceEvidence:
     response.headers["Cache-Control"] = "private, no-store"
@@ -313,7 +313,7 @@ def cached_occurrences(
 async def refresh_occurrences(
     botanical_identity_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     provider: Annotated[GbifBotanicalProvider, Depends(get_provider)],
 ) -> OccurrenceEvidence:
     require_owner(actor)
@@ -332,7 +332,7 @@ async def refresh_occurrences(
 def clear_occurrences(
     botanical_identity_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> Response:
     require_owner(actor)

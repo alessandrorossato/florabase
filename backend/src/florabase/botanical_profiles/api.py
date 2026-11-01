@@ -69,7 +69,7 @@ def _place_not_found() -> HTTPException:
 def read(
     botanical_identity_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> BotanicalProfileResponse:
     profile = get_botanical_profile(database, botanical_identity_id)
     if profile is not None:
@@ -102,7 +102,7 @@ def put(
     payload: BotanicalProfilePut,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> BotanicalProfileResponse | Response:
     require_owner(actor)
     try:
@@ -139,7 +139,7 @@ def put(
 def list_native_ranges(
     botanical_identity_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> list[BotanicalNativeRangeResponse]:
     try:
         return list_botanical_native_ranges(database, botanical_identity_id)
@@ -158,7 +158,7 @@ def add_native_range(
     payload: BotanicalNativeRangeCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> BotanicalNativeRangeResponse:
     require_owner(actor)
     try:
@@ -193,7 +193,7 @@ def remove_native_range(
     botanical_identity_id: UUID,
     geographic_place_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> Response:
     require_owner(actor)
     try:

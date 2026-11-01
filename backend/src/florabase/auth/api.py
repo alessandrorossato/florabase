@@ -55,7 +55,7 @@ def login(
     payload: LoginRequest,
     request: Request,
     response: Response,
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> LoginResponse:
     require_origin(request, settings)
@@ -121,7 +121,7 @@ def recover_csrf(
 def logout(
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> LogoutResponse:
     revoke_session(database, actor.session)

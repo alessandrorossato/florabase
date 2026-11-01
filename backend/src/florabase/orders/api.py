@@ -30,7 +30,7 @@ from florabase.orders.schemas import (
 from florabase.seed_lots.schemas import SeedLotResponse
 
 router = APIRouter(prefix="/orders", tags=["orders"])
-Database = Annotated[Session, Depends(get_database_session)]
+Database = Annotated[Session, Depends(get_database_session, scope="function")]
 Reader = Annotated[AuthenticatedActor, Depends(require_authenticated_actor)]
 Writer = Annotated[AuthenticatedActor, Depends(require_csrf)]
 Offset = Annotated[int, Query(ge=0, le=100000)]

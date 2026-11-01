@@ -87,7 +87,7 @@ async def create(
     response: Response,
     file: Annotated[UploadFile, File(description="JPEG, PNG, or WebP attachment")],
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     storage: Annotated[AttachmentStorage, Depends(get_attachment_storage)],
 ) -> AttachmentResponse:
     require_owner(actor)
@@ -104,7 +104,7 @@ def read(
     attachment_id: UUID,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> AttachmentResponse:
     require_owner(actor)
     response.headers["Cache-Control"] = "private, no-store"
@@ -129,7 +129,7 @@ def read(
 def read_content(
     attachment_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     storage: Annotated[AttachmentStorage, Depends(get_attachment_storage)],
 ) -> FileResponse:
     require_owner(actor)
@@ -158,7 +158,7 @@ def read_content(
 def delete(
     attachment_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     storage: Annotated[AttachmentStorage, Depends(get_attachment_storage)],
 ) -> Response:
     require_owner(actor)
