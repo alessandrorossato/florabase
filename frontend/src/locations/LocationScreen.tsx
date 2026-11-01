@@ -26,6 +26,7 @@ import {
   Breadcrumbs,
   DetailHeader,
   DetailPage,
+  DetailLoading,
 } from "../components/CollectionUI";
 import {
   DirectorySearch,
@@ -751,6 +752,7 @@ export function LocationScreen({
           title="Locations"
           titleId="locations-title"
           eyebrow="Collection"
+          directory
           description="Where your collection lives."
           tools={
             <DirectoryTools
@@ -1157,11 +1159,17 @@ export function LocationScreen({
                   </section>
                 </div>
               </DetailPage>
+            ) : directory.status === "loading" ? (
+              <DetailLoading
+                eyebrow="Location"
+                label="Loading Location detail…"
+                parents={[{ label: "Locations", href: "#/locations" }]}
+                className="collection-detail ui-detail-page location-detail"
+                visual={false}
+              />
             ) : (
               <div className="empty-state">
-                {directory.status === "loading" ? (
-                  <p role="status">Loading Location detail…</p>
-                ) : directory.status === "error" ? (
+                {directory.status === "error" ? (
                   <div role="alert">
                     <h3>Could not load Location</h3>
                     <button

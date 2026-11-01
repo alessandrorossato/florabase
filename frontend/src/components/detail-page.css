@@ -83,3 +83,24 @@
 .app-content .ui-detail-page .stat-strip dd {
   font: var(--type-strong);
 }
+
+.app-content .detail-loading .detail-loading__visual {
+  display: block;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: var(--radius-normal);
+  background: var(--border);
+}
+.app-content .detail-loading .detail-loading__title {
+  display: block;
+  width: min(100%, 24rem);
+  margin-block-start: var(--space-1);
+  border-radius: var(--radius-normal);
+  background: var(--border);
+}
+.app-content .detail-loading .detail-loading__title--h1 {
+  height: 2.375rem;
+}
+.app-content .detail-loading .detail-loading__title--h2 {
+  height: 1.75rem;
+}

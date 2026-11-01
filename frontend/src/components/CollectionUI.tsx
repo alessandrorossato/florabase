@@ -5,6 +5,7 @@ import type {
   ReactNode,
   RefObject,
 } from "react";
+import { Breadcrumbs } from "./Breadcrumbs";
 import { PageHeader } from "./ReferenceUI";
 import "./detail-page.css";
 
@@ -36,6 +37,7 @@ export function WorkspaceIntro({
   tools,
   contextOnly = false,
   contextActions,
+  directory = false,
 }: {
   eyebrow: string;
   title: string;
@@ -45,6 +47,7 @@ export function WorkspaceIntro({
   tools?: ReactNode;
   contextOnly?: boolean;
   contextActions?: ReactNode;
+  directory?: boolean;
 }) {
   if (contextOnly)
     return (
@@ -68,11 +71,12 @@ export function WorkspaceIntro({
       description={description}
       tools={tools}
       actions={actions}
+      directory={directory}
     />
   );
 }
 
-export { Breadcrumbs } from "./Breadcrumbs";
+export { Breadcrumbs };
 
 export function DetailHeader({
   eyebrow,
@@ -143,6 +147,45 @@ export function DetailHeader({
         </div>
       )}
     </header>
+  );
+}
+
+/** Holds a record page's structure while it loads; it never shows record data. */
+export function DetailLoading({
+  eyebrow,
+  label,
+  parents,
+  className = "collection-detail",
+  titleSize = "h2",
+  visual = true,
+}: {
+  eyebrow: string;
+  label: string;
+  parents: { label: string; href: string }[];
+  className?: string;
+  titleSize?: "h1" | "h2";
+  visual?: boolean;
+}) {
+  return (
+    <div className={`detail-loading ${className}`}>
+      <Breadcrumbs items={[...parents, { label: "Loading" }]} />
+      <div aria-hidden="true" className="detail-header">
+        <div className="detail-identity">
+          {visual && (
+            <div className="detail-visual">
+              <span className="detail-loading__visual" />
+            </div>
+          )}
+          <div>
+            <p className="eyebrow">{eyebrow}</p>
+            <span
+              className={`detail-loading__title detail-loading__title--${titleSize}`}
+            />
+          </div>
+        </div>
+      </div>
+      <p role="status">{label}</p>
+    </div>
   );
 }
 

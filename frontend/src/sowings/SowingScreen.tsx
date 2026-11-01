@@ -60,6 +60,7 @@ import {
   DetailHeader,
   DetailTabs,
   WorkspaceIntro,
+  DetailLoading,
 } from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
 import {
@@ -786,6 +787,7 @@ function extractedStages(
 const sowingPage = {
   eyebrow: "Collection",
   title: "Sowings",
+  directory: true,
   titleId: "sowings-title",
   description: "From sowing to seedlings.",
 };
@@ -1054,8 +1056,21 @@ export function SowingScreen({
         className="workspace ui-directory-page sowings-workspace"
         aria-labelledby="sowings-title"
       >
-        <WorkspaceIntro {...sowingPage} />
-        <p role="status">Loading Sowings…</p>
+        <WorkspaceIntro {...sowingPage} contextOnly={Boolean(initialId)} />
+        {initialId ? (
+          <DetailLoading
+            eyebrow="Sowing"
+            label="Loading Sowings…"
+            parents={[
+              { label: "Collection", href: "#/dashboard" },
+              { label: "Sowings", href: "#/sowings" },
+            ]}
+            className="sowing-detail collection-detail"
+            titleSize="h1"
+          />
+        ) : (
+          <p role="status">Loading Sowings…</p>
+        )}
       </section>
     );
   }
@@ -1941,7 +1956,16 @@ export function SowingScreen({
               {editing && !edit.modal ? (
                 editor
               ) : detail.status === "loading" && (mobileDetail || !selected) ? (
-                <p role="status">Loading Sowing detail…</p>
+                <DetailLoading
+                  eyebrow="Sowing"
+                  label="Loading Sowing detail…"
+                  parents={[
+                    { label: "Collection", href: "#/dashboard" },
+                    { label: "Sowings", href: "#/sowings" },
+                  ]}
+                  className="sowing-detail collection-detail"
+                  titleSize="h1"
+                />
               ) : detail.status === "error" && (mobileDetail || !selected) ? (
                 <div className="notice notice--error" role="alert">
                   <p>Florabase could not load this Sowing.</p>

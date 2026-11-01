@@ -78,6 +78,7 @@ import {
   DetailHeader,
   DetailTabs,
   WorkspaceIntro,
+  DetailLoading,
 } from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
 import { BotanicalName, DirectorySearch } from "../components/ReferenceUI";
@@ -680,6 +681,7 @@ function Detail({
 const seedPage = {
   eyebrow: "Collection",
   title: "Seeds",
+  directory: true,
   titleId: "seeds-title",
   description: "Your seeds, stock and storage.",
 };
@@ -1003,8 +1005,21 @@ export function SeedLotScreen({
         className="workspace seeds-workspace"
         aria-labelledby="seeds-title"
       >
-        <WorkspaceIntro {...seedPage} />
-        <p role="status">Loading seed inventory…</p>
+        <WorkspaceIntro {...seedPage} contextOnly={Boolean(initialId)} />
+        {initialId ? (
+          <DetailLoading
+            eyebrow="Seed lot"
+            label="Loading seed inventory…"
+            parents={[
+              { label: "Collection", href: "#/dashboard" },
+              { label: "Seeds", href: "#/seeds" },
+            ]}
+            className="seed-detail collection-detail"
+            titleSize="h1"
+          />
+        ) : (
+          <p role="status">Loading seed inventory…</p>
+        )}
       </section>
     );
   }

@@ -42,6 +42,7 @@ export function PageHeader({
   actions,
   tools,
   eyebrow = "Collection reference",
+  directory = false,
 }: {
   title: string;
   titleId: string;
@@ -49,6 +50,7 @@ export function PageHeader({
   actions?: ReactNode;
   tools?: ReactNode;
   eyebrow?: string;
+  directory?: boolean;
 }) {
   const breadcrumbs = workspaceBreadcrumbs(
     title,
@@ -59,7 +61,7 @@ export function PageHeader({
     <>
       {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
       <header
-        className={`page-header${tools ? " page-header--with-tools" : ""}`}
+        className={`page-header${tools ? " page-header--with-tools" : ""}${directory ? " page-header--directory" : ""}`}
       >
         <div className="page-identity">
           {!breadcrumbs && <p className="eyebrow">{eyebrow}</p>}

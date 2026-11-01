@@ -136,6 +136,31 @@ loading state and whether the title changes, disappears or shifts. **No dedicate
 reproducible visual evidence is attached yet**; capture a short recording or before/during/after
 screenshots when the issue is reproduced.
 
+### UI-FLICKER-001 — C1/C3 correction, 1 November 2026
+
+**Status: corrected on desktop and tablet for the covered routes; operator review pending.**
+Delayed-network comparison of the unmodified checkpoint and this change at 1440 CSS px; the after
+values were also confirmed at 1024 CSS px:
+
+| Route | Before | After |
+| --- | --- | --- |
+| Seeds, Plants | 32px y75 → 22px y63 | 22px y63 throughout |
+| Harvests, Stored material | 32px y67 → 22px y63 | 22px y63 throughout |
+| Suppliers, Orders | y87 → y95 | y87 throughout |
+| Botanical identities | y63 → y71 | y63 throughout |
+| Locations | 32px y88 | 22px y63 |
+| Harvest, Supplier, Order and Location Details | no header while loading | breadcrumb, eyebrow and reserved title; Supplier/Order/Location title position unchanged, Harvest 1px |
+
+Causes: directory heading styles depended on `:has(.ui-directory-workspace)`, which is absent during
+loading; the 8px movement was the breadcrumb list margin collapsing only while its parent was not
+yet flex (`:has(.ui-directory-records)`). Pages now declare `directory` on the header and
+`DetailLoading` holds Details structure without record data. No animation was suppressed.
+
+Remaining: at 390 px the heading still moves 4–12px when `main:has(...records)` switches the mobile
+shell layout; Seeds/Sowings/Plants direct URLs move from the loading position to the legacy Details
+position; a brief title gap remains on the first Supplier Details render. Typography of Details, metrics, actions
+and Stored material are unchanged. UI-DETAIL-001 stays open.
+
 ### Acceptance gate
 
 Keep both IDs open in the next UAT pass. UI-DETAIL-001 needs a visual review of all five affected

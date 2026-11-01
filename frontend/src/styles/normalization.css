@@ -131,6 +131,27 @@ input:is([type="checkbox"], [type="radio"]) {
   margin: var(--space-1) 0 var(--space-2);
   overflow-wrap: anywhere;
 }
+/* A page declares its directory heading, so it holds from the first render. */
+.app-content .page-header.page-header--directory {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+.app-content
+  .page-header.page-header--directory
+  > :is(.page-identity, .page-tools) {
+  flex: none;
+  width: 100%;
+  min-width: 0;
+}
+.app-content .page-header.page-header--directory .page-identity h2 {
+  font: var(--type-h2);
+  margin: 0;
+}
+.app-content .page-header.page-header--directory .page-identity > p {
+  font: var(--type-small);
+}
 .app-content .page-header p {
   margin: 0;
 }

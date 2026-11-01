@@ -50,6 +50,7 @@ import {
   DetailHeader,
   DetailPage,
   DetailTabs,
+  DetailLoading,
 } from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
 import {
@@ -1399,7 +1400,12 @@ export function BotanicalIdentityScreen({
         aria-label="Botanical identity detail"
       >
         {directory.status === "loading" ? (
-          <p role="status">Loading botanical identity…</p>
+          <DetailLoading
+            eyebrow="Botanical identity"
+            label="Loading botanical identity…"
+            parents={[{ label: "Botanical identities", href: "#/identities" }]}
+            className="collection-detail ui-detail-page identity-detail-stack"
+          />
         ) : directory.status === "error" ? (
           <div role="alert">
             <p>Florabase could not load this botanical identity.</p>
@@ -1452,6 +1458,7 @@ export function BotanicalIdentityScreen({
         title="Botanical identities"
         titleId="botanical-identities-title"
         eyebrow="Explore"
+        directory
         description="Names that connect your collection."
         tools={
           <DirectoryTools

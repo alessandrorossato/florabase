@@ -7,6 +7,7 @@ import {
   DetailContext,
   DetailHeader,
   WorkspaceIntro,
+  DetailLoading,
 } from "../components/CollectionUI";
 import {
   DirectoryRecordActions,
@@ -326,6 +327,7 @@ export function HarvestScreen({
         titleId={headingId}
         description="Harvests from your collection."
         contextOnly={Boolean(displayId)}
+        directory
       />
       {!displayId && (
         <nav className="workspace-view-nav" aria-label="Harvest views">
@@ -632,7 +634,15 @@ export function HarvestScreen({
             />
           </article>
         ) : (
-          !error && <p role="status">Loading Harvest detail…</p>
+          !error && (
+            <DetailLoading
+              eyebrow="Harvest"
+              label="Loading Harvest detail…"
+              parents={[{ label: "Harvests", href: "#/harvests" }]}
+              className="collection-detail harvest-detail"
+              titleSize="h1"
+            />
+          )
         )
       ) : storedMode ? (
         <StoredMaterialDirectory

@@ -48,6 +48,7 @@ import {
   DetailPage,
   DetailTabs,
   WorkspaceIntro,
+  DetailLoading,
 } from "../components/CollectionUI";
 import {
   closeCollectionPage,
@@ -101,6 +102,7 @@ type SupplierRecord = SupplierResponse | SupplierDetailResponse;
 const supplierPage = {
   eyebrow: "Sourcing",
   title: "Suppliers",
+  directory: true,
   titleId: "suppliers-title",
   description:
     "Manage the sources from which collection material was directly acquired.",
@@ -1234,7 +1236,15 @@ export function SupplierScreen({
         >
           <WorkspaceIntro contextOnly {...supplierPage} />
           {detail.status === "loading" && (
-            <p role="status">Loading supplier…</p>
+            <DetailLoading
+              eyebrow="Supplier"
+              label="Loading supplier…"
+              parents={[
+                { label: "Sourcing", href: "#/dashboard" },
+                { label: "Suppliers", href: "#/suppliers" },
+              ]}
+              className="collection-detail ui-detail-page supplier-detail"
+            />
           )}
           {detail.status === "error" && (
             <div className="notice notice--error" role="alert">

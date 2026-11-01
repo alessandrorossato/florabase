@@ -68,6 +68,7 @@ import {
   DetailHeader,
   DetailTabs,
   WorkspaceIntro,
+  DetailLoading,
 } from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
 import {
@@ -809,6 +810,7 @@ function Detail({
 const plantPage = {
   eyebrow: "Collection",
   title: "Plants",
+  directory: true,
   titleId: "plants-title",
   description: "Your plants and growing groups.",
 };
@@ -1359,8 +1361,21 @@ export function PlantScreen({
         className="workspace plants-workspace"
         aria-labelledby="plants-title"
       >
-        <WorkspaceIntro {...plantPage} />
-        <p role="status">Loading Plants…</p>
+        <WorkspaceIntro {...plantPage} contextOnly={Boolean(initialId)} />
+        {initialId ? (
+          <DetailLoading
+            eyebrow="Plants"
+            label="Loading Plants…"
+            parents={[
+              { label: "Collection", href: "#/dashboard" },
+              { label: "Plants", href: "#/plants" },
+            ]}
+            className="plant-detail collection-detail"
+            titleSize="h1"
+          />
+        ) : (
+          <p role="status">Loading Plants…</p>
+        )}
       </section>
     );
   if (collection.status === "error" || !references)
@@ -2884,7 +2899,16 @@ export function PlantScreen({
                     editor
                   ) : detail.status === "loading" &&
                     (mobileDetail || !selected) ? (
-                    <p role="status">Loading Plant detail…</p>
+                    <DetailLoading
+                      eyebrow="Plants"
+                      label="Loading Plant detail…"
+                      parents={[
+                        { label: "Collection", href: "#/dashboard" },
+                        { label: "Plants", href: "#/plants" },
+                      ]}
+                      className="plant-detail collection-detail"
+                      titleSize="h1"
+                    />
                   ) : detail.status === "error" &&
                     (mobileDetail || !selected) ? (
                     <div className="notice notice--error" role="alert">

@@ -31,6 +31,7 @@ import {
   DetailPage,
   DetailTabs,
   WorkspaceIntro,
+  DetailLoading,
 } from "../components/CollectionUI";
 import { DetailEmptyState } from "../components/DetailEmptyState";
 import { DirectoryResults } from "../components/DirectoryResults";
@@ -77,6 +78,7 @@ type OrderTab = "overview" | "seed-lots";
 const orderPage = {
   eyebrow: "Sourcing",
   title: "Orders",
+  directory: true,
   titleId: "orders-title",
   description:
     "Track purchase transactions and the physical seed lots acquired through them.",
@@ -1175,7 +1177,15 @@ export function OrderScreen({
               />
             )
           ) : (
-            <p role="status">Loading Order…</p>
+            <DetailLoading
+              eyebrow="Purchase order"
+              label="Loading Order…"
+              parents={[
+                { label: "Sourcing", href: "#/dashboard" },
+                { label: "Orders", href: "#/orders" },
+              ]}
+              className="collection-detail ui-detail-page order-detail"
+            />
           )}
           <div aria-live="polite">
             {success && (

@@ -6802,3 +6802,17 @@ Status remains implemented pending canonical verification.
   No record saved/deleted, foreign worktree/environment touched, push, PR, protected merge, FULL or cleanup.
 - Current compliance matrix, source fingerprint, exact file list, verification and visual gallery:
   `design/ui-system-v1/consolidation/details-cover/`. Final operator UAT remains pending.
+
+### UI-FLICKER-001 C1/C3 stable headings — 1 November 2026
+
+- Directory pages declare `page-header--directory` from first render (Seeds, Sowings, Plants, Harvests,
+  Stored material, Suppliers, Orders, Botanical identities, Locations). Shared `DetailLoading` covers
+  Harvest, Supplier, Order, Location, Sowing, Plant, identity and direct Seed/Sowing/Plant loading.
+  The directory breadcrumb gap is fixed, removing the proven 8px movement; Suppliers, Orders, identities
+  and Locations settle 8px higher than before and Locations now uses the shared directory heading size.
+- Checks: 1125/1125 frontend tests in 101 files, strict TypeScript, ESLint and Prettier on changed files,
+  production build. Live delayed-network comparison against the checkpoint at 1440; patched build also
+  at 1024/390. Direct URL, record switching, and Back/Forward on Suppliers only. Sowings was not re-traced
+  after the final breadcrumb rule. No canonical FULL, push, PR or merge.
+- Unresolved: 390 px shell movement of 4-12px, legacy Seeds/Sowings/Plants Details position after direct
+  loading, brief first-render gap on Supplier Details, operator UAT. UI-DETAIL-001 remains open.

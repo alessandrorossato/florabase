@@ -11,3 +11,11 @@
   overflow-wrap: anywhere;
   overflow: visible;
 }
+/* A flex parent stops the list margin collapsing, so directories fix the gap. */
+.app-content .breadcrumbs:has(+ .page-header--directory) {
+  flex: none;
+  margin: 0 0 1.25rem;
+}
+.app-content .breadcrumbs:has(+ .page-header--directory) ol {
+  margin: 0;
+}

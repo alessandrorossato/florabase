@@ -1,10 +1,66 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
-import { DetailHeader, DetailPage } from "./CollectionUI";
+import {
+  DetailHeader,
+  DetailLoading,
+  DetailPage,
+  WorkspaceIntro,
+} from "./CollectionUI";
 import { OverflowMenu } from "./ReferenceUI";
 
 afterEach(cleanup);
+
+test("a directory heading is declared by the page before any content loads", () => {
+  render(
+    <WorkspaceIntro
+      directory
+      eyebrow="Collection"
+      title="Seeds"
+      titleId="seeds-title"
+      description="Your seeds."
+    />,
+  );
+  expect(
+    screen.getByRole("heading", { name: "Seeds" }).closest(".page-header"),
+  ).toHaveClass("page-header--directory");
+});
+
+test("other page headings keep their own presentation", () => {
+  render(
+    <WorkspaceIntro
+      eyebrow="Collection"
+      title="Journal"
+      titleId="journal-title"
+      description="Activity."
+    />,
+  );
+  expect(
+    screen.getByRole("heading", { name: "Journal" }).closest(".page-header"),
+  ).not.toHaveClass("page-header--directory");
+});
+
+test("Details loading keeps the page structure without inventing a record", () => {
+  render(
+    <DetailLoading
+      eyebrow="Supplier"
+      label="Loading supplier…"
+      parents={[{ label: "Suppliers", href: "#/suppliers" }]}
+      className="collection-detail ui-detail-page supplier-detail"
+    />,
+  );
+  expect(screen.getByRole("status")).toHaveTextContent("Loading supplier…");
+  expect(screen.getByRole("link", { name: "Suppliers" })).toHaveAttribute(
+    "href",
+    "#/suppliers",
+  );
+  expect(screen.getByText("Loading").closest("li")).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  expect(screen.queryByRole("heading")).not.toBeInTheDocument();
+  expect(screen.queryByRole("group")).not.toBeInTheDocument();
+});
 
 test("shared Details preserves formatted names, heading focus and domain sections", () => {
   const ref = { current: null as HTMLHeadingElement | null };
