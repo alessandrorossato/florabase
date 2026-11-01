@@ -223,8 +223,6 @@
 @media (max-width: 48rem) {
   main:has(.ui-directory-page .ui-directory-records),
   main:has(.harvest-directory) {
-    display: block;
-    padding: 0;
     block-size: 100dvh;
     min-block-size: 0;
     overflow: hidden;
@@ -241,8 +239,7 @@
     flex-direction: column;
     min-block-size: 0;
     overflow: hidden;
-    padding: var(--space-3) var(--space-3)
-      calc(5rem + env(safe-area-inset-bottom));
+    padding-block-end: calc(5rem + env(safe-area-inset-bottom));
   }
   .app-content .ui-directory-side-preview {
     max-block-size: 25dvh;

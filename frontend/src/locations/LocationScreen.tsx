@@ -26,6 +26,7 @@ import {
   Breadcrumbs,
   DetailHeader,
   DetailPage,
+  DetailSummary,
   DetailLoading,
 } from "../components/CollectionUI";
 import {
@@ -1047,18 +1048,17 @@ export function LocationScreen({
                     Retired location remains available for historical records.
                   </p>
                 )}
-                <dl
-                  className="seed-overview-band"
-                  aria-label="Location overview"
-                >
-                  <div>
-                    <dt>State</dt>
-                    <dd>{selected.retired_at ? "Retired" : "Active"}</dd>
-                  </div>
-                  <div>
-                    <dt>Parent</dt>
-                    <dd>
-                      {selected.parent_id ? (
+                <DetailSummary
+                  id="location-summary-title"
+                  label="Location overview"
+                  metrics={[
+                    {
+                      label: "State",
+                      value: selected.retired_at ? "Retired" : "Active",
+                    },
+                    {
+                      label: "Parent",
+                      value: selected.parent_id ? (
                         <a href={`#/locations/${selected.parent_id}`}>
                           {
                             locations.find(
@@ -1068,20 +1068,16 @@ export function LocationScreen({
                         </a>
                       ) : (
                         "Root location"
-                      )}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Children</dt>
-                    <dd>
-                      {
-                        locations.filter(
-                          (location) => location.parent_id === selected.id,
-                        ).length
-                      }
-                    </dd>
-                  </div>
-                </dl>
+                      ),
+                    },
+                    {
+                      label: "Children",
+                      value: locations.filter(
+                        (location) => location.parent_id === selected.id,
+                      ).length,
+                    },
+                  ]}
+                />
                 <div className="record-detail-grid location-overview-grid">
                   <section
                     className="record-section"
@@ -1164,7 +1160,7 @@ export function LocationScreen({
                 eyebrow="Location"
                 label="Loading Location detail…"
                 parents={[{ label: "Locations", href: "#/locations" }]}
-                className="collection-detail ui-detail-page location-detail"
+                className="location-detail"
                 visual={false}
               />
             ) : (

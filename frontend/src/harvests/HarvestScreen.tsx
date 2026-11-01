@@ -8,6 +8,8 @@ import {
   DetailHeader,
   WorkspaceIntro,
   DetailLoading,
+  DetailPage,
+  DetailSummary,
 } from "../components/CollectionUI";
 import {
   DirectoryRecordActions,
@@ -501,7 +503,7 @@ export function HarvestScreen({
       )}
       {displayId ? (
         detail?.id === displayId ? (
-          <article className="collection-detail harvest-detail">
+          <DetailPage className="harvest-detail">
             <Breadcrumbs
               items={[
                 { label: "Harvests", href: "#/harvests" },
@@ -570,22 +572,25 @@ export function HarvestScreen({
                 </OverflowMenu>
               }
             />
-            <dl className="seed-overview-band" aria-label="Harvest overview">
-              <div>
-                <dt>Occurrence date</dt>
-                <dd>{formatPartialDate(detail.occurred_on)}</dd>
-              </div>
-              <div>
-                <dt>Source</dt>
-                <dd>
-                  <a href={sourceHref(detail)}>{detail.source.display_name}</a>
-                </dd>
-              </div>
-              <div>
-                <dt>Materials</dt>
-                <dd>{materialSummary(detail)}</dd>
-              </div>
-            </dl>
+            <DetailSummary
+              id="harvest-summary-title"
+              label="Harvest overview"
+              metrics={[
+                {
+                  label: "Occurrence date",
+                  value: formatPartialDate(detail.occurred_on),
+                },
+                {
+                  label: "Source",
+                  value: (
+                    <a href={sourceHref(detail)}>
+                      {detail.source.display_name}
+                    </a>
+                  ),
+                },
+                { label: "Materials", value: materialSummary(detail) },
+              ]}
+            />
             <section
               className="record-section"
               aria-label="Materials collected"
@@ -632,15 +637,14 @@ export function HarvestScreen({
                 );
               }}
             />
-          </article>
+          </DetailPage>
         ) : (
           !error && (
             <DetailLoading
               eyebrow="Harvest"
               label="Loading Harvest detail…"
               parents={[{ label: "Harvests", href: "#/harvests" }]}
-              className="collection-detail harvest-detail"
-              titleSize="h1"
+              className="harvest-detail"
             />
           )
         )

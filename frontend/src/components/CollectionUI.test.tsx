@@ -5,6 +5,7 @@ import {
   DetailHeader,
   DetailLoading,
   DetailPage,
+  DetailSummary,
   WorkspaceIntro,
 } from "./CollectionUI";
 import { OverflowMenu } from "./ReferenceUI";
@@ -130,5 +131,54 @@ test("Details groups the primary, daily secondary, Edit and rare menu actions", 
   expect(screen.getByRole("link", { name: "Print label" })).toHaveAttribute(
     "href",
     "#/labels",
+  );
+});
+
+test("metric summaries omit absent values but keep meaningful zero", () => {
+  render(
+    <DetailSummary
+      id="summary-title"
+      label="Record state"
+      metrics={[
+        { label: "Children", value: 0 },
+        { label: "Storage", value: "Shelf 3", wide: true },
+        { label: "Missing", value: null },
+        { label: "Blank", value: "" },
+      ]}
+      note={<p>Exact values only.</p>}
+    />,
+  );
+  expect(screen.getByRole("region", { name: "At a glance" })).toBeVisible();
+  const list = screen.getByLabelText("Record state");
+  expect(within(list).getByText("Children")).toBeVisible();
+  expect(within(list).getByText("0")).toBeVisible();
+  expect(within(list).queryByText("Missing")).not.toBeInTheDocument();
+  expect(within(list).queryByText("Blank")).not.toBeInTheDocument();
+  expect(list.style.getPropertyValue("--detail-summary-columns")).toBe("3");
+  expect(screen.getByText("Exact values only.")).toBeVisible();
+});
+
+test("a summary with nothing to report renders nothing", () => {
+  const { container } = render(
+    <DetailSummary
+      id="summary-title"
+      label="Record state"
+      metrics={[{ label: "Missing", value: undefined }]}
+    />,
+  );
+  expect(container).toBeEmptyDOMElement();
+});
+
+test("Details loading uses the canonical record shell", () => {
+  const { container } = render(
+    <DetailLoading
+      eyebrow="Harvest"
+      label="Loading Harvest detail…"
+      parents={[{ label: "Harvests", href: "#/harvests" }]}
+    />,
+  );
+  expect(container.firstElementChild).toHaveClass(
+    "ui-detail-page",
+    "detail-loading",
   );
 });

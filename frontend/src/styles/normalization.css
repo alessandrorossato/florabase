@@ -131,6 +131,10 @@ input:is([type="checkbox"], [type="radio"]) {
   margin: var(--space-1) 0 var(--space-2);
   overflow-wrap: anywhere;
 }
+/* Only the outer workspace spaces the page, whatever its display becomes. */
+.app-content .workspace .workspace {
+  margin-block-start: 0;
+}
 /* A page declares its directory heading, so it holds from the first render. */
 .app-content .page-header.page-header--directory {
   display: flex;

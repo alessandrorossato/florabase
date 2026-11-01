@@ -1,5 +1,6 @@
 import { ActionButton } from "./Action";
 import type {
+  CSSProperties,
   HTMLAttributes,
   MouseEventHandler,
   ReactNode,
@@ -155,19 +156,17 @@ export function DetailLoading({
   eyebrow,
   label,
   parents,
-  className = "collection-detail",
-  titleSize = "h2",
+  className = "",
   visual = true,
 }: {
   eyebrow: string;
   label: string;
   parents: { label: string; href: string }[];
   className?: string;
-  titleSize?: "h1" | "h2";
   visual?: boolean;
 }) {
   return (
-    <div className={`detail-loading ${className}`}>
+    <DetailPage as="div" className={`detail-loading ${className}`}>
       <Breadcrumbs items={[...parents, { label: "Loading" }]} />
       <div aria-hidden="true" className="detail-header">
         <div className="detail-identity">
@@ -178,14 +177,72 @@ export function DetailLoading({
           )}
           <div>
             <p className="eyebrow">{eyebrow}</p>
-            <span
-              className={`detail-loading__title detail-loading__title--${titleSize}`}
-            />
+            <span className="detail-loading__title" />
           </div>
         </div>
       </div>
       <p role="status">{label}</p>
-    </div>
+    </DetailPage>
+  );
+}
+
+export interface DetailMetric {
+  label: string;
+  value: ReactNode;
+  /** Takes two columns, for paths and other long values. */
+  wide?: boolean;
+  /** The record's primary figure. */
+  emphasis?: boolean;
+}
+
+/** One summary band for every record; each domain supplies its own metrics. */
+export function DetailSummary({
+  id,
+  label,
+  metrics,
+  title = "At a glance",
+  titleRef,
+  note,
+}: {
+  id: string;
+  label: string;
+  metrics: DetailMetric[];
+  title?: string;
+  titleRef?: RefObject<HTMLHeadingElement | null>;
+  note?: ReactNode;
+}) {
+  const shown = metrics.filter(
+    ({ value }) =>
+      value !== null && value !== undefined && value !== false && value !== "",
+  );
+  if (shown.length === 0) return null;
+  const columns = shown.reduce((sum, { wide }) => sum + (wide ? 2 : 1), 0);
+  return (
+    <section className="detail-summary" aria-labelledby={id}>
+      <h4 id={id} ref={titleRef} tabIndex={titleRef ? -1 : undefined}>
+        {title}
+      </h4>
+      <dl
+        aria-label={label}
+        style={{ "--detail-summary-columns": columns } as CSSProperties}
+      >
+        {shown.map((metric) => (
+          <div
+            key={metric.label}
+            className={[
+              metric.wide && "detail-summary__metric--wide",
+              metric.emphasis && "detail-summary__metric--emphasis",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            <dt>{metric.label}</dt>
+            <dd>{metric.value}</dd>
+          </div>
+        ))}
+      </dl>
+      {note}
+    </section>
   );
 }
 

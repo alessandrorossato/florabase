@@ -69,6 +69,8 @@ import {
   DetailTabs,
   WorkspaceIntro,
   DetailLoading,
+  DetailPage,
+  DetailSummary,
 } from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
 import {
@@ -384,7 +386,7 @@ function Detail({
   );
   const route = record.kind === "plant" ? "plants" : "plant-groups";
   return (
-    <article className="plant-detail collection-detail">
+    <DetailPage className="plant-detail">
       <Breadcrumbs
         items={[
           { label: "Collection", href: "#/dashboard" },
@@ -511,44 +513,39 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <section
-            className="collection-summary"
-            aria-labelledby="plant-summary-title"
-          >
-            <h4 id="plant-summary-title" tabIndex={-1} ref={headingRef}>
-              At a glance
-            </h4>
-            <dl aria-label="Current Plant state">
-              <div>
-                <dt>Lifecycle</dt>
-                <dd>
+          <DetailSummary
+            id="plant-summary-title"
+            label="Current Plant state"
+            titleRef={headingRef}
+            metrics={[
+              {
+                label: "Lifecycle",
+                value: (
                   <LifecycleStatus state={value.lifecycle}>
                     {lifecycleLabel(record)}
                   </LifecycleStatus>
-                </dd>
-              </div>
-              <div>
-                <dt>
-                  {value.lifecycle === "active"
+                ),
+              },
+              {
+                label:
+                  value.lifecycle === "active"
                     ? "Current location"
-                    : "Last recorded location"}
-                </dt>
-                <dd>
-                  {value.location ? (
-                    <a href={`#/locations/${value.location.id}`}>
-                      {value.location.display_path}
-                    </a>
-                  ) : (
-                    "Not recorded"
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt>Collection entry</dt>
-                <dd>{dateLabel(value.collection_entry_date)}</dd>
-              </div>
-            </dl>
-          </section>
+                    : "Last recorded location",
+                wide: true,
+                value: value.location ? (
+                  <a href={`#/locations/${value.location.id}`}>
+                    {value.location.display_path}
+                  </a>
+                ) : (
+                  "Not recorded"
+                ),
+              },
+              {
+                label: "Collection entry",
+                value: dateLabel(value.collection_entry_date),
+              },
+            ]}
+          />
           {record.kind === "group" && (
             <section
               className="plant-fact-group"
@@ -803,7 +800,7 @@ function Detail({
           />
         </div>
       )}
-    </article>
+    </DetailPage>
   );
 }
 
@@ -1362,6 +1359,16 @@ export function PlantScreen({
         aria-labelledby="plants-title"
       >
         <WorkspaceIntro {...plantPage} contextOnly={Boolean(initialId)} />
+        {initialId && (
+          <div className="workspace-context-actions">
+            <a
+              className="button-link button--secondary plant-back"
+              href="#/plants"
+            >
+              ← Back to Plants
+            </a>
+          </div>
+        )}
         {initialId ? (
           <DetailLoading
             eyebrow="Plants"
@@ -1370,8 +1377,7 @@ export function PlantScreen({
               { label: "Collection", href: "#/dashboard" },
               { label: "Plants", href: "#/plants" },
             ]}
-            className="plant-detail collection-detail"
-            titleSize="h1"
+            className="plant-detail"
           />
         ) : (
           <p role="status">Loading Plants…</p>
@@ -2906,8 +2912,7 @@ export function PlantScreen({
                         { label: "Collection", href: "#/dashboard" },
                         { label: "Plants", href: "#/plants" },
                       ]}
-                      className="plant-detail collection-detail"
-                      titleSize="h1"
+                      className="plant-detail"
                     />
                   ) : detail.status === "error" &&
                     (mobileDetail || !selected) ? (

@@ -61,6 +61,8 @@ import {
   DetailTabs,
   WorkspaceIntro,
   DetailLoading,
+  DetailPage,
+  DetailSummary,
 } from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
 import {
@@ -360,7 +362,7 @@ function Detail({
           ? `Maximum ${sowing.temperature_max_c} °C`
           : null;
   return (
-    <article className="sowing-detail collection-detail">
+    <DetailPage className="sowing-detail">
       <Breadcrumbs
         items={[
           { label: "Collection", href: "#/dashboard" },
@@ -479,44 +481,37 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <section
-            className="collection-summary"
-            aria-labelledby="sowing-summary-title"
-          >
-            <h4 id="sowing-summary-title">At a glance</h4>
-            <dl aria-label="Current Sowing state">
-              <div>
-                <dt>Lifecycle</dt>
-                <dd>
+          <DetailSummary
+            id="sowing-summary-title"
+            label="Current Sowing state"
+            metrics={[
+              {
+                label: "Lifecycle",
+                value: (
                   <LifecycleStatus state={sowing.lifecycle}>
                     {lifecycleLabels[sowing.lifecycle]}
                   </LifecycleStatus>
-                </dd>
-              </div>
-              <div>
-                <dt>Sown</dt>
-                <dd>{dateLabel(sowing.sowing_date)}</dd>
-              </div>
-              <div>
-                <dt>Germination</dt>
-                <dd>
-                  <GerminationProgress sowing={sowing} />
-                </dd>
-              </div>
-              <div>
-                <dt>Current location</dt>
-                <dd>
-                  {sowing.location ? (
-                    <a href={`#/locations/${sowing.location.id}`}>
-                      {sowing.location.display_path}
-                    </a>
-                  ) : (
-                    "Not recorded"
-                  )}
-                </dd>
-              </div>
-            </dl>
-          </section>
+                ),
+              },
+              { label: "Sown", value: dateLabel(sowing.sowing_date) },
+              {
+                label: "Germination",
+                wide: true,
+                value: <GerminationProgress sowing={sowing} />,
+              },
+              {
+                label: "Current location",
+                wide: true,
+                value: sowing.location ? (
+                  <a href={`#/locations/${sowing.location.id}`}>
+                    {sowing.location.display_path}
+                  </a>
+                ) : (
+                  "Not recorded"
+                ),
+              },
+            ]}
+          />
           <section
             aria-labelledby="sowing-origin-title"
             className="sowing-fact-group"
@@ -757,7 +752,7 @@ function Detail({
           />
         </div>
       )}
-    </article>
+    </DetailPage>
   );
 }
 
@@ -1057,6 +1052,16 @@ export function SowingScreen({
         aria-labelledby="sowings-title"
       >
         <WorkspaceIntro {...sowingPage} contextOnly={Boolean(initialId)} />
+        {initialId && (
+          <div className="workspace-context-actions">
+            <a
+              className="button-link button--secondary sowing-back"
+              href="#/sowings"
+            >
+              ← Back to Sowings
+            </a>
+          </div>
+        )}
         {initialId ? (
           <DetailLoading
             eyebrow="Sowing"
@@ -1065,8 +1070,7 @@ export function SowingScreen({
               { label: "Collection", href: "#/dashboard" },
               { label: "Sowings", href: "#/sowings" },
             ]}
-            className="sowing-detail collection-detail"
-            titleSize="h1"
+            className="sowing-detail"
           />
         ) : (
           <p role="status">Loading Sowings…</p>
@@ -1963,8 +1967,7 @@ export function SowingScreen({
                     { label: "Collection", href: "#/dashboard" },
                     { label: "Sowings", href: "#/sowings" },
                   ]}
-                  className="sowing-detail collection-detail"
-                  titleSize="h1"
+                  className="sowing-detail"
                 />
               ) : detail.status === "error" && (mobileDetail || !selected) ? (
                 <div className="notice notice--error" role="alert">

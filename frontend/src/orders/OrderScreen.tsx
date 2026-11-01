@@ -29,6 +29,7 @@ import {
   CollectionCard,
   DetailHeader,
   DetailPage,
+  DetailSummary,
   DetailTabs,
   WorkspaceIntro,
   DetailLoading,
@@ -436,30 +437,21 @@ function OrderDetailView({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <section
-            className="collection-summary"
-            aria-labelledby="order-summary-title"
-          >
-            <h4 id="order-summary-title">At a glance</h4>
-            <dl aria-label="Current Order state">
-              <div>
-                <dt>Order date</dt>
-                <dd>{orderDate(order.ordered_on)}</dd>
-              </div>
-              <div>
-                <dt>Total price</dt>
-                <dd>{orderPrice(order)}</dd>
-              </div>
-              <div>
-                <dt>Physical seed lots</dt>
-                <dd>{order.seed_lots_total}</dd>
-              </div>
-            </dl>
-            <p className="field-help">
-              The total transaction price is never divided or allocated between
-              seed lots.
-            </p>
-          </section>
+          <DetailSummary
+            id="order-summary-title"
+            label="Current Order state"
+            metrics={[
+              { label: "Order date", value: orderDate(order.ordered_on) },
+              { label: "Total price", value: orderPrice(order) },
+              { label: "Physical seed lots", value: order.seed_lots_total },
+            ]}
+            note={
+              <p className="field-help">
+                The total transaction price is never divided or allocated
+                between seed lots.
+              </p>
+            }
+          />
           <section
             className="order-fact-group"
             aria-labelledby="order-transaction-title"
@@ -1184,7 +1176,7 @@ export function OrderScreen({
                 { label: "Sourcing", href: "#/dashboard" },
                 { label: "Orders", href: "#/orders" },
               ]}
-              className="collection-detail ui-detail-page order-detail"
+              className="order-detail"
             />
           )}
           <div aria-live="polite">

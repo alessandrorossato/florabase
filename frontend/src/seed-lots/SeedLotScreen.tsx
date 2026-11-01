@@ -76,6 +76,8 @@ import {
   CollectionCard,
   DetailContext,
   DetailHeader,
+  DetailPage,
+  DetailSummary,
   DetailTabs,
   WorkspaceIntro,
   DetailLoading,
@@ -395,8 +397,9 @@ function Detail({
       : "overview",
   );
   return (
-    <section
-      className="seed-detail collection-detail"
+    <DetailPage
+      as="section"
+      className="seed-detail"
       aria-label="Seed lot detail"
     >
       <Breadcrumbs
@@ -495,35 +498,36 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <div className="seed-overview-facts">
-            <h3>At a glance</h3>
-            <dl className="seed-current-summary" aria-label="Current inventory">
-              <div className="seed-summary-lifecycle">
-                <dt>Lifecycle</dt>
-                <dd>
+          <DetailSummary
+            id="seed-summary-title"
+            label="Current inventory"
+            metrics={[
+              {
+                label: "Lifecycle",
+                value: (
                   <LifecycleStatus state={lot.lifecycle}>
                     {lifecycleLabels[lot.lifecycle]}
                   </LifecycleStatus>
-                </dd>
-              </div>
-              <div className="seed-summary-quantity">
-                <dt>{inventoryLabel(lot)}</dt>
-                <dd>{quantityLabel(lot)}</dd>
-              </div>
-              <div className="seed-summary-storage">
-                <dt>Storage</dt>
-                <dd>
-                  {lot.location ? (
-                    <a href={`#/locations/${lot.location.id}`}>
-                      {lot.location.display_path}
-                    </a>
-                  ) : (
-                    "Not recorded"
-                  )}
-                </dd>
-              </div>
-            </dl>
-          </div>
+                ),
+              },
+              {
+                label: inventoryLabel(lot),
+                value: quantityLabel(lot),
+                emphasis: true,
+              },
+              {
+                label: "Storage",
+                wide: true,
+                value: lot.location ? (
+                  <a href={`#/locations/${lot.location.id}`}>
+                    {lot.location.display_path}
+                  </a>
+                ) : (
+                  "Not recorded"
+                ),
+              },
+            ]}
+          />
           <div className="seed-overview-main seed-summary-sections">
             <section
               className="seed-fact-group"
@@ -674,7 +678,7 @@ function Detail({
           />
         </div>
       )}
-    </section>
+    </DetailPage>
   );
 }
 
@@ -1014,8 +1018,7 @@ export function SeedLotScreen({
               { label: "Collection", href: "#/dashboard" },
               { label: "Seeds", href: "#/seeds" },
             ]}
-            className="seed-detail collection-detail"
-            titleSize="h1"
+            className="seed-detail"
           />
         ) : (
           <p role="status">Loading seed inventory…</p>

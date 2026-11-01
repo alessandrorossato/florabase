@@ -46,6 +46,7 @@ import {
   DetailContext,
   DetailHeader,
   DetailPage,
+  DetailSummary,
   DetailTabs,
   WorkspaceIntro,
   DetailLoading,
@@ -426,32 +427,24 @@ function SupplierDetail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <section
-            className="collection-summary"
-            aria-labelledby="supplier-summary-title"
-          >
-            <h4 id="supplier-summary-title">At a glance</h4>
-            <dl aria-label="Current Supplier state">
-              <div>
-                <dt>State</dt>
-                <dd>
+          <DetailSummary
+            id="supplier-summary-title"
+            label="Current Supplier state"
+            metrics={[
+              {
+                label: "State",
+                value: (
                   <LifecycleStatus
                     state={supplier.retired_at ? "retired" : "active"}
                   >
                     {supplier.retired_at ? "Retired" : "Active"}
                   </LifecycleStatus>
-                </dd>
-              </div>
-              <div>
-                <dt>Kind</dt>
-                <dd>{kindLabels[supplier.kind]}</dd>
-              </div>
-              <div>
-                <dt>Direct records</dt>
-                <dd>{counts.direct_records_total}</dd>
-              </div>
-            </dl>
-          </section>
+                ),
+              },
+              { label: "Kind", value: kindLabels[supplier.kind] },
+              { label: "Direct records", value: counts.direct_records_total },
+            ]}
+          />
           <section
             className="supplier-fact-group"
             aria-labelledby="supplier-about-title"
@@ -1243,7 +1236,7 @@ export function SupplierScreen({
                 { label: "Sourcing", href: "#/dashboard" },
                 { label: "Suppliers", href: "#/suppliers" },
               ]}
-              className="collection-detail ui-detail-page supplier-detail"
+              className="supplier-detail"
             />
           )}
           {detail.status === "error" && (

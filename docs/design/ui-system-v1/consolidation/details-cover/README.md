@@ -136,30 +136,48 @@ loading state and whether the title changes, disappears or shifts. **No dedicate
 reproducible visual evidence is attached yet**; capture a short recording or before/during/after
 screenshots when the issue is reproduced.
 
-### UI-FLICKER-001 — C1/C3 correction, 1 November 2026
+### UI-FLICKER-001 — C1/C3 and Gate B corrections, 1 November 2026
 
-**Status: corrected on desktop and tablet for the covered routes; operator review pending.**
-Delayed-network comparison of the unmodified checkpoint and this change at 1440 CSS px; the after
-values were also confirmed at 1024 CSS px:
+**Status: partially resolved; not closed.** Measured with API responses delayed by 400 ms in one
+browser, on source served by an isolated read-only proxy, then compared with `b899990`.
 
-| Route | Before | After |
+| Direct Details URL, 1440 px | Loading → final at `b899990` | Loading → final now |
 | --- | --- | --- |
-| Seeds, Plants | 32px y75 → 22px y63 | 22px y63 throughout |
-| Harvests, Stored material | 32px y67 → 22px y63 | 22px y63 throughout |
-| Suppliers, Orders | y87 → y95 | y87 throughout |
-| Botanical identities | y63 → y71 | y63 throughout |
-| Locations | 32px y88 | 22px y63 |
-| Harvest, Supplier, Order and Location Details | no header while loading | breadcrumb, eyebrow and reserved title; Supplier/Order/Location title position unchanged, Harvest 1px |
+| Seed | y73 → y101, x358 → x387 | y73 → y73, x356 |
+| Sowing, Plant | y73 → y155, x358 → x387 | y128 → y128, x356 |
+| Plant group | not measured | y128 → y128, x356 |
+| Identity | y44 → y92, x1283 → x356 | y92 → y92, x356 |
+| Geography Place | no placeholder → y133 | y117 → y117, x272 |
+| Harvest | y73 → y72 (C1/C3) | y73 → y73, x356 |
+| Supplier, Order, Location | y73 → y73 (C1/C3) | y73 → y73 |
 
-Causes: directory heading styles depended on `:has(.ui-directory-workspace)`, which is absent during
-loading; the 8px movement was the breadcrumb list margin collapsing only while its parent was not
-yet flex (`:has(.ui-directory-records)`). Pages now declare `directory` on the header and
-`DetailLoading` holds Details structure without record data. No animation was suppressed.
+| Directory, 390 px | At `b899990` | Now |
+| --- | --- | --- |
+| Seeds, Plants | x16 y146 → x12 y142 | x16 y146 |
+| Suppliers, Orders | x16 y146 → x12 y158 | x16 y146 |
 
-Remaining: at 390 px the heading still moves 4–12px when `main:has(...records)` switches the mobile
-shell layout; Seeds/Sowings/Plants direct URLs move from the loading position to the legacy Details
-position; a brief title gap remains on the first Supplier Details render. Typography of Details, metrics, actions
-and Stored material are unchanged. UI-DETAIL-001 stays open.
+The direct-URL results hold at 1024 and 390 px for the routes measured there. Directory heading
+position also held at 600, 768 and 769 px. Causes: loading rendered outside the record wrappers,
+which kept a panel after a layout rename; the mobile gutter depended on
+`:has(.ui-directory-records)`; a nested `.workspace` margin collapsed only until its parent became
+flex. Sowings and direct Details are re-traced on this source, replacing the earlier wording.
+
+Open: at 390 px a long record name can wrap the breadcrumb, so its title settled 24 px lower than
+the short loading breadcrumb on the measured retired Supplier; a one-state title gap at 390 px on
+direct Plant and Plant group loading; Identity and Place stay offset by their retained record
+navigation and back link; Sowing and Plant by their context-action row, whose placement belongs to
+C5. Production build, other browsers, assistive technology and real devices were not measured live.
+
+### UI-DETAIL-001 — Gate B presentation, 1 November 2026
+
+**Status: open until operator acceptance.** All listed families use `DetailPage`, one title scale
+(32 px, 22 px below 48 rem) and flat record presentation. `DetailSummary` replaces the three metric
+patterns in Details. Decision for review: the panel around Seeds, Sowings and Plants is removed
+because `.operational-layout` rules show it was meant to be flat, and the layout rename had lost
+them. Duplicate values between header and summary remain, because removal needs a content decision.
+The 1401/1372 px right edges in the audit came from the page scrollbar and panel padding, not from
+different content columns. The Identity collection footprint, provenance `StatStrip` and Stored
+material section stay as they are.
 
 ### Acceptance gate
 

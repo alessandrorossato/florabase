@@ -1404,7 +1404,7 @@ export function BotanicalIdentityScreen({
             eyebrow="Botanical identity"
             label="Loading botanical identity…"
             parents={[{ label: "Botanical identities", href: "#/identities" }]}
-            className="collection-detail ui-detail-page identity-detail-stack"
+            className="identity-detail-stack"
           />
         ) : directory.status === "error" ? (
           <div role="alert">

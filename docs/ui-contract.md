@@ -101,6 +101,11 @@ Rows use meaningful links, metadata and source labels; partial dates retain thei
 Empty sections remain visible with factual explanations. Loading does not show fabricated zeros;
 errors offer retry and authentication expiry returns to the existing session flow.
 
+Record pages use `DetailPage` with `DetailHeader`: 32px title, 22px below 48rem. `DetailLoading` holds
+that structure without record data and never replaces an error or not-found state. `DetailSummary`
+takes typed metrics, omits absent values and keeps meaningful zero. Directory headers declare
+`directory` so their heading holds from first render.
+
 ## Page archetypes
 
 | Archetype           | Primary organization                                          |

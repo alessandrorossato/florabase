@@ -1275,3 +1275,14 @@
 .identity-inspection-heading h3:focus {
   outline: none;
 }
+
+/* Loading reserves the record-navigation row that shares the breadcrumb line. */
+.app-content .identity-reference-page .detail-loading {
+  display: block;
+}
+.app-content .identity-reference-page .detail-loading .breadcrumbs {
+  display: flex;
+  align-items: center;
+  min-block-size: 2.75rem;
+  margin-block-end: var(--space-1);
+}

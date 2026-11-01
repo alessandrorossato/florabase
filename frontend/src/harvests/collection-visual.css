@@ -60,28 +60,6 @@
   font: var(--type-h3);
   margin: 0 0 var(--space-3);
 }
-.app-content :is(.harvest-detail, .location-detail) .seed-overview-band {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-4);
-  margin: var(--space-4) 0;
-  padding: var(--space-4);
-  background: var(--surface-subtle);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-small);
-}
-.seed-overview-band > div {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.seed-overview-band dt {
-  font: var(--type-small);
-  color: var(--text-muted);
-}
-.seed-overview-band dd {
-  font: var(--type-strong);
-  margin: var(--space-1) 0 0;
-}
 .app-content .harvest-context-grid,
 .app-content .location-overview-grid {
   display: grid;
@@ -213,7 +191,6 @@
   }
 }
 @media (max-width: 48rem) {
-  .app-content :is(.harvest-detail, .location-detail) .seed-overview-band,
   .app-content .harvest-context-grid,
   .app-content .location-overview-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -343,10 +320,6 @@
 .app-content .location-overview-grid > section {
   margin-block: var(--space-3);
   padding-top: var(--space-3);
-}
-.app-content :is(.harvest-detail, .location-detail) .seed-overview-band {
-  padding: var(--space-3) var(--space-4);
-  margin-block: var(--space-3);
 }
 .app-content .harvest-items li {
   padding: var(--space-2) 0;

@@ -428,6 +428,12 @@
   width: 100%;
   min-width: 0;
 }
+.app-content .ui-record-detail-workspace .selected-seed {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
 .ui-directory-action-menu :is(.sr-only, .control-icon-button__label) {
   inline-size: auto;
   block-size: auto;

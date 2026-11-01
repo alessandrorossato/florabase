@@ -6812,7 +6812,20 @@ Status remains implemented pending canonical verification.
   and Locations settle 8px higher than before and Locations now uses the shared directory heading size.
 - Checks: 1125/1125 frontend tests in 101 files, strict TypeScript, ESLint and Prettier on changed files,
   production build. Live delayed-network comparison against the checkpoint at 1440; patched build also
-  at 1024/390. Direct URL, record switching, and Back/Forward on Suppliers only. Sowings was not re-traced
-  after the final breadcrumb rule. No canonical FULL, push, PR or merge.
+  at 1024/390. Direct URL, record switching, and Back/Forward on Suppliers only. Sowings was re-traced
+  on the integrated Review (22px y63, stable). No canonical FULL, push, PR or merge.
 - Unresolved: 390 px shell movement of 4-12px, legacy Seeds/Sowings/Plants Details position after direct
   loading, brief first-render gap on Supplier Details, operator UAT. UI-DETAIL-001 remains open.
+
+### UI System v1 Gate B canonical Details — 1 November 2026
+
+- Seeds, Sowings, Plants/PlantGroups, Harvests, Locations, identities, Suppliers, Orders and Geography
+  Places use one `DetailPage` contract: 32px title, 22px below 48rem, shared breadcrumb gap and flat
+  shell. `DetailSummary` replaces the Details metric patterns and omits absent values while keeping zero.
+- Mobile gutter no longer depends on loaded records. Nested workspaces no longer add a margin, so Plants,
+  Suppliers and Orders directories settle with Seeds. `DetailLoading` now matches the final title.
+- Checks: all 101 frontend test files, strict TypeScript, ESLint and Prettier on changed files, production
+  build, `check-features.py` and diff check. Geometry at 1440/1024/390 and gutter at 600/768/769 in one
+  browser. Real click Back/Forward on Orders; 500 responses reach real error states on Supplier, Harvest, Order.
+- Unresolved: UI-DETAIL-001 awaits operator acceptance; UI-FLICKER-001 stays partially resolved. See
+  `design/ui-system-v1/consolidation/details-cover/README.md`. No FULL, push, PR, merge or origin/main.
