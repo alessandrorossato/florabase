@@ -3,6 +3,13 @@
 These tests deliberately use a real uvicorn server, the production ``get_database_session``
 dependency and genuine commits, because rolled-back fixture transactions cannot show what another
 database connection observes. Every committed row is removed again and table counts are compared.
+
+Against the unmodified request-scoped base (``fbce3c4``) three tests fail deterministically for the
+transaction-ordering defect: success visibility, commit failure and login cookie ordering. A fourth,
+``test_application_exception_after_flush_rolls_back``, can also fail there (timing-dependent) only
+because the ``browser`` fixture's own login commit still lands after its response, inside the armed
+window; with a pause after that login it passes on the base. The request under test returned 500 and
+persisted nothing, so base rollback behavior was already correct. This is not a fourth defect.
 """
 
 import socket
@@ -255,6 +262,12 @@ def test_commit_failure_is_an_error_response_and_persists_nothing(
 
 
 def test_application_exception_after_flush_rolls_back(live_api: LiveApi, browser: Browser) -> None:
+    """Rollback was already correct before TX-001; this guards it under function scope.
+
+    ``committed_at == []`` also requires that no earlier request's commit is still in flight. On the
+    request-scoped base that last assertion can fail (timing-dependent) because the fixture login
+    commits after its response, not because this request's rollback is wrong.
+    """
     name = f"TX001 flushed {uuid4().hex[:8]}"
     live_api.probe.arm("fail-after-flush")
     response = browser.send("POST", "/locations", {"name": name})

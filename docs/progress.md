@@ -27,6 +27,19 @@
 
 # Engineering progress
 
+## 2026-11-01 — TX-001 independent QA corrections (CONDITIONAL GO, nonblocking)
+
+- Guard now walks each route's effective dependency tree (application, router, route and nested
+  authentication/CSRF dependencies), requires every Session node to be function-scoped and cached,
+  and proves completeness against all 203 OpenAPI operations. Negative probes reject nested
+  `use_cache=False` and request-scoped declarations and show both really open a second Session.
+  Mutating only `require_authenticated_actor` is reported on 200 of 203 routes for either case.
+- Regression documentation now distinguishes three deterministic base failures from the
+  timing-dependent rollback-after-flush failure caused by fixture login committing after its
+  response (passes on base with a pause after login); no fourth defect is claimed.
+- Architecture documents Session lifetime rules for streaming responses, background tasks and
+  shared transaction identity. Runtime source is unchanged from `560d51e`.
+
 ## 2026-10-31 — TX-001 commit before HTTP success (candidate for independent QA)
 
 - Root cause: every route declared `Depends(get_database_session)` with FastAPI 0.143.0's default
@@ -40,8 +53,11 @@
   send). No endpoint, service, schema, migration or OpenAPI change; generated OpenAPI is identical.
   A route-tree test requires one function-scoped session per request; ASGI probes check ordering.
 - Nine real-commit PostgreSQL HTTP regressions cover visibility, commit failure → 500, rollback
-  after flush, Schedule/SeedLot, explicit-commit Harvest and failed login, login/CSRF/logout; four
-  fail on the original source. Each restores all 38 ORM table counts.
+  after flush, Schedule/SeedLot, explicit-commit Harvest and failed login, login/CSRF/logout. On the
+  original source three fail deterministically for the ordering defect (visibility, commit
+  failure, login cookie). Rollback-after-flush can also fail there (timing-dependent) only because
+  fixture login commits after its response; it passes on the base once that commit is allowed to
+  finish, and base rollback was already correct. Each restores all 38 ORM table counts.
 - Focused evidence used PostgreSQL 16.15 (no Docker/PostgreSQL 18 available): backend unit
   981 passed/1 skipped (90.07%); integration 771 passed/1 skipped, the only failure the
   PostgreSQL-18 version assertion; Ruff, strict mypy and OpenAPI drift passed. The impact plan

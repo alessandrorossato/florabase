@@ -3,15 +3,17 @@ import contextlib
 import json
 import logging
 import sys
-from collections.abc import Generator, Iterator
+from collections.abc import Callable, Generator, Iterator, Sequence
 from typing import Annotated, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi import Depends, FastAPI
+from fastapi import APIRouter, Depends, FastAPI
 from fastapi.dependencies.models import Dependant
-from fastapi.routing import APIRoute, iter_route_contexts
+from fastapi.routing import APIRoute, APIWebSocketRoute, iter_route_contexts
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
+from starlette.routing import BaseRoute
 
 from florabase.core.config import CookieMode, Environment, LogFormat, Settings
 from florabase.core.logging import JsonFormatter, configure_logging
@@ -98,26 +100,142 @@ def test_database_session_commits_and_rolls_back() -> None:
 
 
 def _session_dependencies(dependant: Dependant) -> Iterator[Dependant]:
+    """Every node in a resolved dependency tree, at any depth, that yields the request Session."""
     for dependency in dependant.dependencies:
         if dependency.call is get_database_session:
             yield dependency
         yield from _session_dependencies(dependency)
 
 
-def test_every_route_uses_one_function_scoped_database_session() -> None:
+def _database_session_violations(routes: Sequence[BaseRoute]) -> tuple[set[str], list[str]]:
+    """Inspect each route's effective dependency tree, as FastAPI resolves it per request.
+
+    ``RouteContext.dependant`` merges application, every enclosing router, and route-level
+    dependencies with nested sub-dependencies such as authentication and CSRF. Every Session node
+    must be function-scoped, so it commits before the response starts, and cached, so all nodes in
+    one request share the same Session; FastAPI's cache key includes the scope, and an uncached
+    node is solved again, so either deviation creates an independent second transaction.
+    """
+    operations: set[str] = set()
+    violations: list[str] = []
+    for context in iter_route_contexts(routes):
+        if not isinstance(context.route, APIRoute | APIWebSocketRoute):
+            continue
+        methods = sorted(context.methods or {"WEBSOCKET"})
+        operations.update(f"{method} {context.path}" for method in methods)
+        for dependency in _session_dependencies(context.dependant):
+            if dependency.scope != "function":
+                violations.append(f"{methods} {context.path}: scope={dependency.scope!r}")
+            if not dependency.use_cache:
+                violations.append(f"{methods} {context.path}: use_cache=False")
+    return operations, violations
+
+
+def test_every_route_uses_one_function_scoped_cached_database_session() -> None:
     """TX-001: commit must precede the response, and one request must own one Session."""
-    checked_routes = 0
-    for context in iter_route_contexts(app.routes):
-        route = context.route
-        if not isinstance(route, APIRoute):
-            continue
-        sessions = list(_session_dependencies(route.dependant))
-        if not sessions:
-            continue
-        checked_routes += 1
-        scopes = {dependency.scope for dependency in sessions}
-        assert scopes == {"function"}, f"{sorted(route.methods or ())} {context.path}: {scopes}"
-    assert checked_routes > 150
+    operations, violations = _database_session_violations(app.routes)
+    assert violations == []
+    documented = {
+        f"{method.upper()} {path}"
+        for path, item in app.openapi()["paths"].items()
+        for method in item
+    }
+    assert operations == documented
+    session_routes = [
+        context
+        for context in iter_route_contexts(app.routes)
+        if isinstance(context.route, APIRoute)
+        and any(True for _ in _session_dependencies(context.dependant))
+    ]
+    assert len(session_routes) > 150
+
+
+def _authenticated(
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
+) -> Session:
+    return database
+
+
+def _uncached_authenticated(
+    database: Annotated[Session, Depends(get_database_session, scope="function", use_cache=False)],
+) -> Session:
+    return database
+
+
+def _request_scoped_authenticated(
+    database: Annotated[Session, Depends(get_database_session)],
+) -> Session:
+    return database
+
+
+def _guarded_app(actor: Callable[..., Session]) -> FastAPI:
+    """Nest the Session under a router-level authentication dependency, like require_csrf."""
+    router = APIRouter(prefix="/guarded", dependencies=[Depends(actor)])
+
+    @router.post("/write")
+    def write(
+        actor_database: Annotated[Session, Depends(actor)],
+        database: Annotated[Session, Depends(get_database_session, scope="function")],
+    ) -> dict[str, bool]:
+        return {"shared": actor_database is database}
+
+    probe = FastAPI()
+    outer = APIRouter(prefix="/api")
+    outer.include_router(router)
+    probe.include_router(outer)
+    return probe
+
+
+def test_session_guard_accepts_nested_cached_function_scope() -> None:
+    operations, violations = _database_session_violations(_guarded_app(_authenticated).routes)
+    assert operations == {"POST /api/guarded/write"}
+    assert violations == []
+
+
+@pytest.mark.parametrize(
+    ("actor", "expected"),
+    [
+        (_uncached_authenticated, "use_cache=False"),
+        (_request_scoped_authenticated, "scope=None"),
+    ],
+)
+def test_session_guard_rejects_nested_uncached_or_request_scoped_session(
+    actor: Callable[..., Session], expected: str
+) -> None:
+    _, violations = _database_session_violations(_guarded_app(actor).routes)
+    assert violations
+    assert all(violation.endswith(expected) for violation in violations)
+    assert all(
+        "POST" in violation and "/api/guarded/write" in violation for violation in violations
+    )
+
+
+def _shares_one_session(actor: Callable[..., Session]) -> bool:
+    """Resolve the endpoint's cached Session first, then an authentication-style dependency."""
+    probe = FastAPI()
+
+    @probe.post("/write")
+    def write(
+        database: Annotated[Session, Depends(get_database_session, scope="function")],
+        actor_database: Annotated[Session, Depends(actor)],
+    ) -> dict[str, bool]:
+        return {"shared": actor_database is database}
+
+    session_class = MagicMock()
+    session_class.return_value.__enter__.side_effect = lambda: MagicMock()
+    with (
+        patch("florabase.db.session.get_engine", return_value=MagicMock()),
+        patch("florabase.db.session.Session", session_class),
+        TestClient(probe) as client,
+    ):
+        return bool(client.post("/write").json()["shared"])
+
+
+def test_rejected_session_declarations_really_open_a_second_session() -> None:
+    """The rejected declarations are not cosmetic: each can split one request's transaction."""
+    assert _shares_one_session(_authenticated)
+    assert not _shares_one_session(_uncached_authenticated)
+    assert not _shares_one_session(_request_scoped_authenticated)
 
 
 def _send_probe_write(*, fail_commit: bool) -> list[str]:
