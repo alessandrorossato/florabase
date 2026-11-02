@@ -100,12 +100,21 @@ classifies the subcommand before Docker is reached:
 | Mutating | `attach bridge build commit cp create down exec export kill pause publish pull push restart rm run scale start stop unpause up wait watch` | Writer claim and lifecycle lock | `build exec pull run` take the lifecycle lock; the rest are refused | Available; Quality refuses `down kill rm stop` |
 | Unknown or flag first | Anything else | Refused | Refused | Refused |
 
-`config -o`/`--output` writes a host file and counts as mutating. `down` or `rm` with any volume flag
-form is refused on Review and Sourcing in favour of the confirmed remove action. On every role, `cp`
-refuses relative container paths and any path that contains, or sits inside, PostgreSQL, media or
-dependency storage, in either direction. `make sourcing-preview-compose` permits only read-only
+`config -o`/`--output` writes a host file and counts as mutating. Flags are matched by Compose's own
+grammar (`--x`, `--x=v`, `-x`, `-x=v`, clusters such as `-fx` and `-xt5`), conservatively, so an
+explicit false value also refuses. `down` or `rm` with a volume flag is refused on every role: Review
+and Sourcing keep their confirmed remove action, UAT and Stable Preview expose no Compose passthrough,
+and production has no passthrough for deleting data. Any future production deletion must be a separately
+designed operation. `up --renew-anon-volumes` is refused everywhere. On every role, `cp` refuses
+relative container paths, any path that contains or sits inside PostgreSQL, media or dependency
+storage in either direction, `-L`/`--follow-link` and `-` tar streams. `make sourcing-preview-compose` permits only read-only
 subcommands. A mutating `exec` or `watch` holds the lock until it exits, so it blocks other lifecycle
-commands meanwhile. `run` and `exec` necessarily remain able to change data for the authorized writer.
+commands meanwhile.
+
+This protects against mistakes through the passthrough, and only there. It does not resolve symlinks
+already inside a container, so a plain `cp` to a path that is itself such a symlink is not detected.
+`run` (including `run -v`), `exec` and direct `docker` access remain able to change or delete data, and
+production `exec` and `run` stay available because backup and restore depend on them.
 
 **Parallel features** use separate worktrees and need no coordination apart from these shared resources:
 

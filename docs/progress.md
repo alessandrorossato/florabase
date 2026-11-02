@@ -6874,6 +6874,8 @@ Status remains implemented pending canonical verification.
   against the protected owner, create/attach/collision, refused retire of `548f`. Final gate: canonical FULL, by receipt.
 - Second independent QA (Codex): FAIL, P1 Review Compose denylist omitted `cp` and `watch`. Corrected with a fail-closed
   allowlist across Review, Sourcing, DEV, Quality and production routes; pending re-review, then a new canonical FULL.
+- Third independent QA: FAIL, P1 production `down -v`, P2 `cp -L`. Corrected with parser-accurate flag matching on all
+  roles, also refusing `up -V` and `cp -` tar streams; pending re-review, then a new canonical FULL.
 - Not exercised: real Claude Code, Codex or OpenCode sessions (provider identities are simulated) and real delivery.
 - See [handoff](agent-workflow-001-handoff.md) for design and tradeoffs. Status stays `implemented`;
   no push, PR, merge, finish, old clone/worktree removal or Docker/Git prune.

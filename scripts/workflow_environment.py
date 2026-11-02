@@ -126,6 +126,19 @@ def compose_arguments(arguments: list[str]) -> list[str]:
     return arguments[1:] if arguments[:1] == ["--"] else arguments
 
 
+def has_flag(options: list[str], name: str, short: str) -> bool:
+    """Match Compose's flag grammar: --x, --x=v, -x, -x=v and clusters such as -fx and -xt5.
+
+    Deliberately conservative: an explicit false value and operands after -- also match.
+    """
+    for item in options:
+        if item == f"--{name}" or item.startswith(f"--{name}="):
+            return True
+        if item.startswith("-") and not item.startswith("--") and short in item.partition("=")[0]:
+            return True
+    return False
+
+
 def refuse_persistent_copy(command: list[str]) -> None:
     """Copies bypass Alembic and the media service, so persistent state is out of bounds."""
     for operand in command[1:]:
@@ -154,12 +167,13 @@ def compose_is_mutating(role: str, command: list[str]) -> bool:
         raise WorkflowError(f"unknown Compose subcommand refused: {verb}")
     if verb == "cp":
         refuse_persistent_copy(command)
-    if (
-        role in {"review", "sourcing"}
-        and verb in {"down", "rm"}
-        and any(re.fullmatch(r"--volumes(=.*)?|-[A-Za-z]*v[A-Za-z]*", item) for item in options)
-    ):
-        raise WorkflowError("use the dedicated remove action with its exact project confirmation")
+        # The path check sees neither where a container symlink leads nor a tar stream's entries.
+        if has_flag(options, "follow-link", "L"):
+            raise WorkflowError(
+                "Compose cp --follow-link is refused; symlink targets are unverified"
+            )
+        if "-" in options:
+            raise WorkflowError("Compose cp tar streams are refused; their paths are unverified")
     if role == "dev" and verb in {"up", "down", "start", "stop", "restart", "kill", "rm"}:
         raise WorkflowError(
             "use make dev-up or make dev-stop; raw DEV lifecycle cleanup is refused"
@@ -168,11 +182,18 @@ def compose_is_mutating(role: str, command: list[str]) -> bool:
         raise WorkflowError(f"Compose {verb} is not supported against DEV's persistent state")
     if role == "quality" and verb in {"down", "rm", "stop", "kill"}:
         raise WorkflowError("use make quality-clean for exact worktree lifecycle retirement")
+    # Reached by every role left with these verbs, so no persistent role has a deletion path.
+    if verb in {"down", "rm"} and has_flag(options, "volumes", "v"):
+        if role in {"review", "sourcing"}:
+            raise WorkflowError(
+                "use the dedicated remove action with its exact project confirmation"
+            )
+        raise WorkflowError(f"Compose {verb} cannot delete volumes through {role} passthrough")
+    if verb == "up" and has_flag(options, "renew-anon-volumes", "V"):
+        raise WorkflowError("Compose up --renew-anon-volumes is refused; it discards volume data")
     if verb in COMPOSE_READ_ONLY:
         # config is the one read-only verb that can write a host file.
-        return verb == "config" and any(
-            re.fullmatch(r"--output(=.*)?|-[A-Za-z]*o.*", item) for item in options
-        )
+        return verb == "config" and has_flag(options, "output", "o")
     return True
 
 

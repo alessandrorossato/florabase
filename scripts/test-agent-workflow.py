@@ -753,6 +753,147 @@ class AgentWorkflowTests(unittest.TestCase):
                     "absolute container path", worktree, role, "cp", "./f", target, AGENT_ID="codex"
                 )
 
+    # Every form the installed parser accepted when probed with --dry-run on an empty project.
+    VOLUME_DELETION = (
+        ["down", "-v"],
+        ["down", "--volumes"],
+        ["down", "--volumes=true"],
+        ["down", "--volumes=false"],
+        ["down", "-v=true"],
+        ["down", "-v=1"],
+        ["down", "-vt5"],
+        ["down", "-t5", "-v"],
+        ["down", "--remove-orphans", "-v"],
+        ["down", "--", "-v"],
+        ["rm", "-v"],
+        ["rm", "--volumes"],
+        ["rm", "--volumes=true", "-f"],
+        ["rm", "-fv"],
+        ["rm", "-f", "-v"],
+        ["rm", "-fsv"],
+        ["rm", "-vf=true"],
+        ["rm", "-f", "backend", "-v"],
+    )
+
+    def test_production_cli_never_deletes_volumes_and_has_no_override(self) -> None:
+        worktree = self.create()
+        for command in self.VOLUME_DELETION:
+            self.compose_refused("cannot delete volumes through prod", worktree, "prod", *command)
+            # Neither an operator identity nor a confirmation variable unlocks production.
+            self.compose_refused(
+                "cannot delete volumes through prod",
+                worktree,
+                "prod",
+                *command,
+                AGENT_ID="operator",
+                CONFIRM_REMOVE_REVIEW="florabase-feature-review",
+            )
+
+    def test_review_and_sourcing_cli_keep_refusing_with_their_remove_action(self) -> None:
+        worktree = self.create()
+        self.ok(worktree, "claim", AGENT_ID="codex")
+        for role in ("review", "sourcing"):
+            for command in self.VOLUME_DELETION:
+                self.compose_refused(
+                    "exact project confirmation", worktree, role, *command, AGENT_ID="codex"
+                )
+
+    def test_other_persistent_roles_expose_no_equivalent_deletion_path(self) -> None:
+        worktree = self.create()
+        for command in self.VOLUME_DELETION:
+            self.compose_refused("raw DEV lifecycle cleanup", worktree, "dev", *command)
+            self.compose_refused("make quality-clean", worktree, "quality", *command)
+        for role in ("review", "sourcing", "prod", "quality"):
+            for command in (
+                ["up", "-V"],
+                ["up", "--renew-anon-volumes"],
+                ["up", "--renew-anon-volumes=true"],
+                ["up", "-dV"],
+                ["up", "-V=true"],
+                ["up", "--detach", "backend", "-V"],
+            ):
+                self.compose_refused("renew-anon-volumes", worktree, role, *command)
+
+    def test_cp_follow_link_and_tar_streams_are_refused_on_every_cli_route(self) -> None:
+        worktree = self.create()
+        self.ok(worktree, "claim", AGENT_ID="codex")
+        for role in ("review", "sourcing", "dev", "quality", "prod"):
+            for command in (
+                ["-L", *SAFE_COPY[1:]],
+                ["--follow-link", *SAFE_COPY[1:]],
+                ["--follow-link=true", *SAFE_COPY[1:]],
+                ["--follow-link=false", *SAFE_COPY[1:]],
+                ["-L=true", *SAFE_COPY[1:]],
+                ["-aL", *SAFE_COPY[1:]],
+                ["-La", *SAFE_COPY[1:]],
+                ["--archive", "-L", *SAFE_COPY[1:]],
+                [*SAFE_COPY[1:], "-L"],
+                [SAFE_COPY[1], "--follow-link", SAFE_COPY[2]],
+                ["backend:/tmp/link", "./out", "-L"],
+            ):
+                self.compose_refused(
+                    "follow-link", worktree, role, "cp", *command, AGENT_ID="codex"
+                )
+            for command in (["-", "backend:/tmp/x"], ["backend:/tmp/x", "-"]):
+                self.compose_refused(
+                    "tar streams", worktree, role, "cp", *command, AGENT_ID="codex"
+                )
+        # The read-only Sourcing make route refuses these before Docker as well.
+        self.docker_log.unlink(missing_ok=True)
+        for argument in ("cp -L ./f backend:/tmp/f", "down -v=true", "rm -fv", "up -V"):
+            result = subprocess.run(
+                [sys.executable, str(SOURCING), "compose", "--cmd", argument],
+                cwd=worktree,
+                env=self.env(),
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 1, argument)
+            self.assertFalse(self.docker_log.exists(), argument)
+
+    def test_legitimate_commands_are_not_mistaken_for_deletion_or_follow_link(self) -> None:
+        worktree = self.create()
+        self.ok(worktree, "claim", AGENT_ID="codex")
+        for role, command in (
+            ("prod", ["exec", "-T", "db", "pg_restore", "--list"]),
+            ("prod", ["exec", "-T", "db", "sh", "-c", "printf %s -v"]),
+            ("prod", ["start", "backend"]),
+            ("prod", ["stop", "backend"]),
+            ("prod", ["run", "--rm", "--no-deps", "backend", "python", "-v"]),
+            ("prod", ["up", "--detach", "--build"]),
+            ("prod", ["down"]),
+            ("prod", ["down", "--remove-orphans"]),
+            ("prod", ["down", "--rmi", "local"]),
+            ("prod", ["down", "-t5"]),
+            ("prod", ["down", "--timeout=5"]),
+            ("prod", ["rm", "-fs", "backend"]),
+            ("prod", ["rm", "-f", "vendor-service"]),
+            ("prod", ["cp", "-a", "./f", "backend:/tmp/f"]),
+            ("prod", ["cp", "--archive", "--index", "1", "./f", "backend:/tmp/f"]),
+            ("quality", ["run", "--rm", "--no-deps", "backend", "pytest", "-v"]),
+            (
+                "dev",
+                ["run", "--rm", "backend", "python", "-m", "florabase.auth.bootstrap", "owner"],
+            ),
+        ):
+            self.assertEqual(
+                self.compose_allowed(worktree, role, *command), [tuple(command)], command
+            )
+        for command in (
+            ["rm", "-fs", "backend"],
+            ["down", "--remove-orphans"],
+            ["cp", "-a", *SAFE_COPY[1:]],
+        ):
+            self.assertEqual(
+                self.compose_allowed(worktree, "review", *command, AGENT_ID="codex"),
+                [tuple(command)],
+                command,
+            )
+        # The established make down recipe stays a plain, volume-preserving down.
+        makefile = (ROOT / "Makefile").read_text()
+        self.assertIn("$(COMPOSE) down\n", makefile)
+        self.assertIn("$(COMPOSE) up --detach --build\n", makefile)
+
     def test_dev_route_refuses_unsupported_mutations_and_keeps_operator_flows(self) -> None:
         worktree = self.create()
         for verb in (

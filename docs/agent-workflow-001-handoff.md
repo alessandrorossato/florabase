@@ -30,6 +30,10 @@ Compose v5.6.1 verb that refuses unknown verbs; the policy table is in the workf
 `make sourcing-preview-compose` was labelled read-only but was not, and Sourcing make targets had no writer check.
 DEV gained a lifecycle lock around its up, stop, upgrade and supported mutating passthrough.
 
+A further QA pass found production passthrough still allowed `down -v`, and that `cp -L` escaped path checks. Probing
+the real parser with `--dry-run` on an empty project showed Compose also accepts `-v=true`, `-v=1`, `-vt5` and
+`rm -vf=true`, which the earlier Review and Sourcing regex missed too. Flags now follow that grammar on every role.
+
 ## Tradeoffs and compatibility
 
 - `AGENT_ID` and local Git metadata enforce a cooperative protocol, not authenticated security: identity is declared,
@@ -46,7 +50,8 @@ DEV gained a lifecycle lock around its up, stop, upgrade and supported mutating 
 - Existing Codex worktrees, 28ce, 548f, bf7a and `florabase-claude` are unaffected: retirement requires a marker only
   `make feature-worktree` writes.
 - Agents in a claimed worktree are not writer-gated on DEV passthrough such as `make dev-bootstrap-owner`, because DEV
-  has no feature writer. `run -v` and symlinks inside containers can still reach data for an authorized writer.
+  has no feature writer. `run`, `exec` and direct Docker can still change or delete data, and a plain `cp` to a path
+  that is already a symlink inside the container is not detected.
 - A long `exec` or `watch` on Review holds its lock, so two concurrent `review compose exec` commands now refuse.
 - A worktree created before this helper, including this branch's own, has no marker. Remove those deliberately.
 - Interruption between finish's proof and branch deletion leaves retirement refusing until the operator deletes that ref.
