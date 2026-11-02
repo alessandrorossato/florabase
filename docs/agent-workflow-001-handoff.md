@@ -23,10 +23,18 @@ address-pool contention, so only FULL takes the machine lock. Review's real gap 
 owner labels do not exist until creation, so two sources could both pass `require_owner`. Lifecycle commands now
 hold a machine lock. Review and UAT share port 15174, which fails loudly at bind and keeps separate volumes.
 
+## Compose passthrough classification
+
+Independent QA found the first guard was a denylist that missed `cp` and `watch`. It is now an allowlist over every
+Compose v5.6.1 verb that refuses unknown verbs; the policy table is in the workflow contract. The same review found
+`make sourcing-preview-compose` was labelled read-only but was not, and Sourcing make targets had no writer check.
+DEV gained a lifecycle lock around its up, stop, upgrade and supported mutating passthrough.
+
 ## Tradeoffs and compatibility
 
-- `AGENT_ID` is declared, not authenticated, and raw file edits are not intercepted. Guards bind cooperating agents at
-  gates; they do not sandbox a hostile one. An agent omitting `AGENT_ID` at deliver is treated as the operator, and an
+- `AGENT_ID` and local Git metadata enforce a cooperative protocol, not authenticated security: identity is declared,
+  state files are locally writable and raw file edits are not intercepted. Guards bind cooperating agents at gates;
+  they do not sandbox a hostile one, and direct `docker` commands are outside them. An agent omitting `AGENT_ID` at deliver is treated as the operator, and an
   agent with a pseudo-terminal could reach takeover. Two live sessions sharing one name both pass, with a warning.
 - After SIGKILL the lock is released while a Docker stage may briefly continue, which can overlap a new FULL. Unique
   projects keep this a capacity matter; the failed-run recovery command still applies.
@@ -37,5 +45,8 @@ hold a machine lock. Review and UAT share port 15174, which fails loudly at bind
   rewrite no longer causes refusal. Delivery keeps its own stricter expanded check.
 - Existing Codex worktrees, 28ce, 548f, bf7a and `florabase-claude` are unaffected: retirement requires a marker only
   `make feature-worktree` writes.
+- Agents in a claimed worktree are not writer-gated on DEV passthrough such as `make dev-bootstrap-owner`, because DEV
+  has no feature writer. `run -v` and symlinks inside containers can still reach data for an authorized writer.
+- A long `exec` or `watch` on Review holds its lock, so two concurrent `review compose exec` commands now refuse.
 - A worktree created before this helper, including this branch's own, has no marker. Remove those deliberately.
 - Interruption between finish's proof and branch deletion leaves retirement refusing until the operator deletes that ref.

@@ -28,7 +28,8 @@ commands such as `make feature-verify`. Hand over only with
 `make feature-handoff AGENT_ID=<agent> TO=<agent> REPORT=<file>`. A receiving agent validates through
 `make feature-claim` and treats the report as a claim, not evidence. `TAKEOVER=` is for the operator
 at a terminal after confirming the previous session is gone; agents never use it. Each live session
-uses its own `AGENT_ID`. Read-only reviewers use their own detached checkout.
+uses its own `AGENT_ID`. This is a cooperative protocol, not authenticated security: follow it even
+where nothing would stop you. Mutating or unknown Compose passthrough is guarded or refused. Read-only reviewers use their own detached checkout.
 Follow [docs/development-workflow.md](docs/development-workflow.md) for source,
 environment and review-profile boundaries. Implement the smallest coherent change, run focused checks while developing,
 then complete one policy-selected canonical gate before marking a feature `verified`.

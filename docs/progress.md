@@ -6872,6 +6872,8 @@ Status remains implemented pending canonical verification.
   test-verification-impact 24, test-workflow-resources 14, test-preview-workflow 19, test-uat-preview 19 + 15,
   test-workflow-helpers, workflow-check. Real smoke on this repository: claim and refusal, Review ownership refusal
   against the protected owner, create/attach/collision, refused retire of `548f`. Final gate: canonical FULL, by receipt.
+- Second independent QA (Codex): FAIL, P1 Review Compose denylist omitted `cp` and `watch`. Corrected with a fail-closed
+  allowlist across Review, Sourcing, DEV, Quality and production routes; pending re-review, then a new canonical FULL.
 - Not exercised: real Claude Code, Codex or OpenCode sessions (provider identities are simulated) and real delivery.
 - See [handoff](agent-workflow-001-handoff.md) for design and tradeoffs. Status stays `implemented`;
   no push, PR, merge, finish, old clone/worktree removal or Docker/Git prune.

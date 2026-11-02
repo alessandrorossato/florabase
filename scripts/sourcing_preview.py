@@ -22,6 +22,7 @@ from workflow_environment import (
     Repository,
     WorkflowError,
     code_heads,
+    compose_is_mutating,
     migration_graph,
     run,
 )
@@ -182,12 +183,10 @@ class SourcingPreview(Environment):
 
 
 def compose_passthrough(preview: SourcingPreview, command: list[str]) -> None:
-    if not command or command[0].startswith("-"):
-        raise WorkflowError("provide a Compose subcommand; project/files/config are fixed")
-    if command[0] == "down" and any(item in command for item in ("-v", "--volumes")):
-        raise WorkflowError("use sourcing-preview-remove with its exact project confirmation")
-    if command[0] in {"up", "down", "start", "stop", "restart", "kill", "rm"}:
-        raise WorkflowError("use the sourcing-preview lifecycle actions instead of raw cleanup")
+    if compose_is_mutating("sourcing", command):
+        raise WorkflowError(
+            "sourcing-preview-compose is read-only; use the sourcing-preview lifecycle actions"
+        )
     preview.require_context()
     preview.validate()
     preview.require_owner()
@@ -243,6 +242,9 @@ def main() -> int:
     try:
         preview = SourcingPreview(Repository(Path.cwd()))
         if args.action in {"up", "seed", "bootstrap-owner", "stop", "remove"}:
+            if args.action != "stop":
+                helper = Path(__file__).with_name("feature_worktree.py")
+                run([sys.executable, str(helper), "require-writer"])
             # Owner labels only exist after creation; another source must not pass concurrently.
             with machine_lock(SOURCING_PROJECT, f"{SOURCING_PROJECT} lifecycle"):
                 dispatch(preview, args.action, args)

@@ -82,13 +82,30 @@ from `make feature-context` and run `make feature-claim AGENT_ID=<new> TAKEOVER=
 A takeover also accepts a drifted handoff after inspection. Give each live session its own `AGENT_ID`
 (`codex`, `codex-2`): reclaiming under the same name succeeds with a warning, because the helper has
 no way to tell two sessions apart. Keep `REPORT` outside the worktree, where it cannot change the tree.
-`feature-verify`, Review up/seed/remove and mutating Review Compose passthrough refuse a pending handoff and any other or missing
+`feature-verify`, Review/Sourcing up/seed/remove and their mutating Compose passthrough refuse a pending handoff and any other or missing
 `AGENT_ID` once a worktree is claimed. A never-claimed worktree behaves as before. `feature-deliver` and
-`feature-finish` refuse any `AGENT_ID` except `operator` and a pending handoff. Identity is declared,
-not authenticated, and raw file edits are not intercepted: the claim coordinates cooperating agents
-and gates their shared steps, it is not a sandbox. The terminal requirement for takeover and the
-identity check at delivery stop a cooperating agent acting by mistake, not a determined one. Read-only reviewers use
+`feature-finish` refuse any `AGENT_ID` except `operator` and a pending handoff. **`AGENT_ID` and the local Git metadata enforce a cooperative protocol, not
+authenticated security:** identity is declared, the state files are writable by any local process
+and raw file edits are not intercepted. The claim coordinates cooperating agents and gates their
+shared steps; it is not a sandbox. The terminal requirement for takeover and the identity check at
+delivery stop a cooperating agent acting by mistake, not a determined one. Read-only reviewers use
 `git worktree add --detach <path> <sha>` or a clean clone, in any number, and never hold a claim.
+
+**Compose passthrough** (`workflow_environment.py <role> compose`, `make sourcing-preview-compose`)
+classifies the subcommand before Docker is reached:
+
+| Class | Subcommands | Review, Sourcing | DEV | Quality, production |
+| --- | --- | --- | --- | --- |
+| Read-only | `config events images logs ls port ps stats top version volumes` | Available to anyone | Available | Available |
+| Mutating | `attach bridge build commit cp create down exec export kill pause publish pull push restart rm run scale start stop unpause up wait watch` | Writer claim and lifecycle lock | `build exec pull run` take the lifecycle lock; the rest are refused | Available; Quality refuses `down kill rm stop` |
+| Unknown or flag first | Anything else | Refused | Refused | Refused |
+
+`config -o`/`--output` writes a host file and counts as mutating. `down` or `rm` with any volume flag
+form is refused on Review and Sourcing in favour of the confirmed remove action. On every role, `cp`
+refuses relative container paths and any path that contains, or sits inside, PostgreSQL, media or
+dependency storage, in either direction. `make sourcing-preview-compose` permits only read-only
+subcommands. A mutating `exec` or `watch` holds the lock until it exits, so it blocks other lifecycle
+commands meanwhile. `run` and `exec` necessarily remain able to change data for the authorized writer.
 
 **Parallel features** use separate worktrees and need no coordination apart from these shared resources:
 

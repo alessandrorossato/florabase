@@ -7,6 +7,8 @@ values, GitHub and Docker are PATH mocks, and every Docker argument is recorded 
 
 from __future__ import annotations
 
+import contextlib
+import io
 import itertools
 import json
 import os
@@ -19,10 +21,20 @@ import tempfile
 import unittest
 from pathlib import Path
 from typing import Any, cast
+from unittest.mock import patch
+
+import sourcing_preview
+import workflow_environment
+from workflow_environment import COMPOSE_MUTATING, COMPOSE_READ_ONLY, Environment
+from workflow_resources import ResourceError, machine_lock
 
 ROOT = Path(__file__).resolve().parent.parent
 HELPER = ROOT / "scripts/feature_worktree.py"
 GITHUB = "https://github.com/alessandrorossato/florabase.git"
+ENVIRONMENT = ROOT / "scripts/workflow_environment.py"
+SOURCING = ROOT / "scripts/sourcing_preview.py"
+# A copy that is valid on every route, so only the guard under test can refuse it.
+SAFE_COPY = ["cp", "./file", "backend:/tmp/file"]
 REPORT = {
     "completed": ["implemented lifecycle"],
     "tests": ["make test-agent-workflow"],
@@ -549,6 +561,333 @@ class AgentWorkflowTests(unittest.TestCase):
         moved = ("--branch", "feat/example-001", "--sha", "0" * 40, "--merge", sha)
         self.assertEqual(self.helper(worktree, "mark-finished", *moved).returncode, 1)
         self.refused("codex holds", worktree, "require-writer")
+
+    # Compose passthrough -----------------------------------------------------------------------
+
+    def compose_cli(
+        self, cwd: Path, role: str, *command: str, **values: str
+    ) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, str(ENVIRONMENT), role, "compose", "--", *command],
+            cwd=cwd,
+            env=self.env(**values),
+            capture_output=True,
+            text=True,
+        )
+
+    def compose_refused(
+        self, needle: str, cwd: Path, role: str, *command: str, **values: str
+    ) -> None:
+        """A refusal must name its reason and leave Docker, including persistent state, untouched."""
+        self.docker_log.unlink(missing_ok=True)
+        result = self.compose_cli(cwd, role, *command, **values)
+        self.assertEqual(result.returncode, 1, (role, command, result.stdout))
+        self.assertIn(needle, result.stderr, (role, command))
+        self.assertFalse(self.docker_log.exists(), (role, command, "reached Docker"))
+
+    def compose_allowed(
+        self, cwd: Path, role: str, *command: str, **values: str
+    ) -> list[tuple[str, ...]]:
+        """Run main() in process with Docker mocked at the Compose call, returning those calls."""
+        with (
+            contextlib.chdir(cwd),
+            patch.dict(os.environ, self.env(**values), clear=True),
+            patch("sys.argv", ["workflow", role, "compose", "--", *command]),
+            patch.object(Environment, "validate"),
+            patch.object(Environment, "require_owner"),
+            patch.object(Environment, "prepare_initializer"),
+            patch.object(Environment, "compose") as compose,
+            contextlib.redirect_stderr(io.StringIO()) as stderr,
+        ):
+            self.assertEqual(workflow_environment.main(), 0, stderr.getvalue())
+        return [call.args for call in compose.call_args_list]
+
+    def test_compose_policy_classifies_every_installed_verb_exactly_once(self) -> None:
+        # docker compose --help, Docker Compose v5.6.1. A new verb is refused until classified.
+        installed = set(
+            "attach bridge build commit config cp create down events exec export images kill logs "
+            "ls pause port ps publish pull push restart rm run scale start stats stop top unpause "
+            "up version volumes wait watch".split()
+        )
+        self.assertEqual(COMPOSE_READ_ONLY | COMPOSE_MUTATING, installed)
+        self.assertEqual(COMPOSE_READ_ONLY & COMPOSE_MUTATING, set())
+
+    def test_every_mutating_verb_needs_the_writer_on_review_and_sourcing(self) -> None:
+        worktree = self.create()
+        self.ok(worktree, "claim", AGENT_ID="codex")
+        for role in ("review", "sourcing"):
+            for verb in sorted(COMPOSE_MUTATING):
+                # cp and watch were the verbs that bypassed the original denylist.
+                command = SAFE_COPY if verb == "cp" else [verb]
+                self.compose_refused("codex holds this worktree", worktree, role, *command)
+                self.compose_refused(
+                    "codex holds this worktree", worktree, role, *command, AGENT_ID="opencode"
+                )
+
+    def test_doubled_separator_cannot_disguise_a_mutating_verb(self) -> None:
+        worktree = self.create()
+        self.ok(worktree, "claim", AGENT_ID="codex")
+        self.docker_log.unlink(missing_ok=True)
+        for command in (["--", *SAFE_COPY], ["--", "watch"]):
+            result = self.compose_cli(worktree, "review", *command, AGENT_ID="opencode")
+            self.assertEqual(result.returncode, 1, command)
+            self.assertFalse(self.docker_log.exists(), command)
+
+    def test_cp_and_watch_are_blocked_by_a_pending_handoff(self) -> None:
+        worktree = self.create()
+        self.ok(worktree, "claim", AGENT_ID="codex")
+        self.ok(worktree, "handoff", AGENT_ID="codex", TO="opencode", REPORT=self.report())
+        for command in (SAFE_COPY, ["watch"]):
+            self.compose_refused("is pending", worktree, "review", *command, AGENT_ID="codex")
+            self.compose_refused("is pending", worktree, "review", *command, AGENT_ID="opencode")
+
+    def test_every_mutating_verb_respects_lifecycle_lock_contention(self) -> None:
+        other, worktree = self.create("feat/other"), self.create("fix/current")
+        self.ok(worktree, "claim", AGENT_ID="codex")
+        for role, project in (
+            ("review", "florabase-feature-review"),
+            ("sourcing", "florabase-sourcing-preview"),
+        ):
+            holder = self.hold(other, f"machine_lock({project!r}, 'held lifecycle')")
+            for verb in sorted(COMPOSE_MUTATING):
+                command = SAFE_COPY if verb == "cp" else [verb]
+                self.compose_refused(
+                    "lifecycle is already running", worktree, role, *command, AGENT_ID="codex"
+                )
+            self.release(holder)
+        holder = self.hold(other, "machine_lock('florabase', 'held lifecycle')")
+        for verb in ("build", "exec", "pull", "run"):
+            self.compose_refused("lifecycle is already running", worktree, "dev", verb)
+        self.release(holder)
+
+    def test_unknown_and_flag_first_subcommands_fail_closed_on_every_route(self) -> None:
+        worktree = self.create()
+        for role in ("review", "sourcing", "dev", "quality", "prod"):
+            for verb in ("frobnicate", "alpha", "CP", "volume"):
+                self.compose_refused("unknown Compose subcommand", worktree, role, verb)
+            for command in (
+                ["--project-name", "florabase-prod", "cp"],
+                ["-f", "other.yaml", "watch"],
+                ["--dry-run", "down"],
+            ):
+                self.compose_refused("provide a Compose subcommand", worktree, role, *command)
+        self.docker_log.unlink(missing_ok=True)
+        result = subprocess.run(
+            [sys.executable, str(ENVIRONMENT), "review", "compose"],
+            cwd=worktree,
+            env=self.env(),
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(self.docker_log.exists())
+
+    def test_config_writing_a_host_file_is_guarded_but_config_flags_stay_readable(self) -> None:
+        worktree = self.create()
+        self.ok(worktree, "claim", AGENT_ID="codex")
+        for option in (
+            ["-o", "out"],
+            ["--output", "out"],
+            ["--output=out"],
+            ["-qo", "out"],
+            ["-oout"],
+        ):
+            self.compose_refused("codex holds", worktree, "review", "config", *option)
+        for option in (
+            ["--volumes"],
+            ["--services"],
+            ["-q"],
+            ["--no-normalize"],
+            ["--format", "json"],
+        ):
+            self.assertEqual(
+                self.compose_allowed(worktree, "review", "config", *option),
+                [("config", *option)],
+            )
+
+    def test_volume_deletion_forms_are_refused_even_for_the_writer(self) -> None:
+        worktree = self.create()
+        self.ok(worktree, "claim", AGENT_ID="codex")
+        for role in ("review", "sourcing"):
+            for command in (
+                ["down", "-v"],
+                ["down", "--volumes"],
+                ["down", "--volumes=true"],
+                ["down", "--remove-orphans", "-v"],
+                ["rm", "-v"],
+                ["rm", "-fsv"],
+                ["rm", "--volumes", "backend"],
+            ):
+                self.compose_refused(
+                    "exact project confirmation", worktree, role, *command, AGENT_ID="codex"
+                )
+        self.assertEqual(
+            self.compose_allowed(worktree, "review", "rm", "-f", "backend", AGENT_ID="codex"),
+            [("rm", "-f", "backend")],
+        )
+
+    def test_cp_cannot_reach_persistent_paths_on_any_route_or_in_any_form(self) -> None:
+        worktree = self.create()
+        self.ok(worktree, "claim", AGENT_ID="codex")
+        for role in ("review", "sourcing", "dev", "quality", "prod"):
+            for command in (
+                ["./f", "db:/var/lib/postgresql/data/base"],
+                ["./f", "db:/var/lib/postgresql"],
+                ["./f", "db:/var/lib"],
+                ["./f", "db:/"],
+                ["./f", "db://var/lib/postgresql/data"],
+                ["./f", "db:/tmp/../var/lib/postgresql/data"],
+                ["./f", "backend:/var/lib/florabase/attachments/x"],
+                ["./f", "backend:/tmp/florabase-attachments/x"],
+                ["./f", "frontend:/app/node_modules/x"],
+                ["-", "db:/var/lib/postgresql/data"],
+                ["--archive", "./f", "db:/var/lib/postgresql/data"],
+                ["./f", "db:/var/lib/postgresql/data", "--index", "1"],
+                ["db:/var/lib/postgresql/data", "./exfiltrated"],
+            ):
+                self.compose_refused(
+                    "persistent container state", worktree, role, "cp", *command, AGENT_ID="codex"
+                )
+            for target in ("frontend:node_modules/x", "db:../var/lib/postgresql", "backend:."):
+                self.compose_refused(
+                    "absolute container path", worktree, role, "cp", "./f", target, AGENT_ID="codex"
+                )
+
+    def test_dev_route_refuses_unsupported_mutations_and_keeps_operator_flows(self) -> None:
+        worktree = self.create()
+        for verb in (
+            "cp",
+            "watch",
+            "create",
+            "scale",
+            "pause",
+            "attach",
+            "commit",
+            "wait",
+            "publish",
+        ):
+            command = SAFE_COPY if verb == "cp" else [verb]
+            self.compose_refused("not supported against DEV", worktree, "dev", *command)
+        for verb in ("up", "down", "start", "stop", "restart", "kill", "rm"):
+            self.compose_refused("raw DEV lifecycle cleanup is refused", worktree, "dev", verb)
+        bootstrap = ("run", "--rm", "backend", "python", "-m", "florabase.auth.bootstrap", "owner")
+        self.assertEqual(self.compose_allowed(worktree, "dev", *bootstrap), [bootstrap])
+
+    def test_read_only_verbs_stay_available_without_identity_or_lock(self) -> None:
+        worktree = self.create()
+        self.ok(worktree, "claim", AGENT_ID="codex")
+        holders = [
+            self.hold(worktree, f"machine_lock({name!r}, 'held')")
+            for name in ("florabase-feature-review", "florabase-sourcing-preview", "florabase")
+        ]
+        for role in ("review", "sourcing", "dev", "quality", "prod"):
+            for verb in sorted(COMPOSE_READ_ONLY):
+                self.assertEqual(
+                    self.compose_allowed(worktree, role, verb, AGENT_ID="opencode"), [(verb,)]
+                )
+        for holder in holders:
+            self.release(holder)
+
+    def test_authorized_writer_reaches_compose_only_while_holding_the_lock(self) -> None:
+        worktree = self.create()
+        self.ok(worktree, "claim", AGENT_ID="codex")
+
+        def held(*_args: str, **_kwargs: object) -> None:
+            with self.assertRaises(ResourceError):
+                with machine_lock("florabase-feature-review", "probe"):
+                    pass
+
+        for command in (
+            SAFE_COPY,
+            ["watch"],
+            ["exec", "-T", "frontend", "pnpm", "build"],
+            ["run", "--rm", "backend", "alembic", "revision", "--autogenerate", "-m", "x"],
+            ["config", "-o", "../out.yaml"],
+        ):
+            with (
+                contextlib.chdir(worktree),
+                patch.dict(os.environ, self.env(AGENT_ID="codex"), clear=True),
+                patch("sys.argv", ["workflow", "review", "compose", "--", *command]),
+                patch.object(Environment, "validate"),
+                patch.object(Environment, "require_owner"),
+                patch.object(Environment, "compose", side_effect=held) as compose,
+            ):
+                self.assertEqual(workflow_environment.main(), 0)
+            compose.assert_called_once_with(*command)
+        # Never-claimed worktrees keep working with no identity at all.
+        unclaimed = self.create("fix/unclaimed")
+        self.assertEqual(self.compose_allowed(unclaimed, "review", *SAFE_COPY), [tuple(SAFE_COPY)])
+
+    def test_quality_and_production_routes_keep_their_established_contract(self) -> None:
+        worktree = self.create()
+        self.ok(worktree, "claim", AGENT_ID="codex")
+        # Gate stages and backup/restore scripts use these without a writer identity.
+        for role, command in (
+            ("quality", ["run", "--rm", "--no-deps", "backend", "pytest"]),
+            ("prod", ["exec", "-T", "db", "pg_restore", "--list"]),
+            ("prod", ["stop", "backend"]),
+            ("prod", ["start", "backend"]),
+        ):
+            self.assertEqual(self.compose_allowed(worktree, role, *command), [tuple(command)])
+        for verb in ("down", "rm", "stop", "kill"):
+            self.compose_refused("make quality-clean", worktree, "quality", verb)
+
+    def test_sourcing_preview_passthrough_is_truly_read_only(self) -> None:
+        worktree = self.create()
+
+        def cli(argument: str, **values: str) -> subprocess.CompletedProcess[str]:
+            self.docker_log.unlink(missing_ok=True)
+            return subprocess.run(
+                [sys.executable, str(SOURCING), "compose", "--cmd", argument],
+                cwd=worktree,
+                env=self.env(**values),
+                capture_output=True,
+                text=True,
+            )
+
+        for verb in sorted(COMPOSE_MUTATING):
+            argument = " ".join(SAFE_COPY) if verb == "cp" else verb
+            result = cli(argument)
+            self.assertEqual(result.returncode, 1, verb)
+            self.assertIn("is read-only", result.stderr, verb)
+            self.assertFalse(self.docker_log.exists(), verb)
+        for argument, needle in (
+            ("config -o out", "is read-only"),
+            ("frobnicate", "unknown Compose subcommand"),
+            ("--project-name other ps", "provide a Compose subcommand"),
+            ("down -v", "exact project confirmation"),
+        ):
+            result = cli(argument)
+            self.assertEqual(result.returncode, 1, argument)
+            self.assertIn(needle, result.stderr, argument)
+            self.assertFalse(self.docker_log.exists(), argument)
+        with (
+            contextlib.chdir(worktree),
+            patch.dict(os.environ, self.env(AGENT_ID="opencode"), clear=True),
+            patch("sys.argv", ["sourcing", "compose", "--cmd", "ps -a"]),
+            patch.object(sourcing_preview.SourcingPreview, "require_context"),
+            patch.object(sourcing_preview.SourcingPreview, "validate"),
+            patch.object(sourcing_preview.SourcingPreview, "require_owner"),
+            patch.object(sourcing_preview.SourcingPreview, "compose") as compose,
+        ):
+            self.assertEqual(sourcing_preview.main(), 0)
+        compose.assert_called_once_with("ps", "-a")
+
+    def test_sourcing_make_lifecycle_needs_the_writer_before_docker(self) -> None:
+        worktree = self.create()
+        self.ok(worktree, "claim", AGENT_ID="codex")
+        for action in ("up", "seed", "bootstrap-owner", "remove"):
+            self.docker_log.unlink(missing_ok=True)
+            result = subprocess.run(
+                [sys.executable, str(SOURCING), action],
+                cwd=worktree,
+                env=self.env(AGENT_ID="opencode"),
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 1, action)
+            self.assertIn("codex holds this worktree", result.stderr, action)
+            self.assertFalse(self.docker_log.exists(), action)
 
     def test_sourcing_lifecycle_is_serialized_before_any_docker_change(self) -> None:
         worktree = self.create()
