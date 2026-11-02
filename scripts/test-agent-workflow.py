@@ -21,14 +21,20 @@ import sys
 import tempfile
 import unittest
 import uuid
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, cast
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import feature_worktree
 import sourcing_preview
 import workflow_environment
-from workflow_environment import COMPOSE_MUTATING, COMPOSE_READ_ONLY, Environment
+from workflow_environment import (
+    COMPOSE_MUTATING,
+    COMPOSE_READ_ONLY,
+    Environment,
+    Repository,
+)
 from workflow_resources import ResourceError, machine_lock
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -1481,6 +1487,106 @@ class AgentWorkflowTests(unittest.TestCase):
                         workflow_environment.WorkflowError, "volume backing"
                     ):
                         feature_worktree.require_no_running_mounts(candidate)
+
+    def assert_offline_retirement_blocked(self, worktree: Path, reason: str) -> None:
+        original_git = Repository.git
+        removals: list[tuple[str, ...]] = []
+
+        def guarded_git(repo: Repository, *args: str) -> str:
+            if args[:2] == ("worktree", "remove"):
+                removals.append(args)
+                raise AssertionError("Git removal reached before safe refusal")
+            return original_git(repo, *args)
+
+        with patch.object(Repository, "git", guarded_git):
+            with self.assertRaisesRegex(workflow_environment.WorkflowError, reason):
+                feature_worktree.retire(Repository(self.primary), "example-001", "example-001")
+        self.assertEqual(removals, [])
+        self.assertIn(str(worktree), self.git(self.primary, "worktree", "list"))
+        self.assertEqual((worktree / "feature.txt").read_text(), "feature\n")
+        self.assertEqual((worktree / "frontend/package.json").read_text(), "{}\n")
+
+    def offline_sticky_child(self, *, fifo: bool) -> None:
+        worktree = self.finished(frontend=True)
+        (self.primary / ".git/info/exclude").write_text("node_modules/\n")
+        cache = worktree / "frontend/node_modules"
+        cache.mkdir()
+        child = cache / "foreign"
+        if fifo:
+            os.mkfifo(child)
+        else:
+            child.write_text("retained")
+        original_stat, original_scan = Path.stat, os.scandir
+        foreign_uid = os.geteuid() + 1
+
+        def foreign_stat(path: Path, *, follow_symlinks: bool = True) -> os.stat_result:
+            result = original_stat(path, follow_symlinks=follow_symlinks)
+            if path in (cache, child):
+                fields = list(result)
+                fields[4] = foreign_uid
+                if path == cache:
+                    fields[0] = stat.S_IFDIR | 0o1777
+                return os.stat_result(fields)
+            return result
+
+        @contextlib.contextmanager
+        def foreign_scan(path: Path) -> Iterator[list[Any]]:
+            with original_scan(path) as entries:
+                children = []
+                for entry in entries:
+                    if Path(entry.path) == child:
+                        entry = Mock(wraps=entry, stat=Mock(return_value=foreign_stat(child)))
+                    children.append(entry)
+                yield children
+
+        with (
+            patch.object(Path, "stat", foreign_stat),
+            patch.object(os, "scandir", foreign_scan),
+            patch.object(feature_worktree, "docker", return_value=""),
+        ):
+            self.assert_offline_retirement_blocked(worktree, "sticky parent")
+        self.assertTrue(child.exists())
+        if fifo:
+            self.assertTrue(stat.S_ISFIFO(child.stat().st_mode))
+        else:
+            self.assertEqual(child.read_text(), "retained")
+
+    def test_offline_retire_rejects_sticky_foreign_regular_file(self) -> None:
+        self.offline_sticky_child(fifo=False)
+
+    def test_offline_retire_rejects_sticky_foreign_fifo(self) -> None:
+        self.offline_sticky_child(fifo=True)
+
+    def test_offline_retire_invokes_running_unlabelled_mount_guard(self) -> None:
+        worktree = self.finished(frontend=True)
+        identifier = "a" * 64
+        record = {
+            "Id": identifier,
+            "Running": True,
+            "Mounts": [
+                {"Type": "bind", "Source": str(worktree / "frontend"), "Destination": "/data"},
+            ],
+        }
+
+        def inventory(*args: str) -> str:
+            if args == ("ps", "--quiet", "--no-trunc"):
+                return identifier
+            if args[:3] == ("inspect", "--type", "container"):
+                return json.dumps(record)
+            if args[:2] in (("ps", "-a"), ("volume", "ls")):
+                return ""  # No Florabase labels: existing ownership checks pass.
+            raise AssertionError(f"Unexpected Docker command: {args}")
+
+        with (
+            patch.object(feature_worktree, "docker", side_effect=inventory),
+            patch.object(
+                feature_worktree,
+                "require_no_running_mounts",
+                wraps=feature_worktree.require_no_running_mounts,
+            ) as guard,
+        ):
+            self.assert_offline_retirement_blocked(worktree, "running container")
+            guard.assert_called_once_with(worktree)
 
     def docker_fixture(self, *args: str) -> str:
         """Actual Docker, outside the offline PATH mock; only exact disposable targets mutate."""

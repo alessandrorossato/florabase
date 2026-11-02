@@ -118,3 +118,10 @@ backup/restore and release automation are future acceptance work, not claimed co
 Next: independent delta QA on this corrected tree. Only after it passes may the appropriate QA session
 freeze source/index and run the policy-selected canonical gate. Do not push, open a PR, deliver, merge
 or run real feature-finish from this request. No `verified` promotion or release approval is implied.
+
+## Additional accepted limitations
+
+Docker mount Source is path-based; stale or deliberately retargeted paths cannot always be detected.
+Linux immutable files can still cause failed Git removal with orphaned directory state in exceptional
+privileged environments. These limits do not change the accepted safeguards or the separate planned
+WORKFLOW-RETIRE-AUTH-001 follow-up.
