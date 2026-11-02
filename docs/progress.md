@@ -6880,7 +6880,6 @@ Status remains implemented pending canonical verification.
 - See [handoff](agent-workflow-001-handoff.md) for design and tradeoffs. Status stays `implemented`;
   no push, PR, merge, finish, old clone/worktree removal or Docker/Git prune.
 
-
 ### UI-POLISH-001 — focused Wave 3 review candidate, 2 November 2026
 
 - Validated clean `feat/ui-polish-001` at cached main `9ac7b6c` in the operator-selected worktree;
@@ -6921,3 +6920,49 @@ Status remains implemented pending canonical verification.
 - N1/N2/N5/N6 remain nonblocking and deferred. C5, repeated metrics, broader QA-3/P3 and live
   visual acceptance remain outside this correction. Stored Material's accepted behavior is preserved.
   No canonical FULL, push, PR, merge, feature-finish, shared environment or TEST-DATA-001 changes.
+
+### TEST-DATA-001 golden dataset vertical slice — 2 November 2026
+
+- Added a manifest-driven SMOKE golden dataset (`scripts/golden_plan.py`, `scripts/golden_dataset.py`,
+  `scripts/fixtures/golden/`) generating through owning services into isolated `golden_*` databases and
+  media roots. `review_dataset_v5.apply_node` was extracted for reuse without behavior change. Design and
+  operator decisions: [design](test-data-001-design.md); coverage: `scripts/fixtures/golden/COVERAGE.md`.
+- Evidence: identical canonical digest across hash seeds, timezones and two separate disposable stacks;
+  idempotent repeat; atomic failure with retry; post-commit failure never ready; damage detected only in the
+  damaged copy; persistent targets refused; zero residual resources after each run.
+- Checks: `test_golden_dataset.py` and `test_review_dataset_v5.py` integration, `make workflow-check`,
+  `test-uat-preview`, `test-verification-impact`, `test-environment-workflow`, `check-features`.
+- Unresolved: COMPREHENSIVE and STRESS, ten planned scenarios, Review/UAT/performance adoption (needs operator
+  lifecycle review), independent QA. Status `in_progress`. No canonical FULL, push, PR or merge.
+
+### TEST-DATA-001 independent QA corrections — 2 November 2026
+
+- Added one exclusive, non-blocking per-copy lifecycle lock under `/tmp/florabase-golden/.locks`, covering create,
+  generate, validate, verify-baseline, digest and retire; a loser exits 75 and changes nothing.
+- Added `verify-baseline`, comparing a copy with a reviewed digest pinned in the manifest, separate from domain
+  validation. `digest` is now a diagnostic that also works on damaged copies.
+- Narrowed digest normalization after a column-by-column comparison of two copies: free text that looks like a
+  timestamp, canonical geography, the provider cache, media bytes and scenario keys are now content.
+- The coverage matrix now separates runnable from planned profiles; only SMOKE is executable.
+- Removed the `--copy` re-exec (about 1.1 s per CLI call) and parallelized losing contenders and teardown.
+- Checks: `make golden-dataset-check` (25 passed, 260 s; 172 s and 17 tests before),
+  `test_review_dataset_v5.py`, `make workflow-check`, `scripts/check-features.py`, `test-uat-preview`,
+  `test-verification-impact`, `test-environment-workflow`, backend `mypy` and ruff on the test module.
+- Not run: canonical FULL, the complete integration and unit suites, frontend checks, `smoke-uat-preview`.
+- Unresolved: every migration needs a reviewed manifest pin update; the digest has been observed on one calendar
+  date only; the application import still costs about 1.8 s per CLI process.
+
+### TEST-DATA-001 timestamp baseline correction — 2 November 2026
+
+- Fixed a false `baseline-verified`: every timestamp was reduced to present or absent, so moving
+  `external_taxon_links.last_refreshed_at` by 30 days changed stale/fresh behaviour but not the digest.
+- Generation now runs on a plan-derived clock (anchor date 12:00 UTC plus one second per node), and the digest
+  retains every timestamp. Only `app_metadata.created_at` and the empty session tables stay outside it.
+- Reviewed SMOKE baseline is now `70a1b1ae037cdfce7fa494096bbb557e266cfe7df5780183acda2c7d8dbef967`.
+- Added timestamp negatives through the CLI, an exhaustive per-column digest check, and `verify-baseline` to the
+  lock contention tests.
+- Checks: `test_golden_dataset.py` (29) and `test_review_dataset_v5.py` (3) in fresh disposable stacks,
+  `make workflow-check`, `test-uat-preview`, `test-verification-impact`, `test-environment-workflow`,
+  `scripts/check-features.py`, backend `mypy`, ruff on the test module.
+- Not run: canonical FULL, the complete integration and unit suites, frontend checks, `smoke-uat-preview`.
+- Unresolved: anchored timestamps read as stale on the real clock; the module takes about 5 minutes.

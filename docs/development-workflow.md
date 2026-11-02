@@ -543,6 +543,8 @@ blocks migration; no automatic downgrade or destructive ref-switch recovery occu
 and fixed disposable credentials. An EXIT trap removes only that run's containers and resources.
 No DEV or Review volumes are mounted. Feature migration-cycle testing uses another isolated project
 and applies previous-main head → feature head → previous-main head → feature head when required.
+`make golden-dataset-check` runs the [TEST-DATA-001 golden dataset](test-data-001-design.md) inside that
+same disposable workflow; its copies exist only beside disposable test PostgreSQL.
 
 `make up`, `build`, `migrate`, `down`, `backup`, and `restore` use the explicit `florabase-prod` project.
 `compose.yaml` remains the production distribution topology: immutable non-root backend/frontend

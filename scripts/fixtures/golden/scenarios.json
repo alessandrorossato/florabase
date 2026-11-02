@@ -1,0 +1,958 @@
+{
+  "schema_version": 1,
+  "dataset": "florabase-golden",
+  "version": 1,
+  "seed": 20261102,
+  "anchor_date": "2026-09-15",
+  "profiles": {
+    "smoke": {
+      "status": "implemented",
+      "purpose": "Small and fast; suitable for CI",
+      "volume": 12,
+      "expected": {
+        "plan_sha256": "5afd6ffe46fce10ac62b1ef1233c9944d8c206bef9d407ce4396b5e6ce64b0d7",
+        "nodes": 184,
+        "tables": {
+          "application_settings": 1,
+          "attachments": 3,
+          "botanical_identities": 21,
+          "botanical_identity_cover_images": 1,
+          "botanical_profile_native_ranges": 3,
+          "botanical_profiles": 1,
+          "collection_primary_photos": 2,
+          "events": 20,
+          "external_provider_cache": 1,
+          "external_taxon_links": 1,
+          "geographic_places": 2,
+          "germination_observations": 2,
+          "harvest_items": 3,
+          "harvest_material_dispositions": 4,
+          "harvest_material_inventory": 3,
+          "harvest_seed_lot_conversions": 2,
+          "harvests": 3,
+          "locations": 9,
+          "media_assets": 5,
+          "native_range_revisions": 1,
+          "operation_receipts": 8,
+          "orders": 4,
+          "plant_groups": 7,
+          "plants": 19,
+          "provenance_sites": 5,
+          "record_media_links": 4,
+          "saved_views": 3,
+          "scheduled_activities": 10,
+          "seed_lots": 31,
+          "sowings": 19,
+          "suppliers": 7,
+          "users": 1
+        },
+        "projections": {
+          "dashboard.overdue": 1,
+          "dashboard.due_today": 1,
+          "dashboard.next_seven_days": 4,
+          "dashboard.sowings_unknown_germination": 4,
+          "dashboard.sowings_zero_germination": 1,
+          "dashboard.purchase_packets_without_order": 2,
+          "identities": 21,
+          "locations": 9,
+          "seed_lots": 31,
+          "sowings": 19,
+          "plants": 19,
+          "plant_groups": 7,
+          "harvests": 3,
+          "stored_material": 3,
+          "suppliers": 7,
+          "orders": 4,
+          "history": 34,
+          "media.local": 3,
+          "media.external": 2,
+          "media.unlinked": 3,
+          "schedule.planned": 7,
+          "provenance.sites": 5,
+          "provenance.without_coordinates": 1
+        },
+        "baseline": {
+          "schema_revision": "20261013_0042",
+          "volume": 12,
+          "plan_sha256": "5afd6ffe46fce10ac62b1ef1233c9944d8c206bef9d407ce4396b5e6ce64b0d7",
+          "canonical_sha256": "70a1b1ae037cdfce7fa494096bbb557e266cfe7df5780183acda2c7d8dbef967",
+          "media_files": 3,
+          "media_sha256": "d3583210516d857e6f7c8c8c78a2c3e051d8fe31d001bb0f420c226bc5b39f6e",
+          "scenario_keys_sha256": "e7d0d666d58604b23a8d3a8d8cd661b839265743501ad742225c3998a9ec7ffa",
+          "tables": {
+            "application_settings": {
+              "rows": 1,
+              "sha256": "b127b493476585f2fb04cf764ea0f2e9f03c5e1802d52e2488d64b3286a2c13d"
+            },
+            "attachments": {
+              "rows": 3,
+              "sha256": "7a7b313adfa238a05da708ee49e2c1d26c271165c38c73cdf0db49babafcd7bc"
+            },
+            "botanical_identities": {
+              "rows": 21,
+              "sha256": "cc95a10e78301f366b0c4eb839ee0c569b6f1c98d6888c0b3f7ff4a89bed9a29"
+            },
+            "botanical_identity_cover_images": {
+              "rows": 1,
+              "sha256": "fa259d8062c975092d9dfa4694b8ad4e875076b62fc3335db1d872afc51f200e"
+            },
+            "botanical_profile_native_ranges": {
+              "rows": 3,
+              "sha256": "8291e25ea6647093300b4239cdc0fcbcce352e6477ea6484d61034db44dd5c5c"
+            },
+            "botanical_profiles": {
+              "rows": 1,
+              "sha256": "196abd817f6366f6ef74253ae5a3d2ca6e5f89e67adae3a5e1092cbd87ee073a"
+            },
+            "collection_primary_photos": {
+              "rows": 2,
+              "sha256": "a09a156a8621f8e1f06a3e152de5034e1406c11edd8726cae4948964170ee3e3"
+            },
+            "events": {
+              "rows": 20,
+              "sha256": "09a838fe23d97643672e70774fe09e64da53b5ced0610c6983b2bb00a6f80456"
+            },
+            "external_provider_cache": {
+              "rows": 1,
+              "sha256": "0890e5d799356fb64d2860bd041052f06357962541bf887bf9e2f4d9d565759d"
+            },
+            "external_taxon_links": {
+              "rows": 1,
+              "sha256": "92f49c96e79982c6c573ea7b5bef2c5271252810b2b5c96326ef34e7154af4db"
+            },
+            "geographic_places": {
+              "rows": 289,
+              "sha256": "4cffdc46a98b74f190e1f5c54508ff16c46ff6891e233a9354701caa799837a2"
+            },
+            "germination_observations": {
+              "rows": 2,
+              "sha256": "fdc14171d1eaa69361ae9fe087771941f9f6d049cb7a181deaf301c3063f7e18"
+            },
+            "harvest_items": {
+              "rows": 3,
+              "sha256": "e67d0e848c5b1f55e97e0703a8763e32a24881d50d0fc2a17ffc965c22bac5f2"
+            },
+            "harvest_material_dispositions": {
+              "rows": 4,
+              "sha256": "f5fe6e8fcf3a092135f7ab66efa04a839a1b581e44a35a32047b87efdd0aebc6"
+            },
+            "harvest_material_inventory": {
+              "rows": 3,
+              "sha256": "64887b9dbe70975a307e7e1f010c7848e942c30ac1961c2d05193ee4ac153bfa"
+            },
+            "harvest_seed_lot_conversions": {
+              "rows": 2,
+              "sha256": "a8d698ed1417b60b4f9ee9833a525b31fab7343b15cc79dceefa5d44613523d3"
+            },
+            "harvests": {
+              "rows": 3,
+              "sha256": "cd529a941c691209a831534019a0a01cc7b17c0fc7890066808a07049577ac81"
+            },
+            "locations": {
+              "rows": 9,
+              "sha256": "3ce7288afeea24dc073dc0632e2c2171ed8db3eb2a604cda83b19a0fbb6790a0"
+            },
+            "media_assets": {
+              "rows": 5,
+              "sha256": "9d07ea738f620a8a3aaed0edc3a3fbae03046a11ab4e60238a6cb1ba90806119"
+            },
+            "native_range_applications": {
+              "rows": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "native_range_proposals": {
+              "rows": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "native_range_revisions": {
+              "rows": 1,
+              "sha256": "c1a1d8f2d67be6a2802dddb288e40c5120154433821fd6890928023485e65efc"
+            },
+            "operation_receipts": {
+              "rows": 8,
+              "sha256": "1e2e8a2c53043f9d88d5ab71b13101c3f7eb038fe225b7cccccb6581c26084ef"
+            },
+            "orders": {
+              "rows": 4,
+              "sha256": "e97fd512c0ae3997be462b70d71fe071137d26e1920250e98a99f88f3d89e48c"
+            },
+            "plant_groups": {
+              "rows": 7,
+              "sha256": "f1694564b19a4aab1ce4606bf5b1f1a12048373fcc960273df467385ec1192c8"
+            },
+            "plants": {
+              "rows": 19,
+              "sha256": "6ad316f2392c1c01b3fdbd9f98e2911ccffd49edf36b6dbf664553c35b79cf07"
+            },
+            "provenance_sites": {
+              "rows": 5,
+              "sha256": "db87be14dc792cdfa59b1d7bcda0c836cd9bdd4d3ac104d109aa93573848a346"
+            },
+            "record_media_links": {
+              "rows": 4,
+              "sha256": "797a947805b40068286cb3c1103d2e51752b65edbf0d7ef179a9cf0d75c5fc40"
+            },
+            "saved_views": {
+              "rows": 3,
+              "sha256": "4dfc09fdc95d1ca5826195dd2c58818c940c44dd09469b322712e7ab02942db0"
+            },
+            "scheduled_activities": {
+              "rows": 10,
+              "sha256": "27b4521ea244ede1da70ad779f0027ff25b518943bfc061889d9715399b916af"
+            },
+            "seed_lots": {
+              "rows": 31,
+              "sha256": "a7bc01e1b9843e9c29827d91b08f78ca9ddee58d147b1119dac48a94aadcea1b"
+            },
+            "sowings": {
+              "rows": 19,
+              "sha256": "2d7859057c056dff56d2ef4f2e0cc8dafee47d65805eff831b8fdbf2de9d9d82"
+            },
+            "suppliers": {
+              "rows": 7,
+              "sha256": "3f145c9cca6407c56a4ffbaac19103aad9eb23bc423823f0cc77d22a348c1c92"
+            },
+            "users": {
+              "rows": 1,
+              "sha256": "e01b9b5d814f998a2bc30ad65b9bae1950c464dc3abf0cb572ffe2ad85c05490"
+            },
+            "wcvp_links": {
+              "rows": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "wfo_links": {
+              "rows": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          }
+        }
+      }
+    },
+    "comprehensive": {
+      "status": "planned",
+      "purpose": "Approximately 3,000–5,000 representative records",
+      "target_records": [
+        3000,
+        5000
+      ]
+    },
+    "stress": {
+      "status": "planned",
+      "purpose": "Separately generated performance experiments; never part of FULL"
+    }
+  },
+  "scenarios": [
+    {
+      "id": "base-reference",
+      "domain": "Reference base",
+      "status": "implemented",
+      "profiles": [
+        "smoke",
+        "comprehensive",
+        "stress"
+      ],
+      "covers": [
+        "single enabled owner",
+        "shared identities, supplier, Locations, mapped site"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "identity:base-reference/basil",
+          "field": "scientific_name",
+          "equals": "Ocimum basilicum"
+        },
+        {
+          "check": "field",
+          "key": "owner:base-reference/owner",
+          "field": "enabled",
+          "equals": true
+        },
+        {
+          "check": "field",
+          "key": "location:base-reference/shelf",
+          "field": "parent_id",
+          "equals_ref": "location:base-reference/root"
+        }
+      ]
+    },
+    {
+      "id": "identity-completeness",
+      "domain": "Botanical Identity",
+      "status": "implemented",
+      "profiles": [
+        "smoke",
+        "comprehensive",
+        "stress"
+      ],
+      "covers": [
+        "sparse scientific-name-only reference identity",
+        "hybrid and non-ASCII names",
+        "long cultivar label",
+        "same species with distinct cultivars"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "identity:identity-completeness/sparse",
+          "field": "common_name",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "identity:identity-completeness/cultivar-a",
+          "field": "scientific_name",
+          "equals": "Solanum lycopersicum"
+        },
+        {
+          "check": "field",
+          "key": "identity:identity-completeness/cultivar-b",
+          "field": "cultivar_name",
+          "equals": "Golden B"
+        }
+      ]
+    },
+    {
+      "id": "identity-reference",
+      "domain": "Botanical Identity",
+      "status": "implemented",
+      "profiles": [
+        "smoke",
+        "comprehensive",
+        "stress"
+      ],
+      "covers": [
+        "rich profile",
+        "overlapping native ranges with a custom place",
+        "offline-confirmed external taxon link with no provider request"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "external_taxon:identity-reference/basil",
+          "field": "external_id",
+          "equals": "48GBK"
+        },
+        {
+          "check": "field",
+          "key": "external_taxon:identity-reference/basil",
+          "field": "botanical_identity_id",
+          "equals_ref": "identity:base-reference/basil"
+        }
+      ]
+    },
+    {
+      "id": "sourcing-suppliers-orders",
+      "domain": "Suppliers and Orders",
+      "status": "implemented",
+      "profiles": [
+        "smoke",
+        "comprehensive",
+        "stress"
+      ],
+      "covers": [
+        "all Supplier kinds",
+        "retired Supplier retaining an Order",
+        "exact, zero-price, month-only and year-only Orders",
+        "unknown Supplier",
+        "several packets in one Order",
+        "purchase outside an Order"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "supplier:sourcing-suppliers-orders/retired",
+          "field": "retired_at",
+          "not_null": true
+        },
+        {
+          "check": "field",
+          "key": "order:sourcing-suppliers-orders/retained-retired",
+          "field": "supplier_id",
+          "equals_ref": "supplier:sourcing-suppliers-orders/retired"
+        },
+        {
+          "check": "field",
+          "key": "order:sourcing-suppliers-orders/month-unknown-supplier",
+          "field": "supplier_id",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "order:sourcing-suppliers-orders/free",
+          "field": "total_price",
+          "equals": "0"
+        },
+        {
+          "check": "field",
+          "key": "seed:sourcing-suppliers-orders/second",
+          "field": "order_id",
+          "equals_ref": "order:sourcing-suppliers-orders/exact"
+        },
+        {
+          "check": "field",
+          "key": "seed:sourcing-suppliers-orders/outside-order",
+          "field": "order_id",
+          "is_null": true
+        }
+      ]
+    },
+    {
+      "id": "seed-quantity-states",
+      "domain": "SeedLots",
+      "status": "implemented",
+      "profiles": [
+        "smoke",
+        "comprehensive",
+        "stress"
+      ],
+      "covers": [
+        "unknown, approximate, exact, weight (g, mg) and zero quantity",
+        "year-only and month-only acquisition",
+        "exhausted, discarded and lost lifecycles",
+        "expired viability",
+        "no Location"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "seed:seed-quantity-states/unknown",
+          "field": "quantity_value",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "seed:seed-quantity-states/approximate-year",
+          "field": "quantity_is_approximate",
+          "equals": true
+        },
+        {
+          "check": "field",
+          "key": "seed:seed-quantity-states/approximate-year",
+          "field": "acquisition_date_month",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "seed:seed-quantity-states/exact-month",
+          "field": "acquisition_date_day",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "seed:seed-quantity-states/exhausted-zero",
+          "field": "quantity_value",
+          "equals": "0"
+        },
+        {
+          "check": "field",
+          "key": "seed:seed-quantity-states/exhausted-zero",
+          "field": "lifecycle",
+          "equals": "exhausted"
+        },
+        {
+          "check": "field",
+          "key": "seed:seed-quantity-states/weight-mg",
+          "field": "quantity_unit",
+          "equals": "mg"
+        }
+      ]
+    },
+    {
+      "id": "sowing-germination-states",
+      "domain": "Sowings",
+      "status": "implemented",
+      "profiles": [
+        "smoke",
+        "comprehensive",
+        "stress"
+      ],
+      "covers": [
+        "null, zero and positive germination",
+        "completed, failed and abandoned",
+        "unknown, year, month and day dates",
+        "negative temperature bound",
+        "dated observations distinct from summary"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "sowing:sowing-germination-states/germination-null",
+          "field": "germinated_count",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "sowing:sowing-germination-states/germination-zero",
+          "field": "germinated_count",
+          "equals": 0
+        },
+        {
+          "check": "field",
+          "key": "sowing:sowing-germination-states/failed",
+          "field": "lifecycle",
+          "equals": "failed"
+        },
+        {
+          "check": "field",
+          "key": "observation:sowing-germination-states/second",
+          "field": "newly_germinated_count",
+          "equals": 2
+        }
+      ]
+    },
+    {
+      "id": "propagation-operations",
+      "domain": "Lineage and propagation",
+      "status": "implemented",
+      "profiles": [
+        "smoke",
+        "comprehensive",
+        "stress"
+      ],
+      "covers": [
+        "partial and use-all stock transitions",
+        "reversed transition restoring stock",
+        "Sowing-derived Plant and PlantGroup",
+        "operation receipts"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "seed:propagation-operations/source",
+          "field": "quantity_value",
+          "equals": "40"
+        },
+        {
+          "check": "field",
+          "key": "seed:propagation-operations/use-all",
+          "field": "quantity_value",
+          "equals": "0"
+        },
+        {
+          "check": "field",
+          "key": "sowing:propagation-operations/undone",
+          "field": "lifecycle",
+          "equals": "reversed"
+        },
+        {
+          "check": "field",
+          "key": "plant:propagation-operations/derived",
+          "field": "originating_sowing_id",
+          "equals_ref": "sowing:propagation-operations/partial"
+        }
+      ]
+    },
+    {
+      "id": "plant-lifecycle-states",
+      "domain": "Plants and PlantGroups",
+      "status": "implemented",
+      "profiles": [
+        "smoke",
+        "comprehensive",
+        "stress"
+      ],
+      "covers": [
+        "active, dead, lost, discarded and transferred Plants",
+        "exact, approximate, unknown and zero group quantity",
+        "extraction and reintegration",
+        "unlabelled record"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "plant:plant-lifecycle-states/transferred",
+          "field": "lifecycle",
+          "equals": "transferred"
+        },
+        {
+          "check": "field",
+          "key": "plant:plant-lifecycle-states/reintegrated",
+          "field": "lifecycle",
+          "equals": "reintegrated"
+        },
+        {
+          "check": "field",
+          "key": "group:plant-lifecycle-states/exact",
+          "field": "quantity_value",
+          "equals": 11
+        },
+        {
+          "check": "field",
+          "key": "group:plant-lifecycle-states/unknown",
+          "field": "quantity_value",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "plant:plant-lifecycle-states/no-label-unknown-origin",
+          "field": "label",
+          "is_null": true
+        }
+      ]
+    },
+    {
+      "id": "harvest-stored-material",
+      "domain": "Harvests and Stored material",
+      "status": "implemented",
+      "profiles": [
+        "smoke",
+        "comprehensive",
+        "stress"
+      ],
+      "covers": [
+        "untracked, count and weight items",
+        "Plant and PlantGroup sources",
+        "active and depleted inventory",
+        "partial and use-all dispositions",
+        "Seed lot conversion and its reversal"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "inventory:harvest-stored-material/active",
+          "field": "state",
+          "equals": "active"
+        },
+        {
+          "check": "field",
+          "key": "inventory:harvest-stored-material/active",
+          "field": "quantity_value",
+          "equals": "70"
+        },
+        {
+          "check": "field",
+          "key": "inventory:harvest-stored-material/consumed",
+          "field": "state",
+          "equals": "depleted"
+        },
+        {
+          "check": "field",
+          "key": "conversion:harvest-stored-material/undone",
+          "field": "status",
+          "equals": "reversed"
+        },
+        {
+          "check": "field",
+          "key": "conversion:harvest-stored-material/kept",
+          "field": "status",
+          "equals": "applied"
+        }
+      ]
+    },
+    {
+      "id": "location-geography-edges",
+      "domain": "Locations and Geography",
+      "status": "implemented",
+      "profiles": [
+        "smoke",
+        "comprehensive",
+        "stress"
+      ],
+      "covers": [
+        "deep Location path",
+        "unused root Location",
+        "fabricated pole, antimeridian and null-island coordinates",
+        "site without coordinates"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "site:location-geography-edges/north-pole",
+          "field": "latitude",
+          "equals": "90"
+        },
+        {
+          "check": "field",
+          "key": "site:location-geography-edges/antimeridian",
+          "field": "longitude",
+          "equals": "-180"
+        },
+        {
+          "check": "field",
+          "key": "site:location-geography-edges/no-coordinates",
+          "field": "latitude",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "location:location-geography-edges/depth-4",
+          "field": "parent_id",
+          "equals_ref": "location:location-geography-edges/depth-3"
+        }
+      ]
+    },
+    {
+      "id": "media-references",
+      "domain": "Media",
+      "status": "implemented",
+      "profiles": [
+        "smoke",
+        "comprehensive",
+        "stress"
+      ],
+      "covers": [
+        "one asset shared across three record types",
+        "unlinked local asset",
+        "minimum and panoramic dimensions",
+        "external asset and external cover that are never fetched",
+        "primary photos"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "asset:media-references/reference",
+          "field": "kind",
+          "equals": "external"
+        },
+        {
+          "check": "field",
+          "key": "asset:media-references/reference",
+          "field": "fetched_at",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "asset:media-references/orphan",
+          "field": "kind",
+          "equals": "local"
+        },
+        {
+          "check": "field",
+          "key": "link:media-references/plant",
+          "field": "media_asset_id",
+          "equals_ref": "asset:media-references/shared"
+        },
+        {
+          "check": "field",
+          "key": "cover:media-references/lavender",
+          "field": "source_mode",
+          "equals": "external"
+        }
+      ]
+    },
+    {
+      "id": "journal-history",
+      "domain": "Journal and History",
+      "status": "implemented",
+      "profiles": [
+        "smoke",
+        "comprehensive",
+        "stress"
+      ],
+      "covers": [
+        "unknown, year, month and day dates",
+        "out-of-order backdating",
+        "flowering, fruiting, pruning, treatment",
+        "long notes"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "event:journal-history/observation-unknown-date",
+          "field": "occurred_on_year",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "event:journal-history/fruiting-month",
+          "field": "occurred_on_day",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "event:journal-history/fruiting-month",
+          "field": "plant_id",
+          "equals_ref": "plant:journal-history/journaled"
+        }
+      ]
+    },
+    {
+      "id": "schedule-states",
+      "domain": "Schedule",
+      "status": "implemented",
+      "profiles": [
+        "smoke",
+        "comprehensive",
+        "stress"
+      ],
+      "covers": [
+        "overdue, today, soon and later relative to the fixed anchor",
+        "every target kind and whole-collection work",
+        "completed with and without an Event",
+        "cancelled"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "schedule:schedule-states/completed",
+          "field": "status",
+          "equals": "completed"
+        },
+        {
+          "check": "field",
+          "key": "schedule:schedule-states/completed",
+          "field": "linked_event_id",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "schedule:schedule-states/completed-event",
+          "field": "linked_event_id",
+          "not_null": true
+        },
+        {
+          "check": "field",
+          "key": "schedule:schedule-states/cancelled",
+          "field": "status",
+          "equals": "cancelled"
+        },
+        {
+          "check": "field",
+          "key": "schedule:schedule-states/collection",
+          "field": "plant_id",
+          "is_null": true
+        }
+      ]
+    },
+    {
+      "id": "saved-views",
+      "domain": "Saved views",
+      "status": "implemented",
+      "profiles": [
+        "smoke",
+        "comprehensive",
+        "stress"
+      ],
+      "covers": [
+        "owner-scoped views with validated state on three surfaces"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "saved_view:saved-views/plants",
+          "field": "surface",
+          "equals": "plants"
+        }
+      ]
+    },
+    {
+      "id": "volume-background",
+      "domain": "Volume",
+      "status": "implemented",
+      "profiles": [
+        "smoke",
+        "comprehensive",
+        "stress"
+      ],
+      "covers": [
+        "seeded background mix of identities, packets, Sowings, Plants and Events scaled only by the profile"
+      ],
+      "invariants": []
+    },
+    {
+      "id": "taxonomy-wfo-links",
+      "domain": "Taxonomy",
+      "status": "planned",
+      "profiles": [],
+      "covers": [
+        "confirmed WFO links; needs the optional pinned index, so a truthful skip must be designed"
+      ],
+      "invariants": []
+    },
+    {
+      "id": "enrichment-wcvp-proposals",
+      "domain": "Taxonomy",
+      "status": "planned",
+      "profiles": [],
+      "covers": [
+        "WCVP links, native-range proposals, revisions and applications"
+      ],
+      "invariants": []
+    },
+    {
+      "id": "media-local-covers",
+      "domain": "Media",
+      "status": "planned",
+      "profiles": [],
+      "covers": [
+        "local identity cover and cover replacement"
+      ],
+      "invariants": []
+    },
+    {
+      "id": "media-corrupted-copies",
+      "domain": "Media",
+      "status": "planned",
+      "profiles": [],
+      "covers": [
+        "external local copies and deliberately failed fetch metadata"
+      ],
+      "invariants": []
+    },
+    {
+      "id": "bulk-location-moves",
+      "domain": "Locations and Geography",
+      "status": "planned",
+      "profiles": [],
+      "covers": [
+        "bulk apply with preconditions and conflict rows"
+      ],
+      "invariants": []
+    },
+    {
+      "id": "import-export-roundtrip",
+      "domain": "Import and export",
+      "status": "planned",
+      "profiles": [],
+      "covers": [
+        "export of the golden copy and re-import comparison"
+      ],
+      "invariants": []
+    },
+    {
+      "id": "seed-collection-produced",
+      "domain": "SeedLots",
+      "status": "planned",
+      "profiles": [],
+      "covers": [
+        "collection-produced lots with producer Plant and PlantGroup"
+      ],
+      "invariants": []
+    },
+    {
+      "id": "journal-terminal-events",
+      "domain": "Journal and History",
+      "status": "planned",
+      "profiles": [],
+      "covers": [
+        "movement, repotting, death, loss and discarded Events with lifecycle effects"
+      ],
+      "invariants": []
+    },
+    {
+      "id": "comprehensive-volume-mix",
+      "domain": "Volume",
+      "status": "planned",
+      "profiles": [
+        "comprehensive"
+      ],
+      "covers": [
+        "3,000–5,000 record domain-weighted mix"
+      ],
+      "invariants": []
+    },
+    {
+      "id": "stress-volume-mix",
+      "domain": "Volume",
+      "status": "planned",
+      "profiles": [
+        "stress"
+      ],
+      "covers": [
+        "separately generated large dataset for performance experiments"
+      ],
+      "invariants": []
+    }
+  ]
+}
