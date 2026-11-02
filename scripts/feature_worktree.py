@@ -454,6 +454,101 @@ def undisposable_ignored(target: Repository) -> list[str]:
     ]
 
 
+def require_no_running_mounts(path: Path) -> None:
+    """Inspect every running container; host mountinfo cannot see other mount namespaces."""
+
+    def running() -> set[str]:
+        identifiers = docker("ps", "--quiet", "--no-trunc").splitlines()
+        if any(not re.fullmatch(r"[0-9a-f]{64}", item) for item in identifiers):
+            raise WorkflowError("incomplete running Docker container inventory; retry retirement")
+        return set(identifiers)
+
+    try:
+        candidate = path.resolve(strict=True)
+        identifiers = running()
+        volumes: dict[str, Path] = {}
+        for identifier in sorted(identifiers):
+            record = json.loads(
+                docker(
+                    "inspect",
+                    "--type",
+                    "container",
+                    "--format",
+                    '{"Id":{{json .Id}},"Running":{{json .State.Running}},"Mounts":{{json .Mounts}}}',
+                    identifier,
+                )
+            )
+            if (
+                not isinstance(record, dict)
+                or record.get("Id") != identifier
+                or record.get("Running") is not True
+                or not isinstance(record.get("Mounts"), list)
+            ):
+                raise ValueError("incomplete or changed running container mount information")
+            for mount in record["Mounts"]:
+                if (
+                    not isinstance(mount, dict)
+                    or not isinstance(mount.get("Destination"), str)
+                    or not Path(mount["Destination"]).is_absolute()
+                ):
+                    raise ValueError("incomplete container mount")
+                kind, source = mount.get("Type"), mount.get("Source", "")
+                if kind == "tmpfs" and source == "":
+                    continue
+                if not isinstance(source, str) or not Path(source).is_absolute():
+                    raise ValueError("missing absolute mount source")
+                if kind == "bind":
+                    resolved = Path(source).resolve(strict=True)
+                elif kind == "volume":
+                    name = mount.get("Name")
+                    if not isinstance(name, str) or not re.fullmatch(
+                        r"[a-zA-Z0-9][a-zA-Z0-9_.-]*", name
+                    ):
+                        raise ValueError("missing volume identity")
+                    if name not in volumes:
+                        volume = json.loads(
+                            docker(
+                                "volume",
+                                "inspect",
+                                "--format",
+                                '{"Name":{{json .Name}},"Driver":{{json .Driver}},'
+                                '"Mountpoint":{{json .Mountpoint}},"Options":{{json .Options}}}',
+                                name,
+                            )
+                        )
+                        # Default local volumes have daemon-managed canonical mountpoints. They
+                        # need not be host-readable. Custom backing mounts need operator review.
+                        if (
+                            not isinstance(volume, dict)
+                            or volume.get("Name") != name
+                            or volume.get("Driver") != "local"
+                            or "Options" not in volume
+                            or volume["Options"] not in (None, {})
+                            or volume.get("Mountpoint") != source
+                        ):
+                            raise ValueError("cannot establish volume backing path")
+                        volumes[name] = Path(source).resolve()
+                    resolved = volumes[name]
+                    if resolved != Path(source).resolve():
+                        raise ValueError("inconsistent volume mount source")
+                else:
+                    raise ValueError("unsupported container mount type")
+                # A parent bind exposes the entire candidate, including nested mounts hidden
+                # from host mountinfo. Check both directions on canonical paths.
+                if (
+                    resolved == candidate
+                    or resolved.is_relative_to(candidate)
+                    or candidate.is_relative_to(resolved)
+                ):
+                    raise WorkflowError(
+                        f"running container {identifier} mounts {resolved}; stop its use before retirement"
+                    )
+        if running() != identifiers:
+            raise ValueError("running container inventory changed during inspection")
+    except (OSError, ValueError, TypeError) as error:
+        raise WorkflowError(f"cannot establish safe Docker mount information: {error}") from error
+
+
 def validate_retirement_tree(path: Path) -> None:
     """Preflight Git removal without following links or crossing even same-device bind mounts."""
     try:
@@ -488,9 +583,18 @@ def validate_retirement_tree(path: Path) -> None:
             # Nonempty directories still need write/search permission to remove their contents.
             if children and not os.access(directory, os.W_OK | os.X_OK):
                 raise WorkflowError(f"cannot remove {directory}; fix its ownership first")
+            directory_stat = directory.stat()
             for child in children:
                 if child.is_symlink():
                     raise WorkflowError(f"cannot remove symlink {child.path}; inspect it first")
+                if directory_stat.st_mode & stat.S_ISVTX and os.geteuid() not in (
+                    0,
+                    directory_stat.st_uid,
+                    child.stat(follow_symlinks=False).st_uid,
+                ):
+                    raise WorkflowError(
+                        f"cannot remove {child.path}; sticky parent forbids removal"
+                    )
                 if child.is_dir(follow_symlinks=False):
                     scan(Path(child.path))
 
@@ -543,6 +647,7 @@ def retire(repo: Repository, identifier: str, confirmation: str) -> None:
             f"{path} still owns Docker resources {sorted(owned)}; retire them from it first"
         )
     # Git unregisters before deleting, so an unremovable directory would leave an orphan.
+    require_no_running_mounts(path)
     validate_retirement_tree(path)
     # No --force: Git must still refuse anything it considers unsafe.
     repo.git("worktree", "remove", str(path))

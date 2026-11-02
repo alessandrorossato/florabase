@@ -146,9 +146,13 @@ containers or volumes labelled with that source (Docker unavailable refuses). Ig
 regenerable caches, such as `.env` or backups, refuse for a decision, and so does any directory it
 could not delete. The removal preflight permits a readable empty directory without child write
 permission when its parent permits removal (including sticky-directory ownership checks). Nonempty
-directories still require write/search permission. Symlinks and any mounted path within the candidate
-are refused; Linux `/proc/self/mountinfo` is required to detect same-device bind mounts and missing or
-unreadable traversal/mount evidence fails closed before Git removal. No ownership/permission changes
+directories still require write/search permission; sticky-parent ownership is checked for files and
+other direct children as well as directories. Every running Docker container is inspected regardless
+of labels: a bind source equal to, inside or above the candidate refuses after path resolution.
+Missing/changing Docker evidence and unsupported custom volume backing refuse before removal.
+Symlinks and any host-visible mounted path within the candidate are refused. Linux
+`/proc/self/mountinfo` is required to detect same-device bind mounts; missing or unreadable
+traversal/mount evidence fails closed before Git removal. No ownership/permission changes
 or recursive deletion fallback are performed. Operators must stop external source/mount writers;
 preflight is not atomic against concurrent external changes. It uses `git worktree remove` without force, so worktrees from agent tools, clones,
 branches and all volumes are out of its reach.

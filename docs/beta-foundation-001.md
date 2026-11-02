@@ -1,7 +1,8 @@
 # BETA-FOUNDATION-001 — v0.1.0-beta.1 acceptance contract
 
 Audit date: 2026-11-02. Source baseline: `af2372c7e20468376b3d12904c83dee18133da84`
-(current cached main, PR #139). This is an implementation/audit candidate for independent QA,
+(current cached main, PR #139). Candidate `3553a9c` received independent CONDITIONAL PASS;
+B1–B4 corrections below require independent delta QA before canonical verification. This is a candidate for QA,
 not a beta release approval. No production host was accessed or changed. No real collection was
 imported. Proposed work below is not implemented by this increment.
 
@@ -53,7 +54,14 @@ Each integration test named below is under `backend/tests/integration/`.
 | Media | `attachments/storage.py`, `media/service.py`, `copies.py`, `fetch.py` → MediaScreen, PhotosSection → `test_shared_media.py`, `test_shared_media_concurrency.py`, `test_external_media_copies.py`, MediaScreen tests | **D** protected attachment core / supplier integration; **V** ATTACHMENT-003–005 / MEDIA-VISUAL-001. Shared/unlinked originals, per-record links, primaries and saved external copies exist. Test real photo sizes/orientation, unlink vs delete and recovery of saved copies. External network failures must preserve valid content. |
 | Authentication | `auth/` bootstrap/API/dependencies, `core/config.py` → `auth/`, App session restore → `test_authentication.py`, `test_transaction_lifecycle.py`, App tests | **D** SECURITY-002: owner password, Argon2id, server sessions, secure cookies, exact Origin and CSRF, throttling, default authenticated access. **M** real Tailscale HTTPS acceptance. Tailnet admission does not replace application authentication. **F** multi-user authorization/security sharing. |
 | Import / export | `import_export/api.py`, `service.py` → ImportExportScreen → `test_import_export_api.py`, ImportExportScreen.test.tsx, [format contract](import-export.md) | **V** IMPORT-001 already implemented: UTF-8 CSV, six kinds (identities, suppliers, Locations, SeedLots, Plants, groups), templates/examples, row preview/choices and atomic apply. 2 MiB / 2,000-row limits. Not a Sowing/Event/Harvest/media import, update-sync or complete portable transfer. Real data shape is an onboarding question, not proof import is absent. |
-| Search / maps / labels | search/explore/saved_views and label frontend → Dashboard, maps, LabelsScreen → `test_search002.py`, `test_species_distribution.py`, LabelsScreen tests | **D** supporting discovery, Saved Views, bulk moves and printable authenticated lookup. **V** physical label scans, actual mobile/keyboard use and optional providers. No mandatory online basemap. |
+| Search / maps / labels | search/explore/saved_views and label frontend → Dashboard, maps, LabelsScreen → `test_search002.py`, `test_species_distribution.py`, LabelsScreen tests | **D** SEARCH-002, VIEW-001, BULK-001, MAP-002, EXPLORE-001/002, MAPS-FOUNDATION-001, MAPS-DISTRIBUTION-001, MAPS-ORIGINS-001 and LABEL-001 are verified. **V** SEARCH-001 and MAP-001 remain implemented; physical label scans, actual mobile/keyboard use and optional providers still need field validation. No mandatory online basemap. |
+
+COLLECTION-VISUAL-002 remains **implemented**, with operator acceptance pending for the Harvest,
+stored-material and hierarchical Location presentation. Record explicit acceptance of these beta
+workflows; concrete usability/integrity failures block admission. This does not reopen a broad redesign.
+[RELEASE-001](features.json) remains **planned** for stable v0.1.0: its production install, security,
+recovery and UAT requirements inform beta checks, but private beta acceptance does not complete that
+feature or authorize stable release. Existing feature statuses above are preserved.
 
 ## Missing beta prerequisites and deferred product work
 
@@ -102,8 +110,15 @@ certificate renewal; certificates disclose the hostname to [certificate transpar
 sensitive node names. No public database/backend/Dockhand ports.
 
 Dockhand manages a **versioned image-only Compose document** with fixed project `florabase-prod` and stable named
-volumes (`florabase-prod_postgres_data` and `florabase-prod_attachment_data`). Keep stack revision, backend/frontend digests, PostgreSQL version/digest and Alembic head
-in a release manifest. Dockhand UI edits must not become an unrecorded second source of stack truth.
+volumes (`florabase-prod_postgres_data` and `florabase-prod_attachment_data`). PostgreSQL must also
+use an immutable image reference, for example `postgres:18.6-alpine@sha256:<verified-digest>`; the
+placeholder is not a selected digest. The release manifest records its exact registry reference,
+version, platform, immutable manifest/index and resolved platform digests alongside backend/frontend
+digests, source/stack revision and Alembic head. Application refreshes must leave that PostgreSQL
+identity unchanged. A database image change, including minor releases or a re-pushed tag, requires
+separate explicit maintenance: reviewed notes, verified paired backup, compatibility/restore rehearsal,
+recorded target digest and operator approval. Never couple it to application refresh or an updater.
+Dockhand UI edits must not become an unrecorded second source of stack truth.
 Use an approved immutable stack revision, no mutable `latest` application refs, source binds, Vite,
 package installation or dependency volumes. Never silently adopt volumes from DEV/preview or change
 the project name. Put secrets in protected host/Dockhand configuration; keep them out of Git, labels,
@@ -112,15 +127,49 @@ it is an administrative control plane with Docker authority, separately protecte
 
 The [Dockhand manual](https://dockhand.pro/manual/) documents Git-stack deployment and image-update
 recreation. This proposal uses its deployment management, **not** an assumed transactional migration
-hook. Pin and test the chosen Dockhand release. Disable raw automatic container updates, unguarded
-webhook deployments and Git auto-sync for this stateful stack. A serialized controller can select
-approved release manifests automatically only after the safety contract below is implemented and
+hook. Pin and test the chosen Dockhand release. The manual's
+[container labels](https://dockhand.pro/manual/#container-labels-available) specify that
+`dockhand.update=false` opts a container out of per-container/environment automatic updates and batch
+updates; labels override UI policy and also suppress update checks/badges for that container. Require
+that label on **frontend, backend and PostgreSQL** in the proposed runtime and verify the actual
+labels after deployment. Check Settings → Environments → selected environment → Updates:
+**Automatically update containers must be off**, alongside per-container/stack settings. Keep Git
+auto-sync, force redeploy and unguarded deployment webhooks off. These are separate deployment paths;
+do not assume a container update label prevents a stack redeploy. Confirm behavior on the pinned
+Dockhand version. Release notifications must use a separate manifest check rather than depend on
+badges hidden by those labels. A serialized controller can select approved release manifests automatically only after the safety contract below is implemented and
 tested. Dockhand deployment must be an explicit step owned by that controller/operator; if the pinned
 version cannot gate it reliably, beta ships with automatic checks/notifications and manual promotion.
 
+### Architecture screening before BETA-IMAGE-001 publication
+
+Architecture is a resolved **input to BETA-IMAGE-001**, not a decision deferred to runtime delivery.
+Its first lightweight step records the intended host class and a compatible Linux container runtime:
+Docker Engine with the supported Compose v2 plugin and a tested Dockhand release. Obtain host
+OS/architecture evidence from the intended host, for example:
+
+```bash
+uname -m
+docker version --format '{{.Server.Os}}/{{.Server.Arch}}'
+```
+
+Record that host's results or specifications. A measurement on the development laptop does not
+qualify the eventual host.
+
+The initial publication target is **linux/amd64**, conditional on that screening confirming the
+intended beta host can run it natively. If the selected host is aarch64/arm64 and must be used for the
+initial beta, **linux/arm64 is required before publication**, with matching runtime/base images and
+native smoke evidence. Do not substitute emulation for support evidence. No concrete NAS/VPS model
+or architecture has yet been selected or measured here, so publication waits for this input.
+Additional architectures can be added in a later separately verified image release/manifest without
+blocking an agreed amd64 beta or rewriting previously published digests. Unsupported host families
+wait for that extension. Capacity, durable IO and uptime qualification still belong to runtime work;
+architecture screening does not claim them validated. Dependencies stay foundation → image → runtime.
+
 ### Host selection and resource envelope
 
-No Synology model, Netcup plan, free capacity or uptime measurements were supplied. No host wins by
+No Synology model, Netcup plan, free capacity or uptime measurements were supplied.
+Carry the architecture decision from image screening into runtime host qualification. No host wins by
 name. Prefer a Linux host with predictable local durable disk and recovery access. The following are
 proposed screening budgets, **not measured minimums**: two CPU threads, 4 GiB available RAM for OS,
 Docker, Dockhand, Tailscale and application headroom; 20 GiB free before collection media, retained
@@ -194,7 +243,9 @@ reviewed procedure and verify owner login; recovery sets contain authentication 
 Every application upgrade must serialize and retain a durable journal:
 
 1. Resolve an approved same-source image pair + stack manifest. Pull both by digest and verify
-   architecture, source revision, migration compatibility and available recovery/storage capacity.
+   the already-screened architecture, source revision, migration compatibility and available
+   recovery/storage capacity. Assert the PostgreSQL digest equals the deployed manifest; any DB image
+   change exits this application path for explicit database maintenance.
 2. Prevent overlapping Dockhand/manual deploys. Quiesce writers and keep them quiesced. Make and
    validate the paired pre-upgrade set; record previous/target images, revisions and checksums.
 3. Run exactly the target migration in isolation from application writers. Unknown/ahead DB revision
@@ -203,7 +254,7 @@ Every application upgrade must serialize and retain a durable journal:
    volumes. Check actual Alembic head, health, HTTPS login and media/domain smoke before unblocking
    writes. Record completion; interrupted runs resume the pinned target or require operator recovery.
 5. On failure, notify once with the journal and explicit recovery choice. No blind retry loop,
-   mutable-tag refresh, automatic `alembic downgrade`, volume deletion or automatic DB major upgrade.
+   mutable-tag refresh, automatic `alembic downgrade`, volume deletion or automatic PostgreSQL image upgrade.
 
 | Failure point | Recovery contract |
 | --- | --- |
@@ -215,7 +266,8 @@ Every application upgrade must serialize and retain a durable journal:
 Controlled automation is mandatory as a **bounded policy**, not unattended schema changes in beta. A
 future scheduler may promote only approved manifests explicitly marked schema-compatible, with fresh
 backup and the same tested controller gates; schema changes remain operator-approved until recovery
-is proven. PostgreSQL and Dockhand/Tailscale upgrades have separate maintenance policies. A digest
+is proven. PostgreSQL major, minor and rebuilt-image digest changes, plus Dockhand/Tailscale upgrades,
+have separate explicit maintenance policies. None follows automatically from application refresh. A digest
 pin prevents an image change unless the release manifest is deliberately updated
 ([GHCR digest selection](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)).
 
@@ -227,13 +279,14 @@ no runtime/image mechanism is prebuilt in BETA-FOUNDATION-001.
 | Order | Increment | Depends on | Required outcome |
 | --- | --- | --- | --- |
 | P0 / now | BETA-FOUNDATION-001 | AGENT-WORKFLOW-001 | Evidence inventory, beta contract/backlog and narrow retirement fix; independent infrastructure QA then canonical FULL before delivery. |
-| P0 / next | BETA-IMAGE-001 | BETA-FOUNDATION-001, CI-002 | GHCR release pair, coherent beta versions, immutable manifest/source labels, image-only smoke and publication permissions/security. No deployment to a real host. |
-| P0 / next | BETA-RUNTIME-001 | BETA-IMAGE-001, OPS-001, ATTACHMENT-005 | Versioned Dockhand stack and operator/controller procedures; durable DB/media, Tailscale HTTPS, optional sources, migration gating, paired off-host backup/full restore and failed-upgrade drills on isolated data. Select host from evidence. |
+| P0 / next | BETA-IMAGE-001 | BETA-FOUNDATION-001, CI-002 | Resolve intended-host architecture/runtime first; then GHCR release pair, coherent beta versions, immutable application/PostgreSQL identities, image-only smoke and publication permissions/security. No deployment to a real host. |
+| P0 / next | BETA-RUNTIME-001 | BETA-IMAGE-001, OPS-001, ATTACHMENT-005 | Versioned Dockhand stack and operator/controller procedures; durable DB/media, Tailscale HTTPS, optional sources, migration gating, paired off-host backup/full restore and failed-upgrade drills on isolated data. Qualify host capacity/uptime using the architecture already resolved for image publication. |
 | P0 / before admission | BETA-DATA-001 | BETA-FOUNDATION-001, IMPORT-001 | Representative real-data format rehearsal in isolation, mappings/precision/count reconciliation, tested unsupported-kind manual entry and no unintended mutation. May proceed alongside image work. |
 | P0 / release gate | BETA-ACCEPTANCE-001 | BETA-RUNTIME-001, BETA-DATA-001, SECURITY-002 | Owner-approved real-host acceptance, recovery/uptime/security checks and exact candidate FULL. Only then label v0.1.0-beta.1 usable for continuing collection work. |
 
-**BETA-IMAGE-001 acceptance detail:** choose supported architecture from host screening; require native
-amd64 image smoke, add arm64 only if selected host requires it and native smoke is available. Publish
+**BETA-IMAGE-001 acceptance detail:** complete the architecture/runtime input screening above before
+publication; initial linux/amd64 needs native smoke, and an initial arm64 host requires linux/arm64
+publication plus native smoke. Additional platforms follow later without blocking agreed amd64 use. Publish
 backend/frontend production targets from one accepted revision with OCI source/revision/version labels,
 locked dependencies, retained licenses/source obligations, minimal package-write permissions and no
 secrets/dev/test caches or source-data indices in runtime layers. Do not publish arbitrary PR code.
@@ -244,7 +297,9 @@ not only local build tags. Producing a draft release artifact is not beta admiss
 regenerates OpenAPI/TypeScript if exposed API metadata changes; no API drift exemption.
 
 **BETA-RUNTIME-001 acceptance detail:** keep distribution Compose separate from dev overlays and
-assert image-only configuration/no DB-backend exposure. Use stable volume identities and exact
+assert image-only configuration/no DB-backend exposure. Pin PostgreSQL by immutable digest and
+verify it stays unchanged during application upgrades. Validate labels `dockhand.update=false` on all
+three services, the selected environment update toggle and the separate stack deployment settings. Use stable volume identities and exact
 replacement confirmation for restore. Exercise install → bootstrap → upload → restart/reboot →
 backup → isolated restore → compatible app upgrade → migration failure → app failure after migration
 → interrupted upgrade recovery. Prove original/other environment identities unchanged. Validate the
@@ -270,7 +325,7 @@ All items are mandatory before continuing real collection use; foundation readin
   secrets recovery exist. Operator knows which writes would be lost after rollback.
 
 Open decisions: exact NAS model/DSM or VPS plan and available CPU/RAM/disk; expected collection/media
-size and source file formats; approved tailnet users/devices and stable hostname; selected architecture;
+size and source file formats; approved tailnet users/devices and stable hostname; architecture input before image publication;
 backup destination/key custody/retention and RPO/RTO; maintenance window and permitted outage; whether
 optional WFO/WCVP workflows are required on day one. Defaults above permit planning but are not claims
 about supplied hardware, subscriptions or operator acceptance. Public access and multi-user sharing
@@ -287,16 +342,32 @@ reproducible cause: Docker prepares the nested mount destination in the host bin
 when the process uses a non-root UID. Stopping/removing the container removes the mount, leaving
 an empty host directory. The volume-only ownership initializer does not change source ownership.
 
-The correction checks writable/searchable parents and sticky-directory ownership, scans without
+The corrected preflight checks writable/searchable parents and sticky ownership for **every direct
+child**, including regular files, FIFOs and directories. It scans without
 following links, keeps the write requirement on nonempty directories, and refuses mountpoints anywhere
 inside the candidate using Linux mountinfo (including same-device bind mounts and escaped paths).
 Unreadable/malformed/unavailable evidence refuses before Git unregisters anything. Retirement on
 hosts without `/proc/self/mountinfo` now fails closed; no unsafe portability fallback. Symlink entries
 are refused, including inside ignored caches. Ordinary ignored-cache allowlist policy is unchanged;
 nonignored/unexpected content, dirty trees, finish proofs, writer/gate locks and owned Docker resource
-guards still run. Git removal remains unforced. No chmod/chown/delete fallback was added.
+guards still run. Before Git removal it now inventories **all running Docker containers**, inspects
+only IDs/running state/mount metadata and resolves bind sources strictly. Candidate, descendant and
+ancestor sources (including aliases) refuse, regardless of Florabase labels. A stable second running
+inventory detects concurrent starts/stops during inspection. Host mountinfo checks remain separate.
+Default local volumes are validated by daemon volume identity, mountpoint and empty driver options;
+their daemon-managed paths need not be readable by the operator. Custom/unknown volume drivers or
+backing options, unsupported mount types, missing metadata, unreadable bind sources or Docker failure
+refuse conservatively. No container is stopped/modified by retirement. Git removal remains unforced. No chmod/chown/delete fallback was added.
 
 This is a preflight under the existing cooperative workflow, not protection against a hostile process
 changing mounts/files between inspection and Git removal. Operators must stop external writers. The
 regression and real Docker smoke use disposable Git fixtures; no finished operator worktree was
 retired by this task. Independent QA should review refusal-before-unregistration and repeat the smoke.
+
+## Separate workflow follow-up
+
+WORKFLOW-RETIRE-AUTH-001 records an existing discrepancy: AGENTS.md says retirement refuses an agent
+`AGENT_ID`, but `feature_worktree.py` dispatches `retire()` without `require_operator()`. B1–B4 do not
+change that authorization boundary. A dedicated planned correction must align CLI behavior, pending
+handoff/verification checks and docs, with operator/agent regressions. This foundation task continues
+to respect the operator-only restriction and mutates only disposable test fixtures during smoke.

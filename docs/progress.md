@@ -27,6 +27,35 @@
 
 # Engineering progress
 
+## 2026-11-02 — BETA-FOUNDATION-001 B1–B4 QA corrections ready for delta review
+
+- Continued clean authoritative `3553a9c` / tree `9d986e4`, confirming the existing
+  `codex-beta-foundation-001` writer. Independent CONDITIONAL PASS required B1–B4; no delivery.
+- B1 now checks sticky ownership for every direct child. Exact original-helper reproduction returned
+  Git EPERM after losing registration; corrected real root-owned mode-1777 file and FIFO fixtures
+  each refuse before unregistering and retain source/content. Empty-root-owned positive smoke passes.
+- B2 now inspects all running container mounts regardless of labels, resolves binds and refuses
+  candidate/descendant/ancestor overlaps, incomplete/changing metadata and unknown volume backing.
+  Original helper retired a live unlabelled parent-bind/hidden-tmpfs fixture; corrected helper retains
+  registration, source, running container and nested data. Host mountinfo/resource guards remain.
+- Reproduced the throwaway-patch workflow failure: the old read-only assertion rejected the new
+  `ps --quiet --no-trunc` query. Its exact read-only allowlist now includes required inventory/inspect
+  commands, still rejects mutations, and passes. Original QA patch/log not retained; reproduced cause
+  and bounded evidence are recorded without treating a stale assertion as a product regression.
+- B3 makes architecture/runtime screening a pre-publication BETA-IMAGE-001 input; runtime capacity
+  remains unmeasured. B4 requires immutable PostgreSQL identity, separate major/minor/image maintenance
+  and explicit frontend/backend/DB Dockhand labels plus selected environment policy. Updated audit
+  IDs/statuses and pending COLLECTION-VISUAL-002 acceptance/RELEASE-001; separate planned
+  WORKFLOW-RETIRE-AUTH-001 records the agent-identity restriction discrepancy without implementing it.
+- Checks: narrow baseline 2 passed; targeted 7 passed; smoke-enabled agent suite **60 passed/no skips**;
+  adjacent lifecycle 46, resources 14 and environment 35 passed; shell helpers all passed;
+  workflow Ruff/format/mypy passed; graph **132 valid**, links/status preservation/whitespace passed.
+  Docker before/after identities: **6 containers / 8 networks / 17 volumes** unchanged, including
+  existing container state/mount fingerprints; no retirement smoke containers remain.
+- [Correction evidence and limitations](beta-foundation-001-qa-corrections.md). Independent delta QA
+  must pass before canonical FULL, explicitly not run here. No receipt/verified promotion, production
+  deployment, pipeline/backups implementation, push, PR, delivery, merge or real feature-finish.
+
 ## 2026-11-02 — BETA-FOUNDATION-001 implementation ready for independent QA
 
 - Claimed linked `beta-foundation-001`, branch `feat/beta-foundation-001`, as

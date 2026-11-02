@@ -1,6 +1,9 @@
-# BETA-FOUNDATION-001 — implementation handoff for independent QA
+# BETA-FOUNDATION-001 — original implementation handoff (historical `3553a9c`)
 
-Status: **READY_FOR_QA**, feature `implemented`, not `verified` and not beta GO.
+Superseded by the [B1–B4 correction handoff](beta-foundation-001-qa-corrections.md). Independent delta
+QA must pass before canonical FULL; the commands/results below describe the original candidate.
+
+Original status: **READY_FOR_QA**, feature `implemented`, not `verified` and not beta GO.
 Branch: `feat/beta-foundation-001`; baseline: `af2372c7e20468376b3d12904c83dee18133da84`.
 Worktree: `/home/alessandro/Desktop/github/florabase-worktrees/beta-foundation-001`.
 Writer: `codex-beta-foundation-001`; claim retained pending an explicit recipient handoff.
