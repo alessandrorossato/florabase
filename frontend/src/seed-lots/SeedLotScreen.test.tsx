@@ -2778,6 +2778,11 @@ test.each(["not-a-uuid", "01900000-0000-7000-8000-000000009999"])(
     expect(screen.getByRole("alert")).toHaveTextContent(
       "could not find this seed lot",
     );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: "Seed lot unavailable" }),
+      ).toHaveFocus();
+    });
     const user = userEvent.setup();
     await user.click(screen.getByRole("link", { name: "Return to Seeds" }));
     expect(
