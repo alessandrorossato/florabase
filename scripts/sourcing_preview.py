@@ -25,6 +25,7 @@ from workflow_environment import (
     migration_graph,
     run,
 )
+from workflow_resources import ResourceError, machine_lock
 
 # Source-independent runtime images; live backend/frontend source is bind-mounted by compose.dev.
 IMAGES = ("backend", "frontend")
@@ -241,8 +242,13 @@ def main() -> int:
     args = parser.parse_args()
     try:
         preview = SourcingPreview(Repository(Path.cwd()))
-        dispatch(preview, args.action, args)
-    except (WorkflowError, ValueError, KeyError, OSError) as error:
+        if args.action in {"up", "seed", "bootstrap-owner", "stop", "remove"}:
+            # Owner labels only exist after creation; another source must not pass concurrently.
+            with machine_lock(SOURCING_PROJECT, f"{SOURCING_PROJECT} lifecycle"):
+                dispatch(preview, args.action, args)
+        else:
+            dispatch(preview, args.action, args)
+    except (WorkflowError, ResourceError, ValueError, KeyError, OSError) as error:
         print(f"sourcing preview: {error}", file=sys.stderr)
         return 1
     return 0

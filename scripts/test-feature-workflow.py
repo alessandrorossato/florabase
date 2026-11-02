@@ -17,6 +17,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 
+# Fixtures exercise operator-only delivery even when an agent runs the enclosing canonical gate.
+os.environ.pop("AGENT_ID", None)
+
 ROOT = Path(__file__).resolve().parent.parent
 DELIVER_PATH = ROOT / "scripts/feature-deliver.py"
 SPEC = importlib.util.spec_from_file_location("feature_deliver", DELIVER_PATH)
@@ -80,6 +83,7 @@ class VerifyHelperTests(unittest.TestCase):
             "verify-migration-cycle.sh",
             "verification_impact.py", "verification_gate.py", "verification-impact.json",
             "disposable_workflow.py", "workflow_resources.py",
+            "workflow_environment.py", "feature_worktree.py",
         ):
             shutil.copy2(ROOT / "scripts" / name, scripts / name)
         self.bin = self.root / "bin"
@@ -116,8 +120,12 @@ class VerifyHelperTests(unittest.TestCase):
             **os.environ,
             "PATH": f"{self.bin}:{os.environ['PATH']}",
             "VERIFY_LOG": str(self.log),
+            # Fixture gates run inside a real FULL gate and must not contend for its machine lock.
+            "FLORABASE_LOCK_DIR": str(self.root / "locks"),
             **environment,
         }
+        if "AGENT_ID" not in environment:
+            env.pop("AGENT_ID", None)
         return subprocess.run(
             [str(self.work / "scripts/feature-verify.sh"), *(["--full"] if full else [])],
             cwd=self.work,
@@ -255,6 +263,102 @@ class VerifyHelperTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("source tree changed during verification", result.stderr)
         self.assertFalse((self.work / ".git/info/florabase-feature-verification.json").exists())
+
+    def hold_lock(self, *code: str) -> subprocess.Popen[str]:
+        """Hold a real kernel lock in another process until the test closes its stdin."""
+        program = (
+            f"import sys; sys.path.insert(0, {str(self.work / 'scripts')!r})\n"
+            "from pathlib import Path\n"
+            "from workflow_resources import FileLock, machine_lock\n"
+            f"lock = {code[0]}\n"
+            "with lock:\n    print('held', flush=True)\n    sys.stdin.read()\n"
+        )
+        holder = subprocess.Popen(
+            [sys.executable, "-c", program],
+            env={**os.environ, "FLORABASE_LOCK_DIR": str(self.root / "locks")},
+            text=True,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+        )
+        self.addCleanup(holder.wait)
+        self.addCleanup(holder.stdin.close)
+        self.addCleanup(holder.stdout.close)
+        self.assertEqual(holder.stdout.readline().strip(), "held")
+        return holder
+
+    def test_full_lock_collision_refuses_before_stages_and_recovers_after_kill(self) -> None:
+        holder = self.hold_lock("machine_lock('verification-full', 'canonical FULL verification')")
+        refused = self.verify(full=True)
+        self.assertNotEqual(refused.returncode, 0)
+        self.assertIn("canonical FULL verification is already running", refused.stderr)
+        self.assertIn("FEATURE_VERIFICATION_FAILED", refused.stderr)
+        self.assertFalse(self.log.exists(), "no stage may start while FULL is locked")
+        self.assertFalse((self.work / ".git/info/florabase-feature-verification.json").exists())
+
+        # An affected gate has no shared-resource claim and proceeds during another FULL.
+        self.establish_helper_baseline()
+        (self.work / "docs/note.md").write_text("docs only\n")
+        self.assertEqual(self.verify().returncode, 0)
+
+        (self.work / "docs/note.md").unlink()
+        holder.kill()
+        holder.wait()
+        recovered = self.verify(full=True)
+        self.assertEqual(recovered.returncode, 0, recovered.stderr)
+        self.assertEqual(self.receipt()["verification"]["mode"], "full")
+
+    def test_same_worktree_gate_collision_is_refused(self) -> None:
+        self.hold_lock(
+            f"FileLock(Path({str(self.work / '.git/florabase-verification.lock')!r}), "
+            "'verification of this worktree')"
+        )
+        refused = self.verify()
+        self.assertNotEqual(refused.returncode, 0)
+        self.assertIn("verification of this worktree is already running", refused.stderr)
+
+    def test_context_reports_positive_receipt_states_from_real_gate(self) -> None:
+        self.establish_helper_baseline()
+        (self.work / "docs/note.md").write_text("docs only\n")
+        self.assertEqual(self.verify().returncode, 0)
+
+        def receipt() -> str:
+            context = subprocess.run(
+                [sys.executable, str(self.work / "scripts/feature_worktree.py"), "context", "--json"],
+                cwd=self.work,
+                env={**os.environ, "PATH": f"{self.bin}:{os.environ['PATH']}", "VERIFY_LOG": str(self.log)},
+                check=True,
+                text=True,
+                stdout=subprocess.PIPE,
+            )
+            return json.loads(context.stdout)["receipt"]
+
+        self.assertEqual(receipt(), "valid, commit pending")
+        self.shell("git", "-C", str(self.work), "add", ".")
+        self.shell("git", "-C", str(self.work), "commit", "-m", "note")
+        self.assertEqual(receipt(), "valid for committed HEAD")
+        (self.work / "docs/note.md").write_text("changed\n")
+        self.assertTrue(receipt().startswith("invalid"))
+
+    def test_writer_guard_precedes_receipt_invalidation(self) -> None:
+        receipt = self.work / ".git/info/florabase-feature-verification.json"
+        self.assertEqual(self.verify().returncode, 0)
+        before = receipt.read_text()
+        state = self.work / ".git/info/florabase-agent-state.json"
+        state.write_text(
+            json.dumps(
+                {
+                    "version": 1,
+                    "handoff": None,
+                    "writer": {"agent": "codex", "claim_id": "abc", "claimed_at": "now"},
+                }
+            )
+        )
+        for identity in ({}, {"AGENT_ID": "opencode"}):
+            refused = self.verify(**identity)
+            self.assertNotEqual(refused.returncode, 0)
+            self.assertIn("codex holds this worktree", refused.stderr)
+            self.assertEqual(receipt.read_text(), before)
+        self.assertEqual(self.verify(AGENT_ID="codex").returncode, 0)
 
     def test_linked_worktree_keeps_its_receipt_in_its_own_git_directory(self) -> None:
         primary = self.work

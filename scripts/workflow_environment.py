@@ -17,6 +17,8 @@ from pathlib import Path
 from typing import Any, cast
 from urllib.parse import unquote, urlsplit
 
+from workflow_resources import ResourceError, machine_lock
+
 DEV_PROJECT = "florabase"  # Preserve existing operator volumes; never silently rename them.
 REVIEW_PROJECT = "florabase-feature-review"
 UAT_PROJECT = "florabase-uat-preview"
@@ -27,6 +29,19 @@ PORTS = {"dev": "5173", "review": "15174", "sourcing": "15175", "preview": "1517
 BRANCH_PATTERN = re.compile(r"^(feat|fix|docs|ci)/[a-z0-9][a-z0-9._-]*$")
 MEDIA_ROOT = "/var/lib/florabase/attachments"
 LEGACY_MEDIA_ROOT = "/tmp/florabase-attachments"
+REVIEW_LIFECYCLE = {"up", "seed", "extended-seed", "upgrade", "stop", "remove"}
+REVIEW_COMPOSE_MUTATIONS = {
+    "run",
+    "up",
+    "create",
+    "exec",
+    "start",
+    "restart",
+    "down",
+    "stop",
+    "rm",
+    "kill",
+}
 
 
 class WorkflowError(RuntimeError):
@@ -103,8 +118,8 @@ class Repository:
                 return path
         return Path("/dev/null")
 
-    def initialize(self, branch: str = "") -> None:
-        origin = self.git("remote", "get-url", "origin")
+    def require_origin(self) -> None:
+        origin = self.git("config", "--get", "remote.origin.url")
         normalized = re.sub(r"^git@github\.com:", "https://github.com/", origin)
         normalized = re.sub(r"^ssh://git@github\.com/", "https://github.com/", normalized)
         if (
@@ -112,6 +127,9 @@ class Repository:
             != "https://github.com/alessandrorossato/florabase"
         ):
             raise WorkflowError("origin is not the expected Florabase repository")
+
+    def initialize(self, branch: str = "") -> None:
+        self.require_origin()
         current = self.git("branch", "--show-current")
         base = self.git("rev-parse", "--verify", "origin/main")
         if not current:
@@ -1028,6 +1046,74 @@ class Environment:
         print(f"{self.project}: {'removed' if remove else 'stopped; all volumes preserved'}")
 
 
+def dispatch(env: Environment, args: argparse.Namespace) -> None:
+    if args.action == "compose":
+        command = args.args[1:] if args.args[:1] == ["--"] else args.args
+        if not command or command[0].startswith("-"):
+            raise WorkflowError(
+                "provide a Compose subcommand; project/files/config are fixed by role"
+            )
+        if (
+            env.role in {"review", "sourcing"}
+            and command[0] == "down"
+            and any(item in command for item in ("-v", "--volumes"))
+        ):
+            raise WorkflowError(
+                "use the dedicated remove action with its exact project confirmation"
+            )
+        if env.role == "dev" and command[0] in {
+            "up",
+            "down",
+            "start",
+            "stop",
+            "restart",
+            "kill",
+            "rm",
+        }:
+            raise WorkflowError(
+                "use make dev-up or make dev-stop; raw DEV lifecycle cleanup is refused"
+            )
+        if env.role in {"review", "sourcing", "dev"}:
+            env.validate()
+            env.require_owner()
+            if env.role == "dev" and command[0] in {
+                "up",
+                "down",
+                "stop",
+                "restart",
+            }:
+                env.require_durable_legacy_media()
+        if env.role == "quality" and command[0] in {"down", "rm", "stop", "kill"}:
+            raise WorkflowError("use make quality-clean for exact worktree lifecycle retirement")
+        if env.role == "quality" and command[:1] == ["run"] and "frontend" in command:
+            env.prepare_initializer()
+            env.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")
+        env.compose(*command)
+    elif args.action == "status":
+        env.status()
+    elif args.action == "up":
+        env.up()
+    elif args.action == "seed":
+        env.seed()
+    elif args.action in {"extended-seed", "extended-status"}:
+        env.extended_review("seed" if args.action == "extended-seed" else "status")
+    elif args.action == "upgrade":
+        env.upgrade_state()
+    elif args.action in {"stop", "remove"}:
+        env.stop(
+            remove=args.action == "remove",
+            confirm=os.environ.get(
+                {
+                    "sourcing": "CONFIRM_REMOVE_SOURCING",
+                    "review": "CONFIRM_REMOVE_REVIEW",
+                }.get(env.role, "CONFIRM_REMOVE_REVIEW"),
+                "",
+            ),
+        )
+    else:
+        raise WorkflowError(f"unsupported action: {args.action}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("role", choices=["dev", "review", "sourcing", "quality", "prod", "init"])
@@ -1040,74 +1126,21 @@ def main() -> int:
             repo.initialize(os.environ.get("BRANCH", ""))
             return 0
         env = Environment(repo, args.role)
-        if args.action == "compose":
-            command = args.args[1:] if args.args[:1] == ["--"] else args.args
-            if not command or command[0].startswith("-"):
-                raise WorkflowError(
-                    "provide a Compose subcommand; project/files/config are fixed by role"
-                )
-            if (
-                env.role in {"review", "sourcing"}
-                and command[0] == "down"
-                and any(item in command for item in ("-v", "--volumes"))
-            ):
-                raise WorkflowError(
-                    "use the dedicated remove action with its exact project confirmation"
-                )
-            if env.role == "dev" and command[0] in {
-                "up",
-                "down",
-                "start",
-                "stop",
-                "restart",
-                "kill",
-                "rm",
-            }:
-                raise WorkflowError(
-                    "use make dev-up or make dev-stop; raw DEV lifecycle cleanup is refused"
-                )
-            if env.role in {"review", "sourcing", "dev"}:
-                env.validate()
-                env.require_owner()
-                if env.role == "dev" and command[0] in {
-                    "up",
-                    "down",
-                    "stop",
-                    "restart",
-                }:
-                    env.require_durable_legacy_media()
-            if env.role == "quality" and command[0] in {"down", "rm", "stop", "kill"}:
-                raise WorkflowError(
-                    "use make quality-clean for exact worktree lifecycle retirement"
-                )
-            if env.role == "quality" and command[:1] == ["run"] and "frontend" in command:
-                env.prepare_initializer()
-                env.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")
-            env.compose(*command)
-        elif args.action == "status":
-            env.status()
-        elif args.action == "up":
-            env.up()
-        elif args.action == "seed":
-            env.seed()
-        elif args.action in {"extended-seed", "extended-status"}:
-            env.extended_review("seed" if args.action == "extended-seed" else "status")
-        elif args.action == "upgrade":
-            env.upgrade_state()
-        elif args.action in {"stop", "remove"}:
-            env.stop(
-                remove=args.action == "remove",
-                confirm=os.environ.get(
-                    {
-                        "sourcing": "CONFIRM_REMOVE_SOURCING",
-                        "review": "CONFIRM_REMOVE_REVIEW",
-                    }.get(env.role, "CONFIRM_REMOVE_REVIEW"),
-                    "",
-                ),
-            )
+        passthrough = [item for item in args.args if item != "--"][:1]
+        if args.role in {"review", "sourcing"} and (
+            args.action in REVIEW_LIFECYCLE
+            or (args.action == "compose" and set(passthrough) & REVIEW_COMPOSE_MUTATIONS)
+        ):
+            if args.action != "stop":
+                # A separate process keeps exceptions and the writer contract in one implementation.
+                helper = Path(__file__).with_name("feature_worktree.py")
+                run([sys.executable, str(helper), "require-writer"])
+            # Owner labels only exist after creation; serialize so two sources cannot both pass.
+            with machine_lock(env.project, f"{env.project} lifecycle"):
+                dispatch(env, args)
         else:
-            raise WorkflowError(f"unsupported action: {args.action}")
-    except (WorkflowError, ValueError, KeyError) as error:
+            dispatch(env, args)
+    except (WorkflowError, ResourceError, ValueError, KeyError) as error:
         print(f"workflow: {error}", file=sys.stderr)
         return 1
     return 0

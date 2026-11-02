@@ -26,6 +26,8 @@ branch="$(git branch --show-current)"
 [[ "${branch}" =~ ^(feat|fix|docs|ci)/[a-z0-9][a-z0-9._-]*$ ]] ||
   fail "branch must use feat/, fix/, docs/, or ci/ followed by a safe lowercase name"
 git remote get-url origin >/dev/null 2>&1 || fail "origin remote is required"
+# Refuse before invalidating: another writer's receipt must survive this attempt.
+python3 ./scripts/feature_worktree.py require-writer || fail "writer ownership check failed"
 python3 ./scripts/feature-tree-fingerprint.py invalidate
 git fetch origin main || fail "could not fetch origin/main"
 git show-ref --verify --quiet refs/remotes/origin/main || fail "origin/main is required"

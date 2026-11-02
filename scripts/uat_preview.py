@@ -25,6 +25,7 @@ from workflow_environment import (
     require_upgradeable,
     run,
 )
+from workflow_resources import ResourceError, machine_lock
 
 VOLUMES = {"postgres_data", "attachment_data", "frontend_node_modules"}
 
@@ -647,8 +648,10 @@ def main() -> int:
                     (preview.repository.metadata / f"{preview.project}.lock").open("w")
                 )
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                # Owner labels only exist after creation; another source must not pass concurrently.
+                stack.enter_context(machine_lock(preview.project, f"{preview.project} lifecycle"))
             dispatch(preview, args.action)
-    except (WorkflowError, ValueError, KeyError, OSError) as error:
+    except (WorkflowError, ResourceError, ValueError, KeyError, OSError) as error:
         print(f"UAT Preview: {error}", file=sys.stderr)
         return 1
     return 0

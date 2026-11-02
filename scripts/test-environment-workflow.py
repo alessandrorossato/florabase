@@ -42,6 +42,10 @@ class EnvironmentTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory(prefix="florabase workflow spaces ")
         self.addCleanup(self.temporary.cleanup)
+        # Lifecycle tests must not contend with a real operator Review on this machine.
+        locks = patch.dict(os.environ, {"FLORABASE_LOCK_DIR": f"{self.temporary.name}/locks"})
+        locks.start()
+        self.addCleanup(locks.stop)
         self.primary = Path(self.temporary.name) / "primary"
         self.primary.mkdir()
         git(self.primary, "init", "--initial-branch=main")

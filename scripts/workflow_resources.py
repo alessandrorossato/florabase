@@ -4,8 +4,11 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
+import os
+import pwd
 import re
 import signal
 import subprocess
@@ -14,9 +17,10 @@ import uuid
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from types import FrameType
-from typing import Any, cast
+from typing import IO, Any, cast
 
 PROJECT_LABEL = "com.docker.compose.project"
 OWNER_LABEL = "io.florabase.workflow.owner"
@@ -38,6 +42,64 @@ def docker(*args: str) -> str:
         raise ResourceError(
             f"Docker command failed: docker {' '.join(args)}; run make workflow-resources (address pools/disk/cache/volume capacity may require exact-project recovery)"
         ) from error
+
+
+class FileLock(AbstractContextManager["FileLock"]):
+    """Non-blocking advisory lock; the kernel releases it on crash, SIGKILL or normal exit.
+
+    Python descriptors are not inherited, so a surviving child can never keep a dead owner's lock.
+    The file's holder text is diagnostics only and is never used to decide ownership.
+    """
+
+    def __init__(self, path: Path, purpose: str) -> None:
+        self.path = path
+        self.purpose = purpose
+        self.handle: IO[str] | None = None
+
+    def __enter__(self) -> FileLock:
+        try:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            handle = self.path.open("a+", encoding="utf-8")
+        except OSError as error:
+            raise ResourceError(f"cannot open lock {self.path}: {error}") from error
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as error:
+            handle.seek(0)
+            holder = handle.read().strip() or "another process"
+            handle.close()
+            raise ResourceError(
+                f"{self.purpose} is already running ({holder}); wait for it and retry"
+            ) from error
+        handle.truncate(0)
+        identity = {
+            "pid": os.getpid(),
+            "source": str(Path.cwd()),
+            "started_at": datetime.now(UTC).isoformat(),
+        }
+        handle.write(json.dumps(identity, sort_keys=True))
+        handle.flush()
+        self.handle = handle
+        return self
+
+    def __exit__(self, *exception: object) -> None:
+        if self.handle:
+            self.handle.truncate(0)
+            self.handle.close()
+            self.handle = None
+
+
+def machine_lock(name: str, purpose: str) -> FileLock:
+    """Coordinate every checkout and clone of this user; Git metadata would miss separate clones."""
+    configured = os.environ.get("FLORABASE_LOCK_DIR")
+    # The account's home, not $HOME/XDG: sandboxed tool launches must still share one lock.
+    home = Path(pwd.getpwuid(os.getuid()).pw_dir)
+    root = Path(configured) if configured else home / ".local/state/florabase/locks"
+    return FileLock(root / f"{name}.lock", purpose)
+
+
+def verification_lock(metadata: Path) -> FileLock:
+    return FileLock(metadata / "florabase-verification.lock", "verification of this worktree")
 
 
 @dataclass(frozen=True)

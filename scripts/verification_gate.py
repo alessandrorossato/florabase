@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import subprocess
 import sys
@@ -13,6 +14,7 @@ from typing import Any
 
 from disposable_workflow import MIGRATION_REPORT, expected_migration_evidence
 from verification_impact import describe, make_plan
+from workflow_resources import ResourceError, machine_lock, verification_lock
 
 
 def checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
@@ -182,6 +184,25 @@ def execute(plan: dict[str, Any], path: Path) -> None:
     )
 
 
+def execute_locked(plan: dict[str, Any], path: Path) -> None:
+    metadata = Path(
+        subprocess.run(
+            ["git", "rev-parse", "--absolute-git-dir"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+    )
+    # FULL competes for shared CPU, BuildKit and Docker address pools across every checkout.
+    full_lock = (
+        machine_lock("verification-full", "canonical FULL verification")
+        if plan["mode"] == "full"
+        else contextlib.nullcontext()
+    )
+    with verification_lock(metadata), full_lock:
+        execute(plan, path)
+
+
 def check_untracked_whitespace() -> None:
     raw = subprocess.run(
         ["git", "ls-files", "--others", "--exclude-standard", "-z"],
@@ -213,7 +234,11 @@ def main() -> None:
         return
     if not args.base or not args.execution:
         parser.error("--base and --execution are required for gate execution")
-    execute(make_plan(args.base, force_full=args.full), args.execution)
+    try:
+        execute_locked(make_plan(args.base, force_full=args.full), args.execution)
+    except ResourceError as error:
+        print(f"verification refused: {error}", file=sys.stderr)
+        raise SystemExit(1) from error
 
 
 if __name__ == "__main__":
