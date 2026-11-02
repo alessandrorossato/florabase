@@ -34,6 +34,7 @@ import {
   setRecordRoute,
 } from "../components/recordNavigation";
 import { RecordIdentities } from "../components/recordPresentation";
+import { useRecordDetailFocus } from "../components/useRecordDetailFocus";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import { useDirectoryPagination } from "../components/useDirectoryPagination";
 import { useEditRoute } from "../components/useEditRoute";
@@ -132,6 +133,7 @@ export function HarvestScreen({
   const recordIdentities = useContext(RecordIdentities);
   const headingId = useId();
   const directoryList = useRef<HTMLUListElement>(null);
+  const detailHeading = useRef<HTMLHeadingElement>(null);
   const [records, setRecords] = useState<Harvest[] | null>(null);
   const [detail, setDetail] = useState<Harvest | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -239,6 +241,15 @@ export function HarvestScreen({
     }
   }
   const displayId = editor && edit.modal ? backgroundId : initialId;
+  useRecordDetailFocus({
+    recordKey: displayId ?? null,
+    detailReady: Boolean(detail && detail.id === displayId),
+    directoryReady: Boolean(records),
+    paused: Boolean(editor) || edit.modal || creating || storedMode,
+    headingRef: detailHeading,
+    directoryRef: directoryList,
+    fallbackId: `${headingId}-search`,
+  });
   if (creating)
     return (
       <section className="harvest-workspace harvest-create-workspace">
@@ -511,6 +522,7 @@ export function HarvestScreen({
               ]}
             />
             <DetailHeader
+              headingRef={detailHeading}
               eyebrow="Harvest"
               title={detail.display_title}
               visual={<Visual harvest={detail} />}
@@ -689,6 +701,7 @@ export function HarvestScreen({
                     {pageRecords.map((record) => (
                       <li
                         key={record.id}
+                        data-preview-id={record.id}
                         className="ui-directory-row ui-directory-row--composed"
                         data-selected={record.id === selectedId || undefined}
                       >

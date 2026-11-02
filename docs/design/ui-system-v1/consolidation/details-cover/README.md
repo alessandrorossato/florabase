@@ -248,3 +248,12 @@ has been completed.
    Verify blocked external references never load automatically and ambiguous identities never guess.
 9. Test real browser zoom, physical touch devices and screen-reader navigation. Final operator UAT
    and protected verification remain pending; targeted checks are not release verification.
+
+## UI-POLISH-001 follow-up — 2 November 2026
+
+The [focused audit and review candidate](../../../../ui-polish-001-review.md) checks the three
+historical P2 findings against current main and implements bounded missing-Seed, Plant/Group history
+and six-family focus corrections. The historical matrix above is retained as evidence, not rewritten
+as new QA. C5 and the separate repeated-metric content decision remain open; no broader visual
+acceptance or application-wide focus closure is claimed. Canonical verification requires operator
+authorization.

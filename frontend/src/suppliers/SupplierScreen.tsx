@@ -30,6 +30,7 @@ import { DirectoryTools } from "../components/DirectoryTools";
 import { EditWorkspace } from "../components/EditWorkspace";
 import { FieldLabel } from "../components/FieldLabel";
 import { FormSections } from "../components/FormSections";
+import { useRecordDetailFocus } from "../components/useRecordDetailFocus";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import { useDirectoryPagination } from "../components/useDirectoryPagination";
 import { useEditRoute } from "../components/useEditRoute";
@@ -958,6 +959,16 @@ export function SupplierScreen({
   useCollectionPageReturnFocus(
     directory.status === "ready" && !editing && !edit.modal,
   );
+
+  useRecordDetailFocus({
+    recordKey: initialId ?? null,
+    detailReady: detail.status === "ready" && detail.supplier.id === initialId,
+    directoryReady: directory.status === "ready",
+    paused: editing || edit.modal || creationExpanded,
+    headingRef: detailHeading,
+    directoryRef: directoryList,
+    fallbackId: "supplier-filter",
+  });
 
   if (
     auth.state.status !== "authenticated" &&

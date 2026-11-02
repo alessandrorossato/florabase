@@ -2214,6 +2214,23 @@
       "status": "verified"
     },
     {
+      "id": "UI-POLISH-001",
+      "category": "ux",
+      "description": "Correct confirmed low-risk Wave 3 missing-record, history and focus defects while retaining unresolved visual decisions",
+      "acceptance_criteria": [
+        "An implementation-derived audit identifies the three deferred P2 findings, completed heading work, retained visual exceptions and unresolved C5 placement and separate content decisions",
+        "Unknown and malformed Seed Details links show an explicit recoverable state while existing request failures and authentication handling remain intact",
+        "Plant and PlantGroup browser Back/Forward restore exact Details without clearing existing creation or extraction feedback",
+        "Seeds, Plants and groups, Sowings, Suppliers, Orders and Harvests focus loaded titles and restore their browser-history directory row without stealing intentional focus or editor ownership",
+        "Focused owning and shared regressions, frontend static checks and build support review; unresolved design choices and manual visual limits remain documented with canonical verification pending operator authorization"
+      ],
+      "dependencies": [
+        "UI-SYSTEM-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "TEST-DATA-001",
       "category": "testing",
       "description": "Deterministic synthetic golden dataset with independent copies for Feature Review, UAT and performance testing",

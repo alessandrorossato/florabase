@@ -628,6 +628,18 @@ test("one New disclosure chooses type and supports BotanicalIdentity-only Plant 
   expect(
     await screen.findByText("Plant was added to the collection."),
   ).toBeInTheDocument();
+  const feedbackRoute = window.location.hash;
+  await browserBack();
+  await browserForward();
+  await waitFor(() => {
+    expect(window.location.hash).toBe(feedbackRoute);
+    expect(
+      screen.getByText("Plant was added to the collection."),
+    ).toBeVisible();
+    expect(
+      document.querySelector(".ui-record-detail-workspace"),
+    ).toBeInTheDocument();
+  });
   expect(payloads[0]).toMatchObject({
     botanical_identity_id: identityId,
     label: null,
@@ -690,6 +702,14 @@ test("minimal group creation keeps quantity unknown", async () => {
   expect(screen.getByLabelText("Quantity kind")).toHaveValue("unknown");
   await openFormSection(user, "Lifecycle & notes");
   await user.click(screen.getByRole("button", { name: "Record Plant group" }));
+  await screen.findByText("Plant group was added to the collection.");
+  await browserBack();
+  await browserForward();
+  await waitFor(() => {
+    expect(
+      screen.getByText("Plant group was added to the collection."),
+    ).toBeVisible();
+  });
   expect(payloads[0]).toMatchObject({
     botanical_identity_id: identityId,
     quantity: null,
@@ -1253,6 +1273,27 @@ test("active group extraction is focused, updates exact quantity, opens the Plan
   expect(
     await screen.findByText("Plant was extracted from the group."),
   ).toBeInTheDocument();
+  // Seed a directory entry and the completed result, then traverse Forward to
+  // the retained result. Extraction itself replaces its task history entry.
+  act(() => {
+    window.history.pushState(null, "", "#/plants");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
+  await screen.findByRole("list", { name: "Plants collection" });
+  act(() => {
+    window.history.pushState(null, "", "#/plants/extracted-plant");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
+  await screen.findByRole("heading", { name: "Chosen one" });
+  await browserBack();
+  await screen.findByRole("list", { name: "Plants collection" });
+  await browserForward();
+  await waitFor(() => {
+    expect(
+      screen.getByText("Plant was extracted from the group."),
+    ).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Chosen one" })).toBeVisible();
+  });
   expect(window.location.hash).toBe("#/plants/extracted-plant");
   expect(screen.getByText("Extracted from group")).toBeInTheDocument();
   expect(screen.getAllByText("Seedlings 2026")).toHaveLength(2);
@@ -3217,3 +3258,39 @@ async function assertDedicatedDetails() {
     ).not.toBeInTheDocument();
   });
 }
+
+test.each(["plant", "group"] as const)(
+  "%s Back and Forward restore the exact Details record and title focus",
+  async (kind) => {
+    mockApi(plantHandler([plant()], [group({ lifecycle: "active" })]));
+    const user = await openPlants();
+    const label = kind === "plant" ? "Avocado #1" : "Seedlings 2026";
+    const hash = `#/${kind === "plant" ? "plants" : "plant-groups"}/${kind === "plant" ? plantId : groupId}`;
+    await user.click(
+      screen.getByRole("button", { name: `Open details ${label}` }),
+    );
+    await assertDedicatedDetails();
+    await browserBack();
+    expect(
+      await screen.findByRole("list", { name: "Plants collection" }),
+    ).toBeVisible();
+    await browserForward();
+    await assertDedicatedDetails();
+    expect(window.location.hash).toBe(hash);
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: label })).toHaveFocus();
+    });
+    await browserBack();
+    await waitFor(() => {
+      expect(
+        within(
+          screen.getByRole("list", { name: "Plants collection" }),
+        ).getByRole("button", {
+          name: new RegExp(
+            `^(?!Create or record for |Open details |Details |Edit ).*${label}`,
+          ),
+        }),
+      ).toHaveFocus();
+    });
+  },
+);

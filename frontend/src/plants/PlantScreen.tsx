@@ -40,6 +40,7 @@ import {
   useRecordName,
 } from "../components/recordPresentation";
 import { OverflowMenu } from "../components/ReferenceUI";
+import { useRecordDetailFocus } from "../components/useRecordDetailFocus";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import { useDirectoryPagination } from "../components/useDirectoryPagination";
 import { useEditRoute } from "../components/useEditRoute";
@@ -402,6 +403,7 @@ function Detail({
         ]}
       />
       <DetailHeader
+        headingRef={headingRef}
         visual={
           <div className="collection-primary-detail">
             <RecordVisual
@@ -516,7 +518,6 @@ function Detail({
           <DetailSummary
             id="plant-summary-title"
             label="Current Plant state"
-            titleRef={headingRef}
             metrics={[
               {
                 label: "Lifecycle",
@@ -909,7 +910,6 @@ export function PlantScreen({
     useState<ReintegrationMutationState>({ status: "idle" });
   const feedback = useRef<HTMLDivElement>(null);
   const detailHeading = useRef<HTMLHeadingElement>(null);
-  const focusedDetail = useRef<string | null>(null);
   const editorHeading = useRef<HTMLHeadingElement>(null);
   const extractionTrigger = useRef<HTMLButtonElement | null>(null);
   const recordMoreTrigger = useRef<HTMLButtonElement>(null);
@@ -987,7 +987,15 @@ export function PlantScreen({
     if (!routedKey || routedKey === lastRoutedKey.current) return;
     lastRoutedKey.current = routedKey;
     directEditHandled.current = false;
-    if (routedKey === selectedKey) return;
+    if (routedKey === selectedKey) {
+      // Browser Forward must reopen retained Details without resetting workflow feedback.
+      const timeout = window.setTimeout(() => {
+        setMobileDetail(true);
+      }, 0);
+      return () => {
+        window.clearTimeout(timeout);
+      };
+    }
     const timeout = window.setTimeout(() => {
       setExtractionSource(null);
       setDetail({ status: "loading", key: routedKey });
@@ -1225,30 +1233,16 @@ export function PlantScreen({
     if (save.status === "error") feedback.current?.focus();
   }, [save]);
 
-  useEffect(() => {
-    if (!mobileDetail) focusedDetail.current = null;
-    if (
-      mobileDetail &&
-      detail.status === "ready" &&
-      !editing &&
-      focusedDetail.current !== recordKey(detail.record)
-    ) {
-      focusedDetail.current = recordKey(detail.record);
-      const state: unknown = window.history.state;
-      const target =
-        state && typeof state === "object" && "collectionReturnFocus" in state
-          ? state.collectionReturnFocus
-          : null;
-      // A restored workflow trigger takes priority over the generic detail heading.
-      const restored =
-        target === "extract" || target === "harvest"
-          ? document.querySelector<HTMLElement>(
-              `[data-collection-return="${target}"]`,
-            )
-          : null;
-      (restored ?? detailHeading.current)?.focus();
-    }
-  }, [detail, editing, mobileDetail]);
+  useRecordDetailFocus({
+    recordKey: mobileDetail ? selectedKey : null,
+    detailReady:
+      detail.status === "ready" && recordKey(detail.record) === selectedKey,
+    directoryReady: collection.status === "ready",
+    paused: editing || edit.modal || creationExpanded,
+    headingRef: detailHeading,
+    directoryRef: directoryList,
+    fallbackId: "plant-search",
+  });
 
   const records = useMemo(
     () => (collection.status === "ready" ? collection.records : []),
@@ -2762,6 +2756,7 @@ export function PlantScreen({
                               bulk.recordClick(event, bulkChoices[bulkIndex]);
                             }}
                             key={recordKey(record)}
+                            previewId={recordKey(record)}
                             selected={
                               bulk.active
                                 ? bulk.checked({
