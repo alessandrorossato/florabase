@@ -6879,3 +6879,17 @@ Status remains implemented pending canonical verification.
 - Not exercised: real Claude Code, Codex or OpenCode sessions (provider identities are simulated) and real delivery.
 - See [handoff](agent-workflow-001-handoff.md) for design and tradeoffs. Status stays `implemented`;
   no push, PR, merge, finish, old clone/worktree removal or Docker/Git prune.
+
+### TEST-DATA-001 golden dataset vertical slice — 2 November 2026
+
+- Added a manifest-driven SMOKE golden dataset (`scripts/golden_plan.py`, `scripts/golden_dataset.py`,
+  `scripts/fixtures/golden/`) generating through owning services into isolated `golden_*` databases and
+  media roots. `review_dataset_v5.apply_node` was extracted for reuse without behavior change. Design and
+  operator decisions: [design](test-data-001-design.md); coverage: `scripts/fixtures/golden/COVERAGE.md`.
+- Evidence: identical canonical digest across hash seeds, timezones and two separate disposable stacks;
+  idempotent repeat; atomic failure with retry; post-commit failure never ready; damage detected only in the
+  damaged copy; persistent targets refused; zero residual resources after each run.
+- Checks: `test_golden_dataset.py` and `test_review_dataset_v5.py` integration, `make workflow-check`,
+  `test-uat-preview`, `test-verification-impact`, `test-environment-workflow`, `check-features`.
+- Unresolved: COMPREHENSIVE and STRESS, ten planned scenarios, Review/UAT/performance adoption (needs operator
+  lifecycle review), independent QA. Status `in_progress`. No canonical FULL, push, PR or merge.

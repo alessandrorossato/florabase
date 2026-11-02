@@ -185,24 +185,24 @@ def counts(database: Session) -> dict[str, int]:
     }
 
 
-def create_graph(
-    database: Session,
-    root: Path,
-    baseline: dict[str, Any],
-    manifest: dict[str, Any],
-    *,
-    fail_after: int | None = None,
-) -> None:
-    """All owning services flush in one transaction; media ingestion explicitly uses commit=False."""
-    plan, photos, _ = inputs()
-    refs: dict[str, Any] = {
-        "baseline:" + key: UUID(value) for key, value in baseline["records"].items()
+def canonical_country_refs(database: Session) -> dict[str, Any]:
+    return {
+        "country:" + str(place.source_code): place.id
+        for place in database.scalars(
+            select(v4.GeographicPlace).where(v4.GeographicPlace.place_kind == "canonical")
+        )
     }
-    for place in database.scalars(
-        select(v4.GeographicPlace).where(v4.GeographicPlace.place_kind == "canonical")
-    ):
-        refs["country:" + str(place.source_code)] = place.id
-    storage = AttachmentStorage(root)
+
+
+def apply_node(
+    database: Session,
+    storage: AttachmentStorage,
+    node: dict[str, Any],
+    refs: dict[str, Any],
+    manifest: dict[str, Any],
+    photos: dict[str, dict[str, Any]],
+) -> None:
+    """Create one plan node through its owning service; also used by TEST-DATA-001."""
     records = manifest["records"]
     creators: dict[str, tuple[Callable[..., Any], Any]] = {
         "identity": (v4.identities.create_botanical_identity, v4.BotanicalIdentityCreate),
@@ -218,99 +218,113 @@ def create_graph(
         "harvest": (v4.harvests.write_harvest, v4.HarvestWrite),
         "schedule": (v4.schedule.create, v4.ScheduleWrite),
     }
-    for index, node in enumerate(plan["nodes"]):
-        if fail_after is not None and index == fail_after:
-            raise v4.FixtureError("Injected failure before fixture completion")
-        key, kind = node["key"], node["kind"]
-        payload = resolve(node["payload"], refs)
-        if kind in creators:
-            create, schema = creators[kind]
-            row = create(database, schema.model_validate(payload))
-        elif kind == "profile":
-            identifier = payload.pop("identity_id")
-            v4.put_botanical_profile(
-                database, identifier, v4.BotanicalProfilePut.model_validate(payload)
-            )
-            refs[key] = identifier
-            records[key] = str(identifier)
-            continue
-        elif kind == "range":
-            identifier, place_id = payload["identity_id"], payload["place_id"]
-            v4.add_botanical_native_range(database, identifier, place_id)
-            records[key] = {"identity": str(identifier), "place": str(place_id)}
-            continue
-        elif kind == "extract":
-            group_id = payload.pop("plant_group_id")
-            row, _, event = v4.plants.extract_plant(
-                database, group_id, PlantExtractionCreate.model_validate(payload)
-            )
-            records["event:extraction"] = str(event.id)
-        elif kind == "event":
-            target = payload.pop("plant_id")
-            row = v4.events.create_event(
-                database, "plant", target, v4.EventCreate.model_validate(payload)
-            )
-        elif kind == "observation":
-            target = payload.pop("sowing_id")
-            row = germination_service.create_observation(
-                database, target, GerminationObservationWrite.model_validate(payload)
-            )
-        elif kind == "inventory":
-            target = payload.pop("item_id")
-            row = v4.initialize_inventory(
-                database, target, v4.InventoryWrite.model_validate(payload)
-            )
-        elif kind == "asset":
-            photo = photos[payload["media_key"]]
-            metadata = dict(
-                title=f"Review v5 — {photo['species']} — "
-                + ("external reference" if payload["external"] else "protected local illustration"),
-                attribution=f"{photo['creator']}; {photo['source_url']}; {photo['changes']}",
-                licence_label=photo["licence"],
-                licence_url=photo["licence_url"],
-            )
-            if payload["external"]:
-                row = v4.media.create_external_asset(
-                    database,
-                    v4.ExternalAssetCreate(
-                        **metadata, image_url=photo["image_url"], source_url=photo["source_url"]
-                    ),
-                    commit=False,
-                )
-            else:
-                upload = UploadFile(
-                    file=io.BytesIO((ASSETS / photo["file"]).read_bytes()),
-                    filename=photo["file"],
-                    headers=Headers({"content-type": "image/jpeg"}),
-                )
-                row = asyncio.run(
-                    v4.media.upload_asset(
-                        database, storage, upload, v4.AssetMetadataWrite(**metadata), commit=False
-                    )
-                )
-                attachment = database.get(Attachment, row.attachment_id)
-                assert attachment is not None
-                manifest["created_files"].append(attachment.storage_key)
-        elif kind == "link":
-            row = v4.media.create_link(
+    key, kind = node["key"], node["kind"]
+    payload = resolve(node["payload"], refs)
+    if kind in creators:
+        create, schema = creators[kind]
+        row = create(database, schema.model_validate(payload))
+    elif kind == "profile":
+        identifier = payload.pop("identity_id")
+        v4.put_botanical_profile(
+            database, identifier, v4.BotanicalProfilePut.model_validate(payload)
+        )
+        refs[key] = identifier
+        records[key] = str(identifier)
+        return
+    elif kind == "range":
+        identifier, place_id = payload["identity_id"], payload["place_id"]
+        v4.add_botanical_native_range(database, identifier, place_id)
+        records[key] = {"identity": str(identifier), "place": str(place_id)}
+        return
+    elif kind == "extract":
+        group_id = payload.pop("plant_group_id")
+        row, _, event = v4.plants.extract_plant(
+            database, group_id, PlantExtractionCreate.model_validate(payload)
+        )
+        records[node.get("extraction_event", "event:extraction")] = str(event.id)
+    elif kind == "event":
+        target = payload.pop("plant_id")
+        row = v4.events.create_event(
+            database, "plant", target, v4.EventCreate.model_validate(payload)
+        )
+    elif kind == "observation":
+        target = payload.pop("sowing_id")
+        row = germination_service.create_observation(
+            database, target, GerminationObservationWrite.model_validate(payload)
+        )
+    elif kind == "inventory":
+        target = payload.pop("item_id")
+        row = v4.initialize_inventory(database, target, v4.InventoryWrite.model_validate(payload))
+    elif kind == "asset":
+        photo = photos[payload["media_key"]]
+        metadata = dict(
+            title=f"Review v5 — {photo['species']} — "
+            + ("external reference" if payload["external"] else "protected local illustration"),
+            attribution=f"{photo['creator']}; {photo['source_url']}; {photo['changes']}",
+            licence_label=photo["licence"],
+            licence_url=photo["licence_url"],
+        )
+        if payload["external"]:
+            row = v4.media.create_external_asset(
                 database,
-                payload["target_type"],
-                payload["target_id"],
-                payload["asset_id"],
-                v4.LinkWrite(caption=payload["caption"]),
+                v4.ExternalAssetCreate(
+                    **metadata, image_url=photo["image_url"], source_url=photo["source_url"]
+                ),
                 commit=False,
             )
         else:
-            raise v4.FixtureError(f"Unknown plan node: {kind}")
-        refs[key] = row.id
-        records[key] = str(row.id)
-        if kind == "harvest":
-            item = database.scalar(
-                select(v4.HarvestItem).where(v4.HarvestItem.harvest_id == row.id)
+            upload = UploadFile(
+                file=io.BytesIO((ASSETS / photo["file"]).read_bytes()),
+                filename=photo["file"],
+                headers=Headers({"content-type": "image/jpeg"}),
             )
-            assert item is not None
-            refs["item:" + key] = item.id
-            records["item:" + key] = str(item.id)
+            row = asyncio.run(
+                v4.media.upload_asset(
+                    database, storage, upload, v4.AssetMetadataWrite(**metadata), commit=False
+                )
+            )
+            attachment = database.get(Attachment, row.attachment_id)
+            assert attachment is not None
+            manifest["created_files"].append(attachment.storage_key)
+    elif kind == "link":
+        row = v4.media.create_link(
+            database,
+            payload["target_type"],
+            payload["target_id"],
+            payload["asset_id"],
+            v4.LinkWrite(caption=payload["caption"]),
+            commit=False,
+        )
+    else:
+        raise v4.FixtureError(f"Unknown plan node: {kind}")
+    refs[key] = row.id
+    records[key] = str(row.id)
+    if kind == "harvest":
+        item = database.scalar(select(v4.HarvestItem).where(v4.HarvestItem.harvest_id == row.id))
+        assert item is not None
+        refs["item:" + key] = item.id
+        records["item:" + key] = str(item.id)
+
+
+def create_graph(
+    database: Session,
+    root: Path,
+    baseline: dict[str, Any],
+    manifest: dict[str, Any],
+    *,
+    fail_after: int | None = None,
+) -> None:
+    """All owning services flush in one transaction; media ingestion explicitly uses commit=False."""
+    plan, photos, _ = inputs()
+    refs: dict[str, Any] = {
+        "baseline:" + key: UUID(value) for key, value in baseline["records"].items()
+    }
+    refs.update(canonical_country_refs(database))
+    storage = AttachmentStorage(root)
+    for index, node in enumerate(plan["nodes"]):
+        if fail_after is not None and index == fail_after:
+            raise v4.FixtureError("Injected failure before fixture completion")
+        apply_node(database, storage, node, refs, manifest, photos)
     retiring = database.get(v4.Supplier, refs[plan["retire_supplier"]])
     assert retiring is not None
     v4.suppliers.set_supplier_retired(database, retiring, retired=True)
