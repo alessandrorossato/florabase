@@ -15,6 +15,7 @@ import os
 import pty
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import tempfile
@@ -23,6 +24,7 @@ from pathlib import Path
 from typing import Any, cast
 from unittest.mock import patch
 
+import feature_worktree
 import sourcing_preview
 import workflow_environment
 from workflow_environment import COMPOSE_MUTATING, COMPOSE_READ_ONLY, Environment
@@ -1092,10 +1094,13 @@ class AgentWorkflowTests(unittest.TestCase):
 
     # Finish and retirement ---------------------------------------------------------------------
 
-    def finished(self, branch: str = "feat/example-001") -> Path:
+    def finished(self, branch: str = "feat/example-001", *, frontend: bool = False) -> Path:
         worktree = self.create(branch)
         self.ok(worktree, "claim", AGENT_ID="claude-code")
         (worktree / "feature.txt").write_text("feature\n")
+        if frontend:
+            (worktree / "frontend").mkdir()
+            (worktree / "frontend/package.json").write_text("{}\n")
         self.git(worktree, "add", ".")
         self.git(worktree, "commit", "-m", "feature")
         feature = self.git(worktree, "rev-parse", "HEAD")
@@ -1189,6 +1194,150 @@ class AgentWorkflowTests(unittest.TestCase):
         (worktree / "__pycache__/module.pyc").write_text("regenerable\n")
         self.ok(self.primary, "retire", FEATURE="example-001", CONFIRM_RETIRE="example-001")
         self.assertFalse(worktree.exists())
+
+    def test_empty_unwritable_directory_does_not_block_retirement(self) -> None:
+        worktree = self.finished(frontend=True)
+        cache = worktree / "frontend/node_modules"
+        cache.mkdir()
+        cache.chmod(0o555)
+        self.assertFalse(os.access(cache, os.W_OK))
+        self.ok(self.primary, "retire", FEATURE="example-001", CONFIRM_RETIRE="example-001")
+        self.assertFalse(worktree.exists())
+
+    def test_nonempty_unwritable_directory_keeps_registration_and_content(self) -> None:
+        worktree = self.finished(frontend=True)
+        cache = worktree / "frontend/node_modules"
+        cache.mkdir()
+        (cache / "unexpected.txt").write_text("retain me")
+        # Simulate the repository's ignored dependency cache.
+        (self.primary / ".git/info/exclude").write_text("node_modules/\n")
+        cache.chmod(0o555)
+        try:
+            self.refused(
+                "fix its ownership",
+                self.primary,
+                "retire",
+                FEATURE="example-001",
+                CONFIRM_RETIRE="example-001",
+            )
+            self.assertEqual((cache / "unexpected.txt").read_text(), "retain me")
+            self.assertIn(str(worktree), self.git(self.primary, "worktree", "list"))
+        finally:
+            cache.chmod(0o755)
+
+    def test_retirement_preflight_refuses_links_and_mounts(self) -> None:
+        worktree = self.finished(frontend=True)
+        cache = worktree / "frontend/node_modules"
+        cache.mkdir()
+        outside = self.root / "shared"
+        outside.mkdir()
+        (outside / "keep").write_text("shared data")
+        link = cache / "linked"
+        link.symlink_to(outside, target_is_directory=True)
+        (self.primary / ".git/info/exclude").write_text("node_modules/\n")
+        self.refused(
+            "symlink",
+            self.primary,
+            "retire",
+            FEATURE="example-001",
+            CONFIRM_RETIRE="example-001",
+        )
+        link.unlink()
+        # Include escaped spaces/backslashes and a same-device bind mount, which is_mount misses.
+        mounted = cache / "space and\\slash"
+        mounted.mkdir()
+        escaped = str(mounted).replace("\\", r"\134").replace(" ", r"\040")
+        with patch.object(
+            Path,
+            "read_text",
+            return_value=f"20 1 8:1 / {escaped} rw - ext4 /dev/a rw\n",
+        ):
+            with self.assertRaisesRegex(workflow_environment.WorkflowError, "mounted path"):
+                feature_worktree.validate_retirement_tree(worktree)
+        with patch.object(Path, "read_text", side_effect=PermissionError("unavailable")):
+            with self.assertRaisesRegex(workflow_environment.WorkflowError, "safe removal"):
+                feature_worktree.validate_retirement_tree(worktree)
+        for evidence in ("invalid\n", ""):
+            with patch.object(Path, "read_text", return_value=evidence):
+                with self.assertRaisesRegex(workflow_environment.WorkflowError, "safe removal"):
+                    feature_worktree.validate_retirement_tree(worktree)
+        self.assertTrue(worktree.exists())
+        self.assertEqual((outside / "keep").read_text(), "shared data")
+        self.assertIn(str(worktree), self.git(self.primary, "worktree", "list"))
+
+    def test_retirement_preflight_requires_traversal_and_removable_parent(self) -> None:
+        candidate = self.root / "candidate"
+        parent = candidate / "frontend"
+        cache = parent / "node_modules"
+        cache.mkdir(parents=True)
+        cache.chmod(0o000)
+        try:
+            with self.assertRaisesRegex(workflow_environment.WorkflowError, "safe removal"):
+                feature_worktree.validate_retirement_tree(candidate)
+        finally:
+            cache.chmod(0o755)
+        parent.chmod(0o555)
+        try:
+            with self.assertRaisesRegex(workflow_environment.WorkflowError, "fix its ownership"):
+                feature_worktree.validate_retirement_tree(candidate)
+        finally:
+            parent.chmod(0o755)
+        original_stat = Path.stat
+
+        def sticky_parent(path: Path, *, follow_symlinks: bool = True) -> os.stat_result:
+            result = original_stat(path, follow_symlinks=follow_symlinks)
+            if path == parent:
+                fields = list(result)
+                fields[0] = result.st_mode | stat.S_ISVTX
+                fields[4] = os.getuid() + 2
+                return os.stat_result(fields)
+            return result
+
+        with (
+            patch.object(Path, "stat", sticky_parent),
+            patch.object(os, "geteuid", return_value=os.getuid() + 1),
+        ):
+            with self.assertRaisesRegex(workflow_environment.WorkflowError, "sticky parent"):
+                feature_worktree.validate_retirement_tree(candidate)
+        self.assertTrue(cache.is_dir())
+
+    @unittest.skipUnless(
+        os.environ.get("FLORABASE_RETIRE_DOCKER_SMOKE") == "1",
+        "opt-in real Docker mountpoint smoke; offline suite uses PATH mocks",
+    )
+    def test_real_docker_root_owned_empty_mountpoint_retirement(self) -> None:
+        worktree = self.finished(frontend=True)
+        cache = worktree / "frontend/node_modules"
+        # Docker prepares the nested mountpoint in the host bind as root, even with a non-root
+        # process. Only this disposable fixture is mounted; no network or persistent volume.
+        subprocess.run(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--pull=never",
+                "--network=none",
+                "--read-only",
+                "--user",
+                f"{os.getuid()}:{os.getgid()}",
+                "--mount",
+                f"type=bind,src={worktree / 'frontend'},dst=/fixture",
+                "--tmpfs",
+                "/fixture/node_modules:rw",
+                "--entrypoint",
+                "/bin/true",
+                "node:24.19.0-bookworm-slim",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(cache.stat().st_uid, 0)
+        self.assertEqual(list(cache.iterdir()), [])
+        self.assertFalse(os.access(cache, os.W_OK))  # Original preflight refuses here.
+        self.ok(self.primary, "retire", FEATURE="example-001", CONFIRM_RETIRE="example-001")
+        self.assertFalse(worktree.exists())
+        self.assertNotIn(str(worktree), self.git(self.primary, "worktree", "list"))
 
     def test_tool_worktree_is_refused_even_under_a_redirected_root(self) -> None:
         tools = self.root / "codex/worktrees"

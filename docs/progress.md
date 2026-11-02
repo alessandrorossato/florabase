@@ -27,6 +27,35 @@
 
 # Engineering progress
 
+## 2026-11-02 — BETA-FOUNDATION-001 implementation ready for independent QA
+
+- Claimed linked `beta-foundation-001`, branch `feat/beta-foundation-001`, as
+  `codex-beta-foundation-001` from clean cached main `af2372c`. No real production environment change.
+- [Evidence audit and beta contract](beta-foundation-001.md) distinguishes delivered collection
+  workflows from implemented/real-world acceptance, missing operational prerequisites and deferred
+  work. Existing Harvest inventory/conversion, Orders, CSV, Taxonomy and Schedule are present; stale
+  roadmap snapshots do not establish missing features. Existing statuses are preserved.
+- Proposed private single-owner `v0.1.0-beta.1`: paired immutable GHCR images, versioned Dockhand
+  image-only stack, stable PostgreSQL/media, Tailscale HTTPS plus owner authentication, explicit
+  migration, paired off-host recovery and guarded upgrades. Evaluated NAS/VPS/dedicated host against
+  capacity/uptime/recovery needs; no host selected without actual specifications. Added five scoped
+  graph entries for foundation, images, runtime/recovery, actual-data rehearsal and beta admission.
+- Retirement now permits readable empty directories through a removable parent, retains nonempty
+  write requirements and refuses symlinks/mounts or unavailable traversal evidence before unforced Git
+  removal. No permission rewrites/deletion fallback. Real disposable Docker nested-mount smoke
+  reproduced root-owned empty `frontend/node_modules`; original helper fails both new positive cases,
+  corrected helper passes. Historical reported directories are no longer available for inspection.
+- Checks: initial narrow baseline 2 passed; existing workflow suite 50 passed; final expanded suite
+  54 passed / 1 opt-in smoke skipped (55 total), final focused retirement 4 passed and separate real
+  Docker smoke 1 passed; adjacent feature suite 46 passed and shell helpers all passed;
+  `make workflow-check AGENT_ID=codex-beta-foundation-001` passed Ruff/format and strict mypy;
+  feature graph 131 valid; whitespace checks passed. Iteration fixture/format/type failures resolved.
+- [QA handoff and exact check scope](beta-foundation-001-qa.md): planner selects FULL, reserved for
+  the different independent QA session under canonical policy; no receipt or `verified` promotion.
+  Product suites/builds/API drift/migration cycle, real HTTPS deployment, full restore and real-data
+  UAT not run by this implementation. Host/data/backup/RPO/RTO/maintenance choices remain open.
+  Local commit only; no push, delivery, merge or real feature-finish.
+
 ## 2026-11-02 — UX004-FLAKE-001 lazy-workspace test correction
 
 - Freshly fetched verified main `e5e6b4f` (#134); attached the clean existing `2185` worktree with

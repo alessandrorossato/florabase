@@ -144,7 +144,13 @@ It removes one worktree directly under the managed root that `make feature-workt
 with finish's proof at the same HEAD, a merge on cached `origin/main`, a deleted branch, clean status, no running gate and no Docker
 containers or volumes labelled with that source (Docker unavailable refuses). Ignored files other than
 regenerable caches, such as `.env` or backups, refuse for a decision, and so does any directory it
-could not delete. It uses `git worktree remove` without force, so worktrees from agent tools, clones,
+could not delete. The removal preflight permits a readable empty directory without child write
+permission when its parent permits removal (including sticky-directory ownership checks). Nonempty
+directories still require write/search permission. Symlinks and any mounted path within the candidate
+are refused; Linux `/proc/self/mountinfo` is required to detect same-device bind mounts and missing or
+unreadable traversal/mount evidence fails closed before Git removal. No ownership/permission changes
+or recursive deletion fallback are performed. Operators must stop external source/mount writers;
+preflight is not atomic against concurrent external changes. It uses `git worktree remove` without force, so worktrees from agent tools, clones,
 branches and all volumes are out of its reach.
 A branch-less worktree with no proof, or an abandoned feature, stays for the operator to decide.
 

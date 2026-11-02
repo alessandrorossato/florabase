@@ -11,6 +11,7 @@ import argparse
 import json
 import os
 import re
+import stat
 import subprocess
 import sys
 import uuid
@@ -453,6 +454,51 @@ def undisposable_ignored(target: Repository) -> list[str]:
     ]
 
 
+def validate_retirement_tree(path: Path) -> None:
+    """Preflight Git removal without following links or crossing even same-device bind mounts."""
+    try:
+        # is_mount() alone misses same-device bind mounts. Fail closed without mount evidence.
+        mounts = Path("/proc/self/mountinfo").read_text(encoding="utf-8")
+        if not mounts.strip():
+            raise ValueError("empty mountinfo")
+        for line in mounts.splitlines():
+            fields = line.split()
+            if len(fields) < 6 or " - " not in line:
+                raise ValueError("invalid mountinfo record")
+            mount = Path(re.sub(r"\\([0-7]{3})", lambda m: chr(int(m[1], 8)), fields[4]))
+            if mount == path or mount.is_relative_to(path):
+                raise WorkflowError(f"cannot remove mounted path {mount}; unmount it first")
+
+        def scan(directory: Path) -> None:
+            if directory.is_symlink():
+                raise WorkflowError(f"cannot remove symlink {directory}; inspect it first")
+            parent = directory.parent
+            if not os.access(parent, os.W_OK | os.X_OK):
+                raise WorkflowError(f"cannot remove {directory}; fix its ownership first")
+            parent_stat = parent.stat()
+            if parent_stat.st_mode & stat.S_ISVTX and os.geteuid() not in (
+                0,
+                parent_stat.st_uid,
+                directory.stat().st_uid,
+            ):
+                raise WorkflowError(f"cannot remove {directory}; sticky parent forbids removal")
+            with os.scandir(directory) as entries:
+                children = list(entries)
+            # rmdir needs writable/searchable parent, not a writable empty child.
+            # Nonempty directories still need write/search permission to remove their contents.
+            if children and not os.access(directory, os.W_OK | os.X_OK):
+                raise WorkflowError(f"cannot remove {directory}; fix its ownership first")
+            for child in children:
+                if child.is_symlink():
+                    raise WorkflowError(f"cannot remove symlink {child.path}; inspect it first")
+                if child.is_dir(follow_symlinks=False):
+                    scan(Path(child.path))
+
+        scan(path)
+    except (OSError, ValueError) as error:
+        raise WorkflowError(f"cannot establish safe removal of {path}: {error}") from error
+
+
 def retire(repo: Repository, identifier: str, confirmation: str) -> None:
     """Remove one finished managed worktree; provider-managed and foreign paths always refuse."""
     if not re.fullmatch(r"[a-z0-9][a-z0-9._-]*", identifier):
@@ -497,9 +543,7 @@ def retire(repo: Repository, identifier: str, confirmation: str) -> None:
             f"{path} still owns Docker resources {sorted(owned)}; retire them from it first"
         )
     # Git unregisters before deleting, so an unremovable directory would leave an orphan.
-    for directory, _, _ in os.walk(path):
-        if not os.access(directory, os.W_OK | os.X_OK):
-            raise WorkflowError(f"cannot remove {directory}; fix its ownership first")
+    validate_retirement_tree(path)
     # No --force: Git must still refuse anything it considers unsafe.
     repo.git("worktree", "remove", str(path))
     print(f"FEATURE WORKTREE RETIRED: {path}; volumes, branches and other worktrees unchanged")
