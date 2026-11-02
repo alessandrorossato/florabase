@@ -6859,3 +6859,23 @@ Status remains implemented pending canonical verification.
 - Independent QA in an isolated clone: PASS WITH FINDINGS, no P0/P1. Three P2 defects (blank unknown Seed id,
   Plant Forward keeping the directory, focus on `body` after Details/Back) and P3s are deferred in the Details
   closure matrix. Operator rule: only P0/P1 are corrected before closure.
+
+### AGENT-WORKFLOW-001 provider-neutral multi-agent workflow — 2 November 2026
+
+- `AGENTS.md` is the one contract. Vendor documentation shows native reading by Claude Code (2.1.309 installed
+  under the desktop app), Codex and OpenCode, so no `CLAUDE.md` or OpenCode configuration was added.
+- Added `scripts/feature_worktree.py` and `make feature-worktree/attach/context/claim/handoff/retire`,
+  plus `FileLock` in `workflow_resources.py` for Review/Sourcing/UAT lifecycle, canonical FULL and per-worktree gates.
+  Verify and Review gate on the writer; deliver and finish refuse agent identities and pending handoffs.
+- Independent read-only QA: 1 P1, 2 P2, 8 P3, no P0; all fixed with regressions, not re-reviewed by a second QA pass.
+- Focused checks with `AGENT_ID` set: test-agent-workflow 30, test-feature-workflow 46, test-environment-workflow 35,
+  test-verification-impact 24, test-workflow-resources 14, test-preview-workflow 19, test-uat-preview 19 + 15,
+  test-workflow-helpers, workflow-check. Real smoke on this repository: claim and refusal, Review ownership refusal
+  against the protected owner, create/attach/collision, refused retire of `548f`. Final gate: canonical FULL, by receipt.
+- Second independent QA (Codex): FAIL, P1 Review Compose denylist omitted `cp` and `watch`. Corrected with a fail-closed
+  allowlist across Review, Sourcing, DEV, Quality and production routes; pending re-review, then a new canonical FULL.
+- Third independent QA: FAIL, P1 production `down -v`, P2 `cp -L`. Corrected with parser-accurate flag matching on all
+  roles, also refusing `up -V` and `cp -` tar streams; pending re-review, then a new canonical FULL.
+- Not exercised: real Claude Code, Codex or OpenCode sessions (provider identities are simulated) and real delivery.
+- See [handoff](agent-workflow-001-handoff.md) for design and tradeoffs. Status stays `implemented`;
+  no push, PR, merge, finish, old clone/worktree removal or Docker/Git prune.

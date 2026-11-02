@@ -17,6 +17,7 @@ STATIC = ["format-check", "lint", "typecheck", "api-check"]
 WORKFLOW = [
     "test-workflow-helpers",
     "test-feature-workflow",
+    "test-agent-workflow",
     "test-preview-workflow",
     "test-environment-workflow",
     "test-uat-preview",

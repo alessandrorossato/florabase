@@ -15,7 +15,7 @@ fail() {
 git remote get-url origin >/dev/null 2>&1 || fail "origin remote is required"
 
 git fetch --prune origin
-# Codex owns linked worktree lifecycle. Never try to check out its primary main here.
+# Linked worktrees never check out the primary main here; initialize the current one instead.
 if [[ "$(git rev-parse --absolute-git-dir)" != "$(git rev-parse --path-format=absolute --git-common-dir)" ]]; then
   python3 "$(dirname "$0")/workflow_environment.py" init
   exit

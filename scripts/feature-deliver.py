@@ -174,6 +174,7 @@ class Delivery:
         self.require(branch != "main", "run this command from a feature branch, not main")
         self.require(bool(BRANCH_PATTERN.fullmatch(branch)), "branch must use feat/, fix/, docs/, or ci/")
         self.require(not self.git("status", "--porcelain", capture=True), "working tree is not clean")
+        self.commands.run("python3", "./scripts/feature_worktree.py", "require-operator")
         self.git("rev-parse", "--verify", "HEAD^{commit}")
         origin = self.git("remote", "get-url", "origin", capture=True)
         self.require(

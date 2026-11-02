@@ -9,6 +9,7 @@ import hashlib
 import inspect
 import json
 import os
+import posixpath
 import re
 import shutil
 import subprocess
@@ -16,6 +17,8 @@ import sys
 from pathlib import Path
 from typing import Any, cast
 from urllib.parse import unquote, urlsplit
+
+from workflow_resources import ResourceError, machine_lock
 
 DEV_PROJECT = "florabase"  # Preserve existing operator volumes; never silently rename them.
 REVIEW_PROJECT = "florabase-feature-review"
@@ -27,6 +30,57 @@ PORTS = {"dev": "5173", "review": "15174", "sourcing": "15175", "preview": "1517
 BRANCH_PATTERN = re.compile(r"^(feat|fix|docs|ci)/[a-z0-9][a-z0-9._-]*$")
 MEDIA_ROOT = "/var/lib/florabase/attachments"
 LEGACY_MEDIA_ROOT = "/tmp/florabase-attachments"
+REVIEW_LIFECYCLE = {"up", "seed", "extended-seed", "upgrade", "stop", "remove"}
+# Every Docker Compose v5 verb is classified; anything else is refused, so a verb added by a later
+# Compose release can never pass as read-only.
+COMPOSE_READ_ONLY = {
+    "config",
+    "events",
+    "images",
+    "logs",
+    "ls",
+    "port",
+    "ps",
+    "stats",
+    "top",
+    "version",
+    "volumes",
+}
+COMPOSE_MUTATING = {
+    "attach",
+    "bridge",
+    "build",
+    "commit",
+    "cp",
+    "create",
+    "down",
+    "exec",
+    "export",
+    "kill",
+    "pause",
+    "publish",
+    "pull",
+    "push",
+    "restart",
+    "rm",
+    "run",
+    "scale",
+    "start",
+    "stop",
+    "unpause",
+    "up",
+    "wait",
+    "watch",
+}
+# DEV keeps its established operator flows; its lifecycle belongs to make dev-up and make dev-stop.
+DEV_COMPOSE_MUTATING = {"build", "exec", "pull", "run"}
+PERSISTENT_CONTAINER_PATHS = (
+    "/var/lib/postgresql",
+    MEDIA_ROOT,
+    LEGACY_MEDIA_ROOT,
+    "/state/attachments",
+    "/app/node_modules",
+)
 
 
 class WorkflowError(RuntimeError):
@@ -68,6 +122,81 @@ def run(command: list[str], *, capture: bool = False, env: dict[str, str] | None
     return result.stdout.strip() if capture else ""
 
 
+def compose_arguments(arguments: list[str]) -> list[str]:
+    return arguments[1:] if arguments[:1] == ["--"] else arguments
+
+
+def has_flag(options: list[str], name: str, short: str) -> bool:
+    """Match Compose's flag grammar: --x, --x=v, -x, -x=v and clusters such as -fx and -xt5.
+
+    Deliberately conservative: an explicit false value and operands after -- also match.
+    """
+    for item in options:
+        if item == f"--{name}" or item.startswith(f"--{name}="):
+            return True
+        if item.startswith("-") and not item.startswith("--") and short in item.partition("=")[0]:
+            return True
+    return False
+
+
+def refuse_persistent_copy(command: list[str]) -> None:
+    """Copies bypass Alembic and the media service, so persistent state is out of bounds."""
+    for operand in command[1:]:
+        match = re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*:(.*)", operand)
+        if not match:
+            continue
+        if not match.group(1).startswith("/"):
+            raise WorkflowError("Compose cp needs an absolute container path: " + operand)
+        target = posixpath.normpath("/" + match.group(1).lstrip("/"))
+        for path in PERSISTENT_CONTAINER_PATHS:
+            if (
+                target == "/"
+                or target == path
+                or f"{target}/".startswith(f"{path}/")
+                or (f"{path}/".startswith(f"{target}/"))
+            ):
+                raise WorkflowError(f"Compose cp refused for persistent container state: {operand}")
+
+
+def compose_is_mutating(role: str, command: list[str]) -> bool:
+    """Classify one passthrough before Docker is reached; refuse whatever cannot be supported."""
+    if not command or command[0].startswith("-"):
+        raise WorkflowError("provide a Compose subcommand; project/files/config are fixed by role")
+    verb, options = command[0], command[1:]
+    if verb not in COMPOSE_READ_ONLY | COMPOSE_MUTATING:
+        raise WorkflowError(f"unknown Compose subcommand refused: {verb}")
+    if verb == "cp":
+        refuse_persistent_copy(command)
+        # The path check sees neither where a container symlink leads nor a tar stream's entries.
+        if has_flag(options, "follow-link", "L"):
+            raise WorkflowError(
+                "Compose cp --follow-link is refused; symlink targets are unverified"
+            )
+        if "-" in options:
+            raise WorkflowError("Compose cp tar streams are refused; their paths are unverified")
+    if role == "dev" and verb in {"up", "down", "start", "stop", "restart", "kill", "rm"}:
+        raise WorkflowError(
+            "use make dev-up or make dev-stop; raw DEV lifecycle cleanup is refused"
+        )
+    if role == "dev" and verb in COMPOSE_MUTATING - DEV_COMPOSE_MUTATING:
+        raise WorkflowError(f"Compose {verb} is not supported against DEV's persistent state")
+    if role == "quality" and verb in {"down", "rm", "stop", "kill"}:
+        raise WorkflowError("use make quality-clean for exact worktree lifecycle retirement")
+    # Reached by every role left with these verbs, so no persistent role has a deletion path.
+    if verb in {"down", "rm"} and has_flag(options, "volumes", "v"):
+        if role in {"review", "sourcing"}:
+            raise WorkflowError(
+                "use the dedicated remove action with its exact project confirmation"
+            )
+        raise WorkflowError(f"Compose {verb} cannot delete volumes through {role} passthrough")
+    if verb == "up" and has_flag(options, "renew-anon-volumes", "V"):
+        raise WorkflowError("Compose up --renew-anon-volumes is refused; it discards volume data")
+    if verb in COMPOSE_READ_ONLY:
+        # config is the one read-only verb that can write a host file.
+        return verb == "config" and has_flag(options, "output", "o")
+    return True
+
+
 class Repository:
     def __init__(self, path: Path) -> None:
         self.source = Path(
@@ -103,8 +232,8 @@ class Repository:
                 return path
         return Path("/dev/null")
 
-    def initialize(self, branch: str = "") -> None:
-        origin = self.git("remote", "get-url", "origin")
+    def require_origin(self) -> None:
+        origin = self.git("config", "--get", "remote.origin.url")
         normalized = re.sub(r"^git@github\.com:", "https://github.com/", origin)
         normalized = re.sub(r"^ssh://git@github\.com/", "https://github.com/", normalized)
         if (
@@ -112,6 +241,9 @@ class Repository:
             != "https://github.com/alessandrorossato/florabase"
         ):
             raise WorkflowError("origin is not the expected Florabase repository")
+
+    def initialize(self, branch: str = "") -> None:
+        self.require_origin()
         current = self.git("branch", "--show-current")
         base = self.git("rev-parse", "--verify", "origin/main")
         if not current:
@@ -1028,6 +1160,48 @@ class Environment:
         print(f"{self.project}: {'removed' if remove else 'stopped; all volumes preserved'}")
 
 
+def dispatch(env: Environment, args: argparse.Namespace) -> None:
+    if args.action == "compose":
+        command = compose_arguments(args.args)
+        if env.role in {"review", "sourcing", "dev"}:
+            env.validate()
+            env.require_owner()
+            if env.role == "dev" and command[0] in {
+                "up",
+                "down",
+                "stop",
+                "restart",
+            }:
+                env.require_durable_legacy_media()
+        if env.role == "quality" and command[:1] == ["run"] and "frontend" in command:
+            env.prepare_initializer()
+            env.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")
+        env.compose(*command)
+    elif args.action == "status":
+        env.status()
+    elif args.action == "up":
+        env.up()
+    elif args.action == "seed":
+        env.seed()
+    elif args.action in {"extended-seed", "extended-status"}:
+        env.extended_review("seed" if args.action == "extended-seed" else "status")
+    elif args.action == "upgrade":
+        env.upgrade_state()
+    elif args.action in {"stop", "remove"}:
+        env.stop(
+            remove=args.action == "remove",
+            confirm=os.environ.get(
+                {
+                    "sourcing": "CONFIRM_REMOVE_SOURCING",
+                    "review": "CONFIRM_REMOVE_REVIEW",
+                }.get(env.role, "CONFIRM_REMOVE_REVIEW"),
+                "",
+            ),
+        )
+    else:
+        raise WorkflowError(f"unsupported action: {args.action}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("role", choices=["dev", "review", "sourcing", "quality", "prod", "init"])
@@ -1039,75 +1213,26 @@ def main() -> int:
         if args.role == "init":
             repo.initialize(os.environ.get("BRANCH", ""))
             return 0
+        # Classified first: a refused passthrough never reaches Docker.
+        mutating = args.action == "compose" and compose_is_mutating(
+            args.role, compose_arguments(args.args)
+        )
         env = Environment(repo, args.role)
-        if args.action == "compose":
-            command = args.args[1:] if args.args[:1] == ["--"] else args.args
-            if not command or command[0].startswith("-"):
-                raise WorkflowError(
-                    "provide a Compose subcommand; project/files/config are fixed by role"
-                )
-            if (
-                env.role in {"review", "sourcing"}
-                and command[0] == "down"
-                and any(item in command for item in ("-v", "--volumes"))
-            ):
-                raise WorkflowError(
-                    "use the dedicated remove action with its exact project confirmation"
-                )
-            if env.role == "dev" and command[0] in {
-                "up",
-                "down",
-                "start",
-                "stop",
-                "restart",
-                "kill",
-                "rm",
-            }:
-                raise WorkflowError(
-                    "use make dev-up or make dev-stop; raw DEV lifecycle cleanup is refused"
-                )
-            if env.role in {"review", "sourcing", "dev"}:
-                env.validate()
-                env.require_owner()
-                if env.role == "dev" and command[0] in {
-                    "up",
-                    "down",
-                    "stop",
-                    "restart",
-                }:
-                    env.require_durable_legacy_media()
-            if env.role == "quality" and command[0] in {"down", "rm", "stop", "kill"}:
-                raise WorkflowError(
-                    "use make quality-clean for exact worktree lifecycle retirement"
-                )
-            if env.role == "quality" and command[:1] == ["run"] and "frontend" in command:
-                env.prepare_initializer()
-                env.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")
-            env.compose(*command)
-        elif args.action == "status":
-            env.status()
-        elif args.action == "up":
-            env.up()
-        elif args.action == "seed":
-            env.seed()
-        elif args.action in {"extended-seed", "extended-status"}:
-            env.extended_review("seed" if args.action == "extended-seed" else "status")
-        elif args.action == "upgrade":
-            env.upgrade_state()
-        elif args.action in {"stop", "remove"}:
-            env.stop(
-                remove=args.action == "remove",
-                confirm=os.environ.get(
-                    {
-                        "sourcing": "CONFIRM_REMOVE_SOURCING",
-                        "review": "CONFIRM_REMOVE_REVIEW",
-                    }.get(env.role, "CONFIRM_REMOVE_REVIEW"),
-                    "",
-                ),
-            )
+        if args.role in {"review", "sourcing"} and (args.action in REVIEW_LIFECYCLE or mutating):
+            if args.action != "stop":
+                # A separate process keeps exceptions and the writer contract in one implementation.
+                helper = Path(__file__).with_name("feature_worktree.py")
+                run([sys.executable, str(helper), "require-writer"])
+            # Owner labels only exist after creation; serialize so two sources cannot both pass.
+            with machine_lock(env.project, f"{env.project} lifecycle"):
+                dispatch(env, args)
+        elif args.role == "dev" and (args.action in {"up", "stop", "upgrade"} or mutating):
+            # DEV has no feature writer; it belongs to the operator and takes only the lock.
+            with machine_lock(env.project, f"{env.project} lifecycle"):
+                dispatch(env, args)
         else:
-            raise WorkflowError(f"unsupported action: {args.action}")
-    except (WorkflowError, ValueError, KeyError) as error:
+            dispatch(env, args)
+    except (WorkflowError, ResourceError, ValueError, KeyError) as error:
         print(f"workflow: {error}", file=sys.stderr)
         return 1
     return 0

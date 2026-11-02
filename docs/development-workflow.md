@@ -1,8 +1,8 @@
 # Development, review, preview and production workflow
 
-This is the canonical environment and feature lifecycle contract. Codex manages its own worktrees;
-Florabase validates feature context and runs environments from explicit source trees. It does not
-create a second feature worktree or move the primary checkout off `main`.
+This is the canonical environment and feature lifecycle contract for every agent and operator. It
+validates feature context and runs environments from explicit source trees, and never moves the
+primary checkout off `main`.
 
 | Environment      | Source                                                      | Compose files                                | Project                                  | Browser                    | State                                                         |
 | ---------------- | ----------------------------------------------------------- | -------------------------------------------- | ---------------------------------------- | -------------------------- | ------------------------------------------------------------- |
@@ -33,13 +33,126 @@ project. Review does not publish PostgreSQL/backend ports. Production has no Vit
 development port exposure or mutable dependency volume. Preview uses production builds and the
 same-origin proxy with loopback cookie policy, not a Vite server.
 
-## Existing Codex worktree
+## Feature worktrees and agents
 
-The primary checkout remains on `main`. Open the Codex-provided worktree and run:
+[`AGENTS.md`](../AGENTS.md) is the one instruction contract. Current Claude Code, Codex and OpenCode
+each read it natively, so the repository has no `CLAUDE.md` or OpenCode configuration; a `CLAUDE.md`,
+`CLAUDE.local.md` or `AGENTS.override.md` would displace it and must not be added. Claude Code before
+v2.1.277 reads only `CLAUDE.md`; update it rather than duplicating the rules.
+
+Every agent follows PLAN → IMPLEMENT → FOCUSED TESTS → REVIEW → INDEPENDENT QA → FREEZE → CANONICAL
+VERIFY → OPERATOR DELIVERY → FINISH. The primary checkout stays on `main` for DEV.
+
+```bash
+# From the primary checkout: create or find a worktree
+make feature-worktree BRANCH=feat/example-001   # ../florabase-worktrees/example-001 from fetched main
+make feature-attach BRANCH=feat/example-001     # Read-only: path, SHAs, writer, receipt, resources
+
+# Inside the worktree: inspect, then own it
+make feature-context [BRANCH=feat/example-001] [FORMAT=json]
+make feature-claim AGENT_ID=claude-code
+make feature-verify AGENT_ID=claude-code
+
+# Sequential handoff; dirty work is allowed because its exact digest is recorded
+make feature-handoff AGENT_ID=claude-code TO=codex REPORT=/path/to/report.json
+make feature-claim AGENT_ID=codex
+```
+
+Open any agent's session in the worktree path, for example `claude`, `codex` or `opencode` from that
+directory. Tools that provide their own worktree use `make feature-init` there instead; claims work
+identically. `AGENT_ID` is a free lowercase name (`codex`, `codex-2`), not a provider list.
+`FLORABASE_WORKTREE_ROOT` overrides the managed root.
+
+Creation refuses a primary off `main`, diverged local `main`, wrong origin, an invalid branch name, an
+existing local or remote branch and an existing path. Attach and context refuse an unexpected branch
+and unrelated history; a branch that is merely behind `origin/main` is reported, may be claimed and
+is refused later by the canonical gate.
+
+**Handoff.** `REPORT` is a JSON object with exactly `completed`, `tests` and `defects` (lists of
+strings) and `next_action`. Everything else comes from Git: branch, HEAD, tree, worktree digest, base,
+and on read, receipt validity and Docker ownership. It lives in the worktree's own Git metadata beside
+the receipt (`info/florabase-agent-state.json`), is never committed and goes away with the worktree.
+Keep secrets out of it. Claiming refuses another addressee and any change to HEAD or the exact file
+digest since the handoff. It prints the report labelled as unverified and recomputes the receipt, so
+no agent can pass on verification by assertion.
+
+**One writer.** A claim holds until handed off or taken over; it never expires. A crashed session
+therefore needs the operator, at an interactive terminal, to confirm that session is gone, read the id
+from `make feature-context` and run `make feature-claim AGENT_ID=<new> TAKEOVER=<claim or handoff id>`.
+A takeover also accepts a drifted handoff after inspection. Give each live session its own `AGENT_ID`
+(`codex`, `codex-2`): reclaiming under the same name succeeds with a warning, because the helper has
+no way to tell two sessions apart. Keep `REPORT` outside the worktree, where it cannot change the tree.
+`feature-verify`, Review/Sourcing up/seed/remove and their mutating Compose passthrough refuse a pending handoff and any other or missing
+`AGENT_ID` once a worktree is claimed. A never-claimed worktree behaves as before. `feature-deliver` and
+`feature-finish` refuse any `AGENT_ID` except `operator` and a pending handoff. **`AGENT_ID` and the local Git metadata enforce a cooperative protocol, not
+authenticated security:** identity is declared, the state files are writable by any local process
+and raw file edits are not intercepted. The claim coordinates cooperating agents and gates their
+shared steps; it is not a sandbox. The terminal requirement for takeover and the identity check at
+delivery stop a cooperating agent acting by mistake, not a determined one. Read-only reviewers use
+`git worktree add --detach <path> <sha>` or a clean clone, in any number, and never hold a claim.
+
+**Compose passthrough** (`workflow_environment.py <role> compose`, `make sourcing-preview-compose`)
+classifies the subcommand before Docker is reached:
+
+| Class | Subcommands | Review, Sourcing | DEV | Quality, production |
+| --- | --- | --- | --- | --- |
+| Read-only | `config events images logs ls port ps stats top version volumes` | Available to anyone | Available | Available |
+| Mutating | `attach bridge build commit cp create down exec export kill pause publish pull push restart rm run scale start stop unpause up wait watch` | Writer claim and lifecycle lock | `build exec pull run` take the lifecycle lock; the rest are refused | Available; Quality refuses `down kill rm stop` |
+| Unknown or flag first | Anything else | Refused | Refused | Refused |
+
+`config -o`/`--output` writes a host file and counts as mutating. Flags are matched by Compose's own
+grammar (`--x`, `--x=v`, `-x`, `-x=v`, clusters such as `-fx` and `-xt5`), conservatively, so an
+explicit false value also refuses. `down` or `rm` with a volume flag is refused on every role: Review
+and Sourcing keep their confirmed remove action, UAT and Stable Preview expose no Compose passthrough,
+and production has no passthrough for deleting data. Any future production deletion must be a separately
+designed operation. `up --renew-anon-volumes` is refused everywhere. On every role, `cp` refuses
+relative container paths, any path that contains or sits inside PostgreSQL, media or dependency
+storage in either direction, `-L`/`--follow-link` and `-` tar streams. `make sourcing-preview-compose` permits only read-only
+subcommands. A mutating `exec` or `watch` holds the lock until it exits, so it blocks other lifecycle
+commands meanwhile.
+
+This protects against mistakes through the passthrough, and only there. It does not resolve symlinks
+already inside a container, so a plain `cp` to a path that is itself such a symlink is not detected.
+`run` (including `run -v`), `exec` and direct `docker` access remain able to change or delete data, and
+production `exec` and `run` stay available because backup and restore depend on them.
+
+**Parallel features** use separate worktrees and need no coordination apart from these shared resources:
+
+| Resource | Concurrent features | Guard |
+| ------------------------------------------- | --------------------------------------- | ---------------------------------------------------- |
+| Quality project, integration, migration, build | Parallel; project is unique per worktree/run | Existing exact ownership labels |
+| Feature Review, Sourcing Preview | One owner per project; others refused | Owner labels plus machine lock on lifecycle commands |
+| UAT Preview | One owner; shares port 15174 with Review | Owner labels plus machine and per-owner locks |
+| CPU, shared BuildKit, Docker address pools | Exhausted by concurrent FULL | Machine FULL lock |
+| Same worktree's gate and receipt | One at a time | Per-worktree verification lock |
+
+Owner labels exist only after creation, so two sources starting Review together could both pass that
+check; the lock closes the window. FULL runs share no fixed name or port, so its lock protects capacity
+rather than identity, and affected gates stay parallel. All locks are kernel `flock`s in
+`$FLORABASE_LOCK_DIR` (default `.local/state/florabase/locks` in the account's home), so they cover separate clones,
+never block, and release on any exit including SIGKILL. Children do not inherit them. After SIGKILL,
+stages may briefly outlive the released lock; use the failed run's recovery command as described below.
+Remote CI and direct `make ci` take no lock. Parallel Review ports are deliberately not provided.
+
+**Retirement.** After `make feature-finish` from the primary checkout run:
+
+```bash
+make feature-retire FEATURE=example-001 CONFIRM_RETIRE=example-001
+```
+
+It removes one worktree directly under the managed root that `make feature-worktree` created, and only
+with finish's proof at the same HEAD, a merge on cached `origin/main`, a deleted branch, clean status, no running gate and no Docker
+containers or volumes labelled with that source (Docker unavailable refuses). Ignored files other than
+regenerable caches, such as `.env` or backups, refuse for a decision, and so does any directory it
+could not delete. It uses `git worktree remove` without force, so worktrees from agent tools, clones,
+branches and all volumes are out of its reach.
+A branch-less worktree with no proof, or an abandoned feature, stays for the operator to decide.
+
+### Worktrees provided by an agent tool
 
 ```bash
 make feature-init
-# Only when Codex left a clean detached HEAD at origin/main:
+# Only when the tool left a clean detached HEAD at origin/main:
 make feature-init BRANCH=ci/example
 ```
 
@@ -77,7 +190,7 @@ make dev-bootstrap-owner LOGIN=owner
 make dev-stop
 ```
 
-These commands select the primary checkout even when invoked in a Codex feature worktree. Status
+These commands select the primary checkout even when invoked in a linked feature worktree. Status
 prints that source's current branch/SHA/dirty state, URL, project, network, volume names, service
 health, code head and DB revision. Existing containers bound to another source cause an explicit
 refusal instead of silently acquiring new source mounts. `dev-up` does not migrate the database;
@@ -353,7 +466,7 @@ make feature-review-remove CONFIRM_REMOVE_REVIEW=florabase-feature-review
 ```
 
 This explicitly deletes only that project's DB/media/dependency volumes and prints their names.
-It cannot target DEV, Preview or production. It does not remove the Codex worktree. There is no
+It cannot target DEV, Preview or production. It does not remove the feature worktree. There is no
 automatic DEV data reuse and no Review import helper. Synthetic data is supported; realistic cloning
 requires a coordinated DB-and-media snapshot, a destination replacement confirmation and revision
 compatibility checks. That complete clone is deferred. The old database-only Preview import now
@@ -516,8 +629,8 @@ No local receipt or client impact metadata is trusted. Missing/invalid policy fa
 `make ci` remains exhaustive; remote product test sectorization is deferred. See the
 [CI-004 handoff/evidence](ci-004-verification-efficiency-handoff.md).
 
-Implementation (Sol) runs focused tests, relevant static/build checks and records uncovered risks.
-Independent QA (Luna) reviews behavior/code, runs focused regressions for uncovered risks, fixes
+The implementing agent runs focused tests, relevant static/build checks and records uncovered risks.
+A different agent or session performs independent QA: it reviews behavior/code, runs focused regressions for uncovered risks, fixes
 ordinary defects, then freezes source **and index** and runs **one** `make feature-verify`. That
 entry point selects FULL automatically when required; do not routinely chain `verify-full` after it.
 CI-004 itself requires independent infrastructure QA and the complete FULL gate before delivery.
@@ -589,8 +702,8 @@ API and PR identity failures have explicit diagnostics. Protected squash auto-me
 
 After a proven merge, `make feature-finish` from a linked feature worktree requires a clean primary
 checkout on `main`, fast-forwards it through Git's normal index/worktree update, detaches the retained
-feature worktree at its reviewed SHA and deletes only the proven merged feature branch. Codex owns
-archiving that worktree. A dirty/staged primary or unexpected primary branch receives an actionable
+feature worktree at its reviewed SHA, records its proof for retirement and deletes only the proven
+merged feature branch. `make feature-retire` or the agent tool that created it removes the worktree. A dirty/staged primary or unexpected primary branch receives an actionable
 refusal with feature source retained. Single-checkout manual finish still switches to updated `main`.
 
 ## Troubleshooting and acceptance evidence

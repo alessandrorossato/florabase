@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Fixtures exercise operator-only finish even when an agent runs the enclosing canonical gate.
+unset AGENT_ID
+
 readonly repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly feature_start="${repository_root}/scripts/feature-start.sh"
 readonly feature_finish="${repository_root}/scripts/feature-finish.sh"
@@ -181,9 +184,9 @@ env -C "${linked}" PATH="${mock_bin}:${PATH}" MOCK_PR_STATE=MERGED \
 [[ "$(git -C "${work}" branch --show-current)" == "main" ]] || fail "primary did not retain main"
 [[ "$(git -C "${work}" rev-parse HEAD)" == "${merge_oid}" ]] || fail "primary main not fast-forwarded"
 [[ -z "$(git -C "${work}" status --porcelain)" ]] || fail "primary index/worktree mismatch after finish"
-[[ -z "$(git -C "${linked}" branch --show-current)" ]] || fail "Codex worktree should be retained detached"
+[[ -z "$(git -C "${linked}" branch --show-current)" ]] || fail "linked worktree should be retained detached"
 [[ -z "$(git -C "${linked}" status --porcelain)" ]] || fail "linked index/worktree mismatch after finish"
-[[ -d "${linked}" ]] || fail "Codex-managed worktree removed"
+[[ -d "${linked}" ]] || fail "linked worktree removed"
 if git -C "${work}" show-ref --verify --quiet refs/heads/feat/finish; then
   fail "linked verified merged branch was not deleted"
 fi

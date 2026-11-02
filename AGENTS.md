@@ -14,14 +14,28 @@ do not pre-build later capabilities.
 6. Run the narrowest meaningful baseline checks; use `make check` before risky or broad changes when
    the full stack is available.
 
-Choose the increment before creating a branch. In an existing Codex-managed worktree use
-`make feature-init`; provide `BRANCH=ci/example` only to attach clean detached HEAD at `origin/main`.
-Never create another feature worktree or switch primary `main` in that workflow. Preserve manual
-`make feature-start BRANCH=feat/<feature-id>` (or focused `fix/`, `docs/`, `ci/`) for clean,
-fast-forwarded `main`. Follow [docs/development-workflow.md](docs/development-workflow.md) for source,
+Choose the increment before creating a branch. This file is the one workflow contract for every
+agent (Claude Code, Codex, OpenCode) and operator; no agent owns the workflow. From the primary
+checkout, `make feature-worktree BRANCH=feat/<feature-id>` (or focused `fix/`, `docs/`, `ci/`) creates
+a sibling worktree from fetched `main`; `make feature-attach BRANCH=...` locates an existing one. In a
+worktree provided by an agent tool use `make feature-init`; provide `BRANCH=ci/example` only to attach
+clean detached HEAD at `origin/main`. Never switch primary `main` away. Manual
+`make feature-start BRANCH=...` remains for clean, fast-forwarded `main`.
+
+Exactly one agent writes to a feature worktree. Run `make feature-context`, then
+`make feature-claim AGENT_ID=<agent>` before writing, and pass the same `AGENT_ID` to writer-gated
+commands such as `make feature-verify`. Hand over only with
+`make feature-handoff AGENT_ID=<agent> TO=<agent> REPORT=<file>`. A receiving agent validates through
+`make feature-claim` and treats the report as a claim, not evidence. `TAKEOVER=` is for the operator
+at a terminal after confirming the previous session is gone; agents never use it. Each live session
+uses its own `AGENT_ID`. This is a cooperative protocol, not authenticated security: follow it even
+where nothing would stop you. Mutating or unknown Compose passthrough is guarded or refused. Read-only reviewers use their own detached checkout.
+Follow [docs/development-workflow.md](docs/development-workflow.md) for source,
 environment and review-profile boundaries. Implement the smallest coherent change, run focused checks while developing,
 then complete one policy-selected canonical gate before marking a feature `verified`.
 Infrastructure, security, dependencies, migrations, unknown changes and releases require FULL.
+Every feature follows PLAN → IMPLEMENT → FOCUSED TESTS → REVIEW → INDEPENDENT QA → FREEZE → CANONICAL
+VERIFY → OPERATOR DELIVERY → FINISH.
 
 ## Repository boundaries
 
@@ -78,8 +92,9 @@ task boundary is `READY_FOR_DELIVERY`, do not push or create a PR: the operator 
 auto-merge without bypassing checks. Never force-push, rewrite shared history, manually force a
 merge, or commit feature work directly to `main`. After delivery reports a merged PR, use `make
 feature-finish` for conservative local cleanup (linked finish requires clean primary `main` and
-retains the detached Codex worktree), then use `make dev-upgrade` only when delivery
-reported a migration.
+retains the detached worktree), then use `make dev-upgrade` only when delivery reported a migration.
+Delivery, finish and `make feature-retire` require explicit operator authorization; they refuse an
+agent `AGENT_ID`, and retirement only removes finished worktrees under `florabase-worktrees/`.
 
 Before finishing, run relevant formatting, lint, typing, tests, integration, API drift, migration,
 build, and health checks proportional to the change. Report environmental limits exactly and never

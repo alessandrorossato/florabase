@@ -129,6 +129,24 @@
       "status": "implemented"
     },
     {
+      "id": "AGENT-WORKFLOW-001",
+      "category": "infrastructure",
+      "description": "Provider-neutral multi-agent development workflow on the existing verified feature lifecycle",
+      "acceptance_criteria": [
+        "AGENTS.md is the single instruction contract read natively by Claude Code, Codex and OpenCode, without a provider owning the workflow or changing domain conventions",
+        "A guarded helper creates a feature worktree from fetched main, attaches read-only to an existing one, reports exact branch, HEAD, tree, base, worktree, primary, writer, receipt and resources, and refuses invalid names, wrong base and collisions while feature-init, start, verify, deliver and finish keep their contracts",
+        "A per-worktree writer claim and one agent-independent handoff bind reported work to exact Git state; a receiver revalidates state and receipt, an interrupted writer needs an explicit exact takeover, and read-only reviewers use isolated checkouts",
+        "Kernel locks serialize Review, Sourcing and UAT lifecycle across sources, canonical FULL across every checkout and clone, and gates within a worktree, and recover after interruption without changing DEV, Review or UAT data",
+        "Canonical verification, exact receipts, protected delivery and guarded finish are retained; delivery and finish refuse an agent identity and pending handoff, and explicit retirement removes only a proven finished managed worktree with no owned Docker resources",
+        "Offline regressions simulate provider identities and cover creation, attachment, sequential handoff, dirty and wrong-base refusal, collisions, concurrency, interruption, delivery prerequisites, finish, retirement and environment preservation"
+      ],
+      "dependencies": [
+        "CI-004"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "PREVIEW-001",
       "category": "infrastructure",
       "description": "Provide an isolated persistent operator Preview for UAT",
