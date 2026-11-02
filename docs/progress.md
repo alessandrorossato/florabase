@@ -6910,3 +6910,18 @@ Status remains implemented pending canonical verification.
 - Not run: canonical FULL, the complete integration and unit suites, frontend checks, `smoke-uat-preview`.
 - Unresolved: every migration needs a reviewed manifest pin update; the digest has been observed on one calendar
   date only; the application import still costs about 1.8 s per CLI process.
+
+### TEST-DATA-001 timestamp baseline correction — 2 November 2026
+
+- Fixed a false `baseline-verified`: every timestamp was reduced to present or absent, so moving
+  `external_taxon_links.last_refreshed_at` by 30 days changed stale/fresh behaviour but not the digest.
+- Generation now runs on a plan-derived clock (anchor date 12:00 UTC plus one second per node), and the digest
+  retains every timestamp. Only `app_metadata.created_at` and the empty session tables stay outside it.
+- Reviewed SMOKE baseline is now `70a1b1ae037cdfce7fa494096bbb557e266cfe7df5780183acda2c7d8dbef967`.
+- Added timestamp negatives through the CLI, an exhaustive per-column digest check, and `verify-baseline` to the
+  lock contention tests.
+- Checks: `test_golden_dataset.py` (29) and `test_review_dataset_v5.py` (3) in fresh disposable stacks,
+  `make workflow-check`, `test-uat-preview`, `test-verification-impact`, `test-environment-workflow`,
+  `scripts/check-features.py`, backend `mypy`, ruff on the test module.
+- Not run: canonical FULL, the complete integration and unit suites, frontend checks, `smoke-uat-preview`.
+- Unresolved: anchored timestamps read as stale on the real clock; the module takes about 5 minutes.

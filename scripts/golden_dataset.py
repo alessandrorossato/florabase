@@ -16,10 +16,10 @@ import subprocess
 import sys
 import time
 from collections.abc import Callable
-from datetime import date
+from datetime import UTC, date, datetime, timedelta, tzinfo
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, NoReturn
+from typing import Any, ClassVar, NoReturn
 from urllib.parse import urlsplit
 from uuid import UUID
 
@@ -31,7 +31,7 @@ from alembic.config import Config
 from alembic.script import ScriptDirectory
 from fastapi import UploadFile
 from PIL import Image, ImageDraw
-from sqlalchemy import DateTime, Table, create_engine, event, func, select, text
+from sqlalchemy import Table, create_engine, event, func, select, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 from starlette.datastructures import Headers
@@ -96,7 +96,9 @@ MODELS: dict[str, type[Base]] = {
     "disposition": HarvestMaterialDisposition,
     "saved_view": SavedView,
 }
-# Session state never describes the dataset; a salted hash and a random object name differ per copy.
+# Session state never describes the dataset and generation writes none, so these tables are empty.
+# This is the only timestamp exclusion: generation's clock makes every other timestamp reproducible.
+# A salted hash and a random object name differ per copy.
 # Media bytes are hashed separately, so excluding the object name hides no content.
 EXCLUDED_TABLES = {"auth_sessions", "login_throttles"}
 EXCLUDED_COLUMNS = {("users", "password_hash"), ("attachments", "storage_key")}
@@ -123,6 +125,50 @@ class GoldenError(RuntimeError):
 
 class GoldenBusy(GoldenError):
     """Another lifecycle action holds this copy; the loser changed nothing and may simply retry."""
+
+
+class _FrozenType(type):
+    def __instancecheck__(cls, value: object) -> bool:
+        return isinstance(value, datetime)
+
+
+class FrozenDatetime(datetime, metaclass=_FrozenType):
+    """Stands in for `datetime` in application modules while a golden copy is generated."""
+
+    instant: ClassVar[datetime]
+
+    @classmethod
+    def now(cls, tz: tzinfo | None = None) -> datetime:  # type: ignore[override]
+        if tz is None:
+            raise GoldenError("A naive clock read would not be reproducible")
+        return cls.instant.astimezone(tz)
+
+
+def anchor_instant(plan: dict[str, Any]) -> datetime:
+    return datetime.fromisoformat(f"{plan['anchor_date']}T12:00:00+00:00")
+
+
+def freeze_clock() -> Callable[[], None]:
+    """Give services a plan-derived clock and return how to restore the real one.
+
+    Each node has one instant, one second after the previous node, so stored timestamps depend on
+    neither the wall clock nor the order of clock reads inside a node, and later nodes stay strictly
+    later. A clock source this misses shows up as differing copies, not as a silent pass.
+    """
+    modules = [
+        module
+        for name, module in sys.modules.items()
+        if name.split(".")[0] in {"florabase", "uat_fixture", "review_dataset_v5"}
+        and getattr(module, "datetime", None) is datetime
+    ]
+    for module in modules:
+        module.datetime = FrozenDatetime  # type: ignore[attr-defined]
+
+    def thaw() -> None:
+        for module in modules:
+            module.datetime = datetime  # type: ignore[attr-defined]
+
+    return thaw
 
 
 def owner_node(database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any) -> User:
@@ -505,11 +551,14 @@ def generate(
     storage = AttachmentStorage(root)
     graph = [node for node in plan["nodes"] if node["kind"] not in COMMITTING_KINDS]
     finishing = [node for node in plan["nodes"] if node["kind"] in COMMITTING_KINDS]
+    start = anchor_instant(plan)
+    thaw = freeze_clock()
     try:
         event.listen(database, "before_commit", refuse_commit)
         for index, node in enumerate(graph):
             if index == fail_after:
                 raise GoldenError("Injected failure before golden completion")
+            FrozenDatetime.instant = start + timedelta(seconds=index)
             try:
                 apply_node(database, storage, node, refs, ledger)
             except Exception as error:
@@ -522,6 +571,7 @@ def generate(
         for index, node in enumerate(finishing, start=len(graph)):
             if index == fail_after:
                 raise GoldenError("Injected failure after the graph committed")
+            FrozenDatetime.instant = start + timedelta(seconds=index)
             apply_node(database, storage, node, refs, ledger)
         database.commit()
     except Exception as error:
@@ -537,6 +587,8 @@ def generate(
         ledger["state"] = "failed"
         write_ledger(root, ledger)
         raise
+    finally:
+        thaw()
     ledger["state"] = "ready"
     write_ledger(root, ledger)
     return ledger
@@ -576,6 +628,8 @@ UNRESOLVED = "<unresolved-uuid>"
 
 
 def canonical_value(value: Any, labels: dict[str, str]) -> Any:
+    if isinstance(value, datetime):
+        return value.astimezone(UTC).isoformat()
     if isinstance(value, UUID):
         return labels.get(str(value), UNRESOLVED)
     if isinstance(value, Decimal):
@@ -592,7 +646,7 @@ def canonical_value(value: Any, labels: dict[str, str]) -> Any:
 
 
 def canonical_digest(database: Session, root: Path) -> dict[str, Any]:
-    """Logical database and media content; only ids, wall clocks and secrets are normalized."""
+    """Logical database and media content; only per-copy ids and secrets are normalized."""
     labels = uuid_labels(database)
     tables: dict[str, dict[str, Any]] = {}
     unresolved = 0
@@ -605,11 +659,7 @@ def canonical_digest(database: Session, root: Path) -> dict[str, Any]:
             for column in table.columns:
                 if (table.name, column.name) in EXCLUDED_COLUMNS:
                     continue
-                value = row[column.name]
-                if isinstance(column.type, DateTime) and value is not None:
-                    content[column.name] = "<timestamp>"
-                else:
-                    content[column.name] = canonical_value(value, labels)
+                content[column.name] = canonical_value(row[column.name], labels)
             line = json.dumps(content, sort_keys=True, ensure_ascii=False, default=str)
             unresolved += line.count(UNRESOLVED)
             lines.append(line)

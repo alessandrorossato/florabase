@@ -7,12 +7,14 @@ import select
 import subprocess
 import sys
 from collections.abc import Iterator
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from florabase.core.config import Environment, get_settings
@@ -25,6 +27,9 @@ COPIES = Path("/tmp/florabase-golden")
 LOCKS = COPIES / ".locks"
 BUSY = 75
 BASELINE_MODIFIED = 3
+SHIFT = "interval '720 hours'"
+# The only timestamp with no reproducible value: a migration default outside the digest.
+WALL_CLOCK_COLUMNS = {("app_metadata", "created_at")}
 # Runs the real CLI with one function paused at a known point, so no test depends on timing.
 HARNESS = """
 import sys
@@ -381,6 +386,154 @@ def test_baseline_detects_invariant_valid_modifications(copies: list[str]) -> No
     assert run("verify-baseline", "--copy", name).returncode == 0
 
 
+def timestamp_columns(name: str) -> list[tuple[str, str]]:
+    """Every timestamp in the database, read from PostgreSQL so unmodelled columns count too."""
+    engine = create_engine(copy_url(name))
+    try:
+        with engine.connect() as connection:
+            rows = connection.execute(
+                text(
+                    """
+                    SELECT c.table_name, c.column_name FROM information_schema.columns c
+                    JOIN information_schema.tables t USING (table_schema, table_name)
+                    WHERE c.table_schema = 'public' AND t.table_type = 'BASE TABLE'
+                    AND c.data_type LIKE 'timestamp%'
+                    ORDER BY 1, 2
+                    """
+                )
+            ).all()
+    finally:
+        engine.dispose()
+    return [(table, column) for table, column in rows]
+
+
+def shift_statements(table: str, column: str, sign: str) -> list[str]:
+    """Move a timestamp, passing the triggers that rightly protect immutable facts from SQL."""
+    return [
+        f"ALTER TABLE {table} DISABLE TRIGGER USER",
+        f"UPDATE {table} SET {column} = {column} {sign} {SHIFT} WHERE {column} IS NOT NULL",
+        f"ALTER TABLE {table} ENABLE TRIGGER USER",
+    ]
+
+
+def test_last_refreshed_at_change_is_detected(copies: list[str]) -> None:
+    """The reviewed P1: this date decides stale or fresh, yet used to vanish from the digest."""
+    name = new_copy(copies, "golden_refresh")
+    succeed("generate", "--copy", name)
+    assert run("verify-baseline", "--copy", name).returncode == 0
+    reviewed = succeed("digest", "--copy", name)
+    original = query(name, "SELECT last_refreshed_at FROM external_taxon_links")
+
+    execute(
+        name,
+        "UPDATE external_taxon_links SET last_refreshed_at = :value",
+        value=original - timedelta(days=30),
+    )
+    assert query(name, "SELECT last_refreshed_at FROM external_taxon_links") is not None
+    assert succeed("digest", "--copy", name)["canonical_sha256"] != reviewed["canonical_sha256"]
+    # Domain validation has no opinion on this value; only the baseline does.
+    assert succeed("validate", "--copy", name)["baseline"] == "not-checked"
+    result = run("verify-baseline", "--copy", name)
+    assert result.returncode == BASELINE_MODIFIED, result.stdout
+    report = json.loads(result.stdout)
+    assert report["state"] == "invariant-valid-baseline-modified"
+    assert [line.split(":")[0] for line in report["baseline_differences"]] == [
+        "table external_taxon_links"
+    ]
+
+    execute(name, "UPDATE external_taxon_links SET last_refreshed_at = :value", value=original)
+    assert run("verify-baseline", "--copy", name).returncode == 0
+    assert succeed("digest", "--copy", name)["canonical_sha256"] == reviewed["canonical_sha256"]
+
+
+def test_business_timestamp_changes_are_detected(copies: list[str]) -> None:
+    """Representative columns stay non-null and only move, through the real CLI."""
+    name = new_copy(copies, "golden_timestamps")
+    succeed("generate", "--copy", name)
+    for table, column in (
+        ("external_provider_cache", "fetched_at"),  # Cache TTL
+        ("suppliers", "retired_at"),
+        ("scheduled_activities", "completed_at"),  # History timeline
+        ("harvest_seed_lot_conversions", "reversed_at"),  # History timeline
+        ("users", "password_changed_at"),
+        ("events", "created_at"),  # History fallback and ordering
+        ("plants", "updated_at"),  # Reversal eligibility
+        ("operation_receipts", "created_at"),  # Reversal eligibility
+    ):
+        filled = f"{column} IS NOT NULL"
+        assert query(name, f"SELECT count(*) FROM {table} WHERE {filled}") > 0, table
+        nulls = f"SELECT count(*) FROM {table} WHERE {column} IS NULL"
+        before = query(name, nulls)
+        for statement in shift_statements(table, column, "+"):
+            execute(name, statement)
+        assert query(name, nulls) == before
+        result = run("verify-baseline", "--copy", name)
+        assert result.returncode == BASELINE_MODIFIED, (table, column, result.stdout)
+        differences = json.loads(result.stdout)["baseline_differences"]
+        assert [line.split(":")[0] for line in differences] == [f"table {table}"]
+        for statement in shift_statements(table, column, "-"):
+            execute(name, statement)
+    assert run("verify-baseline", "--copy", name).returncode == 0
+
+
+def test_digest_retains_every_populated_timestamp(first: str) -> None:
+    """Exhaustive, so a blanket normalizer or a too-wide allowlist cannot return unnoticed."""
+    runtime = pytest.importorskip("golden_dataset", reason="available in integration runner only")
+    # The whole allowlist: session state, empty because generation never logs in.
+    assert {"auth_sessions", "login_throttles"} == runtime.EXCLUDED_TABLES
+    for table in runtime.EXCLUDED_TABLES:
+        assert query(first, f"SELECT count(*) FROM {table}") == 0
+    root = COPIES / first
+    engine = create_engine(copy_url(first))
+    checked = []
+    try:
+        with Session(engine) as database:
+            reviewed = runtime.canonical_digest(database, root)["canonical_sha256"]
+            for table, column in timestamp_columns(first):
+                filled = f"{column} IS NOT NULL"
+                count = database.scalar(text(f"SELECT count(*) FROM {table} WHERE {filled}"))
+                if not count or (table, column) in WALL_CLOCK_COLUMNS:
+                    continue
+                # Ordering constraints such as reversed_at >= created_at allow only one direction.
+                for sign in "+-":
+                    try:
+                        for statement in shift_statements(table, column, sign):
+                            database.execute(text(statement))
+                    except IntegrityError:
+                        database.rollback()
+                        continue
+                    shifted = runtime.canonical_digest(database, root)["canonical_sha256"]
+                    assert shifted != reviewed, (table, column)
+                    database.rollback()
+                    break
+                else:
+                    pytest.fail(f"Could not move {table}.{column} in either direction")
+                checked.append((table, column))
+    finally:
+        engine.dispose()
+    assert ("external_taxon_links", "last_refreshed_at") in checked
+    assert ("plants", "updated_at") in checked
+    assert len(checked) > 40
+
+
+def test_generation_stores_only_plan_derived_timestamps(first: str) -> None:
+    """Business time comes from the plan's anchor, never the real clock."""
+    plan = plan_module.build_plan("smoke")
+    start = datetime.fromisoformat(f"{plan['anchor_date']}T12:00:00+00:00")
+    latest = start + timedelta(seconds=len(plan["nodes"]))
+    now = datetime.now(UTC)
+    assert latest < now - timedelta(days=1), "The fixed anchor must stay distinguishable from now"
+    columns = timestamp_columns(first)
+    assert set(columns) >= WALL_CLOCK_COLUMNS
+    for table, column in set(columns) - WALL_CLOCK_COLUMNS:
+        value = query(first, f"SELECT max({column}) FROM {table}")
+        assert value is None or value <= latest, (table, column, value)
+    # The first node creates the owner, and each later node is strictly later.
+    assert query(first, "SELECT created_at FROM users") == start
+    link = query(first, "SELECT last_refreshed_at FROM external_taxon_links")
+    assert start < link <= latest
+
+
 def test_baseline_detects_media_modifications(copies: list[str]) -> None:
     name = new_copy(copies, "golden_media_changed")
     succeed("generate", "--copy", name)
@@ -534,7 +687,9 @@ def test_retirement_cannot_remove_a_copy_during_generation(copies: list[str], fi
     holder = Holder("apply_node", 20, "generate", "--copy", name)
     try:
         holder.wait_until_paused()
-        assert_loses(name, "retire-copy", "create-copy", "generate", "validate", "digest")
+        assert_loses(
+            name, "retire-copy", "create-copy", "generate", "validate", "digest", "verify-baseline"
+        )
         assert copy_exists(name)
         holder.release()
         code, error = holder.finish()
@@ -552,7 +707,7 @@ def test_retirement_cannot_remove_a_copy_during_validation(first: str, second: s
     holder = Holder("validate", 0, "validate", "--copy", first)
     try:
         holder.wait_until_paused()
-        assert_loses(first, "retire-copy", "generate", "digest")
+        assert_loses(first, "retire-copy", "generate", "digest", "verify-baseline")
         assert copy_exists(first)
         # Another copy stays fully usable while this one is held.
         succeed("validate", "--copy", second)
