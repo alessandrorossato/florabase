@@ -27,6 +27,26 @@
 
 # Engineering progress
 
+## 2026-11-02 — UX004-FLAKE-001 lazy-workspace test correction
+
+- Freshly fetched verified main `e5e6b4f` (#134); attached the clean existing `2185` worktree with
+  `make feature-init BRANCH=fix/ux004-flaky-test`. Primary main and Claude's workflow worktree remain
+  untouched.
+- Reproduced the current Add plant test flake: unchanged UX004 passed 19/20 fresh-process runs
+  (259/260 cases), with one timeout finding the Botanical identity combobox. Ten instrumented runs
+  showed import settlement returning while React still displayed Loading workspace and before Plant
+  reference requests. A promise-gated immediate-readiness probe failed 5/5 without async `act` and
+  passed 5/5 with it; those diagnostic failures are distinct from the original intermittent test.
+- Wrapped only the existing import-settlement wait in async `act` to flush the real lazy workspace
+  commit/effects. All original assertions/timeouts remain; no product, fixture, dependency, API or
+  workflow change. Corrected UX004 passed 30/30 fresh-process runs (390/390 cases).
+- Related frontend regression passed 259/259 cases in nine suites; strict TypeScript, zero-warning
+  ESLint, whole-frontend Prettier and production frontend build (274 modules) passed.
+- [Investigation and exact focused checks](ux004-flake-001.md) distinguish this proven current-main
+  scheduling weakness from the historical TX-001 failure, whose exact failed assertion is unavailable.
+  Canonical verification and protected delivery await explicit coordination. No FULL, Feature Review,
+  UAT, push, PR, merge or feature-finish; no feature status is promoted to verified.
+
 ## 2026-11-01 — TX-001 independent QA corrections (CONDITIONAL GO, nonblocking)
 
 - Guard now walks each route's effective dependency tree (application, router, route and nested

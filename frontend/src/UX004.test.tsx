@@ -533,7 +533,10 @@ test("Identity creation menu Add plant reaches the normal form with identity pre
     `#/plants?action=create&identity=${identity.id}&kind=plant`,
   );
   await user.click(action);
-  await vi.dynamicImportSettled();
+  // Import completion alone does not flush the lazy workspace commit and effects.
+  await act(async () => {
+    await vi.dynamicImportSettled();
+  });
   expect(
     await screen.findByRole("combobox", { name: /Botanical identity/ }),
   ).toHaveValue(identity.display_label);
