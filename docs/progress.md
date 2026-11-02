@@ -6893,3 +6893,20 @@ Status remains implemented pending canonical verification.
   `test-uat-preview`, `test-verification-impact`, `test-environment-workflow`, `check-features`.
 - Unresolved: COMPREHENSIVE and STRESS, ten planned scenarios, Review/UAT/performance adoption (needs operator
   lifecycle review), independent QA. Status `in_progress`. No canonical FULL, push, PR or merge.
+
+### TEST-DATA-001 independent QA corrections — 2 November 2026
+
+- Added one exclusive, non-blocking per-copy lifecycle lock under `/tmp/florabase-golden/.locks`, covering create,
+  generate, validate, verify-baseline, digest and retire; a loser exits 75 and changes nothing.
+- Added `verify-baseline`, comparing a copy with a reviewed digest pinned in the manifest, separate from domain
+  validation. `digest` is now a diagnostic that also works on damaged copies.
+- Narrowed digest normalization after a column-by-column comparison of two copies: free text that looks like a
+  timestamp, canonical geography, the provider cache, media bytes and scenario keys are now content.
+- The coverage matrix now separates runnable from planned profiles; only SMOKE is executable.
+- Removed the `--copy` re-exec (about 1.1 s per CLI call) and parallelized losing contenders and teardown.
+- Checks: `make golden-dataset-check` (25 passed, 260 s; 172 s and 17 tests before),
+  `test_review_dataset_v5.py`, `make workflow-check`, `scripts/check-features.py`, `test-uat-preview`,
+  `test-verification-impact`, `test-environment-workflow`, backend `mypy` and ruff on the test module.
+- Not run: canonical FULL, the complete integration and unit suites, frontend checks, `smoke-uat-preview`.
+- Unresolved: every migration needs a reviewed manifest pin update; the digest has been observed on one calendar
+  date only; the application import still costs about 1.8 s per CLI process.

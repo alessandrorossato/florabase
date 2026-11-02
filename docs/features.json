@@ -2221,7 +2221,7 @@
         "A fixed seed and stable scenario identifiers generate logically identical copies from source",
         "A machine-readable manifest records scenarios and expected invariants, and a generated matrix reports coverage",
         "Each copy has its own PostgreSQL database and media root; persistent environments and real data are refused",
-        "Validation detects database and media-reference damage, and failed or repeated generation is predictable",
+        "Validation detects database and media-reference damage, a reviewed baseline detects invariant-valid changes, and failed, repeated or concurrent lifecycle actions are predictable",
         "SMOKE is suitable for CI; COMPREHENSIVE (about 3,000-5,000 records) and STRESS are generated after review"
       ],
       "dependencies": [

@@ -70,6 +70,161 @@
           "schedule.planned": 7,
           "provenance.sites": 5,
           "provenance.without_coordinates": 1
+        },
+        "baseline": {
+          "schema_revision": "20261013_0042",
+          "volume": 12,
+          "plan_sha256": "5afd6ffe46fce10ac62b1ef1233c9944d8c206bef9d407ce4396b5e6ce64b0d7",
+          "canonical_sha256": "8fba637716d76278504e93bb906d7974a41a4fd927c198bd20faae5ed735abc0",
+          "media_files": 3,
+          "media_sha256": "d3583210516d857e6f7c8c8c78a2c3e051d8fe31d001bb0f420c226bc5b39f6e",
+          "scenario_keys_sha256": "e7d0d666d58604b23a8d3a8d8cd661b839265743501ad742225c3998a9ec7ffa",
+          "tables": {
+            "application_settings": {
+              "rows": 1,
+              "sha256": "b127b493476585f2fb04cf764ea0f2e9f03c5e1802d52e2488d64b3286a2c13d"
+            },
+            "attachments": {
+              "rows": 3,
+              "sha256": "bc149fad04ac8bfd6f00b182a8877cf5bef810438a62ab0336c3bac2d38fa410"
+            },
+            "botanical_identities": {
+              "rows": 21,
+              "sha256": "5f1a6a5c073afc859b94671760a3df4ed608df9fabed0888101a641012e13ac6"
+            },
+            "botanical_identity_cover_images": {
+              "rows": 1,
+              "sha256": "dbcd66cc6ea233c2840b1fa684f0b25e85627985e22d4088fa683bd22c592948"
+            },
+            "botanical_profile_native_ranges": {
+              "rows": 3,
+              "sha256": "ee7fc7086db21df0171179f83cd4e9378fc588b31398eb9b2a83551e2ddabbdd"
+            },
+            "botanical_profiles": {
+              "rows": 1,
+              "sha256": "196abd817f6366f6ef74253ae5a3d2ca6e5f89e67adae3a5e1092cbd87ee073a"
+            },
+            "collection_primary_photos": {
+              "rows": 2,
+              "sha256": "94204df05fb001de0d3a48eaba99087e8108fa5c0e7d7f40aca8d19494fdb2d7"
+            },
+            "events": {
+              "rows": 20,
+              "sha256": "fd51623caa487722bdacdd5aad4aeacf814d3e2bbce347faa7d54b16aaa14560"
+            },
+            "external_provider_cache": {
+              "rows": 1,
+              "sha256": "c0ae97cf46c4a8e983ae99024082beed61fec1bf4d4145650240ddc5a1933cbd"
+            },
+            "external_taxon_links": {
+              "rows": 1,
+              "sha256": "0d543ece7594bfbb38aa46790f24c3e4860e39e0dd6ec89d06b2070b54122873"
+            },
+            "geographic_places": {
+              "rows": 289,
+              "sha256": "bacd6606d220308b01b34ccf63f47fa5b77f0a69ddb9c8d792c390fc05709154"
+            },
+            "germination_observations": {
+              "rows": 2,
+              "sha256": "97749c15af8a952598b9a567590f9ceff17a6dcec1ceef7812ba235f6e4d653d"
+            },
+            "harvest_items": {
+              "rows": 3,
+              "sha256": "e67d0e848c5b1f55e97e0703a8763e32a24881d50d0fc2a17ffc965c22bac5f2"
+            },
+            "harvest_material_dispositions": {
+              "rows": 4,
+              "sha256": "bd5147b2e8d3f3eb28f87f55ad9c165a92fda7f90ba7e2b6824417dc8dd075c8"
+            },
+            "harvest_material_inventory": {
+              "rows": 3,
+              "sha256": "5a3ec8ba8f66381a91610d5f68aedc900495a99747b3fded2e4f84a94b053742"
+            },
+            "harvest_seed_lot_conversions": {
+              "rows": 2,
+              "sha256": "3ea9af81e7a86e942ef71a9690c8391d3cd7f4992fc931f9e7871a96a75aac28"
+            },
+            "harvests": {
+              "rows": 3,
+              "sha256": "1087c43cf2eeca1c63629f60a760f42df3f66c72cea790f87ff26fee31363366"
+            },
+            "locations": {
+              "rows": 9,
+              "sha256": "b623d179801f0ce0660bbbd7ead89a3e0875c7ce3267fc2501e1da315853164e"
+            },
+            "media_assets": {
+              "rows": 5,
+              "sha256": "132d68a48f24482a2718506ad0d40526232aaf665b0f1cc98be81cbe6ae34424"
+            },
+            "native_range_applications": {
+              "rows": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "native_range_proposals": {
+              "rows": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "native_range_revisions": {
+              "rows": 1,
+              "sha256": "c1a1d8f2d67be6a2802dddb288e40c5120154433821fd6890928023485e65efc"
+            },
+            "operation_receipts": {
+              "rows": 8,
+              "sha256": "41c91edd3198ef9baef83f1c1323bfa03e52110b312c2a927b1fa965f6d32e33"
+            },
+            "orders": {
+              "rows": 4,
+              "sha256": "44bb3aee7f4d984fac9785fe24b7f6076e27692942693cda3281fe68d2a8916d"
+            },
+            "plant_groups": {
+              "rows": 7,
+              "sha256": "e4d83c6f9222b3d9a2236f4e6320db88fb6a5a93650ded107555648e46b26c37"
+            },
+            "plants": {
+              "rows": 19,
+              "sha256": "39f5a28090c2b6edae7a7b13f12fd0d9b583088afe5486e46c9f3aed1d859f8d"
+            },
+            "provenance_sites": {
+              "rows": 5,
+              "sha256": "bcb1a1317c9ef2e96abaef1f3da0e161e57a82dbd718332c7e6efa82cdd03165"
+            },
+            "record_media_links": {
+              "rows": 4,
+              "sha256": "c3d04203ab1289b6eff2db6d25d5c7acf7434e60bfefe9f3b017099c9d68a0e5"
+            },
+            "saved_views": {
+              "rows": 3,
+              "sha256": "f8aa898a4528e2c2ede2bf7502202fe4435c0ae04dd421d0da9cd9d2eeb77630"
+            },
+            "scheduled_activities": {
+              "rows": 10,
+              "sha256": "697a48f6c7b7c544c778184eddee07d8120bff873e28e7cd7143633b6c02b75a"
+            },
+            "seed_lots": {
+              "rows": 31,
+              "sha256": "f18a3fa21e8ea06876b9e3ad5da357eb0c499251a0cc77917332116c1088d984"
+            },
+            "sowings": {
+              "rows": 19,
+              "sha256": "05a549a9f1854c12f36b0439e7bae0497f15071ec73fe969e88b2c2caa20b71c"
+            },
+            "suppliers": {
+              "rows": 7,
+              "sha256": "c245a7d2a8b2bc6c0347a4e203c60046bb107b6b46b01f511b86931db9623b40"
+            },
+            "users": {
+              "rows": 1,
+              "sha256": "a34d4fc75e9e573a4726ac7af70f8e7369efde31ccfb64e44175f920fe15d4fd"
+            },
+            "wcvp_links": {
+              "rows": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "wfo_links": {
+              "rows": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          }
         }
       }
     },
@@ -779,7 +934,9 @@
       "id": "comprehensive-volume-mix",
       "domain": "Volume",
       "status": "planned",
-      "profiles": [],
+      "profiles": [
+        "comprehensive"
+      ],
       "covers": [
         "3,000–5,000 record domain-weighted mix"
       ],
@@ -789,7 +946,9 @@
       "id": "stress-volume-mix",
       "domain": "Volume",
       "status": "planned",
-      "profiles": [],
+      "profiles": [
+        "stress"
+      ],
       "covers": [
         "separately generated large dataset for performance experiments"
       ],

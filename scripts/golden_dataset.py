@@ -16,7 +16,7 @@ import subprocess
 import sys
 import time
 from collections.abc import Callable
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, NoReturn
@@ -49,8 +49,9 @@ from florabase.collection_photos.schemas import (
 )
 from florabase.collection_photos.service import set_external_identity_cover
 from florabase.collection_views.dashboard import overview
-from florabase.core.config import Environment, Settings
+from florabase.core.config import Environment, Settings, get_settings
 from florabase.db.base import Base
+from florabase.db.session import get_engine
 from florabase.events.schemas import TransferCreate
 from florabase.external_botany.provider import GbifBotanicalProvider
 from florabase.external_botany.service import confirm_link
@@ -83,8 +84,9 @@ from florabase.sowings.model import Sowing
 from florabase.suppliers.model import Supplier
 
 LEDGER = ".golden-dataset.json"
-LOCK = ".golden-dataset.lock"
 COPY_ROOT = Path("/tmp/florabase-golden")
+# COPY_NAME can never match this directory and retirement removes only COPY_ROOT/<name>.
+LOCK_ROOT = COPY_ROOT / ".locks"
 COPY_NAME = re.compile(r"golden_[a-z0-9_]{1,40}")
 OWNER_PASSWORD = "disposable-golden-owner-password"
 MODELS: dict[str, type[Base]] = {
@@ -94,13 +96,15 @@ MODELS: dict[str, type[Base]] = {
     "disposition": HarvestMaterialDisposition,
     "saved_view": SavedView,
 }
-# Secrets, session state and provider-cache timing never describe the dataset.
-EXCLUDED_TABLES = {"auth_sessions", "login_throttles", "external_provider_cache"}
+# Session state never describes the dataset; a salted hash and a random object name differ per copy.
+# Media bytes are hashed separately, so excluding the object name hides no content.
+EXCLUDED_TABLES = {"auth_sessions", "login_throttles"}
 EXCLUDED_COLUMNS = {("users", "password_hash"), ("attachments", "storage_key")}
 UUID_PATTERN = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
-TIMESTAMP_PATTERN = re.compile(
-    r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?"
-)
+EXIT_DOMAIN_INVALID = 1
+EXIT_BASELINE_MODIFIED = 3
+EXIT_BASELINE_UNAVAILABLE = 4
+EXIT_BUSY = 75
 SYNTHETIC_LABELS: tuple[tuple[type[Any], Any], ...] = (
     (SeedLot, SeedLot.label),
     (Sowing, Sowing.label),
@@ -115,6 +119,10 @@ Operation = Callable[[Session, AttachmentStorage, dict[str, Any], dict[str, Any]
 
 class GoldenError(RuntimeError):
     pass
+
+
+class GoldenBusy(GoldenError):
+    """Another lifecycle action holds this copy; the loser changed nothing and may simply retry."""
 
 
 def owner_node(database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any) -> User:
@@ -385,24 +393,48 @@ def code_head() -> str:
     return str(head)
 
 
-def require_target(settings: Settings, database: Session) -> Path:
-    """Refuse everything except an explicitly disposable golden copy at the code's schema head."""
-    url = make_url(settings.database_url)
-    name = url.database or ""
-    root = Path(settings.attachment_storage_root)
+def configured_copy(settings: Settings) -> str:
+    """The copy this configuration names, checked without touching any database or file."""
+    name = make_url(settings.database_url).database or ""
     if not (
         settings.database_disposable
         and settings.environment is Environment.TEST
         and not os.environ.get("FLORABASE_WORKFLOW_MODE")
         and COPY_NAME.fullmatch(name)
-        and root == COPY_ROOT / name
+        and Path(settings.attachment_storage_root) == COPY_ROOT / name
     ):
         raise GoldenError("Golden target refused: not a disposable golden copy; no data changed")
+    return name
+
+
+def lock_copy(name: str) -> int:
+    """Hold the copy's one exclusive lifecycle lock until the returned descriptor closes.
+
+    Every action takes it exactly once, before touching the copy, and never waits. The file is never
+    removed or replaced, so all actions on a name contend on one inode, and the kernel releases it if
+    the holder dies. Python descriptors are not inherited, so a migration child cannot retain it.
+    """
+    if not COPY_NAME.fullmatch(name):
+        raise GoldenError("A golden copy is named golden_<lowercase>; refused")
+    LOCK_ROOT.mkdir(parents=True, exist_ok=True, mode=0o700)
+    descriptor = os.open(LOCK_ROOT / f"{name}.lock", os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError as error:
+        os.close(descriptor)
+        raise GoldenBusy(f"Another golden action holds {name}; nothing changed") from error
+    return descriptor
+
+
+def require_target(settings: Settings, database: Session) -> Path:
+    """Refuse everything except an explicitly disposable golden copy at the code's schema head."""
+    name = configured_copy(settings)
+    root = Path(settings.attachment_storage_root)
+    if not root.is_dir():
+        raise GoldenError(f"Golden media root is missing: {root}; create the copy first")
     actual = database.scalar(text("SELECT current_database()"))
     if actual != name:
         raise GoldenError("Connected database identity refused; no data changed")
-    if not root.is_dir():
-        raise GoldenError(f"Golden media root is missing: {root}; create the copy first")
     revision = database.scalar(text("SELECT version_num FROM alembic_version"))
     if revision != code_head():
         raise GoldenError(f"Golden copy schema {revision} is not code head; no data changed")
@@ -430,7 +462,7 @@ def media_files(root: Path) -> list[Path]:
     return sorted(
         path
         for path in root.rglob("*")
-        if path.is_file() and path.name not in {LEDGER, LEDGER + ".tmp", LOCK}
+        if path.is_file() and path.name not in {LEDGER, LEDGER + ".tmp"}
     )
 
 
@@ -499,7 +531,7 @@ def generate(
         ledger["clean"] = ledger["state"] == "building"
         if ledger["clean"]:
             for child in root.iterdir():
-                if child.name not in {LEDGER, LOCK}:
+                if child.name != LEDGER:
                     shutil.rmtree(child) if child.is_dir() else child.unlink()
             ledger["records"], ledger["created_files"] = {}, []
         ledger["state"] = "failed"
@@ -544,8 +576,6 @@ UNRESOLVED = "<unresolved-uuid>"
 
 
 def canonical_value(value: Any, labels: dict[str, str]) -> Any:
-    if isinstance(value, datetime):
-        return "<timestamp>"
     if isinstance(value, UUID):
         return labels.get(str(value), UNRESOLVED)
     if isinstance(value, Decimal):
@@ -557,24 +587,20 @@ def canonical_value(value: Any, labels: dict[str, str]) -> Any:
     if isinstance(value, list):
         return [canonical_value(item, labels) for item in value]
     if isinstance(value, str):
-        replaced = UUID_PATTERN.sub(lambda match: labels.get(match[0], UNRESOLVED), value)
-        return TIMESTAMP_PATTERN.sub("<timestamp>", replaced)
+        return UUID_PATTERN.sub(lambda match: labels.get(match[0], UNRESOLVED), value)
     return value
 
 
-def canonical_digest(database: Session) -> dict[str, Any]:
-    """Logical content of every table; ids, wall clocks and secrets normalized, nothing sampled."""
+def canonical_digest(database: Session, root: Path) -> dict[str, Any]:
+    """Logical database and media content; only ids, wall clocks and secrets are normalized."""
     labels = uuid_labels(database)
     tables: dict[str, dict[str, Any]] = {}
     unresolved = 0
     for table in application_tables():
         if table.name in EXCLUDED_TABLES:
             continue
-        statement = select(table)
-        if table.name == "geographic_places":
-            statement = statement.where(table.c.place_kind == "custom")
         lines = []
-        for row in database.execute(statement).mappings():
+        for row in database.execute(select(table)).mappings():
             content = {}
             for column in table.columns:
                 if (table.name, column.name) in EXCLUDED_COLUMNS:
@@ -592,11 +618,24 @@ def canonical_digest(database: Session) -> dict[str, Any]:
             "rows": len(lines),
             "sha256": hashlib.sha256("\n".join(lines).encode()).hexdigest(),
         }
-    combined = json.dumps(tables, sort_keys=True).encode()
+    # Bytes of every file, managed or not; object names are random per copy, so only content counts.
+    media = sorted(hashlib.sha256(path.read_bytes()).hexdigest() for path in media_files(root))
+    ledger = read_ledger(root) or {}
+    # The reviewed meaning of each stable scenario key: which logical row it names in this copy.
+    scenario_keys = canonical_value(ledger.get("records", {}), labels)
+    summary: dict[str, Any] = {
+        "media_files": len(media),
+        "media_sha256": hashlib.sha256("\n".join(media).encode()).hexdigest(),
+        "scenario_keys_sha256": hashlib.sha256(
+            json.dumps(scenario_keys, sort_keys=True).encode()
+        ).hexdigest(),
+        "tables": tables,
+    }
+    combined = json.dumps(summary, sort_keys=True).encode()
     return {
+        **summary,
         "canonical_sha256": hashlib.sha256(combined).hexdigest(),
         "schema_revision": database.scalar(text("SELECT version_num FROM alembic_version")),
-        "tables": tables,
         # A UUID no table owns would otherwise vanish into a placeholder and hide a real difference.
         "unresolved_uuids": unresolved,
     }
@@ -753,14 +792,81 @@ def validate(database: Session, root: Path, plan: dict[str, Any]) -> list[str]:
     return problems
 
 
+def baseline_unavailable(plan: dict[str, Any], current: dict[str, Any]) -> str | None:
+    """Why no reviewed baseline applies; never falls back to anything read from the target."""
+    profile = golden_plan.load_manifest()["profiles"][plan["profile"]]
+    baseline = profile.get("expected", {}).get("baseline")
+    if baseline is None:
+        return f"profile {plan['profile']} has no reviewed baseline"
+    if plan["volume"] != baseline["volume"]:
+        return f"volume {plan['volume']} has no reviewed baseline; pinned {baseline['volume']}"
+    if golden_plan.plan_digest(plan) != baseline["plan_sha256"]:
+        return "plan differs from the reviewed baseline's plan"
+    if current["schema_revision"] != baseline["schema_revision"]:
+        return (
+            f"schema {current['schema_revision']} has no reviewed baseline; "
+            f"pinned {baseline['schema_revision']}"
+        )
+    return None
+
+
+def baseline_differences(baseline: dict[str, Any], current: dict[str, Any]) -> list[str]:
+    differences = [
+        f"{field}: {current[field]} != reviewed {baseline[field]}"
+        for field in ("media_files", "media_sha256", "scenario_keys_sha256")
+        if current[field] != baseline[field]
+    ]
+    tables = baseline["tables"].keys() | current["tables"].keys()
+    differences += [
+        f"table {table}: {current['tables'].get(table)} != reviewed {baseline['tables'].get(table)}"
+        for table in sorted(tables)
+        if current["tables"].get(table) != baseline["tables"].get(table)
+    ]
+    if current["unresolved_uuids"]:
+        differences.append(f"unresolved UUIDs: {current['unresolved_uuids']}")
+    if not differences and current["canonical_sha256"] != baseline["canonical_sha256"]:
+        differences.append("canonical digest differs from the reviewed baseline")
+    return differences
+
+
+def verify_baseline(database: Session, root: Path, plan: dict[str, Any]) -> dict[str, Any]:
+    """Domain validation plus comparison with the reviewed, version-controlled digest."""
+    problems = validate(database, root, plan)
+    current = canonical_digest(database, root)
+    unavailable = baseline_unavailable(plan, current)
+    differences = []
+    if unavailable is None:
+        profile = golden_plan.load_manifest()["profiles"][plan["profile"]]
+        differences = baseline_differences(profile["expected"]["baseline"], current)
+    if problems:
+        state = "domain-invalid"
+    elif unavailable:
+        state = "baseline-unavailable"
+    elif differences:
+        state = "invariant-valid-baseline-modified"
+    else:
+        state = "baseline-verified"
+    return {
+        "baseline_differences": differences,
+        "baseline_unavailable": unavailable,
+        "canonical_sha256": current["canonical_sha256"],
+        "domain_problems": problems,
+        "schema_revision": current["schema_revision"],
+        "state": state,
+    }
+
+
 def copy_environment(name: str, settings: Settings) -> dict[str, str]:
     if not COPY_NAME.fullmatch(name):
         raise GoldenError("A golden copy is named golden_<lowercase>; refused")
-    if not (settings.database_disposable and settings.environment is Environment.TEST):
+    if not (
+        settings.database_disposable
+        and settings.environment is Environment.TEST
+        and not os.environ.get("FLORABASE_WORKFLOW_MODE")
+    ):
         raise GoldenError("Golden copies exist only beside disposable test PostgreSQL; refused")
     url = make_url(settings.database_url).set(database=name)
     return {
-        **os.environ,
         "FLORABASE_DATABASE_URL": url.render_as_string(hide_password=False),
         "FLORABASE_ATTACHMENT_STORAGE_ROOT": str(COPY_ROOT / name),
     }
@@ -778,9 +884,16 @@ def maintenance(settings: Settings, statement: str) -> None:
 def create_copy(name: str, settings: Settings) -> None:
     """A new, empty database and media root; the schema always comes from Alembic, never a clone."""
     environment = copy_environment(name, settings)
+    if (COPY_ROOT / name).exists():
+        raise GoldenError(f"Golden media root already exists: {COPY_ROOT / name}; no data changed")
     maintenance(settings, f'CREATE DATABASE "{name}"')
     (COPY_ROOT / name).mkdir(parents=True, mode=0o700)
-    subprocess.run(["alembic", "upgrade", "head"], env=environment, check=True, capture_output=True)
+    subprocess.run(
+        ["alembic", "upgrade", "head"],
+        env={**os.environ, **environment},
+        check=True,
+        capture_output=True,
+    )
 
 
 def retire_copy(name: str, settings: Settings) -> None:
@@ -791,62 +904,85 @@ def retire_copy(name: str, settings: Settings) -> None:
         raise GoldenError(f"Golden media root survived retirement: {COPY_ROOT / name}")
 
 
+def run_copy_action(args: argparse.Namespace, settings: Settings) -> int:
+    deny_network()
+    with Session(get_engine()) as database:
+        root = require_target(settings, database)
+        started = time.monotonic()
+        result: dict[str, Any] = {"baseline": "not-checked"}
+        if args.action == "digest":
+            # Diagnostic only: reports what is there, including on a damaged copy, and claims nothing.
+            result |= canonical_digest(database, root)
+            result["seconds"] = round(time.monotonic() - started, 3)
+            print(json.dumps(result, sort_keys=True))
+            return 0
+        plan = golden_plan.build_plan(args.profile)
+        if args.action == "verify-baseline":
+            report = verify_baseline(database, root, plan)
+            print(json.dumps(report, sort_keys=True))
+            return {
+                "baseline-verified": 0,
+                "domain-invalid": EXIT_DOMAIN_INVALID,
+                "invariant-valid-baseline-modified": EXIT_BASELINE_MODIFIED,
+                "baseline-unavailable": EXIT_BASELINE_UNAVAILABLE,
+            }[report["state"]]
+        if args.action == "generate":
+            ledger = generate(database, root, plan, fail_after=args.fail_after)
+            result |= {"state": ledger["state"], "records": len(ledger["records"])}
+        problems = validate(database, root, plan)
+        if problems:
+            for problem in problems:
+                print(f"Golden validation failed: {problem}", file=sys.stderr)
+            return EXIT_DOMAIN_INVALID
+        result |= {
+            "domain": "valid",
+            "plan_sha256": golden_plan.plan_digest(plan),
+            "seconds": round(time.monotonic() - started, 3),
+        }
+        if args.action == "validate":
+            result["counts"] = table_counts(database)
+            result["projections"] = read_projections(
+                database, date.fromisoformat(plan["anchor_date"])
+            )
+        print(json.dumps(result, sort_keys=True))
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "action", choices=["create-copy", "generate", "validate", "digest", "retire-copy"]
+        "action",
+        choices=["create-copy", "generate", "validate", "verify-baseline", "digest", "retire-copy"],
     )
-    parser.add_argument("--copy", help="golden_<name>: re-run the action against that copy")
+    parser.add_argument("--copy", help="golden_<name>: run the action against that copy")
     parser.add_argument("--profile", default="smoke")
     parser.add_argument("--fail-after", type=int, help="Regression hook: fail before this node")
     args = parser.parse_args()
+    descriptor = None
     try:
-        settings = v4.get_settings()
-        if args.action == "create-copy":
-            create_copy(args.copy or "", settings)
-            return 0
-        if args.action == "retire-copy":
-            retire_copy(args.copy or "", settings)
+        settings = get_settings()
+        if args.action in {"create-copy", "retire-copy"}:
+            copy_environment(args.copy or "", settings)
+            descriptor = lock_copy(args.copy)
+            (create_copy if args.action == "create-copy" else retire_copy)(args.copy, settings)
             return 0
         if args.copy:
-            forwarded = [sys.executable, __file__, args.action, "--profile", args.profile]
-            if args.fail_after is not None:
-                forwarded += ["--fail-after", str(args.fail_after)]
-            os.execve(sys.executable, forwarded, copy_environment(args.copy, settings))
-        deny_network()
-        plan = golden_plan.build_plan(args.profile)
-        with Session(v4.get_engine()) as database:
-            root = require_target(settings, database)
-            started = time.monotonic()
-            with (root / LOCK).open("a") as lock:
-                try:
-                    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                except BlockingIOError as error:
-                    raise GoldenError("Another golden action holds this copy") from error
-                if args.action == "generate":
-                    ledger = generate(database, root, plan, fail_after=args.fail_after)
-            problems = validate(database, root, plan)
-            if problems:
-                for problem in problems:
-                    print(f"Golden validation failed: {problem}", file=sys.stderr)
-                return 1
-            result = canonical_digest(database) if args.action == "digest" else {}
-            if args.action == "generate":
-                result = {"state": ledger["state"], "records": len(ledger["records"])}
-            result |= {
-                "plan_sha256": golden_plan.plan_digest(plan),
-                "seconds": round(time.monotonic() - started, 3),
-            }
-            if args.action == "validate":
-                result["counts"] = table_counts(database)
-                result["projections"] = read_projections(
-                    database, date.fromisoformat(plan["anchor_date"])
-                )
-            print(json.dumps(result, sort_keys=True))
+            # Nothing has connected yet, so the rebuilt settings and engine are the only ones used.
+            os.environ.update(copy_environment(args.copy, settings))
+            get_settings.cache_clear()
+            get_engine.cache_clear()
+            settings = get_settings()
+        descriptor = lock_copy(configured_copy(settings))
+        return run_copy_action(args, settings)
+    except GoldenBusy as error:
+        print(f"Golden dataset busy: {error}", file=sys.stderr)
+        return EXIT_BUSY
     except Exception as error:
         print(f"Golden dataset refused/failed: {type(error).__name__}: {error}", file=sys.stderr)
         return 1
-    return 0
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
 
 
 if __name__ == "__main__":
