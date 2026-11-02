@@ -1557,3 +1557,25 @@ test("Sowing row navigation never appends Details and supports a second record a
   expect(window.location.hash).toContain("other-sowing");
   expect(await screen.findByRole("heading", { name: "Tray B" })).toBeVisible();
 });
+
+test("Sowing Details focuses its title and browser Back restores the opened row", async () => {
+  mockApi(sowingHandler([sowing()]));
+  const user = await openSowings();
+  await user.click(
+    await screen.findByRole("button", { name: "Open details Tray A" }),
+  );
+  await waitFor(() => {
+    expect(screen.getByRole("heading", { name: "Tray A" })).toHaveFocus();
+  });
+  await browserBack();
+  await waitFor(() => {
+    expect(
+      within(screen.getByRole("list", { name: "Sowing collection" })).getByRole(
+        "button",
+        {
+          name: /^(?!Create or record for |Open details |Details |Edit ).*Tray A.*Clitoria ternatea/,
+        },
+      ),
+    ).toHaveFocus();
+  });
+});

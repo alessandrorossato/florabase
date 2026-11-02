@@ -679,3 +679,34 @@ it("Harvest directory never substitutes source-record photos and navigates to th
     screen.queryByRole("complementary", { name: /preview|inspection/i }),
   ).not.toBeInTheDocument();
 });
+
+it("Harvest Details focuses its title and reconnects focus to the returning row", async () => {
+  const { rerender } = wrap(<HarvestScreen />);
+  await userEvent.setup().click(
+    await screen.findByRole("button", {
+      name: /^(?!Open details |Edit ).*Coffee — Fruit harvest/,
+    }),
+  );
+  rerender(
+    <AuthContext.Provider value={auth}>
+      <HarvestScreen initialId={harvest.id} />
+    </AuthContext.Provider>,
+  );
+  await waitFor(() => {
+    expect(
+      screen.getByRole("heading", { name: harvest.display_title }),
+    ).toHaveFocus();
+  });
+  rerender(
+    <AuthContext.Provider value={auth}>
+      <HarvestScreen />
+    </AuthContext.Provider>,
+  );
+  await waitFor(() => {
+    expect(
+      screen.getByRole("button", {
+        name: /^(?!Open details |Edit ).*Coffee — Fruit harvest/,
+      }),
+    ).toHaveFocus();
+  });
+});

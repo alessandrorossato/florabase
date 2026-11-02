@@ -2765,3 +2765,63 @@ test.each(["directory", "details"])(
     expect(requested.every((x) => x.startsWith("GET "))).toBe(true);
   },
 );
+
+test.each(["not-a-uuid", "01900000-0000-7000-8000-000000009999"])(
+  "unavailable Seed route %s explains the missing record and offers directory recovery",
+  async (id) => {
+    mockApi(directoryHandler([lot()]));
+    window.history.replaceState(null, "", `#/seeds/${id}`);
+    render(<App />);
+    expect(
+      await screen.findByRole("heading", { name: "Seed lot unavailable" }),
+    ).toBeVisible();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "could not find this seed lot",
+    );
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("link", { name: "Return to Seeds" }));
+    expect(
+      await screen.findByRole("list", { name: "Seed inventory" }),
+    ).toBeVisible();
+  },
+);
+
+test.each(["row", "action"])(
+  "Seed %s Details focuses the title and Back restores the opened row",
+  async (entry) => {
+    mockApi(directoryHandler([lot()]));
+    const user = await openSeeds();
+    const row = within(
+      await screen.findByRole("list", { name: "Seed inventory" }),
+    ).getByRole("button", {
+      name: /^(?!Create or record for |Open details |Details |Edit ).*Blue packet/,
+    });
+    await user.click(
+      entry === "row"
+        ? row
+        : screen.getByRole("button", { name: "Open details Blue packet" }),
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: "Blue packet" }),
+      ).toHaveFocus();
+    });
+    await browserBack();
+    await waitFor(() => {
+      expect(
+        within(screen.getByRole("list", { name: "Seed inventory" })).getByRole(
+          "button",
+          {
+            name: /^(?!Create or record for |Open details |Details |Edit ).*Blue packet/,
+          },
+        ),
+      ).toHaveFocus();
+    });
+    await browserForward();
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: "Blue packet" }),
+      ).toHaveFocus();
+    });
+  },
+);

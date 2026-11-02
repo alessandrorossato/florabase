@@ -3217,3 +3217,39 @@ async function assertDedicatedDetails() {
     ).not.toBeInTheDocument();
   });
 }
+
+test.each(["plant", "group"] as const)(
+  "%s Back and Forward restore the exact Details record and title focus",
+  async (kind) => {
+    mockApi(plantHandler([plant()], [group({ lifecycle: "active" })]));
+    const user = await openPlants();
+    const label = kind === "plant" ? "Avocado #1" : "Seedlings 2026";
+    const hash = `#/${kind === "plant" ? "plants" : "plant-groups"}/${kind === "plant" ? plantId : groupId}`;
+    await user.click(
+      screen.getByRole("button", { name: `Open details ${label}` }),
+    );
+    await assertDedicatedDetails();
+    await browserBack();
+    expect(
+      await screen.findByRole("list", { name: "Plants collection" }),
+    ).toBeVisible();
+    await browserForward();
+    await assertDedicatedDetails();
+    expect(window.location.hash).toBe(hash);
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: label })).toHaveFocus();
+    });
+    await browserBack();
+    await waitFor(() => {
+      expect(
+        within(
+          screen.getByRole("list", { name: "Plants collection" }),
+        ).getByRole("button", {
+          name: new RegExp(
+            `^(?!Create or record for |Open details |Details |Edit ).*${label}`,
+          ),
+        }),
+      ).toHaveFocus();
+    });
+  },
+);
