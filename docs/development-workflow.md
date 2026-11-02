@@ -545,6 +545,8 @@ No DEV or Review volumes are mounted. Feature migration-cycle testing uses anoth
 and applies previous-main head → feature head → previous-main head → feature head when required.
 `make golden-dataset-check` runs the [TEST-DATA-001 golden dataset](test-data-001-design.md) inside that
 same disposable workflow; its copies exist only beside disposable test PostgreSQL.
+`make golden-dataset-comprehensive-check` runs the [TEST-DATA-002 profile](test-data-002-design.md) the same
+way. It is manual: the default integration suite skips that module, so CI and the canonical gate do not run it.
 
 `make up`, `build`, `migrate`, `down`, `backup`, and `restore` use the explicit `florabase-prod` project.
 `compose.yaml` remains the production distribution topology: immutable non-root backend/frontend

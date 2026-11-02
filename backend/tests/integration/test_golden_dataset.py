@@ -209,14 +209,15 @@ def assert_loses(name: str, *actions: str) -> None:
         assert "holds" in error
 
 
-def test_plan_is_deterministic_and_pinned() -> None:
+@pytest.mark.parametrize("profile", ["smoke", "comprehensive"])
+def test_plan_is_deterministic_and_pinned(profile: str) -> None:
     manifest = plan_module.load_manifest()
-    digest = plan_module.plan_digest(plan_module.build_plan("smoke"))
-    assert digest == plan_module.plan_digest(plan_module.build_plan("smoke"))
-    assert digest == manifest["profiles"]["smoke"]["expected"]["plan_sha256"]
+    digest = plan_module.plan_digest(plan_module.build_plan(profile))
+    assert digest == plan_module.plan_digest(plan_module.build_plan(profile))
+    assert digest == manifest["profiles"][profile]["expected"]["plan_sha256"]
     for seed in ("1", "2"):
         output = subprocess.run(
-            [sys.executable, "/review/golden_plan.py", "summary"],
+            [sys.executable, "/review/golden_plan.py", "summary", "--profile", profile],
             env={**os.environ, "PYTHONHASHSEED": seed},
             capture_output=True,
             text=True,
@@ -243,21 +244,28 @@ def test_manifest_contract_and_generated_coverage() -> None:
     assert len(identifiers) == len(set(identifiers))
     implemented = {e["id"] for e in manifest["scenarios"] if e["status"] == "implemented"}
     assert implemented == set(plan_module.SCENARIOS)
-    keys = {node["key"] for node in plan_module.build_plan("smoke")["nodes"]}
+    plans = {profile: plan_module.build_plan(profile) for profile in ("smoke", "comprehensive")}
+    removed = {node["payload"].get("removes") for node in plans["comprehensive"]["nodes"]}
     for entry in manifest["scenarios"]:
         assert entry["covers"], entry["id"]
         assert entry["status"] in {"implemented", "planned"}
+        keys = {
+            node["key"]
+            for profile in plan_module.runnable_profiles(manifest, entry)
+            for node in plans[profile]["nodes"]
+        }
+        assert not removed & {invariant["key"] for invariant in entry["invariants"]}
         for invariant in entry["invariants"]:
             assert invariant["key"] in keys, invariant
             assert invariant.get("equals_ref", invariant["key"]) in keys, invariant
     assert plan_module.COVERAGE.read_text() == plan_module.coverage_markdown(manifest)
 
 
-def test_coverage_shows_only_smoke_as_currently_executable() -> None:
+def test_coverage_separates_runnable_and_planned_profiles() -> None:
     manifest = plan_module.load_manifest()
     assert {
         name for name, item in manifest["profiles"].items() if item["status"] == "implemented"
-    } == {"smoke"}
+    } == {"smoke", "comprehensive"}
     rows = {
         row.split(" | ")[1].strip("`"): [cell.strip() for cell in row.split(" | ")]
         for row in plan_module.coverage_markdown(manifest).splitlines()
@@ -268,19 +276,60 @@ def test_coverage_shows_only_smoke_as_currently_executable() -> None:
         status, runnable, planned = rows[entry["id"]][2:5]
         assert status == entry["status"]
         if entry["status"] == "implemented":
-            assert (runnable, planned) == ("smoke", "comprehensive, stress"), entry["id"]
+            assert runnable in {"smoke", "comprehensive", "smoke, comprehensive"}, entry["id"]
+            assert planned in {"—", "stress"}, entry["id"]
         else:
             assert runnable == "—", entry["id"]
-    # Planned scenarios stay visible, including the two that define the deferred profiles.
-    assert rows["comprehensive-volume-mix"][2:5] == ["planned", "—", "comprehensive"]
+    # Planned scenarios stay visible, including the one that defines the deferred profile.
     assert rows["stress-volume-mix"][2:5] == ["planned", "—", "stress"]
-    assert sum(entry["status"] == "planned" for entry in manifest["scenarios"]) == 10
+    assert rows["comprehensive-volume-mix"][2:5] == ["implemented", "comprehensive", "—"]
+    assert rows["volume-background"][2:5] == ["implemented", "smoke", "stress"]
+    assert sum(entry["status"] == "planned" for entry in manifest["scenarios"]) == 2
 
 
-@pytest.mark.parametrize("profile", ["comprehensive", "stress", "unknown"])
+@pytest.mark.parametrize("profile", ["stress", "unknown"])
 def test_unimplemented_profiles_refuse(profile: str) -> None:
     with pytest.raises(plan_module.PlanError):
         plan_module.build_plan(profile)
+
+
+def test_the_full_suite_skips_the_comprehensive_module() -> None:
+    """CI and the canonical gate name no file, so they never pay for a COMPREHENSIVE run."""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "--no-cov",
+            "-m",
+            "integration",
+            "-k",
+            "golden_comprehensive",
+        ],
+        cwd="/app",
+        capture_output=True,
+        text=True,
+        timeout=180,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout
+    assert " skipped" in result.stdout, result.stdout
+    assert " passed" not in result.stdout, result.stdout
+
+
+def test_comprehensive_does_not_touch_the_smoke_plan() -> None:
+    """Pure and cheap, so the default CI path guards this without a COMPREHENSIVE generation."""
+    manifest = plan_module.load_manifest()
+    smoke = plan_module.build_plan("smoke", manifest=manifest)
+    comprehensive = plan_module.build_plan("comprehensive", manifest=manifest)
+    shared = {entry["id"] for entry in manifest["scenarios"] if "smoke" in entry["profiles"]} - {
+        "volume-background"
+    }
+    assert [n for n in smoke["nodes"] if n["scenario"] in shared] == [
+        n for n in comprehensive["nodes"] if n["scenario"] in shared
+    ]
+    assert not {n["scenario"] for n in smoke["nodes"]} - shared - {"volume-background"}
+    assert "volume-background" not in {n["scenario"] for n in comprehensive["nodes"]}
 
 
 def test_independent_copies_have_identical_logical_content(first: str, second: str) -> None:

@@ -4,21 +4,27 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import atexit
 import fcntl
 import hashlib
 import io
 import json
 import os
+import random
 import re
+import resource
 import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import time
+from collections import Counter
 from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta, tzinfo
 from decimal import Decimal
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, ClassVar, NoReturn
 from urllib.parse import urlsplit
 from uuid import UUID
@@ -40,19 +46,35 @@ from florabase.attachments.model import Attachment
 from florabase.attachments.storage import AttachmentStorage
 from florabase.auth.model import User
 from florabase.auth.service import bootstrap_owner
-from florabase.botanical_identities.service import list_botanical_identities
+from florabase.botanical_identities.schemas import BotanicalIdentityUpdate
+from florabase.botanical_identities.service import (
+    list_botanical_identities,
+    update_botanical_identity,
+)
 from florabase.botanical_profiles.model import BotanicalProfileNativeRange
+from florabase.bulk import service as bulk
+from florabase.bulk.schemas import (
+    BulkLocationApplyRequest,
+    BulkLocationPreviewRequest,
+    BulkPrecondition,
+    BulkReference,
+)
 from florabase.collection_photos.model import BotanicalIdentityCoverImage, MediaAsset
 from florabase.collection_photos.schemas import (
     ExternalCoverWrite,
     PrimaryPhotoSelection,
 )
-from florabase.collection_photos.service import set_external_identity_cover
+from florabase.collection_photos.service import (
+    set_external_identity_cover,
+    set_local_identity_cover,
+)
 from florabase.collection_views.dashboard import overview
 from florabase.core.config import Environment, Settings, get_settings
 from florabase.db.base import Base
 from florabase.db.session import get_engine
+from florabase.events.model import Event, EventKind
 from florabase.events.schemas import TransferCreate
+from florabase.external_botany import service as external_botany
 from florabase.external_botany.provider import GbifBotanicalProvider
 from florabase.external_botany.service import confirm_link
 from florabase.harvests import conversion_service
@@ -61,10 +83,30 @@ from florabase.harvests.conversion_schemas import ConversionCreate
 from florabase.harvests.inventory_model import HarvestMaterialDisposition
 from florabase.harvests.inventory_schemas import DispositionCreate
 from florabase.harvests.inventory_service import list_inventory, record_disposition
+from florabase.history.schemas import HistoryCategory
 from florabase.history.service import list_history
+from florabase.lineage.service import lineage
 from florabase.locations.model import Location
 from florabase.locations.service import list_locations
+from florabase.media import copies as media_copies
 from florabase.media.schemas import AssetMetadataWrite, ExternalAssetCreate
+from florabase.native_range_enrichment import service as enrichment
+from florabase.native_range_enrichment.model import (
+    NativeRangeApplication,
+    NativeRangeProposal,
+    WcvpLink,
+)
+from florabase.native_range_enrichment.schemas import ApplyWrite
+from florabase.native_range_enrichment.snapshot import (
+    DISTRIBUTION_FIELDS,
+    NAMES_FIELDS,
+)
+from florabase.native_range_enrichment.snapshot import build_index as build_wcvp_index
+from florabase.native_range_enrichment.source import (
+    SourceMetadata,
+    WcvpSource,
+    WcvpVersion,
+)
 from florabase.plants.model import Plant, PlantGroup
 from florabase.propagation import reversal
 from florabase.propagation import service as propagation
@@ -78,10 +120,19 @@ from florabase.provenance_sites.service import collection_provenance_map
 from florabase.saved_views.model import SavedView
 from florabase.saved_views.schemas import SavedViewCreate
 from florabase.saved_views.service import create_view
-from florabase.schedule.schemas import ScheduleComplete
+from florabase.schedule.schemas import ScheduleComplete, ScheduleUpdate
+from florabase.search.schemas import SearchKind
+from florabase.search.service import SearchFilters
+from florabase.search.service import search as global_search
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import Sowing
 from florabase.suppliers.model import Supplier
+from florabase.taxonomy import service as taxonomy
+from florabase.taxonomy.model import WfoLink
+from florabase.taxonomy.schemas import TaxonomyLinkWrite
+from florabase.taxonomy.snapshot import build_index as build_wfo_index
+from florabase.taxonomy.source import CHECKSUM as WFO_CHECKSUM
+from florabase.taxonomy.source import WfoMetadata, WfoSource
 
 LEDGER = ".golden-dataset.json"
 COPY_ROOT = Path("/tmp/florabase-golden")
@@ -95,6 +146,10 @@ MODELS: dict[str, type[Base]] = {
     "cover": BotanicalIdentityCoverImage,
     "disposition": HarvestMaterialDisposition,
     "saved_view": SavedView,
+    "wfo_link": WfoLink,
+    "wcvp_link": WcvpLink,
+    "proposal": NativeRangeProposal,
+    "application": NativeRangeApplication,
 }
 # Session state never describes the dataset and generation writes none, so these tables are empty.
 # This is the only timestamp exclusion: generation's clock makes every other timestamp reproducible.
@@ -102,6 +157,8 @@ MODELS: dict[str, type[Base]] = {
 # Media bytes are hashed separately, so excluding the object name hides no content.
 EXCLUDED_TABLES = {"auth_sessions", "login_throttles"}
 EXCLUDED_COLUMNS = {("users", "password_hash"), ("attachments", "storage_key")}
+# Random per copy like an id, and the only UUIDs that identify a row without being its key.
+VERSION_UUID_COLUMNS = {"wcvp_links": "version", "wfo_links": "version"}
 UUID_PATTERN = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 EXIT_DOMAIN_INVALID = 1
 EXIT_BASELINE_MODIFIED = 3
@@ -177,24 +234,42 @@ def owner_node(database: Session, _: AttachmentStorage, payload: dict[str, Any],
     )
 
 
+IMAGE_TYPES = {
+    "PNG": ("png", "image/png"),
+    "JPEG": ("jpg", "image/jpeg"),
+    "WEBP": ("webp", "image/webp"),
+}
+
+
+def generated_upload(payload: dict[str, Any]) -> tuple[bytes, str, str]:
+    """Bytes, file name and media type; a texture approximates a photo's compressibility."""
+    size = (payload["width"], payload["height"])
+    if "texture" in payload:
+        coarse = (max(2, size[0] // 8), max(2, size[1] // 8))
+        noise = random.Random(payload["texture"]).randbytes(coarse[0] * coarse[1] * 3)
+        image = Image.frombytes("RGB", coarse, noise).resize(size, Image.Resampling.BILINEAR)
+    else:
+        image = Image.new("RGB", size, tuple(payload["colour"]))
+    ImageDraw.Draw(image).line([(0, 0), (size[0] - 1, size[1] - 1)], fill="#47663a")
+    buffer = io.BytesIO()
+    kind = payload.get("format", "PNG")
+    image.save(buffer, format=kind)
+    extension, media_type = IMAGE_TYPES[kind]
+    return buffer.getvalue(), f"golden-generated.{extension}", media_type
+
+
 def generated_asset(
     database: Session, storage: AttachmentStorage, payload: dict[str, Any], ledger: dict[str, Any]
 ) -> MediaAsset:
-    buffer = io.BytesIO()
-    image = Image.new("RGB", (payload["width"], payload["height"]), tuple(payload["colour"]))
-    ImageDraw.Draw(image).line(
-        [(0, 0), (payload["width"] - 1, payload["height"] - 1)], fill="#47663a"
-    )
-    image.save(buffer, format="PNG")
-    buffer.seek(0)
+    content, filename, media_type = generated_upload(payload)
     row: MediaAsset = asyncio.run(
         v4.media.upload_asset(
             database,
             storage,
             UploadFile(
-                file=buffer,
-                filename="golden-generated.png",
-                headers=Headers({"content-type": "image/png"}),
+                file=io.BytesIO(content),
+                filename=filename,
+                headers=Headers({"content-type": media_type}),
             ),
             AssetMetadataWrite(
                 title=payload["title"],
@@ -218,16 +293,16 @@ def external_asset(
     )
 
 
-def taxon_link(database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any) -> Any:
-    """Same offline confirmation as UAT v4: the provider sees only this fixed snapshot."""
-    snapshot = {
+def offline_gbif(payload: dict[str, Any]) -> GbifBotanicalProvider:
+    """Same offline provider as UAT v4: it sees only this fixed snapshot or fixed failure."""
+    snapshot: dict[str, Any] = {
         "usage": {
             "key": payload["external_id"],
             "name": payload["scientific_name"],
             "canonicalName": payload["canonical_name"],
             "authorship": payload["authorship"],
             "rank": "SPECIES",
-            "status": "ACCEPTED",
+            "status": payload.get("status", "ACCEPTED"),
         },
         "classification": [
             {"name": "Plantae", "rank": "KINGDOM"},
@@ -236,23 +311,249 @@ def taxon_link(database: Session, _: AttachmentStorage, payload: dict[str, Any],
         ],
         "diagnostics": {"matchType": "EXACT", "confidence": 98},
     }
+    if "accepted" in payload:
+        snapshot["acceptedUsage"] = payload["accepted"]
 
     def offline(request: httpx.Request) -> httpx.Response:
         if request.url.host != "api.gbif.org":
             raise GoldenError("Unexpected synthetic taxon request")
-        return httpx.Response(200, json=snapshot)
+        return httpx.Response(payload.get("provider_status", 200), json=snapshot)
 
-    provider = GbifBotanicalProvider(v4.get_settings(), transport=httpx.MockTransport(offline))
+    return GbifBotanicalProvider(v4.get_settings(), transport=httpx.MockTransport(offline))
+
+
+def taxon_link(database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any) -> Any:
     return asyncio.run(
         confirm_link(
             database,
-            provider,
+            offline_gbif(payload),
             payload["identity_id"],
             payload["external_id"],
             payload["scientific_name"],
             86400,
         )
     )
+
+
+def taxon_refresh(
+    database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any
+) -> None:
+    link = external_botany.get_link(database, payload["identity_id"])
+    if link is None:
+        raise GoldenError("Refreshing a taxon link that does not exist")
+    asyncio.run(external_botany.refresh_link(database, offline_gbif(payload), link, 86400))
+
+
+def taxon_unlink(database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any) -> None:
+    external_botany.unlink(database, payload["identity_id"])
+
+
+# The synthetic reference indexes live only beside a run, outside the copy's media root. Their
+# content is in the plan, and what a confirmation copies from them is in the digest.
+SOURCES: dict[str, Path] = {}
+
+
+def source_path(name: str) -> Path:
+    if not SOURCES:
+        directory = tempfile.TemporaryDirectory(prefix="florabase-golden-sources-")
+        SOURCES["directory"] = Path(directory.name)
+        atexit.register(directory.cleanup)
+    return SOURCES["directory"] / f"{name}.sqlite"
+
+
+def taxonomy_source_node(
+    _: Session, __: AttachmentStorage, payload: dict[str, Any], ___: Any
+) -> None:
+    build_wfo_index(
+        source_path("wfo"),
+        payload["names"],
+        payload["concepts"],
+        payload["synonyms"],
+        WfoMetadata(retrieved_at=payload["retrieved_at"]),
+    )
+
+
+def wfo_link(database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any) -> Any:
+    identity = v4.identities.get_botanical_identity(database, payload["identity_id"])
+    if identity is None:
+        raise GoldenError("Confirming WFO for an identity that does not exist")
+    current = database.get(WfoLink, identity.id)
+    taxonomy.confirm(
+        database,
+        identity.id,
+        TaxonomyLinkWrite(
+            source_taxon_id=payload["source_taxon_id"],
+            checksum=WFO_CHECKSUM,
+            expected_version=current.version if current else None,
+            identity_updated_at=identity.updated_at,
+        ),
+        WfoSource(source_path("wfo")),
+    )
+    return SimpleNamespace(id=identity.id)
+
+
+def wfo_unlink(database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any) -> None:
+    link = database.get(WfoLink, payload["identity_id"])
+    if link is None:
+        raise GoldenError("Unlinking a WFO link that does not exist")
+    taxonomy.unlink(database, payload["identity_id"], link.version)
+
+
+def identity_update(
+    database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any
+) -> None:
+    identity = v4.identities.get_botanical_identity(database, payload.pop("identity_id"))
+    if identity is None:
+        raise GoldenError("Updating an identity that does not exist")
+    update_botanical_identity(database, identity, BotanicalIdentityUpdate.model_validate(payload))
+
+
+def wcvp_source_node(_: Session, __: AttachmentStorage, payload: dict[str, Any], ___: Any) -> None:
+    build_wcvp_index(
+        source_path(f"wcvp-{payload['version']}"),
+        [dict.fromkeys(NAMES_FIELDS, "") | row for row in payload["names"]],
+        [dict.fromkeys(DISTRIBUTION_FIELDS, "") | row for row in payload["rows"]],
+        SourceMetadata.for_release(payload["version"], payload["retrieved_at"]),
+    )
+
+
+def wcvp_source(version: WcvpVersion) -> WcvpSource:
+    return WcvpSource(source_path(f"wcvp-{version}"), version)
+
+
+def wcvp_link(database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any) -> Any:
+    source = wcvp_source(payload["version"])
+    enrichment.confirm_link(
+        database,
+        payload["identity_id"],
+        payload["external_id"],
+        source.metadata().checksum,
+        source,
+    )
+    return SimpleNamespace(id=payload["identity_id"])
+
+
+def wcvp_propose(database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any) -> Any:
+    return enrichment.propose(database, payload["identity_id"], wcvp_source(payload["version"]))
+
+
+def wcvp_apply(database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any) -> Any:
+    applied = enrichment.apply(
+        database,
+        payload["identity_id"],
+        payload["proposal_id"],
+        ApplyWrite(selected_place_ids=payload["selected_place_ids"]),
+    )
+    return SimpleNamespace(id=applied.proposal_id)
+
+
+def retire_place(database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any) -> None:
+    v4.places.set_geographic_place_retired(database, payload["place_id"], retired=True)
+
+
+def retire_location(
+    database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any
+) -> None:
+    v4.locations.set_location_retired(database, payload["location_id"], retired=True)
+
+
+def bulk_move(database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any) -> None:
+    """Preview then apply, carrying the preview's preconditions as the API client does."""
+    target = payload["target_location_id"]
+    preview = bulk.preview(
+        database,
+        BulkLocationPreviewRequest(
+            records=[BulkReference.model_validate(row) for row in payload["records"]],
+            target_location_id=target,
+        ),
+    )
+    bulk.apply(
+        database,
+        BulkLocationApplyRequest(
+            records=[
+                BulkPrecondition(kind=row.kind, id=row.id, expected_updated_at=row.updated_at)
+                for row in preview.rows
+            ],
+            target_location_id=target,
+            expected_target_updated_at=preview.target_updated_at,
+        ),
+    )
+
+
+def group_event(database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any) -> Any:
+    target = payload.pop("plant_group_id")
+    return v4.events.create_event(
+        database, "plant_group", target, v4.EventCreate.model_validate(payload)
+    )
+
+
+def refused(
+    database: Session, storage: AttachmentStorage, payload: dict[str, Any], ledger: dict[str, Any]
+) -> None:
+    """A domain rule the plan keeps exercising: nothing is stored, and not refusing fails the run."""
+    inner = {"key": "op:refused", "kind": payload["kind"], "payload": payload["payload"]}
+    try:
+        with database.begin_nested():
+            apply_node(database, storage, inner, {}, ledger)
+    except Exception as error:
+        if type(error).__name__ != payload["error"]:
+            raise GoldenError(f"Expected {payload['error']}, got {error!r}") from error
+        return
+    raise GoldenError(f"{payload['kind']} was not refused as {payload['error']}")
+
+
+def local_cover(
+    database: Session, storage: AttachmentStorage, payload: dict[str, Any], ledger: dict[str, Any]
+) -> Any:
+    content, filename, media_type = generated_upload(payload)
+    identity = payload["identity_id"]
+    asyncio.run(
+        set_local_identity_cover(
+            database,
+            storage,
+            identity,
+            UploadFile(
+                file=io.BytesIO(content),
+                filename=filename,
+                headers=Headers({"content-type": media_type}),
+            ),
+        )
+    )
+    return database.scalars(
+        select(BotanicalIdentityCoverImage).where(
+            BotanicalIdentityCoverImage.botanical_identity_id == identity
+        )
+    ).one()
+
+
+def media_copy(
+    database: Session, storage: AttachmentStorage, payload: dict[str, Any], __: Any
+) -> None:
+    """The real save path with the one network call replaced by fixed bytes."""
+    content, _, media_type = generated_upload(payload)
+    fetch = media_copies.fetch_image
+    media_copies.fetch_image = lambda _url, _limit: (content, media_type)
+    try:
+        asyncio.run(
+            media_copies.save_copy(
+                database, storage, payload["asset_id"], refresh=payload["refresh"]
+            )
+        )
+    finally:
+        media_copies.fetch_image = fetch
+
+
+def media_copy_remove(
+    database: Session, storage: AttachmentStorage, payload: dict[str, Any], __: Any
+) -> None:
+    media_copies.remove_copy(database, storage, payload["asset_id"])
+
+
+def schedule_update(
+    database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any
+) -> None:
+    identifier = payload.pop("activity_id")
+    v4.schedule.update(database, identifier, ScheduleUpdate.model_validate(payload))
 
 
 def retire_supplier(
@@ -344,6 +645,11 @@ def schedule_cancel(
 
 def saved_view(database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any) -> Any:
     owner = payload.pop("owner_id")
+    # Saved state is JSON, where an API client's reference is already text.
+    payload["state"] = {
+        name: str(value) if isinstance(value, UUID) else value
+        for name, value in payload["state"].items()
+    }
     return create_view(database, owner, SavedViewCreate.model_validate(payload))
 
 
@@ -391,9 +697,28 @@ OPERATIONS: dict[str, Operation] = {
     "saved_view": saved_view,
     "primary": primary_photo,
     "external_cover": external_cover,
+    "taxon_refresh": taxon_refresh,
+    "taxon_unlink": taxon_unlink,
+    "taxonomy_source": taxonomy_source_node,
+    "wfo_link": wfo_link,
+    "wfo_unlink": wfo_unlink,
+    "identity_update": identity_update,
+    "wcvp_source": wcvp_source_node,
+    "wcvp_link": wcvp_link,
+    "wcvp_propose": wcvp_propose,
+    "wcvp_apply": wcvp_apply,
+    "retire_place": retire_place,
+    "retire_location": retire_location,
+    "bulk_move": bulk_move,
+    "group_event": group_event,
+    "refused": refused,
+    "local_cover": local_cover,
+    "media_copy": media_copy,
+    "media_copy_remove": media_copy_remove,
+    "schedule_update": schedule_update,
 }
 # These owning services always commit, so they run only after the atomic graph has committed.
-COMMITTING_KINDS = {"primary", "external_cover"}
+COMMITTING_KINDS = {"primary", "external_cover", "local_cover", "media_copy", "media_copy_remove"}
 
 
 def apply_node(
@@ -413,6 +738,8 @@ def apply_node(
     if row is not None:
         refs[key] = row.id
         ledger["records"][key] = str(row.id)
+    # An earlier node's record that this one deliberately deletes is no longer managed.
+    ledger["records"].pop(node["payload"].get("removes"), None)
 
 
 def refuse_commit(session: Session) -> None:
@@ -598,15 +925,11 @@ def application_tables() -> list[Table]:
     return [table for _, table in sorted(Base.metadata.tables.items())]
 
 
-def row_identity(table: Table) -> Any:
-    return table.c.get("id")
-
-
 def uuid_labels(database: Session) -> dict[str, str]:
     """UUIDv7 ids are monotonic per process, so a table ordinal is their stable logical name."""
     labels: dict[str, str] = {}
     for table in application_tables():
-        column = row_identity(table)
+        column = table.c.get(VERSION_UUID_COLUMNS.get(table.name, "id"))
         if column is None:
             continue
         if table.name == "geographic_places":
@@ -650,6 +973,11 @@ def canonical_digest(database: Session, root: Path) -> dict[str, Any]:
     labels = uuid_labels(database)
     tables: dict[str, dict[str, Any]] = {}
     unresolved = 0
+    # A completion's idempotency hash covers the request, and a movement request names a per-copy
+    # Location id. Only those rows' hash cannot compare across copies; every other is content.
+    uuid_derived = set(
+        database.scalars(select(Event.id).where(Event.destination_location_id.is_not(None)))
+    )
     for table in application_tables():
         if table.name in EXCLUDED_TABLES:
             continue
@@ -660,6 +988,8 @@ def canonical_digest(database: Session, root: Path) -> dict[str, Any]:
                 if (table.name, column.name) in EXCLUDED_COLUMNS:
                     continue
                 content[column.name] = canonical_value(row[column.name], labels)
+            if table.name == "scheduled_activities" and row["linked_event_id"] in uuid_derived:
+                content["completion_fingerprint"] = "<derived-from-per-copy-uuid>"
             line = json.dumps(content, sort_keys=True, ensure_ascii=False, default=str)
             unresolved += line.count(UNRESOLVED)
             lines.append(line)
@@ -734,6 +1064,76 @@ def read_projections(database: Session, anchor: date) -> dict[str, Any]:
     }
 
 
+def restore_sources(plan: dict[str, Any]) -> None:
+    """Reading a copy needs the same synthetic indexes generation used; the plan holds their content."""
+    for node in plan["nodes"]:
+        if node["kind"] in {"taxonomy_source", "wcvp_source"}:
+            OPERATIONS[node["kind"]](None, None, dict(node["payload"]), None)  # type: ignore[arg-type]
+
+
+def comprehensive_projections(
+    database: Session, plan: dict[str, Any], records: dict[str, Any]
+) -> dict[str, Any]:
+    """Reads only COMPREHENSIVE can answer. Kept apart, so the reviewed SMOKE pin stays as it is."""
+    restore_sources(plan)
+    tree = taxonomy.tree(database, WfoSource(source_path("wfo")))
+    reasons: Counter[str] = Counter(
+        identity.unresolved_reason or "resolved" for identity in tree.identities
+    )
+    descendant = lineage(
+        database, ("plant", UUID(records["plant:seed-collection-produced/second-generation"]))
+    )
+    locations = list_locations(database)
+    plants = v4.plants.list_plants(database)
+    groups = v4.plants.list_plant_groups(database)
+    return {
+        "taxonomy.available": tree.source_available,
+        "taxonomy.represented": tree.counts.represented,
+        "taxonomy.unresolved": tree.unresolved,
+        "taxonomy.synonyms": sorted(
+            identity.scientific_name for identity in tree.identities if identity.synonym_of
+        ),
+        "taxonomy.stale": reasons["Identity changed since source confirmation; review the link"],
+        "taxonomy.nodes": len(tree.nodes),
+        "lineage.generation2_ancestors": len(descendant.ancestors),
+        "search.golden": global_search(database, "Golden", SearchFilters()).total,
+        "search.unicode": global_search(database, "植物", SearchFilters()).total,
+        "search.synonym_name": global_search(database, "Rosmarinus", SearchFilters()).total,
+        "search.retired_supplier": global_search(
+            database, "Closed-down", SearchFilters(kinds=(SearchKind.SUPPLIER,))
+        ).total,
+        "search.events_death": global_search(
+            database, "", SearchFilters(kinds=(SearchKind.EVENT,), event_kind=EventKind.DEATH)
+        ).total,
+        "plants.by_lifecycle": dict(
+            sorted(Counter(item.plant.lifecycle for item in plants).items())
+        ),
+        "groups.by_lifecycle": dict(
+            sorted(Counter(item.plant_group.lifecycle for item in groups).items())
+        ),
+        "locations.retired": sum(item.retired_at is not None for item in locations),
+        **{
+            f"history.{category.value}": list_history(database, categories=(category,)).total
+            for category in HistoryCategory
+        },
+        "saved_views": database.scalar(select(func.count()).select_from(SavedView)),
+        "media.external_with_copy": database.scalar(
+            select(func.count())
+            .select_from(MediaAsset)
+            .where(MediaAsset.kind == "external", MediaAsset.attachment_id.is_not(None))
+        ),
+    }
+
+
+def plan_projections(
+    database: Session, plan: dict[str, Any], records: dict[str, Any]
+) -> dict[str, Any]:
+    projections = read_projections(database, date.fromisoformat(plan["anchor_date"]))
+    if plan["profile"] == "comprehensive":
+        projections |= comprehensive_projections(database, plan, records)
+    return projections
+
+
 def check_invariant(
     database: Session, ledger: dict[str, Any], invariant: dict[str, Any]
 ) -> str | None:
@@ -757,7 +1157,10 @@ def check_invariant(
     return None if normalized == expected else f"{key}.{field}: {normalized!r} != {expected!r}"
 
 
-def media_problems(database: Session, root: Path) -> list[str]:
+def media_problems(
+    database: Session, root: Path, copied: frozenset[str] = frozenset()
+) -> list[str]:
+    """`copied` names the external assets whose plan saved a local copy; no other may have one."""
     problems = []
     expected: set[Path] = set()
     for attachment in database.scalars(select(Attachment)):
@@ -772,10 +1175,17 @@ def media_problems(database: Session, root: Path) -> list[str]:
             or hashlib.sha256(content).hexdigest() != attachment.sha256
         ):
             problems.append(f"media differs: attachment {attachment.id}")
+    assets = list(database.scalars(select(MediaAsset)))
+    for asset in assets:
+        # The one regenerable derivative of a stored image; bytes are covered by the digest.
+        attachment = database.get(Attachment, asset.attachment_id) if asset.attachment_id else None
+        if attachment is not None:
+            name = f"{asset.id.hex}-320-webp-v1-{attachment.sha256}.webp"
+            expected.add(root / ".thumbnails" / name)
     for path in media_files(root):
         if path not in expected:
             problems.append(f"unmanaged media file: {path.relative_to(root)}")
-    for asset in database.scalars(select(MediaAsset)):
+    for asset in assets:
         if asset.kind == "local":
             if asset.attachment_id is None:
                 problems.append(f"local asset without attachment: {asset.id}")
@@ -783,7 +1193,8 @@ def media_problems(database: Session, root: Path) -> list[str]:
         for url in (asset.image_url, asset.source_url):
             if urlsplit(url or "").hostname != "example.invalid":
                 problems.append(f"external asset leaves example.invalid: {asset.id}")
-        if asset.fetched_at is not None or asset.attachment_id is not None:
+        fetched = asset.fetched_at is not None or asset.attachment_id is not None
+        if fetched and str(asset.id) not in copied:
             problems.append(f"external asset was fetched: {asset.id}")
     return problems
 
@@ -799,9 +1210,11 @@ def validate(database: Session, root: Path, plan: dict[str, Any]) -> list[str]:
     if ledger.get("plan_sha256") != golden_plan.plan_digest(plan):
         problems.append("golden ledger belongs to a different plan")
     records = ledger.get("records", {})
+    removed = {node["payload"].get("removes") for node in plan["nodes"]}
     for node in plan["nodes"]:
-        if not node["key"].startswith("op:") and node["key"] not in records:
-            problems.append(f"plan node not recorded: {node['key']}")
+        key = node["key"]
+        if not key.startswith("op:") and key not in records and key not in removed:
+            problems.append(f"plan node not recorded: {key}")
     for key, value in records.items():
         prefix = key.split(":", 1)[0]
         if prefix == "range":
@@ -821,7 +1234,12 @@ def validate(database: Session, root: Path, plan: dict[str, Any]) -> list[str]:
             failure = check_invariant(database, ledger, invariant)
             if failure:
                 problems.append(f"{entry['id']}: {failure}")
-    problems.extend(media_problems(database, root))
+    copied = {
+        records.get(node["payload"]["asset_id"]["$ref"])
+        for node in plan["nodes"]
+        if node["kind"] == "media_copy"
+    }
+    problems.extend(media_problems(database, root, frozenset(str(item) for item in copied)))
     for model, column in SYNTHETIC_LABELS:
         unmarked = database.scalars(
             select(column).where(column.is_not(None), column.not_like("Golden%")).limit(1)
@@ -836,9 +1254,15 @@ def validate(database: Session, root: Path, plan: dict[str, Any]) -> list[str]:
         actual = table_counts(database)
         if actual != expected["tables"]:
             problems.append(f"table counts differ from the pin: {actual}")
-        projections = read_projections(database, date.fromisoformat(plan["anchor_date"]))
-        if projections != expected["projections"]:
-            problems.append(f"read projections differ from the pin: {projections}")
+        try:
+            projections = plan_projections(database, plan, records)
+        except Exception as error:
+            # Damage may break a read; report it beside every other problem found so far.
+            database.rollback()
+            problems.append(f"read projections failed: {type(error).__name__}: {error}")
+        else:
+            if projections != expected["projections"]:
+                problems.append(f"read projections differ from the pin: {projections}")
     return problems
 
 
@@ -954,6 +1378,13 @@ def retire_copy(name: str, settings: Settings) -> None:
         raise GoldenError(f"Golden media root survived retirement: {COPY_ROOT / name}")
 
 
+def measured(started: float) -> dict[str, Any]:
+    return {
+        "peak_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+        "seconds": round(time.monotonic() - started, 3),
+    }
+
+
 def run_copy_action(args: argparse.Namespace, settings: Settings) -> int:
     deny_network()
     with Session(get_engine()) as database:
@@ -963,13 +1394,13 @@ def run_copy_action(args: argparse.Namespace, settings: Settings) -> int:
         if args.action == "digest":
             # Diagnostic only: reports what is there, including on a damaged copy, and claims nothing.
             result |= canonical_digest(database, root)
-            result["seconds"] = round(time.monotonic() - started, 3)
+            result |= measured(started)
             print(json.dumps(result, sort_keys=True))
             return 0
         plan = golden_plan.build_plan(args.profile)
         if args.action == "verify-baseline":
             report = verify_baseline(database, root, plan)
-            print(json.dumps(report, sort_keys=True))
+            print(json.dumps(report | measured(started), sort_keys=True))
             return {
                 "baseline-verified": 0,
                 "domain-invalid": EXIT_DOMAIN_INVALID,
@@ -987,13 +1418,12 @@ def run_copy_action(args: argparse.Namespace, settings: Settings) -> int:
         result |= {
             "domain": "valid",
             "plan_sha256": golden_plan.plan_digest(plan),
-            "seconds": round(time.monotonic() - started, 3),
+            **measured(started),
         }
         if args.action == "validate":
             result["counts"] = table_counts(database)
-            result["projections"] = read_projections(
-                database, date.fromisoformat(plan["anchor_date"])
-            )
+            records = (read_ledger(root) or {}).get("records", {})
+            result["projections"] = plan_projections(database, plan, records)
         print(json.dumps(result, sort_keys=True))
     return 0
 

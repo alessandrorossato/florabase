@@ -6966,3 +6966,20 @@ Status remains implemented pending canonical verification.
   `scripts/check-features.py`, backend `mypy`, ruff on the test module.
 - Not run: canonical FULL, the complete integration and unit suites, frontend checks, `smoke-uat-preview`.
 - Unresolved: anchored timestamps read as stale on the real clock; the module takes about 5 minutes.
+
+### TEST-DATA-002 comprehensive golden dataset — 2 November 2026
+
+- COMPREHENSIVE is executable: 3,183 plan nodes, 3,973 domain records, 34 media files, generated through owning
+  services with 18 exercised refusals and 140 invariants. SMOKE's plan pin and baseline `70a1b1ae…f967` are unchanged.
+  Reviewed baseline `d2db9e9b…98c7`. Design, coverage gaps and CI proposal: [design](test-data-002-design.md).
+- Digest additions: link `version` UUIDs get ordinals, and the completion hash of a Schedule movement is normalized
+  because it derives from a per-copy Location id. A test holds that exception to one row.
+- Domain observations, unchanged and for review: the owning service accepts a new record at a retired Location,
+  and a movement Event on a dead Plant.
+- Checks: `make golden-dataset-comprehensive-check` in two separate stacks (22 passed each; a third produced the pin),
+  `make golden-dataset-check` (31 passed), `test_review_dataset_v5.py` (3 passed), `make workflow-check`,
+  `check-features`, `test-verification-impact`, `test-uat-preview`, `test-environment-workflow`, ruff and mypy on
+  the plan, runtime and test modules. Zero residual resources after each stack.
+- Not run: canonical `make feature-verify`, the complete integration and unit suites, frontend checks.
+- Unresolved: independent QA; `import-export-roundtrip`; update-service edit paths; real image cost; approval of any
+  CI schedule; Review and UAT adoption. Status `implemented`. No push, PR or merge.

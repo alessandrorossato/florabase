@@ -229,12 +229,273 @@
       }
     },
     "comprehensive": {
-      "status": "planned",
-      "purpose": "Approximately 3,000–5,000 representative records",
-      "target_records": [
-        3000,
-        5000
-      ]
+      "status": "implemented",
+      "purpose": "Approximately 3,000–5,000 domain records with semantic coverage and realistic relationships; run manually, not in CI",
+      "volume": 420,
+      "expected": {
+        "plan_sha256": "9b7387daf49e03b9d87392bcaf194196201932b62d48e8b3a002e740cf27e6cf",
+        "nodes": 3183,
+        "tables": {
+          "application_settings": 1,
+          "attachments": 32,
+          "botanical_identities": 114,
+          "botanical_identity_cover_images": 4,
+          "botanical_profile_native_ranges": 32,
+          "botanical_profiles": 28,
+          "collection_primary_photos": 7,
+          "events": 845,
+          "external_provider_cache": 7,
+          "external_taxon_links": 6,
+          "geographic_places": 7,
+          "germination_observations": 390,
+          "harvest_items": 64,
+          "harvest_material_dispositions": 26,
+          "harvest_material_inventory": 45,
+          "harvest_seed_lot_conversions": 8,
+          "harvests": 62,
+          "locations": 34,
+          "media_assets": 37,
+          "native_range_applications": 2,
+          "native_range_proposals": 3,
+          "native_range_revisions": 28,
+          "operation_receipts": 650,
+          "orders": 50,
+          "plant_groups": 137,
+          "plants": 212,
+          "provenance_sites": 24,
+          "record_media_links": 34,
+          "saved_views": 20,
+          "scheduled_activities": 69,
+          "seed_lots": 428,
+          "sowings": 538,
+          "suppliers": 24,
+          "users": 1,
+          "wcvp_links": 4,
+          "wfo_links": 9
+        },
+        "projections": {
+          "dashboard.due_today": 1,
+          "dashboard.next_seven_days": 9,
+          "dashboard.overdue": 8,
+          "dashboard.purchase_packets_without_order": 76,
+          "dashboard.sowings_unknown_germination": 58,
+          "dashboard.sowings_zero_germination": 1,
+          "groups.by_lifecycle": {
+            "active": 107,
+            "completed": 2,
+            "dead": 10,
+            "discarded": 3,
+            "lost": 7,
+            "transferred": 8
+          },
+          "harvests": 62,
+          "history": 1916,
+          "history.event": 783,
+          "history.germination": 390,
+          "history.harvest": 62,
+          "history.material": 28,
+          "history.propagation": 628,
+          "history.schedule": 25,
+          "identities": 114,
+          "lineage.generation2_ancestors": 3,
+          "locations": 34,
+          "locations.retired": 1,
+          "media.external": 7,
+          "media.external_with_copy": 2,
+          "media.local": 30,
+          "media.unlinked": 16,
+          "orders": 50,
+          "plant_groups": 137,
+          "plants": 212,
+          "plants.by_lifecycle": {
+            "active": 176,
+            "dead": 11,
+            "discarded": 8,
+            "lost": 8,
+            "reintegrated": 2,
+            "reversed": 1,
+            "transferred": 6
+          },
+          "provenance.sites": 24,
+          "provenance.without_coordinates": 6,
+          "saved_views": 20,
+          "schedule.planned": 38,
+          "search.events_death": 18,
+          "search.golden": 2452,
+          "search.retired_supplier": 1,
+          "search.synonym_name": 11,
+          "search.unicode": 1,
+          "seed_lots": 428,
+          "sowings": 538,
+          "stored_material": 45,
+          "suppliers": 24,
+          "taxonomy.available": true,
+          "taxonomy.nodes": 13,
+          "taxonomy.represented": 91,
+          "taxonomy.stale": 1,
+          "taxonomy.synonyms": [
+            "Aloe barbadensis",
+            "Lycopersicon esculentum",
+            "Rosmarinus officinalis"
+          ],
+          "taxonomy.unresolved": 83
+        },
+        "baseline": {
+          "schema_revision": "20261013_0042",
+          "volume": 420,
+          "plan_sha256": "9b7387daf49e03b9d87392bcaf194196201932b62d48e8b3a002e740cf27e6cf",
+          "canonical_sha256": "d2db9e9b75fba58e15aa35801d75f2682b277bf67f810680f6828dadce4e98c7",
+          "media_files": 34,
+          "media_sha256": "50894e8a2283bf88349875824e1d3615d70d15be2ff43f708038c72a715afb93",
+          "scenario_keys_sha256": "b3e81413b0970e531643df9395f5742538e0d1101cbbb4db92fcee4f5c3de6d2",
+          "tables": {
+            "application_settings": {
+              "rows": 1,
+              "sha256": "b127b493476585f2fb04cf764ea0f2e9f03c5e1802d52e2488d64b3286a2c13d"
+            },
+            "attachments": {
+              "rows": 32,
+              "sha256": "1d134716f5c52d9216cf0d5e01e94928cd166eb92332d4a166a011cbc3b8b200"
+            },
+            "botanical_identities": {
+              "rows": 114,
+              "sha256": "f7059c1a2c17036db87f8cf593743c2d64b75053c4526d860245b618a8e6cb8a"
+            },
+            "botanical_identity_cover_images": {
+              "rows": 4,
+              "sha256": "a21fc591bf07f3ed04b7b37870697b9fedb8eeec68eb0cd9dc57f1a74abbb432"
+            },
+            "botanical_profile_native_ranges": {
+              "rows": 32,
+              "sha256": "f78e73361c6c35881c210427f64ac4cdc714e2288ca692c08888c8affb180678"
+            },
+            "botanical_profiles": {
+              "rows": 28,
+              "sha256": "751fe8c75a485b7b4b0edb1c03a040f59726e7646ac1358f375ca17605918f65"
+            },
+            "collection_primary_photos": {
+              "rows": 7,
+              "sha256": "90d5c9ced55ae6233dae2d6fd5a486ff8c073baf805f4cdbe75fa017c4432827"
+            },
+            "events": {
+              "rows": 845,
+              "sha256": "7c39f34315d493d9a3e18597dcb4a17bf0096407f395d3b82a9dff16705da5f9"
+            },
+            "external_provider_cache": {
+              "rows": 7,
+              "sha256": "b763f1fb1cb4cbe88fc0e590db3b3b43a370e6d6478076fbbe4a3fb37d00d1e0"
+            },
+            "external_taxon_links": {
+              "rows": 6,
+              "sha256": "3a64355b3fd7b1fcbcce15a9b418946436c7f27e4475f7f3a7202740b4d1d24b"
+            },
+            "geographic_places": {
+              "rows": 294,
+              "sha256": "917260f66cb90fd438fdce4244694d57a15dea6e3a0eb0b55898b99e2dc9197d"
+            },
+            "germination_observations": {
+              "rows": 390,
+              "sha256": "8f50d41c5367d4b4a861e04023366e5fa2218a584df5a17e8ba5e3ebbf397857"
+            },
+            "harvest_items": {
+              "rows": 64,
+              "sha256": "a583224b439b6921f6a8c1a31b8edce8e2308e3c96ca422f3758b21eb6e91102"
+            },
+            "harvest_material_dispositions": {
+              "rows": 26,
+              "sha256": "66ad1060280c39f8415f67b5f9966bdbc14e19b8eb849f30ef481d9556566b78"
+            },
+            "harvest_material_inventory": {
+              "rows": 45,
+              "sha256": "3e1fb635797a23eee3ec37db001172e0348cde61eae813d7b036892457c64f55"
+            },
+            "harvest_seed_lot_conversions": {
+              "rows": 8,
+              "sha256": "a036362ecd35f69e863373e55a649961541d2224c390efcb92837d0e58be104e"
+            },
+            "harvests": {
+              "rows": 62,
+              "sha256": "00fe4539c8cb5dad4dfbac79c4f5e4f317b87ddaecdb6c64e276e95b24d42446"
+            },
+            "locations": {
+              "rows": 34,
+              "sha256": "59d12e10a6ab554971a74e6218397e0adcfc8e6119df67c49673edf0a45bba67"
+            },
+            "media_assets": {
+              "rows": 37,
+              "sha256": "80279c7d1eda36b243b4b7c16db111be71c86962ff788612f65e1d567b8780db"
+            },
+            "native_range_applications": {
+              "rows": 2,
+              "sha256": "825ec94ca1f150cfd0dc6a7abc417c69952a7f5b8a65ec3682c5a889fbb08d79"
+            },
+            "native_range_proposals": {
+              "rows": 3,
+              "sha256": "378a1244135860294c7278c28c4d95705da6faf99c0cb94febc6815a7dd2baab"
+            },
+            "native_range_revisions": {
+              "rows": 28,
+              "sha256": "b2887cdc2edb6b9fdc73b4952d2e4a6ecc28cc690d665ba4b80a9bec7fd4adce"
+            },
+            "operation_receipts": {
+              "rows": 650,
+              "sha256": "532da8df1c861d50384f7f74fcb80423d6d58c874f14f7b84a93ffb79e743b04"
+            },
+            "orders": {
+              "rows": 50,
+              "sha256": "fa12307d002c08b2fce980cbaa76e61789f7234e396926e05577c78298fad471"
+            },
+            "plant_groups": {
+              "rows": 137,
+              "sha256": "69c101eee1f2ea61d3350b2b0ff5671baceb8d2168cbdd7683202ee255404145"
+            },
+            "plants": {
+              "rows": 212,
+              "sha256": "6217c55638385a59f433068deaa883a2ad23d56f2eb15ea5491c82288abafd94"
+            },
+            "provenance_sites": {
+              "rows": 24,
+              "sha256": "a8c9d2a10c5e6864a8ec96944ed52168b6376378bd47b223254659ad11ac8eb2"
+            },
+            "record_media_links": {
+              "rows": 34,
+              "sha256": "38f674a151244860fd45d81a9321e69a9ebc3aed06c2a5ddd8013819129f520f"
+            },
+            "saved_views": {
+              "rows": 20,
+              "sha256": "57423349725e090ca65e01c8977896c36105ba5f8acc80711a8bc01a187ec089"
+            },
+            "scheduled_activities": {
+              "rows": 69,
+              "sha256": "fbb2c0f5de2b47e9003cef00ccbed8a3dfac62dc357546246b6376a045dda546"
+            },
+            "seed_lots": {
+              "rows": 428,
+              "sha256": "bd35288c118c341def60db3206c0bfac5ae1028a9577ab28754fb6bf60d6fffb"
+            },
+            "sowings": {
+              "rows": 538,
+              "sha256": "b4d0fa348dc4941fecf59e97ff8091def6bf148c0d93bbce7aa6dd58c12fbfd3"
+            },
+            "suppliers": {
+              "rows": 24,
+              "sha256": "7a2ba6a0efd5b64a4a2833ca65835818c4d858febff4bcce681dc5cede8ef673"
+            },
+            "users": {
+              "rows": 1,
+              "sha256": "e01b9b5d814f998a2bc30ad65b9bae1950c464dc3abf0cb572ffe2ad85c05490"
+            },
+            "wcvp_links": {
+              "rows": 4,
+              "sha256": "e68f07dcf31c097738014ac6005150e838af4039f9681465421755ef33facff9"
+            },
+            "wfo_links": {
+              "rows": 9,
+              "sha256": "6d40fea2fc38fd78c61467f1f8711f3aba548b1bd933579557e77ca6a1c1eabf"
+            }
+          }
+        }
+      }
     },
     "stress": {
       "status": "planned",
@@ -842,7 +1103,6 @@
       "status": "implemented",
       "profiles": [
         "smoke",
-        "comprehensive",
         "stress"
       ],
       "covers": [
@@ -851,54 +1111,825 @@
       "invariants": []
     },
     {
+      "id": "identity-catalogue",
+      "domain": "Botanical Identity",
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
+      ],
+      "covers": [
+        "a realistic catalogue across families",
+        "cultivars of one species",
+        "profiles with varied completeness",
+        "native ranges at country level"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "identity:identity-catalogue/c000",
+          "field": "scientific_name",
+          "equals": "Achillea millefolium"
+        },
+        {
+          "check": "field",
+          "key": "identity:identity-catalogue/v07",
+          "field": "cultivar_name",
+          "equals": "Golden San Marzano"
+        },
+        {
+          "check": "field",
+          "key": "profile:identity-catalogue/c000",
+          "field": "description",
+          "not_null": true
+        }
+      ]
+    },
+    {
       "id": "taxonomy-wfo-links",
       "domain": "Taxonomy",
-      "status": "planned",
-      "profiles": [],
-      "covers": [
-        "confirmed WFO links; needs the optional pinned index, so a truthful skip must be designed"
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
       ],
-      "invariants": []
+      "covers": [
+        "offline synthetic WFO index with real service confirmation",
+        "accepted, section-placed and synonym links",
+        "stale link after an identity rename",
+        "relinked rotating its version",
+        "unlinked",
+        "unplaced taxon refused"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "wfo_link:taxonomy-wfo-links/synonym-rosemary",
+          "field": "confirmed_at",
+          "not_null": true
+        },
+        {
+          "check": "field",
+          "key": "wfo_link:taxonomy-wfo-links/relinked",
+          "field": "external_id",
+          "equals": "wfo-0000000101"
+        },
+        {
+          "check": "field",
+          "key": "wfo_link:taxonomy-wfo-links/synonym-tomato",
+          "field": "external_id",
+          "equals": "wfo-0000000203"
+        }
+      ]
     },
     {
       "id": "enrichment-wcvp-proposals",
       "domain": "Taxonomy",
-      "status": "planned",
-      "profiles": [],
-      "covers": [
-        "WCVP links, native-range proposals, revisions and applications"
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
       ],
-      "invariants": []
+      "covers": [
+        "offline synthetic v15 and v16 indexes through the real services",
+        "applied proposal adding a reviewed subset",
+        "prior range retained as current-only",
+        "open unapplied proposal",
+        "later-release application",
+        "synonym link and stale identity refused"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "wcvp_link:enrichment-wcvp-proposals/applied",
+          "field": "external_id",
+          "equals": "1001"
+        },
+        {
+          "check": "field",
+          "key": "wcvp_link:enrichment-wcvp-proposals/later",
+          "field": "external_id",
+          "equals": "1004"
+        },
+        {
+          "check": "field",
+          "key": "proposal:enrichment-wcvp-proposals/applied",
+          "field": "identity_id",
+          "equals_ref": "identity:enrichment-wcvp-proposals/applied"
+        },
+        {
+          "check": "field",
+          "key": "application:enrichment-wcvp-proposals/applied",
+          "field": "applied_at",
+          "not_null": true
+        }
+      ]
+    },
+    {
+      "id": "identity-synonyms-external",
+      "domain": "Botanical Identity",
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
+      ],
+      "covers": [
+        "offline GBIF accepted, synonym and doubtful links",
+        "accepted usage of a synonym",
+        "refreshed link with changed data",
+        "failed refresh keeping its last good data",
+        "unlinked identity"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "external_taxon:identity-synonyms-external/synonym",
+          "field": "taxonomic_status",
+          "equals": "SYNONYM"
+        },
+        {
+          "check": "field",
+          "key": "external_taxon:identity-synonyms-external/synonym",
+          "field": "accepted_external_id",
+          "equals": "G0003"
+        },
+        {
+          "check": "field",
+          "key": "external_taxon:identity-synonyms-external/refreshed",
+          "field": "family",
+          "equals": "Lamiaceae (revised)"
+        },
+        {
+          "check": "field",
+          "key": "external_taxon:identity-synonyms-external/refresh-failed",
+          "field": "refresh_error",
+          "equals": "provider_unavailable"
+        },
+        {
+          "check": "field",
+          "key": "external_taxon:identity-synonyms-external/refresh-failed",
+          "field": "family",
+          "equals": "Lamiaceae"
+        }
+      ]
+    },
+    {
+      "id": "provenance-geography-hierarchy",
+      "domain": "Locations and Geography",
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
+      ],
+      "covers": [
+        "custom places nested under a canonical country",
+        "retired custom place retained through its site and lot",
+        "sites with and without coordinates",
+        "one species with distinct provenance by site, place, country and continent"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "place:provenance-geography-hierarchy/retired",
+          "field": "retired_at",
+          "not_null": true
+        },
+        {
+          "check": "field",
+          "key": "place:provenance-geography-hierarchy/valley",
+          "field": "retired_at",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "place:provenance-geography-hierarchy/valley",
+          "field": "parent_id",
+          "equals_ref": "place:provenance-geography-hierarchy/town"
+        },
+        {
+          "check": "field",
+          "key": "seed:provenance-geography-hierarchy/site-retired-place",
+          "field": "provenance_site_id",
+          "equals_ref": "site:provenance-geography-hierarchy/retired"
+        },
+        {
+          "check": "field",
+          "key": "site:provenance-geography-hierarchy/place-only",
+          "field": "latitude",
+          "is_null": true
+        }
+      ]
+    },
+    {
+      "id": "sourcing-acquisition-lineage",
+      "domain": "Suppliers and Orders",
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
+      ],
+      "covers": [
+        "several packets on one Order",
+        "Order currencies, free and very high prices, no price",
+        "empty Order",
+        "Order with unknown Supplier",
+        "seed from bought fruit",
+        "direct purchased Plant and PlantGroup",
+        "Supplier retired with and without history",
+        "new Order at a retired Supplier refused"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "supplier:sourcing-acquisition-lineage/closed",
+          "field": "retired_at",
+          "not_null": true
+        },
+        {
+          "check": "field",
+          "key": "supplier:sourcing-acquisition-lineage/unused",
+          "field": "retired_at",
+          "not_null": true
+        },
+        {
+          "check": "field",
+          "key": "supplier:sourcing-acquisition-lineage/nursery",
+          "field": "retired_at",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "seed:sourcing-acquisition-lineage/closed-1",
+          "field": "supplier_id",
+          "equals_ref": "supplier:sourcing-acquisition-lineage/closed"
+        },
+        {
+          "check": "field",
+          "key": "seed:sourcing-acquisition-lineage/spring-3",
+          "field": "order_id",
+          "equals_ref": "order:sourcing-acquisition-lineage/spring-big"
+        },
+        {
+          "check": "field",
+          "key": "order:sourcing-acquisition-lineage/expensive",
+          "field": "currency",
+          "equals": "JPY"
+        }
+      ]
+    },
+    {
+      "id": "seed-collection-produced",
+      "domain": "SeedLots",
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
+      ],
+      "covers": [
+        "lots produced by a Plant and by a PlantGroup",
+        "three-generation lineage through sowing, harvest and conversion",
+        "two producers refused"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "seed:seed-collection-produced/from-plant",
+          "field": "producer_plant_id",
+          "equals_ref": "plant:seed-collection-produced/mother"
+        },
+        {
+          "check": "field",
+          "key": "seed:seed-collection-produced/from-group",
+          "field": "producer_plant_group_id",
+          "equals_ref": "group:seed-collection-produced/stand"
+        },
+        {
+          "check": "field",
+          "key": "plant:seed-collection-produced/second-generation",
+          "field": "originating_sowing_id",
+          "equals_ref": "sowing:seed-collection-produced/second-generation"
+        },
+        {
+          "check": "field",
+          "key": "inventory:seed-collection-produced/second-generation",
+          "field": "state",
+          "equals": "depleted"
+        }
+      ]
+    },
+    {
+      "id": "sowing-attempts-outcomes",
+      "domain": "Sowings",
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
+      ],
+      "covers": [
+        "repeated attempts drawing down one packet",
+        "failed with zero and low germination",
+        "abandoned attempt",
+        "pretreatment, container and temperature detail",
+        "germination curve observations",
+        "observation before sowing and over-sowing refused"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "sowing:sowing-attempts-outcomes/failed-cold",
+          "field": "lifecycle",
+          "equals": "failed"
+        },
+        {
+          "check": "field",
+          "key": "sowing:sowing-attempts-outcomes/failed-damp",
+          "field": "germinated_count",
+          "equals": 1
+        },
+        {
+          "check": "field",
+          "key": "sowing:sowing-attempts-outcomes/abandoned-mould",
+          "field": "lifecycle",
+          "equals": "abandoned"
+        },
+        {
+          "check": "field",
+          "key": "sowing:sowing-attempts-outcomes/stratified",
+          "field": "germinated_count",
+          "equals": 18
+        },
+        {
+          "check": "field",
+          "key": "observation:sowing-attempts-outcomes/curve-2",
+          "field": "newly_germinated_count",
+          "equals": 9
+        },
+        {
+          "check": "field",
+          "key": "seed:sowing-attempts-outcomes/source",
+          "field": "quantity_value",
+          "equals": "20"
+        }
+      ]
+    },
+    {
+      "id": "plant-group-transitions",
+      "domain": "Plants and PlantGroups",
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
+      ],
+      "covers": [
+        "group drawn down by repeated extraction",
+        "reintegrated Plant staying historical",
+        "reversed Plant",
+        "transferred PlantGroup",
+        "dead, lost, discarded and completed groups",
+        "terminal Event on a historical Plant refused"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "group:plant-group-transitions/gifted",
+          "field": "lifecycle",
+          "equals": "transferred"
+        },
+        {
+          "check": "field",
+          "key": "plant:plant-group-transitions/undone",
+          "field": "lifecycle",
+          "equals": "reversed"
+        },
+        {
+          "check": "field",
+          "key": "plant:plant-group-transitions/pricked-5",
+          "field": "lifecycle",
+          "equals": "reintegrated"
+        },
+        {
+          "check": "field",
+          "key": "plant:plant-group-transitions/pricked-0",
+          "field": "lifecycle",
+          "equals": "active"
+        },
+        {
+          "check": "field",
+          "key": "plant:plant-group-transitions/pricked-0",
+          "field": "originating_plant_group_id",
+          "equals_ref": "group:plant-group-transitions/kept"
+        }
+      ]
+    },
+    {
+      "id": "journal-terminal-events",
+      "domain": "Journal and History",
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
+      ],
+      "covers": [
+        "death, loss and discarded on Plants and groups",
+        "every cultivation Event kind across years",
+        "transfer after an ending refused"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "plant:journal-terminal-events/death",
+          "field": "lifecycle",
+          "equals": "dead"
+        },
+        {
+          "check": "field",
+          "key": "plant:journal-terminal-events/loss",
+          "field": "lifecycle",
+          "equals": "lost"
+        },
+        {
+          "check": "field",
+          "key": "plant:journal-terminal-events/discarded",
+          "field": "lifecycle",
+          "equals": "discarded"
+        },
+        {
+          "check": "field",
+          "key": "group:journal-terminal-events/loss",
+          "field": "lifecycle",
+          "equals": "lost"
+        },
+        {
+          "check": "field",
+          "key": "event:journal-terminal-events/survivor-pruning-2024",
+          "field": "kind",
+          "equals": "pruning"
+        }
+      ]
+    },
+    {
+      "id": "location-movement-history",
+      "domain": "Locations and Geography",
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
+      ],
+      "covers": [
+        "realistic Location tree with a scope-limited drawer",
+        "repeated Plant moves and a PlantGroup move",
+        "bulk move of every record type",
+        "bulk conflict moves nothing",
+        "Location retired after clearing, retaining a dead Plant",
+        "wrong scope and active descendants refused"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "location:location-movement-history/former",
+          "field": "retired_at",
+          "not_null": true
+        },
+        {
+          "check": "field",
+          "key": "location:location-movement-history/bench-a",
+          "field": "retired_at",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "plant:location-movement-history/traveller",
+          "field": "location_id",
+          "equals_ref": "location:location-movement-history/bench-a"
+        },
+        {
+          "check": "field",
+          "key": "seed:location-movement-history/bulk-0",
+          "field": "location_id",
+          "equals_ref": "location:location-movement-history/bench-a"
+        },
+        {
+          "check": "field",
+          "key": "sowing:location-movement-history/bulk",
+          "field": "location_id",
+          "equals_ref": "location:location-movement-history/bench-a"
+        },
+        {
+          "check": "field",
+          "key": "inventory:location-movement-history/bulk",
+          "field": "location_id",
+          "equals_ref": "location:location-movement-history/bench-a"
+        },
+        {
+          "check": "field",
+          "key": "plant:location-movement-history/dead-at-former",
+          "field": "location_id",
+          "equals_ref": "location:location-movement-history/former"
+        }
+      ]
+    },
+    {
+      "id": "harvest-material-conversions",
+      "domain": "Harvests and Stored material",
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
+      ],
+      "covers": [
+        "every material kind",
+        "several lines on one harvest",
+        "harvest retained after its source group ended",
+        "every disposition kind",
+        "partial and over-limit disposals",
+        "conversion under another identity and its reversal"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "inventory:harvest-material-conversions/stem_or_shoot",
+          "field": "state",
+          "equals": "depleted"
+        },
+        {
+          "check": "field",
+          "key": "inventory:harvest-material-conversions/fruit",
+          "field": "state",
+          "equals": "active"
+        },
+        {
+          "check": "field",
+          "key": "inventory:harvest-material-conversions/fruit",
+          "field": "quantity_value",
+          "equals": "600"
+        },
+        {
+          "check": "field",
+          "key": "conversion:harvest-material-conversions/undone",
+          "field": "reversed_at",
+          "not_null": true
+        },
+        {
+          "check": "field",
+          "key": "conversion:harvest-material-conversions/partial",
+          "field": "reversed_at",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "group:harvest-material-conversions/source",
+          "field": "lifecycle",
+          "equals": "dead"
+        }
+      ]
     },
     {
       "id": "media-local-covers",
       "domain": "Media",
-      "status": "planned",
-      "profiles": [],
-      "covers": [
-        "local identity cover and cover replacement"
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
       ],
-      "invariants": []
+      "covers": [
+        "local cover",
+        "cover replaced by a second local image",
+        "local cover replaced by an external one"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "cover:media-local-covers/local-first",
+          "field": "source_mode",
+          "equals": "local"
+        },
+        {
+          "check": "field",
+          "key": "cover:media-local-covers/then-external",
+          "field": "source_mode",
+          "equals": "external"
+        }
+      ]
     },
     {
-      "id": "media-corrupted-copies",
+      "id": "media-associations",
       "domain": "Media",
-      "status": "planned",
-      "profiles": [],
-      "covers": [
-        "external local copies and deliberately failed fetch metadata"
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
       ],
-      "invariants": []
+      "covers": [
+        "one asset on every record type",
+        "gallery order on one record",
+        "JPEG, WebP and PNG at camera, portrait and minimal sizes",
+        "primary photo on several targets and replaced on one",
+        "duplicate link refused"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "asset:media-associations/photo-jpeg",
+          "field": "kind",
+          "equals": "local"
+        },
+        {
+          "check": "field",
+          "key": "asset:media-associations/photo-jpeg",
+          "field": "width",
+          "equals": 1600
+        },
+        {
+          "check": "field",
+          "key": "asset:media-associations/tiny",
+          "field": "width",
+          "equals": 2
+        },
+        {
+          "check": "field",
+          "key": "link:media-associations/shared-event",
+          "field": "media_asset_id",
+          "equals_ref": "asset:media-associations/photo-jpeg"
+        }
+      ]
     },
     {
-      "id": "bulk-location-moves",
-      "domain": "Locations and Geography",
-      "status": "planned",
-      "profiles": [],
-      "covers": [
-        "bulk apply with preconditions and conflict rows"
+      "id": "media-external-copies",
+      "domain": "Media",
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
       ],
-      "invariants": []
+      "covers": [
+        "saved local copy of an external asset",
+        "refreshed copy replacing bytes and thumbnail",
+        "removed copy returning to reference-only",
+        "external reference never copied"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "asset:media-external-copies/kept",
+          "field": "fetched_at",
+          "not_null": true
+        },
+        {
+          "check": "field",
+          "key": "asset:media-external-copies/refreshed",
+          "field": "fetched_at",
+          "not_null": true
+        },
+        {
+          "check": "field",
+          "key": "asset:media-external-copies/removed",
+          "field": "fetched_at",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "asset:media-external-copies/reference-only",
+          "field": "fetched_at",
+          "is_null": true
+        }
+      ]
+    },
+    {
+      "id": "schedule-history-states",
+      "domain": "Schedule",
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
+      ],
+      "covers": [
+        "every activity kind",
+        "far past, far future and leap-day due dates",
+        "rescheduled then completed, and stale version refused",
+        "completed with a movement Event",
+        "planned work retained on an ended Plant"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "schedule:schedule-history-states/repot",
+          "field": "version",
+          "equals": 3
+        },
+        {
+          "check": "field",
+          "key": "schedule:schedule-history-states/repot",
+          "field": "completed_at",
+          "not_null": true
+        },
+        {
+          "check": "field",
+          "key": "schedule:schedule-history-states/move",
+          "field": "completed_at",
+          "not_null": true
+        },
+        {
+          "check": "field",
+          "key": "schedule:schedule-history-states/on-ended",
+          "field": "completed_at",
+          "is_null": true
+        },
+        {
+          "check": "field",
+          "key": "plant:schedule-history-states/ended",
+          "field": "lifecycle",
+          "equals": "dead"
+        }
+      ]
+    },
+    {
+      "id": "saved-views-every-surface",
+      "domain": "Saved views",
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
+      ],
+      "covers": [
+        "a view on every remaining surface",
+        "a view pointing at a retired Location",
+        "an identity-filtered view",
+        "longest name and non-ASCII name"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "saved_view:saved-views-every-surface/search",
+          "field": "surface",
+          "equals": "global_search"
+        },
+        {
+          "check": "field",
+          "key": "saved_view:saved-views-every-surface/map",
+          "field": "surface",
+          "equals": "provenance_map"
+        }
+      ]
+    },
+    {
+      "id": "boundary-states",
+      "domain": "Boundaries",
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
+      ],
+      "covers": [
+        "longest accepted names, labels and notes",
+        "year 1 and year 9999 dates, leap day, anchor day",
+        "largest and smallest quantities",
+        "non-ASCII and right-to-left text",
+        "extreme and equal temperature bounds",
+        "germination above an approximate sown count",
+        "duplicates, unknown references and impossible dates refused"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "seed:boundary-states/leap-day",
+          "field": "acquisition_date_day",
+          "equals": 29
+        },
+        {
+          "check": "field",
+          "key": "seed:boundary-states/largest-count",
+          "field": "quantity_value",
+          "equals": "999999"
+        },
+        {
+          "check": "field",
+          "key": "sowing:boundary-states/more-than-sown",
+          "field": "germinated_count",
+          "equals": 4
+        },
+        {
+          "check": "field",
+          "key": "group:boundary-states/largest",
+          "field": "quantity_value",
+          "equals": 1000000
+        }
+      ]
+    },
+    {
+      "id": "comprehensive-volume-mix",
+      "domain": "Volume",
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
+      ],
+      "covers": [
+        "domain-weighted acquisition, sowing, plant, harvest and ending pathways",
+        "recurring favourite species and a sparse long tail",
+        "failures, abandonment and terminal endings at realistic rates",
+        "shared Suppliers, Orders, Locations, sites and images"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "supplier:comprehensive-volume-mix/s0",
+          "field": "kind",
+          "equals": "seller"
+        },
+        {
+          "check": "field",
+          "key": "supplier:comprehensive-volume-mix/s7",
+          "field": "retired_at",
+          "not_null": true
+        },
+        {
+          "check": "field",
+          "key": "supplier:comprehensive-volume-mix/s0",
+          "field": "retired_at",
+          "is_null": true
+        }
+      ]
     },
     {
       "id": "import-export-roundtrip",
@@ -907,38 +1938,6 @@
       "profiles": [],
       "covers": [
         "export of the golden copy and re-import comparison"
-      ],
-      "invariants": []
-    },
-    {
-      "id": "seed-collection-produced",
-      "domain": "SeedLots",
-      "status": "planned",
-      "profiles": [],
-      "covers": [
-        "collection-produced lots with producer Plant and PlantGroup"
-      ],
-      "invariants": []
-    },
-    {
-      "id": "journal-terminal-events",
-      "domain": "Journal and History",
-      "status": "planned",
-      "profiles": [],
-      "covers": [
-        "movement, repotting, death, loss and discarded Events with lifecycle effects"
-      ],
-      "invariants": []
-    },
-    {
-      "id": "comprehensive-volume-mix",
-      "domain": "Volume",
-      "status": "planned",
-      "profiles": [
-        "comprehensive"
-      ],
-      "covers": [
-        "3,000–5,000 record domain-weighted mix"
       ],
       "invariants": []
     },
