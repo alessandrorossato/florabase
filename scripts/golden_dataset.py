@@ -72,7 +72,7 @@ from florabase.collection_views.dashboard import overview
 from florabase.core.config import Environment, Settings, get_settings
 from florabase.db.base import Base
 from florabase.db.session import get_engine
-from florabase.events.model import Event, EventKind
+from florabase.events.model import EventKind
 from florabase.events.schemas import TransferCreate
 from florabase.external_botany import service as external_botany
 from florabase.external_botany.provider import GbifBotanicalProvider
@@ -120,6 +120,7 @@ from florabase.provenance_sites.service import collection_provenance_map
 from florabase.saved_views.model import SavedView
 from florabase.saved_views.schemas import SavedViewCreate
 from florabase.saved_views.service import create_view
+from florabase.schedule.model import ScheduledActivity
 from florabase.schedule.schemas import ScheduleComplete, ScheduleUpdate
 from florabase.search.schemas import SearchKind
 from florabase.search.service import SearchFilters
@@ -968,15 +969,71 @@ def canonical_value(value: Any, labels: dict[str, str]) -> Any:
     return value
 
 
+def completion_requests(
+    database: Session, plan: dict[str, Any], records: dict[str, Any]
+) -> dict[str, ScheduleComplete]:
+    """What each plan node sent Schedule.complete, rebuilt with this copy's real ids."""
+    refs = {**records, **v5.canonical_country_refs(database)}
+    requests = {}
+    for node in plan["nodes"]:
+        if node["kind"] != "schedule_complete":
+            continue
+        try:
+            payload = v5.resolve(node["payload"], refs)
+        except KeyError:
+            continue  # A damaged ledger: the stored row then has no request, which is reported.
+        identifier = payload.pop("activity_id")
+        requests[str(identifier)] = ScheduleComplete.model_validate(payload)
+    return requests
+
+
+def completion_fingerprint(request: ScheduleComplete) -> str:
+    """Schedule.complete's own contract, so a change there fails every completion loudly."""
+    return hashlib.sha256(request.model_dump_json().encode()).hexdigest()
+
+
+def completion_state(
+    database: Session, plan: dict[str, Any], records: dict[str, Any]
+) -> tuple[dict[str, ScheduleComplete], list[str]]:
+    """Requests whose raw stored fingerprint is proven, and every stored value that is not."""
+    requests = completion_requests(database, plan, records)
+    verified, problems = {}, []
+    for identifier, stored in database.execute(
+        select(ScheduledActivity.id, ScheduledActivity.completion_fingerprint)
+    ):
+        request = requests.get(str(identifier))
+        if request is None:
+            if stored is not None:
+                problems.append(f"completion without a plan request: {identifier}")
+        elif stored == completion_fingerprint(request):
+            verified[str(identifier)] = request
+        else:
+            problems.append(f"completion fingerprint differs from its request: {identifier}")
+    return verified, sorted(problems)
+
+
+def canonical_completion(request: ScheduleComplete, labels: dict[str, str]) -> str:
+    """Comparable across copies only because the raw value was already proven against it."""
+    named = canonical_value(request.model_dump(mode="json"), labels)
+    return "verified-request:" + json.dumps(named, sort_keys=True, ensure_ascii=False)
+
+
+def ledger_plan(ledger: dict[str, Any]) -> dict[str, Any]:
+    """The diagnostic digest takes no profile; a ledger it cannot place verifies nothing."""
+    try:
+        return golden_plan.build_plan(ledger["profile"], volume=ledger.get("volume"))
+    except KeyError, golden_plan.PlanError:
+        return {"nodes": []}
+
+
 def canonical_digest(database: Session, root: Path) -> dict[str, Any]:
     """Logical database and media content; only per-copy ids and secrets are normalized."""
     labels = uuid_labels(database)
     tables: dict[str, dict[str, Any]] = {}
     unresolved = 0
-    # A completion's idempotency hash covers the request, and a movement request names a per-copy
-    # Location id. Only those rows' hash cannot compare across copies; every other is content.
-    uuid_derived = set(
-        database.scalars(select(Event.id).where(Event.destination_location_id.is_not(None)))
+    ledger = read_ledger(root) or {}
+    verified, completion_problems = completion_state(
+        database, ledger_plan(ledger), ledger.get("records", {})
     )
     for table in application_tables():
         if table.name in EXCLUDED_TABLES:
@@ -988,8 +1045,10 @@ def canonical_digest(database: Session, root: Path) -> dict[str, Any]:
                 if (table.name, column.name) in EXCLUDED_COLUMNS:
                     continue
                 content[column.name] = canonical_value(row[column.name], labels)
-            if table.name == "scheduled_activities" and row["linked_event_id"] in uuid_derived:
-                content["completion_fingerprint"] = "<derived-from-per-copy-uuid>"
+            if table.name == "scheduled_activities" and str(row["id"]) in verified:
+                request = verified[str(row["id"])]
+                if UUID_PATTERN.search(request.model_dump_json()):
+                    content["completion_fingerprint"] = canonical_completion(request, labels)
             line = json.dumps(content, sort_keys=True, ensure_ascii=False, default=str)
             unresolved += line.count(UNRESOLVED)
             lines.append(line)
@@ -1000,7 +1059,6 @@ def canonical_digest(database: Session, root: Path) -> dict[str, Any]:
         }
     # Bytes of every file, managed or not; object names are random per copy, so only content counts.
     media = sorted(hashlib.sha256(path.read_bytes()).hexdigest() for path in media_files(root))
-    ledger = read_ledger(root) or {}
     # The reviewed meaning of each stable scenario key: which logical row it names in this copy.
     scenario_keys = canonical_value(ledger.get("records", {}), labels)
     summary: dict[str, Any] = {
@@ -1018,6 +1076,8 @@ def canonical_digest(database: Session, root: Path) -> dict[str, Any]:
         "schema_revision": database.scalar(text("SELECT version_num FROM alembic_version")),
         # A UUID no table owns would otherwise vanish into a placeholder and hide a real difference.
         "unresolved_uuids": unresolved,
+        # Outside the digested summary: a bad value already changes its table's hash.
+        "completion_problems": completion_problems,
     }
 
 
@@ -1240,6 +1300,7 @@ def validate(database: Session, root: Path, plan: dict[str, Any]) -> list[str]:
         if node["kind"] == "media_copy"
     }
     problems.extend(media_problems(database, root, frozenset(str(item) for item in copied)))
+    problems.extend(completion_state(database, plan, records)[1])
     for model, column in SYNTHETIC_LABELS:
         unmarked = database.scalars(
             select(column).where(column.is_not(None), column.not_like("Golden%")).limit(1)
@@ -1296,6 +1357,8 @@ def baseline_differences(baseline: dict[str, Any], current: dict[str, Any]) -> l
         for table in sorted(tables)
         if current["tables"].get(table) != baseline["tables"].get(table)
     ]
+    if current["completion_problems"]:
+        differences.append(f"completion fingerprints: {current['completion_problems']}")
     if current["unresolved_uuids"]:
         differences.append(f"unresolved UUIDs: {current['unresolved_uuids']}")
     if not differences and current["canonical_sha256"] != baseline["canonical_sha256"]:

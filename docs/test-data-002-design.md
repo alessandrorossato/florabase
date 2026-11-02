@@ -3,7 +3,7 @@
 2 November 2026 · `feat/test-data-002` · extends [TEST-DATA-001](test-data-001-design.md), which still
 defines the architecture, locking, guards and baseline contract. Awaiting independent QA.
 
-Reviewed COMPREHENSIVE baseline: `d2db9e9b75fba58e15aa35801d75f2682b277bf67f810680f6828dadce4e98c7`
+Reviewed COMPREHENSIVE baseline: `cf42370751a9d32d6d2cfcca3e7b39b6edb429d5cc2f5793108f3de8e7963a11`
 (schema `20261013_0042`, volume 420). SMOKE's baseline `70a1b1ae…f967` and plan pin did not change.
 
 ## Result of this increment
@@ -26,8 +26,17 @@ application module changed. Coverage: [COVERAGE.md](../scripts/fixtures/golden/C
 
 ## What the profile contains
 
-3,183 plan nodes produce 3,973 domain records (3,982 rows less `application_settings`, `users` and the
-provider cache), plus 289 canonical places from migrations and 34 media files.
+3,183 plan nodes produce 3,973 domain records and 34 media files. The row totals, from the manifest:
+
+| Rows | Count |
+| --- | ---: |
+| Modeled rows including canonical geography | 4,269 |
+| Canonical geographic places, from migrations | 287 |
+| Modeled rows excluding canonical geography | 3,982 |
+| Supporting rows: `application_settings` 1, `users` 1, provider cache 7 | 9 |
+| Domain records | 3,973 |
+
+`geographic_places` has 294 rows: 287 canonical and the 7 custom places counted below.
 
 | Area | Rows | Area | Rows |
 | ---: | ---: | ---: | ---: |
@@ -77,16 +86,38 @@ SMOKE's uniform `volume-background` is not part of this profile; the weighted mi
 
 ## Baseline contract: what changed
 
-The contract in the TEST-DATA-001 design holds. Two additions, each visible only where this profile has data:
+The contract in the TEST-DATA-001 design holds. Two additions:
 
 | Treatment | Field | Why |
 | --- | --- | --- |
 | Per-table ordinal, like an id | `wfo_links.version`, `wcvp_links.version` | Random per copy; a proposal's frozen evidence refers to it, and the relationship must survive |
-| Fixed placeholder | `scheduled_activities.completion_fingerprint`, only where the linked Event has a destination | A SHA-256 of the request, which names a per-copy Location id |
+| Replaced by its proven request, only after verification | `scheduled_activities.completion_fingerprint`, where the request holds a per-copy id | A SHA-256 of a request naming a per-copy Location id |
 
-The second was found by the digest itself: two copies differed in one row. Completing a `move` activity is the
-real product path, so it stays in the plan. A test proves the exception is exactly one row wide and that every
-other completion hash remains content. **Limitation:** tampering with that one hash is not detected.
+### Completion fingerprints
+
+`Schedule.complete` stores a hash of the request and compares it on retry: the same request is an idempotent success,
+anything else is `schedule_stale`. So the stored value is behaviour, and it cannot be dropped from the digest. An
+earlier candidate replaced it with a constant for movement completions, so a corrupted value still verified.
+Independent QA found this. Now every stored value is proven first, in both profiles, with no list of rows or kinds:
+
+1. **Rebuild.** Each `schedule_complete` plan node gives a request, resolved with this copy's real ids from its ledger,
+   through the real `ScheduleComplete` model.
+2. **Prove.** The stored PostgreSQL value must equal the SHA-256 of that request's `model_dump_json()`, which is what the
+   service computes. This duplicates one line of the service on purpose: if the contract changes, every completion fails.
+3. **Canonicalize only what was proven.**
+
+| Stored value | In the digest | Reported |
+| --- | --- | --- |
+| Proven; request has no per-copy id | The raw hash, unchanged | Nothing |
+| Proven; request has a per-copy id | `verified-request:` plus the request with ids replaced by Golden names | Nothing |
+| Differs from its request | The raw stored value | Domain problem, baseline difference |
+| No plan request explains it | The raw stored value | Domain problem, baseline difference |
+
+The canonical form never stands in for an unproven value, so corruption always changes the table hash and the
+`digest` diagnostic, which also lists `completion_problems`. `validate` fails, and `verify-baseline` reports
+`domain-invalid` (exit 1) with the baseline difference. The rule finds per-copy ids in the serialized request rather
+than looking at the Event kind, so a future request with one, even in free text, needs no change. SMOKE's completions have
+none, so its digest is byte-for-byte what it was, while its stored values gain the same proof.
 
 **Updating the pin.** A new migration turns COMPREHENSIVE into `baseline-unavailable` (exit 4), never a false pass,
 and does not break CI because this module does not run there. To re-pin, delete
@@ -101,6 +132,7 @@ Each run below is its own Compose project with its own tmpfs PostgreSQL. The fir
 | Evidence | Result |
 | --- | --- |
 | Copies in one stack: `PYTHONHASHSEED=1, TZ=UTC` and `PYTHONHASHSEED=2, TZ=Asia/Tokyo` | Identical digest; different UUIDs |
+| The movement completion in those two copies | Different Location ids and raw hashes; identical `scheduled_activities` hash |
 | Separate stacks, each verifying both copies against the pin | `baseline-verified` every time |
 | SMOKE baseline beside a COMPREHENSIVE copy | `baseline-verified` |
 
@@ -117,9 +149,17 @@ all go through the real CLI unless noted:
 | Undeclared external copy (in process; a constraint stops doing it by SQL) | `external asset was fetched` |
 | Timestamps only this profile populates (7 columns, in process) | Digest changes |
 | SMOKE arguments on a COMPREHENSIVE copy, and the reverse | Refused; never adopted |
+| Stored completion hash changed (movement, no Event, Event without a per-copy id), including to the neighbouring copy's valid hash | Digest changes, `completion_problems`, `domain-invalid`; restoring verifies again |
+| Stored completion hash no plan request explains | Reported, never canonicalized |
 | Failure late in the atomic graph | Empty database, no objects, retry allowed |
 | Failure in the committing phase | `failed`, not clean, never ready; must be retired |
 | Contention during a held validation | Exit 75 at once for four other actions |
+
+The stored hash is also tested against the real service, in a rolled-back session: the exact request succeeds with no
+new Event, version or timestamp change; a different date, note, destination, version or no Event at all is
+`schedule_stale`; and after the stored hash is changed, the original request stops being accepted. A separate test hashes
+the request written out by hand, so neither the helper nor Pydantic vouches for itself. Another completes new rows
+through the real service to show the rule covers records no current scenario has.
 
 ## Performance and resources
 
@@ -127,16 +167,16 @@ Two independent stacks of the final tree (one sample each), on the development m
 
 | Measure | Stack A | Stack B |
 | --- | ---: | ---: |
-| `generate` work, including its final validation | 8.9 s | 9.8 s |
-| Whole `generate` process, with application import | 12.1 s | 12.8 s |
-| `create-copy` (migrations and geography) | 4.5 s | 4.5 s |
-| `validate` process | 6.0 s | 5.9 s |
-| `digest` process | 2.7 s | 2.8 s |
-| `verify-baseline` process | 5.0 s | 5.1 s |
-| Peak RSS of `generate` | 214 MB | 214 MB |
+| `generate` work, including its final validation | 10.0 s | 9.2 s |
+| Whole `generate` process, with application import | 13.1 s | 12.5 s |
+| `create-copy` (migrations and geography) | 5.0 s | 4.6 s |
+| `validate` process | 6.3 s | 6.3 s |
+| `digest` process | 3.0 s | 3.2 s |
+| `verify-baseline` process | 5.6 s | 5.7 s |
+| Peak RSS of `generate` | 215 MB | 215 MB |
 | Database size | 14.3 MB | 14.3 MB |
 | Media | 2.1 MB, 34 files | 2.1 MB, 34 files |
-| Dedicated test module | 22 tests, 258 s | 22 tests, 266 s |
+| Dedicated test module | 29 tests, 376 s | 29 tests, 378 s |
 
 SMOKE's database is 12.6 MB by comparison.
 
@@ -151,11 +191,11 @@ compresses far better than a photograph. These numbers do not predict a collecti
 Do nothing to required CI. `pytest -m integration` names no file, so the module skips itself. A test in the SMOKE
 module runs that same kind of selection and fails if it ever stops skipping. Required integration gains that test
 (one extra pytest collection) and plan-level checks with no database. That addition was not timed on its own: the
-SMOKE module took 350 s in this run, and its earlier recorded runs vary too much to isolate the difference.
+SMOKE module took 375 s in the latest run, and its earlier recorded runs vary too much to isolate the difference.
 
 **Proposal for your approval, not implemented:** a separate `golden-comprehensive` job in `ci.yml`, triggered by
 `workflow_dispatch` and a weekly `schedule`, calling `make golden-dataset-comprehensive-check`. It would never be a
-required check. At about 4.5 minutes per run including stack setup, it catches dependency or base-image drift that changes bytes between
+required check. At about 6.5 minutes per run including stack setup, it catches dependency or base-image drift that changes bytes between
 reviewed runs. Until then, run it by hand after any change to the plan, the digest, a migration or an owning
 service's write path.
 
@@ -179,8 +219,11 @@ Neither is changed here, and neither is pinned as a promise.
   persistent state to represent. Corruption is covered by the media negatives instead.
 - **Runtime-only unavailability is not stored data.** "Taxonomy source unavailable" and a missing index depend on
   the deployment, not the copy. Interrupted copy cleanup, a pending-delete attachment, also needs a crash to reach.
-- **WCVP and WFO taxa are fabricated** behind real release metadata, as above, and the Schedule `move` fingerprint is
-  normalized. An enrichment demo on a copy would show those names.
+- **WCVP and WFO taxa are fabricated** behind real release metadata, as above. An enrichment demo on a copy would show
+  those names.
+- **Completion proof depends on the plan and ledger.** It proves a stored hash matches this plan's request, not that the
+  service computed it. A value forged to match the correct request is, by construction, the correct value. A ledger
+  edited to re-map a row is reported through `scenario_keys_sha256` and the row's own proof, not separately.
 - **Reads go through services**, not HTTP or a browser. Nothing here says a page renders 3,000 records well.
 - **Observed on one calendar date and machine.** Timestamps are anchored in the past, so links read as stale on the
   real clock, as TEST-DATA-001 records. A Pillow or base-image upgrade can change media bytes and needs a re-pin.

@@ -633,6 +633,23 @@ def test_baseline_applies_only_to_its_reviewed_identity(monkeypatch: pytest.Monk
     assert "no reviewed baseline" in runtime.baseline_unavailable(plan, current)
 
 
+def test_completion_fingerprint_is_protected(first: str) -> None:
+    """SMOKE keeps the raw value as content, and still proves it against the plan's request."""
+    key = ledger(first)["records"]["schedule:schedule-states/completed"]
+    column = "completion_fingerprint"
+    original = query(first, f"SELECT {column} FROM scheduled_activities WHERE id = '{key}'")
+    reviewed = succeed("digest", "--copy", first)
+    assert reviewed["completion_problems"] == []
+    statement = f"UPDATE scheduled_activities SET {column} = :value WHERE id = '{key}'"
+    execute(first, statement, value="0" * 64)
+    assert succeed("digest", "--copy", first)["canonical_sha256"] != reviewed["canonical_sha256"]
+    result = run("verify-baseline", "--copy", first)
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["state"] == "domain-invalid"
+    execute(first, statement, value=original)
+    assert run("verify-baseline", "--copy", first).returncode == 0
+
+
 def test_repeat_generation_is_idempotent(first: str) -> None:
     fingerprint = (
         "SELECT md5(row::text) FROM "

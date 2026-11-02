@@ -344,7 +344,7 @@
           "schema_revision": "20261013_0042",
           "volume": 420,
           "plan_sha256": "9b7387daf49e03b9d87392bcaf194196201932b62d48e8b3a002e740cf27e6cf",
-          "canonical_sha256": "d2db9e9b75fba58e15aa35801d75f2682b277bf67f810680f6828dadce4e98c7",
+          "canonical_sha256": "cf42370751a9d32d6d2cfcca3e7b39b6edb429d5cc2f5793108f3de8e7963a11",
           "media_files": 34,
           "media_sha256": "50894e8a2283bf88349875824e1d3615d70d15be2ff43f708038c72a715afb93",
           "scenario_keys_sha256": "b3e81413b0970e531643df9395f5742538e0d1101cbbb4db92fcee4f5c3de6d2",
@@ -467,7 +467,7 @@
             },
             "scheduled_activities": {
               "rows": 69,
-              "sha256": "fbb2c0f5de2b47e9003cef00ccbed8a3dfac62dc357546246b6376a045dda546"
+              "sha256": "e48e5cb77f00d7fd645eb54233bcba2a745b8715f8ff4cb6dae15929239d3c35"
             },
             "seed_lots": {
               "rows": 428,

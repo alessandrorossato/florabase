@@ -1,5 +1,6 @@
 """TEST-DATA-002: the COMPREHENSIVE golden profile; manual, so it costs CI nothing by default."""
 
+import hashlib
 import json
 import os
 import select
@@ -10,6 +11,7 @@ from collections.abc import Iterator
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
+from uuid import UUID, uuid7
 
 import pytest
 from sqlalchemy import create_engine, text
@@ -18,6 +20,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from florabase.core.config import get_settings
+from florabase.schedule import service as schedule_service
+from florabase.schedule.schemas import ScheduleComplete, ScheduleWrite
 
 sys.path.insert(0, "/review")
 plan_module = pytest.importorskip("golden_plan", reason="available in integration runner only")
@@ -33,6 +37,8 @@ GENERATION: dict[str, Any] = {}
 # Support rows produced by a domain record, not records anyone would count.
 NOT_DOMAIN_RECORDS = {"application_settings", "users", "external_provider_cache"}
 SEARCH_PATH = "test_golden_comprehensive"
+MOVEMENT = "schedule:schedule-history-states/move"
+BENCH = "location:base-reference/bench"
 HOLD_VALIDATION = """
 import sys
 sys.path.insert(0, "/review")
@@ -193,6 +199,16 @@ def test_record_count_is_within_the_reviewed_target(first: str) -> None:
     counts = expected()["tables"]
     domain = sum(count for table, count in counts.items() if table not in NOT_DOMAIN_RECORDS)
     assert 3000 <= domain <= 5000, domain
+    # The published totals: canonical geography comes from migrations, not from the plan.
+    tables = expected()["baseline"]["tables"]
+    assert (
+        query(first, "SELECT count(*) FROM geographic_places WHERE place_kind = 'canonical'") == 287
+    )
+    assert counts["geographic_places"] == 7
+    assert tables["geographic_places"]["rows"] == 294
+    assert sum(counts.values()) == 3982
+    assert sum(item["rows"] for item in tables.values()) == 4269
+    assert domain == 3973
     # Volume must not come from one table: each of these is a separately reviewed domain area.
     for table, least in {
         "botanical_identities": 100,
@@ -362,32 +378,243 @@ def test_digest_retains_timestamps_this_profile_populates(first: str) -> None:
         engine.dispose()
 
 
-def test_only_movement_completion_hashes_are_normalized(first: str) -> None:
-    """The fingerprint exception stays one row wide; every other completion hash is content."""
-    runtime = pytest.importorskip("golden_dataset", reason="available in integration runner only")
-    derived = """
-        SELECT count(*) FROM scheduled_activities a JOIN events e ON e.id = a.linked_event_id
-        WHERE e.destination_location_id IS NOT NULL
-    """
-    assert query(first, derived) == 1
-    root = COPIES / first
-    change = (
-        "UPDATE scheduled_activities SET completion_fingerprint = repeat('0', 64) WHERE id = :id"
+def completion(name: str, key: str) -> tuple[str, str]:
+    identifier = ledger(name)["records"][key]
+    stored = query(
+        name, f"SELECT completion_fingerprint FROM scheduled_activities WHERE id = '{identifier}'"
     )
+    return identifier, stored
+
+
+def movement_request(name: str, **changes: Any) -> ScheduleComplete:
+    """The exact request the plan's movement completion sends, with this copy's Location id."""
+    event = {
+        "kind": "movement",
+        "occurred_on": "2026-09-14",
+        "destination_location_id": ledger(name)["records"][BENCH],
+    }
+    return ScheduleComplete.model_validate(
+        {"expected_version": 1, "event": event | changes.get("event", {})}
+        | {key: value for key, value in changes.items() if key != "event"}
+    )
+
+
+def test_stored_fingerprint_is_the_hash_of_the_literal_request(first: str) -> None:
+    """Written out by hand, so neither the helper nor Pydantic vouches for itself."""
+    bench = ledger(first)["records"][BENCH]
+    literal = (
+        '{"expected_version":1,"event":{"kind":"movement","occurred_on":"2026-09-14",'
+        f'"destination_location_id":"{bench}","notes":null}}}}'
+    )
+    assert completion(first, MOVEMENT)[1] == hashlib.sha256(literal.encode()).hexdigest()
+
+
+def test_schedule_complete_replays_only_the_exact_request(first: str) -> None:
+    """The stored value's business meaning, through the real service."""
+    identifier = UUID(completion(first, MOVEMENT)[0])
     engine = create_engine(copy_url(first))
+    events = "SELECT count(*) FROM events"
     try:
         with Session(engine) as database:
-            reviewed = runtime.canonical_digest(database, root)["canonical_sha256"]
-            for key, sensitive in (
-                ("schedule:schedule-states/completed", True),
-                ("schedule:schedule-states/completed-event", True),
-                ("schedule:schedule-history-states/repot", True),
-                ("schedule:schedule-history-states/move", False),
+            before = schedule_service.complete(database, identifier, movement_request(first))
+            state = (before.version, before.updated_at, before.linked_event_id, before.status)
+            count = database.scalar(text(events))
+            # The exact retry succeeds and changes nothing.
+            again = schedule_service.complete(database, identifier, movement_request(first))
+            assert (again.version, again.updated_at, again.linked_event_id, again.status) == state
+            assert state[3] == "completed"
+            assert database.scalar(text(events)) == count
+            # Every different request is stale, and records nothing.
+            for changes in (
+                {"event": {"occurred_on": "2026-09-13"}},
+                {"event": {"notes": "A different note"}},
+                {"event": {"destination_location_id": str(uuid7())}},
+                {"expected_version": 2},
             ):
-                database.execute(text(change), {"id": ledger(first)["records"][key]})
-                changed = runtime.canonical_digest(database, root)["canonical_sha256"]
-                assert (changed != reviewed) is sensitive, key
-                database.rollback()
+                with pytest.raises(schedule_service.ScheduleError) as refused:
+                    schedule_service.complete(
+                        database, identifier, movement_request(first, **changes)
+                    )
+                assert refused.value.code == "schedule_stale", changes
+            with pytest.raises(schedule_service.ScheduleError) as refused:
+                schedule_service.complete(
+                    database, identifier, ScheduleComplete(expected_version=1)
+                )
+            assert refused.value.code == "schedule_stale"
+            assert database.scalar(text(events)) == count
+            # So a changed stored value breaks the retry of the original request: real behaviour.
+            database.execute(
+                text(
+                    "UPDATE scheduled_activities SET completion_fingerprint = repeat('0', 64) "
+                    "WHERE id = :id"
+                ),
+                {"id": identifier},
+            )
+            database.expire_all()
+            with pytest.raises(schedule_service.ScheduleError) as refused:
+                schedule_service.complete(database, identifier, movement_request(first))
+            assert refused.value.code == "schedule_stale"
+            database.rollback()
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        MOVEMENT,
+        "schedule:schedule-history-states/repot",  # No Event at all
+        "schedule:schedule-states/completed-event",  # An Event with no per-copy id
+    ],
+)
+def test_a_changed_fingerprint_is_refused_until_restored(first: str, second: str, key: str) -> None:
+    identifier, original = completion(second, key)
+    reviewed = succeed("digest", "--copy", second)
+    assert reviewed["completion_problems"] == []
+    statement = (
+        f"UPDATE scheduled_activities SET completion_fingerprint = :value WHERE id = '{identifier}'"
+    )
+    # A hash valid in the neighbouring copy proves nothing here, where it differs.
+    foreign = completion(first, key)[1]
+    for value in {"0" * 64, foreign} - {original}:
+        execute(second, statement, value=value)
+        current = succeed("digest", "--copy", second)
+        assert current["canonical_sha256"] != reviewed["canonical_sha256"], value
+        assert (
+            current["tables"]["scheduled_activities"] != reviewed["tables"]["scheduled_activities"]
+        )
+        assert current["completion_problems"] == [
+            f"completion fingerprint differs from its request: {identifier}"
+        ]
+        result = run("validate", "--copy", second, *PROFILE)
+        assert result.returncode == 1
+        assert "completion fingerprint differs from its request" in result.stderr
+        code, report = verify(second)
+        assert (code, report["state"]) == (1, "domain-invalid"), report
+        assert any("completion fingerprint" in line for line in report["domain_problems"])
+        assert any(
+            line.startswith("table scheduled_activities") for line in report["baseline_differences"]
+        )
+        assert any(
+            line.startswith("completion fingerprints") for line in report["baseline_differences"]
+        )
+    execute(second, statement, value=original)
+    assert verify(second)[0] == 0
+    assert succeed("digest", "--copy", second)["canonical_sha256"] == reviewed["canonical_sha256"]
+
+
+def test_an_unexplained_completion_is_reported(second: str) -> None:
+    """A stored value no request explains is never canonicalized; a constraint forbids NULL."""
+    identifier = completion(second, MOVEMENT)[0]
+    path = COPIES / second / ".golden-dataset.json"
+    original = path.read_text()
+    damaged = json.loads(original)
+    # The ledger no longer names the row, so nothing can prove its hash: never canonicalized.
+    del damaged["records"][MOVEMENT]
+    path.write_text(json.dumps(damaged))
+    try:
+        current = succeed("digest", "--copy", second)
+        assert f"completion without a plan request: {identifier}" in current["completion_problems"]
+        assert current["canonical_sha256"] != expected()["baseline"]["canonical_sha256"]
+    finally:
+        path.write_text(original)
+    assert verify(second)[0] == 0
+
+
+def test_copies_differ_in_raw_ids_but_not_in_digest(first: str, second: str) -> None:
+    """The raw hashes really do differ, so equal digests are proof rather than coincidence."""
+    assert ledger(first)["records"][BENCH] != ledger(second)["records"][BENCH]
+    assert completion(first, MOVEMENT)[1] != completion(second, MOVEMENT)[1]
+    plain = "schedule:schedule-states/completed-event"
+    assert completion(first, plain)[1] == completion(second, plain)[1]
+    left, right = succeed("digest", "--copy", first), succeed("digest", "--copy", second)
+    assert left["completion_problems"] == right["completion_problems"] == []
+    assert left["tables"]["scheduled_activities"] == right["tables"]["scheduled_activities"]
+    assert left["canonical_sha256"] == right["canonical_sha256"]
+
+
+def test_the_rule_protects_future_completions_generally(
+    first: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A later scenario's completions, made by the real service, need no change to the rule."""
+    runtime = pytest.importorskip("golden_dataset", reason="available in integration runner only")
+    records = ledger(first)["records"]
+    plant, bench = records["plant:location-movement-history/traveller"], records[BENCH]
+    root = COPIES / first
+    plan = plan_module.build_plan("comprehensive")
+    engine = create_engine(copy_url(first))
+    cases = {
+        # The same shape of request, on a new row.
+        "schedule:future/movement": (
+            "move",
+            {"kind": "movement", "destination_location_id": bench},
+        ),
+        # No destination at all: a per-copy id in free text is found the same way.
+        "schedule:future/note": ("inspect", {"kind": "observation", "notes": f"See {bench}"}),
+    }
+    try:
+        with Session(engine) as database:
+            future = dict(records)
+            nodes = list(plan["nodes"])
+            for key, (activity, event) in cases.items():
+                row = schedule_service.create(
+                    database,
+                    ScheduleWrite(
+                        activity_kind=activity,
+                        title="Golden — future scenario",
+                        due_on="2026-10-01",
+                        target={"kind": "plant", "id": plant},
+                    ),
+                )
+                request = {
+                    "expected_version": 1,
+                    "event": {"occurred_on": "2026-09-14", **event},
+                }
+                schedule_service.complete(
+                    database, row.id, ScheduleComplete.model_validate(request)
+                )
+                future[key] = str(row.id)
+                nodes.append(
+                    {
+                        "key": f"op:{key}",
+                        "kind": "schedule_complete",
+                        "scenario": "future",
+                        "payload": {"activity_id": {"$ref": key}, **request},
+                    }
+                )
+            database.flush()
+            ids = {future[key] for key in cases}
+            # Not in the plan yet: reported, never quietly accepted.
+            found = runtime.canonical_digest(database, root)["completion_problems"]
+            assert {f"completion without a plan request: {item}" for item in ids} == set(found)
+
+            with monkeypatch.context() as patch:
+                patch.setattr(runtime.golden_plan, "build_plan", lambda *_, **__: {"nodes": nodes})
+                patch.setattr(runtime, "read_ledger", lambda _: {"profile": "x", "records": future})
+                verified, problems = runtime.completion_state(database, {"nodes": nodes}, future)
+                assert problems == []
+                labels = runtime.uuid_labels(database)
+                for item in ids:
+                    text_form = runtime.canonical_completion(verified[item], labels)
+                    assert bench not in text_form
+                    assert labels[bench] in text_form
+                assert runtime.canonical_digest(database, root)["completion_problems"] == []
+                reviewed = runtime.canonical_digest(database, root)["tables"][
+                    "scheduled_activities"
+                ]
+                # And they are protected: changing either stored value is seen at once.
+                for item in sorted(ids):
+                    database.execute(
+                        text(
+                            "UPDATE scheduled_activities SET completion_fingerprint = "
+                            "repeat('0', 64) WHERE id = :id"
+                        ),
+                        {"id": item},
+                    )
+                    current = runtime.canonical_digest(database, root)
+                    assert item in " ".join(current["completion_problems"])
+                    assert current["tables"]["scheduled_activities"] != reviewed
+            database.rollback()
     finally:
         engine.dispose()
 
