@@ -41,6 +41,7 @@ import {
   usePublishRecordIdentities,
   useRecordName,
 } from "../components/recordPresentation";
+import { useRecordDetailFocus } from "../components/useRecordDetailFocus";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import { useDirectoryPagination } from "../components/useDirectoryPagination";
 import { useEditRoute } from "../components/useEditRoute";
@@ -939,6 +940,19 @@ export function SeedLotScreen({
     [inventory],
   );
   const selected = lots.find(({ id }) => id === selectedId) ?? null;
+  const unavailable = Boolean(
+    initialId && !lots.some(({ id }) => id === initialId),
+  );
+  useRecordDetailFocus({
+    recordKey: detailOpen ? (selectedId ?? initialId ?? null) : null,
+    detailReady:
+      inventory.status === "ready" && (selected !== null || unavailable),
+    directoryReady: inventory.status === "ready",
+    paused: editing || edit.modal || creationExpanded,
+    headingRef: detailHeading,
+    directoryRef: directoryList,
+    fallbackId: "seed-search",
+  });
   useEffect(() => {
     if (initialTab !== "edit") {
       directEditHandled.current = false;
@@ -1047,6 +1061,37 @@ export function SeedLotScreen({
             Retry
           </button>
         </div>
+      </section>
+    );
+  }
+  if (unavailable && !editing && !edit.modal) {
+    return (
+      <section
+        className="workspace seeds-workspace"
+        aria-labelledby="seeds-title"
+      >
+        <WorkspaceIntro {...seedPage} contextOnly />
+        <DetailPage className="seed-detail">
+          <Breadcrumbs
+            items={[
+              { label: "Collection", href: "#/dashboard" },
+              { label: "Seeds", href: "#/seeds" },
+              { label: "Unavailable" },
+            ]}
+          />
+          <DetailHeader
+            eyebrow="Seed lot"
+            title="Seed lot unavailable"
+            headingRef={detailHeading}
+          />
+          <div role="alert" className="notice notice--error">
+            <p>
+              Florabase could not find this seed lot. It may have been removed
+              or the link may be incorrect.
+            </p>
+            <a href="#/seeds">Return to Seeds</a>
+          </div>
+        </DetailPage>
       </section>
     );
   }
@@ -2130,6 +2175,7 @@ export function SeedLotScreen({
                             bulk.recordClick(event, bulkChoices[bulkIndex]);
                           }}
                           key={lot.id}
+                          previewId={lot.id}
                           selected={
                             bulk.active
                               ? bulk.checked({ kind: "seed_lot", id: lot.id })

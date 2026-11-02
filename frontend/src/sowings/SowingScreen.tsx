@@ -40,6 +40,7 @@ import {
   useRecordName,
 } from "../components/recordPresentation";
 import { BotanicalName } from "../components/ReferenceUI";
+import { useRecordDetailFocus } from "../components/useRecordDetailFocus";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import { useDirectoryPagination } from "../components/useDirectoryPagination";
 import { useEditRoute } from "../components/useEditRoute";
@@ -371,6 +372,7 @@ function Detail({
         ]}
       />
       <DetailHeader
+        headingRef={headingRef}
         eyebrow="Sowing"
         visual={
           <RecordVisual
@@ -516,9 +518,7 @@ function Detail({
             aria-labelledby="sowing-origin-title"
             className="sowing-fact-group"
           >
-            <h4 id="sowing-origin-title" tabIndex={-1} ref={headingRef}>
-              Source
-            </h4>
+            <h4 id="sowing-origin-title">Source</h4>
             <dl>
               <div>
                 <dt>Seed lot</dt>
@@ -869,7 +869,6 @@ export function SowingScreen({
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const feedback = useRef<HTMLDivElement>(null);
   const detailHeading = useRef<HTMLHeadingElement>(null);
-  const focusedDetail = useRef<string | null>(null);
   const selectedTrigger = useRef<HTMLButtonElement | null>(null);
   const {
     expanded: creationExpanded,
@@ -957,18 +956,15 @@ export function SowingScreen({
     if (save.status === "error") feedback.current?.focus();
   }, [save]);
 
-  useEffect(() => {
-    if (!mobileDetail) focusedDetail.current = null;
-    if (
-      mobileDetail &&
-      detail.status === "ready" &&
-      !editing &&
-      focusedDetail.current !== detail.sowing.id
-    ) {
-      focusedDetail.current = detail.sowing.id;
-      detailHeading.current?.focus();
-    }
-  }, [detail, editing, mobileDetail]);
+  useRecordDetailFocus({
+    recordKey: mobileDetail ? selectedId : null,
+    detailReady: detail.status === "ready" && detail.sowing.id === selectedId,
+    directoryReady: collection.status === "ready",
+    paused: editing || edit.modal || creationExpanded,
+    headingRef: detailHeading,
+    directoryRef: directoryList,
+    fallbackId: "sowing-search",
+  });
 
   const sowings = useMemo(
     () => (collection.status === "ready" ? collection.sowings : []),
@@ -1821,6 +1817,7 @@ export function SowingScreen({
                         bulk.recordClick(event, bulkChoices[bulkIndex]);
                       }}
                       key={sowing.id}
+                      previewId={sowing.id}
                       selected={
                         bulk.active
                           ? bulk.checked({ kind: "sowing", id: sowing.id })

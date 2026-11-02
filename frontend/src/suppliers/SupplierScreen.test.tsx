@@ -628,3 +628,51 @@ test("Supplier row and direct Details command navigate without a preview or crea
   expect(window.location.hash).toBe(`#/suppliers/${id}`);
   expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
 });
+
+test("Supplier Details focuses its title and reconnects focus to the returning row", async () => {
+  vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    const path = requestUrl(input);
+    if (
+      path.includes("/seed-lots") ||
+      path.includes("/plants") ||
+      path.includes("/plant-groups")
+    )
+      return Promise.resolve(json([]));
+    if (path.includes("/orders"))
+      return Promise.resolve(
+        json({ items: [], total: 0, offset: 0, limit: 50 }),
+      );
+    return Promise.resolve(
+      json(
+        path.endsWith(`/suppliers/${id}`)
+          ? {
+              ...supplier,
+              seed_lots: [],
+              plants: [],
+              plant_groups: [],
+              recent_acquisitions: [],
+            }
+          : [supplier],
+      ),
+    );
+  });
+  const { rerender } = mount();
+  const row = await screen.findByRole("button", { name: supplier.name });
+  await userEvent.setup().click(row);
+  rerender(
+    <AuthContext.Provider value={auth}>
+      <SupplierScreen initialId={id} />
+    </AuthContext.Provider>,
+  );
+  await waitFor(() => {
+    expect(screen.getByRole("heading", { name: supplier.name })).toHaveFocus();
+  });
+  rerender(
+    <AuthContext.Provider value={auth}>
+      <SupplierScreen />
+    </AuthContext.Provider>,
+  );
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: supplier.name })).toHaveFocus();
+  });
+});

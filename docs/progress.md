@@ -6879,3 +6879,45 @@ Status remains implemented pending canonical verification.
 - Not exercised: real Claude Code, Codex or OpenCode sessions (provider identities are simulated) and real delivery.
 - See [handoff](agent-workflow-001-handoff.md) for design and tradeoffs. Status stays `implemented`;
   no push, PR, merge, finish, old clone/worktree removal or Docker/Git prune.
+
+
+### UI-POLISH-001 — focused Wave 3 review candidate, 2 November 2026
+
+- Validated clean `feat/ui-polish-001` at cached main `9ac7b6c` in the operator-selected worktree;
+  confirmed writer `codex-ui-polish-001` through feature-context/claim. No takeover or branch change.
+- Checked the historical three P2 findings against source and reproduced missing-Seed, Plant Forward
+  and Seed focus failures. Seeds now show an explicit unavailable state; Plant/Group Forward reopens
+  retained Details while preserving creation/extraction success feedback. Six record owners share
+  bounded title/browser-Back focus restoration with row, list and existing Search fallbacks. Plant
+  and Sowing heading refs target the record title. Existing editors retain focus ownership.
+- Baseline Seed/Plant suites: **120/120**. Final focused run: **396/396 in 13 suites** (six owning
+  screens, focus hook, CollectionUI, DirectoryPage, recordNavigation, App, App.transition, App.lazy).
+  `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build`, feature graph **125**, and diff
+  whitespace checks pass. Independent read-only review found the empty-directory fallback hole;
+  it was fixed with a zero-row regression and re-reviewed without unresolved correctness findings.
+- [Audit, exact checks, decision options and limits](ui-polish-001-review.md). C5 contextual-action
+  placement and repeated metrics remain separate design decisions; the operator removed the mistaken
+  C6 reference. Stored material's lack of an independent Details route remains an accepted exception.
+  Broader QA-3, historical P3s and live responsive/theme/zoom/assistive/device review are not closed.
+- Status `implemented`; implementation committed as `22ab055` after explicit operator authorization.
+  Independently reviewed, with canonical verification still pending. No canonical FULL/receipt, push, PR,
+  merge, delivery, finish or shared DEV/Review/UAT operation. Only this worktree's Quality resources
+  were used; TEST-DATA-001 and its fixture infrastructure were not changed.
+
+
+### UI-POLISH-001 — final independent-QA corrections, 2 November 2026
+
+- Implementation `22ab055` / tree `f994e66f04772ee630c70dc8320577c9715ffc79` is committed.
+  Operator-supplied Claude QA returned CONDITIONAL PASS: 396/396 documented tests, 10/10
+  adversarial probes and 6/6 mutation checks detecting regressions; no confirmed functional blocker.
+  Corrected historical staged/uncommitted wording. Status stays `implemented`: independently
+  reviewed does not mean canonically verified, delivered or merged.
+- B1/N3/N4 correction changes only tests and documentation: Forward feedback assertions for Plant
+  creation, Group creation and extraction; unavailable Seed title focus; Supplier real-history
+  Back/Forward and owner-level empty-directory Search fallback. No production change was needed.
+- Checks: targeted **7/7**; affected **398/398 in 13 suites**; `pnpm typecheck`, `pnpm lint`,
+  `pnpm format:check`, `pnpm build`, feature graph **125** and diff whitespace checks passed.
+  [Audit and exact evidence](ui-polish-001-review.md#independent-claude-qa-and-final-corrections--2-november-2026).
+- N1/N2/N5/N6 remain nonblocking and deferred. C5, repeated metrics, broader QA-3/P3 and live
+  visual acceptance remain outside this correction. Stored Material's accepted behavior is preserved.
+  No canonical FULL, push, PR, merge, feature-finish, shared environment or TEST-DATA-001 changes.

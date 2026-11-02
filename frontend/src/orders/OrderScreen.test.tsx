@@ -776,3 +776,24 @@ test("Order row and direct Details command navigate without a preview or creatio
   expect(window.location.hash).toBe(`#/orders/${id}`);
   expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
 });
+
+test("Order Details focuses its title and reconnects focus to the returning row", async () => {
+  const { rerender } = mount();
+  await userEvent.setup().click(await orderRow());
+  rerender(
+    <AuthContext.Provider value={auth}>
+      <OrderScreen initialId={detail.id} />
+    </AuthContext.Provider>,
+  );
+  await waitFor(() => {
+    expect(screen.getByRole("heading", { name: "REF-1" })).toHaveFocus();
+  });
+  rerender(
+    <AuthContext.Provider value={auth}>
+      <OrderScreen />
+    </AuthContext.Provider>,
+  );
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: "REF-1" })).toHaveFocus();
+  });
+});

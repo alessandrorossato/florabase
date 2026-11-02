@@ -1,4 +1,4 @@
-import { browserBack } from "./test/history";
+import { browserBack, browserForward } from "./test/history";
 import { selectDirectoryFilter } from "./test/directoryFilters";
 import { emptyOverview } from "./collection/dashboardFixtures";
 import {
@@ -4818,3 +4818,73 @@ test("Geography dedicated record exposes loading, retryable error and missing-re
     "#/geography/places",
   );
 });
+
+test.each([false, true])(
+  "Supplier real history restores title and directory focus (empty=%s)",
+  async (empty) => {
+    let directoryEmpty = false;
+    authenticatedThen((path) => {
+      if (path === "/api/v1/suppliers")
+        return jsonResponse(directoryEmpty ? [] : [supplier]);
+      if (path === `/api/v1/suppliers/${supplier.id}`)
+        return jsonResponse(supplierDetail);
+      if (path.startsWith("/api/v1/orders"))
+        return jsonResponse({ items: [], total: 0, offset: 0, limit: 50 });
+      if (
+        [
+          "/api/v1/seed-lots",
+          "/api/v1/locations",
+          "/api/v1/geographic-places",
+        ].includes(path)
+      )
+        return jsonResponse([]);
+      throw new Error(`unexpected request: ${path}`);
+    });
+    window.history.replaceState(null, "", "#/suppliers");
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(
+      await screen.findByRole("button", {
+        name: `Open details ${supplier.name}`,
+      }),
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: supplier.name }),
+      ).toHaveFocus();
+    });
+    await browserBack();
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: supplier.name })).toHaveFocus();
+    });
+    await browserForward();
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: supplier.name }),
+      ).toHaveFocus();
+    });
+    // A fresh authoritative directory read after another record change may be empty.
+    // Navigate away and back to exercise that state without mutating application records.
+    if (empty) {
+      directoryEmpty = true;
+      await user.click(
+        within(
+          screen.getByRole("navigation", { name: "Primary navigation" }),
+        ).getByRole("link", { name: "Seeds" }),
+      );
+      await browserBack();
+      // Preserve sidebar focus on cross-workspace history; explicitly enter the
+      // loaded record before testing its directory return.
+      const title = await screen.findByRole("heading", { name: supplier.name });
+      title.focus();
+    }
+    await browserBack();
+    await waitFor(() => {
+      expect(
+        empty
+          ? screen.getByRole("searchbox", { name: "Filter suppliers" })
+          : screen.getByRole("button", { name: supplier.name }),
+      ).toHaveFocus();
+    });
+  },
+);

@@ -46,6 +46,7 @@ import {
   openCollectionPage,
   setRecordRoute,
 } from "../components/recordNavigation";
+import { useRecordDetailFocus } from "../components/useRecordDetailFocus";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import { useEditRoute } from "../components/useEditRoute";
 import { RecordVisual } from "../photos/RecordVisual";
@@ -967,6 +968,16 @@ export function OrderScreen({
       cancelAnimationFrame(frame);
     };
   }, [edit.modal, editing, initialId, selected]);
+
+  useRecordDetailFocus({
+    recordKey: initialId ?? null,
+    detailReady: Boolean(detail),
+    directoryReady: Boolean(page),
+    paused: editing || edit.modal || formOpen,
+    headingRef: detailHeading,
+    directoryRef: directoryList,
+    fallbackId: "order-search",
+  });
 
   if (
     auth.state.status !== "authenticated" &&
