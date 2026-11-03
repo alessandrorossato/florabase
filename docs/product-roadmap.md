@@ -1,5 +1,11 @@
 # Florabase product and release roadmap
 
+The **v0.1.0-beta.1 private self-hosted beta** now has a separate evidence-based
+[foundation audit and acceptance contract](beta-foundation-001.md). It compares current source at
+`af2372c` with the older snapshots below and defines BETA-IMAGE-001, BETA-RUNTIME-001, actual-data
+onboarding and beta admission in `features.json`. Existing feature statuses and the stable v0.1.0
+release gate are retained; this proposal is not release approval.
+
 Canonical product direction from **v0.1.0 to v1.0.0**, agreed 2026-10-13. This replaces the
 superseded sequences previously collected on this page. Historical decisions and delivered-state
 milestones remain in [engineering progress](progress.md) and the linked feature handoffs.

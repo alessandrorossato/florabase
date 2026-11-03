@@ -2248,6 +2248,115 @@
       "status": "in_progress"
     },
     {
+      "id": "BETA-FOUNDATION-001",
+      "category": "infrastructure",
+      "description": "Audit v0.1.0-beta.1 readiness and define safe beta distribution/runtime work while correcting empty-directory retirement",
+      "acceptance_criteria": [
+        "An evidence-based inventory distinguishes delivered usable workflows, implemented workflows requiring real-world validation, missing beta prerequisites and deferred functionality across the collection capabilities without relying on stale roadmap snapshots",
+        "A private single-owner beta architecture evaluates host requirements and specifies GHCR image pairs, versioned Dockhand Compose, persistent PostgreSQL/media, Tailscale HTTPS plus application authentication, explicit migrations, health and recovery boundaries",
+        "A prioritized beta backlog defines dependencies and measurable acceptance for BETA-IMAGE-001, BETA-RUNTIME-001, actual-data onboarding and beta admission without implementing later capabilities",
+        "Retirement accepts demonstrably empty non-mounted directories removable through a writable parent while retaining dirty/proof/writer/resource protections and refusing symlinks, mounted paths, unreadable evidence and nonempty unremovable contents; offline regressions and disposable real Docker smoke prove behavior without permission rewrites or deletion fallbacks; sticky restrictions cover all direct children, including files and other filesystem objects, and every running container is inspected regardless of labels for candidate/descendant/ancestor mount sources; incomplete/changing Docker evidence fails closed, and real sticky-file/FIFO and unlabelled parent-bind/nested-mount regressions retain registration and contents",
+        "Independent infrastructure QA and one policy-selected canonical FULL gate on the frozen tree pass before delivery; implementation handoff records actual checks and unresolved operational choices without claiming beta readiness"
+      ],
+      "dependencies": [
+        "AGENT-WORKFLOW-001"
+      ],
+      "priority": "P0",
+      "status": "implemented"
+    },
+    {
+      "id": "BETA-IMAGE-001",
+      "category": "operations",
+      "description": "Publish a paired immutable GHCR production-image release for v0.1.0-beta.1",
+      "acceptance_criteria": [
+        "Before publication, lightweight intended-host screening resolves Linux architecture and compatible Docker Engine/Compose runtime: initial linux/amd64 is conditional on native host support; an initial arm64 host requires linux/arm64 plus native smoke, while additional architectures may follow later without blocking an agreed amd64 beta; capacity validation remains runtime work",
+        "A protected publication workflow builds backend and frontend production targets from the same accepted source revision with minimal registry permissions, coherent beta version surfaces, OCI source/revision/version labels and retained licenses/source obligations; arbitrary PR code cannot publish releases",
+        "A versioned release manifest records immutable backend/frontend digests, supported architectures, source commit and expected Alembic head; previous release artifacts remain available and published images contain no secrets, development dependencies, operator data or optional source indices; record the exact immutable PostgreSQL image reference, version, platform and manifest/resolved digests, which application image refresh must preserve",
+        "Clean registry-pull smoke on every supported native architecture proves non-root runtime, same-origin proxy, explicit Alembic capability, owner bootstrap, health/readiness and original-media persistence using disposable data; the previously resolved initial target is required and every added architecture is natively tested",
+        "Document registry access, reproducible build inputs, artifact verification and versioned stack consumption; regenerate both API artifacts if exposed version metadata changes and pass api-check",
+        "Independent infrastructure QA and the exact-tree canonical FULL gate pass before operator delivery; publication and real-host deployment remain separately authorized operations"
+      ],
+      "dependencies": [
+        "BETA-FOUNDATION-001",
+        "CI-002"
+      ],
+      "priority": "P0",
+      "status": "planned"
+    },
+    {
+      "id": "BETA-RUNTIME-001",
+      "category": "operations",
+      "description": "Provide a versioned image-only Dockhand beta runtime with tested persistence, backup and upgrade recovery",
+      "acceptance_criteria": [
+        "Qualify the host using the architecture/runtime already resolved for BETA-IMAGE-001, available memory, durable storage, uptime and recovery evidence; versioned Compose consumes one immutable release pair with stable DB/media volume identities and no source binds, dev runtime or published database/backend ports",
+        "PostgreSQL is pinned by immutable digest and its exact manifest identity is preserved across application refresh; any major, minor or rebuilt-image digest change requires explicit separate maintenance with reviewed compatibility, paired backup/restore evidence and operator approval",
+        "Pinned Dockhand deployment and host Tailscale Serve preserve application owner authentication, secure cookies, exact HTTPS origin and CSRF; control-plane authentication, secrets custody, restart/reboot, private exposure and optional read-only WFO/WCVP provisioning are verified",
+        "Explicit target-image Alembic migration is gated on healthy PostgreSQL and stopped application writers; unknown/ahead schema refuses, startup does not implicitly migrate and application readiness includes separate revision and media acceptance",
+        "Coordinated database/original-media recovery sets include release/revision/checksum/configuration evidence, protected off-host copies and accepted retention/RPO/RTO; an isolated complete restore proves relationships, unlinked/shared originals, saved external copies, owner login and media without modifying source data",
+        "A serialized journaled upgrade procedure or controller preserves quiescence across backup/migration/deploy, checks paired image health and HTTPS acceptance, and passes interrupted-run, failed application and failed schema-upgrade drills; no blind downgrade, volume deletion or automatic PostgreSQL image upgrade",
+        "Frontend, backend and PostgreSQL all carry verified dockhand.update=false labels; confirm the pinned Dockhand behavior and the selected per-environment Automatically update containers policy as well as per-container/stack controls, with Git auto-sync and unguarded webhooks disabled; application promotion is separately gated and cannot change PostgreSQL identity, and release notifications do not rely on excluded-container badges; any automatic application promotion is limited to approved compatible manifests through tested backup/health/recovery gates, otherwise separate checks notify and an operator promotes manually; operational alerts and log/disk bounds remain documented",
+        "Independent infrastructure QA, disposable workflow smoke and the canonical FULL gate pass; real-host installation remains an explicit operator action"
+      ],
+      "dependencies": [
+        "BETA-IMAGE-001",
+        "OPS-001",
+        "ATTACHMENT-005"
+      ],
+      "priority": "P0",
+      "status": "planned"
+    },
+    {
+      "id": "BETA-DATA-001",
+      "category": "transfer",
+      "description": "Rehearse actual collection onboarding using existing import and manual workflows",
+      "acceptance_criteria": [
+        "Inventory representative operator data and media without committing sensitive records; map real source columns and meanings to canonical identity, lot, sowing, plant/group, acquisition, provenance and storage concepts while preserving unknowns and partial precision",
+        "Rehearse supported CSV kinds in isolated data with row preview, explicit ambiguous-reference choices, atomic failures and count/relationship reconciliation; verify repeated import conflicts rather than assuming synchronization",
+        "Demonstrate manual entry for required unsupported import kinds including Sowings, Events, Harvests and media; propose a new bounded import increment only if a measured beta-blocking need remains",
+        "Record operator-reviewed onboarding evidence and unresolved data quality decisions; real beta import is separately authorized and no real source data or secrets enter Git"
+      ],
+      "dependencies": [
+        "BETA-FOUNDATION-001",
+        "IMPORT-001"
+      ],
+      "priority": "P0",
+      "status": "planned"
+    },
+    {
+      "id": "BETA-ACCEPTANCE-001",
+      "category": "operations",
+      "description": "Accept v0.1.0-beta.1 for continuing private real-collection use",
+      "acceptance_criteria": [
+        "The exact image pair and versioned stack pass production HTTPS login/logout/session, Origin/CSRF and private binary access checks on the selected durable host, including health, reboot and process/database failure recovery",
+        "Owner accepts representative actual-data collection flows from identity/acquisition/provenance through SeedLot, Sowing, Plant/group, observation/schedule, Harvest, stored material, seed conversion, shared media and History, with unknowns, corrections and conflict paths",
+        "A proposed seven-day disk-backed ordinary-use soak includes reboot and a planned application upgrade with recorded resource/data/log growth, errors, backup success and desktop/mobile use; all beta-blocking defects are resolved or explicitly scoped out",
+        "A complete isolated restore and failed-upgrade recovery meet operator-accepted RPO/RTO and retention policy, with independent encrypted recovery sets, secret/key recovery and explicit post-snapshot data-loss decisions",
+        "Independent QA and canonical FULL verify the accepted release tree and required protected checks; operator explicitly admits v0.1.0-beta.1 without blanket-promoting existing implemented features or claiming stable v0.1.0 release approval"
+      ],
+      "dependencies": [
+        "BETA-RUNTIME-001",
+        "BETA-DATA-001",
+        "SECURITY-002"
+      ],
+      "priority": "P0",
+      "status": "planned"
+    },
+    {
+      "id": "WORKFLOW-RETIRE-AUTH-001",
+      "category": "infrastructure",
+      "description": "Align retirement AGENT_ID enforcement with the documented operator-only workflow",
+      "acceptance_criteria": [
+        "Retirement CLI refuses agent identities before any mutation and permits explicitly authorized operator use, matching AGENTS.md without treating declared identity as authenticated security",
+        "Review and align pending handoff and active verification restrictions for retirement without weakening finish proof, clean-tree, mount/resource or managed-root protections",
+        "Focused operator/agent and lifecycle regressions plus independent infrastructure QA and canonical FULL validate the bounded correction; documentation names the remaining cooperative concurrency limits"
+      ],
+      "dependencies": [
+        "AGENT-WORKFLOW-001"
+      ],
+      "priority": "P1",
+      "status": "planned"
+    },
+    {
       "id": "TEST-DATA-002",
       "category": "testing",
       "description": "Deterministic COMPREHENSIVE golden dataset profile of about 3,000-5,000 domain records with semantic coverage, generated through owning services",
