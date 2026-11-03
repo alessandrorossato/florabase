@@ -1,0 +1,158 @@
+{
+  "original_evidence": "docs/beta-image-001-local-evidence.json",
+  "batch_a": {
+    "candidate": {
+      "schema_version": 1,
+      "distribution": "local-candidate",
+      "version": "0.1.0-beta.1",
+      "source": {
+        "url": "https://github.com/alessandrorossato/florabase",
+        "revision": "3b9401d8566bbea7021dce5168c1f844d7933ca8",
+        "dirty": true
+      },
+      "platforms": [
+        "linux/amd64"
+      ],
+      "alembic_head": "20261013_0042",
+      "postgresql": {
+        "repository": "docker.io/library/postgres",
+        "version": "18.6-alpine",
+        "reference": "docker.io/library/postgres:18.6-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5",
+        "index_digest": "sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5",
+        "platform": "linux/amd64",
+        "platform_digest": "sha256:3b0ef735388b2cb097fc29b8bb421d86d57d0ddbe7aa1fbd6493e06d65028503"
+      },
+      "images": {
+        "backend": {
+          "reference": "sha256:6e5b36ee1fde39a61c9ba8e8ba029c69c1cebf406b9764593c60325e7c2e2ad4",
+          "platform": "linux/amd64"
+        },
+        "frontend": {
+          "reference": "sha256:10d346f23c91e9f7ed881eed6122a10dd582707d4003b5e10b9a7fa0902dc366",
+          "platform": "linux/amd64"
+        }
+      },
+      "build_inputs": {
+        "version": "0.1.0-beta.1",
+        "platforms": [
+          "linux/amd64"
+        ],
+        "postgresql": {
+          "repository": "docker.io/library/postgres",
+          "version": "18.6-alpine",
+          "reference": "docker.io/library/postgres:18.6-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5",
+          "index_digest": "sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5",
+          "platform": "linux/amd64",
+          "platform_digest": "sha256:3b0ef735388b2cb097fc29b8bb421d86d57d0ddbe7aa1fbd6493e06d65028503"
+        },
+        "scanner": "aquasec/trivy:0.69.3@sha256:bcc376de8d77cfe086a917230e818dc9f8528e3c852f7b1aff648949b6258d1c",
+        "base_images": {
+          "python": "python:3.14.7-slim-bookworm@sha256:82bc3c539b8813ada9d68c63b40158fa002f7f33de9bf3312a3dfdc0620dff56",
+          "node": "node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df",
+          "nginx": "nginxinc/nginx-unprivileged:1.29.4-alpine@sha256:a6c4f61f456b85b8fdf7ec7ab28cc3e299440e6fb4a9dea520e5fd8fd440025e"
+        },
+        "buildkit": "moby/buildkit:buildx-stable-1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea",
+        "sbom_generator": "docker/buildkit-syft-scanner:stable-1@sha256:873a7458c3c8ac8e32c7b796c10e1600b07b963d2aa000a72a2d97aaaa2d6315",
+        "dockerfile_frontend": "docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e"
+      },
+      "workflow": {
+        "run_id": null,
+        "run_attempt": null
+      }
+    },
+    "reports": {
+      "postgresql-security.json": {
+        "path": "/tmp/beta-qa-security/postgresql-security.json",
+        "sha256": "07ed034453b5bff3c78b3b517cb3f7106b305ba6d95e2897c258f90b425d2a01",
+        "counts": {
+          "CRITICAL": 2,
+          "HIGH": 26
+        },
+        "secrets": 0
+      },
+      "frontend-security.json": {
+        "path": "/tmp/beta-qa-security/frontend-security.json",
+        "sha256": "bd36b6544cb0c7395fd5ddc618688e0f0dc14c36cb744c1d574b85b6a4127967",
+        "counts": {
+          "CRITICAL": 3,
+          "HIGH": 61
+        },
+        "secrets": 0
+      },
+      "backend-security.json": {
+        "path": "/tmp/beta-qa-security/backend-security.json",
+        "sha256": "6d605b3743e5c62d487a76622b2ba7c4f20187c2a3d6b7d60674706940ab7019",
+        "counts": {
+          "HIGH": 43,
+          "CRITICAL": 5
+        },
+        "secrets": 0
+      }
+    }
+  },
+  "batch_b": {
+    "candidate": {
+      "schema_version": 1,
+      "distribution": "local-candidate",
+      "version": "0.1.0-beta.1",
+      "source": {
+        "url": "https://github.com/alessandrorossato/florabase",
+        "revision": "2215a62106e52a37f3a355ad6a18b30737790ffa",
+        "dirty": true
+      },
+      "platforms": [
+        "linux/amd64"
+      ],
+      "alembic_head": "20261013_0042",
+      "postgresql": {
+        "repository": "docker.io/library/postgres",
+        "version": "18.6-alpine",
+        "reference": "docker.io/library/postgres:18.6-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5",
+        "index_digest": "sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5",
+        "platform": "linux/amd64",
+        "platform_digest": "sha256:3b0ef735388b2cb097fc29b8bb421d86d57d0ddbe7aa1fbd6493e06d65028503"
+      },
+      "images": {
+        "backend": {
+          "reference": "sha256:e80751b87783b0ca78b6dcb78ab138f06b2a41b0ff01906a1c14b56fb046496f",
+          "platform": "linux/amd64"
+        },
+        "frontend": {
+          "reference": "sha256:17a072611efd1e06461383bcd7e427165d04a1e682ba940a7dd534f7a2dbddec",
+          "platform": "linux/amd64"
+        }
+      },
+      "build_inputs": {
+        "version": "0.1.0-beta.1",
+        "platforms": [
+          "linux/amd64"
+        ],
+        "postgresql": {
+          "repository": "docker.io/library/postgres",
+          "version": "18.6-alpine",
+          "reference": "docker.io/library/postgres:18.6-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5",
+          "index_digest": "sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5",
+          "platform": "linux/amd64",
+          "platform_digest": "sha256:3b0ef735388b2cb097fc29b8bb421d86d57d0ddbe7aa1fbd6493e06d65028503"
+        },
+        "scanner": "aquasec/trivy:0.69.3@sha256:bcc376de8d77cfe086a917230e818dc9f8528e3c852f7b1aff648949b6258d1c",
+        "base_images": {
+          "python": "python:3.14-slim-bookworm@sha256:516b51cb9db2ef061e465c803e50f64361b82cefd91e525b889b967b83e83527",
+          "node": "node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df",
+          "nginx": "nginxinc/nginx-unprivileged:stable-alpine@sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03"
+        },
+        "buildkit": "moby/buildkit:buildx-stable-1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea",
+        "sbom_generator": "docker/buildkit-syft-scanner:stable-1@sha256:873a7458c3c8ac8e32c7b796c10e1600b07b963d2aa000a72a2d97aaaa2d6315",
+        "dockerfile_frontend": "docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e"
+      },
+      "workflow": {
+        "run_id": null,
+        "run_attempt": null
+      }
+    },
+    "status": "builds_passed_runtime_and_scan_blocked_by_registry_429",
+    "log": "/tmp/beta-qa-base-smoke.log",
+    "error": "Docker Hub unauthenticated pull rate limit: registry-1.docker.io/v2/library/postgres/manifests/sha256:84abaff33a0bbc646ae9b1492a05168d4b09814ca49ff2a2839b0969b59f60a0 HTTP 429",
+    "security_findings": null
+  }
+}

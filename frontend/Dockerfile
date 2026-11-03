@@ -15,7 +15,7 @@ ARG REVISION=unknown
 ARG SOURCE=https://github.com/alessandrorossato/florabase
 RUN pnpm build && node build-notices.mjs > dist/THIRD_PARTY_NOTICES.txt && node -e 'require("fs").writeFileSync("dist/release.json", JSON.stringify({version: process.env.VERSION, revision: process.env.REVISION, source: process.env.SOURCE}))'
 
-FROM nginxinc/nginx-unprivileged:1.29.4-alpine@sha256:a6c4f61f456b85b8fdf7ec7ab28cc3e299440e6fb4a9dea520e5fd8fd440025e AS runtime
+FROM nginxinc/nginx-unprivileged:stable-alpine@sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03 AS runtime
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY LICENSE /usr/share/nginx/html/LICENSE

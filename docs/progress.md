@@ -7077,3 +7077,12 @@ Status remains implemented pending canonical verification.
   `make golden-dataset-check` (32 passed), `test_review_dataset_v5.py` (3 passed), `make workflow-check`, `check-features`,
   ruff and mypy on the plan and runtime, ruff on the test modules.
 - Not run: canonical `make feature-verify`, the complete integration and unit suites, frontend checks. Delta QA pending.
+
+### BETA-IMAGE-001 — independent QA corrections, 3 November 2026
+
+- D1 fixes disappearing-container cleanup with fresh inventory proof and exact-label missing-source recovery. 17 resource regressions pass; real race/repeat and supported recovery CLI (forged-source refusal) pass with zero owned residuals.
+- D2 requires exact signer workflow, main source ref, authorized commit and hosted runners; checksum-verified gh 2.103.3 supports the required flags; 2.46.0 does not. D3 enforces the published JSON schema plus cross-field checks, with pinned host-only tooling and 11 passing release tests.
+- Reviewed Pillow/certifi batch: 13.0.0/2026.10.18, unchanged verification policy, application setuid/setgid removed. Compatibility 102/102 tests; batch-A artifact smoke passes, scans remain blocked at backend 5 CRITICAL/43 HIGH, frontend 3/61, PostgreSQL 2/26, zero secrets. Original 11/66 backend evidence preserved. Advisory-specific VEX is a conditional unapproved draft only.
+- D4 locally merged origin/main 1e44c3f without rewriting; progress entries from both branches retained. Main contributes TEST-DATA-002 fixtures/planner/tests, not runtime app/Docker/release changes. No foreign environment changed.
+- New maintained Python/nginx base digest batch builds, but PostgreSQL registry inspection hits Docker Hub HTTP 429 unauthenticated pull limit before runtime smoke/scanning. Current-pin runtime/security verdict is unknown; previous-batch scan counts do not certify it. All exact owned resources retired.
+- DS224+ Linux/amd64 selected by operator; measured runtime/capacity acceptance pending. Compose portability to PCs/VPSs retained; no Dockhand dependency added. No canonical FULL, push, PR, remote merge, publication or persistent deployment. [Delta handoff](beta-image-001-qa-corrections.md) records tests, original/new report hashes and blockers.

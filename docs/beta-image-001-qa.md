@@ -1,3 +1,5 @@
+Historical initial handoff; superseded for current decisions by [QA corrections](beta-image-001-qa-corrections.md). Original scan evidence is preserved.
+
 # BETA-IMAGE-001 — independent QA handoff
 
 Candidate prepared on `feat/beta-image-001` from verified cached main

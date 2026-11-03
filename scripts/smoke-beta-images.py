@@ -289,6 +289,16 @@ def smoke(manifest: dict[str, Any], local: bool = False) -> None:
                 if any(m["Type"] == "bind" for m in details["Mounts"]):
                     raise AssertionError("source/host bind in image-only runtime")
                 uid = compose("exec", "-T", service, "id", "-u")
+                privileged = compose(
+                    "exec",
+                    "-T",
+                    service,
+                    "sh",
+                    "-c",
+                    "find /usr /bin /sbin -xdev -type f -perm /6000 -print",
+                )
+                if privileged:
+                    raise AssertionError("unnecessary setuid/setgid files in application runtime")
                 if uid == "0":
                     raise AssertionError("root runtime")
             compose(

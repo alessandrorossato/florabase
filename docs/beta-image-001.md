@@ -1,3 +1,5 @@
+Current delta QA, remediation batches and remaining registry/security blockers: [QA corrections](beta-image-001-qa-corrections.md).
+
 # BETA-IMAGE-001 — production image candidate
 
 This increment prepares distribution for `0.1.0-beta.1`; it does not approve a host, publish a release,
@@ -7,8 +9,8 @@ Independent infrastructure QA and the exact-tree canonical FULL remain the next 
 ## Platform screening and publication prerequisite
 
 **Publication is blocked by missing host approval and the security findings in the
-[QA handoff](beta-image-001-qa.md).** No intended beta host identity, OS/CPU measurement, Docker Engine/Compose
-versions or operator selection was supplied. `release/platform.json` deliberately remains `pending`.
+[QA handoff](beta-image-001-qa.md).** The operator selected Synology DS224+ (Linux/amd64), but measured Docker Engine/Compose
+compatibility and capacity acceptance remain pending. `release/platform.json` deliberately remains `pending`.
 The Foundation's initial **linux/amd64** is a candidate, not host approval. Local native amd64 smoke
 is development-machine evidence only. No Synology, Netcup or other persistent environment was accessed.
 

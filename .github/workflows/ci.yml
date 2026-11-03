@@ -34,6 +34,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
+          python3 -m pip install -r release/requirements.txt
           python3 scripts/ci-verify.py quality 2>&1 | tee "$RUNNER_TEMP/ci-quality.log"
       - name: Retain complete quality log
         if: always()

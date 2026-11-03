@@ -369,7 +369,7 @@ def report() -> dict[str, Any]:
     }
     projects: dict[str, Any] = {}
     observed_projects = set(known)
-    for kind, listing, _inspection in (
+    for kind, listing, inspection in (
         ("containers", ["ps", "-a"], ["inspect"]),
         ("networks", ["network", "ls"], ["network", "inspect"]),
         ("volumes", ["volume", "ls"], ["volume", "inspect"]),
