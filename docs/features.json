@@ -2355,6 +2355,23 @@
       ],
       "priority": "P1",
       "status": "planned"
+    },
+    {
+      "id": "TEST-DATA-002",
+      "category": "testing",
+      "description": "Deterministic COMPREHENSIVE golden dataset profile of about 3,000-5,000 domain records with semantic coverage, generated through owning services",
+      "acceptance_criteria": [
+        "COMPREHENSIVE generates and validates from source through real domain services, including exercised refusals, while SMOKE's plan and reviewed baseline stay unchanged",
+        "Named scenarios cover botanical identities and taxonomy, synonyms and external links, provenance, purchases, sowing outcomes, lifecycle transitions, harvests and conversions, geography and movement, journal and schedule, saved views and search, media associations and retired or boundary states; a generated matrix reports them",
+        "Copies reproduce the independently pinned digest across hash seeds, timezones and separate stacks; representative negatives prove validation and baseline detection, profile identity, atomic failure and contention behaviour",
+        "Runtime and resource cost are measured; COMPREHENSIVE runs manually in a dedicated module that the default integration suite skips, with any CI schedule left as a proposal for review",
+        "Coverage gaps, limitations and the separate Review and UAT adoption decisions are documented"
+      ],
+      "dependencies": [
+        "TEST-DATA-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
     }
   ]
 }
