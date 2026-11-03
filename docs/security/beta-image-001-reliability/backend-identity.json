@@ -1,0 +1,18 @@
+{
+  "reference": "florabase-verification-build-58c67475f77d-backend",
+  "descriptor": {
+    "mediaType": "application/vnd.oci.image.index.v1+json",
+    "digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "size": 856
+  },
+  "repo_digests": [
+    "florabase-verification-build-58c67475f77d-backend@sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718"
+  ],
+  "os": "linux",
+  "architecture": "amd64",
+  "image_inspect_id": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+  "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+  "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+  "platform_manifest_evidence": "BuildKit export log (/tmp/beta-reliability-exact-smoke.log; SHA-256 recorded in inventory.json)",
+  "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718"
+}

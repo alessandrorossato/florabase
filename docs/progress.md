@@ -7025,6 +7025,28 @@ Status remains implemented pending canonical verification.
 - Not run: canonical FULL, the complete integration and unit suites, frontend checks, `smoke-uat-preview`.
 - Unresolved: anchored timestamps read as stale on the real clock; the module takes about 5 minutes.
 
+### BETA-IMAGE-001 — image pipeline candidate for independent QA, 3 November 2026
+
+- Claimed authoritative `feat/beta-image-001` from main `f637539` as `codex-beta-image-001`.
+  Added paired production image hardening, pinned compiler/base/build/security inputs, hash-enforced
+  unchanged production dependencies, coherent beta versions/OCI traceability, embedded healthchecks,
+  minimal non-root runtimes, frontend release metadata/Docker DNS and licenses/notices.
+- Added protected manual-main GHCR workflow with exact source/tag/check/environment approval,
+  provenance/SBOM, immutable candidate digests, security and artifact-only smoke before version
+  promotion, manifest schema, source/attestation retention and new-prerelease-only publication.
+  Existing delivery protections and TEST-DATA-002 are untouched; no persistent deployment mechanism.
+- Focused checks: workflow-check (Ruff/format/strict mypy), 9 release-contract tests, actionlint 1.7.12,
+  both API generators/api-check, production builds, complete native amd64 image-only smoke,
+  132-feature graph and whitespace pass. Smoke verified migrations, auth/CSRF/cookies, private original
+  media and application recreation; exact owned resources/images retired with zero residual state.
+- Initial make check: backend 985 passed/2 skipped (90.06%); frontend 1144 passed/1 Sowing URL assertion
+  failed. That single test and all 35 Sowing tests pass on focused repeats; broad run is not a PASS.
+- **Publication blocked:** intended-host evidence/operator selection is absent; final raw security scans
+  report backend 11 CRITICAL/66 HIGH, frontend 3/61 and PostgreSQL 2/26, with zero secret findings.
+  Gates remain fail-closed, without suppression. Registry publication/pulls, hosted protection checks,
+  independent QA and canonical FULL are unexecuted. Status stays `in_progress`; this is not beta admission.
+- [Implementation/runbook](beta-image-001.md), [QA checks/blockers](beta-image-001-qa.md),
+  [local evidence/report hashes](beta-image-001-local-evidence.json). No push, PR, merge or feature-finish.
 ### TEST-DATA-002 comprehensive golden dataset — 2 November 2026
 
 - COMPREHENSIVE is executable: 3,183 plan nodes, 3,973 domain records, 34 media files, generated through owning
@@ -7055,3 +7077,19 @@ Status remains implemented pending canonical verification.
   `make golden-dataset-check` (32 passed), `test_review_dataset_v5.py` (3 passed), `make workflow-check`, `check-features`,
   ruff and mypy on the plan and runtime, ruff on the test modules.
 - Not run: canonical `make feature-verify`, the complete integration and unit suites, frontend checks. Delta QA pending.
+
+### BETA-IMAGE-001 — independent QA corrections, 3 November 2026
+
+- D1 fixes disappearing-container cleanup with fresh inventory proof and exact-label missing-source recovery. 17 resource regressions pass; real race/repeat and supported recovery CLI (forged-source refusal) pass with zero owned residuals.
+- D2 requires exact signer workflow, main source ref, authorized commit and hosted runners; checksum-verified gh 2.103.3 supports the required flags; 2.46.0 does not. D3 enforces the published JSON schema plus cross-field checks, with pinned host-only tooling and 11 passing release tests.
+- Reviewed Pillow/certifi batch: 13.0.0/2026.10.18, unchanged verification policy, application setuid/setgid removed. Compatibility 102/102 tests; batch-A artifact smoke passes, scans remain blocked at backend 5 CRITICAL/43 HIGH, frontend 3/61, PostgreSQL 2/26, zero secrets. Original 11/66 backend evidence preserved. Advisory-specific VEX is a conditional unapproved draft only.
+- D4 locally merged origin/main 1e44c3f without rewriting; progress entries from both branches retained. Main contributes TEST-DATA-002 fixtures/planner/tests, not runtime app/Docker/release changes. No foreign environment changed.
+- New maintained Python/nginx base digest batch builds, but PostgreSQL registry inspection hits Docker Hub HTTP 429 unauthenticated pull limit before runtime smoke/scanning. Current-pin runtime/security verdict is unknown; previous-batch scan counts do not certify it. All exact owned resources retired.
+- DS224+ Linux/amd64 selected by operator; measured runtime/capacity acceptance pending. Compose portability to PCs/VPSs retained; no Dockhand dependency added. No canonical FULL, push, PR, remote merge, publication or persistent deployment. [Delta handoff](beta-image-001-qa-corrections.md) records tests, original/new report hashes and blockers.
+
+### BETA-IMAGE-001 — final reliability correction, 3 November 2026
+
+- Full container IDs and conservative legacy-prefix existence checks prevent false cleanup success on inspect failure; realistic regression detects the old defect. Release Compose process groups quiesce before cleanup, with bounded timeout/refusal/recovery. Real timed SIGTERM plus late owned creation removes 2 containers/network/media, verifies zero residuals and unchanged foreign inventory. Resource suites 19/19.
+- Project-managed no-ensurepip venv, verified pip bootstrap and hash-locked transitive tools replace system pip/PYTHONPATH requirements. make test-beta-images 12/12 passes, including fresh offline cache use; absent offline cache refuses. make workflow-check and actionlint pass. D3 rejects equal index/platform digests and untrusted build inputs.
+- Official smoke passes on current pins without pull shim; scans measure backend 2 CRITICAL/36 HIGH, frontend 1/4, PostgreSQL 2/26, zero secrets. Raw reports, exact index/native/config identities, advisory-by-package inventory and unapproved expiring VEX drafts preserved. Security gate remains blocking. Patched Python/media compatibility 102/102.
+- [Final reliability handoff](beta-image-001-final-reliability.md). DS224+ amd64 runtime/capacity and publication approvals remain pending; no canonical FULL before delta QA, push, PR, merge, GHCR publication, deployment or feature-finish.

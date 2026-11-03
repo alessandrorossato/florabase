@@ -4,3 +4,9 @@ node_modules
 .pnpm-store
 *.log
 *.tsbuildinfo
+
+.env
+.env.*
+.git
+backups
+uploads

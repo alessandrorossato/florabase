@@ -9,3 +9,9 @@ __pycache__
 htmlcov
 .source-cache
 **/.source-cache
+
+.env
+.env.*
+.git
+backups
+uploads

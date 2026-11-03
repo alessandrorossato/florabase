@@ -1,0 +1,687 @@
+[
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-53613",
+    "package": "bsdutils",
+    "installed_version": "1:2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-53613"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-53615",
+    "package": "bsdutils",
+    "installed_version": "1:2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-53615"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-78410",
+    "package": "bsdutils",
+    "installed_version": "1:2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-78410"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-41992",
+    "package": "gzip",
+    "installed_version": "1.12-1",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-41992"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-54369",
+    "package": "libacl1",
+    "installed_version": "2.3.1-3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-54369"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-53613",
+    "package": "libblkid1",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-53613"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-53615",
+    "package": "libblkid1",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-53615"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-78410",
+    "package": "libblkid1",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-78410"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-53613",
+    "package": "libmount1",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-53613"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-53615",
+    "package": "libmount1",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-53615"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-78410",
+    "package": "libmount1",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-78410"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2025-69720",
+    "package": "libncursesw6",
+    "installed_version": "6.4-4",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2025-69720"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-53613",
+    "package": "libsmartcols1",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-53613"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-53615",
+    "package": "libsmartcols1",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-53615"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-78410",
+    "package": "libsmartcols1",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-78410"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2025-7458",
+    "package": "libsqlite3-0",
+    "installed_version": "3.40.1-2+deb12u2",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2025-7458"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-11822",
+    "package": "libsqlite3-0",
+    "installed_version": "3.40.1-2+deb12u2",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-11822"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-11824",
+    "package": "libsqlite3-0",
+    "installed_version": "3.40.1-2+deb12u2",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-11824"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-119373",
+    "package": "libsqlite3-0",
+    "installed_version": "3.40.1-2+deb12u2",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-119373"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-16742",
+    "package": "libsystemd0",
+    "installed_version": "252.39-1~deb12u2",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-16742"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2025-69720",
+    "package": "libtinfo6",
+    "installed_version": "6.4-4",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2025-69720"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-16742",
+    "package": "libudev1",
+    "installed_version": "252.39-1~deb12u2",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-16742"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-53613",
+    "package": "libuuid1",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-53613"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-53615",
+    "package": "libuuid1",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-53615"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-78410",
+    "package": "libuuid1",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-78410"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-53613",
+    "package": "mount",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-53613"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-53615",
+    "package": "mount",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-53615"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-78410",
+    "package": "mount",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-78410"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2025-69720",
+    "package": "ncurses-base",
+    "installed_version": "6.4-4",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2025-69720"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2025-69720",
+    "package": "ncurses-bin",
+    "installed_version": "6.4-4",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2025-69720"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-9538",
+    "package": "perl-base",
+    "installed_version": "5.36.0-7+deb12u4",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-9538"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-53613",
+    "package": "util-linux",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-53613"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-53615",
+    "package": "util-linux",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-53615"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-78410",
+    "package": "util-linux",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-78410"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-53613",
+    "package": "util-linux-extra",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-53613"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-53615",
+    "package": "util-linux-extra",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-53615"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2026-78410",
+    "package": "util-linux-extra",
+    "installed_version": "2.38.1-5+deb12u3",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "under_investigation_keep_release_blocked",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2026-78410"
+    ],
+    "rationale": "Installed component; reachability unresolved; treat as potentially applicable",
+    "approved_by": null
+  },
+  {
+    "status": "draft_requires_operator_approval",
+    "image": "backend",
+    "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+    "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+    "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+    "advisory": "CVE-2023-45853",
+    "package": "zlib1g",
+    "installed_version": "1:1.2.13.dfsg-1",
+    "expires": "2026-12-03",
+    "invalidate_on": "any artifact or dependency change",
+    "proposed_assessment": "not_affected_pending_binary_confirmation",
+    "evidence": [
+      "https://avd.aquasec.com/nvd/cve-2023-45853",
+      "https://security-tracker.debian.org/tracker/CVE-2023-45853"
+    ],
+    "rationale": "Draft not-affected proposal: Debian says contrib/minizip not built; binary confirmation and approval pending",
+    "approved_by": null
+  }
+]

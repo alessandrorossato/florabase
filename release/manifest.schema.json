@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/alessandrorossato/florabase/release/manifest.schema.json",
+  "title": "Florabase beta image release manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "distribution": {
+      "const": "registry-candidate"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^0\\.1\\.0-beta\\.[1-9][0-9]*$"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "const": "https://github.com/alessandrorossato/florabase"
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "dirty": {
+          "const": false
+        }
+      },
+      "required": [
+        "url",
+        "revision",
+        "dirty"
+      ]
+    },
+    "platforms": {
+      "const": [
+        "linux/amd64"
+      ]
+    },
+    "alembic_head": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_]+$"
+    },
+    "postgresql": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "repository": {
+          "const": "docker.io/library/postgres"
+        },
+        "version": {
+          "type": "string"
+        },
+        "reference": {
+          "type": "string",
+          "pattern": "^docker\\.io/library/postgres:[a-zA-Z0-9.-]+@sha256:[a-f0-9]{64}$"
+        },
+        "index_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "platform_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "platform": {
+          "const": "linux/amd64"
+        }
+      },
+      "required": [
+        "repository",
+        "version",
+        "reference",
+        "index_digest",
+        "platform_digest",
+        "platform"
+      ]
+    },
+    "images": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "backend": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "reference": {
+              "type": "string",
+              "pattern": "^ghcr\\.io/alessandrorossato/florabase-backend@sha256:[a-f0-9]{64}$"
+            },
+            "index_digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "platform_digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "platform": {
+              "const": "linux/amd64"
+            }
+          },
+          "required": [
+            "reference",
+            "index_digest",
+            "platform_digest",
+            "platform"
+          ]
+        },
+        "frontend": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "reference": {
+              "type": "string",
+              "pattern": "^ghcr\\.io/alessandrorossato/florabase-frontend@sha256:[a-f0-9]{64}$"
+            },
+            "index_digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "platform_digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "platform": {
+              "const": "linux/amd64"
+            }
+          },
+          "required": [
+            "reference",
+            "index_digest",
+            "platform_digest",
+            "platform"
+          ]
+        }
+      },
+      "required": [
+        "backend",
+        "frontend"
+      ]
+    },
+    "build_inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "platforms": {
+          "type": "array"
+        },
+        "postgresql": {
+          "type": "object"
+        },
+        "scanner": {
+          "type": "string",
+          "pattern": "^.+@sha256:[a-f0-9]{64}$"
+        },
+        "base_images": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "python",
+            "node",
+            "nginx"
+          ],
+          "properties": {
+            "python": {
+              "type": "string",
+              "pattern": "^.+@sha256:[a-f0-9]{64}$"
+            },
+            "node": {
+              "type": "string",
+              "pattern": "^.+@sha256:[a-f0-9]{64}$"
+            },
+            "nginx": {
+              "type": "string",
+              "pattern": "^.+@sha256:[a-f0-9]{64}$"
+            }
+          }
+        },
+        "buildkit": {
+          "type": "string",
+          "pattern": "^.+@sha256:[a-f0-9]{64}$"
+        },
+        "sbom_generator": {
+          "type": "string",
+          "pattern": "^.+@sha256:[a-f0-9]{64}$"
+        },
+        "dockerfile_frontend": {
+          "type": "string",
+          "pattern": "^.+@sha256:[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "version",
+        "platforms",
+        "postgresql",
+        "scanner",
+        "base_images",
+        "buildkit",
+        "sbom_generator",
+        "dockerfile_frontend"
+      ]
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "run_attempt": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        }
+      },
+      "required": [
+        "run_id",
+        "run_attempt"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "distribution",
+    "version",
+    "source",
+    "platforms",
+    "alembic_head",
+    "postgresql",
+    "images",
+    "build_inputs",
+    "workflow"
+  ]
+}

@@ -59,6 +59,8 @@ class FakeDocker:
                 )
             _, value = condition.split("=", 1)
             return "\n".join(self.foreign_users.get(value, set()))
+        if args == ("ps", "-aq", "--no-trunc"):
+            return "\n".join(str(i["Id"]) for i in self.objects["containers"])
         if "inspect" in args:
             wanted = args[args.index("inspect") + 1 :]
             return json.dumps(
@@ -88,6 +90,81 @@ class ResourceTests(unittest.TestCase):
         owner = owner or self.owner
         for kind in self.fake.objects:
             self.fake.add(owner, kind, owner.project + "-" + kind)
+
+    def test_shutdown_timeout_refuses_cleanup_and_allows_exact_recovery(self) -> None:
+        with self.assertRaises(ResourceError):
+            with Disposable(self.owner, self.fake) as lifetime:
+                self.populate()
+                with (
+                    patch("workflow_resources.subprocess.Popen") as factory,
+                    patch("workflow_resources.os.killpg"),
+                ):
+                    child = factory.return_value
+                    child.pid = 12345
+                    child.communicate.side_effect = [
+                        SystemExit(143),
+                        subprocess.TimeoutExpired("compose", 30),
+                        ("", ""),
+                    ]
+                    lifetime.run(["owned-compose-fixture"])
+        self.assertFalse(self.fake.removed)
+        Resources(self.owner, self.fake).clean()
+        Resources(self.owner, self.fake).clean()
+        self.assertFalse(any(self.fake.objects.values()))
+
+    def test_realistic_short_listing_cannot_hide_live_uninspectable_container(self) -> None:
+        full = "a" * 64
+        self.fake.add(self.owner, "containers", full)
+        original = self.fake.__call__
+
+        def realistic(*args: str) -> str:
+            if args[0] == "ps":
+                return full if "--no-trunc" in args else full[:12]
+            if args[0] == "inspect":
+                raise ResourceError("metadata unavailable for live container")
+            return original(*args)
+
+        with self.assertRaises(ResourceError):
+            Resources(self.owner, realistic).clean()
+        self.assertFalse(self.fake.removed)
+
+    def test_disappearing_container_does_not_strand_network_or_media(self) -> None:
+        self.populate()
+        original = self.fake.__call__
+
+        def raced(*args: str) -> str:
+            if args[0] == "inspect":
+                self.fake.objects["containers"] = []
+                raise ResourceError("container vanished")
+            return original(*args)
+
+        resources = Resources(self.owner, raced)
+        resources.clean()
+        resources.clean()
+        self.assertFalse(any(self.fake.objects.values()))
+
+    def test_inspect_failure_with_live_container_refuses(self) -> None:
+        self.populate()
+        original = self.fake.__call__
+
+        def failed(*args: str) -> str:
+            if args[0] == "inspect":
+                raise ResourceError("daemon error")
+            return original(*args)
+
+        with self.assertRaises(ResourceError):
+            Resources(self.owner, failed).clean()
+        self.assertEqual(self.fake.removed, [])
+
+    def test_recovery_accepts_missing_source_only_with_exact_labels(self) -> None:
+        owner = Owner.disposable("workflow-smoke", Path("/tmp/removed-source-fixture"))
+        self.populate(owner)
+        wrong = Owner(owner.project, owner.role, "/tmp/forged", owner.identity)
+        with self.assertRaises(ResourceError):
+            Resources(wrong, self.fake).clean()
+        self.assertFalse(self.fake.removed)
+        Resources(owner, self.fake).clean()
+        self.assertFalse(any(self.fake.objects.values()))
 
     def test_exact_project_cleans_stale_network_volume_orphans_and_images(self) -> None:
         self.populate()
