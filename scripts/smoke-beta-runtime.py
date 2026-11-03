@@ -366,26 +366,33 @@ class Smoke:
         self.wait_daemon()
         self.start_operator()
 
-    def wait_daemon(self) -> None:
-        for _ in range(90):
-            probe = subprocess.run(
-                ["docker", "exec", self.dind, "docker", "info"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-            if probe.returncode == 0:
-                return
+    def wait_daemon(self, since: str = "") -> None:
+        """Never exec into the container before dockerd listens.
+
+        The DinD entrypoint moves every process out of the root cgroup before enabling cgroup v2
+        controllers; an early `docker exec` lands there and makes that write fail, killing it.
+        """
+        logs = ""
+        for _ in range(120):
+            logs = subprocess.run(
+                ["docker", "logs", *(["--since", since] if since else []), self.dind],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+            ).stdout
             state = run("docker", "inspect", "-f", "{{.State.Status}}", self.dind)
             if state != "running":
                 break
+            if "API listen on /var/run/docker.sock" in logs:
+                probe = subprocess.run(
+                    ["docker", "exec", self.dind, "docker", "info"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                if probe.returncode == 0:
+                    return
             time.sleep(1)
-        logs = subprocess.run(
-            ["docker", "logs", "--tail", "40", self.dind],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-        ).stdout
-        raise SystemExit("nested Docker 24.0.2 daemon did not start:\n" + logs)
+        raise SystemExit("nested Docker 24.0.2 daemon did not start:\n" + logs[-4000:])
 
     def start_operator(self) -> None:
         self.owned(
@@ -415,8 +422,10 @@ class Smoke:
 
     def restart_daemon(self) -> None:
         """Daemon restart; the operator shares the daemon namespace and is rejoined after it."""
+        since = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         self.owned("docker", "restart", self.dind)
-        self.wait_daemon()
+        # Only log lines from the new start count; stale ones must not pass readiness.
+        self.wait_daemon(since=since)
         self.owned("docker", "restart", self.operator)
 
     def transfer(self, reference: str) -> str:
