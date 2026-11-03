@@ -4,22 +4,48 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
+import io
+import json
+import os
 import subprocess
 import sys
+import tarfile
 import tempfile
 import textwrap
 import unittest
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
-from beta_release import check_platform, inputs, validate_manifest
+from beta_release import (
+    check_platform,
+    inputs,
+    registry_record,
+    saved_descriptors,
+    validate_manifest,
+    validate_release_assets,
+    validate_scan,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("checks", ROOT / "scripts/beta-release-checks.py")
 assert spec and spec.loader
 checks = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(checks)
+
+
+def load_tool(name: str) -> Any:
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / (name + ".py"))
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+tooling = load_tool("release-tools")
+publisher = load_tool("publish-beta-images")
 
 
 def approved() -> dict[str, Any]:
@@ -171,21 +197,458 @@ class ReleaseTests(unittest.TestCase):
                 "name": name,
                 "head_sha": sha,
                 "conclusion": "success",
-                "app": {"slug": "github-actions"},
+                "status": "completed",
             }
             for name in ("quality", "integration", "build")
         ]
-        self.assertTrue(checks.successful_checks(valid, sha))
-        self.assertFalse(checks.successful_checks(valid[:2], sha))
+        self.assertTrue(checks.approved_ci_jobs(valid, sha))
+        self.assertFalse(checks.approved_ci_jobs(valid[:2], sha))
         for field, invalid in (
             ("head_sha", "d" * 40),
             ("conclusion", "failure"),
-            ("app", {"slug": "external"}),
+            ("status", "in_progress"),
         ):
             changed = copy.deepcopy(valid)
             changed[0][field] = invalid
             with self.subTest(field=field):
-                self.assertFalse(checks.successful_checks(changed, sha))
+                self.assertFalse(checks.approved_ci_jobs(changed, sha))
+
+    def test_canonical_ci_producer_identity(self) -> None:
+        valid = {
+            "path": ".github/workflows/ci.yml",
+            "head_sha": "a" * 40,
+            "head_branch": "main",
+            "event": "push",
+            "status": "completed",
+            "conclusion": "success",
+            "repository": {"full_name": "owner/repo"},
+            "head_repository": {"full_name": "owner/repo"},
+        }
+        self.assertTrue(checks.approved_ci_run(valid, "a" * 40, "owner/repo"))
+        for field in valid:
+            changed = {**valid, field: None}
+            with self.subTest(field=field):
+                self.assertFalse(checks.approved_ci_run(changed, "a" * 40, "owner/repo"))
+        self.assertFalse(
+            checks.approved_ci_run(
+                {**valid, "path": ".github/workflows/spoof.yml"}, "a" * 40, "owner/repo"
+            )
+        )
+
+    def test_release_identity_refuses_before_registry_access(self) -> None:
+        sha = "c" * 40
+        valid = {
+            "GITHUB_ACTIONS": "true",
+            "GITHUB_REF": "refs/heads/main",
+            "GITHUB_SHA": sha,
+            "GITHUB_EVENT_NAME": "workflow_dispatch",
+            "GITHUB_REPOSITORY": "alessandrorossato/florabase",
+            "GITHUB_WORKFLOW_REF": "alessandrorossato/florabase/.github/workflows/beta-images.yml@refs/heads/main",
+            "RUNNER_ENVIRONMENT": "github-hosted",
+            "APPROVED_SHA": sha,
+        }
+        with (
+            patch.dict(os.environ, valid, clear=True),
+            patch.object(publisher, "run", return_value=""),
+        ):
+            publisher.require_publication_identity(sha)
+            for field in valid:
+                with (
+                    self.subTest(field=field),
+                    patch.dict(os.environ, {field: ""}),
+                    self.assertRaises(ValueError),
+                ):
+                    publisher.require_publication_identity(sha)
+        with (
+            patch.dict(os.environ, valid, clear=True),
+            patch.object(publisher, "run", return_value=" M file"),
+            self.assertRaises(ValueError),
+        ):
+            publisher.require_publication_identity(sha)
+
+    def test_failed_security_or_smoke_cannot_promote_a_pair(self) -> None:
+        sha = "c" * 40
+        environment = {
+            "GITHUB_ACTIONS": "true",
+            "GITHUB_REF": "refs/heads/main",
+            "GITHUB_SHA": sha,
+            "GITHUB_EVENT_NAME": "workflow_dispatch",
+            "GITHUB_REPOSITORY": "alessandrorossato/florabase",
+            "GITHUB_WORKFLOW_REF": "alessandrorossato/florabase/.github/workflows/beta-images.yml@refs/heads/main",
+            "RUNNER_ENVIRONMENT": "github-hosted",
+            "APPROVED_SHA": sha,
+            "GITHUB_RUN_ID": "1",
+            "GITHUB_RUN_ATTEMPT": "1",
+            "GITHUB_ACTOR": "fixture",
+            "REGISTRY_TOKEN": "fixture-only",
+        }
+
+        def output(*args: str) -> str:
+            if args[:2] == ("git", "rev-parse"):
+                return sha
+            if args[:2] == ("git", "status"):
+                return ""
+            if args[0] == "gh":
+                return "[[]]"
+            return "0"
+
+        def execute(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+            if "--metadata-file" in command:
+                path = Path(command[command.index("--metadata-file") + 1])
+                path.write_text(
+                    json.dumps(
+                        {
+                            "containerimage.digest": "sha256:"
+                            + ("a" if "backend" == command[-1] else "d") * 64
+                        }
+                    )
+                )
+            return subprocess.CompletedProcess(command, 0)
+
+        for failing, phase in (
+            ("scan_images", "frontend_candidate_pushed"),
+            ("run_artifact_smoke", "security_passed"),
+        ):
+            with self.subTest(failing=failing), tempfile.TemporaryDirectory() as temporary:
+                target = Path(temporary) / "output"
+                with (
+                    patch.dict(os.environ, environment, clear=True),
+                    patch.object(sys, "argv", ["publish", "--output", str(target)]),
+                    patch.object(publisher, "inputs", return_value=inputs(ROOT)),
+                    patch.object(publisher, "run", side_effect=output),
+                    patch.object(publisher, "manifest", return_value=candidate()),
+                    patch.object(publisher, "scan_images"),
+                    patch.object(publisher, "run_artifact_smoke"),
+                    patch.object(
+                        publisher, failing, side_effect=ValueError("fixture gate blocked")
+                    ),
+                    patch.object(publisher.subprocess, "run", side_effect=execute) as commands,
+                ):
+                    with self.assertRaisesRegex(ValueError, "fixture gate blocked"):
+                        publisher.main()
+                    self.assertEqual(
+                        json.loads((target / "publication-state.json").read_text())["phase"], phase
+                    )
+                    self.assertFalse((target / "RELEASE.md").exists())
+                    self.assertFalse(
+                        any(
+                            call.args[0][:4] == ["docker", "buildx", "imagetools", "create"]
+                            for call in commands.call_args_list
+                        )
+                    )
+
+    def test_scan_requires_complete_unsuppressed_exact_bytes(self) -> None:
+        digest = "sha256:" + "a" * 64
+        valid: dict[str, Any] = {
+            "SchemaVersion": 2,
+            "ArtifactType": "container_image",
+            "Metadata": {"ImageID": digest},
+            "Results": [{"Class": "os-pkgs", "Packages": [{"Name": "fixture"}]}],
+        }
+        validate_scan(valid, digest)
+        for service in ("backend", "frontend", "postgresql"):
+            with self.subTest(service=service), self.assertRaisesRegex(ValueError, "inventory"):
+                validate_scan(valid, digest, service)
+        for change in (
+            {},
+            {**valid, "Results": []},
+            {**valid, "Metadata": {"ImageID": "wrong"}},
+            {**valid, "Results": [{"Class": "os-pkgs"}]},
+            {**valid, "ExperimentalModifiedFindings": ["ignored"]},
+        ):
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                validate_scan(change, digest)
+        for field in ("Secrets", "Vulnerabilities", "ExperimentalModifiedFindings"):
+            changed = copy.deepcopy(valid)
+            changed["Results"][0][field] = [{"Severity": "HIGH"}]
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                validate_scan(changed, digest)
+
+    def test_shared_or_symlinked_executable_cache_refuses(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            cache = root / "cache"
+            tooling.secure_cache(cache)
+            self.assertEqual(cache.stat().st_mode & 0o777, 0o700)
+            cache.chmod(0o777)
+            with self.assertRaisesRegex(ValueError, "unsafe release cache"):
+                tooling.secure_cache(cache)
+            cache.chmod(0o700)
+            link = root / "symlink"
+            link.symlink_to(cache, target_is_directory=True)
+            with self.assertRaises(ValueError):
+                tooling.secure_cache(link)
+            (cache / "lock").symlink_to(root / "victim")
+            with self.assertRaises((ValueError, FileNotFoundError)):
+                tooling.secure_cache(cache)
+            (cache / "lock").unlink()
+            (cache / "python").write_text("malicious executable")
+            (cache / "python").chmod(0o777)
+            with self.assertRaises(ValueError):
+                tooling.secure_cache(cache)
+
+    def test_authenticated_paginated_draft_lookup_and_id_revalidation(self) -> None:
+        import beta_release
+
+        self.assertTrue(
+            hasattr(beta_release, "locate_draft_release"),
+            "draft lookup must use listing and numeric ID",
+        )
+        tag, sha, repo = "v0.1.0-beta.1", "c" * 40, "alessandrorossato/florabase"
+        draft = {
+            "id": 42,
+            "tag_name": tag,
+            "draft": True,
+            "target_commitish": sha,
+            "url": f"https://api.github.com/repos/{repo}/releases/42",
+            "assets": [],
+        }
+
+        def api(*args: str) -> str:
+            if "/tags/" in args[-1]:
+                raise subprocess.CalledProcessError(
+                    1, args, stderr="404 published release not found"
+                )
+            if "--paginate" in args:
+                self.assertIn("--slurp", args)
+                return json.dumps([[{"tag_name": "unrelated"}], [draft]])
+            self.assertEqual(args[-1], f"repos/{repo}/releases/42")
+            return json.dumps(draft)
+
+        with (
+            patch.dict(os.environ, {"GH_TOKEN": "fixture"}),
+            patch("beta_release.run", side_effect=api),
+        ):
+            self.assertEqual(beta_release.locate_draft_release(repo, tag, sha), draft)
+        mutations = [
+            {**draft, "id": 43},
+            {**draft, "draft": False},
+            {**draft, "tag_name": "stale"},
+            {**draft, "target_commitish": "main"},
+            {**draft, "url": "foreign"},
+            {**draft, "assets": [{"id": 1, "state": "new"}]},
+        ]
+        for value in mutations:
+            with (
+                self.subTest(value=value),
+                patch.dict(os.environ, {"GH_TOKEN": "fixture"}),
+                patch("beta_release.run", side_effect=[json.dumps([[draft]]), json.dumps(value)]),
+                self.assertRaises(ValueError),
+            ):
+                beta_release.locate_draft_release(repo, tag, sha)
+        for pages in [[], [[]], [[draft], [draft]], [[{**draft, "draft": False}]]]:
+            with (
+                self.subTest(pages=pages),
+                patch.dict(os.environ, {"GH_TOKEN": "fixture"}),
+                patch("beta_release.run", return_value=json.dumps(pages)),
+                self.assertRaises(ValueError),
+            ):
+                beta_release.locate_draft_release(repo, tag, sha)
+        with (
+            patch.dict(os.environ, {"GH_TOKEN": "fixture"}),
+            patch("beta_release.run", side_effect=subprocess.CalledProcessError(1, "gh")),
+            self.assertRaises(subprocess.CalledProcessError),
+        ):
+            beta_release.locate_draft_release(repo, tag, sha)
+
+    def test_actual_workflow_draft_finalization_with_published_tag_404(self) -> None:
+        repo, sha, tag = "alessandrorossato/florabase", "c" * 40, "v0.1.0-beta.1"
+        workflow = (ROOT / ".github/workflows/beta-images.yml").read_text()
+        code = textwrap.dedent(workflow.split("<<'PY'\n")[-1].split("          PY")[0])
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "fixture.json").write_bytes(b"fixture")
+            release: dict[str, Any] = {
+                "id": 42,
+                "tag_name": tag,
+                "draft": True,
+                "target_commitish": sha,
+                "url": f"https://api.github.com/repos/{repo}/releases/42",
+                "assets": [
+                    {
+                        "id": 7,
+                        "state": "uploaded",
+                        "name": "fixture.json",
+                        "size": 7,
+                        "digest": "sha256:" + hashlib.sha256(b"fixture").hexdigest(),
+                    }
+                ],
+            }
+            for valid in (True, False):
+                value = copy.deepcopy(release)
+                if not valid:
+                    value["assets"][0]["digest"] = "wrong"
+                with (
+                    patch.dict(
+                        os.environ,
+                        {"GH_TOKEN": "fixture", "GITHUB_REPOSITORY": repo, "GITHUB_SHA": sha},
+                    ),
+                    patch.object(sys, "argv", ["probe", temporary, tag]),
+                    patch(
+                        "beta_release.run",
+                        side_effect=[json.dumps([[], [value]]), json.dumps(value)],
+                    ),
+                    patch(
+                        "subprocess.check_output",
+                        side_effect=subprocess.CalledProcessError(
+                            1, "published-tag-lookup", stderr="404"
+                        ),
+                    ),
+                    patch("subprocess.run") as mutation,
+                ):
+                    if valid:
+                        exec(code, {})
+                        self.assertEqual(
+                            mutation.call_args.args[0][:5],
+                            ["gh", "api", "--method", "PATCH", f"repos/{repo}/releases/42"],
+                        )
+                    else:
+                        with self.assertRaises(ValueError):
+                            exec(code, {})
+                        mutation.assert_not_called()
+
+    def test_draft_validation_and_promotion_order(self) -> None:
+        source = (ROOT / "scripts/publish-beta-images.py").read_text()
+        self.assertLess(
+            source.index("release_asset_inventory(output)"), source.index('"--prefer-index=false"')
+        )
+        import beta_release
+
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "unexpected-directory").mkdir()
+            with self.assertRaises(ValueError):
+                beta_release.release_asset_inventory(output)
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch("beta_release.run") as api,
+            self.assertRaises(ValueError),
+        ):
+            beta_release.locate_draft_release(
+                "alessandrorossato/florabase", "v0.1.0-beta.1", "c" * 40
+            )
+        api.assert_not_called()
+
+    def test_workflow_draft_lookup_never_uses_published_tag_endpoint(self) -> None:
+        workflow = (ROOT / ".github/workflows/beta-images.yml").read_text()
+        self.assertNotIn("/releases/tags/", workflow)
+        self.assertIn("locate_draft_release", workflow)
+        self.assertIn('--target "$GITHUB_SHA"', workflow)
+        self.assertIn('"--method", "PATCH"', workflow)
+
+    def test_partial_or_wrong_release_assets_cannot_be_published(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "manifest.json").write_bytes(b"fixture")
+            asset = {
+                "name": "manifest.json",
+                "size": 7,
+                "digest": "sha256:" + hashlib.sha256(b"fixture").hexdigest(),
+            }
+            valid = {"draft": True, "assets": [asset]}
+            validate_release_assets(valid, output)
+            for change in (
+                {"draft": False, "assets": [asset]},
+                {"draft": True, "assets": []},
+                {"draft": True, "assets": [{**asset, "digest": None}]},
+                {"draft": True, "assets": [{**asset, "size": 0}]},
+            ):
+                with self.subTest(change=change), self.assertRaises(ValueError):
+                    validate_release_assets(change, output)
+
+    def test_saved_native_descriptor_is_bound_to_configuration(self) -> None:
+        config = "sha256:" + "a" * 64
+        native = json.dumps({"config": {"digest": config}}).encode()
+        native_digest = "sha256:" + hashlib.sha256(native).hexdigest()
+        index = json.dumps(
+            {
+                "manifests": [
+                    {"digest": native_digest, "platform": {"os": "linux", "architecture": "amd64"}}
+                ]
+            }
+        ).encode()
+        index_digest = "sha256:" + hashlib.sha256(index).hexdigest()
+        with tempfile.TemporaryFile() as data:
+            with tarfile.open(fileobj=data, mode="w") as saved:
+                for name, value in {
+                    "index.json": json.dumps({"manifests": [{"digest": index_digest}]}).encode(),
+                    "blobs/sha256/" + index_digest[7:]: index,
+                    "blobs/sha256/" + native_digest[7:]: native,
+                }.items():
+                    info = tarfile.TarInfo(name)
+                    info.size = len(value)
+                    saved.addfile(info, io.BytesIO(value))
+            data.seek(0)
+            with tarfile.open(fileobj=data) as saved:
+                self.assertEqual(saved_descriptors(saved, config)["platform_digest"], native_digest)
+                with self.assertRaisesRegex(ValueError, "identity mismatch"):
+                    saved_descriptors(saved, "sha256:" + "b" * 64)
+
+    def test_classic_registry_export_binds_native_config_without_oci_store(self) -> None:
+        config = "sha256:" + "a" * 64
+        native = json.dumps({"config": {"digest": config}}).encode()
+        native_digest = "sha256:" + hashlib.sha256(native).hexdigest()
+        index = json.dumps(
+            {
+                "manifests": [
+                    {"digest": native_digest, "platform": {"os": "linux", "architecture": "amd64"}}
+                ]
+            }
+        ).encode()
+        index_digest = "sha256:" + hashlib.sha256(index).hexdigest()
+        reference = "ghcr.io/owner/image@" + index_digest
+        with tempfile.TemporaryFile() as data:
+            with tarfile.open(fileobj=data, mode="w"):
+                pass
+            data.seek(0)
+            with tarfile.open(fileobj=data) as saved:
+                with patch(
+                    "beta_release.subprocess.check_output",
+                    side_effect=[index + b"\n", native + b"\n"],
+                ):
+                    self.assertEqual(
+                        saved_descriptors(saved, config, reference)["platform_digest"],
+                        native_digest,
+                    )
+                with (
+                    patch("beta_release.subprocess.check_output", return_value=b"{}"),
+                    self.assertRaisesRegex(ValueError, "digest mismatch"),
+                ):
+                    saved_descriptors(saved, config, reference)
+                with (
+                    patch("beta_release.subprocess.check_output", side_effect=[index, native]),
+                    self.assertRaisesRegex(ValueError, "config identity mismatch"),
+                ):
+                    saved_descriptors(saved, "sha256:" + "b" * 64, reference)
+                with self.assertRaisesRegex(ValueError, "OCI image store required"):
+                    saved_descriptors(saved, config, "local-candidate")
+
+    def test_registry_descriptor_requires_distinct_native_identity(self) -> None:
+        digest = "sha256:" + "a" * 64
+        native = {
+            "digest": "sha256:" + "b" * 64,
+            "platform": {"os": "linux", "architecture": "amd64"},
+        }
+        valid = {"digest": digest, "manifests": [native]}
+        reference = "ghcr.io/owner/image@" + digest
+        with patch("beta_release.run", return_value=json.dumps(valid)):
+            self.assertEqual(
+                registry_record(reference, "linux/amd64")["platform_digest"], native["digest"]
+            )
+        for manifests in (
+            [],
+            [native, native],
+            [{**native, "digest": digest}],
+            [native, {**native, "platform": {"os": "linux", "architecture": "arm64"}}],
+        ):
+            with (
+                self.subTest(manifests=manifests),
+                patch(
+                    "beta_release.run", return_value=json.dumps({**valid, "manifests": manifests})
+                ),
+                self.assertRaises(ValueError),
+            ):
+                registry_record(reference, "linux/amd64")
 
     def test_interrupted_artifact_parent_allows_child_cleanup(self) -> None:
         with tempfile.TemporaryDirectory(prefix="beta-child-cleanup-test-") as temporary:
