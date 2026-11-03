@@ -169,7 +169,7 @@ class Resources:
 
     def inventory(self) -> dict[str, list[dict[str, Any]]]:
         result: dict[str, list[dict[str, Any]]] = {}
-        for kind, listing, inspection in (
+        for kind, listing, _inspection in (
             ("containers", ["ps", "-aq"], ["inspect"]),
             ("networks", ["network", "ls", "-q"], ["network", "inspect"]),
             ("volumes", ["volume", "ls", "-q"], ["volume", "inspect"]),
@@ -180,12 +180,28 @@ class Resources:
             identifiers = sorted(
                 set(self.command(*listing, "--filter", f"label={label}={value}").splitlines())
             )
-            result[kind] = (
-                cast(list[dict[str, Any]], json.loads(self.command(*inspection, *identifiers)))
-                if identifiers
-                else []
-            )
+            result[kind] = []
+            for identifier in identifiers:
+                item = self.inspect_present(kind, identifier)
+                if item is not None:
+                    result[kind].append(item)
         return result
+
+    def inspect_present(self, kind: str, identifier: str) -> dict[str, Any] | None:
+        inspection = ["inspect"] if kind == "containers" else [kind[:-1], "inspect"]
+        try:
+            items = json.loads(self.command(*inspection, identifier))
+            if items:
+                return cast(dict[str, Any], items[0])
+        except ResourceError:
+            if kind != "containers":
+                raise
+        if kind != "containers":
+            raise ResourceError("missing resource inspection evidence")
+        # Only a successful fresh all-container inventory proves disappearance.
+        if identifier in self.command("ps", "-aq", "--no-trunc").splitlines():
+            raise ResourceError("container remains but inspection failed; refusing cleanup")
+        return None
 
     @staticmethod
     def labels(item: dict[str, Any], kind: str) -> dict[str, str]:
@@ -267,8 +283,9 @@ class Resources:
             for item in inventory[kind]:
                 # Reinspect ownership immediately before each removal; never remove by prefix.
                 identifier = str(item["Id"] if kind != "volumes" else item["Name"])
-                inspect = ["inspect"] if kind == "containers" else [kind[:-1], "inspect"]
-                current = json.loads(self.command(*inspect, identifier))[0]
+                current = self.inspect_present(kind, identifier)
+                if current is None:
+                    continue
                 self.prove(current, kind)
                 if kind in {"volumes", "networks"} and self.users(
                     "volume" if kind == "volumes" else "network", str(current["Name"])
@@ -352,7 +369,7 @@ def report() -> dict[str, Any]:
     }
     projects: dict[str, Any] = {}
     observed_projects = set(known)
-    for kind, listing, inspection in (
+    for kind, listing, _inspection in (
         ("containers", ["ps", "-a"], ["inspect"]),
         ("networks", ["network", "ls"], ["network", "inspect"]),
         ("volumes", ["volume", "ls"], ["volume", "inspect"]),
@@ -443,6 +460,7 @@ def main() -> int:
     parser.add_argument("--project")
     parser.add_argument("--role")
     parser.add_argument("--owner")
+    parser.add_argument("--source", help="exact recorded source label; need not still exist")
     args = parser.parse_args()
     try:
         from workflow_environment import Repository
@@ -482,7 +500,9 @@ def main() -> int:
                 raise ResourceError(
                     "recovery requires exact --project, --role and --owner from the failed run"
                 )
-            Resources(Owner(args.project, args.role, str(repo.source), args.owner)).clean()
+            Resources(
+                Owner(args.project, args.role, args.source or str(repo.source), args.owner)
+            ).clean()
     except ResourceError as error:
         print(f"RESOURCE_CLEANUP_FAILED: {error}", file=sys.stderr)
         return 1

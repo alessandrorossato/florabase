@@ -59,6 +59,8 @@ class FakeDocker:
                 )
             _, value = condition.split("=", 1)
             return "\n".join(self.foreign_users.get(value, set()))
+        if args == ("ps", "-aq", "--no-trunc"):
+            return "\n".join(str(i["Id"]) for i in self.objects["containers"])
         if "inspect" in args:
             wanted = args[args.index("inspect") + 1 :]
             return json.dumps(
@@ -88,6 +90,44 @@ class ResourceTests(unittest.TestCase):
         owner = owner or self.owner
         for kind in self.fake.objects:
             self.fake.add(owner, kind, owner.project + "-" + kind)
+
+    def test_disappearing_container_does_not_strand_network_or_media(self) -> None:
+        self.populate()
+        original = self.fake.__call__
+
+        def raced(*args: str) -> str:
+            if args[0] == "inspect":
+                self.fake.objects["containers"] = []
+                raise ResourceError("container vanished")
+            return original(*args)
+
+        resources = Resources(self.owner, raced)
+        resources.clean()
+        resources.clean()
+        self.assertFalse(any(self.fake.objects.values()))
+
+    def test_inspect_failure_with_live_container_refuses(self) -> None:
+        self.populate()
+        original = self.fake.__call__
+
+        def failed(*args: str) -> str:
+            if args[0] == "inspect":
+                raise ResourceError("daemon error")
+            return original(*args)
+
+        with self.assertRaises(ResourceError):
+            Resources(self.owner, failed).clean()
+        self.assertEqual(self.fake.removed, [])
+
+    def test_recovery_accepts_missing_source_only_with_exact_labels(self) -> None:
+        owner = Owner.disposable("workflow-smoke", Path("/tmp/removed-source-fixture"))
+        self.populate(owner)
+        wrong = Owner(owner.project, owner.role, "/tmp/forged", owner.identity)
+        with self.assertRaises(ResourceError):
+            Resources(wrong, self.fake).clean()
+        self.assertFalse(self.fake.removed)
+        Resources(owner, self.fake).clean()
+        self.assertFalse(any(self.fake.objects.values()))
 
     def test_exact_project_cleans_stale_network_volume_orphans_and_images(self) -> None:
         self.populate()

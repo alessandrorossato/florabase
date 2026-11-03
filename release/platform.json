@@ -5,5 +5,13 @@
   "operator": null,
   "screened_at": null,
   "evidence": [],
-  "reason": "No intended beta host has been selected or measured. Development/CI amd64 smoke does not approve a beta host."
+  "reason": "Operator selected DS224+ linux/amd64; measured Docker/Compose compatibility and capacity acceptance remain pending. Portable Compose on compatible amd64 PC/VPS hosts is required.",
+  "host_selection": {
+    "model": "Synology DS224+",
+    "os": "linux",
+    "architecture": "amd64",
+    "source": "operator instruction 2026-11-03",
+    "capacity_acceptance": "pending",
+    "runtime_acceptance": "pending"
+  }
 }

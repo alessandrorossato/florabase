@@ -42,6 +42,7 @@ LABEL org.opencontainers.image.title="Florabase backend" \
     org.opencontainers.image.licenses="AGPL-3.0-or-later"
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=6 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready', timeout=3)"
+RUN find /usr /bin /sbin -xdev -type f -perm /6000 -exec chmod a-s {} +
 USER florabase
 EXPOSE 8000
 CMD ["uvicorn", "florabase.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-server-header", "--no-proxy-headers"]

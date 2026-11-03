@@ -50,6 +50,9 @@ def main() -> None:
         args.evidence.write_text(json.dumps(candidate_manifest, indent=2) + "\n")
         with tempfile.TemporaryDirectory(prefix="florabase-artifact-only-") as temporary:
             artifact = Path(temporary)
+            shutil.copyfile(
+                root / "release/manifest.schema.json", artifact / "manifest.schema.json"
+            )
             for name in (
                 "smoke-beta-images.py",
                 "beta_release.py",

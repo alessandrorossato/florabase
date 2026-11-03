@@ -150,6 +150,9 @@ def main() -> None:
         # Tools travel with the artifact; runtime execution has no local checkout or source bind.
         with tempfile.TemporaryDirectory(prefix="beta-artifact-only-") as temporary:
             artifact = Path(temporary)
+            shutil.copyfile(Path("release/manifest.schema.json"), artifact / "manifest.schema.json")
+            shutil.copyfile(Path("release/manifest.schema.json"), output / "manifest.schema.json")
+            shutil.copyfile(Path("release/requirements.txt"), output / "requirements.txt")
             for name in (
                 "smoke-beta-images.py",
                 "beta_release.py",

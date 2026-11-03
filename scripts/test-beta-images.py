@@ -226,6 +226,44 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual(result.returncode, 143)
             self.assertTrue((artifact / "cleaned").is_file())
 
+    def test_published_schema_is_enforced(self) -> None:
+        base = candidate()
+        mutations = []
+        for field in base:
+            v = copy.deepcopy(base)
+            del v[field]
+            mutations.append(v)
+        for field in ("run_id", "run_attempt"):
+            v = copy.deepcopy(base)
+            v["workflow"][field] = None
+            mutations.append(v)
+        for owner in ("foreign", "alessandrorossato"):
+            v = copy.deepcopy(base)
+            v["images"]["frontend"]["reference"] = v["images"]["backend"]["reference"].replace(
+                "alessandrorossato", owner
+            )
+            mutations.append(v)
+        for field in ("scanner", "buildkit", "sbom_generator", "dockerfile_frontend"):
+            v = copy.deepcopy(base)
+            v["build_inputs"][field] = "example:latest"
+            mutations.append(v)
+        v = copy.deepcopy(base)
+        v["build_inputs"]["base_images"]["python"] = "python:latest"
+        mutations.append(v)
+        for i, value in enumerate(mutations):
+            with self.subTest(case=i), self.assertRaises(ValueError):
+                validate_manifest(value)
+
+    def test_attestation_policy_cannot_be_repo_only(self) -> None:
+        policy = (ROOT / "docs/beta-image-001.md").read_text()
+        for flag in (
+            "--signer-workflow",
+            "--source-ref",
+            "--deny-self-hosted-runners",
+            "--source-digest",
+        ):
+            self.assertIn(flag, policy)
+
     def test_no_automatic_release_trigger_and_least_privilege(self) -> None:
         workflow = (ROOT / ".github/workflows/beta-images.yml").read_text()
         self.assertIn("workflow_dispatch:", workflow)

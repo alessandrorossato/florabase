@@ -90,7 +90,7 @@
           "properties": {
             "reference": {
               "type": "string",
-              "pattern": "^ghcr\\.io/[a-z0-9_./-]+@sha256:[a-f0-9]{64}$"
+              "pattern": "^ghcr\\.io/alessandrorossato/florabase-backend@sha256:[a-f0-9]{64}$"
             },
             "index_digest": {
               "type": "string",
@@ -117,7 +117,7 @@
           "properties": {
             "reference": {
               "type": "string",
-              "pattern": "^ghcr\\.io/[a-z0-9_./-]+@sha256:[a-f0-9]{64}$"
+              "pattern": "^ghcr\\.io/alessandrorossato/florabase-frontend@sha256:[a-f0-9]{64}$"
             },
             "index_digest": {
               "type": "string",
@@ -158,19 +158,43 @@
           "type": "object"
         },
         "scanner": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^.+@sha256:[a-f0-9]{64}$"
         },
         "base_images": {
-          "type": "object"
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "python",
+            "node",
+            "nginx"
+          ],
+          "properties": {
+            "python": {
+              "type": "string",
+              "pattern": "^.+@sha256:[a-f0-9]{64}$"
+            },
+            "node": {
+              "type": "string",
+              "pattern": "^.+@sha256:[a-f0-9]{64}$"
+            },
+            "nginx": {
+              "type": "string",
+              "pattern": "^.+@sha256:[a-f0-9]{64}$"
+            }
+          }
         },
         "buildkit": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^.+@sha256:[a-f0-9]{64}$"
         },
         "sbom_generator": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^.+@sha256:[a-f0-9]{64}$"
         },
         "dockerfile_frontend": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^.+@sha256:[a-f0-9]{64}$"
         }
       },
       "required": [

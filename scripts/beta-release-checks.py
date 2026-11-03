@@ -26,6 +26,17 @@ def successful_checks(checks: list[dict[str, Any]], sha: str) -> bool:
 
 
 def main() -> None:
+    help_text = run("gh", "attestation", "verify", "--help")
+    for flag in (
+        "--signer-workflow",
+        "--source-ref",
+        "--deny-self-hosted-runners",
+        "--source-digest",
+    ):
+        if flag not in help_text:
+            raise ValueError(
+                "installed GitHub CLI does not support release verification policy: " + flag
+            )
     locked = inputs(Path.cwd(), publication=True)
     sha = os.environ["GITHUB_SHA"]
     repo = os.environ["GITHUB_REPOSITORY"]

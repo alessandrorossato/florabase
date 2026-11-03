@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import os
 import re
@@ -128,6 +129,19 @@ def registry_record(reference: str, platform: str) -> dict[str, str]:
 
 
 def validate_manifest(value: dict[str, Any], local: bool = False) -> None:
+    if not local:
+        schema_path = Path(__file__).with_name("manifest.schema.json")
+        if not schema_path.exists():
+            schema_path = Path(__file__).resolve().parents[1] / "release/manifest.schema.json"
+        validator = importlib.import_module("jsonschema")
+        try:
+            validator.Draft202012Validator(read(schema_path)).validate(value)
+        except validator.ValidationError as error:
+            raise ValueError(
+                "release manifest violates published schema: " + error.message
+            ) from error
+        if value["images"]["backend"]["reference"] == value["images"]["frontend"]["reference"]:
+            raise ValueError("release pair must have distinct references")
     if (
         value["schema_version"] != 1
         or value["platforms"] != ["linux/amd64"]

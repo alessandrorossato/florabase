@@ -147,8 +147,21 @@ maintenance review and compatibility/restore rehearsal. This feature does not ch
 DEV/preview production-oriented Compose PostgreSQL selection or implement a runtime updater.
 
 Consumers obtain the matching release-manifest and source from the versioned prerelease, verify
-its artifact attestation (for example `gh attestation verify release-manifest.json --repo
-alessandrorossato/florabase`), verify OCI/provenance source/revision and index/platform identities,
+its artifact attestation using GitHub CLI 2.103.3 (tested) or a newer CLI exposing all required flags:
+
+```sh
+gh attestation verify release-manifest.json --repo alessandrorossato/florabase \
+  --signer-workflow alessandrorossato/florabase/.github/workflows/beta-images.yml \
+  --source-ref refs/heads/main --source-digest "$AUTHORIZED_COMMIT" \
+  --deny-self-hosted-runners
+```
+
+Set AUTHORIZED_COMMIT from independently authorized release records, not an unverified manifest.
+Require the manifest version to equal the authorized protected tag/release, source revision to equal
+that commit, and each registry index and native platform digest to equal the signed manifest.
+BuildKit image provenance must identify that source; the manifest attestation does not constitute a
+separate GitHub signature on each image. The workflow preflight checks actual CLI flag support and
+fails closed on older runners (local gh 2.46.0 is incompatible). Verify OCI source/revision and
 then pull the two exact `images.*.reference` values. Never derive a pair from independent mutable tags.
 An artifact attestation proves its producer; acceptance still requires the expected protected workflow,
 source, successful checks and release identity. Retain the manifest and matching source with recovery
@@ -186,3 +199,15 @@ The isolated transport is HTTP with an explicit replay of the secure cookie to t
 real HTTPS/browser cookie handling and durable-host restart/reboot remain BETA-RUNTIME-001 acceptance.
 No canonical FULL is run before independent QA; publication, registry-pull evidence and real-host
 acceptance are not fabricated when their prerequisites are unavailable.
+
+Recovery after an interrupted temporary-source run: from a valid checkout run
+`python3 scripts/workflow_resources.py cleanup-disposable --project <exact-project> --role workflow-smoke --owner <exact-32-hex-run-id> --source <exact-recorded-source>`.
+The source directory may no longer exist. Every actual resource must still prove all four exact
+project/lifecycle/owner/source labels and have no foreign users. A supplied source is a label claim,
+never authority; wrong or incomplete evidence refuses deletion. Repeated cleanup is safe.
+
+Operator selection: Synology DS224+, Linux/amd64. Capacity and actual Docker/Compose runtime evidence
+remain pending. The application stays portable to compatible amd64 PCs/VPSs using Compose without
+Dockhand. No NAS-specific runtime behavior or deployment is introduced; arm64 remains a later extension.
+
+Artifact verification tools require the pinned host-only packages in release/requirements.txt (downloaded as requirements.txt with a release): install them in an isolated Python environment. Production images do not include JSON Schema tooling.

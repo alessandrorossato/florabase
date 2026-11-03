@@ -30,6 +30,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+      - run: python3 -m pip install -r release/requirements.txt
       - name: Validate selected source and host input
         env:
           SELECTED_SHA: ${{ inputs.source_sha }}
@@ -72,6 +73,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+      - run: python3 -m pip install -r release/requirements.txt
       - name: Require explicit environment approval for this exact commit
         env:
           APPROVED_SHA: ${{ secrets.RELEASE_APPROVED_SHA }}

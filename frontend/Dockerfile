@@ -29,6 +29,8 @@ LABEL org.opencontainers.image.title="Florabase frontend" \
     org.opencontainers.image.licenses="AGPL-3.0-or-later"
 HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=6 \
     CMD wget --quiet --tries=1 --spider http://127.0.0.1:8080/healthz
+USER root
+RUN find /usr /bin /sbin -xdev -type f -perm /6000 -exec chmod a-s {} +
 USER 101:101
 EXPOSE 8080
 
