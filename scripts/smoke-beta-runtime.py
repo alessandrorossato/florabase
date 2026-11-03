@@ -1027,7 +1027,9 @@ class Smoke:
         self.stack("up", "-d", "--no-deps", "--force-recreate", "backend")
         results.append(self.never_ready("recreation (Dockhand-equivalent redeploy)"))
         self.psql(f"UPDATE alembic_version SET version_num = '{self.heads['a']}'")
-        self.stack("up", "-d", "--no-deps", "--force-recreate", "backend")
+        # Compatible again: an ordinary uncontrolled `up -d` (as Dockhand runs it) must recover.
+        self.nested("restart", self.backend()["Id"])  # skip the crash-loop backoff delay
+        self.stack("up", "-d")
         self.ctl("acceptance", "--owner", OWNER_LOGIN, stdin=self.password + "\n")
         if self.client("snapshot") != baseline:
             raise SystemExit("schema guard drill changed data")
