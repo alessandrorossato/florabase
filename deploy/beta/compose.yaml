@@ -1,0 +1,212 @@
+# Florabase beta distribution stack (BETA-RUNTIME-001), stack format 1.
+#
+# Image-only: no build, source checkout, development overlay or source bind. Every value comes from
+# the stack directory's controller-rendered `.env` and `reference.env` plus two protected secret
+# env files. Requires Docker Engine >= 24.0 and Compose >= 2.20 (Synology Container Manager
+# 24.0.2 / 2.20.1); nothing newer is used. Install, migrate, back up, restore and promote with
+# florabasectl.py. A plain `docker compose up` or Dockhand redeploy never migrates: schema-gate
+# refuses to start the backend unless the database is exactly at this backend image's Alembic head.
+name: florabase-prod
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+x-backend-environment: &backend-environment
+  FLORABASE_ENVIRONMENT: production
+  FLORABASE_CANONICAL_ORIGIN: ${FLORABASE_CANONICAL_ORIGIN:?Set FLORABASE_CANONICAL_ORIGIN}
+  FLORABASE_COOKIE_MODE: secure
+  FLORABASE_CORS_ORIGINS: "[]"
+  FLORABASE_LOG_LEVEL: ${FLORABASE_LOG_LEVEL:-INFO}
+  FLORABASE_LOG_FORMAT: json
+  FLORABASE_ATTACHMENT_STORAGE_ROOT: /var/lib/florabase/attachments
+
+# One-shot tasks from the pinned backend image. They mount media only where a task needs it.
+x-backend-task: &backend-task
+  image: ${FLORABASE_BACKEND_IMAGE:?Set FLORABASE_BACKEND_IMAGE to an approved digest}
+  env_file:
+    - ${FLORABASE_SECRETS_DIR:?Set FLORABASE_SECRETS_DIR}/backend.env
+    - reference.env
+  environment: *backend-environment
+  depends_on:
+    db:
+      condition: service_healthy
+  restart: "no"
+  read_only: true
+  tmpfs: ["/tmp:size=64m"]
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  mem_limit: 512m
+  memswap_limit: 512m
+  pids_limit: 64
+  networks: [internal]
+  logging: *logging
+
+services:
+  db:
+    image: ${FLORABASE_POSTGRES_IMAGE:?Set FLORABASE_POSTGRES_IMAGE to the approved digest}
+    user: "70:70"
+    env_file:
+      - ${FLORABASE_SECRETS_DIR:?Set FLORABASE_SECRETS_DIR}/db.env
+    volumes:
+      # nocopy: never copy the image's 1777 mount-point mode onto the host directory.
+      - type: volume
+        source: postgres_data
+        target: /var/lib/postgresql
+        volume:
+          nocopy: true
+    read_only: true
+    tmpfs: ["/tmp:size=64m", "/var/run/postgresql:size=1m"]
+    shm_size: 128m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+    stop_grace_period: 60s
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    mem_limit: ${FLORABASE_DB_MEMORY:-1g}
+    memswap_limit: ${FLORABASE_DB_MEMORY:-1g}
+    # 0 = unlimited; set only after preflight reports CPU CFS quota support.
+    cpus: ${FLORABASE_DB_CPUS:-0}
+    pids_limit: 200
+    labels:
+      dockhand.update: "false"
+      io.florabase.runtime.service: db
+    networks: [internal]
+    logging: *logging
+
+  schema-gate:
+    <<: *backend-task
+    command:
+      - python
+      - -c
+      - |
+        import sys
+        from alembic.config import Config
+        from alembic.runtime.migration import MigrationContext
+        from alembic.script import ScriptDirectory
+        from florabase.db.session import get_engine
+        heads = set(ScriptDirectory.from_config(Config("alembic.ini")).get_heads())
+        with get_engine().connect() as connection:
+            current = set(MigrationContext.configure(connection).get_current_heads())
+        if current != heads:
+            sys.exit("schema-gate: database revision %s is not image head %s; use florabasectl" % (sorted(current) or "empty", sorted(heads)))
+        print("schema-gate: database at image head %s" % sorted(heads))
+    labels:
+      dockhand.update: "false"
+      io.florabase.runtime.service: schema-gate
+
+  migrate:
+    <<: *backend-task
+    profiles: [maintenance]
+    command: ["alembic", "upgrade", "head"]
+    labels:
+      dockhand.update: "false"
+      io.florabase.runtime.service: migrate
+
+  # Controller-run probes, owner bootstrap and media verify/archive/restore with writers stopped.
+  tools:
+    <<: *backend-task
+    profiles: [maintenance]
+    volumes:
+      - type: volume
+        source: attachment_data
+        target: /var/lib/florabase/attachments
+        volume:
+          nocopy: true
+    command: ["python", "-c", "print('florabase maintenance tools')"]
+    labels:
+      dockhand.update: "false"
+      io.florabase.runtime.service: tools
+
+  backend:
+    image: ${FLORABASE_BACKEND_IMAGE:?Set FLORABASE_BACKEND_IMAGE to an approved digest}
+    env_file:
+      - ${FLORABASE_SECRETS_DIR:?Set FLORABASE_SECRETS_DIR}/backend.env
+      - reference.env
+    environment: *backend-environment
+    volumes:
+      - type: volume
+        source: attachment_data
+        target: /var/lib/florabase/attachments
+        volume:
+          nocopy: true
+      - type: volume
+        source: reference_data
+        target: /var/lib/florabase/reference
+        read_only: true
+    depends_on:
+      db:
+        condition: service_healthy
+      schema-gate:
+        condition: service_completed_successfully
+    read_only: true
+    tmpfs: ["/tmp:size=256m"]
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 15s
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    mem_limit: ${FLORABASE_BACKEND_MEMORY:-768m}
+    memswap_limit: ${FLORABASE_BACKEND_MEMORY:-768m}
+    cpus: ${FLORABASE_BACKEND_CPUS:-0}
+    pids_limit: 200
+    labels:
+      dockhand.update: "false"
+      io.florabase.runtime.service: backend
+    networks: [internal]
+    logging: *logging
+
+  frontend:
+    image: ${FLORABASE_FRONTEND_IMAGE:?Set FLORABASE_FRONTEND_IMAGE to an approved digest}
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FLORABASE_BIND_ADDRESS:-127.0.0.1}:${FLORABASE_HTTP_PORT:-8080}:8080"
+    read_only: true
+    tmpfs: ["/tmp:size=64m"]
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 10s
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    mem_limit: 128m
+    memswap_limit: 128m
+    pids_limit: 100
+    labels:
+      dockhand.update: "false"
+      io.florabase.runtime.service: frontend
+    networks: [internal]
+    logging: *logging
+
+networks:
+  internal:
+
+# Bind-backed named volumes: a missing directory fails container start (never a silent empty
+# database), and removing the Docker volume object never deletes host data.
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${FLORABASE_POSTGRES_DIR:?Set FLORABASE_POSTGRES_DIR}
+  attachment_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${FLORABASE_MEDIA_DIR:?Set FLORABASE_MEDIA_DIR}
+  reference_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${FLORABASE_REFERENCE_DIR:?Set FLORABASE_REFERENCE_DIR}

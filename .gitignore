@@ -21,3 +21,10 @@ uploads/
 build/
 .source-cache/
 .taxonomy-review/
+
+# Beta runtime: host-specific stack configuration, secrets and controller state never belong here.
+deploy/beta/.env
+deploy/beta/reference.env
+deploy/beta/*.local.*
+deploy/beta/secrets/
+deploy/beta/state/

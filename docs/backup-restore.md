@@ -1,5 +1,10 @@
 # Backup and restore
 
+This page covers the source-build installation (`make backup`/`make restore`). The image-only beta
+runtime uses the same paired artifacts through `florabasectl` recovery sets, with checksums,
+metadata, encrypted off-host export and isolated/replacement restore; see the
+[beta runtime runbook](beta-runtime-001.md#recovery-sets).
+
 ## Coordinated database and attachment backup
 
 With the stack running:
