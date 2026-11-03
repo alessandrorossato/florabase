@@ -7024,3 +7024,26 @@ Status remains implemented pending canonical verification.
   `scripts/check-features.py`, backend `mypy`, ruff on the test module.
 - Not run: canonical FULL, the complete integration and unit suites, frontend checks, `smoke-uat-preview`.
 - Unresolved: anchored timestamps read as stale on the real clock; the module takes about 5 minutes.
+
+### BETA-IMAGE-001 — image pipeline candidate for independent QA, 3 November 2026
+
+- Claimed authoritative `feat/beta-image-001` from main `f637539` as `codex-beta-image-001`.
+  Added paired production image hardening, pinned compiler/base/build/security inputs, hash-enforced
+  unchanged production dependencies, coherent beta versions/OCI traceability, embedded healthchecks,
+  minimal non-root runtimes, frontend release metadata/Docker DNS and licenses/notices.
+- Added protected manual-main GHCR workflow with exact source/tag/check/environment approval,
+  provenance/SBOM, immutable candidate digests, security and artifact-only smoke before version
+  promotion, manifest schema, source/attestation retention and new-prerelease-only publication.
+  Existing delivery protections and TEST-DATA-002 are untouched; no persistent deployment mechanism.
+- Focused checks: workflow-check (Ruff/format/strict mypy), 9 release-contract tests, actionlint 1.7.12,
+  both API generators/api-check, production builds, complete native amd64 image-only smoke,
+  132-feature graph and whitespace pass. Smoke verified migrations, auth/CSRF/cookies, private original
+  media and application recreation; exact owned resources/images retired with zero residual state.
+- Initial make check: backend 985 passed/2 skipped (90.06%); frontend 1144 passed/1 Sowing URL assertion
+  failed. That single test and all 35 Sowing tests pass on focused repeats; broad run is not a PASS.
+- **Publication blocked:** intended-host evidence/operator selection is absent; final raw security scans
+  report backend 11 CRITICAL/66 HIGH, frontend 3/61 and PostgreSQL 2/26, with zero secret findings.
+  Gates remain fail-closed, without suppression. Registry publication/pulls, hosted protection checks,
+  independent QA and canonical FULL are unexecuted. Status stays `in_progress`; this is not beta admission.
+- [Implementation/runbook](beta-image-001.md), [QA checks/blockers](beta-image-001-qa.md),
+  [local evidence/report hashes](beta-image-001-local-evidence.json). No push, PR, merge or feature-finish.

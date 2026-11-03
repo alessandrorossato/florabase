@@ -1,5 +1,5 @@
-# syntax=docker/dockerfile:1.7
-FROM python:3.14.7-slim-bookworm AS builder
+# syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
+FROM python:3.14.7-slim-bookworm@sha256:82bc3c539b8813ada9d68c63b40158fa002f7f33de9bf3312a3dfdc0620dff56 AS builder
 
 ENV PATH="/opt/venv/bin:$PATH" \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -9,11 +9,11 @@ ENV PATH="/opt/venv/bin:$PATH" \
 WORKDIR /build
 COPY pyproject.toml requirements.lock ./
 RUN python -m venv /opt/venv \
-    && /opt/venv/bin/pip install --requirement requirements.lock
+    && /opt/venv/bin/pip install --require-hashes --requirement requirements.lock
 COPY src ./src
 RUN /opt/venv/bin/pip install --no-deps --force-reinstall .
 
-FROM python:3.14.7-slim-bookworm AS runtime
+FROM python:3.14.7-slim-bookworm@sha256:82bc3c539b8813ada9d68c63b40158fa002f7f33de9bf3312a3dfdc0620dff56 AS runtime
 
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -25,10 +25,23 @@ RUN groupadd --system --gid 10001 florabase \
 
 WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
+RUN /opt/venv/bin/python -m pip uninstall --yes pip \
+    && /usr/local/bin/python -m pip uninstall --yes pip
 COPY alembic.ini ./
 COPY alembic ./alembic
-COPY scripts ./scripts
+COPY scripts/attachment_artifacts.py ./scripts/attachment_artifacts.py
 
+COPY LICENSE /usr/share/licenses/florabase/LICENSE
+ARG VERSION=0.1.0-beta.1
+ARG REVISION=unknown
+ARG SOURCE=https://github.com/alessandrorossato/florabase
+LABEL org.opencontainers.image.title="Florabase backend" \
+    org.opencontainers.image.version=$VERSION \
+    org.opencontainers.image.revision=$REVISION \
+    org.opencontainers.image.source=$SOURCE \
+    org.opencontainers.image.licenses="AGPL-3.0-or-later"
+HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=6 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready', timeout=3)"
 USER florabase
 EXPOSE 8000
 CMD ["uvicorn", "florabase.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-server-header", "--no-proxy-headers"]

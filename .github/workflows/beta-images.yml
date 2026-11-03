@@ -1,0 +1,113 @@
+name: Protected beta images
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact accepted main commit (must equal this workflow revision and protected version tag)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: florabase-beta-publication
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      POSTGRES_DB: florabase_ci
+      POSTGRES_USER: florabase_ci
+      POSTGRES_PASSWORD: disposable-ci-password
+      FLORABASE_DATABASE_URL: postgresql+psycopg://florabase_ci:disposable-ci-password@db:5432/florabase_ci
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Validate selected source and host input
+        env:
+          SELECTED_SHA: ${{ inputs.source_sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$SELECTED_SHA" = "$GITHUB_SHA"
+          python3 scripts/beta_release.py check --publication
+          version=$(python3 -c 'import json; print(json.load(open("release/inputs.json"))["version"])')
+          test "$(git rev-parse "refs/tags/v${version}^{commit}")" = "$GITHUB_SHA"
+          python3 scripts/beta-release-checks.py
+      - name: Exhaustive verification of the selected commit
+        run: |
+          set -euo pipefail
+          {
+            make ci
+            ./scripts/verify-migration-cycle.sh HEAD --force-cycle
+          } 2>&1 | tee "$RUNNER_TEMP/beta-verification.log"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: beta-verification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/beta-verification.log
+          if-no-files-found: ignore
+          retention-days: 90
+
+  publish:
+    needs: verify
+    if: github.ref == 'refs/heads/main'
+    environment: beta-release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Require explicit environment approval for this exact commit
+        env:
+          APPROVED_SHA: ${{ secrets.RELEASE_APPROVED_SHA }}
+          SELECTED_SHA: ${{ inputs.source_sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$APPROVED_SHA" = "$GITHUB_SHA"
+          test "$SELECTED_SHA" = "$GITHUB_SHA"
+          python3 scripts/beta_release.py check --publication
+          python3 scripts/beta-release-checks.py
+      - name: Build, scan and smoke immutable candidates; promote only the tested pair
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REGISTRY_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/publish-beta-images.py --output "$RUNNER_TEMP/beta-release"
+      - name: Attest release manifest
+        uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
+        with:
+          subject-path: ${{ runner.temp }}/beta-release/release-manifest.json
+      - name: Retain immutable manifest, security reports and matching source
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: beta-release-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/beta-release/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Create a new prerelease without modifying previous releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version=$(python3 -c 'import json; print(json.load(open("release/inputs.json"))["version"])')
+          gh release create "v${version}" "$RUNNER_TEMP/beta-release/"* \
+            --verify-tag --prerelease --title "Florabase v${version}" \
+            --notes-file "$RUNNER_TEMP/beta-release/RELEASE.md"

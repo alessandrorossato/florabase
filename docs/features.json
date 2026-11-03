@@ -2281,7 +2281,7 @@
         "CI-002"
       ],
       "priority": "P0",
-      "status": "planned"
+      "status": "in_progress"
     },
     {
       "id": "BETA-RUNTIME-001",

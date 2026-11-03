@@ -1,0 +1,9 @@
+{
+  "status": "pending",
+  "candidate_platform": "linux/amd64",
+  "host": null,
+  "operator": null,
+  "screened_at": null,
+  "evidence": [],
+  "reason": "No intended beta host has been selected or measured. Development/CI amd64 smoke does not approve a beta host."
+}
