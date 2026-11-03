@@ -1,17 +1,33 @@
 {
   "status": "pending",
   "candidate_platform": "linux/amd64",
-  "host": null,
+  "host": {
+    "identity": "Synology DS224+",
+    "os": "linux",
+    "architecture": "amd64",
+    "runtime": "docker",
+    "engine_version": "24.0.2",
+    "compose_version": "2.20.1"
+  },
   "operator": null,
   "screened_at": null,
-  "evidence": [],
-  "reason": "Operator selected DS224+ linux/amd64; measured Docker/Compose compatibility and capacity acceptance remain pending. Portable Compose on compatible amd64 PC/VPS hosts is required.",
+  "evidence": [
+    "Operator-supplied intended-host measurements in docs/beta-security-001.md (2026-11-03); not independently probed by this task"
+  ],
+  "reason": "Intended-host architecture/runtime and capacity measurements supplied; explicit screening approval and BETA-RUNTIME-001 runtime/security/recovery acceptance remain pending. Portable linux/amd64 Docker/Compose hosts remain supported.",
   "host_selection": {
     "model": "Synology DS224+",
     "os": "linux",
     "architecture": "amd64",
     "source": "operator instruction 2026-11-03",
     "capacity_acceptance": "pending",
-    "runtime_acceptance": "pending"
+    "runtime_acceptance": "pending",
+    "measured_capacity": {
+      "cpu_cores": 4,
+      "ram_gib": 9.6,
+      "available_ram_gib_approx": 3.7,
+      "free_storage_tb_approx": 2.6,
+      "load": "low observed; operator-supplied"
+    }
   }
 }

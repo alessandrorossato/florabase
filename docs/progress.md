@@ -7094,6 +7094,44 @@ Status remains implemented pending canonical verification.
 - Official smoke passes on current pins without pull shim; scans measure backend 2 CRITICAL/36 HIGH, frontend 1/4, PostgreSQL 2/26, zero secrets. Raw reports, exact index/native/config identities, advisory-by-package inventory and unapproved expiring VEX drafts preserved. Security gate remains blocking. Patched Python/media compatibility 102/102.
 - [Final reliability handoff](beta-image-001-final-reliability.md). DS224+ amd64 runtime/capacity and publication approvals remain pending; no canonical FULL before delta QA, push, PR, merge, GHCR publication, deployment or feature-finish.
 
+### BETA-SECURITY-001 — candidate for independent QA, 3 November 2026
+
+- Claimed authoritative feat/beta-security-001 at f0d2422 as codex-beta-security-001. Evaluated trixie,
+  selected digest-pinned Python 3.14 Alpine and stable unprivileged nginx Alpine slim; preserved Debian
+  DEV and every PostgreSQL identity field. No application dependency or PostgreSQL major changed.
+- Exact final runtime scans: backend **0 CRITICAL / 0 HIGH**, frontend **0/0**, PostgreSQL unchanged
+  **2/26**, zero secrets. Full original/new reports, base trials, advisory/package/fix inventories,
+  hash-checked native/index/config identities and 26 unapproved expiring gosu VEX drafts are retained.
+  Optional libpq OAuth actually links flagged curl/Brotli; no waiver proposed for those libraries.
+- Hardened private executable cache/isolated imports, canonical CI producer and exact protected source
+  checks, complete unsuppressed scan inventories, application descriptor comparisons, read-only/cap-drop
+  artifact smoke, individual image attestations, publication checkpoints and draft asset digest checks.
+  Public manifest v1 unchanged; BETA-RUNTIME-001 Compose/storage/controller/backups untouched.
+- Focused: baseline release tests 12/12; updated 21/21; workflow-check Ruff/format/strict mypy; actionlint
+  1.7.12; resource regressions 19/19; official artifact-only smoke and 103 exact musl runtime media/
+  provider/cache/SQLite tests; fresh online scans and expected PostgreSQL gate refusal; offline tool tests, api-check, 35 environment
+  regressions and real Compose SIGTERM/late-create/repeated-cleanup/foreign-inventory proof.
+  All disposable owned resources/images retired; shared upstream/build cache retained.
+- Supplied DS224+ Engine 24.0.2 / Compose 2.20.1 and capacity measurements recorded without fabricated
+  screening/runtime/security acceptance. PostgreSQL maintenance or individually accepted/reviewed VEX,
+  explicit host approval, protected environment/package configuration and publication authorization remain.
+- No canonical FULL before independent QA authorization, no delivery receipt, push, PR, merge, registry
+  publication or deployment. [Runbook/QA handoff](beta-security-001.md),
+  [retained evidence](security/beta-security-001/README.md). Feature remains in_progress.
+
+### BETA-SECURITY-001 — draft lookup P1 correction, 3 November 2026
+
+- Independent Claude QA conditionally passed 34cebbe / tree 8653d1a4; P1 published-tag lookup could
+  not discover the unpublished draft. Replaced it with authenticated paginated listing, unique draft
+  selection, numeric-ID re-fetch, source/tag/ID/URL/state and asset checks, then numeric-ID PATCH.
+- Local asset checks now precede version-tag promotion; draft upload/validation still follows security,
+  smoke and attestations. Permissions unchanged. No PostgreSQL digest/VEX/runtime contract change.
+- Baseline 21/21; old implementation fails two new regressions, and actual old snippet reproduces
+  tag-404 against mocked GitHub behavior. Corrected suite 25/25; workflow-check and actionlint pass.
+- PostgreSQL 2 CRITICAL/26 HIGH still blocks publication. Separate maintenance proposal requires
+  explicit operator approval and BETA-RUNTIME-001 coordination. [Delta QA handoff](beta-security-001-lookup-correction.md).
+  No canonical FULL, push, PR, merge or publication. Targeted independent delta QA is next.
+
 ### BETA-RUNTIME-001 — image-only beta runtime candidate for independent QA, 3 November 2026
 
 - Resumed in the authoritative worktree at `f0d2422` under the existing writer claim. The saved plan and Compose draft were validated against the repository, and two draft defects were corrected. An empty `FLORABASE_WFO_SNAPSHOT_PATH=` parses as `Path('.')`, so optional datasets now live in a rendered `reference.env`. CPU limits now default to unlimited, because Synology kernels may refuse CFS quotas.

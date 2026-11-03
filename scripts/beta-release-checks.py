@@ -11,17 +11,27 @@ from typing import Any
 from beta_release import SHA, inputs, run
 
 
-def successful_checks(checks: list[dict[str, Any]], sha: str) -> bool:
-    # Restrict the producer as well as the label; arbitrary external statuses are insufficient.
-    return all(
-        any(
-            c.get("name") == name
-            and c.get("head_sha") == sha
-            and c.get("conclusion") == "success"
-            and c.get("app", {}).get("slug") == "github-actions"
-            for c in checks
-        )
-        for name in ("quality", "integration", "build")
+def approved_ci_jobs(jobs: list[dict[str, Any]], sha: str) -> bool:
+    passed = {
+        job.get("name")
+        for job in jobs
+        if job.get("head_sha") == sha
+        and job.get("conclusion") == "success"
+        and job.get("status") == "completed"
+    }
+    return {"quality", "integration", "build"} <= passed
+
+
+def approved_ci_run(value: dict[str, Any], sha: str, repo: str) -> bool:
+    return (
+        value.get("path") == ".github/workflows/ci.yml"
+        and value.get("head_sha") == sha
+        and value.get("head_branch") == "main"
+        and value.get("event") == "push"
+        and value.get("status") == "completed"
+        and value.get("conclusion") == "success"
+        and (value.get("repository") or {}).get("full_name") == repo
+        and (value.get("head_repository") or {}).get("full_name") == repo
     )
 
 
@@ -49,11 +59,35 @@ def main() -> None:
         raise ValueError("manual main dispatch at the exact approved source is required")
     if run("git", "rev-parse", f"refs/tags/v{locked['version']}^{{commit}}") != sha:
         raise ValueError("protected version tag does not select this commit")
-    data = json.loads(
-        run("gh", "api", f"repos/{repo}/commits/{sha}/check-runs?filter=latest&per_page=100")
+    pages = json.loads(
+        run(
+            "gh",
+            "api",
+            "--paginate",
+            "--slurp",
+            f"repos/{repo}/actions/workflows/ci.yml/runs?head_sha={sha}&event=push&per_page=100",
+        )
     )
-    if not successful_checks(data["check_runs"], sha):
-        raise ValueError("quality, integration and build must succeed on this exact commit")
+    approved = False
+    for page in pages:
+        for workflow in page["workflow_runs"]:
+            if not approved_ci_run(workflow, sha, repo):
+                continue
+            jobs = json.loads(
+                run(
+                    "gh",
+                    "api",
+                    "--paginate",
+                    "--slurp",
+                    f"repos/{repo}/actions/runs/{workflow['id']}/attempts/{workflow['run_attempt']}/jobs?per_page=100",
+                )
+            )
+            if approved_ci_jobs([job for batch in jobs for job in batch["jobs"]], sha):
+                approved = True
+    if not approved:
+        raise ValueError(
+            "canonical main CI workflow and all three jobs must succeed on this exact commit"
+        )
     # A failed API request is not evidence of absence. List successfully, then inspect identities.
     releases = json.loads(
         run("gh", "api", "--paginate", "--slurp", f"repos/{repo}/releases?per_page=100")
