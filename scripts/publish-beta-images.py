@@ -153,6 +153,10 @@ def main() -> None:
             shutil.copyfile(Path("release/manifest.schema.json"), artifact / "manifest.schema.json")
             shutil.copyfile(Path("release/manifest.schema.json"), output / "manifest.schema.json")
             shutil.copyfile(Path("release/requirements.txt"), output / "requirements.txt")
+            shutil.copyfile(Path("release/bootstrap.json"), output / "bootstrap.json")
+            shutil.copyfile(Path("scripts/release-tools.py"), output / "release-tools.py")
+            shutil.copyfile(Path("release/inputs.json"), artifact / "inputs.json")
+            shutil.copyfile(Path("release/inputs.json"), output / "inputs.json")
             for name in (
                 "smoke-beta-images.py",
                 "beta_release.py",

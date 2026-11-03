@@ -30,7 +30,6 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - run: python3 -m pip install -r release/requirements.txt
       - name: Validate selected source and host input
         env:
           SELECTED_SHA: ${{ inputs.source_sha }}
@@ -73,7 +72,6 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - run: python3 -m pip install -r release/requirements.txt
       - name: Require explicit environment approval for this exact commit
         env:
           APPROVED_SHA: ${{ secrets.RELEASE_APPROVED_SHA }}
@@ -91,7 +89,7 @@ jobs:
           REGISTRY_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          python3 scripts/publish-beta-images.py --output "$RUNNER_TEMP/beta-release"
+          python3 scripts/release-tools.py scripts/publish-beta-images.py --output "$RUNNER_TEMP/beta-release"
       - name: Attest release manifest
         uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
         with:

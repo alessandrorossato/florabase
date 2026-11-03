@@ -1,0 +1,98 @@
+{
+  "source_candidate": {
+    "schema_version": 1,
+    "distribution": "local-candidate",
+    "version": "0.1.0-beta.1",
+    "source": {
+      "url": "https://github.com/alessandrorossato/florabase",
+      "revision": "d661200ae7c69b5f6ce00e847d733b4478cd0b6a",
+      "dirty": true
+    },
+    "platforms": [
+      "linux/amd64"
+    ],
+    "alembic_head": "20261013_0042",
+    "postgresql": {
+      "repository": "docker.io/library/postgres",
+      "version": "18.6-alpine",
+      "reference": "docker.io/library/postgres:18.6-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5",
+      "index_digest": "sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5",
+      "platform": "linux/amd64",
+      "platform_digest": "sha256:3b0ef735388b2cb097fc29b8bb421d86d57d0ddbe7aa1fbd6493e06d65028503"
+    },
+    "images": {
+      "backend": {
+        "reference": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+        "platform": "linux/amd64"
+      },
+      "frontend": {
+        "reference": "sha256:105b20857e05a79cea62b7e3f1976403c72c94b1e419fef1c973344d75534d5b",
+        "platform": "linux/amd64"
+      }
+    },
+    "build_inputs": {
+      "version": "0.1.0-beta.1",
+      "platforms": [
+        "linux/amd64"
+      ],
+      "postgresql": {
+        "repository": "docker.io/library/postgres",
+        "version": "18.6-alpine",
+        "reference": "docker.io/library/postgres:18.6-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5",
+        "index_digest": "sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5",
+        "platform": "linux/amd64",
+        "platform_digest": "sha256:3b0ef735388b2cb097fc29b8bb421d86d57d0ddbe7aa1fbd6493e06d65028503"
+      },
+      "scanner": "aquasec/trivy:0.69.3@sha256:bcc376de8d77cfe086a917230e818dc9f8528e3c852f7b1aff648949b6258d1c",
+      "base_images": {
+        "python": "python:3.14-slim-bookworm@sha256:516b51cb9db2ef061e465c803e50f64361b82cefd91e525b889b967b83e83527",
+        "node": "node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df",
+        "nginx": "nginxinc/nginx-unprivileged:stable-alpine@sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03"
+      },
+      "buildkit": "moby/buildkit:buildx-stable-1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea",
+      "sbom_generator": "docker/buildkit-syft-scanner:stable-1@sha256:873a7458c3c8ac8e32c7b796c10e1600b07b963d2aa000a72a2d97aaaa2d6315",
+      "dockerfile_frontend": "docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e"
+    },
+    "workflow": {
+      "run_id": null,
+      "run_attempt": null
+    }
+  },
+  "reports": {
+    "backend": {
+      "configuration_digest": "sha256:4aa95506d54b86ba5b9a4d64cfc9ce176c03039310f4bc8a70290171e789c5a8",
+      "index_digest": "sha256:1f3456279801c3ef33e0554bcd831168b3a66dda4ceb0445d693d0fee65d6718",
+      "platform_manifest_digest": "sha256:731e433f212ca71417f400e0c85c1c143fb3023e644c1c14d5b69a1a046749f0",
+      "sha256": "a27b9e28686958be910647e23cfd4b322d8d75f86582e7f1f777fbfb39686a41",
+      "counts": {
+        "HIGH": 36,
+        "CRITICAL": 2
+      },
+      "secret_findings": 0
+    },
+    "frontend": {
+      "configuration_digest": "sha256:9d6ce3e5b4983b750b8a99a7985a2baf1f7d043470d33ad169984c92a7cd4f54",
+      "index_digest": "sha256:105b20857e05a79cea62b7e3f1976403c72c94b1e419fef1c973344d75534d5b",
+      "platform_manifest_digest": "sha256:54868597662a467a20b0a45d9a10dc454b5ad6bf9c49962c658556ea5dace522",
+      "sha256": "77a2a133a4d6a7677150e1629aa0bc1db4a4353be1608c3c46b8bcbfff60255d",
+      "counts": {
+        "CRITICAL": 1,
+        "HIGH": 4
+      },
+      "secret_findings": 0
+    },
+    "postgresql": {
+      "configuration_digest": "sha256:57b23a0326ee442e83b3d3fa027c5a148be0a392d7c91d1ca4e1e70131ee859a",
+      "index_digest": "sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5",
+      "platform_manifest_digest": "sha256:3b0ef735388b2cb097fc29b8bb421d86d57d0ddbe7aa1fbd6493e06d65028503",
+      "sha256": "c0992ce6dd03c31f78b67ccb09f2da8d4f869d5dbf27c18fbd1d0ee3ff93f597",
+      "counts": {
+        "CRITICAL": 2,
+        "HIGH": 26
+      },
+      "secret_findings": 0
+    }
+  },
+  "publication": "blocked",
+  "raw_log_sha256": "f89b77eff703878ca9fd441ffb30ee3535938ea826f3218978e29ac36551b83d"
+}

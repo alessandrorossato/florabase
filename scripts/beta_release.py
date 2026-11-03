@@ -4,11 +4,13 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib
 import json
 import os
 import re
 import subprocess
+import tarfile
 import tempfile
 from pathlib import Path
 from typing import IO, Any
@@ -142,6 +144,15 @@ def validate_manifest(value: dict[str, Any], local: bool = False) -> None:
             ) from error
         if value["images"]["backend"]["reference"] == value["images"]["frontend"]["reference"]:
             raise ValueError("release pair must have distinct references")
+    if not local:
+        for field in ("index_digest", "platform_digest"):
+            if value["images"]["backend"][field] == value["images"]["frontend"][field]:
+                raise ValueError("release images must have distinct " + field)
+        trusted_path = Path(__file__).with_name("inputs.json")
+        if not trusted_path.exists():
+            trusted_path = Path(__file__).resolve().parents[1] / "release/inputs.json"
+        if value["build_inputs"] != read(trusted_path):
+            raise ValueError("manifest build inputs differ from trusted release inputs")
     if (
         value["schema_version"] != 1
         or value["platforms"] != ["linux/amd64"]
@@ -257,6 +268,18 @@ def scan_images(refs: dict[str, str], output: Path, scanner: str) -> None:
     failures: list[str] = []
     with Disposable(owner), tempfile.TemporaryDirectory(prefix="florabase-scan-cache-") as cache:
         for service, ref in refs.items():
+            inspected = json.loads(run("docker", "image", "inspect", ref))[0]
+            identity = {
+                "reference": ref,
+                "image_inspect_id": inspected["Id"],
+                "descriptor": inspected.get("Descriptor"),
+                "repo_digests": inspected.get("RepoDigests"),
+                "os": inspected["Os"],
+                "architecture": inspected["Architecture"],
+            }
+            (output / (service + "-identity.json")).write_text(
+                json.dumps(identity, indent=2) + "\n"
+            )
             archive = output / (service + ".tar")
             subprocess.run(
                 [
@@ -296,8 +319,29 @@ def scan_images(refs: dict[str, str], output: Path, scanner: str) -> None:
                     "/artifacts/" + service + "-security.json",
                 ]
             )
+            with tarfile.open(archive) as saved:
+                manifest_member = saved.extractfile("manifest.json")
+                if manifest_member is None:
+                    raise ValueError("Docker save manifest missing")
+                saved_manifest = json.load(manifest_member)
+                config_member = saved.extractfile(saved_manifest[0]["Config"])
+                if config_member is None:
+                    raise ValueError("Docker save configuration missing")
+                identity["configuration_digest"] = (
+                    "sha256:" + hashlib.sha256(config_member.read()).hexdigest()
+                )
+            (output / (service + "-identity.json")).write_text(
+                json.dumps(identity, indent=2) + "\n"
+            )
             try:
                 result = subprocess.run(command, check=False)
+                report_path = output / (service + "-security.json")
+                if (
+                    report_path.exists()
+                    and read(report_path).get("Metadata", {}).get("ImageID")
+                    != identity["configuration_digest"]
+                ):
+                    raise ValueError("security report does not match saved image configuration")
                 if result.returncode:
                     failures.append(service)
             finally:

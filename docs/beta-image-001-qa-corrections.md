@@ -1,3 +1,5 @@
+Current reliability correction and fresh official smoke/security evidence: [final reliability handoff](beta-image-001-final-reliability.md).
+
 # BETA-IMAGE-001 QA corrections
 
 Independent findings supplied by the operator for reviewed commit `3b9401d` / tree

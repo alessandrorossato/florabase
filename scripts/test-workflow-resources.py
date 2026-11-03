@@ -91,6 +91,43 @@ class ResourceTests(unittest.TestCase):
         for kind in self.fake.objects:
             self.fake.add(owner, kind, owner.project + "-" + kind)
 
+    def test_shutdown_timeout_refuses_cleanup_and_allows_exact_recovery(self) -> None:
+        with self.assertRaises(ResourceError):
+            with Disposable(self.owner, self.fake) as lifetime:
+                self.populate()
+                with (
+                    patch("workflow_resources.subprocess.Popen") as factory,
+                    patch("workflow_resources.os.killpg"),
+                ):
+                    child = factory.return_value
+                    child.pid = 12345
+                    child.communicate.side_effect = [
+                        SystemExit(143),
+                        subprocess.TimeoutExpired("compose", 30),
+                        ("", ""),
+                    ]
+                    lifetime.run(["owned-compose-fixture"])
+        self.assertFalse(self.fake.removed)
+        Resources(self.owner, self.fake).clean()
+        Resources(self.owner, self.fake).clean()
+        self.assertFalse(any(self.fake.objects.values()))
+
+    def test_realistic_short_listing_cannot_hide_live_uninspectable_container(self) -> None:
+        full = "a" * 64
+        self.fake.add(self.owner, "containers", full)
+        original = self.fake.__call__
+
+        def realistic(*args: str) -> str:
+            if args[0] == "ps":
+                return full if "--no-trunc" in args else full[:12]
+            if args[0] == "inspect":
+                raise ResourceError("metadata unavailable for live container")
+            return original(*args)
+
+        with self.assertRaises(ResourceError):
+            Resources(self.owner, realistic).clean()
+        self.assertFalse(self.fake.removed)
+
     def test_disappearing_container_does_not_strand_network_or_media(self) -> None:
         self.populate()
         original = self.fake.__call__

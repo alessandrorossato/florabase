@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from beta_release import inputs, manifest, run, run_artifact_smoke, scan_images
 from workflow_resources import Disposable, Owner
@@ -23,7 +24,11 @@ def main() -> None:
     locked = inputs(root)
     owner = Owner.disposable("verification-build", root)
     refs = {}
-    with Disposable(owner):
+    build_metadata: dict[str, Any] = {}
+    with (
+        Disposable(owner),
+        tempfile.TemporaryDirectory(prefix="beta-build-metadata-") as metadata_dir,
+    ):
         for service in ("backend", "frontend"):
             tag = owner.project + "-" + service
             command = [
@@ -31,6 +36,8 @@ def main() -> None:
                 "build",
                 "--platform",
                 "linux/amd64",
+                "--metadata-file",
+                str(Path(metadata_dir) / (service + ".json")),
                 "--target",
                 "runtime",
                 "--tag",
@@ -46,6 +53,9 @@ def main() -> None:
                 command.extend(["--label", key + "=" + value])
             subprocess.run([*command, str(root / service)], check=True)
             refs[service] = tag
+            build_metadata[service] = json.loads(
+                (Path(metadata_dir) / (service + ".json")).read_text()
+            )
         candidate_manifest = manifest(root, refs, local=True)
         args.evidence.write_text(json.dumps(candidate_manifest, indent=2) + "\n")
         with tempfile.TemporaryDirectory(prefix="florabase-artifact-only-") as temporary:
@@ -53,6 +63,7 @@ def main() -> None:
             shutil.copyfile(
                 root / "release/manifest.schema.json", artifact / "manifest.schema.json"
             )
+            shutil.copyfile(Path("release/inputs.json"), artifact / "inputs.json")
             for name in (
                 "smoke-beta-images.py",
                 "beta_release.py",
@@ -63,6 +74,10 @@ def main() -> None:
             shutil.copyfile(args.evidence, artifact / "candidate.json")
             run_artifact_smoke(artifact, local=True)
         if args.security_dir:
+            args.security_dir.mkdir(parents=True, exist_ok=True)
+            (args.security_dir / "build-metadata.json").write_text(
+                json.dumps(build_metadata, indent=2) + "\n"
+            )
             scan_images(
                 {**refs, "postgresql": locked["postgresql"]["reference"]},
                 args.security_dir,

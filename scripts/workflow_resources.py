@@ -170,7 +170,7 @@ class Resources:
     def inventory(self) -> dict[str, list[dict[str, Any]]]:
         result: dict[str, list[dict[str, Any]]] = {}
         for kind, listing, _inspection in (
-            ("containers", ["ps", "-aq"], ["inspect"]),
+            ("containers", ["ps", "-aq", "--no-trunc"], ["inspect"]),
             ("networks", ["network", "ls", "-q"], ["network", "inspect"]),
             ("volumes", ["volume", "ls", "-q"], ["volume", "inspect"]),
             ("images", ["image", "ls", "-q"], ["image", "inspect"]),
@@ -199,7 +199,10 @@ class Resources:
         if kind != "containers":
             raise ResourceError("missing resource inspection evidence")
         # Only a successful fresh all-container inventory proves disappearance.
-        if identifier in self.command("ps", "-aq", "--no-trunc").splitlines():
+        if any(
+            full == identifier or full.startswith(identifier)
+            for full in self.command("ps", "-aq", "--no-trunc").splitlines()
+        ):
             raise ResourceError("container remains but inspection failed; refusing cleanup")
         return None
 
@@ -328,6 +331,7 @@ class Disposable(AbstractContextManager["Disposable"]):
 
     def __init__(self, owner: Owner, command: Callable[..., str] = docker) -> None:
         self.owner = owner
+        self.quiescence_failed = False
         self.resources = Resources(owner, command)
         self.handlers: dict[signal.Signals, Any] = {}
 
@@ -344,6 +348,48 @@ class Disposable(AbstractContextManager["Disposable"]):
         )
         return self
 
+    def run(
+        self, command: list[str], *, stdin: str | None = None, env: dict[str, str] | None = None
+    ) -> str:
+        """Quiesce the complete Compose process group before resource cleanup."""
+        process = subprocess.Popen(
+            command,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            text=True,
+            env=env,
+            start_new_session=True,
+        )
+        try:
+            output, _ = process.communicate(stdin)
+        except BaseException:
+            self.quiescence_failed = True
+            try:
+                os.killpg(process.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            try:
+                process.communicate(timeout=30)
+            except subprocess.TimeoutExpired as error:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.communicate(timeout=5)
+                self.quiescence_failed = True
+                raise ResourceError(
+                    "owned command shutdown timed out; cleanup refused; recover exact run after checking creators"
+                ) from error
+            try:
+                os.killpg(process.pid, 0)
+            except ProcessLookupError:
+                self.quiescence_failed = False
+            else:
+                raise ResourceError(
+                    "owned process group still exists; cleanup refused until manual recovery"
+                )
+            raise
+        if process.returncode:
+            raise subprocess.CalledProcessError(process.returncode, command)
+        return output.strip()
+
     @staticmethod
     def interrupt(number: int, _frame: FrameType | None) -> None:
         raise SystemExit(128 + number)
@@ -352,6 +398,10 @@ class Disposable(AbstractContextManager["Disposable"]):
         try:
             for number in self.handlers:
                 signal.signal(number, signal.SIG_IGN)
+            if self.quiescence_failed:
+                raise ResourceError(
+                    "cleanup requires manual recovery after owned subprocess shutdown failure"
+                )
             self.resources.clean()
         finally:
             for number, handler in self.handlers.items():

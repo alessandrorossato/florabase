@@ -62,7 +62,12 @@ def candidate() -> dict[str, Any]:
         "alembic_head": "20261013_0042",
         "images": {
             "backend": image,
-            "frontend": {**image, "reference": ref.replace("backend", "frontend")},
+            "frontend": {
+                **image,
+                "reference": ref.replace("backend", "frontend").replace("a" * 64, "d" * 64),
+                "index_digest": "sha256:" + "d" * 64,
+                "platform_digest": "sha256:" + "e" * 64,
+            },
         },
         "postgresql": locked["postgresql"],
         "build_inputs": locked,
@@ -225,6 +230,22 @@ class ReleaseTests(unittest.TestCase):
             result = subprocess.run([sys.executable, "-c", controller], check=False, timeout=10)
             self.assertEqual(result.returncode, 143)
             self.assertTrue((artifact / "cleaned").is_file())
+
+    def test_distinct_digests_and_trusted_build_inputs(self) -> None:
+        for field in ("index_digest", "platform_digest"):
+            value = candidate()
+            value["images"]["frontend"][field] = value["images"]["backend"][field]
+            if field == "index_digest":
+                value["images"]["frontend"]["reference"] = (
+                    "ghcr.io/alessandrorossato/florabase-frontend@"
+                    + value["images"]["backend"][field]
+                )
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                validate_manifest(value)
+        value = candidate()
+        value["build_inputs"]["base_images"]["python"] = "python:3.14@sha256:" + "f" * 64
+        with self.assertRaises(ValueError):
+            validate_manifest(value)
 
     def test_published_schema_is_enforced(self) -> None:
         base = candidate()

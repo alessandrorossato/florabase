@@ -137,16 +137,9 @@ def smoke(manifest: dict[str, Any], local: bool = False) -> None:
         env = {k: v for k, v in os.environ.items() if not k.startswith("COMPOSE_")}
 
         def compose(*args: str, stdin: str | None = None) -> str:
-            return subprocess.run(
-                [*command, *args],
-                input=stdin,
-                env=env,
-                check=True,
-                text=True,
-                stdout=subprocess.PIPE,
-            ).stdout.strip()
+            return lifetime.run([*command, *args], stdin=stdin, env=env)
 
-        with Disposable(owner):
+        with Disposable(owner) as lifetime:
             compose("up", "--detach", "--wait", "--wait-timeout", "120", "db")
             code_head = compose("run", "--rm", "--no-deps", "-T", "backend", "alembic", "heads")
             if code_head != manifest["alembic_head"] + " (head)":

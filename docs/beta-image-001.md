@@ -1,3 +1,5 @@
+Current reliability correction and fresh official smoke/security evidence: [final reliability handoff](beta-image-001-final-reliability.md).
+
 Current delta QA, remediation batches and remaining registry/security blockers: [QA corrections](beta-image-001-qa-corrections.md).
 
 # BETA-IMAGE-001 — production image candidate
@@ -213,3 +215,5 @@ remain pending. The application stays portable to compatible amd64 PCs/VPSs usin
 Dockhand. No NAS-specific runtime behavior or deployment is introduced; arm64 remains a later extension.
 
 Artifact verification tools require the pinned host-only packages in release/requirements.txt (downloaded as requirements.txt with a release): install them in an isolated Python environment. Production images do not include JSON Schema tooling.
+
+Use `make test-beta-images` and `make workflow-check` without manual pip/PYTHONPATH setup. For release tools use `python3 scripts/release-tools.py <script> ...`; downloaded artifact tools use `python3 release-tools.py smoke-beta-images.py --manifest release-manifest.json`. The hash-verified managed venv works without system pip/ensurepip and respects PEP 668. See the final reliability handoff for cache/offline controls. Direct system-Python pip installation examples above are superseded by this managed invocation.
