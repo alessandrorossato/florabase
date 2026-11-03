@@ -4,8 +4,10 @@
 # the stack directory's controller-rendered `.env` and `reference.env` plus two protected secret
 # env files. Requires Docker Engine >= 24.0 and Compose >= 2.20 (Synology Container Manager
 # 24.0.2 / 2.20.1); nothing newer is used. Install, migrate, back up, restore and promote with
-# florabasectl.py. A plain `docker compose up` or Dockhand redeploy never migrates: schema-gate
-# refuses to start the backend unless the database is exactly at this backend image's Alembic head.
+# florabasectl.py. A plain `docker compose up`, container restart or Dockhand redeploy never
+# migrates: the backend's own entrypoint guard refuses to start unless the database is exactly at
+# the release head pinned in `.env` and that head is this image's only Alembic head, on every start.
+# Its healthcheck re-verifies the revision and stops a backend whose database schema changed.
 name: florabase-prod
 
 x-logging: &logging
@@ -81,27 +83,6 @@ services:
     networks: [internal]
     logging: *logging
 
-  schema-gate:
-    <<: *backend-task
-    command:
-      - python
-      - -c
-      - |
-        import sys
-        from alembic.config import Config
-        from alembic.runtime.migration import MigrationContext
-        from alembic.script import ScriptDirectory
-        from florabase.db.session import get_engine
-        heads = set(ScriptDirectory.from_config(Config("alembic.ini")).get_heads())
-        with get_engine().connect() as connection:
-            current = set(MigrationContext.configure(connection).get_current_heads())
-        if current != heads:
-            sys.exit("schema-gate: database revision %s is not image head %s; use florabasectl" % (sorted(current) or "empty", sorted(heads)))
-        print("schema-gate: database at image head %s" % sorted(heads))
-    labels:
-      dockhand.update: "false"
-      io.florabase.runtime.service: schema-gate
-
   migrate:
     <<: *backend-task
     profiles: [maintenance]
@@ -130,7 +111,56 @@ services:
     env_file:
       - ${FLORABASE_SECRETS_DIR:?Set FLORABASE_SECRETS_DIR}/backend.env
       - reference.env
-    environment: *backend-environment
+    environment:
+      <<: *backend-environment
+      # Bound to the authorized release manifest by florabasectl; never derived from a marker.
+      FLORABASE_EXPECTED_ALEMBIC_HEAD: ${FLORABASE_EXPECTED_ALEMBIC_HEAD:?Set the release Alembic head}
+    # Runs before the server on every container start; fails closed on any doubt.
+    entrypoint:
+      - python
+      - -c
+      - |
+        import os, sys
+        from alembic.config import Config
+        from alembic.runtime.migration import MigrationContext
+        from alembic.script import ScriptDirectory
+        from florabase.db.session import get_engine
+        expected = os.environ.get("FLORABASE_EXPECTED_ALEMBIC_HEAD", "")
+        heads = sorted(ScriptDirectory.from_config(Config("alembic.ini")).get_heads())
+        if not expected or heads != [expected]:
+            sys.exit("schema-guard: image heads %s differ from pinned release head %r; refusing to start" % (heads, expected))
+        try:
+            with get_engine().connect() as connection:
+                current = sorted(MigrationContext.configure(connection).get_current_heads())
+        except Exception as error:
+            sys.exit("schema-guard: database revision unavailable (%s); refusing to start" % type(error).__name__)
+        if current != [expected]:
+            sys.exit("schema-guard: database revision %s is not release head %s; refusing to start (florabasectl migrates explicitly)" % (current or "empty", expected))
+        if len(sys.argv) < 2:
+            sys.exit("schema-guard: no server command")
+        print("schema-guard: database at release head %s" % expected, flush=True)
+        os.execvp(sys.argv[1], sys.argv[1:])
+    command: ["uvicorn", "florabase.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-server-header", "--no-proxy-headers"]
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - |
+          import os, signal, sys, urllib.request
+          from alembic.runtime.migration import MigrationContext
+          from florabase.db.session import get_engine
+          urllib.request.urlopen("http://127.0.0.1:8000/api/v1/ready", timeout=3)
+          with get_engine().connect() as connection:
+              current = sorted(MigrationContext.configure(connection).get_current_heads())
+          if current != [os.environ["FLORABASE_EXPECTED_ALEMBIC_HEAD"]]:
+              print("schema-guard: database revision changed to %s; stopping" % current, flush=True)
+              os.kill(1, signal.SIGTERM)
+              sys.exit(1)
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     volumes:
       - type: volume
         source: attachment_data
@@ -144,8 +174,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      schema-gate:
-        condition: service_completed_successfully
     read_only: true
     tmpfs: ["/tmp:size=256m"]
     restart: unless-stopped

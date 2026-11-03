@@ -14,12 +14,14 @@ import fcntl
 import getpass
 import hashlib
 import http.cookies
+import ipaddress
 import json
 import os
 import re
 import secrets
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import time
@@ -52,6 +54,9 @@ SERVICES = ("db", "backend", "frontend")
 PHASES = ("validated", "quiesced", "backed_up", "migrated", "pinned", "started", "accepted")
 DIGEST = r"sha256:[a-f0-9]{64}"
 BACKUP_MAX_AGE_HOURS = 26
+SET_KINDS = ("manual", "pre-upgrade", "safety")
+SET_ID = re.compile(r"[0-9]{8}T[0-9]{6}Z-(?:manual|pre-upgrade|safety)-[a-f0-9]{6}\Z")
+SET_ARTIFACTS = ("attachments.tar", "compose.yaml", "database.dump", "metadata.json")
 
 Json = Dict[str, Any]
 
@@ -455,26 +460,12 @@ class Stack:
         """Explicit bounded start order; Compose's own dependency wait has no timeout."""
         self.compose("up", "-d", "db")
         self.wait_healthy(["db"], timeout)
-        # A fresh gate run per start: a previous release's success never authorizes this one.
-        self.compose("up", "-d", "--force-recreate", "schema-gate")
-        self.wait_completed("schema-gate", 180)
+        # The backend entrypoint guard refuses a schema mismatch itself on every start.
         self.compose("up", "-d", "--no-deps", "backend", "frontend")
         self.wait_healthy(SERVICES, timeout)
 
     def logs(self, service: str) -> str:
         return self.compose("logs", "--no-color", "--tail", "20", service, check=False)
-
-    def wait_completed(self, service: str, timeout: float) -> None:
-        deadline = time.monotonic() + timeout
-        while True:
-            state = (self.container(service) or {}).get("State") or {}
-            if state.get("Status") == "exited":
-                if state.get("ExitCode") == 0:
-                    return
-                raise Failure(f"{service} refused to start the release:\n{self.logs(service)}")
-            if time.monotonic() > deadline:
-                raise Failure(f"{service} did not complete in time")
-            time.sleep(1)
 
     def wait_healthy(self, services: Sequence[str], timeout: float = 300) -> None:
         deadline = time.monotonic() + timeout
@@ -515,6 +506,25 @@ class Stack:
             bound = options.get("type") == "none" and options.get("o") == "bind"
             devices[volume] = str(options.get("device", "")) if bound else ""
         return devices
+
+
+def loopback_address(value: str) -> str:
+    """The private beta publishes only on IPv4 loopback, for host Tailscale Serve to forward."""
+    try:
+        address = ipaddress.ip_address(value)
+    except ValueError as error:
+        raise Refusal(f"bind address {value!r} is not an IP address") from error
+    if address.version != 4 or not address.is_loopback:
+        raise Refusal(
+            f"bind address {value} is not IPv4 loopback (127.0.0.0/8); wider exposure needs a "
+            "separately reviewed and approved feature"
+        )
+    return str(address)
+
+
+def pins(release: Json) -> Json:
+    """Everything the stack .env pins for one release: images, version and Alembic head."""
+    return dict(release["images"], version=release["version"], alembic_head=release["alembic_head"])
 
 
 def normalize_repository(name: str) -> str:
@@ -619,7 +629,8 @@ class Controller:
         lines = [
             "# Rendered by florabasectl from state/installation.json and the deployed release.",
             "# Do not edit: drift is refused. Change configuration with florabasectl.",
-            "FLORABASE_RELEASE_VERSION=" + images.get("version", ""),
+            "FLORABASE_RELEASE_VERSION=" + images["version"],
+            "FLORABASE_EXPECTED_ALEMBIC_HEAD=" + images["alembic_head"],
             "FLORABASE_BACKEND_IMAGE=" + images["backend"],
             "FLORABASE_FRONTEND_IMAGE=" + images["frontend"],
             "FLORABASE_POSTGRES_IMAGE=" + images["postgres"],
@@ -628,7 +639,7 @@ class Controller:
             "FLORABASE_MEDIA_DIR=" + str(layout.media),
             "FLORABASE_REFERENCE_DIR=" + str(layout.reference),
             "FLORABASE_CANONICAL_ORIGIN=" + installation["canonical_origin"],
-            "FLORABASE_BIND_ADDRESS=" + installation["bind_address"],
+            "FLORABASE_BIND_ADDRESS=" + loopback_address(installation["bind_address"]),
             "FLORABASE_HTTP_PORT=" + str(installation["http_port"]),
             "FLORABASE_LOG_LEVEL=INFO",
             "FLORABASE_DB_MEMORY=" + limits["db_memory"],
@@ -871,6 +882,7 @@ class Controller:
 
     def init(self, args: argparse.Namespace) -> None:
         layout = self.layout
+        bind_address = loopback_address(args.bind_address)
         if os.geteuid() != 0:
             raise Refusal("init must run as root to assign PostgreSQL/media ownership")
         origin = args.origin.rstrip("/")
@@ -901,7 +913,7 @@ class Controller:
             "root": str(layout.root),
             "project": PROJECT,
             "canonical_origin": origin,
-            "bind_address": args.bind_address,
+            "bind_address": bind_address,
             "http_port": args.http_port,
             "database": {"name": "florabase", "user": "florabase"},
             "limits": {
@@ -941,7 +953,7 @@ class Controller:
         self.check_volumes()
         self.verify_release(manifest)
         record = release_record(manifest, digest)
-        images = dict(record["images"], version=record["version"])
+        images = pins(record)
         compose = (BUNDLE / "compose.yaml").read_bytes()
         # An interrupted install of the same manifest may continue from its own migration.
         pending = self.layout.state / "install-pending.json"
@@ -1028,7 +1040,7 @@ class Controller:
                 raise Failure(service + " publishes a host port")
             if service == "frontend":
                 hosts = {b["HostIp"] for bindings in published.values() for b in bindings}
-                if hosts != {installation["bind_address"]}:
+                if len(hosts) != 1 or loopback_address(hosts.pop()) != installation["bind_address"]:
                     raise Failure("frontend must publish only on " + installation["bind_address"])
         probe = stack.probe()
         if classify(probe) != "current" or probe["current"] != [current["alembic_head"]]:
@@ -1210,12 +1222,7 @@ class Controller:
             )
 
     def recovery_set(self, set_id: str) -> tuple[Path, Json]:
-        if not re.fullmatch(r"[0-9]{8}T[0-9]{6}Z-[a-z-]+-[a-f0-9]{6}", set_id):
-            raise Refusal("invalid recovery set id")
-        directory = self.layout.backups / set_id
-        if not directory.is_dir():
-            raise Refusal(f"recovery set {set_id} does not exist")
-        return directory, verify_checksums(directory)
+        return inspect_set(self.layout.backups, set_id)
 
     def verify_backup(self, set_id: str) -> Json:
         directory, metadata = self.recovery_set(set_id)
@@ -1225,27 +1232,54 @@ class Controller:
         say(f"RECOVERY_SET_VERIFIED {set_id}")
         return metadata
 
-    def sets(self) -> list[Json]:
-        result: list[Json] = []
+    def recovery_sets(self) -> tuple[list[Json], list[tuple[str, str]]]:
+        """Verified sets plus unverifiable entries; only verified sets ever count or expire."""
+        valid: list[Json] = []
+        invalid: list[tuple[str, str]] = []
         if not self.layout.backups.exists():
-            return result
-        for path in sorted(self.layout.backups.iterdir()):
-            if (
-                path.is_dir()
-                and not path.name.startswith(".")
-                and (path / "metadata.json").exists()
-            ):
-                result.append(read_json(path / "metadata.json"))
-        return result
+            return valid, invalid
+        for entry in sorted(os.listdir(str(self.layout.backups))):
+            if entry.startswith("."):
+                continue  # in-flight .partial-/.import- staging is never a set
+            try:
+                valid.append(inspect_set(self.layout.backups, entry)[1])
+            except (Refusal, Failure, OSError, KeyError, TypeError, ValueError) as error:
+                invalid.append((entry, str(error)))
+        return valid, invalid
+
+    def sets(self) -> list[Json]:
+        return self.recovery_sets()[0]
 
     def retention(self, daily: int, weekly: int, upgrades: int, apply: bool) -> list[str]:
+        for name, value, minimum in (
+            ("daily", daily, 1),
+            ("weekly", weekly, 0),
+            ("upgrades", upgrades, 0),
+        ):
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, int)
+                or not minimum <= value <= 3650
+            ):
+                raise Refusal(f"retention --{name} must be an integer from {minimum} to 3650")
         self.lock()
-        keep, remove = select_retained(self.sets(), daily, weekly, upgrades)
+        valid, invalid = self.recovery_sets()
+        for name, reason in invalid:
+            say(f"keeping unverifiable entry {name!r} untouched: {reason}")
+        keep, remove = select_retained(valid, daily, weekly, upgrades)
+        if valid and not keep:
+            raise Failure("retention would remove every verified recovery set")
+        root = self.layout.backups.resolve()
         for set_id in remove:
             say(("removing " if apply else "would remove ") + set_id)
-            if apply:
-                shutil.rmtree(str(self.layout.backups / set_id))
-                self.journal("retention-remove", set_id=set_id)
+            if not apply:
+                continue
+            # Re-prove identity and containment immediately before deletion.
+            directory, _ = inspect_set(self.layout.backups, set_id)
+            if directory.resolve().parent != root or directory.is_symlink():
+                raise Failure(f"refusing to delete {directory}: outside the backup root")
+            shutil.rmtree(str(directory))
+            self.journal("retention-remove", set_id=set_id)
         say("retaining {} set(s){}".format(len(keep), "" if apply else " (dry run; pass --apply)"))
         return remove
 
@@ -1319,6 +1353,8 @@ class Controller:
     def import_set(self, args: argparse.Namespace) -> None:
         self.lock()
         self.installation()
+        if not SET_ID.fullmatch(args.set_id):
+            raise Refusal("invalid recovery set id")
         target = self.layout.backups / args.set_id
         if target.exists():
             raise Refusal("recovery set already present locally")
@@ -1352,7 +1388,7 @@ class Controller:
         """Fresh DB/media dirs + exact set images; the caller owns quiescence and switching."""
         current = metadata_release(metadata)
         compose = (directory / "compose.yaml").read_bytes()
-        images = dict(current["images"], version=current["version"])
+        images = pins(current)
         self.write_stack(installation, images, compose, layout)
         stack.compose("up", "-d", "db")
         stack.wait_healthy(["db"])
@@ -1546,9 +1582,7 @@ class Controller:
             if operation and operation["phase_index"] >= PHASES.index("pinned")
             else current
         )
-        self.check_drift(
-            installation, dict(pinned["images"], version=pinned["version"]), pinned["stack_sha256"]
-        )
+        self.check_drift(installation, pins(pinned), pinned["stack_sha256"])
         if target["images"] == pinned["images"]:
             raise Refusal("target image pair is already deployed")
         self.check_volumes()
@@ -1642,7 +1676,7 @@ class Controller:
             if operation["phase"] == "migrated":
                 self.write_stack(
                     installation,
-                    dict(target["images"], version=target["version"]),
+                    pins(target),
                     operation["compose"].encode(),
                 )
                 self.set_phase(operation, "pinned")
@@ -1707,7 +1741,7 @@ class Controller:
                     probe["current"], operation.get("backup", "<pre-upgrade set>")
                 )
             )
-        images = dict(previous["images"], version=previous["version"])
+        images = pins(previous)
         self.write_stack(installation, images, self.stored_compose(previous))
         self.stack.start()
         self.acceptance_checks(installation, previous)
@@ -1733,7 +1767,7 @@ class Controller:
         current = self.require_current()
         self.check_drift(
             installation,
-            dict(current["images"], version=current["version"]),
+            pins(current),
             current["stack_sha256"],
         )
         if self.operation() is not None:
@@ -1772,7 +1806,7 @@ class Controller:
     def apply_locked(self, installation: Json, current: Json) -> None:
         self.require_no_pending_restore()
         self.check_volumes()
-        images = dict(current["images"], version=current["version"])
+        images = pins(current)
         self.write_stack(installation, images, self.stored_compose(current))
         self.stack.start()
         self.acceptance_checks(installation, current)
@@ -1851,26 +1885,68 @@ def metadata_release(metadata: Json) -> Json:
     }
 
 
+def regular_file(path: Path) -> bool:
+    return stat.S_ISREG(os.lstat(str(path)).st_mode)
+
+
 def verify_checksums(directory: Path) -> Json:
+    """Exactly the four artifacts, regular files, matching SHA256SUMS and metadata digests."""
     sums = directory / "SHA256SUMS"
-    if not sums.exists():
+    if not sums.exists() or not regular_file(sums):
         raise Refusal(f"{directory} has no SHA256SUMS")
-    names = set()
+    entries: dict[str, str] = {}
     for line in sums.read_text().splitlines():
         expected, _, name = line.partition("  ")
-        if "/" in name or name in names:
-            raise Refusal("unsafe SHA256SUMS entry")
-        names.add(name)
+        if (
+            name not in SET_ARTIFACTS
+            or name in entries
+            or not re.fullmatch(r"[a-f0-9]{64}", expected)
+        ):
+            raise Refusal("unsafe or malformed SHA256SUMS entry")
+        entries[name] = expected
+    if set(entries) != set(SET_ARTIFACTS):
+        raise Failure("recovery set must checksum exactly " + ", ".join(SET_ARTIFACTS))
+    for name, expected in entries.items():
+        if not regular_file(directory / name):
+            raise Refusal(f"{name} is not a regular file")
         if sha256_file(directory / name) != expected:
             raise Failure(f"checksum mismatch for {directory.name}/{name}")
-    required = {"attachments.tar", "compose.yaml", "database.dump", "metadata.json"}
-    if names != required:
-        raise Failure("recovery set must checksum exactly " + ", ".join(sorted(required)))
     metadata = read_json(directory / "metadata.json")
-    for name, details in metadata["artifacts"].items():
-        if sha256_file(directory / name) != details["sha256"]:
+    artifacts = metadata.get("artifacts")
+    if not isinstance(artifacts, dict):
+        raise Failure("metadata has no artifact digests")
+    for name in SET_ARTIFACTS[:3]:
+        details = artifacts.get(name)
+        if not isinstance(details, dict) or details.get("sha256") != entries[name]:
             raise Failure("metadata digest mismatch for " + name)
     return metadata
+
+
+def inspect_set(root: Path, name: str) -> tuple[Path, Json]:
+    """Treat every set name and metadata field as untrusted until proven exact."""
+    if not isinstance(name, str) or not SET_ID.fullmatch(name):
+        raise Refusal(f"invalid recovery set id {name!r}")
+    directory = root / name
+    try:
+        info = os.lstat(str(directory))
+    except FileNotFoundError as error:
+        raise Refusal(f"recovery set {name} does not exist") from error
+    if not stat.S_ISDIR(info.st_mode):
+        raise Refusal(f"{name} is not a real directory (symlinks are refused)")
+    if info.st_uid != os.geteuid() or info.st_mode & 0o022:
+        raise Refusal(f"{name} is not owned by this controller or is group/world writable")
+    if directory.resolve().parent != root.resolve():
+        raise Refusal(f"{name} resolves outside the backup root")
+    metadata = verify_checksums(directory)
+    if metadata.get("set_id") != name or metadata.get("kind") not in SET_KINDS:
+        raise Failure(f"{name}: metadata identity does not match its directory")
+    if "-" + str(metadata["kind"]) + "-" not in name:
+        raise Failure(f"{name}: metadata kind does not match its directory")
+    try:
+        parse_time(str(metadata.get("created_at")))
+    except ValueError as error:
+        raise Failure(f"{name}: metadata creation time is malformed") from error
+    return directory, metadata
 
 
 def select_retained(

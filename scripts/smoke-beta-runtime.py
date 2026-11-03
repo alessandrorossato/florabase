@@ -298,7 +298,17 @@ class Smoke:
                 )
             lines = [f"FROM {tags['backend']}", "COPY zz_*.py /app/alembic/versions/"]
             if crash:
-                lines.append(f'CMD ["python", "-c", "raise SystemExit({crash!r})"]')
+                # Compose owns the backend command, so the crash must live in the application.
+                (context / "crash.py").write_text(f"\nraise SystemExit({crash!r})\n")
+                lines += [
+                    "USER root",
+                    "COPY crash.py /tmp/crash.py",
+                    'RUN python -c "import importlib.util as u, pathlib; '
+                    "p = pathlib.Path(u.find_spec('florabase.main').origin); "
+                    "p.write_text(p.read_text() + pathlib.Path('/tmp/crash.py').read_text())\" "
+                    "&& rm /tmp/crash.py",
+                    "USER florabase",
+                ]
             (context / "Dockerfile").write_text("\n".join(lines) + "\n")
             tag = f"{self.owner.project}-backend-{name}"
             self.owned("docker", "build", "--tag", tag, *self.labels, str(context))
@@ -596,6 +606,8 @@ class Smoke:
             host_dependent={n: c["ok"] for n, c in checks.items() if n not in required},
         )
 
+        for unsafe in ("0.0.0.0", "::", "192.0.2.10"):
+            self.ctl("init", "--origin", ORIGIN, "--bind-address", unsafe, expect=2)
         self.ctl("init", "--origin", ORIGIN, "--http-port", str(LIVE_PORT))
         self.ctl("init", "--origin", ORIGIN, expect=2)
         path, digest = self.manifests["a"]
@@ -665,6 +677,8 @@ class Smoke:
             daemon_restart=True,
             db_restarted_at=after_restart["started"],
         )
+
+        self.schema_guard_drill(baseline)
 
         set_one = re.findall(r"BACKUP_COMPLETE (\S+)", self.ctl("backup"))[0]
         self.ctl("verify-backup", set_one)
@@ -866,6 +880,7 @@ class Smoke:
             raise SystemExit("cleared reference dataset is still configured")
         self.step("reference-datasets", kind="wfo", read_only=True, cleared=True)
 
+        self.retention_drill()
         retention = self.ctl("retention")
         status = self.status()
         if status["problems"] or status["release"]["images"]["backend"] != refs["backend-e"]:
@@ -904,6 +919,143 @@ class Smoke:
             host_florabase_prod_unchanged=True,
         )
 
+    def http_status(self, path: str) -> int:
+        script = (
+            "import sys, urllib.error, urllib.request\n"
+            "try:\n"
+            f"    print(urllib.request.urlopen('http://127.0.0.1:{LIVE_PORT}' + sys.argv[1],"
+            " timeout=5).status)\n"
+            "except urllib.error.HTTPError as error:\n    print(error.code)\n"
+            "except OSError:\n    print(0)\n"
+        )
+        return int(run("docker", "exec", self.operator, "python3", "-c", script, path))
+
+    def backend(self) -> dict[str, Any]:
+        details = self.nested_json("inspect", self.stack("ps", "-aq", "backend"))[0]
+        assert isinstance(details, dict)
+        return details
+
+    def psql(self, sql: str) -> str:
+        return self.stack(
+            "exec",
+            "-T",
+            "db",
+            "sh",
+            "-c",
+            'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -Atc "' + sql + '"',
+        )
+
+    def never_ready(self, phase: str, seconds: int = 45) -> dict[str, Any]:
+        """The incompatible backend must not become healthy or serve readiness."""
+        deadline = time.monotonic() + seconds
+        observed = set()
+        while time.monotonic() < deadline:
+            state = self.backend()["State"]
+            health = (state.get("Health") or {}).get("Status")
+            observed.add(str(health or state["Status"]))
+            if health == "healthy" or self.http_status("/api/v1/ready") == 200:
+                raise SystemExit(f"incompatible backend became ready after {phase}")
+            time.sleep(3)
+        logs = run(
+            "docker",
+            "exec",
+            self.dind,
+            "docker",
+            "logs",
+            "--tail",
+            "50",
+            self.backend()["Id"],
+            stderr=subprocess.STDOUT,
+        )
+        if "refusing to start" not in logs:
+            raise SystemExit(f"guard refusal not logged after {phase}")
+        return {"phase": phase, "states": sorted(observed)}
+
+    def schema_guard_drill(self, baseline: dict[str, Any]) -> None:
+        """R1: no stale success, restart or recreation lets a mismatched schema serve."""
+        backend = self.backend()
+        logs = run(
+            "docker", "exec", self.dind, "docker", "logs", backend["Id"], stderr=subprocess.STDOUT
+        )
+        if "schema-guard: database at release head " + self.heads["a"] not in logs:
+            raise SystemExit("compatible start did not record the guard's success")
+        self.psql("UPDATE alembic_version SET version_num = 'runtime_smoke_forged'")
+        # Already running: the schema-aware healthcheck must stop it, not keep serving.
+        deadline = time.monotonic() + 90
+        while self.backend()["RestartCount"] == backend["RestartCount"] and (
+            self.backend()["State"]["StartedAt"] == backend["State"]["StartedAt"]
+        ):
+            if time.monotonic() > deadline:
+                raise SystemExit("running backend kept serving a changed schema")
+            time.sleep(3)
+        results = [self.never_ready("running backend schema change")]
+        plain = subprocess.run(
+            [
+                "docker",
+                "exec",
+                self.operator,
+                "timeout",
+                "150",
+                "docker",
+                "compose",
+                "--project-name",
+                "florabase-prod",
+                "--project-directory",
+                INSTALL + "/stack",
+                "--file",
+                INSTALL + "/stack/compose.yaml",
+                "--env-file",
+                INSTALL + "/stack/.env",
+                "up",
+                "-d",
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ).returncode
+        results.append(dict(self.never_ready("plain docker compose up -d"), compose_exit=plain))
+        self.nested("restart", self.backend()["Id"])
+        results.append(self.never_ready("docker restart"))
+        self.stack("up", "-d", "--no-deps", "--force-recreate", "backend")
+        results.append(self.never_ready("recreation (Dockhand-equivalent redeploy)"))
+        self.psql(f"UPDATE alembic_version SET version_num = '{self.heads['a']}'")
+        self.stack("up", "-d", "--no-deps", "--force-recreate", "backend")
+        self.ctl("acceptance", "--owner", OWNER_LOGIN, stdin=self.password + "\n")
+        if self.client("snapshot") != baseline:
+            raise SystemExit("schema guard drill changed data")
+        self.step("schema-guard", refused=results, compatible_after_restore=True)
+
+    def retention_drill(self) -> None:
+        """R2 on real sets: a planted traversal entry is never eligible; newest set survives."""
+        backups = INSTALL + "/backups"
+        valid = sorted(
+            line.split()[0] for line in self.ctl("list-backups").splitlines() if "  " in line
+        )
+        planted = "20260101T000000Z-manual-0000aa"
+        self.operator_sh(
+            f"cp -a {backups}/{valid[-1]} {backups}/{planted} && cd {backups}/{planted} && "
+            "python3 -c \"import json; m=json.load(open('metadata.json')); "
+            "m['set_id']='../postgres'; m['created_at']='2026-01-01T00:00:00Z'; "
+            "json.dump(m, open('metadata.json', 'w'))\" && "
+            "sha256sum attachments.tar compose.yaml database.dump metadata.json > SHA256SUMS"
+        )
+        output = self.ctl(
+            "retention", "--daily", "1", "--weekly", "0", "--upgrades", "0", "--apply"
+        )
+        remaining = self.operator_sh(f"ls {backups}").split()
+        self.operator_sh(f"test -d {INSTALL}/postgres && test -d {backups}/{planted}")
+        if valid[-1] not in remaining or "keeping unverifiable entry" not in output:
+            raise SystemExit("retention did not keep the newest set or skip the planted entry")
+        self.ctl("retention", "--daily", "1", "--weekly", "0", "--upgrades", "0", "--apply")
+        self.operator_sh(f"rm -rf {backups}/{planted}")
+        self.ctl("acceptance")
+        self.step(
+            "retention-boundary",
+            before=len(valid),
+            kept=valid[-1],
+            planted_traversal_kept_untouched=True,
+            idempotent=True,
+        )
+
     def status_operation(self) -> str:
         return self.operator_sh(f"cat {INSTALL}/state/operation.json 2>/dev/null || true")
 
@@ -936,6 +1088,14 @@ def main() -> None:
     parser.add_argument("--evidence", type=Path, required=True)
     args = parser.parse_args()
     compose = compose_binary()
+    source = {
+        "commit": run("git", "-C", str(ROOT), "rev-parse", "HEAD"),
+        "tree": run("git", "-C", str(ROOT), "rev-parse", "HEAD^{tree}"),
+        "clean": run("git", "-C", str(ROOT), "status", "--porcelain", "--untracked-files=all")
+        == "",
+    }
+    if not source["clean"]:
+        print("WARNING: dirty source tree; this run is not evidence for a commit", flush=True)
     if run("docker", "version", "--format", "{{.Server.Os}}/{{.Server.Arch}}") != "linux/amd64":
         raise SystemExit("native linux/amd64 Docker is required")
     with tempfile.TemporaryDirectory(prefix="florabase-runtime-smoke-") as temporary:
@@ -981,6 +1141,7 @@ def main() -> None:
             refs = smoke.publish(tags)
             smoke.scenario(refs)
             smoke.evidence.update(
+                source=source,
                 runtime={
                     "engine": "24.0.2",
                     "compose": "2.20.1",

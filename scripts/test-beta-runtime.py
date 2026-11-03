@@ -29,7 +29,10 @@ COMPOSE: list[str] = ["docker", "compose"]
 
 
 def load_controller() -> Any:
-    spec = importlib.util.spec_from_file_location("florabasectl", BUNDLE / "florabasectl.py")
+    # FLORABASECTL_UNDER_TEST runs these rules against another controller copy (for example a
+    # reviewed older commit) to prove a regression test fails there.
+    path = Path(os.environ.get("FLORABASECTL_UNDER_TEST") or BUNDLE / "florabasectl.py")
+    spec = importlib.util.spec_from_file_location("florabasectl", path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -210,8 +213,12 @@ class PureRules(unittest.TestCase):
             self.assertEqual(ctl.read_json(path), {"a": 1})
 
 
-def recovery_set(directory: Path) -> None:
-    directory.mkdir()
+def recovery_set(
+    directory: Path, set_id: str | None = None, created_at: str = "2026-11-01T03:00:00Z"
+) -> None:
+    """A structurally valid synthetic set; destructive tests use only temporary directories."""
+    directory.mkdir(mode=0o700)
+    directory.chmod(0o700)  # as the controller creates sets, independent of the caller's umask
     for name, data in (
         ("database.dump", b"dump"),
         ("attachments.tar", b"tar"),
@@ -222,13 +229,24 @@ def recovery_set(directory: Path) -> None:
         name: {"sha256": hashlib.sha256((directory / name).read_bytes()).hexdigest()}
         for name in ("database.dump", "attachments.tar", "compose.yaml")
     }
-    (directory / "metadata.json").write_text(json.dumps({"artifacts": artifacts}))
+    name = directory.name if set_id is None else set_id
+    kind = "pre-upgrade" if "-pre-upgrade-" in name else "manual"
+    metadata = {"artifacts": artifacts, "set_id": name, "kind": kind, "created_at": created_at}
+    (directory / "metadata.json").write_text(json.dumps(metadata))
+    write_sums(directory)
+
+
+def write_sums(directory: Path) -> None:
     (directory / "SHA256SUMS").write_text(
         "".join(
             hashlib.sha256((directory / name).read_bytes()).hexdigest() + "  " + name + "\n"
             for name in ("attachments.tar", "compose.yaml", "database.dump", "metadata.json")
         )
     )
+
+
+def set_name(day: int, kind: str = "manual") -> str:
+    return f"202610{day:02d}T030000Z-{kind}-{day:06x}"
 
 
 class RecoverySets(unittest.TestCase):
@@ -253,6 +271,181 @@ class RecoverySets(unittest.TestCase):
             sums.write_text(lines[0] + "\n" + "0" * 64 + "  ../escape\n")
             with self.assertRaises(ctl.Refusal):
                 ctl.verify_checksums(directory)
+
+
+class Retention(unittest.TestCase):
+    """R2: deletion targets come only from verified, contained directory identities."""
+
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.base = Path(self.temporary.name)
+        self.root = self.base / "install"
+        self.controller = ctl.Controller(self.root, FakeRunner())
+        self.backups = self.controller.layout.backups
+        self.backups.mkdir(parents=True)
+        self.controller.layout.state.mkdir()
+        # Victims outside and beside the backup root must survive every attack below.
+        self.victims = [self.base / "victim", self.root / "postgres", self.backups / "unrelated"]
+        for victim in self.victims:
+            victim.mkdir()
+            (victim / "keep").write_text("data")
+
+    def tearDown(self) -> None:
+        if self.controller._lock is not None:
+            self.controller._lock.close()
+        self.temporary.cleanup()
+
+    def retention(self, *args: Any) -> list[str]:
+        try:
+            return list(self.controller.retention(*args))
+        finally:
+            if self.controller._lock is not None:
+                self.controller._lock.close()
+                self.controller._lock = None
+
+    def assert_victims_intact(self) -> None:
+        for victim in self.victims:
+            self.assertEqual((victim / "keep").read_text(), "data", victim)
+
+    def valid(self, day: int, kind: str = "manual") -> Path:
+        directory = self.backups / set_name(day, kind)
+        recovery_set(directory, created_at=f"2026-10-{day:02d}T03:00:00Z")
+        return Path(directory)
+
+    def test_traversal_absolute_and_mismatched_ids_are_never_deleted(self) -> None:
+        self.valid(30)
+        attacks = {
+            set_name(1): "../../victim",
+            set_name(2): str(self.base / "victim"),
+            set_name(3): "../postgres",
+            set_name(4): set_name(5),
+        }
+        for directory, claimed in attacks.items():
+            recovery_set(
+                self.backups / directory, set_id=claimed, created_at="2026-09-01T03:00:00Z"
+            )
+        (self.backups / "unrelated" / "metadata.json").write_text(
+            json.dumps(
+                {"set_id": "../victim", "kind": "manual", "created_at": "2026-01-01T00:00:00Z"}
+            )
+        )
+        removed = self.retention(1, 0, 0, True)
+        self.assertEqual(removed, [])
+        self.assert_victims_intact()
+        for directory in attacks:
+            self.assertTrue((self.backups / directory).is_dir(), "unverifiable set kept untouched")
+
+    def test_symlinked_set_pointing_outside_is_refused(self) -> None:
+        self.valid(30)
+        outside = self.base / "outside-set"
+        recovery_set(outside, set_id=set_name(1), created_at="2026-09-01T03:00:00Z")
+        (self.backups / set_name(1)).symlink_to(outside)
+        self.assertEqual(self.retention(1, 0, 0, True), [])
+        self.assertTrue((outside / "database.dump").exists())
+        self.assert_victims_intact()
+
+    def test_tampered_missing_or_invalid_metadata_is_not_eligible(self) -> None:
+        self.valid(30)
+        tampered = self.valid(1)
+        (tampered / "database.dump").write_bytes(b"changed")
+        missing = self.valid(2)
+        (missing / "metadata.json").unlink()
+        wrong_kind = self.valid(3)
+        metadata = json.loads((wrong_kind / "metadata.json").read_text())
+        metadata["kind"] = "pre-upgrade"
+        (wrong_kind / "metadata.json").write_text(json.dumps(metadata))
+        write_sums(wrong_kind)
+        bad_sums = self.valid(4)
+        (bad_sums / "SHA256SUMS").write_text("0" * 64 + "  ../../victim/keep\n")
+        writable = self.valid(5)
+        writable.chmod(0o777)
+        self.assertEqual(self.retention(1, 0, 0, True), [])
+        for directory in (tampered, missing, wrong_kind, bad_sums, writable):
+            self.assertTrue(directory.is_dir())
+        self.assert_victims_intact()
+
+    def test_malformed_policy_is_refused(self) -> None:
+        self.valid(30)
+        for policy in ((0, 0, 0), (-1, 4, 3), (7, -1, 3), (7, 4, 99999), (True, 4, 3)):
+            with self.subTest(policy), self.assertRaises(ctl.Refusal):
+                self.retention(*policy, True)
+        self.assertTrue((self.backups / set_name(30)).is_dir())
+
+    def test_last_valid_set_survives_and_retention_is_idempotent(self) -> None:
+        for day in range(1, 11):
+            self.valid(day)
+        first = self.retention(1, 0, 0, True)
+        self.assertEqual(sorted(first), sorted(set_name(day) for day in range(1, 10)))
+        self.assertEqual(self.retention(1, 0, 0, True), [])
+        self.assertTrue((self.backups / set_name(10)).is_dir())
+        self.assert_victims_intact()
+
+    def test_dry_run_deletes_nothing(self) -> None:
+        for day in range(1, 4):
+            self.valid(day)
+        self.assertEqual(len(self.retention(1, 0, 0, False)), 2)
+        self.assertEqual(len(list(self.backups.glob("202610*"))), 3)
+
+
+class BindAddress(unittest.TestCase):
+    """R3: only IPv4 loopback publication is possible without a separately reviewed feature."""
+
+    def test_loopback_accepted(self) -> None:
+        for value in ("127.0.0.1", "127.0.0.2", "127.10.20.30"):
+            self.assertEqual(ctl.loopback_address(value), value)
+
+    def test_wildcard_public_private_and_ipv6_refused(self) -> None:
+        for value in (
+            "0.0.0.0",
+            "::",
+            "::1",
+            "192.0.2.10",
+            "203.0.113.5",
+            "localhost",
+            "",
+            "127.0.0.1:80",
+        ):
+            with self.subTest(value), self.assertRaises(ctl.Refusal):
+                ctl.loopback_address(value)
+
+    def test_init_and_render_refuse_unsafe_binding(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "new"
+            args = ctl.parser().parse_args(
+                [
+                    "--root",
+                    str(root),
+                    "init",
+                    "--origin",
+                    "https://florabase.example.invalid",
+                    "--bind-address",
+                    "0.0.0.0",
+                ]
+            )
+            with self.assertRaisesRegex(ctl.Refusal, "loopback"):
+                ctl.Controller(root, FakeRunner()).init(args)
+            self.assertFalse(root.exists(), "refused before creating anything")
+            controller = ctl.Controller(root, FakeRunner())
+            installation = {
+                "canonical_origin": "https://x.example.invalid",
+                "bind_address": "0.0.0.0",
+                "http_port": 8080,
+                "limits": {
+                    "db_memory": "1g",
+                    "db_cpus": "0",
+                    "backend_memory": "1g",
+                    "backend_cpus": "0",
+                },
+            }
+            images = {
+                "backend": "b",
+                "frontend": "f",
+                "postgres": "p",
+                "version": "v",
+                "alembic_head": "h",
+            }
+            with self.assertRaisesRegex(ctl.Refusal, "loopback"):
+                controller.render_env(installation, images, controller.layout)
 
 
 class FakeRunner:
@@ -297,7 +490,7 @@ class ControllerRules(unittest.TestCase):
         record = ctl.release_record(manifest(), "f" * 64)
         compose = (BUNDLE / "compose.yaml").read_bytes()
         record["stack_sha256"] = self.controller.write_stack(
-            self.installation, dict(record["images"], version=record["version"]), compose
+            self.installation, ctl.pins(record), compose
         )
         ctl.write_json(layout.current_file, record)
         self.current = record
@@ -516,17 +709,71 @@ class ControllerRules(unittest.TestCase):
 
 
 # Everything BETA-RUNTIME-001 adds is public: it must not describe any real installation.
-DISCLOSURE_FILES = [
-    "deploy/beta/compose.yaml",
-    "deploy/beta/florabasectl.py",
-    "deploy/beta/florabase.env.example",
-    "docs/beta-runtime-001.md",
-    "docs/beta-runtime-001-evidence.json",
-    "docs/beta-runtime-001-qa-handoff.md",
-    "scripts/smoke-beta-runtime.py",
-    "scripts/smoke_beta_runtime_client.py",
-    "scripts/test-beta-runtime.py",
-]
+def git(*args: str) -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(ROOT), *args], capture_output=True, text=True, check=True
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return result.stdout
+
+
+def feature_base() -> str | None:
+    """Merge base of this feature; FLORABASE_DISCLOSURE_BASE overrides it explicitly."""
+    override = os.environ.get("FLORABASE_DISCLOSURE_BASE")
+    if override:
+        return override
+    head = (git("rev-parse", "HEAD") or "").strip()
+    for ref in ("origin/main", "main"):
+        base = (git("merge-base", "HEAD", ref) or "").strip()
+        if base and base != head:
+            return base
+    return None
+
+
+def feature_changes(base: str) -> dict[str, set[int] | None]:
+    """Every path the feature changes against its base: committed, staged, unstaged and untracked.
+
+    Tracked paths map to their added line numbers; untracked candidates (None) scan whole.
+    """
+    diff = git("diff", "--unified=0", "--no-color", "--no-renames", base, "--")
+    untracked = git("ls-files", "--others", "--exclude-standard")
+    if diff is None or untracked is None:
+        raise AssertionError("cannot derive the feature diff from Git")
+    changes: dict[str, set[int] | None] = {}
+    current: str | None = None
+    for line in diff.splitlines():
+        if line.startswith("+++ "):
+            current = None if line == "+++ /dev/null" else line[len("+++ b/") :]
+            if current is not None:
+                changes.setdefault(current, set())
+        elif line.startswith("@@") and current is not None:
+            match = re.search(r"\+(\d+)(?:,(\d+))?", line)
+            assert match is not None
+            first, count = int(match.group(1)), int(match.group(2) or "1")
+            lines = changes[current]
+            assert lines is not None
+            lines.update(range(first, first + count))
+    for path in untracked.splitlines():
+        changes[path] = None
+    return changes
+
+
+def fixture_lines(path: Path) -> set[int]:
+    """Only the explicitly marked synthetic-sample block of this test file is exempt."""
+    exempt: set[int] = set()
+    inside = False
+    for number, line in enumerate(path.read_text().splitlines(), 1):
+        if "# disclosure-fixtures-begin" in line:
+            inside = True
+        if inside:
+            exempt.add(number)
+        if "# disclosure-fixtures-end" in line:
+            inside = False
+    return exempt
+
+
 # disclosure-fixtures-begin: patterns and samples are the only exempt lines.
 DISCLOSURE_PATTERNS = {
     "private or CGNAT IPv4": r"\b(?:10\.\d{1,3}|192\.168|172\.(?:1[6-9]|2\d|3[01])|"
@@ -543,22 +790,48 @@ DISCLOSURE_PATTERNS = {
 class Disclosure(unittest.TestCase):
     """Dedicated privacy/sanitization gate over every runtime file that will be committed."""
 
+    def changes(self) -> dict[str, set[int] | None]:
+        if git("rev-parse", "HEAD") is None:
+            self.skipTest(
+                "Git unavailable (container run); the host run of this suite is mandatory"
+            )
+        base = feature_base()
+        if base is None:
+            self.skipTest("no feature diff: HEAD is on main; set FLORABASE_DISCLOSURE_BASE to scan")
+        return feature_changes(base)
+
     def test_no_infrastructure_or_secret_disclosure(self) -> None:
         findings = []
-        for name in DISCLOSURE_FILES:
+        for name, lines in sorted(self.changes().items()):
             path = ROOT / name
-            if not path.exists():
-                findings.append(name + ": missing from the scan list")
+            if not path.is_file() or path.is_symlink():
                 continue
-            exempt = False
-            for number, line in enumerate(path.read_text().splitlines(), 1):
-                if name.endswith("test-beta-runtime.py") and "disclosure-fixtures-" in line:
-                    exempt = "disclosure-fixtures-begin" in line
+            exempt = fixture_lines(path) if name == "scripts/test-beta-runtime.py" else set()
+            text = path.read_text(errors="replace").splitlines()
+            for number, line in enumerate(text, 1):
+                if (lines is not None and number not in lines) or number in exempt:
                     continue
                 for label, pattern in DISCLOSURE_PATTERNS.items():
-                    if not exempt and re.search(pattern, line):
+                    if re.search(pattern, line):
                         findings.append(f"{name}:{number}: {label}")
         self.assertEqual(findings, [])
+
+    def test_scope_is_the_whole_feature_diff(self) -> None:
+        changes = self.changes()
+        for path in (
+            ".gitignore",
+            "Makefile",
+            "docs/progress.md",
+            "docs/features.json",
+            "deploy/beta/florabasectl.py",
+            "scripts/test-beta-runtime.py",
+        ):
+            self.assertIn(path, changes)
+        self.assertEqual(
+            fixture_lines(ROOT / "scripts/test-beta-runtime.py")
+            and min(fixture_lines(ROOT / "scripts/test-beta-runtime.py")) > 0,
+            True,
+        )
 
     def test_patterns_detect_examples(self) -> None:
         samples = {
@@ -596,7 +869,13 @@ class Disclosure(unittest.TestCase):
                 "backend_cpus": "0",
             },
         }
-        images = {"backend": "b", "frontend": "f", "postgres": "p", "version": "v"}
+        images = {
+            "backend": "b",
+            "frontend": "f",
+            "postgres": "p",
+            "version": "v",
+            "alembic_head": "h",
+        }
         controller = ctl.Controller(Path("/srv/florabase"), FakeRunner())
         rendered = controller.render_env(installation, images, controller.layout).decode()
         self.assertEqual(keys(example), keys(rendered))
@@ -655,6 +934,7 @@ class StackContract(unittest.TestCase):
             FLORABASE_MEDIA_DIR="/srv/florabase/media",
             FLORABASE_REFERENCE_DIR="/srv/florabase/reference",
             FLORABASE_CANONICAL_ORIGIN="https://florabase.example.invalid",
+            FLORABASE_EXPECTED_ALEMBIC_HEAD="20261013_0042",
         )
         cls.env = "".join(key + "=" + value + "\n" for key, value in values.items())
         result = compose_config(cls.directory, cls.env)
@@ -672,10 +952,10 @@ class StackContract(unittest.TestCase):
 
     def test_project_and_services(self) -> None:
         self.assertEqual(self.config["name"], "florabase-prod")
-        self.assertEqual(set(self.config["services"]), {"db", "schema-gate", "backend", "frontend"})
+        self.assertEqual(set(self.config["services"]), {"db", "backend", "frontend"})
         self.assertEqual(
             set(self.maintenance["services"]),
-            {"db", "schema-gate", "backend", "frontend", "migrate", "tools"},
+            {"db", "backend", "frontend", "migrate", "tools"},
         )
 
     def test_image_only_and_pinned(self) -> None:
@@ -719,22 +999,62 @@ class StackContract(unittest.TestCase):
 
     def test_startup_gating_and_no_implicit_migration(self) -> None:
         services = self.maintenance["services"]
-        self.assertEqual(
-            services["backend"]["depends_on"]["schema-gate"]["condition"],
-            "service_completed_successfully",
-        )
-        self.assertEqual(services["backend"]["depends_on"]["db"]["condition"], "service_healthy")
+        backend = services["backend"]
+        self.assertEqual(set(backend["depends_on"]), {"db"})
+        self.assertEqual(backend["depends_on"]["db"]["condition"], "service_healthy")
         self.assertEqual(
             services["frontend"]["depends_on"]["backend"]["condition"], "service_healthy"
         )
-        self.assertIsNone(services["backend"].get("command"))
-        self.assertIn("is not image head", " ".join(services["schema-gate"]["command"]))
         for name, service in services.items():
-            command = " ".join(service.get("command") or [])
+            command = " ".join((service.get("entrypoint") or []) + (service.get("command") or []))
             if "upgrade" in command:
                 self.assertEqual(name, "migrate")
         self.assertEqual(services["migrate"]["profiles"], ["maintenance"])
-        self.assertEqual(services["schema-gate"]["restart"], "no")
+
+    def test_schema_guard_runs_inside_every_backend_start(self) -> None:
+        """R1: no one-shot success container can authorize a backend start."""
+        services = self.maintenance["services"]
+        self.assertNotIn("schema-gate", services)
+        for service in services.values():
+            for dependency in (service.get("depends_on") or {}).values():
+                self.assertNotEqual(dependency["condition"], "service_completed_successfully")
+        backend = services["backend"]
+        guard = " ".join(backend["entrypoint"])
+        self.assertEqual(backend["entrypoint"][:2], ["python", "-c"])
+        for required in (
+            "FLORABASE_EXPECTED_ALEMBIC_HEAD",
+            "get_current_heads",
+            "refusing to start",
+            "os.execvp",
+            "heads != [expected]",
+            "except Exception",
+        ):
+            self.assertIn(required, guard)
+        self.assertNotIn("upgrade", guard)
+        self.assertEqual(backend["command"][:2], ["uvicorn", "florabase.main:app"])
+        self.assertEqual(backend["environment"]["FLORABASE_EXPECTED_ALEMBIC_HEAD"], "20261013_0042")
+        health = " ".join(backend["healthcheck"]["test"])
+        for required in (
+            "/api/v1/ready",
+            "get_current_heads",
+            "FLORABASE_EXPECTED_ALEMBIC_HEAD",
+            "os.kill(1",
+        ):
+            self.assertIn(required, health)
+        self.assertEqual(backend["restart"], "unless-stopped")
+        for task in ("migrate", "tools"):
+            self.assertNotIn("FLORABASE_EXPECTED_ALEMBIC_HEAD", services[task]["environment"])
+
+    def test_guard_refuses_missing_expected_head(self) -> None:
+        env = "".join(
+            line + "\n"
+            for line in self.env.splitlines()
+            if not line.startswith("FLORABASE_EXPECTED_ALEMBIC_HEAD=")
+        )
+        result = compose_config(self.directory, env)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("FLORABASE_EXPECTED_ALEMBIC_HEAD", result.stderr)
+        compose_config(self.directory, self.env)
 
     def test_production_settings_without_empty_optional_paths(self) -> None:
         environment = self.config["services"]["backend"]["environment"]
@@ -791,7 +1111,15 @@ def main() -> None:
     COMPOSE[:] = args.compose.split()
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
-    cases = [ManifestRules, PureRules, RecoverySets, ControllerRules, Disclosure]
+    cases = [
+        ManifestRules,
+        PureRules,
+        RecoverySets,
+        Retention,
+        BindAddress,
+        ControllerRules,
+        Disclosure,
+    ]
     if not args.controller_only:
         cases.append(StackContract)
     for case in cases:

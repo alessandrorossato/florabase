@@ -26,18 +26,23 @@ artifacts an operator copies to the host; no checkout, Git or package installati
 - **Pinned images.** `.env` carries the backend/frontend digest pair from one release manifest and
   the PostgreSQL digest recorded at install. Missing pins, secrets directory or data paths fail
   `docker compose config` instead of falling back to defaults.
-- **Startup never migrates.** `schema-gate` (one-shot, backend image) compares the database Alembic
-  revision with the image head and refuses otherwise; `backend` depends on its success, `frontend` on
-  backend health. `migrate` and `tools` exist only in the `maintenance` profile and are run by the
-  controller. A Dockhand redeploy or manual `docker compose up -d` therefore cannot migrate, and
-  cannot start an image whose schema differs from the database.
+- **Startup never migrates; schema is enforced inside the backend.** The backend's entrypoint
+  guard runs before the server on *every* container start: `docker compose up`, `docker restart`,
+  daemon restart, reboot or a Dockhand recreation. It refuses unless the image's only Alembic head
+  equals `FLORABASE_EXPECTED_ALEMBIC_HEAD` (rendered from the authorized release manifest) and the
+  database revision equals it. An unreachable or ambiguous revision also refuses. No one-shot
+  success container can authorize a start. The backend healthcheck re-reads the revision every 10 s;
+  if the schema changes under a running backend, it stops the container, and the guard then keeps it
+  down. `migrate` and `tools` exist only in the `maintenance` profile, run by the controller.
 - **Durable identities.** Named volumes `florabase-prod_postgres_data`, `_attachment_data` and
   `_reference_data` are local-driver *bind* volumes onto host directories. A missing directory stops
   the container instead of creating an empty database; removing the Docker volume object never
   deletes host data. The controller refuses any existing project volume that is plain or bound
   elsewhere (for example one left by the source-build `compose.yaml`, which shares the project name).
-- **Private exposure.** Only frontend publishes, on `127.0.0.1:${FLORABASE_HTTP_PORT}` for host
-  Tailscale Serve. Database and backend have no ports. CORS is empty, cookies secure, origin exact.
+- **Private exposure.** Only frontend publishes, on IPv4 loopback for host Tailscale Serve. The
+  controller refuses any `--bind-address` outside `127.0.0.0/8` (including `0.0.0.0`, `::` and LAN or
+  public addresses), both at `init` and whenever it renders `.env`. Wider exposure needs a separately
+  reviewed feature. Database and backend have no ports. CORS is empty, cookies secure, origin exact.
 - **Hardening and bounds.** All containers are read-only with tmpfs scratch, `cap_drop: ALL`,
   `no-new-privileges`, memory and PID limits; PostgreSQL runs as 70:70, backend as 10001, nginx
   as 101. Memory ceilings (PostgreSQL 1 GiB, backend 768 MiB, frontend 128 MiB, one-shot tasks
@@ -94,7 +99,7 @@ Run everything as root on the host (`sudo -i` on DSM). Replace the example paths
    non-empty root, so it never adopts data. Use `--http-port` if 8080 is taken.
 4. **Install.** Run `... install --manifest release-manifest.json --manifest-sha256 <sha256>`.
    This pulls by digest, starts PostgreSQL, migrates the *empty* database explicitly, starts the
-   application through the gate and runs acceptance. An interrupted install of the same manifest can
+   application (its guard verifies the schema) and runs acceptance. An interrupted install of the same manifest can
    be re-run; any other non-empty database is refused.
 5. **Create the owner.** Run `... bootstrap-owner <login>`; the password is read from the terminal or
    stdin, never from arguments.
@@ -125,7 +130,7 @@ Dockhand is the control plane, the following applies:
   Scheduled update checks may stay on: excluded containers show no badge, so release notifications
   come from `florabasectl check-release` (exit 10 when an approved manifest differs) instead.
 - No Git stack, auto-sync, force-redeploy or deployment webhook for this stack. A manual Dockhand
-  redeploy of the recorded files is harmless, because the gate refuses schema mismatches. It is not
+  redeploy of the recorded files is harmless, because the backend guard refuses schema mismatches. It is not
   an upgrade path: promotion is only through the controller.
 - Labels win over UI policy per the Dockhand manual, but behavior on the pinned Dockhand version is
   **not yet verified**; record it during real-host acceptance.
@@ -135,7 +140,7 @@ Dockhand is the control plane, the following applies:
 Readiness for the controller means all of the following:
 
 - db/backend/frontend are healthy and run exactly the pinned images;
-- the gate-verified Alembic head equals the release manifest;
+- the guard-verified Alembic head equals the release manifest;
 - every original verifies against its database SHA-256;
 - media storage accepts a write/read;
 - HTTP surfaces answer and the frontend `/release.json` matches the release.
@@ -164,7 +169,16 @@ restarts writers. `verify-backup <set>` re-checks everything, using no live serv
   reporting success. `import-set` fetches a set onto a new host. Keep the restic password and the
   `secrets/` and Dockhand key backups in separate custody.
 - **Retention:** `retention` (dry run) / `--apply` keeps the newest set per day for 7 days, per
-  ISO week for 4 weeks, the 3 newest pre-upgrade/safety sets and always the newest set.
+  ISO week for 4 weeks, the 3 newest pre-upgrade/safety sets and always the newest set. Every set
+  name and metadata field is untrusted. A set counts or expires only if all of the following hold:
+  - its directory name has the exact set-id syntax;
+  - it is a real directory, not a symlink, owned by the controller and not group/world-writable,
+    inside the backup root;
+  - its four artifacts are regular files matching `SHA256SUMS` and the metadata digests;
+  - its metadata `set_id`, kind and time match the directory.
+
+  Anything else is reported and left untouched. Deletion targets are re-proven immediately before
+  removal. The policy must be in range, and the run is idempotent.
 - **Isolated drill:** `restore-isolated <set> --http-port 18081 [--owner <login>]` restores into a new
   `florabase-restore-*` project with its own directories, secrets and loopback port. It compares
   revision and exact table counts, verifies every original and invalidates restored sessions before
@@ -193,7 +207,7 @@ evidence; they are not host RTO.
 2. `validated` → stop writers → `quiesced` → fresh pre-upgrade recovery set → `backed_up`.
 3. Run the target image's migration and verify the head → `migrated`.
 4. Atomically pin the new pair and stack document → `pinned`.
-5. Start db, gate, backend and frontend with bounded waits; a crash loop fails fast → `started`.
+5. Start db, then backend (guarded) and frontend with bounded waits; a crash loop fails fast → `started`.
 6. Run acceptance → `accepted`, then record `current.json`.
 
 Every phase is fsynced to `state/operation.json` and `state/journal.jsonl`. On failure the operation
@@ -218,9 +232,13 @@ Python 3.8.20 and pulls only from a loopback registry inside that daemon. Test-o
 add a compatible revision (B), a failing migration (C), a migrated-but-crashing application (D) and
 its forward fix (E). The sequence:
 
-- preflight, init (twice: refused), install with wrong then right digest, owner bootstrap/login;
+- preflight; init refused for `0.0.0.0`, `::` and a LAN address; init; repeat init refused;
+  install with wrong then right digest; owner bootstrap/login;
 - seed suppliers, an unlinked original, a shared original linked twice and an external asset with
   a saved local copy; recreate backend/frontend and restart the daemon, then compare the exact data;
+- schema guard: after a recorded successful start, the database revision is forged. The running
+  backend stops itself; plain `docker compose up -d`, `docker restart` and forced recreation never
+  become healthy or ready, and the refusal is logged; restoring the revision restores service;
 - backup, verification and tamper detection;
 - isolated restore with login, compared to the source and proven not to touch the live database;
 - encrypted restic export, then import of the set from the repository;
@@ -230,6 +248,9 @@ its forward fix (E). The sequence:
 - failed application after migration → refused abort → explicit forward fix;
 - replacement restore after wrong-ID refusals, with sessions invalidated and failed data preserved;
 - SIGKILL after migration → refused promote → resume;
+- WFO dataset provisioning (wrong digest refused, read-only mount, cleared);
+- retention on real sets with a planted traversal entry (`set_id: ../postgres`), which is kept
+  untouched while older sets expire, the newest survives and a repeat run is a no-op;
 - final status clean, update labels verified, unrelated nested workload and host `florabase-prod`
   resources unchanged.
 

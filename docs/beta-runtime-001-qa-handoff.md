@@ -4,6 +4,21 @@ Implementation claims below are the author's; QA treats them as claims and repro
 design and operator procedures are in the [runbook](beta-runtime-001.md); the recorded disposable
 run is [beta-runtime-001-evidence.json](beta-runtime-001-evidence.json).
 
+## QA corrections (round 1, reviewed `e1a708f`)
+
+| Finding | Correction | Regression |
+| --- | --- | --- |
+| R1 P0 schema gate reusable by plain Compose | One-shot `schema-gate` removed. The backend entrypoint guard checks image head = `.env` release head = database revision on every start and fails closed. Its healthcheck re-reads the revision and stops a backend whose schema changed. | `StackContract.test_schema_guard_runs_inside_every_backend_start`, `test_guard_refuses_missing_expected_head`; smoke step `schema-guard` (running change, plain `up -d`, `docker restart`, recreation, restore) |
+| R2 P0 retention traversal | Set identity is proven from the directory (syntax, real non-symlink dir, ownership/mode, containment, exact artifacts, checksums, metadata identity); invalid entries are never eligible; the target is re-proven before `rmtree`; the policy is range-checked | `Retention.*` (traversal, absolute, symlink, mismatch, tampered/missing metadata, bad sums, writable, policy, last set, idempotence, dry run); smoke step `retention-boundary` |
+| R3 P1 arbitrary bind address | IPv4 loopback only (`127.0.0.0/8`) at `init`, `.env` rendering and acceptance | `BindAddress.*`; smoke refuses `0.0.0.0`, `::`, `192.0.2.10` |
+| R4 P1 static privacy list | The scan derives paths from Git: the diff against the feature merge base (committed, staged, unstaged) plus untracked files. Only added lines are scanned; the only exemption is the marked synthetic-fixture block. | `Disclosure.test_no_infrastructure_or_secret_disclosure`, `test_scope_is_the_whole_feature_diff` |
+
+Against the reviewed controller,
+`FLORABASECTL_UNDER_TEST=<e1a708f florabasectl.py> python3 scripts/test-beta-runtime.py --controller-only`
+fails every R2 and R3 test. Its retention printed `removing ../../victim` and an absolute path outside
+the backup root (disposable temp directories only). The reviewed `compose.yaml` still has the
+`service_completed_successfully` gate that `test_schema_guard_runs_inside_every_backend_start` rejects.
+
 ## Reproduce
 
 ```bash
@@ -13,10 +28,24 @@ make workflow-check
 ```
 
 `test-beta-runtime` runs the offline stack contract, controller rules and disclosure scan under the
-host Python and under the pinned Python 3.8.20 image. `smoke-beta-runtime` needs native linux/amd64
+host Python. It also runs the controller rules under the pinned Python 3.8.20 image; that image has
+no Git, so the disclosure scan reports skipped there and the host run is the authoritative one. `smoke-beta-runtime` needs native linux/amd64
 Docker with privileged containers, about 8 minutes and network access for the first image builds and
 for the checksum-verified Compose 2.20.1 download (cached under `~/.cache/florabase`). It must end
 with `BETA_RUNTIME_SMOKE_PASSED` and `RESOURCE_CLEANUP_PASSED … residual_containers_networks_volumes=0`.
+
+Isolated procedure for a reviewer without access to the operator's Docker socket. Do not change
+socket permissions or grant broad privileges; use a disposable machine or VM that you control.
+
+1. Provision a clean linux/amd64 VM with any current Docker Engine, then add your account to its
+   `docker` group. All tested runtime versions are nested: `docker:24.0.2-dind` and Compose 2.20.1
+   run inside it.
+2. `git clone` the repository and `git checkout <candidate commit>`; confirm `git status` is clean.
+3. Run `make test-beta-runtime` and `make smoke-beta-runtime`. The smoke creates only resources
+   labelled with its own run ID and removes them. Nothing touches other projects; it checks that
+   host `florabase-prod` resources are unchanged.
+4. The evidence written to `/tmp/florabase-beta-runtime-smoke.json` records `source.commit`, `tree`
+   and `clean`; a run from a dirty tree prints a warning and is not evidence for a commit.
 
 ## Review focus
 
@@ -37,9 +66,12 @@ with `BETA_RUNTIME_SMOKE_PASSED` and `RESOURCE_CLEANUP_PASSED … residual_conta
 Florabase is public and portable, so nothing committed may describe a real installation. QA confirms,
 for every new and modified file in the diff (`git status --short --untracked-files=all`):
 
-1. `make test-beta-runtime` passes `Disclosure.test_no_infrastructure_or_secret_disclosure`.
-   It scans for private/CGNAT IPv4 addresses, concrete `*.ts.net` names, personal home paths, email
-   addresses, private keys, access tokens and literal credentials.
+1. `make test-beta-runtime` (host run) passes `Disclosure.test_no_infrastructure_or_secret_disclosure`.
+   It derives the scope from Git: every path changed against the feature merge base (committed,
+   staged, unstaged) plus untracked candidates, including `Makefile`, `.gitignore` and modified docs.
+   It looks for private/CGNAT IPv4 addresses, concrete `*.ts.net` names, personal home paths, email
+   addresses, private keys, access tokens and literal credentials. The only exemption is the marked
+   synthetic-fixture block in the test itself. `FLORABASE_DISCLOSURE_BASE=<sha>` scans another range.
 2. A manual read of the diff finds none of the following:
    - real LAN/Tailscale addresses, hostnames or domains;
    - names of the operator's other containers, stacks, networks or services;
