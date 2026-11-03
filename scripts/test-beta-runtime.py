@@ -16,6 +16,7 @@ import io
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -283,6 +284,7 @@ class Retention(unittest.TestCase):
         self.controller = ctl.Controller(self.root, FakeRunner())
         self.backups = self.controller.layout.backups
         self.backups.mkdir(parents=True)
+        self.backups.chmod(0o700)  # the protected root init creates
         self.controller.layout.state.mkdir()
         # Victims outside and beside the backup root must survive every attack below.
         self.victims = [self.base / "victim", self.root / "postgres", self.backups / "unrelated"]
@@ -380,6 +382,62 @@ class Retention(unittest.TestCase):
         self.assertTrue((self.backups / set_name(10)).is_dir())
         self.assert_victims_intact()
 
+    def substitute_after_validation(self, target: Path, replace: Any) -> None:
+        """Swap the target right after deletion-time validation passes (TOCTOU attempt)."""
+        original = ctl.inspect_set
+        calls = {"count": 0}
+
+        def racing(root: Path, name: str) -> Any:
+            result = original(root, name)
+            if name == target.name:
+                calls["count"] += 1
+                if calls["count"] == 2:  # 1st: listing; 2nd: inside remove_set
+                    replace(Path(root) / name)
+            return result
+
+        ctl.inspect_set = racing
+        self.addCleanup(setattr, ctl, "inspect_set", original)
+
+    def test_symlink_substitution_after_validation_fails_closed(self) -> None:
+        self.valid(30)
+        target = self.valid(1)
+        outside = self.base / "victim"
+
+        def to_symlink(path: Path) -> None:
+            path.rename(self.base / "moved-away")
+            path.symlink_to(outside)
+
+        self.substitute_after_validation(target, to_symlink)
+        with self.assertRaises(ctl.Failure):
+            self.retention(1, 0, 0, True)
+        self.assertTrue(target.is_symlink())
+        self.assertTrue((self.base / "moved-away" / "database.dump").exists())
+        self.assert_victims_intact()
+
+    def test_directory_substitution_after_validation_fails_closed(self) -> None:
+        self.valid(30)
+        target = self.valid(1)
+
+        def to_other_directory(path: Path) -> None:
+            path.rename(self.base / "moved-away")
+            path.mkdir(mode=0o700)
+            (path / "keep").write_text("attacker-chosen data")
+
+        self.substitute_after_validation(target, to_other_directory)
+        with self.assertRaisesRegex(ctl.Failure, "changed while it was being verified"):
+            self.retention(1, 0, 0, True)
+        self.assertEqual((target / "keep").read_text(), "attacker-chosen data")
+        self.assertTrue((self.base / "moved-away" / "database.dump").exists())
+        self.assert_victims_intact()
+
+    def test_unprotected_backup_root_refuses_deletion(self) -> None:
+        self.valid(30)
+        self.valid(1)
+        self.backups.chmod(0o755)
+        with self.assertRaisesRegex(ctl.Failure, "mode 0700"):
+            self.retention(1, 0, 0, True)
+        self.assertTrue((self.backups / set_name(1)).is_dir())
+
     def test_dry_run_deletes_nothing(self) -> None:
         for day in range(1, 4):
             self.valid(day)
@@ -388,33 +446,14 @@ class Retention(unittest.TestCase):
 
 
 class BindAddress(unittest.TestCase):
-    """R3: only IPv4 loopback publication is possible without a separately reviewed feature."""
+    """R3: the published address is not configurable anywhere in the controller."""
 
-    def test_loopback_accepted(self) -> None:
-        for value in ("127.0.0.1", "127.0.0.2", "127.10.20.30"):
-            self.assertEqual(ctl.loopback_address(value), value)
-
-    def test_wildcard_public_private_and_ipv6_refused(self) -> None:
-        for value in (
-            "0.0.0.0",
-            "::",
-            "::1",
-            "192.0.2.10",
-            "203.0.113.5",
-            "localhost",
-            "",
-            "127.0.0.1:80",
-        ):
-            with self.subTest(value), self.assertRaises(ctl.Refusal):
-                ctl.loopback_address(value)
-
-    def test_init_and_render_refuse_unsafe_binding(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary) / "new"
-            args = ctl.parser().parse_args(
+    def test_bind_option_is_gone(self) -> None:
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            ctl.parser().parse_args(
                 [
                     "--root",
-                    str(root),
+                    "/srv/x",
                     "init",
                     "--origin",
                     "https://florabase.example.invalid",
@@ -422,30 +461,30 @@ class BindAddress(unittest.TestCase):
                     "0.0.0.0",
                 ]
             )
-            with self.assertRaisesRegex(ctl.Refusal, "loopback"):
-                ctl.Controller(root, FakeRunner()).init(args)
-            self.assertFalse(root.exists(), "refused before creating anything")
-            controller = ctl.Controller(root, FakeRunner())
-            installation = {
-                "canonical_origin": "https://x.example.invalid",
-                "bind_address": "0.0.0.0",
-                "http_port": 8080,
-                "limits": {
-                    "db_memory": "1g",
-                    "db_cpus": "0",
-                    "backend_memory": "1g",
-                    "backend_cpus": "0",
-                },
-            }
-            images = {
-                "backend": "b",
-                "frontend": "f",
-                "postgres": "p",
-                "version": "v",
-                "alembic_head": "h",
-            }
-            with self.assertRaisesRegex(ctl.Refusal, "loopback"):
-                controller.render_env(installation, images, controller.layout)
+
+    def test_rendered_env_never_sets_an_address(self) -> None:
+        controller = ctl.Controller(Path("/srv/florabase"), FakeRunner())
+        installation = {
+            "canonical_origin": "https://x.example.invalid",
+            "bind_address": "0.0.0.0",  # a stale/edited value is ignored, not rendered
+            "http_port": 8080,
+            "limits": {
+                "db_memory": "1g",
+                "db_cpus": "0",
+                "backend_memory": "1g",
+                "backend_cpus": "0",
+            },
+        }
+        images = {
+            "backend": "b",
+            "frontend": "f",
+            "postgres": "p",
+            "version": "v",
+            "alembic_head": "h",
+        }
+        rendered = controller.render_env(installation, images, controller.layout).decode()
+        self.assertNotIn("BIND", rendered)
+        self.assertNotIn("0.0.0.0", rendered)
 
 
 class FakeRunner:
@@ -475,7 +514,6 @@ class ControllerRules(unittest.TestCase):
             "format": 1,
             "installation_id": "1" * 32,
             "canonical_origin": "https://florabase.example.invalid",
-            "bind_address": "127.0.0.1",
             "http_port": 8080,
             "database": {"name": "florabase", "user": "florabase"},
             "limits": {
@@ -709,72 +747,85 @@ class ControllerRules(unittest.TestCase):
 
 
 # Everything BETA-RUNTIME-001 adds is public: it must not describe any real installation.
-def git(*args: str) -> str | None:
+class GitError(AssertionError):
+    """A failed or ambiguous Git read: the disclosure gate refuses rather than passes."""
+
+
+def git_in(repo: Path, *args: str) -> str:
     try:
         result = subprocess.run(
-            ["git", "-C", str(ROOT), *args], capture_output=True, text=True, check=True
+            ["git", "-C", str(repo), *args], capture_output=True, text=True, errors="replace"
         )
-    except (OSError, subprocess.CalledProcessError):
-        return None
+    except OSError as error:
+        raise GitError(f"git {args[0]}: {error}") from error
+    if result.returncode:
+        raise GitError(f"git {' '.join(args[:3])} failed: {result.stderr.strip()[:300]}")
     return result.stdout
 
 
-def feature_base() -> str | None:
-    """Merge base of this feature; FLORABASE_DISCLOSURE_BASE overrides it explicitly."""
+def disclosure_base(repo: Path) -> str:
+    """The feature's fork point, never an arbitrary history range."""
     override = os.environ.get("FLORABASE_DISCLOSURE_BASE")
     if override:
-        return override
-    head = (git("rev-parse", "HEAD") or "").strip()
+        return git_in(repo, "rev-parse", "--verify", override + "^{commit}").strip()
     for ref in ("origin/main", "main"):
-        base = (git("merge-base", "HEAD", ref) or "").strip()
-        if base and base != head:
-            return base
-    return None
+        try:
+            git_in(repo, "rev-parse", "--verify", "--quiet", ref + "^{commit}")
+        except GitError:
+            continue
+        return git_in(repo, "merge-base", "HEAD", ref).strip()
+    parents = git_in(repo, "rev-list", "--parents", "-n", "1", "HEAD").split()
+    if len(parents) == 3:
+        return parents[1]  # CI pull-request merge checkout: first parent is the PR base
+    if len(parents) == 2:
+        return parents[1]  # main without a main ref (shallow CI): the newest commit only
+    raise GitError("cannot determine the feature base; set FLORABASE_DISCLOSURE_BASE")
 
 
-def feature_changes(base: str) -> dict[str, set[int] | None]:
-    """Every path the feature changes against its base: committed, staged, unstaged and untracked.
-
-    Tracked paths map to their added line numbers; untracked candidates (None) scan whole.
-    """
-    diff = git("diff", "--unified=0", "--no-color", "--no-renames", base, "--")
-    untracked = git("ls-files", "--others", "--exclude-standard")
-    if diff is None or untracked is None:
-        raise AssertionError("cannot derive the feature diff from Git")
-    changes: dict[str, set[int] | None] = {}
-    current: str | None = None
-    for line in diff.splitlines():
+def added_lines(repo: Path, scope: str, *diff: str) -> list[tuple[str, str, int, str]]:
+    """Added lines of one diff, read from Git objects (index/commits), not the worktree."""
+    output = git_in(
+        repo, "diff", "--unified=0", "--no-color", "--no-ext-diff", "--text", "-M", *diff, "--"
+    )
+    found: list[tuple[str, str, int, str]] = []
+    path: str | None = None
+    number = 0
+    for line in output.splitlines():
         if line.startswith("+++ "):
-            current = None if line == "+++ /dev/null" else line[len("+++ b/") :]
-            if current is not None:
-                changes.setdefault(current, set())
-        elif line.startswith("@@") and current is not None:
-            match = re.search(r"\+(\d+)(?:,(\d+))?", line)
-            assert match is not None
-            first, count = int(match.group(1)), int(match.group(2) or "1")
-            lines = changes[current]
-            assert lines is not None
-            lines.update(range(first, first + count))
-    for path in untracked.splitlines():
-        changes[path] = None
-    return changes
+            path = None if line == "+++ /dev/null" else line[len("+++ b/") :]
+        elif line.startswith("@@"):
+            match = re.search(r"\+(\d+)", line)
+            if match is None:
+                raise GitError("unparseable diff hunk: " + line)
+            number = int(match.group(1))
+        elif line.startswith("+") and path is not None:
+            found.append((scope, path, number, line[1:]))
+            number += 1
+    return found
 
 
-def fixture_lines(path: Path) -> set[int]:
-    """Only the explicitly marked synthetic-sample block of this test file is exempt."""
-    exempt: set[int] = set()
-    inside = False
-    for number, line in enumerate(path.read_text().splitlines(), 1):
-        if "# disclosure-fixtures-begin" in line:
-            inside = True
-        if inside:
-            exempt.add(number)
-        if "# disclosure-fixtures-end" in line:
-            inside = False
-    return exempt
+def disclosure_lines(repo: Path, base: str) -> list[tuple[str, str, int, str]]:
+    """Committed feature changes, the staged index, unstaged edits and untracked candidates."""
+    lines = added_lines(repo, "committed", base, "HEAD")
+    lines += added_lines(repo, "staged", "--cached")
+    lines += added_lines(repo, "unstaged")
+    for path in git_in(repo, "ls-files", "-z", "--others", "--exclude-standard").split("\0"):
+        if path and (repo / path).is_file() and not (repo / path).is_symlink():
+            text = (repo / path).read_text(errors="replace").splitlines()
+            lines += [("untracked", path, n, line) for n, line in enumerate(text, 1)]
+    return lines
 
 
-# disclosure-fixtures-begin: patterns and samples are the only exempt lines.
+def disclosure_findings(repo: Path, base: str) -> list[str]:
+    return [
+        f"{scope} {path}:{number}: {label}"
+        for scope, path, number, line in disclosure_lines(repo, base)
+        for label, pattern in DISCLOSURE_PATTERNS.items()
+        if re.search(pattern, line)
+    ]
+
+
+# No exemptions: patterns and samples are assembled so that their own source never matches.
 DISCLOSURE_PATTERNS = {
     "private or CGNAT IPv4": r"\b(?:10\.\d{1,3}|192\.168|172\.(?:1[6-9]|2\d|3[01])|"
     r"100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])|169\.254)\.\d{1,3}\.\d{1,3}\b",
@@ -782,42 +833,69 @@ DISCLOSURE_PATTERNS = {
     "personal home path": r"/(?:home|Users)/[A-Za-z0-9._-]+",
     "email address": r"[A-Za-z0-9._%+-]+@(?!sha256)[A-Za-z0-9-]+\.[A-Za-z]{2,}",
     "private key": r"-----BEGIN [A-Z ]*PRIVATE KEY-----",
-    "access token": r"\b(?:ghp_|gho_|github_pat_|glpat-|AKIA|xox[bp]-|sk-[A-Za-z0-9]{20})",
+    "access token": r"\b(?:g"
+    r"hp_|g"
+    r"ho_|github"
+    r"_pat_|gl"
+    r"pat-|AK"
+    r"IA|xo"
+    r"x[bp]-|s"
+    r"k-[A-Za-z0-9]{20})",
     "literal credential": r"(?:POSTGRES_PASSWORD|RESTIC_PASSWORD)=(?!\{|<)[^\s\"']+",
+}
+SYNTHETIC = {
+    "private or CGNAT IPv4": "10.20." + "30.40",
+    "concrete tailnet name": "nas.tail" + "1234.ts.net",
+    "personal home path": "/ho" + "me/someone/backups",
+    "email address": "someone" + "@" + "example.org",
+    "access token": "gh" + "p_" + "x" * 20,
+    "literal credential": "POSTGRES_" + "PASSWORD=" + "hunter2",
 }
 
 
-class Disclosure(unittest.TestCase):
-    """Dedicated privacy/sanitization gate over every runtime file that will be committed."""
+def scratch_repository(root: Path) -> Path:
+    """A disposable repository with isolated configuration and a main fork point."""
+    repo = root / "repo"
+    repo.mkdir()
+    for args in (("init", "-q", "-b", "main"), ("config", "commit.gpgsign", "false")):
+        git_in(repo, *args)
+    (repo / "history.md").write_text(
+        "old private note " + SYNTHETIC["private or CGNAT IPv4"] + "\n"
+    )
+    (repo / "README.md").write_text("public\n")
+    git_in(repo, "add", "-A")
+    git_in(repo, "commit", "-q", "-m", "base")
+    git_in(repo, "checkout", "-q", "-b", "feature")
+    return repo
 
-    def changes(self) -> dict[str, set[int] | None]:
-        if git("rev-parse", "HEAD") is None:
+
+class Disclosure(unittest.TestCase):
+    """R4: dedicated privacy gate over every changed blob of the feature, staged ones included."""
+
+    def setUp(self) -> None:
+        if shutil.which("git") is None:
             self.skipTest(
                 "Git unavailable (container run); the host run of this suite is mandatory"
             )
-        base = feature_base()
-        if base is None:
-            self.skipTest("no feature diff: HEAD is on main; set FLORABASE_DISCLOSURE_BASE to scan")
-        return feature_changes(base)
+        identity = "runtime-test" + "@" + "example.invalid"
+        self.environment = environment(
+            GIT_CONFIG_GLOBAL=os.devnull,
+            GIT_CONFIG_NOSYSTEM="1",
+            GIT_AUTHOR_NAME="t",
+            GIT_AUTHOR_EMAIL=identity,
+            GIT_COMMITTER_NAME="t",
+            GIT_COMMITTER_EMAIL=identity,
+        )
+        self.environment.__enter__()
+
+    def tearDown(self) -> None:
+        self.environment.__exit__(None, None, None)
 
     def test_no_infrastructure_or_secret_disclosure(self) -> None:
-        findings = []
-        for name, lines in sorted(self.changes().items()):
-            path = ROOT / name
-            if not path.is_file() or path.is_symlink():
-                continue
-            exempt = fixture_lines(path) if name == "scripts/test-beta-runtime.py" else set()
-            text = path.read_text(errors="replace").splitlines()
-            for number, line in enumerate(text, 1):
-                if (lines is not None and number not in lines) or number in exempt:
-                    continue
-                for label, pattern in DISCLOSURE_PATTERNS.items():
-                    if re.search(pattern, line):
-                        findings.append(f"{name}:{number}: {label}")
-        self.assertEqual(findings, [])
+        self.assertEqual(disclosure_findings(ROOT, disclosure_base(ROOT)), [])
 
     def test_scope_is_the_whole_feature_diff(self) -> None:
-        changes = self.changes()
+        paths = {path for _, path, _, _ in disclosure_lines(ROOT, disclosure_base(ROOT))}
         for path in (
             ".gitignore",
             "Makefile",
@@ -826,28 +904,69 @@ class Disclosure(unittest.TestCase):
             "deploy/beta/florabasectl.py",
             "scripts/test-beta-runtime.py",
         ):
-            self.assertIn(path, changes)
-        self.assertEqual(
-            fixture_lines(ROOT / "scripts/test-beta-runtime.py")
-            and min(fixture_lines(ROOT / "scripts/test-beta-runtime.py")) > 0,
-            True,
-        )
+            self.assertIn(path, paths)
 
-    def test_patterns_detect_examples(self) -> None:
-        samples = {
-            "private or CGNAT IPv4": "192.168.1.20",
-            "concrete tailnet name": "nas.tail1234.ts.net",
-            "personal home path": "/home/someone/backups",
-            "email address": "someone@example.org",
-            "literal credential": "POSTGRES_PASSWORD=hunter2",
-        }
-        for label, sample in samples.items():
+    def test_patterns_detect_synthetic_samples_and_not_their_source(self) -> None:
+        for label, sample in SYNTHETIC.items():
             self.assertRegex(sample, DISCLOSURE_PATTERNS[label])
+        source = Path(__file__).read_text()
+        for label, pattern in DISCLOSURE_PATTERNS.items():
+            self.assertIsNone(re.search(pattern, source), label)
         for allowed in ("https://<node>.<tailnet>.ts.net", "127.0.0.1:8080", "@sha256:abc"):
-            self.assertFalse(
-                any(re.search(p, allowed) for p in DISCLOSURE_PATTERNS.values()), allowed
+            self.assertFalse(any(re.search(p, allowed) for p in DISCLOSURE_PATTERNS.values()))
+
+    def test_staged_blob_is_scanned_even_when_worktree_is_clean(self) -> None:
+        """Codex bypass: stage sensitive content, then put a safe placeholder in the worktree."""
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = scratch_repository(Path(temporary))
+            note = repo / "notes.md"
+            note.write_text("endpoint " + SYNTHETIC["private or CGNAT IPv4"] + "\n")
+            git_in(repo, "add", "notes.md")
+            note.write_text("endpoint <placeholder>\n")
+            findings = disclosure_findings(repo, disclosure_base(repo))
+            self.assertEqual(findings, ["staged notes.md:1: private or CGNAT IPv4"])
+
+    def test_unstaged_worktree_is_scanned_when_index_is_safe(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = scratch_repository(Path(temporary))
+            note = repo / "notes.md"
+            note.write_text("endpoint <placeholder>\n")
+            git_in(repo, "add", "notes.md")
+            note.write_text("token " + SYNTHETIC["access token"] + "\n")
+            findings = disclosure_findings(repo, disclosure_base(repo))
+            self.assertEqual(findings, ["unstaged notes.md:1: access token"])
+
+    def test_committed_untracked_rename_and_deletion(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = scratch_repository(Path(temporary))
+            (repo / "leak.md").write_text("\n" + SYNTHETIC["personal home path"] + "\n")
+            git_in(repo, "add", "leak.md")
+            git_in(repo, "commit", "-q", "-m", "leak")
+            git_in(repo, "rm", "-q", "leak.md")  # a later staged deletion does not hide the commit
+            git_in(repo, "mv", "history.md", "moved.md")  # pure rename: old content is not new
+            (repo / "candidate.txt").write_text(SYNTHETIC["email address"] + "\n")
+            findings = disclosure_findings(repo, disclosure_base(repo))
+            self.assertEqual(
+                findings,
+                [
+                    "committed leak.md:2: personal home path",
+                    "untracked candidate.txt:1: email address",
+                ],
             )
-        # disclosure-fixtures-end
+
+    def test_failed_git_reads_refuse(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = scratch_repository(Path(temporary))
+            with self.assertRaises(GitError):
+                disclosure_findings(repo, "0" * 40)
+            with environment(FLORABASE_DISCLOSURE_BASE="no-such-ref"), self.assertRaises(GitError):
+                disclosure_base(repo)
+            with self.assertRaises(GitError):
+                disclosure_findings(Path(temporary) / "missing", "HEAD")
+
+
+class EnvTemplate(unittest.TestCase):
+    """The sanitized template documents exactly what the controller renders."""
 
     def test_env_example_matches_rendered_keys(self) -> None:
         def keys(text: str) -> list[str]:
@@ -860,7 +979,6 @@ class Disclosure(unittest.TestCase):
         example = (BUNDLE / "florabase.env.example").read_text()
         installation = {
             "canonical_origin": "https://florabase.example.invalid",
-            "bind_address": "127.0.0.1",
             "http_port": 8080,
             "limits": {
                 "db_memory": "1g",
@@ -882,7 +1000,7 @@ class Disclosure(unittest.TestCase):
 
 
 def compose_config(
-    directory: Path, env: str, profile: bool = False
+    directory: Path, env: str, profile: bool = False, ambient: dict[str, str] | None = None
 ) -> subprocess.CompletedProcess[str]:
     (directory / ".env").write_text(env)
     command = COMPOSE + [
@@ -896,6 +1014,7 @@ def compose_config(
     if profile:
         command += ["--profile", "maintenance"]
     clean = {k: v for k, v in os.environ.items() if not k.startswith(("COMPOSE_", "FLORABASE_"))}
+    clean.update(ambient or {})
     return subprocess.run(
         command + ["config", "--format", "json"], capture_output=True, text=True, env=clean
     )
@@ -983,6 +1102,35 @@ class StackContract(unittest.TestCase):
                     )
                 else:
                     self.assertFalse(service.get("ports"), "database/backend are never published")
+
+    def test_hostile_bind_variables_cannot_widen_publication(self) -> None:
+        """R3: ambient shell or .env values (as Dockhand might inject) keep 127.0.0.1."""
+        hostile = {"FLORABASE_BIND_ADDRESS": "0.0.0.0", "APP_BIND_ADDRESS": "0.0.0.0"}
+        cases = [
+            ("ambient", self.env, hostile),
+            ("dotenv", self.env + "FLORABASE_BIND_ADDRESS=0.0.0.0\n", {}),
+            ("both+ipv6", self.env, {"FLORABASE_BIND_ADDRESS": "::"}),
+        ]
+        for name, env, ambient in cases:
+            with self.subTest(name):
+                result = compose_config(self.directory, env, profile=True, ambient=ambient)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                services = json.loads(result.stdout)["services"]
+                ports = services["frontend"]["ports"]
+                self.assertEqual(
+                    [(p["host_ip"], p["target"]) for p in ports], [("127.0.0.1", 8080)]
+                )
+                for other in ("db", "backend", "migrate", "tools"):
+                    self.assertFalse(services[other].get("ports"))
+        for port in ("0.0.0.0:8080", "8080:8080", "[::]:8080"):
+            with self.subTest(port=port):
+                result = compose_config(
+                    self.directory, self.env, ambient={"FLORABASE_HTTP_PORT": port}
+                )
+                if result.returncode == 0:
+                    ports = json.loads(result.stdout)["services"]["frontend"]["ports"]
+                    self.assertEqual({p["host_ip"] for p in ports}, {"127.0.0.1"})
+        compose_config(self.directory, self.env)
 
     def test_hardening_labels_and_logging(self) -> None:
         for name, service in self.maintenance["services"].items():
@@ -1119,6 +1267,7 @@ def main() -> None:
         BindAddress,
         ControllerRules,
         Disclosure,
+        EnvTemplate,
     ]
     if not args.controller_only:
         cases.append(StackContract)

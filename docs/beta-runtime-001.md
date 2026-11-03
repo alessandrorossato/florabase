@@ -39,10 +39,20 @@ artifacts an operator copies to the host; no checkout, Git or package installati
   the container instead of creating an empty database; removing the Docker volume object never
   deletes host data. The controller refuses any existing project volume that is plain or bound
   elsewhere (for example one left by the source-build `compose.yaml`, which shares the project name).
-- **Private exposure.** Only frontend publishes, on IPv4 loopback for host Tailscale Serve. The
-  controller refuses any `--bind-address` outside `127.0.0.0/8` (including `0.0.0.0`, `::` and LAN or
-  public addresses), both at `init` and whenever it renders `.env`. Wider exposure needs a separately
-  reviewed feature. Database and backend have no ports. CORS is empty, cookies secure, origin exact.
+- **Private exposure.** Only frontend publishes, and `compose.yaml` fixes the address to a literal
+  `127.0.0.1`. Only the host port (`FLORABASE_HTTP_PORT`) is a variable, so no ambient shell, `.env`
+  or Dockhand variable can widen it. The controller has no bind-address option, and acceptance
+  rejects any other published address. Database and backend have no host ports. CORS is empty,
+  cookies secure, origin exact. Wider exposure would need a separately reviewed feature.
+- **Loopback is not yet a proven network boundary (real-host blocker).** Docker's documentation warns
+  that Engine releases before 28.0.0 can let hosts on the same L2 segment reach ports published to
+  127.0.0.1. DSM 7.2 Container Manager ships Engine 24.0.2. Before deployment the operator must:
+  - run an independent LAN reachability test from another device on the same segment against
+    `<nas-lan-address>:<FLORABASE_HTTP_PORT>`, which must fail;
+  - apply suitable DSM/network protections, such as DSM firewall rules for the published port;
+  - confirm that only Tailscale Serve reaches the application.
+
+  This feature changes no firewall, daemon or Tailscale settings.
 - **Hardening and bounds.** All containers are read-only with tmpfs scratch, `cap_drop: ALL`,
   `no-new-privileges`, memory and PID limits; PostgreSQL runs as 70:70, backend as 10001, nginx
   as 101. Memory ceilings (PostgreSQL 1 GiB, backend 768 MiB, frontend 128 MiB, one-shot tasks
@@ -179,6 +189,19 @@ restarts writers. `verify-backup <set>` re-checks everything, using no live serv
 
   Anything else is reported and left untouched. Deletion targets are re-proven immediately before
   removal. The policy must be in range, and the run is idempotent.
+  Deletion is anchored on a no-follow descriptor of the backup root, which must be owned by the
+  controller with mode 0700. The set is opened no-follow and validated, and the open directory must
+  still be the listed entry. It is then renamed to a private `.retention-*` tombstone *within that
+  root descriptor*, and must still be the opened directory, before Python's symlink-attack-resistant
+  fd-based `rmtree` (available on Python 3.8/Linux) removes it. Any substitution fails closed and
+  leaves the entry for review.
+
+  **Residual limit:** this is not atomic against a concurrent writer that can already modify the
+  root-owned 0700 backup root. Such a writer has the controller's own authority and is outside the
+  threat model. Every rename and deletion stays inside the root descriptor, and metadata is never a
+  path, so substitution by anyone else cannot cause deletion outside the backup root. An
+  interrupted removal leaves a `.retention-*` tombstone that is never counted as a set; delete it
+  after review.
 - **Isolated drill:** `restore-isolated <set> --http-port 18081 [--owner <login>]` restores into a new
   `florabase-restore-*` project with its own directories, secrets and loopback port. It compares
   revision and exact table counts, verifies every original and invalidates restored sessions before
@@ -232,10 +255,12 @@ Python 3.8.20 and pulls only from a loopback registry inside that daemon. Test-o
 add a compatible revision (B), a failing migration (C), a migrated-but-crashing application (D) and
 its forward fix (E). The sequence:
 
-- preflight; init refused for `0.0.0.0`, `::` and a LAN address; init; repeat init refused;
+- preflight; `--bind-address` rejected (no such option); init; repeat init refused;
   install with wrong then right digest; owner bootstrap/login;
 - seed suppliers, an unlinked original, a shared original linked twice and an external asset with
   a saved local copy; recreate backend/frontend and restart the daemon, then compare the exact data;
+- hostile `FLORABASE_BIND_ADDRESS=0.0.0.0` during a real recreation still publishes only frontend on
+  127.0.0.1, with no db/backend ports;
 - schema guard: after a recorded successful start, the database revision is forged. The running
   backend stops itself; plain `docker compose up -d`, `docker restart` and forced recreation never
   become healthy or ready, and the refusal is logged; restoring the revision restores service;
@@ -267,6 +292,8 @@ BETA-ACCEPTANCE-001:
 - The selected host's DSM/OS version, Python 3 version, and Container Manager Engine/Compose plugin path (`docker
   compose` or standalone `docker-compose`; `FLORABASECTL_COMPOSE` overrides detection);
   `preflight` evidence including CFS/memory warnings.
+- LAN reachability of the loopback-published port on Engine 24.0.2 (see Private exposure) and the
+  DSM protections chosen against it.
 - Btrfs ownership/ACL behavior for `postgres/` 0700 at uid 70; UPS and memory headroom alongside
   DSM tasks.
 - Pinned Dockhand version: label exclusion, environment update toggle, stack import, secrets path

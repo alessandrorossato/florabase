@@ -14,7 +14,6 @@ import fcntl
 import getpass
 import hashlib
 import http.cookies
-import ipaddress
 import json
 import os
 import re
@@ -54,6 +53,7 @@ SERVICES = ("db", "backend", "frontend")
 PHASES = ("validated", "quiesced", "backed_up", "migrated", "pinned", "started", "accepted")
 DIGEST = r"sha256:[a-f0-9]{64}"
 BACKUP_MAX_AGE_HOURS = 26
+LOOPBACK = "127.0.0.1"  # literal in compose.yaml; never configurable in this private beta
 SET_KINDS = ("manual", "pre-upgrade", "safety")
 SET_ID = re.compile(r"[0-9]{8}T[0-9]{6}Z-(?:manual|pre-upgrade|safety)-[a-f0-9]{6}\Z")
 SET_ARTIFACTS = ("attachments.tar", "compose.yaml", "database.dump", "metadata.json")
@@ -508,20 +508,6 @@ class Stack:
         return devices
 
 
-def loopback_address(value: str) -> str:
-    """The private beta publishes only on IPv4 loopback, for host Tailscale Serve to forward."""
-    try:
-        address = ipaddress.ip_address(value)
-    except ValueError as error:
-        raise Refusal(f"bind address {value!r} is not an IP address") from error
-    if address.version != 4 or not address.is_loopback:
-        raise Refusal(
-            f"bind address {value} is not IPv4 loopback (127.0.0.0/8); wider exposure needs a "
-            "separately reviewed and approved feature"
-        )
-    return str(address)
-
-
 def pins(release: Json) -> Json:
     """Everything the stack .env pins for one release: images, version and Alembic head."""
     return dict(release["images"], version=release["version"], alembic_head=release["alembic_head"])
@@ -639,7 +625,6 @@ class Controller:
             "FLORABASE_MEDIA_DIR=" + str(layout.media),
             "FLORABASE_REFERENCE_DIR=" + str(layout.reference),
             "FLORABASE_CANONICAL_ORIGIN=" + installation["canonical_origin"],
-            "FLORABASE_BIND_ADDRESS=" + loopback_address(installation["bind_address"]),
             "FLORABASE_HTTP_PORT=" + str(installation["http_port"]),
             "FLORABASE_LOG_LEVEL=INFO",
             "FLORABASE_DB_MEMORY=" + limits["db_memory"],
@@ -882,7 +867,6 @@ class Controller:
 
     def init(self, args: argparse.Namespace) -> None:
         layout = self.layout
-        bind_address = loopback_address(args.bind_address)
         if os.geteuid() != 0:
             raise Refusal("init must run as root to assign PostgreSQL/media ownership")
         origin = args.origin.rstrip("/")
@@ -913,7 +897,6 @@ class Controller:
             "root": str(layout.root),
             "project": PROJECT,
             "canonical_origin": origin,
-            "bind_address": bind_address,
             "http_port": args.http_port,
             "database": {"name": "florabase", "user": "florabase"},
             "limits": {
@@ -1040,8 +1023,10 @@ class Controller:
                 raise Failure(service + " publishes a host port")
             if service == "frontend":
                 hosts = {b["HostIp"] for bindings in published.values() for b in bindings}
-                if len(hosts) != 1 or loopback_address(hosts.pop()) != installation["bind_address"]:
-                    raise Failure("frontend must publish only on " + installation["bind_address"])
+                if hosts != {LOOPBACK}:
+                    raise Failure(
+                        f"frontend must publish only on {LOOPBACK}, found {sorted(hosts)}"
+                    )
         probe = stack.probe()
         if classify(probe) != "current" or probe["current"] != [current["alembic_head"]]:
             raise Failure("database revision {} is not release head".format(probe["current"]))
@@ -1049,9 +1034,7 @@ class Controller:
         if "FLORABASE_MEDIA_WRITABLE" not in stack.tool("python", "-c", MEDIA_WRITE_SCRIPT):
             raise Failure("media storage write/read check failed")
         port = http_port or installation["http_port"]
-        address = installation["bind_address"]
-        host = "127.0.0.1" if address in {"0.0.0.0", "127.0.0.1"} else address
-        local = f"http://{host}:{port}"
+        local = f"http://{LOOPBACK}:{port}"
         http_acceptance(local, current)
         if base_url:
             http_acceptance(base_url.rstrip("/"), current)
@@ -1147,7 +1130,6 @@ class Controller:
                 "configuration": {
                     "canonical_origin": installation["canonical_origin"],
                     "http_port": installation["http_port"],
-                    "bind_address": installation["bind_address"],
                     "database": installation["database"],
                     "reference": installation.get("reference", {}),
                     "stack_sha256": sha256_file(partial / "compose.yaml"),
@@ -1269,17 +1251,11 @@ class Controller:
         keep, remove = select_retained(valid, daily, weekly, upgrades)
         if valid and not keep:
             raise Failure("retention would remove every verified recovery set")
-        root = self.layout.backups.resolve()
         for set_id in remove:
             say(("removing " if apply else "would remove ") + set_id)
-            if not apply:
-                continue
-            # Re-prove identity and containment immediately before deletion.
-            directory, _ = inspect_set(self.layout.backups, set_id)
-            if directory.resolve().parent != root or directory.is_symlink():
-                raise Failure(f"refusing to delete {directory}: outside the backup root")
-            shutil.rmtree(str(directory))
-            self.journal("retention-remove", set_id=set_id)
+            if apply:
+                remove_set(self.layout.backups, set_id)
+                self.journal("retention-remove", set_id=set_id)
         say("retaining {} set(s){}".format(len(keep), "" if apply else " (dry run; pass --apply)"))
         return remove
 
@@ -1461,7 +1437,6 @@ class Controller:
         drill_installation = dict(
             installation,
             http_port=args.http_port,
-            bind_address="127.0.0.1",
             reference={},
         )
         stack = Stack(self.runner, project, drill.stack)
@@ -1949,6 +1924,51 @@ def inspect_set(root: Path, name: str) -> tuple[Path, Json]:
     return directory, metadata
 
 
+def remove_set(root: Path, set_id: str) -> None:
+    """Delete one verified set without ever following a path outside the backup root.
+
+    Anchored on a no-follow descriptor of the protected root (controller-owned, 0700): the set is
+    opened no-follow, validated, its directory entry is renamed to a private tombstone *within that
+    root descriptor* and the tombstone must still be the opened directory. Only then does the
+    symlink-attack-resistant fd-based rmtree run. A substitution between steps fails closed, and
+    renames stay inside the root. Not atomic against a concurrent writer that can already modify
+    the root-owned 0700 directory; such a writer has the controller's own authority.
+    """
+    if not getattr(shutil.rmtree, "avoids_symlink_attacks", False):
+        raise Failure("this platform lacks symlink-attack-resistant rmtree; refusing deletion")
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    root_fd = os.open(str(root), flags)
+    try:
+        info = os.fstat(root_fd)
+        if info.st_uid != os.geteuid() or info.st_mode & 0o077:
+            raise Failure(f"{root} must be owned by the controller with mode 0700")
+        try:
+            set_fd = os.open(set_id, flags, dir_fd=root_fd)
+        except OSError as error:
+            raise Failure(
+                f"{set_id} is not a real directory in the backup root: {error}"
+            ) from error
+        try:
+            opened = os.fstat(set_fd)
+            inspect_set(root, set_id)
+            listed = os.stat(set_id, dir_fd=root_fd, follow_symlinks=False)
+            if not os.path.samestat(opened, listed) or opened.st_uid != os.geteuid():
+                raise Failure(f"{set_id} changed while it was being verified; nothing deleted")
+            tombstone = ".retention-" + set_id + "-" + uuid.uuid4().hex[:8]
+            os.rename(set_id, tombstone, src_dir_fd=root_fd, dst_dir_fd=root_fd)
+            moved = os.stat(tombstone, dir_fd=root_fd, follow_symlinks=False)
+            if not os.path.samestat(opened, moved):
+                raise Failure(f"{set_id} was replaced during deletion; left as {tombstone}")
+        finally:
+            os.close(set_fd)
+        os.fsync(root_fd)
+        # The tombstone is a controller-only name inside the 0700 root; rmtree re-verifies the
+        # top directory with fstat and descends only through no-follow descriptors.
+        shutil.rmtree(str(root / tombstone))
+    finally:
+        os.close(root_fd)
+
+
 def select_retained(
     sets: list[Json], daily: int, weekly: int, upgrades: int
 ) -> tuple[list[str], list[str]]:
@@ -2098,7 +2118,6 @@ def parser() -> argparse.ArgumentParser:
     command = commands.add_parser("init", help="create directories, secrets and configuration")
     command.add_argument("--origin", required=True)
     command.add_argument("--http-port", type=int, default=8080)
-    command.add_argument("--bind-address", default="127.0.0.1")
     command.add_argument("--db-memory", default="1g")
     command.add_argument("--db-cpus", default="0")
     command.add_argument("--backend-memory", default="768m")

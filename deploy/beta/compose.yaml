@@ -197,7 +197,10 @@ services:
       backend:
         condition: service_healthy
     ports:
-      - "${FLORABASE_BIND_ADDRESS:-127.0.0.1}:${FLORABASE_HTTP_PORT:-8080}:8080"
+      # Literal loopback: no variable can widen the published address. Only the host port is
+      # configurable. Docker Engine < 28 may still let same-L2 LAN peers reach loopback-published
+      # ports, so real hosts need an independent LAN reachability test (see the runbook).
+      - "127.0.0.1:${FLORABASE_HTTP_PORT:-8080}:8080"
     read_only: true
     tmpfs: ["/tmp:size=64m"]
     restart: unless-stopped

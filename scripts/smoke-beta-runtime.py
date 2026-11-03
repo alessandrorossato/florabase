@@ -615,8 +615,8 @@ class Smoke:
             host_dependent={n: c["ok"] for n, c in checks.items() if n not in required},
         )
 
-        for unsafe in ("0.0.0.0", "::", "192.0.2.10"):
-            self.ctl("init", "--origin", ORIGIN, "--bind-address", unsafe, expect=2)
+        # The published address is not a controller option at all.
+        self.ctl("init", "--origin", ORIGIN, "--bind-address", "0.0.0.0", expect=2)
         self.ctl("init", "--origin", ORIGIN, "--http-port", str(LIVE_PORT))
         self.ctl("init", "--origin", ORIGIN, expect=2)
         path, digest = self.manifests["a"]
@@ -670,7 +670,47 @@ class Smoke:
             raise SystemExit("seeded unlinked/shared/saved-copy relationships missing")
         self.step("seed", assets=len(assets), seeded=seeded)
 
-        self.stack("up", "-d", "--force-recreate", "--no-deps", "backend", "frontend")
+        # Hostile ambient bind variables (as a Dockhand environment could inject) change nothing.
+        run(
+            "docker",
+            "exec",
+            "-e",
+            "FLORABASE_BIND_ADDRESS=0.0.0.0",
+            "-e",
+            "APP_BIND_ADDRESS=0.0.0.0",
+            self.operator,
+            "docker",
+            "compose",
+            "--project-name",
+            "florabase-prod",
+            "--project-directory",
+            INSTALL + "/stack",
+            "--file",
+            INSTALL + "/stack/compose.yaml",
+            "--env-file",
+            INSTALL + "/stack/.env",
+            "up",
+            "-d",
+            "--force-recreate",
+            "--no-deps",
+            "backend",
+            "frontend",
+        )
+        published = {
+            service: [
+                binding["HostIp"]
+                for bindings in (
+                    self.nested_json("inspect", self.stack("ps", "-q", service))[0][
+                        "NetworkSettings"
+                    ]["Ports"]
+                    or {}
+                ).values()
+                for binding in bindings or []
+            ]
+            for service in ("db", "backend", "frontend")
+        }
+        if published != {"db": [], "backend": [], "frontend": ["127.0.0.1"]}:
+            raise SystemExit("hostile bind variables changed publication: " + json.dumps(published))
         self.ctl("acceptance")
         before_restart = self.db_container()
         self.restart_daemon()
@@ -680,6 +720,7 @@ class Smoke:
         after_restart = self.db_container()
         if before_restart["id"] != after_restart["id"]:
             raise SystemExit("daemon restart replaced the PostgreSQL container")
+        self.step("hostile-bind-environment", published=published)
         self.step(
             "persistence",
             recreated=["backend", "frontend"],

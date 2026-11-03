@@ -10,7 +10,7 @@ run is [beta-runtime-001-evidence.json](beta-runtime-001-evidence.json).
 | --- | --- | --- |
 | R1 P0 schema gate reusable by plain Compose | One-shot `schema-gate` removed. The backend entrypoint guard checks image head = `.env` release head = database revision on every start and fails closed. Its healthcheck re-reads the revision and stops a backend whose schema changed. | `StackContract.test_schema_guard_runs_inside_every_backend_start`, `test_guard_refuses_missing_expected_head`; smoke step `schema-guard` (running change, plain `up -d`, `docker restart`, recreation, restore) |
 | R2 P0 retention traversal | Set identity is proven from the directory (syntax, real non-symlink dir, ownership/mode, containment, exact artifacts, checksums, metadata identity); invalid entries are never eligible; the target is re-proven before `rmtree`; the policy is range-checked | `Retention.*` (traversal, absolute, symlink, mismatch, tampered/missing metadata, bad sums, writable, policy, last set, idempotence, dry run); smoke step `retention-boundary` |
-| R3 P1 arbitrary bind address | IPv4 loopback only (`127.0.0.0/8`) at `init`, `.env` rendering and acceptance | `BindAddress.*`; smoke refuses `0.0.0.0`, `::`, `192.0.2.10` |
+| R3 P1 arbitrary bind address | IPv4 loopback only at `init`, `.env` rendering and acceptance (superseded in round 2 by a literal Compose address) | `BindAddress.*`; smoke refuses `0.0.0.0`, `::`, `192.0.2.10` |
 | R4 P1 static privacy list | The scan derives paths from Git: the diff against the feature merge base (committed, staged, unstaged) plus untracked files. Only added lines are scanned; the only exemption is the marked synthetic-fixture block. | `Disclosure.test_no_infrastructure_or_secret_disclosure`, `test_scope_is_the_whole_feature_diff` |
 
 Against the reviewed controller,
@@ -18,6 +18,22 @@ Against the reviewed controller,
 fails every R2 and R3 test. Its retention printed `removing ../../victim` and an absolute path outside
 the backup root (disposable temp directories only). The reviewed `compose.yaml` still has the
 `service_completed_successfully` gate that `test_schema_guard_runs_inside_every_backend_start` rejects.
+
+## QA corrections (round 2, reviewed `fcd25bc`)
+
+| Finding | Correction | Regression |
+| --- | --- | --- |
+| R3 P1 `FLORABASE_BIND_ADDRESS` interpolation | Literal `127.0.0.1` in `compose.yaml`; only the port is variable. The `--bind-address` option and rendered variable are removed; acceptance requires exactly 127.0.0.1. | `StackContract.test_hostile_bind_variables_cannot_widen_publication` (ambient, `.env`, `::`, hostile port, Compose 2.20.1 too); `BindAddress.*`; smoke `hostile-bind-environment` |
+| R4 P1 staged-content bypass | The scanner reads Git objects: added lines of `base..HEAD`, `--cached` (index blobs), unstaged worktree vs index, and untracked files. It uses rename detection, skips deletions and refuses on any Git error. There is no exemption: patterns and samples are assembled so their own source never matches. | `Disclosure.test_staged_blob_is_scanned_even_when_worktree_is_clean` (Codex's exact case), `test_unstaged_worktree_is_scanned_when_index_is_safe`, `test_committed_untracked_rename_and_deletion`, `test_failed_git_reads_refuse`, `test_patterns_detect_synthetic_samples_and_not_their_source` |
+| R2 retention TOCTOU | `remove_set`: no-follow root fd (controller-owned 0700), no-follow set fd, validation, identity check, rename to a tombstone inside the root fd, re-check, fd-based `rmtree`. The residual limit is documented in the runbook. | `Retention.test_directory_substitution_after_validation_fails_closed`, `test_symlink_substitution_after_validation_fails_closed`, `test_unprotected_backup_root_refuses_deletion` |
+
+Against `fcd25bc`:
+- `FLORABASE_BIND_ADDRESS=0.0.0.0` makes Compose 2.20.1 render `host_ip 0.0.0.0`; the corrected stack renders `127.0.0.1`.
+- The reviewed scanner returns `[]` for a staged sensitive blob behind a safe worktree copy; the corrected one reports `staged notes.md:1`.
+- The reviewed controller fails the directory-substitution, unprotected-root and bind tests.
+
+Real-host blocker added: Engine < 28 loopback publication may be reachable from the same L2 segment.
+An independent LAN reachability test and DSM protections are required before deployment.
 
 ## Reproduce
 
