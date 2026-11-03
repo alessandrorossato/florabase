@@ -17,6 +17,7 @@ from beta_release import (
     inputs,
     manifest,
     registry_record,
+    release_asset_inventory,
     run,
     run_artifact_smoke,
     scan_images,
@@ -208,6 +209,10 @@ def main() -> None:
             ],
             check=True,
         )
+        (output / "RELEASE.md").write_text(
+            f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair passed native amd64 registry-pull smoke and HIGH/CRITICAL vulnerability and secret checks. PostgreSQL is separately pinned. This is image distribution, not real-host deployment or beta admission. Never overwrite this release or delete its image identities.\n"
+        )
+        release_asset_inventory(output)
         for service, ref in refs.items():
             subprocess.run(
                 [
@@ -237,9 +242,6 @@ def main() -> None:
             if promoted["digest"] != registry_record(ref, "linux/amd64")["index_digest"]:
                 raise ValueError("promotion changed immutable image identity")
             checkpoint(service + "_version_promoted")
-        (output / "RELEASE.md").write_text(
-            f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair passed native amd64 registry-pull smoke and HIGH/CRITICAL vulnerability and secret checks. PostgreSQL is separately pinned. This is image distribution, not real-host deployment or beta admission. Never overwrite this release or delete its image identities.\n"
-        )
         checkpoint("pair_promoted_requires_attestation_and_release")
         with Path(os.environ["GITHUB_OUTPUT"]).open("a") as outputs:
             for service, ref in refs.items():

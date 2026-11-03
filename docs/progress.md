@@ -7118,3 +7118,16 @@ Status remains implemented pending canonical verification.
 - No canonical FULL before independent QA authorization, no delivery receipt, push, PR, merge, registry
   publication or deployment. [Runbook/QA handoff](beta-security-001.md),
   [retained evidence](security/beta-security-001/README.md). Feature remains in_progress.
+
+### BETA-SECURITY-001 — draft lookup P1 correction, 3 November 2026
+
+- Independent Claude QA conditionally passed 34cebbe / tree 8653d1a4; P1 published-tag lookup could
+  not discover the unpublished draft. Replaced it with authenticated paginated listing, unique draft
+  selection, numeric-ID re-fetch, source/tag/ID/URL/state and asset checks, then numeric-ID PATCH.
+- Local asset checks now precede version-tag promotion; draft upload/validation still follows security,
+  smoke and attestations. Permissions unchanged. No PostgreSQL digest/VEX/runtime contract change.
+- Baseline 21/21; old implementation fails two new regressions, and actual old snippet reproduces
+  tag-404 against mocked GitHub behavior. Corrected suite 25/25; workflow-check and actionlint pass.
+- PostgreSQL 2 CRITICAL/26 HIGH still blocks publication. Separate maintenance proposal requires
+  explicit operator approval and BETA-RUNTIME-001 coordination. [Delta QA handoff](beta-security-001-lookup-correction.md).
+  No canonical FULL, push, PR, merge or publication. Targeted independent delta QA is next.

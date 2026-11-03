@@ -387,6 +387,155 @@ class ReleaseTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 tooling.secure_cache(cache)
 
+    def test_authenticated_paginated_draft_lookup_and_id_revalidation(self) -> None:
+        import beta_release
+
+        self.assertTrue(
+            hasattr(beta_release, "locate_draft_release"),
+            "draft lookup must use listing and numeric ID",
+        )
+        tag, sha, repo = "v0.1.0-beta.1", "c" * 40, "alessandrorossato/florabase"
+        draft = {
+            "id": 42,
+            "tag_name": tag,
+            "draft": True,
+            "target_commitish": sha,
+            "url": f"https://api.github.com/repos/{repo}/releases/42",
+            "assets": [],
+        }
+
+        def api(*args: str) -> str:
+            if "/tags/" in args[-1]:
+                raise subprocess.CalledProcessError(
+                    1, args, stderr="404 published release not found"
+                )
+            if "--paginate" in args:
+                self.assertIn("--slurp", args)
+                return json.dumps([[{"tag_name": "unrelated"}], [draft]])
+            self.assertEqual(args[-1], f"repos/{repo}/releases/42")
+            return json.dumps(draft)
+
+        with (
+            patch.dict(os.environ, {"GH_TOKEN": "fixture"}),
+            patch("beta_release.run", side_effect=api),
+        ):
+            self.assertEqual(beta_release.locate_draft_release(repo, tag, sha), draft)
+        mutations = [
+            {**draft, "id": 43},
+            {**draft, "draft": False},
+            {**draft, "tag_name": "stale"},
+            {**draft, "target_commitish": "main"},
+            {**draft, "url": "foreign"},
+            {**draft, "assets": [{"id": 1, "state": "new"}]},
+        ]
+        for value in mutations:
+            with (
+                self.subTest(value=value),
+                patch.dict(os.environ, {"GH_TOKEN": "fixture"}),
+                patch("beta_release.run", side_effect=[json.dumps([[draft]]), json.dumps(value)]),
+                self.assertRaises(ValueError),
+            ):
+                beta_release.locate_draft_release(repo, tag, sha)
+        for pages in [[], [[]], [[draft], [draft]], [[{**draft, "draft": False}]]]:
+            with (
+                self.subTest(pages=pages),
+                patch.dict(os.environ, {"GH_TOKEN": "fixture"}),
+                patch("beta_release.run", return_value=json.dumps(pages)),
+                self.assertRaises(ValueError),
+            ):
+                beta_release.locate_draft_release(repo, tag, sha)
+        with (
+            patch.dict(os.environ, {"GH_TOKEN": "fixture"}),
+            patch("beta_release.run", side_effect=subprocess.CalledProcessError(1, "gh")),
+            self.assertRaises(subprocess.CalledProcessError),
+        ):
+            beta_release.locate_draft_release(repo, tag, sha)
+
+    def test_actual_workflow_draft_finalization_with_published_tag_404(self) -> None:
+        repo, sha, tag = "alessandrorossato/florabase", "c" * 40, "v0.1.0-beta.1"
+        workflow = (ROOT / ".github/workflows/beta-images.yml").read_text()
+        code = textwrap.dedent(workflow.split("<<'PY'\n")[-1].split("          PY")[0])
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "fixture.json").write_bytes(b"fixture")
+            release: dict[str, Any] = {
+                "id": 42,
+                "tag_name": tag,
+                "draft": True,
+                "target_commitish": sha,
+                "url": f"https://api.github.com/repos/{repo}/releases/42",
+                "assets": [
+                    {
+                        "id": 7,
+                        "state": "uploaded",
+                        "name": "fixture.json",
+                        "size": 7,
+                        "digest": "sha256:" + hashlib.sha256(b"fixture").hexdigest(),
+                    }
+                ],
+            }
+            for valid in (True, False):
+                value = copy.deepcopy(release)
+                if not valid:
+                    value["assets"][0]["digest"] = "wrong"
+                with (
+                    patch.dict(
+                        os.environ,
+                        {"GH_TOKEN": "fixture", "GITHUB_REPOSITORY": repo, "GITHUB_SHA": sha},
+                    ),
+                    patch.object(sys, "argv", ["probe", temporary, tag]),
+                    patch(
+                        "beta_release.run",
+                        side_effect=[json.dumps([[], [value]]), json.dumps(value)],
+                    ),
+                    patch(
+                        "subprocess.check_output",
+                        side_effect=subprocess.CalledProcessError(
+                            1, "published-tag-lookup", stderr="404"
+                        ),
+                    ),
+                    patch("subprocess.run") as mutation,
+                ):
+                    if valid:
+                        exec(code, {})
+                        self.assertEqual(
+                            mutation.call_args.args[0][:5],
+                            ["gh", "api", "--method", "PATCH", f"repos/{repo}/releases/42"],
+                        )
+                    else:
+                        with self.assertRaises(ValueError):
+                            exec(code, {})
+                        mutation.assert_not_called()
+
+    def test_draft_validation_and_promotion_order(self) -> None:
+        source = (ROOT / "scripts/publish-beta-images.py").read_text()
+        self.assertLess(
+            source.index("release_asset_inventory(output)"), source.index('"--prefer-index=false"')
+        )
+        import beta_release
+
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "unexpected-directory").mkdir()
+            with self.assertRaises(ValueError):
+                beta_release.release_asset_inventory(output)
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch("beta_release.run") as api,
+            self.assertRaises(ValueError),
+        ):
+            beta_release.locate_draft_release(
+                "alessandrorossato/florabase", "v0.1.0-beta.1", "c" * 40
+            )
+        api.assert_not_called()
+
+    def test_workflow_draft_lookup_never_uses_published_tag_endpoint(self) -> None:
+        workflow = (ROOT / ".github/workflows/beta-images.yml").read_text()
+        self.assertNotIn("/releases/tags/", workflow)
+        self.assertIn("locate_draft_release", workflow)
+        self.assertIn('--target "$GITHUB_SHA"', workflow)
+        self.assertIn('"--method", "PATCH"', workflow)
+
     def test_partial_or_wrong_release_assets_cannot_be_published(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary)

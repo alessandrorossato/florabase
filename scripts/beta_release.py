@@ -394,20 +394,78 @@ def validate_scan(
             raise ValueError("security report contains blocking findings")
 
 
+def locate_draft_release(repo: str, tag: str, sha: str) -> dict[str, Any]:
+    """Authenticated listing includes drafts; the published-tag endpoint does not."""
+    if (
+        not os.environ.get("GH_TOKEN")
+        or repo != SOURCE.removeprefix("https://github.com/")
+        or not SHA.fullmatch(sha)
+    ):
+        raise ValueError("authenticated approved release identity required")
+    pages = json.loads(
+        run(
+            "gh",
+            "api",
+            "--method",
+            "GET",
+            "--paginate",
+            "--slurp",
+            f"repos/{repo}/releases?per_page=100",
+        )
+    )
+    matches = [release for page in pages for release in page if release.get("tag_name") == tag]
+    if len(matches) != 1 or matches[0].get("draft") is not True:
+        raise ValueError("expected exactly one matching unpublished draft")
+    selected = matches[0]
+    identity = selected.get("id")
+    if type(identity) is not int or identity <= 0:
+        raise ValueError("invalid numeric draft identity")
+    release = json.loads(run("gh", "api", "--method", "GET", f"repos/{repo}/releases/{identity}"))
+    if not isinstance(release, dict):
+        raise ValueError("invalid release API response")
+    for value in (selected, release):
+        if (
+            type(value.get("id")) is not int
+            or value.get("id") != identity
+            or value.get("tag_name") != tag
+            or value.get("draft") is not True
+            or value.get("target_commitish") != sha
+            or value.get("url") != f"https://api.github.com/repos/{repo}/releases/{identity}"
+        ):
+            raise ValueError("stale or inconsistent draft release identity")
+    assets = release.get("assets", [])
+    ids = [asset.get("id") for asset in assets]
+    if (
+        any(type(i) is not int or i <= 0 for i in ids)
+        or len(set(ids)) != len(ids)
+        or any(asset.get("state") != "uploaded" for asset in assets)
+    ):
+        raise ValueError("invalid or incomplete draft asset identities")
+    return release
+
+
+def release_asset_inventory(output: Path) -> dict[str, tuple[int, str]]:
+    """Check predictable local asset failures before registry version promotion."""
+    files = list(output.iterdir())
+    if not files or any(not path.is_file() or path.is_symlink() for path in files):
+        raise ValueError("invalid local release asset inventory")
+    return {
+        path.name: (path.stat().st_size, "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest())
+        for path in files
+    }
+
+
 def validate_release_assets(release: dict[str, Any], output: Path) -> None:
     """Require a complete private draft, including byte-bound evidence, before publication."""
-    files = {p.name: p for p in output.iterdir() if p.is_file()}
+    files = release_asset_inventory(output)
     assets = release.get("assets", [])
     if release.get("draft") is not True or len(assets) != len(files):
         raise ValueError("incomplete draft release")
     if {a["name"] for a in assets} != set(files):
         raise ValueError("draft release asset names differ")
     for asset in assets:
-        data = files[asset["name"]].read_bytes()
-        if (
-            asset.get("size") != len(data)
-            or asset.get("digest") != "sha256:" + hashlib.sha256(data).hexdigest()
-        ):
+        size, digest = files[asset["name"]]
+        if asset.get("size") != size or asset.get("digest") != digest:
             raise ValueError("draft release asset digest/size mismatch")
 
 

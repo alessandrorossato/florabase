@@ -1,3 +1,5 @@
+Draft-release P1 correction and targeted delta-QA handoff: [lookup correction](beta-security-001-lookup-correction.md).
+
 # BETA-SECURITY-001 — security and release hardening candidate
 
 Initial main: `f0d24224cf0eae32cc8670aeab54a67d53a2c723`.

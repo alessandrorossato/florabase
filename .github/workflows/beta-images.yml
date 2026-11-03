@@ -123,13 +123,14 @@ jobs:
           set -euo pipefail
           version=$(python3 -c 'import json; print(json.load(open("release/inputs.json"))["version"])')
           gh release create "v${version}" "$RUNNER_TEMP/beta-release/"* \
-            --verify-tag --draft --prerelease --title "Florabase v${version}" \
+            --verify-tag --target "$GITHUB_SHA" --draft --prerelease --title "Florabase v${version}" \
             --notes-file "$RUNNER_TEMP/beta-release/RELEASE.md"
           python3 - "$RUNNER_TEMP/beta-release" "v${version}" <<'PY'
-          import json, pathlib, subprocess, sys
+          import os, pathlib, subprocess, sys
           sys.path.insert(0, "scripts")
-          from beta_release import validate_release_assets
-          release = json.loads(subprocess.check_output(["gh", "api", "repos/" + __import__("os").environ["GITHUB_REPOSITORY"] + "/releases/tags/" + sys.argv[2]], text=True))
+          from beta_release import locate_draft_release, validate_release_assets
+          repo = os.environ["GITHUB_REPOSITORY"]
+          release = locate_draft_release(repo, sys.argv[2], os.environ["GITHUB_SHA"])
           validate_release_assets(release, pathlib.Path(sys.argv[1]))
+          subprocess.run(["gh", "api", "--method", "PATCH", f"repos/{repo}/releases/{release['id']}", "-F", "draft=false", "-F", "prerelease=true"], check=True)
           PY
-          gh release edit "v${version}" --draft=false --prerelease
