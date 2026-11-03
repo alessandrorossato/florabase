@@ -66,6 +66,11 @@ restore.
 
 ## Isolated restore drill
 
+This existing example validates only the database portion. It does **not** prove complete collection
+recovery. The [beta runtime acceptance contract](beta-foundation-001.md) requires a separate isolated
+restore of both DB and original media, digest/relationship checks and authenticated application use;
+that automated runtime drill remains BETA-RUNTIME-001 work.
+
 The following smoke test uses a network-isolated, tmpfs-backed PostgreSQL container. It does not connect to or replace the Compose database. Set `dump_file` to the custom-format dump being tested:
 
 ```bash

@@ -15,17 +15,26 @@ import os
 import pty
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import tempfile
 import unittest
+import uuid
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, cast
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
+import feature_worktree
 import sourcing_preview
 import workflow_environment
-from workflow_environment import COMPOSE_MUTATING, COMPOSE_READ_ONLY, Environment
+from workflow_environment import (
+    COMPOSE_MUTATING,
+    COMPOSE_READ_ONLY,
+    Environment,
+    Repository,
+)
 from workflow_resources import ResourceError, machine_lock
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -1092,10 +1101,13 @@ class AgentWorkflowTests(unittest.TestCase):
 
     # Finish and retirement ---------------------------------------------------------------------
 
-    def finished(self, branch: str = "feat/example-001") -> Path:
+    def finished(self, branch: str = "feat/example-001", *, frontend: bool = False) -> Path:
         worktree = self.create(branch)
         self.ok(worktree, "claim", AGENT_ID="claude-code")
         (worktree / "feature.txt").write_text("feature\n")
+        if frontend:
+            (worktree / "frontend").mkdir()
+            (worktree / "frontend/package.json").write_text("{}\n")
         self.git(worktree, "add", ".")
         self.git(worktree, "commit", "-m", "feature")
         feature = self.git(worktree, "rev-parse", "HEAD")
@@ -1140,9 +1152,20 @@ class AgentWorkflowTests(unittest.TestCase):
         self.ok(self.primary, "retire", FEATURE="example-001", CONFIRM_RETIRE="example-001")
         self.assertFalse(worktree.exists())
         self.assertEqual(self.git(self.primary, "status", "--porcelain"), "")
-        # DEV/Review/UAT data preservation: retirement only ever lists Docker state.
+        # DEV/Review/UAT preservation: only exact read-only inventory/inspection commands.
         for line in self.docker_log.read_text().splitlines():
-            self.assertTrue(line.startswith(("ps -a --filter", "volume ls --filter")), line)
+            self.assertTrue(
+                line == "ps --quiet --no-trunc"
+                or line.startswith(
+                    (
+                        "ps -a --filter",
+                        "volume ls --filter",
+                        "inspect --type container --format",
+                        "volume inspect --format",
+                    )
+                ),
+                line,
+            )
 
     def test_retirement_refuses_every_unsafe_state(self) -> None:
         worktree = self.finished()
@@ -1189,6 +1212,511 @@ class AgentWorkflowTests(unittest.TestCase):
         (worktree / "__pycache__/module.pyc").write_text("regenerable\n")
         self.ok(self.primary, "retire", FEATURE="example-001", CONFIRM_RETIRE="example-001")
         self.assertFalse(worktree.exists())
+
+    def test_empty_unwritable_directory_does_not_block_retirement(self) -> None:
+        worktree = self.finished(frontend=True)
+        cache = worktree / "frontend/node_modules"
+        cache.mkdir()
+        cache.chmod(0o555)
+        self.assertFalse(os.access(cache, os.W_OK))
+        self.ok(self.primary, "retire", FEATURE="example-001", CONFIRM_RETIRE="example-001")
+        self.assertFalse(worktree.exists())
+
+    def test_nonempty_unwritable_directory_keeps_registration_and_content(self) -> None:
+        worktree = self.finished(frontend=True)
+        cache = worktree / "frontend/node_modules"
+        cache.mkdir()
+        (cache / "unexpected.txt").write_text("retain me")
+        # Simulate the repository's ignored dependency cache.
+        (self.primary / ".git/info/exclude").write_text("node_modules/\n")
+        cache.chmod(0o555)
+        try:
+            self.refused(
+                "fix its ownership",
+                self.primary,
+                "retire",
+                FEATURE="example-001",
+                CONFIRM_RETIRE="example-001",
+            )
+            self.assertEqual((cache / "unexpected.txt").read_text(), "retain me")
+            self.assertIn(str(worktree), self.git(self.primary, "worktree", "list"))
+        finally:
+            cache.chmod(0o755)
+
+    def test_retirement_preflight_refuses_links_and_mounts(self) -> None:
+        worktree = self.finished(frontend=True)
+        cache = worktree / "frontend/node_modules"
+        cache.mkdir()
+        outside = self.root / "shared"
+        outside.mkdir()
+        (outside / "keep").write_text("shared data")
+        link = cache / "linked"
+        link.symlink_to(outside, target_is_directory=True)
+        (self.primary / ".git/info/exclude").write_text("node_modules/\n")
+        self.refused(
+            "symlink",
+            self.primary,
+            "retire",
+            FEATURE="example-001",
+            CONFIRM_RETIRE="example-001",
+        )
+        link.unlink()
+        # Include escaped spaces/backslashes and a same-device bind mount, which is_mount misses.
+        mounted = cache / "space and\\slash"
+        mounted.mkdir()
+        escaped = str(mounted).replace("\\", r"\134").replace(" ", r"\040")
+        with patch.object(
+            Path,
+            "read_text",
+            return_value=f"20 1 8:1 / {escaped} rw - ext4 /dev/a rw\n",
+        ):
+            with self.assertRaisesRegex(workflow_environment.WorkflowError, "mounted path"):
+                feature_worktree.validate_retirement_tree(worktree)
+        with patch.object(Path, "read_text", side_effect=PermissionError("unavailable")):
+            with self.assertRaisesRegex(workflow_environment.WorkflowError, "safe removal"):
+                feature_worktree.validate_retirement_tree(worktree)
+        for evidence in ("invalid\n", ""):
+            with patch.object(Path, "read_text", return_value=evidence):
+                with self.assertRaisesRegex(workflow_environment.WorkflowError, "safe removal"):
+                    feature_worktree.validate_retirement_tree(worktree)
+        self.assertTrue(worktree.exists())
+        self.assertEqual((outside / "keep").read_text(), "shared data")
+        self.assertIn(str(worktree), self.git(self.primary, "worktree", "list"))
+
+    def test_retirement_preflight_requires_traversal_and_removable_parent(self) -> None:
+        candidate = self.root / "candidate"
+        parent = candidate / "frontend"
+        cache = parent / "node_modules"
+        cache.mkdir(parents=True)
+        cache.chmod(0o000)
+        try:
+            with self.assertRaisesRegex(workflow_environment.WorkflowError, "safe removal"):
+                feature_worktree.validate_retirement_tree(candidate)
+        finally:
+            cache.chmod(0o755)
+        parent.chmod(0o555)
+        try:
+            with self.assertRaisesRegex(workflow_environment.WorkflowError, "fix its ownership"):
+                feature_worktree.validate_retirement_tree(candidate)
+        finally:
+            parent.chmod(0o755)
+        original_stat = Path.stat
+
+        def sticky_parent(path: Path, *, follow_symlinks: bool = True) -> os.stat_result:
+            result = original_stat(path, follow_symlinks=follow_symlinks)
+            if path == parent:
+                fields = list(result)
+                fields[0] = result.st_mode | stat.S_ISVTX
+                fields[4] = os.getuid() + 2
+                return os.stat_result(fields)
+            return result
+
+        with (
+            patch.object(Path, "stat", sticky_parent),
+            patch.object(os, "geteuid", return_value=os.getuid() + 1),
+        ):
+            with self.assertRaisesRegex(workflow_environment.WorkflowError, "sticky parent"):
+                feature_worktree.validate_retirement_tree(candidate)
+        self.assertTrue(cache.is_dir())
+
+    @unittest.skipUnless(
+        os.environ.get("FLORABASE_RETIRE_DOCKER_SMOKE") == "1",
+        "opt-in real Docker mountpoint smoke; offline suite uses PATH mocks",
+    )
+    def test_real_docker_root_owned_empty_mountpoint_retirement(self) -> None:
+        worktree = self.finished(frontend=True)
+        cache = worktree / "frontend/node_modules"
+        # Docker prepares the nested mountpoint in the host bind as root, even with a non-root
+        # process. Only this disposable fixture is mounted; no network or persistent volume.
+        subprocess.run(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--pull=never",
+                "--network=none",
+                "--read-only",
+                "--user",
+                f"{os.getuid()}:{os.getgid()}",
+                "--mount",
+                f"type=bind,src={worktree / 'frontend'},dst=/fixture",
+                "--tmpfs",
+                "/fixture/node_modules:rw",
+                "--entrypoint",
+                "/bin/true",
+                "node:24.19.0-bookworm-slim",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(cache.stat().st_uid, 0)
+        self.assertEqual(list(cache.iterdir()), [])
+        self.assertFalse(os.access(cache, os.W_OK))  # Original preflight refuses here.
+        self.ok(self.primary, "retire", FEATURE="example-001", CONFIRM_RETIRE="example-001")
+        self.assertFalse(worktree.exists())
+        self.assertNotIn(str(worktree), self.git(self.primary, "worktree", "list"))
+
+    def test_running_mount_guard_resolves_overlap_and_allows_unrelated_sources(self) -> None:
+        candidate = self.root / "candidate"
+        candidate.mkdir()
+        child = candidate / "child"
+        child.mkdir()
+        unrelated = self.root / "candidate-other"
+        unrelated.mkdir()
+        alias = self.root / "alias"
+        alias.symlink_to(child, target_is_directory=True)
+        identifier = "a" * 64
+        for source in (candidate, child, candidate.parent, alias, unrelated):
+            record = {
+                "Id": identifier,
+                "Running": True,
+                "Mounts": [{"Type": "bind", "Source": str(source), "Destination": "/data"}],
+            }
+            with (
+                self.subTest(source=source),
+                patch.object(
+                    feature_worktree,
+                    "docker",
+                    side_effect=[identifier, json.dumps(record), identifier],
+                ) as commands,
+            ):
+                if source == unrelated:
+                    feature_worktree.require_no_running_mounts(candidate)
+                    self.assertEqual(commands.call_count, 3)
+                else:
+                    with self.assertRaisesRegex(
+                        workflow_environment.WorkflowError, "running container"
+                    ):
+                        feature_worktree.require_no_running_mounts(candidate)
+            self.assertTrue(child.is_dir())
+
+    def test_running_mount_guard_fails_closed_on_incomplete_or_changing_evidence(self) -> None:
+        identifier = "a" * 64
+        cases: list[list[str]] = [
+            ["short-id"],
+            [identifier, ""],
+            [identifier, "{}"],
+            [identifier, json.dumps({"Id": identifier, "Running": True})],
+            [identifier, json.dumps({"Id": identifier, "Running": False, "Mounts": []})],
+            [identifier, json.dumps({"Id": identifier, "Running": True, "Mounts": [{}]})],
+            [
+                identifier,
+                json.dumps(
+                    {
+                        "Id": identifier,
+                        "Running": True,
+                        "Mounts": [{"Type": "bind", "Destination": "/data", "Source": "relative"}],
+                    }
+                ),
+            ],
+            [
+                identifier,
+                json.dumps(
+                    {
+                        "Id": identifier,
+                        "Running": True,
+                        "Mounts": [
+                            {
+                                "Type": "bind",
+                                "Destination": "/data",
+                                "Source": str(self.root / "gone"),
+                            }
+                        ],
+                    }
+                ),
+            ],
+            [identifier, json.dumps({"Id": identifier, "Running": True, "Mounts": []}), "b" * 64],
+        ]
+        for answers in cases:
+            with (
+                self.subTest(answers=answers),
+                patch.object(feature_worktree, "docker", side_effect=answers),
+            ):
+                with self.assertRaises(workflow_environment.WorkflowError):
+                    feature_worktree.require_no_running_mounts(self.root)
+        with patch.object(
+            feature_worktree, "docker", side_effect=ResourceError("Docker unavailable")
+        ):
+            with self.assertRaises(ResourceError):
+                feature_worktree.require_no_running_mounts(self.root)
+
+    def test_running_mount_guard_checks_volume_backing_and_tmpfs(self) -> None:
+        candidate = self.root / "candidate"
+        candidate.mkdir()
+        source = self.root / "docker-data/volumes/fixture/_data"
+        source.mkdir(parents=True)
+        identifier = "a" * 64
+        record = {
+            "Id": identifier,
+            "Running": True,
+            "Mounts": [
+                {
+                    "Type": "volume",
+                    "Name": "fixture",
+                    "Source": str(source),
+                    "Destination": "/data",
+                },
+                {"Type": "tmpfs", "Destination": "/tmp"},
+            ],
+        }
+        volume = {"Name": "fixture", "Driver": "local", "Mountpoint": str(source), "Options": None}
+        for changes, allowed in (
+            ({}, True),
+            ({"Options": {"device": str(candidate)}}, False),
+            ({"Driver": "unknown"}, False),
+            ({"Mountpoint": "/other"}, False),
+        ):
+            with (
+                self.subTest(changes=changes),
+                patch.object(
+                    feature_worktree,
+                    "docker",
+                    side_effect=[
+                        identifier,
+                        json.dumps(record),
+                        json.dumps({**volume, **changes}),
+                        identifier,
+                    ],
+                ),
+            ):
+                if allowed:
+                    feature_worktree.require_no_running_mounts(candidate)
+                else:
+                    with self.assertRaisesRegex(
+                        workflow_environment.WorkflowError, "volume backing"
+                    ):
+                        feature_worktree.require_no_running_mounts(candidate)
+
+    def assert_offline_retirement_blocked(self, worktree: Path, reason: str) -> None:
+        original_git = Repository.git
+        removals: list[tuple[str, ...]] = []
+
+        def guarded_git(repo: Repository, *args: str) -> str:
+            if args[:2] == ("worktree", "remove"):
+                removals.append(args)
+                raise AssertionError("Git removal reached before safe refusal")
+            return original_git(repo, *args)
+
+        with patch.object(Repository, "git", guarded_git):
+            with self.assertRaisesRegex(workflow_environment.WorkflowError, reason):
+                feature_worktree.retire(Repository(self.primary), "example-001", "example-001")
+        self.assertEqual(removals, [])
+        self.assertIn(str(worktree), self.git(self.primary, "worktree", "list"))
+        self.assertEqual((worktree / "feature.txt").read_text(), "feature\n")
+        self.assertEqual((worktree / "frontend/package.json").read_text(), "{}\n")
+
+    def offline_sticky_child(self, *, fifo: bool) -> None:
+        worktree = self.finished(frontend=True)
+        (self.primary / ".git/info/exclude").write_text("node_modules/\n")
+        cache = worktree / "frontend/node_modules"
+        cache.mkdir()
+        child = cache / "foreign"
+        if fifo:
+            os.mkfifo(child)
+        else:
+            child.write_text("retained")
+        original_stat, original_scan = Path.stat, os.scandir
+        foreign_uid = os.geteuid() + 1
+
+        def foreign_stat(path: Path, *, follow_symlinks: bool = True) -> os.stat_result:
+            result = original_stat(path, follow_symlinks=follow_symlinks)
+            if path in (cache, child):
+                fields = list(result)
+                fields[4] = foreign_uid
+                if path == cache:
+                    fields[0] = stat.S_IFDIR | 0o1777
+                return os.stat_result(fields)
+            return result
+
+        @contextlib.contextmanager
+        def foreign_scan(path: Path) -> Iterator[list[Any]]:
+            with original_scan(path) as entries:
+                children = []
+                for entry in entries:
+                    if Path(entry.path) == child:
+                        entry = Mock(wraps=entry, stat=Mock(return_value=foreign_stat(child)))
+                    children.append(entry)
+                yield children
+
+        with (
+            patch.object(Path, "stat", foreign_stat),
+            patch.object(os, "scandir", foreign_scan),
+            patch.object(feature_worktree, "docker", return_value=""),
+        ):
+            self.assert_offline_retirement_blocked(worktree, "sticky parent")
+        self.assertTrue(child.exists())
+        if fifo:
+            self.assertTrue(stat.S_ISFIFO(child.stat().st_mode))
+        else:
+            self.assertEqual(child.read_text(), "retained")
+
+    def test_offline_retire_rejects_sticky_foreign_regular_file(self) -> None:
+        self.offline_sticky_child(fifo=False)
+
+    def test_offline_retire_rejects_sticky_foreign_fifo(self) -> None:
+        self.offline_sticky_child(fifo=True)
+
+    def test_offline_retire_invokes_running_unlabelled_mount_guard(self) -> None:
+        worktree = self.finished(frontend=True)
+        identifier = "a" * 64
+        record = {
+            "Id": identifier,
+            "Running": True,
+            "Mounts": [
+                {"Type": "bind", "Source": str(worktree / "frontend"), "Destination": "/data"},
+            ],
+        }
+
+        def inventory(*args: str) -> str:
+            if args == ("ps", "--quiet", "--no-trunc"):
+                return identifier
+            if args[:3] == ("inspect", "--type", "container"):
+                return json.dumps(record)
+            if args[:2] in (("ps", "-a"), ("volume", "ls")):
+                return ""  # No Florabase labels: existing ownership checks pass.
+            raise AssertionError(f"Unexpected Docker command: {args}")
+
+        with (
+            patch.object(feature_worktree, "docker", side_effect=inventory),
+            patch.object(
+                feature_worktree,
+                "require_no_running_mounts",
+                wraps=feature_worktree.require_no_running_mounts,
+            ) as guard,
+        ):
+            self.assert_offline_retirement_blocked(worktree, "running container")
+            guard.assert_called_once_with(worktree)
+
+    def docker_fixture(self, *args: str) -> str:
+        """Actual Docker, outside the offline PATH mock; only exact disposable targets mutate."""
+        return subprocess.run(
+            ["docker", *args], check=True, capture_output=True, text=True
+        ).stdout.strip()
+
+    @unittest.skipUnless(
+        os.environ.get("FLORABASE_RETIRE_DOCKER_SMOKE") == "1",
+        "opt-in real Docker filesystem smoke",
+    )
+    def test_real_sticky_foreign_objects_preserve_registration_and_contents(self) -> None:
+        worktree = self.finished(frontend=True)
+        frontend = worktree / "frontend"
+        cache = frontend / "node_modules"
+        (self.primary / ".git/info/exclude").write_text("node_modules/\n")
+        for name, create in (
+            ("rootfile", "printf retained > /fixture/node_modules/rootfile"),
+            ("rootfifo", "mkfifo /fixture/node_modules/rootfifo"),
+        ):
+            with self.subTest(child=name):
+                self.docker_fixture(
+                    "run",
+                    "--rm",
+                    "--pull=never",
+                    "--network=none",
+                    "--read-only",
+                    "--mount",
+                    f"type=bind,src={frontend},dst=/fixture",
+                    "--entrypoint",
+                    "sh",
+                    "node:24.19.0-bookworm-slim",
+                    "-ec",
+                    "mkdir -m 1777 /fixture/node_modules; " + create,
+                )
+                try:
+                    self.assertEqual(cache.stat().st_uid, 0)
+                    self.assertEqual(cache.stat().st_mode & 0o7777, 0o1777)
+                    self.assertEqual((cache / name).stat().st_uid, 0)
+                    self.refused(
+                        "sticky parent",
+                        self.primary,
+                        "retire",
+                        FEATURE="example-001",
+                        CONFIRM_RETIRE="example-001",
+                    )
+                    self.assertIn(str(worktree), self.git(self.primary, "worktree", "list"))
+                    self.assertEqual((worktree / "feature.txt").read_text(), "feature\n")
+                    self.assertEqual((frontend / "package.json").read_text(), "{}\n")
+                    if name == "rootfile":
+                        self.assertEqual((cache / name).read_text(), "retained")
+                    else:
+                        self.assertTrue(stat.S_ISFIFO((cache / name).stat().st_mode))
+                finally:
+                    # Exact fixture objects only: no recursive permission repair/deletion fallback.
+                    self.docker_fixture(
+                        "run",
+                        "--rm",
+                        "--pull=never",
+                        "--network=none",
+                        "--read-only",
+                        "--mount",
+                        f"type=bind,src={frontend},dst=/fixture",
+                        "--entrypoint",
+                        "sh",
+                        "node:24.19.0-bookworm-slim",
+                        "-ec",
+                        f"rm /fixture/node_modules/{name}; rmdir /fixture/node_modules",
+                    )
+
+    @unittest.skipUnless(
+        os.environ.get("FLORABASE_RETIRE_DOCKER_SMOKE") == "1", "opt-in real Docker mount smoke"
+    )
+    def test_real_unlabelled_parent_mount_preserves_live_nested_data(self) -> None:
+        worktree = self.finished(frontend=True)
+        name = f"florabase-retire-smoke-{uuid.uuid4().hex[:12]}"
+        # Exercise the real read-only Docker checks in retirement, not its PATH fixture mock.
+        (self.bin / "docker").unlink()
+        (self.bin / "docker").symlink_to(shutil.which("docker") or "docker")
+        container = self.docker_fixture(
+            "run",
+            "-d",
+            "--name",
+            name,
+            "--pull=never",
+            "--network=none",
+            "--read-only",
+            "--user",
+            f"{os.getuid()}:{os.getgid()}",
+            "--mount",
+            f"type=bind,src={self.managed},dst=/fixture",
+            "--tmpfs",
+            f"/fixture/example-001/frontend/node_modules:rw,uid={os.getuid()}",
+            "--entrypoint",
+            "sleep",
+            "node:24.19.0-bookworm-slim",
+            "300",
+        )
+        try:
+            self.docker_fixture(
+                "exec",
+                container,
+                "sh",
+                "-ec",
+                "printf live > /fixture/example-001/frontend/node_modules/data",
+            )
+            cache = worktree / "frontend/node_modules"
+            self.assertEqual(list(cache.iterdir()), [])  # Hidden by the container's tmpfs.
+            self.refused(
+                "running container",
+                self.primary,
+                "retire",
+                FEATURE="example-001",
+                CONFIRM_RETIRE="example-001",
+            )
+            self.assertIn(str(worktree), self.git(self.primary, "worktree", "list"))
+            self.assertEqual((worktree / "feature.txt").read_text(), "feature\n")
+            self.assertEqual(
+                self.docker_fixture(
+                    "exec", container, "cat", "/fixture/example-001/frontend/node_modules/data"
+                ),
+                "live",
+            )
+            self.assertEqual(
+                self.docker_fixture("inspect", "--format", "{{.State.Running}}", container), "true"
+            )
+        finally:
+            self.docker_fixture("stop", "--time", "1", container)
+            self.docker_fixture("rm", container)
+            self.assertEqual(self.docker_fixture("ps", "-aq", "--filter", f"name=^/{name}$"), "")
 
     def test_tool_worktree_is_refused_even_under_a_redirected_root(self) -> None:
         tools = self.root / "codex/worktrees"
