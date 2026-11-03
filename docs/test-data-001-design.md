@@ -6,8 +6,9 @@ Reviewed SMOKE baseline: `70a1b1ae037cdfce7fa494096bbb557e266cfe7df5780183acda2c
 
 ## Result of this increment
 
-The SMOKE profile generates, validates and retires isolated synthetic copies from source. COMPREHENSIVE
-and STRESS are declared in the manifest and refuse until reviewed. No environment lifecycle or restore
+The SMOKE profile generates, validates and retires isolated synthetic copies from source. STRESS is
+declared in the manifest and refuses until reviewed. [TEST-DATA-002](test-data-002-design.md) later made
+COMPREHENSIVE executable and resolved some gaps listed below. No environment lifecycle or restore
 workflow changed, and no Review, UAT, Sourcing, Preview, DEV or production command can reach this code.
 
 ```bash
@@ -26,7 +27,7 @@ python /review/golden_dataset.py retire-copy --copy golden_a   # Drops the DB an
 ```
 
 The coverage matrix is generated from the manifest: [COVERAGE.md](../scripts/fixtures/golden/COVERAGE.md).
-Only SMOKE runs today; the matrix shows each scenario's runnable and still-planned profiles separately.
+It shows each scenario's runnable and still-planned profiles separately.
 
 ## Architecture
 

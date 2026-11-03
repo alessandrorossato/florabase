@@ -7047,3 +7047,33 @@ Status remains implemented pending canonical verification.
   independent QA and canonical FULL are unexecuted. Status stays `in_progress`; this is not beta admission.
 - [Implementation/runbook](beta-image-001.md), [QA checks/blockers](beta-image-001-qa.md),
   [local evidence/report hashes](beta-image-001-local-evidence.json). No push, PR, merge or feature-finish.
+### TEST-DATA-002 comprehensive golden dataset — 2 November 2026
+
+- COMPREHENSIVE is executable: 3,183 plan nodes, 3,973 domain records, 34 media files, generated through owning
+  services with 18 exercised refusals and 140 invariants. SMOKE's plan pin and baseline `70a1b1ae…f967` are unchanged.
+  Design, coverage gaps and CI proposal: [design](test-data-002-design.md).
+- Digest addition: link `version` UUIDs get ordinals.
+- Domain observations, unchanged and for review: the owning service accepts a new record at a retired Location,
+  and a movement Event on a dead Plant.
+- Checks: `make golden-dataset-comprehensive-check` in two separate stacks (22 passed each; a third produced the pin),
+  `make golden-dataset-check` (31 passed), `test_review_dataset_v5.py` (3 passed), `make workflow-check`,
+  `check-features`, `test-verification-impact`, `test-uat-preview`, `test-environment-workflow`, ruff and mypy on
+  the plan, runtime and test modules. Zero residual resources after each stack.
+- Not run: canonical `make feature-verify`, the complete integration and unit suites, frontend checks.
+- Unresolved: independent QA; `import-export-roundtrip`; update-service edit paths; real image cost; approval of any
+  CI schedule; Review and UAT adoption. Status `implemented`. No push, PR or merge.
+
+### TEST-DATA-002 fingerprint integrity correction — 2 November 2026
+
+- Independent QA failed `ba4deac` (P1): the digest replaced the stored completion hash of movement completions with a
+  constant, so a corrupted value still verified, though `Schedule.complete` uses it to tell a retry from a conflict.
+- Every stored hash, in both profiles, is now proven against the request rebuilt from the plan and the copy's ids. Only a
+  proven value whose request holds a per-copy id is replaced, by that canonical request. Anything else stays raw and is a
+  domain problem, so the digest changes and `verify-baseline` refuses. No Schedule service changed.
+- Reviewed baseline moved from `d2db9e9b…98c7` to `cf423707…3a11`. Against the old pin, only `scheduled_activities` and the
+  combined digest changed; plan, counts, projections, media and scenario keys did not. SMOKE's pin is byte-identical.
+- P2: published totals corrected to 287 canonical + 7 custom = 294 geographic rows; 3,982 and 4,269 modeled rows.
+- Checks: `make golden-dataset-comprehensive-check` in two stacks separate from the pin's (29 passed each),
+  `make golden-dataset-check` (32 passed), `test_review_dataset_v5.py` (3 passed), `make workflow-check`, `check-features`,
+  ruff and mypy on the plan and runtime, ruff on the test modules.
+- Not run: canonical `make feature-verify`, the complete integration and unit suites, frontend checks. Delta QA pending.

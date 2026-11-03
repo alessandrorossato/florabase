@@ -55,6 +55,10 @@ test-integration: ## Run PostgreSQL-backed integration tests in a disposable Com
 golden-dataset-check: ## Generate and validate isolated SMOKE golden copies in a disposable Compose project
 	./scripts/test-integration.sh backend/tests/integration/test_golden_dataset.py
 
+.PHONY: golden-dataset-comprehensive-check
+golden-dataset-comprehensive-check: ## Generate, verify and damage COMPREHENSIVE golden copies in a disposable Compose project; manual
+	./scripts/test-integration.sh backend/tests/integration/test_golden_comprehensive.py
+
 test-frontend:
 	$(DEV_COMPOSE) run --rm --no-deps frontend pnpm test
 
