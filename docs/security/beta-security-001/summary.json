@@ -1,0 +1,32 @@
+[
+  {
+    "image": "backend",
+    "index_digest": "sha256:feea846206315953ad525db48164b9b5a89670784d304bdb265381f2ecfcf6fc",
+    "platform_digest": "sha256:2fc3c9cec27d4db5c67582cd3322572536a083434b4c67e92e5b94c05316233a",
+    "configuration_digest": "sha256:325f0efd273bd6869a3522962dac449edc5216d89826b4c98833da0d38ea5b0c",
+    "high": 0,
+    "critical": 0,
+    "secrets": 0,
+    "size_bytes": 160220672
+  },
+  {
+    "image": "frontend",
+    "index_digest": "sha256:c5c7647f30cfdfa01dfea9d3b0d14f4ab152a891ccb8b5c270b32cd87e5ecb93",
+    "platform_digest": "sha256:25694f1c2b51504fa3c89fc9a08d4ebf56d6313b0331f5714a1d9e8843e8c8ce",
+    "configuration_digest": "sha256:52d670a1396cee3c1e75f44b3db1e33d9e6746626a9faba91d671bb03c92537b",
+    "high": 0,
+    "critical": 0,
+    "secrets": 0,
+    "size_bytes": 24848384
+  },
+  {
+    "image": "postgresql",
+    "index_digest": "sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5",
+    "platform_digest": "sha256:3b0ef735388b2cb097fc29b8bb421d86d57d0ddbe7aa1fbd6493e06d65028503",
+    "configuration_digest": "sha256:57b23a0326ee442e83b3d3fa027c5a148be0a392d7c91d1ca4e1e70131ee859a",
+    "high": 26,
+    "critical": 2,
+    "secrets": 0,
+    "size_bytes": 306650624
+  }
+]

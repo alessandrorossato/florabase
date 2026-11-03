@@ -1,0 +1,15 @@
+{
+  "reference": "python:3.14-slim-trixie@sha256:930e1abba7c4e8f96ed93e8012c35d174d7732752731bbd5e8e757d7ec6f3966",
+  "image_inspect_id": "sha256:930e1abba7c4e8f96ed93e8012c35d174d7732752731bbd5e8e757d7ec6f3966",
+  "descriptor": {
+    "mediaType": "application/vnd.oci.image.index.v1+json",
+    "digest": "sha256:930e1abba7c4e8f96ed93e8012c35d174d7732752731bbd5e8e757d7ec6f3966",
+    "size": 10373
+  },
+  "repo_digests": [
+    "python@sha256:930e1abba7c4e8f96ed93e8012c35d174d7732752731bbd5e8e757d7ec6f3966"
+  ],
+  "os": "linux",
+  "architecture": "amd64",
+  "configuration_digest": "sha256:b37832cc2a1f91289afeccd6d96cfb9d480024615956dc078069ea82ffce1338"
+}

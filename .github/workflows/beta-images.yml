@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: florabase-beta-publication
@@ -64,6 +65,7 @@ jobs:
     timeout-minutes: 60
     permissions:
       contents: write
+      actions: read
       packages: write
       id-token: write
       attestations: write
@@ -84,12 +86,24 @@ jobs:
           python3 scripts/beta_release.py check --publication
           python3 scripts/beta-release-checks.py
       - name: Build, scan and smoke immutable candidates; promote only the tested pair
+        id: pair
         env:
           GH_TOKEN: ${{ github.token }}
           REGISTRY_TOKEN: ${{ github.token }}
+          APPROVED_SHA: ${{ secrets.RELEASE_APPROVED_SHA }}
         run: |
           set -euo pipefail
           python3 scripts/release-tools.py scripts/publish-beta-images.py --output "$RUNNER_TEMP/beta-release"
+      - name: Attest exact backend index
+        uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
+        with:
+          subject-name: ${{ steps.pair.outputs.backend_name }}
+          subject-digest: ${{ steps.pair.outputs.backend_digest }}
+      - name: Attest exact frontend index
+        uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
+        with:
+          subject-name: ${{ steps.pair.outputs.frontend_name }}
+          subject-digest: ${{ steps.pair.outputs.frontend_digest }}
       - name: Attest release manifest
         uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
         with:
@@ -109,5 +123,13 @@ jobs:
           set -euo pipefail
           version=$(python3 -c 'import json; print(json.load(open("release/inputs.json"))["version"])')
           gh release create "v${version}" "$RUNNER_TEMP/beta-release/"* \
-            --verify-tag --prerelease --title "Florabase v${version}" \
+            --verify-tag --draft --prerelease --title "Florabase v${version}" \
             --notes-file "$RUNNER_TEMP/beta-release/RELEASE.md"
+          python3 - "$RUNNER_TEMP/beta-release" "v${version}" <<'PY'
+          import json, pathlib, subprocess, sys
+          sys.path.insert(0, "scripts")
+          from beta_release import validate_release_assets
+          release = json.loads(subprocess.check_output(["gh", "api", "repos/" + __import__("os").environ["GITHUB_REPOSITORY"] + "/releases/tags/" + sys.argv[2]], text=True))
+          validate_release_assets(release, pathlib.Path(sys.argv[1]))
+          PY
+          gh release edit "v${version}" --draft=false --prerelease

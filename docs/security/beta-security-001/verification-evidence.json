@@ -1,0 +1,87 @@
+{
+  "date": "2026-11-03",
+  "canonical_full": "NOT RUN; requires independent QA authorization",
+  "checks": {
+    "baseline_release_tests": "12/12 PASS",
+    "updated_release_tests": "21/21 PASS",
+    "workflow_check": "PASS; Ruff, format, strict mypy 27+5 files and policy",
+    "actionlint": "1.7.12 PASS; shellcheck disabled; archive SHA256 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8",
+    "resource_regressions": "19/19 PASS",
+    "api_check": "PASS; no generated artifact drift",
+    "environment_regressions": "35/35 PASS",
+    "sigterm_late_creation": "PASS; 2 containers, network, media volume removed; repeat cleanup PASS; foreign inventory unchanged",
+    "artifact_smoke": "PASS; actual non-root read-only cap-drop application services; migrations/auth/media/recreation/DB-loss",
+    "exact_runtime_compatibility": "103/103 PASS in 1.55s; musl Python 3.14.10 SQLite 3.53.4 Pillow 13.0.0 certifi 2026.10.18; CA verification asserted",
+    "security": "EXPECTED BLOCK: applications 0/0 each; PostgreSQL 2 CRITICAL/26 HIGH; zero reported secrets under configured policy",
+    "offline_tools": "Final 21/21 warm offline; 20/20 fresh wheelhouse-only venv before classic-store regression addition; empty offline cache explicitly REFUSED",
+    "feature_graph": "134 features valid",
+    "classic_registry_descriptor": "PASS against real pinned PostgreSQL raw index/native manifests using a classic-format archive fixture; config/index/native bindings match OCI export. No Docker daemon storage switch performed."
+  },
+  "local_logs": [
+    {
+      "path": "/tmp/beta-security-baseline.log",
+      "sha256": "7fe880ef6f78c418d63cc7e3182af00ce10f4c3492b93ccf791b6daaad98c878"
+    },
+    {
+      "path": "/tmp/beta-security-workflow.log",
+      "sha256": "878fcf5179952d0e8f3245b1d55a13ecd365eb38026bb30f38648e5ba03083af"
+    },
+    {
+      "path": "/tmp/beta-security-offline-tests.log",
+      "sha256": "b37039ab98d6ecf684d93b2da61866961e3ab2412facece2ae709ce65d794c38"
+    },
+    {
+      "path": "/tmp/beta-security-actionlint.log",
+      "sha256": "47de7b04ef7c0585d8b9a462c6af528743f7735d64518ce00d3e12a616112f0e"
+    },
+    {
+      "path": "/tmp/beta-security-resources.log",
+      "sha256": "b37385f1b7ee4746fb604ffc14ca944a2fb948176340fdaf8f91e8db5c5ebc52"
+    },
+    {
+      "path": "/tmp/beta-security-api-check.log",
+      "sha256": "940cec9ec5297c92dc7b8716669d00bc2d1a7b272229e75bcb17e0995fc6f6f2"
+    },
+    {
+      "path": "/tmp/beta-security-environment.log",
+      "sha256": "f68d9b165e32a29ce2a7fc1096dc727261ecb0e2ce9da7c3f0b9ed441fcfdc19"
+    },
+    {
+      "path": "/tmp/beta-security-lifecycle.log",
+      "sha256": "7f104c5b4c3b67ee3f0de51f8aef9dcc6ce7a5ed51dae278f1e7edf36446fc50"
+    },
+    {
+      "path": "/tmp/beta-security-candidate.log",
+      "sha256": "e1cfa02ef88ea4560c2a1f95069cc3790b633852ca8658dd9eca76d760950c73"
+    },
+    {
+      "path": "/tmp/beta-security-candidate-b.log",
+      "sha256": "800c5044de235868715b64ee97fd1d4b0870caf56fc84080c36f5cb3e5edc973"
+    },
+    {
+      "path": "/tmp/beta-security-candidate-c.log",
+      "sha256": "8913e230e2c41ebcc0aaac506327ef746b66c01c133ae9447b6d2aafe6d3fb9b"
+    },
+    {
+      "path": "/tmp/beta-security-postgresql-applicability.log",
+      "sha256": "3c64625b8b8309e6f995d4a9eaf734e24d062db86ed7bef83b26e4c811bdbfbd"
+    },
+    {
+      "path": "/tmp/beta-security-pg-oauth.log",
+      "sha256": "b175944fd6d254633469f610002726229b39ab7e0617f30376313b1708d6add4"
+    },
+    {
+      "path": "/tmp/beta-security-final-offline-tests.log",
+      "sha256": "a52ac08bb5ac0c5ce78a6d8bda8878888d75a1b417d0168da024eeb673e7eb44"
+    },
+    {
+      "path": "/tmp/beta-security-fresh-offline.log",
+      "sha256": "779949c35d40be149e849a66820ffc867c7862e6b6c3ec7b5f37ea057a079922"
+    },
+    {
+      "path": "/tmp/beta-security-classic-descriptor.log",
+      "sha256": "e0666ba56b2d863edaf102af568b82097a44bec7a552f54253dc7a1bd75fcc55"
+    }
+  ],
+  "log_retention": "Local /tmp diagnostic logs are not committed build output; raw scanner reports and descriptors are committed unchanged. Logs may expire; structured results and report hashes are durable evidence, not a delivery receipt."
+}

@@ -112,7 +112,7 @@ def registry_record(reference: str, platform: str) -> dict[str, str]:
         )
     )
     digest = reference.split("@")[1]
-    if descriptor["digest"] != digest:
+    if platform != "linux/amd64" or descriptor["digest"] != digest:
         raise ValueError("registry digest mismatch")
     native = [
         m
@@ -120,7 +120,16 @@ def registry_record(reference: str, platform: str) -> dict[str, str]:
         if m.get("platform", {}).get("os") == "linux"
         and m.get("platform", {}).get("architecture") == "amd64"
     ]
-    if len(native) != 1:
+    if (
+        len(native) != 1
+        or not DIGEST.fullmatch(native[0]["digest"])
+        or native[0]["digest"] == digest
+        or any(
+            m.get("platform", {}).get("architecture") not in {"amd64", "unknown"}
+            or m.get("platform", {}).get("os") not in {"linux", "unknown"}
+            for m in descriptor["manifests"]
+        )
+    ):
         raise ValueError("expected one native platform descriptor")
     return {
         "reference": reference,
@@ -260,6 +269,148 @@ def run_artifact_smoke(artifact: Path, local: bool, log: IO[str] | None = None) 
         raise subprocess.CalledProcessError(status, command)
 
 
+def saved_descriptors(
+    saved: tarfile.TarFile, configuration_digest: str, reference: str | None = None
+) -> dict[str, Any]:
+    """Retain hash-checked OCI descriptors binding the exported bytes to native/config IDs."""
+
+    def document(name: str) -> dict[str, Any]:
+        member = saved.extractfile(name)
+        if member is None:
+            raise ValueError("missing saved-image descriptor: " + name)
+        data = member.read()
+        if (
+            name.startswith("blobs/sha256/")
+            and hashlib.sha256(data).hexdigest() != name.split("/")[-1]
+        ):
+            raise ValueError("saved-image descriptor digest mismatch")
+        result = json.loads(data)
+        if not isinstance(result, dict):
+            raise ValueError("invalid saved-image descriptor")
+        return result
+
+    def blob(digest: str) -> dict[str, Any]:
+        if not DIGEST.fullmatch(digest):
+            raise ValueError("invalid descriptor digest")
+        return document("blobs/sha256/" + digest.removeprefix("sha256:"))
+
+    if "index.json" not in saved.getnames():
+        # Classic Docker saves config/layers without OCI descriptors. Registry release
+        # inputs still have an authoritative index/native manifest to bind those bytes.
+        if not reference or "@" not in reference:
+            raise ValueError("OCI image store required for local descriptor retention")
+        repository, index_digest = reference.split("@")
+
+        def registry_blob(digest: str) -> dict[str, Any]:
+            if not DIGEST.fullmatch(digest):
+                raise ValueError("invalid registry descriptor digest")
+            data = subprocess.check_output(
+                ["docker", "buildx", "imagetools", "inspect", repository + "@" + digest, "--raw"]
+            )
+            # The CLI terminates its raw JSON output with a display newline.
+            candidates = (data, data.removesuffix(b"\n"))
+            payload = next(
+                (
+                    value
+                    for value in candidates
+                    if "sha256:" + hashlib.sha256(value).hexdigest() == digest
+                ),
+                None,
+            )
+            if payload is None:
+                raise ValueError("registry descriptor digest mismatch")
+            result = json.loads(payload)
+            if not isinstance(result, dict):
+                raise ValueError("invalid registry descriptor")
+            return result
+
+        index = registry_blob(index_digest)
+        blob = registry_blob
+    else:
+        roots = document("index.json")["manifests"]
+        if len(roots) != 1:
+            raise ValueError("expected one exported image index")
+        index_digest = roots[0]["digest"]
+        index = blob(index_digest)
+    native = [
+        m
+        for m in index["manifests"]
+        if m.get("platform") == {"os": "linux", "architecture": "amd64"}
+    ]
+    if len(native) != 1:
+        raise ValueError("expected one exported native platform")
+    platform_digest = native[0]["digest"]
+    platform = blob(platform_digest)
+    if platform["config"]["digest"] != configuration_digest:
+        raise ValueError("native manifest/config identity mismatch")
+    return {
+        "index_digest": index_digest,
+        "platform_digest": platform_digest,
+        "configuration_digest": configuration_digest,
+        "index": index,
+        "native_manifest": platform,
+    }
+
+
+def validate_scan(
+    report: dict[str, Any], configuration_digest: str, service: str | None = None
+) -> None:
+    """A successful process alone cannot authorize an empty, stale or suppressed scan."""
+    results = report.get("Results")
+    if (
+        report.get("SchemaVersion") != 2
+        or report.get("ArtifactType") != "container_image"
+        or report.get("Metadata", {}).get("ImageID") != configuration_digest
+        or not isinstance(results, list)
+        or not any(r.get("Class") == "os-pkgs" and r.get("Packages") for r in results)
+        or report.get("ExperimentalModifiedFindings")
+    ):
+        raise ValueError("incomplete or mismatched security report")
+    expected = {
+        "backend": (
+            "python-pkg",
+            {"fastapi", "florabase-backend", "pillow", "psycopg-binary", "sqlalchemy"},
+        ),
+        "frontend": ("alpine", {"nginx"}),
+        "postgresql": ("gobinary", {"github.com/tianon/gosu", "stdlib"}),
+    }
+    if service in expected:
+        kind, packages = expected[service]
+        observed = {
+            package["Name"].lower()
+            for result in results
+            if result.get("Type") == kind
+            for package in result.get("Packages", [])
+        }
+        if not packages <= observed:
+            raise ValueError("incomplete security package inventory: " + str(service))
+    for result in results:
+        if (
+            result.get("ExperimentalModifiedFindings")
+            or result.get("Misconfigurations")
+            or result.get("Secrets")
+            or result.get("Vulnerabilities")
+        ):
+            raise ValueError("security report contains blocking findings")
+
+
+def validate_release_assets(release: dict[str, Any], output: Path) -> None:
+    """Require a complete private draft, including byte-bound evidence, before publication."""
+    files = {p.name: p for p in output.iterdir() if p.is_file()}
+    assets = release.get("assets", [])
+    if release.get("draft") is not True or len(assets) != len(files):
+        raise ValueError("incomplete draft release")
+    if {a["name"] for a in assets} != set(files):
+        raise ValueError("draft release asset names differ")
+    for asset in assets:
+        data = files[asset["name"]].read_bytes()
+        if (
+            asset.get("size") != len(data)
+            or asset.get("digest") != "sha256:" + hashlib.sha256(data).hexdigest()
+        ):
+            raise ValueError("draft release asset digest/size mismatch")
+
+
 def scan_images(refs: dict[str, str], output: Path, scanner: str) -> None:
     """Scan exact local bytes, retain every verdict, and retire owned scanner containers."""
     output = output.resolve()
@@ -303,6 +454,9 @@ def scan_images(refs: dict[str, str], output: Path, scanner: str) -> None:
                     scanner,
                     "image",
                     "--quiet",
+                    "--ignorefile",
+                    "/dev/null",
+                    "--show-suppressed",
                     "--cache-dir",
                     "/cache",
                     "--input",
@@ -330,20 +484,33 @@ def scan_images(refs: dict[str, str], output: Path, scanner: str) -> None:
                 identity["configuration_digest"] = (
                     "sha256:" + hashlib.sha256(config_member.read()).hexdigest()
                 )
+                descriptors = saved_descriptors(saved, identity["configuration_digest"], ref)
+                inspected_digest = (inspected.get("Descriptor") or {}).get("digest")
+                if inspected_digest and inspected_digest != descriptors["index_digest"]:
+                    raise ValueError("exported image index differs from inspected identity")
+                if "@" in ref and ref.split("@")[-1] != descriptors["index_digest"]:
+                    raise ValueError(
+                        "exported image index differs from selected registry reference"
+                    )
+                (output / (service + "-descriptors.json")).write_text(
+                    json.dumps(descriptors, indent=2) + "\n"
+                )
             (output / (service + "-identity.json")).write_text(
                 json.dumps(identity, indent=2) + "\n"
             )
+            report_path = output / (service + "-security.json")
+            if report_path.exists():
+                raise ValueError(
+                    "refuse to overwrite original security report: " + str(report_path)
+                )
             try:
                 result = subprocess.run(command, check=False)
-                report_path = output / (service + "-security.json")
-                if (
-                    report_path.exists()
-                    and read(report_path).get("Metadata", {}).get("ImageID")
-                    != identity["configuration_digest"]
-                ):
-                    raise ValueError("security report does not match saved image configuration")
+                try:
+                    validate_scan(read(report_path), identity["configuration_digest"], service)
+                except (ValueError, OSError, TypeError, KeyError, AttributeError) as error:
+                    failures.append(service + ": " + str(error))
                 if result.returncode:
-                    failures.append(service)
+                    failures.append(service + ": scanner exit " + str(result.returncode))
             finally:
                 archive.unlink(missing_ok=True)
     if failures:

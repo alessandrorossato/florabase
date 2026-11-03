@@ -1,0 +1,15 @@
+{
+  "reference": "florabase-verification-build-3733d98a2e99-backend",
+  "image_inspect_id": "sha256:ccc3c58e1a54f1329bf2af63c9be8b980069b25c3fdda492b6dfaf77307d9fa4",
+  "descriptor": {
+    "mediaType": "application/vnd.oci.image.index.v1+json",
+    "digest": "sha256:ccc3c58e1a54f1329bf2af63c9be8b980069b25c3fdda492b6dfaf77307d9fa4",
+    "size": 856
+  },
+  "repo_digests": [
+    "florabase-verification-build-3733d98a2e99-backend@sha256:ccc3c58e1a54f1329bf2af63c9be8b980069b25c3fdda492b6dfaf77307d9fa4"
+  ],
+  "os": "linux",
+  "architecture": "amd64",
+  "configuration_digest": "sha256:cc8348656bcb3b1dc019633c19238e3681e39b65712717c767443f69634703ad"
+}

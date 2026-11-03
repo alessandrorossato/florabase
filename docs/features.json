@@ -2284,6 +2284,22 @@
       "status": "in_progress"
     },
     {
+      "id": "BETA-SECURITY-001",
+      "category": "security",
+      "description": "Remediate beta image vulnerabilities and harden explicitly authorized GHCR release security without weakening gates",
+      "acceptance_criteria": [
+        "Original and rebuilt exact-image HIGH/CRITICAL inventories, fix availability and runtime applicability are retained; compatible digest-pinned application base updates pass targeted tests and artifact-only smoke while PostgreSQL maintenance remains separate",
+        "Release tooling rejects unsafe executable caches, scans fail closed on incomplete evidence, protected CI/release identities and immutable attestations are verified, and interrupted publication cannot claim a complete release",
+        "Remaining findings and any advisory-specific expiring VEX proposal require explicit operator acceptance before use; protected environment and publication prerequisites are documented without remote mutation",
+        "Independent QA authorizes canonical FULL before verification and operator delivery; no push, publication or deployment occurs in implementation"
+      ],
+      "dependencies": [
+        "BETA-IMAGE-001"
+      ],
+      "priority": "P0",
+      "status": "in_progress"
+    },
+    {
       "id": "BETA-RUNTIME-001",
       "category": "operations",
       "description": "Provide a versioned image-only Dockhand beta runtime with tested persistence, backup and upgrade recovery",

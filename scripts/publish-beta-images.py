@@ -6,11 +6,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 import shutil
 import subprocess
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from beta_release import (
     SOURCE,
@@ -23,24 +23,48 @@ from beta_release import (
 )
 
 
+def require_publication_identity(sha: str) -> None:
+    if (
+        os.environ.get("GITHUB_ACTIONS") != "true"
+        or os.environ.get("GITHUB_REF") != "refs/heads/main"
+        or sha != os.environ.get("GITHUB_SHA")
+        or os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch"
+        or os.environ.get("GITHUB_REPOSITORY") != SOURCE.removeprefix("https://github.com/")
+        or os.environ.get("GITHUB_WORKFLOW_REF")
+        != SOURCE.removeprefix("https://github.com/")
+        + "/.github/workflows/beta-images.yml@refs/heads/main"
+        or os.environ.get("RUNNER_ENVIRONMENT") != "github-hosted"
+        or os.environ.get("APPROVED_SHA") != sha
+        or run("git", "status", "--porcelain")
+    ):
+        raise ValueError("publication only runs in protected manual CI at the workflow commit")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     locked = inputs(Path.cwd(), publication=True)
     sha = run("git", "rev-parse", "HEAD")
-    if (
-        os.environ.get("GITHUB_ACTIONS") != "true"
-        or os.environ.get("GITHUB_REF") != "refs/heads/main"
-        or sha != os.environ.get("GITHUB_SHA")
-        or os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch"
-    ):
-        raise ValueError("publication only runs in protected manual CI at the workflow commit")
+    require_publication_identity(sha)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     repository = os.environ["GITHUB_REPOSITORY"].lower()
-    if not re.fullmatch(r"[a-z0-9_.-]+/[a-z0-9_.-]+", repository):
-        raise ValueError("invalid repository")
+    subprocess.run(["python3", "scripts/beta-release-checks.py"], check=True)
+    state: dict[str, Any] = {
+        "source_sha": sha,
+        "version": locked["version"],
+        "run_id": os.environ["GITHUB_RUN_ID"],
+        "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+        "phase": "preflight",
+        "images": {},
+    }
+
+    def checkpoint(phase: str) -> None:
+        state["phase"] = phase
+        (output / "publication-state.json").write_text(json.dumps(state, indent=2) + "\n")
+
+    checkpoint("preflight")
     refs = {}
     version = locked["version"]
     builder = "beta-" + os.environ["GITHUB_RUN_ID"] + "-" + os.environ["GITHUB_RUN_ATTEMPT"]
@@ -139,6 +163,8 @@ def main() -> None:
             )
             digest = json.loads(metadata.read_text())["containerimage.digest"]
             refs[service] = image + "@" + digest
+            state["images"][service] = refs[service]
+            checkpoint(service + "_candidate_pushed")
         value = manifest(Path.cwd(), refs, local=False)
         manifest_path = output / "release-manifest.json"
         manifest_path.write_text(json.dumps(value, indent=2) + "\n")
@@ -147,6 +173,7 @@ def main() -> None:
         for ref in scan_refs.values():
             subprocess.run(["docker", "pull", "--platform", "linux/amd64", ref], check=True)
         scan_images(scan_refs, output, locked["scanner"])
+        checkpoint("security_passed")
         # Tools travel with the artifact; runtime execution has no local checkout or source bind.
         with tempfile.TemporaryDirectory(prefix="beta-artifact-only-") as temporary:
             artifact = Path(temporary)
@@ -168,6 +195,7 @@ def main() -> None:
             shutil.copyfile(manifest_path, artifact / manifest_path.name)
             with (output / "image-smoke.log").open("w") as log:
                 run_artifact_smoke(artifact, local=False, log=log)
+        checkpoint("smoke_passed")
         subprocess.run(
             [
                 "git",
@@ -180,7 +208,7 @@ def main() -> None:
             ],
             check=True,
         )
-        for ref in refs.values():
+        for service, ref in refs.items():
             subprocess.run(
                 [
                     "docker",
@@ -208,9 +236,15 @@ def main() -> None:
             )
             if promoted["digest"] != registry_record(ref, "linux/amd64")["index_digest"]:
                 raise ValueError("promotion changed immutable image identity")
+            checkpoint(service + "_version_promoted")
         (output / "RELEASE.md").write_text(
             f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair passed native amd64 registry-pull smoke and HIGH/CRITICAL vulnerability and secret checks. PostgreSQL is separately pinned. This is image distribution, not real-host deployment or beta admission. Never overwrite this release or delete its image identities.\n"
         )
+        checkpoint("pair_promoted_requires_attestation_and_release")
+        with Path(os.environ["GITHUB_OUTPUT"]).open("a") as outputs:
+            for service, ref in refs.items():
+                name, digest = ref.split("@")
+                outputs.write(f"{service}_name={name}\n{service}_digest={digest}\n")
     finally:
         subprocess.run(["docker", "buildx", "rm", builder], check=False)
         subprocess.run(["docker", "logout", "ghcr.io"], check=False)

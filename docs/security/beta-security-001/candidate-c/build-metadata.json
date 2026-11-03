@@ -1,0 +1,186 @@
+{
+  "backend": {
+    "buildx.build.provenance": {
+      "builder": {
+        "id": ""
+      },
+      "buildType": "https://mobyproject.org/buildkit@v1",
+      "materials": [
+        {
+          "uri": "pkg:docker/docker/dockerfile@1.7?digest=sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e&platform=linux%2Famd64",
+          "digest": {
+            "sha256": "a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e"
+          }
+        },
+        {
+          "uri": "pkg:docker/docker/dockerfile@1.7?digest=sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e",
+          "digest": {
+            "sha256": "a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e"
+          }
+        },
+        {
+          "uri": "pkg:docker/python@3.14-alpine?digest=sha256:eb2c62658b8d51bff0acc408504b76521d02030de56a8a3c1e830083e89b89d2&platform=linux%2Famd64",
+          "digest": {
+            "sha256": "eb2c62658b8d51bff0acc408504b76521d02030de56a8a3c1e830083e89b89d2"
+          }
+        }
+      ],
+      "invocation": {
+        "configSource": {
+          "entryPoint": "Dockerfile"
+        },
+        "parameters": {
+          "frontend": "gateway.v0",
+          "args": {
+            "build-arg:REVISION": "f0d24224cf0eae32cc8670aeab54a67d53a2c723",
+            "build-arg:SOURCE_DATE_EPOCH": "1793708785",
+            "build-arg:VERSION": "0.1.0-beta.1",
+            "cmdline": "docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e",
+            "label:com.docker.compose.project": "florabase-verification-build-7bc2127c918e",
+            "label:io.florabase.workflow.lifecycle": "verification-build",
+            "label:io.florabase.workflow.owner": "7bc2127c918e4c9992680831ca5f8b8c",
+            "label:io.florabase.workflow.source": "/home/alessandro/Desktop/github/florabase-worktrees/beta-security-001",
+            "source": "docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e",
+            "target": "runtime"
+          },
+          "locals": [
+            {
+              "name": "context"
+            },
+            {
+              "name": "dockerfile"
+            }
+          ],
+          "root": {
+            "configSource": {
+              "path": "Dockerfile"
+            },
+            "request": {
+              "args": {
+                "build-arg:REVISION": "f0d24224cf0eae32cc8670aeab54a67d53a2c723",
+                "build-arg:SOURCE_DATE_EPOCH": "1793708785",
+                "build-arg:VERSION": "0.1.0-beta.1",
+                "label:com.docker.compose.project": "florabase-verification-build-7bc2127c918e",
+                "label:io.florabase.workflow.lifecycle": "verification-build",
+                "label:io.florabase.workflow.owner": "7bc2127c918e4c9992680831ca5f8b8c",
+                "label:io.florabase.workflow.source": "/home/alessandro/Desktop/github/florabase-worktrees/beta-security-001",
+                "target": "runtime",
+                "vcs:localdir:context": "backend",
+                "vcs:localdir:dockerfile": "backend",
+                "vcs:revision": "f0d24224cf0eae32cc8670aeab54a67d53a2c723",
+                "vcs:source": "https://github.com/alessandrorossato/florabase"
+              }
+            }
+          },
+          "compatibilityVersion": 30
+        },
+        "environment": {
+          "platform": "linux/amd64"
+        }
+      }
+    },
+    "buildx.build.ref": "default/default/u32urchwapb0atgsa7s8bht4l",
+    "containerimage.descriptor": {
+      "mediaType": "application/vnd.oci.image.index.v1+json",
+      "digest": "sha256:feea846206315953ad525db48164b9b5a89670784d304bdb265381f2ecfcf6fc",
+      "size": 856
+    },
+    "containerimage.digest": "sha256:feea846206315953ad525db48164b9b5a89670784d304bdb265381f2ecfcf6fc",
+    "image.name": "docker.io/library/florabase-verification-build-7bc2127c918e-backend:latest"
+  },
+  "frontend": {
+    "buildx.build.provenance": {
+      "builder": {
+        "id": ""
+      },
+      "buildType": "https://mobyproject.org/buildkit@v1",
+      "materials": [
+        {
+          "uri": "pkg:docker/docker/dockerfile@1.7?digest=sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e&platform=linux%2Famd64",
+          "digest": {
+            "sha256": "a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e"
+          }
+        },
+        {
+          "uri": "pkg:docker/docker/dockerfile@1.7?digest=sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e",
+          "digest": {
+            "sha256": "a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e"
+          }
+        },
+        {
+          "uri": "pkg:docker/node@24.19.0-bookworm-slim?digest=sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df&platform=linux%2Famd64",
+          "digest": {
+            "sha256": "a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df"
+          }
+        },
+        {
+          "uri": "pkg:docker/nginxinc/nginx-unprivileged@stable-alpine-slim?digest=sha256:5d8bb9437d74a600ec5dbf90c035451c724dc33eac8d3a71078f6f8612c345f6&platform=linux%2Famd64",
+          "digest": {
+            "sha256": "5d8bb9437d74a600ec5dbf90c035451c724dc33eac8d3a71078f6f8612c345f6"
+          }
+        }
+      ],
+      "invocation": {
+        "configSource": {
+          "entryPoint": "Dockerfile"
+        },
+        "parameters": {
+          "frontend": "gateway.v0",
+          "args": {
+            "build-arg:REVISION": "f0d24224cf0eae32cc8670aeab54a67d53a2c723",
+            "build-arg:SOURCE_DATE_EPOCH": "1793708785",
+            "build-arg:VERSION": "0.1.0-beta.1",
+            "cmdline": "docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e",
+            "label:com.docker.compose.project": "florabase-verification-build-7bc2127c918e",
+            "label:io.florabase.workflow.lifecycle": "verification-build",
+            "label:io.florabase.workflow.owner": "7bc2127c918e4c9992680831ca5f8b8c",
+            "label:io.florabase.workflow.source": "/home/alessandro/Desktop/github/florabase-worktrees/beta-security-001",
+            "source": "docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e",
+            "target": "runtime"
+          },
+          "locals": [
+            {
+              "name": "context"
+            },
+            {
+              "name": "dockerfile"
+            }
+          ],
+          "root": {
+            "configSource": {
+              "path": "Dockerfile"
+            },
+            "request": {
+              "args": {
+                "build-arg:REVISION": "f0d24224cf0eae32cc8670aeab54a67d53a2c723",
+                "build-arg:SOURCE_DATE_EPOCH": "1793708785",
+                "build-arg:VERSION": "0.1.0-beta.1",
+                "label:com.docker.compose.project": "florabase-verification-build-7bc2127c918e",
+                "label:io.florabase.workflow.lifecycle": "verification-build",
+                "label:io.florabase.workflow.owner": "7bc2127c918e4c9992680831ca5f8b8c",
+                "label:io.florabase.workflow.source": "/home/alessandro/Desktop/github/florabase-worktrees/beta-security-001",
+                "target": "runtime",
+                "vcs:localdir:context": "frontend",
+                "vcs:localdir:dockerfile": "frontend",
+                "vcs:revision": "f0d24224cf0eae32cc8670aeab54a67d53a2c723",
+                "vcs:source": "https://github.com/alessandrorossato/florabase"
+              }
+            }
+          },
+          "compatibilityVersion": 30
+        },
+        "environment": {
+          "platform": "linux/amd64"
+        }
+      }
+    },
+    "buildx.build.ref": "default/default/jy3u63q0kej5fks33vdzj6htf",
+    "containerimage.descriptor": {
+      "mediaType": "application/vnd.oci.image.index.v1+json",
+      "digest": "sha256:c5c7647f30cfdfa01dfea9d3b0d14f4ab152a891ccb8b5c270b32cd87e5ecb93",
+      "size": 856
+    },
+    "containerimage.digest": "sha256:c5c7647f30cfdfa01dfea9d3b0d14f4ab152a891ccb8b5c270b32cd87e5ecb93",
+    "image.name": "docker.io/library/florabase-verification-build-7bc2127c918e-frontend:latest"
+  }
+}

@@ -1,3 +1,5 @@
+Current application remediation and release-security candidate: [BETA-SECURITY-001](beta-security-001.md). Its current evidence supersedes the historical application counts and host-measurement gaps below; publication remains blocked.
+
 Current reliability correction and fresh official smoke/security evidence: [final reliability handoff](beta-image-001-final-reliability.md).
 
 Current delta QA, remediation batches and remaining registry/security blockers: [QA corrections](beta-image-001-qa-corrections.md).

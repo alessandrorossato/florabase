@@ -17,7 +17,7 @@ from http.cookies import SimpleCookie
 from pathlib import Path
 from typing import Any
 
-from beta_release import read, run, validate_manifest
+from beta_release import read, registry_record, run, validate_manifest
 from workflow_resources import Disposable, Owner
 
 ORIGIN = "https://beta-image.invalid"
@@ -60,6 +60,8 @@ def smoke(manifest: dict[str, Any], local: bool = False) -> None:
             ):
                 raise ValueError("PostgreSQL platform digest mismatch")
             continue
+        if not local and registry_record(reference, native) != manifest["images"][service]:
+            raise ValueError("application platform/index identity mismatch")
         labels = image["Config"]["Labels"]
         for key, expected in {
             "version": manifest["version"],
@@ -109,8 +111,20 @@ def smoke(manifest: dict[str, Any], local: bool = False) -> None:
                 "environment": backend_env,
                 "volumes": ["media:/var/lib/florabase/attachments"],
                 "init": True,
+                "read_only": True,
+                "cap_drop": ["ALL"],
+                "security_opt": ["no-new-privileges:true"],
+                "tmpfs": ["/tmp:rw,noexec,nosuid,size=64m"],
             },
-            "frontend": {"image": images["frontend"], "ports": ["127.0.0.1::8080"], "init": True},
+            "frontend": {
+                "image": images["frontend"],
+                "ports": ["127.0.0.1::8080"],
+                "init": True,
+                "read_only": True,
+                "cap_drop": ["ALL"],
+                "security_opt": ["no-new-privileges:true"],
+                "tmpfs": ["/tmp:rw,noexec,nosuid,size=64m"],
+            },
         }
         for service in services.values():
             service.update(labels=labels, platform=native, networks=["isolated"])
