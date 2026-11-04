@@ -7201,3 +7201,21 @@ Status remains implemented pending canonical verification.
 - Checks: typecheck, lint, Prettier, production build. The full frontend suite passed 1153/1153 in three serial runs; main `d94f275` passed 1145/1145 three times. Three earlier branch runs under concurrent capture load each showed one different focus/timing intermittent (UX004, StoredMaterial, Schedule); none reproduced in isolation or serially. Recorded for independent review.
 - Evidence: 70 images at `ecadaf3` (manifests in `docs/design/florabase-next/m1/`). Field Ledger light, dark and tablet show no control below 40px desktop or 44px touch and no console errors. Botanical preservation is 33/37 pixel-identical to the baseline; Settings differs as intended, dashboard and Geography are capture noise, and the Collection origins zoom glyph difference (131 px) is unexplained. Baseline 149/149 hashes intact.
 - Pre-existing findings on main, not changed: Leaflet zoom buttons are 30px, and lazy `geography.css` changes directory breadcrumb spacing after a Geography visit. Canonical FULL not run; no push, PR or merge. Stopped at the M1 checkpoint.
+
+### UI-REDESIGN-EXPLORATION-001 — M2 Workbench shell and navigation, 4 November 2026
+
+- Commit `307611b`, frontend only. New `frontend/src/shell/`: the navigation model (six workspaces, every section once, existing sub-views as deep links, shared creation actions), `WorkbenchShell`, `CommandPalette` and scoped `workbench.css`.
+  - **Rail:** a workspace tablist that previews sections without navigating.
+  - **Context panel:** Search, New, sections and sub-views, account, and a hide option.
+  - **Palette:** Ctrl/⌘K or `/`, over sections, creation routes and records from the existing `/api/v1/search`, with loading, empty and error states.
+  - **Mobile:** a header section strip, a workspace bottom bar with section sheets, and an account sheet.
+- Routes, deep links, history, auth and the unsaved-changes guard are kept. `App.tsx` routes all shell navigation through one guarded `navigateTo`, and the shell keeps the existing page layout contract.
+- Fixed from M1: the lazily loaded duplicate breadcrumb rules in `geography.css`, and the 30px Leaflet zoom buttons. Removed about 620 lines of dead sidebar CSS, the resize handle and the collapsed-groups preference.
+- Tests: the shared `test/navigation.ts` helper; old sidebar tests replaced with Workbench equivalents (destinations, panel preview/hide/reopen, tablist keyboard, malformed preference); 10 new shell tests.
+- Checks: typecheck, ESLint, Prettier and production build pass. The full frontend suite passed 1164/1164 on the committed tree three times (one in-session run and two serial runs). No intermittent failure was observed in M2; the earlier M1 focus/timing intermittents stay tracked and unclassified.
+- Evidence (UAT Preview, synthetic fixture), manifests in `docs/design/florabase-next/m2/`:
+  - Field Ledger light: 43 captures over 12 routes at 1440/1024/390 plus palette, preview, New menu, sheets and keyboard focus. No control under 40px pointer or 44px touch, no console errors.
+  - Dark: 10 captures, same result.
+  - Botanical inside the shell: 7 captures; one 40px mobile filter chip, as on main.
+  - Six before/after composites are in `.florabase-next-evidence/m2-before-after/`.
+- Deviations from the concept are documented: the rail previews rather than navigates; no global top bar; no counts or saved views in the panel; Settings as a sixth workspace; Dashboard is unchanged until M3. The Collection origins glyph variance is superseded by the zoom resize and remains unexplained. Canonical FULL not run; no push, PR or merge. Stopped at the M2 checkpoint.

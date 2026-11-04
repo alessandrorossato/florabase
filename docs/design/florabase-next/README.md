@@ -82,8 +82,8 @@ network idle plus 900 ms.
 
 ## Milestone plan
 
-M0 baseline (done) → M1 Field Ledger foundation (done, awaiting checkpoint review) → M2 shell → M3
-Today and directories → M4 record detail → M5 quick create and QR → M6 remaining areas → M7
+M0 baseline (done) → M1 Field Ledger foundation (accepted) → M2 Workbench shell (done, awaiting
+checkpoint review) → M3 Today and directories → M4 record detail → M5 quick create and QR → M6 remaining areas → M7
 side-by-side comparison, regression report and recommendation. Checkpoints with the operator come
 after M1, M2, M4 and M7.
 
@@ -217,6 +217,147 @@ The baseline is unchanged: 149/149 images still match their committed hashes.
   check.
 - A browser that already stored a Botanical preference for `localhost:15174` keeps it; choose Field
   Ledger in Settings → Appearance.
+
+## M2: Workbench shell and navigation
+
+Commit `307611b` (implementation and tests), frontend only. No backend, API, schema, route, auth
+or data change. Field Ledger light and dark and the six UI Foundation themes all render inside the
+new shell; the shell reads only semantic and rail tokens.
+
+### Architecture
+
+| Path | Role |
+| ---- | ---- |
+| `shell/navigation.ts` | The single navigation model: six workspaces, every section once, existing sub-views as deep links (Plant groups, Stored material, Calendar, Collection origins, Species distribution, Native ranges), and the shared creation actions also used by Dashboard Quick add. |
+| `shell/WorkbenchShell.tsx` | Rail, context panel, mobile header strip, bottom bar, workspace and account sheets, the global shortcut. Owns no routing. |
+| `shell/CommandPalette.tsx` | Finder over sections, creation routes and records from the existing `/api/v1/search`. |
+| `shell/workbench.css` | Every rule scoped to `.wb-shell` or a `.wb-*` part, imported after the global sheets and before lazily loaded page CSS. |
+| `App.tsx` | Keeps route parsing, workspace rendering, the content region and its handlers. All shell navigation goes through one guarded `navigateTo(href)`: same unsaved-form confirmation as before, push or replace history, and a remount for same-section targets. 1029 → 621 lines. |
+| `test/navigation.ts` | `openSection(user, label)`: tests reach any section the way an operator does (the link if visible, otherwise the owning workspace tab first). |
+
+The shell keeps the existing layout contract: one sidebar grid item before `.app-content`, so every
+page's `.application-shell:has(…)` rule for full-height directories and document-flow pages applies
+unchanged, including the mobile `auto / 1fr` row.
+
+### Interaction model
+
+- **Rail = workspaces.** A vertical `tablist` (Today, Collection, Activity, Explore, Sourcing and,
+  pinned at the bottom, Settings). Selecting a tab previews that workspace's sections in the panel
+  **without navigating**, like an activity bar, so browsing workspaces never loads a page or adds
+  history. Arrow keys, Home and End move a roving tab stop. A dot and the accessible suffix
+  ", current location" mark the workspace of the open page. Selecting the open workspace again hides
+  the panel, and the next navigation returns the panel to the page's workspace.
+- **Context panel = tabpanel.** Global tools (Search with the shortcut shown, and New with all nine
+  creation routes), the workspace title in Newsreader with a one-line summary, its sections and
+  sub-views with `aria-current="page"` on the exact view, and the account (signed-in owner, theme,
+  Hide panel, Sign out). The hidden state is a browser-local preference
+  (`florabase.workbench.panel-collapsed.v1`); corrupt values fall back to shown.
+- **Command palette.** Ctrl/⌘+K anywhere, or `/` outside text fields. Empty: Create and Go to (every
+  section and sub-view). Typed: Records (debounced, at most 8, server-built links), Go to, Create, and
+  "All results for …" into the existing filtered Dashboard search. Combobox with listbox semantics,
+  arrow keys and Enter, Escape, focus returned to the invoking control. Search loading and failure
+  are stated; on failure sections and actions keep working.
+- **Mobile (≤ 48rem).** The rail becomes a header (Florabase wordmark, search, account). The panel
+  becomes a scrollable strip of the current workspace's sections. A fixed bottom bar of the five
+  workspaces opens a sheet with that workspace's sections and sub-views. An account sheet holds
+  Settings, Labels, Import / Export, theme and Sign out.
+- **Tablet (48–75rem).** Rail and panel stay; the panel narrows to 15rem so content keeps
+  roughly the width the previous sidebar left.
+
+### Navigation and interaction coverage
+
+| Journey | Covered by |
+| ------- | ---------- |
+| Every former destination reachable, once, on desktop and through mobile sheets; each route sets URL, `aria-current`, heading and breadcrumb | `App.test.tsx` "Workbench workspaces, panels and mobile sheets retain every destination and route" |
+| Previewing a workspace does not navigate or remount; hide and reopen, focus return, persisted preference | "desktop context panel previews, hides and reopens without remounting the workspace" |
+| Tablist keyboard model; panel follows hash navigation | "workspace tabs support arrow keys and the panel follows activated routes" |
+| Malformed panel preference | "Workbench tolerates a malformed panel preference" (3 cases) |
+| Model completeness, sub-view current state, guarded and modified clicks, New menu, palette (shortcut, local results without network, record search with loading, results, keyboard choice, full-search link, failure, `/` ignored in fields), mobile sheets, account and sign-out busy state | `shell/WorkbenchShell.test.tsx`, 10 tests |
+| Legacy and canonical map aliases mark the right sub-view | `GeographyWorkspace.test.tsx` (6 cases) |
+| Existing screen suites (Seeds, Sowings, Plants, Settings, Labels, Import / Export, lazy loading, route transitions) | Unchanged behaviour assertions; navigation steps use `openSection` |
+
+### Verification at `307611b`
+
+| Check | Result |
+| ----- | ------ |
+| Typecheck, ESLint (0 warnings), Prettier, production build | pass |
+| Full frontend suite | 1164/1164: 1154 existing (some updated for the new shell) + 10 new shell tests. Serial reruns on the final tree are listed in progress.md |
+| Feature graph | valid |
+
+Canonical FULL was not run, as instructed.
+
+### Accessibility and responsive results
+
+- Measured on real renders (capture probe) with Field Ledger light: 43 captures over 12 routes at
+  1440, 1024 and 390, plus palette, workspace preview, New menu, workspace and account sheets, and
+  keyboard focus. **No control is below 40px with a fine pointer or 44px with touch, and there are no
+  console errors.** Dark: 10 captures, same result. Botanical inside the new shell: 7 captures with
+  no console errors; one 40px filter chip on mobile, as on main, because the six themes keep their
+  original compact sizing (M1).
+- ARIA: rail tablist with roving tabindex; panel tabpanel labelled by its tab; page titles keep
+  `h2` (the panel title is not a heading, so it never competes with a page title); palette
+  combobox with listbox, groups and `aria-activedescendant`; dialogs use the existing focus-trapping
+  `TaskDialog`; `aria-current="page"` on the exact view and `aria-current="true"` on the mobile
+  workspace of the open page; icon-only buttons are named ("Search and commands", "New record",
+  "Account and settings").
+- Forced colours: selected tab, current link and active option gain a `Highlight` outline. Print
+  hides the shell. No new motion.
+- Not covered: screen reader, real browser zoom, physical devices.
+
+### Before and after (real UAT Preview captures, same synthetic data)
+
+Before: `baseline-main-d94f275`. After: `m2-307611b-field-ledger-light`, `-dark` and
+`m2-307611b-botanical`. Manifests are in [`m2/`](m2/); images are in `.florabase-next-evidence/`.
+
+### Findings carried from M1
+
+| Finding | M2 outcome |
+| ------- | ---------- |
+| `geography.css` duplicated `breadcrumbs.css` and, loaded lazily, changed directory breadcrumb spacing app-wide after any Geography visit | **Fixed.** The duplicate is removed and `breadcrumbs.css` alone owns breadcrumb geometry. |
+| Leaflet zoom buttons were 30px in every theme (`.leaflet-touch .leaflet-bar a` outranked the app rule) | **Fixed.** The shared rule now matches that specificity: 40px with a pointer and 44px on touch under Field Ledger, 44px in the six themes. Verified on Collection origins. |
+| 131-pixel difference in the zoom glyphs on Collection origins | **Superseded, still unexplained.** The resize changes those pixels by design, so the M1 comparison no longer applies. Recheck in the Phase E side-by-side. |
+| Intermittent full-suite failures in focus/timing tests (UX004, StoredMaterial, Schedule) under concurrent load | **Still tracked, not classified.** None observed in the M2 full runs listed in progress.md. Main was clean in 3 of 3 runs in M1. |
+
+### Deviations from the Claude Design concept
+
+1. **The rail previews rather than navigates.** In the concept a rail click opened a workspace.
+   The activity-bar model avoids loading pages and history entries just to look around, and maps
+   directly onto the ARIA tabs pattern. Opening a section is one more click; the palette remains a
+   one-step route to any section.
+2. **No global top bar.** Search and New sit at the top of the context panel, because a separate
+   top bar would break the existing page layout contract (`.application-shell > .app-content`)
+   that full-height directories depend on. When the panel is hidden, a search button appears in the
+   rail.
+3. **No counts or saved views in the context column.** There is no endpoint with counts for every
+   section (the dashboard aggregate covers four active kinds), and saved views have no direct
+   route. Showing either would mean new API work or extra requests on every page, so they are
+   deferred rather than faked.
+4. **Settings is a sixth workspace** holding Settings, Labels and Import / Export, so the Tools are
+   discoverable without opening the Settings page.
+5. **Mobile bottom bar holds workspaces, not Today / Scan / Record.** Scan and record belong to M5
+   (QR and quick capture). Today is the first workspace.
+6. **Dashboard is unchanged** and keeps its own search and Quick add next to the panel's Search and
+   New; M3 replaces it with Today. The creation list is already shared.
+7. **The inspector, lineage strip and timeline** are not part of the shell; they arrive with the
+   directories and record detail in M3 and M4.
+
+### Removed and replaced
+
+- The flat grouped sidebar, its collapsed-groups preference
+  (`florabase.sidebar.collapsed-groups.v1`, now ignored), the resize handle
+  (`SidebarResizeHandle.tsx`, `sidebarWidth.ts`), and the mobile Home / Seeds / Sowings / Plants +
+  More bar.
+- About 620 lines of now-dead sidebar CSS across `styles.css`, `foundation.css`,
+  `normalization.css`, `controls.css` and four page sheets. Removal matched whole class tokens only;
+  live selectors in mixed lists were kept.
+
+### Outstanding for review
+
+- One more click to reach a section in another workspace (deviation 1). The palette mitigates
+  this, but it is a real change to habit.
+- Botanical, Herbarium and Mineral render the rail with their light `surface-subtle`, which is
+  coherent but less distinctive than Field Ledger's dark rail.
+- The page-level duplication of Search and Quick add on the Dashboard remains until M3.
 
 ## Separate proposals
 

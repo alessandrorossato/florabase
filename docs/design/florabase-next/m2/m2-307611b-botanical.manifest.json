@@ -1,0 +1,180 @@
+{
+  "label": "m2-307611b-botanical",
+  "origin": "http://localhost:15174",
+  "theme_preference": {
+    "palette": "botanical",
+    "appearance": "system"
+  },
+  "captured_at": "2026-11-04T12:59:44Z",
+  "viewports": {
+    "desktop": {
+      "width": 1440,
+      "height": 844
+    },
+    "tablet": {
+      "width": 1024,
+      "height": 844
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "blocked_external_hosts": [],
+  "resolved_ids": {
+    "seed_lot": "01a1a5e2-e9c1-70d3-aeeb-e6722419645a",
+    "sowing": "01a1a5e2-e9c6-7273-8287-0adacddbc2af",
+    "plant": "01a1a5e2-e9ca-74c2-9311-846a221fed7a",
+    "plant_group": "01a1a5e2-e9d0-70fb-97c1-fb2b805a1e7d",
+    "harvest": "01a1a5e2-e9d7-75f0-adc8-1602543773c1",
+    "location": "01a1a5e2-e9b1-77f8-aaff-4d8b8a90b429",
+    "identity": "01a1a5e2-e969-72d4-b009-84fda3772739",
+    "supplier": "01a1a5e2-e9af-74db-b2cb-def5563b3dea",
+    "order": "01a1a5e2-e9b9-744e-849a-a80effb14596"
+  },
+  "entries": [
+    {
+      "key": "dashboard",
+      "area": "Dashboard",
+      "route": "#/dashboard",
+      "viewport": "desktop",
+      "file": "dashboard-desktop.png",
+      "sha256": "7ba347cf5f1113682b848af2513baad650c81d2c94f4a88dc0546e7b4cd2121b",
+      "bytes": 131869,
+      "title": "Florabase",
+      "settled_ms": 2078,
+      "console_errors": [],
+      "probe": {
+        "palette": "botanical",
+        "appearance": "light",
+        "body_font": "\"Source Sans 3 Variable\"",
+        "control_height_token": "2.75rem",
+        "controls": 15,
+        "min_height": 44,
+        "below_target": 0,
+        "below_target_kinds": []
+      }
+    },
+    {
+      "key": "seeds",
+      "area": "Seeds",
+      "route": "#/seeds",
+      "viewport": "desktop",
+      "file": "seeds-desktop.png",
+      "sha256": "5d6c9e044d19257f574b459237e045aee77ab7002567dd4cbc613becf6fadacf",
+      "bytes": 137799,
+      "title": "Florabase",
+      "settled_ms": 907,
+      "console_errors": [],
+      "probe": {
+        "palette": "botanical",
+        "appearance": "light",
+        "body_font": "\"Source Sans 3 Variable\"",
+        "control_height_token": "2.75rem",
+        "controls": 50,
+        "min_height": 40,
+        "below_target": 0,
+        "below_target_kinds": []
+      }
+    },
+    {
+      "key": "plant-detail",
+      "area": "Details",
+      "route": "#/plants/{plant}",
+      "viewport": "desktop",
+      "file": "plant-detail-desktop.png",
+      "sha256": "c482aac316286940bd245998ef5c594bd68dae0f7d6181046e742b42e4916581",
+      "bytes": 109962,
+      "title": "Florabase",
+      "settled_ms": 906,
+      "console_errors": [],
+      "probe": {
+        "palette": "botanical",
+        "appearance": "light",
+        "body_font": "\"Source Sans 3 Variable\"",
+        "control_height_token": "2.75rem",
+        "controls": 20,
+        "min_height": 44,
+        "below_target": 0,
+        "below_target_kinds": []
+      }
+    },
+    {
+      "key": "shell-preview-explore",
+      "area": "Navigation",
+      "route": "#/seeds + shell-preview-explore",
+      "viewport": "desktop",
+      "file": "shell-preview-explore-desktop.png",
+      "sha256": "08a3aad4f76bee20541b8d183dbd68dc01abbc05b09bb681e66ab28e410461e8",
+      "bytes": 140033
+    },
+    {
+      "key": "dashboard",
+      "area": "Dashboard",
+      "route": "#/dashboard",
+      "viewport": "mobile",
+      "file": "dashboard-mobile.png",
+      "sha256": "09a23910757d6a31d421ad5380180b3dd3cf89c56644c7ba93df0723dc23ae07",
+      "bytes": 52178,
+      "title": "Florabase",
+      "settled_ms": 2112,
+      "console_errors": [],
+      "probe": {
+        "palette": "botanical",
+        "appearance": "light",
+        "body_font": "\"Source Sans 3 Variable\"",
+        "control_height_token": "2.75rem",
+        "controls": 11,
+        "min_height": 44,
+        "below_target": 0,
+        "below_target_kinds": []
+      }
+    },
+    {
+      "key": "seeds",
+      "area": "Seeds",
+      "route": "#/seeds",
+      "viewport": "mobile",
+      "file": "seeds-mobile.png",
+      "sha256": "1636eb879c588a537c908955cad36a71766b6c98a49bd1262b84526f704c0a4a",
+      "bytes": 52380,
+      "title": "Florabase",
+      "settled_ms": 907,
+      "console_errors": [],
+      "probe": {
+        "palette": "botanical",
+        "appearance": "light",
+        "body_font": "\"Source Sans 3 Variable\"",
+        "control_height_token": "2.75rem",
+        "controls": 46,
+        "min_height": 40,
+        "below_target": 1,
+        "below_target_kinds": [
+          "button.button--quiet.control-action"
+        ]
+      }
+    },
+    {
+      "key": "plant-detail",
+      "area": "Details",
+      "route": "#/plants/{plant}",
+      "viewport": "mobile",
+      "file": "plant-detail-mobile.png",
+      "sha256": "487d4f8ad4c718aa4ee78317016a8b59693cd96f2775c8e4256fb19957a04c12",
+      "bytes": 53811,
+      "title": "Florabase",
+      "settled_ms": 907,
+      "console_errors": [],
+      "probe": {
+        "palette": "botanical",
+        "appearance": "light",
+        "body_font": "\"Source Sans 3 Variable\"",
+        "control_height_token": "2.75rem",
+        "controls": 16,
+        "min_height": 44,
+        "below_target": 0,
+        "below_target_kinds": []
+      }
+    }
+  ]
+}

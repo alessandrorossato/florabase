@@ -107,6 +107,46 @@ ROUTES: list[tuple[str, str, str]] = [
     ("import-export", "Settings", "/import-export"),
 ]
 
+# Florabase Next shell interactions (key, viewport, route, steps). Each records a skip when its
+# control does not exist, so the same script also runs against main.
+def _palette(page: Page) -> None:
+    page.keyboard.press("Control+k")
+    page.wait_for_timeout(250)
+    page.keyboard.type("basil")
+    page.wait_for_timeout(1200)
+
+
+def _preview(page: Page) -> None:
+    page.get_by_role("tab", name="Explore").first.click()
+    page.wait_for_timeout(300)
+
+
+def _new_menu(page: Page) -> None:
+    page.get_by_role("button", name="New record").click()
+    page.wait_for_timeout(300)
+
+
+def _sheet(page: Page) -> None:
+    page.get_by_role("navigation", name="Mobile primary navigation").get_by_role(
+        "button", name="Collection"
+    ).click()
+    page.wait_for_timeout(400)
+
+
+def _account(page: Page) -> None:
+    page.get_by_role("button", name="Account and settings").click()
+    page.wait_for_timeout(400)
+
+
+INTERACTIONS = [
+    ("shell-palette", "desktop", "/dashboard", _palette),
+    ("shell-preview-explore", "desktop", "/seeds", _preview),
+    ("shell-new-menu", "desktop", "/seeds", _new_menu),
+    ("shell-palette", "mobile", "/seeds", _palette),
+    ("shell-workspace-sheet", "mobile", "/seeds", _sheet),
+    ("shell-account-sheet", "mobile", "/seeds", _account),
+]
+
 LISTS = {
     "seed_lot": "/api/v1/seed-lots",
     "sowing": "/api/v1/sowings",
@@ -241,6 +281,24 @@ def main() -> None:
                     entries.append({"key": "navigation-more", "area": "Navigation", "route": "#/dashboard + More",
                                     "viewport": vp_name, "file": file.name,
                                     "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)})
+            for key, view, route, steps in INTERACTIONS:
+                if view != vp_name or (ONLY_ROUTES and key not in ONLY_ROUTES):
+                    continue
+                page.goto(f"{ORIGIN}/#{route}")
+                page.reload()  # hash navigation alone would keep an earlier dialog open
+                settle(page)
+                try:
+                    steps(page)
+                except Exception as error:  # noqa: BLE001 - recorded, not hidden
+                    entries.append({"key": key, "viewport": vp_name, "skipped": str(error)[:160]})
+                    continue
+                file = OUT / f"{key}-{vp_name}.png"
+                page.screenshot(path=str(file))
+                data = file.read_bytes()
+                entries.append({"key": key, "area": "Navigation", "route": f"#{route} + {key}",
+                                "viewport": vp_name, "file": file.name,
+                                "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)})
+                page.keyboard.press("Escape")
             context.close()
         browser.close()
     manifest = {
