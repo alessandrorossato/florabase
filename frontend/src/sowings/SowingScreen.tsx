@@ -1,6 +1,7 @@
 import {
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -340,7 +341,11 @@ function Detail({
         ? initialTab
         : "overview",
   );
-  useEffect(() => {
+  // Canonicalize the legacy ?tab=propagation address in the same commit as the Lineage tab
+  // renders (before paint), so the address and the selected tab never disagree. As a passive
+  // effect this left a window in which the tab was selected but the address still said
+  // "propagation" (observed in 2 of 150 renders; M6 SowingScreen intermittent).
+  useLayoutEffect(() => {
     if (initialTab === "propagation")
       window.history.replaceState(
         null,

@@ -30,6 +30,7 @@ import {
 } from "./api";
 import { clearEntryRequest, hasEntryRequest } from "./entryRequest";
 import { useJournalReader } from "./journalReader";
+import { precisionGroups } from "../timeline/almanac";
 
 type TimelineState =
   | { status: "loading" }
@@ -207,6 +208,14 @@ export function EventJournal({
       filterKinds[filter].includes(event.kind),
     );
   }, [filter, timeline]);
+
+  // Consecutive entries sharing a recorded period start a group (see timeline/almanac.ts).
+  const periodStarts = new Map(
+    precisionGroups(visible).map((group) => [
+      group.entries[0].id,
+      group.heading,
+    ]),
+  );
 
   if (
     auth.state.status !== "authenticated" &&
@@ -450,9 +459,14 @@ export function EventJournal({
             <ol className="event-timeline" aria-label="Journal entries">
               {visible.map((item) => (
                 <li
-                  className={`event-item event-item--${item.kind}`}
+                  className={`event-item event-item--${item.kind}${periodStarts.has(item.id) ? " event-item--period" : ""}`}
                   key={item.id}
                 >
+                  {periodStarts.has(item.id) && (
+                    // The recorded period opens here; it says which part of the date was
+                    // not recorded (Ledger Folio). Read with the entry, not a separate item.
+                    <p className="event-period">{periodStarts.get(item.id)}</p>
+                  )}
                   <div className="event-marker" aria-hidden="true" />
                   <article className="event-card">
                     <EventTargetPhoto

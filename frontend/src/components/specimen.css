@@ -173,8 +173,14 @@
   font: 400 0.8125rem/1.45 var(--font-data);
   font-variant-numeric: tabular-nums;
 }
+/* Recorded values (dates, counts, quantities) use the data face; links and place paths use the
+   UI face so long names do not break into narrow monospace fragments. */
 .app-content .ui-detail-page .specimen-label dd :is(a, span) {
   font: inherit;
+}
+.app-content .ui-detail-page .specimen-label dd a {
+  font: var(--type-small);
+  font-weight: 500;
 }
 .app-content .ui-detail-page .specimen-label .specimen-label__unknown {
   color: var(--text-muted);

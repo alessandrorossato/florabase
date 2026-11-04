@@ -1286,3 +1286,67 @@
   min-block-size: 2.75rem;
   margin-block-end: var(--space-1);
 }
+
+/* M6 reference sheet: an identity is a reference, not a specimen, so it keeps its hub layout
+   but speaks the Specimen Sheet's language: a framed 4:5 plate for the identity cover, the
+   record-title scale for the name, and a ruled foot under the header. Tokens only. */
+.app-content .identity-reference-page .ui-detail-page .detail-header {
+  --detail-plate: 8.5rem;
+  padding-block-end: var(--space-4);
+  border-block-end: 1px solid var(--border-strong);
+}
+.app-content
+  .identity-reference-page
+  .ui-detail-page
+  .detail-identity:has(.detail-visual) {
+  grid-template-columns: var(--detail-plate) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: end;
+}
+.app-content
+  .identity-reference-page
+  .ui-detail-page
+  .detail-visual
+  .identity-header-visual {
+  width: var(--detail-plate);
+  height: calc(var(--detail-plate) * 1.25);
+  overflow: hidden;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+.app-content
+  .identity-reference-page
+  .ui-detail-page
+  .detail-visual
+  .identity-header-visual
+  :is(.identity-image, img) {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  object-fit: cover;
+}
+.app-content
+  .identity-reference-page
+  .ui-detail-page
+  .detail-header
+  :is(h2, h3) {
+  font: var(--type-record-title, var(--type-h1));
+  font-size: clamp(2rem, 1.4rem + 1.6vw, 3rem);
+  line-height: 1.05;
+}
+.app-content
+  .identity-reference-page
+  .ui-detail-page
+  .detail-header
+  .entity-common-name {
+  margin: var(--space-2) 0 0;
+  font: var(--type-body);
+  color: var(--text-muted);
+}
+@media (max-width: 40rem) {
+  .app-content .identity-reference-page .ui-detail-page .detail-header {
+    --detail-plate: 6rem;
+  }
+}

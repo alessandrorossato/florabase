@@ -7345,3 +7345,26 @@ Status remains implemented pending canonical verification.
   - Botanical: 40px controls at touch widths, from the original themes' pointer geometry (as since M1).
 - Open: R7 real-device QR, R10 measured contrast pass for new tint pairs, R11 manual screen reader/zoom/forced colours, the Journal tab's own precision grouping, the phone action dock.
 - Canonical FULL not run; no push, PR or merge. Stopped at the M6B checkpoint.
+
+### UI-REDESIGN-EXPLORATION-001 — M6 final refinement and visual review, 4 November 2026
+
+- Frontend only, on M6B.
+- Botanical identity reference sheet: framed 4:5 plate, record-title serif, ruled foot. Its hub layout is kept.
+- Journal tab precision periods (shared `precisionGroups`; one list item per entry, API order).
+- Specimen label: links and paths use the UI face; recorded values keep the data face.
+- Evaluated and declined, with reasons:
+  - phone action dock (duplicates the Record button);
+  - Today thumbnails (schedule targets carry no image);
+  - Record sheet recent chips (the shell's Recent holds sections, not records).
+- Accessibility (automated):
+  - every new text pair ≥ 5.58:1 and non-text marks ≥ 4.08:1, in light and dark;
+  - 45 Tab stops on a record, all with a visible focus indicator;
+  - 200% zoom: no horizontal overflow; 400% zoom: no element beyond the viewport (the 16 px reported on Seeds is the test browser's scrollbar);
+  - forced colours: no console errors.
+- Manual screen reader, real zoom, real high contrast and physical-device checks remain owed.
+- SowingScreen intermittent: mechanism proven (2 of 150 probe renders showed the tab selected before the address was canonical). Fixed in the app with `useLayoutEffect` (0 of 300 after). Not classified as pre-existing.
+- Four full runs before the fix: 1207/1207 each. Final tree: one run 1207/1207; one run had a new single failure in App "identity section keyboard navigation retains browser Back and Forward boundaries" (truncated hash mismatch; 20 of 20 isolated passes; not diagnosed; tracked).
+- Larger specimen images: an additive `display_url` rendition with `srcset` is recorded as a backend proposal; not implemented.
+- QR camera on Android: pending the operator.
+- Review: live UAT at http://localhost:15174 (`preview` / `preview`, synthetic). 16 numbered screenshots are in `.florabase-next-evidence/m6-final-review/` (manifest in `docs/design/florabase-next/m6-final/`).
+- Canonical FULL not run; no push, PR or merge. M7 not started.

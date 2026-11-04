@@ -801,7 +801,7 @@ restores the fixture.
 | R3 | Provenance repeating lineage | **Met.** The label states only the record's direct origin (kind of origin, and the direct source group or sowing as a link, so it stays reachable if lineage fails); indirect sources stay in the lineage sequence. | Plant tests; captures |
 | R4 | Phone directory header height | **Met.** First record at 264–296px instead of about 580px (390×844); no header control under 44px. | Probe in progress.md; phone captures |
 | R5 | Realistic multi-step lineage | **Met in UAT** (three steps, above); unit tests keep reversed, unlabelled and missing-source cases. | `three-step` captures |
-| R6 | MediaScreen intermittent | **Hardened, not reproduced.** The final focus assertion raced a passive effect (same mechanism as the StoredMaterial race) and now waits for the same focus. 0 of 32 stressed isolated runs failed before the change. Still tracked. | progress.md |
+| R6 | MediaScreen intermittent | **Hardened, not reproduced** (the separate SowingScreen intermittent was diagnosed and fixed in the M6 final pass). The final focus assertion raced a passive effect (same mechanism as the StoredMaterial race) and now waits for the same focus. 0 of 32 stressed isolated runs failed before the change. Still tracked. | progress.md |
 | R7 | Real-device QR camera acceptance | **Open: needs the operator** (Android phone over HTTPS or localhost, printed label). | — |
 | R8 | Almanac accessibility | **Met.** Axis `aria-hidden`; grouped lists carry every entry, its date text and its precision in words; the undated sentence is visible text; forced colours draw the marks. | `almanac.test.ts`, timeline tests |
 | R9 | Phone action dock | **Not built** (deviation 3); no overlap risk introduced. | — |
@@ -825,6 +825,164 @@ restores the fixture.
 6. **The Journal tab's own list is not regrouped yet.** The Almanac on Overview uses the
    precision groups; regrouping EventJournal's editable list is left for a follow-up to avoid
    changing its editing interactions now.
+
+## M6 final refinement and visual review
+
+Frontend only, on top of M6B. This is a refinement and review checkpoint, not M7.
+
+### Live UAT review environment
+
+- **Address:** http://localhost:15174 (isolated Compose project `florabase-uat-preview`; it serves
+  this worktree's frontend source live).
+- **Sign in:** the synthetic UAT fixture owner `preview` / `preview`. It is not a personal account,
+  and the data is synthetic.
+- **Theme:** Field Ledger is the branch default. Switch light and dark from the theme control in
+  the panel footer or the account sheet.
+- **Suggested review path:**
+  1. Today.
+  2. Collection → Plants → "Preview — Basil mother plant": dense record, photo, two-step lineage,
+     Almanac with month-only and undated entries.
+  3. "Preview — Basil seedling (extracted for M6B lineage check)": real three-step lineage.
+  4. Seeds → "Preview — Aloe unknown stock": sparse record, unknown quantity.
+  5. Sowings → "Preview — Spring basil tray".
+  6. Explore → Botanical identities → "Aloe vera": reference sheet.
+  7. Any record's Journal tab: precision periods.
+  8. The same pages at phone width, with the Record button.
+- The UAT data equals fixture v4 plus the M6B extracted Plant (the Basil seedlings group is
+  now 5 plants).
+
+### Representative screenshots
+
+`.florabase-next-evidence/m6-final-review/`, 16 images, numbered for review order:
+
+| # | View |
+| - | ---- |
+| 01, 03 | Plant, desktop, light and dark |
+| 02 | Real three-step lineage, desktop |
+| 04 | Seed lot (purchased, linked Order), desktop |
+| 05 | Sowing, desktop dark |
+| 06 | Botanical identity reference sheet, desktop |
+| 07 | Today, desktop |
+| 08, 09 | Plant (light) and Seed lot (dark), tablet 1024 |
+| 10, 11 | Plant (light) and Sowing (dark), phone 390 |
+| 12 | Seeds directory, phone (compact header) |
+| 13 | Botanical identity, phone dark |
+| 14 | Journal tab with precision periods |
+| 15 | Plant in forced colours |
+| 16 | Record sheet v2, phone |
+
+The full route sets are `m6b-353ea39-*` (144 images; manifests in [`m6b/`](m6b/)).
+
+### Visual review against the approved Direction A
+
+| Area | Finding | Action |
+| ---- | ------- | ------ |
+| Composition | The plate and label column with the record flowing on the right matches Direction A on Plant, Plant group, Seed lot, Sowing, Harvest, Order and Supplier. The Workbench panel narrows the right column at 1440 compared with the artboard (which had a rail only). | Kept; the panel can be hidden and the layout adapts. |
+| Typography | Label values were all in the monospace data face, so place paths and links broke into narrow fragments. | **Fixed:** links and paths use the UI face; recorded values (dates, counts, quantities) stay in the data face. |
+| Image rendering | The plate shows the API's thumbnail scaled up, which looks soft or pixelated. This is the weakest point against the artboard. | Approach documented below; not changed (it needs an additive backend rendition). |
+| Almanac | With little dated data (two or three months), the axis is sparse; on Seed lot it sits in a narrow second column. | Accepted for now. The axis only covers the dated range, so it never pads the window with invented months. |
+| Consistency | Botanical identity had no shared treatment. | **Done:** reference sheet (below). |
+| Whitespace | No excessive gaps found in the review set; the old empty "At a glance" bands are gone. | — |
+
+### Botanical identity: reference sheet
+
+An identity is a reference, not a physical specimen, so it keeps its hub layout (record navigation,
+overview, reference, taxonomy, maps, media, history). It now speaks the system's language: a framed
+4:5 plate for the identity cover, the record-title serif scale for the scientific name, and a ruled
+foot under the header. The styles are scoped to the identity page's own stylesheet.
+
+### Journal precision periods
+
+The Journal tab (EventJournal) now opens each recorded period with its precision, using the
+Almanac's `precisionGroups`: "November 2026", "March 2025 · day not recorded",
+"2024 · month not recorded", "Date not recorded". The period is plain text at the top of the
+period's first entry, so the list keeps one item per entry, filters keep working, and screen
+readers read the period with that entry. Groups follow the API's order and never re-sort.
+Covered by the Plant Journal test.
+
+### Evaluated, not implemented
+
+| Candidate | Decision |
+| --------- | -------- |
+| Phone action dock | **Not added.** The record's header actions are already on the first screen on phones, and the bottom bar's Record button opens the open record's own actions (Journal entry, germination, lineage, label) within thumb reach. A dock would duplicate that and compete with the bottom bar. |
+| Today thumbnails | **Not added.** Schedule targets carry no image, so thumbnails would need one extra request per record on every Today load. |
+| Record sheet recent chips | **Not added.** The shell's Recent list holds sections, not records; record-level recents would need new client tracking for a small gain, since the sheet already leads with the open record and has search. |
+
+### Accessibility evidence
+
+**Automated (performed):**
+- **Contrast**, WCAG 2.x formula, for every colour pair the new components use, in Field Ledger
+  light and dark:
+  - all text pairs ≥ 5.58:1 (minimum: muted on the lineage tint, light);
+  - lineage text on its tint 6.18:1 light, 6.90:1 dark;
+  - non-text marks ≥ 4.08:1 (requirement 3:1); the overdue ring is 4.48:1 in light.
+- **Keyboard:** 45 Tab presses through a Plant record at 1440. Every stop shows a visible focus
+  indicator (the one exception is focus returning to `<body>` at the end of the document). The order
+  is DOM order: back bar, breadcrumb, specimen label, then title, actions, lineage, tabs and panel.
+  Titles focused by navigation draw the ring only after keyboard use (M5).
+- **Browser zoom (emulated by CSS viewport):**
+  - 200% of 1440×900 (720 px wide): no horizontal overflow on Plant, Sowing, Seeds or Today.
+  - 400% of 1280×1024 (320 px): no element extends beyond the viewport. Seeds reports 16 px
+    `scrollWidth − clientWidth`, which is the 16 px classic vertical scrollbar of the test browser,
+    not content overflow.
+- **Forced colours** (Chromium `forced-colors: active`): Plant renders with no console errors;
+  Almanac marks use `CanvasText`. Screenshot 15.
+
+**Manual (not performed here, owed):** a screen reader pass (NVDA or VoiceOver), real browser zoom
+on a physical display, Windows High Contrast themes on real hardware, and touch on physical phones.
+
+### Larger specimen images: recommended approach
+
+Today the collection photo contract (`PrimaryPhotoResponse`) exposes only `thumbnail_url`. The
+original image is served by `GET /api/v1/collection-photos/local/{photo_id}`, but loading
+originals into every plate would download full camera files (often several MB) for a
+24rem-wide frame, so the frontend does not do that.
+
+Recommended, as a **separate backend proposal** (not implemented):
+1. Add a bounded *display* rendition, generated lazily and cached like thumbnails. For example,
+   1200 px on the long edge, JPEG or WebP, with the same authorization and cache headers.
+2. Expose it additively as an optional `display_url` on `PrimaryPhotoResponse`. Existing clients
+   are unaffected.
+3. Frontend: render the plate as
+   `<img src={thumbnail_url} srcset="{thumbnail_url} 320w, {display_url} 1200w" sizes="(min-width: 72rem) 24rem, (min-width: 50rem) 18rem, 100vw">`.
+   The browser then fetches the display rendition only for large or dense screens, and phones
+   keep the thumbnail.
+4. External references keep their cached thumbnail until the same rendition exists for them.
+
+### SowingScreen intermittent: diagnosed and fixed
+
+- **Observed:** "old Sowing propagation URL opens the canonical Lineage tab and empty summary"
+  failed once in 8 full-suite runs and never in 15 isolated runs. Four further full runs with
+  failure output preserved all passed, so the original message was never captured.
+- **Mechanism (in code from main, `a36c6cf`):** the Sowing screen sets the Lineage tab
+  synchronously, but it rewrote the legacy `?tab=propagation` address in a *passive* effect. The
+  test asserts the canonical address right after the selected tab appears.
+- **Proof:** a temporary probe (not committed) rendered the screen 150 times and found the tab
+  selected while the address still read `?tab=propagation` in **2 of 150** renders.
+- **Fix (app, not test):** the rewrite now runs in `useLayoutEffect`, inside the same commit and
+  before paint, so the address and the selected tab never disagree. The probe then showed
+  **0 of 300**. The test is unchanged and as strict as before.
+- **Classification:** the mechanism is in code that predates this branch. It is still not called
+  pre-existing, because it was not reproduced on main. M6B added asynchronous work to Sowing
+  detail (the lineage strip), which may have changed the timing.
+
+### Final verification and a newly observed intermittent
+
+- Prettier, typecheck, ESLint and the build pass (main JS 285.0 kB, gzip 87.8 kB).
+- Full suite: four runs before the Sowing fix all passed 1207/1207. On the final tree, run 1
+  passed 1207/1207. Run 2 had one failure in a different test: App "identity section keyboard
+  navigation retains browser Back and Forward boundaries". The preserved message is a hash
+  mismatch that the reporter truncates (both values begin `#/identities/0190…`), so which of
+  the test's three `waitFor` hash checks failed is unknown. It passed 20 of 20 isolated runs.
+- This branch does not change identity behaviour (only identity CSS in this pass), and the test
+  is unchanged. A plausible mechanism is jsdom's asynchronous history traversal racing
+  `waitFor`'s 1 s default under full-suite load, but **it is not proven**. It is tracked, not
+  classified, and not "fixed" by loosening the test.
+
+### Real-device QR camera
+
+**Pending operator acceptance on Android** (HTTPS or localhost, a printed Florabase label). Not
+claimed as tested.
 
 ## Separate proposals
 

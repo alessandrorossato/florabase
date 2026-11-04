@@ -1,0 +1,87 @@
+{
+ "label": "m6-final-review",
+ "origin": "http://localhost:15174",
+ "note": "Field Ledger light/dark at 1440x900, 1024x900 and 390x844; UAT Preview synthetic data plus the M6B extracted Plant. Viewport captures except where named full.",
+ "entries": [
+  {
+   "file": "01-plant-desktop-light.png",
+   "sha256": "fbcbd61d2dc05307b0df03cfdc1252345a5e9032d6798391f4c25921a7fa1b85",
+   "bytes": 163239
+  },
+  {
+   "file": "02-plant-three-step-lineage-desktop-light.png",
+   "sha256": "8ce0e6310082f67f35d88d2a4d147cfebfaaefe6845a513acce92681b5d846a8",
+   "bytes": 145403
+  },
+  {
+   "file": "03-plant-desktop-dark.png",
+   "sha256": "2c89fc4ada621076009dc7de0e3b4b2ef360049698fd036a1c23650b637c539c",
+   "bytes": 162794
+  },
+  {
+   "file": "04-seed-lot-desktop-light.png",
+   "sha256": "eef84ff03109fbed39595f5a9ecacc26d75a387fd9c294b1be9a0b34a644aa7d",
+   "bytes": 155445
+  },
+  {
+   "file": "05-sowing-desktop-dark.png",
+   "sha256": "5010275e613d43cc566a25ad626a8c6c7d3077a49f2c4ceda6dffc4e7a41675b",
+   "bytes": 152874
+  },
+  {
+   "file": "06-identity-desktop-light.png",
+   "sha256": "9535284dc81ac8c6ec2985ff090774b3da6985b1a31aafa8a43e97103059cd32",
+   "bytes": 129377
+  },
+  {
+   "file": "07-today-desktop-light.png",
+   "sha256": "ce7926cccb680fd1a3d4f3f9cede81aa98978aaffea5cb72f46e8f1bdd742461",
+   "bytes": 153270
+  },
+  {
+   "file": "08-plant-tablet-light.png",
+   "sha256": "1f9f01a3823ed155d9b0bec545091126f989b443346cfc6be957e390e8b81958",
+   "bytes": 124762
+  },
+  {
+   "file": "09-seed-lot-tablet-dark.png",
+   "sha256": "a30b048579bf2dd214c6629bf811bb6d86021bf5b36fabc1ff9b31834cb20faa",
+   "bytes": 116024
+  },
+  {
+   "file": "10-plant-phone-light.png",
+   "sha256": "1f56ece1124721b33f96aadd82d87b8f73d9475fc9bcff842cc58dd3e68daba2",
+   "bytes": 61064
+  },
+  {
+   "file": "11-sowing-phone-dark.png",
+   "sha256": "479b828ecc54255278a36a5bef80c6647ef5f33b045d6189ced65c8eef78b5aa",
+   "bytes": 57250
+  },
+  {
+   "file": "12-seeds-directory-phone-light.png",
+   "sha256": "76c5466d89df58d0bf9cd0909cb0892cb15ed67ffb61f59a302d4b4db75ad6bc",
+   "bytes": 54555
+  },
+  {
+   "file": "13-identity-phone-dark.png",
+   "sha256": "f3a22cbd6b0effd168c2ac35ca24a90a1f4b8c0d7f70f7e90983f1a6f7ed7b2a",
+   "bytes": 50310
+  },
+  {
+   "file": "14-plant-journal-desktop-light.png",
+   "sha256": "ea8227d7c66029072267ea90378ca20683023bdf913b182c913e815db7f9dc69",
+   "bytes": 167257
+  },
+  {
+   "file": "15-plant-forced-colours-desktop.png",
+   "sha256": "a2927df3ce7622fbdb59a1f962e0d09db0e31a14d5d3fd77c7f3149091c9dfbc",
+   "bytes": 164388
+  },
+  {
+   "file": "16-record-sheet-phone-light.png",
+   "sha256": "624e4546fec8e1d314575c1d98c83ba2729ebd7cc186ce884a2b4516be50f26f",
+   "bytes": 58875
+  }
+ ]
+}

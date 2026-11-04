@@ -1842,6 +1842,19 @@ test("Plant Journal entries preserves API order, every label and partial-date pr
   expect(items[1]).toHaveTextContent("2025-03");
   expect(items[2]).toHaveTextContent("2026-09-02");
   expect(items[3]).toHaveTextContent("Date unknown");
+  // Each recorded period opens with its precision stated (Ledger Folio grouping).
+  expect(items[0].querySelector(".event-period")).toHaveTextContent(
+    "2024 · month not recorded",
+  );
+  expect(items[1].querySelector(".event-period")).toHaveTextContent(
+    "March 2025 · day not recorded",
+  );
+  expect(items[2].querySelector(".event-period")).toHaveTextContent(
+    "September 2026",
+  );
+  expect(items[3].querySelector(".event-period")).toHaveTextContent(
+    "Date not recorded",
+  );
   expect(items[1]).toHaveTextContent("Destination: Greenhouse → Bench 4");
   expect(items[0].querySelector(".event-card")).toBeInTheDocument();
   expect(timeline).toHaveClass("event-timeline");
