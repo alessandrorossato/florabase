@@ -542,7 +542,11 @@
     padding: 0;
   }
   .app-content .ui-directory-page .page-header--directory .page-identity {
+    /* Anchored: an unpositioned absolute box keeps its static place at the end of the
+       header row and widened the phone layout viewport by 16px (M7 finding). */
     position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
     width: 1px;
     height: 1px;
     overflow: hidden;
@@ -631,6 +635,8 @@
   }
   .app-content .harvest-workspace > .page-header--directory {
     position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
     width: 1px;
     height: 1px;
     margin: 0;
