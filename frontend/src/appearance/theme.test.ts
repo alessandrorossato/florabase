@@ -47,11 +47,27 @@ test.each([
 ])("default for missing/corrupt/unknown version: %s", (raw) => {
   bootstrap(raw, true);
   expect(window.florabaseAppearance.getSnapshot()).toMatchObject({
-    palette: "botanical",
+    palette: "field-ledger",
     appearance: "system",
     effectiveAppearance: "dark",
   });
 });
+
+test.each(["field-ledger", "botanical", "herbarium", "mineral"])(
+  "Florabase Next defaults to Field Ledger but honours a saved %s choice",
+  (palette) => {
+    bootstrap(JSON.stringify({ version: 1, palette, appearance: "light" }));
+    expect(document.documentElement.dataset).toMatchObject({
+      palette,
+      appearance: "light",
+    });
+    window.florabaseAppearance.setPalette("field-ledger");
+    expect(JSON.parse(localStorage.getItem(key) ?? "null")).toMatchObject({
+      version: 1,
+      palette: "field-ledger",
+    });
+  },
+);
 
 test("invalid fields fall back independently; unknown values never enter root attributes", () => {
   bootstrap(
@@ -65,7 +81,7 @@ test("invalid fields fall back independently; unknown values never enter root at
     JSON.stringify({ version: 1, palette: "invalid", appearance: "light" }),
   );
   expect(window.florabaseAppearance.getSnapshot()).toMatchObject({
-    palette: "botanical",
+    palette: "field-ledger",
     appearance: "light",
   });
 });
@@ -105,7 +121,7 @@ test("cross-tab changes and clear synchronize without storage echo; unrelated/se
   send(key, JSON.stringify({ version: 1, palette: "mineral" }), sessionStorage);
   expect(window.florabaseAppearance.getSnapshot().palette).toBe("herbarium");
   send(key, "corrupt");
-  expect(window.florabaseAppearance.getSnapshot().palette).toBe("botanical");
+  expect(window.florabaseAppearance.getSnapshot().palette).toBe("field-ledger");
   send(null, null);
   expect(window.florabaseAppearance.getSnapshot().appearance).toBe("system");
   expect(write).not.toHaveBeenCalled();

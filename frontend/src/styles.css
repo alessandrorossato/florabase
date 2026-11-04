@@ -427,7 +427,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 button:focus-visible {
-  outline: 3px solid var(--focus-ring);
+  outline: var(--focus-ring-width) solid var(--focus-ring);
   outline-offset: 2px;
 }
 button {
@@ -628,7 +628,7 @@ button:disabled {
 }
 .detail-tab {
   flex: 0 0 auto;
-  min-height: 2.75rem;
+  min-height: var(--control-height);
   padding: 0.65rem 0.8rem;
   color: var(--text-muted);
   background: transparent;

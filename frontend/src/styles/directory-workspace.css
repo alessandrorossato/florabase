@@ -650,6 +650,7 @@ main:has(.harvest-directory) {
   min-width: 3.5rem;
   text-align: center;
   font: var(--type-small);
+  font-family: var(--font-data);
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);
 }

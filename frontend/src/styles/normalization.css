@@ -127,7 +127,7 @@ input:is([type="checkbox"], [type="radio"]) {
 }
 .app-content :is(.page-header, .screen-heading) h2 {
   font: var(--type-h1);
-  letter-spacing: normal;
+  letter-spacing: var(--tracking-heading);
   margin: var(--space-1) 0 var(--space-2);
   overflow-wrap: anywhere;
 }
@@ -223,7 +223,7 @@ input:is([type="checkbox"], [type="radio"]) {
 }
 .app-content :is(.detail-header h3, .seed-form-heading h3, .entity-title) {
   font: var(--type-h1);
-  letter-spacing: normal;
+  letter-spacing: var(--tracking-heading);
   overflow-wrap: anywhere;
 }
 .app-content

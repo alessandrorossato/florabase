@@ -3,7 +3,9 @@
 // Loaded before app styles/React; intentionally independent of authentication.
 (function () {
   const key = "florabase.appearance.v1";
-  const palettes = ["botanical", "herbarium", "mineral"];
+  // Florabase Next (experimental branch): Field Ledger is the default; the other palettes are unchanged.
+  const defaultPalette = "field-ledger";
+  const palettes = ["field-ledger", "botanical", "herbarium", "mineral"];
   const appearances = ["system", "light", "dark"];
   const listeners = new Set();
   const media = window.matchMedia?.("(prefers-color-scheme: dark)");
@@ -12,7 +14,9 @@
       const value = JSON.parse(raw);
       if (!value || value.version !== 1) return defaults();
       return {
-        palette: palettes.includes(value.palette) ? value.palette : "botanical",
+        palette: palettes.includes(value.palette)
+          ? value.palette
+          : defaultPalette,
         appearance: appearances.includes(value.appearance)
           ? value.appearance
           : "system",
@@ -22,7 +26,7 @@
     }
   }
   function defaults() {
-    return { palette: "botanical", appearance: "system" };
+    return { palette: defaultPalette, appearance: "system" };
   }
   let persistent = true;
   let preferences;

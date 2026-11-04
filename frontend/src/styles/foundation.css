@@ -15,11 +15,12 @@ textarea {
   font-family: var(--font-ui);
 }
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline: 3px solid var(--focus-ring);
-  outline-offset: 3px;
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 .page-header h2 {
   font: var(--type-h1);
+  letter-spacing: var(--tracking-heading);
 }
 .page-header p:last-child {
   font: var(--type-body);
@@ -94,6 +95,7 @@ textarea {
 .ui-section-header h3 {
   margin: 0;
   font: var(--type-h2);
+  letter-spacing: var(--tracking-heading);
 }
 .ui-section-header a {
   font: var(--type-small);

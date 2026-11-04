@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-export type Palette = "botanical" | "herbarium" | "mineral";
+export type Palette = "field-ledger" | "botanical" | "herbarium" | "mineral";
 export type Appearance = "system" | "light" | "dark";
 export interface ThemeSnapshot {
   palette: Palette;
@@ -23,6 +23,7 @@ declare global {
 }
 
 export const paletteLabels: Record<Palette, string> = {
+  "field-ledger": "Field Ledger",
   botanical: "Botanical",
   herbarium: "Herbarium",
   mineral: "Mineral",
