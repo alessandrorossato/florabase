@@ -84,9 +84,11 @@
   background: transparent;
   color: var(--text-muted);
 }
-.app-content .ui-detail-page .specimen-plate .record-visual img {
+.app-content .ui-detail-page .specimen-plate .record-visual > img {
   width: 100%;
+  max-width: none;
   height: 100%;
+  max-height: none;
   object-fit: cover;
 }
 .app-content .ui-detail-page .specimen-plate .record-visual svg {

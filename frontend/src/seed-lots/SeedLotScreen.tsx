@@ -441,6 +441,7 @@ function Detail({
         }
         lineage={
           <LineageStrip
+            currentKind={"seed_lot"}
             key={lot.updated_at}
             kind="seed-lots"
             id={lot.id}

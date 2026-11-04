@@ -46,6 +46,7 @@ test("shows only the recorded upstream path, oldest first, ending at this record
       kind="plants"
       id="mother"
       current="This Plant"
+      currentKind="plant"
       fullHref="#/plants/mother?tab=lineage"
       onFull={onFull}
     />,
@@ -55,8 +56,9 @@ test("shows only the recorded upstream path, oldest first, ending at this record
   const steps = within(path).getAllByRole("listitem");
   expect(steps.map((step) => step.textContent)).toEqual([
     "Seed lotUnlabelled seed lotexhausted",
-    "SowingSpring tray",
-    "This Plant",
+    // Each relationship is written as text, named only from the recorded kinds.
+    "sown asSowingSpring tray",
+    "grown intoThis Plant",
   ]);
   expect(steps[2]).toHaveAttribute("aria-current", "true");
   expect(within(steps[0]).getByRole("link")).toHaveAttribute(

@@ -103,7 +103,7 @@ test("planned work stays planned, overdue is not shown as done, and Journal date
       journal={{ target: "plant", href: "#/plants/p?tab=events", onOpen }}
     />,
   );
-  const timeline = screen.getByRole("region", { name: "Timeline" });
+  const timeline = screen.getByRole("region", { name: "Almanac" });
   const plannedLane = within(timeline).getByRole("region", { name: "Planned" });
   const late = (
     await within(plannedLane).findByRole("link", { name: "Repot basil" })

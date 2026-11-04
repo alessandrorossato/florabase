@@ -17,6 +17,12 @@ import {
   scheduleHash,
   type TargetKind,
 } from "../schedule/state";
+import {
+  almanacWindow,
+  dayPosition,
+  partialMark,
+  precisionGroups,
+} from "./almanac";
 import "./record-timeline.css";
 
 type Loaded<T> =
@@ -145,12 +151,86 @@ export function RecordTimeline({
       ? null
       : historyHash({ q: "", category: [], subject_kind: [kind], year: "" });
 
+  const events = recorded.status === "ready" ? recorded.value : [];
+  const shown = events.slice(0, 3);
+  const plans = planned.status === "ready" ? planned.value.items : [];
+  const today = planned.status === "ready" ? planned.value.today : day;
+  const range = almanacWindow(
+    events.map((event) => event.occurred_on),
+    plans.map((item) => item.due_on),
+    today,
+  );
+  const undated = events.filter((event) => !event.occurred_on).length;
+  const span = range ? range.end - range.start + 1 : 1;
+  const todayLeft = range ? dayPosition(range, today) : null;
   return (
     <section
       className={`record-timeline ${className}`}
       aria-labelledby={titleId}
     >
-      <h4 id={titleId}>Timeline</h4>
+      <h4 id={titleId}>Almanac</h4>
+      {range && (
+        // A visual summary only; the lists below carry every entry and its precision.
+        <div className="almanac-axis" aria-hidden="true">
+          {range.months.map((month, index) => (
+            <span
+              key={month.key}
+              className="almanac-axis__month"
+              style={{ left: `${String((index / span) * 100)}%` }}
+            >
+              {month.label}
+              {index === 0 || month.label === "Jan"
+                ? ` ${String(month.year)}`
+                : ""}
+            </span>
+          ))}
+          {todayLeft !== null && (
+            <span
+              className="almanac-axis__today"
+              style={{ left: `${String(todayLeft)}%` }}
+            />
+          )}
+          {events.map((event) => {
+            const mark = event.occurred_on
+              ? partialMark(range, event.occurred_on)
+              : null;
+            if (!mark) return null;
+            return mark.kind === "day" ? (
+              <span
+                key={event.id}
+                className="almanac-axis__dot"
+                style={{ left: `${String(mark.left)}%` }}
+              />
+            ) : (
+              <span
+                key={event.id}
+                className="almanac-axis__span"
+                style={{
+                  left: `${String(mark.left)}%`,
+                  width: `${String(mark.width)}%`,
+                }}
+              />
+            );
+          })}
+          {plans.map((item) => {
+            const left = dayPosition(range, item.due_on);
+            return left === null ? null : (
+              <span
+                key={item.id}
+                className={`almanac-axis__plan${item.overdue ? " almanac-axis__plan--overdue" : ""}`}
+                style={{ left: `${String(left)}%` }}
+              />
+            );
+          })}
+        </div>
+      )}
+      {undated > 0 && (
+        <p className="record-timeline__note almanac-undated">
+          {undated === 1
+            ? "1 Journal entry has no recorded date; it is listed, not placed on the axis."
+            : `${String(undated)} Journal entries have no recorded date; they are listed, not placed on the axis.`}
+        </p>
+      )}
       <div className="record-timeline__lanes">
         <section
           className="record-timeline__lane record-timeline__lane--planned"
@@ -242,26 +322,33 @@ export function RecordTimeline({
               Loading Journal…
             </p>
           ) : recorded.value.length ? (
-            <ol className="record-timeline__list">
-              {recorded.value.slice(0, 3).map((event) => (
-                <li key={event.id} className="record-timeline__item">
-                  {event.occurred_on ? (
-                    <time>{formatPartialDate(event.occurred_on)}</time>
-                  ) : (
-                    <span className="record-timeline__undated">
-                      Date not recorded
-                    </span>
-                  )}
-                  <div>
-                    <strong>{eventLabels[event.kind]}</strong>
-                    <p>
-                      {eventSourceLabel(event)}
-                      {event.notes?.trim() ? ` · ${event.notes.trim()}` : ""}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
+            precisionGroups(shown).map((group) => (
+              <div key={group.heading} className="almanac-group">
+                <h5 className="almanac-group__heading">{group.heading}</h5>
+                <ol className="record-timeline__list">
+                  {group.entries.map((event) => (
+                    <li key={event.id} className="record-timeline__item">
+                      {event.occurred_on ? (
+                        <time>{formatPartialDate(event.occurred_on)}</time>
+                      ) : (
+                        <span className="record-timeline__undated">
+                          Date not recorded
+                        </span>
+                      )}
+                      <div>
+                        <strong>{eventLabels[event.kind]}</strong>
+                        <p>
+                          {eventSourceLabel(event)}
+                          {event.notes?.trim()
+                            ? ` · ${event.notes.trim()}`
+                            : ""}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ))
           ) : (
             <p className="record-timeline__note">No Journal entries yet.</p>
           )}

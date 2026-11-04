@@ -559,6 +559,7 @@ function Detail({
           }
           lineage={
             <LineageStrip
+              currentKind={record.kind === "plant" ? "plant" : "plant_group"}
               key={value.updated_at}
               kind={record.kind === "plant" ? "plants" : "plant-groups"}
               id={value.id}

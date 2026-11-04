@@ -2384,7 +2384,7 @@ test("Overview keeps current-state facts and Sowings has one canonical start act
   expect(screen.getByRole("region", { name: "Notes" })).toHaveTextContent(
     "Keep dry.",
   );
-  const timeline = screen.getByRole("region", { name: "Timeline" });
+  const timeline = screen.getByRole("region", { name: "Almanac" });
   expect(
     within(timeline).getByRole("region", { name: "Planned" }),
   ).toBeVisible();

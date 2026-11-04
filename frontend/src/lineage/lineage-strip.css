@@ -81,3 +81,38 @@
   font-weight: 600;
   white-space: nowrap;
 }
+
+/* M6B lineage sequence: each recorded step is a small card; the relationship to the step
+   before it is written as text ("sown as", "grown into"), not implied by the arrow alone. */
+.lineage-strip__path > li {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+.lineage-strip__path > li + li {
+  margin-inline-start: var(--space-6);
+  position: relative;
+}
+.lineage-strip__path > li + li::before {
+  position: absolute;
+  inset-inline-start: calc(-1 * var(--space-6) + 2px);
+  inset-block-start: 50%;
+  margin: 0;
+  transform: translateY(-50%);
+}
+.lineage-strip__path > li.lineage-strip__current {
+  border: 2px solid var(--lineage);
+}
+.lineage-strip__verb {
+  color: var(--lineage);
+  font: var(--type-label);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.lineage-strip__path {
+  gap: var(--space-2) 0;
+}
