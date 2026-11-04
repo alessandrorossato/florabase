@@ -1,6 +1,6 @@
 # Audit — current UI at `61fefbb`
 
-**Status: PROPOSED / AWAITING DESIGN APPROVAL.** Labels follow the [package legend](README.md#how-to-read-this-package).
+**Status: COMPLETE — DOCUMENTED DESIGN REVIEW · NO IMPLEMENTATION APPROVED.** Labels follow the [package legend](README.md#how-to-read-this-package).
 
 **Method.** A source scan of `frontend/src` at `61fefbb`, plus browser captures from the 1 November
 Wave 3 evidence sets (synthetic Review v5 fixture). There was no live session on current main.

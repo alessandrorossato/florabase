@@ -1,6 +1,6 @@
 # Prioritized inconsistencies
 
-**Status: PROPOSED / AWAITING DESIGN APPROVAL.** Labels follow the [package legend](README.md#how-to-read-this-package).
+**Status: COMPLETE — DOCUMENTED DESIGN REVIEW · NO IMPLEMENTATION APPROVED.** Labels follow the [package legend](README.md#how-to-read-this-package).
 
 **Priorities.** P1: visible on every page of a family, or in the public screenshot set. P2: a
 cross-area consistency or accessibility gap with a contained fix. P3: polish, copy or documentation.

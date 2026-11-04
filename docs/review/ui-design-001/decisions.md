@@ -1,9 +1,10 @@
-# Decisions awaiting approval (D1–D6)
+# Decisions D1–D6 (open, deferred without decision)
 
-**Status: DECISION PENDING for every item.** None of these has been decided. The mockups and the
-design artifact illustrate the reviewer's **proposed** option so it can be judged visually. That is
-not a recommendation already adopted. Record each answer here, or in the follow-up implementation
-increment, before work that depends on it begins.
+**Status: OPEN, DEFERRED WITHOUT DECISION.** UI-DESIGN-001 closed on 4 November 2026 with all six
+decisions undecided. The operator chose to explore a more radical redesign (Florabase Next) instead.
+The mockups and the design artifact illustrate the reviewer's **proposed** option only so it could be
+judged visually. That is not a recommendation adopted or a decision made. Any future increment that
+revives one of these items must obtain its decision first.
 
 | ID | Question | Option A — keep current (EXISTING) | Option B — PROPOSAL illustrated in the mockups | Affects | Blocks |
 | --- | --- | --- | --- | --- | --- |
@@ -14,16 +15,16 @@ increment, before work that depends on it begins.
 | D5 | Facts repeated in the header and DetailSummary | Keep both (deferred content item) | Lifecycle and location stay in the header; the summary drops them and shows origin, entry date and kind/quantity | Plant, Sowing and Seed lot summaries | Phase 3 summary change |
 | D6 | Primary creation action on phones | Visible "New plant or group" in the tool lane | A header button labeled "New"; accessible name "New plant or group"; per-page select leaves the compact results bar | `DirectoryTools`, `PageHeader` compact slot (F-01) | Phase 4 |
 
-Phases 0, 1 and 2 of the [implementation plan](implementation-plan.md) do not depend on any of these
-decisions.
+No phase of the [implementation plan](implementation-plan.md) is approved, including phases 0–2, which
+do not depend on these decisions.
 
 ## Decision record
 
 | ID | Decision | Decided by | Date |
 | --- | --- | --- | --- |
-| D1 | — pending — | | |
-| D2 | — pending — | | |
-| D3 | — pending — | | |
-| D4 | — pending — | | |
-| D5 | — pending — | | |
-| D6 | — pending — | | |
+| D1 | — open (deferred at closure, 4 Nov 2026) — | | |
+| D2 | — open (deferred at closure, 4 Nov 2026) — | | |
+| D3 | — open (deferred at closure, 4 Nov 2026) — | | |
+| D4 | — open (deferred at closure, 4 Nov 2026) — | | |
+| D5 | — open (deferred at closure, 4 Nov 2026) — | | |
+| D6 | — open (deferred at closure, 4 Nov 2026) — | | |

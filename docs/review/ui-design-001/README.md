@@ -1,9 +1,11 @@
 # UI-DESIGN-001 — visual and interaction consistency review
 
-> **Status: PROPOSED / AWAITING DESIGN APPROVAL.** This is a design review package. It is not an
-> implementation, not an accepted contract and not release evidence. Decisions D1–D6 belong to the
-> operator and are deliberately left open. No frontend code, design token, API, schema or fixture
-> was changed.
+> **Status: COMPLETE — DOCUMENTED DESIGN REVIEW · NO IMPLEMENTATION APPROVED.** UI-DESIGN-001 is complete as a documented design review,
+> closed on 4 November 2026. Its audit, findings, proposals, mockups and design artifact are retained as
+> a reference baseline. **No implementation was approved.** Decisions D1–D6 remain open and were not
+> decided. The operator chose to explore a more radical UI/UX redesign in a separate feature (Florabase
+> Next) instead of implementing this plan. No frontend code, design token, API, schema or fixture was
+> changed.
 
 - **Main commit reviewed:** `61fefbbd026ae11fd84394acba698a84abc7f16d` (`61fefbb`, #144, 4 November 2026).
   The last frontend source change before it is `9ef2b63` (#138, 2 November, tests only).
@@ -11,8 +13,9 @@
   It is private to its owner until shared from its Share menu. It holds the editable token set, 13
   component cards, the interactive Plants workspace and the before/after page. This folder is its
   retained Git export.
-- **Implementer for later phases:** Claude Code, with independent review by a separate session on a
-  different model. **Codex is not assigned implementation work.**
+- **Implementation:** none approved. If any part of this plan is revived, it needs a new operator-approved
+  increment, with Claude Code implementing and an independent session on a different model reviewing.
+  **Codex is not assigned implementation work.**
 
 ## How to read this package
 
@@ -65,6 +68,18 @@ token source, and the proposed tokens in it are not in the product.
 - The mockups are hand-built recreations rendered with synthetic data. They show intended structure
   and hierarchy, not pixel parity with the product. See [mockups/README.md](mockups/README.md) for the
   known raster artifacts.
+
+## Closure
+
+- **Complete:** the documented review (audit, findings F-01–F-17, proposed changes, plan, checklist,
+  evidence index, mockups, and the interactive design artifact).
+- **Not approved:** every PROPOSAL and every phase of the [implementation plan](implementation-plan.md).
+- **Open:** D1–D6 ([decisions.md](decisions.md)), deferred without a decision.
+- **Successor:** Florabase Next, a separate creative-exploration feature with a working alternative
+  frontend. It may use this package as reference evidence. It is not bound by these proposals, and
+  this package does not approve or start it.
+- **Still valid as findings:** the VERIFIED (source) items describe `61fefbb` and remain true until the
+  cited code changes. Re-check them before relying on them.
 
 ## Phase boundary
 

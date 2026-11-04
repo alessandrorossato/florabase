@@ -1,6 +1,6 @@
 # Design mockups — not production screenshots
 
-**Status: PROPOSED / AWAITING DESIGN APPROVAL.** Every image in this folder is a **design mockup**.
+**Status: COMPLETE — DOCUMENTED DESIGN REVIEW · NO IMPLEMENTATION APPROVED.** Every image in this folder is a **design mockup**.
 None of them is a screenshot of the Florabase application. Each one has a visible banner reading
 "DESIGN MOCKUP · UI-DESIGN-001 proposal · … · not a screenshot of the production application". Never
 use these images as release, marketing or public screenshots.

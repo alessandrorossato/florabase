@@ -1,6 +1,6 @@
 # Proposed component and token changes
 
-**Status: PROPOSED / AWAITING DESIGN APPROVAL.** Everything in this document is a PROPOSAL unless it is labeled EXISTING. Labels follow the [package legend](README.md#how-to-read-this-package).
+**Status: COMPLETE — DOCUMENTED DESIGN REVIEW · NO IMPLEMENTATION APPROVED.** Everything in this document is a PROPOSAL unless it is labeled EXISTING. Labels follow the [package legend](README.md#how-to-read-this-package).
 
 Ten reusable rules, not per-screen redesigns. None of these tokens or components exists in the product yet, except where a row says EXISTING. Nothing here changes an API, the schema, domain rules, routes, filters or saved-view state.
 

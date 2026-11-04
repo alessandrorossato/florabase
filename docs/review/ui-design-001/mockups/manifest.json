@@ -1,6 +1,6 @@
 {
   "feature": "UI-DESIGN-001",
-  "status": "PROPOSED / AWAITING DESIGN APPROVAL",
+  "status": "COMPLETE — DOCUMENTED DESIGN REVIEW · NO IMPLEMENTATION APPROVED",
   "main_reviewed": "61fefbbd026ae11fd84394acba698a84abc7f16d",
   "source": "Hand-built recreation from the UI-DESIGN-001 Claude Design artifact (https://claude.ai/artifact/T5A2PpURaCtwGxYTU6F8eN), rendered with synthetic data",
   "renderer": "html2canvas 1.4.1 in the desktop app's built-in browser at an emulated CSS viewport; 1320px captures are 1305px wide because the page scrollbar is excluded",

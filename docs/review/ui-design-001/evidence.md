@@ -1,6 +1,6 @@
 # Evidence used by this review
 
-**Status: PROPOSED / AWAITING DESIGN APPROVAL.** Everything here is **EVIDENCE (1 Nov)** or
+**Status: COMPLETE — DOCUMENTED DESIGN REVIEW · NO IMPLEMENTATION APPROVED.** Everything here is **EVIDENCE (1 Nov)** or
 **VERIFIED (source)**. The captures are referenced in place under `docs/design/ui-system-v1/`; this
 package does not copy them.
 

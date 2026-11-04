@@ -1,6 +1,6 @@
 # Implementation plan
 
-**Status: PROPOSED / AWAITING DESIGN APPROVAL.** No phase is authorized by this document. Each phase starts only after the operator approves it and any decisions it depends on ([decisions.md](decisions.md)).
+**Status: COMPLETE — DOCUMENTED DESIGN REVIEW · NO IMPLEMENTATION APPROVED.** No phase is authorized or scheduled. The review closed without approving implementation; the plan is retained as reference only. Reviving any phase needs a new operator-approved increment and the decisions it depends on ([decisions.md](decisions.md)).
 
 **Implementer:** Claude Code. **Reviewer:** an independent read-only session on a different model, in its own detached checkout. **Codex is not assigned implementation work.** Each phase is one backlog increment on its own `feat/ui-design-001-<phase>` worktree (`make feature-worktree`, `feature-claim AGENT_ID=claude-ui-design-001`) and follows PLAN → IMPLEMENT → FOCUSED TESTS → REVIEW → INDEPENDENT QA → FREEZE → CANONICAL VERIFY. Shared UI infrastructure escalates to FULL. No phase touches the backend, API, schema, migrations or fixtures.
 

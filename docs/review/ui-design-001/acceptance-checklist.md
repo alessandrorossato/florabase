@@ -1,6 +1,6 @@
 # Visual acceptance and public screenshots
 
-**Status: PROPOSED / AWAITING DESIGN APPROVAL.** This checklist applies to future implementation phases and the release screenshot set. Nothing here has been checked against an implementation yet. Items that depend on D1–D6 apply only once those are decided.
+**Status: COMPLETE — DOCUMENTED DESIGN REVIEW · NO IMPLEMENTATION APPROVED.** This checklist applies to future implementation phases and the release screenshot set. Nothing here has been checked against an implementation yet. Items that depend on D1–D6 apply only once those are decided.
 
 ## Per page (every phase)
 

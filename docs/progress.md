@@ -7179,3 +7179,9 @@ Status remains implemented pending canonical verification.
 - Re-checked on main: RELEASE-VISUAL-AUDIT F09 resolved; F01 resolved at callers but still order-dependent in `TaskDialog`; F02 partial; UI-DETAIL-001 residue (C5 row, repeated lifecycle) still in source; UI-FLICKER-001 still partial and not re-measured.
 - Limits: no authenticated live session on main (owner sign-in); captures are from 1 November; no physical device, screen reader, real zoom or forced-colors checks; contrast computed from `tokens.css`. Mockups are hand-built recreations with synthetic data, rasterized with html2canvas, and are not product screenshots.
 - No frontend, token, backend, schema, fixture or environment change. Checks: `check-features` (135 valid), docs-only `make feature-verify`. No push, PR, merge or delivery. Codex is not assigned implementation work.
+
+### UI-DESIGN-001 — closed as a documented design review, 4 November 2026
+
+- The operator closed UI-DESIGN-001 as a documentation-only baseline. **No implementation was approved.** D1–D6 stay open and deferred without decision. The operator will explore a more radical redesign in a separate feature, Florabase Next, which is not started on this branch.
+- The package status changed to COMPLETE — DOCUMENTED DESIGN REVIEW · NO IMPLEMENTATION APPROVED. The audit, findings, mockups, evidence index and design artifact are kept unchanged as reference. The README gained a Closure section; the implementation plan is reference only. The feature is `verified` against its revised closure criteria.
+- Checks: `check-features` (135 valid) and docs-only `make feature-verify` on the final committed HEAD. No frontend, token, backend, schema, fixture or environment change. No push, PR or merge; the branch is ready for operator `make feature-deliver`.
