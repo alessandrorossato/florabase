@@ -1,8 +1,10 @@
 # Deployment and upgrades
 
-The proposed image-only Dockhand/Tailscale beta path is specified in the
-[beta foundation contract](beta-foundation-001.md); BETA-IMAGE-001 and BETA-RUNTIME-001 are still
-planned. The commands below describe the existing source-build deployment.
+The image-only Dockhand/Tailscale beta runtime (versioned stack, `florabasectl` controller,
+recovery and upgrade procedures) is documented in the [beta runtime runbook](beta-runtime-001.md);
+it is not yet accepted on a real host. The commands below describe the existing source-build
+deployment. Both use the `florabase-prod` project name: do not run them on the same host, and never
+point the beta controller at volumes created by the source build (it refuses to adopt them).
 
 This is the canonical self-hosting guide. Florabase is pre-release software: review changes and keep
 a tested backup before every upgrade.
