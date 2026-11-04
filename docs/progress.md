@@ -7313,3 +7313,35 @@ Status remains implemented pending canonical verification.
 - Audit, tradeoffs, recommendation, M6B component plan and the release-issue register (R1–R13) are in `docs/design/florabase-next/m6a-design-review.md`.
 - Recommendation: direction A (Specimen Sheet) for all ten record types, with C's precision grouping in the Journal tab.
 - M6B not started; awaiting operator direction approval. No FULL, push, PR or merge.
+
+### UI-REDESIGN-EXPLORATION-001 — M6B Specimen Sheet implementation, 4 November 2026
+
+- Direction A (Specimen Sheet) with Direction C's precision grouping, as approved.
+- Commits `81ba6b9`, `85b726a`, `659e053`, `70810bb`, `353ea39`, plus the checkpoint commit. Frontend only.
+- Specimen Sheet: `DetailHeader` specimen mode, `SpecimenPlate`, `SpecimenLabel`.
+  - Applied to Plant, Plant group, Seed lot, Sowing, Harvest (including Stored material inside it), Order, Supplier and Location (label only).
+  - Botanical identity keeps its reference-hub layout (deviation).
+- Lineage sequence with relationships written as text. Almanac axis with precision groups.
+- `JournalScope`: one Journal request per record view (R2).
+- Compact phone directory header (R4): first record 580px → 264–296px; no header control under 44px.
+- Today groups Next work by record. Record sheet v2: tiles plus one record search through the existing search endpoint.
+- R5: a real three-step lineage was created in isolated UAT through the existing extraction API (Plant `01a1a834-…`). UAT Preview now differs from fixture v4 by that Plant, and the Basil seedlings group is now 5 plants.
+- Tests changed only where the design moved a fact:
+  - Plant "Managed group" and "At a glance" regions → "Plant group facts";
+  - the extracted Plant's group link is asserted in the facts;
+  - Seed lot "At a glance" heading → facts region;
+  - Timeline → Almanac;
+  - Record sheet chooser → search;
+  - one Journal call-signature assertion.
+- New tests: Almanac geometry and grouping, the shared Journal request, and lineage relationship text.
+- MediaScreen (R6): final focus assertion hardened for the passive-effect race (not reproduced: 0 of 32 stressed isolated runs).
+- New intermittent: SowingScreen "old Sowing propagation URL opens the canonical Lineage tab and empty summary" failed once in one full run and 0 of 15 isolated; tracked, details in the M6B README section.
+- Checks:
+  - Format, typecheck and lint pass; build passes. Main JS 269.9 → 285.0 kB (gzip 83.4 → 87.8 kB).
+  - Full suite on the final tree: 4 runs. 3 passed 1207/1207; 1 had the single SowingScreen failure (0 of 15 isolated, 0 in the 2 later full runs; message not captured).
+- Evidence: 144 captures at `353ea39`, plus 6 interaction captures. Manifests are in `docs/design/florabase-next/m6b/`.
+  - 0 console errors.
+  - Field Ledger light and dark: 0 below target.
+  - Botanical: 40px controls at touch widths, from the original themes' pointer geometry (as since M1).
+- Open: R7 real-device QR, R10 measured contrast pass for new tint pairs, R11 manual screen reader/zoom/forced colours, the Journal tab's own precision grouping, the phone action dock.
+- Canonical FULL not run; no push, PR or merge. Stopped at the M6B checkpoint.

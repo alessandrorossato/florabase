@@ -1,0 +1,36 @@
+{
+ "label": "m6b-353ea39-interactions",
+ "origin": "http://localhost:15174",
+ "entries": [
+  {
+   "file": "three-step-lineage-desktop.png",
+   "sha256": "de80871be0d64cd3e6d200593abee7b89ad794ca0ad204619c4ce66ccd998423",
+   "note": "Plant extracted in UAT for R5; lineage Seed lot \u2192 Sowing \u2192 Plant group \u2192 Plant"
+  },
+  {
+   "file": "record-sheet-v2-mobile.png",
+   "sha256": "624e4546fec8e1d314575c1d98c83ba2729ebd7cc186ce884a2b4516be50f26f",
+   "note": "Record sheet v2 on a Plant, search 'basil' (5 results)"
+  },
+  {
+   "file": "seeds-compact-header-mobile.png",
+   "sha256": "76c5466d89df58d0bf9cd0909cb0892cb15ed67ffb61f59a302d4b4db75ad6bc",
+   "note": "Compact phone directory header; first record at 272px"
+  },
+  {
+   "file": "plant-almanac-desktop-full.png",
+   "sha256": "8cc513583cd8e066c272aec778c3f66de0801fe27e9c234bc49253c87856b298",
+   "note": "Plant sheet with Almanac axis, precision groups and lineage sequence"
+  },
+  {
+   "file": "plant-mobile-dark-full.png",
+   "sha256": "93c4198c46b06c1cc651b52f76e6d74371456e9467da34c32e5e974c3cfbe9f0",
+   "note": "Plant sheet on a phone, Field Ledger dark"
+  },
+  {
+   "file": "today-grouped-desktop.png",
+   "sha256": "45f29ab33e7ede6ac07badaf436d88a9a356d2a6d8d98fbcd6ab41f358c55431",
+   "note": "Today with Next work grouped by record"
+  }
+ ]
+}

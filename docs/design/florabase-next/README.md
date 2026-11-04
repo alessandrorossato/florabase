@@ -747,6 +747,85 @@ Manifests are in [`m5/`](m5/).
 3. **No motion added.** Sheets and dialogs keep their existing behaviour. Motion stays a polish
    item for M6, with reduced-motion respected.
 
+## M6B: Specimen Sheet implementation
+
+Direction A (Specimen Sheet) was approved in M6A, with Direction C's date-precision grouping.
+Commits `81ba6b9`, `85b726a`, `659e053`, `70810bb`, `353ea39`, plus the checkpoint commit (MediaScreen test hardening, docs and manifests). Frontend only:
+no backend, API, schema, route or auth change. The design reference is the M6A canvas
+(https://claude.ai/artifact/B3TWNaSJvnjxUz2GmdXRCx).
+
+### What was built
+
+| Part | Implementation |
+| ---- | -------------- |
+| Specimen Sheet layout | `DetailHeader` specimen mode with `SpecimenPlate` and `SpecimenLabel` (CollectionUI, `specimen.css`). The detail page is a size container. At 50rem and wider the plate and label float in a left column (18rem, or 24rem from 72rem) and every later sibling keeps a matching start margin, so tabs and panels stay in the right column. At medium widths (a tablet with the panel open) plate and label sit side by side above the record. On phones there is one column: the plate is a 3:2 banner and the label follows the content. |
+| Specimen label | One ruled, double-framed fact list per record. DetailSummary metrics move into it unchanged, keeping their list's accessible name ("Current inventory", "Current Sowing state", …) and the Order price note. Missing values that domains already write ("Not recorded", "Unknown", "Quantity unknown") are set in italics as unknown. |
+| Record types | Plant and Plant group (label replaces At a glance, Managed group and Origin and provenance), Seed lot, Sowing, Harvest, Order, Supplier (plate and label), Location (label only: locations have no images). Stored material opens inside its Harvest (`?inventory=`), so it shares the Harvest sheet. **Botanical identity keeps its reference-hub composition** (see deviations). |
+| Lineage sequence | `LineageStrip`, now with step cards. Each step's relationship to the one before is written as text and named only from the recorded kinds: Seed lot → Sowing "sown as", Sowing → Plant or Plant group "grown into", Plant group → Plant "extracted", Plant or Plant group → Seed lot "produced". |
+| Almanac | `RecordTimeline`, renamed Almanac, gains a month axis (`aria-hidden`; at most twelve months covering today and every dated entry). Recorded days are dots, month-only and year-only dates are spans, and planned items are hollow dashed rings, with overdue in the warning colour. Undated entries are not drawn, and a visible sentence says so. Recorded entries are grouped by the precision actually recorded ("November 2026", "September 2026 · day not recorded", "2024 · month not recorded", "Date not recorded"). The planned lane, links and History footnote are unchanged. Geometry and grouping are pure functions in `timeline/almanac.ts`. |
+| One Journal request (R2) | `JournalScope` and `useJournalReader`. Inside a Plant or Plant group view, the Overview Almanac and the Journal tab share one response per record and version. Every Journal mutation and retry invalidates before re-reading. Leaving the record discards the scope. No API change. |
+| Compact phone directories (R4) | At 40rem and below, the breadcrumb is hidden (the section strip names the section) and the page title is kept for assistive technology only. Search has its own row; view, Filters, Saved views and New become 44px icon buttons with unchanged accessible names. Filter chips scroll beside them, and pagination and Select records follow the list. Applied to DirectoryPage directories and to the Harvests workspace. |
+| Today | Next work is grouped by target record: the record is named once (linked, with its kind and any non-active lifecycle) above its planned items. The schedule target carries no image, so no plates are shown. |
+| Record sheet v2 | The open record's actions are tiles, the first being primary. One search across Plants, Plant groups and Sowings via the existing `/api/v1/search` with kind filters replaces the type radios and the two picker fields. Each result says which entry form it opens. |
+
+### Verification
+
+| Check | Result |
+| ----- | ------ |
+| Prettier, typecheck, ESLint (0 warnings), production build | pass. Main JS 269.9 → 285.0 kB (gzip 83.4 → 87.8 kB): the Specimen Sheet, Almanac, Journal scope and Record search |
+| Full frontend suite on the final tree | 4 runs. 3 passed 1207/1207. 1 had one failure: SowingScreen "old Sowing propagation URL opens the canonical Lineage tab and empty summary". It then passed in 15 of 15 isolated runs and in the next 2 full runs. Its message was not captured, so it is **tracked, not diagnosed and not classified**. Sowing detail changed in M6B (strip, label), so it is not assumed unrelated. |
+| New and changed tests | 1207 total. New tests: Almanac geometry, grouping and windows (3); the shared Journal request (1); lineage relationship text. Changed assertions only where the design moved a fact (progress.md lists them). |
+| Captures at `353ea39` | 144 route captures in Field Ledger light, Field Ledger dark and Botanical: 12 routes (nine details, Today, Seeds, Plants) at 1440 (viewport and full page), 1024 and 390. 0 console errors; Field Ledger 0 below target. Botanical shows 40px controls at touch widths, from the original themes' geometry (M1). Plus 6 interaction captures. Manifests are in [`m6b/`](m6b/). |
+
+### Real three-step lineage (R5)
+
+The illustrative three-step chain from the Design was validated with real data. In the isolated
+UAT Preview, a Plant was extracted from "Preview — Basil seedlings" through the existing
+`POST /api/v1/plant-groups/{id}/extract-plant`:
+- label "Preview — Basil seedling (extracted for M6B lineage check)";
+- collection entry month-only 2026-10;
+- id `01a1a834-8b02-72d9-bb23-61bef95dcca9`.
+
+`GET /api/v1/plants/{id}/lineage` returns Plant group → Sowing → Seed lot. The sheet draws Seed lot
+"sown as" Sowing "grown into" Plant group "extracted" This Plant, and the label shows the
+month-only entry as 2026-10. **UAT data note:** the extraction lowered the group's quantity from
+6 to 5 and added one Plant, so UAT Preview now differs from fixture v4 by this record. Reseeding
+restores the fixture.
+
+### Acceptance checklist (M6A findings R1–R13)
+
+| # | Finding | Status | Evidence |
+| - | ------- | ------ | -------- |
+| R1 | Consistent Details across the ten types | **Met for nine; one deliberate exception.** Plant, Plant group, Seed lot, Sowing, Harvest (and Stored material inside it), Order, Supplier and Location use the sheet. Botanical identity keeps its reference-hub layout. | Captures `m6b-*`; deviation 1 |
+| R2 | Duplicated Journal requests | **Met.** One request per record view and version. | `RecordTimeline.test.tsx` "share one Journal request"; Plant Journal deep-link test |
+| R3 | Provenance repeating lineage | **Met.** The label states only the record's direct origin (kind of origin, and the direct source group or sowing as a link, so it stays reachable if lineage fails); indirect sources stay in the lineage sequence. | Plant tests; captures |
+| R4 | Phone directory header height | **Met.** First record at 264–296px instead of about 580px (390×844); no header control under 44px. | Probe in progress.md; phone captures |
+| R5 | Realistic multi-step lineage | **Met in UAT** (three steps, above); unit tests keep reversed, unlabelled and missing-source cases. | `three-step` captures |
+| R6 | MediaScreen intermittent | **Hardened, not reproduced.** The final focus assertion raced a passive effect (same mechanism as the StoredMaterial race) and now waits for the same focus. 0 of 32 stressed isolated runs failed before the change. Still tracked. | progress.md |
+| R7 | Real-device QR camera acceptance | **Open: needs the operator** (Android phone over HTTPS or localhost, printed label). | — |
+| R8 | Almanac accessibility | **Met.** Axis `aria-hidden`; grouped lists carry every entry, its date text and its precision in words; the undated sentence is visible text; forced colours draw the marks. | `almanac.test.ts`, timeline tests |
+| R9 | Phone action dock | **Not built** (deviation 3); no overlap risk introduced. | — |
+| R10 | Muted text contrast on tints, both appearances | **Partly verified.** Uses the existing token pairs already measured in M1. The new pairs (muted on `--lineage-subtle`, label text on `--surface`) are token pairs from the M1 palette work; a measured pass of every new pair is still owed. | — |
+| R11 | Screen reader, real zoom, forced colours | **Open.** Automated probes only; needs a manual pass. | — |
+| R12 | Preserve functionality, APIs, permissions, themes | **Met.** No domain behaviour change; every existing suite passes; the six palette blocks remain pinned (token test). Assertions changed only where the design intentionally moved a fact (listed in progress.md). | Test runs |
+| R13 | Six themes on the new layout | **Met.** Specimen components use tokens only; Botanical captures show the sheet. | `m6b-*-botanical` |
+
+### Compared with the M6A artboards (material deviations)
+
+1. **Botanical identity** keeps its reference-hub layout (taxonomy, maps, media, collection
+   footprint). Its page styles conflict with the floated plate column, and an identity is not a
+   specimen. Making it a sheet needs a dedicated pass.
+2. **Plates use thumbnails.** The API exposes only the thumbnail rendition for collection
+   photos, so a large plate can look soft. A larger rendition would need a backend proposal.
+3. **No phone action dock.** Header actions stay in the page as before. The dock is a later
+   refinement.
+4. **No thumbnails in Today's groups** (schedule targets carry no image) and **no recent-record
+   chips** in the Record sheet (the shell's Recent list holds pages, not entry targets).
+5. **Location has no plate** (no location imagery).
+6. **The Journal tab's own list is not regrouped yet.** The Almanac on Overview uses the
+   precision groups; regrouping EventJournal's editable list is left for a follow-up to avoid
+   changing its editing interactions now.
+
 ## Separate proposals
 
 1. **Per-record History filter.** The record timeline's System history lane needs
