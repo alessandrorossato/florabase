@@ -984,6 +984,106 @@ Recommended, as a **separate backend proposal** (not implemented):
 **Pending operator acceptance on Android** (HTTPS or localhost, a printed Florabase label). Not
 claimed as tested.
 
+## M7: side-by-side evaluation, regression review and recommendation
+
+Commits `2d95552` (refinements) and `4571f03` (fixes), plus the M7 checkpoint (docs). Main
+`d94f275` is still `origin/main`, the branch's merge base (read-only check). The review package
+is [INDEPENDENT-REVIEW.md](INDEPENDENT-REVIEW.md).
+
+### Visual refinements
+
+- **Lineage:** the sequence never wraps onto a second row. Wider screens get one row that scrolls
+  sideways when it does not fit; phones get a vertical top-to-bottom sequence with "Full lineage"
+  below it. Verified with the real three-step record.
+- **Tablet:** the name and actions come first, then the plate and label side by side.
+- **Phone:** breadcrumb, name, identity, actions and lineage come before a shorter 16:9 image
+  banner; the label follows the content.
+- **Almanac:** the axis appears only with at least three dated entries across two or more months.
+  Otherwise the precision-grouped lists stand alone.
+
+### Regressions found and fixed in M7
+
+1. **Phone directories were 16 px too wide** (Seeds, Plants, Sowings and other DirectoryPage
+   directories). This pushed the fixed bottom bar partly off-screen, so the Collection workspace
+   sheet could not be tapped in the capture interaction. **Introduced in M6B** by the visually
+   hidden title (absolute, no inset). Fixed; all 14 phone routes now measure 390 px with the bar
+   fully visible. This also corrects the M6 record, which attributed the 16 px at 400% zoom to a
+   scrollbar; it was this overflow.
+2. **Taxonomy "About taxonomy search" disclosure was 32 px.** Pre-existing on main (`ee34874`);
+   now 40 px.
+
+### Functional comparison against main `d94f275`
+
+Evidence:
+- **(a) Test inventory.** Main has 894 uniquely named tests; the branch has 937. Eight main test
+  names are absent:
+  - seven are the replaced sidebar, Quick add and Dashboard-navigation tests (superseded by the
+    Workbench shell and Today tests);
+  - one was renamed and extended in M1 (contrast pairs now cover the two Field Ledger sets).
+  - No other behaviour test was removed, and the full suite passes.
+- **(b) Route sweep.** All 37 main routes are reachable on the branch at desktop, tablet and phone,
+  in light and dark, with 0 console errors and 0 controls under target in Field Ledger. The only
+  absent capture key is the old mobile "More" menu, replaced by workspace sheets.
+- **(c) Workflow smoke.** On the writable synthetic UAT: 10/10 checks passed.
+  - Created a month-precision Journal entry through the record's own form (`entry=new`).
+  - Saw it under "October 2026 · day not recorded" in the Journal and in the Overview Almanac.
+  - Deleted it; the record's event count was restored.
+  - Record sheet search found a Sowing and opened its germination form.
+  - A foreign label link was refused; a label link opened its Plant.
+  - No console errors.
+
+| Area | Main | Florabase Next | Status |
+| ---- | ---- | -------------- | ------ |
+| Navigation | Grouped sidebar, mobile Home/Seeds/Sowings/Plants + More | Rail workspaces, context panel, Saved views, Recent, palette, mobile workspace sheets | All destinations kept; one extra click across workspaces (mitigated by Recent and the palette) |
+| Record CRUD (all types) | Detail pages and edit dialogs | Same domain forms and dialogs inside the Specimen Sheet | Unchanged behaviour (suites pass) |
+| Saved Views | Per-directory dialog | Same dialog; also listed in the panel (5 + "Show all") and the palette | Improved discoverability |
+| Bulk actions | Select records, bulk move | Unchanged; on phones Select follows the list | Kept |
+| Media | Media directory and detail | Unchanged behaviour; the plate shows the primary photo thumbnail | Kept |
+| Lineage | Lineage tab, Origin rows | Lineage tab kept; header sequence with relationship text; label states the direct source | Improved (explicit only) |
+| History | History page | Unchanged; the Almanac links History by kind | Kept (a per-record filter is a backend proposal) |
+| Permissions and auth | Session, CSRF | Untouched; no backend change | Kept |
+| Mobile capture | Journal Record menu → record route | Record sheet (contextual actions, record search, label links, guarded camera scan) → the record's own form | Improved |
+| Filters and search | Directory filters, global search | Same; compact phone header; palette record search | Kept |
+| Import / Export, Labels, Settings, Schedule, Maps | Existing pages | Same pages in the shell | Kept |
+| Dashboard Quick add | In-page button | Global New menu | **Changed** (same routes, different place) |
+| Page title "Dashboard" | — | "Today" (same route `#/dashboard`) | **Changed** |
+| Themes | Six themes | Six unchanged (pinned by test) plus Field Ledger light/dark (branch default) | Kept |
+
+### Comparison and recommendation
+
+| Dimension | Original Florabase | Florabase Next |
+| --------- | ------------------ | -------------- |
+| Usability | Familiar flat sidebar; dense but text-heavy pages; Saved Views hidden in directories | Workspaces plus palette; records lead with identity, lineage and planned versus recorded; capture in two taps; compact phone directories. Cost: one extra click across workspaces and habit change |
+| Visual quality | Coherent but generic administrative UI | Distinctive botanical identity (Field Ledger, Specimen Sheet, reference sheet); image softness from thumbnails |
+| Accessibility | Established baseline | Automated contrast, keyboard, zoom and forced-colours evidence passes; focus ring only after keyboard use; **manual screen reader pass not yet done** |
+| Maintainability | Large shared stylesheets with overrides | Shared components (Specimen, Almanac, Journal scope, shell) and scoped CSS; about 1,200 lines of dead CSS removed; some legacy sheets remain |
+| Performance | Main JS 251.5 kB (gzip 78.1) | 285.0 kB (gzip 87.8); one Journal request per record view; no polling |
+| Feature completeness | Complete | Complete; no backend capability added or removed; Quick add and the Dashboard title moved or renamed |
+
+**Recommendation: adopt the full redesign, with specific blocking corrections.** Do not merge
+until all of these are done:
+1. an independent review against INDEPENDENT-REVIEW.md;
+2. a manual screen-reader pass (and real zoom and high-contrast) on the Specimen Sheet, the shell
+   and the Record sheet;
+3. classification of the identity navigation intermittent;
+4. operator acceptance of the changed habits (Quick add moved to New, "Today", workspace
+   navigation);
+5. canonical FULL and the normal delivery, only after the operator's approval.
+
+Non-blocking but high priority:
+- the display-image rendition proposal;
+- Android QR acceptance before advertising camera scanning;
+- bundle review.
+
+If the operator prefers less change at once, the components integrate selectively in this
+order, each as its own reviewed delivery:
+1. Field Ledger tokens (opt-in theme);
+2. the Specimen Sheet with Almanac and lineage sequence;
+3. capture (Record sheet and entry links);
+4. the Workbench shell.
+
+The shell has the largest habit change and the lowest independent value, so it goes last.
+
 ## Separate proposals
 
 1. **Per-record History filter.** The record timeline's System history lane needs

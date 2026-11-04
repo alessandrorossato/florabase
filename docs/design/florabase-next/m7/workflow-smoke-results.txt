@@ -1,0 +1,11 @@
+PASS Journal entry created through the record form — {'precision': 'month', 'year': 2026, 'month': 10, 'day': None}
+PASS address left clean after the form
+PASS Journal tab lists it under 'October 2026 · day not recorded'
+PASS Overview Almanac shows the new entry — RECORDED in the Journal |  | October 2026 · day not recorded | 2026-10 | Flowering |  | Jour
+PASS entry deleted; record back to its original event count — 1 -> 1
+PASS Record sheet finds a Sowing with its germination form
+PASS germination form opens from the sheet — hash=#/sowings/01a1a5e2-e9c6-7273-8287-0adacddbc2af?tab=germination dialogs=1
+PASS foreign label link refused
+PASS label link opens the Plant
+PASS no console errors
+SMOKE 10/10 passed

@@ -7368,3 +7368,24 @@ Status remains implemented pending canonical verification.
 - QR camera on Android: pending the operator.
 - Review: live UAT at http://localhost:15174 (`preview` / `preview`, synthetic). 16 numbered screenshots are in `.florabase-next-evidence/m6-final-review/` (manifest in `docs/design/florabase-next/m6-final/`).
 - Canonical FULL not run; no push, PR or merge. M7 not started.
+
+### UI-REDESIGN-EXPLORATION-001 — M7 side-by-side evaluation and recommendation, 4 November 2026
+
+- Commits `2d95552` (lineage, tablet, phone and sparse-Almanac refinements) and `4571f03` (fixes), plus the checkpoint commit (docs). Main `d94f275` is unchanged and is the merge base.
+- Regressions found and fixed:
+  - phone DirectoryPage directories were 16 px too wide since M6B (hidden title), hiding part of the bottom bar;
+  - a pre-existing 32 px Taxonomy disclosure.
+- Correction: the M6 note attributing 16 px at 400% zoom to a scrollbar was wrong; it was the overflow.
+- Functional comparison:
+  - test inventory: 894 → 937 names; 8 absent, all replaced or renamed;
+  - route sweep: all 37 main routes, 0 console errors, 0 below target in Field Ledger light and dark;
+  - workflow smoke 10/10 on synthetic UAT, including Journal create and delete with the data restored.
+- Identity intermittent:
+  - not reproduced in 4 instrumented full runs (step latencies 1–13 ms against a 1000 ms wait, refuting the timeout hypothesis) or 20 isolated runs;
+  - tracked and unclassified.
+- Checks:
+  - format, typecheck, lint and build pass; full suite 1207/1207 on the final tree, and 4/4 instrumented runs;
+  - backend diff against main is empty.
+- Evidence: 236 captures at `4571f03` in Field Ledger light and dark, plus 10 main-vs-Next composites. The independent review package is `docs/design/florabase-next/INDEPENDENT-REVIEW.md`.
+- Recommendation: adopt with specific blocking corrections (independent review, a manual screen reader pass, identity intermittent classification, operator acceptance of the habit changes, then FULL and delivery only on approval).
+- QR camera on Android: pending the operator. Canonical FULL not run; no push, PR or merge.
