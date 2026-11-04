@@ -2406,6 +2406,26 @@
       ],
       "priority": "P1",
       "status": "verified"
+    },
+    {
+      "id": "UI-REDESIGN-EXPLORATION-001",
+      "category": "ux",
+      "description": "Experimental Florabase Next frontend (Workbench direction, Field Ledger tokens) on feat/ui-redesign-exploration-001, compared side by side with main using real screenshots from isolated synthetic environments; experimental only, never merged without operator review and approval",
+      "acceptance_criteria": [
+        "A fresh authenticated baseline of main is captured from an isolated synthetic environment with the existing fixture owner, recording source SHA, environment, dataset, viewports and image hashes, without personal credentials",
+        "The alternative frontend uses only existing backend APIs, schema, authentication and authorization, preserves every existing hash route and deep link, and covers all current product areas, not only showcase screens",
+        "Today, command palette, quick-create, QR lookup flows and record detail lineage and timeline are genuinely functional against the existing API, with loading, empty, error, validation and confirmation states and no decorative nonfunctional controls",
+        "Light and dark Field Ledger themes are added without removing or degrading the six existing themes; desktop pointer controls may be 40px with focus, spacing and zoom preserved, and touch targets are at least 44px",
+        "Keyboard navigation, focus return, screen-reader semantics, zoom and desktop, tablet and mobile layouts are tested, and existing frontend tests stay green or are replaced with equivalent coverage",
+        "Main and Florabase Next run in separate isolated Docker environments with independent writable synthetic datasets, and paired screenshots from the running applications cover navigation, dashboard, plants, seeds, sowings, details, explore, forms and dialogs, and mobile",
+        "A functional regression report, evaluation against the agreed criteria, adoption or selective-integration or rejection recommendation and a migration plan are recorded; features needing new backend support are separate proposals",
+        "Canonical FULL verification, delivery and merge happen only after explicit operator approval; Claude implements and independent review uses a separate Claude session or Luna, with no Codex implementation"
+      ],
+      "dependencies": [
+        "UI-DESIGN-001"
+      ],
+      "priority": "P2",
+      "status": "in_progress"
     }
   ]
 }
