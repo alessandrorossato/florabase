@@ -526,3 +526,138 @@
 .app-content .ui-directory-record-actions .ui-directory-quick-action:hover {
   background: var(--surface-hover);
 }
+
+/* M6B compact phone header (M6A finding R4): the first record should start near the top of
+   the screen. Nothing is removed: the section strip above already names the section, so the
+   page title is kept for assistive technology only; search keeps its own row; view, Filters,
+   Saved views and New become 44px icon buttons with their accessible names unchanged, and
+   the active-filter chips scroll beside them; pagination and record selection follow the
+   list instead of preceding it. */
+@media (max-width: 40rem) {
+  .app-content .ui-directory-page .breadcrumbs {
+    display: none;
+  }
+  .app-content .ui-directory-page .page-header--directory {
+    margin-block: 0 var(--space-3);
+    padding: 0;
+  }
+  .app-content .ui-directory-page .page-header--directory .page-identity {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .app-content .ui-directory-page .page-header--directory .page-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+  }
+  .app-content .ui-directory-page .page-header--directory .directory-tools {
+    display: contents;
+  }
+  .app-content .ui-directory-page .page-header--directory .directory-search {
+    flex: 1 1 100%;
+    margin: 0;
+  }
+  .app-content
+    .ui-directory-page
+    .page-header--directory
+    :is(.ui-view-switcher, .saved-views, .directory-tools > .control-action) {
+    flex: none;
+    margin: 0;
+  }
+  /* Icon-only on phones; the visible label is hidden but stays the accessible name. */
+  .app-content
+    .ui-directory-page
+    .page-header--directory
+    .page-tools
+    :is(.ui-view-switcher, .saved-views, .directory-tools > .control-action)
+    .control-action,
+  .app-content
+    .ui-directory-page
+    .page-header--directory
+    .directory-tools
+    > .control-action {
+    min-inline-size: var(--control-height);
+    padding-inline: 0;
+    justify-content: center;
+    gap: 0;
+    font-size: 0;
+  }
+  .app-content
+    .ui-directory-page
+    .page-header--directory
+    .page-tools
+    .control-action
+    :is(svg, .control-icon) {
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+  }
+  .app-content .ui-directory-page .page-header--directory .directory-filter-summary {
+    display: flex;
+    flex: 1 1 0;
+    flex-wrap: nowrap;
+    min-width: 0;
+    margin: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    white-space: nowrap;
+  }
+  .app-content .ui-directory-page .ui-directory-workspace {
+    display: flex;
+    flex-direction: column;
+  }
+  .app-content .ui-directory-page .ui-directory-workspace > .directory-pagination {
+    order: 1;
+    margin-block-start: var(--space-3);
+  }
+}
+
+/* The Harvests workspace composes the same directory parts outside DirectoryPage (its tools
+   sit beside the header and it adds a Harvests / Stored material switch); same phone rules. */
+@media (max-width: 40rem) {
+  .app-content .harvest-workspace > .breadcrumbs {
+    display: none;
+  }
+  .app-content .harvest-workspace > .page-header--directory {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .app-content .harvest-workspace > .directory-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .app-content .harvest-workspace > .directory-tools > .directory-search {
+    flex: 1 1 100%;
+    margin: 0;
+  }
+  .app-content .harvest-workspace > .directory-tools > :not(.directory-search) {
+    flex: none;
+    margin: 0;
+  }
+  .app-content .harvest-workspace > .directory-tools .control-action {
+    min-inline-size: var(--control-height);
+    padding-inline: 0;
+    justify-content: center;
+    gap: 0;
+    font-size: 0;
+  }
+  .app-content .harvest-workspace .ui-directory-workspace {
+    display: flex;
+    flex-direction: column;
+  }
+  .app-content .harvest-workspace .ui-directory-workspace > .directory-pagination {
+    order: 1;
+    margin-block-start: var(--space-3);
+  }
+}
