@@ -26,20 +26,37 @@ const auth = {
   cancelLogout: vi.fn(),
 } as AuthContextValue;
 
-const fetch = vi.fn((path: string) => {
-  const kind = /targets\/(\w+)/.exec(path)?.[1] ?? "plant";
-  const id = kind === "sowing" ? sowingId : plantId;
-  const label = kind === "sowing" ? "Spring tray" : "Basil mother";
-  return Promise.resolve(
+// The Record sheet searches the existing global search endpoint for record kinds.
+const fetch = vi.fn((path: string) =>
+  Promise.resolve(
     new Response(
       JSON.stringify({
-        items: [{ kind, id, label, lifecycle: "active" }],
+        query: "tray",
         total: 1,
+        offset: 0,
+        limit: 8,
+        groups: path.startsWith("/api/v1/search")
+          ? [
+              {
+                kind: "sowing",
+                total: 1,
+                items: [
+                  {
+                    kind: "sowing",
+                    id: sowingId,
+                    title: "Spring tray",
+                    context: "Ocimum basilicum",
+                    href: `#/sowings/${sowingId}`,
+                  },
+                ],
+              },
+            ]
+          : [],
       }),
       { headers: { "Content-Type": "application/json" } },
     ),
-  );
-});
+  ),
+);
 beforeEach(() => {
   vi.stubGlobal("fetch", fetch);
 });
@@ -90,26 +107,31 @@ test("on a Plant, the sheet leads with that Plant's own actions", async () => {
     `#/plants/${plantId}?tab=events&entry=new`,
   );
   expect(onClose).toHaveBeenCalled();
-  await screen.findByRole("combobox", { name: "Target record" });
 });
 
-test("away from a record, choosing a Sowing opens its germination form", async () => {
-  mount();
+test("away from a record, finding a Sowing opens its germination form", async () => {
+  const { follow } = mount();
   expect(screen.queryByRole("navigation", { name: /^This / })).toBeNull();
-  await userEvent.click(screen.getByRole("radio", { name: "Sowing" }));
-  await userEvent.click(
-    await screen.findByRole("combobox", { name: "Target record" }),
+  expect(screen.getByText("Type at least two characters.")).toBeVisible();
+  await userEvent.type(
+    screen.getByRole("searchbox", {
+      name: "Find a Plant, Plant group or Sowing",
+    }),
+    "tray",
   );
-  const option = await screen.findByRole("option", { name: /Spring tray/ });
-  await userEvent.click(within(option).getByRole("button"));
-  expect(
-    screen.getByRole("link", { name: "Open germination entry" }),
-  ).toHaveAttribute("href", `#/sowings/${sowingId}?tab=germination&entry=new`);
-  expect(
-    fetch.mock.calls.some(([path]) =>
-      path.includes("/schedule/targets/sowing"),
-    ),
-  ).toBe(true);
+  const link = await screen.findByRole("link", { name: /Spring tray/ });
+  expect(link).toHaveAttribute(
+    "href",
+    `#/sowings/${sowingId}?tab=germination&entry=new`,
+  );
+  expect(link).toHaveTextContent("Sowing · germination observation");
+  expect(screen.getByRole("status")).toHaveTextContent("1 matching record");
+  const [searched] = fetch.mock.calls.find(([path]) =>
+    path.startsWith("/api/v1/search"),
+  ) ?? [""];
+  expect(searched).toContain("kind=plant&kind=plant_group&kind=sowing");
+  await userEvent.click(link);
+  expect(follow).toHaveBeenCalled();
 });
 
 test("a typed or scanner-typed label link opens only a Florabase label route", async () => {

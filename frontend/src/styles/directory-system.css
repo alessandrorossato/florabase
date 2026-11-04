@@ -597,7 +597,10 @@
     inline-size: 1.25rem;
     block-size: 1.25rem;
   }
-  .app-content .ui-directory-page .page-header--directory .directory-filter-summary {
+  .app-content
+    .ui-directory-page
+    .page-header--directory
+    .directory-filter-summary {
     display: flex;
     flex: 1 1 0;
     flex-wrap: nowrap;
@@ -611,7 +614,10 @@
     display: flex;
     flex-direction: column;
   }
-  .app-content .ui-directory-page .ui-directory-workspace > .directory-pagination {
+  .app-content
+    .ui-directory-page
+    .ui-directory-workspace
+    > .directory-pagination {
     order: 1;
     margin-block-start: var(--space-3);
   }
@@ -656,7 +662,10 @@
     display: flex;
     flex-direction: column;
   }
-  .app-content .harvest-workspace .ui-directory-workspace > .directory-pagination {
+  .app-content
+    .harvest-workspace
+    .ui-directory-workspace
+    > .directory-pagination {
     order: 1;
     margin-block-start: var(--space-3);
   }

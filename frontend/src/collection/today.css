@@ -386,3 +386,30 @@
     padding: var(--space-2) var(--space-4);
   }
 }
+
+/* Next work grouped by record (M6B): the record is named once, its plans listed under it. */
+.today-work-group + .today-work-group {
+  margin-block-start: var(--space-3);
+}
+.today-work-group > h4 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  padding-block: var(--space-3) var(--space-1);
+  border-block-start: 1px solid var(--border-strong);
+  font: var(--type-strong);
+}
+.today-work-group > h4 a {
+  color: var(--text);
+}
+.today-work-group > h4 span {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.today-work-group .today-work-list li {
+  grid-template-columns: 6.25rem minmax(0, 1fr) auto;
+  padding-block: var(--space-2);
+  border-block-start-color: var(--border);
+}

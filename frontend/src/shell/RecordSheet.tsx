@@ -11,16 +11,11 @@ import {
 import { Icon } from "../components/Icon";
 import { TaskDialog } from "../components/TaskDialog";
 import { entryHref } from "../events/entryRequest";
-import { ScheduleTargetPicker } from "../schedule/ScheduleTargetPicker";
+import { requestJson } from "../auth/api";
+import { searchKindLabels, type SearchResponse } from "../collection/searchApi";
 import { labelRoute } from "./labelRoute";
 import { recordContext } from "./recordContext";
 
-type Task = "plant" | "plant_group" | "sowing";
-const taskLabels: Record<Task, string> = {
-  plant: "Plant",
-  plant_group: "Plant group",
-  sowing: "Sowing",
-};
 // Recording workflows that already have their own routes (as in the Journal's Record menu).
 const workflows = [
   {
@@ -32,12 +27,70 @@ const workflows = [
   { label: "Complete scheduled work", href: "#/schedule", icon: "calendar" },
 ] as const;
 
-function targetHref(task: Task, id: string) {
-  return task === "sowing"
-    ? entryHref(`#/sowings/${id}?tab=germination`)
+type Hit = SearchResponse["groups"][number]["items"][number];
+const recordKinds = ["plant", "plant_group", "sowing"] as const;
+
+/** A Sowing opens its germination form; a Plant or Plant group its Journal entry form. */
+function hitHref(hit: Hit) {
+  return hit.kind === "sowing"
+    ? entryHref(`#/sowings/${hit.id}?tab=germination`)
     : entryHref(
-        `#/${task === "plant" ? "plants" : "plant-groups"}/${id}?tab=events`,
+        `#/${hit.kind === "plant" ? "plants" : "plant-groups"}/${hit.id}?tab=events`,
       );
+}
+
+/** The existing global search, limited to the record kinds that have entry forms. */
+function useRecordSearch(query: string) {
+  const trimmed = query.trim();
+  const [answer, setAnswer] = useState<{
+    query: string;
+    hits: Hit[] | null;
+  } | null>(null);
+  useEffect(() => {
+    if (trimmed.length < 2) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams({ q: trimmed, limit: "8" });
+      for (const kind of recordKinds) params.append("kind", kind);
+      requestJson<SearchResponse>(`/api/v1/search?${params.toString()}`, {
+        signal: controller.signal,
+      })
+        .then((response) => {
+          setAnswer({
+            query: trimmed,
+            hits: response.groups
+              .flatMap((group) => group.items)
+              .filter((hit) =>
+                (recordKinds as readonly string[]).includes(hit.kind),
+              ),
+          });
+        })
+        .catch((error: unknown) => {
+          if (error instanceof DOMException && error.name === "AbortError")
+            return;
+          setAnswer({ query: trimmed, hits: null });
+        });
+    }, 200);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [trimmed]);
+  const current = answer?.query === trimmed ? answer : null;
+  if (trimmed.length < 2)
+    return { hits: [], message: "Type at least two characters." };
+  if (!current) return { hits: [], message: "Searching…" };
+  if (!current.hits)
+    return {
+      hits: [],
+      message: "Search is unavailable. Open the record from Plants or Sowings.",
+    };
+  return {
+    hits: current.hits,
+    message: current.hits.length
+      ? `${String(current.hits.length)} matching ${current.hits.length === 1 ? "record" : "records"}`
+      : `No Plant, Plant group or Sowing matches “${trimmed}”.`,
+  };
 }
 
 interface Detector {
@@ -160,8 +213,8 @@ export function RecordSheet({
   returnFocusTo?: RefObject<HTMLElement | null>;
 }) {
   const context = recordContext(hash);
-  const [task, setTask] = useState<Task>("plant");
-  const [target, setTarget] = useState("");
+  const [query, setQuery] = useState("");
+  const search = useRecordSearch(query);
   const [label, setLabel] = useState("");
   const [labelError, setLabelError] = useState(false);
   const labelId = useId();
@@ -214,49 +267,51 @@ export function RecordSheet({
 
       <section className="wb-record__group" aria-labelledby={`${labelId}-pick`}>
         <h3 id={`${labelId}-pick`} className="wb-record__title">
-          Choose a record
+          Another record
         </h3>
-        <fieldset className="wb-record__tasks">
-          <legend>
-            A Journal entry for a Plant or Plant group, or germination for a
-            Sowing
-          </legend>
-          {(Object.keys(taskLabels) as Task[]).map((value) => (
-            <label key={value} className="wb-record__task">
-              <input
-                type="radio"
-                name={`${labelId}-task`}
-                checked={task === value}
-                onChange={() => {
-                  setTask(value);
-                  setTarget("");
-                }}
-              />
-              {taskLabels[value]}
-            </label>
-          ))}
-        </fieldset>
-        <ScheduleTargetPicker
-          key={task}
-          allowInactive
-          kind={task}
-          value={target}
-          selected={null}
-          onChange={setTarget}
-        />
-        {target && (
-          <a
-            className="button-link"
-            href={targetHref(task, target)}
-            onClick={(event) => {
-              follow(event, targetHref(task, target));
-              onClose();
+        <label className="field">
+          Find a Plant, Plant group or Sowing
+          <input
+            type="search"
+            value={query}
+            autoComplete="off"
+            aria-describedby={`${labelId}-pick-status`}
+            onChange={(event) => {
+              setQuery(event.target.value);
             }}
-          >
-            {task === "sowing"
-              ? "Open germination entry"
-              : "Open Journal entry"}
-          </a>
+          />
+        </label>
+        <p id={`${labelId}-pick-status`} className="field-help" role="status">
+          {search.message}
+        </p>
+        {search.hits.length > 0 && (
+          <ul className="wb-record__results" aria-label="Matching records">
+            {search.hits.map((hit) => {
+              const href = hitHref(hit);
+              return (
+                <li key={`${hit.kind}:${hit.id}`}>
+                  <a
+                    href={href}
+                    className="wb-record__action"
+                    onClick={(event) => {
+                      follow(event, href);
+                      onClose();
+                    }}
+                  >
+                    <span>
+                      {hit.title}
+                      <span className="wb-record__hint">
+                        {searchKindLabels[hit.kind]} ·{" "}
+                        {hit.kind === "sowing"
+                          ? "germination observation"
+                          : "Journal entry"}
+                      </span>
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
         )}
       </section>
 

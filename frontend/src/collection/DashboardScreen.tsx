@@ -52,6 +52,46 @@ function plural(count: number, one: string, many: string) {
   return `${String(count)} ${count === 1 ? one : many}`;
 }
 
+type Upcoming = DashboardResponse["overview"]["upcoming"][number];
+const targetRoutes: Record<string, string> = {
+  plant: "plants",
+  plant_group: "plant-groups",
+  seed_lot: "seeds",
+  sowing: "sowings",
+  location: "locations",
+  botanical_identity: "identities",
+};
+
+/** Planned items grouped by their target record, in the order the Schedule returned them. */
+function workGroups(items: Upcoming[]) {
+  const groups: {
+    key: string;
+    label: string;
+    detail: string;
+    href: string | null;
+    items: Upcoming[];
+  }[] = [];
+  for (const item of items) {
+    const target = item.target;
+    const key = target ? `${target.kind}:${target.id}` : "collection";
+    let group = groups.find((candidate) => candidate.key === key);
+    if (!group) {
+      group = {
+        key,
+        label: target ? target.label : "Collection-wide",
+        detail: target
+          ? `${targetLabels[target.kind]}${target.lifecycle && target.lifecycle !== "active" ? ` · ${target.lifecycle}` : ""}`
+          : "Not tied to a record",
+        href: target ? `#/${targetRoutes[target.kind]}/${target.id}` : null,
+        items: [],
+      };
+      groups.push(group);
+    }
+    group.items.push(item);
+  }
+  return groups;
+}
+
 /** One sentence composed only from returned counts; nothing is inferred. */
 function summary(value: DashboardResponse) {
   const { overdue, due_today: today } = value.overview;
@@ -204,31 +244,39 @@ export function DashboardOverview() {
             ))}
           </div>
           {data.upcoming.length ? (
-            <ol className="today-work-list">
-              {data.upcoming.map((item) => {
-                const state = item.overdue
-                  ? "Overdue"
-                  : item.due_on === data.today
-                    ? "Due today"
-                    : "Planned";
-                return (
-                  <li key={item.id}>
-                    <time dateTime={item.due_on}>{item.due_on}</time>
-                    <div>
-                      <a href={`#/schedule/${item.id}`}>{item.title}</a>
-                      <p>
-                        {item.target
-                          ? `${targetLabels[item.target.kind]} · ${item.target.label}${item.target.lifecycle && item.target.lifecycle !== "active" ? ` · ${item.target.lifecycle}` : ""}`
-                          : "Collection-wide"}
-                      </p>
-                    </div>
-                    <StatusBadge attention={state !== "Planned"}>
-                      {state}
-                    </StatusBadge>
-                  </li>
-                );
-              })}
-            </ol>
+            // Grouped by record: each record is named once over its planned items.
+            <div className="today-work-groups">
+              {workGroups(data.upcoming).map((group) => (
+                <div key={group.key} className="today-work-group">
+                  <h4>
+                    {group.href ? (
+                      <a href={group.href}>{group.label}</a>
+                    ) : (
+                      group.label
+                    )}
+                    <span>{group.detail}</span>
+                  </h4>
+                  <ol className="today-work-list">
+                    {group.items.map((item) => {
+                      const state = item.overdue
+                        ? "Overdue"
+                        : item.due_on === data.today
+                          ? "Due today"
+                          : "Planned";
+                      return (
+                        <li key={item.id}>
+                          <time dateTime={item.due_on}>{item.due_on}</time>
+                          <a href={`#/schedule/${item.id}`}>{item.title}</a>
+                          <StatusBadge attention={state !== "Planned"}>
+                            {state}
+                          </StatusBadge>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
+              ))}
+            </div>
           ) : (
             <EmptyState>
               No planned activities. Schedule work when your collection needs

@@ -798,3 +798,45 @@
     color: inherit;
   }
 }
+
+/* Record sheet v2 (M6B): the open record's actions as tiles; results under one search. */
+.wb-record nav.wb-record__group[aria-label^="This "] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.wb-record nav.wb-record__group[aria-label^="This "] > .wb-record__title {
+  grid-column: 1 / -1;
+}
+.wb-record nav.wb-record__group[aria-label^="This "] > .wb-record__action {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-block-size: 5rem;
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+}
+.wb-record
+  nav.wb-record__group[aria-label^="This "]
+  > .wb-record__action:first-of-type {
+  color: var(--on-primary);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.wb-record
+  nav.wb-record__group[aria-label^="This "]
+  > .wb-record__action:first-of-type
+  .control-icon {
+  color: inherit;
+}
+.wb-record .wb-record__results {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wb-record .wb-record__hint {
+  display: block;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
