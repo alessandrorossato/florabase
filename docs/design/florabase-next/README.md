@@ -82,8 +82,8 @@ network idle plus 900 ms.
 
 ## Milestone plan
 
-M0 baseline (done) → M1 Field Ledger foundation (accepted) → M2 Workbench shell (done, awaiting
-checkpoint review) → M3 Today and directories → M4 record detail → M5 quick create and QR → M6 remaining areas → M7
+M0 baseline (done) → M1 Field Ledger foundation (accepted) → M2 Workbench shell (accepted) → M3
+Today and directories (done, awaiting checkpoint review) → M4 record detail → M5 quick create and QR → M6 remaining areas → M7
 side-by-side comparison, regression report and recommendation. Checkpoints with the operator come
 after M1, M2, M4 and M7.
 
@@ -358,6 +358,144 @@ Before: `baseline-main-d94f275`. After: `m2-307611b-field-ledger-light`, `-dark`
 - Botanical, Herbarium and Mineral render the rail with their light `surface-subtle`, which is
   coherent but less distinctive than Field Ledger's dark rail.
 - The page-level duplication of Search and Quick add on the Dashboard remains until M3.
+
+## M3: Today and directories
+
+Commit `b59a21c` (implementation and tests), frontend only. No backend, API, schema, route, auth or
+data change. Today stays on `#/dashboard` and its existing `/api/v1/dashboard` endpoint.
+
+### Today
+
+Today replaces the Dashboard presentation. Every line comes from returned data, and each panel
+states where its data comes from:
+
+| Area | Source | Honesty rule |
+| ---- | ------ | ------------ |
+| Lede ("1 overdue and 7 due today in the Schedule. You hold 2 active Plants…") | Schedule counts and active record counts | Composed only from returned numbers. With nothing due it says so; no greeting, trend or inference. The eyebrow date is the operator's local calendar day. |
+| Collection snapshot | Active record counts, current identity membership | A ruled ledger of four record counts, labelled as records, not plant totals or quantities. |
+| Next work | Schedule (overdue, today, next seven days, earliest planned items) | Labelled "Planned in Schedule". Overdue is explained as derived from the due date, not a statement that work did or did not happen. |
+| Plants in your collection | Selected active Plants with their own primary photo or a labelled identity reference | Specimen plates with Newsreader scientific names; the photo source is shown on the plate, and attribution stays available. |
+| Recent activity | Journal and History projection | Each entry keeps its Journal or History origin, Reversed state and recorded-time labelling. |
+| Record keeping | The existing derived dashboard counts | Labelled "Derived counts of current records. Prompts to review, not tasks or conclusions." The six counts carry their exact definitions, and the panel states that zero is a recorded count, not a failure. |
+
+**Deliberate reversal for review:** DASHBOARD-001 / GLOBAL-VISUAL-001 removed the Propagation,
+Sourcing and Botanical coverage modules from rendering for v0.1 focus, and deferred additional
+summaries to a later Dashboard review. Record keeping brings those counts back as one compact,
+explicitly derived panel, because this exploration is that review. It is easy to remove if the
+v0.1 decision should stand.
+
+Global search, Filters and Saved views stay in the Today header, and search results still replace
+the overview. **The page-level Quick add is consolidated into the Workbench New menu.** Shell
+creation routes now go through the same `openCollectionPage` path as content links, so Back from
+a creation task returns to its directory wherever it started. This is covered by the existing
+"New Sowing Back uses Sowings as parent" and "New plant/group Back" tests, now entered from Today
+through New.
+
+### Directories (Ledger grammar)
+
+Applied to every `DirectoryPage` directory (Seeds, Sowings, Plants and Plant groups, Harvests,
+Locations, Botanical identities, Suppliers, Orders and others), reviewed first on Seeds and Plants. It
+is implemented as edits to the owning rules in `directory-system.css` (the UI System v1 directory
+contract), `directory.css` and `status.css`, not as a new override layer:
+
+- **List rows** in a single bordered ledger with hairline separators, a row hover, framed 3rem
+  thumbnails, the scientific name in Newsreader italic, the summary (quantity, type) end-aligned
+  with tabular figures, and the existing inset bar for selection.
+- **Row actions** (More, Open details, Edit) are borderless until hover or open, at the shared control
+  height: 44px in the six themes as before, and 40/44px in Field Ledger.
+- **Gallery** cards are specimen plates: a full-bleed 4:3 photograph, or a hatched plate with the
+  record's icon where no photo exists. The selected card gets a primary outline.
+- **Phones:** the record takes the full line and its actions follow on their own row, replacing
+  the cramped title-beside-stacked-actions layout.
+- **Status** chips become a dot and the word on a faint tint of their colour, with an outline in
+  forced colours.
+- **Typography:** in Field Ledger, page, record and section titles use Newsreader 500 through
+  `--type-h1` and `--type-h2`, so directories, Today, dialogs and record titles share the botanical
+  serif. The six themes are unchanged; their token blocks remain pinned to main.
+
+Every directory capability is preserved and untouched in code: search, lifecycle and type filters,
+the filter drawer and chips, List and Gallery, Saved views per surface, Select records and bulk
+moves, pagination and page size, row Details, Edit and More menus, direct Details routes and
+Back/Forward focus restoration. The existing directory test suites pass. Only their Dashboard entry
+steps changed (Today and New instead of Dashboard and Quick add); no directory behaviour
+assertion was altered.
+
+### Saved Views discoverability
+
+Saved views stay private shortcuts to existing directory URLs. The shell now lists them without
+any new API or route:
+
+- `shell/useSavedViewLinks.ts` lists the owner's views through the existing
+  `GET /api/v1/saved-views` and turns each into its ordinary URL with the existing `savedViewHash`
+  serializer. Only views it accepts are shown; an incompatible view stays in its directory's own
+  dialog, which explains it.
+- They appear in the panel of the owning workspace (Seeds views under Collection), all of them under
+  Today, in mobile workspace sheets, and in the command palette ("Saved view · Seed lots").
+- The list refreshes when the existing Saved views dialog creates, renames, updates or deletes a
+  view (a window event from `saved-views/events.ts`). A listing failure simply hides the group.
+- Opening a view takes one click from the panel. On main it took three: open the directory, then
+  Saved views, then the view.
+
+### Workspace-preview evaluation (requirement 6)
+
+This is an analytical keystroke-level comparison, not user testing (no user testing was possible
+here).
+
+| Journey | Main | M2 | M3 |
+| ------- | ---- | -- | -- |
+| Today → Seeds | 1 click | 2 (tab, link) | 2 first time; 1 from Recent afterwards; or Ctrl K, type, Enter |
+| Seeds → Plants (same workspace) | 1 | 1 | 1 |
+| Plants → Orders (another workspace) | 1 | 2 | 2, or 1 from Recent once visited |
+| Open a Saved View | 3 | 3 | 1 from the panel or palette |
+| Start a new sowing from anywhere | 2 (Dashboard Quick add, from the Dashboard only) | 2 (New, item) | 2 (New, item), from every page |
+| Return to Today | 1 | 1 (brand mark) | 1 (brand mark) |
+
+Conclusion: keep the preview model. It reduces what the panel shows at once (at most five sections with
+their sub-views, instead of fifteen destinations) without page loads. The extra click for a cold cross-workspace trip is offset for
+repeated trips by Recent, and for named destinations by Saved views and the palette. M3 adds those
+rather than reverting to an always-expanded list. Worth testing with the operator: whether Recent
+should be pinned higher, and whether single-section workspaces should navigate on selection.
+
+### Verification at `b59a21c`
+
+| Check | Result |
+| ----- | ------ |
+| Typecheck, ESLint, Prettier, production build | pass. Main JS 251.5 → 262.7 kB (gzip 78.1 → 81.5 kB) from the Saved Views serializer in the shell; main CSS 224.9 → 223.4 kB |
+| Full frontend suite | 1169/1169. Serial reruns are listed in progress.md |
+| New tests | Today: summary composed from counts, sources stated, record-keeping definitions and values, the empty Schedule wording. Shell: Saved Views by workspace, Today and palette, incompatible omitted, refresh on change; listing failure; Recent. Ported: Quick add menu keyboard and dismissal tests now exercise the New menu |
+| Feature graph | valid |
+
+### Evidence
+
+Captured from UAT Preview serving `b59a21c`. A temporary Saved View ("Basil lots", Seeds, `q=basil`)
+was created through the authenticated API to show discoverability, then deleted. The UAT data
+returned to its fixture state (verified: zero Saved Views).
+
+| Set | Images | Probe |
+| --- | ------ | ----- |
+| Field Ledger light: 10 routes at 1440/1024/390, desktop full pages, palette, preview, New menu, sheets, keyboard focus | 47 | min 40px desktop, 44px touch; 0 below target; 0 console errors |
+| Field Ledger dark: Today, Seeds, Plants, plant detail at 1440/390 | 8 | same result |
+| Botanical: Today, Seeds, Plants at 1440/390 | 6 | 0 console errors; the 40px filter chip on mobile is unchanged from main |
+
+Before/after composites (main baseline against M3) for Today desktop (full page), Today mobile,
+Seeds desktop, Plants dark, Plants tablet and Seeds mobile are in
+`.florabase-next-evidence/m3-before-after/`. Manifests are in [`m3/`](m3/).
+
+### Limitations and known regressions
+
+- **Quick add is no longer on the page.** Creation from Today is through New (two clicks, the same
+  as before), now global. Anyone used to the in-page button needs to find it in the panel.
+- **The Dashboard title is now Today.** The route and Saved View surface (`global_search`) are
+  unchanged, but the visible name changed.
+- **Record keeping** contradicts the v0.1 decision to hide these modules (see above).
+- **Gallery plates** show a thin band above the photograph; it is a padding left by an earlier
+  rule and is minor polish for M6.
+- **Phone headers** in directories still stack the search, view switch, Filters, Saved views and
+  New over three lines before the first record. The tools grammar is shared with M4 and M6 work.
+- **The main JS chunk is 11 kB larger** (3.4 kB gzipped) because the shell now carries the
+  Saved Views serializer.
+- The 30px Leaflet zoom fix and the breadcrumb fix from M2 still apply. The M1 glyph variance stays
+  unexplained until the Phase E side-by-side.
 
 ## Separate proposals
 

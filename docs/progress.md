@@ -7219,3 +7219,23 @@ Status remains implemented pending canonical verification.
   - Botanical inside the shell: 7 captures; one 40px mobile filter chip, as on main.
   - Six before/after composites are in `.florabase-next-evidence/m2-before-after/`.
 - Deviations from the concept are documented: the rail previews rather than navigates; no global top bar; no counts or saved views in the panel; Settings as a sixth workspace; Dashboard is unchanged until M3. The Collection origins glyph variance is superseded by the zoom resize and remains unexplained. Canonical FULL not run; no push, PR or merge. Stopped at the M2 checkpoint.
+
+### UI-REDESIGN-EXPLORATION-001 — M3 Today and directories, 4 November 2026
+
+- Commit `b59a21c`, frontend only. Today replaces the Dashboard presentation on the same route and endpoint:
+  - A lede composed only from returned counts.
+  - The holdings ledger.
+  - Next work labelled "Planned in Schedule", with the Overdue caveat.
+  - Specimen plates.
+  - Recent activity with Journal and History origins kept.
+  - A compact Record keeping panel of the existing derived counts, with their definitions. This reverses the v0.1 decision to hide those modules and is flagged for review.
+- The page-level Quick add is consolidated into the shell New menu. Shell creation routes now use `openCollectionPage`, so Back semantics match content links.
+- Directories adopt the Ledger grammar through edits to their owning rules (`directory-system.css`, `directory.css`, `status.css`): hairline rows, Newsreader scientific names, end-aligned summaries, quiet row actions, 4:3 specimen plates, phone rows with actions on their own line, and dot-and-word status. Field Ledger titles use Newsreader via `--type-h1` and `--type-h2`. The six themes stay pinned.
+- Saved Views are discoverable in the owning workspace panel, Today, mobile sheets and the palette, via the existing list endpoint and `savedViewHash`; incompatible views are omitted. There's also a session-only Recent group. No new API or route.
+- The Journal record launcher no longer depends on the lazily loaded Dashboard stylesheet; about 600 lines of dead dashboard CSS are removed.
+- Checks: typecheck, ESLint, Prettier and build pass. The full frontend suite passed 1169/1169 on the committed tree three times (one in-session run and two serial). No intermittent observed. Main JS is 11 kB larger (3.4 kB gzipped).
+- Evidence: 61 captures at `b59a21c` (manifests in `docs/design/florabase-next/m3/`), plus six before/after composites. Field Ledger shows no control under 40px pointer or 44px touch and no console errors.
+  - A temporary Saved View was created via the API for the captures, then deleted; UAT is back to zero Saved Views.
+- Preview-model evaluation (analytical, not user testing): keep the model, with Recent, Saved views and the palette offsetting cross-workspace trips.
+- Known regressions and limits: no in-page Quick add; the visible title is now Today; Record keeping reverses the v0.1 decision; a small band above gallery photos; stacked directory tools on phones.
+- Canonical FULL not run; no push, PR or merge. Stopped at the M3 checkpoint.
