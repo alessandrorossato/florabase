@@ -1,4 +1,4 @@
-import { Icon, type IconName } from "../components/Icon";
+import { Icon } from "../components/Icon";
 import { DashboardPhotos } from "./DashboardPhotos";
 import { useEffect, useState } from "react";
 import { ApiError } from "../auth/api";
@@ -20,22 +20,14 @@ import { localDay, targetLabels } from "../schedule/state";
 import { getDashboard, type DashboardResponse } from "./api";
 import { useDashboardSearch } from "./DashboardSearch";
 import "./dashboard.css";
+import { createActions } from "../shell/navigation";
 
 type State =
   | { status: "loading" }
   | { status: "ready"; value: DashboardResponse }
   | { status: "error" };
-const actions = [
-  ["New seed lot", "#/seeds?action=create", "seed"],
-  ["New sowing", "#/sowings?action=create", "sprout"],
-  ["New plant", "#/plants?action=create&kind=plant", "plant"],
-  ["New plant group", "#/plants?action=create&kind=group", "layers"],
-  ["Record harvest", "#/harvests?action=create", "harvest"],
-  ["New botanical identity", "#/identities?action=create", "flower"],
-  ["New supplier", "#/suppliers?action=create", "store"],
-  ["New location", "#/locations?action=create", "pin"],
-  ["New local place", "#/geography?action=create", "globe"],
-] satisfies [string, string, IconName][];
+// Creation entry points are shared with the Workbench New menu and command palette.
+const actions = createActions;
 
 function isDashboardResponse(value: unknown): value is DashboardResponse {
   if (typeof value !== "object" || value === null) return false;

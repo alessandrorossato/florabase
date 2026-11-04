@@ -508,11 +508,16 @@ test("direct composer URL survives authentication and uses saved QR origin indep
   render(<App />);
   await screen.findByRole("spinbutton");
   expect(screen.getByRole("button", { name: "Print" })).toBeEnabled();
+  // Workbench: Labels lives in the Settings workspace, not among primary sections.
   expect(
     within(
       screen.getByRole("navigation", { name: "Primary navigation" }),
-    ).queryByRole("link", { name: "Labels" }),
-  ).not.toBeInTheDocument();
+    ).getByRole("link", { name: "Labels" }),
+  ).toHaveAttribute("aria-current", "page");
+  expect(screen.getByRole("tab", { name: /^Settings/ })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
 });
 
 test("full label content remains readable when fixed paper capacity is exceeded", async () => {

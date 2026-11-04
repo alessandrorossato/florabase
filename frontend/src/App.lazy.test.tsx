@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 
@@ -17,6 +17,7 @@ vi.mock("./seed-lots/SeedLotScreen", () => {
 });
 
 import { App } from "./App";
+import { openSection } from "./test/navigation";
 
 afterEach(() => {
   cleanup();
@@ -71,27 +72,23 @@ test("restoration defers workspaces and navigation loads only the selected works
   );
   expect(loaded).toEqual(["dashboard"]);
   const user = userEvent.setup();
-  await user.click(screen.getByRole("link", { name: "Settings" }));
+  await openSection(user, "Settings");
   await screen.findByRole("heading", { name: "Settings" }, { timeout: 5000 });
-  await user.click(await screen.findByRole("link", { name: "Labels" }));
+  await openSection(user, "Labels");
   await screen.findByRole(
     "heading",
     { name: "Labels workspace" },
     { timeout: 5000 },
   );
   expect(loaded).toEqual(["dashboard", "labels"]);
-  await user.click(
-    within(
-      screen.getByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Seeds" }),
-  );
+  await openSection(user, "Seeds");
   await screen.findByRole(
     "heading",
     { name: "Seeds workspace" },
     { timeout: 5000 },
   );
   expect(loaded).toEqual(["dashboard", "labels", "seeds"]);
-  await user.click(screen.getByRole("link", { name: "Dashboard" }));
+  await openSection(user, "Dashboard");
   await screen.findByRole(
     "heading",
     { name: "Dashboard workspace" },

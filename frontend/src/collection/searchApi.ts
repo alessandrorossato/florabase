@@ -108,6 +108,24 @@ export function getSearch(
   });
 }
 
+/** Singular record-kind names, shared by Dashboard search and the command palette. */
+export const searchKindLabels: Record<SearchKind, string> = {
+  seed_lot: "Seed lot",
+  sowing: "Sowing",
+  plant: "Plant",
+  plant_group: "Plant group",
+  harvest: "Harvest",
+  media_asset: "Media",
+  event: "Event",
+  botanical_identity: "Botanical identity",
+  botanical_profile: "Reference knowledge",
+  supplier: "Supplier",
+  order: "Order",
+  location: "Location",
+  geographic_place: "Geographic place",
+  provenance_site: "Provenance site",
+};
+
 export const lifecycles: Partial<Record<SearchKind, string[]>> = {
   seed_lot: ["active", "exhausted", "discarded", "lost"],
   sowing: ["active", "reversed", "completed", "failed", "abandoned"],

@@ -17,6 +17,7 @@ import { App } from "../App";
 import type { GeographicPlaceResponse } from "../geographic-places/api";
 // These cases exercise SeedLot interactions; App.lazy.test.tsx owns chunk loading.
 import "./SeedLotScreen";
+import { openSection as openWorkspaceSection } from "../test/navigation";
 
 const identity = {
   id: "01900000-0000-7000-8000-000000000101",
@@ -208,11 +209,7 @@ async function openSeeds() {
   setViewportMatches(true);
   const user = userEvent.setup();
   render(<App />);
-  await user.click(
-    within(
-      await screen.findByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Seeds" }),
-  );
+  await openWorkspaceSection(user, "Seeds");
   await screen.findByRole("heading", { name: "Seeds", level: 2 });
   return user;
 }
@@ -374,11 +371,7 @@ test("reselecting Seeds clears selection, search and lifecycle filter without re
   });
   await selectDirectoryFilter(user, "Lifecycle", "all");
   await user.type(screen.getByLabelText("Search seed inventory"), "Blue");
-  await user.click(
-    within(
-      screen.getByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Seeds" }),
-  );
+  await openWorkspaceSection(user, "Seeds");
   expect(window.location.hash).toBe("#/seeds");
   expect(await screen.findByLabelText("Search seed inventory")).toHaveValue("");
   expect(
@@ -401,19 +394,11 @@ test("reselecting Seeds protects an edited form until changes are discarded", as
   await assertDedicatedDetails();
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   await user.type(screen.getByLabelText("Lot label"), " changed");
-  await user.click(
-    within(
-      screen.getByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Seeds" }),
-  );
+  await openWorkspaceSection(user, "Seeds");
   expect(confirm).toHaveBeenCalledOnce();
   expect(screen.getByLabelText("Lot label")).toHaveValue("Blue packet changed");
   confirm.mockReturnValue(true);
-  await user.click(
-    within(
-      screen.getByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Seeds" }),
-  );
+  await openWorkspaceSection(user, "Seeds");
   expect(window.location.hash).toBe("#/seeds");
   expect(
     screen.queryByRole("button", { name: "Save changes" }),
@@ -2403,8 +2388,11 @@ test("Overview keeps current-state facts and Sowings has one canonical start act
     "href",
     "#/sowings/sowing-id",
   );
-  expect(screen.getByRole("tabpanel")).toHaveTextContent("12 seeds used");
-  expect(screen.getByRole("tabpanel")).toHaveTextContent("7 germinated");
+  const recordPanel = within(
+    screen.getByRole("region", { name: "Workspace content" }),
+  ).getByRole("tabpanel");
+  expect(recordPanel).toHaveTextContent("12 seeds used");
+  expect(recordPanel).toHaveTextContent("7 germinated");
   expect(screen.getAllByRole("link", { name: "Start sowing" })).toHaveLength(1);
   expect(
     screen.queryByRole("link", { name: "Start another sowing" }),

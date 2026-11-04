@@ -16,6 +16,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { App } from "../App";
 // These cases exercise Sowing interactions; App.lazy.test.tsx owns chunk loading.
 import "./SowingScreen";
+import { openSection } from "../test/navigation";
 
 const identityId = "01900000-0000-7000-8000-000000000101";
 const seedLotId = "01900000-0000-7000-8000-000000000201";
@@ -199,11 +200,7 @@ async function openSowings() {
   setViewportMatches(true);
   const user = userEvent.setup();
   render(<App />);
-  await user.click(
-    within(
-      await screen.findByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Sowings" }),
-  );
+  await openSection(user, "Sowings");
   await screen.findByRole("heading", { name: "Sowings", level: 2 });
   return user;
 }

@@ -180,13 +180,6 @@ body:has(.activity-page dialog[open]) {
   border-radius: 0;
   padding: var(--space-3) 0;
 }
-@media (min-width: 48.01rem) {
-  .application-shell:has(.activity-page) > .desktop-sidebar {
-    position: sticky;
-    top: 0;
-    height: 100dvh;
-  }
-}
 @media (max-width: 48rem) {
   .app-content > .activity-page.ui-page,
   .app-content > .activity-page.ui-page:has(#global-events-title) {

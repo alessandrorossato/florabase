@@ -22,6 +22,7 @@ import {
   getSearch,
   readSearchState,
   searchHash,
+  searchKindLabels,
   type SearchKind,
   type SearchResponse,
   type SearchState,
@@ -42,22 +43,6 @@ const labels: Record<SearchKind, string> = {
   location: "Locations",
   geographic_place: "Geographic places",
   provenance_site: "Provenance sites",
-};
-const singular: Record<SearchKind, string> = {
-  seed_lot: "Seed lot",
-  sowing: "Sowing",
-  plant: "Plant",
-  plant_group: "Plant group",
-  harvest: "Harvest",
-  media_asset: "Media",
-  event: "Event",
-  botanical_identity: "Botanical identity",
-  botanical_profile: "Reference knowledge",
-  supplier: "Supplier",
-  order: "Order",
-  location: "Location",
-  geographic_place: "Geographic place",
-  provenance_site: "Provenance site",
 };
 const categories: { title: string; kinds: SearchKind[] }[] = [
   {
@@ -728,7 +713,7 @@ export function useDashboardSearch() {
                                 context &&
                                 context.toLocaleLowerCase() !==
                                   item.title.trim().toLocaleLowerCase() &&
-                                context !== singular[item.kind] &&
+                                context !== searchKindLabels[item.kind] &&
                                 context !== labels[item.kind] &&
                                 context !== "Collection location";
                               const metadata =
@@ -737,12 +722,12 @@ export function useDashboardSearch() {
                                   ? context
                                   : item.kind === "botanical_profile"
                                     ? "Botanical profile"
-                                    : `${singular[item.kind]}${showContext ? ` · ${context}` : ""}`;
+                                    : `${searchKindLabels[item.kind]}${showContext ? ` · ${context}` : ""}`;
                               return (
                                 <li key={item.id}>
                                   <a
                                     href={item.href}
-                                    aria-label={`${singular[item.kind]}: ${item.title}${showContext ? `. ${context}` : ""}`}
+                                    aria-label={`${searchKindLabels[item.kind]}: ${item.title}${showContext ? `. ${context}` : ""}`}
                                   >
                                     <strong>{item.title}</strong>
                                     <span>{metadata}</span>

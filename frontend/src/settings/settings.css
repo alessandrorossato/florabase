@@ -77,13 +77,6 @@
   height: auto;
   overflow: visible;
 }
-@media screen and (min-width: 48.01rem) {
-  .application-shell:has(.settings-workspace) > .desktop-sidebar {
-    position: sticky;
-    top: 0;
-    height: 100dvh;
-  }
-}
 
 /* Browser-local appearance preferences do not participate in the General form. */
 .appearance-settings fieldset {

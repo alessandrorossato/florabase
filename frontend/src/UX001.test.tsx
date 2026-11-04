@@ -10,6 +10,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { App } from "./App";
+import { openSection } from "./test/navigation";
 
 const identity = {
   id: "01900000-0000-7000-8000-000000000099",
@@ -85,7 +86,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-test("Dashboard is the default workspace with grouped desktop and five-item mobile navigation", async () => {
+test("Dashboard is the default workspace with Workbench workspaces and mobile workspace sheets", async () => {
   mockAuthenticated((path) => {
     if (path.startsWith("/api/v1/dashboard"))
       return json({
@@ -131,28 +132,48 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
   }
   expect(screen.getByText(/Strong new growth\./)).toBeInTheDocument();
 
-  const desktop = screen.getByRole("navigation", {
-    name: "Primary navigation",
-  });
-  for (const group of ["Overview", "Collection", "Explore", "Sourcing"])
-    expect(
-      within(desktop).getByRole("region", { name: group }),
-    ).toBeInTheDocument();
+  // Workbench: a rail of workspace tabs switches the context panel without
+  // navigating; the panel lists the selected workspace's sections.
+  const workspaceTabs = screen.getByRole("tablist", { name: "Workspaces" });
   expect(
-    within(within(desktop).getByRole("region", { name: "Explore" })).getByRole(
-      "link",
-      { name: "Botanical identities" },
-    ),
+    within(workspaceTabs)
+      .getAllByRole("tab")
+      .map((tab) => tab.querySelector(".wb-tab__label")?.textContent),
+  ).toEqual([
+    "Today",
+    "Collection",
+    "Activity",
+    "Explore",
+    "Sourcing",
+    "Settings",
+  ]);
+  expect(
+    within(workspaceTabs).getByRole("tab", { name: /^Today/ }),
+  ).toHaveAttribute("aria-selected", "true");
+  expect(
+    within(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Dashboard" }),
+  ).toHaveAttribute("aria-current", "page");
+  await user.click(
+    within(workspaceTabs).getByRole("tab", { name: /^Explore/ }),
+  );
+  expect(
+    within(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Botanical identities" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("heading", { name: "Dashboard", level: 2 }),
   ).toBeInTheDocument();
   const mobile = screen.getByRole("navigation", {
     name: "Mobile primary navigation",
   });
-  expect(mobile.querySelectorAll("a, button")).toHaveLength(5);
   expect(
     within(mobile)
-      .getAllByRole("link")
+      .getAllByRole("button")
       .map((item) => item.textContent),
-  ).toEqual(["Home", "Seeds", "Sowings", "Plants"]);
+  ).toEqual(["Today", "Collection", "Activity", "Explore", "Sourcing"]);
   expect(
     within(snapshot).getByRole("link", { name: /Plant groups.*3/ }),
   ).toHaveAttribute("href", "#/plants?type=group");
@@ -161,21 +182,17 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
     screen.getByRole("navigation", { name: "Quick actions" }),
   ).toHaveTextContent("New seed lot");
   await user.keyboard("{Escape}");
-  await user.click(within(mobile).getByRole("button", { name: "More" }));
+  await user.click(within(mobile).getByRole("button", { name: "Activity" }));
+  const sheet = screen.getByRole("dialog", { name: "Activity" });
   expect(
-    screen.getByRole("navigation", { name: "More navigation" }),
+    within(sheet).getByRole("link", { name: "Journal" }),
   ).toBeInTheDocument();
+  await user.click(within(sheet).getByRole("button", { name: "Close" }));
   expect(
-    within(
-      screen.getByRole("navigation", { name: "More navigation" }),
-    ).getByRole("link", { name: "Journal" }),
-  ).toBeInTheDocument();
-  await user.click(within(mobile).getByRole("link", { name: "Home" }));
-  expect(
-    screen.queryByRole("navigation", { name: "More navigation" }),
+    screen.queryByRole("dialog", { name: "Activity" }),
   ).not.toBeInTheDocument();
 
-  await user.click(within(desktop).getByRole("link", { name: "Journal" }));
+  await openSection(user, "Journal");
   expect(
     await screen.findByRole("heading", { name: "Journal" }),
   ).toBeInTheDocument();
@@ -287,7 +304,11 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
     "aria-controls",
     "panel-overview",
   );
-  expect(screen.getByRole("tabpanel")).toHaveAttribute("id", "panel-overview");
+  expect(
+    within(screen.getByRole("region", { name: "Workspace content" })).getByRole(
+      "tabpanel",
+    ),
+  ).toHaveAttribute("id", "panel-overview");
   expect(
     screen.getByRole("heading", { name: "Botanical summary" }),
   ).toBeInTheDocument();
@@ -323,7 +344,11 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
       expect.stringContaining(`#/${route}?identity_id=${identity.id}`),
     );
   }
-  expect(screen.queryByRole("tab", { name: "Collection" })).toBeNull();
+  expect(
+    within(
+      screen.getByRole("region", { name: "Workspace content" }),
+    ).queryByRole("tab", { name: "Collection" }),
+  ).toBeNull();
   await user.click(screen.getByRole("button", { name: "Start sowing" }));
   const sowingWorkflow = await screen.findByRole("dialog", {
     name: "Start sowing",

@@ -14,6 +14,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { App } from "../App";
+import { openSection } from "../test/navigation";
 
 const identityId = "01900000-0000-7000-8000-000000000101";
 const otherIdentityId = "01900000-0000-7000-8000-000000000102";
@@ -324,11 +325,7 @@ async function openPlants(waitForReady = true) {
   setViewportMatches(true);
   const user = userEvent.setup();
   render(<App />);
-  await user.click(
-    within(
-      await screen.findByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Plants" }),
-  );
+  await openSection(user, "Plants");
   if (waitForReady) {
     await screen.findByRole(
       "heading",
@@ -2930,11 +2927,7 @@ test.each(["plant", "group"] as const)(
     expect(
       await screen.findByRole("button", { name: "New plant or group" }),
     ).toBeVisible();
-    await user.click(
-      within(
-        screen.getByRole("navigation", { name: "Primary navigation" }),
-      ).getByRole("link", { name: "Dashboard" }),
-    );
+    await openSection(user, "Dashboard");
     await user.click(await screen.findByRole("button", { name: "Quick add" }));
     await user.click(
       screen.getByRole("link", {

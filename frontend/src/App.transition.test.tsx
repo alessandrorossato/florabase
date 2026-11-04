@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 
@@ -24,6 +24,7 @@ vi.mock("./seed-lots/SeedLotScreen", async () => {
 });
 
 import { App } from "./App";
+import { openSection } from "./test/navigation";
 
 afterEach(() => {
   cleanup();
@@ -62,13 +63,7 @@ test("an unresolved route chunk shows a compact loading placeholder and one shel
     { name: "Dashboard workspace" },
     { timeout: 10_000 },
   );
-  await userEvent
-    .setup()
-    .click(
-      within(
-        screen.getByRole("navigation", { name: "Primary navigation" }),
-      ).getByRole("link", { name: "Seeds" }),
-    );
+  await openSection(userEvent.setup(), "Seeds");
   const loading = screen.getByRole("status");
   expect(loading).toHaveClass("workspace-route-loading");
   expect(loading).toHaveTextContent("Loading workspace…");

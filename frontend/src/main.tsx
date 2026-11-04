@@ -18,6 +18,8 @@ import "./styles.css";
 import "./styles/foundation.css";
 import "./styles/normalization.css";
 import "./styles/controls.css";
+// Workbench shell after global sheets, before lazily loaded page CSS.
+import "./shell/workbench.css";
 
 const root = document.getElementById("root");
 

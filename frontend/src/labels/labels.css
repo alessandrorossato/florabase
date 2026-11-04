@@ -261,13 +261,6 @@
 .labels-workspace .label-preview {
   overflow: visible;
 }
-@media screen and (min-width: 48.01rem) {
-  .application-shell:has(.labels-workspace) > .desktop-sidebar {
-    position: sticky;
-    top: 0;
-    height: 100dvh;
-  }
-}
 .label-content-details {
   font: var(--type-small);
 }

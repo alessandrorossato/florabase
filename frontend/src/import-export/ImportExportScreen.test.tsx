@@ -9,6 +9,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { App } from "../App";
+import { openSection } from "../test/navigation";
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -93,13 +94,11 @@ test("navigates, validates row issues, retries and explicitly confirms the revie
   });
 
   render(<App />);
-  await user.click(await screen.findByRole("link", { name: "Settings" }));
+  await openSection(user, "Settings");
   await user.click(
-    await screen.findByRole(
-      "link",
-      { name: "Import / Export" },
-      { timeout: 5000 },
-    ),
+    await within(
+      screen.getByRole("region", { name: "Workspace content" }),
+    ).findByRole("link", { name: "Import / Export" }, { timeout: 5000 }),
   );
   expect(
     await screen.findByRole(
@@ -220,13 +219,11 @@ test("shows validation progress and a recoverable file error", async () => {
   });
 
   render(<App />);
-  await user.click(await screen.findByRole("link", { name: "Settings" }));
+  await openSection(user, "Settings");
   await user.click(
-    await screen.findByRole(
-      "link",
-      { name: "Import / Export" },
-      { timeout: 5000 },
-    ),
+    await within(
+      screen.getByRole("region", { name: "Workspace content" }),
+    ).findByRole("link", { name: "Import / Export" }, { timeout: 5000 }),
   );
   await user.upload(
     await screen.findByLabelText(/CSV file/),
@@ -347,13 +344,11 @@ test("guides a human Supplier import and requires a reviewed update choice", asy
   });
 
   render(<App />);
-  await user.click(await screen.findByRole("link", { name: "Settings" }));
+  await openSection(user, "Settings");
   await user.click(
-    await screen.findByRole(
-      "link",
-      { name: "Import / Export" },
-      { timeout: 5000 },
-    ),
+    await within(
+      screen.getByRole("region", { name: "Workspace content" }),
+    ).findByRole("link", { name: "Import / Export" }, { timeout: 5000 }),
   );
   await user.selectOptions(
     await screen.findByLabelText("Record type"),

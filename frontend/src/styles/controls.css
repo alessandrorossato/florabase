@@ -73,19 +73,10 @@
   background: transparent;
   pointer-events: none;
 }
-.sidebar-footer-actions .control-action,
-.sidebar-footer-actions .control-icon-button,
-.mobile-navigation-footer-actions .control-action,
-.mobile-navigation-footer-actions .control-icon-button {
-  font: var(--type-small);
-}
 .theme-preview.control-icon-button {
   color: var(--text-muted);
   background: transparent;
   border-color: transparent;
-}
-.mobile-navigation-dialog .theme-preview .control-icon-button__label {
-  display: inline;
 }
 @media (max-width: 48rem), (any-pointer: coarse), (hover: none) {
   .control-icon-button__label {
@@ -105,42 +96,16 @@
   }
 }
 
-.leaflet-bar a {
+/* Leaflet's touch sheet (.leaflet-touch .leaflet-bar a, 30px) outranked the plain rule, so map
+   zoom controls were 30px in every theme. Match its specificity to keep the shared target. */
+.leaflet-bar a,
+.leaflet-touch .leaflet-bar a {
   width: var(--control-height);
   height: var(--control-height);
   line-height: var(--control-height);
 }
-
-.sidebar-group-toggle .control-icon {
-  width: 18px;
-  height: 18px;
-}
-
-/* Destination pictograms remain decorative; navigation labels own accessible names. */
-.desktop-sidebar .navigation-link,
-.mobile-navigation-groups .navigation-link {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
 .navigation-link .control-icon {
   flex-shrink: 0;
 }
-.mobile-navigation .control-icon {
-  width: 1rem;
-  height: 1rem;
-}
 
 /* Mobile account controls already live in More; desktop collapse has no mobile target. */
-@media (max-width: 48rem) {
-  .desktop-sidebar .sidebar-toggle--hide,
-  .desktop-sidebar > .desktop-sidebar__content,
-  .desktop-sidebar > .sidebar-utility {
-    display: none;
-  }
-  .desktop-sidebar > .sidebar-top {
-    display: flex;
-    align-items: center;
-    min-height: 2.75rem;
-  }
-}

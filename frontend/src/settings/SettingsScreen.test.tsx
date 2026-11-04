@@ -223,18 +223,21 @@ test("Settings deep links and Tools replace the primary Tools macro-category, pr
   expect(
     within(nav).queryByRole("region", { name: "Tools" }),
   ).not.toBeInTheDocument();
-  expect(
-    within(nav).queryByRole("link", { name: "Labels" }),
-  ).not.toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "Labels" })).toHaveAttribute(
+  // Workbench: the Settings workspace panel lists Settings and its Tools; the page
+  // keeps its own Tools links to the same routes.
+  expect(within(nav).getByRole("link", { name: "Labels" })).toHaveAttribute(
     "href",
     "#/labels",
   );
-  expect(screen.getByRole("link", { name: "Import / Export" })).toHaveAttribute(
+  const content = screen.getByRole("region", { name: "Workspace content" });
+  expect(within(content).getByRole("link", { name: "Labels" })).toHaveAttribute(
     "href",
-    "#/import-export",
+    "#/labels",
   );
-  expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute(
+  expect(
+    within(content).getByRole("link", { name: "Import / Export" }),
+  ).toHaveAttribute("href", "#/import-export");
+  expect(within(nav).getByRole("link", { name: "Settings" })).toHaveAttribute(
     "aria-current",
     "page",
   );

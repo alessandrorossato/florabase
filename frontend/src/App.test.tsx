@@ -19,6 +19,7 @@ import { App } from "./App";
 import "./botanical-identities/BotanicalIdentityScreen";
 import type { GeographicPlaceResponse } from "./geographic-places/api";
 import type { LocationResponse } from "./locations/api";
+import { openSection } from "./test/navigation";
 
 const session = {
   user_id: "01900000-0000-7000-8000-000000000001",
@@ -346,11 +347,7 @@ const supplierDetail = {
 async function openSuppliers() {
   const user = userEvent.setup();
   render(<App />);
-  await user.click(
-    within(
-      await screen.findByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Suppliers" }),
-  );
+  await openSection(user, "Suppliers");
   return user;
 }
 
@@ -401,11 +398,7 @@ const drawerLocation = {
 async function openLocations() {
   const user = userEvent.setup();
   render(<App />);
-  await user.click(
-    within(
-      await screen.findByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Locations" }),
-  );
+  await openSection(user, "Locations");
   return user;
 }
 
@@ -522,16 +515,16 @@ test("restores an existing session and recovers CSRF without a password", async 
   expect(
     within(sidebar).getByRole("button", { name: "Sign out" }),
   ).toBeInTheDocument();
-  const utilities = sidebar.querySelector(".sidebar-footer-actions");
-  expect(utilities).toContainElement(
-    within(sidebar).getByRole("link", { name: "Settings" }),
-  );
-  expect(utilities).toContainElement(
+  const footer = sidebar.querySelector(".wb-panel__footer");
+  expect(footer).toContainElement(
     within(sidebar).getByRole("button", { name: /Appearance:/ }),
   );
-  expect(utilities).not.toContainElement(
+  expect(footer).toContainElement(
     within(sidebar).getByRole("button", { name: "Sign out" }),
   );
+  expect(
+    within(sidebar).getByRole("tab", { name: /^Settings/ }),
+  ).toHaveAttribute("aria-controls", "wb-panel");
   expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
   expect(calls.slice(0, 2)).toEqual([
     "GET /api/v1/auth/session",
@@ -539,7 +532,7 @@ test("restores an existing session and recovers CSRF without a password", async 
   ]);
 });
 
-test("desktop navigation hides and reopens without remounting the workspace", async () => {
+test("desktop context panel previews, hides and reopens without remounting the workspace", async () => {
   window.history.replaceState(null, "", "#/dashboard");
   mockFetch((path) => {
     if (path.endsWith("/session")) return jsonResponse(session);
@@ -549,104 +542,61 @@ test("desktop navigation hides and reopens without remounting the workspace", as
   });
   const user = userEvent.setup();
   const { unmount } = render(<App />);
-  const sidebar = await screen.findByRole("complementary", {
-    name: "Application sidebar",
-  });
-  const shell = sidebar.parentElement;
-  const workspace = screen.getByRole("region", { name: "Workspace content" });
-  const explore = within(sidebar).getByRole("region", { name: "Explore" });
-  expect(
-    within(explore).getByRole("link", { name: "Botanical identities" }),
-  ).toBeInTheDocument();
-  expect(
-    within(sidebar).queryByRole("region", { name: "Botany" }),
-  ).not.toBeInTheDocument();
-  expect(
-    within(sidebar).queryByRole("region", { name: "Tools" }),
-  ).not.toBeInTheDocument();
-  expect(
-    within(sidebar).getByRole("link", { name: "Settings" }),
-  ).toHaveAttribute("href", "#/settings");
-  expect(
-    within(sidebar).getByRole("button", { name: /Appearance:/ }),
-  ).toBeInTheDocument();
-  const resize = within(sidebar).getByRole("separator", {
-    name: "Resize navigation",
-  });
-  const dashboard = await screen.findByRole("heading", { name: "Dashboard" });
-  resize.focus();
-  await user.keyboard("{End}");
-  expect(resize).toHaveAttribute(
-    "aria-valuenow",
-    String(Math.min(400, Math.floor(window.innerWidth * 0.35))),
-  );
-  expect(await screen.findByRole("heading", { name: "Dashboard" })).toBe(
-    dashboard,
-  );
-  await user.keyboard("{Home}");
-  expect(resize).toHaveAttribute("aria-valuenow", "220");
-  await user.keyboard("{ArrowRight}");
-  expect(resize).toHaveAttribute("aria-valuenow", "228");
-  const initialWidth = window.innerWidth;
   try {
-    Object.defineProperty(window, "innerWidth", {
-      configurable: true,
-      value: 1440,
+    const sidebar = await screen.findByRole("complementary", {
+      name: "Application sidebar",
     });
-    window.dispatchEvent(new Event("resize"));
-    await waitFor(() => {
-      expect(resize).toHaveAttribute("aria-valuemax", "400");
-    });
-    Object.defineProperty(window, "innerWidth", {
-      configurable: true,
-      value: 1024,
-    });
-    window.dispatchEvent(new Event("resize"));
-    await waitFor(() => {
-      expect(resize).toHaveAttribute("aria-valuemax", "358");
-    });
-    expect(resize).toHaveAttribute("aria-valuenow", "228");
+    const shell = sidebar.parentElement;
+    const workspace = screen.getByRole("region", { name: "Workspace content" });
+    const dashboard = await screen.findByRole("heading", { name: "Dashboard" });
+    expect(
+      within(screen.getByRole("tabpanel", { name: /^Today/ })).getByRole(
+        "link",
+        { name: "Dashboard" },
+      ),
+    ).toHaveAttribute("aria-current", "page");
+    // Previewing another workspace switches the panel without navigating.
+    const explore = screen.getByRole("tab", { name: /^Explore/ });
+    await user.click(explore);
+    expect(explore).toHaveAttribute("aria-selected", "true");
+    expect(
+      within(
+        screen.getByRole("navigation", { name: "Primary navigation" }),
+      ).getByRole("link", { name: "Botanical identities" }),
+    ).toHaveAttribute("href", "#/identities");
+    expect(window.location.hash).toBe("#/dashboard");
     expect(screen.getByRole("heading", { name: "Dashboard" })).toBe(dashboard);
-  } finally {
-    Object.defineProperty(window, "innerWidth", {
-      configurable: true,
-      value: initialWidth,
+    // Hiding the panel keeps the workspace mounted and returns focus to the tab.
+    await user.click(
+      within(sidebar).getByRole("button", { name: "Hide panel" }),
+    );
+    expect(shell).toHaveClass("wb-shell--collapsed");
+    expect(explore).toHaveAttribute("aria-selected", "false");
+    await waitFor(() => {
+      expect(explore).toHaveFocus();
     });
-    window.dispatchEvent(new Event("resize"));
+    expect(screen.getByRole("region", { name: "Workspace content" })).toBe(
+      workspace,
+    );
+    expect(localStorage.getItem("florabase.workbench.panel-collapsed.v1")).toBe(
+      "true",
+    );
+    await user.keyboard("{Enter}");
+    expect(shell).not.toHaveClass("wb-shell--collapsed");
+    expect(explore).toHaveAttribute("aria-selected", "true");
+    // Selecting the open workspace again collapses it, like an activity bar.
+    await user.click(explore);
+    expect(shell).toHaveClass("wb-shell--collapsed");
+    expect(screen.getByRole("heading", { name: "Dashboard" })).toBe(dashboard);
+    unmount();
+    render(<App />);
+    const reloadedShell = await screen.findByRole("complementary", {
+      name: "Application sidebar",
+    });
+    expect(reloadedShell.parentElement).toHaveClass("wb-shell--collapsed");
+  } finally {
+    localStorage.removeItem("florabase.workbench.panel-collapsed.v1");
   }
-  const hideNavigation = within(sidebar).getByRole("button", {
-    name: "Hide navigation",
-  });
-  expect(
-    within(sidebar).getByRole("link", { name: "Dashboard" }),
-  ).toHaveAttribute("aria-current", "page");
-  hideNavigation.focus();
-  await user.keyboard("{Enter}");
-  expect(shell).toHaveClass("navigation-collapsed");
-  expect(screen.getByRole("region", { name: "Workspace content" })).toBe(
-    workspace,
-  );
-  const showNavigation = screen.getByRole("button", {
-    name: "Show navigation",
-  });
-  await waitFor(() => {
-    expect(showNavigation).toHaveFocus();
-  });
-  showNavigation.focus();
-  await user.keyboard("{Enter}");
-  await waitFor(() => {
-    expect(hideNavigation).toHaveFocus();
-  });
-  expect(shell).not.toHaveClass("navigation-collapsed");
-  expect(screen.getByRole("region", { name: "Workspace content" })).toBe(
-    workspace,
-  );
-  unmount();
-  render(<App />);
-  const reloadedShell = await screen.findByRole("complementary", {
-    name: "Application sidebar",
-  });
-  expect(reloadedShell.parentElement).not.toHaveClass("navigation-collapsed");
 });
 
 test("a restoration service failure is explicit and retryable", async () => {
@@ -694,14 +644,15 @@ test("keyboard login succeeds, clears the password, and stores no token", async 
     await screen.findByText("Signed in as Florabase Owner"),
   ).toBeInTheDocument();
   expect(localStorage.length).toBe(1);
-  expect(localStorage.key(0)).toBe("florabase.sidebar.collapsed-groups.v1");
-  expect(localStorage.getItem("florabase.sidebar.collapsed-groups.v1")).toBe(
-    "[]",
+  // Only the Workbench panel presentation preference is stored; no credential.
+  expect(localStorage.key(0)).toBe("florabase.workbench.panel-collapsed.v1");
+  expect(localStorage.getItem("florabase.workbench.panel-collapsed.v1")).toBe(
+    "false",
   );
   expect(sessionStorage.length).toBe(0);
   expect(storageWrite.mock.calls.length).toBeGreaterThan(0);
   for (const call of storageWrite.mock.calls) {
-    expect(call).toEqual(["florabase.sidebar.collapsed-groups.v1", "[]"]);
+    expect(call).toEqual(["florabase.workbench.panel-collapsed.v1", "false"]);
   }
   const loginRequest = requests.find(({ path }) => path.endsWith("/login"));
   expect(loginRequest?.init?.credentials).toBe("same-origin");
@@ -1742,11 +1693,7 @@ test("primary navigation switches accessibly to the empty supplier directory", a
     screen.queryByRole("heading", { name: "Add supplier" }),
   ).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "New supplier" })).toHaveFocus();
-  await user.click(
-    within(
-      screen.getByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Botanical identities" }),
-  );
+  await openSection(user, "Botanical identities");
   expect(
     await screen.findByRole("heading", { name: "Botanical identities" }),
   ).toBeInTheDocument();
@@ -2646,11 +2593,7 @@ test("location deletion confirms safe leaves and explains blocked parents", asyn
   await user.click(await screen.findByLabelText("More location actions"));
   await user.click(screen.getByRole("button", { name: "Delete location" }));
   expect(await screen.findByText(/Garden was deleted/)).toBeInTheDocument();
-  await user.click(
-    within(
-      screen.getByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Locations" }),
-  );
+  await openSection(user, "Locations");
   expect(
     screen.queryByRole("button", { name: /^Garden/i }),
   ).not.toBeInTheDocument();
@@ -3059,11 +3002,7 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
     </StrictMode>,
   );
 
-  await user.click(
-    within(
-      await screen.findByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Locations" }),
-  );
+  await openSection(user, "Locations");
   const newLocation = await screen.findByRole("button", {
     name: "New location",
   });
@@ -3097,11 +3036,7 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
   await user.keyboard("{Escape}");
   expect(editLocation).toHaveFocus();
 
-  await user.click(
-    within(
-      screen.getByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Suppliers" }),
-  );
+  await openSection(user, "Suppliers");
   const newSupplier = await screen.findByRole("button", {
     name: "New supplier",
   });
@@ -3129,11 +3064,7 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
   await user.keyboard("{Escape}");
   expect(editSupplier).toHaveFocus();
 
-  await user.click(
-    within(
-      screen.getByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Geography" }),
-  );
+  await openSection(user, "Geography");
   await act(async () => {
     await vi.dynamicImportSettled();
   });
@@ -3534,7 +3465,7 @@ test.each([1440, 390])(
   },
 );
 
-test("Sourcing and Explore sidebar macroareas and mobile More retain every destination and route", async () => {
+test("Workbench workspaces, panels and mobile sheets retain every destination and route", async () => {
   window.history.replaceState(null, "", "#/dashboard");
   mockFetch((path) => {
     if (path.endsWith("/session")) return jsonResponse(session);
@@ -3615,17 +3546,18 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     name: "Primary navigation",
   });
   expect(
-    within(nav)
-      .getAllByRole("region")
-      .map((group) => group.getAttribute("aria-label")),
-  ).toEqual(["Overview", "Collection", "Activity", "Explore", "Sourcing"]);
-  expect(within(nav).getAllByRole("button", { expanded: true })).toHaveLength(
-    5,
-  );
+    within(sidebar)
+      .getAllByRole("tab")
+      .map((tab) => tab.querySelector(".wb-tab__label")?.textContent),
+  ).toEqual([
+    "Today",
+    "Collection",
+    "Activity",
+    "Explore",
+    "Sourcing",
+    "Settings",
+  ]);
   expect(within(nav).queryByText("Maps")).not.toBeInTheDocument();
-  expect(
-    within(nav).queryByRole("button", { name: "Maps" }),
-  ).not.toBeInTheDocument();
   const destinations = [
     "Dashboard",
     "Seeds",
@@ -3643,43 +3575,42 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "Suppliers",
     "Orders",
   ];
-  expect(
-    within(nav)
-      .getAllByRole("link")
-      .filter((button) => button.classList.contains("navigation-link"))
-      .map((button) => button.textContent),
-  ).toEqual(destinations);
+  // Every destination appears exactly once across the workspace panels.
+  const reachable: string[] = [];
+  for (const tab of within(sidebar).getAllByRole("tab").slice(0, 5)) {
+    await user.click(tab);
+    reachable.push(
+      ...within(nav)
+        .getAllByRole("link")
+        .filter((link) => link.classList.contains("navigation-link"))
+        .map((link) => link.textContent),
+    );
+  }
+  expect(reachable).toEqual(destinations);
+  await user.click(within(sidebar).getByRole("tab", { name: /^Today/ }));
   expect(within(nav).getByRole("link", { name: "Dashboard" })).toHaveAttribute(
     "aria-current",
     "page",
   );
-  await user.click(
-    within(
-      screen.getByRole("navigation", { name: "Mobile primary navigation" }),
-    ).getByRole("button", { name: "More" }),
-  );
-  expect(
-    within(screen.getByRole("navigation", { name: "More navigation" }))
-      .getAllByRole("link")
-      .map((button) => button.textContent),
-  ).toEqual(destinations);
-  const account = screen
-    .getByRole("dialog", { name: "Navigation" })
-    .querySelector(".mobile-navigation-account");
-  expect(account).toContainElement(
-    within(screen.getByRole("dialog", { name: "Navigation" })).getByRole(
-      "link",
-      { name: "Settings" },
-    ),
-  );
-  const mobileSignOut = within(
-    screen.getByRole("dialog", { name: "Navigation" }),
-  ).getByRole("button", { name: "Sign out" });
-  expect(account).toContainElement(mobileSignOut);
-  expect(
-    account?.querySelector(".sidebar-footer-actions"),
-  ).not.toContainElement(mobileSignOut);
-  await user.click(screen.getByRole("button", { name: "Close navigation" }));
+  // Mobile: each workspace opens a sheet with the same destinations.
+  const mobile = screen.getByRole("navigation", {
+    name: "Mobile primary navigation",
+  });
+  const mobileReachable: string[] = [];
+  for (const button of within(mobile).getAllByRole("button")) {
+    await user.click(button);
+    const sheet = screen.getByRole("dialog", {
+      name: button.textContent,
+    });
+    mobileReachable.push(
+      ...within(sheet)
+        .getAllByRole("link")
+        .filter((link) => link.classList.contains("navigation-link"))
+        .map((link) => link.textContent),
+    );
+    await user.click(within(sheet).getByRole("button", { name: "Close" }));
+  }
+  expect(mobileReachable).toEqual(destinations);
   const routes = [
     "dashboard",
     "seeds",
@@ -3715,7 +3646,7 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "Sourcing",
   ];
   for (const [index, destination] of destinations.entries()) {
-    await user.click(within(nav).getByRole("link", { name: destination }));
+    await openSection(user, destination);
     await vi.dynamicImportSettled();
     await waitFor(() => {
       expect(window.location.hash).toBe(`#/${routes[index]}`);
@@ -3748,65 +3679,39 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
   }
 });
 
-test("sidebar disclosures support keyboard, persist preferences and expand activated routes", async () => {
+test("workspace tabs support arrow keys and the panel follows activated routes", async () => {
   window.history.replaceState(null, "", "#/history");
-  localStorage.setItem(
-    "florabase.sidebar.collapsed-groups.v1",
-    JSON.stringify(["Activity", "Explore", "Places", "Reference"]),
-  );
   mockFetch((path) => {
     if (path.endsWith("/session")) return jsonResponse(session);
     if (path.endsWith("/csrf")) return jsonResponse({ csrf_token: "csrf" });
     if (path.endsWith("/health")) return jsonResponse({ status: "ok" });
-    if (path.startsWith("/api/v1/orders?"))
-      return jsonResponse({ items: [], total: 0, offset: 0, limit: 50 });
     if (path.startsWith("/api/v1/history?"))
       return jsonResponse({ items: [], total: 0, offset: 0, limit: 50 });
     return jsonResponse([]);
   });
   const user = userEvent.setup();
-  let view = render(<App />);
-  let nav = await screen.findByRole("navigation", {
-    name: "Primary navigation",
-  });
-  expect(within(nav).getByRole("button", { name: "Activity" })).toHaveAttribute(
-    "aria-expanded",
-    "true",
-  );
+  const view = render(<App />);
+  const activity = await screen.findByRole("tab", { name: /^Activity/ });
+  expect(activity).toHaveAttribute("aria-selected", "true");
+  expect(activity).toHaveAccessibleName("Activity, current location");
+  expect(activity).toHaveAttribute("tabindex", "0");
+  const nav = screen.getByRole("navigation", { name: "Primary navigation" });
   expect(within(nav).getByRole("link", { name: "History" })).toHaveAttribute(
     "aria-current",
     "page",
   );
-  expect(within(nav).getByRole("button", { name: "Explore" })).toHaveAttribute(
-    "aria-expanded",
-    "false",
-  );
-  expect(
-    within(nav).queryByRole("link", { name: "Geography" }),
-  ).not.toBeInTheDocument();
-  const collection = within(nav).getByRole("button", { name: "Collection" });
-  collection.focus();
-  await user.keyboard("{Enter}");
-  expect(collection).toHaveFocus();
-  expect(collection).toHaveAttribute("aria-expanded", "false");
-  expect(
-    within(nav).queryByRole("link", { name: "Seeds" }),
-  ).not.toBeInTheDocument();
-  expect(
-    JSON.parse(
-      localStorage.getItem("florabase.sidebar.collapsed-groups.v1") ?? "[]",
-    ),
-  ).toEqual(["Explore", "Collection"]);
-  view.unmount();
-  view = render(<App />);
-  nav = await screen.findByRole("navigation", { name: "Primary navigation" });
-  expect(
-    within(nav).getByRole("button", { name: "Collection" }),
-  ).toHaveAttribute("aria-expanded", "false");
-  await user.click(within(nav).getByRole("button", { name: "Activity" }));
-  expect(
-    within(nav).queryByRole("link", { name: "Journal" }),
-  ).not.toBeInTheDocument();
+  activity.focus();
+  await user.keyboard("{ArrowDown}");
+  const explore = screen.getByRole("tab", { name: /^Explore/ });
+  expect(explore).toHaveFocus();
+  expect(explore).toHaveAttribute("aria-selected", "true");
+  expect(activity).toHaveAttribute("tabindex", "-1");
+  expect(within(nav).getByRole("link", { name: "Geography" })).toBeVisible();
+  await user.keyboard("{End}");
+  expect(screen.getByRole("tab", { name: /^Settings/ })).toHaveFocus();
+  await user.keyboard("{Home}");
+  expect(screen.getByRole("tab", { name: /^Today/ })).toHaveFocus();
+  expect(window.location.hash).toBe("#/history");
   act(() => {
     window.history.pushState(null, "", "#/events?category=status");
     window.dispatchEvent(new HashChangeEvent("hashchange"));
@@ -3814,44 +3719,37 @@ test("sidebar disclosures support keyboard, persist preferences and expand activ
   expect(
     await screen.findByRole("heading", { name: "Journal", level: 2 }),
   ).toBeVisible();
-  expect(within(nav).getByRole("button", { name: "Activity" })).toHaveAttribute(
-    "aria-expanded",
-    "true",
-  );
+  expect(activity).toHaveAttribute("aria-selected", "true");
   expect(within(nav).getByRole("link", { name: "Journal" })).toHaveAttribute(
     "aria-current",
     "page",
   );
-  await user.click(await screen.findByRole("button", { name: "Filters (1)" }));
-  expect(
-    await screen.findByRole("checkbox", {
-      name: "Lifecycle",
-      checked: true,
-    }),
-  ).toBeVisible();
-  await user.click(within(nav).getByRole("button", { name: "Collection" }));
-  expect(within(nav).getByRole("link", { name: "Seeds" })).toBeVisible();
   view.unmount();
 });
 
-test.each(["invalid JSON", '{"Collection":true}'])(
-  "sidebar tolerates malformed presentation preference %s",
+test.each(["invalid", "{}", "null"])(
+  "Workbench tolerates a malformed panel preference %s",
   async (stored) => {
-    localStorage.setItem("florabase.sidebar.collapsed-groups.v1", stored);
-    mockFetch((path) =>
-      path.endsWith("/session")
-        ? jsonResponse(session)
-        : path.endsWith("/csrf")
-          ? jsonResponse({ csrf_token: "csrf" })
-          : jsonResponse([]),
-    );
-    render(<App />);
-    const nav = await screen.findByRole("navigation", {
-      name: "Primary navigation",
-    });
-    expect(within(nav).getAllByRole("button", { expanded: true })).toHaveLength(
-      5,
-    );
+    localStorage.setItem("florabase.workbench.panel-collapsed.v1", stored);
+    try {
+      mockFetch((path) =>
+        path.endsWith("/session")
+          ? jsonResponse(session)
+          : path.endsWith("/csrf")
+            ? jsonResponse({ csrf_token: "csrf" })
+            : jsonResponse([]),
+      );
+      render(<App />);
+      const sidebar = await screen.findByRole("complementary", {
+        name: "Application sidebar",
+      });
+      expect(sidebar.parentElement).not.toHaveClass("wb-shell--collapsed");
+      expect(
+        screen.getByRole("navigation", { name: "Primary navigation" }),
+      ).toBeInTheDocument();
+    } finally {
+      localStorage.removeItem("florabase.workbench.panel-collapsed.v1");
+    }
   },
 );
 
@@ -4525,7 +4423,11 @@ test.each(["seeds", "sowings", "plants", "harvests", "events"])(
           }),
         ).toHaveAttribute("href", expect.stringContaining("identity_id="));
       }
-      expect(screen.queryByRole("tab", { name: "Collection" })).toBeNull();
+      expect(
+        within(
+          screen.getByRole("region", { name: "Workspace content" }),
+        ).queryByRole("tab", { name: "Collection" }),
+      ).toBeNull();
       await waitFor(() => {
         expect(
           screen.queryByText("Loading collection context…"),
@@ -4867,11 +4769,7 @@ test.each([false, true])(
     // Navigate away and back to exercise that state without mutating application records.
     if (empty) {
       directoryEmpty = true;
-      await user.click(
-        within(
-          screen.getByRole("navigation", { name: "Primary navigation" }),
-        ).getByRole("link", { name: "Seeds" }),
-      );
+      await openSection(user, "Seeds");
       await browserBack();
       // Preserve sidebar focus on cross-workspace history; explicitly enter the
       // loaded record before testing its directory return.

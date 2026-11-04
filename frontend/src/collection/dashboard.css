@@ -68,13 +68,6 @@ body:has(.workspace--dashboard dialog[open]) {
 .dashboard-quick-add a:hover {
   background: var(--surface-hover);
 }
-@media (min-width: 48.01rem) {
-  .application-shell:has(.workspace--dashboard) > .desktop-sidebar {
-    position: sticky;
-    top: 0;
-    height: 100dvh;
-  }
-}
 .dashboard-content {
   display: grid;
   gap: var(--space-4);
