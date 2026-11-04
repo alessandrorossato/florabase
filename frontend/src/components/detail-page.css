@@ -4,12 +4,29 @@
   box-sizing: border-box;
   font: var(--type-body);
 }
+/* Record identity header: plate, kind, name, identity and lifecycle on the left, record
+   actions on the right, and (when a record has recorded sources) the lineage strip below. */
 .app-content .ui-detail-page .detail-header {
+  --detail-plate: 6rem;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "identity actions"
+    "lineage lineage";
   align-items: start;
-  gap: var(--space-4);
+  gap: var(--space-4) var(--space-6);
   margin-block: 0 var(--space-4);
+}
+.app-content .ui-detail-page .detail-header > .detail-identity {
+  grid-area: identity;
+  min-width: 0;
+}
+.app-content .ui-detail-page .detail-header > .detail-actions {
+  grid-area: actions;
+}
+.app-content .ui-detail-page .detail-header > .detail-lineage {
+  grid-area: lineage;
+  min-width: 0;
 }
 .app-content .ui-detail-page .breadcrumbs {
   flex: none;
@@ -23,8 +40,30 @@
 }
 .app-content .ui-detail-page .detail-header :is(h2, h3) {
   margin: var(--space-1) 0 0;
-  font: var(--type-h1);
+  font: var(--type-record-title, var(--type-h1));
+  letter-spacing: var(--tracking-heading, normal);
   overflow-wrap: anywhere;
+}
+.app-content .ui-detail-page .detail-identity__text {
+  display: grid;
+  align-content: start;
+  min-width: 0;
+}
+.app-content .ui-detail-page .detail-header .detail-secondary {
+  margin-block-start: var(--space-2);
+}
+/* Scientific names read as names: the botanical face, as in directory rows. */
+.app-content .ui-detail-page .detail-secondary a[href^="#/identities/"] {
+  font-family: var(--font-botanical);
+  font-size: 1.0625rem;
+  font-style: italic;
+}
+.app-content .ui-detail-page .detail-header .detail-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  margin-block-start: var(--space-2);
 }
 .app-content .ui-detail-page .detail-header .detail-actions {
   justify-content: flex-end;
@@ -33,17 +72,21 @@
 }
 .app-content .ui-detail-page .detail-identity:has(.detail-visual) {
   display: grid;
-  grid-template-columns: 4.5rem minmax(0, 1fr);
+  grid-template-columns: var(--detail-plate, 4.5rem) minmax(0, 1fr);
   align-items: start;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 .app-content
   .ui-detail-page
   .detail-visual
   :is(.identity-image, .record-visual, img) {
-  width: 4.5rem;
-  height: 4.5rem;
+  width: var(--detail-plate, 4.5rem);
+  height: var(--detail-plate, 4.5rem);
   object-fit: contain;
+}
+.app-content .ui-detail-page .detail-visual .record-visual {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
 }
 .app-content .ui-detail-page .record-path {
   display: block;
@@ -69,6 +112,10 @@
 @media (max-width: 64rem) {
   .app-content .ui-detail-page .detail-header {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "identity"
+      "lineage"
+      "actions";
   }
   .app-content .ui-detail-page .detail-header .detail-actions {
     justify-content: flex-start;
@@ -96,6 +143,10 @@
   background: var(--border);
 }
 @media (max-width: 48rem) {
+  .app-content .ui-detail-page .detail-header {
+    --detail-plate: 4.5rem;
+    gap: var(--space-3);
+  }
   .app-content .ui-detail-page .detail-header :is(h2, h3) {
     font: var(--type-h2);
   }

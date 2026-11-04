@@ -93,6 +93,7 @@ export function DetailHeader({
   visual,
   headingLevel = 3,
   titleId,
+  lineage,
 }: {
   eyebrow: string;
   title: ReactNode;
@@ -107,13 +108,15 @@ export function DetailHeader({
   visual?: ReactNode;
   headingLevel?: 2 | 3;
   titleId?: string;
+  /** A recorded-lineage strip spanning the header (records with recorded sources). */
+  lineage?: ReactNode;
 }) {
   const Heading = headingLevel === 2 ? "h2" : "h3";
   return (
     <header className="detail-header">
       <div className="detail-identity">
         {visual && <div className="detail-visual">{visual}</div>}
-        <div>
+        <div className="detail-identity__text">
           <p className="eyebrow">{eyebrow}</p>
           <Heading
             id={titleId}
@@ -147,6 +150,7 @@ export function DetailHeader({
           {overflow}
         </div>
       )}
+      {lineage && <div className="detail-lineage">{lineage}</div>}
     </header>
   );
 }

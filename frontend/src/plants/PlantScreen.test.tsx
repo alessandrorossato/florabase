@@ -2121,7 +2121,10 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
   });
   mockApi(
     plantHandler([plant()], [], (path) =>
-      path === `/api/v1/plants/${plantId}/events` ? pendingEvents : undefined,
+      // The Overview timeline and the Journal tab each read the record's Journal.
+      path === `/api/v1/plants/${plantId}/events`
+        ? pendingEvents.then((response) => response.clone())
+        : undefined,
     ),
   );
   const user = await openPlants();

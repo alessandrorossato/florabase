@@ -328,6 +328,14 @@
 .wb-group a:hover {
   background: var(--surface-hover);
 }
+.wb-group__more {
+  min-block-size: var(--control-height-compact);
+  margin: var(--space-1) 0 0;
+  padding: 0 var(--space-3);
+  color: var(--primary);
+  font: var(--type-small);
+  font-weight: 600;
+}
 .wb-group__name {
   overflow: hidden;
   font: var(--type-small);

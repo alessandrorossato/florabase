@@ -2343,15 +2343,19 @@ test("Overview keeps current-state facts and Sowings has one canonical start act
     within(inventory)
       .getAllByRole("term")
       .map((node) => node.textContent),
-  ).toEqual(["Lifecycle", "Remaining", "Storage"]);
-  expect(within(inventory).getAllByRole("definition")).toHaveLength(3);
+  ).toEqual(["Remaining", "Storage"]);
+  expect(within(inventory).getAllByRole("definition")).toHaveLength(2);
+  // Lifecycle is stated once, in the record header.
+  expect(
+    screen.getByRole("heading", { name: "Blue packet" }).closest("header"),
+  ).toHaveTextContent("Active");
   expect(screen.getByRole("region", { name: "Acquisition" })).toHaveTextContent(
     "Purchased",
   );
   expect(screen.getByRole("region", { name: "Origin" })).toHaveTextContent(
     "Thailand",
   );
-  expect(inventory).toHaveTextContent("Active");
+  expect(inventory).not.toHaveTextContent("Active");
   expect(inventory).toHaveTextContent("50 seeds");
   expect(
     within(inventory).getByRole("link", { name: location.display_path }),
@@ -2380,9 +2384,13 @@ test("Overview keeps current-state facts and Sowings has one canonical start act
   expect(screen.getByRole("region", { name: "Notes" })).toHaveTextContent(
     "Keep dry.",
   );
+  const timeline = screen.getByRole("region", { name: "Timeline" });
   expect(
-    screen.getByRole("heading", { name: "Upcoming activities" }),
+    within(timeline).getByRole("region", { name: "Planned" }),
   ).toBeVisible();
+  expect(
+    within(timeline).getByRole("region", { name: "Recorded" }),
+  ).toHaveTextContent("Seed lots have no Journal.");
   await user.click(screen.getByRole("tab", { name: "Sowings" }));
   expect(await screen.findByRole("link", { name: /Tray A/ })).toHaveAttribute(
     "href",

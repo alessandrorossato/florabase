@@ -293,7 +293,13 @@ test("Today composes its summary only from returned counts and states every sour
       "Recorded in the Journal and derived History, latest first",
     ),
   ).toBeInTheDocument();
-  const records = screen.getByRole("region", { name: "Record keeping" });
+  const records = screen.getByRole("region", { name: "Data quality" });
+  const disclosure = within(records)
+    .getByText("Data quality")
+    .closest("details");
+  expect(disclosure).not.toHaveAttribute("open");
+  await userEvent.click(within(records).getByText("Data quality"));
+  expect(disclosure).toHaveAttribute("open");
   expect(records).toHaveTextContent(
     "Derived counts of current records. Prompts to review, not tasks or conclusions.",
   );

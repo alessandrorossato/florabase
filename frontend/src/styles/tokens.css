@@ -274,6 +274,8 @@
   /* Page and record titles take the botanical serif; the face sets Field Ledger apart. */
   --type-h1: 500 2rem/1.125 var(--font-botanical);
   --type-h2: 500 1.375rem/1.25 var(--font-botanical);
+  /* Record titles sit one step above page titles: the specimen is the subject. */
+  --type-record-title: 500 2.375rem/1.1 var(--font-botanical);
   --type-h3: 600 1.0625rem/1.4118 var(--font-ui);
   --type-body: 400 0.875rem/1.4286 var(--font-ui);
   --type-strong: 600 0.875rem/1.4286 var(--font-ui);

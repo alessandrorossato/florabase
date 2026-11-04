@@ -245,7 +245,7 @@ export function DashboardOverview() {
         <DashboardPhotos photos={state.value.photos ?? []} />
       </div>
 
-      <div className="today-grid today-grid--secondary">
+      <div className="today-stack">
         <section
           className="today-panel today-recent"
           aria-labelledby="recent-activity-title"
@@ -294,14 +294,18 @@ export function DashboardOverview() {
             </EmptyState>
           )}
         </section>
+      </div>
 
-        <section
-          className="today-panel today-records"
-          aria-labelledby="record-keeping-title"
-        >
-          <header className="today-panel__header">
-            <h3 id="record-keeping-title">Record keeping</h3>
-          </header>
+      <section className="today-quality" aria-labelledby="data-quality-title">
+        <details>
+          <summary>
+            <span id="data-quality-title" className="today-quality__title">
+              Data quality
+            </span>
+            <span className="today-quality__hint">
+              Derived counts of current records, for occasional review
+            </span>
+          </summary>
           <p className="today-provenance">
             Derived counts of current records. Prompts to review, not tasks or
             conclusions.
@@ -337,8 +341,8 @@ export function DashboardOverview() {
             <a href="#/sowings">Sowings</a>, <a href="#/seeds">Seeds</a> or{" "}
             <a href="#/identities">Botanical identities</a>.
           </p>
-        </section>
-      </div>
+        </details>
+      </section>
     </div>
   );
 }

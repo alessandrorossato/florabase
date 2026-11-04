@@ -440,3 +440,33 @@ test("Recent lists previously opened sections, not records or the current page",
       .map((link) => link.getAttribute("href")),
   ).toEqual(["#/seeds"]);
 });
+
+test("many Saved Views stay reachable: five shown, the rest behind a disclosure and in the palette", async () => {
+  const views = Array.from({ length: 12 }, (_, index) =>
+    view(
+      `0190d2a8-0000-7000-8000-0000000001${String(index).padStart(2, "0")}`,
+      `Lots view ${String(index + 1)}`,
+      "seed_lots",
+      { q: `q${String(index)}` },
+    ),
+  );
+  vi.stubGlobal("fetch", savedViewsFetch(views));
+  const user = userEvent.setup();
+  renderShell({ section: "seeds", hash: "#/seeds" });
+  const saved = await screen.findByRole("navigation", { name: "Saved views" });
+  expect(within(saved).getAllByRole("link")).toHaveLength(5);
+  const more = within(saved).getByRole("button", {
+    name: "Show all 12 saved views",
+  });
+  expect(more).toHaveAttribute("aria-expanded", "false");
+  await user.click(more);
+  expect(within(saved).getAllByRole("link")).toHaveLength(12);
+  expect(more).toHaveAttribute("aria-expanded", "true");
+  await user.click(within(saved).getByRole("button", { name: "Show fewer" }));
+  expect(within(saved).getAllByRole("link")).toHaveLength(5);
+  await user.keyboard("{Control>}k{/Control}");
+  await user.keyboard("view 12");
+  expect(
+    screen.getByRole("option", { name: /Lots view 12/ }),
+  ).toBeInTheDocument();
+});

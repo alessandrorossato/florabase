@@ -1,76 +1,30 @@
-import { useEffect, useState } from "react";
-
-import type { components } from "../api/schema";
-import { requestJson } from "../auth/api";
 import { DetailEmptyState } from "../components/DetailEmptyState";
 import { PropagationPath } from "../propagation/PropagationPath";
 import { InfoDisclosure } from "../components/ContextualHelp";
+import {
+  lineageFallbackLabels as fallbackLabels,
+  lineageHref as href,
+  lineageKindLabels as labels,
+  upstreamPath,
+  useRecordedLineage,
+  type LineageEndpoint,
+} from "./useRecordedLineage";
 
-type LineageResponse = components["schemas"]["LineageResponse"];
-type Kind = "seed-lots" | "sowings" | "plants" | "plant-groups";
-
-const labels: Record<string, string> = {
-  seed_lot: "Seed lot",
-  sowing: "Sowing",
-  plant: "Plant",
-  plant_group: "Plant group",
-};
-const fallbackLabels: Record<string, string> = {
-  seed_lot: "Unlabelled seed lot",
-  sowing: "Unlabelled sowing",
-  plant: "Unlabelled plant",
-  plant_group: "Unlabelled plant group",
-};
-
-function href(kind: string, id: string) {
-  const route =
-    kind === "seed_lot"
-      ? "seeds"
-      : kind === "plant_group"
-        ? "plant-groups"
-        : `${kind}s`;
-  return `#/${route}/${id}?tab=lineage`;
-}
-
-export function LineagePanel({ kind, id }: { kind: Kind; id: string }) {
-  const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState<
-    | { status: "loading"; key: string }
-    | { status: "ready"; key: string; value: LineageResponse }
-    | { status: "error"; key: string }
-  >({ status: "loading", key: `${kind}:${id}` });
-
-  useEffect(() => {
-    const controller = new AbortController();
-    void requestJson<LineageResponse>(`/api/v1/${kind}/${id}/lineage`, {
-      signal: controller.signal,
-    })
-      .then((value) => {
-        if (!controller.signal.aborted)
-          setState({ status: "ready", key: `${kind}:${id}`, value });
-      })
-      .catch(() => {
-        if (!controller.signal.aborted)
-          setState({ status: "error", key: `${kind}:${id}` });
-      });
-    return () => {
-      controller.abort();
-    };
-  }, [id, kind, attempt]);
-
-  if (state.key !== `${kind}:${id}` || state.status === "loading")
+export function LineagePanel({
+  kind,
+  id,
+}: {
+  kind: LineageEndpoint;
+  id: string;
+}) {
+  const [state, retry] = useRecordedLineage(kind, id);
+  if (state.status === "loading")
     return <p role="status">Loading recorded lineage…</p>;
   if (state.status === "error")
     return (
       <div className="notice notice--error" role="alert">
         <p>Florabase could not load recorded lineage.</p>
-        <button
-          type="button"
-          onClick={() => {
-            setState({ status: "loading", key: `${kind}:${id}` });
-            setAttempt((value) => value + 1);
-          }}
-        >
+        <button type="button" onClick={retry}>
           Retry lineage
         </button>
       </div>
@@ -79,13 +33,7 @@ export function LineagePanel({ kind, id }: { kind: Kind; id: string }) {
     return <DetailEmptyState>No recorded lineage.</DetailEmptyState>;
   if (kind !== "seed-lots") {
     // The API walks nearest-first. Reverse only that explicit path for material flow.
-    const seen = new Set<string>();
-    const nodes = [...state.value.ancestors].reverse().filter((node) => {
-      const key = `${node.kind}:${node.id}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+    const nodes = upstreamPath(state.value);
     const subject = state.value.subject;
     return (
       <PropagationPath

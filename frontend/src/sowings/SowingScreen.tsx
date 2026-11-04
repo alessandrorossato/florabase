@@ -50,7 +50,8 @@ import { RecordVisual } from "../photos/RecordVisual";
 import { CreationReversal } from "../propagation/CreationReversal";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
-import { UpcomingActivities } from "../schedule/UpcomingActivities";
+import { RecordTimeline } from "../timeline/RecordTimeline";
+import { LineageStrip } from "../lineage/LineageStrip";
 import { sowingFormPanels } from "./SowingFormFields";
 
 import { ApiError } from "../auth/api";
@@ -399,28 +400,30 @@ function Detail({
                   </a>
                 ),
               },
-              {
-                label: "Seed lot",
-                value: (
-                  <a href={`#/seeds/${sowing.seed_lot.id}`}>
-                    {recordName(sowing.seed_lot, "Unlabelled SeedLot")}
-                  </a>
-                ),
-              },
             ]}
           />
         }
         status={
-          <>
-            <LifecycleStatus state={sowing.lifecycle}>
-              {lifecycleLabels[sowing.lifecycle]}
-            </LifecycleStatus>
-            {sowing.location && (
-              <a href={`#/locations/${sowing.location.id}`}>
-                {sowing.location.display_path}
-              </a>
-            )}
-          </>
+          <LifecycleStatus state={sowing.lifecycle}>
+            {lifecycleLabels[sowing.lifecycle]}
+          </LifecycleStatus>
+        }
+        lineage={
+          <LineageStrip
+            key={sowing.updated_at}
+            kind="seed-lots"
+            id={sowing.seed_lot.id}
+            includeSubject
+            current="This Sowing"
+            fullHref={
+              tab === "lineage"
+                ? undefined
+                : `#/sowings/${sowing.id}?tab=lineage`
+            }
+            onFull={() => {
+              setTab("lineage");
+            }}
+          />
         }
         primaryActions={
           sowing.lifecycle !== "reversed" ? (
@@ -487,14 +490,6 @@ function Detail({
             id="sowing-summary-title"
             label="Current Sowing state"
             metrics={[
-              {
-                label: "Lifecycle",
-                value: (
-                  <LifecycleStatus state={sowing.lifecycle}>
-                    {lifecycleLabels[sowing.lifecycle]}
-                  </LifecycleStatus>
-                ),
-              },
               { label: "Sown", value: dateLabel(sowing.sowing_date) },
               {
                 label: "Germination",
@@ -581,10 +576,24 @@ function Detail({
               </dl>
             </section>
           )}
-          <UpcomingActivities
-            kind={"sowing"}
+          <RecordTimeline
+            kind="sowing"
             id={sowing.id}
             current={sowing.lifecycle === "active"}
+            recordedElsewhere={
+              <>
+                Germination counts and dates are recorded in{" "}
+                <a
+                  href={`#/sowings/${sowing.id}?tab=germination`}
+                  onClick={() => {
+                    setTab("germination");
+                  }}
+                >
+                  Germination
+                </a>
+                .
+              </>
+            }
           />
           <section
             className="sowing-fact-group"

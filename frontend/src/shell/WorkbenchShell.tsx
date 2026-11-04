@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useId,
   useRef,
   useState,
   type KeyboardEvent,
@@ -121,19 +122,28 @@ function LinkGroup({
   label,
   items,
   follow,
+  limit,
+  moreLabel,
 }: {
   label: string;
   items: { key: string; href: string; name: string; detail?: string }[];
   follow: (event: MouseEvent<HTMLAnchorElement>, href: string) => void;
+  /** Show this many, then a disclosure for the rest (accounts with many items). */
+  limit?: number;
+  moreLabel?: (count: number) => string;
 }) {
+  const [expanded, setExpanded] = useState(false);
+  const listId = useId();
   if (!items.length) return null;
+  const capped = limit !== undefined && items.length > limit;
+  const shown = capped && !expanded ? items.slice(0, limit) : items;
   return (
     <nav className="wb-group" aria-label={label}>
       <p className="wb-group__title" aria-hidden="true">
         {label}
       </p>
-      <ul>
-        {items.map((item) => (
+      <ul id={listId}>
+        {shown.map((item) => (
           <li key={item.key}>
             <a
               href={item.href}
@@ -149,6 +159,21 @@ function LinkGroup({
           </li>
         ))}
       </ul>
+      {capped && (
+        <button
+          type="button"
+          className="button--quiet wb-group__more"
+          aria-expanded={expanded}
+          aria-controls={listId}
+          onClick={() => {
+            setExpanded((value) => !value);
+          }}
+        >
+          {expanded
+            ? "Show fewer"
+            : (moreLabel?.(items.length) ?? `Show all ${String(items.length)}`)}
+        </button>
+      )}
     </nav>
   );
 }
@@ -156,7 +181,6 @@ function LinkGroup({
 function savedItems(views: SavedViewLink[], workspace: WorkspaceId) {
   return views
     .filter((view) => workspace === "today" || view.workspace === workspace)
-    .slice(0, 8)
     .map((view) => ({
       key: view.id,
       href: view.href,
@@ -472,6 +496,8 @@ export function WorkbenchShell({
             label="Saved views"
             items={savedItems(savedViews, panel.id)}
             follow={follow}
+            limit={5}
+            moreLabel={(count) => `Show all ${String(count)} saved views`}
           />
           <LinkGroup label="Recent" items={recent} follow={follow} />
           <footer className="wb-panel__footer">
@@ -556,6 +582,8 @@ export function WorkbenchShell({
             label="Saved views"
             items={savedItems(savedViews, sheetWorkspace.id)}
             follow={follow}
+            limit={5}
+            moreLabel={(count) => `Show all ${String(count)} saved views`}
           />
         </TaskDialog>
       )}

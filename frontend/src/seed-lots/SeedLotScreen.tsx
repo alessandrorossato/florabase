@@ -59,7 +59,8 @@ import {
 } from "../orders/purchaseApi";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
-import { UpcomingActivities } from "../schedule/UpcomingActivities";
+import { RecordTimeline } from "../timeline/RecordTimeline";
+import { LineageStrip } from "../lineage/LineageStrip";
 import "./seed-refinement.css";
 
 import { ApiError } from "../auth/api";
@@ -434,16 +435,23 @@ function Detail({
           </a>
         }
         status={
-          <>
-            <LifecycleStatus state={lot.lifecycle}>
-              {lifecycleLabels[lot.lifecycle]}
-            </LifecycleStatus>
-            {lot.location && (
-              <a href={`#/locations/${lot.location.id}`}>
-                {lot.location.display_path}
-              </a>
-            )}
-          </>
+          <LifecycleStatus state={lot.lifecycle}>
+            {lifecycleLabels[lot.lifecycle]}
+          </LifecycleStatus>
+        }
+        lineage={
+          <LineageStrip
+            key={lot.updated_at}
+            kind="seed-lots"
+            id={lot.id}
+            current="This Seed lot"
+            fullHref={
+              tab === "lineage" ? undefined : `#/seeds/${lot.id}?tab=lineage`
+            }
+            onFull={() => {
+              setTab("lineage");
+            }}
+          />
         }
         primaryActions={
           lot.lifecycle === "active" ? (
@@ -503,14 +511,6 @@ function Detail({
             id="seed-summary-title"
             label="Current inventory"
             metrics={[
-              {
-                label: "Lifecycle",
-                value: (
-                  <LifecycleStatus state={lot.lifecycle}>
-                    {lifecycleLabels[lot.lifecycle]}
-                  </LifecycleStatus>
-                ),
-              },
               {
                 label: inventoryLabel(lot),
                 value: quantityLabel(lot),
@@ -615,10 +615,25 @@ function Detail({
                 </div>
               </dl>
             </section>
-            <UpcomingActivities
-              kind={"seed_lot"}
+            <RecordTimeline
+              kind="seed_lot"
               id={lot.id}
               current={lot.lifecycle === "active"}
+              recordedElsewhere={
+                <>
+                  Seed lots have no Journal. Sowings started from this lot are
+                  listed under{" "}
+                  <a
+                    href={`#/seeds/${lot.id}?tab=sowings`}
+                    onClick={() => {
+                      setTab("sowings");
+                    }}
+                  >
+                    Sowings
+                  </a>
+                  .
+                </>
+              }
             />
             {lot.harvest_conversion_id && (
               <div className="seed-overview-conversion">

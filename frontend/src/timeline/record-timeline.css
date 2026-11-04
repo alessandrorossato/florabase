@@ -1,0 +1,158 @@
+/* Record timeline. Two lanes on one rule: Planned (hollow, dashed: not happened) and
+   Recorded (solid: entered in the Journal). Overdue is a derived date state, drawn with the
+   warning token but never as an error. Tokens only, so every palette renders it. */
+.record-timeline {
+  container-type: inline-size;
+  min-inline-size: 0;
+}
+.record-timeline > h4 {
+  margin: 0 0 var(--space-3);
+}
+.record-timeline__lanes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+}
+@container (min-width: 36rem) {
+  .record-timeline__lanes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* Lanes are parts of one section, not sibling record sections. */
+.record-timeline .record-timeline__lane {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.record-timeline__lane-title {
+  margin: 0 0 var(--space-2);
+  color: var(--text);
+  font: var(--type-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.record-timeline__lane-title span {
+  color: var(--text-muted);
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.record-timeline__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.record-timeline__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: var(--space-1) var(--space-3);
+  align-items: baseline;
+  padding-block: var(--space-2);
+  padding-inline-start: var(--space-6);
+}
+/* The rule. */
+.record-timeline__item::before {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: calc(0.3125rem - 0.5px);
+  content: "";
+  border-inline-start: 1px solid var(--border-strong);
+}
+.record-timeline__item:first-child::before {
+  inset-block-start: 1rem;
+}
+.record-timeline__item:last-child::before {
+  inset-block-end: calc(100% - 1rem);
+}
+.record-timeline__item:only-child::before {
+  display: none;
+}
+/* The node. */
+.record-timeline__item::after {
+  position: absolute;
+  inset-block-start: 0.75rem;
+  inset-inline-start: 0;
+  box-sizing: border-box;
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  content: "";
+  border-radius: 50%;
+}
+.record-timeline__lane--recorded .record-timeline__item::after {
+  background: var(--primary);
+  border: 2px solid var(--primary);
+}
+.record-timeline__lane--planned .record-timeline__item::before {
+  border-inline-start-style: dashed;
+}
+.record-timeline__lane--planned .record-timeline__item::after {
+  background: var(--surface);
+  border: 2px dashed var(--text-muted);
+}
+.record-timeline__lane--planned .record-timeline__item--overdue::after {
+  border-color: var(--warning);
+}
+.record-timeline__item time,
+.record-timeline__undated {
+  color: var(--text-muted);
+  font-family: var(--font-data);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+.record-timeline__undated {
+  font-family: var(--font-ui);
+  font-style: italic;
+}
+.record-timeline__item a,
+.record-timeline__item strong {
+  color: var(--text);
+  font: var(--type-strong);
+}
+.record-timeline__item p {
+  display: -webkit-box;
+  margin: 2px 0 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font: var(--type-small);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.record-timeline__item--overdue p {
+  color: var(--warning-text);
+}
+.record-timeline__note {
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.record-timeline__note button {
+  min-block-size: var(--control-height-compact);
+}
+.record-timeline__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: var(--space-2) 0 0;
+  font: var(--type-small);
+}
+.record-timeline__links a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--control-height-compact);
+}
+.record-timeline__footnote {
+  margin: var(--space-3) 0 0;
+  padding-block-start: var(--space-2);
+  color: var(--text-muted);
+  border-block-start: 1px dashed var(--border);
+  font: var(--type-small);
+}
+@container (max-width: 22rem) {
+  .record-timeline__item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -12,7 +12,7 @@ import { AuthContext, type AuthContextValue } from "../auth/context";
 import { ApiError } from "../auth/api";
 import * as api from "./api";
 import { ScheduleScreen } from "./ScheduleScreen";
-import { UpcomingActivities } from "./UpcomingActivities";
+import { RecordTimeline } from "../timeline/RecordTimeline";
 import {
   defaultState,
   localDay,
@@ -331,7 +331,7 @@ test("errors, retry and empty state remain usable", async () => {
   expect(await screen.findByText("No planned activities yet.")).toBeVisible();
 });
 test("bounded entity and Dashboard summaries link to canonical Schedule filters", async () => {
-  mount(<UpcomingActivities kind="plant" id={id} />);
+  mount(<RecordTimeline kind="plant" id={id} />);
   await screen.findByRole("link", { name: "Repot basil" });
   expect(api.listSchedule).toHaveBeenCalledWith(
     expect.objectContaining({ target_kind: ["plant"], target_id: id }),

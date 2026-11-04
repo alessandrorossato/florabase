@@ -1,0 +1,83 @@
+/* Recorded lineage strip (record header). Tokens only; the path reads oldest to newest and
+   each step is one explicitly recorded source. */
+.lineage-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-inline-size: 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--lineage-subtle);
+  border-inline-start: 3px solid var(--lineage);
+  border-radius: 0 var(--radius-small) var(--radius-small) 0;
+}
+.lineage-strip__label {
+  margin: 0;
+  color: var(--lineage);
+  font: var(--type-eyebrow);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.lineage-strip__path {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) 0;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lineage-strip__path > li {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+  min-inline-size: 0;
+}
+.lineage-strip__path > li + li::before {
+  /* Decorative: the ordered list already conveys the sequence. */
+  content: "→" / "";
+  margin-inline: var(--space-2);
+  color: var(--lineage);
+}
+.lineage-strip__kind {
+  color: var(--text-muted);
+  font: var(--type-label);
+  font-weight: 500;
+}
+.lineage-strip__path a {
+  color: var(--text);
+  font: var(--type-strong);
+  overflow-wrap: anywhere;
+  text-decoration-color: var(--lineage);
+  text-underline-offset: 0.2em;
+}
+.lineage-strip__path a:hover {
+  color: var(--lineage);
+}
+.lineage-strip__state {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.lineage-strip__current .lineage-strip__kind {
+  color: var(--text);
+  font: var(--type-strong);
+}
+.lineage-strip__note {
+  flex: 1 1 auto;
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.lineage-strip__note button {
+  min-block-size: var(--control-height-compact);
+  margin-inline-start: var(--space-2);
+}
+.lineage-strip__full {
+  margin-inline-start: auto;
+  font: var(--type-small);
+  font-weight: 600;
+  white-space: nowrap;
+}

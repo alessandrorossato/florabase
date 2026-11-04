@@ -346,3 +346,43 @@
     gap: var(--space-1);
   }
 }
+
+.today-stack {
+  display: grid;
+  gap: var(--space-6);
+}
+
+/* Data quality: secondary, collapsed, deliberately neutral (no warning colour or badges). */
+.today-quality details {
+  padding: var(--space-3) var(--space-6);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-normal);
+}
+.today-quality summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  min-block-size: var(--control-height);
+  align-content: center;
+  color: var(--text);
+  cursor: pointer;
+}
+.today-quality__title {
+  font: var(--type-strong);
+}
+.today-quality__hint {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.today-quality details[open] summary {
+  margin-block-end: var(--space-2);
+}
+.today-quality .today-ledger {
+  max-inline-size: 40rem;
+}
+@media (max-width: 48rem) {
+  .today-quality details {
+    padding: var(--space-2) var(--space-4);
+  }
+}

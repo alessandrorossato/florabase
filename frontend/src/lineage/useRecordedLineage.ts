@@ -1,0 +1,86 @@
+import { useCallback, useEffect, useState } from "react";
+
+import type { components } from "../api/schema";
+import { requestJson } from "../auth/api";
+
+export type LineageResponse = components["schemas"]["LineageResponse"];
+export type LineageNode = LineageResponse["subject"];
+/** The three record kinds with a recorded-lineage endpoint. */
+export type LineageEndpoint = "seed-lots" | "plants" | "plant-groups";
+
+export type RecordedLineage =
+  | { status: "loading" }
+  | { status: "ready"; value: LineageResponse }
+  | { status: "error" };
+
+export const lineageKindLabels: Record<LineageNode["kind"], string> = {
+  seed_lot: "Seed lot",
+  sowing: "Sowing",
+  plant: "Plant",
+  plant_group: "Plant group",
+};
+export const lineageFallbackLabels: Record<LineageNode["kind"], string> = {
+  seed_lot: "Unlabelled seed lot",
+  sowing: "Unlabelled sowing",
+  plant: "Unlabelled plant",
+  plant_group: "Unlabelled plant group",
+};
+
+export function lineageHref(kind: LineageNode["kind"], id: string) {
+  const route =
+    kind === "seed_lot"
+      ? "seeds"
+      : kind === "plant_group"
+        ? "plant-groups"
+        : `${kind}s`;
+  return `#/${route}/${id}?tab=lineage`;
+}
+
+/**
+ * Explicit upstream path, oldest first. The API walks one recorded source per record,
+ * nearest-first; only that path is reversed and de-duplicated. Nothing is inferred.
+ */
+export function upstreamPath(value: LineageResponse): LineageNode[] {
+  const seen = new Set<string>();
+  return [...value.ancestors].reverse().filter((node) => {
+    const key = `${node.kind}:${node.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/** Loads one record's recorded lineage; stale responses for another record are ignored. */
+export function useRecordedLineage(
+  kind: LineageEndpoint,
+  id: string,
+): [RecordedLineage, () => void] {
+  const key = `${kind}:${id}`;
+  const [attempt, setAttempt] = useState(0);
+  const [state, setState] = useState<
+    { key: string; attempt: number } & RecordedLineage
+  >({ status: "loading", key, attempt });
+  useEffect(() => {
+    const controller = new AbortController();
+    void requestJson<LineageResponse>(`/api/v1/${kind}/${id}/lineage`, {
+      signal: controller.signal,
+    })
+      .then((value) => {
+        if (!controller.signal.aborted)
+          setState({ status: "ready", key, attempt, value });
+      })
+      .catch(() => {
+        if (!controller.signal.aborted)
+          setState({ status: "error", key, attempt });
+      });
+    return () => {
+      controller.abort();
+    };
+  }, [id, kind, key, attempt]);
+  const retry = useCallback(() => {
+    setAttempt((value) => value + 1);
+  }, []);
+  if (state.key !== key || state.attempt !== attempt)
+    return [{ status: "loading" }, retry];
+  return [state, retry];
+}

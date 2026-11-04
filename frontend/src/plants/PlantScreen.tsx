@@ -50,7 +50,8 @@ import { labelComposerHref } from "../labels/labelData";
 import { CreationReversal } from "../propagation/CreationReversal";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
-import { UpcomingActivities } from "../schedule/UpcomingActivities";
+import { RecordTimeline } from "../timeline/RecordTimeline";
+import { LineageStrip } from "../lineage/LineageStrip";
 import {
   PlantEntryDateField,
   PlantEssentialsFields,
@@ -440,16 +441,27 @@ function Detail({
           />
         }
         status={
-          <>
-            <LifecycleStatus state={value.lifecycle}>
-              {lifecycleLabel(record)}
-            </LifecycleStatus>
-            {value.location && (
-              <a href={`#/locations/${value.location.id}`}>
-                {value.location.display_path}
-              </a>
-            )}
-          </>
+          <LifecycleStatus state={value.lifecycle}>
+            {lifecycleLabel(record)}
+          </LifecycleStatus>
+        }
+        lineage={
+          <LineageStrip
+            key={value.updated_at}
+            kind={record.kind === "plant" ? "plants" : "plant-groups"}
+            id={value.id}
+            current={
+              record.kind === "plant" ? "This Plant" : "This Plant group"
+            }
+            fullHref={
+              tab === "lineage"
+                ? undefined
+                : `#/${route}/${value.id}?tab=lineage`
+            }
+            onFull={() => {
+              setTab("lineage");
+            }}
+          />
         }
         primaryActions={
           <>
@@ -519,14 +531,6 @@ function Detail({
             id="plant-summary-title"
             label="Current Plant state"
             metrics={[
-              {
-                label: "Lifecycle",
-                value: (
-                  <LifecycleStatus state={value.lifecycle}>
-                    {lifecycleLabel(record)}
-                  </LifecycleStatus>
-                ),
-              },
               {
                 label:
                   value.lifecycle === "active"
@@ -706,10 +710,17 @@ function Detail({
               )}
             </section>
           )}
-          <UpcomingActivities
+          <RecordTimeline
             kind={record.kind === "plant" ? "plant" : "plant_group"}
             id={value.id}
             current={value.lifecycle === "active"}
+            journal={{
+              target: record.kind,
+              href: `#/${route}/${value.id}?tab=events`,
+              onOpen: () => {
+                setTab("events");
+              },
+            }}
           />
           {value.notes && (
             <section
