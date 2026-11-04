@@ -7300,3 +7300,16 @@ Status remains implemented pending canonical verification.
   - Mobile directory header density (required).
   - Camera scanning untested on real devices.
 - Canonical FULL not run; no push, PR or merge. Stopped at the M5 checkpoint.
+
+### UI-REDESIGN-EXPLORATION-001 — M6A creative design review, 4 November 2026
+
+- Design only; no frontend, backend, API, schema or auth change.
+- New Claude Design canvas: https://claude.ai/artifact/B3TWNaSJvnjxUz2GmdXRCx. The Phase B artifact is preserved unchanged. The canvas has ten artboards over four pages:
+  - three record-detail directions (A Specimen Sheet, B Research Workspace, C Ledger Folio);
+  - A on phone and tablet, with sparse data, unknowns, partial dates, and loading/error states;
+  - Today grouped by record, a compact phone Seeds header, Record sheet v2, and the palette and confirm dialog;
+  - before/after with real M5 captures.
+- Grounded in UAT fixture v4 data; one three-step lineage record is marked illustrative.
+- Audit, tradeoffs, recommendation, M6B component plan and the release-issue register (R1–R13) are in `docs/design/florabase-next/m6a-design-review.md`.
+- Recommendation: direction A (Specimen Sheet) for all ten record types, with C's precision grouping in the Journal tab.
+- M6B not started; awaiting operator direction approval. No FULL, push, PR or merge.
