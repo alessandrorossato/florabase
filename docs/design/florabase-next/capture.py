@@ -31,6 +31,34 @@ LOGIN = os.environ["CAPTURE_LOGIN"]
 PASSWORD = os.environ["CAPTURE_PASSWORD"]
 OUT = pathlib.Path(os.environ.get("CAPTURE_OUT", "/out")) / LABEL
 SETTLE_MS = int(os.environ.get("CAPTURE_SETTLE_MS", "900"))
+# Optional filters for representative milestone captures (comma lists); default is everything.
+ONLY_ROUTES = {k for k in os.environ.get("CAPTURE_ROUTES", "").split(",") if k}
+ONLY_VIEWPORTS = {k for k in os.environ.get("CAPTURE_VIEWPORTS", "").split(",") if k}
+FULL_PAGE = os.environ.get("CAPTURE_FULL_PAGE", "1") == "1"
+# Optional browser-local theme preference, written before any page script runs.
+PALETTE = os.environ.get("CAPTURE_PALETTE")
+APPEARANCE = os.environ.get("CAPTURE_APPEARANCE", "light")
+
+# Measures rendered controls against the agreed targets (D3): 40px pointer, 44px touch.
+PROBE = """(target) => {
+  const sel = 'button, .button-link, input:not([type=checkbox]):not([type=radio]):not([type=hidden]), select, textarea, [role=tab]';
+  const seen = [...document.querySelectorAll(sel)].filter((el) => {
+    const r = el.getBoundingClientRect(); const cs = getComputedStyle(el);
+    return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && !el.closest('.leaflet-container');
+  });
+  const heights = seen.map((el) => Math.round(el.getBoundingClientRect().height * 10) / 10);
+  const small = seen.filter((el) => el.getBoundingClientRect().height < target - 0.5)
+    .map((el) => (el.tagName.toLowerCase() + '.' + [...el.classList].slice(0, 2).join('.')).slice(0, 60));
+  const root = getComputedStyle(document.documentElement);
+  return {
+    palette: document.documentElement.dataset.palette || null,
+    appearance: document.documentElement.dataset.appearance || null,
+    body_font: getComputedStyle(document.body).fontFamily.split(',')[0],
+    control_height_token: root.getPropertyValue('--control-height').trim(),
+    controls: seen.length, min_height: heights.length ? Math.min(...heights) : null,
+    below_target: small.length, below_target_kinds: [...new Set(small)].slice(0, 8),
+  };
+}"""
 
 VIEWPORTS = {
     "desktop": {"viewport": {"width": 1440, "height": 844}},
@@ -121,7 +149,14 @@ def main() -> None:
         browser = pw.chromium.launch(headless=True)
         ids: dict[str, str | None] = {}
         for vp_name, vp in VIEWPORTS.items():
+            if ONLY_VIEWPORTS and vp_name not in ONLY_VIEWPORTS:
+                continue
             context = browser.new_context(device_scale_factor=1, reduced_motion="reduce", **vp)
+            if PALETTE:
+                pref = json.dumps({"version": 1, "palette": PALETTE, "appearance": APPEARANCE})
+                context.add_init_script(
+                    f"localStorage.setItem('florabase.appearance.v1', {json.dumps(pref)});"
+                )
 
             def route_external(route: Route) -> None:
                 url = route.request.url
@@ -147,6 +182,8 @@ def main() -> None:
             errors: list[str] = []
             page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
             for key, area, route in ROUTES:
+                if ONLY_ROUTES and key not in ONLY_ROUTES:
+                    continue
                 target = route
                 missing = [k for k in ids if "{" + k + "}" in target and not ids[k]]
                 if missing:
@@ -159,8 +196,9 @@ def main() -> None:
                 page.goto(f"{ORIGIN}/#{target}")
                 settle(page)
                 elapsed = round((time.monotonic() - started) * 1000)
+                probe = page.evaluate(PROBE, 40 if vp_name == "desktop" else 44)
                 shots = [("", False)]
-                if vp_name == "desktop":
+                if vp_name == "desktop" and FULL_PAGE:
                     shots.append(("-full", True))
                 for suffix, full in shots:
                     file = OUT / f"{key}-{vp_name}{suffix}.png"
@@ -172,8 +210,25 @@ def main() -> None:
                         "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data),
                         "title": page.title(), "settled_ms": elapsed,
                         "console_errors": sorted(set(errors)),
+                        "probe": probe,
                     })
-            if vp_name == "mobile":
+            if vp_name == "desktop" and (not ONLY_ROUTES or "focus-keyboard" in ONLY_ROUTES):
+                page.goto(f"{ORIGIN}/#/seeds")
+                settle(page)
+                page.locator("main").first.focus() if page.locator("main[tabindex]").count() else None
+                for _ in range(int(os.environ.get("CAPTURE_TABS", "6"))):
+                    page.keyboard.press("Tab")
+                page.wait_for_timeout(300)
+                focused = page.evaluate(
+                    "() => { const e = document.activeElement; return e ? (e.tagName.toLowerCase() + ' ' + (e.getAttribute('aria-label') || e.textContent || '').trim().slice(0, 40)) : null; }"
+                )
+                file = OUT / "focus-keyboard-desktop.png"
+                page.screenshot(path=str(file))
+                data = file.read_bytes()
+                entries.append({"key": "focus-keyboard", "area": "Accessibility", "route": "#/seeds + Tab",
+                                "viewport": vp_name, "file": file.name, "focused": focused,
+                                "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)})
+            if vp_name == "mobile" and (not ONLY_ROUTES or "navigation-more" in ONLY_ROUTES):
                 page.goto(f"{ORIGIN}/#/dashboard")
                 settle(page)
                 more = page.get_by_role("navigation", name="Mobile primary navigation").get_by_role("button", name="More")
@@ -189,7 +244,8 @@ def main() -> None:
             context.close()
         browser.close()
     manifest = {
-        "label": LABEL, "origin": ORIGIN, "captured_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "label": LABEL, "origin": ORIGIN,
+        "theme_preference": {"palette": PALETTE, "appearance": APPEARANCE} if PALETTE else None, "captured_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "viewports": {k: v["viewport"] for k, v in VIEWPORTS.items()},
         "blocked_external_hosts": sorted(blocked), "resolved_ids": ids, "entries": entries,
     }

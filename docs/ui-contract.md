@@ -50,6 +50,10 @@ UI: Source Sans 3 Variable, with system sans fallback. Botanical accent: Source 
 with Georgia fallback. Both are exactly pinned Fontsource 5.3.0 packages (2026-07-19 release),
 OFL-1.1, served from bundled same-origin WOFF2 assets with font-display swap. Runtime needs no CDN.
 Font licenses are also shipped under `/licenses/`. The package release-age policy is unchanged.
+Florabase Next (experimental branch `feat/ui-redesign-exploration-001` only) adds the Field Ledger
+system with Instrument Sans, Newsreader and IBM Plex Mono, all exact-pinned Fontsource 5.3.0 OFL-1.1
+packages bundled the same way, with licences under `/licenses/`. The six themes in this contract
+are unchanged; see [Florabase Next](design/florabase-next/README.md).
 See [Fontsource Sans](https://fontsource.org/fonts/source-sans-3/about) and
 [Serif delivery](https://fontsource.org/fonts/source-serif-4/use).
 

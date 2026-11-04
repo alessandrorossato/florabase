@@ -82,32 +82,141 @@ network idle plus 900 ms.
 
 ## Milestone plan
 
-M0 baseline (done) → M1 Field Ledger foundation → M2 shell → M3 Today and directories → M4 record
-detail → M5 quick create and QR → M6 remaining areas → M7 side-by-side comparison, regression
-report and recommendation. Checkpoints with the operator come after M1, M2, M4 and M7.
+M0 baseline (done) → M1 Field Ledger foundation (done, awaiting checkpoint review) → M2 shell → M3
+Today and directories → M4 record detail → M5 quick create and QR → M6 remaining areas → M7
+side-by-side comparison, regression report and recommendation. Checkpoints with the operator come
+after M1, M2, M4 and M7.
 
-### M1: Field Ledger foundation (next)
+## M1: Field Ledger foundation
 
-Scope, all frontend:
+Commits `8ce52fa` (foundation), `b39fa50` and `ecadaf3` (touch-target fixes found by the capture
+probe). Frontend only: no backend, API, schema, route, auth or data change.
 
-1. **Palette, not replacement.** Add a `field-ledger` palette with light and dark appearances to
-   the existing `data-palette` × `data-appearance` matrix (`appearance/theme.ts`,
-   `styles/tokens.css`). It is the default on this branch only. Botanical, Herbarium and Mineral stay
-   selectable and unchanged. Evidence colours (`comparison-*`, `native-count-*`) keep their identity.
-2. **Tokens.** Every existing semantic token gets a Field Ledger value, plus new ones: rail, lineage,
-   data font, and pointer-aware control height (40px for fine pointers, 44px under
-   `pointer: coarse` and on compact widths).
-3. **Type.** Self-hosted Instrument Sans, Newsreader italic and IBM Plex Mono via `@fontsource`,
-   alongside the existing Source Sans / Serif. This is a dependency change, recorded for the
-   eventual FULL gate.
-4. **Primitives restyled through tokens only.** Buttons, inputs, selects, status, tabs, dialogs,
-   focus ring and pointer spacing. No layout or shell change yet.
-5. **Tests.** Contrast assertions for the new palette in the appearance tests, existing theme tests
-   unchanged, focused lint, typecheck and frontend tests.
+### What Field Ledger is
 
-Exit for the M1 checkpoint: the running branch in UAT Preview shows the current layout in Field
-Ledger light and dark, the six original themes are unchanged, and a short capture set compares
-the result with the baseline.
+Field Ledger is a **system**, not a fourth colour palette. It is selected through the existing
+`data-palette` × `data-appearance` matrix, so the same bootstrap, Settings control and
+browser-local preference apply, but it also owns type, geometry and focus:
+
+| Layer | Field Ledger | UI Foundation (six themes) |
+| ----- | ------------ | -------------------------- |
+| UI face | Instrument Sans Variable | Source Sans 3 Variable |
+| Scientific names | Newsreader Variable italic (optical size) | Source Serif 4 Variable italic |
+| Recorded data | IBM Plex Mono 400/500: metrics, pagination positions | UI face |
+| Body / strong | 14/20 px, weights 400/600 | 15/22 px, weights 400/600 |
+| Titles | 30/34 and 20/26 px at 600, −0.012em tracking | 32/38 and 22/28 px at 650 |
+| Radii | 8 controls, 12 surfaces, 14 dialogs | 6, 10, 14 |
+| Pointer controls | 40px; 44px under `max-width: 48rem` or `any-pointer: coarse` | 44px (compact icons 40px) |
+| Focus | 3px ring, 2px offset | 3px ring, 3px offset |
+| New roles | rail, rail text and active, lineage and lineage tint | resolve to existing semantic tokens |
+
+Minimum contrast under the rules the existing tests enforce for every theme, with text 4.5:1 and
+cues 3:1 on background, surface, subtle, hover and primary-tint surfaces:
+
+| Appearance | Text (worst pair) | Boundary cue (worst pair) | On primary | Rail muted text |
+| ---------- | ----------------- | ------------------------- | ---------- | --------------- |
+| Light | 5.37:1 muted on hover | 3.29:1 control border on hover | 6.92:1 | 9.94:1 |
+| Dark | 5.48:1 muted on primary tint | 3.41:1 control border on primary tint | 9.86:1 | 9.76:1 |
+
+### How it is built
+
+- **Tokens, not overrides.** New system tokens (`--font-data`, `--focus-ring-width`,
+  `--focus-ring-offset`, `--tracking-heading`, `--control-height-touch`,
+  `--control-height-compact`, `--rail-*`, `--lineage*`) default in `:root` to the exact UI Foundation
+  values. Shared rules read them. Field Ledger overrides them in one system block plus one block per
+  appearance in `styles/tokens.css`. Shared rules in `foundation.css`, `normalization.css`,
+  `styles.css`, `directory.css`, `directory-workspace.css` and `settings.css` swapped literals for
+  those tokens: focus outlines, title tracking, detail-tab height, pagination position font, and
+  the heights of pagination and row-action icons, the active-filter chip lane and the sidebar group
+  toggles. No page-local Field Ledger CSS exists.
+- **The six themes are pinned.** A test hashes the six original palette blocks and must match
+  main `d94f275` byte for byte. Saved Botanical, Herbarium or Mineral preferences are honoured; only
+  a missing, corrupt or unknown preference falls back to Field Ledger. That fallback applies on this
+  branch only. Main is untouched.
+- **Fonts** are exact-pinned Fontsource 5.3.0 packages (OFL-1.1), bundled as same-origin WOFF2, with
+  each package's licence shipped under `/licenses/` (`instrument-sans.txt`, `newsreader.txt`,
+  `ibm-plex-mono.txt`). There is no CDN, and a test rejects Google Fonts or remote `@import`.
+  Faces load only when the active system uses them: a Botanical page loads only Source Sans. The
+  production build adds 20 WOFF2 files (Instrument Sans 88 KB, Newsreader 516 KB, Plex Mono 120 KB,
+  all subsets). Unicode-range subsetting means a Latin page fetches only its Latin subsets.
+- **Settings swatches** now render each system's own UI face, so the Field Ledger option previews
+  Instrument Sans and the others preview Source Sans.
+
+### Verification at `ecadaf3`
+
+| Check | Result |
+| ----- | ------ |
+| Typecheck, ESLint (0 warnings), Prettier | pass |
+| Focused: appearance, theme bootstrap, Controls, ThemeControl, Settings, components, plants, seed lots, sowings | pass, 23 files and 313 tests on the final tree |
+| Full frontend suite, three serial runs | 1153/1153 each time; main `d94f275` passed 1145/1145 three times |
+| Production build | pass; no Google Fonts references in `dist` |
+| Feature graph | valid |
+
+Honest note on flakiness: earlier full runs on this branch, executed while screenshot captures
+and the main comparison ran concurrently, each showed one different intermittent failure:
+UX004 legacy deep links, StoredMaterial QR hash focus, and Schedule pending-save focus return. All
+three are focus or timing assertions in suites that run `appearance.js` but apply no CSS (jsdom).
+None reproduced in isolated reruns (UX004 5/5, StoredMaterial 6/6) or in the three serial full runs.
+Main was not observed failing in three runs, so branch involvement cannot be fully excluded from
+this sample; it is listed for the independent reviewer.
+
+Canonical FULL was not run, as instructed.
+
+### Screenshot evidence (representative, not the full matrix)
+
+Captured from UAT Preview (same isolated project, synthetic fixture, preview owner) serving
+`ecadaf3`, with `capture.py`. New options: route and viewport filters, a theme preference seeded
+before page scripts, a keyboard-focus capture, and a probe that records the active palette, UI
+face, `--control-height` and every rendered control below the target (40px desktop, 44px touch).
+Manifests are in [`m1/`](m1/); images are in `.florabase-next-evidence/m1-ecadaf3-*`.
+
+| Set | Images | Probe result |
+| --- | ------ | ------------ |
+| Field Ledger light: 7 routes desktop + mobile, keyboard focus, mobile More | 16 | min 40px desktop, 44px mobile, 0 controls below target, 0 console errors |
+| Field Ledger light, tablet: dashboard, Seeds, plant detail | 3 | min 44px, 0 below target |
+| Field Ledger dark: 7 routes desktop + mobile | 14 | min 40px desktop, 44px mobile, 0 below target, 0 console errors |
+| Botanical preservation: all 37 baseline routes, desktop, baseline order | 37 | see below |
+
+Botanical preservation against the main baseline: **33 of 37 pixel-identical.** The four
+differences:
+
+- **Settings:** intended. The Field Ledger option is added to the theme picker.
+- **Dashboard:** capture nondeterminism. Two identical repeat runs of the same build differ from
+  each other; one of them matched main exactly.
+- **Geography:** 62 pixels of rounded-corner anti-aliasing, one or two levels per channel. It was
+  pixel-identical to main in two earlier M1 runs.
+- **Collection origins:** 131 pixels inside Leaflet's zoom +/− glyphs, consistent across M1 runs.
+  The computed font (`700 22px "Lucida Console", Monaco, monospace`) and the loaded faces (Source
+  Sans only) match main's rules, and no changed rule applies to that control. **Unexplained;**
+  rechecked live in the Phase E side-by-side.
+
+The baseline is unchanged: 149/149 images still match their committed hashes.
+
+### Findings recorded during M1
+
+- **Pre-existing on main:** Leaflet's touch stylesheet (`.leaflet-touch .leaflet-bar a`, 30px)
+  outranks the app's `.leaflet-bar a` control-height rule, so map zoom buttons are 30px in every
+  theme. Maps keep their own controls in this plan; this is listed for M6 or a separate fix and
+  was not changed in M1.
+- **Pre-existing on main:** `geography.css` re-declares `.app-content .workspace > .breadcrumbs`
+  with the same specificity as `breadcrumbs.css`, and it loads lazily. After any Geography visit,
+  directory breadcrumb spacing changes from the intended 20px to 8px for the rest of the session.
+  This made baseline captures route-order dependent. Not changed in M1.
+- **Fixed on this branch for Field Ledger:** pagination arrows, row-action icons, active-filter
+  chips and sidebar group toggles were 40px on touch (also on main). They now follow the
+  pointer-aware height under Field Ledger and keep their values in the six themes.
+
+### M1 limits and what M1 deliberately does not do
+
+- Layout, navigation and component structure are unchanged; M1 restyles through tokens only. The
+  Workbench shell, rail, command palette, inspector, lineage strip and timeline begin in M2–M4.
+- Status badges keep their current outlined form. The dot-and-word status from the design arrives
+  with the M3 directory primitives.
+- Tests use jsdom, which applies no CSS. Visual behaviour is evidenced by the captures and probe,
+  not by unit tests. There was no screen reader, forced-colours, browser-zoom or physical-device
+  check.
+- A browser that already stored a Botanical preference for `localhost:15174` keeps it; choose Field
+  Ledger in Settings → Appearance.
 
 ## Separate proposals
 
