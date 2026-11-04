@@ -158,7 +158,7 @@
   overflow-wrap: anywhere;
 }
 .app-content .orders-workspace .order-fact-group .button--quiet {
-  min-height: 2rem;
+  min-height: var(--control-height-compact);
   padding: 0;
 }
 .app-content .orders-workspace .order-overview-wide {
