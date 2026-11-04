@@ -15,6 +15,7 @@ import { CommandPalette } from "./CommandPalette";
 import {
   createActions,
   currentLink,
+  destinationOfHash,
   primaryWorkspaces,
   workspaceOf,
   workspaces,
@@ -22,6 +23,7 @@ import {
   type Workspace,
   type WorkspaceId,
 } from "./navigation";
+import { useSavedViewLinks, type SavedViewLink } from "./useSavedViewLinks";
 
 const panelPreferenceKey = "florabase.workbench.panel-collapsed.v1";
 
@@ -114,6 +116,55 @@ function WorkspaceLinks({
   );
 }
 
+/** A labelled list of plain links (Saved views, Recent) inside the panel or a sheet. */
+function LinkGroup({
+  label,
+  items,
+  follow,
+}: {
+  label: string;
+  items: { key: string; href: string; name: string; detail?: string }[];
+  follow: (event: MouseEvent<HTMLAnchorElement>, href: string) => void;
+}) {
+  if (!items.length) return null;
+  return (
+    <nav className="wb-group" aria-label={label}>
+      <p className="wb-group__title" aria-hidden="true">
+        {label}
+      </p>
+      <ul>
+        {items.map((item) => (
+          <li key={item.key}>
+            <a
+              href={item.href}
+              onClick={(event) => {
+                follow(event, item.href);
+              }}
+            >
+              <span className="wb-group__name">{item.name}</span>
+              {item.detail && (
+                <span className="wb-group__detail">{item.detail}</span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+function savedItems(views: SavedViewLink[], workspace: WorkspaceId) {
+  return views
+    .filter((view) => workspace === "today" || view.workspace === workspace)
+    .slice(0, 8)
+    .map((view) => ({
+      key: view.id,
+      href: view.href,
+      name: view.name,
+      detail: view.surface,
+    }));
+}
+
 /**
  * Florabase Next Workbench shell. A rail of workspaces (a vertical tablist)
  * switches the context panel without navigating, like an activity bar; the
@@ -151,6 +202,30 @@ export function WorkbenchShell({
     setPanelChoice({ from: hash, id });
   };
   const [collapsed, setCollapsed] = useState(readCollapsed);
+  const savedViews = useSavedViewLinks();
+  // Recently opened section-level destinations in this session (never records,
+  // never stored). Updated while rendering when the route changes.
+  const [recentState, setRecentState] = useState<{
+    hash: string;
+    items: { label: string; href: string }[];
+  }>({ hash: "", items: [] });
+  if (recentState.hash !== hash) {
+    const entry = destinationOfHash(hash);
+    setRecentState({
+      hash,
+      items: entry
+        ? [
+            { label: entry.label, href: entry.href },
+            ...recentState.items.filter((item) => item.href !== entry.href),
+          ].slice(0, 6)
+        : recentState.items,
+    });
+  }
+  const currentHref = destinationOfHash(hash)?.href;
+  const recent = recentState.items
+    .filter((item) => item.href !== currentHref)
+    .slice(0, 4)
+    .map((item) => ({ key: item.href, href: item.href, name: item.label }));
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [sheet, setSheet] = useState<WorkspaceId | "account" | null>(null);
   const searchTrigger = useRef<HTMLButtonElement>(null);
@@ -393,6 +468,12 @@ export function WorkbenchShell({
               follow={follow}
             />
           </nav>
+          <LinkGroup
+            label="Saved views"
+            items={savedItems(savedViews, panel.id)}
+            follow={follow}
+          />
+          <LinkGroup label="Recent" items={recent} follow={follow} />
           <footer className="wb-panel__footer">
             <p className="wb-account">{`Signed in as ${signedInAs}`}</p>
             <div className="wb-panel__footer-actions">
@@ -471,6 +552,11 @@ export function WorkbenchShell({
               follow={follow}
             />
           </nav>
+          <LinkGroup
+            label="Saved views"
+            items={savedItems(savedViews, sheetWorkspace.id)}
+            follow={follow}
+          />
         </TaskDialog>
       )}
 
@@ -525,6 +611,7 @@ export function WorkbenchShell({
           }}
           onNavigate={onNavigate}
           returnFocusTo={paletteReturn}
+          savedViews={savedViews}
         />
       )}
     </div>

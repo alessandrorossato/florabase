@@ -548,11 +548,11 @@ test("desktop context panel previews, hides and reopens without remounting the w
     });
     const shell = sidebar.parentElement;
     const workspace = screen.getByRole("region", { name: "Workspace content" });
-    const dashboard = await screen.findByRole("heading", { name: "Dashboard" });
+    const dashboard = await screen.findByRole("heading", { name: "Today" });
     expect(
       within(screen.getByRole("tabpanel", { name: /^Today/ })).getByRole(
         "link",
-        { name: "Dashboard" },
+        { name: "Today" },
       ),
     ).toHaveAttribute("aria-current", "page");
     // Previewing another workspace switches the panel without navigating.
@@ -565,7 +565,7 @@ test("desktop context panel previews, hides and reopens without remounting the w
       ).getByRole("link", { name: "Botanical identities" }),
     ).toHaveAttribute("href", "#/identities");
     expect(window.location.hash).toBe("#/dashboard");
-    expect(screen.getByRole("heading", { name: "Dashboard" })).toBe(dashboard);
+    expect(screen.getByRole("heading", { name: "Today" })).toBe(dashboard);
     // Hiding the panel keeps the workspace mounted and returns focus to the tab.
     await user.click(
       within(sidebar).getByRole("button", { name: "Hide panel" }),
@@ -587,7 +587,7 @@ test("desktop context panel previews, hides and reopens without remounting the w
     // Selecting the open workspace again collapses it, like an activity bar.
     await user.click(explore);
     expect(shell).toHaveClass("wb-shell--collapsed");
-    expect(screen.getByRole("heading", { name: "Dashboard" })).toBe(dashboard);
+    expect(screen.getByRole("heading", { name: "Today" })).toBe(dashboard);
     unmount();
     render(<App />);
     const reloadedShell = await screen.findByRole("complementary", {
@@ -3559,7 +3559,7 @@ test("Workbench workspaces, panels and mobile sheets retain every destination an
   ]);
   expect(within(nav).queryByText("Maps")).not.toBeInTheDocument();
   const destinations = [
-    "Dashboard",
+    "Today",
     "Seeds",
     "Sowings",
     "Plants",
@@ -3588,7 +3588,7 @@ test("Workbench workspaces, panels and mobile sheets retain every destination an
   }
   expect(reachable).toEqual(destinations);
   await user.click(within(sidebar).getByRole("tab", { name: /^Today/ }));
-  expect(within(nav).getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+  expect(within(nav).getByRole("link", { name: "Today" })).toHaveAttribute(
     "aria-current",
     "page",
   );
@@ -3668,7 +3668,7 @@ test("Workbench workspaces, panels and mobile sheets retain every destination an
           .getAllByRole("listitem")
           .map((item) => item.textContent),
       ).toEqual(["Explore", "Geography", "Overview"]);
-    } else if (destination !== "Dashboard") {
+    } else if (destination !== "Today") {
       expect(
         screen.getByRole("navigation", { name: "Breadcrumb" }),
       ).toHaveTextContent(categories[index]);
@@ -4577,13 +4577,13 @@ test("identity section keyboard navigation retains browser Back and Forward boun
   ).toHaveFocus();
 });
 
-test("Dashboard Quick add keeps all destinations and labels with distinct decorative icons", async () => {
+test("Workbench New menu keeps all creation destinations and labels with distinct decorative icons", async () => {
   window.history.replaceState(null, "", "#/dashboard");
   authenticatedThen(() => jsonResponse({ status: "ok" }));
   const user = userEvent.setup();
   render(<App />);
-  await user.click(await screen.findByRole("button", { name: "Quick add" }));
-  const actions = screen.getByRole("navigation", { name: "Quick actions" });
+  await user.click(await screen.findByRole("button", { name: "New record" }));
+  const actions = screen.getByRole("navigation", { name: "Create" });
   const expected = [
     ["New seed lot", "#/seeds?action=create"],
     ["New sowing", "#/sowings?action=create"],

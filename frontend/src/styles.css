@@ -554,9 +554,7 @@ button:disabled {
 .detail-header h3 {
   margin-bottom: 0;
 }
-.dashboard-activity {
-  margin-top: 2rem;
-}
+
 .breadcrumbs ol {
   display: flex;
   flex-wrap: wrap;
@@ -4350,9 +4348,7 @@ button:disabled {
   color: var(--color-muted);
   font-size: 0.9rem;
 }
-.dashboard-snapshot,
-.dashboard-activity,
-.dashboard-quick-actions {
+.dashboard-snapshot {
   padding-block: var(--space-6);
   border-top: 1px solid var(--color-border);
 }
@@ -4384,33 +4380,7 @@ button:disabled {
 .dashboard-stat-strip strong {
   font: 400 2rem/1 var(--font-editorial);
 }
-.dashboard-quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-}
-.dashboard-quick-actions h3 {
-  flex-basis: 100%;
-  margin: 0 0 var(--space-1);
-  font: 400 1.4rem/1.2 var(--font-editorial);
-}
-.dashboard-quick-actions a {
-  min-height: 2.75rem;
-  padding: 0.5rem 0.85rem;
-  color: var(--color-accent);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  font-weight: 600;
-}
-.dashboard-quick-actions a:hover,
-.dashboard-quick-actions a:focus-visible {
-  border-color: var(--color-accent);
-}
-.dashboard-quick-actions a:focus-visible {
-  outline: 3px solid var(--color-accent);
-  outline-offset: 2px;
-}
+
 .workspace:has(#global-events-title) .page-header {
   margin-top: var(--space-4);
 }
@@ -5252,65 +5222,7 @@ button:disabled {
     overflow-y: auto;
     align-content: start;
   }
-  .workspace--dashboard .dashboard-overview {
-    display: flex;
-    flex: 1 1 auto;
-    flex-direction: column;
-    min-height: 0;
-  }
-  .workspace--dashboard .dashboard-main {
-    display: grid;
-    flex: 1 1 auto;
-    grid-template-columns: minmax(0, 2fr) minmax(12rem, 0.82fr);
-    gap: 1.5rem;
-    min-height: 0;
-    min-width: 0;
-    padding-top: 0.9rem;
-    border-top: 1px solid var(--color-border);
-  }
-  .workspace--dashboard .dashboard-activity {
-    display: flex;
-    flex-direction: column;
-    grid-column: 1;
-    grid-row: 1;
-    min-height: 0;
-    min-width: 0;
-    margin: 0;
-    padding: 0;
-    border: 0;
-  }
-  .workspace--dashboard .dashboard-activity > .section-heading {
-    flex: none;
-    align-items: end;
-  }
-  .workspace--dashboard .dashboard-activity > .event-feed {
-    flex: 1 1 auto;
-    min-height: 0;
-    margin-top: 0.8rem;
-    padding-right: 0.35rem;
-    overflow-y: auto;
-    align-content: start;
-  }
-  .workspace--dashboard .dashboard-quick-actions {
-    display: grid;
-    grid-column: 2;
-    grid-row: 1;
-    align-content: start;
-    align-self: start;
-    gap: 0.8rem;
-    min-width: 0;
-    padding: 0.85rem;
-    background: var(--color-sage);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-small);
-  }
-  .workspace--dashboard .dashboard-quick-actions h3 {
-    margin-bottom: 0.2rem;
-  }
-  .workspace--dashboard .dashboard-quick-actions a {
-    width: 100%;
-    justify-content: flex-start;
-  }
+
   .workspace--dashboard:has(.dashboard-results) {
     overflow-y: auto;
   }
@@ -5494,47 +5406,7 @@ button:disabled {
   }
 }
 
-@media (min-width: 48.01rem) and (max-width: 960px) {
-  .workspace--dashboard .dashboard-main {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr);
-    gap: 0.75rem;
-  }
-  .workspace--dashboard .dashboard-quick-actions {
-    grid-column: 1;
-    grid-row: 1;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .workspace--dashboard .dashboard-quick-actions h3 {
-    grid-column: 1 / -1;
-  }
-  .workspace--dashboard .dashboard-activity {
-    grid-column: 1;
-    grid-row: 2;
-  }
-}
-
 @media (max-width: 48rem) {
-  .workspace--dashboard .dashboard-overview,
-  .workspace--dashboard .dashboard-main {
-    display: block;
-  }
-  .workspace--dashboard .dashboard-quick-actions {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.8rem;
-  }
-  .workspace--dashboard .dashboard-quick-actions h3 {
-    grid-column: 1 / -1;
-  }
-  .workspace--dashboard .dashboard-quick-actions a {
-    min-width: 0;
-    width: 100%;
-  }
-  .workspace--dashboard .dashboard-activity > .event-feed {
-    max-height: none;
-    overflow: visible;
-  }
   .workspace--dashboard .event-feed a,
   .workspace--dashboard .event-feed a:visited {
     color: var(--color-accent);

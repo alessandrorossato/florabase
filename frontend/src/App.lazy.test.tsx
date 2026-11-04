@@ -88,7 +88,7 @@ test("restoration defers workspaces and navigation loads only the selected works
     { timeout: 5000 },
   );
   expect(loaded).toEqual(["dashboard", "labels", "seeds"]);
-  await openSection(user, "Dashboard");
+  await openSection(user, "Today");
   await screen.findByRole(
     "heading",
     { name: "Dashboard workspace" },

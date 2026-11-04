@@ -12,6 +12,7 @@ import { searchKindLabels, type SearchResponse } from "../collection/searchApi";
 import { Icon, type IconName } from "../components/Icon";
 import { TaskDialog } from "../components/TaskDialog";
 import { allDestinations, createActions } from "./navigation";
+import type { SavedViewLink } from "./useSavedViewLinks";
 
 type SearchHit = SearchResponse["groups"][number]["items"][number];
 type RecordState =
@@ -37,6 +38,7 @@ interface Group {
 
 const RECORD_LIMIT = 8;
 const recordIcon: IconName = "document";
+const savedViewIcon: IconName = "saved-views";
 
 function includes(text: string, query: string) {
   return text.toLocaleLowerCase().includes(query.toLocaleLowerCase());
@@ -51,10 +53,12 @@ export function CommandPalette({
   onClose,
   onNavigate,
   returnFocusTo,
+  savedViews = [],
 }: {
   onClose: () => void;
   onNavigate: (href: string) => void;
   returnFocusTo?: RefObject<HTMLElement | null>;
+  savedViews?: SavedViewLink[];
 }) {
   const [query, setQuery] = useState("");
   const [answer, setAnswer] = useState<Answer | null>(null);
@@ -124,6 +128,20 @@ export function CommandPalette({
         href,
         icon,
       }));
+    const views = savedViews
+      .filter(
+        (view) =>
+          !trimmed ||
+          includes(view.name, trimmed) ||
+          includes(view.surface, trimmed),
+      )
+      .map((view) => ({
+        key: `view:${view.id}`,
+        label: view.name,
+        detail: `Saved view · ${view.surface}`,
+        href: view.href,
+        icon: savedViewIcon,
+      }));
     const found =
       records.status === "ready"
         ? records.hits.slice(0, RECORD_LIMIT).map((hit) => ({
@@ -140,6 +158,7 @@ export function CommandPalette({
     const all: Group[] = trimmed
       ? [
           { label: "Records", options: found },
+          { label: "Saved views", options: views },
           { label: "Go to", options: destinations },
           { label: "Create", options: actions },
           {
@@ -159,11 +178,12 @@ export function CommandPalette({
           },
         ]
       : [
+          { label: "Saved views", options: views },
           { label: "Create", options: actions },
           { label: "Go to", options: destinations },
         ];
     return all.filter((group) => group.options.length);
-  }, [trimmed, records]);
+  }, [trimmed, records, savedViews]);
 
   const options = groups.flatMap((group) => group.options);
   const current = Math.min(active, Math.max(options.length - 1, 0));

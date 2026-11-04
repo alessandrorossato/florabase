@@ -111,11 +111,7 @@ test("Dashboard is the default workspace with Workbench workspaces and mobile wo
   render(<App />);
 
   expect(
-    await screen.findByRole(
-      "heading",
-      { name: "Dashboard" },
-      { timeout: 10_000 },
-    ),
+    await screen.findByRole("heading", { name: "Today" }, { timeout: 10_000 }),
   ).toBeInTheDocument();
   const snapshot = await screen.findByRole("region", {
     name: "Collection snapshot",
@@ -153,7 +149,7 @@ test("Dashboard is the default workspace with Workbench workspaces and mobile wo
   expect(
     within(
       screen.getByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Dashboard" }),
+    ).getByRole("link", { name: "Today" }),
   ).toHaveAttribute("aria-current", "page");
   await user.click(
     within(workspaceTabs).getByRole("tab", { name: /^Explore/ }),
@@ -164,7 +160,7 @@ test("Dashboard is the default workspace with Workbench workspaces and mobile wo
     ).getByRole("link", { name: "Botanical identities" }),
   ).toBeInTheDocument();
   expect(
-    screen.getByRole("heading", { name: "Dashboard", level: 2 }),
+    screen.getByRole("heading", { name: "Today", level: 2 }),
   ).toBeInTheDocument();
   const mobile = screen.getByRole("navigation", {
     name: "Mobile primary navigation",
@@ -177,10 +173,10 @@ test("Dashboard is the default workspace with Workbench workspaces and mobile wo
   expect(
     within(snapshot).getByRole("link", { name: /Plant groups.*3/ }),
   ).toHaveAttribute("href", "#/plants?type=group");
-  await user.click(screen.getByRole("button", { name: "Quick add" }));
-  expect(
-    screen.getByRole("navigation", { name: "Quick actions" }),
-  ).toHaveTextContent("New seed lot");
+  await user.click(screen.getByRole("button", { name: "New record" }));
+  expect(screen.getByRole("navigation", { name: "Create" })).toHaveTextContent(
+    "New seed lot",
+  );
   await user.keyboard("{Escape}");
   await user.click(within(mobile).getByRole("button", { name: "Activity" }));
   const sheet = screen.getByRole("dialog", { name: "Activity" });

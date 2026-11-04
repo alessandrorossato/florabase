@@ -145,8 +145,8 @@ test("Dashboard keeps its counts, actions, and chronological Event context", asy
     ).toBeInTheDocument();
   }
   const user = userEvent.setup();
-  await user.click(screen.getByRole("button", { name: "Quick add" }));
-  const actions = screen.getByRole("navigation", { name: "Quick actions" });
+  await user.click(screen.getByRole("button", { name: "New record" }));
+  const actions = screen.getByRole("navigation", { name: "Create" });
   expect(within(actions).getAllByRole("link")).toHaveLength(9);
   for (const [name, href] of [
     ["New seed lot", "#/seeds?action=create"],
@@ -187,16 +187,16 @@ test("Dashboard identity and all search tools share the PageHeader grammar", asy
     name: "Search your collection",
   });
   const header = screen
-    .getByRole("heading", { name: "Dashboard" })
+    .getByRole("heading", { name: "Today" })
     .closest(".page-header");
   expect(header).toHaveClass("page-header--with-tools");
   expect(header).toContainElement(search);
   const tools = within(
-    screen.getByRole("group", { name: "Dashboard controls" }),
+    screen.getByRole("group", { name: "Collection search" }),
   );
   expect(tools.getByRole("button", { name: "Filters" })).toBeVisible();
   expect(tools.getByRole("button", { name: "Saved views" })).toBeVisible();
-  expect(tools.getByRole("button", { name: "Quick add" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "New record" })).toBeVisible();
   expect(search.closest(".page-tools")).toBeInTheDocument();
 });
 
@@ -244,12 +244,10 @@ test("Dashboard search replaces overview, groups results, and restores the norma
   expect(
     await screen.findByRole("heading", { name: "Collection snapshot" }),
   ).toBeInTheDocument();
-  expect(
-    screen.queryByRole("navigation", { name: "Quick actions" }),
-  ).toBeNull();
-  await user.click(screen.getByRole("button", { name: "Quick add" }));
+  expect(screen.queryByRole("navigation", { name: "Create" })).toBeNull();
+  await user.click(screen.getByRole("button", { name: "New record" }));
   const quickActions = screen.getByRole("navigation", {
-    name: "Quick actions",
+    name: "Create",
   });
   for (const [name, href] of [
     ["New seed lot", "#/seeds?action=create"],
@@ -786,12 +784,12 @@ test("Orders and Suppliers share Sourcing search with exact Order deep links", a
   expect(result).toHaveTextContent("2026-10 · Nursery · EUR 42.50");
 });
 
-test("Dashboard toolbar keeps compact controls and Quick add supports keyboard and outside dismissal", async () => {
+test("Today toolbar keeps compact controls and the Workbench New menu supports keyboard and outside dismissal", async () => {
   setup(() => json({}));
   const user = userEvent.setup();
   render(<App />);
   const toolbar = await screen.findByRole("group", {
-    name: "Dashboard controls",
+    name: "Collection search",
   });
   expect(
     within(toolbar).getByRole("searchbox", { name: "Search your collection" }),
@@ -800,14 +798,14 @@ test("Dashboard toolbar keeps compact controls and Quick add supports keyboard a
     within(toolbar)
       .getAllByRole("button")
       .map((item) => item.textContent),
-  ).toEqual(["Filters", "Saved views", "Quick add"]);
+  ).toEqual(["Filters", "Saved views"]);
   expect(
     screen.queryByRole("heading", { name: "Record in your collection" }),
   ).toBeNull();
-  const trigger = within(toolbar).getByRole("button", { name: "Quick add" });
+  const trigger = screen.getByRole("button", { name: "New record" });
   trigger.focus();
   await user.keyboard("{ArrowDown}");
-  const menu = await screen.findByRole("group", { name: "Quick add menu" });
+  const menu = await screen.findByRole("group", { name: "New record menu" });
   await waitFor(() => {
     expect(
       within(menu).getByRole("link", { name: "New seed lot" }),
@@ -818,11 +816,11 @@ test("Dashboard toolbar keeps compact controls and Quick add supports keyboard a
     within(menu).getByRole("link", { name: "New local place" }),
   ).toHaveFocus();
   await user.keyboard("{Escape}");
-  expect(screen.queryByRole("group", { name: "Quick add menu" })).toBeNull();
+  expect(screen.queryByRole("group", { name: "New record menu" })).toBeNull();
   expect(trigger).toHaveFocus();
   await user.click(trigger);
-  await user.click(screen.getByRole("heading", { name: "Dashboard" }));
-  expect(screen.queryByRole("group", { name: "Quick add menu" })).toBeNull();
+  await user.click(screen.getByRole("heading", { name: "Today" }));
+  expect(screen.queryByRole("group", { name: "New record menu" })).toBeNull();
   await waitFor(() => {
     expect(trigger).toHaveFocus();
   });

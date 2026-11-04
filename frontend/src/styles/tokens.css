@@ -271,8 +271,9 @@
   --font-botanical: "Newsreader Variable", Georgia, serif;
   --font-data: "IBM Plex Mono", ui-monospace, monospace;
   --type-display: 600 2.5rem/1.1 var(--font-ui);
-  --type-h1: 600 1.875rem/1.1333 var(--font-ui);
-  --type-h2: 600 1.25rem/1.3 var(--font-ui);
+  /* Page and record titles take the botanical serif; the face sets Field Ledger apart. */
+  --type-h1: 500 2rem/1.125 var(--font-botanical);
+  --type-h2: 500 1.375rem/1.25 var(--font-botanical);
   --type-h3: 600 1.0625rem/1.4118 var(--font-ui);
   --type-body: 400 0.875rem/1.4286 var(--font-ui);
   --type-strong: 600 0.875rem/1.4286 var(--font-ui);

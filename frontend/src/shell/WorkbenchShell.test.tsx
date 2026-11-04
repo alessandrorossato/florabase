@@ -318,3 +318,125 @@ test("signing out disables the panel action with a visible busy label", () => {
   renderShell({ signingOut: true });
   expect(screen.getByRole("button", { name: "Signing out…" })).toBeDisabled();
 });
+
+function savedViewsFetch(views: unknown[]) {
+  return vi.fn((path: string) =>
+    Promise.resolve(
+      new Response(
+        JSON.stringify(path.startsWith("/api/v1/saved-views") ? views : []),
+        { headers: { "Content-Type": "application/json" } },
+      ),
+    ),
+  );
+}
+const view = (
+  id: string,
+  name: string,
+  surface: string,
+  state: object,
+  compatibility = "supported",
+) => ({
+  id,
+  name,
+  surface,
+  state,
+  state_version: 1,
+  compatibility,
+  created_at: "2026-11-01T00:00:00Z",
+  updated_at: "2026-11-01T00:00:00Z",
+});
+
+test("supported Saved Views open as their ordinary directory URLs in the owning workspace, Today and the palette", async () => {
+  const fetch = savedViewsFetch([
+    view("0190d2a8-0000-7000-8000-00000000000a", "Basil lots", "seed_lots", {
+      q: "basil",
+    }),
+    view(
+      "0190d2a8-0000-7000-8000-00000000000b",
+      "Broken",
+      "plants",
+      { q: "x" },
+      "invalid_state",
+    ),
+  ]);
+  vi.stubGlobal("fetch", fetch);
+  const user = userEvent.setup();
+  const { onNavigate } = renderShell({ section: "seeds", hash: "#/seeds" });
+  const saved = await screen.findByRole("navigation", { name: "Saved views" });
+  expect(
+    within(saved).getByRole("link", { name: /Basil lots/ }),
+  ).toHaveAttribute("href", "#/seeds?q=basil");
+  expect(within(saved).queryByText("Broken")).toBeNull();
+  await user.click(within(saved).getByRole("link", { name: /Basil lots/ }));
+  expect(onNavigate).toHaveBeenCalledWith("#/seeds?q=basil");
+  await user.click(screen.getByRole("tab", { name: /^Sourcing/ }));
+  expect(screen.queryByRole("navigation", { name: "Saved views" })).toBeNull();
+  await user.click(screen.getByRole("tab", { name: /^Today/ }));
+  expect(
+    within(screen.getByRole("navigation", { name: "Saved views" })).getByRole(
+      "link",
+      { name: /Basil lots/ },
+    ),
+  ).toBeInTheDocument();
+  await user.keyboard("{Control>}k{/Control}");
+  expect(
+    within(
+      screen.getByRole("dialog", { name: "Search and commands" }),
+    ).getByRole("option", { name: /Basil lots/ }),
+  ).toHaveTextContent("Saved view · Seed lots");
+  expect(fetch).toHaveBeenCalledTimes(1);
+  await user.keyboard("{Escape}");
+  window.dispatchEvent(new Event("florabase:saved-views-changed"));
+  await waitFor(() => {
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+});
+
+test("Saved View listing failure leaves the panel usable without the group", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => Promise.resolve(new Response("{}", { status: 500 }))),
+  );
+  renderShell({ section: "seeds", hash: "#/seeds" });
+  expect(
+    screen.getByRole("navigation", { name: "Primary navigation" }),
+  ).toBeInTheDocument();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(screen.queryByRole("navigation", { name: "Saved views" })).toBeNull();
+});
+
+test("Recent lists previously opened sections, not records or the current page", () => {
+  vi.stubGlobal("fetch", savedViewsFetch([]));
+  const props = {
+    signedInAs: "Test Owner",
+    signingOut: false,
+    onSignOut: vi.fn(),
+    onNavigate: vi.fn(),
+  };
+  const content = <section aria-label="Workspace content" />;
+  const { rerender } = render(
+    <WorkbenchShell section="seeds" hash="#/seeds" {...props}>
+      {content}
+    </WorkbenchShell>,
+  );
+  rerender(
+    <WorkbenchShell
+      section="plants"
+      hash="#/plants/0190d2a8-0000-7000-8000-000000000001"
+      {...props}
+    >
+      {content}
+    </WorkbenchShell>,
+  );
+  rerender(
+    <WorkbenchShell section="orders" hash="#/orders" {...props}>
+      {content}
+    </WorkbenchShell>,
+  );
+  const recent = screen.getByRole("navigation", { name: "Recent" });
+  expect(
+    within(recent)
+      .getAllByRole("link")
+      .map((link) => link.getAttribute("href")),
+  ).toEqual(["#/seeds"]);
+});

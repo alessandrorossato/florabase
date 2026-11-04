@@ -18,6 +18,7 @@ import {
   updateSavedView,
   type SavedView,
 } from "./api";
+import { savedViewsChanged } from "./events";
 import {
   savedViewHash,
   surfaceLabels,
@@ -148,6 +149,8 @@ export function SavedViews({
           { name, surface, state_version: 1, state: state ?? {} },
           token,
         );
+      // The Workbench panel and palette list Saved Views; tell them to refresh.
+      window.dispatchEvent(new Event(savedViewsChanged));
       setNotice(
         action.kind === "delete"
           ? "Saved View deleted. Your records are unchanged."

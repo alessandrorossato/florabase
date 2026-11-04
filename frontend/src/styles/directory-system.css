@@ -20,6 +20,10 @@
   overflow: hidden;
   border-radius: var(--radius-small);
 }
+.app-content .ui-directory-row .ui-record-visual {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+}
 .app-content .ui-record-visual img {
   width: 100%;
   height: 100%;
@@ -40,8 +44,9 @@
 }
 .app-content .ui-record-title {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
   min-width: 0;
 }
 .app-content .ui-record-title > strong {
@@ -55,9 +60,21 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+.app-content .ui-record-secondary .scientific-name {
+  font-family: var(--font-botanical);
+  font-size: 0.9375rem;
+  font-style: italic;
+}
 .app-content .ui-record-summary {
   display: grid;
   gap: var(--space-1);
+}
+/* Rows read as a ledger: what is held, aligned at the end of the line. */
+.app-content .ui-directory-row .ui-record-summary {
+  justify-items: end;
+  color: var(--text);
+  text-align: end;
+  font-variant-numeric: tabular-nums;
 }
 .app-content .ui-record-summary strong {
   font: var(--type-strong);
@@ -81,11 +98,43 @@
 .app-content .ui-directory-card .ui-record-title {
   align-items: start;
 }
-.app-content .ui-directory-card .ui-record-visual:has(img),
-.app-content .ui-directory-card .ui-record-visual:has(img) > .record-visual {
+.app-content
+  .ui-directory-card
+  .ui-directory-trigger:has(> .ui-record-content) {
+  padding: 0 0 var(--space-2);
+}
+.app-content .ui-directory-card :is(.ui-record-identity, .ui-record-summary) {
+  padding-inline: var(--space-4);
+}
+/* Cards are specimen plates: a 4:3 photograph, or a labelled hatched plate without one. */
+.app-content .ui-directory-card .ui-record-visual,
+.app-content .ui-directory-card .ui-record-visual > .record-visual {
   width: 100%;
   height: auto;
+  margin: 0;
   aspect-ratio: 4 / 3;
+  border-radius: 0;
+}
+.app-content .ui-directory-card .ui-record-visual {
+  border-block-end: 1px solid var(--border);
+}
+.app-content .ui-directory-card .ui-record-visual:not(:has(img)) {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--surface-subtle) 0 0.5rem,
+    var(--background) 0.5rem 1rem
+  );
+}
+.app-content
+  .ui-directory-card
+  .ui-record-visual:not(:has(img))
+  > .record-visual {
+  background: transparent;
+}
+.app-content .ui-directory-card .ui-record-visual:not(:has(img)) svg {
+  width: 2rem;
+  height: 2rem;
+  color: var(--text-muted);
 }
 .app-content .ui-directory-card .ui-directory-record-actions {
   margin-top: auto;
@@ -283,9 +332,27 @@
   min-width: 0;
   margin-block: 0;
 }
-@media (max-width: 40rem) {
+/* Phones: the record takes the full line; its actions follow on their own row. */
+@media (max-width: 48rem) {
+  .app-content
+    .ui-directory-records--list
+    > .ui-directory-row:has(.ui-record-content) {
+    flex-wrap: wrap;
+  }
+  .app-content
+    .ui-directory-records--list
+    .tooltip-trigger:has(> .ui-directory-trigger) {
+    flex-basis: 100%;
+  }
   .app-content .ui-directory-records--list .ui-directory-record-actions {
-    max-width: 7rem;
+    flex-basis: 100%;
+    max-width: none;
+    justify-content: flex-end;
+    padding-block-start: 0;
+  }
+  .app-content .ui-directory-row .ui-record-summary {
+    justify-items: start;
+    text-align: start;
   }
 }
 
@@ -348,21 +415,31 @@
   color: var(--text-muted);
   background: var(--surface-subtle);
 }
-.app-content
-  .ui-directory-records
-  > :is(.ui-directory-row, .ui-directory-card)[data-selected="true"] {
-  box-shadow: none;
+.app-content .ui-directory-records > .ui-directory-card[data-selected="true"] {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
 }
 .app-content
   .ui-directory-records
   :is(.ui-directory-row, .ui-directory-card)
   .ui-directory-record-actions
   .control-icon-button {
-  border: 1px solid var(--border);
+  /* Florabase Next: quiet repeated row actions; the boundary appears on hover and focus. */
+  color: var(--text-muted);
+  border: 1px solid transparent;
   border-radius: var(--radius-small);
+  background: transparent;
+  width: var(--control-height);
+  height: var(--control-height);
+}
+.app-content
+  .ui-directory-records
+  :is(.ui-directory-row, .ui-directory-card)
+  .ui-directory-record-actions
+  .control-icon-button:is(:hover, [aria-expanded="true"]) {
+  color: var(--text);
+  border-color: var(--border-strong);
   background: var(--surface);
-  width: 2.75rem;
-  height: 2.75rem;
 }
 .ui-directory-action-menu[hidden] {
   display: none;

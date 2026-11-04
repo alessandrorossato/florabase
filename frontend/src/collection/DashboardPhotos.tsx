@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { DashboardResponse } from "./api";
-import { EmptyState, SectionHeader } from "../components/WorkspaceUI";
+import { EmptyState } from "../components/WorkspaceUI";
 import { Icon } from "../components/Icon";
 
 type Photo = NonNullable<DashboardResponse["photos"]>[number];
@@ -26,12 +26,12 @@ function Thumbnail({ photo }: { photo: Photo }) {
           }}
         />
       ) : (
-        <span className="dashboard-photo-fallback">
+        <span className="today-plate__fallback">
           <Icon name="plant" />
           <span>No photograph</span>
         </span>
       )}
-      <span className="dashboard-photo-source">
+      <span className="today-plate__source">
         {image
           ? reference
             ? "Identity reference"
@@ -45,76 +45,30 @@ function Thumbnail({ photo }: { photo: Photo }) {
 export function DashboardPhotos({ photos }: { photos: Photo[] }) {
   return (
     <section
-      className="dashboard-photo-section"
+      className="today-panel today-specimens"
       aria-labelledby="dashboard-media-title"
     >
-      <SectionHeader
-        id="dashboard-media-title"
-        title="Plants in your collection"
-      >
-        <div className="dashboard-photo-tools">
-          <a href="#/plants">All Plants</a>
-          {photos.some((photo) => photo.image ?? photo.reference_image) && (
-            <details className="dashboard-photo-credits">
-              <summary>Image attribution</summary>
-              <p>
-                Explicit Plant primary photos are preferred. Identity references
-                illustrate the botanical identity, not the owned specimen.
-              </p>
-              <ul>
-                {photos.map((photo) => (
-                  <li key={photo.id}>
-                    <strong>{photo.title}</strong>
-                    {[photo.image, photo.reference_image].map(
-                      (image, index) =>
-                        image && (
-                          <span key={index}>
-                            {index === 0
-                              ? " · Plant primary"
-                              : " · Identity reference"}
-                            {` · ${image.attribution ?? "Attribution not recorded"}`}
-                            {image.licence_label &&
-                              (image.licence_url ? (
-                                <>
-                                  {" "}
-                                  ·{" "}
-                                  <a href={image.licence_url}>
-                                    {image.licence_label}
-                                  </a>
-                                </>
-                              ) : (
-                                ` · ${image.licence_label}`
-                              ))}
-                            {image.source_url && (
-                              <>
-                                {" "}
-                                · <a href={image.source_url}>Source</a>
-                              </>
-                            )}
-                          </span>
-                        ),
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </details>
-          )}
-        </div>
-      </SectionHeader>
+      <header className="today-panel__header">
+        <h3 id="dashboard-media-title">Plants in your collection</h3>
+        <a href="#/plants">All Plants</a>
+      </header>
+      <p className="today-provenance">
+        Active individual Plants, with their own primary photo where recorded
+      </p>
       {photos.length ? (
-        <ul
-          className="dashboard-photo-grid"
-          aria-label="Selected individual Plants"
-        >
+        <ul className="today-plates" aria-label="Selected individual Plants">
           {photos.map((photo) => (
             <li key={photo.id}>
               <a href={`#/plants/${photo.id}`} aria-label={photo.title}>
-                <span className="dashboard-photo-frame">
+                <span className="today-plate__frame">
                   <Thumbnail photo={photo} />
                 </span>
-                <span className="dashboard-photo-label" title={photo.title}>
+                <span className="today-plate__title" title={photo.title}>
                   {photo.title}
                 </span>
+                <i className="scientific-name today-plate__name">
+                  {photo.scientific_name}
+                </i>
               </a>
             </li>
           ))}
@@ -124,6 +78,51 @@ export function DashboardPhotos({ photos }: { photos: Photo[] }) {
           No active individual Plants recorded. Add a Plant to start your
           collection.
         </EmptyState>
+      )}
+      {photos.some((photo) => photo.image ?? photo.reference_image) && (
+        <details className="today-credits">
+          <summary>Image attribution</summary>
+          <p>
+            Explicit Plant primary photos are preferred. Identity references
+            illustrate the botanical identity, not the owned specimen.
+          </p>
+          <ul>
+            {photos.map((photo) => (
+              <li key={photo.id}>
+                <strong>{photo.title}</strong>
+                {[photo.image, photo.reference_image].map(
+                  (image, index) =>
+                    image && (
+                      <span key={index}>
+                        {index === 0
+                          ? " · Plant primary"
+                          : " · Identity reference"}
+                        {` · ${image.attribution ?? "Attribution not recorded"}`}
+                        {image.licence_label &&
+                          (image.licence_url ? (
+                            <>
+                              {" "}
+                              ·{" "}
+                              <a href={image.licence_url}>
+                                {image.licence_label}
+                              </a>
+                            </>
+                          ) : (
+                            ` · ${image.licence_label}`
+                          ))}
+                        {image.source_url && (
+                          <>
+                            {" "}
+                            · <a href={image.source_url}>Source</a>
+                          </>
+                        )}
+                      </span>
+                    ),
+                )}
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
     </section>
   );

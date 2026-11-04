@@ -2927,8 +2927,8 @@ test.each(["plant", "group"] as const)(
     expect(
       await screen.findByRole("button", { name: "New plant or group" }),
     ).toBeVisible();
-    await openSection(user, "Dashboard");
-    await user.click(await screen.findByRole("button", { name: "Quick add" }));
+    await openSection(user, "Today");
+    await user.click(await screen.findByRole("button", { name: "New record" }));
     await user.click(
       screen.getByRole("link", {
         name: kind === "plant" ? "New plant" : "New plant group",

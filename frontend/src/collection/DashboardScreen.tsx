@@ -1,33 +1,30 @@
-import { Icon } from "../components/Icon";
-import { DashboardPhotos } from "./DashboardPhotos";
 import { useEffect, useState } from "react";
+
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { OverflowMenu, PageHeader } from "../components/ReferenceUI";
+import { PageHeader } from "../components/ReferenceUI";
 import {
   EmptyState,
   ErrorState,
   LoadingState,
   Metric,
   Page,
-  SectionHeader,
   StatusBadge,
 } from "../components/WorkspaceUI";
-import { historyDateLabel, historyOrigin } from "../history/presentation";
 import { historyHref } from "../history/api";
+import { historyDateLabel, historyOrigin } from "../history/presentation";
 import { SavedViews } from "../saved-views/SavedViews";
 import { localDay, targetLabels } from "../schedule/state";
 import { getDashboard, type DashboardResponse } from "./api";
+import { DashboardPhotos } from "./DashboardPhotos";
 import { useDashboardSearch } from "./DashboardSearch";
 import "./dashboard.css";
-import { createActions } from "../shell/navigation";
+import "./today.css";
 
 type State =
   | { status: "loading" }
   | { status: "ready"; value: DashboardResponse }
   | { status: "error" };
-// Creation entry points are shared with the Workbench New menu and command palette.
-const actions = createActions;
 
 function isDashboardResponse(value: unknown): value is DashboardResponse {
   if (typeof value !== "object" || value === null) return false;
@@ -38,6 +35,37 @@ function isDashboardResponse(value: unknown): value is DashboardResponse {
     Array.isArray(candidate.overview.upcoming) &&
     Array.isArray(candidate.overview.recent_activity)
   );
+}
+
+/** The operator's local calendar day, written out; it is never a stored fact. */
+function dayLabel(day: string) {
+  const [year, month, date] = day.split("-").map(Number);
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(year, month - 1, date));
+}
+
+function plural(count: number, one: string, many: string) {
+  return `${String(count)} ${count === 1 ? one : many}`;
+}
+
+/** One sentence composed only from returned counts; nothing is inferred. */
+function summary(value: DashboardResponse) {
+  const { overdue, due_today: today } = value.overview;
+  const work =
+    overdue + today === 0
+      ? "Nothing is overdue or due today in the Schedule"
+      : [
+          overdue ? `${String(overdue)} overdue` : "",
+          today ? `${String(today)} due today` : "",
+        ]
+          .filter(Boolean)
+          .join(" and ") + " in the Schedule";
+  const { counts } = value;
+  return `${work}. You hold ${plural(counts.active_plants, "active Plant", "active Plants")}, ${plural(counts.active_plant_groups, "Plant group", "Plant groups")}, ${plural(counts.active_seed_lots, "seed lot", "seed lots")} and ${plural(counts.active_sowings, "active sowing", "active sowings")}.`;
 }
 
 export function DashboardOverview() {
@@ -92,17 +120,24 @@ export function DashboardOverview() {
           setAttempt((n) => n + 1);
         }}
       >
-        Florabase could not load the Dashboard.
+        Florabase could not load Today.
       </ErrorState>
     );
   const { counts, overview: data } = state.value;
+  const coverage = (value: number) =>
+    `${String(value)} of ${String(data.current_identities)}`;
   return (
-    <div className="dashboard-content">
-      <section aria-labelledby="collection-snapshot-title">
-        <h3 id="collection-snapshot-title" className="sr-only">
+    <div className="today">
+      <p className="today-lede">{summary(state.value)}</p>
+
+      <section
+        className="today-holdings"
+        aria-labelledby="collection-snapshot-title"
+      >
+        <h3 id="collection-snapshot-title" className="today-label">
           Collection snapshot
         </h3>
-        <div className="dashboard-metrics">
+        <div className="today-metrics">
           <Metric
             label="Individual Plants"
             value={counts.active_plants}
@@ -128,23 +163,24 @@ export function DashboardOverview() {
             href="#/sowings"
           />
         </div>
-        <p className="dashboard-membership">
+        <p className="today-note">
           <strong>{data.current_identities}</strong> botanical identities
-          represented in current material, including stored harvests ·{" "}
-          <time dateTime={data.today}>{data.today}</time>.{" "}
+          represented in current material, including stored harvests.{" "}
           <a href="#/species-distribution?scope=current">Explore collection</a>
         </p>
       </section>
-      <div className="dashboard-columns">
-        <DashboardPhotos photos={state.value.photos ?? []} />
+
+      <div className="today-grid">
         <section
-          className="dashboard-attention"
+          className="today-panel today-work"
           aria-labelledby="attention-title"
         >
-          <SectionHeader id="attention-title" title="Next work">
+          <header className="today-panel__header">
+            <h3 id="attention-title">Next work</h3>
             <a href="#/schedule">Open Schedule</a>
-          </SectionHeader>
-          <div className="dashboard-attention-counts">
+          </header>
+          <p className="today-provenance">Planned in Schedule</p>
+          <div className="today-windows">
             {(
               [
                 ["Overdue", data.overdue, "overdue"],
@@ -167,38 +203,31 @@ export function DashboardOverview() {
               </a>
             ))}
           </div>
-          <p className="dashboard-context">Next 7 days starts tomorrow</p>
           {data.upcoming.length ? (
-            <ol className="dashboard-rows">
-              {data.upcoming.map((item) => (
-                <li key={item.id}>
-                  <div>
-                    <a
-                      className="dashboard-row-title"
-                      href={`#/schedule/${item.id}`}
-                    >
-                      {item.title}
-                    </a>
-                    <p>
-                      {item.target
-                        ? `${targetLabels[item.target.kind]} · ${item.target.label}${item.target.lifecycle && item.target.lifecycle !== "active" ? ` · ${item.target.lifecycle}` : ""}`
-                        : "Collection-wide"}
-                    </p>
-                  </div>
-                  <div className="dashboard-row-meta">
-                    <StatusBadge
-                      attention={item.overdue || item.due_on === data.today}
-                    >
-                      {item.overdue
-                        ? "Overdue"
-                        : item.due_on === data.today
-                          ? "Due today"
-                          : "Planned"}
-                    </StatusBadge>
+            <ol className="today-work-list">
+              {data.upcoming.map((item) => {
+                const state = item.overdue
+                  ? "Overdue"
+                  : item.due_on === data.today
+                    ? "Due today"
+                    : "Planned";
+                return (
+                  <li key={item.id}>
                     <time dateTime={item.due_on}>{item.due_on}</time>
-                  </div>
-                </li>
-              ))}
+                    <div>
+                      <a href={`#/schedule/${item.id}`}>{item.title}</a>
+                      <p>
+                        {item.target
+                          ? `${targetLabels[item.target.kind]} · ${item.target.label}${item.target.lifecycle && item.target.lifecycle !== "active" ? ` · ${item.target.lifecycle}` : ""}`
+                          : "Collection-wide"}
+                      </p>
+                    </div>
+                    <StatusBadge attention={state !== "Planned"}>
+                      {state}
+                    </StatusBadge>
+                  </li>
+                );
+              })}
             </ol>
           ) : (
             <EmptyState>
@@ -206,69 +235,109 @@ export function DashboardOverview() {
               it.
             </EmptyState>
           )}
+          <p className="today-footnote">
+            Overdue is derived from the due date; it does not mean the work
+            happened or did not. Next 7 days starts tomorrow. The list shows the
+            earliest planned items.
+          </p>
         </section>
+
+        <DashboardPhotos photos={state.value.photos ?? []} />
       </div>
-      <div className="dashboard-secondary-strip">
-        <details className="dashboard-activity-disclosure" open>
-          <summary>
-            Recent activity · {data.recent_activity.length} latest entries
-          </summary>
-          <section
-            className="dashboard-recent"
-            aria-labelledby="recent-activity-title"
-          >
-            <SectionHeader id="recent-activity-title" title="Recent activity">
-              <span className="dashboard-section-links">
-                <a href="#/events">Open Journal</a>
-                <a href="#/history">Open History</a>
-              </span>
-            </SectionHeader>
-            <p className="dashboard-context">
-              Recorded observations and operational facts
-            </p>
-            {data.recent_activity.length ? (
-              <ol className="dashboard-rows">
-                {data.recent_activity.map((entry) => (
-                  <li key={entry.key}>
-                    <article>
-                      <div className="dashboard-activity-heading">
+
+      <div className="today-grid today-grid--secondary">
+        <section
+          className="today-panel today-recent"
+          aria-labelledby="recent-activity-title"
+        >
+          <header className="today-panel__header">
+            <h3 id="recent-activity-title">Recent activity</h3>
+            <span className="today-links">
+              <a href="#/events">Open Journal</a>
+              <a href="#/history">Open History</a>
+            </span>
+          </header>
+          <p className="today-provenance">
+            Recorded in the Journal and derived History, latest first
+          </p>
+          {data.recent_activity.length ? (
+            <ol className="today-activity">
+              {data.recent_activity.map((entry) => (
+                <li key={entry.key}>
+                  <article>
+                    <time>{historyDateLabel(entry)}</time>
+                    <div>
+                      <span className="today-activity__origin">
                         <StatusBadge>
                           {historyOrigin(entry).surface}
                         </StatusBadge>
-                        <time>{historyDateLabel(entry)}</time>
                         {entry.status === "reversed" && (
                           <StatusBadge>Reversed</StatusBadge>
                         )}
-                      </div>
-                      <a
-                        className="dashboard-row-title"
-                        href={historyHref(entry.primary, entry.source_kind)}
-                      >
+                      </span>
+                      <a href={historyHref(entry.primary, entry.source_kind)}>
                         {entry.title}
                       </a>
                       <p>
                         {entry.primary.label}
                         {entry.context ? ` · ${entry.context}` : ""}
                       </p>
-                    </article>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <EmptyState>
-                No recent activity. Journal observations and recorded operations
-                will appear here.
-              </EmptyState>
-            )}
-          </section>
-        </details>
-        <nav
-          className="dashboard-secondary-links"
-          aria-label="Activity destinations"
+                    </div>
+                  </article>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <EmptyState>
+              No recent activity. Journal observations and recorded operations
+              will appear here.
+            </EmptyState>
+          )}
+        </section>
+
+        <section
+          className="today-panel today-records"
+          aria-labelledby="record-keeping-title"
         >
-          <a href="#/events">Open Journal</a>
-          <a href="#/history">Open History</a>
-        </nav>
+          <header className="today-panel__header">
+            <h3 id="record-keeping-title">Record keeping</h3>
+          </header>
+          <p className="today-provenance">
+            Derived counts of current records. Prompts to review, not tasks or
+            conclusions.
+          </p>
+          <dl className="today-ledger">
+            <div>
+              <dt>Active sowings without a germination count</dt>
+              <dd>{data.sowings_unknown_germination}</dd>
+            </div>
+            <div>
+              <dt>Active sowings with zero germinated recorded</dt>
+              <dd>{data.sowings_zero_germination}</dd>
+            </div>
+            <div>
+              <dt>Active sowings with germination recorded</dt>
+              <dd>{data.sowings_with_germination}</dd>
+            </div>
+            <div>
+              <dt>Purchased seed lots without an Order link</dt>
+              <dd>{data.purchase_packets_without_order}</dd>
+            </div>
+            <div>
+              <dt>Current identities with reference knowledge</dt>
+              <dd>{coverage(data.identities_with_profile)}</dd>
+            </div>
+            <div>
+              <dt>Current identities with a confirmed WFO link</dt>
+              <dd>{coverage(data.identities_with_wfo)}</dd>
+            </div>
+          </dl>
+          <p className="today-footnote">
+            A zero count is recorded, not a failure. Review in{" "}
+            <a href="#/sowings">Sowings</a>, <a href="#/seeds">Seeds</a> or{" "}
+            <a href="#/identities">Botanical identities</a>.
+          </p>
+        </section>
       </div>
     </div>
   );
@@ -279,15 +348,15 @@ export function DashboardScreen() {
   return (
     <Page titleId="dashboard-title" className="workspace--dashboard">
       <PageHeader
-        title="Dashboard"
+        title="Today"
         titleId="dashboard-title"
-        eyebrow="Overview"
-        description="Current holdings, planned work and recent activity."
+        eyebrow={dayLabel(localDay())}
+        description="Planned work, recorded activity and what you hold."
         tools={
           <div
             className="dashboard-toolbar"
             role="group"
-            aria-label="Dashboard controls"
+            aria-label="Collection search"
           >
             {search.header}
             <SavedViews
@@ -296,16 +365,6 @@ export function DashboardScreen() {
               allSurfaces
               presentation="dialog"
             />
-            <OverflowMenu label="Quick add ▾" ariaLabel="Quick add">
-              <nav className="dashboard-quick-add" aria-label="Quick actions">
-                {actions.map(([label, href, icon]) => (
-                  <a key={label} href={href}>
-                    <Icon name={icon} />
-                    {label}
-                  </a>
-                ))}
-              </nav>
-            </OverflowMenu>
           </div>
         }
       />

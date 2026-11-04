@@ -1425,7 +1425,7 @@ test.each([false, true])(
     if (fromDashboard) {
       render(<App />);
       await user.click(
-        await screen.findByRole("button", { name: "Quick add" }),
+        await screen.findByRole("button", { name: "New record" }),
       );
       await user.click(screen.getByRole("link", { name: "New sowing" }));
     } else await user.click(screen.getByRole("button", { name: "New sowing" }));

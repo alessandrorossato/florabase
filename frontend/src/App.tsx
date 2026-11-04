@@ -314,6 +314,13 @@ function ApplicationShell() {
     )
       return;
     formChanged.current = false;
+    // Creation and source tasks insert their parent page, exactly like content links,
+    // so Back returns to the directory or source record wherever the task started.
+    if (collectionPageParent(target)) {
+      openCollectionPage(target);
+      if (window.scrollY > 0) window.scrollTo(0, 0);
+      return;
+    }
     const previous = route.section;
     if (window.location.hash === target)
       window.history.replaceState(null, "", target);

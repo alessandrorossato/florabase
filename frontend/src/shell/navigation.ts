@@ -77,7 +77,7 @@ export const workspaces: Workspace[] = [
     label: "Today",
     icon: "sun",
     summary: "Current holdings, due work and recent activity.",
-    destinations: [destination("dashboard", "Dashboard")],
+    destinations: [destination("dashboard", "Today")],
   },
   {
     id: "collection",
@@ -238,4 +238,39 @@ export function currentLink(
   const child = item.children?.find((candidate) => candidate.matches(hash));
   if (child) return { section: false, child };
   return { section: item.section === activeSection };
+}
+
+/** The workspace whose sections own a hash route (ignoring record ids and query). */
+export function workspaceOfHash(hash: string): Workspace | undefined {
+  const first = hash.replace(/^#\/?/, "").split(/[/?]/, 1)[0];
+  const alias: Partial<Record<string, Section>> = {
+    "plant-groups": "plants",
+    map: "geography",
+    "species-distribution": "geography",
+    "native-ranges": "geography",
+  };
+  const section: string = alias[first] ?? first;
+  return workspaces.find((workspace) =>
+    workspace.destinations.some((item) => item.section === section),
+  );
+}
+
+/** A section-level destination (not a record) for a hash, used for Recent. */
+export function destinationOfHash(
+  hash: string,
+): { label: string; href: string; icon: IconName } | undefined {
+  for (const workspace of workspaces)
+    for (const item of workspace.destinations) {
+      const child = item.children?.find((candidate) => candidate.matches(hash));
+      if (child)
+        return { label: child.label, href: child.href, icon: item.icon };
+      const path = hash.split("?", 1)[0];
+      if (path === `#/${item.section}`)
+        return {
+          label: item.label,
+          href: `#/${item.section}`,
+          icon: item.icon,
+        };
+    }
+  return undefined;
 }
