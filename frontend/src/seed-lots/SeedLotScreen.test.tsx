@@ -2338,7 +2338,10 @@ test("Overview keeps current-state facts and Sowings has one canonical start act
   );
   await assertDedicatedDetails();
   const inventory = screen.getByLabelText("Current inventory");
-  expect(screen.getByRole("heading", { name: "At a glance" })).toBeVisible();
+  // The inventory facts now live on the specimen label (no separate At a glance band).
+  expect(
+    screen.getByRole("region", { name: "Seed lot facts" }),
+  ).toContainElement(inventory);
   expect(
     within(inventory)
       .getAllByRole("term")

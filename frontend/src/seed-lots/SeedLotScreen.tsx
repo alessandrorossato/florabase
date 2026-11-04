@@ -79,10 +79,11 @@ import {
   DetailContext,
   DetailHeader,
   DetailPage,
-  DetailSummary,
   DetailTabs,
   WorkspaceIntro,
   DetailLoading,
+  SpecimenLabel,
+  SpecimenPlate,
 } from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
 import { BotanicalName, DirectorySearch } from "../components/ReferenceUI";
@@ -412,9 +413,33 @@ function Detail({
         ]}
       />
       <DetailHeader
+        label={
+          <SpecimenLabel
+            kind="Seed lot"
+            name="Current inventory"
+            rows={[
+              {
+                label: inventoryLabel(lot),
+                value: quantityLabel(lot),
+                emphasis: true,
+              },
+              {
+                label: "Storage",
+                wide: true,
+                value: lot.location ? (
+                  <a href={`#/locations/${lot.location.id}`}>
+                    {lot.location.display_path}
+                  </a>
+                ) : (
+                  "Not recorded"
+                ),
+              },
+            ]}
+          />
+        }
         headingRef={headingRef}
-        visual={
-          <div className="collection-primary-detail">
+        plate={
+          <SpecimenPlate>
             <RecordVisual
               photo={lot.primary_photo}
               showSource
@@ -422,7 +447,7 @@ function Detail({
               identity={lot.botanical_identity}
               kind={"seed"}
             />
-          </div>
+          </SpecimenPlate>
         }
         eyebrow="Seed lot"
         title={recordName(lot, "Unlabelled seed lot")}
@@ -508,28 +533,6 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <DetailSummary
-            id="seed-summary-title"
-            label="Current inventory"
-            metrics={[
-              {
-                label: inventoryLabel(lot),
-                value: quantityLabel(lot),
-                emphasis: true,
-              },
-              {
-                label: "Storage",
-                wide: true,
-                value: lot.location ? (
-                  <a href={`#/locations/${lot.location.id}`}>
-                    {lot.location.display_path}
-                  </a>
-                ) : (
-                  "Not recorded"
-                ),
-              },
-            ]}
-          />
           <div className="seed-overview-main seed-summary-sections">
             <section
               className="seed-fact-group"

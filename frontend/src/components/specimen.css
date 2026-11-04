@@ -231,3 +231,12 @@
     font-size: 2rem;
   }
 }
+.app-content .ui-detail-page .specimen-label__note {
+  padding-block: var(--space-2);
+  color: var(--text-muted);
+  border-block-start: 1px solid var(--border);
+  font: var(--type-small);
+}
+.app-content .ui-detail-page .specimen-label__note > * {
+  margin: 0;
+}

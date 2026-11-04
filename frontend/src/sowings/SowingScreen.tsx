@@ -64,7 +64,8 @@ import {
   WorkspaceIntro,
   DetailLoading,
   DetailPage,
-  DetailSummary,
+  SpecimenLabel,
+  SpecimenPlate,
 } from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
 import {
@@ -373,18 +374,45 @@ function Detail({
         ]}
       />
       <DetailHeader
+        label={
+          <SpecimenLabel
+            kind="Sowing"
+            name="Current Sowing state"
+            rows={[
+              { label: "Sown", value: dateLabel(sowing.sowing_date) },
+              {
+                label: "Germination",
+                wide: true,
+                value: <GerminationProgress sowing={sowing} />,
+              },
+              {
+                label: "Current location",
+                wide: true,
+                value: sowing.location ? (
+                  <a href={`#/locations/${sowing.location.id}`}>
+                    {sowing.location.display_path}
+                  </a>
+                ) : (
+                  "Not recorded"
+                ),
+              },
+            ]}
+          />
+        }
         headingRef={headingRef}
         eyebrow="Sowing"
-        visual={
-          <RecordVisual
-            kind="sowing"
-            label={recordName(sowing, "Sowing")}
-            identity={{
-              id: sowing.seed_lot.botanical_identity_id,
-              display_label: sowing.seed_lot.botanical_identity_display_label,
-            }}
-            showSource
-          />
+        plate={
+          <SpecimenPlate>
+            <RecordVisual
+              kind="sowing"
+              label={recordName(sowing, "Sowing")}
+              identity={{
+                id: sowing.seed_lot.botanical_identity_id,
+                display_label: sowing.seed_lot.botanical_identity_display_label,
+              }}
+              showSource
+            />
+          </SpecimenPlate>
         }
         title={recordName(sowing, "Unlabelled sowing")}
         secondary={
@@ -487,29 +515,6 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <DetailSummary
-            id="sowing-summary-title"
-            label="Current Sowing state"
-            metrics={[
-              { label: "Sown", value: dateLabel(sowing.sowing_date) },
-              {
-                label: "Germination",
-                wide: true,
-                value: <GerminationProgress sowing={sowing} />,
-              },
-              {
-                label: "Current location",
-                wide: true,
-                value: sowing.location ? (
-                  <a href={`#/locations/${sowing.location.id}`}>
-                    {sowing.location.display_path}
-                  </a>
-                ) : (
-                  "Not recorded"
-                ),
-              },
-            ]}
-          />
           <section
             aria-labelledby="sowing-origin-title"
             className="sowing-fact-group"

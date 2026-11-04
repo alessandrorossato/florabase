@@ -16,7 +16,20 @@ export interface SpecimenRow {
   label: string;
   value: ReactNode;
   unknown?: boolean;
+  /** Accepted so DetailSummary metrics move into the label unchanged; not used here. */
+  wide?: boolean;
+  emphasis?: boolean;
 }
+
+// Values the domains already use for missing facts; the label sets them as "unknown".
+const unknownWords = new Set([
+  "Not recorded",
+  "Unknown",
+  "Quantity unknown",
+  "Unknown quantity",
+  "Not applicable",
+  "None recorded",
+]);
 
 /**
  * The record's ruled fact block (the herbarium label of the Specimen Sheet). It replaces the
@@ -25,9 +38,15 @@ export interface SpecimenRow {
 export function SpecimenLabel({
   kind,
   rows,
+  note,
+  name,
 }: {
   kind: string;
   rows: SpecimenRow[];
+  /** The fact list's accessible name (as DetailSummary's label was), e.g. "Current inventory". */
+  name?: string;
+  /** A sentence the facts need to be read correctly (for example how a price applies). */
+  note?: ReactNode;
 }) {
   const shown = rows.filter(
     ({ value }) => value !== null && value !== undefined && value !== false,
@@ -38,16 +57,24 @@ export function SpecimenLabel({
       <p className="specimen-label__title" aria-hidden="true">
         Florabase · {kind}
       </p>
-      <dl>
+      <dl aria-label={name}>
         {shown.map((row) => (
           <div key={row.label}>
             <dt>{row.label}</dt>
-            <dd className={row.unknown ? "specimen-label__unknown" : undefined}>
+            <dd
+              className={
+                (row.unknown ??
+                (typeof row.value === "string" && unknownWords.has(row.value)))
+                  ? "specimen-label__unknown"
+                  : undefined
+              }
+            >
               {row.value}
             </dd>
           </div>
         ))}
       </dl>
+      {note && <div className="specimen-label__note">{note}</div>}
     </section>
   );
 }

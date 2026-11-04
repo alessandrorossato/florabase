@@ -47,10 +47,11 @@ import {
   DetailContext,
   DetailHeader,
   DetailPage,
-  DetailSummary,
   DetailTabs,
   WorkspaceIntro,
   DetailLoading,
+  SpecimenLabel,
+  SpecimenPlate,
 } from "../components/CollectionUI";
 import {
   closeCollectionPage,
@@ -354,15 +355,35 @@ function SupplierDetail({
         ]}
       />
       <DetailHeader
+        label={
+          <SpecimenLabel
+            kind="Supplier"
+            name="Current Supplier state"
+            rows={[
+              {
+                label: "State",
+                value: (
+                  <LifecycleStatus
+                    state={supplier.retired_at ? "retired" : "active"}
+                  >
+                    {supplier.retired_at ? "Retired" : "Active"}
+                  </LifecycleStatus>
+                ),
+              },
+              { label: "Kind", value: kindLabels[supplier.kind] },
+              { label: "Direct records", value: counts.direct_records_total },
+            ]}
+          />
+        }
         headingRef={headingRef}
-        visual={
-          <div className="collection-primary-detail">
+        plate={
+          <SpecimenPlate>
             <RecordVisual
               kind="supplier"
               label={supplier.name}
               photo={primaryPhoto ?? null}
             />
-          </div>
+          </SpecimenPlate>
         }
         eyebrow="Supplier"
         title={supplier.name}
@@ -428,24 +449,6 @@ function SupplierDetail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <DetailSummary
-            id="supplier-summary-title"
-            label="Current Supplier state"
-            metrics={[
-              {
-                label: "State",
-                value: (
-                  <LifecycleStatus
-                    state={supplier.retired_at ? "retired" : "active"}
-                  >
-                    {supplier.retired_at ? "Retired" : "Active"}
-                  </LifecycleStatus>
-                ),
-              },
-              { label: "Kind", value: kindLabels[supplier.kind] },
-              { label: "Direct records", value: counts.direct_records_total },
-            ]}
-          />
           <section
             className="supplier-fact-group"
             aria-labelledby="supplier-about-title"
