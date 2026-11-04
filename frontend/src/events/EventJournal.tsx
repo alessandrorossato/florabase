@@ -23,13 +23,13 @@ import type { PartialDate } from "../seed-lots/api";
 import {
   createEvent,
   deleteEvent,
-  listEvents,
   updateEvent,
   type EventKind,
   type EventResponse,
   type EventTargetKind,
 } from "./api";
 import { clearEntryRequest, hasEntryRequest } from "./entryRequest";
+import { useJournalReader } from "./journalReader";
 
 type TimelineState =
   | { status: "loading" }
@@ -160,6 +160,7 @@ export function EventJournal({
   onTargetRefresh: () => Promise<void>;
 }) {
   const auth = useAuth();
+  const journal = useJournalReader();
   const [timeline, setTimeline] = useState<TimelineState>({
     status: "loading",
   });
@@ -181,9 +182,12 @@ export function EventJournal({
 
   useEffect(() => {
     const controller = new AbortController();
-    void listEvents(targetKind, targetId, controller.signal)
+    // Inside a record view the Overview Almanac may already hold this response.
+    void journal
+      .read(targetKind, targetId)
       .then((events) => {
-        setTimeline({ status: "ready", events });
+        if (!controller.signal.aborted)
+          setTimeline({ status: "ready", events });
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
@@ -194,7 +198,7 @@ export function EventJournal({
     return () => {
       controller.abort();
     };
-  }, [attempt, auth, targetId, targetKind]);
+  }, [attempt, auth, targetId, targetKind, journal]);
 
   const visible = useMemo(() => {
     if (timeline.status !== "ready") return [];
@@ -221,7 +225,9 @@ export function EventJournal({
   }
 
   async function refreshTimeline() {
-    const events = await listEvents(targetKind, targetId);
+    // A mutation changed the Journal: never reuse the earlier response.
+    journal.invalidate(targetKind, targetId);
+    const events = await journal.read(targetKind, targetId);
     setTimeline({ status: "ready", events });
   }
 
@@ -395,6 +401,7 @@ export function EventJournal({
             type="button"
             onClick={() => {
               setTimeline({ status: "loading" });
+              journal.invalidate(targetKind, targetId);
               setAttempt((value) => value + 1);
             }}
           >

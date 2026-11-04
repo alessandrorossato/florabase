@@ -6,6 +6,8 @@ import { AuthContext, type AuthContextValue } from "../auth/context";
 import * as events from "../events/api";
 import * as schedule from "../schedule/api";
 import { localDay } from "../schedule/state";
+import { JournalScope } from "../events/JournalScope";
+import { useJournalReader } from "../events/journalReader";
 import { RecordTimeline } from "./RecordTimeline";
 
 vi.mock("../events/api", () => ({ listEvents: vi.fn() }));
@@ -194,9 +196,32 @@ test("empty and failed lanes are explicit and retryable", async () => {
   expect(await screen.findByText("No planned activities.")).toBeVisible();
   await userEvent.click(screen.getByRole("button", { name: "Retry Journal" }));
   expect(await screen.findByText("No Journal entries yet.")).toBeVisible();
-  expect(events.listEvents).toHaveBeenLastCalledWith(
-    "group",
-    "g",
-    expect.any(AbortSignal),
+  expect(events.listEvents).toHaveBeenLastCalledWith("group", "g");
+});
+
+test("inside a record view the Almanac and the Journal share one Journal request", async () => {
+  vi.mocked(events.listEvents).mockResolvedValue([event({ id: "one" })]);
+  let reader: ReturnType<typeof useJournalReader> | undefined;
+  function Probe() {
+    reader = useJournalReader();
+    return null;
+  }
+  mount(
+    <JournalScope version="v1">
+      <RecordTimeline
+        kind="plant"
+        id="p"
+        journal={{ target: "plant", href: "#/plants/p?tab=events" }}
+      />
+      <Probe />
+    </JournalScope>,
   );
+  await screen.findByText("Flowering");
+  // A second reader (the Journal tab) reuses the response.
+  await reader?.read("plant", "p");
+  expect(events.listEvents).toHaveBeenCalledTimes(1);
+  // A Journal mutation invalidates; the next read asks again.
+  reader?.invalidate("plant", "p");
+  await reader?.read("plant", "p");
+  expect(events.listEvents).toHaveBeenCalledTimes(2);
 });

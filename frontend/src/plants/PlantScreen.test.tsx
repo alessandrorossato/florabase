@@ -1293,7 +1293,14 @@ test("active group extraction is focused, updates exact quantity, opens the Plan
   });
   expect(window.location.hash).toBe("#/plants/extracted-plant");
   expect(screen.getByText("Extracted from group")).toBeInTheDocument();
-  expect(screen.getAllByText("Seedlings 2026")).toHaveLength(2);
+  // The direct source group is a fact of the record itself, so it stays reachable even when
+  // recorded lineage (unmocked here) cannot load.
+  expect(
+    within(screen.getByRole("region", { name: "Plant facts" })).getByRole(
+      "link",
+      { name: "Seedlings 2026" },
+    ),
+  ).toBeVisible();
   await user.click(screen.getByRole("button", { name: "Edit Plant" }));
   expect(screen.getByText(/Origin is read-only/)).toBeInTheDocument();
   expect(screen.queryByLabelText("Direct origin")).not.toBeInTheDocument();
@@ -2428,8 +2435,8 @@ test("group extraction history uses only recorded group origin and includes reta
     "1 extracted Plant · historical extractions",
   );
   expect(
-    screen.getByRole("region", { name: "Managed group" }),
-  ).toHaveTextContent("5 plants");
+    screen.getByRole("region", { name: "Plant group facts" }),
+  ).toHaveTextContent("Current quantity5 plants");
 });
 
 test("transfer dialog contains keyboard focus and restores the operation trigger on escape", async () => {
@@ -2511,12 +2518,9 @@ test("historical group detail labels retained location and zero count without cl
     }),
   );
   await assertDedicatedDetails();
-  expect(screen.getByRole("region", { name: "At a glance" })).toHaveTextContent(
-    "Last recorded location",
-  );
-  expect(
-    screen.getByRole("region", { name: "Managed group" }),
-  ).toHaveTextContent("Recorded quantity0 plants");
+  const facts = screen.getByRole("region", { name: "Plant group facts" });
+  expect(facts).toHaveTextContent("Last recorded location");
+  expect(facts).toHaveTextContent("Recorded quantity0 plants");
   expect(
     screen.queryByRole("button", { name: "Extract plant" }),
   ).not.toBeInTheDocument();

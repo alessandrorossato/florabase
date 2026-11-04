@@ -9,6 +9,53 @@ import type {
 import { Breadcrumbs } from "./Breadcrumbs";
 import { PageHeader } from "./ReferenceUI";
 import "./detail-page.css";
+import "./specimen.css";
+
+/** One fact on a record's specimen label. Unknown facts say so in words, never "—" or 0. */
+export interface SpecimenRow {
+  label: string;
+  value: ReactNode;
+  unknown?: boolean;
+}
+
+/**
+ * The record's ruled fact block (the herbarium label of the Specimen Sheet). It replaces the
+ * header facts and the At a glance band, so each fact is stated once.
+ */
+export function SpecimenLabel({
+  kind,
+  rows,
+}: {
+  kind: string;
+  rows: SpecimenRow[];
+}) {
+  const shown = rows.filter(
+    ({ value }) => value !== null && value !== undefined && value !== false,
+  );
+  if (!shown.length) return null;
+  return (
+    <section className="specimen-label" aria-label={`${kind} facts`}>
+      <p className="specimen-label__title" aria-hidden="true">
+        Florabase · {kind}
+      </p>
+      <dl>
+        {shown.map((row) => (
+          <div key={row.label}>
+            <dt>{row.label}</dt>
+            <dd className={row.unknown ? "specimen-label__unknown" : undefined}>
+              {row.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+/** The record's plate: its own photo, else its identity reference, else a quiet fallback. */
+export function SpecimenPlate({ children }: { children: ReactNode }) {
+  return <figure className="specimen-plate">{children}</figure>;
+}
 
 /** Shared record presentation; routes, tabs, permissions and content remain domain-owned. */
 export function DetailPage({
@@ -94,6 +141,8 @@ export function DetailHeader({
   headingLevel = 3,
   titleId,
   lineage,
+  plate,
+  label,
 }: {
   eyebrow: string;
   title: ReactNode;
@@ -110,12 +159,17 @@ export function DetailHeader({
   titleId?: string;
   /** A recorded-lineage strip spanning the header (records with recorded sources). */
   lineage?: ReactNode;
+  /** Specimen Sheet: a large plate (SpecimenPlate) beside the record. */
+  plate?: ReactNode;
+  /** Specimen Sheet: the ruled fact block under the plate (SpecimenLabel). */
+  label?: ReactNode;
 }) {
   const Heading = headingLevel === 2 ? "h2" : "h3";
-  return (
-    <header className="detail-header">
+  const specimen = Boolean(plate) || Boolean(label);
+  const main = (
+    <>
       <div className="detail-identity">
-        {visual && <div className="detail-visual">{visual}</div>}
+        {!specimen && visual && <div className="detail-visual">{visual}</div>}
         <div className="detail-identity__text">
           <p className="eyebrow">{eyebrow}</p>
           <Heading
@@ -151,6 +205,16 @@ export function DetailHeader({
         </div>
       )}
       {lineage && <div className="detail-lineage">{lineage}</div>}
+    </>
+  );
+  if (!specimen) return <header className="detail-header">{main}</header>;
+  return (
+    <header className="detail-header detail-header--specimen">
+      <div className="specimen-aside">
+        {plate}
+        {label}
+      </div>
+      <div className="specimen-main">{main}</div>
     </header>
   );
 }

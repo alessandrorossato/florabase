@@ -2,11 +2,8 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import {
-  listEvents,
-  type EventResponse,
-  type EventTargetKind,
-} from "../events/api";
+import { type EventResponse, type EventTargetKind } from "../events/api";
+import { useJournalReader } from "../events/journalReader";
 import {
   eventLabels,
   eventSourceLabel,
@@ -69,13 +66,16 @@ function usePlanned(kind: TargetKind, id: string, day: string) {
 /** A Plant's or Plant group's Journal, latest first as the API orders it. */
 function useJournal(target: EventTargetKind | undefined, id: string) {
   const auth = useAuth();
+  const reader = useJournalReader();
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<Loaded<EventResponse[]> | null>(null);
   const key = JSON.stringify([target, id, attempt]);
   useEffect(() => {
     if (!target) return;
     const controller = new AbortController();
-    void listEvents(target, id, controller.signal)
+    // Inside a record view the Journal tab reuses this response (JournalScope).
+    void reader
+      .read(target, id)
       .then((value) => {
         if (!controller.signal.aborted)
           setResult({ key, status: "ready", value });
@@ -89,10 +89,11 @@ function useJournal(target: EventTargetKind | undefined, id: string) {
     return () => {
       controller.abort();
     };
-  }, [target, id, key, auth]);
+  }, [target, id, key, auth, reader]);
   return [
     laneFor(result, key),
     () => {
+      if (target) reader.invalidate(target, id);
       setAttempt((value) => value + 1);
     },
   ] as const;
