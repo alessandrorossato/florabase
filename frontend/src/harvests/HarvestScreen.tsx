@@ -556,10 +556,6 @@ export function HarvestScreen({
                         </a>
                       ),
                     },
-                    {
-                      label: "Date",
-                      value: formatPartialDate(detail.occurred_on),
-                    },
                   ]}
                 />
               }
@@ -591,14 +587,6 @@ export function HarvestScreen({
                 {
                   label: "Occurrence date",
                   value: formatPartialDate(detail.occurred_on),
-                },
-                {
-                  label: "Source",
-                  value: (
-                    <a href={sourceHref(detail)}>
-                      {detail.source.display_name}
-                    </a>
-                  ),
                 },
                 { label: "Materials", value: materialSummary(detail) },
               ]}
