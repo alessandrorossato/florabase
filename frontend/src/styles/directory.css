@@ -473,8 +473,8 @@
   padding: var(--space-2);
 }
 .ui-directory-record-actions .control-icon-button {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: var(--control-height-compact);
+  height: var(--control-height-compact);
   padding: var(--space-2);
 }
 .ui-directory-record-actions .control-icon-button__label {

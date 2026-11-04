@@ -175,6 +175,7 @@ test("new system tokens default to UI Foundation geometry, so only Field Ledger 
     "--font-data: var(--font-ui);",
     "--control-height: 2.75rem;",
     "--control-height-touch: 2.75rem;",
+    "--control-height-compact: 2.5rem;",
     "--focus-ring-width: 3px;",
     "--focus-ring-offset: 3px;",
     "--tracking-heading: normal;",
@@ -193,6 +194,7 @@ test("Field Ledger is a complete system: type, data font, radii, focus and point
     "--type-metric: 500 1.75rem/1.1429 var(--font-data);",
   );
   expect(system).toContain("--control-height: 2.5rem;");
+  expect(system).toContain("--control-height-compact: var(--control-height);");
   expect(system).toContain("--focus-ring-offset: 2px;");
   for (const role of [
     "display",

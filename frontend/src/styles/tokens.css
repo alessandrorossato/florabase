@@ -63,6 +63,7 @@
      Botanical, Herbarium and Mineral palettes render as before; Field Ledger overrides them. */
   --font-data: var(--font-ui);
   --control-height-touch: 2.75rem;
+  --control-height-compact: 2.5rem;
   --focus-ring-width: 3px;
   --focus-ring-offset: 3px;
   --tracking-heading: normal;
@@ -283,6 +284,8 @@
   --radius-normal: 12px;
   --radius-large: 14px;
   --control-height: 2.5rem;
+  /* Repeated row and pagination icons follow the pointer-aware control height. */
+  --control-height-compact: var(--control-height);
   --focus-ring-offset: 2px;
   --tracking-heading: -0.012em;
 }
