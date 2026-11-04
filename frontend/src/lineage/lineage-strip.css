@@ -116,3 +116,48 @@
 .lineage-strip__path {
   gap: var(--space-2) 0;
 }
+
+/* M7: the sequence never wraps onto a second row, where it reads as two separate paths. On
+   wider screens it stays one row and scrolls sideways when it does not fit (focus on a step
+   scrolls it into view); on phones it becomes a vertical sequence read top to bottom. */
+.lineage-strip__path {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  padding-block-end: var(--space-1);
+}
+.lineage-strip__path > li {
+  flex: none;
+  max-inline-size: 16rem;
+  scroll-snap-align: start;
+}
+.lineage-strip__path > li a {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 40rem) {
+  .lineage-strip__path {
+    flex-direction: column;
+    align-items: stretch;
+    overflow-x: visible;
+    gap: var(--space-5, 1.25rem);
+  }
+  .lineage-strip__path {
+    flex-basis: 100%;
+  }
+  .lineage-strip__path > li {
+    max-inline-size: none;
+  }
+  .lineage-strip__full {
+    margin-inline-start: 0;
+  }
+  .lineage-strip__path > li + li {
+    margin-inline-start: 0;
+  }
+  .lineage-strip__path > li + li::before {
+    content: "↓" / "";
+    inset-inline-start: var(--space-3);
+    inset-block-start: calc(-1 * var(--space-5, 1.25rem));
+    transform: none;
+  }
+}

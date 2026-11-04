@@ -246,3 +246,32 @@
 .app-content .ui-detail-page .specimen-label__note > * {
   margin: 0;
 }
+
+/* M7 hierarchy refinements.
+   Tablet and medium widths: the record's name and actions come first; the plate and label
+   follow side by side, so the title is never pushed below a tall plate. */
+@container specimen (max-width: 49.99rem) {
+  .app-content .ui-detail-page .detail-header--specimen {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .app-content .ui-detail-page .detail-header--specimen > .specimen-main {
+    order: -1;
+  }
+}
+/* Phones: breadcrumb, then name, identity, actions and lineage, then a shorter image banner,
+   then the record's sections; the label still follows the content. */
+@media (max-width: 40rem) {
+  .app-content .ui-detail-page:has(> .detail-header--specimen) > .breadcrumbs {
+    order: -2;
+  }
+  .app-content .ui-detail-page .detail-header--specimen > .specimen-main {
+    order: -1;
+    margin-block-end: var(--space-4);
+  }
+  .app-content .ui-detail-page .specimen-plate {
+    aspect-ratio: 16 / 9;
+    max-block-size: 13rem;
+  }
+}

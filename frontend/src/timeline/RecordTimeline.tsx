@@ -161,6 +161,9 @@ export function RecordTimeline({
     today,
   );
   const undated = events.filter((event) => !event.occurred_on).length;
+  // With very little dated history an axis is mostly empty rule; the lists alone are clearer.
+  const dated = events.length - undated + plans.length;
+  const showAxis = range !== null && dated >= 3 && range.months.length >= 2;
   const span = range ? range.end - range.start + 1 : 1;
   const todayLeft = range ? dayPosition(range, today) : null;
   return (
@@ -169,7 +172,7 @@ export function RecordTimeline({
       aria-labelledby={titleId}
     >
       <h4 id={titleId}>Almanac</h4>
-      {range && (
+      {range && showAxis && (
         // A visual summary only; the lists below carry every entry and its precision.
         <div className="almanac-axis" aria-hidden="true">
           {range.months.map((month, index) => (
@@ -224,7 +227,7 @@ export function RecordTimeline({
           })}
         </div>
       )}
-      {undated > 0 && (
+      {showAxis && undated > 0 && (
         <p className="record-timeline__note almanac-undated">
           {undated === 1
             ? "1 Journal entry has no recorded date; it is listed, not placed on the axis."
