@@ -12,6 +12,7 @@ import { searchKindLabels, type SearchResponse } from "../collection/searchApi";
 import { Icon, type IconName } from "../components/Icon";
 import { TaskDialog } from "../components/TaskDialog";
 import { allDestinations, createActions } from "./navigation";
+import { recordContext } from "./recordContext";
 import type { SavedViewLink } from "./useSavedViewLinks";
 
 type SearchHit = SearchResponse["groups"][number]["items"][number];
@@ -54,11 +55,14 @@ export function CommandPalette({
   onNavigate,
   returnFocusTo,
   savedViews = [],
+  hash = "",
 }: {
   onClose: () => void;
   onNavigate: (href: string) => void;
   returnFocusTo?: RefObject<HTMLElement | null>;
   savedViews?: SavedViewLink[];
+  /** The open route; a record detail adds its own actions first. */
+  hash?: string;
 }) {
   const [query, setQuery] = useState("");
   const [answer, setAnswer] = useState<Answer | null>(null);
@@ -128,6 +132,17 @@ export function CommandPalette({
         href,
         icon,
       }));
+    const context = recordContext(hash);
+    const here = (context?.actions ?? [])
+      .filter(({ label }) => !trimmed || includes(label, trimmed))
+      .map(({ label, href, icon }) => ({
+        key: `here:${href}`,
+        label,
+        detail: `This ${context?.noun ?? "record"}`,
+        href,
+        icon,
+      }));
+    const hereLabel = `This ${context?.noun ?? "record"}`;
     const views = savedViews
       .filter(
         (view) =>
@@ -157,6 +172,7 @@ export function CommandPalette({
         : [];
     const all: Group[] = trimmed
       ? [
+          { label: hereLabel, options: here },
           { label: "Records", options: found },
           { label: "Saved views", options: views },
           { label: "Go to", options: destinations },
@@ -178,12 +194,13 @@ export function CommandPalette({
           },
         ]
       : [
+          { label: hereLabel, options: here },
           { label: "Saved views", options: views },
           { label: "Create", options: actions },
           { label: "Go to", options: destinations },
         ];
     return all.filter((group) => group.options.length);
-  }, [trimmed, records, savedViews]);
+  }, [trimmed, records, savedViews, hash]);
 
   const options = groups.flatMap((group) => group.options);
   const current = Math.min(active, Math.max(options.length - 1, 0));
@@ -264,15 +281,16 @@ export function CommandPalette({
         role="listbox"
         aria-label="Results"
       >
-        {groups.map((group) => (
+        {groups.map((group, groupIndex) => (
           <div
             key={group.label}
             role="group"
-            aria-labelledby={`${id}-${group.label}`}
+            // An id never contains the label's spaces, which would split the reference.
+            aria-labelledby={`${id}-group-${String(groupIndex)}`}
           >
             <div
               className="wb-palette__group"
-              id={`${id}-${group.label}`}
+              id={`${id}-group-${String(groupIndex)}`}
               role="presentation"
             >
               {group.label}

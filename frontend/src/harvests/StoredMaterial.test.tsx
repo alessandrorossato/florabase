@@ -144,7 +144,13 @@ it("a QR inventory hash change focuses the retained record on an already-open Ha
     "#/harvests/harvest?inventory=inventory",
   );
   window.dispatchEvent(new HashChangeEvent("hashchange"));
-  expect(document.getElementById("inventory-inventory")).toHaveFocus();
+  // The section registers its hashchange listener in a passive effect, which may not have
+  // flushed yet when the event fires. The effect then focuses from the current hash when it
+  // registers, so focus still lands on the record: wait for it rather than assuming the
+  // listener was already attached (this synchronous assertion failed intermittently).
+  await waitFor(() => {
+    expect(document.getElementById("inventory-inventory")).toHaveFocus();
+  });
 });
 it("shows untracked opt-in separately from historical collection", async () => {
   wrap(<StoredMaterialSection harvest={harvest} />);

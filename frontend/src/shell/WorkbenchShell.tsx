@@ -13,6 +13,7 @@ import { OverflowMenu } from "../components/ReferenceUI";
 import { TaskDialog } from "../components/TaskDialog";
 import { ThemeControl } from "../components/ThemeControl";
 import { CommandPalette } from "./CommandPalette";
+import { RecordSheet } from "./RecordSheet";
 import {
   createActions,
   currentLink,
@@ -251,6 +252,8 @@ export function WorkbenchShell({
     .slice(0, 4)
     .map((item) => ({ key: item.href, href: item.href, name: item.label }));
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [recordOpen, setRecordOpen] = useState(false);
+  const recordReturn = useRef<HTMLElement | null>(null);
   const [sheet, setSheet] = useState<WorkspaceId | "account" | null>(null);
   const searchTrigger = useRef<HTMLButtonElement>(null);
   const railSearch = useRef<HTMLButtonElement>(null);
@@ -299,6 +302,12 @@ export function WorkbenchShell({
   function openPalette(trigger: HTMLElement | null) {
     paletteReturn.current = trigger;
     setPaletteOpen(true);
+  }
+
+  function openRecord(trigger: HTMLElement) {
+    recordReturn.current = trigger;
+    setSheet(null);
+    setRecordOpen(true);
   }
 
   function follow(event: MouseEvent<HTMLAnchorElement>, href: string) {
@@ -368,6 +377,17 @@ export function WorkbenchShell({
             }}
           >
             <Icon name="search" shell />
+          </button>
+          <button
+            type="button"
+            className="wb-rail__record"
+            aria-haspopup="dialog"
+            onClick={(event) => {
+              openRecord(event.currentTarget);
+            }}
+          >
+            <Icon name="journal" shell />
+            Record
           </button>
           <div
             className="wb-rail__tabs"
@@ -530,6 +550,17 @@ export function WorkbenchShell({
       {children}
 
       <nav aria-label="Mobile primary navigation" className="wb-bottombar">
+        <button
+          type="button"
+          className="wb-bottombar__record"
+          aria-haspopup="dialog"
+          onClick={(event) => {
+            openRecord(event.currentTarget);
+          }}
+        >
+          <Icon name="journal" shell />
+          Record
+        </button>
         {primaryWorkspaces.map((workspace) => (
           <button
             key={workspace.id}
@@ -632,8 +663,21 @@ export function WorkbenchShell({
         </TaskDialog>
       )}
 
+      {recordOpen && (
+        <RecordSheet
+          hash={hash}
+          follow={follow}
+          onNavigate={onNavigate}
+          returnFocusTo={recordReturn}
+          onClose={() => {
+            setRecordOpen(false);
+          }}
+        />
+      )}
+
       {paletteOpen && (
         <CommandPalette
+          hash={hash}
           onClose={() => {
             setPaletteOpen(false);
           }}

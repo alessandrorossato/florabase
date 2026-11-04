@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { App } from "./App.tsx";
+import { trackInputModality } from "./focusModality";
 import "leaflet/dist/leaflet.css";
 import "@fontsource-variable/source-sans-3";
 import "@fontsource-variable/source-sans-3/wght-italic.css";
@@ -27,6 +28,7 @@ if (root === null) {
   throw new Error("Application root element is missing");
 }
 
+trackInputModality();
 createRoot(root).render(
   <StrictMode>
     <App />

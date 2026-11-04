@@ -169,6 +169,25 @@
   min-inline-size: var(--control-height);
   padding-inline: var(--space-2);
 }
+/* Record: the rail's one action, set apart from the workspace tabs by the accent. */
+.wb-shell .wb-rail__record {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-block-size: 3.5rem;
+  margin-block-end: var(--space-2);
+  padding: var(--space-2) var(--space-1);
+  color: var(--on-primary);
+  background: var(--primary);
+  border: 0;
+  border-radius: var(--radius-normal);
+  font: 600 0.6875rem/1.2 var(--font-ui);
+}
+.wb-shell .wb-rail__record:hover {
+  background: var(--primary-hover);
+}
 .wb-shell .wb-search-trigger {
   display: flex;
   flex: 1 1 auto;
@@ -572,6 +591,7 @@
     font-weight: 500;
   }
   .wb-shell .wb-rail__tabs,
+  .wb-shell .wb-rail__record,
   .wb-shell .wb-rail__search,
   .wb-shell--collapsed .wb-rail__search {
     display: none;
@@ -675,5 +695,106 @@
   .wb-shell .wb-sidebar,
   .wb-shell .wb-bottombar {
     display: none;
+  }
+}
+
+/* Record sheet (M5): contextual record actions, a record chooser, label links and scanning. */
+.wb-record .wb-record__group {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-block: var(--space-3);
+  border-block-start: 1px solid var(--border);
+}
+.wb-record .wb-record__title {
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--type-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.wb-record .wb-record__action {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-block-size: var(--control-height);
+  padding-inline: var(--space-2);
+  color: var(--text);
+  border-radius: var(--radius-small);
+  font: var(--type-strong);
+  text-decoration: none;
+}
+.wb-record .wb-record__action:hover {
+  background: var(--surface-hover);
+}
+.wb-record .wb-record__action .control-icon {
+  color: var(--primary);
+}
+.wb-record .wb-record__tasks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.wb-record .wb-record__tasks legend {
+  flex-basis: 100%;
+  margin-block-end: var(--space-1);
+  padding: 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.wb-record label.wb-record__task {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  inline-size: auto;
+  min-block-size: var(--control-height);
+  margin: 0;
+  padding-inline-end: var(--space-3);
+  font: var(--type-body);
+}
+.wb-record label.wb-record__task input {
+  flex: none;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  margin: 0;
+}
+.wb-record .wb-record__label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-2);
+}
+.wb-record .wb-record__label .field {
+  margin: 0;
+}
+.wb-record .wb-scan {
+  display: grid;
+  gap: var(--space-2);
+}
+.wb-record .wb-scan__video {
+  inline-size: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--surface-subtle);
+  border-radius: var(--radius-normal);
+}
+.wb-record .wb-scan > p:empty {
+  display: none;
+}
+.task-dialog.wb-record {
+  max-block-size: min(46rem, 100dvh - 2rem);
+  overflow-y: auto;
+}
+@media (max-width: 48rem) {
+  .wb-shell .wb-bottombar .wb-bottombar__record {
+    color: var(--on-primary);
+    background: var(--primary);
+  }
+  .wb-shell .wb-bottombar .wb-bottombar__record .control-icon {
+    color: inherit;
   }
 }

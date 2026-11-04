@@ -29,6 +29,7 @@ import {
   type EventResponse,
   type EventTargetKind,
 } from "./api";
+import { clearEntryRequest, hasEntryRequest } from "./entryRequest";
 
 type TimelineState =
   | { status: "loading" }
@@ -164,7 +165,13 @@ export function EventJournal({
   });
   const [attempt, setAttempt] = useState(0);
   const [filter, setFilter] = useState<EventFilter>("all");
-  const [editor, setEditor] = useState<EventResponse | "create" | null>(null);
+  // "?entry=new" (Record sheet, palette) opens this form once; see entryRequest.ts.
+  const [editor, setEditor] = useState<EventResponse | "create" | null>(() =>
+    hasEntryRequest() ? "create" : null,
+  );
+  useEffect(() => {
+    clearEntryRequest();
+  }, []);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [deleting, setDeleting] = useState<EventResponse | null>(null);
   const [photoEvent, setPhotoEvent] = useState<EventResponse | null>(null);

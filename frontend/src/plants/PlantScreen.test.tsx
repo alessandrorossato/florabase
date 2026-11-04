@@ -3290,3 +3290,28 @@ test.each(["plant", "group"] as const)(
     });
   },
 );
+
+test("an entry=new deep link opens the record's own Journal form once and leaves the address clean", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    `#/plants/${plantId}?tab=events&entry=new`,
+  );
+  mockApi(plantHandler([plant()], [group()]));
+  await act(async () => {
+    render(<App />);
+    await Promise.resolve();
+  });
+  await act(async () => {
+    await vi.dynamicImportSettled();
+  });
+  expect(
+    await screen.findByRole("dialog", { name: "Add entry" }),
+  ).toBeVisible();
+  // The request is consumed: reload, Back or a remount will not reopen the form.
+  expect(window.location.hash).toBe(`#/plants/${plantId}?tab=events`);
+  expect(screen.getByRole("tab", { name: "Journal" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+});

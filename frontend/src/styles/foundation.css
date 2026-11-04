@@ -114,3 +114,9 @@ textarea {
   width: 1.1rem;
   height: 1.1rem;
 }
+
+/* Headings focused by navigation (tabindex="-1") show the ring only after keyboard use; see
+   focusModality.ts. Without that signal they keep focus for screen readers but draw nothing. */
+:root:not([data-input="keyboard"]) :is(h1, h2, h3, h4)[tabindex="-1"]:focus {
+  outline: none;
+}

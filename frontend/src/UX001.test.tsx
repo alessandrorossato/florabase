@@ -169,7 +169,14 @@ test("Dashboard is the default workspace with Workbench workspaces and mobile wo
     within(mobile)
       .getAllByRole("button")
       .map((item) => item.textContent),
-  ).toEqual(["Today", "Collection", "Activity", "Explore", "Sourcing"]);
+  ).toEqual([
+    "Record",
+    "Today",
+    "Collection",
+    "Activity",
+    "Explore",
+    "Sourcing",
+  ]);
   expect(
     within(snapshot).getByRole("link", { name: /Plant groups.*3/ }),
   ).toHaveAttribute("href", "#/plants?type=group");
