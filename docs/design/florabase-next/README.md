@@ -497,7 +497,156 @@ Seeds desktop, Plants dark, Plants tablet and Seeds mobile are in
 - The 30px Leaflet zoom fix and the breadcrumb fix from M2 still apply. The M1 glyph variance stays
   unexplained until the Phase E side-by-side.
 
+## M4: Record detail and lineage
+
+Commits `94a1675` (implementation and tests), `bfb23b4` (Order detail target size) and
+`380e6f4` (Harvest de-duplication). Frontend only: no backend, API, schema, route, auth or data
+change. Every record reads existing endpoints.
+
+### M3 decisions applied
+
+| Decision | Outcome |
+| -------- | ------- |
+| Keep the record-keeping counts as secondary, collapsible **Data quality** | Today ends with a full-width, collapsed `Data quality` disclosure with a dashed neutral border. It has no warning colour, badges or counts in the closed state. Open, it keeps the six exact definitions, the "Derived counts of current records. Prompts to review, not tasks or conclusions." source line, and the "zero is a recorded count, not a failure" note. Recent activity takes the full width above it. |
+| Saved Views stay usable with many views | The panel and mobile sheets show the first five, then a "Show all N saved views" button (`aria-expanded`, `aria-controls`) that expands in place and collapses with "Show fewer". The arbitrary eight-item cap is removed, so every compatible view is reachable from the panel as well as the palette. Tested with 12 views. |
+| Mobile directory header density | **Carried as a required item before final visual acceptance.** Not addressed in M4, which is about record detail. It is listed under Outstanding below so it cannot drop out of the plan. |
+
+### Record identity header (all ten record types)
+
+`CollectionUI.DetailHeader` and `detail-page.css` own the header for Plants, Plant groups, Seed
+lots, Sowings, Harvests, Stored material, Locations, Botanical identities, Suppliers and Orders.
+There are no per-page overrides.
+
+- A 6rem specimen plate (4.5rem on phones), framed, holding the record's own photo or its
+  labelled identity or kind fallback, exactly as before.
+- Kind eyebrow, then the record title on a new `--type-record-title` step. That step is defined only
+  in Field Ledger (Newsreader 2.375rem); the six themes fall back to their `--type-h1`.
+- Scientific names linked from the header (`#/identities/…`) render in the botanical face, as in
+  directory rows.
+- A lifecycle line, then actions in the top right (stacked under the identity at ≤ 64rem). The
+  record-actions group, the overflow menus, Edit and every primary action are unchanged.
+- An optional `lineage` slot spans the header for records with recorded sources.
+
+**Less repetition.** Lifecycle is stated once, in the header. It is removed from the At a glance
+band of Plant, Plant group, Seed lot and Sowing. The location stays in At a glance, where it is
+labelled "Current location", "Last recorded location" or "Storage". The Sowing's Seed lot moves
+from the header facts into the lineage strip. On Harvest, Source stays in the header and the date
+only in At a glance, where it keeps its recorded precision.
+
+### Recorded lineage strip
+
+`lineage/LineageStrip.tsx` with `lineage/useRecordedLineage.ts`. `LineagePanel` now shares the hook
+and has the same output.
+
+- **Sources:** the existing `/api/v1/{plants|plant-groups|seed-lots}/{id}/lineage` endpoints. The
+  backend walks one recorded source per record, so the path is linear. It is reversed to read
+  oldest first and ends at "This Plant", "This Plant group", "This Seed lot" or "This Sowing".
+- **Sowings** have no lineage endpoint. They read their recorded Seed lot's path and include that
+  Seed lot. This uses the same explicit relationships, not inference.
+- **Shown:** kind, linked label and any lifecycle other than active (for example exhausted or
+  reversed). "Full lineage" opens the Lineage tab and is hidden while that tab is open.
+- **Not shown:** descendants, shared Botanical identity, or anything else that would need
+  inference. With no recorded source, the strip says "No recorded source material."
+- **States:** loading and failure (with "Retry lineage") are visible but not live regions, because
+  the strip is secondary to the page heading. The separator arrows are decorative CSS
+  (`content: "→" / ""`); the ordered list carries the sequence.
+
+Plant, Plant group, Seed lot and Sowing details carry the strip. Harvests and Stored material have
+no lineage endpoint. Harvest keeps its recorded Source in the header facts.
+
+### Record timeline
+
+`timeline/RecordTimeline.tsx` replaces `schedule/UpcomingActivities.tsx` in the Plant, Plant group,
+Seed lot and Sowing overviews. It has two lanes on one rule:
+
+| Lane | Source | Honesty rule |
+| ---- | ------ | ------------ |
+| **Planned** ("in Schedule, not yet done") | Existing `listSchedule` with the record's `target_kind`/`target_id`, planned status, first three | Hollow, dashed nodes. Each item says Planned, Due today, or "Overdue · not recorded as done", with the overdue node in the warning colour. Nothing planned is shown as having happened. "View all N in Schedule" and "Schedule activity" keep the existing filtered links (the latter only for active records). |
+| **Recorded** ("in the Journal") | Existing `listEvents` for Plants and Plant groups, in the API's order (dated newest first, undated last), first three | Solid nodes. Dates use `formatPartialDate`, so year-only stays `2024`, month-only `2025-04` and an undated entry "Date not recorded". The source (Journal, Harvest or Collection operation) is kept. "Open Journal (N entries)" opens the Journal tab. |
+| Recorded, other records | No per-record event API | Seed lot: "Seed lots have no Journal" with a link to its Sowings tab. Sowing: points to the Germination tab, where its dated observations are. |
+| System history | Not available per record | A footnote links History filtered by the record's kind. A per-record History filter is a separate proposal (below). |
+
+The lanes sit side by side when the section is wider than 36rem and stack otherwise. Overdue is
+recomputed when the local day changes, without polling.
+
+### Preserved functionality
+
+Code paths were untouched for editing (all edit dialogs and the unsaved-change guard), deletion
+and reversal, permissions-driven action visibility, tabs and their `?tab=` deep links, Journal,
+Photos and media, Germination, Lineage tabs, Order seed-lot linking, Print label, Record harvest,
+Create Plant or group from a Sowing, and Back/breadcrumb navigation. The detail suites pass. Only
+three assertions changed, each for an intended design change:
+
+- the Seed lot summary no longer lists Lifecycle, which is now asserted in the header;
+- the "Upcoming activities" heading became the Timeline with Planned and Recorded regions;
+- one Plant Journal fixture now serves two reads, because the Overview and the Journal tab each
+  read the Journal.
+
+### Verification
+
+| Check | Result |
+| ----- | ------ |
+| Typecheck, ESLint (0 warnings), Prettier, production build | pass. Main JS 262.7 → 263.1 kB (gzip 81.5 → 81.6 kB) |
+| Full frontend suite | 1177/1177 at `94a1675` and again at `380e6f4` (1169 at M3, +1 Saved Views, +7 strip and timeline; the Upcoming activities test was ported, not added). Serial reruns are listed in progress.md |
+| New tests | `LineageStrip.test.tsx` (4): oldest-first explicit path with links and `aria-current`, the subject not repeated, Sowing via Seed lot, empty wording, retry. `RecordTimeline.test.tsx` (3): planned versus overdue wording, links, filter; day, month and year precision and undated entries; source labels; Journal open; History link; records without a Journal; inactive records cannot schedule; empty, failed and retry for both lanes. Shell: 12 Saved Views disclosure. Today: Data quality collapsed by default. |
+
+### Evidence
+
+Captured from UAT Preview serving `380e6f4`: nine detail routes (Seed lot, Sowing, Plant, Plant
+group, Harvest, Location, Botanical identity, Supplier, Order) at 1440 (viewport and full page),
+1024 and 390.
+
+| Set | Images | Probe |
+| --- | ------ | ----- |
+| Field Ledger light | 36 | 0 console errors; min 40px; 0 below target |
+| Field Ledger dark | 36 | 0 console errors; min 40px; 0 below target |
+| Botanical | 36 | 0 console errors. Order detail's inline action is 40px at touch widths, because the six themes keep their original pointer geometry (M1, D2) |
+
+The first capture pass found Order detail's "View physical seed lots" at a fixed 2rem in every
+theme. `bfb23b4` sizes it from `--control-height-compact`, so it is 40px everywhere and 44px on
+touch in Field Ledger. Earlier milestones did not capture Order detail, so this was not a
+regression from M1–M3.
+
+Before/after composites (main `d94f275` against M4, Field Ledger light) are in
+`.florabase-next-evidence/m4-before-after/`. There are nine desktop full pages; Plant, Sowing and
+Seed lot at 390 and 1024; and Plant in dark. Manifests are in [`m4/`](m4/).
+
+### Deviations from the Claude Design concept
+
+1. **No descendant branch in the strip.** The concept drew lineage both ways. Descendants exist
+   only as Sowing propagation summaries and group extraction lists, and those stay in their
+   Overview sections and Lineage tabs. Drawing them in the header would mix counts with recorded
+   paths.
+2. **One timeline section, two lanes, not one merged chronology.** Partial dates (a year, a month)
+   cannot be honestly interleaved with exact due dates, so planned and recorded entries keep
+   separate orderings on a shared visual rule.
+3. **No system-history lane.** It needs a per-record History filter that does not exist.
+4. **No inspector side panel on details.** The header, strip and tabs already carry identity and
+   navigation; an inspector would duplicate them.
+
+### Outstanding for review
+
+- **Required before final visual acceptance:** mobile directory header density (M3 decision 3).
+- The programmatic focus outline on the record title (focus moves there on navigation, as on main)
+  is prominent in direct-load screenshots. It is correct keyboard behaviour and was left unchanged.
+- The Overview and the Journal tab each read the Journal (one extra request on Plant and Plant
+  group details).
+- Origin and provenance on Plants still lists the originating Sowing and Seed lot that the strip
+  also shows. It keeps them because it adds context (group botanical context, direct origin
+  kind). Review whether the duplication is wanted.
+- Locations, Suppliers, Orders, Botanical identities, Harvests and Stored material only get the
+  shared header in M4. Their overviews keep their existing layouts.
+- The StoredMaterial focus test ("a QR inventory hash change focuses the retained record…") failed
+  in one full-suite rerun and 2 of 30 isolated runs. Its component, test and API are unchanged on
+  this branch and import no M4 code. It stays tracked (since M1), and is not classified as
+  pre-existing until it is reproduced on main.
+
 ## Separate proposals
 
-None yet. Anything that would need a new endpoint or contract change (for example, a per-record
-timeline aggregate) is recorded here as a proposal and is not implemented on this branch.
+1. **Per-record History filter.** The record timeline's System history lane needs
+   `GET /api/v1/history` to accept a subject id (today it filters by `category`, `subject_kind`,
+   `year` and `q` only). Until then the timeline links History filtered by kind. This is not
+   implemented on this branch.
+
+Anything else that would need a new endpoint or contract change is recorded here and is not
+implemented on this branch.

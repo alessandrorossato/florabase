@@ -7239,3 +7239,37 @@ Status remains implemented pending canonical verification.
 - Preview-model evaluation (analytical, not user testing): keep the model, with Recent, Saved views and the palette offsetting cross-workspace trips.
 - Known regressions and limits: no in-page Quick add; the visible title is now Today; Record keeping reverses the v0.1 decision; a small band above gallery photos; stacked directory tools on phones.
 - Canonical FULL not run; no push, PR or merge. Stopped at the M3 checkpoint.
+
+### UI-REDESIGN-EXPLORATION-001 — M4 record detail and lineage, 4 November 2026
+
+- Commits `94a1675` (implementation and tests), `bfb23b4` (Order detail target size) and `380e6f4` (Harvest states Source and date once). Frontend only: no backend, API, schema, route or auth change.
+- M3 decisions:
+  - Today's record-keeping counts are now a collapsed, neutral "Data quality" disclosure that keeps its definitions and source line.
+  - Saved views show five, then an accessible "Show all N saved views" disclosure; the eight-item cap is removed.
+  - Mobile directory header density is carried as a required item before final visual acceptance.
+- Shared `DetailHeader` across all ten record types:
+  - 6rem specimen plate.
+  - Field Ledger `--type-record-title`; the six themes fall back to `--type-h1`.
+  - Botanical-face scientific names, a lifecycle line and an optional lineage slot.
+  - Lifecycle is stated once (removed from At a glance on Plant, group, Seed lot and Sowing). Sowing's Seed lot moves to the strip. Harvest states Source in the header and the date in the summary.
+- `LineageStrip` shows only the explicitly recorded upstream path from the existing lineage endpoints, oldest first. Sowings read their recorded Seed lot's path. There are no descendants and no identity-based inference. It has an empty wording and a retryable failure. `LineagePanel` shares the new `useRecordedLineage` hook.
+- `RecordTimeline` replaces `UpcomingActivities`:
+  - A Planned lane from Schedule; overdue reads "not recorded as done".
+  - A Recorded lane from the Journal, with partial-date precision kept and undated entries stated.
+  - Seed lots and Sowings point to where their records live.
+  - System history links History by kind. A per-record History filter is recorded as a separate proposal.
+- Checks:
+  - Typecheck, ESLint, Prettier and build pass. Main JS is 263.1 kB (gzip 81.6 kB).
+  - Full frontend suite 1177/1177 at `94a1675` and twice at `380e6f4`, plus one serial rerun with 1 failure: `StoredMaterial.test.tsx` "a QR inventory hash change focuses the retained record on an already-open Harvest".
+  - That test then failed 2 of 30 times in isolation at `380e6f4` (and 0 of 20 times with the pre-`380e6f4` Harvest screen, which the test does not load).
+  - The branch has not changed `StoredMaterial.tsx`, its test or its API, and they import no M4 module. This is the StoredMaterial intermittent tracked since M1. It is still not classified as pre-existing, because it has not been reproduced on main.
+- Evidence: 108 captures at `380e6f4` (nine detail routes at 1440 full and viewport, 1024 and 390, in Field Ledger light and dark and in Botanical). Manifests are in `docs/design/florabase-next/m4/`. There are 16 before/after composites against the main baseline.
+  - Field Ledger: 0 console errors and 0 controls below target.
+  - Botanical: 0 console errors. Order detail's inline action is 40px at touch widths, because the six themes keep their pointer geometry.
+- Open for review:
+  - Mobile directory header density (required).
+  - The prominent programmatic focus outline on record titles.
+  - One extra Journal request on Plant details.
+  - Plant Origin and provenance partly repeats the strip.
+  - Non-lineage record types only get the shared header.
+- Canonical FULL not run; no push, PR or merge. Stopped at the M4 checkpoint.
