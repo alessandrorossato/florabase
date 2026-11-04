@@ -641,6 +641,112 @@ Seed lot at 390 and 1024; and Plant in dark. Manifests are in [`m4/`](m4/).
   this branch and import no M4 code. It stays tracked (since M1), and is not classified as
   pre-existing until it is reproduced on main.
 
+## M5: Advanced interactions and mobile workflows
+
+Commit `e593c50`, frontend only. No backend, API, schema, route or auth change. M4 is accepted
+as an experimental milestone, not as final visual acceptance of record detail.
+
+### Record sheet
+
+One place to start recording, from every page:
+
+- **Where it opens:** the accent item at the top of the rail (desktop and tablet, visible even
+  with the panel hidden), and the first item of the phone bottom bar.
+- **This record:** on a Plant, Plant group, Sowing or Seed lot detail, the sheet leads with that
+  record's own actions:
+  - Add Journal entry (Plants and Plant groups).
+  - Add germination observation (Sowings).
+  - Open recorded lineage.
+  - Print label.
+  These are the actions the page itself offers regardless of lifecycle. Lifecycle-dependent
+  actions (Start sowing, Create Plant, Schedule activity) stay on the page, so the shell never
+  shows an action the page would withhold.
+- **Choose a record:** Plant, Plant group or Sowing, through the existing Schedule target picker
+  (the one the Journal's Record menu uses), then straight into that record's form.
+- **Open a label:** see QR below.
+- **Other recording:** Record harvest, Record sowing, Complete scheduled work (existing routes).
+
+**No form copies.** Following the Journal's own rule ("Target-dependent workflows reuse their own
+detail route"), a one-time `?entry=new` parameter opens the record's real Journal or germination
+form. Its validation, permissions, unsaved-change guard and history behaviour are therefore
+unchanged. The parameter is read in a pure state initialiser (safe under StrictMode) and removed
+from the address once the form is open, so reload, Back and remounts do not reopen it. From a
+Sowing on a phone, a germination count is two taps away: Record, then Add germination
+observation.
+
+### QR and label links
+
+Labels already encode an ordinary record URL (`<canonical origin>/#/seeds|plants|plant-groups/<id>`,
+or a Harvest URL with `?inventory=<id>`). A phone camera already opens them. M5 adds what existing
+capabilities support:
+
+- **Label link field.** A typed or pasted link, or a USB/Bluetooth scanner, which types the code
+  and presses Enter. Only the exact shapes labels encode are accepted, and only their in-app
+  route is used, so a code can never leave Florabase or start an action (`create`, `edit`). The
+  canonical origin is not compared, because labels may carry the public address while the app is
+  open on a LAN one. Refusals are stated.
+- **Scan with camera**, only where the browser has `BarcodeDetector` and a camera in a secure
+  context. That means Chromium on Android and some desktops; not Safari or Firefox, and not plain-HTTP LAN
+  addresses. The button is absent elsewhere rather than broken. Frames stay on the device, the
+  camera is released when a label is read or the sheet closes, and foreign codes are refused.
+  **Not tested on a real device or camera**; covered by unit tests with a stub detector and
+  stream.
+- No fake scanner, no upload, no backend change.
+
+### Command palette and focus
+
+- On a record detail, the palette's first group is "This Plant" (or Sowing, …) with the same
+  record actions as the sheet. They are filterable.
+- **Fixed (from M2):** palette group ids contained the label's spaces ("Saved views"), so
+  `aria-labelledby` split into two broken references. Ids are now index-based.
+- **Title focus ring (M4 finding).** Navigation still moves focus to the page or record heading
+  (`tabindex="-1"`) for screen readers. `focusModality.ts` records the last input on
+  `<html data-input>`, and those headings draw the ring only after keyboard use. Verified in
+  UAT: on direct load the heading is focused with no ring; after a key press the ring is solid.
+  Interactive controls are unaffected.
+- Keyboard-only path verified in UAT: Record (rail), Enter, Add Journal entry, Enter. This lands
+  in the real Add entry dialog with focus inside it and a clean address.
+
+### Findings carried into release acceptance
+
+| Finding | M5 outcome |
+| ------- | ---------- |
+| Record detail not distinctive enough for final adoption | **Open, M6.** M5 was interaction work. |
+| Title focus ring shows on direct load | **Fixed** (above). |
+| Lineage with real multi-step and partial chains | **Partly.** UAT has a recorded two-step chain (Seed lot → Sowing → Plant and Plant group). Multi-step, reversed, unlabelled and missing-source cases are covered by `LineageStrip` and `LineagePanel` tests. Creating a three-step UAT chain (a Plant extracted from a group) is **open for M6**. |
+| Details with only the new header | **Open, M6** (Harvest, Stored material, Location, Identity, Supplier, Order overviews). |
+| Plant Journal loaded twice | **Investigated, open for M6.** The Overview timeline and the Journal tab each call `GET …/events`, never concurrently (only one panel is mounted). Deduplicating without changing API behaviour means sharing one fetch per record version, either a request cache keyed by record and `updated_at` and invalidated by Journal mutations, or the detail owning the list and passing it down. Both touch `EventJournal`'s mutation and refresh paths, so it is deferred rather than rushed. |
+| Plant provenance partly duplicates lineage | **Open, M6.** |
+| Mobile directory headers too tall | **Open, required, M6.** |
+| StoredMaterial focus test | **Resolved, with evidence.** The test dispatched `hashchange` and asserted focus synchronously, but the section registers its listener in a passive effect that may not have flushed. The effect also focuses from the current hash when it registers, so the app is not affected. Before: 2 failures in 30 isolated runs (M4). After waiting for focus (same assertion: the exact record must receive it): 40/40. Not classified as pre-existing, because main was not run. |
+| New: `MediaScreen.test.tsx` "detail return preserves filters and page…" | Failed once in one full-suite run; 0 of 30 isolated runs; `frontend/src/media` is untouched on this branch. Tracked, not classified. |
+
+### Verification
+
+| Check | Result |
+| ----- | ------ |
+| Typecheck, ESLint (0 warnings), Prettier, production build | pass. Main JS 263.1 → 269.9 kB (gzip 81.6 → 83.4 kB): Record sheet, camera reader, label validation |
+| Full frontend suite | 1203/1203 on the committed tree. One earlier full run had the single MediaScreen failure above. |
+| New tests (26) | Record sheet (5): context actions, chooser to germination form, label refusal and scanner Enter, camera offered only with support, scan → navigate and release camera, foreign code refused. `labelRoute` (16): accepted and refused shapes. `recordContext` (3). Focus modality (1). `entry=new` end to end through `App` (1). |
+
+### Evidence (UAT Preview serving `e593c50`)
+
+| Set | Images | Probe |
+| --- | ------ | ----- |
+| Interactions: direct-load focus, Record sheet on a Plant (desktop, phone, phone dark) and on Today (phone), `entry=new` Journal and germination, contextual palette, refused label, keyboard-only flow | 10 | 0 console errors; no sheet, bottom-bar or rail control under 40px |
+| Field Ledger light: Plant, Plant group, Sowing, Seed lot details, Today, Seeds at three widths | 24 | 0 console errors; 0 below target |
+
+Manifests are in [`m5/`](m5/).
+
+### Deviations
+
+1. **Record, not "Scan" and "Record" as separate bottom-bar items.** Scanning only exists where the
+   browser supports it, so it lives inside Record rather than as a control that would be dead on
+   most devices.
+2. **No inline quick-capture forms.** The sheet routes to the record's own forms, as above.
+3. **No motion added.** Sheets and dialogs keep their existing behaviour. Motion stays a polish
+   item for M6, with reduced-motion respected.
+
 ## Separate proposals
 
 1. **Per-record History filter.** The record timeline's System history lane needs

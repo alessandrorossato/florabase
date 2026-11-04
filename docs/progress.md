@@ -7273,3 +7273,30 @@ Status remains implemented pending canonical verification.
   - Plant Origin and provenance partly repeats the strip.
   - Non-lineage record types only get the shared header.
 - Canonical FULL not run; no push, PR or merge. Stopped at the M4 checkpoint.
+
+### UI-REDESIGN-EXPLORATION-001 — M5 advanced interactions and mobile workflows, 4 November 2026
+
+- Commit `e593c50`, frontend only.
+- Record sheet (rail accent; first item of the phone bottom bar) contains:
+  - the open record's own actions;
+  - a Plant / Plant group / Sowing chooser into the record's real form via a one-time `?entry=new`;
+  - label links (typed, pasted or USB-scanner);
+  - camera scanning only with `BarcodeDetector` in a secure context;
+  - the existing recording routes.
+- No form copies and no new API.
+- Label links accept only the shapes labels encode and use only the in-app route.
+- Palette leads with "This <record>" actions. Fixed broken palette group `aria-labelledby` (ids contained spaces).
+- Programmatically focused headings show the focus ring only after keyboard use (verified in UAT).
+- StoredMaterial QR focus test: diagnosed as a passive-effect race in the test (the component also focuses when its effect registers). It now waits for focus: 2/30 failures before, 40/40 after. Not classified as pre-existing.
+- MediaScreen "detail return preserves filters…" failed once in one full run; 0/30 isolated; media untouched on the branch. Tracked.
+- Checks: typecheck, ESLint, Prettier and build pass; 1203/1203; main JS 269.9 kB (gzip 83.4 kB).
+- Evidence: 10 interaction captures plus 24 route captures at `e593c50` (manifests in `docs/design/florabase-next/m5/`). 0 console errors; 0 below target; keyboard-only Record → Journal entry verified.
+- Open for M6 and release acceptance:
+  - Record-detail distinctiveness.
+  - A three-step UAT lineage chain.
+  - Overview consistency for non-lineage details.
+  - Journal double load (investigated; design options recorded).
+  - Provenance/lineage duplication.
+  - Mobile directory header density (required).
+  - Camera scanning untested on real devices.
+- Canonical FULL not run; no push, PR or merge. Stopped at the M5 checkpoint.
