@@ -8699,7 +8699,7 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  min-height: 2.5rem;
+  min-height: var(--control-height-compact);
   padding: 0.45rem 0.6rem;
   border: 0;
   background: transparent;
