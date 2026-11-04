@@ -2388,6 +2388,24 @@
       ],
       "priority": "P2",
       "status": "implemented"
+    },
+    {
+      "id": "UI-DESIGN-001",
+      "category": "ux",
+      "description": "Review visual and interaction consistency across the delivered UI and propose a small set of reusable visual rules, token additions and component changes as an editable Claude Design artifact before any implementation",
+      "acceptance_criteria": [
+        "An editable Claude Design artifact recreates the existing tokens, icons and primitives and demonstrates the proposal through an interactive Plants workspace covering directory, details, edit, empty, loading, error and confirmation states at desktop, tablet and mobile widths in all six themes",
+        "A concise audit and prioritized findings cite the reviewed main commit, source lines or dated captures for every claim, and re-check earlier Details, flicker and release-audit findings against current main",
+        "Proposed token and component changes, a phased low-risk Claude Code implementation plan with independent review, and a visual acceptance and public screenshot checklist are recorded without changing frontend, token, backend or schema behavior",
+        "The retained Git package distinguishes existing behavior, verified source findings, proposals and pending operator decisions D1-D6, labels static renderings as design mockups rather than production screenshots, and states its evidence limits",
+        "Operator design approval and decisions D1-D6 precede any implementation increment; Codex is not assigned implementation work"
+      ],
+      "dependencies": [
+        "UI-POLISH-001",
+        "RELEASE-VISUAL-AUDIT-001"
+      ],
+      "priority": "P1",
+      "status": "in_progress"
     }
   ]
 }

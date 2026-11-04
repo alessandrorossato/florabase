@@ -1,0 +1,116 @@
+{
+  "feature": "UI-DESIGN-001",
+  "status": "PROPOSED / AWAITING DESIGN APPROVAL",
+  "main_reviewed": "61fefbbd026ae11fd84394acba698a84abc7f16d",
+  "source": "Hand-built recreation from the UI-DESIGN-001 Claude Design artifact (https://claude.ai/artifact/T5A2PpURaCtwGxYTU6F8eN), rendered with synthetic data",
+  "renderer": "html2canvas 1.4.1 in the desktop app's built-in browser at an emulated CSS viewport; 1320px captures are 1305px wide because the page scrollbar is excluded",
+  "rendered": "2026-11-04",
+  "data": "Synthetic plant records invented for the mockup; no owner, fixture or production data",
+  "mockups": [
+    {
+      "file": "mockup-plants-directory-list-1320-botanical-light.png",
+      "kind": "design-mockup",
+      "not_production": true,
+      "screen": "Plants directory, List",
+      "css_viewport_width": 1320,
+      "raster": [
+        1305,
+        917
+      ],
+      "theme": "Botanical Light",
+      "state": "Results with an active filter chip",
+      "illustrates": "F-01, F-04, F-08",
+      "sha256": "7a9272c77880a62cbb638ff5c55fb55c438909dc374b1a731e77fd8f603d5700"
+    },
+    {
+      "file": "mockup-plant-details-1320-botanical-light.png",
+      "kind": "design-mockup",
+      "not_production": true,
+      "screen": "Plant details, Overview",
+      "css_viewport_width": 1320,
+      "raster": [
+        1305,
+        917
+      ],
+      "theme": "Botanical Light",
+      "state": "Header actions, tabs, summary, sections",
+      "illustrates": "F-03, F-05, F-09, D4, D5",
+      "sha256": "85d3eb484b2879b4b6012369888202a52865ef846c32a7216799e2ffed5ad8f7"
+    },
+    {
+      "file": "mockup-plant-edit-discard-confirmation-1320-botanical-dark.png",
+      "kind": "design-mockup",
+      "not_production": true,
+      "screen": "Plant edit with discard confirmation",
+      "css_viewport_width": 1320,
+      "raster": [
+        1305,
+        1105
+      ],
+      "theme": "Botanical Dark",
+      "state": "ConfirmDialog after Cancel on the editor",
+      "illustrates": "F-02, F-13",
+      "sha256": "ed28763b12c455bc1efc1155f7e65178ac7f6cd99e7e13a7a3fe9bad64d34904"
+    },
+    {
+      "file": "mockup-plants-empty-filtered-1320-herbarium-light.png",
+      "kind": "design-mockup",
+      "not_production": true,
+      "screen": "Plants directory, empty filtered result",
+      "css_viewport_width": 1320,
+      "raster": [
+        1305,
+        917
+      ],
+      "theme": "Herbarium Light",
+      "state": "Empty state with Reset filters",
+      "illustrates": "States",
+      "sha256": "ecd37fa86e2c04d9238075bbee1918c409654b70118b1a20cccb5ecdf4d486da"
+    },
+    {
+      "file": "mockup-plants-gallery-1024-botanical-dark.png",
+      "kind": "design-mockup",
+      "not_production": true,
+      "screen": "Plants gallery, tablet",
+      "css_viewport_width": 1024,
+      "raster": [
+        1024,
+        789
+      ],
+      "theme": "Botanical Dark",
+      "state": "Icon rail and header primary",
+      "illustrates": "D1, D2, F-15",
+      "sha256": "6f564a88dfc02d684672fc73c46dcd73fd372538213e4ca9bdb8c3cfc883396b"
+    },
+    {
+      "file": "mockup-plants-directory-390-botanical-light.png",
+      "kind": "design-mockup",
+      "not_production": true,
+      "screen": "Plants directory, phone",
+      "css_viewport_width": 390,
+      "raster": [
+        390,
+        1292
+      ],
+      "theme": "Botanical Light",
+      "state": "Compact toolbar and results bar",
+      "illustrates": "F-01, D6",
+      "sha256": "2f1237a890594c8ad50f3c2201ebd04c95df0800a6a1376251356c301a8801d4"
+    },
+    {
+      "file": "mockup-plant-details-390-mineral-dark.png",
+      "kind": "design-mockup",
+      "not_production": true,
+      "screen": "Plant details, phone",
+      "css_viewport_width": 390,
+      "raster": [
+        390,
+        967
+      ],
+      "theme": "Mineral Dark",
+      "state": "Wrapped actions, two-column summary",
+      "illustrates": "F-03, D4, D5",
+      "sha256": "03a737c0bf4c2dc7cce095d392c291ab54562b1ac2e7b9689b366e9c8d18185e"
+    }
+  ]
+}
