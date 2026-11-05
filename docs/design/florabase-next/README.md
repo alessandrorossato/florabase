@@ -1094,6 +1094,13 @@ proposal, the mapping of every audit finding, the tradeoffs and the Stage B plan
 [m8a-design-refinement.md](m8a-design-refinement.md). No code changed in Stage A; Stage B waits
 for operator approval.
 
+## M8 Stage B: implementation
+
+Stage B implemented the recommended Stage A direction and the operator's findings A (directory
+language), B (panel collapse) and C (extended Review and WFO, investigated only). Causes, status of
+every finding, tests, intermittents and evidence are in
+[m8b-implementation.md](m8b-implementation.md).
+
 ## Separate proposals
 
 1. **Per-record History filter.** The record timeline's System history lane needs

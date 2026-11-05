@@ -7389,3 +7389,18 @@ Status remains implemented pending canonical verification.
 - Evidence: 236 captures at `4571f03` in Field Ledger light and dark, plus 10 main-vs-Next composites. The independent review package is `docs/design/florabase-next/INDEPENDENT-REVIEW.md`.
 - Recommendation: adopt with specific blocking corrections (independent review, a manual screen reader pass, identity intermittent classification, operator acceptance of the habit changes, then FULL and delivery only on approval).
 - QR camera on Android: pending the operator. Canonical FULL not run; no push, PR or merge.
+
+### UI-REDESIGN-EXPLORATION-001 — M8 design refinement (Stage A and Stage B), 5–6 November 2026
+
+- Input: independent audit of `35f9eb2` (functional QA pass with findings; design and UX acceptance fail) and operator findings A–C.
+- Stage A: Claude Design canvas https://claude.ai/artifact/EZkPPeaXAXm151sJmbUPCq (record detail, Today, phone, missing photos and palette, directories) and `docs/design/florabase-next/m8a-design-refinement.md`.
+- Stage B commits `42929cf`, `e5e7abe`, `edc25b8`, `0495b81`, `a94d02f`, `b92e6ca`; record in `docs/design/florabase-next/m8b-implementation.md`.
+- Defects fixed with cause and failing-first regression tests:
+  - Workbench panel collapse: the collapsed rule preceded an equal-specificity base rule;
+  - detail tabs ignored later `?tab=` routes on an open record (the cause of the identical M7 plant-lineage capture); captures now assert address and selected tab.
+- Built: specimen sheet, 2× image-enlargement cap, quiet missing-photo mat, lineage stem and phone disclosure, panel collapsed on record pages, Today bench, shared ledger directory language, phone directory spacing (first record 236–247 px), identity tab grid, palette record glyphs.
+- Not built: sparse-Almanac season strip, palette group totals, Locations/Journal/History/Taxonomy list restyle, phone context bar replacing the workspace strip.
+- Extended Review + WFO: investigated only (`docs/design/florabase-next/m8-extended-review-environment.md`); no supported environment combines v5 and WFO; nothing activated.
+- Tests: identity intermittent not reproduced in 33 further runs (21 orders, 12 under contention). New: `location hierarchy … keyboard selection` fails deterministically with shuffle seed 3; Geography and a Schedule test failed once each, unclassified.
+- Checks on `b92e6ca`: format, typecheck, lint, build pass; full suite 1209/1210, then 1210/1210 twice; backend diff empty.
+- Manual screen reader, physical zoom, high contrast and touch passes and Android QR remain open. Canonical FULL not run; no push, PR or merge.
