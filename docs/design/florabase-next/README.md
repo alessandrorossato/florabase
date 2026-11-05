@@ -1084,6 +1084,16 @@ order, each as its own reviewed delivery:
 
 The shell has the largest habit change and the lowest independent value, so it goes last.
 
+## M8 Stage A: design refinement after the independent audit
+
+The independent audit of `35f9eb2` passed functional QA with findings and failed design and UX
+acceptance. Stage A is a new Claude Design canvas
+(https://claude.ai/artifact/EZkPPeaXAXm151sJmbUPCq) with before/after boards against real M7
+captures. It recommends the Herbarium Mount record sheet and the Collection Bench Today. The
+proposal, the mapping of every audit finding, the tradeoffs and the Stage B plan are in
+[m8a-design-refinement.md](m8a-design-refinement.md). No code changed in Stage A; Stage B waits
+for operator approval.
+
 ## Separate proposals
 
 1. **Per-record History filter.** The record timeline's System history lane needs
