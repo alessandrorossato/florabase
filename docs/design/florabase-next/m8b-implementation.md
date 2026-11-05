@@ -69,7 +69,7 @@ T1 Collection Bench).
 
 Reproduce: `python3 ./scripts/workflow_environment.py quality compose -- run --rm --no-deps -T frontend sh -c 'pnpm exec vitest run src/App.test.tsx --sequence.shuffle --sequence.seed=3'`.
 
-## Checks on the final tree (`b92e6ca`)
+## Checks on the final tree (`b92e6ca`, plus the CSS-only `dba7078`)
 
 - `pnpm format:check`, `pnpm typecheck`, `pnpm lint` (0 warnings), `pnpm build`: pass.
 - Full Vitest: 1210 tests; 1209/1210 on the first run (Schedule intermittent above), then
@@ -83,3 +83,12 @@ Reproduce: `python3 ./scripts/workflow_environment.py quality compose -- run --r
 
 Manual screen reader, physical zoom, Windows High Contrast and touch-device passes; Android QR.
 Live activation of the extended Review environment and WFO (awaiting approval).
+
+## Evidence
+
+| Evidence | Location (git-excluded images; manifests committed) |
+| -------- | ---------------------------------------------------- |
+| All routes, desktop/tablet/phone, light and dark, at `dba7078` with address and tab assertions | `.florabase-next-evidence/m8-dba7078-field-ledger-{light,dark}/` (118 each); manifests `docs/design/florabase-next/m8/`. 0 console errors, 0 controls below target (40px pointer, 44px touch), 0 state failures, 0 identical images; Plant detail and Plant lineage now differ |
+| Before/after against M7 | `.florabase-next-evidence/m8-before-after/` (11: Plant light/dark/phone, Plant lineage route, Today desktop/phone, Seeds dark/phone, identity phone, Harvests, panel collapse) |
+| Panel collapse states | `.florabase-next-evidence/m8-panel-collapse/` (expanded, collapsed, reopened, 1100, phone, back to 1440, other workspace) |
+| Capture check refusing the old defect | `.florabase-next-evidence/m8-lineage-state-check/` and the run recorded above |
