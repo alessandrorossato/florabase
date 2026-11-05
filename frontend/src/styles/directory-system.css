@@ -676,3 +676,163 @@
     margin-block-start: var(--space-3);
   }
 }
+
+/* M8 ledger directory (operator finding A). One language for every directory that uses the
+   shared records list: Seeds, Sowings, Plants and groups, Harvests, Stored material, Suppliers,
+   Orders, Locations and Botanical identities. A ruled ledger instead of a framed card; a quiet
+   mat swatch; botanical names in the serif italic; status as dot and word without a tint;
+   recorded quantities in the data face; row actions quiet until the row is hovered or focused.
+   Tokens only; structure, controls and behaviour are unchanged. */
+.app-content .ui-directory-records--list {
+  background: transparent;
+  border: 0;
+  border-block-start: 1px solid var(--text);
+  border-radius: 0;
+}
+.app-content .ui-directory-records--list > .ui-directory-row {
+  padding-inline: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+.app-content .ui-directory-records--list > .ui-directory-row:last-child {
+  border-bottom: 1px solid var(--border);
+}
+.app-content .ui-directory-row .ui-record-visual {
+  background: var(--surface-subtle);
+  border: 0;
+}
+.app-content .ui-directory-records .ui-record-visual .record-visual {
+  color: var(--border-strong);
+  background: transparent;
+}
+.app-content .ui-directory-records .ui-record-title > strong {
+  font-size: 0.9375rem;
+  letter-spacing: -0.003em;
+}
+.app-content .ui-directory-records .ui-record-status .ui-status-chip {
+  padding: 0;
+  background: none;
+  font: var(--type-small);
+  font-weight: 500;
+}
+.app-content .ui-directory-row .ui-record-summary {
+  font-family: var(--font-data);
+  font-size: 0.8125rem;
+  color: var(--text);
+}
+.app-content .ui-directory-row .ui-record-summary strong {
+  font-family: var(--font-data);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.app-content
+  .ui-directory-records--list
+  .ui-directory-record-actions
+  :is(button, a):not(.button--primary) {
+  color: var(--text-muted);
+  background: transparent;
+  border-color: transparent;
+}
+.app-content
+  .ui-directory-records--list
+  .ui-directory-row:is(:hover, :focus-within)
+  .ui-directory-record-actions
+  :is(button, a):not(.button--primary) {
+  color: var(--text);
+}
+.app-content
+  .ui-directory-records--list
+  .ui-directory-record-actions
+  :is(button, a):not(.button--primary):hover {
+  background: var(--surface-hover);
+}
+/* Gallery: small herbarium sheets; images uncropped on the mat, never enlarged. */
+.app-content .ui-directory-card .ui-record-visual {
+  margin: var(--space-2) var(--space-2) 0;
+  width: auto;
+  aspect-ratio: 1 / 1;
+  background: var(--surface-subtle);
+  border-block-end: 0;
+  border-radius: 2px;
+}
+.app-content .ui-directory-card .ui-record-visual:not(:has(img)) {
+  background: var(--surface-subtle);
+}
+.app-content .ui-directory-card .ui-record-visual:not(:has(img)) svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--border-strong);
+}
+.app-content .ui-directory-card .ui-record-visual img {
+  width: auto;
+  height: auto;
+  max-width: calc(100% - 2 * var(--space-3));
+  max-height: calc(100% - 2 * var(--space-3));
+  padding: var(--space-1);
+  object-fit: contain;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+/* Unknown is not a number: said in words, in the UI face, muted. */
+.app-content .ui-directory-records .ui-record-summary .ui-record-unknown {
+  font-family: var(--font-ui);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.app-content .ui-directory-row .ui-record-summary :is(strong, small) {
+  font-weight: 400;
+}
+
+/* Phones: row actions share the record's last line instead of adding a row of their own. */
+@media (max-width: 48rem) {
+  .app-content .ui-directory-records--list > .ui-directory-row--composed {
+    padding-block: var(--space-1);
+  }
+  .app-content
+    .ui-directory-records--list
+    > .ui-directory-row--composed
+    > .ui-directory-record-actions {
+    width: auto;
+    margin-block-start: calc(-1 * var(--control-height-touch, 2.75rem));
+    margin-inline-start: auto;
+  }
+  .app-content .ui-directory-records--list .ui-record-content {
+    grid-template-columns: 3rem minmax(0, 1fr);
+  }
+  .app-content .ui-directory-records--list .ui-record-summary {
+    grid-column: 2;
+    justify-items: start;
+    text-align: start;
+    min-block-size: var(--control-height-touch, 2.75rem);
+    align-content: center;
+    /* Room for the row's actions, which share this line. */
+    padding-inline-end: calc(3 * var(--control-height-touch, 2.75rem));
+  }
+}
+
+/* M8 phones: the first record within the 240px target (audit P1). The section margin and the
+   frame gap above the list were stacked spacing, not separation the reader needs. */
+@media (max-width: 48rem) {
+  .app-content .ui-directory-page {
+    margin-block-start: 0;
+  }
+  .app-content .workspace:has(.ui-directory-records) {
+    margin-block-start: 0;
+  }
+  .app-content:has(.ui-directory-records) {
+    padding-block-start: var(--space-2);
+  }
+  .app-content .page-header--with-tools .page-tools {
+    gap: var(--space-1) var(--space-2);
+  }
+  .app-content .ui-directory-page .ui-directory-frame,
+  .app-content .ui-directory-workspace {
+    gap: var(--space-2);
+  }
+  .app-content .page-header--with-tools {
+    row-gap: var(--space-1);
+  }
+  .app-content .ui-directory-records--list {
+    padding-block-start: 0;
+  }
+}

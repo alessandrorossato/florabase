@@ -2259,7 +2259,13 @@ export function SeedLotScreen({
                               }
                               summary={
                                 <>
-                                  <strong>
+                                  <strong
+                                    className={
+                                      lot.quantity
+                                        ? undefined
+                                        : "ui-record-unknown"
+                                    }
+                                  >
                                     {quantityLabel(lot)}
                                     {lot.quantity && lot.lifecycle === "active"
                                       ? " remaining"

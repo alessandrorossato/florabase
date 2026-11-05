@@ -2823,7 +2823,15 @@ export function PlantScreen({
                                       ? "Plant"
                                       : "Group"}
                                     {record.kind === "group" && (
-                                      <strong>{quantityLabel(record)}</strong>
+                                      <strong
+                                        className={
+                                          record.value.quantity
+                                            ? undefined
+                                            : "ui-record-unknown"
+                                        }
+                                      >
+                                        {quantityLabel(record)}
+                                      </strong>
                                     )}
                                   </>
                                 }
