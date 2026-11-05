@@ -34,9 +34,6 @@
 .wb-shell--collapsed .wb-sidebar {
   grid-template-columns: var(--wb-rail);
 }
-.wb-shell--collapsed .wb-panel {
-  display: none;
-}
 
 .wb-shell .wb-rail {
   display: flex;
@@ -159,6 +156,13 @@
   color: var(--text);
   background: var(--surface);
   border-inline-end: 1px solid var(--border);
+}
+/* Collapsed: the panel leaves layout and focus order entirely. This must follow the base
+   rule above (same specificity); before M8 it preceded it, so the panel stayed displayed and
+   wrapped into an implicit grid row under the rail, clipped to the rail's width. The phone
+   rules below show the panel again as the section strip. */
+.wb-shell--collapsed .wb-panel {
+  display: none;
 }
 .wb-shell .wb-panel__tools {
   display: flex;

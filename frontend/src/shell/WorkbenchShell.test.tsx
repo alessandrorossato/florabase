@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import {
   cleanup,
   render,
@@ -470,3 +472,59 @@ test("many Saved Views stay reachable: five shown, the rest behind a disclosure 
     screen.getByRole("option", { name: /Lots view 12/ }),
   ).toBeInTheDocument();
 });
+
+test("collapsing the active workspace removes the panel from layout and focus, and reopening restores it", async () => {
+  vi.stubGlobal("fetch", savedViewsFetch([]));
+  // Load the real shell stylesheet so the cascade, not a class name, is under test (M8 P1:
+  // a same-specificity base rule after the collapsed rule kept the panel displayed). jsdom
+  // ignores media conditions, so only the unconditional (desktop) rules are loaded; the phone
+  // strip is covered by browser captures.
+  const style = document.createElement("style");
+  style.textContent = withoutMediaBlocks(
+    readFileSync("src/shell/workbench.css", "utf8"),
+  );
+  document.head.append(style);
+  try {
+    const user = userEvent.setup();
+    renderShell({ section: "seeds", hash: "#/seeds" });
+    const tab = screen.getByRole("tab", { name: /Collection/ });
+    const panel = screen.getByRole("tabpanel", { hidden: true });
+    expect(panel).toHaveAttribute("id", "wb-panel");
+    expect(getComputedStyle(panel).display).toBe("flex");
+    expect(tab).toHaveAttribute("aria-selected", "true");
+
+    await user.click(tab);
+    expect(getComputedStyle(panel).display).toBe("none");
+    expect(tab).toHaveAttribute("aria-selected", "false");
+    expect(localStorage.getItem("florabase.workbench.panel-collapsed.v1")).toBe(
+      "true",
+    );
+
+    await user.click(tab);
+    expect(getComputedStyle(panel).display).toBe("flex");
+    expect(tab).toHaveAttribute("aria-selected", "true");
+    expect(tab).toHaveFocus();
+    expect(within(panel).getByRole("link", { name: "Seeds" })).toBeVisible();
+  } finally {
+    style.remove();
+  }
+});
+
+function withoutMediaBlocks(css: string) {
+  let out = "";
+  let index = 0;
+  while (index < css.length) {
+    const start = css.indexOf("@media", index);
+    if (start === -1) return out + css.slice(index);
+    out += css.slice(index, start);
+    let depth = 0;
+    let cursor = css.indexOf("{", start);
+    for (; cursor < css.length; cursor += 1) {
+      if (css[cursor] === "{") depth += 1;
+      if (css[cursor] === "}") depth -= 1;
+      if (depth === 0) break;
+    }
+    index = cursor + 1;
+  }
+  return out;
+}
