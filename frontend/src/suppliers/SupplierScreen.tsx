@@ -331,11 +331,19 @@ function SupplierDetail({
     success: (value: SupplierResponse) => string,
   ) => void;
 }) {
-  const [tab, setTab] = useState(
-    initialTab && ["overview", "photos", "material"].includes(initialTab)
-      ? initialTab
-      : "overview",
-  );
+  const tabOf = (value?: string) =>
+    value && ["overview", "photos", "material"].includes(value)
+      ? value
+      : "overview";
+  const [tab, setTab] = useState(() => tabOf(initialTab));
+  // Follow later route changes on the same mounted record (a link or Record sheet action to
+  // ?tab=lineage while this record is open); useState only reads the first value. Edit
+  // routes are handled by the edit workspace and leave the selected section alone.
+  const [lastRouteTab, setLastRouteTab] = useState(initialTab);
+  if (lastRouteTab !== initialTab) {
+    setLastRouteTab(initialTab);
+    if (initialTab !== "edit") setTab(tabOf(initialTab));
+  }
   const [primaryPhoto, setPrimaryPhoto] = useState(supplier.primary_photo);
   const counts = supplier.usage_counts;
   const linkedTotal = counts.direct_records_total;

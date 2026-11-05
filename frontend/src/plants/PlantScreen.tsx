@@ -381,9 +381,17 @@ function Detail({
   const originatingGroup =
     record.kind === "plant" ? record.value.originating_plant_group : null;
   const allowedTabs = ["overview", "events", "photos", "lineage"];
-  const [tab, setTab] = useState(
-    initialTab && allowedTabs.includes(initialTab) ? initialTab : "overview",
-  );
+  const tabOf = (value?: string) =>
+    value && allowedTabs.includes(value) ? value : "overview";
+  const [tab, setTab] = useState(() => tabOf(initialTab));
+  // Follow later route changes on the same mounted record (a link or Record sheet action to
+  // ?tab=lineage while this record is open); useState only reads the first value. Edit
+  // routes are handled by the edit workspace and leave the selected section alone.
+  const [lastRouteTab, setLastRouteTab] = useState(initialTab);
+  if (lastRouteTab !== initialTab) {
+    setLastRouteTab(initialTab);
+    if (initialTab !== "edit") setTab(tabOf(initialTab));
+  }
   const route = record.kind === "plant" ? "plants" : "plant-groups";
   // One fact block (the specimen label), replacing At a glance, Managed group and Origin and
   // provenance. Indirect sources (the Seed lot behind a Sowing) are left to the lineage strip.

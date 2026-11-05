@@ -2831,6 +2831,32 @@ test("PlantGroup direct edit alias uses the shared full-page editor", async () =
   ).toBeVisible();
 });
 
+test("a later route to another tab of the open Plant selects that tab (M8 capture defect)", async () => {
+  mockApi(plantHandler([plant()], []));
+  window.history.replaceState(null, "", `#/plants/${plantId}`);
+  render(<App />);
+  const overview = await screen.findByRole("tab", { name: "Overview" });
+  expect(overview).toHaveAttribute("aria-selected", "true");
+  act(() => {
+    window.location.hash = `#/plants/${plantId}?tab=lineage`;
+  });
+  await waitFor(() => {
+    expect(screen.getByRole("tab", { name: "Lineage" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+  act(() => {
+    window.location.hash = `#/plants/${plantId}`;
+  });
+  await waitFor(() => {
+    expect(screen.getByRole("tab", { name: "Overview" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+});
+
 test("saving Plant edit retains its detail tab and connected focus trigger across a new revision", async () => {
   let current = plant();
   const custom: Handler = (path, init) => {

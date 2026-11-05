@@ -333,14 +333,22 @@ function Detail({
       controller.abort();
     };
   }, [sowing.id, sowing.updated_at]);
-  const [tab, setTab] = useState(
-    initialTab === "propagation"
+  const tabOf = (value?: string) =>
+    value === "propagation"
       ? "lineage"
-      : initialTab &&
-          ["overview", "germination", "photos", "lineage"].includes(initialTab)
-        ? initialTab
-        : "overview",
-  );
+      : value &&
+          ["overview", "germination", "photos", "lineage"].includes(value)
+        ? value
+        : "overview";
+  const [tab, setTab] = useState(() => tabOf(initialTab));
+  // Follow later route changes on the same mounted record (a link or Record sheet action to
+  // ?tab=lineage while this record is open); useState only reads the first value. Edit
+  // routes are handled by the edit workspace and leave the selected section alone.
+  const [lastRouteTab, setLastRouteTab] = useState(initialTab);
+  if (lastRouteTab !== initialTab) {
+    setLastRouteTab(initialTab);
+    if (initialTab !== "edit") setTab(tabOf(initialTab));
+  }
   // Canonicalize the legacy ?tab=propagation address in the same commit as the Lineage tab
   // renders (before paint), so the address and the selected tab never disagree. As a passive
   // effect this left a window in which the tab was selected but the address still said

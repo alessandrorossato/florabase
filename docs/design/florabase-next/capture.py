@@ -173,6 +173,30 @@ def first_id(payload: Any) -> str | None:
     return None
 
 
+# Record sections a route may select with ?tab=; the capture is refused unless the page shows it.
+TAB_LABELS = {
+    "overview": "Overview", "events": "Journal", "photos": "Photos", "lineage": "Lineage",
+    "germination": "Germination", "sowings": "Sowings", "material": "Material",
+}
+STATE = """() => ({
+  hash: location.hash,
+  tab: (document.querySelector('.app-content [role=tab][aria-selected=true]') || {}).textContent || null,
+})"""
+
+
+def state_mismatch(page: Page, target: str) -> str | None:
+    """M8: evidence must show the state its key names (M7 plant-lineage showed Overview)."""
+    actual = page.evaluate(STATE)
+    expected_hash = "#" + target
+    if actual["hash"] != expected_hash:
+        return f"address {actual['hash']!r} != {expected_hash!r}"
+    if "?tab=" in target:
+        wanted = TAB_LABELS.get(target.split("?tab=", 1)[1].split("&", 1)[0])
+        if wanted and not (actual["tab"] or "").strip().startswith(wanted):
+            return f"selected tab {actual['tab']!r} != {wanted!r}"
+    return None
+
+
 def settle(page: Page) -> None:
     try:
         page.wait_for_load_state("networkidle", timeout=15000)
@@ -236,6 +260,10 @@ def main() -> None:
                 page.goto(f"{ORIGIN}/#{target}")
                 settle(page)
                 elapsed = round((time.monotonic() - started) * 1000)
+                mismatch = state_mismatch(page, target)
+                if mismatch:
+                    entries.append({"key": key, "viewport": vp_name, "failed": mismatch})
+                    continue
                 probe = page.evaluate(PROBE, 40 if vp_name == "desktop" else 44)
                 shots = [("", False)]
                 if vp_name == "desktop" and FULL_PAGE:
@@ -307,8 +335,19 @@ def main() -> None:
         "viewports": {k: v["viewport"] for k, v in VIEWPORTS.items()},
         "blocked_external_hosts": sorted(blocked), "resolved_ids": ids, "entries": entries,
     }
+    # Distinct keys with byte-identical images in one viewport are flagged, never silently kept.
+    seen: dict[tuple[str, str], str] = {}
+    for entry in entries:
+        if "sha256" not in entry or entry["key"].endswith("-full"):
+            continue
+        other = seen.setdefault((entry["viewport"], entry["sha256"]), entry["key"])
+        if other != entry["key"]:
+            entry["identical_to"] = other
     (OUT / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    print(f"{len([e for e in entries if 'file' in e])} images -> {OUT}")
+    failed = [e for e in entries if "failed" in e or "identical_to" in e]
+    print(f"{len([e for e in entries if 'file' in e])} images -> {OUT}; {len(failed)} state failures")
+    if failed:
+        raise SystemExit(f"capture state check failed: {failed[:5]}")
 
 
 if __name__ == "__main__":

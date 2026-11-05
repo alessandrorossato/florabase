@@ -393,12 +393,19 @@ function Detail({
     transaction?.id === lot.order_id ? transaction : null;
   const summarySupplier = linkedTransaction?.supplier ?? lot.supplier;
 
-  const [tab, setTab] = useState(
-    initialTab &&
-      ["overview", "sowings", "photos", "lineage"].includes(initialTab)
-      ? initialTab
-      : "overview",
-  );
+  const tabOf = (value?: string) =>
+    value && ["overview", "sowings", "photos", "lineage"].includes(value)
+      ? value
+      : "overview";
+  const [tab, setTab] = useState(() => tabOf(initialTab));
+  // Follow later route changes on the same mounted record (a link or Record sheet action to
+  // ?tab=lineage while this record is open); useState only reads the first value. Edit
+  // routes are handled by the edit workspace and leave the selected section alone.
+  const [lastRouteTab, setLastRouteTab] = useState(initialTab);
+  if (lastRouteTab !== initialTab) {
+    setLastRouteTab(initialTab);
+    if (initialTab !== "edit") setTab(tabOf(initialTab));
+  }
   return (
     <DetailPage
       as="section"
