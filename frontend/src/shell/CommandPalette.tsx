@@ -8,7 +8,11 @@ import {
 } from "react";
 
 import { requestJson } from "../auth/api";
-import { searchKindLabels, type SearchResponse } from "../collection/searchApi";
+import {
+  searchKindLabels,
+  type SearchKind,
+  type SearchResponse,
+} from "../collection/searchApi";
 import { Icon, type IconName } from "../components/Icon";
 import { TaskDialog } from "../components/TaskDialog";
 import { allDestinations, createActions } from "./navigation";
@@ -31,6 +35,9 @@ interface Option {
   detail: string;
   href: string;
   icon: IconName;
+  /** Record hits: the kind word and the identity text the search already returns. */
+  kindLabel?: string;
+  context?: string;
 }
 interface Group {
   label: string;
@@ -38,7 +45,23 @@ interface Group {
 }
 
 const RECORD_LIMIT = 8;
-const recordIcon: IconName = "document";
+// M8: each record kind has its own glyph so similar names are told apart at a glance.
+const kindIcons: Partial<Record<SearchKind, IconName>> = {
+  seed_lot: "seed",
+  sowing: "sprout",
+  plant: "plant",
+  plant_group: "layers",
+  harvest: "harvest",
+  media_asset: "image",
+  event: "journal",
+  botanical_identity: "flower",
+  botanical_profile: "overview",
+  supplier: "store",
+  order: "parcel",
+  location: "pin",
+  geographic_place: "globe",
+  provenance_site: "pin",
+};
 const savedViewIcon: IconName = "saved-views";
 
 function includes(text: string, query: string) {
@@ -167,7 +190,12 @@ export function CommandPalette({
                 ? `${searchKindLabels[hit.kind]} · ${hit.context}`
                 : searchKindLabels[hit.kind],
             href: hit.href,
-            icon: recordIcon,
+            icon: kindIcons[hit.kind] ?? "document",
+            kindLabel: searchKindLabels[hit.kind],
+            context:
+              hit.context && hit.context !== hit.title
+                ? hit.context
+                : undefined,
           }))
         : [];
     const all: Group[] = trimmed
@@ -318,7 +346,14 @@ export function CommandPalette({
                 >
                   <Icon name={option.icon} />
                   <span className="wb-palette__label">{option.label}</span>
-                  <span className="wb-palette__detail">{option.detail}</span>
+                  {option.context ? (
+                    <span className="wb-palette__detail">
+                      {option.kindLabel} ·{" "}
+                      <i className="wb-palette__context">{option.context}</i>
+                    </span>
+                  ) : (
+                    <span className="wb-palette__detail">{option.detail}</span>
+                  )}
                 </div>
               );
             })}

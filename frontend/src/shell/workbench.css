@@ -844,3 +844,9 @@
   color: var(--text-muted);
   font: var(--type-small);
 }
+
+/* M8 palette record identification: the identity line in the botanical italic. */
+.wb-palette .wb-palette__context {
+  font-family: var(--font-botanical);
+  font-size: 0.9375rem;
+}
