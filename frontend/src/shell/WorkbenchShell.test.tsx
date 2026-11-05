@@ -528,3 +528,47 @@ function withoutMediaBlocks(css: string) {
   }
   return out;
 }
+
+test("record pages start with the panel collapsed; the rail opens it there without changing the saved preference", async () => {
+  vi.stubGlobal("fetch", savedViewsFetch([]));
+  const user = userEvent.setup();
+  const record = "#/plants/0190d2a8-0000-7000-8000-000000000002";
+  const { container, rerender } = renderShell({
+    section: "plants",
+    hash: record,
+  });
+  const shell = container.querySelector(".wb-shell");
+  expect(shell).toHaveClass("wb-shell--collapsed");
+  const tab = screen.getByRole("tab", { name: /Collection/ });
+  expect(tab).toHaveAttribute("aria-selected", "false");
+
+  await user.click(tab);
+  expect(shell).not.toHaveClass("wb-shell--collapsed");
+  expect(tab).toHaveAttribute("aria-selected", "true");
+  expect(localStorage.getItem("florabase.workbench.panel-collapsed.v1")).toBe(
+    "false",
+  );
+
+  const props = {
+    signedInAs: "Test Owner",
+    signingOut: false,
+    onSignOut: vi.fn(),
+    onNavigate: vi.fn(),
+  };
+  rerender(
+    <WorkbenchShell
+      section="plants"
+      hash="#/plants/0190d2a8-0000-7000-8000-000000000003"
+      {...props}
+    >
+      <section aria-label="Workspace content" className="app-content" />
+    </WorkbenchShell>,
+  );
+  expect(shell).toHaveClass("wb-shell--collapsed");
+  rerender(
+    <WorkbenchShell section="plants" hash="#/plants" {...props}>
+      <section aria-label="Workspace content" className="app-content" />
+    </WorkbenchShell>,
+  );
+  expect(shell).not.toHaveClass("wb-shell--collapsed");
+});

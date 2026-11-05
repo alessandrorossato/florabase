@@ -29,6 +29,11 @@ import { useSavedViewLinks, type SavedViewLink } from "./useSavedViewLinks";
 
 const panelPreferenceKey = "florabase.workbench.panel-collapsed.v1";
 
+// Record pages (a specimen sheet) start with the panel collapsed so the record has the
+// width (M8 R1). Opening the panel from the rail on that page keeps it open there.
+const recordPagePattern =
+  /^#\/(seeds|sowings|plants|plant-groups|harvests|suppliers|orders|locations|identities)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:[?/]|$)/i;
+
 function readCollapsed() {
   try {
     return window.localStorage.getItem(panelPreferenceKey) === "true";
@@ -226,7 +231,10 @@ export function WorkbenchShell({
   const setPanelId = (id: WorkspaceId) => {
     setPanelChoice({ from: hash, id });
   };
-  const [collapsed, setCollapsed] = useState(readCollapsed);
+  const [storedCollapsed, setCollapsed] = useState(readCollapsed);
+  const collapsed =
+    storedCollapsed ||
+    (recordPagePattern.test(hash) && panelChoice?.from !== hash);
   const savedViews = useSavedViewLinks();
   // Recently opened section-level destinations in this session (never records,
   // never stored). Updated while rendering when the route changes.
@@ -265,11 +273,11 @@ export function WorkbenchShell({
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(panelPreferenceKey, String(collapsed));
+      window.localStorage.setItem(panelPreferenceKey, String(storedCollapsed));
     } catch {
       // The panel still works when browser preference storage is unavailable.
     }
-  }, [collapsed]);
+  }, [storedCollapsed]);
 
   useEffect(() => {
     const open = (event: globalThis.KeyboardEvent) => {

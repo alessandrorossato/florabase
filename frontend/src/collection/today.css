@@ -413,3 +413,197 @@
   padding-block: var(--space-2);
   border-block-start-color: var(--border);
 }
+
+/* M8 Today: a collection bench, not an administrative dashboard (audit P1).
+   The active Plants become a full-width bench of small herbarium sheets above the work; the
+   four counts become one quiet ledger line (their derived context stays, in small type);
+   Next work is the primary panel. Structure, links and wording are unchanged. */
+.today-lede {
+  max-inline-size: 44rem;
+  color: var(--text-muted);
+  font-size: 1.0625rem;
+  line-height: 1.45;
+}
+.today-label {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.today-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-block: 0;
+  border-block-end: 1px solid var(--text);
+}
+.today-metrics .ui-metric,
+.today-metrics .ui-metric:first-child {
+  flex: 1 1 10rem;
+  padding: var(--space-2) var(--space-4) var(--space-3) 0;
+  border-inline-start: 0;
+}
+.today-metrics .ui-metric + .ui-metric {
+  padding-inline-start: var(--space-4);
+  border-inline-start: 1px solid var(--border);
+}
+.today-grid {
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+}
+.today-specimens {
+  grid-column: 1 / -1;
+  order: -1;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.today-specimens .today-panel__header h3,
+.today-work .today-panel__header h3,
+.today-recent .today-panel__header h3 {
+  font: var(--type-h2);
+  font-size: 1.625rem;
+}
+.today-plates {
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 12rem));
+  gap: var(--space-4);
+}
+.today-plates a {
+  padding: var(--space-2) var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+.today-plates a:hover {
+  border-color: var(--border-strong);
+}
+.today-plate__frame {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1 / 1;
+  border: 0;
+  border-radius: 2px;
+}
+.today-plates a:hover .today-plate__frame {
+  border-color: transparent;
+}
+/* Mounted and uncropped, never enlarged: the API thumbnail stays at or below its own size. */
+.today-plate__frame img {
+  inline-size: auto;
+  block-size: auto;
+  max-inline-size: calc(100% - 2 * var(--space-3));
+  max-block-size: calc(100% - 2 * var(--space-3));
+  padding: var(--space-1);
+  object-fit: contain;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.today-plate__fallback {
+  inline-size: 100%;
+  color: var(--border-strong);
+  background: none;
+  font-size: 0;
+}
+.today-plate__fallback .control-icon {
+  inline-size: 1.375rem;
+  block-size: 1.375rem;
+}
+.today-plate__title {
+  padding-inline: var(--space-1);
+}
+.today-plate__name {
+  padding-inline: var(--space-1);
+}
+.today-work {
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.today-windows {
+  display: inline-flex;
+  gap: 0;
+}
+.today-windows a {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-block-size: var(--control-height);
+  padding: var(--space-2) var(--space-3);
+  border-radius: 0;
+}
+.today-windows a + a {
+  margin-inline-start: -1px;
+}
+.today-windows a:first-child {
+  border-radius: var(--radius-small) 0 0 var(--radius-small);
+}
+.today-windows a:last-child {
+  border-radius: 0 var(--radius-small) var(--radius-small) 0;
+}
+.today-windows strong {
+  font: 500 1rem/1 var(--font-data);
+}
+@media (max-width: 48rem) {
+  .today-plates {
+    display: flex;
+    gap: var(--space-3);
+    overflow-x: auto;
+    padding-block-end: var(--space-1);
+  }
+  .today-plates > li {
+    flex: none;
+    inline-size: 9rem;
+  }
+  .today-windows {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* One search on Today: the page's collection search. The shell's own entry is hidden while
+   it is on screen (Ctrl/⌘K still opens the palette). */
+.wb-shell:has(.app-content .today)
+  :is(
+    .wb-search-trigger,
+    .wb-rail__search,
+    .wb-mobilebar [aria-label="Search and commands"]
+  ) {
+  display: none;
+}
+
+/* Wide: Next work and Recent activity side by side under the bench. The grid wrapper steps
+   aside (display: contents) so its two panels place in the page grid; DOM order and headings
+   are unchanged. */
+@media (min-width: 64rem) {
+  .today {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    column-gap: var(--space-8);
+    align-items: start;
+  }
+  .today > * {
+    grid-column: 1 / -1;
+  }
+  .today > .today-grid {
+    display: contents;
+  }
+  .today > .today-lede {
+    order: -4;
+  }
+  .today > .today-holdings {
+    order: -3;
+  }
+  .today .today-specimens {
+    order: -2;
+    grid-column: 1 / -1;
+  }
+  .today .today-work {
+    order: -1;
+    grid-column: 1;
+  }
+  .today > .today-stack {
+    order: -1;
+    grid-column: 2;
+  }
+}

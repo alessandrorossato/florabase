@@ -1,3 +1,4 @@
+import { useId, useState } from "react";
 import type { MouseEventHandler } from "react";
 
 import {
@@ -64,6 +65,10 @@ export function LineageStrip({
   onFull?: MouseEventHandler<HTMLAnchorElement>;
 }) {
   const [state, retry] = useRecordedLineage(kind, id);
+  // Phones fold the path into one row (M8); wider layouts hide the toggle and always show it.
+  const [expanded, setExpanded] = useState(false);
+  const pathId = useId();
+  let toggle = null;
   let body;
   if (state.status === "loading")
     body = <p className="lineage-strip__note">Loading recorded lineage…</p>;
@@ -82,8 +87,31 @@ export function LineageStrip({
       ...upstreamPath(state.value),
       ...(includeSubject ? [state.value.subject] : []),
     ];
+    if (nodes.length)
+      toggle = (
+        <button
+          type="button"
+          className="lineage-strip__toggle"
+          aria-expanded={expanded}
+          aria-controls={pathId}
+          onClick={() => {
+            setExpanded(!expanded);
+          }}
+        >
+          <span className="lineage-strip__toggle-label">
+            Recorded lineage · {nodes.length}{" "}
+            {nodes.length === 1 ? "step" : "steps"}
+          </span>
+          <span className="lineage-strip__toggle-summary">
+            {[
+              ...nodes.map((node) => lineageKindLabels[node.kind]),
+              current,
+            ].join(" → ")}
+          </span>
+        </button>
+      );
     body = nodes.length ? (
-      <ol className="lineage-strip__path">
+      <ol id={pathId} className="lineage-strip__path">
         {nodes.map((node, index) => (
           <li key={`${node.kind}:${node.id}`}>
             <Verb from={nodes[index - 1]?.kind} to={node.kind} />
@@ -108,10 +136,15 @@ export function LineageStrip({
     );
   }
   return (
-    <nav className="lineage-strip" aria-label="Recorded lineage">
+    <nav
+      className="lineage-strip"
+      aria-label="Recorded lineage"
+      data-expanded={expanded || undefined}
+    >
       <p className="lineage-strip__label" aria-hidden="true">
         Recorded lineage
       </p>
+      {toggle}
       {body}
       {fullHref && (
         <a className="lineage-strip__full" href={fullHref} onClick={onFull}>

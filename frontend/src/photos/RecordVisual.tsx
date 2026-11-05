@@ -1,4 +1,5 @@
 import { useContext, useState } from "react";
+import type { CSSProperties } from "react";
 import type { BotanicalIdentityResponse } from "../botanical-identities/api";
 import { RecordIdentities } from "../components/recordPresentation";
 import type { PrimaryPhoto } from "./api";
@@ -59,6 +60,13 @@ export function RecordVisual({
       : (identities.get(summary.id) ?? summary)
     : undefined;
   const [broken, setBroken] = useState<ReadonlySet<string>>(new Set());
+  // The loaded image's natural size, so large frames never enlarge it more than twice
+  // (M8: plates showed 96-320px thumbnails stretched three to four times).
+  const [natural, setNatural] = useState<{
+    src: string;
+    width: number;
+    height: number;
+  } | null>(null);
   const direct = photo?.thumbnail_url ?? null;
   const cover = identity?.compact_external_cover_url?.startsWith(
     "/api/v1/media-assets/",
@@ -102,6 +110,19 @@ export function RecordVisual({
           onError={() => {
             setBroken((current) => new Set([...current, source]));
           }}
+          onLoad={(event) => {
+            const { naturalWidth: width, naturalHeight: height } =
+              event.currentTarget;
+            if (width && height) setNatural({ src: source, width, height });
+          }}
+          style={
+            natural?.src === source
+              ? ({
+                  "--visual-natural-w": `${String(natural.width)}px`,
+                  "--visual-natural-h": `${String(natural.height)}px`,
+                } as CSSProperties)
+              : undefined
+          }
         />
       ) : (
         <>

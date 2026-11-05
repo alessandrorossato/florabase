@@ -82,82 +82,173 @@
   white-space: nowrap;
 }
 
-/* M6B lineage sequence: each recorded step is a small card; the relationship to the step
-   before it is written as text ("sown as", "grown into"), not implied by the arrow alone. */
-.lineage-strip__path > li {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: var(--space-2) var(--space-3);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-small);
+/* M8 stem line: no tinted band and no cards. The path reads as one quiet line under a ruled
+   rule; each relationship is written on its connector ("sown as", "grown into"). The ordered
+   list still conveys the sequence; the connectors are decorative. */
+.lineage-strip {
+  padding: var(--space-3) 0 var(--space-4);
+  background: transparent;
+  border-inline-start: 0;
+  border-block: 1px solid var(--border);
+  border-radius: 0;
 }
-.lineage-strip__path > li + li {
-  margin-inline-start: var(--space-6);
-  position: relative;
+.lineage-strip__label {
+  order: -2;
 }
-.lineage-strip__path > li + li::before {
-  position: absolute;
-  inset-inline-start: calc(-1 * var(--space-6) + 2px);
-  inset-block-start: 50%;
-  margin: 0;
-  transform: translateY(-50%);
-}
-.lineage-strip__path > li.lineage-strip__current {
-  border: 2px solid var(--lineage);
-}
-.lineage-strip__verb {
+.lineage-strip__full {
+  order: -1;
   color: var(--lineage);
-  font: var(--type-label);
-  font-weight: 500;
-  letter-spacing: 0.02em;
 }
 .lineage-strip__path {
-  gap: var(--space-2) 0;
-}
-
-/* M7: the sequence never wraps onto a second row, where it reads as two separate paths. On
-   wider screens it stays one row and scrolls sideways when it does not fit (focus on a step
-   scrolls it into view); on phones it becomes a vertical sequence read top to bottom. */
-.lineage-strip__path {
+  flex-basis: 100%;
   flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: 0;
   overflow-x: auto;
   scroll-snap-type: x proximity;
   scrollbar-width: thin;
-  padding-block-end: var(--space-1);
+  padding-block: var(--space-1);
 }
 .lineage-strip__path > li {
+  position: relative;
   flex: none;
-  max-inline-size: 16rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  max-inline-size: 14rem;
+  padding: 0;
   scroll-snap-align: start;
 }
-.lineage-strip__path > li a {
+.lineage-strip__path > li + li {
+  margin-inline-start: 6rem;
+}
+/* Connector: a hairline with an arrowhead in the gap before each later step. */
+.lineage-strip__path > li + li::before {
+  content: "" / "";
+  position: absolute;
+  inset-inline-start: -5.25rem;
+  inset-block-end: 0.7em;
+  inline-size: 4.5rem;
+  margin: 0;
+  border-block-start: 1px solid var(--lineage);
+  transform: none;
+}
+.lineage-strip__path > li + li::after {
+  content: "" / "";
+  position: absolute;
+  inset-inline-start: -0.9rem;
+  inset-block-end: calc(0.7em - 4px);
+  border-block: 4px solid transparent;
+  border-inline-start: 6px solid var(--lineage);
+}
+.lineage-strip__verb {
+  position: absolute;
+  inset-inline-start: -5.5rem;
+  inset-block-end: calc(0.7em + 4px);
+  inline-size: 5rem;
+  color: var(--lineage);
+  font: var(--type-label);
+  font-weight: 500;
+  text-align: center;
+}
+.lineage-strip__path a {
   overflow-wrap: anywhere;
 }
+.lineage-strip__current .lineage-strip__kind {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--lineage);
+}
+.lineage-strip__current .lineage-strip__kind::before {
+  content: "" / "";
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  background: var(--lineage);
+  border-radius: 50%;
+}
+/* The phone toggle exists only at phone width. */
+.lineage-strip__toggle {
+  display: none;
+}
+
+/* Phones: one disclosure row; expanded, a vertical sequence read top to bottom. */
 @media (max-width: 40rem) {
+  .lineage-strip:has(.lineage-strip__toggle) > .lineage-strip__label {
+    display: none;
+  }
+  .lineage-strip__toggle {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 2px var(--space-2);
+    inline-size: 100%;
+    min-block-size: var(--control-height-touch, 2.75rem);
+    padding: var(--space-1) 0;
+    color: var(--text);
+    text-align: start;
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+  .lineage-strip__toggle::after {
+    content: "" / "";
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-block-end: 2px solid var(--lineage);
+    border-inline-end: 2px solid var(--lineage);
+    transform: rotate(45deg);
+  }
+  .lineage-strip[data-expanded] .lineage-strip__toggle::after {
+    transform: rotate(225deg);
+  }
+  .lineage-strip__toggle-label {
+    color: var(--lineage);
+    font: var(--type-eyebrow);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .lineage-strip__toggle-summary {
+    overflow: hidden;
+    color: var(--text);
+    font: var(--type-small);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .lineage-strip:not([data-expanded]):has(.lineage-strip__toggle)
+    > :is(.lineage-strip__path, .lineage-strip__full) {
+    display: none;
+  }
+  .lineage-strip__full {
+    order: 0;
+    margin-inline-start: 0;
+    min-block-size: var(--control-height-touch, 2.75rem);
+    display: inline-flex;
+    align-items: center;
+  }
   .lineage-strip__path {
     flex-direction: column;
     align-items: stretch;
+    gap: var(--space-4);
     overflow-x: visible;
-    gap: var(--space-5, 1.25rem);
-  }
-  .lineage-strip__path {
-    flex-basis: 100%;
+    padding-inline-start: var(--space-3);
+    border-inline-start: 1px solid var(--lineage);
   }
   .lineage-strip__path > li {
     max-inline-size: none;
   }
-  .lineage-strip__full {
-    margin-inline-start: 0;
-  }
   .lineage-strip__path > li + li {
     margin-inline-start: 0;
   }
-  .lineage-strip__path > li + li::before {
-    content: "↓" / "";
-    inset-inline-start: var(--space-3);
-    inset-block-start: calc(-1 * var(--space-5, 1.25rem));
-    transform: none;
+  .lineage-strip__path > li + li::before,
+  .lineage-strip__path > li + li::after {
+    display: none;
+  }
+  .lineage-strip__verb {
+    position: static;
+    inline-size: auto;
+    text-align: start;
   }
 }
