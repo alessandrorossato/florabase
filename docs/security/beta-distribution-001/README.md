@@ -19,6 +19,9 @@ so they stayed outside Git; re-running the same scan reproduces them.
 - `postgresql-18.6-rebuild/`: identity, descriptors, raw report and `summary.json` with advisories,
   gosu applicability and the data-directory compatibility check.
 
+Remediation evaluation for the remaining findings, including the recorded approved pin and a
+tested gosu-free prototype (0 / 0): [postgresql-gosu-remediation.md](postgresql-gosu-remediation.md).
+
 **Release blocker.** The fail-closed gate still blocks publication on the 26 gosu findings. gosu
 is not executed by this stack (the entrypoint calls it only as root; the stack runs PostgreSQL as
 70:70 with all capabilities dropped and no-new-privileges), but that is applicability evidence, not

@@ -368,8 +368,9 @@ has not yet been recorded on a real Dockhand installation for this release.
 | `status` reports an old backup or low disk | Check the scheduled `backup`, free space under the root, and `retention --apply` |
 
 Readiness is `GET /api/v1/ready` through the frontend; liveness is `/healthz`. With PostgreSQL
-stopped, readiness fails (an error, or no answer within the client timeout when the `db` name cannot
-be resolved) while `/healthz` stays live, and the backend healthcheck reports unhealthy.
+stopped or hung, readiness answers 503 within a few seconds (connection attempts are bounded to 3 s;
+name resolution adds the resolver's timeout) while `/healthz` stays live, and the backend
+healthcheck reports unhealthy.
 
 ## Uninstalling without losing data
 

@@ -7501,3 +7501,23 @@ Status remains implemented pending canonical verification.
 - Not run: independent QA, canonical `make feature-verify` (FULL), frontend/backend unit suites
   (no application code changed), registry publication, real-host or real Dockhand checks.
   Observation: readiness has no DB connect timeout. No push, PR, tag or release.
+
+### BETA-DISTRIBUTION-001 — PostgreSQL gosu evaluation and readiness bound, 6 November 2026
+
+- Operator approved the rebuilt `postgres:18.6-alpine@sha256:123b1799…5395` pin for development and
+  isolated verification only; full digest, provenance, compatibility and recovery evidence recorded in
+  [postgresql-gosu-remediation.md](security/beta-distribution-001/postgresql-gosu-remediation.md).
+- No official fix exists: docker-library still pins gosu 1.19 for every PostgreSQL 18 variant and gosu
+  1.20 is built on the same Go 1.24.6. A gosu-free derived prototype (upstream digest, `rm` gosu,
+  `USER 70:70`) builds reproducibly (`b242b556…` twice), scans 0 CRITICAL / 0 HIGH / 0 secrets, and passes
+  hardened 70:70 init, restart/recreation, dump, `pg_restore --list`, restore, old-pin data directory and
+  default-user checks; a root start exits 127 before `initdb` without changing existing data.
+  Recommended; integration into the protected publication workflow awaits operator approval.
+- `985437f`: readiness hung without an answer for 60 s on a paused database; an unpooled engine with
+  `connect_timeout=3` and `statement_timeout=2000` now answers 503 in 3.0 s (stopped database 503 in
+  about 5 s, healthy 200 in 0.1 s).
+- Checks: backend Ruff, format, strict mypy; backend unit suite 986 passed / 3 skipped (90.06%);
+  readiness integration 2 passed; `beta_release.py check` passed; local artifact-only image smoke
+  `LOCAL_BETA_CANDIDATE_PASSED` at `985437f` (docs edited during the run, image contexts unchanged).
+- Still BETA-BLOCKED. Not run: runtime smoke on `985437f`, independent QA, canonical FULL, protected
+  publication. No push, PR, tag, GHCR package or release.

@@ -77,19 +77,23 @@ with an explicit migration, plus failed/interrupted upgrades; 8 `backup`, `resto
 
 ## Security findings and blockers
 
-1. **Blocking: PostgreSQL gosu.** `postgres:18.6-alpine@sha256:123b1799…` still reports 1 CRITICAL /
+1. **Blocking: PostgreSQL gosu** (evaluated in
+   [postgresql-gosu-remediation.md](security/beta-distribution-001/postgresql-gosu-remediation.md):
+   no fixed official artifact exists; a tested gosu-free derived image scans 0/0 and awaits approval
+   to integrate). `postgres:18.6-alpine@sha256:123b1799…` still reports 1 CRITICAL /
    25 HIGH, all Go 1.24.6 stdlib in `/usr/local/bin/gosu`. The stack never executes gosu (non-root
    70:70, no capabilities), which is applicability evidence only; the fail-closed gate blocks
    publication. Operator choice needed: wait for an upstream rebuild with a fixed Go toolchain,
    publish a Florabase-built PostgreSQL image without gosu (a new supply-chain artifact), or accept
    narrowly scoped expiring VEX (also needs a reviewed VEX input path in the gate).
-2. **Approval needed: PostgreSQL pin change.** BETA-RUNTIME-001 requires operator approval for a
-   rebuilt digest. Compatibility and paired backup/restore rehearsals are recorded above; no
-   installation uses the old pin.
+2. **Approved (development and isolated verification only): PostgreSQL pin change** to
+   `sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395`; provenance,
+   compatibility and recovery evidence recorded in the remediation evaluation.
 3. **Frontend Alpine pins** go stale when Alpine supersedes them (the build then fails closed);
    remove them once the pinned base carries the fixes.
-4. Observation: `/api/v1/ready` has no database connect timeout; with PostgreSQL stopped and the
-   name unresolvable it may answer only after the client gives up. Failure is still controlled.
+4. Fixed (`985437f`): readiness hung without an answer for 60 s against a paused database; it now
+   uses an unpooled engine with `connect_timeout=3` and `statement_timeout=2000` and answers 503 in
+   3.0 s. Stopped database: 503 in about 5 s (resolver timeout), unchanged.
 5. Limitations: no owner password reset; HTTPS origin fixed at `init`; amd64 only (arm64 neither
    built nor tested); Dockhand workflow documented but not recorded on a real Dockhand, so no
    screenshots; real-host items in [beta-runtime-001.md](beta-runtime-001.md#outstanding-operator-evidence)
@@ -100,4 +104,4 @@ with an explicit migration, plus failed/interrupted upgrades; 8 `backup`, `resto
 Mandatory and open: blocker 1, approval 2, independent QA, canonical FULL, protected publication
 and a clean registry-pull smoke of the published pair, then real-host acceptance (BETA-ACCEPTANCE-001).
 Later: owner password reset/change, guided upgrade automation, arm64 images, configurable origin
-and map tiles, readiness connect timeout, PostgreSQL major-upgrade tooling.
+and map tiles, request-path database timeouts, PostgreSQL major-upgrade tooling.
