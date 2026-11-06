@@ -1,5 +1,11 @@
 import { dismissDialogControlLayer } from "./controlLayers";
-import { useEffect, useRef, type ReactNode, type RefObject } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  type ReactNode,
+  type RefObject,
+} from "react";
 
 function focusableControls(element: HTMLDialogElement | null) {
   return Array.from(
@@ -44,6 +50,30 @@ export function TaskDialog({
   useEffect(() => {
     if (returnFocusTo?.current) returnFocus.current = returnFocusTo.current;
   });
+
+  const removal = useRef({ modal, fallbackFocusTo });
+  useLayoutEffect(() => {
+    removal.current = { modal, fallbackFocusTo };
+  });
+  // When an asynchronous update (a save completing) removes a modal dialog that holds
+  // focus, return focus in that same commit: the passive cleanup below runs a task
+  // later and would leave focus on <body> in between. Unmount only, and only while
+  // focus is inside, so React's own post-commit focus restoration cannot undo it.
+  useLayoutEffect(
+    () => () => {
+      const element = dialog.current;
+      const { modal: wasModal, fallbackFocusTo: fallback } = removal.current;
+      if (!wasModal || !element?.contains(document.activeElement)) return;
+      const target = returnFocus.current;
+      (target?.isConnected && !element.contains(target)
+        ? target
+        : fallback?.current?.isConnected
+          ? fallback.current
+          : null
+      )?.focus();
+    },
+    [],
+  );
 
   useEffect(() => {
     const element = dialog.current;
