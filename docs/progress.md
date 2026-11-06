@@ -7448,4 +7448,3 @@ Status remains implemented pending canonical verification.
   consecutive full runs; 155 light and 155 dark captures with 0 errors, 0 below target
   and 0 state failures; backend diff empty.
 - F6 stays on the watch list. Canonical FULL not run; no push, PR or merge.
-

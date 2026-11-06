@@ -116,4 +116,3 @@ proposal is in the M6 section of the README.
 | 7 | Botanical and other original themes keep 40px controls at touch widths in a few places | Same as main (original geometry) | No |
 | 8 | Botanical identity keeps its hub layout (reference sheet, not a specimen sheet) | Deliberate | No |
 | 9 | Phone action dock, Today thumbnails, recent-record chips | Evaluated, not built (reasons in README) | No |
-
