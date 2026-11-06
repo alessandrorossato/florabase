@@ -2426,6 +2426,24 @@
       ],
       "priority": "P2",
       "status": "in_progress"
+    },
+    {
+      "id": "VERIFICATION-FAST-001",
+      "category": "infrastructure",
+      "description": "Run cheap deterministic verification stages first, make stage execution independent of the launching terminal, and report per-stage timing and outcomes",
+      "acceptance_criteria": [
+        "Feature graph and complete whitespace checks precede every workflow, Docker, build, migration and integration stage, with the same stage set and commands and an unchanged exact-tree receipt contract",
+        "The frozen-state check covers working tree, index and HEAD so early source-state checks remain valid for the whole run",
+        "Agent-workflow helper subprocesses and every gate stage use noninteractive stdin; PTY-based operator tests are unchanged",
+        "Stage order, per-stage elapsed time and passed/failed/interrupted/not-run outcomes are reported, and diagnostics never count as evidence",
+        "Regressions reproduce the Markdown EOF FULL failure, terminal versus noninteractive launches and index mutation, and fail against the previous scripts",
+        "Reusable stage evidence is documented as a separate proposal with its safety boundary and is not implemented"
+      ],
+      "dependencies": [
+        "CI-004"
+      ],
+      "priority": "P1",
+      "status": "implemented"
     }
   ]
 }

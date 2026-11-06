@@ -34,7 +34,7 @@ git show-ref --verify --quiet refs/remotes/origin/main || fail "origin/main is r
 git merge-base --is-ancestor origin/main HEAD ||
   fail "branch does not contain origin/main; rebase or merge deliberately before verification"
 base_sha="$(git merge-base origin/main HEAD)"
-initial_digest="$(python3 ./scripts/feature-tree-fingerprint.py digest)"
+initial_state="$(python3 ./scripts/feature-tree-fingerprint.py frozen-state)"
 
 execution="$(mktemp)"
 trap 'rm -f "${execution}"' EXIT
@@ -44,9 +44,10 @@ case "${1:-}" in
   --full) mode_args+=(--full) ;;
   *) fail "only --full is supported; focused checks cannot produce a delivery receipt" ;;
 esac
-run_stage "selected gate" python3 ./scripts/verification_gate.py --base "${base_sha}" "${mode_args[@]}" --execution "${execution}"
-[[ "$(python3 ./scripts/feature-tree-fingerprint.py digest)" == "${initial_digest}" ]] ||
-  fail "source tree changed during verification; freeze the tree and rerun make feature-verify"
+# The gate never reads stdin, so terminal, pipe and CI launches select identical behaviour.
+run_stage "selected gate" python3 ./scripts/verification_gate.py --base "${base_sha}" "${mode_args[@]}" --execution "${execution}" </dev/null
+[[ "$(python3 ./scripts/feature-tree-fingerprint.py frozen-state)" == "${initial_state}" ]] ||
+  fail "source tree changed during verification (working tree, index or HEAD); freeze them and rerun make feature-verify"
 run_stage "verification receipt" python3 ./scripts/feature-tree-fingerprint.py write --branch "${branch}" --base "${base_sha}" --execution "${execution}"
 
 printf '\nFEATURE_VERIFICATION_PASSED\n'

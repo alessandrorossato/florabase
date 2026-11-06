@@ -618,6 +618,20 @@ local/remote quality still enforces the existing whole-application coverage thre
 changes build frontend; backend-only changes build backend; generated frontend contract changes
 build both. The contexts are independent. Pure product changes skip workflow-specific suites.
 
+Stages run cheapest-first and independently of the launching terminal:
+1. Feature graph and the three whitespace checks.
+2. Offline workflow suites, then the Docker `workflow-check`.
+3. Global static checks, then unit suites (`make check` runs `api-check` before `test`).
+4. Production builds, then the migration cycle, then integration.
+
+Every stage gets `/dev/null` as stdin. The gate prints the stage order up front and a per-stage
+summary (passed, failed, interrupted or not run, with elapsed time) at the end or on failure. It
+keeps the latest run's timings in `<git-dir>/info/florabase-verification-last-run.json`, which is
+diagnostics only and never evidence. Because source-state checks run first, the closing
+frozen-state comparison covers the working tree, the index and HEAD. See
+[VERIFICATION-FAST-001](verification-fast-001-handoff.md); its stage-evidence reuse proposal is not
+implemented.
+
 Freeze source before the final gate. It invalidates old evidence at startup and rejects source edits
 while stages run. Version 2 receipts cover file content, modes and symlinks, exact base/branch, mode,
 impact-map version/digest, changed/affected scopes, escalation reasons, selected suites, completed
