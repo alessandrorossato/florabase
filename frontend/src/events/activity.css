@@ -304,6 +304,50 @@ body:has(.activity-page dialog[open]) {
   background: var(--primary-subtle);
   border-color: var(--primary);
 }
+/* Phones (QA F4): one scrolling row instead of three wrapped rows, so the first fact
+   stays near the top. Every chip remains in the row and in the tab order; a fade marks
+   each side that has more chips, and the thin scrollbar stays for pointer users. */
+@media (max-width: 48rem) {
+  .activity-page .history-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: var(--space-6);
+    scrollbar-width: thin;
+    /* Room for the 3px focus ring and its 3px offset, which overflow would clip. */
+    padding: 0.375rem;
+    margin-inline: -0.375rem;
+    --chip-fade: 2.5rem;
+  }
+  .activity-page .history-chips > button {
+    flex: none;
+    min-block-size: var(--control-height-touch);
+    white-space: nowrap;
+  }
+  .activity-page .history-chips[data-overflow-end] {
+    mask-image: linear-gradient(
+      to right,
+      #000 calc(100% - var(--chip-fade)),
+      transparent
+    );
+  }
+  .activity-page .history-chips[data-overflow-start] {
+    mask-image: linear-gradient(
+      to left,
+      #000 calc(100% - var(--chip-fade)),
+      transparent
+    );
+  }
+  .activity-page .history-chips[data-overflow-start][data-overflow-end] {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 var(--chip-fade),
+      #000 calc(100% - var(--chip-fade)),
+      transparent
+    );
+  }
+}
 .activity-page .history-basis {
   display: block;
   color: var(--text-muted);

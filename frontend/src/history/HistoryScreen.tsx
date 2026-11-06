@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { StatusBadge } from "../components/WorkspaceUI";
@@ -294,11 +294,59 @@ function HistoryCategoryChips({
   onChange: (next: Category[]) => void;
 }) {
   const values = Object.keys(categoryLabels) as Category[];
+  // Phones show the chips as one scrolling row (QA F4): fades mark the side with more
+  // chips, and a selected chip starts in view without moving the page.
+  const strip = useRef<HTMLDivElement>(null);
+  const [overflow, setOverflow] = useState({ start: false, end: false });
+  useEffect(() => {
+    const element = strip.current;
+    if (!element) return;
+    const measure = () => {
+      const end = element.scrollWidth - element.clientWidth;
+      const next = {
+        start: element.scrollLeft > 1,
+        end: end > 1 && element.scrollLeft < end - 1,
+      };
+      setOverflow((current) =>
+        current.start === next.start && current.end === next.end
+          ? current
+          : next,
+      );
+    };
+    const pressed = element.querySelector<HTMLElement>(
+      "button[aria-pressed='true']",
+    );
+    if (pressed && element.scrollWidth > element.clientWidth)
+      element.scrollLeft = Math.max(
+        0,
+        pressed.offsetLeft - element.offsetLeft - 16,
+      );
+    measure();
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? undefined
+        : new ResizeObserver(measure);
+    observer?.observe(element);
+    element.addEventListener("scroll", measure, { passive: true });
+    return () => {
+      observer?.disconnect();
+      element.removeEventListener("scroll", measure);
+    };
+  }, []);
   return (
     <div
+      ref={strip}
       className="history-chips"
       role="group"
       aria-label="Quick fact type filters"
+      data-overflow-start={overflow.start || undefined}
+      data-overflow-end={overflow.end || undefined}
+      onFocus={(event) => {
+        // Browsers leave a partly clipped chip under the fade; bring it fully in view.
+        const chip = event.target;
+        if (chip !== event.currentTarget)
+          chip.scrollIntoView({ block: "nearest", inline: "nearest" });
+      }}
     >
       <button
         type="button"

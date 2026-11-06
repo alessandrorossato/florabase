@@ -14,6 +14,7 @@ import * as api from "./api";
 import * as saved from "../saved-views/api";
 import { HistoryScreen } from "./HistoryScreen";
 import {
+  categoryLabels,
   historyHash,
   parseHistoryState,
   readHistoryState,
@@ -500,6 +501,42 @@ test("multiple primary records and fact types count dimensions and save determin
   );
   expect(readHistoryState().subject_kind).toEqual([]);
   expect(readHistoryState().year).toBe("2026");
+});
+
+test("phone chip strip marks each side that has more fact types to scroll to", async () => {
+  const width = (name: "scrollWidth" | "clientWidth", value: number) =>
+    Object.defineProperty(HTMLElement.prototype, name, {
+      configurable: true,
+      get(this: HTMLElement) {
+        return this.classList.contains("history-chips") ? value : 0;
+      },
+    });
+  width("scrollWidth", 600);
+  width("clientWidth", 300);
+  try {
+    mount();
+    await screen.findByText("Movement");
+    const chips = screen.getByRole("group", {
+      name: "Quick fact type filters",
+    });
+    expect(chips).toHaveAttribute("data-overflow-end", "true");
+    expect(chips).not.toHaveAttribute("data-overflow-start");
+    chips.scrollLeft = 150;
+    fireEvent.scroll(chips);
+    expect(chips).toHaveAttribute("data-overflow-start", "true");
+    expect(chips).toHaveAttribute("data-overflow-end", "true");
+    chips.scrollLeft = 300;
+    fireEvent.scroll(chips);
+    expect(chips).toHaveAttribute("data-overflow-start", "true");
+    expect(chips).not.toHaveAttribute("data-overflow-end");
+    // Every fact type stays in the row and in the tab order.
+    expect(within(chips).getAllByRole("button")).toHaveLength(
+      1 + Object.keys(categoryLabels).length,
+    );
+  } finally {
+    delete (HTMLElement.prototype as { scrollWidth?: number }).scrollWidth;
+    delete (HTMLElement.prototype as { clientWidth?: number }).clientWidth;
+  }
 });
 
 test("fact type chips and the Filters drawer share one category selection and URL", async () => {
