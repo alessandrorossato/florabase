@@ -1,10 +1,4 @@
-import {
-  cleanup,
-  render,
-  screen,
-  waitFor,
-  within,
-} from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 import { App } from "../App";
@@ -43,10 +37,10 @@ function pathOf(input: RequestInfo | URL) {
       ? input.toString()
       : input.url;
 }
-function settings(focusQr = false) {
+function theme() {
   return render(
     <AuthContext.Provider value={state}>
-      <SettingsScreen focusQr={focusQr} />
+      <SettingsScreen />
     </AuthContext.Provider>,
   );
 }
@@ -57,144 +51,8 @@ afterEach(() => {
   window.history.replaceState(null, "", "/");
 });
 
-test("read, save normalized QR destination with CSRF, remount persisted value and clear explicitly", async () => {
-  let saved = {
-    public_qr_base_url: null as string | null,
-    default_label_preset: "medium",
-  };
-  const fetch = vi
-    .spyOn(globalThis, "fetch")
-    .mockImplementation((_path, init) => {
-      if (init?.method === "PUT") {
-        const sent = JSON.parse(init.body as string) as typeof saved;
-        saved = {
-          ...sent,
-          public_qr_base_url:
-            sent.public_qr_base_url?.replace(/\/$/, "").toLowerCase() ?? null,
-        };
-      }
-      return Promise.resolve(json(saved));
-    });
-  const user = userEvent.setup();
-  const first = settings();
-  const input = await screen.findByRole("textbox", {
-    name: "Public / QR base URL",
-  });
-  expect(input).toHaveValue("");
-  await user.type(input, "https://FLORA.example/");
-  await user.click(screen.getByRole("button", { name: "Save settings" }));
-  expect(await screen.findByText("Application settings saved.")).toBeVisible();
-  expect(input).toHaveValue("https://flora.example");
-  expect(
-    new Headers(
-      fetch.mock.calls.find(([, init]) => init?.method === "PUT")?.[1]?.headers,
-    ).get("X-CSRF-Token"),
-  ).toBe("csrf");
-  first.unmount();
-  settings();
-  const again = await screen.findByRole("textbox", {
-    name: "Public / QR base URL",
-  });
-  expect(again).toHaveValue("https://flora.example");
-  await user.clear(again);
-  await user.click(screen.getByRole("button", { name: "Save settings" }));
-  await waitFor(() => {
-    expect(saved.public_qr_base_url).toBeNull();
-  });
-});
-
-test("one page contains General and Tools without tabs or a duplicate label preference", async () => {
-  let saved = {
-    public_qr_base_url: "https://flora.example",
-    default_label_preset: "medium",
-  };
-  const fetch = vi
-    .spyOn(globalThis, "fetch")
-    .mockImplementation((_path, init) => {
-      if (init?.method === "PUT")
-        saved = JSON.parse(init.body as string) as typeof saved;
-      return Promise.resolve(json(saved));
-    });
-  settings();
-  const user = userEvent.setup();
-  const input = await screen.findByRole("textbox", {
-    name: "Public / QR base URL",
-  });
-  expect(screen.getByRole("heading", { name: "General" })).toBeVisible();
-  expect(screen.getByRole("heading", { name: "Tools" })).toBeVisible();
-  expect(
-    screen.queryByRole("navigation", { name: "Settings sections" }),
-  ).not.toBeInTheDocument();
-  expect(screen.queryByText("Labels & printing")).not.toBeInTheDocument();
-  expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "Labels" })).toHaveAttribute(
-    "href",
-    "#/labels",
-  );
-  expect(screen.getByRole("link", { name: "Import / Export" })).toHaveAttribute(
-    "href",
-    "#/import-export",
-  );
-  // A default saved in Labels after this page loaded must survive a QR URL save.
-  saved.default_label_preset = "large";
-  await user.clear(input);
-  await user.type(input, "https://new.example");
-  await user.click(screen.getByRole("button", { name: "Save settings" }));
-  await screen.findByText("Application settings saved.");
-  const body = fetch.mock.calls.find(([, init]) => init?.method === "PUT")?.[1]
-    ?.body;
-  expect(JSON.parse(body as string)).toEqual({
-    public_qr_base_url: "https://new.example",
-    default_label_preset: "large",
-  });
-});
-
-test("invalid URL response and failed save retain edits; retry and auth failure are actionable", async () => {
-  const fetch = vi
-    .spyOn(globalThis, "fetch")
-    .mockImplementation((_path, init) =>
-      Promise.resolve(
-        json(
-          init?.method === "PUT"
-            ? {}
-            : { public_qr_base_url: null, default_label_preset: "medium" },
-          init?.method === "PUT" ? 422 : 200,
-        ),
-      ),
-    );
-  settings();
-  const user = userEvent.setup();
-  const input = await screen.findByRole("textbox", {
-    name: "Public / QR base URL",
-  });
-  await user.type(input, "https://flora.example/path");
-  await user.click(screen.getByRole("button", { name: "Save settings" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent(
-    "no credentials, path, query or fragment",
-  );
-  expect(input).toHaveValue("https://flora.example/path");
-  fetch.mockImplementation(() => Promise.resolve(json({}, 500)));
-  cleanup();
-  settings();
-  await screen.findByRole("alert");
-  fetch.mockImplementation(() =>
-    Promise.resolve(
-      json({ public_qr_base_url: null, default_label_preset: "medium" }),
-    ),
-  );
-  await user.click(screen.getByRole("button", { name: "Retry" }));
-  await screen.findByRole("textbox");
-  cleanup();
-  fetch.mockImplementation(() => Promise.resolve(json({}, 401)));
-  settings();
-  await waitFor(() => {
-    expect(expired).toHaveBeenCalled();
-  });
-});
-
-test("Settings deep links and Tools replace the primary Tools macro-category, preserving routes", async () => {
-  window.history.replaceState(null, "", "#/settings?tab=tools");
-  vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+function appFetch(baseUrl: string | null = null) {
+  return vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
     const path = pathOf(input);
     return Promise.resolve(
       json(
@@ -208,72 +66,84 @@ test("Settings deep links and Tools replace the primary Tools macro-category, pr
           : path.endsWith("/csrf")
             ? { csrf_token: "csrf" }
             : path.endsWith("application-settings")
-              ? { public_qr_base_url: null, default_label_preset: "medium" }
-              : { status: "ok" },
+              ? { public_qr_base_url: baseUrl, default_label_preset: "medium" }
+              : path.includes("/api/v1/")
+                ? []
+                : { status: "ok" },
       ),
     );
   });
-  render(<App />);
-  await screen.findByRole(
-    "heading",
-    { name: "Settings", level: 2 },
-    { timeout: 5000 },
-  );
-  const nav = screen.getByRole("navigation", { name: "Primary navigation" });
-  expect(
-    within(nav).queryByRole("region", { name: "Tools" }),
-  ).not.toBeInTheDocument();
-  // Workbench: the Settings workspace panel lists Settings and its Tools; the page
-  // keeps its own Tools links to the same routes.
-  expect(within(nav).getByRole("link", { name: "Labels" })).toHaveAttribute(
-    "href",
-    "#/labels",
-  );
-  const content = screen.getByRole("region", { name: "Workspace content" });
-  expect(within(content).getByRole("link", { name: "Labels" })).toHaveAttribute(
-    "href",
-    "#/labels",
-  );
-  expect(
-    within(content).getByRole("link", { name: "Import / Export" }),
-  ).toHaveAttribute("href", "#/import-export");
-  expect(within(nav).getByRole("link", { name: "Settings" })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
-  expect(
-    screen.queryByRole("navigation", { name: "Settings sections" }),
-  ).not.toBeInTheDocument();
-  expect(
-    await screen.findByRole("textbox", { name: "Public / QR base URL" }),
-  ).toBeVisible();
-  expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
-});
+}
 
-test("direct QR Settings navigation focuses the General field and keeps Tools available", async () => {
-  vi.spyOn(globalThis, "fetch").mockResolvedValue(
-    json({ public_qr_base_url: null, default_label_preset: "medium" }),
-  );
-  settings(true);
-  const field = await screen.findByRole("textbox", {
-    name: "Public / QR base URL",
-  });
-  await waitFor(() => {
-    expect(field).toHaveFocus();
-  });
-  expect(screen.getByRole("link", { name: "Labels" })).toBeVisible();
-});
-
-test("local Appearance remains usable when server-owned General settings cannot load", async () => {
-  const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(json({}, 500));
-  settings();
-  await screen.findByRole("alert");
-  const initialCalls = fetch.mock.calls.length;
+test("Theme holds only palette and appearance, needs no server settings and repeats no tools", async () => {
+  const fetch = vi.spyOn(globalThis, "fetch");
+  theme();
+  expect(screen.getByRole("heading", { name: "Theme" })).toBeVisible();
+  expect(
+    screen.queryByRole("textbox", { name: "Public / QR base URL" }),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: "General" })).toBeNull();
+  expect(screen.queryByRole("heading", { name: "Tools" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "Labels" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "Import / Export" })).toBeNull();
   const user = userEvent.setup();
   await user.click(screen.getByRole("radio", { name: "Herbarium" }));
   await user.click(screen.getByRole("radio", { name: "Dark" }));
   expect(document.documentElement).toHaveAttribute("data-palette", "herbarium");
   expect(document.documentElement).toHaveAttribute("data-appearance", "dark");
-  expect(fetch).toHaveBeenCalledTimes(initialCalls);
   expect(screen.getByRole("radio", { name: "Dark" })).toHaveFocus();
+  expect(fetch).not.toHaveBeenCalled();
+});
+
+test("#/settings stays valid as Theme; the Settings workspace lists Theme, Labels and Import / Export once", async () => {
+  window.history.replaceState(null, "", "#/settings");
+  appFetch();
+  render(<App />);
+  await screen.findByRole(
+    "heading",
+    { name: "Theme", level: 2 },
+    { timeout: 5000 },
+  );
+  expect(window.location.hash).toBe("#/settings");
+  const nav = screen.getByRole("navigation", { name: "Primary navigation" });
+  expect(within(nav).getByRole("link", { name: "Theme" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  expect(within(nav).getAllByRole("link", { name: "Labels" })).toHaveLength(1);
+  expect(within(nav).getByRole("link", { name: "Labels" })).toHaveAttribute(
+    "href",
+    "#/labels",
+  );
+  expect(
+    within(nav).getAllByRole("link", { name: "Import / Export" }),
+  ).toHaveLength(1);
+  expect(within(nav).queryByRole("link", { name: "Settings" })).toBeNull();
+  const content = screen.getByRole("region", { name: "Workspace content" });
+  expect(within(content).queryByRole("link", { name: "Labels" })).toBeNull();
+  expect(
+    within(content).queryByRole("textbox", { name: "Public / QR base URL" }),
+  ).toBeNull();
+});
+
+test("the former Settings QR address opens the QR destination in Labels and replaces the address", async () => {
+  window.history.replaceState(null, "", "#/settings?tab=general");
+  appFetch("https://flora.example");
+  render(<App />);
+  const field = await screen.findByRole(
+    "textbox",
+    { name: "Public / QR base URL" },
+    { timeout: 5000 },
+  );
+  expect(field).toHaveValue("https://flora.example");
+  expect(screen.getByRole("dialog", { name: "QR destination" })).toBeVisible();
+  expect(window.location.hash).toBe("#/labels");
+  expect(
+    screen.getByRole("heading", { name: "Labels", level: 2 }),
+  ).toBeVisible();
+  const nav = screen.getByRole("navigation", { name: "Primary navigation" });
+  expect(within(nav).getByRole("link", { name: "Labels" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
 });

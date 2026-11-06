@@ -180,6 +180,8 @@ interface Route {
   placeId?: string;
   labelKind?: string;
   labelRecord?: string;
+  /** The former Settings QR address (#/settings?tab=general) opens Labels' QR dialog. */
+  labelQr?: boolean;
 }
 
 function currentRoute(): Route {
@@ -232,6 +234,12 @@ function currentRoute(): Route {
       tab,
       ...context,
     };
+  if (first === "settings" && tab === "general") {
+    // Compatible redirect: the QR address moved to Labels (M8 final). Replace the address
+    // before anything renders so navigation and history show Labels.
+    window.history.replaceState(null, "", "#/labels");
+    return { section: "labels", labelQr: true, ...context };
+  }
   const valid: Section[] = [
     "dashboard",
     "seeds",
@@ -506,12 +514,13 @@ function ApplicationShell() {
               ) : route.section === "import-export" ? (
                 <ImportExportScreen />
               ) : route.section === "settings" ? (
-                <SettingsScreen focusQr={route.tab === "general"} />
+                <SettingsScreen />
               ) : route.section === "labels" ? (
                 <LabelsScreen
                   key={`${route.labelKind ?? ""}:${route.labelRecord ?? ""}`}
                   initialKind={route.labelKind}
                   initialId={route.labelRecord}
+                  openQrDestination={route.labelQr}
                 />
               ) : route.section === "locations" ? (
                 <LocationScreen

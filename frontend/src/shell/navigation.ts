@@ -175,9 +175,9 @@ export const workspaces: Workspace[] = [
     id: "settings",
     label: "Settings",
     icon: "gear",
-    summary: "Appearance, the public QR address and collection tools.",
+    summary: "Theme, printed labels and data transfer.",
     destinations: [
-      destination("settings", "Settings"),
+      destination("settings", "Theme"),
       destination("labels", "Labels"),
       destination("import-export", "Import / Export"),
     ],

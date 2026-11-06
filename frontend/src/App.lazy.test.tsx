@@ -72,8 +72,8 @@ test("restoration defers workspaces and navigation loads only the selected works
   );
   expect(loaded).toEqual(["dashboard"]);
   const user = userEvent.setup();
-  await openSection(user, "Settings");
-  await screen.findByRole("heading", { name: "Settings" }, { timeout: 5000 });
+  await openSection(user, "Theme");
+  await screen.findByRole("heading", { name: "Theme" }, { timeout: 5000 });
   await openSection(user, "Labels");
   await screen.findByRole(
     "heading",

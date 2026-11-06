@@ -94,12 +94,7 @@ test("navigates, validates row issues, retries and explicitly confirms the revie
   });
 
   render(<App />);
-  await openSection(user, "Settings");
-  await user.click(
-    await within(
-      screen.getByRole("region", { name: "Workspace content" }),
-    ).findByRole("link", { name: "Import / Export" }, { timeout: 5000 }),
-  );
+  await openSection(user, "Import / Export");
   expect(
     await screen.findByRole(
       "heading",
@@ -219,12 +214,7 @@ test("shows validation progress and a recoverable file error", async () => {
   });
 
   render(<App />);
-  await openSection(user, "Settings");
-  await user.click(
-    await within(
-      screen.getByRole("region", { name: "Workspace content" }),
-    ).findByRole("link", { name: "Import / Export" }, { timeout: 5000 }),
-  );
+  await openSection(user, "Import / Export");
   await user.upload(
     await screen.findByLabelText(/CSV file/),
     new File(["invalid"], "bad.csv", { type: "text/csv" }),
@@ -344,12 +334,7 @@ test("guides a human Supplier import and requires a reviewed update choice", asy
   });
 
   render(<App />);
-  await openSection(user, "Settings");
-  await user.click(
-    await within(
-      screen.getByRole("region", { name: "Workspace content" }),
-    ).findByRole("link", { name: "Import / Export" }, { timeout: 5000 }),
-  );
+  await openSection(user, "Import / Export");
   await user.selectOptions(
     await screen.findByLabelText("Record type"),
     "suppliers",

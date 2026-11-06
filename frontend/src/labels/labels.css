@@ -492,3 +492,52 @@
 .label-page--small .label-qr {
   align-self: start;
 }
+
+/* M8 final: QR destination is configured here (it moved from Settings). A section, not a
+   notice: what the address does, its value or the unset warning, and the existing dialog. */
+.label-qr-destination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+  font: var(--type-body);
+}
+.label-qr-destination--unset {
+  background: var(--warning-subtle);
+  border-color: var(--warning);
+}
+.label-qr-destination__text {
+  flex: 1 1 28rem;
+  min-width: 0;
+}
+.label-qr-destination h3 {
+  margin: 0;
+  font: var(--type-h3);
+}
+.label-qr-destination__help {
+  margin: var(--space-1) 0 0;
+  max-width: 44rem;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.label-qr-destination__value {
+  margin: var(--space-3) 0 0;
+  font: 400 0.875rem/1.4 var(--font-data);
+  overflow-wrap: anywhere;
+}
+.label-qr-destination__warning {
+  margin: var(--space-3) 0 0;
+  color: var(--warning-text);
+  font: var(--type-strong);
+}
+.label-qr-destination > button {
+  min-height: var(--control-height);
+  padding: 0 var(--space-4);
+  font: var(--type-strong);
+}
