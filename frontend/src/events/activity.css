@@ -285,7 +285,8 @@ body:has(.activity-page dialog[open]) {
   margin-block-end: var(--space-3);
 }
 .activity-page .history-chips > button {
-  min-block-size: 2.25rem;
+  /* Same target as every control: 40px with a pointer, 44px for touch (M8 probe). */
+  min-block-size: var(--control-height);
   padding: 0 var(--space-3);
   color: var(--text);
   background: var(--surface);
