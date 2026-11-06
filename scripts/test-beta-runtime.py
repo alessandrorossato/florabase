@@ -895,16 +895,38 @@ class Disclosure(unittest.TestCase):
         self.assertEqual(disclosure_findings(ROOT, disclosure_base(ROOT)), [])
 
     def test_scope_is_the_whole_feature_diff(self) -> None:
-        paths = {path for _, path, _, _ in disclosure_lines(ROOT, disclosure_base(ROOT))}
-        for path in (
-            ".gitignore",
-            "Makefile",
-            "docs/progress.md",
-            "docs/features.json",
-            "deploy/beta/florabasectl.py",
-            "scripts/test-beta-runtime.py",
-        ):
-            self.assertIn(path, paths)
+        """Every change since the fork point, with its provenance; nothing from before it."""
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = scratch_repository(Path(temporary))
+            (repo / "first.md").write_text("first commit\n")
+            git_in(repo, "add", "first.md")
+            git_in(repo, "commit", "-q", "-m", "first feature commit")
+            (repo / "nested").mkdir()
+            (repo / "nested" / "second.md").write_text("second commit\n")
+            git_in(repo, "add", "nested/second.md")
+            git_in(repo, "commit", "-q", "-m", "second feature commit")
+            # main moves on after the fork point; comparing with its tip instead of the
+            # fork point would report the file it deletes as a feature addition
+            git_in(repo, "checkout", "-q", "main")
+            git_in(repo, "rm", "-q", "README.md")
+            git_in(repo, "commit", "-q", "-m", "main after fork")
+            git_in(repo, "checkout", "-q", "feature")
+            (repo / "staged.md").write_text("staged\n")
+            git_in(repo, "add", "staged.md")
+            with (repo / "first.md").open("a") as tracked:
+                tracked.write("unstaged\n")
+            (repo / "untracked.md").write_text("untracked\n")
+            lines = disclosure_lines(repo, disclosure_base(repo))
+        self.assertEqual(
+            sorted(lines),
+            [
+                ("committed", "first.md", 1, "first commit"),
+                ("committed", "nested/second.md", 1, "second commit"),
+                ("staged", "staged.md", 1, "staged"),
+                ("unstaged", "first.md", 2, "unstaged"),
+                ("untracked", "untracked.md", 1, "untracked"),
+            ],
+        )
 
     def test_patterns_detect_synthetic_samples_and_not_their_source(self) -> None:
         for label, sample in SYNTHETIC.items():
