@@ -273,3 +273,153 @@ body:has(.activity-page dialog[open]) {
 .event-timeline .event-item--period:first-child .event-period {
   margin-block-start: 0;
 }
+
+/* M8 final: History as a collection audit trail. A dense, ruled table at desktop: each
+   fact is one row of When · Fact type · What happened · Record · Related · State. The
+   row's existing elements are placed into columns (display: contents), so the markup,
+   headings and links are unchanged. Phones fall back to two-line rows without overflow. */
+.activity-page .history-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-end: var(--space-3);
+}
+.activity-page .history-chips > button {
+  min-block-size: 2.25rem;
+  padding: 0 var(--space-3);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  font: var(--type-small);
+  font-weight: 500;
+  cursor: pointer;
+}
+.activity-page .history-chips > button:hover {
+  background: var(--surface-hover);
+}
+.activity-page .history-chips > button[aria-pressed="true"] {
+  color: var(--primary);
+  background: var(--primary-subtle);
+  border-color: var(--primary);
+}
+.activity-page .history-basis {
+  display: block;
+  color: var(--text-muted);
+  font: var(--type-label);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+.activity-page .history-columns {
+  display: none;
+}
+@media (min-width: 64.01rem) {
+  .activity-page .history-list {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+  }
+  .activity-page .history-columns,
+  .activity-page .history-row {
+    display: grid;
+    grid-template-columns:
+      9.5rem 9.5rem minmax(0, 1.4fr) minmax(0, 1.1fr) minmax(0, 1.1fr)
+      5.5rem;
+    column-gap: var(--space-4);
+    align-items: start;
+  }
+  .activity-page .history-columns {
+    padding: var(--space-2) var(--space-2);
+    color: var(--text-muted);
+    border-block-end: 1px solid var(--text);
+    font: var(--type-label);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .activity-page .history-list > li:first-child .history-row,
+  .activity-page .history-row {
+    padding: var(--space-2);
+    border: 0;
+    border-block-end: 1px solid var(--border);
+    border-radius: 0;
+    background: transparent;
+    font: var(--type-small);
+  }
+  .activity-page .history-row:hover {
+    background: var(--surface-hover);
+  }
+  .activity-page .history-content,
+  .activity-page .history-row .activity-row-heading {
+    display: contents;
+  }
+  .activity-page .history-content::before {
+    display: none;
+  }
+  .activity-page .history-date {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    padding: 0;
+    font-family: var(--font-data);
+    font-size: 0.8125rem;
+  }
+  .activity-page .history-row .activity-row-heading > .ui-badge:first-child {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: start;
+    padding: 0;
+    color: var(--text-muted);
+    background: none;
+    border: 0;
+    font: var(--type-small);
+    font-weight: 500;
+  }
+  .activity-page .history-row .activity-row-heading > h3 {
+    grid-column: 3;
+    grid-row: 1;
+    margin: 0;
+    font: var(--type-strong);
+    font-size: 0.875rem;
+  }
+  .activity-page
+    .history-row
+    .activity-row-heading
+    > .ui-badge
+    + h3
+    + .ui-badge {
+    grid-column: 6;
+    grid-row: 1;
+    justify-self: start;
+  }
+  .activity-page .history-content > p {
+    grid-column: 3;
+    grid-row: 2;
+    margin: 0;
+    color: var(--text-muted);
+  }
+  .activity-page .history-primary {
+    grid-column: 4;
+    grid-row: 1;
+    overflow-wrap: anywhere;
+  }
+  .activity-page .history-subject {
+    grid-column: 4;
+    grid-row: 2;
+    margin: 0;
+  }
+  .activity-page .history-related {
+    grid-column: 5;
+    grid-row: 1 / span 3;
+    display: grid;
+    gap: 2px;
+    margin: 0;
+  }
+}
+@media (min-width: 64.01rem) {
+  .activity-page .history-row .history-subject {
+    display: block;
+    margin: 2px 0 0;
+    padding: 0;
+    line-height: 1.3;
+  }
+}

@@ -501,3 +501,49 @@ test("multiple primary records and fact types count dimensions and save determin
   expect(readHistoryState().subject_kind).toEqual([]);
   expect(readHistoryState().year).toBe("2026");
 });
+
+test("fact type chips and the Filters drawer share one category selection and URL", async () => {
+  vi.mocked(api.getHistory).mockImplementation((_filters, offset) =>
+    Promise.resolve(response([entry()], 1, offset)),
+  );
+  const user = userEvent.setup();
+  mount();
+  await screen.findByText("Movement");
+  const chips = screen.getByRole("group", {
+    name: "Quick fact type filters",
+  });
+  expect(
+    within(chips).getByRole("button", { name: "All facts" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  const harvests = within(chips).getByRole("button", { name: "Harvests" });
+  harvests.focus();
+  await user.keyboard("{Enter}");
+  expect(harvests).toHaveAttribute("aria-pressed", "true");
+  expect(window.location.hash).toBe("#/history?category=harvest");
+  await waitFor(() => {
+    expect(api.getHistory).toHaveBeenLastCalledWith(
+      expect.objectContaining({ category: ["harvest"] }),
+      0,
+      expect.any(AbortSignal),
+    );
+  });
+
+  // The drawer shows the chip's choice, and a drawer change shows on the chips.
+  await user.click(screen.getByRole("button", { name: "Filters (1)" }));
+  const drawer = screen.getByRole("dialog", { name: "History filters" });
+  expect(
+    within(drawer).getByRole("checkbox", { name: "Harvests" }),
+  ).toBeChecked();
+  await user.click(within(drawer).getByRole("checkbox", { name: "Journal" }));
+  expect(window.location.hash).toBe(
+    "#/history?category=event&category=harvest",
+  );
+  await user.keyboard("{Escape}");
+  expect(
+    within(chips).getByRole("button", { name: "Journal" }),
+  ).toHaveAttribute("aria-pressed", "true");
+
+  await user.click(within(chips).getByRole("button", { name: "All facts" }));
+  expect(window.location.hash).toBe("#/history");
+  expect(harvests).toHaveAttribute("aria-pressed", "false");
+});

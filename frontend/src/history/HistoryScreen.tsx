@@ -4,7 +4,7 @@ import { useAuth } from "../auth/context";
 import { StatusBadge } from "../components/WorkspaceUI";
 import { ActivityPage } from "../components/ActivityPage";
 import { ActivityChoices } from "../events/ActivityFilters";
-import { selectionLabel } from "../events/filterSelection";
+import { selectionLabel, toggleSelection } from "../events/filterSelection";
 import { ActivityPageHeader } from "../events/ActivityPageHeader";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
@@ -22,6 +22,7 @@ import {
   readHistoryState,
   saveHistoryState,
   subjectLabels,
+  type Category,
   type HistoryState,
   type SubjectKind,
 } from "./state";
@@ -204,6 +205,12 @@ export function HistoryScreen() {
       }
       chronology={
         <>
+          <HistoryCategoryChips
+            selected={filters.category}
+            onChange={(category) => {
+              update({ ...filters, category });
+            }}
+          />
           {loading && <p role="status">Loading History…</p>}
           {error && (
             <div className="notice notice--error" role="alert">
@@ -229,6 +236,14 @@ export function HistoryScreen() {
                 </p>
               ) : (
                 <ol className="history-list">
+                  <li className="history-columns" aria-hidden="true">
+                    <span>When</span>
+                    <span>Fact type</span>
+                    <span>What happened</span>
+                    <span>Record</span>
+                    <span>Related</span>
+                    <span>State</span>
+                  </li>
                   {data.items.map((entry) => (
                     <HistoryRow key={entry.key} entry={entry} />
                   ))}
@@ -267,13 +282,68 @@ export function HistoryScreen() {
     />
   );
 }
+/**
+ * One-tap fact types (M8 final, D1). They read and write the same category selection as
+ * the Filters drawer, through the same URL update, so the two can never disagree.
+ */
+function HistoryCategoryChips({
+  selected,
+  onChange,
+}: {
+  selected: readonly Category[];
+  onChange: (next: Category[]) => void;
+}) {
+  const values = Object.keys(categoryLabels) as Category[];
+  return (
+    <div
+      className="history-chips"
+      role="group"
+      aria-label="Quick fact type filters"
+    >
+      <button
+        type="button"
+        aria-pressed={selected.length === 0}
+        onClick={() => {
+          onChange([]);
+        }}
+      >
+        All facts
+      </button>
+      {values.map((value) => (
+        <button
+          key={value}
+          type="button"
+          aria-pressed={selected.includes(value)}
+          onClick={() => {
+            onChange(toggleSelection(values, selected, value));
+          }}
+        >
+          {categoryLabels[value]}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function HistoryRow({ entry }: { entry: HistoryEntry }) {
   const origin = historyOrigin(entry);
+  // Recorded dates already say so ("Recorded …", "Completion recorded …"); occurred dates
+  // gain their basis and recorded precision, never a more precise one.
+  const occurred =
+    entry.date_basis === "occurred" &&
+    !(entry.source_kind === "scheduled_activity" && entry.occurred_at !== null)
+      ? entry.occurred_on?.precision
+      : undefined;
   return (
     <li>
       <article className="history-row">
         <div className="history-date">
           <time>{historyDateLabel(entry)}</time>
+          {/* Occurred: when it happened, at its recorded precision. Recorded: when
+              Florabase stored it, because no occurrence date was given. */}
+          {occurred && (
+            <span className="history-basis">{`occurred · ${occurred}`}</span>
+          )}
         </div>
         <div className="history-content">
           <div className="activity-row-heading">
