@@ -7448,3 +7448,31 @@ Status remains implemented pending canonical verification.
   consecutive full runs; 155 light and 155 dark captures with 0 errors, 0 below target
   and 0 state failures; backend diff empty.
 - F6 stays on the watch list. Canonical FULL not run; no push, PR or merge.
+
+## 2026-11-06 — VERIFICATION-FAST-001 cheap-first canonical gate (Phase 1)
+
+- Root causes:
+  - Whitespace checks ran after every expensive stage, so a FULL that passed all Docker suites
+    failed on two Markdown EOF blank lines and had to repeat everything.
+  - `test-agent-workflow.py` `helper()` inherited the runner's stdin. Under a terminal,
+    `TAKEOVER=` refusals became operator takeovers. This was reproduced with a PTY: 2 failures on
+    `fec0398`, passing with `/dev/null`.
+- The gate now runs graph, then the three whitespace checks, then offline workflow suites,
+  workflow-check, quality, builds, the migration cycle and integration. The stage set and commands
+  are unchanged.
+- Every stage gets `/dev/null` stdin. The gate prints the stage order, a per-stage summary and a
+  diagnostics-only last-run journal. The frozen-state check now covers the working tree, index and
+  HEAD.
+- `make check` runs `api-check` before `test`.
+- Measured: a real `make verify-full` with a bad untracked Markdown EOF fails in 10.5 s wall time
+  (stages 0.12 s, no Docker resources); before, it would have failed only after the whole FULL.
+- Offline suites under a PTY stdin all pass (138 s), the same as the base under `/dev/null`.
+- Checks:
+  - `test-verification-impact`: 28 passed.
+  - `test-feature-workflow`: 49 passed.
+  - All eight offline workflow suites pass under a PTY stdin.
+  - The workflow-check Ruff, format and strict mypy lines pass.
+  - The new tests fail against the base scripts.
+- Phase 2 reusable stage evidence is a proposal only. It is documented with its enforced-boundary
+  safety analysis in [the handoff](verification-fast-001-handoff.md) and recommended as a separate
+  feature. Independent infrastructure QA is pending.

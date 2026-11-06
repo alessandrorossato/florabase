@@ -128,10 +128,13 @@ class AgentWorkflowTests(unittest.TestCase):
     def helper(
         self, cwd: Path, command: str, *args: str, **values: str
     ) -> subprocess.CompletedProcess[str]:
+        # Never inherit the runner's stdin: a gate launched from a terminal would otherwise turn
+        # every agent call into an operator call. Only terminal() supplies a real PTY.
         return subprocess.run(
             [sys.executable, str(HELPER), command, *args],
             cwd=cwd,
             env=self.env(**values),
+            stdin=subprocess.DEVNULL,
             text=True,
             capture_output=True,
         )

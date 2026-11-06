@@ -9,6 +9,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -294,6 +295,114 @@ class SelectionTests(unittest.TestCase):
                     self.assertEqual(bool(helpers), plan["mode"] == "full")
         with self.assertRaises(ValueError):
             CI.ci_checks_for(self.plan("docs/example.md"), "unknown")
+
+    def test_cheap_source_checks_precede_every_docker_stage_without_losing_coverage(self) -> None:
+        # Before VERIFICATION-FAST-001 whitespace ran last; a trailing Markdown blank line failed
+        # a FULL only after every Docker suite. The stage *set* must be exactly preserved.
+        full = self.plan("unknown.conf")
+        order = [c["id"] for c in checks_for(full)]
+        self.assertEqual(
+            order,
+            [
+                "feature-graph",
+                "whitespace",
+                "staged-whitespace",
+                "untracked-whitespace",
+                "test-workflow-helpers",
+                "test-feature-workflow",
+                "test-agent-workflow",
+                "test-preview-workflow",
+                "test-environment-workflow",
+                "test-uat-preview",
+                "test-verification-impact",
+                "test-workflow-resources",
+                "workflow-check",
+                "quality",
+                "production-builds",
+                "migration-cycle",
+                "integration",
+            ],
+        )
+        for paths in (
+            ("backend/src/florabase/schedule/service.py",),
+            ("frontend/src/taxonomy/TaxonomyScreen.tsx",),
+            ("backend/alembic/versions/new.py",),
+        ):
+            with self.subTest(paths=paths):
+                ids = [c["id"] for c in checks_for(self.plan(*paths))]
+                self.assertEqual(
+                    ids[:4],
+                    ["feature-graph", "whitespace", "staged-whitespace", "untracked-whitespace"],
+                )
+                self.assertEqual(len(ids), len(set(ids)))
+        affected = checks_for(self.plan("backend/src/florabase/schedule/service.py"))
+        ids = [c["id"] for c in affected]
+        for cheap, costly in (("api-check", "backend"), ("backend", "production-builds")):
+            self.assertLess(ids.index(cheap), ids.index(costly))
+        self.assertEqual(ids[-1], "integration")
+
+    def test_make_check_runs_static_and_api_drift_before_unit_suites(self) -> None:
+        line = next(
+            line
+            for line in (ROOT / "Makefile").read_text().splitlines()
+            if line.startswith("check:")
+        )
+        self.assertEqual(
+            line.split("##")[0].split(":", 1)[1].split(),
+            ["format-check", "lint", "typecheck", "api-check", "test"],
+        )
+
+    def test_stages_get_noninteractive_stdin_even_from_a_terminal(self) -> None:
+        import pty
+
+        probe = "import sys\nsys.exit(3 if sys.stdin.isatty() or sys.stdin.read(1) else 0)\n"
+        program = (
+            f"import sys; sys.path.insert(0, {str(ROOT / 'scripts')!r})\n"
+            "from verification_gate import run_checks\n"
+            "plan = {'mode': 'full', 'affected_scopes': [], 'base': 'x'}\n"
+            f"run_checks(plan, [{{'id': 'probe', 'command': [sys.executable, '-c', {probe!r}]}}])\n"
+            "print('PROBE_PASSED')\n"
+        )
+        parent, child = pty.openpty()
+        self.addCleanup(os.close, parent)
+        self.addCleanup(os.close, child)
+        for stdin in (child, subprocess.DEVNULL):
+            with self.subTest(terminal=stdin == child):
+                result = subprocess.run(
+                    [sys.executable, "-c", program], stdin=stdin, text=True, capture_output=True
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("PROBE_PASSED", result.stdout)
+
+    def test_failure_summary_and_journal_name_failed_and_unrun_stages(self) -> None:
+        output = io.StringIO()
+        with tempfile.TemporaryDirectory() as directory:
+            journal = Path(directory) / "last-run.json"
+            with (
+                redirect_stdout(output),
+                redirect_stderr(output),
+                self.assertRaises(SystemExit),
+            ):
+                run_checks(
+                    self.plan("docs/example.md"),
+                    [
+                        {"id": "first", "command": ["true"]},
+                        {"id": "failed-case", "command": ["false"]},
+                        {"id": "expensive", "command": ["true"]},
+                    ],
+                    journal,
+                )
+            record = json.loads(journal.read_text())
+            self.assertEqual(
+                [(s["id"], s["status"]) for s in record["stages"]],
+                [("first", "passed"), ("failed-case", "failed")],
+            )
+            self.assertIn("never verification evidence", record["purpose"])
+            self.assertEqual(list(Path(directory).iterdir()), [journal])
+        text = output.getvalue()
+        self.assertIn("Stage summary", text)
+        self.assertRegex(text, r"expensive\s+not run")
+        self.assertRegex(text, r"failed-case\s+failed")
 
     def test_failure_keeps_output_exit_status_and_prior_stages(self) -> None:
         output = io.StringIO()

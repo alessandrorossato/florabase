@@ -92,6 +92,8 @@ class VerifyHelperTests(unittest.TestCase):
             "#!/usr/bin/env bash\nset -eu\nprintf '%s\\n' \"$*\" >>\"${VERIFY_LOG}\"\n"
             "if [[ \"${VERIFY_FAIL_STAGE:-}\" == \"$1\" ]]; then exit 7; fi\n"
             "if [[ \"${VERIFY_MUTATE_STAGE:-}\" == \"$1\" ]]; then echo changed > during-verify.txt; fi\n"
+            "if [[ \"${VERIFY_STAGE_INDEX:-}\" == \"$1\" ]]; then git add pending.txt; fi\n"
+            "if [[ -t 0 ]]; then printf 'interactive-stdin %s\\n' \"$1\" >>\"${VERIFY_LOG}\"; fi\n"
         )
         (self.bin / "docker").write_text(
             "#!/usr/bin/env bash\nset -eu\nprintf '%s\\n' \"$*\" >>\"${VERIFY_LOG}\"\n"
@@ -115,7 +117,9 @@ class VerifyHelperTests(unittest.TestCase):
     def shell(*command: str) -> None:
         subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    def verify(self, *, full: bool = False, **environment: str) -> subprocess.CompletedProcess[str]:
+    def verify(
+        self, *, full: bool = False, stdin: int | None = subprocess.DEVNULL, **environment: str
+    ) -> subprocess.CompletedProcess[str]:
         env = {
             **os.environ,
             "PATH": f"{self.bin}:{os.environ['PATH']}",
@@ -130,6 +134,7 @@ class VerifyHelperTests(unittest.TestCase):
             [str(self.work / "scripts/feature-verify.sh"), *(["--full"] if full else [])],
             cwd=self.work,
             env=env,
+            stdin=stdin,
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -263,6 +268,59 @@ class VerifyHelperTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("source tree changed during verification", result.stderr)
         self.assertFalse((self.work / ".git/info/florabase-feature-verification.json").exists())
+
+    def test_full_markdown_eof_blank_line_fails_before_any_expensive_stage(self) -> None:
+        # Reproduces the Florabase Next FULL that passed every Docker stage, then failed on two
+        # trailing Markdown blank lines and had to repeat everything after the one-line fix.
+        self.establish_helper_baseline()
+        (self.work / "docs/record.md").write_text("evidence\n\n")
+        self.shell("git", "-C", str(self.work), "add", "docs/record.md")
+        self.shell("git", "-C", str(self.work), "commit", "-m", "record")
+        (self.work / "docs/untracked.md").write_text("draft\n\n")
+        failed = self.verify(full=True)
+        self.assertNotEqual(failed.returncode, 0)
+        self.assertIn("stage failed: whitespace", failed.stderr)
+        self.assertIn("FEATURE_VERIFICATION_FAILED", failed.stderr)
+        for stage in ("test-agent-workflow", "workflow-check", "quality", "integration"):
+            self.assertRegex(failed.stderr, rf"{stage}\s+not run")
+        self.assertFalse(self.log.exists(), "no make/Docker stage may run before whitespace")
+        self.assertFalse((self.work / ".git/info/florabase-feature-verification.json").exists())
+
+        (self.work / "docs/record.md").write_text("evidence\n")
+        self.shell("git", "-C", str(self.work), "commit", "-am", "fix record")
+        untracked = self.verify(full=True)
+        self.assertIn("stage failed: untracked-whitespace", untracked.stderr)
+        self.assertFalse(self.log.exists())
+
+        (self.work / "docs/untracked.md").write_text("draft\n")
+        fixed = self.verify(full=True)
+        self.assertEqual(fixed.returncode, 0, fixed.stderr)
+        self.assertEqual(self.receipt()["verification"]["mode"], "full")
+        self.assertIn("check", self.log.read_text().splitlines())
+
+    def test_index_change_during_verification_cannot_receive_a_receipt(self) -> None:
+        # Staged whitespace is checked early, so the index must stay frozen like the tree.
+        (self.work / "pending.txt").write_text("clean\n")
+        result = self.verify(VERIFY_STAGE_INDEX="check")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("source tree changed during verification", result.stderr)
+        self.assertFalse((self.work / ".git/info/florabase-feature-verification.json").exists())
+
+    def test_terminal_launch_gives_stages_the_same_noninteractive_stdin(self) -> None:
+        import pty
+
+        parent, child = pty.openpty()
+        self.addCleanup(os.close, parent)
+        self.addCleanup(os.close, child)
+        result = self.verify(stdin=child)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Stage order: feature-graph -> whitespace", result.stdout)
+        self.assertIn("Stage summary", result.stdout)
+        self.assertNotIn("interactive-stdin", self.log.read_text())
+        journal = json.loads(
+            (self.work / ".git/info/florabase-verification-last-run.json").read_text()
+        )
+        self.assertTrue(all(s["status"] == "passed" for s in journal["stages"]))
 
     def hold_lock(self, *code: str) -> subprocess.Popen[str]:
         """Hold a real kernel lock in another process until the test closes its stdin."""

@@ -94,6 +94,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     command = parser.add_subparsers(dest="command", required=True)
     command.add_parser("digest")
+    command.add_parser("frozen-state")
     command.add_parser("invalidate")
     write = command.add_parser("write")
     write.add_argument("--branch", required=True)
@@ -114,6 +115,18 @@ def main() -> None:
 
     if args.command == "digest":
         print(digest(working_entries()))
+        return
+    if args.command == "frozen-state":
+        # Early whitespace/staged checks are only valid if HEAD, index and tree stay frozen.
+        index = subprocess.run(
+            ["git", "ls-files", "--stage", "-z"], check=True, stdout=subprocess.PIPE
+        ).stdout
+        state = {
+            "head": git("rev-parse", "HEAD"),
+            "index": hashlib.sha256(index).hexdigest(),
+            "worktree": digest(working_entries()),
+        }
+        print(hashlib.sha256(json.dumps(state, sort_keys=True).encode()).hexdigest())
         return
     if args.command == "invalidate":
         receipt_path.unlink(missing_ok=True)
