@@ -23,6 +23,9 @@ from beta_release import (
     scan_images,
 )
 
+# deploy/beta files attached to every release; names must not collide with other assets.
+INSTALL_BUNDLE = ("compose.yaml", "florabasectl.py", "florabase.env.example")
+
 
 def require_publication_identity(sha: str) -> None:
     if (
@@ -209,8 +212,12 @@ def main() -> None:
             ],
             check=True,
         )
+        # The install bundle: an operator needs only these three assets and the manifest, never a
+        # checkout. They are byte-bound to the release like every other asset.
+        for name in INSTALL_BUNDLE:
+            shutil.copyfile(Path("deploy/beta") / name, output / name)
         (output / "RELEASE.md").write_text(
-            f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair passed native amd64 registry-pull smoke and HIGH/CRITICAL vulnerability and secret checks. PostgreSQL is separately pinned. This is image distribution, not real-host deployment or beta admission. Never overwrite this release or delete its image identities.\n"
+            f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair passed native amd64 registry-pull smoke and HIGH/CRITICAL vulnerability and secret checks. PostgreSQL is separately pinned. Install with the attached {', '.join(INSTALL_BUNDLE)} and release-manifest.json as described in docs/installation.md at this source revision. This is a prerelease: no stable or latest tag is published. Never overwrite this release or delete its image identities.\n"
         )
         release_asset_inventory(output)
         for service, ref in refs.items():

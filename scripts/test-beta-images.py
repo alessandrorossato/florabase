@@ -9,6 +9,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import subprocess
 import sys
 import tarfile
@@ -528,6 +529,21 @@ class ReleaseTests(unittest.TestCase):
                 "alessandrorossato/florabase", "v0.1.0-beta.1", "c" * 40
             )
         api.assert_not_called()
+
+    def test_install_bundle_is_attached_before_inventory_and_never_latest(self) -> None:
+        source = (ROOT / "scripts/publish-beta-images.py").read_text()
+        copy = source.index("for name in INSTALL_BUNDLE:")
+        self.assertLess(copy, source.index("release_asset_inventory(output)"))
+        self.assertLess(copy, source.index('"--prefer-index=false"'))
+        bundle = re.search(r"INSTALL_BUNDLE = \(([^)]*)\)", source)
+        assert bundle is not None
+        names = re.findall(r'"([^"]+)"', bundle.group(1))
+        self.assertEqual(names, ["compose.yaml", "florabasectl.py", "florabase.env.example"])
+        for name in names:
+            self.assertTrue((ROOT / "deploy/beta" / name).is_file(), name)
+        # Prerelease promotion writes only the exact version tag.
+        self.assertNotIn(":latest", source)
+        self.assertIn('ref.split("@")[0] + ":" + version', source)
 
     def test_workflow_draft_lookup_never_uses_published_tag_endpoint(self) -> None:
         workflow = (ROOT / ".github/workflows/beta-images.yml").read_text()

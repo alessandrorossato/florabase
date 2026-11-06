@@ -214,6 +214,64 @@ class PureRules(unittest.TestCase):
             self.assertEqual(ctl.read_json(path), {"a": 1})
 
 
+class HttpAcceptance(unittest.TestCase):
+    """The shell, its script assets and API 404s are checked on every acceptance run."""
+
+    SHELL = (
+        b'<!doctype html><html><head><script src="/appearance.js"></script>'
+        b'<script type="module" crossorigin src="/assets/index-abc.js"></script></head>'
+        b'<body><div id="root"></div></body></html>'
+    )
+    CURRENT = {"version": "0.1.0-beta.1", "source_revision": "a" * 40}
+
+    def responses(self, **overrides: tuple[int, str, bytes]) -> dict[str, tuple[int, str, bytes]]:
+        release = json.dumps({"version": "0.1.0-beta.1", "revision": "a" * 40}).encode()
+        values = {
+            "/healthz": (200, "text/plain", b"ok"),
+            "/api/v1/health": (200, "application/json", b"{}"),
+            "/api/v1/ready": (200, "application/json", b"{}"),
+            "/release.json": (200, "application/json", release),
+            "/": (200, "text/html", self.SHELL),
+            "/appearance.js": (200, "application/javascript", b""),
+            "/assets/index-abc.js": (200, "application/javascript", b""),
+            "/api/v1/florabase-acceptance-unknown": (404, "application/json", b"{}"),
+            "/api/v1/auth/session": (401, "application/json", b"{}"),
+        }
+        values.update({key.replace("_", "/"): value for key, value in overrides.items()})
+        return values
+
+    def run_acceptance(self, values: dict[str, tuple[int, str, bytes]]) -> None:
+        def fake(url: str, method: str = "GET", body: Any = None, headers: Any = None) -> Any:
+            status, content_type, payload = values[url[len("http://x") :]]
+            return status, {"Content-Type": content_type}, payload
+
+        original = ctl.http_request
+        ctl.http_request = fake
+        try:
+            ctl.http_acceptance("http://x", self.CURRENT)
+        finally:
+            ctl.http_request = original
+
+    def test_healthy_release_passes(self) -> None:
+        self.run_acceptance(self.responses())
+
+    def test_spa_fallback_for_api_is_refused(self) -> None:
+        values = self.responses()
+        values["/api/v1/florabase-acceptance-unknown"] = (200, "text/html", self.SHELL)
+        with self.assertRaisesRegex(ctl.Failure, "unknown API path"):
+            self.run_acceptance(values)
+
+    def test_missing_shell_or_asset_is_refused(self) -> None:
+        values = self.responses()
+        values["/"] = (200, "text/html", b"<html>maintenance</html>")
+        with self.assertRaisesRegex(ctl.Failure, "application shell"):
+            self.run_acceptance(values)
+        values = self.responses()
+        values["/assets/index-abc.js"] = (200, "text/html", self.SHELL)
+        with self.assertRaisesRegex(ctl.Failure, "index-abc.js"):
+            self.run_acceptance(values)
+
+
 def recovery_set(
     directory: Path, set_id: str | None = None, created_at: str = "2026-11-01T03:00:00Z"
 ) -> None:
@@ -1198,8 +1256,20 @@ class StackContract(unittest.TestCase):
             "os.execvp",
             "heads != [expected]",
             "except Exception",
+            # Actionable refusals: invalid settings, empty, pending and newer/foreign schemas.
+            "get_settings()",
+            "invalid configuration",
+            "walk_revisions()",
+            "florabasectl.py install",
+            "a migration is pending",
+            "florabasectl.py promote",
+            "never downgrade blindly",
+            "This container never migrates",
         ):
             self.assertIn(required, guard)
+        # Settings errors may echo submitted values (the database URL holds the password).
+        self.assertNotIn("str(error)", guard)
+        self.assertNotIn('"input"', guard)
         self.assertNotIn("upgrade", guard)
         self.assertEqual(backend["command"][:2], ["uvicorn", "florabase.main:app"])
         self.assertEqual(backend["environment"]["FLORABASE_EXPECTED_ALEMBIC_HEAD"], "20261013_0042")
@@ -1284,6 +1354,7 @@ def main() -> None:
     cases = [
         ManifestRules,
         PureRules,
+        HttpAcceptance,
         RecoverySets,
         Retention,
         BindAddress,

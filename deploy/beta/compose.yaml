@@ -124,18 +124,34 @@ services:
         from alembic.config import Config
         from alembic.runtime.migration import MigrationContext
         from alembic.script import ScriptDirectory
+        from florabase.core.config import get_settings
         from florabase.db.session import get_engine
+        try:
+            get_settings()
+        except Exception as error:
+            # Field names and messages only: submitted values may contain the database password.
+            problems = getattr(error, "errors", lambda: [])()
+            detail = "; ".join("%s: %s" % (".".join(str(part) for part in item.get("loc", ())) or "settings", item.get("msg", "")) for item in problems)
+            sys.exit("schema-guard: invalid configuration (%s) %s; refusing to start. Correct the stack .env or secrets/backend.env and start again" % (type(error).__name__, detail))
         expected = os.environ.get("FLORABASE_EXPECTED_ALEMBIC_HEAD", "")
-        heads = sorted(ScriptDirectory.from_config(Config("alembic.ini")).get_heads())
+        script = ScriptDirectory.from_config(Config("alembic.ini"))
+        heads = sorted(script.get_heads())
         if not expected or heads != [expected]:
-            sys.exit("schema-guard: image heads %s differ from pinned release head %r; refusing to start" % (heads, expected))
+            sys.exit("schema-guard: image heads %s differ from pinned release head %r; refusing to start. Use the backend image named by the same release manifest (florabasectl.py apply)" % (heads, expected))
         try:
             with get_engine().connect() as connection:
                 current = sorted(MigrationContext.configure(connection).get_current_heads())
         except Exception as error:
-            sys.exit("schema-guard: database revision unavailable (%s); refusing to start" % type(error).__name__)
+            sys.exit("schema-guard: database revision unavailable (%s); refusing to start. Check that the db service is healthy and FLORABASE_DATABASE_URL matches secrets/db.env" % type(error).__name__)
         if current != [expected]:
-            sys.exit("schema-guard: database revision %s is not release head %s; refusing to start (florabasectl migrates explicitly)" % (current or "empty", expected))
+            known = set(item.revision for item in script.walk_revisions())
+            if not current:
+                advice = "the database is not initialized: run florabasectl.py install for a new installation"
+            elif all(revision in known for revision in current):
+                advice = "a migration is pending: back up, then run florabasectl.py promote, which stops writers, backs up and migrates explicitly"
+            else:
+                advice = "the database is newer than or foreign to this image: deploy the matching release or restore a recovery set; never downgrade blindly"
+            sys.exit("schema-guard: database revision %s is not release head %s; refusing to start (%s). This container never migrates" % (current or "empty", expected, advice))
         if len(sys.argv) < 2:
             sys.exit("schema-guard: no server command")
         print("schema-guard: database at release head %s" % expected, flush=True)

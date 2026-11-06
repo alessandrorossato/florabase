@@ -2041,6 +2041,20 @@ def http_acceptance(base: str, current: Json) -> None:
         or release.get("revision") != current["source_revision"]
     ):
         raise Failure("frontend release surface does not match the deployed release")
+    # Client routes live in the URL fragment, so the server only ever serves the shell; its
+    # script assets must resolve, and an unknown API path must never fall back to the shell.
+    status, headers, body = http_request(base + "/")
+    page = body.decode("utf-8", "replace")
+    scripts = re.findall(r'<script[^>]+src="(/[^"]+\.js)"', page)
+    if status != 200 or '<div id="root">' not in page or not scripts:
+        raise Failure(f"{base}/ did not serve the application shell")
+    for script in scripts:
+        status, headers, _ = http_request(base + script)
+        if status != 200 or "javascript" not in (headers.get("Content-Type") or ""):
+            raise Failure(f"{base}{script} returned {status} {headers.get('Content-Type')}")
+    status, headers, body = http_request(base + "/api/v1/florabase-acceptance-unknown")
+    if status != 404 or not (headers.get("Content-Type") or "").startswith("application/json"):
+        raise Failure(f"unknown API path returned {status} {headers.get('Content-Type')}")
     status, _, _ = http_request(base + "/api/v1/auth/session")
     if status != 401:
         raise Failure(f"anonymous session must be rejected, got {status}")
