@@ -231,7 +231,10 @@
 }
 body {
   margin: 0;
-  min-width: 320px;
+  /* The 320px floor is the window width; a classic vertical scrollbar takes its width
+     from the layout viewport (100vw - 100%), so the floor subtracts it instead of
+     forcing a page-wide horizontal scroll at exactly 320px (QA P2). */
+  min-width: calc(320px - (100vw - 100%));
   min-height: 100vh;
 }
 main {
