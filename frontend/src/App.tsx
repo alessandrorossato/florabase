@@ -235,9 +235,9 @@ function currentRoute(): Route {
       ...context,
     };
   if (first === "settings" && tab === "general") {
-    // Compatible redirect: the QR address moved to Labels (M8 final). Replace the address
-    // before anything renders so navigation and history show Labels.
-    window.history.replaceState(null, "", "#/labels");
+    // Compatible redirect: the QR address moved to Labels (M8 final). The intent travels in
+    // the address, so a repeated parse (React development double-invocation) agrees.
+    window.history.replaceState(null, "", "#/labels?qr=edit");
     return { section: "labels", labelQr: true, ...context };
   }
   const valid: Section[] = [
@@ -267,6 +267,7 @@ function currentRoute(): Route {
     tab,
     placeId,
     labelKind: params.get("kind") ?? undefined,
+    labelQr: first === "labels" && params.get("qr") === "edit",
     labelRecord: params.get("record") ?? undefined,
     ...context,
   };

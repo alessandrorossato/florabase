@@ -62,6 +62,11 @@ export function LabelsScreen({
     baseUrl: string | null;
   }>({ status: "loading", baseUrl: null });
   const [editingQr, setEditingQr] = useState(openQrDestination);
+  // Once open, the one-time ?qr=edit marker leaves the address (a reload shows Labels).
+  useEffect(() => {
+    if (openQrDestination && window.location.hash === "#/labels?qr=edit")
+      window.history.replaceState(null, "", "#/labels");
+  }, [openQrDestination]);
   const [settingsRetry, setSettingsRetry] = useState(0);
   const [defaultPreset, setDefaultPreset] = useState<LabelPresetId | null>(
     null,
