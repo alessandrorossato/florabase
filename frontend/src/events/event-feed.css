@@ -109,3 +109,133 @@
     left: calc(var(--space-4) * -1);
   }
 }
+
+/* M8 final: the Journal as a field journal. A reading column; entries under the precision
+   they were recorded with; the note itself is the body, in the botanical serif; the record's
+   own photo is a small mounted print captioned as the record's photo. */
+.event-feed.journal-feed--periods {
+  max-inline-size: 56rem;
+  margin-inline: auto;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.journal-feed--periods .journal-period + .journal-period {
+  margin-block-start: var(--space-8);
+}
+.event-feed.journal-feed--periods .journal-period__heading {
+  margin: 0;
+  padding-block-end: var(--space-2);
+  border-block-end: 1px solid var(--text);
+  font: var(--type-h2);
+  font-size: 1.5rem;
+}
+.journal-feed--periods ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.event-feed.journal-feed--periods > section > ol > li > article {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, 8rem) minmax(0, 1fr);
+  gap: var(--space-6);
+  padding: var(--space-5, 1.25rem) 0 var(--space-6);
+  border-top: 1px solid var(--border);
+}
+.event-feed.journal-feed--periods > section > ol > li:first-child > article {
+  border-top: 0;
+}
+.journal-feed--periods .journal-date {
+  font-family: var(--font-data);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+.journal-feed--periods .journal-content {
+  padding: 0;
+  border-left: 0;
+}
+.journal-feed--periods .journal-content::before {
+  display: none;
+}
+.journal-feed--periods .activity-row-heading {
+  gap: var(--space-2);
+  margin: 0;
+}
+/* The source (Journal, Harvest, operation) as a quiet word before the kind. */
+.journal-feed--periods .activity-row-heading .ui-badge {
+  padding: 0;
+  color: var(--text-muted);
+  background: none;
+  border: 0;
+  font: var(--type-label);
+  font-weight: 500;
+}
+.journal-feed--periods .activity-row-heading h3 {
+  margin: 0;
+  color: var(--primary);
+  font: var(--type-eyebrow);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.event-feed.journal-feed--periods .journal-note {
+  max-inline-size: 42rem;
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-botanical);
+  font-size: 1.25rem;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+.journal-feed--periods .journal-subject {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+  font: var(--type-small);
+}
+.journal-feed--periods .journal-photo {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  margin: 0;
+}
+.journal-feed--periods .journal-photo .record-visual {
+  display: grid;
+  place-items: center;
+  inline-size: 4rem;
+  block-size: 4rem;
+  background: var(--surface-subtle);
+  border-radius: var(--radius-small);
+}
+.journal-feed--periods .journal-photo img {
+  max-inline-size: calc(100% - var(--space-2));
+  max-block-size: calc(100% - var(--space-2));
+  inline-size: auto;
+  block-size: auto;
+  padding: 2px;
+  object-fit: contain;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.journal-feed--periods .journal-photo .record-visual__source {
+  display: none;
+}
+.journal-feed--periods .journal-photo figcaption {
+  color: var(--text-muted);
+  font: var(--type-label);
+  font-weight: 400;
+  white-space: nowrap;
+}
+.event-feed.journal-feed--periods .journal-related {
+  margin-block-start: var(--space-2);
+}
+@media (max-width: 48rem) {
+  .event-feed.journal-feed--periods > section > ol > li > article {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+    padding-left: 0;
+    border-left: 0;
+  }
+  .event-feed.journal-feed--periods .journal-note {
+    font-size: 1.125rem;
+  }
+}
