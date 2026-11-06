@@ -381,9 +381,19 @@
   .schedule-mobile-day {
     display: block;
     margin-top: var(--space-6);
+    /* Scrolled into view on selection; the shell's scroll-padding already keeps it
+       clear of the pinned header and bottom bar. */
+    scroll-margin-block: var(--space-3);
   }
   .schedule-mobile-day h4 {
     font: var(--type-h3);
+  }
+  .schedule-mobile-day__purpose {
+    margin: 0 0 var(--space-2);
+    color: var(--text-muted);
+    font: 600 0.75rem/1.4 var(--font-ui);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
   .task-dialog.schedule-day-drawer {
     padding: var(--space-4);
@@ -514,6 +524,7 @@ body:has(.schedule-workspace dialog[open]) {
 }
 .schedule-mobile-day__header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
@@ -522,6 +533,7 @@ body:has(.schedule-workspace dialog[open]) {
 }
 .schedule-mobile-day__header h4 {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 /* Fixed columns: an activity title can never widen its day; it truncates with an ellipsis
    (the full title stays in the button's name and in the day inspector). */

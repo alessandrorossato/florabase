@@ -1,6 +1,6 @@
 import { ActionButton } from "../components/Action";
 import { ScheduleTargetLabel } from "./ScheduleTargetLabel";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { TaskDialog } from "../components/TaskDialog";
 import {
   EmptyState,
@@ -67,6 +67,24 @@ export function ScheduleCalendar({
   // Phones (M8 final, D2): the selected day's panel appears only once a day is chosen and
   // can be closed without changing the month, filters or selected date in the address.
   const [dayPanelOpen, setDayPanelOpen] = useState(Boolean(state.date));
+  // Each phone selection asks the opened panel to take focus once; opening from the
+  // address alone (a reload or shared link) never moves focus.
+  const [panelFocusRequest, setPanelFocusRequest] = useState(0);
+  const panelHeading = useRef<HTMLHeadingElement>(null);
+  const month = useRef<HTMLTableElement>(null);
+  useEffect(() => {
+    const heading = panelHeading.current;
+    if (!panelFocusRequest || !heading) return;
+    heading.focus({ preventScroll: true });
+    const section = heading.closest("section");
+    if (section && typeof section.scrollIntoView === "function")
+      section.scrollIntoView({
+        block: "nearest",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+      });
+  }, [panelFocusRequest]);
   const days = monthDays(state.month);
   const selected =
     state.date || (today.startsWith(state.month) ? today : (days[0] ?? ""));
@@ -86,7 +104,18 @@ export function ScheduleCalendar({
     onChange({ ...state, date: day });
     if (forceDrawer || !window.matchMedia("(max-width: 48rem)").matches)
       setDrawerOpen(true);
-    else setDayPanelOpen(true);
+    else {
+      setDayPanelOpen(true);
+      setPanelFocusRequest((request) => request + 1);
+    }
+  }
+  function closeDayPanel() {
+    setDayPanelOpen(false);
+    month.current
+      ?.querySelector<HTMLButtonElement>(
+        `.schedule-day-button[data-day="${selected}"]`,
+      )
+      ?.focus();
   }
   function navigate(month: string) {
     setDrawerOpen(false);
@@ -209,6 +238,7 @@ export function ScheduleCalendar({
         </>
       )}
       <table
+        ref={month}
         className="schedule-month"
         aria-label={`${monthLabel(state.month)} scheduled work`}
         aria-busy={!page && !error}
@@ -237,6 +267,7 @@ export function ScheduleCalendar({
                         <button
                           type="button"
                           className="schedule-day-button"
+                          data-day={day}
                           aria-pressed={day === selected}
                           aria-current={day === today ? "date" : undefined}
                           aria-label={`${dayLabel(day)}${day === today ? ", today" : ""}${page ? `, ${String(items.length)} ${state.status.length === 1 ? state.status[0] : "scheduled"} activities` : ""}`}
@@ -312,16 +343,24 @@ export function ScheduleCalendar({
       {dayPanelOpen && (
         <section
           className="schedule-mobile-day"
-          aria-labelledby="schedule-selected-day"
+          aria-label={`Scheduled work, ${dayLabel(selected)}`}
+          onKeyDown={(event) => {
+            if (event.key !== "Escape" || event.defaultPrevented) return;
+            event.preventDefault();
+            closeDayPanel();
+          }}
         >
           <header className="schedule-mobile-day__header">
-            <h4 id="schedule-selected-day">{dayLabel(selected)}</h4>
+            <div>
+              <p className="schedule-mobile-day__purpose">Scheduled work</p>
+              <h4 id="schedule-selected-day" ref={panelHeading} tabIndex={-1}>
+                {dayLabel(selected)}
+              </h4>
+            </div>
             <button
               type="button"
               className="button--secondary"
-              onClick={() => {
-                setDayPanelOpen(false);
-              }}
+              onClick={closeDayPanel}
             >
               Close day
             </button>

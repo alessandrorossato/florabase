@@ -268,8 +268,46 @@ export function WorkbenchShell({
   const mobileSearch = useRef<HTMLButtonElement>(null);
   const paletteReturn = useRef<HTMLElement | null>(null);
   const tabs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const sidebar = useRef<HTMLElement>(null);
+  const bottombar = useRef<HTMLElement>(null);
   const panel =
     workspaces.find((item) => item.id === panelId) ?? routeWorkspace;
+
+  // Publish how much of the viewport the pinned phone header and bottom bar cover, so the
+  // document's scroll-padding keeps focused and scrolled-to content clear of them.
+  useEffect(() => {
+    const root = document.documentElement;
+    const measure = () => {
+      const header = sidebar.current;
+      const bar = bottombar.current;
+      const top =
+        header &&
+        getComputedStyle(header).position === "sticky" &&
+        header.getBoundingClientRect().width >= window.innerWidth - 1
+          ? header.offsetHeight
+          : 0;
+      const bottom =
+        bar && getComputedStyle(bar).position === "fixed"
+          ? bar.offsetHeight
+          : 0;
+      root.style.setProperty("--wb-obscured-top", `${String(top)}px`);
+      root.style.setProperty("--wb-obscured-bottom", `${String(bottom)}px`);
+    };
+    measure();
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? undefined
+        : new ResizeObserver(measure);
+    if (sidebar.current) observer?.observe(sidebar.current);
+    if (bottombar.current) observer?.observe(bottombar.current);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", measure);
+      root.style.removeProperty("--wb-obscured-top");
+      root.style.removeProperty("--wb-obscured-bottom");
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -360,7 +398,11 @@ export function WorkbenchShell({
     <div
       className={`application-shell wb-shell${collapsed ? " wb-shell--collapsed" : ""}`}
     >
-      <aside className="wb-sidebar" aria-label="Application sidebar">
+      <aside
+        ref={sidebar}
+        className="wb-sidebar"
+        aria-label="Application sidebar"
+      >
         <div className="wb-rail">
           <h1 className="wb-brand" id="page-title">
             <a
@@ -557,7 +599,11 @@ export function WorkbenchShell({
 
       {children}
 
-      <nav aria-label="Mobile primary navigation" className="wb-bottombar">
+      <nav
+        ref={bottombar}
+        aria-label="Mobile primary navigation"
+        className="wb-bottombar"
+      >
         <button
           type="button"
           className="wb-bottombar__record"

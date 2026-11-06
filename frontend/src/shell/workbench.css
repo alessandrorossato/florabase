@@ -20,6 +20,13 @@
   --sidebar-width: var(--wb-rail);
 }
 
+/* Scrolling to or focusing content stops clear of the pinned phone header and bottom bar
+   (measured by WorkbenchShell; both are 0 where nothing is pinned). */
+html:has(.wb-shell) {
+  scroll-padding-block: var(--wb-obscured-top, 0px)
+    var(--wb-obscured-bottom, 0px);
+}
+
 /* Sidebar: rail + panel ---------------------------------------------------- */
 .wb-shell .wb-sidebar {
   position: sticky;
@@ -685,6 +692,19 @@
   .task-dialog.wb-palette {
     inline-size: calc(100% - 1rem);
     margin-block-start: var(--space-3);
+  }
+}
+
+/* Short phone-width viewports (for example 1280x800 at 400% zoom = 320x200 CSS px):
+   a pinned header and bottom bar would leave almost no room for content, so the header
+   scrolls away with the page and the bottom bar follows the content. */
+@media (max-width: 48rem) and (max-height: 30rem) {
+  .wb-shell .wb-sidebar,
+  .wb-shell .wb-bottombar {
+    position: static;
+  }
+  .wb-shell .app-content {
+    padding-bottom: var(--space-4);
   }
 }
 
