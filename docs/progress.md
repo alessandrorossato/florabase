@@ -7433,3 +7433,19 @@ Status remains implemented pending canonical verification.
 - Open: manual screen-reader, zoom, high-contrast and touch passes; Android QR; F6 watch.
   Canonical FULL not run; no push, PR or merge.
 
+### UI-REDESIGN-EXPLORATION-001 — M8 final responsive QA remediation, 6 November 2026
+
+- Input: Codex Luna's second M8 review (FULL NO-GO); scope limited to two responsive
+  corrections. Record: `docs/design/florabase-next/m8-responsive-remediation.md`.
+- `177a01e` (P1): the pinned phone header is detected against the layout viewport
+  (`clientWidth`), not `window.innerWidth`, so classic scrollbars no longer zero the top
+  scroll-padding; measured bar geometry is published rounded up.
+- `41a5c35` (P2): `body` min-width subtracts a classic scrollbar's width, removing the
+  15px page overflow at 320px without hiding overflow.
+- `e5a430a`: real-browser geometry regression under classic and overlay scrollbars;
+  74/96 on `61baa3f`, 96/96 light and dark on `e5a430a`.
+- Checks on `e5a430a`: format, typecheck, lint and build pass; 1220/1220 in three
+  consecutive full runs; 155 light and 155 dark captures with 0 errors, 0 below target
+  and 0 state failures; backend diff empty.
+- F6 stays on the watch list. Canonical FULL not run; no push, PR or merge.
+
