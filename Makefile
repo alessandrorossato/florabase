@@ -85,7 +85,7 @@ api-generate: ## Regenerate OpenAPI and TypeScript API declarations
 api-check: ## Verify generated API artifacts are current
 	./scripts/check-api-generated.sh
 
-check: format-check lint typecheck test api-check ## Run the main non-destructive verification suite
+check: format-check lint typecheck api-check test ## Run the main non-destructive verification suite (cheap static checks first)
 
 ci: test-verification-impact test-workflow-resources test-workflow-helpers test-agent-workflow test-feature-workflow test-preview-workflow test-environment-workflow test-uat-preview workflow-check check test-integration build ## Run the complete local equivalent of pull-request CI
 
