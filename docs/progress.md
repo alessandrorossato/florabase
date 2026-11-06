@@ -7415,3 +7415,21 @@ Status remains implemented pending canonical verification.
   - the legacy QR redirect was lost under React development double-invocation.
 - Checks on `784c975`: format, typecheck, lint and build pass; full suite 1211/1211 in three consecutive runs; 236 captures with 0 errors, 0 below target and 0 state failures; backend diff empty.
 - Manual accessibility passes and Android QR remain open. Canonical FULL not run; no push, PR or merge.
+
+### UI-REDESIGN-EXPLORATION-001 — M8 independent QA remediation, 6 November 2026
+
+- Input: Codex Luna's final M8 QA (PASS WITH FINDINGS; FULL not authorised). Record:
+  `docs/design/florabase-next/m8-qa-remediation.md`.
+- Commits `a9bf9e5` (F2 test sync), `33f427b` (F3 TaskDialog focus gap), `9744409` (F1 phone
+  day panel and shell scroll-padding), `b164650` (F4 History chip row), `61867c0` (F7
+  identity title focus).
+- Reproduced and root-caused F2 (lazy chunk plus synchronous query), F3 (focus on `<body>`
+  between dialog removal and passive cleanup; no duplicate mutation or lost work) and F7
+  (late title focus taking focus from the tabs). F6 not reproduced and not claimed fixed.
+- Checks on `61867c0`: format, typecheck, lint and build pass; 1217/1217 in three
+  consecutive full runs; 40/40 shuffled App seeds and 40/40 shuffled Schedule runs under
+  contention; 155 light and 155 dark captures with 0 errors, 0 below target and 0 state
+  failures; backend diff empty.
+- Open: manual screen-reader, zoom, high-contrast and touch passes; Android QR; F6 watch.
+  Canonical FULL not run; no push, PR or merge.
+
