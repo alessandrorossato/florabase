@@ -7519,5 +7519,7 @@ Status remains implemented pending canonical verification.
 - Checks: backend Ruff, format, strict mypy; backend unit suite 986 passed / 3 skipped (90.06%);
   readiness integration 2 passed; `beta_release.py check` passed; local artifact-only image smoke
   `LOCAL_BETA_CANDIDATE_PASSED` at `985437f` (docs edited during the run, image contexts unchanged).
-- Still BETA-BLOCKED. Not run: runtime smoke on `985437f`, independent QA, canonical FULL, protected
+- Runtime smoke 21/21 from clean `3123acf` (819.9 s, evidence refreshed); the drill's 5 s probe still
+  meets the nested daemon's 5 s resolver timeout for a stopped `db`.
+- Still BETA-BLOCKED. Not run: independent QA, canonical FULL, protected
   publication. No push, PR, tag, GHCR package or release.
