@@ -1002,11 +1002,22 @@ export function ScheduleScreen() {
                 );
                 return items.length ? (
                   <section
-                    className="schedule-group"
+                    className={`schedule-group schedule-group--${heading.toLowerCase().replace(/\s+/g, "-")}`}
                     key={heading}
                     aria-label={heading}
                   >
-                    <h3>{heading}</h3>
+                    <div className="schedule-group__header">
+                      <h3>{heading}</h3>
+                      <span className="schedule-group__count">
+                        {items.length}{" "}
+                        {items.length === 1 ? "activity" : "activities"}
+                      </span>
+                      {heading === "Overdue" && (
+                        <span className="schedule-group__note">
+                          Planned, not recorded as done
+                        </span>
+                      )}
+                    </div>
                     <ol className="schedule-list">
                       {items.map((item) => (
                         <li key={item.id}>

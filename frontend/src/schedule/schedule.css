@@ -160,3 +160,87 @@
 .schedule-attention {
   font: var(--type-small);
 }
+
+/* M8 final: the Schedule as an operational planning workspace. Agenda lanes carry their
+   state in the header (count and, for Overdue, what overdue means); rows show the planning
+   distance in words and overdue rows a warm edge. Planned work never looks recorded. */
+.activity-page .schedule-group {
+  margin-block-start: var(--space-6);
+}
+.schedule-group__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  padding-block-end: var(--space-2);
+  border-block-end: 2px solid var(--text);
+}
+.activity-page .schedule-group .schedule-group__header > h3 {
+  margin: 0;
+  font: var(--type-label);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.schedule-group__count {
+  color: var(--text-muted);
+  font: 500 0.8125rem/1 var(--font-data);
+}
+.schedule-group__note {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.schedule-group--overdue .schedule-group__header {
+  border-block-end-color: var(--warning);
+}
+.schedule-group--overdue .schedule-group__header > h3 {
+  color: var(--warning-text);
+}
+.schedule-group--later .schedule-group__header,
+.schedule-group--completed .schedule-group__header,
+.schedule-group--cancelled .schedule-group__header {
+  border-block-end-color: var(--border-strong);
+}
+.activity-page .schedule-group .schedule-list {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+.activity-page .schedule-group .schedule-list > li {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-block-end: 1px solid var(--border);
+  border-radius: 0;
+}
+.schedule-row {
+  padding: var(--space-3) var(--space-2) var(--space-3) var(--space-3);
+}
+.schedule-row:hover {
+  background: var(--surface-hover);
+}
+.schedule-row[data-tone="overdue"] {
+  box-shadow: inset 3px 0 0 var(--warning);
+}
+.schedule-row[data-tone="today"] {
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+.schedule-row .schedule-title {
+  font: var(--type-strong);
+  font-size: 0.9375rem;
+}
+.schedule-row time {
+  font-family: var(--font-data);
+}
+.schedule-age {
+  display: inline-block;
+  margin-inline-start: var(--space-3);
+  color: var(--text-muted);
+  font: var(--type-small);
+  font-weight: 600;
+}
+.schedule-row[data-tone="overdue"] .schedule-age,
+.schedule-row[data-tone="today"] .schedule-age {
+  color: var(--warning-text);
+}

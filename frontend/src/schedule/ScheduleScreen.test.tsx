@@ -652,6 +652,34 @@ test("mobile day selection exposes inline work and date prefill without a modal"
   }
 });
 
+test("mobile day panel opens only on selection and closes without changing month, date or filters", async () => {
+  vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: true }));
+  try {
+    calendarRoute();
+    const user = userEvent.setup();
+    mount();
+    const day = await screen.findByRole("button", {
+      name: /Thursday, 1 October 2026,/,
+    });
+    expect(
+      screen.queryByRole("region", { name: "Thursday, 1 October 2026" }),
+    ).not.toBeInTheDocument();
+    await user.click(day);
+    const panel = screen.getByRole("region", {
+      name: "Thursday, 1 October 2026",
+    });
+    const address = window.location.hash;
+    await user.click(within(panel).getByRole("button", { name: "Close day" }));
+    expect(
+      screen.queryByRole("region", { name: "Thursday, 1 October 2026" }),
+    ).not.toBeInTheDocument();
+    expect(window.location.hash).toBe(address);
+    expect(day).toHaveAttribute("aria-pressed", "true");
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+
 test("Calendar loading, retry, empty filtered period and reset preserve presentation", async () => {
   calendarRoute("&activity_kind=water");
   vi.mocked(api.listCalendar).mockRejectedValueOnce(new ApiError(500));

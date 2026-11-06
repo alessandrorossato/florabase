@@ -443,3 +443,110 @@ body:has(.schedule-workspace dialog[open]) {
     gap: var(--space-2);
   }
 }
+
+/* M8 final Month: legible busy cells. Each activity is one line with a state mark (a filled
+   dot for planned, a warm ring for overdue, a check-tone for completed, struck for
+   cancelled); the full state stays in each button's accessible name and in the day
+   inspector. Cells holding overdue work take a warm tint. */
+.schedule-cell-activity {
+  position: relative;
+  padding-inline-start: var(--space-4);
+}
+.schedule-cell-activity::before {
+  content: "" / "";
+  position: absolute;
+  inset-inline-start: var(--space-1);
+  inset-block-start: 0.55em;
+  inline-size: 0.4375rem;
+  block-size: 0.4375rem;
+  border-radius: 50%;
+  background: var(--primary);
+}
+.schedule-cell-activity[data-tone="overdue"]::before {
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 2px solid var(--warning);
+}
+.schedule-cell-activity[data-tone="today"]::before {
+  background: var(--warning);
+}
+.schedule-cell-activity[data-tone="completed"]::before {
+  background: var(--text-muted);
+}
+.schedule-cell-activity[data-tone="cancelled"] > strong {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+.schedule-cell-activity > span:not(.ui-badge),
+.schedule-cell-activity .ui-badge {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.schedule-cell-activity > strong {
+  display: block;
+  overflow: hidden;
+  font: var(--type-small);
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.schedule-month td.schedule-day--overdue {
+  background: var(--warning-subtle);
+}
+.schedule-month td.schedule-day--overdue .schedule-day-count {
+  color: var(--warning-text);
+  background: transparent;
+  border: 1px solid var(--warning);
+}
+/* The day inspector: flush with the workspace edge, under the shell, not a floating card. */
+.task-dialog.schedule-day-drawer {
+  width: min(28rem, 100%);
+  border-radius: 0;
+  border-inline-start: 1px solid var(--border);
+  box-shadow: var(--elevation-overlay);
+}
+.task-dialog.schedule-day-drawer::backdrop {
+  background: color-mix(in srgb, var(--overlay-backdrop) 40%, transparent);
+}
+.schedule-mobile-day__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block-end: var(--space-2);
+  border-block-end: 1px solid var(--text);
+}
+.schedule-mobile-day__header h4 {
+  margin: 0;
+}
+/* Fixed columns: an activity title can never widen its day; it truncates with an ellipsis
+   (the full title stays in the button's name and in the day inspector). */
+.schedule-month {
+  table-layout: fixed;
+  inline-size: 100%;
+}
+.schedule-month td {
+  overflow: hidden;
+}
+.schedule-cell-items,
+.schedule-cell-items > li {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.schedule-cell-activity {
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-align: start;
+}
+.schedule-month td.schedule-day--overdue .schedule-day-count {
+  padding: 0 0.375rem;
+  border-radius: 999px;
+  line-height: 1.4;
+}

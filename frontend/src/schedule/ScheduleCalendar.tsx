@@ -20,7 +20,12 @@ import {
   ScheduleActivityRow,
   type ActivityAction,
 } from "./ScheduleActivityRow";
-import { activityLabels, activityState, type ScheduleState } from "./state";
+import {
+  activityLabels,
+  activityState,
+  activityTone,
+  type ScheduleState,
+} from "./state";
 import "./calendar.css";
 
 const weekdays = [
@@ -59,6 +64,9 @@ export function ScheduleCalendar({
   onCreate: (day: string) => void;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Phones (M8 final, D2): the selected day's panel appears only once a day is chosen and
+  // can be closed without changing the month, filters or selected date in the address.
+  const [dayPanelOpen, setDayPanelOpen] = useState(Boolean(state.date));
   const days = monthDays(state.month);
   const selected =
     state.date || (today.startsWith(state.month) ? today : (days[0] ?? ""));
@@ -78,9 +86,11 @@ export function ScheduleCalendar({
     onChange({ ...state, date: day });
     if (forceDrawer || !window.matchMedia("(max-width: 48rem)").matches)
       setDrawerOpen(true);
+    else setDayPanelOpen(true);
   }
   function navigate(month: string) {
     setDrawerOpen(false);
+    setDayPanelOpen(false);
     onChange({ ...state, month, date: "" });
   }
   function detail() {
@@ -220,7 +230,7 @@ export function ScheduleCalendar({
                 return (
                   <td
                     key={day ?? `blank-${String(j)}`}
-                    className={`${day === today ? "schedule-day--today " : ""}${day === selected ? "schedule-day--selected" : ""}`}
+                    className={`${day === today ? "schedule-day--today " : ""}${day === selected ? "schedule-day--selected " : ""}${items.some((item) => activityTone(item, today) === "overdue") ? "schedule-day--overdue" : ""}`}
                   >
                     {day && (
                       <>
@@ -253,6 +263,7 @@ export function ScheduleCalendar({
                               <button
                                 type="button"
                                 className="schedule-cell-activity"
+                                data-tone={activityTone(item, today)}
                                 aria-label={`${item.title}, ${activityLabels[item.activity_kind]}, ${item.target?.label ?? "Whole collection"}, ${activityState(item, today)}`}
                                 onClick={() => {
                                   onAction("inspect", item);
@@ -298,13 +309,26 @@ export function ScheduleCalendar({
           ))}
         </tbody>
       </table>
-      <section
-        className="schedule-mobile-day"
-        aria-labelledby="schedule-selected-day"
-      >
-        <h4 id="schedule-selected-day">{dayLabel(selected)}</h4>
-        {page && detail()}
-      </section>
+      {dayPanelOpen && (
+        <section
+          className="schedule-mobile-day"
+          aria-labelledby="schedule-selected-day"
+        >
+          <header className="schedule-mobile-day__header">
+            <h4 id="schedule-selected-day">{dayLabel(selected)}</h4>
+            <button
+              type="button"
+              className="button--secondary"
+              onClick={() => {
+                setDayPanelOpen(false);
+              }}
+            >
+              Close day
+            </button>
+          </header>
+          {page && detail()}
+        </section>
+      )}
       {drawerOpen && (
         <TaskDialog
           title={`Scheduled work · ${dayLabel(selected)}`}
