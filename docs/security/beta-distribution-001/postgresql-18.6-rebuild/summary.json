@@ -1,0 +1,76 @@
+{
+  "scanned_at": "2026-11-06T20:11:20.30306618Z",
+  "scanner": "aquasec/trivy:0.69.3@sha256:bcc376de8d77cfe086a917230e818dc9f8528e3c852f7b1aff648949b6258d1c",
+  "reference": "docker.io/library/postgres:18.6-alpine@sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395",
+  "amd64_platform_digest": "sha256:300ebd02c6d4de9ee27ad7f6855d5d21b4d3a4a5117767c1197d284c635d9736",
+  "upstream_created": "2026-11-05T19:06:10Z",
+  "upstream_revision": "e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc",
+  "postgres_version": "PostgreSQL 18.6 on x86_64-pc-linux-musl",
+  "counts": {
+    "CRITICAL": 1,
+    "HIGH": 25,
+    "secrets": 0
+  },
+  "by_package": [
+    {
+      "target": "usr/local/bin/gosu",
+      "package": "stdlib",
+      "installed": "v1.24.6",
+      "severity": "CRITICAL",
+      "count": 1
+    },
+    {
+      "target": "usr/local/bin/gosu",
+      "package": "stdlib",
+      "installed": "v1.24.6",
+      "severity": "HIGH",
+      "count": 25
+    }
+  ],
+  "advisories": [
+    "CVE-2025-61726",
+    "CVE-2025-61729",
+    "CVE-2025-68121",
+    "CVE-2026-111943",
+    "CVE-2026-25679",
+    "CVE-2026-27145",
+    "CVE-2026-32280",
+    "CVE-2026-32281",
+    "CVE-2026-32283",
+    "CVE-2026-33811",
+    "CVE-2026-33814",
+    "CVE-2026-33818",
+    "CVE-2026-39820",
+    "CVE-2026-39821",
+    "CVE-2026-39822",
+    "CVE-2026-39836",
+    "CVE-2026-42499",
+    "CVE-2026-42504",
+    "CVE-2026-56853",
+    "CVE-2026-56858",
+    "CVE-2026-56859",
+    "CVE-2026-56860",
+    "CVE-2026-56862",
+    "CVE-2026-78667",
+    "CVE-2026-78669",
+    "CVE-2026-97031"
+  ],
+  "previous_pin": {
+    "index_digest": "sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5",
+    "counts": {
+      "CRITICAL": 2,
+      "HIGH": 26
+    },
+    "resolved_by_rebuild": [
+      "brotli-libs CVE-2026-111497",
+      "libcurl CVE-2026-92392"
+    ]
+  },
+  "gosu_runtime_applicability": {
+    "gosu_sha256": "52c8749d0142edd234e9d6bd5237dff2d81e71f43537e2f4f66f75dd4b243dd0",
+    "entrypoint_use": "docker-entrypoint.sh:341-343 execs gosu only when id -u is 0",
+    "stack_user": "70:70 (deploy/beta/compose.yaml), cap_drop ALL, no-new-privileges",
+    "conclusion": "gosu is not executed by the Florabase stack; this is applicability evidence only and does not satisfy the fail-closed scan gate"
+  },
+  "data_compatibility": "a data directory initialized by the previous pin started under this image and returned its rows; no errors logged"
+}

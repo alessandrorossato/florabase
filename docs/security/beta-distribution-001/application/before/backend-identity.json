@@ -1,0 +1,15 @@
+{
+  "reference": "florabase-betadist-check-backend:tmp",
+  "image_inspect_id": "sha256:555eddf1f32cd6a7d32d76ef11431315e943f97b64d26e3a19032b496c481b97",
+  "descriptor": {
+    "mediaType": "application/vnd.oci.image.index.v1+json",
+    "digest": "sha256:555eddf1f32cd6a7d32d76ef11431315e943f97b64d26e3a19032b496c481b97",
+    "size": 856
+  },
+  "repo_digests": [
+    "florabase-betadist-check-backend@sha256:555eddf1f32cd6a7d32d76ef11431315e943f97b64d26e3a19032b496c481b97"
+  ],
+  "os": "linux",
+  "architecture": "amd64",
+  "configuration_digest": "sha256:b558eff40b2aef73e610536a0cdc044a05e214471fce3cb2fdc85ce2ad295908"
+}

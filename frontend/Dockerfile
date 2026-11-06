@@ -30,7 +30,10 @@ LABEL org.opencontainers.image.title="Florabase frontend" \
 HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=6 \
     CMD wget --quiet --tries=1 --spider http://127.0.0.1:8080/healthz
 USER root
-RUN find /usr /bin /sbin -xdev -type f -perm /6000 -exec chmod a-s {} +
+# Alpine fixes the pinned base predates (musl CVE-2026-107891, zlib CVE-2026-85091). Exact versions
+# fail the build once Alpine supersedes them; remove this line when the base digest carries them.
+RUN apk add --no-cache musl=1.2.6-r3 musl-utils=1.2.6-r3 zlib=1.4-r0 \
+    && find /usr /bin /sbin -xdev -type f -perm /6000 -exec chmod a-s {} +
 USER 101:101
 EXPOSE 8080
 
