@@ -280,15 +280,29 @@ export function WorkbenchShell({
     const measure = () => {
       const header = sidebar.current;
       const bar = bottombar.current;
+      // Compare with the layout viewport (clientWidth/clientHeight), which excludes a
+      // classic scrollbar; window.innerWidth includes it, so a full-width phone header
+      // looked narrower than the window and was missed (QA P1). Publish the measured
+      // geometry, rounded up, so fractional bars are fully covered.
+      const viewportWidth = root.clientWidth;
+      const viewportHeight = root.clientHeight;
+      const headerBox = header?.getBoundingClientRect();
       const top =
         header &&
+        headerBox &&
         getComputedStyle(header).position === "sticky" &&
-        header.getBoundingClientRect().width >= window.innerWidth - 1
-          ? header.offsetHeight
+        headerBox.left <= 0.5 &&
+        headerBox.right >= viewportWidth - 0.5 &&
+        headerBox.height < viewportHeight / 2
+          ? Math.ceil(headerBox.height)
           : 0;
+      const barBox = bar?.getBoundingClientRect();
       const bottom =
-        bar && getComputedStyle(bar).position === "fixed"
-          ? bar.offsetHeight
+        bar &&
+        barBox &&
+        barBox.height > 0 &&
+        getComputedStyle(bar).position === "fixed"
+          ? Math.max(0, Math.ceil(viewportHeight - barBox.top))
           : 0;
       root.style.setProperty("--wb-obscured-top", `${String(top)}px`);
       root.style.setProperty("--wb-obscured-bottom", `${String(bottom)}px`);

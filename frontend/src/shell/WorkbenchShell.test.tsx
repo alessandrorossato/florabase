@@ -572,3 +572,91 @@ test("record pages start with the panel collapsed; the rail opens it there witho
   );
   expect(shell).not.toHaveClass("wb-shell--collapsed");
 });
+
+/** Lays out the shell as a browser would; jsdom has no layout. */
+function layout(
+  viewport: { innerWidth: number; clientWidth: number; clientHeight: number },
+  sidebar: Partial<DOMRect>,
+  bottombar: Partial<DOMRect> | null,
+) {
+  vi.stubGlobal("innerWidth", viewport.innerWidth);
+  const root = document.documentElement;
+  Object.defineProperty(root, "clientWidth", {
+    configurable: true,
+    value: viewport.clientWidth,
+  });
+  Object.defineProperty(root, "clientHeight", {
+    configurable: true,
+    value: viewport.clientHeight,
+  });
+  const original = window.getComputedStyle.bind(window);
+  const pinned = (style: CSSStyleDeclaration, position: string) =>
+    new Proxy(style, {
+      get: (target, key): unknown =>
+        key === "position" ? position : Reflect.get(target, key, target),
+    });
+  vi.spyOn(window, "getComputedStyle").mockImplementation((element) => {
+    const style = original(element);
+    if (element.classList.contains("wb-sidebar"))
+      return pinned(style, "sticky");
+    if (element.classList.contains("wb-bottombar"))
+      return pinned(style, bottombar ? "fixed" : "static");
+    return style;
+  });
+  const box = (rect: Partial<DOMRect>) =>
+    ({
+      left: 0,
+      top: 0,
+      right: 0,
+      bottom: 0,
+      width: 0,
+      height: 0,
+      ...rect,
+    }) as DOMRect;
+  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
+    function (this: Element) {
+      if (this.classList.contains("wb-sidebar")) return box(sidebar);
+      if (this.classList.contains("wb-bottombar") && bottombar)
+        return box(bottombar);
+      return box({});
+    },
+  );
+}
+
+test.each([
+  ["a classic scrollbar (layout viewport 375 of a 390 window)", 390, 375],
+  ["overlay scrollbars (layout viewport equals the window)", 390, 390],
+])(
+  "pinned phone header and bottom bar are published as scroll-padding with %s",
+  (_mode, innerWidth, clientWidth) => {
+    layout(
+      { innerWidth, clientWidth, clientHeight: 844 },
+      { right: clientWidth, width: clientWidth, bottom: 116.6, height: 116.6 },
+      { top: 779.6, bottom: 844, height: 64.4, right: clientWidth },
+    );
+    try {
+      renderShell();
+      const root = document.documentElement.style;
+      expect(root.getPropertyValue("--wb-obscured-top")).toBe("117px");
+      expect(root.getPropertyValue("--wb-obscured-bottom")).toBe("65px");
+    } finally {
+      vi.restoreAllMocks();
+    }
+  },
+);
+
+test("a desktop side rail is not published as a pinned top header", () => {
+  layout(
+    { innerWidth: 1440, clientWidth: 1425, clientHeight: 844 },
+    { right: 80, width: 80, bottom: 844, height: 844 },
+    null,
+  );
+  try {
+    renderShell();
+    const root = document.documentElement.style;
+    expect(root.getPropertyValue("--wb-obscured-top")).toBe("0px");
+    expect(root.getPropertyValue("--wb-obscured-bottom")).toBe("0px");
+  } finally {
+    vi.restoreAllMocks();
+  }
+});
