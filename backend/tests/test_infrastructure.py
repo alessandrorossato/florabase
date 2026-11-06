@@ -13,11 +13,18 @@ from fastapi.dependencies.models import Dependant
 from fastapi.routing import APIRoute, APIWebSocketRoute, iter_route_contexts
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
+from sqlalchemy.pool import NullPool
 from starlette.routing import BaseRoute
 
 from florabase.core.config import CookieMode, Environment, LogFormat, Settings
 from florabase.core.logging import JsonFormatter, configure_logging
-from florabase.db.session import check_database, get_database_session, get_engine
+from florabase.db.session import (
+    READINESS_CONNECT_TIMEOUT_SECONDS,
+    check_database,
+    get_database_session,
+    get_engine,
+    get_readiness_engine,
+)
 from florabase.main import app, create_app, lifespan
 
 
@@ -72,10 +79,26 @@ def test_configure_logging_supports_json_and_text() -> None:
 
 def test_database_check_executes_probe() -> None:
     engine = MagicMock()
-    with patch("florabase.db.session.get_engine", return_value=engine):
+    with patch("florabase.db.session.get_readiness_engine", return_value=engine):
         check_database()
 
     engine.connect.return_value.__enter__.return_value.execute.assert_called_once()
+
+
+def test_readiness_engine_is_unpooled_and_time_bounded() -> None:
+    get_readiness_engine.cache_clear()
+    with (
+        patch("florabase.db.session.get_settings", return_value=settings()),
+        patch("florabase.db.session.create_engine") as create,
+    ):
+        get_readiness_engine()
+    get_readiness_engine.cache_clear()
+    keywords = create.call_args.kwargs
+    assert keywords["poolclass"] is NullPool
+    assert keywords["connect_args"]["connect_timeout"] == READINESS_CONNECT_TIMEOUT_SECONDS
+    assert keywords["connect_args"]["options"] == "-c statement_timeout=2000"
+    # Docker health checks give the probe 5 to 10 seconds.
+    assert READINESS_CONNECT_TIMEOUT_SECONDS < 5
 
 
 def test_database_session_commits_and_rolls_back() -> None:
