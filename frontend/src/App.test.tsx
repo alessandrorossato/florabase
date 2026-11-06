@@ -2120,12 +2120,14 @@ test("location hierarchy renders paths and supports keyboard selection", async (
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await openLocations();
+  // The hierarchy renders once the locations request resolves; wait for it rather
+  // than relying on an earlier test having loaded the lazy section chunk already.
+  expect(
+    await screen.findByRole("list", { name: "Location hierarchy" }),
+  ).toHaveAttribute("tabindex", "0");
   expect(
     screen.queryByRole("button", { name: /Seed cabinet/ }),
   ).not.toBeInTheDocument();
-  expect(
-    screen.getByRole("list", { name: "Location hierarchy" }),
-  ).toHaveAttribute("tabindex", "0");
   const expandHouse = await screen.findByRole("button", {
     name: "Expand House",
   });
