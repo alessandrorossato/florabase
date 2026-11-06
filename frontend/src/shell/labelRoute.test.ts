@@ -5,9 +5,23 @@ import { labelRoute } from "./labelRoute";
 const id = "0190d2a8-0000-7000-8000-000000000001";
 const other = "0190d2a8-0000-7000-8000-000000000002";
 
+// A full username-and-password URL, built rather than written as a literal.
+const withCredentials = new URL(`https://florabase.example/#/plants/${id}`);
+withCredentials.username = "user";
+withCredentials.password = "pw";
+
+test("the credential case carries both a username and a password", () => {
+  expect(withCredentials.username).toBe("user");
+  expect(withCredentials.password).toBe("pw");
+  const parsed = new URL(withCredentials.href);
+  expect(parsed.username).toBe("user");
+  expect(parsed.password).toBe("pw");
+  expect(parsed.hash).toBe(`#/plants/${id}`);
+});
+
 test.each([
   [`https://florabase.example/#/seeds/${id}`, `#/seeds/${id}`],
-  [`http://192.168.1.20:8080/#/plants/${id}`, `#/plants/${id}`],
+  [`http://florabase.test:8080/#/plants/${id}`, `#/plants/${id}`],
   [`https://florabase.example/#/plant-groups/${id}`, `#/plant-groups/${id}`],
   [
     `https://florabase.example/#/harvests/${id}?inventory=${other}`,
@@ -22,7 +36,7 @@ test.each([
   "",
   "hello",
   `javascript:alert(1)//#/plants/${id}`,
-  `https://user:pw@florabase.example/#/plants/${id}`,
+  withCredentials.href,
   `https://florabase.example/app/#/plants/${id}`,
   `https://florabase.example/?next=x#/plants/${id}`,
   `https://florabase.example/#/plants/${id}?action=edit`,
