@@ -7404,3 +7404,14 @@ Status remains implemented pending canonical verification.
 - Tests: identity intermittent not reproduced in 33 further runs (21 orders, 12 under contention). New: `location hierarchy … keyboard selection` fails deterministically with shuffle seed 3; Geography and a Schedule test failed once each, unclassified.
 - Checks on `b92e6ca`: format, typecheck, lint, build pass; full suite 1209/1210, then 1210/1210 twice; backend diff empty.
 - Manual screen reader, physical zoom, high contrast and touch passes and Android QR remain open. Canonical FULL not run; no push, PR or merge.
+
+### UI-REDESIGN-EXPLORATION-001 — M8 final UX (Activity identities and Settings), 6 November 2026
+
+- Approved design: canvas page 6 with D1 (History chips share the Filters state) and D2 (Month day inspector on selection).
+- Commits `15dc04f`, `c1146b4`, `7f4a222`, `5eb5691`, `0127aa0`, `784c975`; record in `docs/design/florabase-next/m8-final-ux-implementation.md`.
+- Built: Settings as Theme · Labels · Import / Export, with the QR destination in Labels and a compatible `#/settings?tab=general` redirect; the Journal as a field journal; History as an audit table with fact type chips; the Schedule's Agenda lanes, Month cells and day inspector.
+- Found and fixed during verification:
+  - History chips were 36 px, below target (caught by the capture probe);
+  - the legacy QR redirect was lost under React development double-invocation.
+- Checks on `784c975`: format, typecheck, lint and build pass; full suite 1211/1211 in three consecutive runs; 236 captures with 0 errors, 0 below target and 0 state failures; backend diff empty.
+- Manual accessibility passes and Android QR remain open. Canonical FULL not run; no push, PR or merge.
