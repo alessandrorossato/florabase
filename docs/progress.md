@@ -7476,3 +7476,28 @@ Status remains implemented pending canonical verification.
 - Phase 2 reusable stage evidence is a proposal only. It is documented with its enforced-boundary
   safety analysis in [the handoff](verification-fast-001-handoff.md) and recommended as a separate
   feature. Independent infrastructure QA is pending.
+
+### BETA-DISTRIBUTION-001 — installable beta distribution candidate for independent QA, 6 November 2026
+
+- Worktree `feat/beta-distribution-001` from `fec0398`, writer `claude-beta`; `origin/main` `da80dc6`
+  (#149, verification-workflow files only) merged without rewriting. Operator decisions: keep the
+  image pair, explicit one-shot migrations, `0.1.0-beta.1`.
+- Releases now attach `compose.yaml`, `florabasectl.py` and `florabase.env.example`; no `latest`.
+  The backend guard reports invalid configuration (field names only), unavailable database and
+  empty/pending/newer schemas with the exact action and still never migrates. Acceptance checks the
+  application shell, its scripts and JSON 404 for unknown API paths. New
+  [installation guide](installation.md) with Dockhand workflow; record in
+  [beta-distribution-001.md](beta-distribution-001.md).
+- Security: PostgreSQL pin moved to the upstream same-version `18.6-alpine` rebuild `123b1799…`
+  (brotli/libcurl fixed; data-directory compatibility checked) — **needs operator approval**. Frontend
+  base newly showed 3 HIGH (musl, zlib) with no upstream rebuild; exact Alpine pins restore 0/0;
+  backend 0/0. **Blocker:** 1 CRITICAL / 25 HIGH remain in PostgreSQL's gosu (not executed by the
+  stack; gate stays fail-closed). Reduced reports in `docs/security/beta-distribution-001/`.
+- Checks: `make workflow-check` (incl. `test-beta-runtime` 60 + 48 under Python 3.8.20,
+  `test-beta-images` 26); `check-features` 138 valid; guard refusals in the real backend image;
+  `scripts/smoke-beta-runtime.py` 21/21 from clean `872f076` (830.6 s) and `fd4fc76` (841.4 s),
+  adding pending-migration, missing-secret, stopped-database, HTTP-origin and TLS reverse-proxy
+  drills; zero owned residuals, DEV/UAT/host `florabase-prod` untouched.
+- Not run: independent QA, canonical `make feature-verify` (FULL), frontend/backend unit suites
+  (no application code changed), registry publication, real-host or real Dockhand checks.
+  Observation: readiness has no DB connect timeout. No push, PR, tag or release.

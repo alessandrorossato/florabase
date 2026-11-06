@@ -362,13 +362,14 @@ has not yet been recorded on a real Dockhand installation for this release.
 | `… not release head … (the database is not initialized …)` | Empty database: run `florabasectl.py install` |
 | `… (a migration is pending …)` | Images are newer than the database. Use `promote`, which backs up and migrates; never run `migrate` by hand |
 | `… (the database is newer than or foreign to this image …)` | An older or unrelated image was pinned. Run `florabasectl.py apply` to restore the recorded release, or restore a recovery set |
-| `env file …/secrets/backend.env not found` from Compose | The secrets directory is missing or unreadable; Compose changes nothing. Restore `secrets/` from your configuration backup |
+| `Failed to load …/secrets/backend.env: … no such file or directory` from Compose | The secrets directory is missing or unreadable; Compose changes nothing. Restore `secrets/` from your configuration backup |
 | Login fails with HTTP 403 | The browser address differs from `--origin`, or the proxy changes the `Origin`/`Host`. Open exactly the configured origin |
 | Uploads fail with HTTP 413 | The reverse proxy's body limit is below 32 MiB |
 | `status` reports an old backup or low disk | Check the scheduled `backup`, free space under the root, and `retention --apply` |
 
 Readiness is `GET /api/v1/ready` through the frontend; liveness is `/healthz`. With PostgreSQL
-stopped, readiness reports failure while the frontend stays live.
+stopped, readiness fails (an error, or no answer within the client timeout when the `db` name cannot
+be resolved) while `/healthz` stays live, and the backend healthcheck reports unhealthy.
 
 ## Uninstalling without losing data
 
