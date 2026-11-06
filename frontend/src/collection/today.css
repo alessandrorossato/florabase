@@ -1,0 +1,609 @@
+/* Today (Florabase Next home). Owned by collection/DashboardScreen; tokens only, so every
+   palette renders it. Planned, recorded and derived information each carry a provenance line. */
+
+.today {
+  display: grid;
+  gap: var(--space-6);
+  padding-block-end: var(--space-8);
+}
+.today time {
+  color: var(--text-muted);
+  font-family: var(--font-data);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+.today-lede {
+  max-inline-size: 48rem;
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-botanical);
+  font-size: 1.375rem;
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+}
+.today-label {
+  margin: 0 0 var(--space-2);
+  color: var(--text-muted);
+  font: var(--type-eyebrow);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Holdings: a ruled ledger of four record counts. */
+.today-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-block: 1px solid var(--text);
+}
+.today-metrics .ui-metric {
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border: 0;
+  border-inline-start: 1px solid var(--border);
+  border-radius: 0;
+}
+.today-metrics .ui-metric:first-child {
+  border-inline-start: 0;
+  padding-inline-start: 0;
+}
+.today-metrics .ui-metric:hover {
+  background: var(--surface-hover);
+}
+.today-metrics .ui-metric__label {
+  color: var(--text-muted);
+  font: var(--type-label);
+  letter-spacing: 0.02em;
+}
+.today-note {
+  margin: var(--space-2) 0 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+
+.today-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+.today-panel {
+  min-inline-size: 0;
+  padding: var(--space-4) var(--space-6) var(--space-6);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+}
+.today-panel__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+.today-panel__header h3 {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-botanical);
+  font-size: 1.375rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.today-panel__header a,
+.today-links a,
+.today-footnote a {
+  font: var(--type-small);
+}
+.today-links {
+  display: flex;
+  gap: var(--space-3);
+}
+.today-provenance {
+  margin: var(--space-1) 0 var(--space-4);
+  color: var(--text-muted);
+  font: var(--type-label);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+.today-footnote {
+  margin: var(--space-4) 0 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+
+/* Planned work. */
+.today-windows {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-block-end: var(--space-2);
+}
+.today-windows a {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-3);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  text-decoration: none;
+}
+.today-windows a:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+}
+.today-windows strong {
+  font: var(--type-metric);
+}
+.today-windows span {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.today-windows a.has-attention {
+  background: var(--warning-subtle);
+  border-color: var(--warning);
+}
+.today-windows a.has-attention strong {
+  color: var(--warning-text);
+}
+.today-work-list,
+.today-activity {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.today-work-list li {
+  display: grid;
+  grid-template-columns: 6.25rem minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: baseline;
+  padding-block: var(--space-3);
+  border-block-start: 1px solid var(--border);
+}
+.today-work-list a,
+.today-activity a {
+  color: var(--text);
+  font: var(--type-strong);
+  text-decoration: none;
+}
+.today-work-list a:hover,
+.today-activity a:hover {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.today-work-list p,
+.today-activity p {
+  margin: 2px 0 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+
+/* Recorded activity. */
+.today-activity li {
+  padding-block: var(--space-3);
+  border-block-start: 1px solid var(--border);
+}
+.today-activity article {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: var(--space-3);
+}
+/* History date labels are phrases ("Completion recorded …"), not data. */
+.today-activity time {
+  font-family: var(--font-ui);
+}
+.today-activity__origin {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-block-end: var(--space-1);
+}
+
+/* Derived record-keeping ledger. */
+.today-ledger {
+  display: grid;
+  margin: 0;
+}
+.today-ledger > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: baseline;
+  padding-block: var(--space-2);
+  border-block-start: 1px solid var(--border);
+}
+.today-ledger dt {
+  color: var(--text);
+  font: var(--type-small);
+}
+.today-ledger dd {
+  margin: 0;
+  color: var(--text);
+  font: 500 0.9375rem/1.3 var(--font-data);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+/* Specimen plates. */
+.today-plates {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: var(--space-4) var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.today-plates a {
+  display: grid;
+  gap: 2px;
+  color: var(--text);
+  text-decoration: none;
+}
+.today-plate__frame {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+.today-plates a:hover .today-plate__frame {
+  border-color: var(--primary);
+}
+.today-plate__frame img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+.today-plate__fallback {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--space-1);
+  block-size: 100%;
+  color: var(--text-muted);
+  font: var(--type-small);
+  background: repeating-linear-gradient(
+    135deg,
+    var(--surface-subtle) 0 0.5rem,
+    var(--background) 0.5rem 1rem
+  );
+}
+.today-plate__fallback .control-icon {
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+}
+.today-plate__source {
+  position: absolute;
+  inset-inline-start: var(--space-1);
+  inset-block-end: var(--space-1);
+  padding: 1px var(--space-2);
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  border-radius: 4px;
+  font: var(--type-label);
+  font-weight: 400;
+}
+.today-plate__frame:has(.today-plate__fallback) .today-plate__source {
+  display: none;
+}
+.today-plate__title {
+  margin-block-start: var(--space-2);
+  overflow: hidden;
+  font: var(--type-small);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.today-plate__name {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+.today-credits {
+  margin-block-start: var(--space-4);
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.today-credits ul {
+  padding-inline-start: var(--space-4);
+}
+
+@media (max-width: 75rem) {
+  .today-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 48rem) {
+  .today {
+    gap: var(--space-4);
+  }
+  .today-lede {
+    font-size: 1.125rem;
+  }
+  .today-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .today-metrics .ui-metric,
+  .today-metrics .ui-metric:first-child {
+    padding: var(--space-3);
+    border-inline-start: 0;
+    border-block-end: 1px solid var(--border);
+  }
+  .today-panel {
+    padding: var(--space-3) var(--space-4) var(--space-4);
+  }
+  .today-work-list li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .today-work-list time {
+    grid-column: 1 / -1;
+  }
+  .today-activity article {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+}
+
+.today-stack {
+  display: grid;
+  gap: var(--space-6);
+}
+
+/* Data quality: secondary, collapsed, deliberately neutral (no warning colour or badges). */
+.today-quality details {
+  padding: var(--space-3) var(--space-6);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-normal);
+}
+.today-quality summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  min-block-size: var(--control-height);
+  align-content: center;
+  color: var(--text);
+  cursor: pointer;
+}
+.today-quality__title {
+  font: var(--type-strong);
+}
+.today-quality__hint {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.today-quality details[open] summary {
+  margin-block-end: var(--space-2);
+}
+.today-quality .today-ledger {
+  max-inline-size: 40rem;
+}
+@media (max-width: 48rem) {
+  .today-quality details {
+    padding: var(--space-2) var(--space-4);
+  }
+}
+
+/* Next work grouped by record (M6B): the record is named once, its plans listed under it. */
+.today-work-group + .today-work-group {
+  margin-block-start: var(--space-3);
+}
+.today-work-group > h4 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  padding-block: var(--space-3) var(--space-1);
+  border-block-start: 1px solid var(--border-strong);
+  font: var(--type-strong);
+}
+.today-work-group > h4 a {
+  color: var(--text);
+}
+.today-work-group > h4 span {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.today-work-group .today-work-list li {
+  grid-template-columns: 6.25rem minmax(0, 1fr) auto;
+  padding-block: var(--space-2);
+  border-block-start-color: var(--border);
+}
+
+/* M8 Today: a collection bench, not an administrative dashboard (audit P1).
+   The active Plants become a full-width bench of small herbarium sheets above the work; the
+   four counts become one quiet ledger line (their derived context stays, in small type);
+   Next work is the primary panel. Structure, links and wording are unchanged. */
+.today-lede {
+  max-inline-size: 44rem;
+  color: var(--text-muted);
+  font-size: 1.0625rem;
+  line-height: 1.45;
+}
+.today-label {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.today-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-block: 0;
+  border-block-end: 1px solid var(--text);
+}
+.today-metrics .ui-metric,
+.today-metrics .ui-metric:first-child {
+  flex: 1 1 10rem;
+  padding: var(--space-2) var(--space-4) var(--space-3) 0;
+  border-inline-start: 0;
+}
+.today-metrics .ui-metric + .ui-metric {
+  padding-inline-start: var(--space-4);
+  border-inline-start: 1px solid var(--border);
+}
+.today-grid {
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+}
+.today-specimens {
+  grid-column: 1 / -1;
+  order: -1;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.today-specimens .today-panel__header h3,
+.today-work .today-panel__header h3,
+.today-recent .today-panel__header h3 {
+  font: var(--type-h2);
+  font-size: 1.625rem;
+}
+.today-plates {
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 12rem));
+  gap: var(--space-4);
+}
+.today-plates a {
+  padding: var(--space-2) var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+.today-plates a:hover {
+  border-color: var(--border-strong);
+}
+.today-plate__frame {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1 / 1;
+  border: 0;
+  border-radius: 2px;
+}
+.today-plates a:hover .today-plate__frame {
+  border-color: transparent;
+}
+/* Mounted and uncropped, never enlarged: the API thumbnail stays at or below its own size. */
+.today-plate__frame img {
+  inline-size: auto;
+  block-size: auto;
+  max-inline-size: calc(100% - 2 * var(--space-3));
+  max-block-size: calc(100% - 2 * var(--space-3));
+  padding: var(--space-1);
+  object-fit: contain;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.today-plate__fallback {
+  inline-size: 100%;
+  color: var(--border-strong);
+  background: none;
+  font-size: 0;
+}
+.today-plate__fallback .control-icon {
+  inline-size: 1.375rem;
+  block-size: 1.375rem;
+}
+.today-plate__title {
+  padding-inline: var(--space-1);
+}
+.today-plate__name {
+  padding-inline: var(--space-1);
+}
+.today-work {
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.today-windows {
+  display: inline-flex;
+  gap: 0;
+}
+.today-windows a {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-block-size: var(--control-height);
+  padding: var(--space-2) var(--space-3);
+  border-radius: 0;
+}
+.today-windows a + a {
+  margin-inline-start: -1px;
+}
+.today-windows a:first-child {
+  border-radius: var(--radius-small) 0 0 var(--radius-small);
+}
+.today-windows a:last-child {
+  border-radius: 0 var(--radius-small) var(--radius-small) 0;
+}
+.today-windows strong {
+  font: 500 1rem/1 var(--font-data);
+}
+@media (max-width: 48rem) {
+  .today-plates {
+    display: flex;
+    gap: var(--space-3);
+    overflow-x: auto;
+    padding-block-end: var(--space-1);
+  }
+  .today-plates > li {
+    flex: none;
+    inline-size: 9rem;
+  }
+  .today-windows {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* One search on Today: the page's collection search. The shell's own entry is hidden while
+   it is on screen (Ctrl/⌘K still opens the palette). */
+.wb-shell:has(.app-content .today)
+  :is(
+    .wb-search-trigger,
+    .wb-rail__search,
+    .wb-mobilebar [aria-label="Search and commands"]
+  ) {
+  display: none;
+}
+
+/* Wide: Next work and Recent activity side by side under the bench. The grid wrapper steps
+   aside (display: contents) so its two panels place in the page grid; DOM order and headings
+   are unchanged. */
+@media (min-width: 64rem) {
+  .today {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    column-gap: var(--space-8);
+    align-items: start;
+  }
+  .today > * {
+    grid-column: 1 / -1;
+  }
+  .today > .today-grid {
+    display: contents;
+  }
+  .today > .today-lede {
+    order: -4;
+  }
+  .today > .today-holdings {
+    order: -3;
+  }
+  .today .today-specimens {
+    order: -2;
+    grid-column: 1 / -1;
+  }
+  .today .today-work {
+    order: -1;
+    grid-column: 1;
+  }
+  .today > .today-stack {
+    order: -1;
+    grid-column: 2;
+  }
+}

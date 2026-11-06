@@ -2,6 +2,7 @@ import { ActionButton } from "../components/Action";
 import { DetailEmptyState } from "../components/DetailEmptyState";
 import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
+import { clearEntryRequest, hasEntryRequest } from "../events/entryRequest";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -63,7 +64,19 @@ export function GerminationSection({ sowingId }: { sowingId: string }) {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [retry, setRetry] = useState(0);
-  const [editor, setEditor] = useState<Editor | null>(null);
+  // "?entry=new" (Record sheet, palette) opens the add form once; see entryRequest.ts.
+  const [editor, setEditor] = useState<Editor | null>(() =>
+    auth.state.status === "authenticated" && hasEntryRequest()
+      ? { kind: "add" }
+      : null,
+  );
+  const addTrigger = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!hasEntryRequest()) return;
+    clearEntryRequest();
+    // Closing the form returns focus to the section's own Add observation button.
+    returnFocus.current ??= addTrigger.current;
+  }, []);
   const [date, setDate] = useState("");
   const [count, setCount] = useState("");
   const [saving, setSaving] = useState(false);
@@ -209,6 +222,7 @@ export function GerminationSection({ sowingId }: { sowingId: string }) {
         </div>
         {canEdit && (
           <button
+            ref={addTrigger}
             type="button"
             onClick={(event) => {
               open({ kind: "add" }, event.currentTarget);

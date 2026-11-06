@@ -12,7 +12,7 @@ import { AuthContext, type AuthContextValue } from "../auth/context";
 import { ApiError } from "../auth/api";
 import * as api from "./api";
 import { ScheduleScreen } from "./ScheduleScreen";
-import { UpcomingActivities } from "./UpcomingActivities";
+import { RecordTimeline } from "../timeline/RecordTimeline";
 import {
   defaultState,
   localDay,
@@ -331,7 +331,7 @@ test("errors, retry and empty state remain usable", async () => {
   expect(await screen.findByText("No planned activities yet.")).toBeVisible();
 });
 test("bounded entity and Dashboard summaries link to canonical Schedule filters", async () => {
-  mount(<UpcomingActivities kind="plant" id={id} />);
+  mount(<RecordTimeline kind="plant" id={id} />);
   await screen.findByRole("link", { name: "Repot basil" });
   expect(api.listSchedule).toHaveBeenCalledWith(
     expect.objectContaining({ target_kind: ["plant"], target_id: id }),
@@ -638,7 +638,7 @@ test("mobile day selection exposes inline work and date prefill without a modal"
     );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     const agenda = screen.getByRole("region", {
-      name: "Thursday, 1 October 2026",
+      name: "Scheduled work, Thursday, 1 October 2026",
     });
     expect(
       within(agenda).getByRole("button", { name: "Repot basil" }),
@@ -649,6 +649,173 @@ test("mobile day selection exposes inline work and date prefill without a modal"
     expect(screen.getByLabelText("Due date")).toHaveValue("2026-10-01");
   } finally {
     vi.unstubAllGlobals();
+  }
+});
+
+test("mobile day panel opens only on selection and closes without changing month, date or filters", async () => {
+  vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: true }));
+  try {
+    calendarRoute();
+    const user = userEvent.setup();
+    mount();
+    const day = await screen.findByRole("button", {
+      name: /Thursday, 1 October 2026,/,
+    });
+    expect(
+      screen.queryByRole("region", {
+        name: "Scheduled work, Thursday, 1 October 2026",
+      }),
+    ).not.toBeInTheDocument();
+    await user.click(day);
+    const panel = screen.getByRole("region", {
+      name: "Scheduled work, Thursday, 1 October 2026",
+    });
+    const address = window.location.hash;
+    await user.click(within(panel).getByRole("button", { name: "Close day" }));
+    expect(
+      screen.queryByRole("region", {
+        name: "Scheduled work, Thursday, 1 October 2026",
+      }),
+    ).not.toBeInTheDocument();
+    expect(window.location.hash).toBe(address);
+    expect(day).toHaveAttribute("aria-pressed", "true");
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+
+function phoneMedia() {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn((query: string) => ({ matches: query.includes("max-width") })),
+  );
+  return vi.spyOn(HTMLElement.prototype, "scrollIntoView");
+}
+
+test("phone day selection by touch moves focus to the announced panel and Close day returns it", async () => {
+  const scrollIntoView = phoneMedia();
+  try {
+    calendarRoute("&activity_kind=water");
+    const user = userEvent.setup();
+    mount();
+    const day = await screen.findByRole("button", {
+      name: /Thursday, 1 October 2026,/,
+    });
+    await user.pointer({ keys: "[TouchA]", target: day });
+    const panel = screen.getByRole("region", {
+      name: "Scheduled work, Thursday, 1 October 2026",
+    });
+    const heading = within(panel).getByRole("heading", {
+      name: "Thursday, 1 October 2026",
+    });
+    expect(heading).toHaveFocus();
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(scrollIntoView.mock.contexts.at(-1)).toBe(panel);
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      block: "nearest",
+      behavior: "smooth",
+    });
+    const address = window.location.hash;
+    expect(address).toContain("date=2026-10-01");
+    await user.pointer({
+      keys: "[TouchA]",
+      target: within(panel).getByRole("button", { name: "Close day" }),
+    });
+    expect(screen.queryByRole("region", { name: /Scheduled work/ })).toBeNull();
+    expect(day).toHaveFocus();
+    expect(day).toHaveAttribute("aria-pressed", "true");
+    expect(window.location.hash).toBe(address);
+    expect(window.location.hash).toContain("activity_kind=water");
+    expect(window.location.hash).toContain("month=2026-10");
+  } finally {
+    vi.unstubAllGlobals();
+    scrollIntoView.mockRestore();
+  }
+});
+
+test("phone day panel is reachable and dismissible from the keyboard alone", async () => {
+  const scrollIntoView = phoneMedia();
+  try {
+    calendarRoute();
+    const user = userEvent.setup();
+    mount();
+    const day = await screen.findByRole("button", {
+      name: /Thursday, 1 October 2026,/,
+    });
+    day.focus();
+    await user.keyboard("{Enter}");
+    const panel = screen.getByRole("region", {
+      name: "Scheduled work, Thursday, 1 October 2026",
+    });
+    expect(within(panel).getByRole("heading", { level: 4 })).toHaveFocus();
+    await user.tab();
+    expect(
+      within(panel).getByRole("button", { name: "Close day" }),
+    ).toHaveFocus();
+    await user.tab();
+    expect(
+      within(panel).getByRole("button", { name: "Add activity" }),
+    ).toHaveFocus();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("region", { name: /Scheduled work/ })).toBeNull();
+    expect(day).toHaveFocus();
+    const next = screen.getByRole("button", {
+      name: /Friday, 2 October 2026,/,
+    });
+    next.focus();
+    await user.keyboard(" ");
+    expect(
+      screen.getByRole("heading", {
+        name: "Friday, 2 October 2026",
+      }),
+    ).toHaveFocus();
+  } finally {
+    vi.unstubAllGlobals();
+    scrollIntoView.mockRestore();
+  }
+});
+
+test("phone day panel opened from the address does not move focus or scroll", async () => {
+  const scrollIntoView = phoneMedia();
+  try {
+    calendarRoute("&date=2026-10-01");
+    mount();
+    expect(
+      await screen.findByRole("region", {
+        name: "Scheduled work, Thursday, 1 October 2026",
+      }),
+    ).toBeInTheDocument();
+    expect(document.body).toHaveFocus();
+    expect(scrollIntoView).not.toHaveBeenCalled();
+  } finally {
+    vi.unstubAllGlobals();
+    scrollIntoView.mockRestore();
+  }
+});
+
+test("Escape in a row's action menu closes the menu, not the phone day panel", async () => {
+  const scrollIntoView = phoneMedia();
+  try {
+    calendarRoute();
+    const user = userEvent.setup();
+    mount();
+    await user.click(
+      await screen.findByRole("button", { name: /Thursday, 1 October 2026,/ }),
+    );
+    const panel = screen.getByRole("region", {
+      name: "Scheduled work, Thursday, 1 October 2026",
+    });
+    const menu = within(panel).getByRole("button", {
+      name: "Actions for Repot basil",
+    });
+    await user.click(menu);
+    expect(menu).toHaveAttribute("aria-expanded", "true");
+    await user.keyboard("{Escape}");
+    expect(menu).toHaveAttribute("aria-expanded", "false");
+    expect(panel).toBeInTheDocument();
+  } finally {
+    vi.unstubAllGlobals();
+    scrollIntoView.mockRestore();
   }
 });
 

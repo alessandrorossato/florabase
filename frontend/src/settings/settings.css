@@ -77,13 +77,6 @@
   height: auto;
   overflow: visible;
 }
-@media screen and (min-width: 48.01rem) {
-  .application-shell:has(.settings-workspace) > .desktop-sidebar {
-    position: sticky;
-    top: 0;
-    height: 100dvh;
-  }
-}
 
 /* Browser-local appearance preferences do not participate in the General form. */
 .appearance-settings fieldset {
@@ -134,6 +127,7 @@
   gap: var(--space-2);
   width: 4rem;
   padding: var(--space-1) var(--space-2);
+  font-family: var(--font-ui);
   color: var(--text);
   background: var(--background);
   border: 1px solid var(--border-strong);

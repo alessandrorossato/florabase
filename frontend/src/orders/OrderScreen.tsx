@@ -29,10 +29,11 @@ import {
   CollectionCard,
   DetailHeader,
   DetailPage,
-  DetailSummary,
   DetailTabs,
   WorkspaceIntro,
   DetailLoading,
+  SpecimenLabel,
+  SpecimenPlate,
 } from "../components/CollectionUI";
 import { DetailEmptyState } from "../components/DetailEmptyState";
 import { DirectoryResults } from "../components/DirectoryResults";
@@ -377,11 +378,28 @@ function OrderDetailView({
         ]}
       />
       <DetailHeader
+        label={
+          <SpecimenLabel
+            kind="Order"
+            name="Current Order state"
+            rows={[
+              { label: "Order date", value: orderDate(order.ordered_on) },
+              { label: "Total price", value: orderPrice(order) },
+              { label: "Physical seed lots", value: order.seed_lots_total },
+            ]}
+            note={
+              <p className="field-help">
+                The total transaction price is never divided or allocated
+                between seed lots.
+              </p>
+            }
+          />
+        }
         headingRef={headingRef}
-        visual={
-          <div className="collection-primary-detail">
+        plate={
+          <SpecimenPlate>
             <RecordVisual kind="order" label={orderTitle(order)} photo={null} />
-          </div>
+          </SpecimenPlate>
         }
         eyebrow="Purchase order"
         title={orderTitle(order)}
@@ -438,21 +456,6 @@ function OrderDetailView({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <DetailSummary
-            id="order-summary-title"
-            label="Current Order state"
-            metrics={[
-              { label: "Order date", value: orderDate(order.ordered_on) },
-              { label: "Total price", value: orderPrice(order) },
-              { label: "Physical seed lots", value: order.seed_lots_total },
-            ]}
-            note={
-              <p className="field-help">
-                The total transaction price is never divided or allocated
-                between seed lots.
-              </p>
-            }
-          />
           <section
             className="order-fact-group"
             aria-labelledby="order-transaction-title"

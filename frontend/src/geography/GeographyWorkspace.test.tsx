@@ -124,16 +124,16 @@ test.each([
     const sidebar = screen.getByRole("navigation", {
       name: "Primary navigation",
     });
+    // Workbench: each map is a sub-destination of Geography in the Explore panel,
+    // and canonical and legacy aliases both mark that map as the current page.
+    expect(within(sidebar).getByRole("link", { name: label })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
     expect(
       within(sidebar).getByRole("link", { name: "Geography" }),
-    ).toHaveAttribute("aria-current", "page");
-    for (const name of [
-      "Maps",
-      "Native ranges",
-      "Species distribution",
-      "Collection origins",
-    ])
-      expect(within(sidebar).queryByText(name)).not.toBeInTheDocument();
+    ).not.toHaveAttribute("aria-current");
+    expect(within(sidebar).queryByText("Maps")).not.toBeInTheDocument();
     const breadcrumbs = screen.getByRole("navigation", { name: "Breadcrumb" });
     expect(
       within(breadcrumbs).getByRole("link", { name: "Geography" }),

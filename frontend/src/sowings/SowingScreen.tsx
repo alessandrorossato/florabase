@@ -1,6 +1,7 @@
 import {
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -50,7 +51,8 @@ import { RecordVisual } from "../photos/RecordVisual";
 import { CreationReversal } from "../propagation/CreationReversal";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
-import { UpcomingActivities } from "../schedule/UpcomingActivities";
+import { RecordTimeline } from "../timeline/RecordTimeline";
+import { LineageStrip } from "../lineage/LineageStrip";
 import { sowingFormPanels } from "./SowingFormFields";
 
 import { ApiError } from "../auth/api";
@@ -63,7 +65,8 @@ import {
   WorkspaceIntro,
   DetailLoading,
   DetailPage,
-  DetailSummary,
+  SpecimenLabel,
+  SpecimenPlate,
 } from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
 import {
@@ -330,15 +333,27 @@ function Detail({
       controller.abort();
     };
   }, [sowing.id, sowing.updated_at]);
-  const [tab, setTab] = useState(
-    initialTab === "propagation"
+  const tabOf = (value?: string) =>
+    value === "propagation"
       ? "lineage"
-      : initialTab &&
-          ["overview", "germination", "photos", "lineage"].includes(initialTab)
-        ? initialTab
-        : "overview",
-  );
-  useEffect(() => {
+      : value &&
+          ["overview", "germination", "photos", "lineage"].includes(value)
+        ? value
+        : "overview";
+  const [tab, setTab] = useState(() => tabOf(initialTab));
+  // Follow later route changes on the same mounted record (a link or Record sheet action to
+  // ?tab=lineage while this record is open); useState only reads the first value. Edit
+  // routes are handled by the edit workspace and leave the selected section alone.
+  const [lastRouteTab, setLastRouteTab] = useState(initialTab);
+  if (lastRouteTab !== initialTab) {
+    setLastRouteTab(initialTab);
+    if (initialTab !== "edit") setTab(tabOf(initialTab));
+  }
+  // Canonicalize the legacy ?tab=propagation address in the same commit as the Lineage tab
+  // renders (before paint), so the address and the selected tab never disagree. As a passive
+  // effect this left a window in which the tab was selected but the address still said
+  // "propagation" (observed in 2 of 150 renders; M6 SowingScreen intermittent).
+  useLayoutEffect(() => {
     if (initialTab === "propagation")
       window.history.replaceState(
         null,
@@ -372,18 +387,45 @@ function Detail({
         ]}
       />
       <DetailHeader
+        label={
+          <SpecimenLabel
+            kind="Sowing"
+            name="Current Sowing state"
+            rows={[
+              { label: "Sown", value: dateLabel(sowing.sowing_date) },
+              {
+                label: "Germination",
+                wide: true,
+                value: <GerminationProgress sowing={sowing} />,
+              },
+              {
+                label: "Current location",
+                wide: true,
+                value: sowing.location ? (
+                  <a href={`#/locations/${sowing.location.id}`}>
+                    {sowing.location.display_path}
+                  </a>
+                ) : (
+                  "Not recorded"
+                ),
+              },
+            ]}
+          />
+        }
         headingRef={headingRef}
         eyebrow="Sowing"
-        visual={
-          <RecordVisual
-            kind="sowing"
-            label={recordName(sowing, "Sowing")}
-            identity={{
-              id: sowing.seed_lot.botanical_identity_id,
-              display_label: sowing.seed_lot.botanical_identity_display_label,
-            }}
-            showSource
-          />
+        plate={
+          <SpecimenPlate>
+            <RecordVisual
+              kind="sowing"
+              label={recordName(sowing, "Sowing")}
+              identity={{
+                id: sowing.seed_lot.botanical_identity_id,
+                display_label: sowing.seed_lot.botanical_identity_display_label,
+              }}
+              showSource
+            />
+          </SpecimenPlate>
         }
         title={recordName(sowing, "Unlabelled sowing")}
         secondary={
@@ -399,28 +441,31 @@ function Detail({
                   </a>
                 ),
               },
-              {
-                label: "Seed lot",
-                value: (
-                  <a href={`#/seeds/${sowing.seed_lot.id}`}>
-                    {recordName(sowing.seed_lot, "Unlabelled SeedLot")}
-                  </a>
-                ),
-              },
             ]}
           />
         }
         status={
-          <>
-            <LifecycleStatus state={sowing.lifecycle}>
-              {lifecycleLabels[sowing.lifecycle]}
-            </LifecycleStatus>
-            {sowing.location && (
-              <a href={`#/locations/${sowing.location.id}`}>
-                {sowing.location.display_path}
-              </a>
-            )}
-          </>
+          <LifecycleStatus state={sowing.lifecycle}>
+            {lifecycleLabels[sowing.lifecycle]}
+          </LifecycleStatus>
+        }
+        lineage={
+          <LineageStrip
+            currentKind={"sowing"}
+            key={sowing.updated_at}
+            kind="seed-lots"
+            id={sowing.seed_lot.id}
+            includeSubject
+            current="This Sowing"
+            fullHref={
+              tab === "lineage"
+                ? undefined
+                : `#/sowings/${sowing.id}?tab=lineage`
+            }
+            onFull={() => {
+              setTab("lineage");
+            }}
+          />
         }
         primaryActions={
           sowing.lifecycle !== "reversed" ? (
@@ -483,37 +528,6 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <DetailSummary
-            id="sowing-summary-title"
-            label="Current Sowing state"
-            metrics={[
-              {
-                label: "Lifecycle",
-                value: (
-                  <LifecycleStatus state={sowing.lifecycle}>
-                    {lifecycleLabels[sowing.lifecycle]}
-                  </LifecycleStatus>
-                ),
-              },
-              { label: "Sown", value: dateLabel(sowing.sowing_date) },
-              {
-                label: "Germination",
-                wide: true,
-                value: <GerminationProgress sowing={sowing} />,
-              },
-              {
-                label: "Current location",
-                wide: true,
-                value: sowing.location ? (
-                  <a href={`#/locations/${sowing.location.id}`}>
-                    {sowing.location.display_path}
-                  </a>
-                ) : (
-                  "Not recorded"
-                ),
-              },
-            ]}
-          />
           <section
             aria-labelledby="sowing-origin-title"
             className="sowing-fact-group"
@@ -581,10 +595,24 @@ function Detail({
               </dl>
             </section>
           )}
-          <UpcomingActivities
-            kind={"sowing"}
+          <RecordTimeline
+            kind="sowing"
             id={sowing.id}
             current={sowing.lifecycle === "active"}
+            recordedElsewhere={
+              <>
+                Germination counts and dates are recorded in{" "}
+                <a
+                  href={`#/sowings/${sowing.id}?tab=germination`}
+                  onClick={() => {
+                    setTab("germination");
+                  }}
+                >
+                  Germination
+                </a>
+                .
+              </>
+            }
           />
           <section
             className="sowing-fact-group"

@@ -13,7 +13,6 @@ import { StrictMode } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { App } from "../App";
 import { AuthContext, type AuthContextValue } from "../auth/context";
-import { SettingsScreen } from "../settings/SettingsScreen";
 import { LabelSheet } from "./LabelSheet";
 import { LabelsScreen } from "./LabelsScreen";
 import {
@@ -508,11 +507,16 @@ test("direct composer URL survives authentication and uses saved QR origin indep
   render(<App />);
   await screen.findByRole("spinbutton");
   expect(screen.getByRole("button", { name: "Print" })).toBeEnabled();
+  // Workbench: Labels lives in the Settings workspace, not among primary sections.
   expect(
     within(
       screen.getByRole("navigation", { name: "Primary navigation" }),
-    ).queryByRole("link", { name: "Labels" }),
-  ).not.toBeInTheDocument();
+    ).getByRole("link", { name: "Labels" }),
+  ).toHaveAttribute("aria-current", "page");
+  expect(screen.getByRole("tab", { name: /^Settings/ })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
 });
 
 test("full label content remains readable when fixed paper capacity is exceeded", async () => {
@@ -903,15 +907,71 @@ test("QR dialog saves normalized shared setting and regenerates QR without losin
     ([, init]) => init?.method === "PUT",
   )?.[1];
   expect(new Headers(request?.headers).get("X-CSRF-Token")).toBe("labels-csrf");
+  // The shared setting persists: a fresh Labels workspace reads the saved address.
   cleanup();
-  render(
-    <AuthContext.Provider value={authenticated}>
-      <SettingsScreen />
-    </AuthContext.Provider>,
-  );
+  authenticatedComposer();
   expect(
-    await screen.findByRole("textbox", { name: "Public / QR base URL" }),
-  ).toHaveValue("https://new.example");
+    await screen.findByText("QR destination: https://new.example"),
+  ).toBeVisible();
+});
+
+test("QR destination failures retain edits, a later default survives the save, and expiry is actionable (moved from Settings)", async () => {
+  const fixture = persistedSettingsFixture();
+  const original = fixture.fetch.getMockImplementation();
+  if (!original) throw new Error("Missing fixture");
+  fixture.fetch.mockImplementation((path, init) =>
+    init?.method === "PUT"
+      ? Promise.resolve(response({}, 500))
+      : original(path, init),
+  );
+  authenticatedComposer();
+  await screen.findByRole("spinbutton");
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Edit QR destination" }));
+  const input = screen.getByRole("textbox", { name: "Public / QR base URL" });
+  await user.clear(input);
+  await user.type(input, "https://kept.example");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Your changes are retained",
+  );
+  expect(input).toHaveValue("https://kept.example");
+
+  // A default label size saved elsewhere after this page loaded survives a QR save.
+  let latest = {
+    public_qr_base_url: canonicalOrigin as string | null,
+    default_label_preset: "large",
+  };
+  fixture.fetch.mockImplementation((path, init) => {
+    if (!requestPath(path).endsWith("application-settings"))
+      return original(path, init);
+    if (init?.method === "PUT")
+      latest = JSON.parse(init.body as string) as typeof latest;
+    return Promise.resolve(response(latest));
+  });
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => {
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+  expect(latest).toEqual({
+    public_qr_base_url: "https://kept.example",
+    default_label_preset: "large",
+  });
+
+  fixture.fetch.mockImplementation((path, init) =>
+    init?.method === "PUT"
+      ? Promise.resolve(response({}, 401))
+      : original(path, init),
+  );
+  await user.click(screen.getByRole("button", { name: "Edit QR destination" }));
+  await user.type(
+    screen.getByRole("textbox", { name: "Public / QR base URL" }),
+    "x",
+  );
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => {
+    expect(sessionExpired).toHaveBeenCalled();
+  });
 });
 
 test("QR dialog server validation retains edits and dirty Escape/backdrop require explicit discard", async () => {

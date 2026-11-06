@@ -42,7 +42,6 @@ test("empty collection preserves all operational areas and uses the local calend
   expect(
     await screen.findByRole("heading", { name: "Collection snapshot" }),
   ).toBeInTheDocument();
-  await userEvent.click(screen.getByText("Recent activity · 0 latest entries"));
   for (const name of ["Next work", "Recent activity"])
     expect(screen.getByRole("heading", { name })).toBeInTheDocument();
   expect(screen.getByText(/No planned activities/)).toBeInTheDocument();
@@ -124,7 +123,6 @@ test("Journal, History, partial dates, reversal and planned work remain distingu
   });
   render(<DashboardOverview />);
   await screen.findByRole("heading", { name: "Collection snapshot" });
-  await userEvent.click(screen.getByText(/Recent activity ·/));
   const recent = await screen.findByRole("region", { name: "Recent activity" });
   expect(within(recent).getByText("Journal")).toBeInTheDocument();
   expect(within(recent).getByText("History")).toBeInTheDocument();
@@ -264,4 +262,70 @@ test("Plant visit sample stays stable through rerenders, and broken primary fall
   fireEvent.error(screen.getByRole("img", { name: plant.title }));
   expect(screen.queryByRole("img")).toBeNull();
   expect(screen.getByRole("link", { name: plant.title })).toBeVisible();
+});
+
+test("Today composes its summary only from returned counts and states every source", async () => {
+  get.mockResolvedValue({
+    ...empty,
+    counts: { ...empty.counts, active_plants: 1, active_seed_lots: 7 },
+    overview: {
+      ...emptyOverview,
+      overdue: 1,
+      due_today: 2,
+      current_identities: 5,
+      identities_with_profile: 4,
+      identities_with_wfo: 0,
+      sowings_unknown_germination: 3,
+      sowings_zero_germination: 1,
+      sowings_with_germination: 2,
+      purchase_packets_without_order: 6,
+    },
+  });
+  render(<DashboardOverview />);
+  expect(
+    await screen.findByText(
+      "1 overdue and 2 due today in the Schedule. You hold 1 active Plant, 0 Plant groups, 7 seed lots and 0 active sowings.",
+    ),
+  ).toBeInTheDocument();
+  expect(screen.getByText("Planned in Schedule")).toBeInTheDocument();
+  expect(
+    screen.getByText(
+      "Recorded in the Journal and derived History, latest first",
+    ),
+  ).toBeInTheDocument();
+  const records = screen.getByRole("region", { name: "Data quality" });
+  const disclosure = within(records)
+    .getByText("Data quality")
+    .closest("details");
+  expect(disclosure).not.toHaveAttribute("open");
+  await userEvent.click(within(records).getByText("Data quality"));
+  expect(disclosure).toHaveAttribute("open");
+  expect(records).toHaveTextContent(
+    "Derived counts of current records. Prompts to review, not tasks or conclusions.",
+  );
+  for (const [term, value] of [
+    ["Active sowings without a germination count", "3"],
+    ["Active sowings with zero germinated recorded", "1"],
+    ["Active sowings with germination recorded", "2"],
+    ["Purchased seed lots without an Order link", "6"],
+    ["Current identities with reference knowledge", "4 of 5"],
+    ["Current identities with a confirmed WFO link", "0 of 5"],
+  ]) {
+    const row = within(records).getByText(term).closest("div");
+    expect(row).toHaveTextContent(`${term}${value}`);
+  }
+  expect(records).toHaveTextContent("A zero count is recorded, not a failure.");
+  expect(
+    screen.getByText(/Overdue is derived from the due date/),
+  ).toBeInTheDocument();
+});
+
+test("an empty Schedule says so instead of manufacturing work", async () => {
+  get.mockResolvedValue(empty);
+  render(<DashboardOverview />);
+  expect(
+    await screen.findByText(
+      "Nothing is overdue or due today in the Schedule. You hold 0 active Plants, 0 Plant groups, 0 seed lots and 0 active sowings.",
+    ),
+  ).toBeInTheDocument();
 });

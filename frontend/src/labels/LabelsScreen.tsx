@@ -48,9 +48,12 @@ type RecordsState =
 export function LabelsScreen({
   initialKind,
   initialId,
+  openQrDestination = false,
 }: {
   initialKind?: string;
   initialId?: string;
+  /** The former Settings QR link (#/settings?tab=general) opens the QR dialog here. */
+  openQrDestination?: boolean;
 }) {
   const auth = useAuth();
   const [presetId, setPresetId] = useState<LabelPresetId>("medium");
@@ -58,7 +61,12 @@ export function LabelsScreen({
     status: "loading" | "error" | "ready";
     baseUrl: string | null;
   }>({ status: "loading", baseUrl: null });
-  const [editingQr, setEditingQr] = useState(false);
+  const [editingQr, setEditingQr] = useState(openQrDestination);
+  // Once open, the one-time ?qr=edit marker leaves the address (a reload shows Labels).
+  useEffect(() => {
+    if (openQrDestination && window.location.hash === "#/labels?qr=edit")
+      window.history.replaceState(null, "", "#/labels");
+  }, [openQrDestination]);
   const [settingsRetry, setSettingsRetry] = useState(0);
   const [defaultPreset, setDefaultPreset] = useState<LabelPresetId | null>(
     null,
@@ -207,7 +215,7 @@ export function LabelsScreen({
       <PageHeader
         title="Labels"
         titleId="labels-heading"
-        eyebrow="Tools"
+        eyebrow="Settings"
         description="Prepare collection material for print."
         tools={
           <ActionButton
@@ -241,28 +249,41 @@ export function LabelsScreen({
           Could not load print settings. Printing is unavailable.
         </ErrorState>
       ) : (
-        <div
-          className={`label-qr-destination${configuration.baseUrl ? "" : " notice notice--warning"}`}
+        <section
+          className={`label-qr-destination${configuration.baseUrl ? "" : " label-qr-destination--unset"}`}
+          aria-labelledby="label-qr-destination-title"
         >
-          <span>
-            {configuration.baseUrl
-              ? `QR destination: ${configuration.baseUrl}`
-              : "QR destination is not configured. Set a public URL before printing."}
-          </span>
+          <div className="label-qr-destination__text">
+            <h3 id="label-qr-destination-title">QR destination</h3>
+            <p className="label-qr-destination__help">
+              The public address encoded in every QR code you print. Scanning a
+              label opens that record at this address. Labels already printed
+              keep the address they were printed with.
+            </p>
+            {configuration.baseUrl ? (
+              <p className="label-qr-destination__value">
+                {`QR destination: ${configuration.baseUrl}`}
+              </p>
+            ) : (
+              <p className="label-qr-destination__warning">
+                QR destination is not configured. Printing is unavailable until
+                an address is saved.
+              </p>
+            )}
+          </div>
           <ActionButton
             icon="edit"
             type="button"
             className="button--secondary"
-            aria-label="Edit QR destination"
             onClick={() => {
               setEditingQr(true);
             }}
           >
-            Edit
+            Edit QR destination
           </ActionButton>
-        </div>
+        </section>
       )}
-      {editingQr && (
+      {editingQr && configuration.status === "ready" && (
         <QrDestinationDialog
           value={configuration.baseUrl}
           onClose={() => {

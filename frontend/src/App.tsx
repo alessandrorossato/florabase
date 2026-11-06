@@ -1,26 +1,20 @@
 import { geographyRoute, type GeographyView } from "./geography/routes";
-import { Icon } from "./components/Icon";
-import { navigationIcons } from "./components/navigationIcons";
-import { ActionButton, IconButton } from "./components/Action";
 import {
   collectionPageParent,
   openCollectionPage,
 } from "./components/recordNavigation";
-import { SidebarResizeHandle } from "./components/SidebarResizeHandle";
-import { sidebarWidthLimit } from "./components/sidebarWidth";
-import type { CSSProperties, MouseEvent } from "react";
 import { RecordPresentationProvider } from "./components/RecordPresentationProvider";
-import { Fragment, lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 import type { components } from "./api/schema";
 import { AuthProvider } from "./auth/AuthProvider";
 import { useAuth } from "./auth/context";
 import { LoginForm } from "./auth/LoginForm";
-import { ThemeControl } from "./components/ThemeControl";
-import { TaskDialog } from "./components/TaskDialog";
 import { WorkspaceBoundary } from "./components/WorkspaceBoundary";
 import { loadWorkspaceChunk } from "./components/workspaceChunk";
 import { isFreshDirectoryNavigation } from "./components/recordNavigation";
+import { WorkbenchShell } from "./shell/WorkbenchShell";
+import type { Section } from "./shell/navigation";
 
 const HarvestScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
@@ -168,26 +162,6 @@ type HealthState =
   | { status: "ready"; response: HealthResponse }
   | { status: "error" };
 
-type Section =
-  | "dashboard"
-  | "seeds"
-  | "sowings"
-  | "plants"
-  | "harvests"
-  | "events"
-  | "history"
-  | "schedule"
-  | "taxonomy"
-  | "identities"
-  | "suppliers"
-  | "orders"
-  | "locations"
-  | "geography"
-  | "import-export"
-  | "labels"
-  | "settings"
-  | "media";
-
 interface Route {
   section: Section;
   geographyView?: GeographyView;
@@ -206,6 +180,8 @@ interface Route {
   placeId?: string;
   labelKind?: string;
   labelRecord?: string;
+  /** The former Settings QR address (#/settings?tab=general) opens Labels' QR dialog. */
+  labelQr?: boolean;
 }
 
 function currentRoute(): Route {
@@ -258,6 +234,12 @@ function currentRoute(): Route {
       tab,
       ...context,
     };
+  if (first === "settings" && tab === "general") {
+    // Compatible redirect: the QR address moved to Labels (M8 final). The intent travels in
+    // the address, so a repeated parse (React development double-invocation) agrees.
+    window.history.replaceState(null, "", "#/labels?qr=edit");
+    return { section: "labels", labelQr: true, ...context };
+  }
   const valid: Section[] = [
     "dashboard",
     "seeds",
@@ -285,77 +267,10 @@ function currentRoute(): Route {
     tab,
     placeId,
     labelKind: params.get("kind") ?? undefined,
+    labelQr: first === "labels" && params.get("qr") === "edit",
     labelRecord: params.get("record") ?? undefined,
     ...context,
   };
-}
-
-const desktopGroups: {
-  label: string;
-  items: { id: Section; label: string }[];
-}[] = [
-  { label: "Overview", items: [{ id: "dashboard", label: "Dashboard" }] },
-  {
-    label: "Collection",
-    items: [
-      { id: "seeds", label: "Seeds" },
-      { id: "sowings", label: "Sowings" },
-      { id: "plants", label: "Plants" },
-      { id: "harvests", label: "Harvests" },
-      { id: "locations", label: "Locations" },
-    ],
-  },
-  {
-    label: "Activity",
-    items: [
-      { id: "events", label: "Journal" },
-      { id: "history", label: "History" },
-      { id: "schedule", label: "Schedule" },
-    ],
-  },
-  {
-    label: "Explore",
-    items: [
-      { id: "identities", label: "Botanical identities" },
-      { id: "taxonomy", label: "Taxonomy" },
-      { id: "media", label: "Media" },
-      { id: "geography", label: "Geography" },
-    ],
-  },
-  {
-    label: "Sourcing",
-    items: [
-      { id: "suppliers", label: "Suppliers" },
-      { id: "orders", label: "Orders" },
-    ],
-  },
-];
-
-const sidebarPreferenceKey = "florabase.sidebar.collapsed-groups.v1";
-function expandActiveGroup(collapsed: string[], section: Section): string[] {
-  const active = desktopGroups.find((group) =>
-    group.items.some((item) => item.id === section),
-  );
-  return active && collapsed.includes(active.label)
-    ? collapsed.filter((label) => label !== active.label)
-    : collapsed;
-}
-function readCollapsedGroups(section: Section): string[] {
-  try {
-    const stored: unknown = JSON.parse(
-      window.localStorage.getItem(sidebarPreferenceKey) ?? "[]",
-    );
-    return expandActiveGroup(
-      desktopGroups
-        .filter(
-          (group) => Array.isArray(stored) && stored.includes(group.label),
-        )
-        .map((group) => group.label),
-      section,
-    );
-  } catch {
-    return [];
-  }
 }
 
 function WorkspaceLoading() {
@@ -373,79 +288,13 @@ function ApplicationShell() {
   const state = auth.state;
   const [health, setHealth] = useState<HealthState>({ status: "loading" });
   const [route, setRoute] = useState<Route>(currentRoute);
-  const [collapsedGroups, setCollapsedGroups] = useState(() =>
-    readCollapsedGroups(route.section),
-  );
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(
-        sidebarPreferenceKey,
-        JSON.stringify(collapsedGroups),
-      );
-    } catch {
-      // Navigation still works when browser preference storage is unavailable.
-    }
-  }, [collapsedGroups]);
-  const [moreOpen, setMoreOpen] = useState(false);
   const [navigationReset, setNavigationReset] = useState(0);
-  const [navigationVisible, setNavigationVisible] = useState(true);
-  const [sidebarWidth, setSidebarWidth] = useState(248);
-  useEffect(() => {
-    const resize = () => {
-      setSidebarWidth((current) =>
-        Math.min(current, sidebarWidthLimit(window.innerWidth)),
-      );
-    };
-    window.addEventListener("resize", resize);
-    return () => {
-      window.removeEventListener("resize", resize);
-    };
-  }, []);
-  const showNavigationRef = useRef<HTMLButtonElement>(null);
-  const hideNavigationRef = useRef<HTMLButtonElement>(null);
-  const sidebarRef = useRef<HTMLElement>(null);
-  useEffect(() => {
-    const container = sidebarRef.current?.querySelector<HTMLElement>(
-      ".desktop-sidebar__content",
-    );
-    if (!container || !navigationVisible) return;
-    const revealActive = () => {
-      const active = container.querySelector<HTMLElement>(
-        ".navigation-link[aria-current=page]",
-      );
-      if (!active) return;
-      const bounds = container.getBoundingClientRect();
-      const target = active.getBoundingClientRect();
-      if (target.bottom > bounds.bottom)
-        container.scrollTop += target.bottom - bounds.bottom;
-      else if (target.top < bounds.top)
-        container.scrollTop -= bounds.top - target.top;
-    };
-    revealActive();
-    // Lazy workspace CSS can change shell geometry after the route has activated.
-    const resize =
-      typeof ResizeObserver === "undefined"
-        ? undefined
-        : new ResizeObserver(revealActive);
-    resize?.observe(container);
-    const workspace =
-      sidebarRef.current?.parentElement?.querySelector(".app-content");
-    const content = new MutationObserver(revealActive);
-    if (workspace) content.observe(workspace, { childList: true });
-    return () => {
-      resize?.disconnect();
-      content.disconnect();
-    };
-  }, [route.section, collapsedGroups, navigationVisible, state.status]);
   const formChanged = useRef(false);
 
   useEffect(() => {
     const update = (event: Event) => {
       const next = currentRoute();
       setRoute(next);
-      setCollapsedGroups((collapsed) =>
-        expandActiveGroup(collapsed, next.section),
-      );
       // Explicit directory opens start fresh; detail/history transitions retain
       // their existing focus and interaction behavior.
       if (isFreshDirectoryNavigation(event))
@@ -463,8 +312,8 @@ function ApplicationShell() {
     formChanged.current = false;
   }, [route.section]);
 
-  function navigate(section: Section) {
-    const sameDestination = route.section === section;
+  /** Guarded in-app navigation to any existing hash route (shell, palette, menus). */
+  function navigateTo(target: string) {
     if (
       formChanged.current &&
       document.querySelector(".app-content form:not([role='search'])") &&
@@ -474,31 +323,22 @@ function ApplicationShell() {
     )
       return;
     formChanged.current = false;
-    const target = `#/${section}`;
+    // Creation and source tasks insert their parent page, exactly like content links,
+    // so Back returns to the directory or source record wherever the task started.
+    if (collectionPageParent(target)) {
+      openCollectionPage(target);
+      if (window.scrollY > 0) window.scrollTo(0, 0);
+      return;
+    }
+    const previous = route.section;
     if (window.location.hash === target)
       window.history.replaceState(null, "", target);
     else window.history.pushState(null, "", target);
-    setRoute({ section });
-    setCollapsedGroups((collapsed) => expandActiveGroup(collapsed, section));
-    if (sameDestination) setNavigationReset((value) => value + 1);
-    setMoreOpen(false);
+    const next = currentRoute();
+    setRoute(next);
+    // Same-section targets remount the workspace so initial props apply.
+    if (next.section === previous) setNavigationReset((value) => value + 1);
     if (window.scrollY > 0) window.scrollTo(0, 0);
-  }
-
-  function followNavigation(
-    event: MouseEvent<HTMLAnchorElement>,
-    section: Section,
-  ) {
-    if (
-      event.button !== 0 ||
-      event.metaKey ||
-      event.ctrlKey ||
-      event.shiftKey ||
-      event.altKey
-    )
-      return;
-    event.preventDefault();
-    navigate(section);
   }
 
   useEffect(() => {
@@ -529,121 +369,16 @@ function ApplicationShell() {
   const signedInAs = state.session.display_name ?? state.session.login_name;
 
   return (
-    <div
-      className={`application-shell${navigationVisible ? "" : " navigation-collapsed"}`}
-      style={
-        { "--sidebar-width": `${String(sidebarWidth)}px` } as CSSProperties
-      }
+    <WorkbenchShell
+      section={route.section}
+      hash={window.location.hash || "#/dashboard"}
+      signedInAs={signedInAs}
+      signingOut={state.status === "logging-out"}
+      onSignOut={() => {
+        void auth.logOut();
+      }}
+      onNavigate={navigateTo}
     >
-      <aside
-        ref={sidebarRef}
-        className="desktop-sidebar"
-        aria-label="Application sidebar"
-      >
-        <div className="sidebar-top">
-          <h1 className="sidebar-brand" id="page-title">
-            <a className="brand" href="#/dashboard">
-              Florabase
-            </a>
-          </h1>
-          <IconButton
-            icon="panel-close"
-            label="Hide navigation"
-            tooltip="Collapse the navigation panel"
-            visibleLabel="Hide"
-            shell
-            type="button"
-            className="sidebar-toggle sidebar-toggle--hide"
-            ref={hideNavigationRef}
-            onClick={() => {
-              setNavigationVisible(false);
-              window.setTimeout(() => showNavigationRef.current?.focus(), 0);
-            }}
-          />
-        </div>
-        <div className="desktop-sidebar__content">
-          <nav aria-label="Primary navigation">
-            {desktopGroups.map((group) => (
-              <section key={group.label} aria-label={group.label}>
-                <h2 className="sidebar-group-heading">
-                  <button
-                    type="button"
-                    className="sidebar-group-toggle"
-                    aria-expanded={!collapsedGroups.includes(group.label)}
-                    aria-controls={`navigation-${group.label.toLowerCase()}`}
-                    onClick={() => {
-                      setCollapsedGroups((collapsed) =>
-                        collapsed.includes(group.label)
-                          ? collapsed.filter((label) => label !== group.label)
-                          : [...collapsed, group.label],
-                      );
-                    }}
-                  >
-                    {group.label}
-                    <Icon
-                      name={
-                        collapsedGroups.includes(group.label)
-                          ? "chevron-down"
-                          : "chevron-up"
-                      }
-                    />
-                  </button>
-                </h2>
-                <div
-                  id={`navigation-${group.label.toLowerCase()}`}
-                  hidden={collapsedGroups.includes(group.label)}
-                >
-                  {group.items.map((item) => (
-                    <Fragment key={item.id}>
-                      <a
-                        href={`#/${item.id}`}
-                        className="navigation-link"
-                        aria-current={
-                          route.section === item.id ? "page" : undefined
-                        }
-                        onClick={(event) => {
-                          followNavigation(event, item.id);
-                        }}
-                      >
-                        <Icon name={navigationIcons[item.id]} shell />
-                        {item.label}
-                      </a>
-                    </Fragment>
-                  ))}
-                </div>
-              </section>
-            ))}
-          </nav>
-        </div>
-        <div className="sidebar-utility">
-          <p>Signed in as {signedInAs}</p>
-          <div className="sidebar-footer-actions">
-            <a
-              href="#/settings"
-              className="footer-settings"
-              aria-current={route.section === "settings" ? "page" : undefined}
-              onClick={(event) => {
-                followNavigation(event, "settings");
-              }}
-            >
-              <Icon name={navigationIcons.settings} shell />
-              Settings
-            </a>
-            <ThemeControl />
-          </div>
-          <button
-            className="footer-sign-out"
-            type="button"
-            disabled={state.status === "logging-out"}
-            onClick={() => {
-              void auth.logOut();
-            }}
-          >
-            {state.status === "logging-out" ? "Signing out…" : "Sign out"}
-          </button>
-        </div>
-        <SidebarResizeHandle width={sidebarWidth} onResize={setSidebarWidth} />
-      </aside>
       <section
         aria-label="Workspace content"
         className="app-content"
@@ -684,19 +419,6 @@ function ApplicationShell() {
             formChanged.current = true;
         }}
       >
-        <button
-          type="button"
-          className="sidebar-toggle sidebar-toggle--show"
-          ref={showNavigationRef}
-          aria-label="Show navigation"
-          onClick={() => {
-            setNavigationVisible(true);
-            window.setTimeout(() => hideNavigationRef.current?.focus(), 0);
-          }}
-        >
-          <Icon name="menu" shell />
-          <span>Open navigation</span>
-        </button>
         <RecordPresentationProvider
           key={route.section}
           fetchIdentities={
@@ -793,12 +515,13 @@ function ApplicationShell() {
               ) : route.section === "import-export" ? (
                 <ImportExportScreen />
               ) : route.section === "settings" ? (
-                <SettingsScreen focusQr={route.tab === "general"} />
+                <SettingsScreen />
               ) : route.section === "labels" ? (
                 <LabelsScreen
                   key={`${route.labelKind ?? ""}:${route.labelRecord ?? ""}`}
                   initialKind={route.labelKind}
                   initialId={route.labelRecord}
+                  openQrDestination={route.labelQr}
                 />
               ) : route.section === "locations" ? (
                 <LocationScreen
@@ -847,121 +570,7 @@ function ApplicationShell() {
           </div>
         )}
       </section>
-      <nav aria-label="Mobile primary navigation" className="mobile-navigation">
-        {[
-          { id: "dashboard", label: "Home" },
-          { id: "seeds", label: "Seeds" },
-          { id: "sowings", label: "Sowings" },
-          { id: "plants", label: "Plants" },
-        ].map((item) => (
-          <a
-            key={item.id}
-            href={`#/${item.id}`}
-            aria-current={route.section === item.id ? "page" : undefined}
-            onClick={(event) => {
-              followNavigation(event, item.id as Section);
-            }}
-          >
-            <Icon name={navigationIcons[item.id as Section]} shell />
-            {item.label}
-          </a>
-        ))}
-        <button
-          type="button"
-          aria-expanded={moreOpen}
-          aria-controls="mobile-more-menu"
-          aria-current={
-            !["dashboard", "seeds", "sowings", "plants"].includes(route.section)
-              ? "page"
-              : undefined
-          }
-          onClick={() => {
-            setMoreOpen((value) => !value);
-          }}
-        >
-          More
-        </button>
-      </nav>
-      {moreOpen && (
-        <TaskDialog
-          id="mobile-more-menu"
-          title="Navigation"
-          className="mobile-navigation-dialog"
-          onClose={() => {
-            setMoreOpen(false);
-          }}
-          dismissOnBackdrop
-        >
-          <div className="mobile-navigation-heading">
-            <h2>Navigation</h2>
-            <ActionButton
-              icon="close"
-              type="button"
-              className="button--secondary"
-              onClick={() => {
-                setMoreOpen(false);
-              }}
-            >
-              Close navigation
-            </ActionButton>
-          </div>
-          <nav
-            aria-label="More navigation"
-            className="mobile-navigation-groups"
-          >
-            {desktopGroups.map((group) => (
-              <section key={group.label} aria-label={group.label}>
-                <h3>{group.label}</h3>
-                {group.items.map((item) => (
-                  <Fragment key={item.id}>
-                    <a
-                      href={`#/${item.id}`}
-                      className="navigation-link"
-                      aria-current={
-                        route.section === item.id ? "page" : undefined
-                      }
-                      onClick={(event) => {
-                        followNavigation(event, item.id);
-                      }}
-                    >
-                      <Icon name={navigationIcons[item.id]} shell />
-                      {item.label}
-                    </a>
-                  </Fragment>
-                ))}
-              </section>
-            ))}
-          </nav>
-          <div className="mobile-navigation-account">
-            <p>Signed in as {signedInAs}</p>
-            <div className="sidebar-footer-actions">
-              <a
-                href="#/settings"
-                className="footer-settings"
-                aria-current={route.section === "settings" ? "page" : undefined}
-                onClick={(event) => {
-                  followNavigation(event, "settings");
-                }}
-              >
-                <Icon name={navigationIcons.settings} shell />
-                Settings
-              </a>
-              <ThemeControl />
-            </div>
-            <button
-              className="footer-sign-out"
-              type="button"
-              disabled={state.status === "logging-out"}
-              onClick={() => {
-                void auth.logOut();
-              }}
-            >
-              {state.status === "logging-out" ? "Signing out…" : "Sign out"}
-            </button>
-          </div>
-        </TaskDialog>
-      )}
-    </div>
+    </WorkbenchShell>
   );
 }
 

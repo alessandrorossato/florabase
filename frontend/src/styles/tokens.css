@@ -59,6 +59,22 @@
   --native-count-mid: #729f86;
   --native-count-high: #2f684f;
 
+  /* System tokens added for Field Ledger. Defaults reproduce UI Foundation exactly, so the
+     Botanical, Herbarium and Mineral palettes render as before; Field Ledger overrides them. */
+  --font-data: var(--font-ui);
+  --control-height-touch: 2.75rem;
+  --control-height-compact: 2.5rem;
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 3px;
+  --tracking-heading: normal;
+  --rail-background: var(--surface-subtle);
+  --rail-text: var(--text);
+  --rail-text-muted: var(--text-muted);
+  --rail-active: var(--primary);
+  --rail-active-subtle: var(--primary-subtle);
+  --lineage: var(--info);
+  --lineage-subtle: var(--surface-subtle);
+
   /* Compatibility aliases for existing pages; new UI uses semantic names above. */
   --color-ink: var(--text);
   --color-muted: var(--text-muted);
@@ -242,6 +258,120 @@
   --focus-ring: #9bc5e0;
   --overlay-backdrop: rgb(0 0 0 / 64%);
   --elevation-overlay: 0 8px 32px rgb(0 0 0 / 32%);
+}
+
+/* FIELD LEDGER (Florabase Next, experimental). Unlike the three palettes above it is a system:
+   one block sets type, data font, radii, control geometry and focus geometry, and two blocks
+   set colour. Instrument Sans (UI), Newsreader italic (scientific names) and IBM Plex Mono
+   (recorded quantities, dates, labels) are bundled OFL-1.1 Fontsource packages; see
+   /licenses/. Desktop pointer controls are 40px; coarse pointers and compact widths keep 44px. */
+:root[data-palette="field-ledger"],
+[data-preview-palette="field-ledger"] {
+  --font-ui: "Instrument Sans Variable", system-ui, sans-serif;
+  --font-botanical: "Newsreader Variable", Georgia, serif;
+  --font-data: "IBM Plex Mono", ui-monospace, monospace;
+  --type-display: 600 2.5rem/1.1 var(--font-ui);
+  /* Page and record titles take the botanical serif; the face sets Field Ledger apart. */
+  --type-h1: 500 2rem/1.125 var(--font-botanical);
+  --type-h2: 500 1.375rem/1.25 var(--font-botanical);
+  /* Record titles sit one step above page titles: the specimen is the subject. */
+  --type-record-title: 500 2.375rem/1.1 var(--font-botanical);
+  --type-h3: 600 1.0625rem/1.4118 var(--font-ui);
+  --type-body: 400 0.875rem/1.4286 var(--font-ui);
+  --type-strong: 600 0.875rem/1.4286 var(--font-ui);
+  --type-small: 400 0.8125rem/1.3846 var(--font-ui);
+  --type-label: 600 0.75rem/1.3333 var(--font-ui);
+  --type-eyebrow: 600 0.6875rem/1.4545 var(--font-ui);
+  --type-metric: 500 1.75rem/1.1429 var(--font-data);
+  --radius-small: 8px;
+  --radius-normal: 12px;
+  --radius-large: 14px;
+  --control-height: 2.5rem;
+  /* Repeated row and pagination icons follow the pointer-aware control height. */
+  --control-height-compact: var(--control-height);
+  --focus-ring-offset: 2px;
+  --tracking-heading: -0.012em;
+}
+@media (max-width: 48rem), (any-pointer: coarse) {
+  :root[data-palette="field-ledger"],
+  [data-preview-palette="field-ledger"] {
+    --control-height: var(--control-height-touch);
+  }
+}
+
+:root[data-palette="field-ledger"][data-appearance="light"],
+[data-preview-palette="field-ledger"][data-preview-appearance="light"] {
+  color-scheme: light;
+  --background: #f3f4f0;
+  --surface: #ffffff;
+  --surface-subtle: #eceee9;
+  --surface-hover: #e4e8e2;
+  --text: #18211c;
+  --text-muted: #545f58;
+  --border: #dce0d9;
+  --border-strong: #77807a;
+  --primary: #1c6644;
+  --primary-hover: #134a31;
+  --primary-subtle: #e1ede5;
+  --on-primary: #ffffff;
+  --success: #1c6644;
+  --warning: #a85d14;
+  --warning-text: #874708;
+  --danger: #a1241b;
+  --danger-subtle: #f9e5e2;
+  --warning-subtle: #f8ebdd;
+  --info: #285889;
+  --focus-ring: #285889;
+  --overlay-backdrop: rgb(14 19 17 / 48%);
+  --elevation-overlay:
+    0 12px 40px rgb(18 25 21 / 18%), 0 2px 6px rgb(18 25 21 / 8%);
+  --rail-background: #121915;
+  --rail-text: #e5ebe6;
+  --rail-text-muted: #b9c4bc;
+  --rail-active: #6fcf97;
+  --rail-active-subtle: #1f3a2b;
+  --lineage: #285889;
+  --lineage-subtle: #e4ecf4;
+}
+
+:root[data-palette="field-ledger"][data-appearance="dark"],
+[data-preview-palette="field-ledger"][data-preview-appearance="dark"] {
+  color-scheme: dark;
+  --background: #0e1311;
+  --surface: #151b18;
+  --surface-subtle: #1a211d;
+  --surface-hover: #222a26;
+  --text: #e5ebe6;
+  --text-muted: #9ca79f;
+  --border: #2a332e;
+  --border-strong: #77827a;
+  --primary: #6fcf97;
+  --primary-hover: #8fddb0;
+  --primary-subtle: #183326;
+  --on-primary: #0e1311;
+  --success: #6fcf97;
+  --warning: #e9a35b;
+  --warning-text: #e9a35b;
+  --danger: #f08a80;
+  --danger-subtle: #3d1c19;
+  --warning-subtle: #3a2814;
+  --info: #8db6e2;
+  --focus-ring: #8db6e2;
+  --overlay-backdrop: rgb(0 0 0 / 64%);
+  --elevation-overlay: 0 12px 40px rgb(0 0 0 / 50%), 0 2px 6px rgb(0 0 0 / 30%);
+  --rail-background: #080b0a;
+  --rail-text: #e5ebe6;
+  --rail-text-muted: #aeb9b1;
+  --rail-active: #6fcf97;
+  --rail-active-subtle: #183326;
+  --lineage: #8db6e2;
+  --lineage-subtle: #1a2a3b;
+}
+
+/* Settings theme swatches show each system's own UI face; custom properties otherwise inherit
+   the active palette's font into the other swatches. */
+[data-preview-palette]:not([data-preview-palette="field-ledger"]) {
+  --font-ui: "Source Sans 3 Variable", system-ui, sans-serif;
 }
 
 /* Evidence slots retain identity across palettes; only appearance changes the values. */

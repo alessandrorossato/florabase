@@ -6,7 +6,12 @@ import {
   type Palette,
 } from "./theme";
 
-const palettes: Palette[] = ["botanical", "herbarium", "mineral"];
+const palettes: Palette[] = [
+  "field-ledger",
+  "botanical",
+  "herbarium",
+  "mineral",
+];
 const appearances: Appearance[] = ["system", "light", "dark"];
 
 export function AppearanceSettings() {

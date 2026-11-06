@@ -59,7 +59,8 @@ import {
 } from "../orders/purchaseApi";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
-import { UpcomingActivities } from "../schedule/UpcomingActivities";
+import { RecordTimeline } from "../timeline/RecordTimeline";
+import { LineageStrip } from "../lineage/LineageStrip";
 import "./seed-refinement.css";
 
 import { ApiError } from "../auth/api";
@@ -78,10 +79,11 @@ import {
   DetailContext,
   DetailHeader,
   DetailPage,
-  DetailSummary,
   DetailTabs,
   WorkspaceIntro,
   DetailLoading,
+  SpecimenLabel,
+  SpecimenPlate,
 } from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
 import { BotanicalName, DirectorySearch } from "../components/ReferenceUI";
@@ -391,12 +393,19 @@ function Detail({
     transaction?.id === lot.order_id ? transaction : null;
   const summarySupplier = linkedTransaction?.supplier ?? lot.supplier;
 
-  const [tab, setTab] = useState(
-    initialTab &&
-      ["overview", "sowings", "photos", "lineage"].includes(initialTab)
-      ? initialTab
-      : "overview",
-  );
+  const tabOf = (value?: string) =>
+    value && ["overview", "sowings", "photos", "lineage"].includes(value)
+      ? value
+      : "overview";
+  const [tab, setTab] = useState(() => tabOf(initialTab));
+  // Follow later route changes on the same mounted record (a link or Record sheet action to
+  // ?tab=lineage while this record is open); useState only reads the first value. Edit
+  // routes are handled by the edit workspace and leave the selected section alone.
+  const [lastRouteTab, setLastRouteTab] = useState(initialTab);
+  if (lastRouteTab !== initialTab) {
+    setLastRouteTab(initialTab);
+    if (initialTab !== "edit") setTab(tabOf(initialTab));
+  }
   return (
     <DetailPage
       as="section"
@@ -411,9 +420,33 @@ function Detail({
         ]}
       />
       <DetailHeader
+        label={
+          <SpecimenLabel
+            kind="Seed lot"
+            name="Current inventory"
+            rows={[
+              {
+                label: inventoryLabel(lot),
+                value: quantityLabel(lot),
+                emphasis: true,
+              },
+              {
+                label: "Storage",
+                wide: true,
+                value: lot.location ? (
+                  <a href={`#/locations/${lot.location.id}`}>
+                    {lot.location.display_path}
+                  </a>
+                ) : (
+                  "Not recorded"
+                ),
+              },
+            ]}
+          />
+        }
         headingRef={headingRef}
-        visual={
-          <div className="collection-primary-detail">
+        plate={
+          <SpecimenPlate>
             <RecordVisual
               photo={lot.primary_photo}
               showSource
@@ -421,7 +454,7 @@ function Detail({
               identity={lot.botanical_identity}
               kind={"seed"}
             />
-          </div>
+          </SpecimenPlate>
         }
         eyebrow="Seed lot"
         title={recordName(lot, "Unlabelled seed lot")}
@@ -434,16 +467,24 @@ function Detail({
           </a>
         }
         status={
-          <>
-            <LifecycleStatus state={lot.lifecycle}>
-              {lifecycleLabels[lot.lifecycle]}
-            </LifecycleStatus>
-            {lot.location && (
-              <a href={`#/locations/${lot.location.id}`}>
-                {lot.location.display_path}
-              </a>
-            )}
-          </>
+          <LifecycleStatus state={lot.lifecycle}>
+            {lifecycleLabels[lot.lifecycle]}
+          </LifecycleStatus>
+        }
+        lineage={
+          <LineageStrip
+            currentKind={"seed_lot"}
+            key={lot.updated_at}
+            kind="seed-lots"
+            id={lot.id}
+            current="This Seed lot"
+            fullHref={
+              tab === "lineage" ? undefined : `#/seeds/${lot.id}?tab=lineage`
+            }
+            onFull={() => {
+              setTab("lineage");
+            }}
+          />
         }
         primaryActions={
           lot.lifecycle === "active" ? (
@@ -499,36 +540,6 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <DetailSummary
-            id="seed-summary-title"
-            label="Current inventory"
-            metrics={[
-              {
-                label: "Lifecycle",
-                value: (
-                  <LifecycleStatus state={lot.lifecycle}>
-                    {lifecycleLabels[lot.lifecycle]}
-                  </LifecycleStatus>
-                ),
-              },
-              {
-                label: inventoryLabel(lot),
-                value: quantityLabel(lot),
-                emphasis: true,
-              },
-              {
-                label: "Storage",
-                wide: true,
-                value: lot.location ? (
-                  <a href={`#/locations/${lot.location.id}`}>
-                    {lot.location.display_path}
-                  </a>
-                ) : (
-                  "Not recorded"
-                ),
-              },
-            ]}
-          />
           <div className="seed-overview-main seed-summary-sections">
             <section
               className="seed-fact-group"
@@ -615,10 +626,25 @@ function Detail({
                 </div>
               </dl>
             </section>
-            <UpcomingActivities
-              kind={"seed_lot"}
+            <RecordTimeline
+              kind="seed_lot"
               id={lot.id}
               current={lot.lifecycle === "active"}
+              recordedElsewhere={
+                <>
+                  Seed lots have no Journal. Sowings started from this lot are
+                  listed under{" "}
+                  <a
+                    href={`#/seeds/${lot.id}?tab=sowings`}
+                    onClick={() => {
+                      setTab("sowings");
+                    }}
+                  >
+                    Sowings
+                  </a>
+                  .
+                </>
+              }
             />
             {lot.harvest_conversion_id && (
               <div className="seed-overview-conversion">
@@ -2233,7 +2259,13 @@ export function SeedLotScreen({
                               }
                               summary={
                                 <>
-                                  <strong>
+                                  <strong
+                                    className={
+                                      lot.quantity
+                                        ? undefined
+                                        : "ui-record-unknown"
+                                    }
+                                  >
                                     {quantityLabel(lot)}
                                     {lot.quantity && lot.lifecycle === "active"
                                       ? " remaining"

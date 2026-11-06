@@ -1262,7 +1262,13 @@ test("detail return preserves filters and page, restores initiating card and fal
   view.unmount();
   mount(<MediaScreen />);
   await screen.findByText(/No matching media/);
-  expect(screen.getByRole("heading", { name: "Media" })).toHaveFocus();
+  // The empty state renders at commit; focus moves to the heading in a passive effect that may
+  // flush after findByText resolves (the pattern behind the StoredMaterial race). Wait for the
+  // same assertion rather than racing it. Not reproduced in isolation (M6B: 0 of 32 stressed
+  // runs); hardened on the code-level mechanism and still tracked.
+  await waitFor(() => {
+    expect(screen.getByRole("heading", { name: "Media" })).toHaveFocus();
+  });
 });
 
 test("mobile activation carries exact filters and offset straight to details without an inspector", async () => {

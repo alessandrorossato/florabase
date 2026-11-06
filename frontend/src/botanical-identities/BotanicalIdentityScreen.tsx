@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -153,7 +154,9 @@ function IdentityDetails({
   );
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  useEffect(() => {
+  // Focus the title in the commit that mounts it: a passive effect ran a task later and
+  // could take focus back from a control the user (or a test) had already reached.
+  useLayoutEffect(() => {
     titleRef.current?.focus({ preventScroll: true });
     window.scrollTo({ top: 0 });
   }, []);

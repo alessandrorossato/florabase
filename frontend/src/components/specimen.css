@@ -1,0 +1,424 @@
+/* Specimen Sheet (Florabase Next M6B): a record page set like a mounted herbarium sheet. The
+   plate and its ruled label sit in a left column; the name, actions, lineage, tabs and panels
+   flow in the right column. Tokens only, so every palette renders it.
+
+   Layout: the detail page is a size container. At 50rem and wider the plate column floats and
+   every sibling after the header keeps a matching start margin, so tabs and panels stay in the
+   right column however tall either side becomes. Narrower, the page is one column: the plate
+   becomes a banner and the label moves after the record's content. */
+
+.app-content .ui-detail-page:has(> .detail-header--specimen) {
+  --specimen-gap: var(--space-8);
+  --specimen-col: 18rem;
+  container: specimen / inline-size;
+  display: flow-root;
+}
+@container specimen (min-width: 72rem) {
+  /* Set on every child: the floated column and the siblings' margin must agree. */
+  .app-content .ui-detail-page:has(> .detail-header--specimen) > * {
+    --specimen-col: 24rem;
+  }
+}
+
+.app-content .ui-detail-page .detail-header--specimen {
+  display: block;
+  margin-block: 0 var(--space-4);
+}
+/* M8: the aside is one herbarium sheet holding the mounted photograph and its label. */
+.app-content .ui-detail-page .specimen-aside {
+  display: grid;
+  align-content: start;
+  gap: var(--space-6);
+  min-width: 0;
+  padding: var(--space-5, 1.25rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+.app-content .ui-detail-page .specimen-aside .specimen-label dl > div {
+  grid-template-columns: minmax(5.5rem, 0.7fr) minmax(0, 1.5fr);
+}
+.app-content .ui-detail-page .specimen-main {
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.app-content .ui-detail-page .specimen-main .detail-identity {
+  min-width: 0;
+}
+.app-content .ui-detail-page .specimen-main .detail-actions {
+  justify-content: flex-start;
+  max-width: none;
+  margin: 0;
+}
+.app-content .ui-detail-page .detail-header--specimen :is(h2, h3) {
+  margin: var(--space-2) 0 0;
+  font: var(--type-record-title, var(--type-h1));
+  font-size: clamp(2.125rem, 1.25rem + 2.4cqi, 3.75rem);
+  font-weight: 450;
+  line-height: 1.02;
+  letter-spacing: var(--tracking-heading, normal);
+  overflow-wrap: anywhere;
+}
+.app-content .ui-detail-page .detail-header--specimen .detail-secondary {
+  margin-block-start: var(--space-3);
+}
+.app-content
+  .ui-detail-page
+  .detail-header--specimen
+  .detail-secondary
+  a[href^="#/identities/"] {
+  font-size: clamp(1.375rem, 1.1rem + 0.9cqi, 1.875rem);
+  line-height: 1.2;
+  text-decoration-color: var(--border-strong);
+  text-decoration-thickness: 1px;
+}
+
+/* The plate: a quiet mat on the sheet. */
+.app-content .ui-detail-page .specimen-plate {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--surface-subtle);
+  border-radius: 2px;
+}
+.app-content .ui-detail-page .specimen-plate .record-visual {
+  display: grid;
+  /* A definite track, so the image's percentage limits resolve against the plate. */
+  grid-template: 100% / 100%;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-muted);
+}
+/* Mounted, uncropped and never more than twice its natural size: a 320px thumbnail stays
+   sharp-looking instead of being stretched to the frame. A larger rendition fills more. */
+.app-content .ui-detail-page .specimen-plate .record-visual > img {
+  box-sizing: border-box;
+  width: min(100% - 2 * var(--space-6), var(--visual-natural-w, 50%) * 2);
+  max-width: none;
+  height: auto;
+  max-height: calc(100% - 2 * var(--space-6));
+  padding: var(--space-2);
+  object-fit: contain;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+/* No photograph: flat mat, an inset hairline and a small mark; no stripes (M8 audit P1). */
+.app-content .ui-detail-page .specimen-plate .record-visual svg {
+  width: 2rem;
+  height: auto;
+  color: var(--border-strong);
+}
+.app-content .ui-detail-page .specimen-plate .record-visual:has(svg) {
+  outline: 1px solid var(--border);
+  outline-offset: calc(-1 * var(--space-3));
+}
+/* The source line is the plate's caption: what the image is, or that there is none. */
+.app-content .ui-detail-page .specimen-plate .record-visual__source,
+.app-content
+  .ui-detail-page
+  .specimen-plate
+  .record-visual
+  > .sr-only:last-child {
+  position: absolute;
+  inset-inline-start: var(--space-3);
+  inset-block-end: var(--space-3);
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 2px var(--space-2);
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  white-space: nowrap;
+  color: var(--text-muted);
+  background: var(--surface);
+  border-radius: 4px;
+  font: var(--type-label);
+  font-weight: 500;
+}
+
+/* The specimen label: a ruled, double-framed fact block. */
+.app-content .ui-detail-page .specimen-label {
+  padding: var(--space-4) var(--space-4) var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  outline: 1px solid var(--border-strong);
+  outline-offset: 3px;
+}
+.app-content .ui-detail-page .specimen-label__title {
+  margin: 0 0 var(--space-2);
+  color: var(--text-muted);
+  font: var(--type-eyebrow);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+/* Page sheets style bare dl/dt (grids, uppercase terms); the label resets them. */
+.app-content .ui-detail-page .specimen-label dl {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.app-content .ui-detail-page .specimen-label dl > div {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, 0.8fr) minmax(0, 1.6fr);
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+  border-block-start: 1px solid var(--border);
+}
+.app-content .ui-detail-page .specimen-label dt {
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.app-content .ui-detail-page .specimen-label dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font: 400 0.8125rem/1.45 var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+/* Recorded values (dates, counts, quantities) use the data face; links and place paths use the
+   UI face so long names do not break into narrow monospace fragments. */
+.app-content .ui-detail-page .specimen-label dd :is(a, span) {
+  font: inherit;
+}
+.app-content .ui-detail-page .specimen-label dd a {
+  font: var(--type-small);
+  font-weight: 500;
+}
+.app-content .ui-detail-page .specimen-label .specimen-label__unknown {
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-style: italic;
+}
+
+/* Two columns: the plate column floats; everything after the header keeps to the right. */
+@container specimen (min-width: 50rem) {
+  .app-content .ui-detail-page .specimen-aside {
+    float: inline-start;
+    width: var(--specimen-col);
+    margin-inline-end: var(--specimen-gap);
+    margin-block-end: var(--space-6);
+  }
+  .app-content .ui-detail-page .specimen-main,
+  .app-content .ui-detail-page .detail-header--specimen ~ * {
+    margin-inline-start: calc(var(--specimen-col) + var(--specimen-gap));
+  }
+  .app-content .ui-detail-page .detail-header--specimen ~ dialog {
+    margin-inline-start: auto;
+  }
+}
+
+/* Medium widths (a tablet with the panel open): plate and label side by side above the record. */
+@container specimen (max-width: 49.99rem) {
+  .app-content .ui-detail-page .specimen-aside {
+    grid-template-columns: minmax(0, 13rem) minmax(0, 1fr);
+    align-items: start;
+    margin-block-end: var(--space-5, 1.25rem);
+  }
+}
+
+/* Phones: one column. The plate becomes a banner, then the record; the label follows the
+   content. (A container cannot query itself, so the page's own flow uses the viewport.) */
+@media (max-width: 40rem) {
+  .app-content .ui-detail-page:has(> .detail-header--specimen) {
+    display: flex;
+    flex-direction: column;
+  }
+  .app-content .ui-detail-page .detail-header--specimen,
+  .app-content .ui-detail-page .specimen-aside {
+    display: contents;
+  }
+  .app-content .ui-detail-page .specimen-plate {
+    aspect-ratio: 3 / 2;
+    margin-block-end: var(--space-4);
+  }
+  .app-content .ui-detail-page .specimen-label {
+    order: 99;
+    margin-block-start: var(--space-6);
+  }
+  .app-content .ui-detail-page .detail-header--specimen :is(h2, h3) {
+    font-size: 2rem;
+  }
+}
+.app-content .ui-detail-page .specimen-label__note {
+  padding-block: var(--space-2);
+  color: var(--text-muted);
+  border-block-start: 1px solid var(--border);
+  font: var(--type-small);
+}
+.app-content .ui-detail-page .specimen-label__note > * {
+  margin: 0;
+}
+
+/* M7 hierarchy refinements.
+   Tablet and medium widths: the record's name and actions come first; the plate and label
+   follow side by side, so the title is never pushed below a tall plate. */
+@container specimen (max-width: 49.99rem) {
+  .app-content .ui-detail-page .detail-header--specimen {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .app-content .ui-detail-page .detail-header--specimen > .specimen-main {
+    order: -1;
+  }
+}
+/* Phones: breadcrumb, then name, identity, actions and lineage, then a shorter image banner,
+   then the record's sections; the label still follows the content. */
+@media (max-width: 40rem) {
+  .app-content .ui-detail-page:has(> .detail-header--specimen) > .breadcrumbs {
+    order: -2;
+  }
+  .app-content .ui-detail-page .detail-header--specimen > .specimen-main {
+    order: -1;
+    margin-block-end: var(--space-4);
+  }
+  .app-content .ui-detail-page .specimen-plate {
+    aspect-ratio: 16 / 9;
+    max-block-size: 13rem;
+  }
+}
+
+/* M8 phones: the identity row. A small mounted image sits beside the name and scientific
+   name; actions and the folded lineage span below; the label still follows the content. The
+   page becomes a two-column grid whose items are the header's parts (display: contents). */
+@media (max-width: 40rem) {
+  .app-content .ui-detail-page:has(> .detail-header--specimen) {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    column-gap: var(--space-4);
+    align-items: start;
+  }
+  .app-content .ui-detail-page:has(> .detail-header--specimen) > * {
+    grid-column: 1 / -1;
+  }
+  .app-content .ui-detail-page .detail-header--specimen,
+  .app-content .ui-detail-page .detail-header--specimen > .specimen-main {
+    display: contents;
+  }
+  .app-content .ui-detail-page .specimen-aside {
+    display: contents;
+    padding: 0;
+    background: none;
+    border: 0;
+  }
+  .app-content .ui-detail-page .specimen-plate {
+    grid-column: 1;
+    order: -1;
+    aspect-ratio: 4 / 5;
+    max-block-size: none;
+    margin: 0 0 var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-small);
+  }
+  .app-content .ui-detail-page .specimen-plate .record-visual > img {
+    width: min(100% - 2 * var(--space-2), var(--visual-natural-w, 50%) * 2);
+    max-height: calc(100% - 2 * var(--space-2));
+    padding: 2px;
+  }
+  .app-content .ui-detail-page .specimen-plate .record-visual svg {
+    width: 1.25rem;
+  }
+  .app-content .ui-detail-page .specimen-plate .record-visual:has(svg) {
+    outline-offset: calc(-1 * var(--space-2));
+  }
+  /* The plate's caption ("No image", "Record primary photo") is announced, not drawn. */
+  .app-content .ui-detail-page .specimen-plate .record-visual__source,
+  .app-content
+    .ui-detail-page
+    .specimen-plate
+    .record-visual
+    > .sr-only:last-child {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .app-content .ui-detail-page .specimen-main .detail-identity {
+    grid-column: 2;
+    order: -1;
+    margin-block-end: var(--space-4);
+  }
+  .app-content
+    .ui-detail-page
+    .specimen-main
+    :is(.detail-actions, .detail-lineage) {
+    grid-column: 1 / -1;
+    order: -1;
+    margin-block-end: var(--space-4);
+  }
+  .app-content .ui-detail-page .detail-header--specimen :is(h2, h3) {
+    font-size: 1.625rem;
+    line-height: 1.1;
+  }
+  .app-content
+    .ui-detail-page
+    .detail-header--specimen
+    .detail-secondary
+    a[href^="#/identities/"] {
+    font-size: 1.125rem;
+  }
+}
+
+/* M8 phones: the detail page's Back and New controls share one compact context row. */
+@media (max-width: 40rem) {
+  .app-content .collection-context-page > .workspace-context-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-block-end: var(--space-3);
+  }
+  .app-content
+    .collection-context-page
+    > .workspace-context-actions
+    > :first-child {
+    margin-inline-start: calc(-1 * var(--space-2));
+    padding-inline: var(--space-2);
+    background: transparent;
+    border-color: transparent;
+  }
+}
+
+/* M8 phones: actions as a tidy grid (primary full width, the rest side by side) and the
+   record sections as one row of equal tabs that scrolls only if it cannot fit. */
+@media (max-width: 40rem) {
+  .app-content .ui-detail-page .specimen-main .detail-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+  .app-content .ui-detail-page .specimen-main .detail-actions > :first-child {
+    grid-column: 1 / -1;
+  }
+  .app-content .ui-detail-page .specimen-main .detail-actions > * {
+    inline-size: 100%;
+    justify-content: center;
+  }
+  .app-content .ui-detail-page:has(> .detail-header--specimen) .detail-tabs {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(max-content, 1fr);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .app-content .ui-detail-page:has(> .detail-header--specimen) .detail-tab {
+    padding-inline: var(--space-2);
+  }
+}

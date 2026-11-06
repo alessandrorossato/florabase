@@ -345,3 +345,10 @@
   > a.button-link:not(.button--secondary) {
   color: var(--on-primary);
 }
+
+/* Overview sections stack on phones; two columns leave each under 11rem. */
+@media (max-width: 48rem) {
+  .app-content :is(.sowings-workspace, .plants-workspace) .collection-overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

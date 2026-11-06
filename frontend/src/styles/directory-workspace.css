@@ -451,8 +451,8 @@ main:has(.harvest-directory) {
 
 /* Filter changes keep one stable summary lane; extra chips scroll horizontally. */
 .ui-directory-page .directory-filter-summary {
-  min-block-size: 2.5rem;
-  max-block-size: 2.5rem;
+  min-block-size: var(--control-height-compact);
+  max-block-size: var(--control-height-compact);
   flex-wrap: nowrap;
   overflow-x: auto;
   overflow-y: hidden;
@@ -509,8 +509,8 @@ main:has(.harvest-directory) {
 .app-content
   :is(.ui-directory-page, .stored-material-directory)
   .directory-filter-summary {
-  min-block-size: 3rem;
-  max-block-size: 3rem;
+  min-block-size: calc(var(--control-height-compact) + 0.5rem);
+  max-block-size: calc(var(--control-height-compact) + 0.5rem);
   align-items: center;
   box-sizing: border-box;
   overflow-y: hidden;
@@ -519,7 +519,7 @@ main:has(.harvest-directory) {
   :is(.ui-directory-page, .stored-material-directory)
   .directory-filter-summary
   > button {
-  min-block-size: 2.5rem;
+  min-block-size: var(--control-height-compact);
   box-sizing: border-box;
 }
 .sowings-workspace :is(.lifecycle-badge--failed, .lifecycle-badge--abandoned) {
@@ -650,12 +650,13 @@ main:has(.harvest-directory) {
   min-width: 3.5rem;
   text-align: center;
   font: var(--type-small);
+  font-family: var(--font-data);
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);
 }
 .directory-pagination-nav .control-icon-button {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: var(--control-height-compact);
+  height: var(--control-height-compact);
   background: transparent;
   border-color: transparent;
 }

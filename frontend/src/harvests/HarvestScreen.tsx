@@ -9,7 +9,8 @@ import {
   WorkspaceIntro,
   DetailLoading,
   DetailPage,
-  DetailSummary,
+  SpecimenLabel,
+  SpecimenPlate,
 } from "../components/CollectionUI";
 import {
   DirectoryRecordActions,
@@ -522,10 +523,27 @@ export function HarvestScreen({
               ]}
             />
             <DetailHeader
+              label={
+                <SpecimenLabel
+                  kind="Harvest"
+                  name="Harvest overview"
+                  rows={[
+                    {
+                      label: "Occurrence date",
+                      value: formatPartialDate(detail.occurred_on),
+                    },
+                    { label: "Materials", value: materialSummary(detail) },
+                  ]}
+                />
+              }
               headingRef={detailHeading}
               eyebrow="Harvest"
               title={detail.display_title}
-              visual={<Visual harvest={detail} />}
+              plate={
+                <SpecimenPlate>
+                  <Visual harvest={detail} />
+                </SpecimenPlate>
+              }
               secondary={
                 <DetailContext
                   items={[
@@ -556,10 +574,6 @@ export function HarvestScreen({
                         </a>
                       ),
                     },
-                    {
-                      label: "Date",
-                      value: formatPartialDate(detail.occurred_on),
-                    },
                   ]}
                 />
               }
@@ -583,25 +597,6 @@ export function HarvestScreen({
                   </button>
                 </OverflowMenu>
               }
-            />
-            <DetailSummary
-              id="harvest-summary-title"
-              label="Harvest overview"
-              metrics={[
-                {
-                  label: "Occurrence date",
-                  value: formatPartialDate(detail.occurred_on),
-                },
-                {
-                  label: "Source",
-                  value: (
-                    <a href={sourceHref(detail)}>
-                      {detail.source.display_name}
-                    </a>
-                  ),
-                },
-                { label: "Materials", value: materialSummary(detail) },
-              ]}
             />
             <section
               className="record-section"

@@ -141,7 +141,7 @@ export function GlobalEventsScreen() {
                   No Journal entries match this search or filter.
                 </p>
               ) : (
-                <EventFeed journal events={visible} />
+                <EventFeed journal periods events={visible} />
               )}
             </>
           )}

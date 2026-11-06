@@ -170,7 +170,7 @@ export function ImportExportScreen() {
   return (
     <div className="import-workspace" aria-labelledby="import-title">
       <PageHeader
-        eyebrow="Tools"
+        eyebrow="Settings"
         title="Import / Export"
         titleId="import-title"
         description="Exchange collection data using Florabase's supported CSV workflows."

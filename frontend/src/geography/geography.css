@@ -361,19 +361,8 @@
 .app-content [aria-labelledby^="geography-"] > .page-header .eyebrow:empty {
   display: none;
 }
-.app-content .workspace > .breadcrumbs {
-  flex: none;
-  margin: 0 0 var(--space-2);
-}
-.app-content .breadcrumbs ol {
-  flex-wrap: wrap;
-  overflow: visible;
-}
-.app-content .breadcrumbs li {
-  white-space: normal;
-  overflow-wrap: anywhere;
-  overflow: visible;
-}
+/* Breadcrumb geometry is owned by components/breadcrumbs.css; a lazily loaded copy here
+   used to override the directory breadcrumb gap app-wide after any Geography visit. */
 
 @media (min-width: 48.001rem) {
   .site-navigation-inspector,

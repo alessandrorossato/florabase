@@ -1286,3 +1286,121 @@
   min-block-size: 2.75rem;
   margin-block-end: var(--space-1);
 }
+
+/* M6 reference sheet: an identity is a reference, not a specimen, so it keeps its hub layout
+   but speaks the Specimen Sheet's language: a framed 4:5 plate for the identity cover, the
+   record-title scale for the name, and a ruled foot under the header. Tokens only. */
+.app-content .identity-reference-page .ui-detail-page .detail-header {
+  --detail-plate: 8.5rem;
+  padding-block-end: var(--space-4);
+  border-block-end: 1px solid var(--border-strong);
+}
+.app-content
+  .identity-reference-page
+  .ui-detail-page
+  .detail-identity:has(.detail-visual) {
+  grid-template-columns: var(--detail-plate) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: end;
+}
+.app-content
+  .identity-reference-page
+  .ui-detail-page
+  .detail-visual
+  .identity-header-visual {
+  width: var(--detail-plate);
+  height: calc(var(--detail-plate) * 1.25);
+  overflow: hidden;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+.app-content
+  .identity-reference-page
+  .ui-detail-page
+  .detail-visual
+  .identity-header-visual
+  :is(.identity-image, img) {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  object-fit: cover;
+}
+.app-content
+  .identity-reference-page
+  .ui-detail-page
+  .detail-header
+  :is(h2, h3) {
+  font: var(--type-record-title, var(--type-h1));
+  font-size: clamp(2rem, 1.4rem + 1.6vw, 3rem);
+  line-height: 1.05;
+}
+.app-content
+  .identity-reference-page
+  .ui-detail-page
+  .detail-header
+  .entity-common-name {
+  margin: var(--space-2) 0 0;
+  font: var(--type-body);
+  color: var(--text-muted);
+}
+@media (max-width: 40rem) {
+  .app-content .identity-reference-page .ui-detail-page .detail-header {
+    --detail-plate: 6rem;
+  }
+}
+
+/* M8 phones (audit P2): the six identity sections wrap into a 3 x 2 grid of tabs, so none is
+   hidden off-screen behind a horizontal scroll. Roles, order and keyboard behaviour are
+   unchanged; the selected tab keeps its underline and gains the selected fill. */
+@media (max-width: 40rem) {
+  .identity-reference-page .identity-detail-tabs {
+    overflow: visible;
+    padding: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+  }
+  .identity-reference-page .identity-detail-tabs .detail-tabs {
+    inline-size: 100%;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    overflow: visible;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-small);
+    background: var(--surface);
+  }
+  .identity-reference-page .identity-detail-tabs .detail-tabs > [role="tab"] {
+    justify-content: center;
+    min-block-size: var(--control-height-touch, 2.75rem);
+    margin: 0;
+    padding-inline: var(--space-2);
+    border: 0;
+    border-block-start: 1px solid var(--border);
+    border-inline-start: 1px solid var(--border);
+    border-radius: 0;
+  }
+  .identity-reference-page
+    .identity-detail-tabs
+    .detail-tabs
+    > [role="tab"]:nth-child(-n + 3) {
+    border-block-start: 0;
+  }
+  .identity-reference-page
+    .identity-detail-tabs
+    .detail-tabs
+    > [role="tab"]:nth-child(3n + 1) {
+    border-inline-start: 0;
+  }
+  .identity-reference-page
+    .identity-detail-tabs
+    .detail-tabs
+    > [role="tab"][aria-selected="true"] {
+    color: var(--primary);
+    background: var(--primary-subtle);
+    box-shadow: inset 0 -2px 0 var(--primary);
+  }
+}

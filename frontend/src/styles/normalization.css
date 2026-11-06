@@ -127,7 +127,7 @@ input:is([type="checkbox"], [type="radio"]) {
 }
 .app-content :is(.page-header, .screen-heading) h2 {
   font: var(--type-h1);
-  letter-spacing: normal;
+  letter-spacing: var(--tracking-heading);
   margin: var(--space-1) 0 var(--space-2);
   overflow-wrap: anywhere;
 }
@@ -223,7 +223,7 @@ input:is([type="checkbox"], [type="radio"]) {
 }
 .app-content :is(.detail-header h3, .seed-form-heading h3, .entity-title) {
   font: var(--type-h1);
-  letter-spacing: normal;
+  letter-spacing: var(--tracking-heading);
   overflow-wrap: anywhere;
 }
 .app-content
@@ -542,11 +542,7 @@ main > .card form > button {
     overflow: visible;
     align-items: start;
   }
-  .application-shell > .desktop-sidebar {
-    position: sticky;
-    top: 0;
-    height: 100dvh;
-  }
+
   .application-shell > .app-content {
     height: auto;
     overflow: visible;
@@ -599,16 +595,6 @@ main > .card form > button {
   }
   .task-dialog .supplier-form {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .mobile-navigation-dialog .mobile-navigation-heading {
-    position: sticky;
-    top: calc(-1 * var(--space-4));
-    padding-block: var(--space-2);
-    background: var(--surface);
-    z-index: 1;
-  }
-  .mobile-navigation-groups .navigation-link[aria-current="page"] {
-    border-bottom-color: transparent;
   }
 }
 @media (prefers-reduced-motion: reduce) {

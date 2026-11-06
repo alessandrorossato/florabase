@@ -147,3 +147,30 @@ export function activityState(item: Activity, today: string): string {
   if (item.due_on === today) return "Planned · Due today";
   return "Planned";
 }
+
+/** Whole calendar days from `from` to `to` (both YYYY-MM-DD), independent of time zone. */
+function dayDistance(from: string, to: string): number {
+  const utc = (day: string) =>
+    Date.UTC(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10));
+  return Math.round((utc(to) - utc(from)) / 86_400_000);
+}
+
+/**
+ * The planning distance in words (M8 final): how late or how soon planned work is. It says
+ * nothing about whether the work happened; completed and cancelled work has no age.
+ */
+export function activityAge(item: Activity, today: string): string | null {
+  if (item.status !== "planned") return null;
+  const days = dayDistance(today, item.due_on);
+  if (days === 0) return "Due today";
+  if (days < 0)
+    return `${String(-days)} ${days === -1 ? "day" : "days"} overdue`;
+  return `in ${String(days)} ${days === 1 ? "day" : "days"}`;
+}
+
+/** Planning state for styling: overdue, today, upcoming, completed or cancelled. */
+export function activityTone(item: Activity, today: string): string {
+  if (item.status !== "planned") return item.status;
+  if (item.due_on < today) return "overdue";
+  return item.due_on === today ? "today" : "upcoming";
+}

@@ -7185,3 +7185,266 @@ Status remains implemented pending canonical verification.
 - The operator closed UI-DESIGN-001 as a documentation-only baseline. **No implementation was approved.** D1–D6 stay open and deferred without decision. The operator will explore a more radical redesign in a separate feature, Florabase Next, which is not started on this branch.
 - The package status changed to COMPLETE — DOCUMENTED DESIGN REVIEW · NO IMPLEMENTATION APPROVED. The audit, findings, mockups, evidence index and design artifact are kept unchanged as reference. The README gained a Closure section; the implementation plan is reference only. The feature is `verified` against its revised closure criteria.
 - Checks: `check-features` (135 valid) and docs-only `make feature-verify` on the final committed HEAD. No frontend, token, backend, schema, fixture or environment change. No push, PR or merge; the branch is ready for operator `make feature-deliver`.
+
+### UI-REDESIGN-EXPLORATION-001 — M0 worktree and authenticated baseline, 4 November 2026
+
+- Operator approved experimentation with decisions D1–D4: Workbench direction enriched with Herbarium and Living Lineage, Field Ledger light and dark without removing the six themes, 40px pointer and 44px touch controls, and M0 first. Experimental only. No FULL, delivery or merge before operator review of the running alternative.
+- Agent-provided worktree at `origin/main` `d94f275`: session branch renamed to `feat/ui-redesign-exploration-001`, `make feature-init`, `make feature-claim AGENT_ID=claude-next`. Primary checkout and main unchanged.
+- Baseline: UAT Preview (`florabase-uat-preview`, loopback 15174) built from this worktree at `d94f275`, migrations at head `20261013_0042`, fixture v4 with 66 synthetic records, UAT-only fixture owner. No personal credentials. DEV untouched.
+- `docs/design/florabase-next/capture.py` in the pinned Playwright image (`v1.48.0-noble`, playwright installed into scratch, nothing added to the repository's dependencies): 149 images over 37 routes at 1440/1024/390. None skipped, no console errors, no external requests. Manifest with hashes committed; images kept outside Git in the locally excluded `.florabase-next-evidence/`.
+- Registered `UI-REDESIGN-EXPLORATION-001` (`in_progress`). Limits: small fixture, no screen reader, forced colours, real zoom or device. No frontend code change yet; M1 (Field Ledger palette and primitives) is next.
+
+### UI-REDESIGN-EXPLORATION-001 — M1 Field Ledger foundation, 4 November 2026
+
+- Commits `8ce52fa`, `b39fa50` and `ecadaf3`, frontend only. Field Ledger joins the existing palette × appearance matrix as a system: Instrument Sans UI, Newsreader italic scientific names, IBM Plex Mono data, 14/20 body, 8/12/14 radii, 2px focus offset, and 40px pointer controls with 44px under compact or coarse pointers. Complete light and dark sets are included. It is the branch default only; saved Botanical, Herbarium or Mineral choices are honoured, and a test pins those six blocks to main's bytes.
+- New system tokens default to UI Foundation values; shared rules read them, with no page-local overrides. Fonts are exact-pinned Fontsource 5.3.0 (OFL-1.1), same-origin, with licences under `/licenses/`, no CDN.
+- Checks: typecheck, lint, Prettier, production build. The full frontend suite passed 1153/1153 in three serial runs; main `d94f275` passed 1145/1145 three times. Three earlier branch runs under concurrent capture load each showed one different focus/timing intermittent (UX004, StoredMaterial, Schedule); none reproduced in isolation or serially. Recorded for independent review.
+- Evidence: 70 images at `ecadaf3` (manifests in `docs/design/florabase-next/m1/`). Field Ledger light, dark and tablet show no control below 40px desktop or 44px touch and no console errors. Botanical preservation is 33/37 pixel-identical to the baseline; Settings differs as intended, dashboard and Geography are capture noise, and the Collection origins zoom glyph difference (131 px) is unexplained. Baseline 149/149 hashes intact.
+- Pre-existing findings on main, not changed: Leaflet zoom buttons are 30px, and lazy `geography.css` changes directory breadcrumb spacing after a Geography visit. Canonical FULL not run; no push, PR or merge. Stopped at the M1 checkpoint.
+
+### UI-REDESIGN-EXPLORATION-001 — M2 Workbench shell and navigation, 4 November 2026
+
+- Commit `307611b`, frontend only. New `frontend/src/shell/`: the navigation model (six workspaces, every section once, existing sub-views as deep links, shared creation actions), `WorkbenchShell`, `CommandPalette` and scoped `workbench.css`.
+  - **Rail:** a workspace tablist that previews sections without navigating.
+  - **Context panel:** Search, New, sections and sub-views, account, and a hide option.
+  - **Palette:** Ctrl/⌘K or `/`, over sections, creation routes and records from the existing `/api/v1/search`, with loading, empty and error states.
+  - **Mobile:** a header section strip, a workspace bottom bar with section sheets, and an account sheet.
+- Routes, deep links, history, auth and the unsaved-changes guard are kept. `App.tsx` routes all shell navigation through one guarded `navigateTo`, and the shell keeps the existing page layout contract.
+- Fixed from M1: the lazily loaded duplicate breadcrumb rules in `geography.css`, and the 30px Leaflet zoom buttons. Removed about 620 lines of dead sidebar CSS, the resize handle and the collapsed-groups preference.
+- Tests: the shared `test/navigation.ts` helper; old sidebar tests replaced with Workbench equivalents (destinations, panel preview/hide/reopen, tablist keyboard, malformed preference); 10 new shell tests.
+- Checks: typecheck, ESLint, Prettier and production build pass. The full frontend suite passed 1164/1164 on the committed tree three times (one in-session run and two serial runs). No intermittent failure was observed in M2; the earlier M1 focus/timing intermittents stay tracked and unclassified.
+- Evidence (UAT Preview, synthetic fixture), manifests in `docs/design/florabase-next/m2/`:
+  - Field Ledger light: 43 captures over 12 routes at 1440/1024/390 plus palette, preview, New menu, sheets and keyboard focus. No control under 40px pointer or 44px touch, no console errors.
+  - Dark: 10 captures, same result.
+  - Botanical inside the shell: 7 captures; one 40px mobile filter chip, as on main.
+  - Six before/after composites are in `.florabase-next-evidence/m2-before-after/`.
+- Deviations from the concept are documented: the rail previews rather than navigates; no global top bar; no counts or saved views in the panel; Settings as a sixth workspace; Dashboard is unchanged until M3. The Collection origins glyph variance is superseded by the zoom resize and remains unexplained. Canonical FULL not run; no push, PR or merge. Stopped at the M2 checkpoint.
+
+### UI-REDESIGN-EXPLORATION-001 — M3 Today and directories, 4 November 2026
+
+- Commit `b59a21c`, frontend only. Today replaces the Dashboard presentation on the same route and endpoint:
+  - A lede composed only from returned counts.
+  - The holdings ledger.
+  - Next work labelled "Planned in Schedule", with the Overdue caveat.
+  - Specimen plates.
+  - Recent activity with Journal and History origins kept.
+  - A compact Record keeping panel of the existing derived counts, with their definitions. This reverses the v0.1 decision to hide those modules and is flagged for review.
+- The page-level Quick add is consolidated into the shell New menu. Shell creation routes now use `openCollectionPage`, so Back semantics match content links.
+- Directories adopt the Ledger grammar through edits to their owning rules (`directory-system.css`, `directory.css`, `status.css`): hairline rows, Newsreader scientific names, end-aligned summaries, quiet row actions, 4:3 specimen plates, phone rows with actions on their own line, and dot-and-word status. Field Ledger titles use Newsreader via `--type-h1` and `--type-h2`. The six themes stay pinned.
+- Saved Views are discoverable in the owning workspace panel, Today, mobile sheets and the palette, via the existing list endpoint and `savedViewHash`; incompatible views are omitted. There's also a session-only Recent group. No new API or route.
+- The Journal record launcher no longer depends on the lazily loaded Dashboard stylesheet; about 600 lines of dead dashboard CSS are removed.
+- Checks: typecheck, ESLint, Prettier and build pass. The full frontend suite passed 1169/1169 on the committed tree three times (one in-session run and two serial). No intermittent observed. Main JS is 11 kB larger (3.4 kB gzipped).
+- Evidence: 61 captures at `b59a21c` (manifests in `docs/design/florabase-next/m3/`), plus six before/after composites. Field Ledger shows no control under 40px pointer or 44px touch and no console errors.
+  - A temporary Saved View was created via the API for the captures, then deleted; UAT is back to zero Saved Views.
+- Preview-model evaluation (analytical, not user testing): keep the model, with Recent, Saved views and the palette offsetting cross-workspace trips.
+- Known regressions and limits: no in-page Quick add; the visible title is now Today; Record keeping reverses the v0.1 decision; a small band above gallery photos; stacked directory tools on phones.
+- Canonical FULL not run; no push, PR or merge. Stopped at the M3 checkpoint.
+
+### UI-REDESIGN-EXPLORATION-001 — M4 record detail and lineage, 4 November 2026
+
+- Commits `94a1675` (implementation and tests), `bfb23b4` (Order detail target size) and `380e6f4` (Harvest states Source and date once). Frontend only: no backend, API, schema, route or auth change.
+- M3 decisions:
+  - Today's record-keeping counts are now a collapsed, neutral "Data quality" disclosure that keeps its definitions and source line.
+  - Saved views show five, then an accessible "Show all N saved views" disclosure; the eight-item cap is removed.
+  - Mobile directory header density is carried as a required item before final visual acceptance.
+- Shared `DetailHeader` across all ten record types:
+  - 6rem specimen plate.
+  - Field Ledger `--type-record-title`; the six themes fall back to `--type-h1`.
+  - Botanical-face scientific names, a lifecycle line and an optional lineage slot.
+  - Lifecycle is stated once (removed from At a glance on Plant, group, Seed lot and Sowing). Sowing's Seed lot moves to the strip. Harvest states Source in the header and the date in the summary.
+- `LineageStrip` shows only the explicitly recorded upstream path from the existing lineage endpoints, oldest first. Sowings read their recorded Seed lot's path. There are no descendants and no identity-based inference. It has an empty wording and a retryable failure. `LineagePanel` shares the new `useRecordedLineage` hook.
+- `RecordTimeline` replaces `UpcomingActivities`:
+  - A Planned lane from Schedule; overdue reads "not recorded as done".
+  - A Recorded lane from the Journal, with partial-date precision kept and undated entries stated.
+  - Seed lots and Sowings point to where their records live.
+  - System history links History by kind. A per-record History filter is recorded as a separate proposal.
+- Checks:
+  - Typecheck, ESLint, Prettier and build pass. Main JS is 263.1 kB (gzip 81.6 kB).
+  - Full frontend suite 1177/1177 at `94a1675` and twice at `380e6f4`, plus one serial rerun with 1 failure: `StoredMaterial.test.tsx` "a QR inventory hash change focuses the retained record on an already-open Harvest".
+  - That test then failed 2 of 30 times in isolation at `380e6f4` (and 0 of 20 times with the pre-`380e6f4` Harvest screen, which the test does not load).
+  - The branch has not changed `StoredMaterial.tsx`, its test or its API, and they import no M4 module. This is the StoredMaterial intermittent tracked since M1. It is still not classified as pre-existing, because it has not been reproduced on main.
+- Evidence: 108 captures at `380e6f4` (nine detail routes at 1440 full and viewport, 1024 and 390, in Field Ledger light and dark and in Botanical). Manifests are in `docs/design/florabase-next/m4/`. There are 16 before/after composites against the main baseline.
+  - Field Ledger: 0 console errors and 0 controls below target.
+  - Botanical: 0 console errors. Order detail's inline action is 40px at touch widths, because the six themes keep their pointer geometry.
+- Open for review:
+  - Mobile directory header density (required).
+  - The prominent programmatic focus outline on record titles.
+  - One extra Journal request on Plant details.
+  - Plant Origin and provenance partly repeats the strip.
+  - Non-lineage record types only get the shared header.
+- Canonical FULL not run; no push, PR or merge. Stopped at the M4 checkpoint.
+
+### UI-REDESIGN-EXPLORATION-001 — M5 advanced interactions and mobile workflows, 4 November 2026
+
+- Commit `e593c50`, frontend only.
+- Record sheet (rail accent; first item of the phone bottom bar) contains:
+  - the open record's own actions;
+  - a Plant / Plant group / Sowing chooser into the record's real form via a one-time `?entry=new`;
+  - label links (typed, pasted or USB-scanner);
+  - camera scanning only with `BarcodeDetector` in a secure context;
+  - the existing recording routes.
+- No form copies and no new API.
+- Label links accept only the shapes labels encode and use only the in-app route.
+- Palette leads with "This <record>" actions. Fixed broken palette group `aria-labelledby` (ids contained spaces).
+- Programmatically focused headings show the focus ring only after keyboard use (verified in UAT).
+- StoredMaterial QR focus test: diagnosed as a passive-effect race in the test (the component also focuses when its effect registers). It now waits for focus: 2/30 failures before, 40/40 after. Not classified as pre-existing.
+- MediaScreen "detail return preserves filters…" failed once in one full run; 0/30 isolated; media untouched on the branch. Tracked.
+- Checks: typecheck, ESLint, Prettier and build pass; 1203/1203; main JS 269.9 kB (gzip 83.4 kB).
+- Evidence: 10 interaction captures plus 24 route captures at `e593c50` (manifests in `docs/design/florabase-next/m5/`). 0 console errors; 0 below target; keyboard-only Record → Journal entry verified.
+- Open for M6 and release acceptance:
+  - Record-detail distinctiveness.
+  - A three-step UAT lineage chain.
+  - Overview consistency for non-lineage details.
+  - Journal double load (investigated; design options recorded).
+  - Provenance/lineage duplication.
+  - Mobile directory header density (required).
+  - Camera scanning untested on real devices.
+- Canonical FULL not run; no push, PR or merge. Stopped at the M5 checkpoint.
+
+### UI-REDESIGN-EXPLORATION-001 — M6A creative design review, 4 November 2026
+
+- Design only; no frontend, backend, API, schema or auth change.
+- New Claude Design canvas: https://claude.ai/artifact/B3TWNaSJvnjxUz2GmdXRCx. The Phase B artifact is preserved unchanged. The canvas has ten artboards over four pages:
+  - three record-detail directions (A Specimen Sheet, B Research Workspace, C Ledger Folio);
+  - A on phone and tablet, with sparse data, unknowns, partial dates, and loading/error states;
+  - Today grouped by record, a compact phone Seeds header, Record sheet v2, and the palette and confirm dialog;
+  - before/after with real M5 captures.
+- Grounded in UAT fixture v4 data; one three-step lineage record is marked illustrative.
+- Audit, tradeoffs, recommendation, M6B component plan and the release-issue register (R1–R13) are in `docs/design/florabase-next/m6a-design-review.md`.
+- Recommendation: direction A (Specimen Sheet) for all ten record types, with C's precision grouping in the Journal tab.
+- M6B not started; awaiting operator direction approval. No FULL, push, PR or merge.
+
+### UI-REDESIGN-EXPLORATION-001 — M6B Specimen Sheet implementation, 4 November 2026
+
+- Direction A (Specimen Sheet) with Direction C's precision grouping, as approved.
+- Commits `81ba6b9`, `85b726a`, `659e053`, `70810bb`, `353ea39`, plus the checkpoint commit. Frontend only.
+- Specimen Sheet: `DetailHeader` specimen mode, `SpecimenPlate`, `SpecimenLabel`.
+  - Applied to Plant, Plant group, Seed lot, Sowing, Harvest (including Stored material inside it), Order, Supplier and Location (label only).
+  - Botanical identity keeps its reference-hub layout (deviation).
+- Lineage sequence with relationships written as text. Almanac axis with precision groups.
+- `JournalScope`: one Journal request per record view (R2).
+- Compact phone directory header (R4): first record 580px → 264–296px; no header control under 44px.
+- Today groups Next work by record. Record sheet v2: tiles plus one record search through the existing search endpoint.
+- R5: a real three-step lineage was created in isolated UAT through the existing extraction API (Plant `01a1a834-…`). UAT Preview now differs from fixture v4 by that Plant, and the Basil seedlings group is now 5 plants.
+- Tests changed only where the design moved a fact:
+  - Plant "Managed group" and "At a glance" regions → "Plant group facts";
+  - the extracted Plant's group link is asserted in the facts;
+  - Seed lot "At a glance" heading → facts region;
+  - Timeline → Almanac;
+  - Record sheet chooser → search;
+  - one Journal call-signature assertion.
+- New tests: Almanac geometry and grouping, the shared Journal request, and lineage relationship text.
+- MediaScreen (R6): final focus assertion hardened for the passive-effect race (not reproduced: 0 of 32 stressed isolated runs).
+- New intermittent: SowingScreen "old Sowing propagation URL opens the canonical Lineage tab and empty summary" failed once in one full run and 0 of 15 isolated; tracked, details in the M6B README section.
+- Checks:
+  - Format, typecheck and lint pass; build passes. Main JS 269.9 → 285.0 kB (gzip 83.4 → 87.8 kB).
+  - Full suite on the final tree: 4 runs. 3 passed 1207/1207; 1 had the single SowingScreen failure (0 of 15 isolated, 0 in the 2 later full runs; message not captured).
+- Evidence: 144 captures at `353ea39`, plus 6 interaction captures. Manifests are in `docs/design/florabase-next/m6b/`.
+  - 0 console errors.
+  - Field Ledger light and dark: 0 below target.
+  - Botanical: 40px controls at touch widths, from the original themes' pointer geometry (as since M1).
+- Open: R7 real-device QR, R10 measured contrast pass for new tint pairs, R11 manual screen reader/zoom/forced colours, the Journal tab's own precision grouping, the phone action dock.
+- Canonical FULL not run; no push, PR or merge. Stopped at the M6B checkpoint.
+
+### UI-REDESIGN-EXPLORATION-001 — M6 final refinement and visual review, 4 November 2026
+
+- Frontend only, on M6B.
+- Botanical identity reference sheet: framed 4:5 plate, record-title serif, ruled foot. Its hub layout is kept.
+- Journal tab precision periods (shared `precisionGroups`; one list item per entry, API order).
+- Specimen label: links and paths use the UI face; recorded values keep the data face.
+- Evaluated and declined, with reasons:
+  - phone action dock (duplicates the Record button);
+  - Today thumbnails (schedule targets carry no image);
+  - Record sheet recent chips (the shell's Recent holds sections, not records).
+- Accessibility (automated):
+  - every new text pair ≥ 5.58:1 and non-text marks ≥ 4.08:1, in light and dark;
+  - 45 Tab stops on a record, all with a visible focus indicator;
+  - 200% zoom: no horizontal overflow; 400% zoom: no element beyond the viewport (the 16 px reported on Seeds is the test browser's scrollbar);
+  - forced colours: no console errors.
+- Manual screen reader, real zoom, real high contrast and physical-device checks remain owed.
+- SowingScreen intermittent: mechanism proven (2 of 150 probe renders showed the tab selected before the address was canonical). Fixed in the app with `useLayoutEffect` (0 of 300 after). Not classified as pre-existing.
+- Four full runs before the fix: 1207/1207 each. Final tree: one run 1207/1207; one run had a new single failure in App "identity section keyboard navigation retains browser Back and Forward boundaries" (truncated hash mismatch; 20 of 20 isolated passes; not diagnosed; tracked).
+- Larger specimen images: an additive `display_url` rendition with `srcset` is recorded as a backend proposal; not implemented.
+- QR camera on Android: pending the operator.
+- Review: live UAT at http://localhost:15174 (`preview` / `preview`, synthetic). 16 numbered screenshots are in `.florabase-next-evidence/m6-final-review/` (manifest in `docs/design/florabase-next/m6-final/`).
+- Canonical FULL not run; no push, PR or merge. M7 not started.
+
+### UI-REDESIGN-EXPLORATION-001 — M7 side-by-side evaluation and recommendation, 4 November 2026
+
+- Commits `2d95552` (lineage, tablet, phone and sparse-Almanac refinements) and `4571f03` (fixes), plus the checkpoint commit (docs). Main `d94f275` is unchanged and is the merge base.
+- Regressions found and fixed:
+  - phone DirectoryPage directories were 16 px too wide since M6B (hidden title), hiding part of the bottom bar;
+  - a pre-existing 32 px Taxonomy disclosure.
+- Correction: the M6 note attributing 16 px at 400% zoom to a scrollbar was wrong; it was the overflow.
+- Functional comparison:
+  - test inventory: 894 → 937 names; 8 absent, all replaced or renamed;
+  - route sweep: all 37 main routes, 0 console errors, 0 below target in Field Ledger light and dark;
+  - workflow smoke 10/10 on synthetic UAT, including Journal create and delete with the data restored.
+- Identity intermittent:
+  - not reproduced in 4 instrumented full runs (step latencies 1–13 ms against a 1000 ms wait, refuting the timeout hypothesis) or 20 isolated runs;
+  - tracked and unclassified.
+- Checks:
+  - format, typecheck, lint and build pass; full suite 1207/1207 on the final tree, and 4/4 instrumented runs;
+  - backend diff against main is empty.
+- Evidence: 236 captures at `4571f03` in Field Ledger light and dark, plus 10 main-vs-Next composites. The independent review package is `docs/design/florabase-next/INDEPENDENT-REVIEW.md`.
+- Recommendation: adopt with specific blocking corrections (independent review, a manual screen reader pass, identity intermittent classification, operator acceptance of the habit changes, then FULL and delivery only on approval).
+- QR camera on Android: pending the operator. Canonical FULL not run; no push, PR or merge.
+
+### UI-REDESIGN-EXPLORATION-001 — M8 design refinement (Stage A and Stage B), 5–6 November 2026
+
+- Input: independent audit of `35f9eb2` (functional QA pass with findings; design and UX acceptance fail) and operator findings A–C.
+- Stage A: Claude Design canvas https://claude.ai/artifact/EZkPPeaXAXm151sJmbUPCq (record detail, Today, phone, missing photos and palette, directories) and `docs/design/florabase-next/m8a-design-refinement.md`.
+- Stage B commits `42929cf`, `e5e7abe`, `edc25b8`, `0495b81`, `a94d02f`, `b92e6ca`; record in `docs/design/florabase-next/m8b-implementation.md`.
+- Defects fixed with cause and failing-first regression tests:
+  - Workbench panel collapse: the collapsed rule preceded an equal-specificity base rule;
+  - detail tabs ignored later `?tab=` routes on an open record (the cause of the identical M7 plant-lineage capture); captures now assert address and selected tab.
+- Built: specimen sheet, 2× image-enlargement cap, quiet missing-photo mat, lineage stem and phone disclosure, panel collapsed on record pages, Today bench, shared ledger directory language, phone directory spacing (first record 236–247 px), identity tab grid, palette record glyphs.
+- Not built: sparse-Almanac season strip, palette group totals, Locations/Journal/History/Taxonomy list restyle, phone context bar replacing the workspace strip.
+- Extended Review + WFO: investigated only (`docs/design/florabase-next/m8-extended-review-environment.md`); no supported environment combines v5 and WFO; nothing activated.
+- Tests: identity intermittent not reproduced in 33 further runs (21 orders, 12 under contention). New: `location hierarchy … keyboard selection` fails deterministically with shuffle seed 3; Geography and a Schedule test failed once each, unclassified.
+- Checks on `b92e6ca`: format, typecheck, lint, build pass; full suite 1209/1210, then 1210/1210 twice; backend diff empty.
+- Manual screen reader, physical zoom, high contrast and touch passes and Android QR remain open. Canonical FULL not run; no push, PR or merge.
+
+### UI-REDESIGN-EXPLORATION-001 — M8 final UX (Activity identities and Settings), 6 November 2026
+
+- Approved design: canvas page 6 with D1 (History chips share the Filters state) and D2 (Month day inspector on selection).
+- Commits `15dc04f`, `c1146b4`, `7f4a222`, `5eb5691`, `0127aa0`, `784c975`; record in `docs/design/florabase-next/m8-final-ux-implementation.md`.
+- Built: Settings as Theme · Labels · Import / Export, with the QR destination in Labels and a compatible `#/settings?tab=general` redirect; the Journal as a field journal; History as an audit table with fact type chips; the Schedule's Agenda lanes, Month cells and day inspector.
+- Found and fixed during verification:
+  - History chips were 36 px, below target (caught by the capture probe);
+  - the legacy QR redirect was lost under React development double-invocation.
+- Checks on `784c975`: format, typecheck, lint and build pass; full suite 1211/1211 in three consecutive runs; 236 captures with 0 errors, 0 below target and 0 state failures; backend diff empty.
+- Manual accessibility passes and Android QR remain open. Canonical FULL not run; no push, PR or merge.
+
+### UI-REDESIGN-EXPLORATION-001 — M8 independent QA remediation, 6 November 2026
+
+- Input: Codex Luna's final M8 QA (PASS WITH FINDINGS; FULL not authorised). Record:
+  `docs/design/florabase-next/m8-qa-remediation.md`.
+- Commits `a9bf9e5` (F2 test sync), `33f427b` (F3 TaskDialog focus gap), `9744409` (F1 phone
+  day panel and shell scroll-padding), `b164650` (F4 History chip row), `61867c0` (F7
+  identity title focus).
+- Reproduced and root-caused F2 (lazy chunk plus synchronous query), F3 (focus on `<body>`
+  between dialog removal and passive cleanup; no duplicate mutation or lost work) and F7
+  (late title focus taking focus from the tabs). F6 not reproduced and not claimed fixed.
+- Checks on `61867c0`: format, typecheck, lint and build pass; 1217/1217 in three
+  consecutive full runs; 40/40 shuffled App seeds and 40/40 shuffled Schedule runs under
+  contention; 155 light and 155 dark captures with 0 errors, 0 below target and 0 state
+  failures; backend diff empty.
+- Open: manual screen-reader, zoom, high-contrast and touch passes; Android QR; F6 watch.
+  Canonical FULL not run; no push, PR or merge.
+
+### UI-REDESIGN-EXPLORATION-001 — M8 final responsive QA remediation, 6 November 2026
+
+- Input: Codex Luna's second M8 review (FULL NO-GO); scope limited to two responsive
+  corrections. Record: `docs/design/florabase-next/m8-responsive-remediation.md`.
+- `177a01e` (P1): the pinned phone header is detected against the layout viewport
+  (`clientWidth`), not `window.innerWidth`, so classic scrollbars no longer zero the top
+  scroll-padding; measured bar geometry is published rounded up.
+- `41a5c35` (P2): `body` min-width subtracts a classic scrollbar's width, removing the
+  15px page overflow at 320px without hiding overflow.
+- `e5a430a`: real-browser geometry regression under classic and overlay scrollbars;
+  74/96 on `61baa3f`, 96/96 light and dark on `e5a430a`.
+- Checks on `e5a430a`: format, typecheck, lint and build pass; 1220/1220 in three
+  consecutive full runs; 155 light and 155 dark captures with 0 errors, 0 below target
+  and 0 state failures; backend diff empty.
+- F6 stays on the watch list. Canonical FULL not run; no push, PR or merge.

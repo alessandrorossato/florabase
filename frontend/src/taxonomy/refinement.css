@@ -65,7 +65,7 @@
 }
 .taxonomy-source-line > .control-action {
   font: var(--type-small);
-  min-height: 2rem;
+  min-height: var(--control-height-compact);
   padding-block: 0;
 }
 .taxonomy-screen.taxonomy-refined .taxonomy-stage .taxonomy-workspace {

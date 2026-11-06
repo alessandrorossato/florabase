@@ -280,6 +280,7 @@
       "integration": ["backend/tests/integration/test_schedule.py"],
       "frontend": [
         "frontend/src/schedule/ScheduleScreen.test.tsx",
+        "frontend/src/schedule/age.test.ts",
         "frontend/src/schedule/api.test.ts",
         "frontend/src/schedule/calendar.test.ts"
       ],
@@ -475,7 +476,10 @@
         "backend/tests/integration/test_lineage_integrity_migration.py",
         "backend/tests/integration/test_lineage_migration.py"
       ],
-      "frontend": ["frontend/src/lineage/LineagePanel.test.tsx"],
+      "frontend": [
+        "frontend/src/lineage/LineagePanel.test.tsx",
+        "frontend/src/lineage/LineageStrip.test.tsx"
+      ],
       "affects": [
         "seeds-regression",
         "sowings-regression",

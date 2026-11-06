@@ -1,0 +1,213 @@
+{
+  "label": "m3-b59a21c-field-ledger-dark",
+  "origin": "http://localhost:15174",
+  "theme_preference": {
+    "palette": "field-ledger",
+    "appearance": "dark"
+  },
+  "captured_at": "2026-11-04T14:00:11Z",
+  "viewports": {
+    "desktop": {
+      "width": 1440,
+      "height": 844
+    },
+    "tablet": {
+      "width": 1024,
+      "height": 844
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "blocked_external_hosts": [],
+  "resolved_ids": {
+    "seed_lot": "01a1a5e2-e9c1-70d3-aeeb-e6722419645a",
+    "sowing": "01a1a5e2-e9c6-7273-8287-0adacddbc2af",
+    "plant": "01a1a5e2-e9ca-74c2-9311-846a221fed7a",
+    "plant_group": "01a1a5e2-e9d0-70fb-97c1-fb2b805a1e7d",
+    "harvest": "01a1a5e2-e9d7-75f0-adc8-1602543773c1",
+    "location": "01a1a5e2-e9b1-77f8-aaff-4d8b8a90b429",
+    "identity": "01a1a5e2-e969-72d4-b009-84fda3772739",
+    "supplier": "01a1a5e2-e9af-74db-b2cb-def5563b3dea",
+    "order": "01a1a5e2-e9b9-744e-849a-a80effb14596"
+  },
+  "entries": [
+    {
+      "key": "dashboard",
+      "area": "Dashboard",
+      "route": "#/dashboard",
+      "viewport": "desktop",
+      "file": "dashboard-desktop.png",
+      "sha256": "22962f345b6da8904819617b287ed7dfec06ab4c0446cfe6673df79165a01d79",
+      "bytes": 159247,
+      "title": "Florabase",
+      "settled_ms": 2088,
+      "console_errors": [],
+      "probe": {
+        "palette": "field-ledger",
+        "appearance": "dark",
+        "body_font": "\"Instrument Sans Variable\"",
+        "control_height_token": "2.5rem",
+        "controls": 14,
+        "min_height": 40,
+        "below_target": 0,
+        "below_target_kinds": []
+      }
+    },
+    {
+      "key": "seeds",
+      "area": "Seeds",
+      "route": "#/seeds",
+      "viewport": "desktop",
+      "file": "seeds-desktop.png",
+      "sha256": "5f85823d54a8f62ea625031d9a13084391bd339b4aadb6ad47914eaf2451e863",
+      "bytes": 146983,
+      "title": "Florabase",
+      "settled_ms": 906,
+      "console_errors": [],
+      "probe": {
+        "palette": "field-ledger",
+        "appearance": "dark",
+        "body_font": "\"Instrument Sans Variable\"",
+        "control_height_token": "2.5rem",
+        "controls": 50,
+        "min_height": 40,
+        "below_target": 0,
+        "below_target_kinds": []
+      }
+    },
+    {
+      "key": "plants",
+      "area": "Plants",
+      "route": "#/plants",
+      "viewport": "desktop",
+      "file": "plants-desktop.png",
+      "sha256": "e166ea042c870a92b0b238118beb6e7770aaf8824d5f8617593d5b86db481d92",
+      "bytes": 125383,
+      "title": "Florabase",
+      "settled_ms": 907,
+      "console_errors": [],
+      "probe": {
+        "palette": "field-ledger",
+        "appearance": "dark",
+        "body_font": "\"Instrument Sans Variable\"",
+        "control_height_token": "2.5rem",
+        "controls": 34,
+        "min_height": 40,
+        "below_target": 0,
+        "below_target_kinds": []
+      }
+    },
+    {
+      "key": "plant-detail",
+      "area": "Details",
+      "route": "#/plants/{plant}",
+      "viewport": "desktop",
+      "file": "plant-detail-desktop.png",
+      "sha256": "007b6654afdeda0b0d87bec5a8ea3f455f8b022d190e16a70425e6d611c2fa57",
+      "bytes": 121229,
+      "title": "Florabase",
+      "settled_ms": 907,
+      "console_errors": [],
+      "probe": {
+        "palette": "field-ledger",
+        "appearance": "dark",
+        "body_font": "\"Instrument Sans Variable\"",
+        "control_height_token": "2.5rem",
+        "controls": 20,
+        "min_height": 40,
+        "below_target": 0,
+        "below_target_kinds": []
+      }
+    },
+    {
+      "key": "dashboard",
+      "area": "Dashboard",
+      "route": "#/dashboard",
+      "viewport": "mobile",
+      "file": "dashboard-mobile.png",
+      "sha256": "4a8fba3063b65fde7d6de2e378d2fe64d72f411d33f796273b65d3e5ccaf2795",
+      "bytes": 54698,
+      "title": "Florabase",
+      "settled_ms": 2097,
+      "console_errors": [],
+      "probe": {
+        "palette": "field-ledger",
+        "appearance": "dark",
+        "body_font": "\"Instrument Sans Variable\"",
+        "control_height_token": "2.75rem",
+        "controls": 10,
+        "min_height": 44,
+        "below_target": 0,
+        "below_target_kinds": []
+      }
+    },
+    {
+      "key": "seeds",
+      "area": "Seeds",
+      "route": "#/seeds",
+      "viewport": "mobile",
+      "file": "seeds-mobile.png",
+      "sha256": "c251d25e66dba4e2e34adbdce85ad28e50ffb76035b6594e17fc1bc23b5bf881",
+      "bytes": 52322,
+      "title": "Florabase",
+      "settled_ms": 907,
+      "console_errors": [],
+      "probe": {
+        "palette": "field-ledger",
+        "appearance": "dark",
+        "body_font": "\"Instrument Sans Variable\"",
+        "control_height_token": "2.75rem",
+        "controls": 46,
+        "min_height": 44,
+        "below_target": 0,
+        "below_target_kinds": []
+      }
+    },
+    {
+      "key": "plants",
+      "area": "Plants",
+      "route": "#/plants",
+      "viewport": "mobile",
+      "file": "plants-mobile.png",
+      "sha256": "abd2846f4c090163e9f17274d7b6fee000dcc9ed02ab59d475f057734135e86c",
+      "bytes": 47456,
+      "title": "Florabase",
+      "settled_ms": 906,
+      "console_errors": [],
+      "probe": {
+        "palette": "field-ledger",
+        "appearance": "dark",
+        "body_font": "\"Instrument Sans Variable\"",
+        "control_height_token": "2.75rem",
+        "controls": 30,
+        "min_height": 44,
+        "below_target": 0,
+        "below_target_kinds": []
+      }
+    },
+    {
+      "key": "plant-detail",
+      "area": "Details",
+      "route": "#/plants/{plant}",
+      "viewport": "mobile",
+      "file": "plant-detail-mobile.png",
+      "sha256": "b952c226e622454d452e3d4d70a7963478012c4fc756c75f86f937e6621fa433",
+      "bytes": 55171,
+      "title": "Florabase",
+      "settled_ms": 907,
+      "console_errors": [],
+      "probe": {
+        "palette": "field-ledger",
+        "appearance": "dark",
+        "body_font": "\"Instrument Sans Variable\"",
+        "control_height_token": "2.75rem",
+        "controls": 16,
+        "min_height": 44,
+        "below_target": 0,
+        "below_target_kinds": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+ "label": "m5-e593c50-interactions",
+ "origin": "http://localhost:15174",
+ "entries": [
+  {
+   "name": "plant-direct",
+   "viewport": "desktop",
+   "route": "/plants/01a1a5e2-e9cd-70e4-be42-010f1608af85",
+   "file": "plant-direct.png",
+   "sha256": "2f6cf6f9affad690b5383df9e721829390bda72a87dc271ab44b354c079d2a72",
+   "console_errors": [],
+   "under_40px": [],
+   "title_outline": [
+    true,
+    "none"
+   ],
+   "after_key": "solid"
+  },
+  {
+   "name": "record-plant-desktop",
+   "viewport": "desktop",
+   "route": "/plants/01a1a5e2-e9cd-70e4-be42-010f1608af85",
+   "file": "record-plant-desktop.png",
+   "sha256": "7c3826d1fa124d622e105c3062a4bfa0e04745f8e5eedf70a07ad3b3b44c40cc",
+   "console_errors": [],
+   "under_40px": []
+  },
+  {
+   "name": "record-plant-mobile",
+   "viewport": "mobile",
+   "route": "/plants/01a1a5e2-e9cd-70e4-be42-010f1608af85",
+   "file": "record-plant-mobile.png",
+   "sha256": "39a07f0abc228ab11a25339e79f9a35428b089c72aba0ef7c5ba7810d6c67018",
+   "console_errors": [],
+   "under_40px": []
+  },
+  {
+   "name": "record-today-mobile",
+   "viewport": "mobile",
+   "route": "/dashboard",
+   "file": "record-today-mobile.png",
+   "sha256": "337a30f2a9900b59bee655402c6adc4b96e5c01f627b734fb894c0449a2fa2f6",
+   "console_errors": [],
+   "under_40px": []
+  },
+  {
+   "name": "entry-new",
+   "viewport": "desktop",
+   "route": "/plants/01a1a5e2-e9cd-70e4-be42-010f1608af85?tab=events&entry=new",
+   "file": "entry-new.png",
+   "sha256": "d8b316c61576465a6e26c3417cafd535a8f7b6f882e9ed4e8d9f1aecf11dd656",
+   "console_errors": [],
+   "under_40px": [],
+   "hash": "#/plants/01a1a5e2-e9cd-70e4-be42-010f1608af85?tab=events"
+  },
+  {
+   "name": "germination-new",
+   "viewport": "mobile",
+   "route": "/sowings/01a1a5e2-e9c6-7273-8287-0adacddbc2af?tab=germination&entry=new",
+   "file": "germination-new.png",
+   "sha256": "21fc89ac16985592f0493b151ebd5d375845c446d5ab49d6fbfad792f75ae101",
+   "console_errors": [],
+   "under_40px": [],
+   "hash": "#/sowings/01a1a5e2-e9c6-7273-8287-0adacddbc2af?tab=germination"
+  },
+  {
+   "name": "palette-plant-context",
+   "viewport": "desktop",
+   "route": "/plants/01a1a5e2-e9cd-70e4-be42-010f1608af85",
+   "file": "palette-plant-context.png",
+   "sha256": "b25e92de4911da5dba900b86ca0fe2c01f437cf5e5c6e686f81cf6b9c5ff8d4b",
+   "console_errors": [],
+   "under_40px": [],
+   "first_group": "This Plant"
+  },
+  {
+   "name": "record-label-refused",
+   "viewport": "mobile",
+   "route": "/dashboard",
+   "file": "record-label-refused.png",
+   "sha256": "fa5bb4afccaa24f1ff2d9f3c5eed66a8bba35816901b40abf5f833a483e30294",
+   "console_errors": [],
+   "under_40px": []
+  },
+  {
+   "name": "record-plant-mobile-dark",
+   "viewport": "mobile",
+   "route": "/plants/01a1a5e2-e9cd-70e4-be42-010f1608af85",
+   "file": "record-plant-mobile-dark.png",
+   "sha256": "39a07f0abc228ab11a25339e79f9a35428b089c72aba0ef7c5ba7810d6c67018",
+   "console_errors": [],
+   "under_40px": []
+  },
+  {
+   "name": "keyboard-record-entry",
+   "viewport": "desktop",
+   "route": "/plants/01a1a5e2-e9cd-70e4-be42-010f1608af85",
+   "file": "keyboard-record-entry.png",
+   "sha256": "d8b316c61576465a6e26c3417cafd535a8f7b6f882e9ed4e8d9f1aecf11dd656",
+   "console_errors": [],
+   "under_40px": [],
+   "dialog": "Add entry",
+   "focus_in_dialog": true,
+   "hash_after": "#/plants/01a1a5e2-e9cd-70e4-be42-010f1608af85?tab=events"
+  }
+ ]
+}

@@ -1,0 +1,872 @@
+/* Florabase Next Workbench shell. Every rule is scoped to .wb-shell or a .wb-* part so
+   nothing leaks into page content. Layout keeps the existing contract: one sidebar grid
+   item before .app-content, so page :has() rules for full-height directories still apply. */
+
+.wb-visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.application-shell.wb-shell {
+  --wb-rail: 5rem;
+  --wb-panel: 17rem;
+  --sidebar-width: calc(var(--wb-rail) + var(--wb-panel));
+}
+.application-shell.wb-shell--collapsed {
+  --sidebar-width: var(--wb-rail);
+}
+
+/* Scrolling to or focusing content stops clear of the pinned phone header and bottom bar
+   (measured by WorkbenchShell; both are 0 where nothing is pinned). */
+html:has(.wb-shell) {
+  scroll-padding-block: var(--wb-obscured-top, 0px)
+    var(--wb-obscured-bottom, 0px);
+}
+
+/* Sidebar: rail + panel ---------------------------------------------------- */
+.wb-shell .wb-sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: var(--wb-rail) minmax(0, 1fr);
+  block-size: 100dvh;
+  min-block-size: 0;
+  align-self: start;
+}
+.wb-shell--collapsed .wb-sidebar {
+  grid-template-columns: var(--wb-rail);
+}
+
+.wb-shell .wb-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-1);
+  min-block-size: 0;
+  padding: var(--space-3) var(--space-2);
+  color: var(--rail-text-muted);
+  background: var(--rail-background);
+}
+.wb-shell .wb-brand {
+  margin: 0 0 var(--space-2);
+  font: inherit;
+  letter-spacing: normal;
+}
+.wb-shell .wb-brand a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-block-size: 3rem;
+  color: var(--rail-text);
+  text-decoration: none;
+  border-radius: var(--radius-small);
+}
+.wb-shell .wb-brand__mark {
+  display: grid;
+  place-items: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  color: var(--rail-active);
+  font-family: var(--font-botanical);
+  font-size: 1.6rem;
+  font-style: italic;
+  line-height: 1;
+  border: 1px solid color-mix(in srgb, var(--rail-active) 45%, transparent);
+  border-radius: 50%;
+}
+.wb-shell .wb-brand__name {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.wb-shell .wb-rail__search,
+.wb-shell .wb-tab,
+.wb-shell .wb-icon-button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-block-size: 3.5rem;
+  min-inline-size: 0;
+  padding: var(--space-2) var(--space-1);
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-small);
+  font: 600 0.6875rem/1.2 var(--font-ui);
+  letter-spacing: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.wb-shell .wb-rail__search {
+  display: none;
+  min-block-size: var(--control-height);
+}
+.wb-shell--collapsed .wb-rail__search {
+  display: flex;
+}
+.wb-shell .wb-rail__search:hover,
+.wb-shell .wb-tab:hover,
+.wb-shell .wb-icon-button:hover {
+  color: var(--rail-text);
+  background: color-mix(in srgb, var(--rail-text) 9%, transparent);
+}
+.wb-shell .wb-rail__tabs {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-block-size: 0;
+}
+.wb-shell .wb-tab[aria-selected="true"] {
+  color: var(--rail-text);
+  background: var(--rail-active-subtle);
+}
+.wb-shell .wb-tab[aria-selected="true"] .control-icon {
+  color: var(--rail-active);
+}
+.wb-shell .wb-tab--here::after {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-end: 0.85rem;
+  inline-size: 0.375rem;
+  block-size: 0.375rem;
+  border-radius: 50%;
+  background: var(--rail-active);
+  content: "";
+}
+.wb-shell .wb-tab--utility {
+  margin-block-start: auto;
+}
+.wb-shell .wb-mobilebar {
+  display: none;
+}
+
+.wb-shell .wb-panel {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  padding: var(--space-4) var(--space-3) var(--space-3);
+  overflow-y: auto;
+  color: var(--text);
+  background: var(--surface);
+  border-inline-end: 1px solid var(--border);
+}
+/* Collapsed: the panel leaves layout and focus order entirely. This must follow the base
+   rule above (same specificity); before M8 it preceded it, so the panel stayed displayed and
+   wrapped into an implicit grid row under the rail, clipped to the rail's width. The phone
+   rules below show the panel again as the section strip. */
+.wb-shell--collapsed .wb-panel {
+  display: none;
+}
+.wb-shell .wb-panel__tools {
+  display: flex;
+  gap: var(--space-2);
+}
+.wb-shell .wb-panel__tools .overflow-trigger {
+  flex: none;
+  min-inline-size: var(--control-height);
+  padding-inline: var(--space-2);
+}
+/* Record: the rail's one action, set apart from the workspace tabs by the accent. */
+.wb-shell .wb-rail__record {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-block-size: 3.5rem;
+  margin-block-end: var(--space-2);
+  padding: var(--space-2) var(--space-1);
+  color: var(--on-primary);
+  background: var(--primary);
+  border: 0;
+  border-radius: var(--radius-normal);
+  font: 600 0.6875rem/1.2 var(--font-ui);
+}
+.wb-shell .wb-rail__record:hover {
+  background: var(--primary-hover);
+}
+.wb-shell .wb-search-trigger {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  min-block-size: var(--control-height);
+  padding: 0 var(--space-2) 0 var(--space-3);
+  color: var(--text-muted);
+  background: var(--background);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-small);
+  font: var(--type-small);
+  text-align: start;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.wb-shell .wb-search-trigger:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+.wb-shell .wb-search-trigger > span {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wb-shell kbd,
+.wb-palette kbd {
+  padding: 0.0625rem 0.3125rem;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-block-end-width: 2px;
+  border-radius: 4px;
+  font: 500 0.6875rem/1.4 var(--font-data);
+  white-space: nowrap;
+}
+.wb-shell .wb-panel__header {
+  margin: var(--space-6) var(--space-2) var(--space-3);
+}
+.wb-shell .wb-panel__eyebrow {
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--type-eyebrow);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.wb-shell .wb-panel__title {
+  margin: var(--space-1) 0 var(--space-1);
+  color: var(--text);
+  font-family: var(--font-botanical);
+  font-size: 1.625rem;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.wb-panel__summary {
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.wb-shell .wb-links,
+.wb-sheet .wb-links,
+.wb-shell .wb-sublinks,
+.wb-sheet .wb-sublinks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wb-shell .wb-links,
+.wb-sheet .wb-links {
+  display: grid;
+  gap: 2px;
+}
+.wb-shell .wb-link,
+.wb-sheet .wb-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-block-size: var(--control-height);
+  padding: 0 var(--space-3);
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-small);
+  font: var(--type-strong);
+  text-decoration: none;
+}
+.wb-shell .wb-link .control-icon,
+.wb-sheet .wb-link .control-icon {
+  color: var(--text-muted);
+}
+.wb-shell .wb-sublinks,
+.wb-sheet .wb-sublinks {
+  margin: 2px 0 var(--space-1);
+  padding-inline-start: 2.25rem;
+}
+.wb-shell .wb-sublink,
+.wb-sheet .wb-sublink {
+  display: flex;
+  align-items: center;
+  min-block-size: var(--control-height-compact);
+  padding: 0 var(--space-3);
+  color: var(--text-muted);
+  border-radius: var(--radius-small);
+  font: var(--type-small);
+  text-decoration: none;
+}
+.wb-shell :is(.wb-link, .wb-sublink):hover,
+.wb-sheet :is(.wb-link, .wb-sublink):hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+.wb-shell :is(.wb-link, .wb-sublink)[aria-current="page"],
+.wb-sheet :is(.wb-link, .wb-sublink)[aria-current="page"] {
+  color: var(--primary);
+  background: var(--primary-subtle);
+}
+.wb-shell .wb-link[aria-current="page"] .control-icon,
+.wb-sheet .wb-link[aria-current="page"] .control-icon {
+  color: var(--primary);
+}
+.wb-shell .wb-sublink[aria-current="page"],
+.wb-sheet .wb-sublink[aria-current="page"] {
+  font-weight: 600;
+}
+/* Saved views and Recent: quieter link groups below the sections. */
+.wb-group {
+  margin-block-start: var(--space-4);
+  padding-block-start: var(--space-3);
+  border-block-start: 1px solid var(--border);
+}
+.wb-group__title {
+  margin: 0 var(--space-3) var(--space-1);
+  color: var(--text-muted);
+  font: var(--type-eyebrow);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.wb-group ul {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wb-group a {
+  display: grid;
+  align-content: center;
+  min-block-size: var(--control-height-compact);
+  padding: var(--space-1) var(--space-3);
+  color: var(--text);
+  border-radius: var(--radius-small);
+  text-decoration: none;
+}
+.wb-group a:hover {
+  background: var(--surface-hover);
+}
+.wb-group__more {
+  min-block-size: var(--control-height-compact);
+  margin: var(--space-1) 0 0;
+  padding: 0 var(--space-3);
+  color: var(--primary);
+  font: var(--type-small);
+  font-weight: 600;
+}
+.wb-group__name {
+  overflow: hidden;
+  font: var(--type-small);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wb-group__detail {
+  overflow: hidden;
+  color: var(--text-muted);
+  font: var(--type-label);
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wb-shell .wb-panel__footer {
+  display: grid;
+  gap: var(--space-2);
+  margin-block-start: auto;
+  padding: var(--space-3) var(--space-2) 0;
+  border-block-start: 1px solid var(--border);
+}
+.wb-account {
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.wb-account strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.wb-panel__footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.wb-panel__footer-actions > *,
+.wb-panel__footer-actions .control-icon-button__label {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.wb-shell .wb-collapse {
+  margin-inline-start: auto;
+}
+.wb-shell .wb-sign-out,
+.wb-sheet .wb-sign-out {
+  inline-size: 100%;
+}
+.wb-sheet .wb-sign-out {
+  inline-size: auto;
+  margin-inline-start: auto;
+}
+
+/* Create menu popover (portalled to body, so not under .wb-shell). */
+.wb-create {
+  display: grid;
+  min-inline-size: 15rem;
+}
+.wb-create a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-block-size: var(--control-height);
+  padding: 0 var(--space-3);
+  color: var(--text);
+  border-radius: var(--radius-small);
+  text-decoration: none;
+}
+.wb-create a:hover {
+  background: var(--surface-hover);
+}
+.wb-create .control-icon {
+  color: var(--text-muted);
+}
+
+/* Bottom bar and sheets (mobile). */
+.wb-shell .wb-bottombar {
+  display: none;
+}
+.task-dialog.wb-sheet {
+  inline-size: min(100% - 1.5rem, 26rem);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-large);
+}
+.wb-sheet .wb-sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-block-end: var(--space-1);
+}
+.wb-sheet .wb-sheet__header h2 {
+  margin: 0;
+  font-family: var(--font-botanical);
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+.wb-sheet > nav {
+  margin-block: var(--space-4);
+}
+
+/* Command palette. */
+.task-dialog.wb-palette {
+  inline-size: min(100% - 2rem, 42rem);
+  max-block-size: min(36rem, 100dvh - 6rem);
+  margin-block-start: 10dvh;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-large);
+}
+.task-dialog.wb-palette[open] {
+  display: flex;
+  flex-direction: column;
+}
+.wb-palette .wb-palette__field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-4);
+  color: var(--text-muted);
+  border-block-end: 1px solid var(--border);
+}
+.wb-palette .wb-palette__field:focus-within {
+  box-shadow: inset 0 -2px 0 var(--focus-ring);
+}
+.wb-palette .wb-palette__field input {
+  flex: 1 1 auto;
+  min-block-size: 3.5rem;
+  padding: 0;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font: 400 1.0625rem/1.4 var(--font-ui);
+}
+.wb-palette .wb-palette__field input:focus-visible {
+  outline: none;
+}
+.wb-palette .wb-palette__status {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.wb-palette .wb-palette__results {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  padding: 0 var(--space-2) var(--space-3);
+  overflow-y: auto;
+}
+.wb-palette .wb-palette__group {
+  padding: var(--space-3) var(--space-3) var(--space-1);
+  color: var(--text-muted);
+  font: var(--type-eyebrow);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.wb-palette .wb-palette__option {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-block-size: var(--control-height);
+  padding: 0 var(--space-3);
+  color: var(--text);
+  border-radius: var(--radius-small);
+  cursor: pointer;
+}
+.wb-palette .wb-palette__option .control-icon {
+  color: var(--text-muted);
+}
+.wb-palette .wb-palette__option[aria-selected="true"] {
+  color: var(--primary);
+  background: var(--primary-subtle);
+}
+.wb-palette .wb-palette__option[aria-selected="true"] .control-icon {
+  color: var(--primary);
+}
+.wb-palette .wb-palette__label {
+  overflow: hidden;
+  font: var(--type-strong);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wb-palette .wb-palette__detail {
+  max-inline-size: 18rem;
+  overflow: hidden;
+  color: var(--text-muted);
+  font: var(--type-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tablet: a narrower panel keeps content width close to the previous sidebar. */
+@media (min-width: 48.01rem) and (max-width: 75rem) {
+  .application-shell.wb-shell {
+    --wb-rail: 4.75rem;
+    --wb-panel: 15rem;
+  }
+}
+
+/* Mobile: rail becomes a header, the panel a section strip, workspaces a bottom bar. */
+@media (max-width: 48rem) {
+  .application-shell.wb-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wb-shell .wb-sidebar,
+  .wb-shell--collapsed .wb-sidebar {
+    display: block;
+    block-size: auto;
+    grid-template-columns: none;
+  }
+  .wb-shell .wb-rail {
+    flex-direction: row;
+    align-items: center;
+    padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
+  }
+  .wb-shell .wb-brand {
+    margin: 0;
+  }
+  .wb-shell .wb-brand a {
+    justify-content: flex-start;
+  }
+  .wb-shell .wb-brand__name {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    clip-path: none;
+    font-family: var(--font-botanical);
+    font-size: 1.375rem;
+    font-weight: 500;
+  }
+  .wb-shell .wb-rail__tabs,
+  .wb-shell .wb-rail__record,
+  .wb-shell .wb-rail__search,
+  .wb-shell--collapsed .wb-rail__search {
+    display: none;
+  }
+  .wb-shell .wb-mobilebar {
+    display: flex;
+    gap: var(--space-1);
+    margin-inline-start: auto;
+  }
+  .wb-shell .wb-icon-button {
+    min-block-size: var(--control-height-touch);
+    min-inline-size: var(--control-height-touch);
+  }
+  .wb-shell .wb-panel,
+  .wb-shell--collapsed .wb-panel {
+    display: block;
+    padding: 0;
+    overflow: visible;
+    border-inline-end: 0;
+    border-block-end: 1px solid var(--border);
+  }
+  .wb-shell .wb-panel__tools,
+  .wb-shell .wb-panel__header,
+  .wb-shell .wb-panel__footer,
+  .wb-shell .wb-panel .wb-group,
+  .wb-shell .wb-sections .wb-sublinks {
+    display: none;
+  }
+  .wb-shell .wb-sections {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .wb-shell .wb-sections .wb-links {
+    display: flex;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+  }
+  /* Sub-views are hidden in the strip, so their parent section shows as current. */
+  .wb-shell .wb-sections li:has(.wb-sublink[aria-current="page"]) > .wb-link {
+    color: var(--primary);
+    background: var(--primary-subtle);
+  }
+  .wb-shell .wb-sections .wb-link {
+    min-block-size: var(--control-height-touch);
+    gap: var(--space-2);
+    white-space: nowrap;
+    border: 1px solid var(--border);
+  }
+  .wb-shell .wb-bottombar {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 30;
+    display: flex;
+    padding: var(--space-1) var(--space-1)
+      calc(var(--space-1) + env(safe-area-inset-bottom));
+    background: var(--rail-background);
+  }
+  .wb-shell .wb-bottombar button {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-inline-size: 0;
+    min-block-size: 3.5rem;
+    padding: var(--space-1) 2px;
+    color: var(--rail-text-muted);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-small);
+    font: 600 0.6875rem/1.2 var(--font-ui);
+  }
+  .wb-shell .wb-bottombar button[aria-current="true"] {
+    color: var(--rail-text);
+    background: var(--rail-active-subtle);
+  }
+  .wb-shell .wb-bottombar button[aria-current="true"] .control-icon {
+    color: var(--rail-active);
+  }
+  .task-dialog.wb-sheet {
+    inline-size: 100%;
+    max-inline-size: none;
+    margin: auto 0 0;
+    border-radius: var(--radius-large) var(--radius-large) 0 0;
+  }
+  .task-dialog.wb-palette {
+    inline-size: calc(100% - 1rem);
+    margin-block-start: var(--space-3);
+  }
+}
+
+/* Short phone-width viewports (for example 1280x800 at 400% zoom = 320x200 CSS px):
+   a pinned header and bottom bar would leave almost no room for content, so the header
+   scrolls away with the page and the bottom bar follows the content. */
+@media (max-width: 48rem) and (max-height: 30rem) {
+  .wb-shell .wb-sidebar,
+  .wb-shell .wb-bottombar {
+    position: static;
+  }
+  .wb-shell .app-content {
+    padding-bottom: var(--space-4);
+  }
+}
+
+@media (forced-colors: active) {
+  .wb-shell .wb-tab[aria-selected="true"],
+  .wb-shell :is(.wb-link, .wb-sublink)[aria-current="page"],
+  .wb-palette .wb-palette__option[aria-selected="true"] {
+    outline: 2px solid Highlight;
+  }
+}
+@media print {
+  .wb-shell .wb-sidebar,
+  .wb-shell .wb-bottombar {
+    display: none;
+  }
+}
+
+/* Record sheet (M5): contextual record actions, a record chooser, label links and scanning. */
+.wb-record .wb-record__group {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-block: var(--space-3);
+  border-block-start: 1px solid var(--border);
+}
+.wb-record .wb-record__title {
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--type-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.wb-record .wb-record__action {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-block-size: var(--control-height);
+  padding-inline: var(--space-2);
+  color: var(--text);
+  border-radius: var(--radius-small);
+  font: var(--type-strong);
+  text-decoration: none;
+}
+.wb-record .wb-record__action:hover {
+  background: var(--surface-hover);
+}
+.wb-record .wb-record__action .control-icon {
+  color: var(--primary);
+}
+.wb-record .wb-record__tasks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.wb-record .wb-record__tasks legend {
+  flex-basis: 100%;
+  margin-block-end: var(--space-1);
+  padding: 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.wb-record label.wb-record__task {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  inline-size: auto;
+  min-block-size: var(--control-height);
+  margin: 0;
+  padding-inline-end: var(--space-3);
+  font: var(--type-body);
+}
+.wb-record label.wb-record__task input {
+  flex: none;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  margin: 0;
+}
+.wb-record .wb-record__label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-2);
+}
+.wb-record .wb-record__label .field {
+  margin: 0;
+}
+.wb-record .wb-scan {
+  display: grid;
+  gap: var(--space-2);
+}
+.wb-record .wb-scan__video {
+  inline-size: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--surface-subtle);
+  border-radius: var(--radius-normal);
+}
+.wb-record .wb-scan > p:empty {
+  display: none;
+}
+.task-dialog.wb-record {
+  max-block-size: min(46rem, 100dvh - 2rem);
+  overflow-y: auto;
+}
+@media (max-width: 48rem) {
+  .wb-shell .wb-bottombar .wb-bottombar__record {
+    color: var(--on-primary);
+    background: var(--primary);
+  }
+  .wb-shell .wb-bottombar .wb-bottombar__record .control-icon {
+    color: inherit;
+  }
+}
+
+/* Record sheet v2 (M6B): the open record's actions as tiles; results under one search. */
+.wb-record nav.wb-record__group[aria-label^="This "] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.wb-record nav.wb-record__group[aria-label^="This "] > .wb-record__title {
+  grid-column: 1 / -1;
+}
+.wb-record nav.wb-record__group[aria-label^="This "] > .wb-record__action {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-block-size: 5rem;
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+}
+.wb-record
+  nav.wb-record__group[aria-label^="This "]
+  > .wb-record__action:first-of-type {
+  color: var(--on-primary);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.wb-record
+  nav.wb-record__group[aria-label^="This "]
+  > .wb-record__action:first-of-type
+  .control-icon {
+  color: inherit;
+}
+.wb-record .wb-record__results {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wb-record .wb-record__hint {
+  display: block;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+
+/* M8 palette record identification: the identity line in the botanical italic. */
+.wb-palette .wb-palette__context {
+  font-family: var(--font-botanical);
+  font-size: 0.9375rem;
+}

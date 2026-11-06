@@ -26,8 +26,8 @@ import {
   Breadcrumbs,
   DetailHeader,
   DetailPage,
-  DetailSummary,
   DetailLoading,
+  SpecimenLabel,
 } from "../components/CollectionUI";
 import {
   DirectorySearch,
@@ -961,6 +961,39 @@ export function LocationScreen({
                   ]}
                 />
                 <DetailHeader
+                  label={
+                    <SpecimenLabel
+                      kind="Location"
+                      name="Location overview"
+                      rows={[
+                        {
+                          label: "State",
+                          value: selected.retired_at ? "Retired" : "Active",
+                        },
+                        {
+                          label: "Parent",
+                          value: selected.parent_id ? (
+                            <a href={`#/locations/${selected.parent_id}`}>
+                              {
+                                locations.find(
+                                  (location) =>
+                                    location.id === selected.parent_id,
+                                )?.name
+                              }
+                            </a>
+                          ) : (
+                            "Root location"
+                          ),
+                        },
+                        {
+                          label: "Children",
+                          value: locations.filter(
+                            (location) => location.parent_id === selected.id,
+                          ).length,
+                        },
+                      ]}
+                    />
+                  }
                   eyebrow="Location"
                   title={selected.name}
                   secondary={
@@ -1048,36 +1081,6 @@ export function LocationScreen({
                     Retired location remains available for historical records.
                   </p>
                 )}
-                <DetailSummary
-                  id="location-summary-title"
-                  label="Location overview"
-                  metrics={[
-                    {
-                      label: "State",
-                      value: selected.retired_at ? "Retired" : "Active",
-                    },
-                    {
-                      label: "Parent",
-                      value: selected.parent_id ? (
-                        <a href={`#/locations/${selected.parent_id}`}>
-                          {
-                            locations.find(
-                              (location) => location.id === selected.parent_id,
-                            )?.name
-                          }
-                        </a>
-                      ) : (
-                        "Root location"
-                      ),
-                    },
-                    {
-                      label: "Children",
-                      value: locations.filter(
-                        (location) => location.parent_id === selected.id,
-                      ).length,
-                    },
-                  ]}
-                />
                 <div className="record-detail-grid location-overview-grid">
                   <section
                     className="record-section"

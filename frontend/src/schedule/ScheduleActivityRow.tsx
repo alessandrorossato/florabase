@@ -3,8 +3,10 @@ import { ScheduleTargetLabel } from "./ScheduleTargetLabel";
 import { OverflowMenu } from "../components/ReferenceUI";
 import type { Activity } from "./api";
 import {
+  activityAge,
   activityLabels,
   activityState,
+  activityTone,
   localDay,
   targetHref,
   targetLabels,
@@ -22,8 +24,9 @@ export function ScheduleActivityRow({
   today?: string;
   onAction: (action: ActivityAction, item: Activity) => void;
 }) {
+  const age = activityAge(item, today);
   return (
-    <div className="schedule-row">
+    <div className="schedule-row" data-tone={activityTone(item, today)}>
       <div>
         <button
           className="link-button schedule-title"
@@ -39,6 +42,7 @@ export function ScheduleActivityRow({
           <strong>
             {activityState(item, today).replace("Planned · ", "")}
           </strong>
+          {age && <span className="schedule-age">{age}</span>}
         </p>
         {item.target ? (
           <p>

@@ -14,6 +14,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { App } from "../App";
+import { openSection } from "../test/navigation";
 
 const identityId = "01900000-0000-7000-8000-000000000101";
 const otherIdentityId = "01900000-0000-7000-8000-000000000102";
@@ -324,11 +325,7 @@ async function openPlants(waitForReady = true) {
   setViewportMatches(true);
   const user = userEvent.setup();
   render(<App />);
-  await user.click(
-    within(
-      await screen.findByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Plants" }),
-  );
+  await openSection(user, "Plants");
   if (waitForReady) {
     await screen.findByRole(
       "heading",
@@ -1296,7 +1293,14 @@ test("active group extraction is focused, updates exact quantity, opens the Plan
   });
   expect(window.location.hash).toBe("#/plants/extracted-plant");
   expect(screen.getByText("Extracted from group")).toBeInTheDocument();
-  expect(screen.getAllByText("Seedlings 2026")).toHaveLength(2);
+  // The direct source group is a fact of the record itself, so it stays reachable even when
+  // recorded lineage (unmocked here) cannot load.
+  expect(
+    within(screen.getByRole("region", { name: "Plant facts" })).getByRole(
+      "link",
+      { name: "Seedlings 2026" },
+    ),
+  ).toBeVisible();
   await user.click(screen.getByRole("button", { name: "Edit Plant" }));
   expect(screen.getByText(/Origin is read-only/)).toBeInTheDocument();
   expect(screen.queryByLabelText("Direct origin")).not.toBeInTheDocument();
@@ -1838,6 +1842,19 @@ test("Plant Journal entries preserves API order, every label and partial-date pr
   expect(items[1]).toHaveTextContent("2025-03");
   expect(items[2]).toHaveTextContent("2026-09-02");
   expect(items[3]).toHaveTextContent("Date unknown");
+  // Each recorded period opens with its precision stated (Ledger Folio grouping).
+  expect(items[0].querySelector(".event-period")).toHaveTextContent(
+    "2024 · month not recorded",
+  );
+  expect(items[1].querySelector(".event-period")).toHaveTextContent(
+    "March 2025 · day not recorded",
+  );
+  expect(items[2].querySelector(".event-period")).toHaveTextContent(
+    "September 2026",
+  );
+  expect(items[3].querySelector(".event-period")).toHaveTextContent(
+    "Date not recorded",
+  );
   expect(items[1]).toHaveTextContent("Destination: Greenhouse → Bench 4");
   expect(items[0].querySelector(".event-card")).toBeInTheDocument();
   expect(timeline).toHaveClass("event-timeline");
@@ -2124,7 +2141,10 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
   });
   mockApi(
     plantHandler([plant()], [], (path) =>
-      path === `/api/v1/plants/${plantId}/events` ? pendingEvents : undefined,
+      // The Overview timeline and the Journal tab each read the record's Journal.
+      path === `/api/v1/plants/${plantId}/events`
+        ? pendingEvents.then((response) => response.clone())
+        : undefined,
     ),
   );
   const user = await openPlants();
@@ -2428,8 +2448,8 @@ test("group extraction history uses only recorded group origin and includes reta
     "1 extracted Plant · historical extractions",
   );
   expect(
-    screen.getByRole("region", { name: "Managed group" }),
-  ).toHaveTextContent("5 plants");
+    screen.getByRole("region", { name: "Plant group facts" }),
+  ).toHaveTextContent("Current quantity5 plants");
 });
 
 test("transfer dialog contains keyboard focus and restores the operation trigger on escape", async () => {
@@ -2511,12 +2531,9 @@ test("historical group detail labels retained location and zero count without cl
     }),
   );
   await assertDedicatedDetails();
-  expect(screen.getByRole("region", { name: "At a glance" })).toHaveTextContent(
-    "Last recorded location",
-  );
-  expect(
-    screen.getByRole("region", { name: "Managed group" }),
-  ).toHaveTextContent("Recorded quantity0 plants");
+  const facts = screen.getByRole("region", { name: "Plant group facts" });
+  expect(facts).toHaveTextContent("Last recorded location");
+  expect(facts).toHaveTextContent("Recorded quantity0 plants");
   expect(
     screen.queryByRole("button", { name: "Extract plant" }),
   ).not.toBeInTheDocument();
@@ -2814,6 +2831,32 @@ test("PlantGroup direct edit alias uses the shared full-page editor", async () =
   ).toBeVisible();
 });
 
+test("a later route to another tab of the open Plant selects that tab (M8 capture defect)", async () => {
+  mockApi(plantHandler([plant()], []));
+  window.history.replaceState(null, "", `#/plants/${plantId}`);
+  render(<App />);
+  const overview = await screen.findByRole("tab", { name: "Overview" });
+  expect(overview).toHaveAttribute("aria-selected", "true");
+  act(() => {
+    window.location.hash = `#/plants/${plantId}?tab=lineage`;
+  });
+  await waitFor(() => {
+    expect(screen.getByRole("tab", { name: "Lineage" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+  act(() => {
+    window.location.hash = `#/plants/${plantId}`;
+  });
+  await waitFor(() => {
+    expect(screen.getByRole("tab", { name: "Overview" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+});
+
 test("saving Plant edit retains its detail tab and connected focus trigger across a new revision", async () => {
   let current = plant();
   const custom: Handler = (path, init) => {
@@ -2930,12 +2973,8 @@ test.each(["plant", "group"] as const)(
     expect(
       await screen.findByRole("button", { name: "New plant or group" }),
     ).toBeVisible();
-    await user.click(
-      within(
-        screen.getByRole("navigation", { name: "Primary navigation" }),
-      ).getByRole("link", { name: "Dashboard" }),
-    );
-    await user.click(await screen.findByRole("button", { name: "Quick add" }));
+    await openSection(user, "Today");
+    await user.click(await screen.findByRole("button", { name: "New record" }));
     await user.click(
       screen.getByRole("link", {
         name: kind === "plant" ? "New plant" : "New plant group",
@@ -3294,3 +3333,28 @@ test.each(["plant", "group"] as const)(
     });
   },
 );
+
+test("an entry=new deep link opens the record's own Journal form once and leaves the address clean", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    `#/plants/${plantId}?tab=events&entry=new`,
+  );
+  mockApi(plantHandler([plant()], [group()]));
+  await act(async () => {
+    render(<App />);
+    await Promise.resolve();
+  });
+  await act(async () => {
+    await vi.dynamicImportSettled();
+  });
+  expect(
+    await screen.findByRole("dialog", { name: "Add entry" }),
+  ).toBeVisible();
+  // The request is consumed: reload, Back or a remount will not reopen the form.
+  expect(window.location.hash).toBe(`#/plants/${plantId}?tab=events`);
+  expect(screen.getByRole("tab", { name: "Journal" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+});

@@ -20,6 +20,10 @@
   overflow: hidden;
   border-radius: var(--radius-small);
 }
+.app-content .ui-directory-row .ui-record-visual {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+}
 .app-content .ui-record-visual img {
   width: 100%;
   height: 100%;
@@ -40,8 +44,9 @@
 }
 .app-content .ui-record-title {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
   min-width: 0;
 }
 .app-content .ui-record-title > strong {
@@ -55,9 +60,21 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+.app-content .ui-record-secondary .scientific-name {
+  font-family: var(--font-botanical);
+  font-size: 0.9375rem;
+  font-style: italic;
+}
 .app-content .ui-record-summary {
   display: grid;
   gap: var(--space-1);
+}
+/* Rows read as a ledger: what is held, aligned at the end of the line. */
+.app-content .ui-directory-row .ui-record-summary {
+  justify-items: end;
+  color: var(--text);
+  text-align: end;
+  font-variant-numeric: tabular-nums;
 }
 .app-content .ui-record-summary strong {
   font: var(--type-strong);
@@ -81,11 +98,43 @@
 .app-content .ui-directory-card .ui-record-title {
   align-items: start;
 }
-.app-content .ui-directory-card .ui-record-visual:has(img),
-.app-content .ui-directory-card .ui-record-visual:has(img) > .record-visual {
+.app-content
+  .ui-directory-card
+  .ui-directory-trigger:has(> .ui-record-content) {
+  padding: 0 0 var(--space-2);
+}
+.app-content .ui-directory-card :is(.ui-record-identity, .ui-record-summary) {
+  padding-inline: var(--space-4);
+}
+/* Cards are specimen plates: a 4:3 photograph, or a labelled hatched plate without one. */
+.app-content .ui-directory-card .ui-record-visual,
+.app-content .ui-directory-card .ui-record-visual > .record-visual {
   width: 100%;
   height: auto;
+  margin: 0;
   aspect-ratio: 4 / 3;
+  border-radius: 0;
+}
+.app-content .ui-directory-card .ui-record-visual {
+  border-block-end: 1px solid var(--border);
+}
+.app-content .ui-directory-card .ui-record-visual:not(:has(img)) {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--surface-subtle) 0 0.5rem,
+    var(--background) 0.5rem 1rem
+  );
+}
+.app-content
+  .ui-directory-card
+  .ui-record-visual:not(:has(img))
+  > .record-visual {
+  background: transparent;
+}
+.app-content .ui-directory-card .ui-record-visual:not(:has(img)) svg {
+  width: 2rem;
+  height: 2rem;
+  color: var(--text-muted);
 }
 .app-content .ui-directory-card .ui-directory-record-actions {
   margin-top: auto;
@@ -283,9 +332,27 @@
   min-width: 0;
   margin-block: 0;
 }
-@media (max-width: 40rem) {
+/* Phones: the record takes the full line; its actions follow on their own row. */
+@media (max-width: 48rem) {
+  .app-content
+    .ui-directory-records--list
+    > .ui-directory-row:has(.ui-record-content) {
+    flex-wrap: wrap;
+  }
+  .app-content
+    .ui-directory-records--list
+    .tooltip-trigger:has(> .ui-directory-trigger) {
+    flex-basis: 100%;
+  }
   .app-content .ui-directory-records--list .ui-directory-record-actions {
-    max-width: 7rem;
+    flex-basis: 100%;
+    max-width: none;
+    justify-content: flex-end;
+    padding-block-start: 0;
+  }
+  .app-content .ui-directory-row .ui-record-summary {
+    justify-items: start;
+    text-align: start;
   }
 }
 
@@ -348,21 +415,31 @@
   color: var(--text-muted);
   background: var(--surface-subtle);
 }
-.app-content
-  .ui-directory-records
-  > :is(.ui-directory-row, .ui-directory-card)[data-selected="true"] {
-  box-shadow: none;
+.app-content .ui-directory-records > .ui-directory-card[data-selected="true"] {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
 }
 .app-content
   .ui-directory-records
   :is(.ui-directory-row, .ui-directory-card)
   .ui-directory-record-actions
   .control-icon-button {
-  border: 1px solid var(--border);
+  /* Florabase Next: quiet repeated row actions; the boundary appears on hover and focus. */
+  color: var(--text-muted);
+  border: 1px solid transparent;
   border-radius: var(--radius-small);
+  background: transparent;
+  width: var(--control-height);
+  height: var(--control-height);
+}
+.app-content
+  .ui-directory-records
+  :is(.ui-directory-row, .ui-directory-card)
+  .ui-directory-record-actions
+  .control-icon-button:is(:hover, [aria-expanded="true"]) {
+  color: var(--text);
+  border-color: var(--border-strong);
   background: var(--surface);
-  width: 2.75rem;
-  height: 2.75rem;
 }
 .ui-directory-action-menu[hidden] {
   display: none;
@@ -448,4 +525,314 @@
 }
 .app-content .ui-directory-record-actions .ui-directory-quick-action:hover {
   background: var(--surface-hover);
+}
+
+/* M6B compact phone header (M6A finding R4): the first record should start near the top of
+   the screen. Nothing is removed: the section strip above already names the section, so the
+   page title is kept for assistive technology only; search keeps its own row; view, Filters,
+   Saved views and New become 44px icon buttons with their accessible names unchanged, and
+   the active-filter chips scroll beside them; pagination and record selection follow the
+   list instead of preceding it. */
+@media (max-width: 40rem) {
+  .app-content .ui-directory-page .breadcrumbs {
+    display: none;
+  }
+  .app-content .ui-directory-page .page-header--directory {
+    margin-block: 0 var(--space-3);
+    padding: 0;
+  }
+  .app-content .ui-directory-page .page-header--directory .page-identity {
+    /* Anchored: an unpositioned absolute box keeps its static place at the end of the
+       header row and widened the phone layout viewport by 16px (M7 finding). */
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .app-content .ui-directory-page .page-header--directory .page-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+  }
+  .app-content .ui-directory-page .page-header--directory .directory-tools {
+    display: contents;
+  }
+  .app-content .ui-directory-page .page-header--directory .directory-search {
+    flex: 1 1 100%;
+    margin: 0;
+  }
+  .app-content
+    .ui-directory-page
+    .page-header--directory
+    :is(.ui-view-switcher, .saved-views, .directory-tools > .control-action) {
+    flex: none;
+    margin: 0;
+  }
+  /* Icon-only on phones; the visible label is hidden but stays the accessible name. */
+  .app-content
+    .ui-directory-page
+    .page-header--directory
+    .page-tools
+    :is(.ui-view-switcher, .saved-views, .directory-tools > .control-action)
+    .control-action,
+  .app-content
+    .ui-directory-page
+    .page-header--directory
+    .directory-tools
+    > .control-action {
+    min-inline-size: var(--control-height);
+    padding-inline: 0;
+    justify-content: center;
+    gap: 0;
+    font-size: 0;
+  }
+  .app-content
+    .ui-directory-page
+    .page-header--directory
+    .page-tools
+    .control-action
+    :is(svg, .control-icon) {
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+  }
+  .app-content
+    .ui-directory-page
+    .page-header--directory
+    .directory-filter-summary {
+    display: flex;
+    flex: 1 1 0;
+    flex-wrap: nowrap;
+    min-width: 0;
+    margin: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    white-space: nowrap;
+  }
+  .app-content .ui-directory-page .ui-directory-workspace {
+    display: flex;
+    flex-direction: column;
+  }
+  .app-content
+    .ui-directory-page
+    .ui-directory-workspace
+    > .directory-pagination {
+    order: 1;
+    margin-block-start: var(--space-3);
+  }
+}
+
+/* The Harvests workspace composes the same directory parts outside DirectoryPage (its tools
+   sit beside the header and it adds a Harvests / Stored material switch); same phone rules. */
+@media (max-width: 40rem) {
+  .app-content .harvest-workspace > .breadcrumbs {
+    display: none;
+  }
+  .app-content .harvest-workspace > .page-header--directory {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .app-content .harvest-workspace > .directory-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .app-content .harvest-workspace > .directory-tools > .directory-search {
+    flex: 1 1 100%;
+    margin: 0;
+  }
+  .app-content .harvest-workspace > .directory-tools > :not(.directory-search) {
+    flex: none;
+    margin: 0;
+  }
+  .app-content .harvest-workspace > .directory-tools .control-action {
+    min-inline-size: var(--control-height);
+    padding-inline: 0;
+    justify-content: center;
+    gap: 0;
+    font-size: 0;
+  }
+  .app-content .harvest-workspace .ui-directory-workspace {
+    display: flex;
+    flex-direction: column;
+  }
+  .app-content
+    .harvest-workspace
+    .ui-directory-workspace
+    > .directory-pagination {
+    order: 1;
+    margin-block-start: var(--space-3);
+  }
+}
+
+/* M8 ledger directory (operator finding A). One language for every directory that uses the
+   shared records list: Seeds, Sowings, Plants and groups, Harvests, Stored material, Suppliers,
+   Orders, Locations and Botanical identities. A ruled ledger instead of a framed card; a quiet
+   mat swatch; botanical names in the serif italic; status as dot and word without a tint;
+   recorded quantities in the data face; row actions quiet until the row is hovered or focused.
+   Tokens only; structure, controls and behaviour are unchanged. */
+.app-content .ui-directory-records--list {
+  background: transparent;
+  border: 0;
+  border-block-start: 1px solid var(--text);
+  border-radius: 0;
+}
+.app-content .ui-directory-records--list > .ui-directory-row {
+  padding-inline: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+.app-content .ui-directory-records--list > .ui-directory-row:last-child {
+  border-bottom: 1px solid var(--border);
+}
+.app-content .ui-directory-row .ui-record-visual {
+  background: var(--surface-subtle);
+  border: 0;
+}
+.app-content .ui-directory-records .ui-record-visual .record-visual {
+  color: var(--border-strong);
+  background: transparent;
+}
+.app-content .ui-directory-records .ui-record-title > strong {
+  font-size: 0.9375rem;
+  letter-spacing: -0.003em;
+}
+.app-content .ui-directory-records .ui-record-status .ui-status-chip {
+  padding: 0;
+  background: none;
+  font: var(--type-small);
+  font-weight: 500;
+}
+.app-content .ui-directory-row .ui-record-summary {
+  font-family: var(--font-data);
+  font-size: 0.8125rem;
+  color: var(--text);
+}
+.app-content .ui-directory-row .ui-record-summary strong {
+  font-family: var(--font-data);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.app-content
+  .ui-directory-records--list
+  .ui-directory-record-actions
+  :is(button, a):not(.button--primary) {
+  color: var(--text-muted);
+  background: transparent;
+  border-color: transparent;
+}
+.app-content
+  .ui-directory-records--list
+  .ui-directory-row:is(:hover, :focus-within)
+  .ui-directory-record-actions
+  :is(button, a):not(.button--primary) {
+  color: var(--text);
+}
+.app-content
+  .ui-directory-records--list
+  .ui-directory-record-actions
+  :is(button, a):not(.button--primary):hover {
+  background: var(--surface-hover);
+}
+/* Gallery: small herbarium sheets; images uncropped on the mat, never enlarged. */
+.app-content .ui-directory-card .ui-record-visual {
+  margin: var(--space-2) var(--space-2) 0;
+  width: auto;
+  aspect-ratio: 1 / 1;
+  background: var(--surface-subtle);
+  border-block-end: 0;
+  border-radius: 2px;
+}
+.app-content .ui-directory-card .ui-record-visual:not(:has(img)) {
+  background: var(--surface-subtle);
+}
+.app-content .ui-directory-card .ui-record-visual:not(:has(img)) svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--border-strong);
+}
+.app-content .ui-directory-card .ui-record-visual img {
+  width: auto;
+  height: auto;
+  max-width: calc(100% - 2 * var(--space-3));
+  max-height: calc(100% - 2 * var(--space-3));
+  padding: var(--space-1);
+  object-fit: contain;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+/* Unknown is not a number: said in words, in the UI face, muted. */
+.app-content .ui-directory-records .ui-record-summary .ui-record-unknown {
+  font-family: var(--font-ui);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.app-content .ui-directory-row .ui-record-summary :is(strong, small) {
+  font-weight: 400;
+}
+
+/* Phones: row actions share the record's last line instead of adding a row of their own. */
+@media (max-width: 48rem) {
+  .app-content .ui-directory-records--list > .ui-directory-row--composed {
+    padding-block: var(--space-1);
+  }
+  .app-content
+    .ui-directory-records--list
+    > .ui-directory-row--composed
+    > .ui-directory-record-actions {
+    width: auto;
+    margin-block-start: calc(-1 * var(--control-height-touch, 2.75rem));
+    margin-inline-start: auto;
+  }
+  .app-content .ui-directory-records--list .ui-record-content {
+    grid-template-columns: 3rem minmax(0, 1fr);
+  }
+  .app-content .ui-directory-records--list .ui-record-summary {
+    grid-column: 2;
+    justify-items: start;
+    text-align: start;
+    min-block-size: var(--control-height-touch, 2.75rem);
+    align-content: center;
+    /* Room for the row's actions, which share this line. */
+    padding-inline-end: calc(3 * var(--control-height-touch, 2.75rem));
+  }
+}
+
+/* M8 phones: the first record within the 240px target (audit P1). The section margin and the
+   frame gap above the list were stacked spacing, not separation the reader needs. */
+@media (max-width: 48rem) {
+  .app-content .ui-directory-page {
+    margin-block-start: 0;
+  }
+  .app-content .workspace:has(.ui-directory-records) {
+    margin-block-start: 0;
+  }
+  .app-content:has(.ui-directory-records) {
+    padding-block-start: var(--space-2);
+  }
+  .app-content .page-header--with-tools .page-tools {
+    gap: var(--space-1) var(--space-2);
+  }
+  .app-content .ui-directory-page .ui-directory-frame,
+  .app-content .ui-directory-workspace {
+    gap: var(--space-2);
+  }
+  .app-content .page-header--with-tools {
+    row-gap: var(--space-1);
+  }
+  .app-content .ui-directory-records--list {
+    padding-block-start: 0;
+  }
 }
