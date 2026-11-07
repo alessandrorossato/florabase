@@ -7544,3 +7544,22 @@ Status remains implemented pending canonical verification.
 - Checks: `make workflow-check`; `beta_release.py check`; local candidate passed; runtime smoke 22/22
   from clean `0d074e7` (858.2 s). Not run: actionlint (declined download), independent QA, canonical
   FULL, GHCR publication. Still BETA-BLOCKED. No push, PR, tag or release.
+
+### BETA-DISTRIBUTION-001 — independent QA corrections, 7 November 2026
+
+- Independent read-only QA of `794fdfc`: PASS WITH FINDINGS (1 P1, 3 P2, 5 P3); FULL not authorized
+  until P1. All nine addressed in `8ce70c6`:
+  - P1: the manifest binds the install bundle by SHA-256, each bundle file is attested, the controller
+    refuses a differing `compose.yaml`/`florabasectl.py`, and attestation checks are mandatory in the guide;
+  - P2-1/P3-2: an unpublished PostgreSQL identity is built and verified in a loopback registry before
+    any byte reaches GHCR; a published tag must equal the pin (lookup errors fail closed) and is
+    re-verified, not rebuilt;
+  - P2-2: buildx client pinned (v0.38.1) and `postgres-identity --check` in the read-only verify job;
+  - P2-3: release notes name the single-scanner gate; P3-1: upstream `docker-entrypoint.sh` refuses root,
+    covering overridden entry points; P3-3: controller mirrors the identity rules and version label;
+    P3-4: readiness caches a success for 1 s; P3-5: stale text corrected.
+- New pins: index `4edc0790…`, platform `55b1969a…`, reproduced twice and through the verified-copy path.
+- Checks: `make workflow-check` (release 30, runtime 61 + 49 on Python 3.8.20); backend unit 987 passed
+  (90.07%); registry verification (gate PASSED, Grype 0 Critical/High both modes); local candidate passed;
+  runtime smoke 22/22 from clean `52648b5` (857.9 s). Not run: actionlint, canonical FULL, publication.
+  Delta QA requested. No push, PR, tag or release.
