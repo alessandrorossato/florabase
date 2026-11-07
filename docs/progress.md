@@ -7600,4 +7600,3 @@ Status remains implemented pending canonical verification.
   the digest from the build output (the WFO seal, or the WCVP digest recorded after the build), not
   one computed from the copy. QA's informational note: `ATTACH` is now refused (attached-database
   limit 0). `test_reference_index.py` has 25 tests.
-
