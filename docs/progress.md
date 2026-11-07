@@ -7635,3 +7635,28 @@ Status remains implemented pending canonical verification.
 - Version bumped to `0.1.0-beta.2` (backend/frontend packages, Dockerfile defaults, OpenAPI, `release/inputs.json`,
   installation guide). The existing `v0.1.0-beta.1` tag is untouched; the operator creates `v0.1.0-beta.2` after
   delivery. Nothing published, tagged or configured.
+
+### GHCR-PREFLIGHT-BETA3 — registry-manifest preflight and v0.1.0-beta.3, 7 November 2026
+
+- Protected `v0.1.0-beta.2` run `42407235373`: verify passed; publish failed in the preflight with
+  `gh: Invalid argument. (HTTP 400)` from `GET /users/alessandrorossato/packages?package_type=container`.
+  The GitHub Packages REST API does not accept the workflow's `GITHUB_TOKEN` (it requires a classic
+  personal access token with `read:packages`), so the listing could never succeed in CI. The fixture
+  test mocked `gh` and hid it. Nothing was built, pushed or released.
+- `publish-beta-images.py` now asks the GHCR registry API directly: a `pull,push`-scoped token from
+  `ghcr.io/token` (the scope a push requests, so a not-yet-created package is still authorized), then
+  `GET /v2/<repo>/manifests/<tag>`. A 200 must carry a manifest/index media type, `schemaVersion` 2 and a
+  `Docker-Content-Digest` equal to the SHA-256 of the body. Only a 404 whose errors are all
+  `MANIFEST_UNKNOWN`/`NAME_UNKNOWN` is absent; 401/403/429/5xx, network errors, timeouts and malformed
+  bodies refuse. An existing backend/frontend version refuses; an existing PostgreSQL tag must equal the
+  pinned index digest. No new token or permission. The cleanup no longer removes a builder that was never
+  created (the secondary `no builder` error); logout still always runs.
+- The repository formatter (target py314) rewrites `except (A, B):` into 3.14-only syntax, while the
+  runner uses Python 3.12; a new test parses every release script with the 3.12 grammar.
+- Tests: `RegistryPreflightTests` (12) for existing/absent/unauthorized/unavailable/malformed lookups,
+  PostgreSQL tag with pinned and other digests, absent PostgreSQL rebuild and early-error cleanup; also
+  run on `python:3.12-slim`. Live read-only GHCR probe: existing public tag returned its verified digest,
+  an absent tag returned absent, invalid credentials refused.
+- Not verifiable before the protected run: GHCR's answer to `GITHUB_TOKEN` for a never-published package
+  (expected `NAME_UNKNOWN`/`MANIFEST_UNKNOWN` 404; any other answer fails closed).
+- Version bumped to `0.1.0-beta.3`; `v0.1.0-beta.1` and `v0.1.0-beta.2` tags are untouched.

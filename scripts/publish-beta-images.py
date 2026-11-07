@@ -4,12 +4,17 @@
 from __future__ import annotations
 
 import argparse
+import base64
+import hashlib
 import json
 import os
 import re
 import shutil
 import subprocess
 import tempfile
+import urllib.error
+import urllib.parse
+import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +32,100 @@ from beta_release import (
     scan_images,
     software_bill_of_materials,
 )
+
+REGISTRY = "ghcr.io"
+MANIFEST_MEDIA_TYPES = (
+    "application/vnd.oci.image.index.v1+json",
+    "application/vnd.docker.distribution.manifest.list.v2+json",
+    "application/vnd.oci.image.manifest.v1+json",
+    "application/vnd.docker.distribution.manifest.v2+json",
+)
+ABSENT_CODES = {"MANIFEST_UNKNOWN", "NAME_UNKNOWN"}
+
+
+def registry_token(repository: str, actor: str, secret: str) -> str:
+    """Exchange the workflow credential for a registry token scoped to this repository.
+
+    The pull,push scope is the one a push itself requests, so a package that does not exist yet
+    is still authorized; the token is only used for read requests here.
+    """
+    query = urllib.parse.urlencode(
+        {"service": REGISTRY, "scope": "repository:" + repository + ":pull,push"}
+    )
+    basic = base64.b64encode((actor + ":" + secret).encode()).decode()
+    request = urllib.request.Request(
+        "https://" + REGISTRY + "/token?" + query, headers={"Authorization": "Basic " + basic}
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            token = json.loads(response.read()).get("token")
+    except urllib.error.HTTPError as error:
+        error.close()
+        raise ValueError(
+            f"registry refused credentials for {repository} (HTTP {error.code})"
+        ) from error
+    except (OSError, ValueError, AttributeError) as error:
+        raise ValueError(
+            f"registry token request for {repository} failed: {type(error).__name__}"
+        ) from error
+    if not isinstance(token, str) or not token:
+        raise ValueError(f"registry token response for {repository} is malformed")
+    return token
+
+
+def published_digest(repository: str, tag: str, actor: str, secret: str) -> str | None:
+    """Return the published index/manifest digest, or None only for a definite absence.
+
+    Every other outcome (authorization, availability, network, malformed or inconsistent
+    responses) raises, so an ambiguous lookup can never be mistaken for an unpublished tag.
+    """
+    if not re.fullmatch(r"[a-z0-9_./-]+", repository) or not re.fullmatch(r"[\w.-]+", tag):
+        raise ValueError("invalid registry reference")
+    token = registry_token(repository, actor, secret)
+    request = urllib.request.Request(
+        "https://" + REGISTRY + "/v2/" + repository + "/manifests/" + tag,
+        headers={"Authorization": "Bearer " + token, "Accept": ", ".join(MANIFEST_MEDIA_TYPES)},
+    )
+    reference = REGISTRY + "/" + repository + ":" + tag
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            body = response.read()
+            header = response.headers.get("Docker-Content-Digest", "")
+            media_type = response.headers.get("Content-Type", "").split(";")[0].strip()
+    except urllib.error.HTTPError as error:
+        with error:
+            try:
+                document = json.loads(error.read())
+            except ValueError:
+                document = None
+        errors = document.get("errors") if isinstance(document, dict) else None
+        codes = (
+            {item.get("code") for item in errors if isinstance(item, dict)}
+            if isinstance(errors, list)
+            else set()
+        )
+        if error.code == 404 and codes and codes <= ABSENT_CODES:
+            return None
+        raise ValueError(
+            f"cannot determine whether {reference} exists (HTTP {error.code})"
+        ) from error
+    except (OSError, ValueError) as error:
+        raise ValueError(
+            f"cannot determine whether {reference} exists: {type(error).__name__}"
+        ) from error
+    digest = "sha256:" + hashlib.sha256(body).hexdigest()
+    try:
+        document = json.loads(body)
+    except ValueError:
+        document = None
+    if (
+        media_type not in MANIFEST_MEDIA_TYPES
+        or not isinstance(document, dict)
+        or document.get("schemaVersion") != 2
+        or header != digest
+    ):
+        raise ValueError(f"registry returned a malformed manifest for {reference}")
+    return digest
 
 
 def require_publication_identity(sha: str) -> None:
@@ -87,61 +186,23 @@ def main() -> None:
         text=True,
         check=True,
     )
+    builder_requested = False
     try:
-        # Enumerate successfully: auth/network errors must never be treated as an absent version.
-        owner = repository.split("/")[0]
-        packages = json.loads(
-            run(
-                "gh",
-                "api",
-                "--paginate",
-                "--slurp",
-                f"/users/{owner}/packages?package_type=container&per_page=100",
-            )
-        )
-        existing = {p["name"] for page in packages for p in page}
+        # Registry lookups distinguish a definite absence from every failure: authorization,
+        # network, availability and malformed responses all refuse publication.
+        actor, secret = os.environ["GITHUB_ACTOR"], os.environ["REGISTRY_TOKEN"]
         for service in ("backend", "frontend"):
-            package = repository.split("/")[1] + "-" + service
-            if package in existing:
-                tags = json.loads(
-                    run(
-                        "gh",
-                        "api",
-                        "--paginate",
-                        "--slurp",
-                        f"/users/{owner}/packages/container/{package}/versions?per_page=100",
-                    )
-                )
-                if any(
-                    version in item["metadata"]["container"]["tags"]
-                    for page in tags
-                    for item in page
-                ):
-                    raise ValueError("versioned image already exists; choose a new release")
+            if published_digest(repository + "-" + service, version, actor, secret) is not None:
+                raise ValueError("versioned image already exists; choose a new release")
         pg = locked["postgresql"]
-        postgres_published = False
-        if POSTGRES_REPOSITORY.removeprefix("ghcr.io/" + owner + "/") in existing:
-            # Shared by every release: an existing tag must already be the pinned identity, and
-            # only a definite "not found" may count as absent (auth/network errors fail closed).
-            tagged = subprocess.run(
-                [
-                    "docker",
-                    "buildx",
-                    "imagetools",
-                    "inspect",
-                    POSTGRES_REPOSITORY + ":" + pg["version"],
-                    "--format",
-                    "{{json .Manifest}}",
-                ],
-                text=True,
-                capture_output=True,
-            )
-            if tagged.returncode == 0:
-                if json.loads(tagged.stdout)["digest"] != pg["index_digest"]:
-                    raise ValueError("published PostgreSQL tag differs from the pinned identity")
-                postgres_published = True
-            elif not re.search(r"not found|manifest unknown", tagged.stderr, re.IGNORECASE):
-                raise ValueError("cannot determine the published PostgreSQL tag; refusing")
+        # Shared by every release: an existing tag must already be the pinned identity.
+        published = published_digest(
+            POSTGRES_REPOSITORY.removeprefix(REGISTRY + "/"), pg["version"], actor, secret
+        )
+        if published is not None and published != pg["index_digest"]:
+            raise ValueError("published PostgreSQL tag differs from the pinned identity")
+        postgres_published = published is not None
+        builder_requested = True
         subprocess.run(
             [
                 "docker",
@@ -325,7 +386,8 @@ def main() -> None:
                 name, digest = ref.split("@")
                 outputs.write(f"{service}_name={name}\n{service}_digest={digest}\n")
     finally:
-        subprocess.run(["docker", "buildx", "rm", builder], check=False)
+        if builder_requested:
+            subprocess.run(["docker", "buildx", "rm", builder], check=False)
         subprocess.run(["docker", "logout", "ghcr.io"], check=False)
 
 

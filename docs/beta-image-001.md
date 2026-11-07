@@ -101,7 +101,10 @@ Repository/operator prerequisites, deliberately not configured by this feature:
 5. Grant the workflow access to GHCR packages `florabase-backend` and `florabase-frontend`; enable
    immutable GitHub Releases and retention of versioned images/attestations/source. Restrict package
    administration/deletion. The workflow refuses existing release/version identities; GHCR tags alone
-   are not an immutability control. Digest references are authoritative.
+   are not an immutability control. Digest references are authoritative. Existence is checked against
+   the registry manifest API with the workflow's `GITHUB_TOKEN` (the GitHub Packages REST API rejects
+   that token): only a 404 whose errors are all `MANIFEST_UNKNOWN`/`NAME_UNKNOWN` counts as absent;
+   authorization, network, availability and malformed or digest-inconsistent responses refuse.
 
 Only the publication job receives package/content write and OIDC/attestation permissions; other
 jobs have read-only contents. Checkout credentials are not persisted. Registry login uses the

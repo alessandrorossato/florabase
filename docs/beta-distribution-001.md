@@ -9,8 +9,9 @@ and independent QA; nothing was pushed, published, tagged or deployed.
 - Keep the existing backend/frontend image pair plus PostgreSQL; no combined image and no parallel
   distribution mechanism. Extend `deploy/beta`, `florabasectl.py`, the manifest and GHCR workflow.
 - Migrations stay explicit: nothing migrates on `up`, restart or image update.
-- Version `0.1.0-beta.2`, tag `v0.1.0-beta.2`; no `latest` from a prerelease. The `v0.1.0-beta.1` tag is
-  kept unmodified: its first protected run failed in release-tool bootstrap before any package or release was written.
+- Version `0.1.0-beta.3`, tag `v0.1.0-beta.3`; no `latest` from a prerelease. The `v0.1.0-beta.1` and
+  `v0.1.0-beta.2` tags are kept unmodified: beta.1 failed in release-tool bootstrap and beta.2 in the GHCR
+  preflight (run `42407235373`), both before any package or release was written.
 
 ## Gap assessment against the brief
 

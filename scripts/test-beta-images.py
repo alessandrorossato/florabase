@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import ast
 import copy
+import email.message
 import hashlib
 import importlib.util
 import io
@@ -16,6 +18,7 @@ import tarfile
 import tempfile
 import textwrap
 import unittest
+import urllib.error
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -104,7 +107,7 @@ def ctl_bundle_names() -> tuple[str, ...]:
 
 class ReleaseTests(unittest.TestCase):
     def test_current_candidate_inputs_and_platform_policy(self) -> None:
-        self.assertEqual(inputs(ROOT)["version"], "0.1.0-beta.2")
+        self.assertEqual(inputs(ROOT)["version"], "0.1.0-beta.3")
         committed = json.loads((ROOT / "release/platform.json").read_text())
         check_platform(committed)
         inputs(ROOT, publication=True)
@@ -360,8 +363,6 @@ class ReleaseTests(unittest.TestCase):
                 return sha
             if args[:2] == ("git", "status"):
                 return ""
-            if args[0] == "gh":
-                return "[[]]"
             return "0"
 
         def execute(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
@@ -390,6 +391,7 @@ class ReleaseTests(unittest.TestCase):
                     patch.object(publisher, "inputs", return_value=inputs(ROOT)),
                     patch.object(publisher, "run", side_effect=output),
                     patch.object(publisher, "manifest", return_value=candidate()),
+                    patch.object(publisher, "published_digest", return_value=None),
                     patch.object(publisher, "scan_images"),
                     patch.object(publisher, "run_artifact_smoke"),
                     patch.object(publisher, "software_bill_of_materials"),
@@ -573,7 +575,10 @@ class ReleaseTests(unittest.TestCase):
         # An unpublished identity is built and verified in a loopback registry before GHCR.
         self.assertLess(source.index("local_postgres_identity("), source.index("scan_images("))
         self.assertIn("destination=POSTGRES_REPOSITORY", source)
-        self.assertIn("not found|manifest unknown", source)
+        # Existence is decided by registry manifest lookups, never by stderr text or the packages
+        # REST API (which rejects the workflow's GITHUB_TOKEN with HTTP 400).
+        self.assertNotIn("not found|manifest unknown", source)
+        self.assertNotIn("/packages", source)
         self.assertLess(source.index("scan_images("), source.index("software_bill_of_materials("))
         self.assertLess(
             source.index("software_bill_of_materials("),
@@ -996,6 +1001,289 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(workflow.count("packages: write"), 1)
         self.assertIn("needs: verify", workflow)
         self.assertIn("--verify-tag", workflow)
+
+
+INDEX_TYPE = "application/vnd.oci.image.index.v1+json"
+
+
+class FakeResponse:
+    def __init__(self, body: bytes, headers: dict[str, str]) -> None:
+        self.body = body
+        self.headers = headers
+
+    def __enter__(self) -> FakeResponse:
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        return None
+
+    def read(self) -> bytes:
+        return self.body
+
+
+def token_response() -> FakeResponse:
+    return FakeResponse(b'{"token": "registry-fixture"}', {})
+
+
+def manifest_response(body: bytes = b'{"schemaVersion": 2, "manifests": []}') -> FakeResponse:
+    digest = "sha256:" + hashlib.sha256(body).hexdigest()
+    return FakeResponse(body, {"Docker-Content-Digest": digest, "Content-Type": INDEX_TYPE})
+
+
+def http_error(code: int, body: bytes = b"") -> urllib.error.HTTPError:
+    return urllib.error.HTTPError(
+        "https://ghcr.io/fixture",
+        code,
+        "fixture",
+        email.message.Message(),
+        io.BytesIO(body),
+    )
+
+
+def registry(*answers: object) -> Any:
+    """Answer the token request, then the manifest request, in order."""
+    queue = list(answers)
+
+    def urlopen(request: Any, timeout: float) -> Any:
+        answer = queue.pop(0)
+        if isinstance(answer, BaseException):
+            raise answer
+        return answer
+
+    return patch.object(publisher.urllib.request, "urlopen", side_effect=urlopen)
+
+
+class RegistryPreflightTests(unittest.TestCase):
+    """GHCR existence checks: only a definite registry "unknown" counts as absent."""
+
+    def lookup(self, *answers: object) -> str | None:
+        with registry(*answers) as opener:
+            result: str | None = publisher.published_digest(
+                "alessandrorossato/florabase-backend", "0.1.0-beta.3", "actor", "secret"
+            )
+        token, manifest = (call.args[0] for call in opener.call_args_list)
+        self.assertIn(
+            "scope=repository%3Aalessandrorossato%2Fflorabase-backend%3Apull%2Cpush", token.full_url
+        )
+        self.assertTrue(token.get_header("Authorization").startswith("Basic "))
+        self.assertEqual(manifest.get_header("Authorization"), "Bearer registry-fixture")
+        self.assertIn(INDEX_TYPE, manifest.get_header("Accept"))
+        self.assertTrue(
+            manifest.full_url.endswith(
+                "/v2/alessandrorossato/florabase-backend/manifests/0.1.0-beta.3"
+            )
+        )
+        return result
+
+    def test_existing_application_version_returns_its_digest(self) -> None:
+        response = manifest_response()
+        self.assertEqual(
+            self.lookup(token_response(), response), response.headers["Docker-Content-Digest"]
+        )
+
+    def test_definitely_absent_image(self) -> None:
+        for code in ("MANIFEST_UNKNOWN", "NAME_UNKNOWN"):
+            body = json.dumps({"errors": [{"code": code, "message": "unknown"}]}).encode()
+            with self.subTest(code=code):
+                self.assertIsNone(self.lookup(token_response(), http_error(404, body)))
+
+    def test_unauthorized_registry_refuses(self) -> None:
+        denied = b'{"errors": [{"code": "DENIED", "message": "denied"}]}'
+        for answers in (
+            (http_error(401),),
+            (http_error(403, denied),),
+            (token_response(), http_error(401, denied)),
+            (token_response(), http_error(403, denied)),
+            # A 404 that is really an authorization refusal is not an absence.
+            (token_response(), http_error(404, denied)),
+        ):
+            with self.subTest(answers=answers), registry(*answers), self.assertRaises(ValueError):
+                publisher.published_digest("owner/image", "1", "actor", "secret")
+
+    def test_unavailable_registry_refuses(self) -> None:
+        for answers in (
+            (urllib.error.URLError("unreachable"),),
+            (TimeoutError(),),
+            (token_response(), http_error(500)),
+            (token_response(), http_error(503)),
+            (token_response(), http_error(429)),
+            (token_response(), urllib.error.URLError("reset")),
+        ):
+            with self.subTest(answers=answers), registry(*answers), self.assertRaises(ValueError):
+                publisher.published_digest("owner/image", "1", "actor", "secret")
+
+    def test_malformed_response_refuses(self) -> None:
+        good = manifest_response()
+        for answers in (
+            (FakeResponse(b"not json", {}),),
+            (FakeResponse(b'{"token": ""}', {}),),
+            (FakeResponse(b"[]", {}),),
+            (token_response(), http_error(404, b"not json")),
+            (token_response(), http_error(404, b'{"errors": []}')),
+            (token_response(), http_error(404, b'{"errors": [{"message": "x"}]}')),
+            (token_response(), FakeResponse(b"not json", good.headers)),
+            (
+                token_response(),
+                FakeResponse(good.body, {**good.headers, "Docker-Content-Digest": ""}),
+            ),
+            (token_response(), FakeResponse(b'{"schemaVersion": 2, "x": 1}', good.headers)),
+            (
+                token_response(),
+                FakeResponse(good.body, {**good.headers, "Content-Type": "text/html"}),
+            ),
+            (
+                token_response(),
+                FakeResponse(
+                    b'{"schemaVersion": 1}', {**manifest_response(b'{"schemaVersion": 1}').headers}
+                ),
+            ),
+        ):
+            with self.subTest(answers=answers), registry(*answers), self.assertRaises(ValueError):
+                publisher.published_digest("owner/image", "1", "actor", "secret")
+
+    def test_release_scripts_parse_on_the_runner_python(self) -> None:
+        # The protected workflow runs these with ubuntu-24.04's Python 3.12, while the repository
+        # formatter targets 3.14 (it rewrites `except (A, B):` into 3.14-only syntax).
+        for name in (
+            "publish-beta-images.py",
+            "beta_release.py",
+            "beta-release-checks.py",
+            "release-tools.py",
+            "smoke-beta-images.py",
+            "disposable_workflow.py",
+            "workflow_resources.py",
+        ):
+            with self.subTest(name=name):
+                source = (ROOT / "scripts" / name).read_text()
+                ast.parse(source, name, feature_version=(3, 12))
+
+    def test_invalid_reference_is_refused_before_any_request(self) -> None:
+        for repository, tag in (("Owner/Image", "1"), ("owner/image", "1/../x"), ("o", "")):
+            with self.subTest(repository=repository), registry() as opener:
+                with self.assertRaises(ValueError):
+                    publisher.published_digest(repository, tag, "actor", "secret")
+                opener.assert_not_called()
+
+    def publish(self, lookups: dict[str, str | Exception | None]) -> tuple[Any, Any, Path]:
+        sha = "c" * 40
+        environment = {
+            "GITHUB_ACTIONS": "true",
+            "GITHUB_REF": "refs/heads/main",
+            "GITHUB_SHA": sha,
+            "GITHUB_EVENT_NAME": "workflow_dispatch",
+            "GITHUB_REPOSITORY": "alessandrorossato/florabase",
+            "GITHUB_WORKFLOW_REF": "alessandrorossato/florabase/.github/workflows/beta-images.yml@refs/heads/main",
+            "RUNNER_ENVIRONMENT": "github-hosted",
+            "APPROVED_SHA": sha,
+            "GITHUB_RUN_ID": "1",
+            "GITHUB_RUN_ATTEMPT": "1",
+            "GITHUB_ACTOR": "fixture",
+            "REGISTRY_TOKEN": "fixture-only",
+        }
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        target = Path(temporary.name) / "output"
+
+        def output(*args: str) -> str:
+            return {"rev-parse": sha, "status": ""}.get(args[1], "0") if args[0] == "git" else "0"
+
+        def lookup(repository: str, tag: str, actor: str, secret: str) -> str | None:
+            self.assertEqual((actor, secret), ("fixture", "fixture-only"))
+            answer = lookups[repository]
+            if isinstance(answer, Exception):
+                raise answer
+            return answer
+
+        def execute(command: list[str], **_: Any) -> subprocess.CompletedProcess[str]:
+            if command[:3] == ["docker", "buildx", "build"]:
+                raise ValueError("stop at build")
+            return subprocess.CompletedProcess(command, 0)
+
+        with (
+            patch.dict(os.environ, environment, clear=True),
+            patch.object(sys, "argv", ["publish", "--output", str(target)]),
+            patch.object(publisher, "inputs", return_value=inputs(ROOT)),
+            patch.object(publisher, "run", side_effect=output),
+            patch.object(publisher, "published_digest", side_effect=lookup),
+            patch.object(
+                publisher, "local_postgres_identity", side_effect=ValueError("stop after preflight")
+            ) as rebuild,
+            patch.object(
+                publisher.subprocess,
+                "run",
+                side_effect=execute,
+            ) as commands,
+            self.assertRaises(ValueError) as raised,
+        ):
+            publisher.main()
+        self.raised = str(raised.exception)
+        return commands, rebuild, target
+
+    @staticmethod
+    def ran(commands: Any, prefix: list[str]) -> bool:
+        return any(call.args[0][: len(prefix)] == prefix for call in commands.call_args_list)
+
+    def lookups(self, **changes: str | Exception | None) -> dict[str, str | Exception | None]:
+        value: dict[str, str | Exception | None] = {
+            "alessandrorossato/florabase-backend": None,
+            "alessandrorossato/florabase-frontend": None,
+            "alessandrorossato/florabase-postgres": None,
+        }
+        value.update({"alessandrorossato/florabase-" + key: item for key, item in changes.items()})
+        return value
+
+    def test_existing_application_version_blocks_and_cleans_up(self) -> None:
+        for service in ("backend", "frontend"):
+            with self.subTest(service=service):
+                commands, rebuild, target = self.publish(
+                    self.lookups(**{service: "sha256:" + "e" * 64})
+                )
+                self.assertIn("already exists", self.raised)
+                rebuild.assert_not_called()
+                self.assertEqual(
+                    json.loads((target / "publication-state.json").read_text())["phase"],
+                    "preflight",
+                )
+                # Cleanup after an early error: no builder existed, so none is removed; the
+                # registry login is always revoked.
+                self.assertFalse(self.ran(commands, ["docker", "buildx", "create"]))
+                self.assertFalse(self.ran(commands, ["docker", "buildx", "rm"]))
+                self.assertTrue(self.ran(commands, ["docker", "logout", "ghcr.io"]))
+
+    def test_registry_failure_blocks_publication_and_cleans_up(self) -> None:
+        failure = ValueError("cannot determine whether fixture exists (HTTP 401)")
+        for service in ("backend", "frontend", "postgres"):
+            with self.subTest(service=service):
+                commands, rebuild, _ = self.publish(self.lookups(**{service: failure}))
+                self.assertIn("cannot determine", self.raised)
+                rebuild.assert_not_called()
+                self.assertFalse(self.ran(commands, ["docker", "buildx", "create"]))
+                self.assertFalse(self.ran(commands, ["docker", "buildx", "rm"]))
+                self.assertTrue(self.ran(commands, ["docker", "logout", "ghcr.io"]))
+
+    def test_existing_postgres_tag_with_pinned_digest_is_reused(self) -> None:
+        pinned = inputs(ROOT)["postgresql"]["index_digest"]
+        commands, rebuild, _ = self.publish(self.lookups(postgres=pinned))
+        self.assertEqual(self.raised, "stop at build")
+        # The published identity is reused: no rebuild into the registry.
+        rebuild.assert_not_called()
+        self.assertTrue(self.ran(commands, ["docker", "buildx", "create"]))
+        # The builder was created, so cleanup removes it.
+        self.assertTrue(self.ran(commands, ["docker", "buildx", "rm"]))
+        self.assertTrue(self.ran(commands, ["docker", "logout", "ghcr.io"]))
+
+    def test_existing_postgres_tag_with_other_digest_blocks(self) -> None:
+        commands, rebuild, _ = self.publish(self.lookups(postgres="sha256:" + "f" * 64))
+        self.assertIn("differs from the pinned identity", self.raised)
+        rebuild.assert_not_called()
+        self.assertFalse(self.ran(commands, ["docker", "buildx", "create"]))
+        self.assertTrue(self.ran(commands, ["docker", "logout", "ghcr.io"]))
+
+    def test_absent_postgres_tag_builds_the_pinned_identity(self) -> None:
+        commands, rebuild, _ = self.publish(self.lookups())
+        self.assertEqual(self.raised, "stop after preflight")
+        rebuild.assert_called_once()
+        self.assertTrue(self.ran(commands, ["docker", "buildx", "rm"]))
 
 
 if __name__ == "__main__":

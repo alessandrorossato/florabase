@@ -46,7 +46,8 @@ name and digest, the image version and source; there is deliberately no per-comm
   registry, `require_pinned_postgres` refuses anything that does not reproduce the pins, and only
   then copies those exact bytes (`imagetools create --prefer-index=false`) to a GHCR candidate tag;
   nothing unverified reaches GHCR. When `18.6-alpine-florabase.1` already exists it must point at the
-  pinned index (any lookup error other than a definite "not found" refuses), and it is not rebuilt.
+  pinned index (registry manifest digest, verified against the returned bytes; anything other than a
+  definite `MANIFEST_UNKNOWN`/`NAME_UNKNOWN` 404 refuses), and it is not rebuilt.
   Either way every release re-verifies the published bytes: registry identity, the unchanged
   fail-closed scan gate, SBOM (pinned Trivy CycloneDX, release asset `postgresql-sbom.cdx.json`),
   artifact smoke with the pair and `actions/attest-build-provenance`; the version tag is written only
