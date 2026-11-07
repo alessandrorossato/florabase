@@ -67,9 +67,16 @@ digest, then:
 | Grype v0.121.1, `--scope all-layers` | identical: 3 Medium, no gosu or Go stdlib findings |
 | SBOM | 54 components, none is gosu |
 | Root start | exit 64 with an explicit message before any directory or data change |
-| Runtime smoke 22/22 from clean `0d074e7` (Engine 24.0.2, Compose 2.20.1): fresh install, persistence, daemon restart, backup, isolated and replacement restore, explicit-migration upgrade, failure drills | pass; `postgres-image` step: uid 70, gosu absent, root exit 64 with the live data directory byte-identical, previous official-pin data directory opens ([evidence](../../beta-distribution-001-evidence.json)) |
 
-The local candidate (`build-beta-candidate.py`) builds the image with the local builder; it is not
+**Runtime smoke** ([evidence](../../beta-distribution-001-evidence.json)) runs on an image built from
+`postgres/` with the local builder and served from the nested test registry, so its digest differs
+from the pins; it proves behavior, not the pinned identity: fresh install, persistence, daemon
+restart, backup, isolated and replacement restore, explicit-migration upgrade, failure drills, and
+the `postgres-image` step (uid 70, gosu absent, root refused with exit 64 through the default,
+`docker-entrypoint.sh` and `docker-ensure-initdb.sh` entry points with the live data directory
+byte-identical, previous official-pin data directory opens).
+
+The local candidate (`build-beta-candidate.py`) likewise builds the image with the local builder; it is not
 authoritative for the pinned identity, which only `beta_release.py postgres-identity --check` and
 the protected publisher prove.
 
@@ -78,7 +85,7 @@ the protected publisher prove.
 The removal is **runtime removal, not physical elimination.** Layer 2 of the image (upstream,
 `sha256:63677b2e…`) still contains `usr/local/bin/gosu` (1,769,900 bytes, sha256
 `52c8749d0142edd234e9d6bd5237dff2d81e71f43537e2f4f66f75dd4b243dd0`, the official gosu 1.19 release
-binary). Layer 11 (Florabase) contains the whiteout `usr/local/bin/.wh.gosu`. No container started
+binary). Layer 12 (Florabase) contains the whiteout `usr/local/bin/.wh.gosu`. No container started
 from the image can see or execute the file.
 
 Assessment:
