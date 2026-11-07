@@ -7600,3 +7600,7 @@ Status remains implemented pending canonical verification.
   the digest from the build output (the WFO seal, or the WCVP digest recorded after the build), not
   one computed from the copy. QA's informational note: `ATTACH` is now refused (attached-database
   limit 0). `test_reference_index.py` has 25 tests.
+- Delta QA of `8ef70ec`: PASS WITH FINDINGS (2 × P3), both fixed. P3-4: the duplicate check was
+  quadratic in the schema size (about 32 s of CPU for a crafted 30,000-object schema); it now
+  compares the row count with the contract, and only counts duplicates for the refusal log. P3-5:
+  the security record's suite total is 91.

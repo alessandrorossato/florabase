@@ -81,7 +81,7 @@ are unchanged: metadata, release, the WFO format version and the WFO seal.
   - empty, non-SQLite, damaged-header and truncated files;
   - an unsupported WFO format version and a WCVP release mismatch;
   - builders refusing to publish a non-conforming layout.
-- These tests and the existing WFO/WCVP suites (90 cases) passed on SQLite 3.40.1 (development
+- These tests and the existing WFO/WCVP suites (91 cases) passed on SQLite 3.40.1 (development
   image) and on SQLite 3.53.4 inside the backend `runtime` image built from this tree.
 - Performance, runtime image, a builder-made WCVP index of 1,400,000 taxa and 700,000
   distributions (408 MB):

@@ -11,6 +11,7 @@ transaction, so a cooperating writer cannot change the schema in between.
 
 import logging
 import sqlite3
+from collections import Counter
 from pathlib import Path
 from typing import Final
 
@@ -70,9 +71,10 @@ def open_reference_index(path: Path, contract: SchemaContract, label: str) -> sq
             )
         ]
         found = set(rows)
-        # Duplicate rows (for example a second automatic index) must not collapse into the set.
-        duplicated = {row for row in found if rows.count(row) > 1}
-        if found != contract or duplicated:
+        # Duplicate rows (for example a second automatic index) must not collapse into the set,
+        # so the row count must match too. Both checks are linear in the schema size.
+        if len(rows) != len(contract) or found != contract:
+            duplicated = {row for row, count in Counter(rows).items() if count > 1}
             logger.warning(
                 "Refusing %s reference index %s: not the layout Florabase's builder writes "
                 "(unexpected: %s; missing: %s; duplicated: %s)",
