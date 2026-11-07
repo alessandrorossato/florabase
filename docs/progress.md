@@ -7660,3 +7660,21 @@ Status remains implemented pending canonical verification.
 - Not verifiable before the protected run: GHCR's answer to `GITHUB_TOKEN` for a never-published package
   (expected `NAME_UNKNOWN`/`MANIFEST_UNKNOWN` 404; any other answer fails closed).
 - Version bumped to `0.1.0-beta.3`; `v0.1.0-beta.1` and `v0.1.0-beta.2` tags are untouched.
+
+### CI-HYGIENE-001 — verification impact for executable documentation, 7 November 2026
+
+- Replaced the blanket `docs/` exemption with an allowlist of static documentation suffixes.
+  Review Compose overlays, Python and browser tooling, the Dockerfile prototype, and unknown formats
+  select FULL. Git mode evidence across the base, HEAD, index and working tree protects executable
+  files and symlinks even when they use a documentation suffix.
+- The baseline impact suite passed 28 tests. The updated suite passed 30 tests, including real Git
+  modifications, additions, deletions, renames in both directions, masked modes and a synthetic
+  PR merge smoke. Independent QA confirmed the suite, the 139-entry feature graph, and the current
+  documentation inventory (65 FULL paths and 3,207 lightweight paths). It also checked unusual Git
+  filenames and masked executable modes. QA reproduced an unmerged Markdown path whose executable
+  stage-3 mode was absent from the raw diff. The planner now refuses unmerged paths, and the
+  regression failed before this correction and passed afterward. Canonical FULL evidence belongs
+  to the exact-tree receipt.
+- The first FULL stopped at the disclosure check, which flagged a synthetic Git fixture address.
+  The fixture now uses a local-only identity. The disclosure check remains in place.
+- Focused Ruff lint, format and strict mypy passed after separating raw and decoded Git paths.

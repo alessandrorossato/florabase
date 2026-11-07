@@ -129,6 +129,21 @@
       "status": "implemented"
     },
     {
+      "id": "CI-HYGIENE-001",
+      "category": "infrastructure",
+      "description": "Require full verification for executable and unclassified files under docs/",
+      "acceptance_criteria": [
+        "Compose overlays, executable review tooling, and unknown documentation formats select FULL while ordinary static documentation retains the lightweight profile",
+        "Git-backed regressions cover modifications, additions, deletions, both directions of renames, executable modes, and symlinks across the complete feature tree",
+        "Independent infrastructure QA and canonical FULL verify the frozen change without modifying beta publication or release artifacts"
+      ],
+      "dependencies": [
+        "CI-003"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "AGENT-WORKFLOW-001",
       "category": "infrastructure",
       "description": "Provider-neutral multi-agent development workflow on the existing verified feature lifecycle",

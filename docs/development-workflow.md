@@ -612,7 +612,12 @@ cycling only when impact analysis proves it unnecessary. Generated contracts req
 classified production scope.
 
 True docs-only plans run feature graph and complete whitespace checks with no Docker/product
-suites or image builds. Product plans retain whole-repository Ruff, Prettier, ESLint, mypy, TypeScript
+suites or image builds. Under `docs/`, the impact map allows only known static documentation
+suffixes. Compose overlays, review scripts, browser review HTML and unrecognized formats require
+FULL. Executable modes and symlinks require FULL even with a documentation suffix. The planner
+checks modes across the base, HEAD, index and worktree and considers both sides of a move.
+An unmerged path prevents the planner from safely classifying the tree.
+Product plans retain whole-repository Ruff, Prettier, ESLint, mypy, TypeScript
 and generated API drift checks. Affected unit tests use explicit files and `--no-cov`; exhaustive
 local/remote quality still enforces the existing whole-application coverage threshold. Frontend-only
 changes build frontend; backend-only changes build backend; generated frontend contract changes
