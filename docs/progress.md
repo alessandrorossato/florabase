@@ -7604,3 +7604,17 @@ Status remains implemented pending canonical verification.
   quadratic in the schema size (about 32 s of CPU for a crafted 30,000-object schema); it now
   compares the row count with the contract, and only counts duplicates for the refusal log. P3-5:
   the security record's suite total is 91.
+
+### CI-RELEASE-PLATFORM — publication decoupled from host acceptance, 7 November 2026
+
+- Release sequence clarified by the operator: publish verified linux/amd64 images and prerelease through the
+  protected workflow; then deploy the published images to a chosen host; accept the host separately.
+- `release/platform.json` now records the supported platform, `publication.host_approval_required=false` and a
+  `deployment_acceptance` block that stays `pending`. Synology DS224+ is only a candidate target. `check_platform`
+  no longer requires an approved host, operator or screening date; it fails closed unless the platform is
+  linux/amd64, host approval is not required, and the deployment-acceptance block exists. All other
+  publication protections are untouched.
+- Docs: `beta-image-001.md`, `beta-security-001.md`, BETA-IMAGE-001 acceptance wording in `features.json`.
+  Real-host acceptance (capacity, Docker/Compose, HTTPS, persistence, backup/restore, recovery) has NOT occurred.
+- Checks: `make test-beta-images` (29 tests) and `beta_release.py check --publication` pass. Other publication
+  blockers (QA/FULL, `RELEASE_APPROVED_SHA`, protections, manual authorization) are unchanged. Nothing published or tagged.

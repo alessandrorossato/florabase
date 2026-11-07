@@ -151,10 +151,10 @@ No remote repository setting, environment, tag, package, release or persistent h
    independently review and explicitly accept each defensible expiring VEX draft, then authorize a
    narrowly tested ingestion policy. Library fixes remain required. Do not interpret this handoff as
    a security exception, PostgreSQL maintenance approval or beta admission.
-3. Explicitly accept the supplied intended-host screening in release/platform.json with operator and
-   screened_at; status deliberately remains pending despite populated measurements. Runtime capacity,
-   persistent IO, reboot/recovery, HTTPS and Engine 24.0.2 / Compose 2.20.1 operational acceptance are
-   still BETA-RUNTIME-001 work. Only generic amd64 Docker behavior is assumed.
+3. Host acceptance is no longer a publication prerequisite (`release/platform.json` records the supported
+   linux/amd64 platform; the DS224+ measurements are a candidate-target note). Runtime capacity,
+   persistent IO, reboot/recovery, HTTPS and Engine 24.0.2 / Compose 2.20.1 operational acceptance remain
+   separate post-publication BETA-RUNTIME-001 deployment gates on the actual host.
 4. Protect main and v* tags with required reviews/checks; restrict tag creation to the release operator.
    Configure **beta-release** environment with an explicit **main-only branch rule**, independent
    required reviewer, prevent self-review and no administrative bypass. Confirm the repository plan

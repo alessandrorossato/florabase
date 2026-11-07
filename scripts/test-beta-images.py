@@ -50,21 +50,11 @@ tooling = load_tool("release-tools")
 publisher = load_tool("publish-beta-images")
 
 
-def approved() -> dict[str, Any]:
+def policy() -> dict[str, Any]:
     return {
-        "status": "approved",
         "candidate_platform": "linux/amd64",
-        "operator": "fixture-operator",
-        "screened_at": "2026-11-03",
-        "evidence": ["fixture-only"],
-        "host": {
-            "identity": "fixture-only",
-            "os": "linux",
-            "architecture": "amd64",
-            "runtime": "docker",
-            "engine_version": "29.0.0",
-            "compose_version": "2.40.0",
-        },
+        "publication": {"host_approval_required": False},
+        "deployment_acceptance": {"status": "pending"},
     }
 
 
@@ -112,37 +102,42 @@ def ctl_bundle_names() -> tuple[str, ...]:
 
 
 class ReleaseTests(unittest.TestCase):
-    def test_current_candidate_inputs_and_pending_publication(self) -> None:
+    def test_current_candidate_inputs_and_platform_policy(self) -> None:
         self.assertEqual(inputs(ROOT)["version"], "0.1.0-beta.1")
-        with self.assertRaisesRegex(ValueError, "PUBLICATION BLOCKED"):
-            check_platform({"status": "pending"})
+        committed = json.loads((ROOT / "release/platform.json").read_text())
+        check_platform(committed)
+        inputs(ROOT, publication=True)
+        # Publication does not depend on any host; actual-host acceptance is not claimed.
+        self.assertEqual(committed["deployment_acceptance"]["status"], "pending")
+        self.assertNotIn("host", committed)
+        self.assertNotIn("operator", committed)
 
-    def test_host_screen_requires_every_piece_of_intended_host_evidence(self) -> None:
-        check_platform(approved())
-        for key in ("status", "candidate_platform", "operator", "screened_at", "evidence", "host"):
-            with self.subTest(key=key):
-                value = approved()
-                del value[key]
-                with self.assertRaises(ValueError):
+    def test_platform_policy_requires_supported_platform_and_separate_deployment(self) -> None:
+        check_platform(policy())
+        accepted = policy()
+        accepted["deployment_acceptance"]["status"] = "accepted"
+        check_platform(accepted)
+        invalid = []
+        for key in ("candidate_platform", "publication", "deployment_acceptance"):
+            value = policy()
+            del value[key]
+            invalid.append(value)
+        for platform in ("linux/arm64", "windows/amd64", None):
+            value = policy()
+            value["candidate_platform"] = platform
+            invalid.append(value)
+        for required in (True, None, "false"):
+            value = policy()
+            value["publication"]["host_approval_required"] = required
+            invalid.append(value)
+        for status in ("", "approved", None):
+            value = policy()
+            value["deployment_acceptance"]["status"] = status
+            invalid.append(value)
+        for value in invalid:
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(ValueError, "PUBLICATION BLOCKED"):
                     check_platform(value)
-        for key in approved()["host"]:
-            with self.subTest(host=key):
-                value = approved()
-                del value["host"][key]
-                with self.assertRaises(ValueError):
-                    check_platform(value)
-
-    def test_unsupported_hosts_and_compose_v1_refuse(self) -> None:
-        for key, invalid in (
-            ("os", "windows"),
-            ("architecture", "arm64"),
-            ("runtime", "podman"),
-            ("compose_version", "1.29.2"),
-        ):
-            value = approved()
-            value["host"][key] = invalid
-            with self.subTest(key=key), self.assertRaises(ValueError):
-                check_platform(value)
 
     def test_immutable_manifest_and_mutations(self) -> None:
         valid = candidate()
