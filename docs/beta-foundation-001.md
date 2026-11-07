@@ -1,5 +1,7 @@
 # BETA-FOUNDATION-001 — v0.1.0-beta.1 acceptance contract
 
+> **Superseded in part (RELEASE-PLATFORM-DECOUPLE):** publication no longer requires approval of a specific host. `release/platform.json` records the supported linux/amd64 platform; host capacity, Docker/Compose, HTTPS, persistence and recovery acceptance are separate post-publication deployment gates (BETA-RUNTIME-001). See [BETA-IMAGE-001](beta-image-001.md#platform-policy-and-publication-prerequisite). The text below is preserved as historical record and is not rewritten.
+
 Audit date: 2026-11-02. Source baseline: `af2372c7e20468376b3d12904c83dee18133da84`
 (current cached main, PR #139). Candidate `3553a9c` received independent CONDITIONAL PASS;
 B1–B4 corrections below require independent delta QA before canonical verification. This is a candidate for QA,

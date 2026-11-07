@@ -42,11 +42,25 @@ def read(path: Path) -> dict[str, Any]:
     return value
 
 
+def _structured_evidence(deployment: dict[str, Any]) -> bool:
+    evidence = deployment.get("evidence")
+    return (
+        isinstance(evidence, list)
+        and bool(evidence)
+        and all(
+            isinstance(item, dict)
+            and all(isinstance(item.get(k), str) and item[k].strip() for k in ("host", "reference"))
+            for item in evidence
+        )
+    )
+
+
 def check_platform(policy: dict[str, Any]) -> None:
     """Publication needs the supported native platform, not approval of any particular host.
 
     Host resource, Docker/Compose, HTTPS, persistence and recovery acceptance are separate
-    deployment gates (BETA-RUNTIME-001) recorded under ``deployment_acceptance``.
+    deployment gates (BETA-RUNTIME-001) recorded under ``deployment_acceptance``; ``pending`` is
+    sufficient for publication and ``accepted`` requires structured evidence.
     """
     publication = policy.get("publication")
     deployment = policy.get("deployment_acceptance")
@@ -56,6 +70,7 @@ def check_platform(policy: dict[str, Any]) -> None:
         or publication.get("host_approval_required") is not False
         or not isinstance(deployment, dict)
         or deployment.get("status") not in {"pending", "accepted"}
+        or (deployment["status"] == "accepted" and not _structured_evidence(deployment))
     ):
         raise ValueError(
             "PUBLICATION BLOCKED: release/platform.json must name the supported linux/amd64 "

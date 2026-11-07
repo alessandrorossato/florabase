@@ -1,5 +1,7 @@
 Historical initial handoff; superseded for current decisions by [QA corrections](beta-image-001-qa-corrections.md). Original scan evidence is preserved.
 
+> **Superseded in part (RELEASE-PLATFORM-DECOUPLE):** publication no longer requires approval of a specific host. `release/platform.json` records the supported linux/amd64 platform; host capacity, Docker/Compose, HTTPS, persistence and recovery acceptance are separate post-publication deployment gates (BETA-RUNTIME-001). See [BETA-IMAGE-001](beta-image-001.md#platform-policy-and-publication-prerequisite). The text below is preserved as historical record and is not rewritten.
+
 # BETA-IMAGE-001 — independent QA handoff
 
 Candidate prepared on `feat/beta-image-001` from verified cached main

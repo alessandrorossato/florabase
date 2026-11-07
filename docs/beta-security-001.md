@@ -20,7 +20,7 @@ change. Do not touch its Compose, storage, controller or backups. No remote sett
 No VEX is active or accepted. Any exception needs exact advisory/package/artifact applicability,
 expiry and explicit operator acceptance, followed by a separately reviewed gate implementation.
 
-## Supplied intended-host evidence
+## Supplied candidate-host evidence (not a publication prerequisite)
 
 Operator instruction dated 2026-11-03 selects Synology DS224+, Linux/amd64, Docker Engine 24.0.2,
 Compose 2.20.1; four cores, 9.6 GiB RAM, about 3.7 GiB available, low observed load and about 2.6 TB

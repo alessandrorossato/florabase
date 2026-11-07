@@ -24,6 +24,7 @@ from beta_release import (
     check_platform,
     inputs,
     install_bundle,
+    read,
     registry_record,
     saved_descriptors,
     validate_manifest,
@@ -116,6 +117,7 @@ class ReleaseTests(unittest.TestCase):
         check_platform(policy())
         accepted = policy()
         accepted["deployment_acceptance"]["status"] = "accepted"
+        accepted["deployment_acceptance"]["evidence"] = [{"host": "h", "reference": "r"}]
         check_platform(accepted)
         invalid = []
         for key in ("candidate_platform", "publication", "deployment_acceptance"):
@@ -134,10 +136,46 @@ class ReleaseTests(unittest.TestCase):
             value = policy()
             value["deployment_acceptance"]["status"] = status
             invalid.append(value)
+        bad_evidence: list[Any] = [
+            None,
+            [],
+            "text",
+            [{}],
+            ["text"],
+            [{"host": "h"}],
+            [{"host": "h", "reference": " "}],
+            [{"host": 1, "reference": "r"}],
+            [{"host": "h", "reference": "r"}, {"host": "h"}],
+        ]
+        for evidence in bad_evidence:
+            value = policy()
+            value["deployment_acceptance"]["status"] = "accepted"
+            if evidence is not None:
+                value["deployment_acceptance"]["evidence"] = evidence
+            invalid.append(value)
+        for key in ("publication", "deployment_acceptance"):
+            malformed_values: list[Any] = [None, [], "x", 1, True]
+            for malformed in malformed_values:
+                value = policy()
+                value[key] = malformed
+                invalid.append(value)
         for value in invalid:
             with self.subTest(value=value):
                 with self.assertRaisesRegex(ValueError, "PUBLICATION BLOCKED"):
                     check_platform(value)
+
+    def test_platform_file_missing_or_not_an_object_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "platform.json"
+            with self.assertRaises(FileNotFoundError):
+                read(path)
+            for text in ("[]", '"x"', "1", "null", "{", ""):
+                path.write_text(text)
+                with self.subTest(text=text), self.assertRaises(ValueError):
+                    check_platform(read(path))
+            path.write_text("{}")
+            with self.assertRaisesRegex(ValueError, "PUBLICATION BLOCKED"):
+                check_platform(read(path))
 
     def test_immutable_manifest_and_mutations(self) -> None:
         valid = candidate()

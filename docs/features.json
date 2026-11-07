@@ -2304,7 +2304,7 @@
       "category": "operations",
       "description": "Provide a versioned image-only Dockhand beta runtime with tested persistence, backup and upgrade recovery",
       "acceptance_criteria": [
-        "Qualify the host using the architecture/runtime already resolved for BETA-IMAGE-001, available memory, durable storage, uptime and recovery evidence; versioned Compose consumes one immutable release pair with stable DB/media volume identities and no source binds, dev runtime or published database/backend ports",
+        "Qualify the host using the supported linux/amd64 platform recorded for BETA-IMAGE-001, accepting the selected host's Docker Engine/Compose compatibility here, available memory, durable storage, uptime and recovery evidence; versioned Compose consumes one immutable release pair with stable DB/media volume identities and no source binds, dev runtime or published database/backend ports",
         "PostgreSQL is pinned by immutable digest and its exact manifest identity is preserved across application refresh; any major, minor or rebuilt-image digest change requires explicit separate maintenance with reviewed compatibility, paired backup/restore evidence and operator approval",
         "Pinned Dockhand deployment and host Tailscale Serve preserve application owner authentication, secure cookies, exact HTTPS origin and CSRF; control-plane authentication, secrets custody, restart/reboot, private exposure and optional read-only WFO/WCVP provisioning are verified",
         "Explicit target-image Alembic migration is gated on healthy PostgreSQL and stopped application writers; unknown/ahead schema refuses, startup does not implicitly migrate and application readiness includes separate revision and media acceptance",

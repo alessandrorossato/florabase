@@ -26,6 +26,8 @@ authorization and fail-closed checks (including the security findings in the [QA
 If the first target is ARM, this workflow must first be extended and independently tested on native arm64
 with matching pins and manifest platform identities; emulation does not qualify it.
 
+`deployment_acceptance.status` may be `accepted` only with nonempty structured `evidence` (a list of objects, each with nonempty string `host` and `reference`); `pending` is sufficient for publication.
+
 Host-specific acceptance is a separate deployment gate (BETA-RUNTIME-001) run on the actual host against the
 published images: resource capacity, Docker Engine/Compose compatibility, HTTPS, durable persistence,
 backup/restore and recovery. Useful host evidence commands:
