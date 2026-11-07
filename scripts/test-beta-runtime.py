@@ -59,19 +59,29 @@ def manifest() -> dict[str, Any]:
             "platform": "linux/amd64",
         }
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "distribution": "registry-candidate",
         "version": "0.1.0-beta.1",
         "source": {"url": ctl.SOURCE_URL, "revision": "a" * 40, "dirty": False},
         "platforms": ["linux/amd64"],
         "alembic_head": "20261013_0042",
         "postgresql": {
-            "repository": "docker.io/library/postgres",
-            "version": "18.6-alpine",
-            "reference": "docker.io/library/postgres:18.6-alpine@" + pg_index,
+            "repository": "ghcr.io/alessandrorossato/florabase-postgres",
+            "version": "18.6-alpine-florabase.1",
+            "reference": "ghcr.io/alessandrorossato/florabase-postgres:18.6-alpine-florabase.1@"
+            + pg_index,
             "index_digest": pg_index,
             "platform_digest": digest("pg-platform"),
             "platform": "linux/amd64",
+            "source_date_epoch": 1762387200,
+            "upstream": {
+                "repository": "docker.io/library/postgres",
+                "version": "18.6-alpine",
+                "reference": "docker.io/library/postgres:18.6-alpine@" + digest("upstream-index"),
+                "index_digest": digest("upstream-index"),
+                "platform_digest": digest("upstream-platform"),
+                "platform": "linux/amd64",
+            },
         },
         "images": images,
         "build_inputs": {},

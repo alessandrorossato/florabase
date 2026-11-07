@@ -39,6 +39,11 @@ REGISTRY_IMAGE = (
 RESTIC_IMAGE = (
     "restic/restic:0.17.3@sha256:8f5a62b422a2cb1277ea0dd6e826fe1acf649e5b9f02d60e5268d5fd1976255a"
 )
+# The official image the previous releases pinned: its data directories must open unchanged.
+PREVIOUS_OFFICIAL_POSTGRES = (
+    "docker.io/library/postgres:18.6-alpine"
+    "@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5"
+)
 COMPOSE_URL = (
     "https://github.com/docker/compose/releases/download/v2.20.1/docker-compose-linux-x86_64"
 )
@@ -359,6 +364,19 @@ class Smoke:
         }
         self.version, self.revision = inputs["version"], revision
         self.postgres = inputs["postgresql"]
+        # The derived image is built from this source exactly as the release builds it; the
+        # pinned registry identity itself is proven by `beta_release.py postgres-identity`.
+        self.postgres_tag = f"{self.owner.project}-postgres"
+        self.owned(
+            "docker",
+            "build",
+            "--platform",
+            "linux/amd64",
+            "--tag",
+            self.postgres_tag,
+            *self.labels,
+            str(ROOT / "postgres"),
+        )
         return tags
 
     def start_daemon(self) -> None:
@@ -525,13 +543,14 @@ class Smoke:
             repository = "florabase-frontend" if name == "frontend" else "florabase-backend"
             refs[name] = self.push(self.transfer(tag), repository, name)
         postgres = self.push(
-            self.transfer(self.postgres["reference"]),
-            "postgres",
+            self.transfer(self.postgres_tag),
+            "florabase-postgres",
             self.postgres["version"],
         )
         refs["postgres"] = postgres.replace(
-            "/postgres@", "/postgres:" + self.postgres["version"] + "@"
+            "/florabase-postgres@", "/florabase-postgres:" + self.postgres["version"] + "@"
         )
+        refs["postgres-previous-official"] = self.transfer(PREVIOUS_OFFICIAL_POSTGRES)
         refs["restic"] = self.push(self.transfer(RESTIC_IMAGE), "restic", "0.17.3")
         # Unrelated sentinel workload: must be unchanged by every controller action.
         self.nested("volume", "create", "sentinel")
@@ -572,7 +591,7 @@ class Smoke:
 
         backend = refs["backend" if name == "a" else "backend-" + name]
         value = {
-            "schema_version": 1,
+            "schema_version": 2,
             "distribution": "test-candidate",
             "version": self.version,
             "source": {
@@ -584,8 +603,10 @@ class Smoke:
             "alembic_head": self.heads[name],
             "postgresql": dict(
                 entry(refs["postgres"]),
-                repository=f"{REGISTRY}/postgres",
+                repository=f"{REGISTRY}/florabase-postgres",
                 version=self.postgres["version"],
+                source_date_epoch=self.postgres["source_date_epoch"],
+                upstream=self.postgres["upstream"],
             ),
             "images": {"backend": entry(backend), "frontend": entry(refs["frontend"])},
             "build_inputs": {},
@@ -764,6 +785,7 @@ class Smoke:
         self.pending_migration_drill()
         self.failure_drills(baseline)
         self.https_proxy_drill(baseline)
+        self.postgres_image_drill(baseline)
 
         set_one = re.findall(r"BACKUP_COMPLETE (\S+)", self.ctl("backup"))[0]
         self.ctl("verify-backup", set_one)
@@ -1308,6 +1330,121 @@ class Smoke:
             hostile_forwarded_headers_ignored=True,
             owner_login_logout_csrf=True,
             original_media_identical=True,
+        )
+
+    def postgres_image_drill(self, baseline: dict[str, Any]) -> None:
+        """Derived PostgreSQL: no gosu, uid 70, root refused before touching data, old pin data."""
+        image = self.evidence["references"]["postgres"]
+        running = self.stack("exec", "-T", "db", "sh", "-c", "id -u; command -v gosu || echo none")
+        if running.split() != ["70", "none"]:
+            raise SystemExit("database must run as uid 70 without gosu: " + running)
+        tree = f"find {INSTALL}/postgres -printf '%U:%G %m %s %T@ %p\\n' | sort | sha256sum"
+        self.stack("stop")
+        before = self.operator_sh(tree)
+        refused = subprocess.run(
+            [
+                "docker",
+                "exec",
+                self.dind,
+                "docker",
+                "run",
+                "--rm",
+                "--user",
+                "0",
+                "--network",
+                "none",
+                "-v",
+                "florabase-prod_postgres_data:/var/lib/postgresql",
+                image,
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+        after = self.operator_sh(tree)
+        if refused.returncode != 64 or "refusing to run as root" not in refused.stdout:
+            raise SystemExit("root start was not refused: " + refused.stdout[-2000:])
+        if before != after:
+            raise SystemExit("refused root start changed the PostgreSQL data directory")
+        self.stack("up", "-d")
+        self.ctl("acceptance", "--owner", OWNER_LOGIN, stdin=self.password + "\n")
+        if self.client("snapshot") != baseline:
+            raise SystemExit("PostgreSQL image drill changed data")
+
+        # A data directory initialized by the previously pinned official image opens unchanged.
+        compat = DATA + "/postgres-compat"
+        self.operator_sh(f"mkdir -m 0700 {compat} && chown 70:70 {compat}")
+        common = [
+            "run",
+            "-d",
+            "--user",
+            "70:70",
+            "--network",
+            "none",
+            # Disposable, network-less drill database: no password exists to protect.
+            "-e",
+            "POSTGRES_HOST_AUTH_METHOD=trust",
+        ]
+        common += ["-v", f"{compat}:/var/lib/postgresql"]
+
+        def wait_ready(name: str) -> None:
+            for _ in range(60):
+                if (
+                    subprocess.run(
+                        [
+                            "docker",
+                            "exec",
+                            self.dind,
+                            "docker",
+                            "exec",
+                            name,
+                            "pg_isready",
+                            "-U",
+                            "postgres",
+                        ],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    ).returncode
+                    == 0
+                ):
+                    return
+                time.sleep(1)
+            raise SystemExit(name + " never became ready")
+
+        self.nested(
+            *common,
+            "--name",
+            "compat-old",
+            self.evidence["references"]["postgres-previous-official"],
+        )
+        wait_ready("compat-old")
+        self.nested(
+            "exec",
+            "compat-old",
+            "psql",
+            "-U",
+            "postgres",
+            "-Atc",
+            "CREATE TABLE compat (v text); INSERT INTO compat VALUES ('written-by-previous-official')",
+        )
+        self.nested("stop", "-t", "30", "compat-old")
+        self.nested("rm", "compat-old")
+        self.nested(*common, "--name", "compat-new", image)
+        wait_ready("compat-new")
+        value = self.nested(
+            "exec", "compat-new", "psql", "-U", "postgres", "-Atc", "SELECT v FROM compat"
+        )
+        self.nested("stop", "-t", "30", "compat-new")
+        self.nested("rm", "compat-new")
+        if value != "written-by-previous-official":
+            raise SystemExit("previous official data directory did not open: " + value)
+        self.step(
+            "postgres-image",
+            uid=70,
+            gosu="absent",
+            root_refused_exit=refused.returncode,
+            data_directory_unchanged=True,
+            previous_official_data_opened=True,
         )
 
     def retention_drill(self) -> None:

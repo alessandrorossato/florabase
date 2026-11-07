@@ -56,6 +56,13 @@ def main() -> None:
             build_metadata[service] = json.loads(
                 (Path(metadata_dir) / (service + ".json")).read_text()
             )
+        # Local and non-authoritative: the pinned registry identity is only proven by
+        # `beta_release.py postgres-identity --check` and by the protected publisher.
+        postgres_tag = owner.project + "-postgres"
+        command = ["docker", "build", "--platform", "linux/amd64", "--tag", postgres_tag]
+        for key, value in owner.labels().items():
+            command.extend(["--label", key + "=" + value])
+        subprocess.run([*command, str(root / "postgres")], check=True)
         candidate_manifest = manifest(root, refs, local=True)
         args.evidence.write_text(json.dumps(candidate_manifest, indent=2) + "\n")
         with tempfile.TemporaryDirectory(prefix="florabase-artifact-only-") as temporary:
@@ -72,14 +79,14 @@ def main() -> None:
             ):
                 shutil.copyfile(root / "scripts" / name, artifact / name)
             shutil.copyfile(args.evidence, artifact / "candidate.json")
-            run_artifact_smoke(artifact, local=True)
+            run_artifact_smoke(artifact, local=True, postgres_image=postgres_tag)
         if args.security_dir:
             args.security_dir.mkdir(parents=True, exist_ok=True)
             (args.security_dir / "build-metadata.json").write_text(
                 json.dumps(build_metadata, indent=2) + "\n"
             )
             scan_images(
-                {**refs, "postgresql": locked["postgresql"]["reference"]},
+                {**refs, "postgresql": postgres_tag},
                 args.security_dir,
                 locked["scanner"],
             )

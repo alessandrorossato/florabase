@@ -104,6 +104,11 @@ jobs:
         with:
           subject-name: ${{ steps.pair.outputs.frontend_name }}
           subject-digest: ${{ steps.pair.outputs.frontend_digest }}
+      - name: Attest exact PostgreSQL index
+        uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
+        with:
+          subject-name: ${{ steps.pair.outputs.postgresql_name }}
+          subject-digest: ${{ steps.pair.outputs.postgresql_digest }}
       - name: Attest release manifest
         uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
         with:

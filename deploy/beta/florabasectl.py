@@ -203,7 +203,7 @@ def validate_manifest(manifest: Json, *, test_candidate: bool = False) -> None:
         if not condition:
             raise Refusal("release manifest: " + message)
 
-    need(manifest.get("schema_version") == 1, "schema_version must be 1")
+    need(manifest.get("schema_version") == 2, "schema_version must be 2")
     distribution = "test-candidate" if test_candidate else "registry-candidate"
     need(manifest.get("distribution") == distribution, "distribution must be " + distribution)
     need(
@@ -225,17 +225,38 @@ def validate_manifest(manifest: Json, *, test_candidate: bool = False) -> None:
     postgres = manifest.get("postgresql")
     need(isinstance(postgres, dict), "postgresql is required")
     assert isinstance(postgres, dict)
-    postgres_pattern = r"docker\.io/library/postgres:[a-zA-Z0-9.-]+@" + DIGEST
+    # Florabase-built PostgreSQL (the official image without gosu); its base is recorded.
+    postgres_version = r"18\.6-alpine-florabase\.[1-9][0-9]*"
+    postgres_repository = r"ghcr\.io/alessandrorossato/florabase-postgres"
     if test_candidate:
-        postgres_pattern = (
-            "(?:" + postgres_pattern + "|" + loopback + r"postgres:[a-zA-Z0-9.-]+@" + DIGEST + ")"
-        )
+        postgres_repository = "(?:" + postgres_repository + "|" + loopback + "florabase-postgres)"
     need(
-        bool(re.fullmatch(postgres_pattern, str(postgres.get("reference", "")))),
+        bool(
+            re.fullmatch(
+                postgres_repository + ":" + postgres_version + "@" + DIGEST,
+                str(postgres.get("reference", "")),
+            )
+        ),
         "invalid postgresql reference",
     )
     need(postgres.get("platform") == PLATFORM, "postgresql platform must be linux/amd64")
-    need(isinstance(postgres.get("version"), str), "postgresql version required")
+    need(
+        bool(re.fullmatch(postgres_version, str(postgres.get("version", "")))),
+        "postgresql version required",
+    )
+    upstream = postgres.get("upstream")
+    need(isinstance(upstream, dict), "postgresql upstream base is required")
+    assert isinstance(upstream, dict)
+    need(
+        bool(
+            re.fullmatch(
+                r"docker\.io/library/postgres:[a-zA-Z0-9.-]+@" + DIGEST,
+                str(upstream.get("reference", "")),
+            )
+        )
+        and str(upstream.get("reference", "")).endswith("@" + str(upstream.get("index_digest"))),
+        "invalid postgresql upstream base",
+    )
     images = manifest.get("images")
     need(isinstance(images, dict) and set(images) == {"backend", "frontend"}, "images pair")
     assert isinstance(images, dict)
@@ -777,7 +798,16 @@ class Controller:
         say("verifying release images and identities")
         for name in ("backend", "frontend"):
             self.verify_image(manifest["images"][name], manifest, name)
-        self.verify_image(manifest["postgresql"], None, "postgresql")
+        postgres = manifest["postgresql"]
+        config = self.verify_image(postgres, None, "postgresql").get("Config") or {}
+        labels = config.get("Labels") or {}
+        if (
+            config.get("User") != "70:70"
+            or config.get("Entrypoint") != ["florabase-postgres-entrypoint"]
+            or labels.get("org.opencontainers.image.base.digest")
+            != postgres["upstream"]["index_digest"]
+        ):
+            raise Refusal("postgresql image is not the release's non-root derived image")
         heads = self.image_heads(manifest["images"]["backend"]["reference"])
         if heads != [manifest["alembic_head"]]:
             raise Refusal(f"backend image Alembic heads {heads} differ from manifest")

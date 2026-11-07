@@ -21,6 +21,12 @@ from workflow_resources import Disposable, Owner
 DIGEST = re.compile(r"sha256:[a-f0-9]{64}")
 SHA = re.compile(r"[a-f0-9]{40}")
 SOURCE = "https://github.com/alessandrorossato/florabase"
+POSTGRES_REPOSITORY = "ghcr.io/alessandrorossato/florabase-postgres"
+UPSTREAM_POSTGRES = "docker.io/library/postgres"
+POSTGRES_ENTRYPOINT = "florabase-postgres-entrypoint"
+REGISTRY_IMAGE = (
+    "registry:2.8.3@sha256:a3d8aaa63ed8681a604f1dea0aa03f100d5895b6a58ace528858a7b332415373"
+)
 
 
 def run(*args: str) -> str:
@@ -67,7 +73,7 @@ def inputs(root: Path, publication: bool = False) -> dict[str, Any]:
         raise ValueError("API version mismatch")
     if f'version = "{version}"' not in (root / "backend/pyproject.toml").read_text():
         raise ValueError("backend package version mismatch")
-    for area in ("backend", "frontend"):
+    for area in ("backend", "frontend", "postgres"):
         if (root / area / "LICENSE").read_bytes() != (root / "LICENSE").read_bytes():
             raise ValueError("image license must match repository license")
     for name, ref in value["base_images"].items():
@@ -82,7 +88,7 @@ def inputs(root: Path, publication: bool = False) -> dict[str, Any]:
         ref = value[tool]
         if "@" not in ref or not DIGEST.fullmatch(ref.split("@")[-1]):
             raise ValueError("mutable release tool input: " + tool)
-    for area in ("backend", "frontend"):
+    for area in ("backend", "frontend", "postgres"):
         if (
             not (root / area / "Dockerfile")
             .read_text()
@@ -90,17 +96,188 @@ def inputs(root: Path, publication: bool = False) -> dict[str, Any]:
         ):
             raise ValueError("Dockerfile compiler identity drift")
     pg = value["postgresql"]
-    if (
-        pg["platform"] != "linux/amd64"
-        or not DIGEST.fullmatch(pg["index_digest"])
-        or not DIGEST.fullmatch(pg["platform_digest"])
-        or pg["reference"] != f"{pg['repository']}:{pg['version']}@{pg['index_digest']}"
-        or not DIGEST.fullmatch(value["scanner"].split("@")[-1])
-    ):
+    if not DIGEST.fullmatch(value["scanner"].split("@")[-1]):
         raise ValueError("invalid pinned release input")
+    validate_postgres_identity(pg)
+    postgres_dockerfile = (root / "postgres/Dockerfile").read_text()
+    upstream = pg["upstream"]
+    if (
+        postgres_dockerfile.count("\nFROM ") != 1
+        or f"\nFROM {upstream['reference']}\n" not in postgres_dockerfile
+        or f'org.opencontainers.image.base.digest="{upstream["index_digest"]}"'
+        not in postgres_dockerfile
+        or f'org.opencontainers.image.version="{pg["version"]}"' not in postgres_dockerfile
+        or "ARG " in postgres_dockerfile
+    ):
+        raise ValueError("PostgreSQL Dockerfile differs from the pinned derived identity")
     if publication:
         check_platform(read(root / "release/platform.json"))
     return value
+
+
+def validate_postgres_identity(pg: dict[str, Any], repository: str = POSTGRES_REPOSITORY) -> None:
+    """The derived image is pinned by content; its upstream base is pinned and recorded too."""
+    upstream = pg.get("upstream") or {}
+    if (
+        set(pg)
+        != {
+            "repository",
+            "version",
+            "reference",
+            "index_digest",
+            "platform_digest",
+            "platform",
+            "source_date_epoch",
+            "upstream",
+        }
+        or pg["repository"] != repository
+        or not re.fullmatch(r"18\.6-alpine-florabase\.[1-9][0-9]*", pg["version"])
+        or pg["platform"] != "linux/amd64"
+        or not DIGEST.fullmatch(pg["index_digest"])
+        or not DIGEST.fullmatch(pg["platform_digest"])
+        or pg["index_digest"] == pg["platform_digest"]
+        or pg["reference"] != f"{pg['repository']}:{pg['version']}@{pg['index_digest']}"
+        or type(pg["source_date_epoch"]) is not int
+        or pg["source_date_epoch"] <= 0
+        or set(upstream)
+        != {"repository", "version", "reference", "index_digest", "platform_digest", "platform"}
+        or upstream["repository"] != UPSTREAM_POSTGRES
+        or upstream["platform"] != "linux/amd64"
+        or not DIGEST.fullmatch(upstream["index_digest"])
+        or not DIGEST.fullmatch(upstream["platform_digest"])
+        or upstream["reference"]
+        != f"{upstream['repository']}:{upstream['version']}@{upstream['index_digest']}"
+        or not pg["version"].startswith(upstream["version"] + "-florabase.")
+    ):
+        raise ValueError("invalid PostgreSQL identity")
+
+
+def build_postgres_image(
+    root: Path, builder: str, repository: str, tag: str, epoch: int, insecure: bool = False
+) -> dict[str, str]:
+    """Deterministic derived PostgreSQL build: one platform manifest wrapped in a bare index.
+
+    In-index provenance/SBOM attestations embed build times, so they are disabled here; the
+    protected workflow attests the index with GitHub artifact attestations instead.
+    """
+    with tempfile.TemporaryDirectory(prefix="florabase-postgres-build-") as temporary:
+        metadata = Path(temporary) / "metadata.json"
+        output = (
+            f"type=image,name={repository}:{tag}-platform,push=true,"
+            "rewrite-timestamp=true,oci-mediatypes=true"
+        )
+        if insecure:
+            output += ",registry.insecure=true"
+        subprocess.run(
+            [
+                "docker",
+                "buildx",
+                "build",
+                "--builder",
+                builder,
+                "--platform",
+                "linux/amd64",
+                "--provenance=false",
+                "--sbom=false",
+                "--no-cache",
+                "--build-arg",
+                f"SOURCE_DATE_EPOCH={epoch}",
+                "--metadata-file",
+                str(metadata),
+                "--output",
+                output,
+                str(root / "postgres"),
+            ],
+            check=True,
+        )
+        platform_digest = json.loads(metadata.read_text())["containerimage.digest"]
+    if not DIGEST.fullmatch(platform_digest):
+        raise ValueError("PostgreSQL build reported no platform digest")
+    subprocess.run(
+        [
+            "docker",
+            "buildx",
+            "imagetools",
+            "create",
+            "--tag",
+            f"{repository}:{tag}",
+            f"{repository}@{platform_digest}",
+        ],
+        check=True,
+    )
+    index = json.loads(
+        run(
+            "docker",
+            "buildx",
+            "imagetools",
+            "inspect",
+            f"{repository}:{tag}",
+            "--format",
+            "{{json .Manifest}}",
+        )
+    )
+    platforms = [m.get("platform") for m in index.get("manifests", [])]
+    if (
+        platforms != [{"architecture": "amd64", "os": "linux"}]
+        or index["manifests"][0]["digest"] != platform_digest
+    ):
+        raise ValueError("PostgreSQL index must hold exactly the built native manifest")
+    return {"index_digest": index["digest"], "platform_digest": platform_digest}
+
+
+def require_pinned_postgres(built: dict[str, str], pg: dict[str, Any]) -> None:
+    for field in ("index_digest", "platform_digest"):
+        if built[field] != pg[field]:
+            raise ValueError(
+                f"PostgreSQL build is not reproducible: {field} {built[field]} != pinned {pg[field]}"
+            )
+
+
+def local_postgres_identity(root: Path, port: int = 5055) -> dict[str, str]:
+    """Rebuild the derived image with the pinned BuildKit into a disposable loopback registry."""
+    locked = inputs(root)
+    owner = Owner.disposable("verification-build", root)
+    registry = owner.project + "-registry"
+    builder = owner.project + "-builder"
+    repository = f"127.0.0.1:{port}/florabase-postgres"
+    with Disposable(owner):
+        # Owned and labelled: the Disposable owner retires it, as for every workflow resource.
+        command = ["docker", "run", "-d", "--name", registry]
+        for key, value in owner.labels().items():
+            command.extend(["--label", key + "=" + value])
+        subprocess.run(
+            [*command, "-p", f"127.0.0.1:{port}:5000", REGISTRY_IMAGE],
+            check=True,
+            stdout=subprocess.DEVNULL,
+        )
+        subprocess.run(
+            [
+                "docker",
+                "buildx",
+                "create",
+                "--name",
+                builder,
+                "--driver",
+                "docker-container",
+                "--driver-opt",
+                "image=" + locked["buildkit"],
+                "--driver-opt",
+                "network=host",
+            ],
+            check=True,
+            stdout=subprocess.DEVNULL,
+        )
+        try:
+            return build_postgres_image(
+                root,
+                builder,
+                repository,
+                locked["postgresql"]["version"],
+                locked["postgresql"]["source_date_epoch"],
+                insecure=True,
+            )
+        finally:
+            subprocess.run(["docker", "buildx", "rm", builder], check=False)
 
 
 def registry_record(reference: str, platform: str) -> dict[str, str]:
@@ -163,7 +340,7 @@ def validate_manifest(value: dict[str, Any], local: bool = False) -> None:
         if value["build_inputs"] != read(trusted_path):
             raise ValueError("manifest build inputs differ from trusted release inputs")
     if (
-        value["schema_version"] != 1
+        value["schema_version"] != 2
         or value["platforms"] != ["linux/amd64"]
         or not re.fullmatch(r"0\.1\.0-beta\.[1-9][0-9]*", value["version"])
         or not SHA.fullmatch(value["source"]["revision"])
@@ -189,15 +366,7 @@ def validate_manifest(value: dict[str, Any], local: bool = False) -> None:
             or not DIGEST.fullmatch(image["platform_digest"])
         ):
             raise ValueError("invalid immutable image identity")
-    pg = value["postgresql"]
-    if (
-        pg["repository"] != "docker.io/library/postgres"
-        or pg["platform"] != "linux/amd64"
-        or not DIGEST.fullmatch(pg["index_digest"])
-        or not DIGEST.fullmatch(pg["platform_digest"])
-        or pg["reference"] != f"{pg['repository']}:{pg['version']}@{pg['index_digest']}"
-    ):
-        raise ValueError("invalid PostgreSQL identity")
+    validate_postgres_identity(value["postgresql"])
 
 
 def manifest(root: Path, refs: dict[str, str], local: bool) -> dict[str, Any]:
@@ -206,6 +375,11 @@ def manifest(root: Path, refs: dict[str, str], local: bool) -> dict[str, Any]:
     if not SHA.fullmatch(revision):
         raise ValueError("invalid source revision")
     images: dict[str, Any] = {}
+    if not local:
+        pg = locked["postgresql"]
+        record = registry_record(f"{pg['repository']}@{pg['index_digest']}", "linux/amd64")
+        if record["platform_digest"] != pg["platform_digest"]:
+            raise ValueError("published PostgreSQL index does not hold the pinned platform image")
     for service, reference in refs.items():
         if local:
             image = json.loads(run("docker", "image", "inspect", reference))[0]
@@ -213,7 +387,7 @@ def manifest(root: Path, refs: dict[str, str], local: bool) -> dict[str, Any]:
         else:
             images[service] = registry_record(reference, "linux/amd64")
     result = {
-        "schema_version": 1,
+        "schema_version": 2,
         "distribution": "local-candidate" if local else "registry-candidate",
         "version": locked["version"],
         "source": {
@@ -242,7 +416,9 @@ def manifest(root: Path, refs: dict[str, str], local: bool) -> dict[str, Any]:
     return result
 
 
-def run_artifact_smoke(artifact: Path, local: bool, log: IO[str] | None = None) -> None:
+def run_artifact_smoke(
+    artifact: Path, local: bool, log: IO[str] | None = None, postgres_image: str | None = None
+) -> None:
     """Let the artifact child unwind its resource owner when the parent is interrupted."""
     command = [
         "python3",
@@ -251,7 +427,9 @@ def run_artifact_smoke(artifact: Path, local: bool, log: IO[str] | None = None) 
         "candidate.json" if local else "release-manifest.json",
     ]
     if local:
-        command.append("--local")
+        if not postgres_image:
+            raise ValueError("local artifact smoke needs the locally built PostgreSQL image")
+        command.extend(["--local", "--postgres-image", postgres_image])
     process = subprocess.Popen(
         command, cwd=artifact, stdout=log, stderr=subprocess.STDOUT if log else None
     )
@@ -372,8 +550,13 @@ def validate_scan(
             {"fastapi", "florabase-backend", "pillow", "psycopg-binary", "sqlalchemy"},
         ),
         "frontend": ("alpine", {"nginx"}),
-        "postgresql": ("gobinary", {"github.com/tianon/gosu", "stdlib"}),
+        # The derived image must still show its Alpine runtime; the gosu binary must be gone.
+        "postgresql": ("alpine", {"musl", "busybox", "libssl3"}),
     }
+    if service == "postgresql" and any(
+        "gosu" in str(result.get("Target", "")) for result in results
+    ):
+        raise ValueError("PostgreSQL image still contains gosu")
     if service in expected:
         kind, packages = expected[service]
         observed = {
@@ -392,6 +575,52 @@ def validate_scan(
             or result.get("Vulnerabilities")
         ):
             raise ValueError("security report contains blocking findings")
+
+
+def software_bill_of_materials(reference: str, destination: Path, scanner: str) -> None:
+    """CycloneDX SBOM of the exact pulled bytes, generated by the pinned scanner."""
+    destination = destination.resolve()
+    if destination.exists():
+        raise ValueError("refuse to overwrite SBOM: " + str(destination))
+    with tempfile.TemporaryDirectory(prefix="florabase-sbom-") as temporary:
+        work = Path(temporary)
+        os.chmod(work, 0o755)
+        archive = work / "image.tar"
+        image_id = run("docker", "image", "inspect", "--format", "{{.Id}}", reference)
+        subprocess.run(["docker", "save", "--output", str(archive), image_id], check=True)
+        archive.chmod(0o644)
+        subprocess.run(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--network",
+                "none",
+                "--user",
+                f"{os.getuid()}:{os.getgid()}",
+                "--mount",
+                f"type=bind,src={work},dst=/artifacts",
+                scanner,
+                "image",
+                "--quiet",
+                "--offline-scan",
+                "--skip-db-update",
+                "--skip-java-db-update",
+                "--cache-dir",
+                "/tmp",
+                "--input",
+                "/artifacts/image.tar",
+                "--format",
+                "cyclonedx",
+                "--output",
+                "/artifacts/sbom.json",
+            ],
+            check=True,
+        )
+        sbom = read(work / "sbom.json")
+        if sbom.get("bomFormat") != "CycloneDX" or not sbom.get("components"):
+            raise ValueError("incomplete SBOM for " + reference)
+        destination.write_text(json.dumps(sbom, indent=2) + "\n")
 
 
 def locate_draft_release(repo: str, tag: str, sha: str) -> dict[str, Any]:
@@ -581,15 +810,23 @@ def scan_images(refs: dict[str, str], output: Path, scanner: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("check", "manifest"))
+    parser.add_argument("command", choices=("check", "manifest", "postgres-identity"))
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--publication", action="store_true")
     parser.add_argument("--local", action="store_true")
     parser.add_argument("--backend")
     parser.add_argument("--frontend")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--check", action="store_true", help="postgres-identity: compare pins")
     args = parser.parse_args()
     inputs(args.root, args.publication)
+    if args.command == "postgres-identity":
+        built = local_postgres_identity(args.root)
+        print(json.dumps(built, indent=2))
+        if args.check:
+            require_pinned_postgres(built, inputs(args.root)["postgresql"])
+            print("POSTGRES_IDENTITY_REPRODUCED")
+        return
     if args.command == "manifest":
         if not args.backend or not args.frontend or not args.output:
             parser.error("manifest requires --backend, --frontend and --output")

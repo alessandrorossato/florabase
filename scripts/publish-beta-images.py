@@ -13,14 +13,18 @@ from pathlib import Path
 from typing import Any
 
 from beta_release import (
+    POSTGRES_REPOSITORY,
     SOURCE,
+    build_postgres_image,
     inputs,
     manifest,
     registry_record,
     release_asset_inventory,
+    require_pinned_postgres,
     run,
     run_artifact_smoke,
     scan_images,
+    software_bill_of_materials,
 )
 
 # deploy/beta files attached to every release; names must not collide with other assets.
@@ -116,6 +120,24 @@ def main() -> None:
                     for item in page
                 ):
                     raise ValueError("versioned image already exists; choose a new release")
+        pg = locked["postgresql"]
+        if POSTGRES_REPOSITORY.removeprefix("ghcr.io/" + owner + "/") in existing:
+            # Shared by every release: an existing tag must already be the pinned identity.
+            tagged = subprocess.run(
+                [
+                    "docker",
+                    "buildx",
+                    "imagetools",
+                    "inspect",
+                    POSTGRES_REPOSITORY + ":" + pg["version"],
+                    "--format",
+                    "{{json .Manifest}}",
+                ],
+                text=True,
+                capture_output=True,
+            )
+            if tagged.returncode == 0 and json.loads(tagged.stdout)["digest"] != pg["index_digest"]:
+                raise ValueError("published PostgreSQL tag differs from the pinned identity")
         subprocess.run(
             [
                 "docker",
@@ -131,6 +153,17 @@ def main() -> None:
             ],
             check=True,
         )
+        # Deterministic: rebuilt for every release and refused unless it reproduces the pins.
+        built = build_postgres_image(
+            Path.cwd(),
+            builder,
+            POSTGRES_REPOSITORY,
+            "candidate-" + builder + "-postgres",
+            pg["source_date_epoch"],
+        )
+        require_pinned_postgres(built, pg)
+        state["images"]["postgresql"] = POSTGRES_REPOSITORY + "@" + pg["index_digest"]
+        checkpoint("postgresql_candidate_pushed")
         for service in ("backend", "frontend"):
             image = "ghcr.io/" + repository + "-" + service
             candidate = image + ":candidate-" + builder
@@ -173,10 +206,14 @@ def main() -> None:
         manifest_path = output / "release-manifest.json"
         manifest_path.write_text(json.dumps(value, indent=2) + "\n")
         # Scan the exact pushed bytes, including secrets, before promoting version tags.
-        scan_refs = {**refs, "postgresql": locked["postgresql"]["reference"]}
+        scan_refs = {**refs, "postgresql": POSTGRES_REPOSITORY + "@" + pg["index_digest"]}
         for ref in scan_refs.values():
             subprocess.run(["docker", "pull", "--platform", "linux/amd64", ref], check=True)
         scan_images(scan_refs, output, locked["scanner"])
+        # The derived image has no in-index SBOM attestation (it would break reproducibility).
+        software_bill_of_materials(
+            scan_refs["postgresql"], output / "postgresql-sbom.cdx.json", locked["scanner"]
+        )
         checkpoint("security_passed")
         # Tools travel with the artifact; runtime execution has no local checkout or source bind.
         with tempfile.TemporaryDirectory(prefix="beta-artifact-only-") as temporary:
@@ -217,7 +254,7 @@ def main() -> None:
         for name in INSTALL_BUNDLE:
             shutil.copyfile(Path("deploy/beta") / name, output / name)
         (output / "RELEASE.md").write_text(
-            f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair passed native amd64 registry-pull smoke and HIGH/CRITICAL vulnerability and secret checks. PostgreSQL is separately pinned. Install with the attached {', '.join(INSTALL_BUNDLE)} and release-manifest.json as described in docs/installation.md at this source revision. This is a prerelease: no stable or latest tag is published. Never overwrite this release or delete its image identities.\n"
+            f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair passed native amd64 registry-pull smoke and HIGH/CRITICAL vulnerability and secret checks. PostgreSQL is the Florabase-built {pg['version']} image ({pg['reference']}): the official {pg['upstream']['reference']} without its gosu executable, which stays in an unchanged upstream layer but is absent from the container filesystem; it is identical in every release. Install with the attached {', '.join(INSTALL_BUNDLE)} and release-manifest.json as described in docs/installation.md at this source revision. This is a prerelease: no stable or latest tag is published. Never overwrite this release or delete its image identities.\n"
         )
         release_asset_inventory(output)
         for service, ref in refs.items():
@@ -249,9 +286,36 @@ def main() -> None:
             if promoted["digest"] != registry_record(ref, "linux/amd64")["index_digest"]:
                 raise ValueError("promotion changed immutable image identity")
             checkpoint(service + "_version_promoted")
+        subprocess.run(
+            [
+                "docker",
+                "buildx",
+                "imagetools",
+                "create",
+                "--prefer-index=false",
+                "--tag",
+                POSTGRES_REPOSITORY + ":" + pg["version"],
+                scan_refs["postgresql"],
+            ],
+            check=True,
+        )
+        promoted = json.loads(
+            run(
+                "docker",
+                "buildx",
+                "imagetools",
+                "inspect",
+                POSTGRES_REPOSITORY + ":" + pg["version"],
+                "--format",
+                "{{json .Manifest}}",
+            )
+        )
+        if promoted["digest"] != pg["index_digest"]:
+            raise ValueError("promotion changed the PostgreSQL identity")
+        checkpoint("postgresql_version_promoted")
         checkpoint("pair_promoted_requires_attestation_and_release")
         with Path(os.environ["GITHUB_OUTPUT"]).open("a") as outputs:
-            for service, ref in refs.items():
+            for service, ref in {**refs, "postgresql": scan_refs["postgresql"]}.items():
                 name, digest = ref.split("@")
                 outputs.write(f"{service}_name={name}\n{service}_digest={digest}\n")
     finally:

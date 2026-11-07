@@ -77,7 +77,7 @@ def candidate() -> dict[str, Any]:
         "platform": "linux/amd64",
     }
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "distribution": "registry-candidate",
         "version": locked["version"],
         "source": {
@@ -140,7 +140,7 @@ class ReleaseTests(unittest.TestCase):
         validate_manifest(valid)
         mutations = [
             ("platforms", ["linux/arm64"]),
-            ("schema_version", 2),
+            ("schema_version", 1),
             ("version", "latest"),
             ("distribution", "local-candidate"),
         ]
@@ -161,13 +161,32 @@ class ReleaseTests(unittest.TestCase):
                 validate_manifest(changed)
         for field, invalid in (
             ("reference", "postgres:18.6-alpine"),
+            ("repository", "docker.io/library/postgres"),
+            ("version", "18.6-alpine"),
             ("platform_digest", "bad"),
             ("platform", "linux/arm64"),
+            ("source_date_epoch", "1762387200"),
         ):
             changed = copy.deepcopy(valid)
             changed["postgresql"][field] = invalid
+            changed["build_inputs"]["postgresql"] = changed["postgresql"]
             with self.subTest(postgres=field), self.assertRaises(ValueError):
                 validate_manifest(changed)
+        for field, invalid in (
+            ("repository", "ghcr.io/example/postgres"),
+            ("index_digest", "sha256:" + "f" * 64),
+            ("platform", "linux/arm64"),
+        ):
+            changed = copy.deepcopy(valid)
+            changed["postgresql"]["upstream"][field] = invalid
+            changed["build_inputs"]["postgresql"] = changed["postgresql"]
+            with self.subTest(upstream=field), self.assertRaises(ValueError):
+                validate_manifest(changed)
+        # The official image itself is no longer an acceptable release database identity.
+        changed = copy.deepcopy(valid)
+        changed["postgresql"] = dict(changed["postgresql"]["upstream"])
+        with self.assertRaises(ValueError):
+            validate_manifest(changed)
 
     def test_dirty_or_inconsistent_release_metadata_refuses(self) -> None:
         for field, invalid in (("dirty", True), ("revision", "not-a-commit")):
@@ -307,6 +326,7 @@ class ReleaseTests(unittest.TestCase):
             return subprocess.CompletedProcess(command, 0)
 
         for failing, phase in (
+            ("require_pinned_postgres", "preflight"),
             ("scan_images", "frontend_candidate_pushed"),
             ("run_artifact_smoke", "security_passed"),
         ):
@@ -320,6 +340,15 @@ class ReleaseTests(unittest.TestCase):
                     patch.object(publisher, "manifest", return_value=candidate()),
                     patch.object(publisher, "scan_images"),
                     patch.object(publisher, "run_artifact_smoke"),
+                    patch.object(publisher, "software_bill_of_materials"),
+                    patch.object(
+                        publisher,
+                        "build_postgres_image",
+                        return_value={
+                            field: inputs(ROOT)["postgresql"][field]
+                            for field in ("index_digest", "platform_digest")
+                        },
+                    ),
                     patch.object(
                         publisher, failing, side_effect=ValueError("fixture gate blocked")
                     ),
@@ -364,6 +393,132 @@ class ReleaseTests(unittest.TestCase):
             changed["Results"][0][field] = [{"Severity": "HIGH"}]
             with self.subTest(field=field), self.assertRaises(ValueError):
                 validate_scan(changed, digest)
+
+    def test_postgres_scan_requires_alpine_inventory_and_no_gosu(self) -> None:
+        digest = "sha256:" + "a" * 64
+        alpine = {
+            "Class": "os-pkgs",
+            "Type": "alpine",
+            "Packages": [{"Name": name} for name in ("musl", "busybox", "libssl3", "tzdata")],
+        }
+        valid: dict[str, Any] = {
+            "SchemaVersion": 2,
+            "ArtifactType": "container_image",
+            "Metadata": {"ImageID": digest},
+            "Results": [alpine],
+        }
+        validate_scan(valid, digest, "postgresql")
+        with_gosu = copy.deepcopy(valid)
+        with_gosu["Results"].append(
+            {
+                "Target": "usr/local/bin/gosu",
+                "Class": "lang-pkgs",
+                "Type": "gobinary",
+                "Packages": [{"Name": "stdlib"}],
+            }
+        )
+        with self.assertRaisesRegex(ValueError, "gosu"):
+            validate_scan(with_gosu, digest, "postgresql")
+        partial = copy.deepcopy(valid)
+        partial["Results"][0]["Packages"] = [{"Name": "musl"}]
+        with self.assertRaisesRegex(ValueError, "inventory"):
+            validate_scan(partial, digest, "postgresql")
+
+    def test_postgres_inputs_bind_dockerfile_and_reproducible_pins(self) -> None:
+        import beta_release
+
+        pinned = inputs(ROOT)["postgresql"]
+        self.assertEqual(pinned["repository"], beta_release.POSTGRES_REPOSITORY)
+        self.assertEqual(pinned["upstream"]["repository"], "docker.io/library/postgres")
+        dockerfile = (ROOT / "postgres/Dockerfile").read_text()
+        self.assertIn("\nFROM " + pinned["upstream"]["reference"] + "\n", dockerfile)
+        self.assertIn("    && rm /usr/local/bin/gosu\n", dockerfile)
+        self.assertIn("USER 70:70\n", dockerfile)
+        self.assertIn('ENTRYPOINT ["florabase-postgres-entrypoint"]', dockerfile)
+        for drift in (
+            dockerfile.replace(pinned["upstream"]["index_digest"], "sha256:" + "f" * 64, 1),
+            dockerfile.replace('version="18.6-alpine-florabase.1"', 'version="other"'),
+            dockerfile.replace("FROM ", "ARG BASE\nFROM ", 1),
+        ):
+            with tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                for path in (
+                    "release/inputs.json",
+                    "frontend/package.json",
+                    "backend/src/florabase/__init__.py",
+                    "backend/pyproject.toml",
+                    "backend/Dockerfile",
+                    "frontend/Dockerfile",
+                    "LICENSE",
+                    "backend/LICENSE",
+                    "frontend/LICENSE",
+                    "postgres/LICENSE",
+                    "postgres/Dockerfile",
+                ):
+                    (root / path).parent.mkdir(parents=True, exist_ok=True)
+                    (root / path).write_bytes((ROOT / path).read_bytes())
+                inputs(root)
+                (root / "postgres/Dockerfile").write_text(drift)
+                with self.assertRaisesRegex(ValueError, "PostgreSQL Dockerfile|base image"):
+                    inputs(root)
+        beta_release.require_pinned_postgres(
+            {"index_digest": pinned["index_digest"], "platform_digest": pinned["platform_digest"]},
+            pinned,
+        )
+        with self.assertRaisesRegex(ValueError, "not reproducible"):
+            beta_release.require_pinned_postgres(
+                {
+                    "index_digest": "sha256:" + "f" * 64,
+                    "platform_digest": pinned["platform_digest"],
+                },
+                pinned,
+            )
+
+    def test_postgres_entrypoint_refuses_root_before_upstream_entrypoint(self) -> None:
+        guard = ROOT / "postgres/florabase-postgres-entrypoint.sh"
+        for uid, expected in (("0", 64), ("70", 0)):
+            with self.subTest(uid=uid), tempfile.TemporaryDirectory() as temporary:
+                bin_dir = Path(temporary)
+                (bin_dir / "id").write_text(f"#!/bin/sh\necho {uid}\n")
+                (bin_dir / "docker-entrypoint.sh").write_text(
+                    '#!/bin/sh\necho upstream-entrypoint "$@" > "$MARKER"\n'
+                )
+                for name in ("id", "docker-entrypoint.sh"):
+                    (bin_dir / name).chmod(0o755)
+                marker = bin_dir / "marker"
+                result = subprocess.run(
+                    ["/bin/sh", str(guard), "postgres"],
+                    env={"PATH": f"{bin_dir}:/usr/bin:/bin", "MARKER": str(marker)},
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(result.returncode, expected)
+                if uid == "0":
+                    self.assertIn("refusing to run as root", result.stderr)
+                    self.assertFalse(marker.exists(), "upstream entrypoint must not run as root")
+                else:
+                    self.assertEqual(marker.read_text(), "upstream-entrypoint postgres\n")
+
+    def test_publication_attests_and_pins_postgres(self) -> None:
+        workflow = (ROOT / ".github/workflows/beta-images.yml").read_text()
+        self.assertIn("subject-digest: ${{ steps.pair.outputs.postgresql_digest }}", workflow)
+        source = (ROOT / "scripts/publish-beta-images.py").read_text()
+        build = source.index("build_postgres_image(")
+        self.assertLess(build, source.index("require_pinned_postgres(built, pg)"))
+        self.assertLess(
+            source.index("require_pinned_postgres(built, pg)"), source.index("scan_images(")
+        )
+        self.assertLess(source.index("scan_images("), source.index("software_bill_of_materials("))
+        self.assertLess(
+            source.index("software_bill_of_materials("),
+            source.index('checkpoint("security_passed")'),
+        )
+        self.assertLess(
+            source.index("run_artifact_smoke("),
+            source.index('POSTGRES_REPOSITORY + ":" + pg["version"],\n                scan_refs'),
+        )
+        self.assertIn('"postgresql": POSTGRES_REPOSITORY + "@" + pg["index_digest"]', source)
 
     def test_shared_or_symlinked_executable_cache_refuses(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -701,7 +856,7 @@ class ReleaseTests(unittest.TestCase):
                         time.sleep(0.01)
                     os.kill(os.getpid(), signal.SIGTERM)
                 threading.Thread(target=send_signal, daemon=True).start()
-                run_artifact_smoke(artifact, local=True)
+                run_artifact_smoke(artifact, local=True, postgres_image="sha256:" + "0" * 64)
                 """)
                 .replace("SCRIPTS", repr(str(ROOT / "scripts")))
                 .replace("ARTIFACT", repr(str(artifact)))
