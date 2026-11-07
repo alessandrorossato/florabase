@@ -74,18 +74,22 @@ attestation from the protected release workflow; check all four with the GitHub 
 newer):
 
 ```bash
+verified=yes
 for file in release-manifest.json compose.yaml florabasectl.py florabase.env.example; do
   gh attestation verify "$file" --repo alessandrorossato/florabase \
     --signer-workflow alessandrorossato/florabase/.github/workflows/beta-images.yml \
-    --source-ref refs/heads/main --deny-self-hosted-runners || { echo "REFUSE $file"; break; }
+    --source-ref refs/heads/main --deny-self-hosted-runners || verified=no
 done
-sha256sum release-manifest.json
+if [ "$verified" = yes ]; then sha256sum release-manifest.json; else echo "STOP: a file failed attestation; delete the downloads" >&2; false; fi
 ```
 
-Stop if any check fails. Comparing SHA-256 values with the digests on the release page only proves
-the download is intact, not who produced the file. The attested manifest also records the SHA-256
-of each bundle file (`install_bundle`), and the controller refuses to install or upgrade with a
-`compose.yaml` or `florabasectl.py` that differs from it.
+Continue only if every file verified and the last command printed the manifest's SHA-256. This
+attestation check is the control that proves the files come from the protected release workflow;
+comparing SHA-256 values with the digests on the release page only proves the download is intact.
+The attested manifest also records the SHA-256 of each bundle file (`install_bundle`), and the
+controller refuses to install or upgrade with a `compose.yaml` or `florabasectl.py` that differs
+from it. That catches files mixed from different releases; it cannot detect a tampered controller
+(which checks itself), so never skip the attestation check.
 
 Keep the manifest's SHA-256: every install and upgrade command requires it, and the controller
 refuses a manifest whose hash differs. The controller never uses image tags.
@@ -364,7 +368,7 @@ because they must quiesce writers and take a verified backup first.
 5. Start, stop, restart and redeploy from Dockhand as needed. A redeploy of the recorded files is
    safe: the backend refuses to serve an incompatible schema. It is not an upgrade.
 6. For an upgrade, run `promote` on the host. Dockhand then shows the new containers. Use
-   `florabasectl.py check-release --manifest … --manifest-sha256 …` for release notifications, since
+   the installed `florabasectl.py check-release --manifest … --manifest-sha256 …` for release notifications (it reads a newer release's manifest without changing anything), since
    excluded containers show no update badge.
 
 Protect Dockhand itself: enable its authentication, never expose it publicly and back up its data

@@ -48,8 +48,6 @@ jobs:
           version: v0.38.1
           driver: docker
           use: false
-      - name: Reproduce the pinned PostgreSQL identity before publication can start
-        run: python3 scripts/release-tools.py scripts/beta_release.py postgres-identity --check
       - name: Exhaustive verification of the selected commit
         run: |
           set -euo pipefail

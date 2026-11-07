@@ -533,7 +533,9 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn("subject-path: |", workflow)
         for name in ("compose.yaml", "florabasectl.py", "florabase.env.example"):
             self.assertIn("${{ runner.temp }}/beta-release/" + name, workflow)
-        self.assertIn("postgres-identity --check", workflow)
+        # The rebuild check must not gate every release: the publisher runs it only for an
+        # unpublished identity, so a superseded Alpine pin never blocks application releases.
+        self.assertNotIn("postgres-identity --check", workflow)
         self.assertEqual(workflow.count("version: v0.38.1"), 2)
         # An unpublished identity is built and verified in a loopback registry before GHCR.
         self.assertLess(source.index("local_postgres_identity("), source.index("scan_images("))

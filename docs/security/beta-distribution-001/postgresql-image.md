@@ -32,8 +32,11 @@ name and digest, the image version and source; there is deliberately no per-comm
   removed because it records install times. `imagetools create` then wraps the single amd64 manifest
   in a bare index. Fresh builders reproduced both digests on every run. The workflow pins the buildx
   client that writes that index (`docker/setup-buildx-action` with `version: v0.38.1`, the version
-  that produced the pins) and runs `postgres-identity --check` in the read-only verify job before the
-  publish job can start.
+  that produced the pins). The reproducibility check runs only where a build happens: the publisher's
+  first-publication path builds in a loopback registry and refuses a mismatch before any package
+  write. It deliberately does not run in every release's verify job, where a superseded Alpine pin
+  would block application releases; a pull-request-time reproducibility job in `ci.yml` is a
+  follow-up for the CI owner.
 - **Same release manifest, same identity every release.** Manifest schema v2 records the derived
   image and its upstream base in `postgresql`. Every application release references the identical
   PostgreSQL index, so the controller's rule that `promote` never changes PostgreSQL still holds, and

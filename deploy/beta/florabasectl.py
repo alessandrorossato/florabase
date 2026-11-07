@@ -327,7 +327,9 @@ def release_record(manifest: Json, manifest_sha256: str) -> Json:
     }
 
 
-def load_manifest(path: Path, expected_sha256: str, allow_test: bool) -> tuple[Json, str]:
+def load_manifest(
+    path: Path, expected_sha256: str, allow_test: bool, bundle: bool = True
+) -> tuple[Json, str]:
     if allow_test and not test_mode():
         raise Refusal("--allow-test-candidate requires FLORABASECTL_TEST_MODE=1")
     if not re.fullmatch(r"[a-f0-9]{64}", expected_sha256):
@@ -337,12 +339,17 @@ def load_manifest(path: Path, expected_sha256: str, allow_test: bool) -> tuple[J
         raise Refusal(f"manifest digest {actual} does not match the authorized digest")
     manifest = read_json(path)
     validate_manifest(manifest, test_candidate=allow_test)
-    verify_bundle(manifest)
+    if bundle:
+        verify_bundle(manifest)
     return manifest, actual
 
 
 def verify_bundle(manifest: Json) -> None:
-    """The controller and stack file must be the release's own, as the attested manifest says."""
+    """Refuse mixing: the controller and stack file must be the ones this manifest records.
+
+    This catches an accidental mix of releases; it cannot detect a tampered controller (which
+    checks itself). The mandatory `gh attestation verify` of every bundle file is that control.
+    """
     for name in ("compose.yaml", "florabasectl.py"):
         actual = "sha256:" + sha256_file(BUNDLE / name)
         if actual != manifest["install_bundle"][name]:
@@ -1898,9 +1905,13 @@ class Controller:
         return 1 if problems else 0
 
     def check_release(self, args: argparse.Namespace) -> int:
-        """Separate release notification; never relies on Dockhand update badges."""
+        """Separate release notification; never relies on Dockhand update badges.
+
+        It changes nothing, so the installed (older) controller may read a newer manifest; the
+        bundle check applies when that release is actually installed or promoted.
+        """
         manifest, digest = load_manifest(
-            args.manifest, args.manifest_sha256, args.allow_test_candidate
+            args.manifest, args.manifest_sha256, args.allow_test_candidate, bundle=False
         )
         current = self.require_current()
         target = release_record(manifest, digest)

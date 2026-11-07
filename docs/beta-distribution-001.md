@@ -134,3 +134,16 @@ Checks on `0d074e7` / this tree:
 - Runtime smoke 22/22 from clean `0d074e7` in 858.2 s, zero owned residuals.
 - Not run: actionlint (downloading the binary was declined), independent QA, canonical FULL,
   protected publication against GHCR.
+
+## Delta QA, 7 November 2026
+
+Delta QA of `c88ea79`: PASS WITH FINDINGS. All nine original findings were confirmed fixed, plus three new ones,
+all addressed:
+- D-P2-1: the verify job's `postgres-identity --check` rebuilt the image on every dispatch and would
+  again block application releases once Alpine supersedes an exact pin. Removed; the publisher's
+  first-publication path keeps the reproducibility refusal before any package write. A
+  pull-request-time reproducibility job in `ci.yml` is a follow-up for the CI-FAST owner (QA: acceptable).
+- D-P3-1: `check-release` no longer applies the bundle check, so an installed controller can announce
+  a newer release; installing or promoting with a mismatched bundle is still refused (offline test).
+- D-P3-2: the guide's verification loop now fails visibly, and the docs state that the controller's
+  bundle check catches mixed releases while the mandatory attestation check is the authenticity control.

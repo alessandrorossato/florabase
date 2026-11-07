@@ -7563,3 +7563,10 @@ Status remains implemented pending canonical verification.
   (90.07%); registry verification (gate PASSED, Grype 0 Critical/High both modes); local candidate passed;
   runtime smoke 22/22 from clean `52648b5` (857.9 s). Not run: actionlint, canonical FULL, publication.
   Delta QA requested. No push, PR, tag or release.
+
+### BETA-DISTRIBUTION-001 — delta QA corrections, 7 November 2026
+
+- Delta QA of `c88ea79`: PASS WITH FINDINGS (D-P2-1, D-P3-1, D-P3-2), all fixed: the verify-job identity
+  rebuild is removed (it reintroduced the Alpine-pin release block), `check-release` reads newer manifests
+  without the bundle check, and the guide's attestation loop fails visibly. QA accepted the absent
+  `ci.yml` reproducibility job as a CI-FAST follow-up. Canonical FULL follows on the corrected tree.

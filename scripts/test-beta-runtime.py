@@ -717,6 +717,30 @@ class ControllerRules(unittest.TestCase):
             self.promote()
         self.assertFalse(self.controller.layout.operation_file.exists())
 
+    def test_installed_controller_announces_a_newer_release_bundle(self) -> None:
+        # A newer release ships a different controller and stack; the installed controller must
+        # still announce it, while installing or promoting with the wrong bundle is refused.
+        self.next["install_bundle"] = {name: digest("next-" + name) for name in ctl.INSTALL_BUNDLE}
+        self.write_next()
+        sha = hashlib.sha256(self.manifest_path.read_bytes()).hexdigest()
+        args = ctl.parser().parse_args(
+            [
+                "--root",
+                str(self.root),
+                "check-release",
+                "--manifest",
+                str(self.manifest_path),
+                "--manifest-sha256",
+                sha,
+            ]
+        )
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+            self.assertEqual(self.controller.check_release(args), 10)
+        self.assertIn("RELEASE_AVAILABLE", output.getvalue())
+        with self.assertRaisesRegex(ctl.Refusal, "install bundle"):
+            self.promote("--confirm-migration")
+
     def test_same_pair_refused(self) -> None:
         self.next = manifest()
         self.write_next()
