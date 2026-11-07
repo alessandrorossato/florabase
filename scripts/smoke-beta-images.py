@@ -11,6 +11,7 @@ import os
 import secrets
 import subprocess
 import tempfile
+import time
 import urllib.error
 import urllib.request
 from http.cookies import SimpleCookie
@@ -55,11 +56,20 @@ def check_postgres_image(reference: str, pg: dict[str, Any]) -> None:
     )
     if files.split()[0] != "70" or "PostgreSQL) 18.6" not in files:
         raise ValueError("PostgreSQL image must run as 70 without gosu: " + files)
-    refused = subprocess.run(
-        [*probe, "--user", "0", reference], capture_output=True, text=True, timeout=60
-    )
-    if refused.returncode != 64 or "refusing to run as root" not in refused.stderr:
-        raise ValueError("PostgreSQL image did not refuse root before initialization")
+    # Every entry point, including overridden ones, refuses root before touching the disk.
+    for entrypoint in (
+        [],
+        ["--entrypoint", "docker-entrypoint.sh"],
+        ["--entrypoint", "docker-ensure-initdb.sh"],
+    ):
+        refused = subprocess.run(
+            [*probe, "--user", "0", *entrypoint, reference, "postgres"],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        if refused.returncode != 64 or "refusing to run as root" not in refused.stderr:
+            raise ValueError("PostgreSQL image did not refuse root: " + " ".join(entrypoint))
 
 
 def smoke(manifest: dict[str, Any], local: bool = False, postgres_image: str | None = None) -> None:
@@ -355,6 +365,9 @@ def smoke(manifest: dict[str, Any], local: bool = False, postgres_image: str | N
             request("/api/v1/auth/logout", "POST", b"", {"Origin": ORIGIN, "X-CSRF-Token": csrf})
             request("/api/v1/auth/session", expected=401)
             compose("stop", "db")
+            time.sleep(
+                1.5
+            )  # outlast the backend's one-second cache of a successful readiness probe
             request("/api/v1/ready", expected=503)
             print("BETA_IMAGE_SMOKE_PASSED distribution=" + manifest["distribution"], flush=True)
 

@@ -24,6 +24,8 @@ SOURCE = "https://github.com/alessandrorossato/florabase"
 POSTGRES_REPOSITORY = "ghcr.io/alessandrorossato/florabase-postgres"
 UPSTREAM_POSTGRES = "docker.io/library/postgres"
 POSTGRES_ENTRYPOINT = "florabase-postgres-entrypoint"
+# deploy/beta files attached to every release and bound by hash into the attested manifest.
+INSTALL_BUNDLE = ("compose.yaml", "florabasectl.py", "florabase.env.example")
 REGISTRY_IMAGE = (
     "registry:2.8.3@sha256:a3d8aaa63ed8681a604f1dea0aa03f100d5895b6a58ace528858a7b332415373"
 )
@@ -233,9 +235,16 @@ def require_pinned_postgres(built: dict[str, str], pg: dict[str, Any]) -> None:
             )
 
 
-def local_postgres_identity(root: Path, port: int = 5055) -> dict[str, str]:
-    """Rebuild the derived image with the pinned BuildKit into a disposable loopback registry."""
+def local_postgres_identity(
+    root: Path, port: int = 5055, destination: str | None = None
+) -> dict[str, str]:
+    """Rebuild the derived image with the pinned BuildKit into a disposable loopback registry.
+
+    With a destination tag, the loopback index is copied byte-for-byte (`--prefer-index=false`)
+    only after it reproduced the pins, so nothing unverified ever reaches the destination.
+    """
     locked = inputs(root)
+    pg = locked["postgresql"]
     owner = Owner.disposable("verification-build", root)
     registry = owner.project + "-registry"
     builder = owner.project + "-builder"
@@ -268,16 +277,48 @@ def local_postgres_identity(root: Path, port: int = 5055) -> dict[str, str]:
             stdout=subprocess.DEVNULL,
         )
         try:
-            return build_postgres_image(
-                root,
-                builder,
-                repository,
-                locked["postgresql"]["version"],
-                locked["postgresql"]["source_date_epoch"],
-                insecure=True,
+            built = build_postgres_image(
+                root, builder, repository, pg["version"], pg["source_date_epoch"], insecure=True
             )
         finally:
             subprocess.run(["docker", "buildx", "rm", builder], check=False)
+        if destination is not None:
+            require_pinned_postgres(built, pg)
+            subprocess.run(
+                [
+                    "docker",
+                    "buildx",
+                    "imagetools",
+                    "create",
+                    "--prefer-index=false",
+                    "--tag",
+                    destination,
+                    f"{repository}@{built['index_digest']}",
+                ],
+                check=True,
+            )
+            copied = json.loads(
+                run(
+                    "docker",
+                    "buildx",
+                    "imagetools",
+                    "inspect",
+                    destination,
+                    "--format",
+                    "{{json .Manifest}}",
+                )
+            )
+            if copied["digest"] != pg["index_digest"]:
+                raise ValueError("copying the verified PostgreSQL index changed its identity")
+        return built
+
+
+def install_bundle(root: Path) -> dict[str, str]:
+    """SHA-256 of each deploy/beta file attached to the release, bound into the manifest."""
+    return {
+        name: "sha256:" + hashlib.sha256((root / "deploy/beta" / name).read_bytes()).hexdigest()
+        for name in INSTALL_BUNDLE
+    }
 
 
 def registry_record(reference: str, platform: str) -> dict[str, str]:
@@ -367,6 +408,13 @@ def validate_manifest(value: dict[str, Any], local: bool = False) -> None:
         ):
             raise ValueError("invalid immutable image identity")
     validate_postgres_identity(value["postgresql"])
+    bundle = value.get("install_bundle")
+    if (
+        not isinstance(bundle, dict)
+        or set(bundle) != set(INSTALL_BUNDLE)
+        or not all(isinstance(d, str) and DIGEST.fullmatch(d) for d in bundle.values())
+    ):
+        raise ValueError("release manifest must bind the install bundle by SHA-256")
 
 
 def manifest(root: Path, refs: dict[str, str], local: bool) -> dict[str, Any]:
@@ -404,6 +452,7 @@ def manifest(root: Path, refs: dict[str, str], local: bool) -> dict[str, Any]:
         ),
         "postgresql": locked["postgresql"],
         "images": images,
+        "install_bundle": install_bundle(root),
         "build_inputs": locked,
         "workflow": {
             "run_id": os.environ.get("GITHUB_RUN_ID"),

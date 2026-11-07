@@ -23,6 +23,7 @@ from unittest.mock import patch
 from beta_release import (
     check_platform,
     inputs,
+    install_bundle,
     registry_record,
     saved_descriptors,
     validate_manifest,
@@ -97,9 +98,17 @@ def candidate() -> dict[str, Any]:
             },
         },
         "postgresql": locked["postgresql"],
+        "install_bundle": install_bundle(ROOT),
         "build_inputs": locked,
         "workflow": {"run_id": "1", "run_attempt": "1"},
     }
+
+
+def ctl_bundle_names() -> tuple[str, ...]:
+    source = (ROOT / "deploy/beta/florabasectl.py").read_text()
+    match = re.search(r"^INSTALL_BUNDLE = \(([^)]*)\)", source, re.MULTILINE)
+    assert match is not None
+    return tuple(re.findall(r'"([^"]+)"', match.group(1)))
 
 
 class ReleaseTests(unittest.TestCase):
@@ -181,6 +190,16 @@ class ReleaseTests(unittest.TestCase):
             changed["postgresql"]["upstream"][field] = invalid
             changed["build_inputs"]["postgresql"] = changed["postgresql"]
             with self.subTest(upstream=field), self.assertRaises(ValueError):
+                validate_manifest(changed)
+        for change in (
+            {},
+            {"compose.yaml": "sha256:" + "a" * 64},
+            {**install_bundle(ROOT), "extra": "sha256:" + "a" * 64},
+            {**install_bundle(ROOT), "florabasectl.py": "unpinned"},
+        ):
+            changed = copy.deepcopy(valid)
+            changed["install_bundle"] = change
+            with self.subTest(bundle=sorted(change)), self.assertRaises(ValueError):
                 validate_manifest(changed)
         # The official image itself is no longer an acceptable release database identity.
         changed = copy.deepcopy(valid)
@@ -326,7 +345,7 @@ class ReleaseTests(unittest.TestCase):
             return subprocess.CompletedProcess(command, 0)
 
         for failing, phase in (
-            ("require_pinned_postgres", "preflight"),
+            ("local_postgres_identity", "preflight"),
             ("scan_images", "frontend_candidate_pushed"),
             ("run_artifact_smoke", "security_passed"),
         ):
@@ -343,7 +362,7 @@ class ReleaseTests(unittest.TestCase):
                     patch.object(publisher, "software_bill_of_materials"),
                     patch.object(
                         publisher,
-                        "build_postgres_image",
+                        "local_postgres_identity",
                         return_value={
                             field: inputs(ROOT)["postgresql"][field]
                             for field in ("index_digest", "platform_digest")
@@ -432,7 +451,11 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(pinned["upstream"]["repository"], "docker.io/library/postgres")
         dockerfile = (ROOT / "postgres/Dockerfile").read_text()
         self.assertIn("\nFROM " + pinned["upstream"]["reference"] + "\n", dockerfile)
-        self.assertIn("    && rm /usr/local/bin/gosu\n", dockerfile)
+        self.assertIn("    && rm /usr/local/bin/gosu \\\n", dockerfile)
+        # The upstream entrypoint (sourced first by docker-ensure-initdb.sh) refuses root too.
+        self.assertIn("sed -i '1a florabase-postgres-refuse-root || exit 64'", dockerfile)
+        self.assertIn('= "florabase-postgres-refuse-root || exit 64"', dockerfile)
+        self.assertIn("^source /usr/local/bin/docker-entrypoint.sh$", dockerfile)
         self.assertIn("USER 70:70\n", dockerfile)
         self.assertIn('ENTRYPOINT ["florabase-postgres-entrypoint"]', dockerfile)
         for drift in (
@@ -483,7 +506,10 @@ class ReleaseTests(unittest.TestCase):
                 (bin_dir / "docker-entrypoint.sh").write_text(
                     '#!/bin/sh\necho upstream-entrypoint "$@" > "$MARKER"\n'
                 )
-                for name in ("id", "docker-entrypoint.sh"):
+                (bin_dir / "florabase-postgres-refuse-root").write_bytes(
+                    (ROOT / "postgres/florabase-postgres-refuse-root.sh").read_bytes()
+                )
+                for name in ("id", "docker-entrypoint.sh", "florabase-postgres-refuse-root"):
                     (bin_dir / name).chmod(0o755)
                 marker = bin_dir / "marker"
                 result = subprocess.run(
@@ -504,11 +530,15 @@ class ReleaseTests(unittest.TestCase):
         workflow = (ROOT / ".github/workflows/beta-images.yml").read_text()
         self.assertIn("subject-digest: ${{ steps.pair.outputs.postgresql_digest }}", workflow)
         source = (ROOT / "scripts/publish-beta-images.py").read_text()
-        build = source.index("build_postgres_image(")
-        self.assertLess(build, source.index("require_pinned_postgres(built, pg)"))
-        self.assertLess(
-            source.index("require_pinned_postgres(built, pg)"), source.index("scan_images(")
-        )
+        self.assertIn("subject-path: |", workflow)
+        for name in ("compose.yaml", "florabasectl.py", "florabase.env.example"):
+            self.assertIn("${{ runner.temp }}/beta-release/" + name, workflow)
+        self.assertIn("postgres-identity --check", workflow)
+        self.assertEqual(workflow.count("version: v0.38.1"), 2)
+        # An unpublished identity is built and verified in a loopback registry before GHCR.
+        self.assertLess(source.index("local_postgres_identity("), source.index("scan_images("))
+        self.assertIn("destination=POSTGRES_REPOSITORY", source)
+        self.assertIn("not found|manifest unknown", source)
         self.assertLess(source.index("scan_images("), source.index("software_bill_of_materials("))
         self.assertLess(
             source.index("software_bill_of_materials("),
@@ -516,7 +546,7 @@ class ReleaseTests(unittest.TestCase):
         )
         self.assertLess(
             source.index("run_artifact_smoke("),
-            source.index('POSTGRES_REPOSITORY + ":" + pg["version"],\n                scan_refs'),
+            source.index('checkpoint("postgresql_version_promoted")'),
         )
         self.assertIn('"postgresql": POSTGRES_REPOSITORY + "@" + pg["index_digest"]', source)
 
@@ -690,10 +720,12 @@ class ReleaseTests(unittest.TestCase):
         copy = source.index("for name in INSTALL_BUNDLE:")
         self.assertLess(copy, source.index("release_asset_inventory(output)"))
         self.assertLess(copy, source.index('"--prefer-index=false"'))
-        bundle = re.search(r"INSTALL_BUNDLE = \(([^)]*)\)", source)
-        assert bundle is not None
-        names = re.findall(r'"([^"]+)"', bundle.group(1))
+        import beta_release
+
+        names = list(beta_release.INSTALL_BUNDLE)
         self.assertEqual(names, ["compose.yaml", "florabasectl.py", "florabase.env.example"])
+        # The controller pins the same names it verifies against the manifest.
+        self.assertEqual(tuple(names), ctl_bundle_names())
         for name in names:
             self.assertTrue((ROOT / "deploy/beta" / name).is_file(), name)
         # Prerelease promotion writes only the exact version tag.

@@ -12,39 +12,46 @@ image the operator approved, with three changes and nothing else:
 | --- | --- |
 | `/usr/local/bin/gosu` removed | Its embedded Go 1.24.6 stdlib carries 1 CRITICAL / 25 HIGH advisories; no fixed official artifact exists (see [remediation evaluation](postgresql-gosu-remediation.md)) and Florabase never runs PostgreSQL as root |
 | `zlib` 1.3.2-r1 → 1.4-r0 | CVE-2026-4738 (Critical), reported by Grype but not by the pinned Trivy; fixed in Alpine 3.24 |
-| `USER 70:70` and the `florabase-postgres-entrypoint` guard | Without gosu the upstream root branch cannot work; the guard refuses root before the upstream entrypoint creates, chowns or initializes anything (exit 64) |
+| `USER 70:70`, the `florabase-postgres-entrypoint` guard and a root refusal on line 2 of the upstream `docker-entrypoint.sh` | Without gosu the upstream root branch cannot work. Root is refused (exit 64) before anything is created, chowned or initialized, through the image entrypoint and through an overridden `--entrypoint docker-entrypoint.sh` or `docker-ensure-initdb.sh`/`docker-enforce-initdb.sh` (which source it first) |
 
 Inputs ([`postgres/`](../../../postgres/)): the base
 `docker.io/library/postgres:18.6-alpine@sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395`
 (amd64 `sha256:300ebd02c6d4de9ee27ad7f6855d5d21b4d3a4a5117767c1197d284c635d9736`, docker-library
-`e00e1bd`), the Dockerfile, the four-line guard and the repository license. Labels record the base
+`e00e1bd`), the Dockerfile, the entrypoint and root-refusal scripts and the repository license. Labels record the base
 name and digest, the image version and source; there is deliberately no per-commit label.
 
 ## Release contract
 
 - **Pinned by content.** `release/inputs.json` `postgresql` holds the expected index
-  `sha256:e5855f0cc6118b2b6dcd8c36d933e9b350d04e1757dfacb26737de0298fb1cbb` and platform manifest
-  `sha256:e625e5878a90b4b0ae60824dd41b7960c56c033a07ceabae5852d573d2259a50`, the
+  `sha256:4edc079088c3f78b69fc8f9473e33881ebabea7fea2d82b3227b70a69ae3b7de` and platform manifest
+  `sha256:55b1969a7fddad118ca07a15058a43a5916dec3e4dbab38029e671225b392b91`, the
   `source_date_epoch` (1762387200) and the exact `upstream` identity. `beta_release.py check`
   refuses a Dockerfile whose base, base-digest label or version differs, or that uses `ARG`.
 - **Deterministic build.** The pinned BuildKit builds with `--no-cache`, `rewrite-timestamp`, the
   fixed epoch and no in-index provenance/SBOM (those embed build times); `/var/log/apk.log` is
   removed because it records install times. `imagetools create` then wraps the single amd64 manifest
-  in a bare index. Fresh builders reproduced both digests on every run.
+  in a bare index. Fresh builders reproduced both digests on every run. The workflow pins the buildx
+  client that writes that index (`docker/setup-buildx-action` with `version: v0.38.1`, the version
+  that produced the pins) and runs `postgres-identity --check` in the read-only verify job before the
+  publish job can start.
 - **Same release manifest, same identity every release.** Manifest schema v2 records the derived
-  image and its upstream base in `postgresql`. Because the build is reproducible, every application
-  release references the identical PostgreSQL index, so the controller's rule that `promote` never
-  changes PostgreSQL still holds, and the pair plus PostgreSQL are bound to one manifest by
-  immutable digests.
-- **Protected publication only.** The existing manual, environment-approved workflow builds it
-  first; `require_pinned_postgres` refuses any build that does not reproduce the pins. It is pushed
-  as a candidate, scanned by the unchanged fail-closed gate, SBOM'd (pinned Trivy CycloneDX, release
-  asset `postgresql-sbom.cdx.json`), smoked with the pair, attested with
-  `actions/attest-build-provenance` and only then tagged. An existing `18.6-alpine-florabase.1` tag
-  is accepted only if it already points at the pinned index.
+  image and its upstream base in `postgresql`. Every application release references the identical
+  PostgreSQL index, so the controller's rule that `promote` never changes PostgreSQL still holds, and
+  the pair plus PostgreSQL are bound to one manifest by immutable digests.
+- **Protected publication only; built once, re-verified always.** When the pinned version is not yet
+  published, the existing manual, environment-approved workflow builds it in a disposable loopback
+  registry, `require_pinned_postgres` refuses anything that does not reproduce the pins, and only
+  then copies those exact bytes (`imagetools create --prefer-index=false`) to a GHCR candidate tag;
+  nothing unverified reaches GHCR. When `18.6-alpine-florabase.1` already exists it must point at the
+  pinned index (any lookup error other than a definite "not found" refuses), and it is not rebuilt.
+  Either way every release re-verifies the published bytes: registry identity, the unchanged
+  fail-closed scan gate, SBOM (pinned Trivy CycloneDX, release asset `postgresql-sbom.cdx.json`),
+  artifact smoke with the pair and `actions/attest-build-provenance`; the version tag is written only
+  on first publication.
 - **Consumers verify it.** The controller requires the Florabase repository, the recorded upstream
-  base, user `70:70`, the guard entrypoint and the base-digest label on the pulled image, and checks
-  the platform digest; the artifact smoke additionally checks gosu absence and root refusal.
+  base, a reference tag equal to the version, user `70:70`, the guard entrypoint and the base-digest
+  and version labels on the pulled image, and checks the platform digest; the artifact smoke
+  additionally checks gosu absence and root refusal through every entry point.
 
 ## Verification evidence
 
@@ -54,7 +61,7 @@ digest, then:
 
 | Check | Result |
 | --- | --- |
-| Registry identity | index `e5855f0c…` holding exactly the amd64 manifest `e625e587…`; equal to the pins |
+| Registry identity | index `4edc0790…` holding exactly the amd64 manifest `55b1969a…`; equal to the pins |
 | Release gate (pinned Trivy 0.69.3, vuln+secret, HIGH/CRITICAL, no ignore file) on the pulled bytes | PASSED: 0 / 0, 0 secrets; Alpine 3.24 package inventory present; no gosu target |
 | Grype v0.121.1, squashed filesystem | 0 Critical / 0 High; 3 Medium (busybox CVE-2025-60876, no fix) |
 | Grype v0.121.1, `--scope all-layers` | identical: 3 Medium, no gosu or Go stdlib findings |
@@ -126,8 +133,11 @@ Florabase now owns a third published image. The owner of the release process mus
    - treat it as PostgreSQL maintenance under the BETA-RUNTIME-001 rule: a new PostgreSQL identity
      needs reviewed compatibility, a paired backup/restore rehearsal and operator approval; it never
      rides on an application release.
-3. **Expect forced rebuilds:** the exact `zlib=1.4-r0` pin fails the build once Alpine supersedes
-   it. That is intentional (fail closed) but makes the next release a PostgreSQL identity change.
+3. **Superseded pins:** the exact `zlib=1.4-r0` pin fails a *rebuild* once Alpine supersedes it.
+   Application releases do not rebuild an already-published PostgreSQL version, so they are not
+   blocked; the next PostgreSQL identity simply needs the current package version. The backend and
+   frontend carry the same kind of exact pins and are rebuilt for every release, so a superseded pin
+   there does block application releases until the pin is updated (fail closed, by design).
 4. **Keep the record:** retain the build/scan/SBOM evidence and this document's digests for every
    published version; never delete or overwrite a published PostgreSQL version.
 

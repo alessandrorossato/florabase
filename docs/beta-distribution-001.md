@@ -77,15 +77,11 @@ with an explicit migration, plus failed/interrupted upgrades; 8 `backup`, `resto
 
 ## Security findings and blockers
 
-1. **Blocking: PostgreSQL gosu** (evaluated in
-   [postgresql-gosu-remediation.md](security/beta-distribution-001/postgresql-gosu-remediation.md):
-   no fixed official artifact exists; a tested gosu-free derived image scans 0/0 and awaits approval
-   to integrate). `postgres:18.6-alpine@sha256:123b1799…` still reports 1 CRITICAL /
-   25 HIGH, all Go 1.24.6 stdlib in `/usr/local/bin/gosu`. The stack never executes gosu (non-root
-   70:70, no capabilities), which is applicability evidence only; the fail-closed gate blocks
-   publication. Operator choice needed: wait for an upstream rebuild with a fixed Go toolchain,
-   publish a Florabase-built PostgreSQL image without gosu (a new supply-chain artifact), or accept
-   narrowly scoped expiring VEX (also needs a reviewed VEX input path in the gate).
+1. **Resolved (7 November 2026): PostgreSQL gosu.** Superseded by the Florabase PostgreSQL image
+   (see the update below and
+   [postgresql-image.md](security/beta-distribution-001/postgresql-image.md)). The official
+   `postgres:18.6-alpine@sha256:123b1799…` reports 1 CRITICAL / 25 HIGH in gosu's Go 1.24.6 stdlib;
+   the derived image's filesystem has no gosu, while its original bytes remain in an upstream layer.
 2. **Approved (development and isolated verification only): PostgreSQL pin change** to
    `sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395`; provenance,
    compatibility and recovery evidence recorded in the remediation evaluation.
@@ -101,8 +97,9 @@ with an explicit migration, plus failed/interrupted upgrades; 8 `backup`, `resto
 
 ## Mandatory for v0.1.0-beta.1 versus later
 
-Mandatory and open: blocker 1, approval 2, independent QA, canonical FULL, protected publication
-and a clean registry-pull smoke of the published pair, then real-host acceptance (BETA-ACCEPTANCE-001).
+Mandatory and open: delta QA of the QA corrections, canonical FULL, the operator's decision on the
+second-scanner sqlite-libs findings, protected publication with a clean registry-pull smoke of the
+published images, then real-host acceptance (BETA-ACCEPTANCE-001).
 Later: owner password reset/change, guided upgrade automation, arm64 images, configurable origin
 and map tiles, request-path database timeouts, PostgreSQL major-upgrade tooling.
 

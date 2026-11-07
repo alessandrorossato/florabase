@@ -268,6 +268,30 @@
         "run_id",
         "run_attempt"
       ]
+    },
+    "install_bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "SHA-256 of each install-bundle release asset; the controller refuses a bundle that differs.",
+      "properties": {
+        "compose.yaml": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "florabasectl.py": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "florabase.env.example": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "compose.yaml",
+        "florabasectl.py",
+        "florabase.env.example"
+      ]
     }
   },
   "required": [
@@ -280,6 +304,7 @@
     "postgresql",
     "images",
     "build_inputs",
-    "workflow"
+    "workflow",
+    "install_bundle"
   ]
 }

@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, FastAPI
 from fastapi.dependencies.models import Dependant
 from fastapi.routing import APIRoute, APIWebSocketRoute, iter_route_contexts
 from fastapi.testclient import TestClient
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import NullPool
 from starlette.routing import BaseRoute
@@ -79,10 +80,37 @@ def test_configure_logging_supports_json_and_text() -> None:
 
 def test_database_check_executes_probe() -> None:
     engine = MagicMock()
-    with patch("florabase.db.session.get_readiness_engine", return_value=engine):
+    with (
+        patch("florabase.db.session._readiness_ok_until", 0.0),
+        patch("florabase.db.session.get_readiness_engine", return_value=engine),
+    ):
         check_database()
 
     engine.connect.return_value.__enter__.return_value.execute.assert_called_once()
+
+
+def test_readiness_reuses_only_a_recent_success() -> None:
+    engine = MagicMock()
+    clock = [100.0]
+    with (
+        patch("florabase.db.session._readiness_ok_until", 0.0),
+        patch("florabase.db.session.get_readiness_engine", return_value=engine),
+        patch("florabase.db.session.time.monotonic", side_effect=lambda: clock[0]),
+    ):
+        check_database()
+        clock[0] += 0.5
+        check_database()
+        assert engine.connect.call_count == 1
+        clock[0] += 1.0
+        check_database()
+        assert engine.connect.call_count == 2
+        # A failure is never cached: the next probe tries again.
+        clock[0] += 2.0
+        engine.connect.side_effect = OperationalError("SELECT 1", {}, RuntimeError("down"))
+        for _ in range(2):
+            with pytest.raises(OperationalError):
+                check_database()
+        assert engine.connect.call_count == 4
 
 
 def test_readiness_engine_is_unpooled_and_time_bounded() -> None:

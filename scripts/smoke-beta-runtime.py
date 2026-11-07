@@ -609,6 +609,12 @@ class Smoke:
                 upstream=self.postgres["upstream"],
             ),
             "images": {"backend": entry(backend), "frontend": entry(refs["frontend"])},
+            # The copied bundle is byte-identical to deploy/beta; the controller verifies it.
+            "install_bundle": {
+                name: "sha256:"
+                + hashlib.sha256((ROOT / "deploy/beta" / name).read_bytes()).hexdigest()
+                for name in ("compose.yaml", "florabasectl.py", "florabase.env.example")
+            },
             "build_inputs": {},
             "workflow": {"run_id": "0", "run_attempt": "0"},
         }
@@ -1341,29 +1347,39 @@ class Smoke:
         tree = f"find {INSTALL}/postgres -printf '%U:%G %m %s %T@ %p\\n' | sort | sha256sum"
         self.stack("stop")
         before = self.operator_sh(tree)
-        refused = subprocess.run(
-            [
-                "docker",
-                "exec",
-                self.dind,
-                "docker",
-                "run",
-                "--rm",
-                "--user",
-                "0",
-                "--network",
-                "none",
-                "-v",
-                "florabase-prod_postgres_data:/var/lib/postgresql",
-                image,
-            ],
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        )
+        # Default entrypoint and the overridden upstream ones (initdb helpers source it first).
+        for entrypoint in (
+            [],
+            ["--entrypoint", "docker-entrypoint.sh"],
+            ["--entrypoint", "docker-ensure-initdb.sh"],
+        ):
+            refused = subprocess.run(
+                [
+                    "docker",
+                    "exec",
+                    self.dind,
+                    "docker",
+                    "run",
+                    "--rm",
+                    "--user",
+                    "0",
+                    "--network",
+                    "none",
+                    "-v",
+                    "florabase-prod_postgres_data:/var/lib/postgresql",
+                    *entrypoint,
+                    image,
+                    "postgres",
+                ],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+            if refused.returncode != 64 or "refusing to run as root" not in refused.stdout:
+                raise SystemExit(
+                    f"root start {entrypoint} was not refused: " + refused.stdout[-2000:]
+                )
         after = self.operator_sh(tree)
-        if refused.returncode != 64 or "refusing to run as root" not in refused.stdout:
-            raise SystemExit("root start was not refused: " + refused.stdout[-2000:])
         if before != after:
             raise SystemExit("refused root start changed the PostgreSQL data directory")
         self.stack("up", "-d")
@@ -1443,6 +1459,7 @@ class Smoke:
             uid=70,
             gosu="absent",
             root_refused_exit=refused.returncode,
+            root_refused_entrypoints=["default", "docker-entrypoint.sh", "docker-ensure-initdb.sh"],
             data_directory_unchanged=True,
             previous_official_data_opened=True,
         )

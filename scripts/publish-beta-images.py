@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -13,22 +14,19 @@ from pathlib import Path
 from typing import Any
 
 from beta_release import (
+    INSTALL_BUNDLE,
     POSTGRES_REPOSITORY,
     SOURCE,
-    build_postgres_image,
     inputs,
+    local_postgres_identity,
     manifest,
     registry_record,
     release_asset_inventory,
-    require_pinned_postgres,
     run,
     run_artifact_smoke,
     scan_images,
     software_bill_of_materials,
 )
-
-# deploy/beta files attached to every release; names must not collide with other assets.
-INSTALL_BUNDLE = ("compose.yaml", "florabasectl.py", "florabase.env.example")
 
 
 def require_publication_identity(sha: str) -> None:
@@ -121,8 +119,10 @@ def main() -> None:
                 ):
                     raise ValueError("versioned image already exists; choose a new release")
         pg = locked["postgresql"]
+        postgres_published = False
         if POSTGRES_REPOSITORY.removeprefix("ghcr.io/" + owner + "/") in existing:
-            # Shared by every release: an existing tag must already be the pinned identity.
+            # Shared by every release: an existing tag must already be the pinned identity, and
+            # only a definite "not found" may count as absent (auth/network errors fail closed).
             tagged = subprocess.run(
                 [
                     "docker",
@@ -136,8 +136,12 @@ def main() -> None:
                 text=True,
                 capture_output=True,
             )
-            if tagged.returncode == 0 and json.loads(tagged.stdout)["digest"] != pg["index_digest"]:
-                raise ValueError("published PostgreSQL tag differs from the pinned identity")
+            if tagged.returncode == 0:
+                if json.loads(tagged.stdout)["digest"] != pg["index_digest"]:
+                    raise ValueError("published PostgreSQL tag differs from the pinned identity")
+                postgres_published = True
+            elif not re.search(r"not found|manifest unknown", tagged.stderr, re.IGNORECASE):
+                raise ValueError("cannot determine the published PostgreSQL tag; refusing")
         subprocess.run(
             [
                 "docker",
@@ -153,17 +157,17 @@ def main() -> None:
             ],
             check=True,
         )
-        # Deterministic: rebuilt for every release and refused unless it reproduces the pins.
-        built = build_postgres_image(
-            Path.cwd(),
-            builder,
-            POSTGRES_REPOSITORY,
-            "candidate-" + builder + "-postgres",
-            pg["source_date_epoch"],
-        )
-        require_pinned_postgres(built, pg)
+        if not postgres_published:
+            # First publication of this identity: build in a disposable loopback registry,
+            # refuse unless it reproduces the pins, and only then copy the exact bytes to GHCR.
+            local_postgres_identity(
+                Path.cwd(),
+                destination=POSTGRES_REPOSITORY + ":candidate-" + builder + "-postgres",
+            )
+        # Every release re-verifies the published bytes (identity, gate, SBOM, smoke, attestation)
+        # without rebuilding, so a superseded Alpine pin never blocks application releases.
         state["images"]["postgresql"] = POSTGRES_REPOSITORY + "@" + pg["index_digest"]
-        checkpoint("postgresql_candidate_pushed")
+        checkpoint("postgresql_candidate_verified")
         for service in ("backend", "frontend"):
             image = "ghcr.io/" + repository + "-" + service
             candidate = image + ":candidate-" + builder
@@ -250,11 +254,12 @@ def main() -> None:
             check=True,
         )
         # The install bundle: an operator needs only these three assets and the manifest, never a
-        # checkout. They are byte-bound to the release like every other asset.
+        # checkout. The attested manifest records their SHA-256 (install_bundle), each file is
+        # also attested, and the controller refuses a bundle that differs from the manifest.
         for name in INSTALL_BUNDLE:
             shutil.copyfile(Path("deploy/beta") / name, output / name)
         (output / "RELEASE.md").write_text(
-            f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair passed native amd64 registry-pull smoke and HIGH/CRITICAL vulnerability and secret checks. PostgreSQL is the Florabase-built {pg['version']} image ({pg['reference']}): the official {pg['upstream']['reference']} without its gosu executable, which stays in an unchanged upstream layer but is absent from the container filesystem; it is identical in every release. Install with the attached {', '.join(INSTALL_BUNDLE)} and release-manifest.json as described in docs/installation.md at this source revision. This is a prerelease: no stable or latest tag is published. Never overwrite this release or delete its image identities.\n"
+            f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair and PostgreSQL passed native amd64 registry-pull smoke and the pinned Trivy gate (HIGH/CRITICAL vulnerabilities and secrets); that gate is a single scanner, and findings it does not report are recorded in docs/security/beta-distribution-001/postgresql-image.md at this source revision. PostgreSQL is the Florabase-built {pg['version']} image ({pg['reference']}): the official {pg['upstream']['reference']} without its gosu executable, which stays in an unchanged upstream layer but is absent from the container filesystem; it is identical in every release. Install with the attached {', '.join(INSTALL_BUNDLE)} and release-manifest.json as described in docs/installation.md at this source revision. This is a prerelease: no stable or latest tag is published. Never overwrite this release or delete its image identities.\n"
         )
         release_asset_inventory(output)
         for service, ref in refs.items():
@@ -286,19 +291,20 @@ def main() -> None:
             if promoted["digest"] != registry_record(ref, "linux/amd64")["index_digest"]:
                 raise ValueError("promotion changed immutable image identity")
             checkpoint(service + "_version_promoted")
-        subprocess.run(
-            [
-                "docker",
-                "buildx",
-                "imagetools",
-                "create",
-                "--prefer-index=false",
-                "--tag",
-                POSTGRES_REPOSITORY + ":" + pg["version"],
-                scan_refs["postgresql"],
-            ],
-            check=True,
-        )
+        if not postgres_published:
+            subprocess.run(
+                [
+                    "docker",
+                    "buildx",
+                    "imagetools",
+                    "create",
+                    "--prefer-index=false",
+                    "--tag",
+                    POSTGRES_REPOSITORY + ":" + pg["version"],
+                    scan_refs["postgresql"],
+                ],
+                check=True,
+            )
         promoted = json.loads(
             run(
                 "docker",

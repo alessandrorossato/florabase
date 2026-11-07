@@ -1,3 +1,4 @@
+import time
 from collections.abc import Iterator
 from functools import lru_cache
 
@@ -11,6 +12,10 @@ from florabase.core.config import get_settings
 # drops packets; libpq otherwise waits indefinitely while connecting or for a reply.
 READINESS_CONNECT_TIMEOUT_SECONDS = 3
 READINESS_STATEMENT_TIMEOUT_MILLISECONDS = 2000
+# /api/v1/ready is unauthenticated: reuse a success briefly so a request flood cannot make every
+# request open a new PostgreSQL connection. Failures are never cached.
+READINESS_SUCCESS_CACHE_SECONDS = 1.0
+_readiness_ok_until = 0.0
 
 
 @lru_cache
@@ -32,8 +37,12 @@ def get_readiness_engine() -> Engine:
 
 
 def check_database() -> None:
+    global _readiness_ok_until
+    if time.monotonic() < _readiness_ok_until:
+        return
     with get_readiness_engine().connect() as connection:
         connection.execute(text("SELECT 1"))
+    _readiness_ok_until = time.monotonic() + READINESS_SUCCESS_CACHE_SECONDS
 
 
 def get_database_session() -> Iterator[Session]:

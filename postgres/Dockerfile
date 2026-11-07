@@ -8,13 +8,19 @@
 # container filesystem has no gosu. See docs/security/beta-distribution-001/postgresql-image.md.
 FROM docker.io/library/postgres:18.6-alpine@sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395
 COPY --chmod=0755 florabase-postgres-entrypoint.sh /usr/local/bin/florabase-postgres-entrypoint
+COPY --chmod=0755 florabase-postgres-refuse-root.sh /usr/local/bin/florabase-postgres-refuse-root
 COPY LICENSE /usr/share/licenses/florabase/LICENSE
 # zlib fix the pinned base predates (CVE-2026-4738); the exact version fails the build once Alpine
 # supersedes it. apk.log records wall-clock install times, so it is removed to stay reproducible.
-# Then remove the unused gosu executable.
+# Then remove the unused gosu executable, and make the upstream entrypoint refuse root on its
+# second line. docker-ensure-initdb.sh (and its docker-enforce-initdb.sh link) source it first, so
+# every entry point, including an overridden --entrypoint, refuses root before touching disk.
 RUN apk add --no-cache zlib=1.4-r0 \
     && rm -f /var/log/apk.log \
-    && rm /usr/local/bin/gosu
+    && rm /usr/local/bin/gosu \
+    && sed -i '1a florabase-postgres-refuse-root || exit 64' /usr/local/bin/docker-entrypoint.sh \
+    && test "$(sed -n 2p /usr/local/bin/docker-entrypoint.sh)" = "florabase-postgres-refuse-root || exit 64" \
+    && grep -q '^source /usr/local/bin/docker-entrypoint.sh$' /usr/local/bin/docker-ensure-initdb.sh
 LABEL org.opencontainers.image.title="Florabase PostgreSQL" \
     org.opencontainers.image.description="Official postgres:18.6-alpine without gosu; runs only as 70:70" \
     org.opencontainers.image.version="18.6-alpine-florabase.1" \

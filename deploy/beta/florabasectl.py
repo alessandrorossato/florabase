@@ -53,6 +53,7 @@ SERVICES = ("db", "backend", "frontend")
 PHASES = ("validated", "quiesced", "backed_up", "migrated", "pinned", "started", "accepted")
 DIGEST = r"sha256:[a-f0-9]{64}"
 BACKUP_MAX_AGE_HOURS = 26
+INSTALL_BUNDLE = ("compose.yaml", "florabasectl.py", "florabase.env.example")
 LOOPBACK = "127.0.0.1"  # literal in compose.yaml; never configurable in this private beta
 SET_KINDS = ("manual", "pre-upgrade", "safety")
 SET_ID = re.compile(r"[0-9]{8}T[0-9]{6}Z-(?:manual|pre-upgrade|safety)-[a-f0-9]{6}\Z")
@@ -244,18 +245,40 @@ def validate_manifest(manifest: Json, *, test_candidate: bool = False) -> None:
         bool(re.fullmatch(postgres_version, str(postgres.get("version", "")))),
         "postgresql version required",
     )
+    need(
+        str(postgres.get("reference", "")).split("@")[0].rsplit(":", 1)[-1]
+        == postgres.get("version"),
+        "postgresql reference tag must equal its version",
+    )
+    need(
+        isinstance(postgres.get("source_date_epoch"), int)
+        and not isinstance(postgres.get("source_date_epoch"), bool)
+        and postgres["source_date_epoch"] > 0,
+        "postgresql source_date_epoch required",
+    )
     upstream = postgres.get("upstream")
     need(isinstance(upstream, dict), "postgresql upstream base is required")
     assert isinstance(upstream, dict)
     need(
-        bool(
-            re.fullmatch(
-                r"docker\.io/library/postgres:[a-zA-Z0-9.-]+@" + DIGEST,
-                str(upstream.get("reference", "")),
-            )
+        upstream.get("repository") == "docker.io/library/postgres"
+        and upstream.get("platform") == PLATFORM
+        and bool(re.fullmatch(DIGEST, str(upstream.get("index_digest", ""))))
+        and bool(re.fullmatch(DIGEST, str(upstream.get("platform_digest", ""))))
+        and upstream.get("reference")
+        == "{}:{}@{}".format(
+            upstream.get("repository"), upstream.get("version"), upstream.get("index_digest")
         )
-        and str(upstream.get("reference", "")).endswith("@" + str(upstream.get("index_digest"))),
+        and str(postgres.get("version", "")).startswith(
+            str(upstream.get("version")) + "-florabase."
+        ),
         "invalid postgresql upstream base",
+    )
+    bundle = manifest.get("install_bundle")
+    need(
+        isinstance(bundle, dict)
+        and set(bundle) == set(INSTALL_BUNDLE)
+        and all(bool(re.fullmatch(DIGEST, str(value))) for value in bundle.values()),
+        "install_bundle must record the SHA-256 of every bundle file",
     )
     images = manifest.get("images")
     need(isinstance(images, dict) and set(images) == {"backend", "frontend"}, "images pair")
@@ -314,7 +337,19 @@ def load_manifest(path: Path, expected_sha256: str, allow_test: bool) -> tuple[J
         raise Refusal(f"manifest digest {actual} does not match the authorized digest")
     manifest = read_json(path)
     validate_manifest(manifest, test_candidate=allow_test)
+    verify_bundle(manifest)
     return manifest, actual
+
+
+def verify_bundle(manifest: Json) -> None:
+    """The controller and stack file must be the release's own, as the attested manifest says."""
+    for name in ("compose.yaml", "florabasectl.py"):
+        actual = "sha256:" + sha256_file(BUNDLE / name)
+        if actual != manifest["install_bundle"][name]:
+            raise Refusal(
+                f"{name} ({actual}) is not this release's install bundle file; download the "
+                "bundle assets of the same release and verify their attestations"
+            )
 
 
 # --------------------------------------------------------------------------- process runner
@@ -806,6 +841,7 @@ class Controller:
             or config.get("Entrypoint") != ["florabase-postgres-entrypoint"]
             or labels.get("org.opencontainers.image.base.digest")
             != postgres["upstream"]["index_digest"]
+            or labels.get("org.opencontainers.image.version") != postgres["version"]
         ):
             raise Refusal("postgresql image is not the release's non-root derived image")
         heads = self.image_heads(manifest["images"]["backend"]["reference"])

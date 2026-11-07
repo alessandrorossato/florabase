@@ -84,6 +84,10 @@ def manifest() -> dict[str, Any]:
             },
         },
         "images": images,
+        "install_bundle": {
+            name: "sha256:" + hashlib.sha256((ctl.BUNDLE / name).read_bytes()).hexdigest()
+            for name in ctl.INSTALL_BUNDLE
+        },
         "build_inputs": {},
         "workflow": {"run_id": "1", "run_attempt": "1"},
     }
@@ -127,6 +131,25 @@ class ManifestRules(unittest.TestCase):
                 reference="127.0.0.1:5000/florabase-backend@"
                 + m["images"]["backend"]["index_digest"]
             ),
+            "official postgres": lambda m: m.update(postgresql=dict(m["postgresql"]["upstream"])),
+            "postgres tag differs from version": lambda m: m["postgresql"].update(
+                version="18.6-alpine-florabase.2"
+            ),
+            "postgres epoch": lambda m: m["postgresql"].update(source_date_epoch="1762387200"),
+            "upstream repository": lambda m: m["postgresql"]["upstream"].update(
+                repository="docker.io/evil/postgres"
+            ),
+            "upstream platform": lambda m: m["postgresql"]["upstream"].update(
+                platform="linux/arm64"
+            ),
+            "upstream platform digest": lambda m: m["postgresql"]["upstream"].update(
+                platform_digest="bad"
+            ),
+            "missing install bundle": lambda m: m.pop("install_bundle"),
+            "partial install bundle": lambda m: m["install_bundle"].pop("florabasectl.py"),
+            "unpinned install bundle": lambda m: m["install_bundle"].update(
+                **{"compose.yaml": "latest"}
+            ),
         }
         for name, mutate in cases.items():
             with self.subTest(name):
@@ -134,6 +157,15 @@ class ManifestRules(unittest.TestCase):
                 mutate(value)
                 with self.assertRaises(ctl.Refusal):
                     ctl.validate_manifest(value)
+
+    def test_bundle_must_be_the_releases_own(self) -> None:
+        ctl.verify_bundle(manifest())
+        for name in ("compose.yaml", "florabasectl.py"):
+            with self.subTest(name):
+                value = manifest()
+                value["install_bundle"][name] = digest("another release")
+                with self.assertRaisesRegex(ctl.Refusal, "install bundle"):
+                    ctl.verify_bundle(value)
 
     def test_test_candidate_needs_mode_and_loopback(self) -> None:
         value = manifest()

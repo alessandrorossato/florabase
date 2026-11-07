@@ -16,10 +16,10 @@ compiler. Developers working on Florabase itself should read [development](devel
 | `backend` | `ghcr.io/alessandrorossato/florabase-backend` | FastAPI/Uvicorn API, owner authentication, media storage |
 | `db` | `ghcr.io/alessandrorossato/florabase-postgres` | PostgreSQL 18.6: the official `postgres:18.6-alpine` image without its unused `gosu` tool, runs only as uid/gid 70; never published to the host |
 
-All three images are pinned by immutable digest in one signed release manifest, so they can never be
-mixed across versions. The backend and frontend come from one source commit; the PostgreSQL image is
-rebuilt byte-for-byte identically for every release, so application upgrades never change the
-database image ([details](security/beta-distribution-001/postgresql-image.md)). A small
+All three images are pinned by immutable digest in one attested (build-provenance) release manifest,
+so they can never be mixed across versions. The backend and frontend come from one source commit; the
+PostgreSQL image keeps one identity across releases (it is built reproducibly once, then re-verified
+by every release), so application upgrades never change the database image ([details](security/beta-distribution-001/postgresql-image.md)). A small
 host program, `florabasectl.py` (Python standard library only), installs, migrates, backs up,
 restores and upgrades the stack. Docker Compose (or Dockhand) runs it.
 
@@ -66,17 +66,26 @@ base=https://github.com/alessandrorossato/florabase/releases/download/v0.1.0-bet
 for file in release-manifest.json compose.yaml florabasectl.py florabase.env.example; do
   curl --fail --location --remote-name "$base/$file"
 done
-sha256sum release-manifest.json compose.yaml florabasectl.py
 ```
 
-Compare the printed SHA-256 values with the digests that GitHub shows for each asset on the
-release page. Optionally verify the manifest's build provenance with the GitHub CLI:
+**Verify every file before running anything** (required: `florabasectl.py` runs as root and
+controls migrations, backups and restores). Each file carries a GitHub build-provenance
+attestation from the protected release workflow; check all four with the GitHub CLI (2.103.3 or
+newer):
 
 ```bash
-gh attestation verify release-manifest.json --repo alessandrorossato/florabase \
-  --signer-workflow alessandrorossato/florabase/.github/workflows/beta-images.yml \
-  --source-ref refs/heads/main --deny-self-hosted-runners
+for file in release-manifest.json compose.yaml florabasectl.py florabase.env.example; do
+  gh attestation verify "$file" --repo alessandrorossato/florabase \
+    --signer-workflow alessandrorossato/florabase/.github/workflows/beta-images.yml \
+    --source-ref refs/heads/main --deny-self-hosted-runners || { echo "REFUSE $file"; break; }
+done
+sha256sum release-manifest.json
 ```
+
+Stop if any check fails. Comparing SHA-256 values with the digests on the release page only proves
+the download is intact, not who produced the file. The attested manifest also records the SHA-256
+of each bundle file (`install_bundle`), and the controller refuses to install or upgrade with a
+`compose.yaml` or `florabasectl.py` that differs from it.
 
 Keep the manifest's SHA-256: every install and upgrade command requires it, and the controller
 refuses a manifest whose hash differs. The controller never uses image tags.
@@ -240,10 +249,12 @@ Before the server starts, the backend checks that the database is exactly at the
 its release and refuses otherwise, with a message that names the action to take (see
 [Troubleshooting](#troubleshooting)). A newer image therefore cannot silently change your data.
 
-Upgrade with one controller command:
+Download and verify the new release's files into a new directory exactly as in
+[step 1](#1-download-and-verify-the-release), then upgrade with that release's own controller (an
+older or newer `florabasectl.py` or `compose.yaml` is refused):
 
 ```bash
-python3 florabasectl.py --root /srv/florabase promote \
+python3 /srv/florabase-bundle/<new>/florabasectl.py --root /srv/florabase promote \
   --manifest /srv/florabase-bundle/<new>/release-manifest.json --manifest-sha256 <sha256> \
   --confirm-migration
 ```
@@ -281,7 +292,9 @@ pinned by digest). Application upgrades never change the PostgreSQL image; `prom
 whose PostgreSQL identity differs. A new Florabase PostgreSQL version (an upstream rebuild, a security
 fix or a minor update) is separate, explicitly announced maintenance with its own backup. The image
 runs only as the `postgres` account (uid/gid 70): starting it as root stops immediately with
-`florabase-postgres: refusing to run as root`, before anything on disk changes. A **major** version change
+`florabase-postgres: refusing to run as root`, before anything on disk changes. This holds for the
+image's own entry point and for the upstream `docker-entrypoint.sh` and `docker-ensure-initdb.sh`
+when they are used as an overridden entry point. A **major** version change
 (for example to 19) cannot reuse the data directory: it needs a new installation restored from a
 logical backup, and it is not automated in this beta. PostgreSQL itself refuses to start on a data
 directory from another major version, so a wrong image fails instead of corrupting data. A database
