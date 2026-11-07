@@ -7590,3 +7590,14 @@ Status remains implemented pending canonical verification.
   on 1.4M taxa: plus 0.07 ms per connection, identical results.
 - Not run: indexes from the full official archives (not on this host). Canonical FULL and
   independent QA follow on the committed tree.
+
+### BETA-DISTRIBUTION-001 — QA of the SQLite hardening, 7 November 2026
+
+- Independent QA of `40200e0`: PASS WITH FINDINGS (3 × P3), all fixed. P3-1: duplicated
+  `sqlite_schema` rows collapsed into the set comparison (a second `sqlite_autoindex_taxa_1`
+  pointing at another b-tree passed and returned wrong data); duplicates are now refused and logged.
+  P3-2: the test count in the security record. P3-3: the guide's `reference set --sha256` now uses
+  the digest from the build output (the WFO seal, or the WCVP digest recorded after the build), not
+  one computed from the copy. QA's informational note: `ATTACH` is now refused (attached-database
+  limit 0). `test_reference_index.py` has 25 tests.
+

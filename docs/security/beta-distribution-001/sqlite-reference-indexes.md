@@ -31,12 +31,14 @@ every connection, before any application statement:
 2. `setconfig`: `DEFENSIVE` on; `TRUSTED_SCHEMA`, `ENABLE_VIEW`, `ENABLE_TRIGGER`,
    `ENABLE_LOAD_EXTENSION` and `WRITABLE_SCHEMA` off. Each value is read back with `getconfig`,
    and the open fails if one did not apply.
-3. `PRAGMA query_only=ON`, `PRAGMA cell_size_check=ON`.
+3. `PRAGMA query_only=ON`, `PRAGMA cell_size_check=ON`, and an attached-database limit of 0
+   (`ATTACH` is refused).
 4. `BEGIN`: one read transaction, and its shared lock, from the check until the connection
    closes, so a cooperating writer cannot change the schema between the check and the queries.
 5. Read `sqlite_schema` (type, name, table, SQL) and require it to equal the builder's contract
-   exactly. Reading the schema does not instantiate virtual tables; a test with a non-existent
-   module proves it.
+   exactly, with no duplicated row (a second automatic index pointing at other storage would
+   otherwise collapse into the same set). Reading the schema does not instantiate virtual
+   tables; a test with a non-existent module proves it.
 
 A mismatch raises a generic, actionable error, for example "The WCVP snapshot is not a supported
 index built by Florabase's WCVP builder." It reaches the API as a 503 `*_unavailable` response
@@ -67,7 +69,7 @@ are unchanged: metadata, release, the WFO format version and the WFO seal.
 
 ## Evidence
 
-- `backend/tests/test_reference_index.py` (22 cases) covers:
+- `backend/tests/test_reference_index.py` (25 cases) covers:
   - builder output equals the contracts (WFO; WCVP 15 and 16), and reference operations on them;
   - the hardened connection state, with writes and `load_extension` refused;
   - QA's view-over-FTS5 exploit: the control connection runs the MATCH, while every WCVP
@@ -75,6 +77,7 @@ are unchanged: metadata, release, the WFO format version and the WFO seal.
   - hardening alone stops the view but not a direct FTS5 `taxa`, so the contract decides;
   - views, triggers, FTS5, an unknown module, an extra table, an extra or dropped index,
     `sqlite_stat1`, an added column and a renamed `taxa`, each with a matching seal;
+  - a duplicated schema row and a refused `ATTACH`;
   - empty, non-SQLite, damaged-header and truncated files;
   - an unsupported WFO format version and a WCVP release mismatch;
   - builders refusing to publish a non-conforming layout.

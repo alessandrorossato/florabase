@@ -112,6 +112,8 @@ def test_connection_is_hardened_read_only_and_holds_one_read_transaction(tmp_pat
             db.execute("DELETE FROM taxa")
         with pytest.raises(sqlite3.OperationalError):
             db.execute("SELECT load_extension('x')")
+        with pytest.raises(sqlite3.OperationalError):
+            db.execute("ATTACH DATABASE ':memory:' AS other")
 
 
 def test_view_over_fts5_exploit_is_refused_before_the_search_runs(tmp_path: Path) -> None:
@@ -182,6 +184,16 @@ def add_unknown_module(db: sqlite3.Connection) -> None:
     )
 
 
+def duplicate_automatic_index(db: sqlite3.Connection) -> None:
+    # Same row as the contract's, but pointing at another b-tree (QA delta finding P3-1).
+    root = db.execute("SELECT rootpage FROM sqlite_schema WHERE name='metadata'").fetchone()[0]
+    db.execute("PRAGMA writable_schema=ON")
+    db.execute(
+        "INSERT INTO sqlite_schema VALUES ('index', 'sqlite_autoindex_taxa_1', 'taxa', ?, NULL)",
+        (root,),
+    )
+
+
 def add_table(db: sqlite3.Connection) -> None:
     db.execute("CREATE TABLE extra(x)")
 
@@ -215,6 +227,7 @@ def replace_taxa_with_view(db: sqlite3.Connection) -> None:
         add_trigger,
         add_fts5,
         add_unknown_module,
+        duplicate_automatic_index,
         add_table,
         add_index,
         add_statistics,

@@ -268,14 +268,16 @@ docker run --rm --network none --read-only --tmpfs /tmp --user 10001:10001 \
   --retrieved-at <the archive's actual UTC retrieval time>
 install -m 0644 /srv/florabase-build/wfo-2026-06.sqlite /srv/florabase-build/wfo-2026-06.sha256 \
   /srv/florabase/reference/
+# The digest the builder recorded at build time (the WFO seal), not one computed from the copy.
 python3 florabasectl.py --root /srv/florabase reference set --kind wfo \
-  --file wfo-2026-06.sqlite --sha256 "$(sha256sum /srv/florabase/reference/wfo-2026-06.sqlite | cut -d' ' -f1)" \
+  --file wfo-2026-06.sqlite --sha256 "$(cat /srv/florabase-build/wfo-2026-06.sha256)" \
   --provenance "florabase.taxonomy.snapshot from the pinned WFO 2026-06 archive"
 ```
 
 For WCVP v16, run `python -m florabase.native_range_enrichment.snapshot /out/wcvp-v16.sqlite
---version 16 --archive /in/archive.zip --retrieved-at …` the same way, then
-`reference set --kind wcvp-v16`.
+--version 16 --archive /in/archive.zip --retrieved-at …` the same way. That builder writes no seal,
+so record `sha256sum /srv/florabase-build/wcvp-v16.sqlite` right after the build, then pass that
+value to `reference set --kind wcvp-v16`.
 
 The SHA-256 you pass to `reference set` (and the WFO `.sha256` seal next to the index) proves
 only that the file was not changed after you built it. It says nothing about who built the file,

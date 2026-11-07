@@ -57,24 +57,30 @@ def open_reference_index(path: Path, contract: SchemaContract, label: str) -> sq
             connection.setconfig(option, enabled)
             if connection.getconfig(option) != enabled:
                 raise UnsupportedIndexError("SQLite connection hardening is unavailable")
+        # No other database can be attached to a reference connection.
+        connection.setlimit(sqlite3.SQLITE_LIMIT_ATTACHED, 0)
         connection.execute("PRAGMA query_only=ON")
         connection.execute("PRAGMA cell_size_check=ON")
         # Hold one read transaction (and its shared lock) from the schema check to close().
         connection.execute("BEGIN")
-        found = {
+        rows = [
             (str(kind), str(name), str(table), None if sql is None else str(sql))
             for kind, name, table, sql in connection.execute(
                 "SELECT type, name, tbl_name, sql FROM sqlite_schema"
             )
-        }
-        if found != contract:
+        ]
+        found = set(rows)
+        # Duplicate rows (for example a second automatic index) must not collapse into the set.
+        duplicated = {row for row in found if rows.count(row) > 1}
+        if found != contract or duplicated:
             logger.warning(
                 "Refusing %s reference index %s: not the layout Florabase's builder writes "
-                "(unexpected: %s; missing: %s)",
+                "(unexpected: %s; missing: %s; duplicated: %s)",
                 label,
                 path.name[:128],
                 _describe(found - contract) or "none",
                 _describe(set(contract) - found) or "none",
+                _describe(duplicated) or "none",
             )
             raise UnsupportedIndexError("Unsupported reference index schema")
         connection.row_factory = sqlite3.Row
