@@ -1,10 +1,10 @@
-# Installing Florabase (v0.1.0-beta.1)
+# Installing Florabase (v0.1.0-beta.2)
 
 This guide is for people who want to **run** Florabase on their own server from the published
 container images. You do not need the source code, Node.js, a Python development environment or a
 compiler. Developers working on Florabase itself should read [development](development.md) instead.
 
-> **Beta status.** `v0.1.0-beta.1` is a private, single-owner prerelease. It is not yet published;
+> **Beta status.** `v0.1.0-beta.2` is a private, single-owner prerelease. It is not yet published (the `v0.1.0-beta.1` tag exists but its protected publication failed before any release or image was created, so use beta.2);
 > the commands below name the release assets it will carry. Keep a tested backup before every
 > upgrade. Known limitations are listed at the end of this guide.
 
@@ -62,7 +62,7 @@ Use a working directory outside the future installation root, for example `/srv/
 
 ```bash
 mkdir -p /srv/florabase-bundle && cd /srv/florabase-bundle
-base=https://github.com/alessandrorossato/florabase/releases/download/v0.1.0-beta.1
+base=https://github.com/alessandrorossato/florabase/releases/download/v0.1.0-beta.2
 for file in release-manifest.json compose.yaml florabasectl.py florabase.env.example; do
   curl --fail --location --remote-name "$base/$file"
 done

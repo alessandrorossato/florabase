@@ -7618,3 +7618,20 @@ Status remains implemented pending canonical verification.
   Real-host acceptance (capacity, Docker/Compose, HTTPS, persistence, backup/restore, recovery) has NOT occurred.
 - Checks: `make test-beta-images` (29 tests) and `beta_release.py check --publication` pass. Other publication
   blockers (QA/FULL, `RELEASE_APPROVED_SHA`, protections, manual authorization) are unchanged. Nothing published or tagged.
+
+### RELEASE-TOOLS-LOCK-BETA2 — release-tool lock fix and v0.1.0-beta.2, 7 November 2026
+
+- First protected run (`actions/runs/42395852280`) failed in the verify job: on Python 3.12 `referencing==0.37.0`
+  requires `typing-extensions>=4.4.0` (marker `python_version < "3.13"`), which was absent from the hashed lock,
+  so `--require-hashes` refused it. The publish job was skipped and no Release or package was created. It was
+  invisible on the Python 3.14 development host, where the marker is false. Reproduced in `python:3.12`.
+- `release/requirements.txt` now pins `typing-extensions==4.16.0` with wheel and sdist SHA-256 hashes verified by
+  downloading both files. Hash checking, `--only-binary` and the bootstrap pip hash are unchanged.
+- New `scripts/test-release-tools-lock.py` (run by `make test-beta-images`): prepares the tools from an empty cache,
+  asserts pinned-and-hashed entries and no `--no-deps`/index overrides, and walks every locked wheel's `Requires-Dist`
+  with markers evaluated for Python 3.11, 3.12 (GitHub runner), 3.13 and 3.14. It fails on the previous lock.
+- Bootstrap audit: the clean bootstrap and the import check pass on Python 3.11–3.14 containers; Python 3.10 is
+  unsupported by the repository and unchanged. No other bootstrap defect was found.
+- Version bumped to `0.1.0-beta.2` (backend/frontend packages, Dockerfile defaults, OpenAPI, `release/inputs.json`,
+  installation guide). The existing `v0.1.0-beta.1` tag is untouched; the operator creates `v0.1.0-beta.2` after
+  delivery. Nothing published, tagged or configured.
