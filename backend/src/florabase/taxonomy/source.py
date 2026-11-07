@@ -11,6 +11,12 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from florabase.core.reference_index import (
+    SchemaContract,
+    UnsupportedIndexError,
+    open_reference_index,
+)
+
 VERSION: Final = "2026-06"
 ARCHIVE_URL = "https://zenodo.org/api/records/20782718/files/wfo_plantlist_2026-06.zip/content"
 CHECKSUM: Final = "75f1ad1f371978c9e46f3044152c07ed276fe57be9fb9a15b3621b19cf231987"
@@ -48,6 +54,30 @@ RANKS = frozenset(
         "subkingdom",
         "kingdom",
     ]
+)
+
+
+# The one layout taxonomy.snapshot.build_index writes (metadata format_version 1).
+SCHEMA: Final[SchemaContract] = frozenset(
+    {
+        ("table", "metadata", "metadata", "CREATE TABLE metadata(payload TEXT NOT NULL)"),
+        (
+            "table",
+            "taxa",
+            "taxa",
+            "CREATE TABLE taxa(source_taxon_id TEXT PRIMARY KEY, parent_source_taxon_id TEXT, "
+            "scientific_name TEXT NOT NULL, authorship TEXT NOT NULL, rank TEXT NOT NULL, "
+            "taxonomic_status TEXT NOT NULL, accepted_source_taxon_id TEXT, "
+            "search_name TEXT NOT NULL)",
+        ),
+        ("index", "sqlite_autoindex_taxa_1", "taxa", None),
+        (
+            "index",
+            "search_taxa",
+            "taxa",
+            "CREATE INDEX search_taxa ON taxa(search_name,authorship,source_taxon_id)",
+        ),
+    }
 )
 
 
@@ -111,9 +141,12 @@ class WfoSource:
             raise SourceUnavailableError(
                 "The WFO source index validation seal is missing."
             ) from error
-        connection = sqlite3.connect(f"{self.path.resolve().as_uri()}?mode=ro", uri=True)
-        connection.row_factory = sqlite3.Row
-        return connection
+        try:
+            return open_reference_index(self.path, SCHEMA, "WFO")
+        except UnsupportedIndexError as error:
+            raise SourceUnavailableError(
+                "The WFO source index is not a supported index built by Florabase's WFO builder."
+            ) from error
 
     def metadata(self) -> WfoMetadata:
         try:

@@ -14,7 +14,8 @@ from datetime import datetime
 from pathlib import Path
 from zipfile import ZipFile
 
-from florabase.taxonomy.source import CHECKSUM, CODE, RANKS, ROOT, WfoMetadata
+from florabase.core.reference_index import open_reference_index
+from florabase.taxonomy.source import CHECKSUM, CODE, RANKS, ROOT, SCHEMA, WfoMetadata
 
 FIELDS = {
     "name.tsv": [
@@ -183,6 +184,8 @@ def build_index(
             )
         if temporary.stat().st_size > 1_000_000_000:
             raise ValueError("WFO index exceeds disk bound")
+        # Publish only the layout the reader accepts.
+        open_reference_index(temporary, SCHEMA, "WFO").close()
         temporary.chmod(0o600)
         with temporary.open("rb") as stream:
             digest = hashlib.file_digest(stream, "sha256").hexdigest()

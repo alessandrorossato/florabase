@@ -1,10 +1,21 @@
+import time
 from collections.abc import Iterator
 from functools import lru_cache
 
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.orm import Session
+from sqlalchemy.pool import NullPool
 
 from florabase.core.config import get_settings
+
+# Readiness must answer within the health check timeout even when PostgreSQL hangs or the network
+# drops packets; libpq otherwise waits indefinitely while connecting or for a reply.
+READINESS_CONNECT_TIMEOUT_SECONDS = 3
+READINESS_STATEMENT_TIMEOUT_MILLISECONDS = 2000
+# /api/v1/ready is unauthenticated: reuse a success briefly so a request flood cannot make every
+# request open a new PostgreSQL connection. Failures are never cached.
+READINESS_SUCCESS_CACHE_SECONDS = 1.0
+_readiness_ok_until = 0.0
 
 
 @lru_cache
@@ -12,9 +23,26 @@ def get_engine() -> Engine:
     return create_engine(get_settings().database_url, pool_pre_ping=True)
 
 
+@lru_cache
+def get_readiness_engine() -> Engine:
+    """Unpooled, time-bounded engine: a probe never waits on a stale pooled connection."""
+    return create_engine(
+        get_settings().database_url,
+        poolclass=NullPool,
+        connect_args={
+            "connect_timeout": READINESS_CONNECT_TIMEOUT_SECONDS,
+            "options": f"-c statement_timeout={READINESS_STATEMENT_TIMEOUT_MILLISECONDS}",
+        },
+    )
+
+
 def check_database() -> None:
-    with get_engine().connect() as connection:
+    global _readiness_ok_until
+    if time.monotonic() < _readiness_ok_until:
+        return
+    with get_readiness_engine().connect() as connection:
         connection.execute(text("SELECT 1"))
+    _readiness_ok_until = time.monotonic() + READINESS_SUCCESS_CACHE_SECONDS
 
 
 def get_database_session() -> Iterator[Session]:

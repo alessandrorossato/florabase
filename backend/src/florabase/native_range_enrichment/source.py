@@ -11,6 +11,12 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
+from florabase.core.reference_index import (
+    SchemaContract,
+    UnsupportedIndexError,
+    open_reference_index,
+)
+
 ARCHIVE_URL = "https://sftp.kew.org/pub/data-repositories/WCVP/Archive/wcvp_v15.zip"
 ARCHIVE_SHA256 = "693e05b31ea6ce724c88ccf38bb964db2f22424b396f7ed1fd04fdb203af7e81"
 VERSION = "15"
@@ -65,6 +71,44 @@ def reviewed_release(version: str) -> Release:
         return RELEASES[version]
     except KeyError as error:
         raise ValueError("Unreviewed WCVP version") from error
+
+
+# The one layout native_range_enrichment.snapshot.build_index writes for every reviewed release.
+SCHEMA: SchemaContract = frozenset(
+    {
+        ("table", "metadata", "metadata", "CREATE TABLE metadata(payload TEXT NOT NULL)"),
+        (
+            "table",
+            "taxa",
+            "taxa",
+            "CREATE TABLE taxa(external_id TEXT PRIMARY KEY, name TEXT NOT NULL, "
+            "authorship TEXT NOT NULL,rank TEXT NOT NULL, status TEXT NOT NULL, "
+            "accepted_id TEXT NOT NULL, powo_id TEXT NOT NULL,reviewed TEXT NOT NULL, "
+            "search_name TEXT NOT NULL COLLATE NOCASE)",
+        ),
+        ("index", "sqlite_autoindex_taxa_1", "taxa", None),
+        (
+            "table",
+            "distributions",
+            "distributions",
+            "CREATE TABLE distributions(locality_id TEXT PRIMARY KEY, "
+            "external_id TEXT NOT NULL, payload TEXT NOT NULL)",
+        ),
+        ("index", "sqlite_autoindex_distributions_1", "distributions", None),
+        (
+            "index",
+            "taxa_search",
+            "taxa",
+            "CREATE INDEX taxa_search ON taxa(search_name, external_id)",
+        ),
+        (
+            "index",
+            "distribution_taxon",
+            "distributions",
+            "CREATE INDEX distribution_taxon ON distributions(external_id, locality_id)",
+        ),
+    }
+)
 
 
 class SourceUnavailableError(Exception):
@@ -145,9 +189,12 @@ class WcvpSource:
     def _connect(self) -> sqlite3.Connection:
         if self.path is None or not self.path.is_file() or self.path.stat().st_size > 2_000_000_000:
             raise SourceUnavailableError("The reviewed WCVP snapshot is not installed.")
-        connection = sqlite3.connect(f"{self.path.resolve().as_uri()}?mode=ro", uri=True)
-        connection.row_factory = sqlite3.Row
-        return connection
+        try:
+            return open_reference_index(self.path, SCHEMA, "WCVP")
+        except UnsupportedIndexError as error:
+            raise SourceUnavailableError(
+                "The WCVP snapshot is not a supported index built by Florabase's WCVP builder."
+            ) from error
 
     def metadata(self) -> SourceMetadata:
         try:

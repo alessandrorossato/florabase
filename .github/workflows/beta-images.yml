@@ -42,6 +42,12 @@ jobs:
           version=$(python3 -c 'import json; print(json.load(open("release/inputs.json"))["version"])')
           test "$(git rev-parse "refs/tags/v${version}^{commit}")" = "$GITHUB_SHA"
           python3 scripts/beta-release-checks.py
+      # The buildx client writes the PostgreSQL index; pin the version that produced the pins.
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        with:
+          version: v0.38.1
+          driver: docker
+          use: false
       - name: Exhaustive verification of the selected commit
         run: |
           set -euo pipefail
@@ -74,6 +80,13 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+      # Same pinned buildx client as verification.
+      # The buildx client writes the PostgreSQL index; pin the version that produced the pins.
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        with:
+          version: v0.38.1
+          driver: docker
+          use: false
       - name: Require explicit environment approval for this exact commit
         env:
           APPROVED_SHA: ${{ secrets.RELEASE_APPROVED_SHA }}
@@ -104,6 +117,18 @@ jobs:
         with:
           subject-name: ${{ steps.pair.outputs.frontend_name }}
           subject-digest: ${{ steps.pair.outputs.frontend_digest }}
+      - name: Attest exact PostgreSQL index
+        uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
+        with:
+          subject-name: ${{ steps.pair.outputs.postgresql_name }}
+          subject-digest: ${{ steps.pair.outputs.postgresql_digest }}
+      - name: Attest install bundle files
+        uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
+        with:
+          subject-path: |
+            ${{ runner.temp }}/beta-release/compose.yaml
+            ${{ runner.temp }}/beta-release/florabasectl.py
+            ${{ runner.temp }}/beta-release/florabase.env.example
       - name: Attest release manifest
         uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
         with:

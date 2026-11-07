@@ -59,21 +59,35 @@ def manifest() -> dict[str, Any]:
             "platform": "linux/amd64",
         }
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "distribution": "registry-candidate",
         "version": "0.1.0-beta.1",
         "source": {"url": ctl.SOURCE_URL, "revision": "a" * 40, "dirty": False},
         "platforms": ["linux/amd64"],
         "alembic_head": "20261013_0042",
         "postgresql": {
-            "repository": "docker.io/library/postgres",
-            "version": "18.6-alpine",
-            "reference": "docker.io/library/postgres:18.6-alpine@" + pg_index,
+            "repository": "ghcr.io/alessandrorossato/florabase-postgres",
+            "version": "18.6-alpine-florabase.1",
+            "reference": "ghcr.io/alessandrorossato/florabase-postgres:18.6-alpine-florabase.1@"
+            + pg_index,
             "index_digest": pg_index,
             "platform_digest": digest("pg-platform"),
             "platform": "linux/amd64",
+            "source_date_epoch": 1762387200,
+            "upstream": {
+                "repository": "docker.io/library/postgres",
+                "version": "18.6-alpine",
+                "reference": "docker.io/library/postgres:18.6-alpine@" + digest("upstream-index"),
+                "index_digest": digest("upstream-index"),
+                "platform_digest": digest("upstream-platform"),
+                "platform": "linux/amd64",
+            },
         },
         "images": images,
+        "install_bundle": {
+            name: "sha256:" + hashlib.sha256((ctl.BUNDLE / name).read_bytes()).hexdigest()
+            for name in ctl.INSTALL_BUNDLE
+        },
         "build_inputs": {},
         "workflow": {"run_id": "1", "run_attempt": "1"},
     }
@@ -117,6 +131,25 @@ class ManifestRules(unittest.TestCase):
                 reference="127.0.0.1:5000/florabase-backend@"
                 + m["images"]["backend"]["index_digest"]
             ),
+            "official postgres": lambda m: m.update(postgresql=dict(m["postgresql"]["upstream"])),
+            "postgres tag differs from version": lambda m: m["postgresql"].update(
+                version="18.6-alpine-florabase.2"
+            ),
+            "postgres epoch": lambda m: m["postgresql"].update(source_date_epoch="1762387200"),
+            "upstream repository": lambda m: m["postgresql"]["upstream"].update(
+                repository="docker.io/evil/postgres"
+            ),
+            "upstream platform": lambda m: m["postgresql"]["upstream"].update(
+                platform="linux/arm64"
+            ),
+            "upstream platform digest": lambda m: m["postgresql"]["upstream"].update(
+                platform_digest="bad"
+            ),
+            "missing install bundle": lambda m: m.pop("install_bundle"),
+            "partial install bundle": lambda m: m["install_bundle"].pop("florabasectl.py"),
+            "unpinned install bundle": lambda m: m["install_bundle"].update(
+                **{"compose.yaml": "latest"}
+            ),
         }
         for name, mutate in cases.items():
             with self.subTest(name):
@@ -124,6 +157,15 @@ class ManifestRules(unittest.TestCase):
                 mutate(value)
                 with self.assertRaises(ctl.Refusal):
                     ctl.validate_manifest(value)
+
+    def test_bundle_must_be_the_releases_own(self) -> None:
+        ctl.verify_bundle(manifest())
+        for name in ("compose.yaml", "florabasectl.py"):
+            with self.subTest(name):
+                value = manifest()
+                value["install_bundle"][name] = digest("another release")
+                with self.assertRaisesRegex(ctl.Refusal, "install bundle"):
+                    ctl.verify_bundle(value)
 
     def test_test_candidate_needs_mode_and_loopback(self) -> None:
         value = manifest()
@@ -212,6 +254,64 @@ class PureRules(unittest.TestCase):
             ctl.write_json(path, {"a": 1})
             self.assertEqual(path.stat().st_mode & 0o777, 0o600)
             self.assertEqual(ctl.read_json(path), {"a": 1})
+
+
+class HttpAcceptance(unittest.TestCase):
+    """The shell, its script assets and API 404s are checked on every acceptance run."""
+
+    SHELL = (
+        b'<!doctype html><html><head><script src="/appearance.js"></script>'
+        b'<script type="module" crossorigin src="/assets/index-abc.js"></script></head>'
+        b'<body><div id="root"></div></body></html>'
+    )
+    CURRENT = {"version": "0.1.0-beta.1", "source_revision": "a" * 40}
+
+    def responses(self, **overrides: tuple[int, str, bytes]) -> dict[str, tuple[int, str, bytes]]:
+        release = json.dumps({"version": "0.1.0-beta.1", "revision": "a" * 40}).encode()
+        values = {
+            "/healthz": (200, "text/plain", b"ok"),
+            "/api/v1/health": (200, "application/json", b"{}"),
+            "/api/v1/ready": (200, "application/json", b"{}"),
+            "/release.json": (200, "application/json", release),
+            "/": (200, "text/html", self.SHELL),
+            "/appearance.js": (200, "application/javascript", b""),
+            "/assets/index-abc.js": (200, "application/javascript", b""),
+            "/api/v1/florabase-acceptance-unknown": (404, "application/json", b"{}"),
+            "/api/v1/auth/session": (401, "application/json", b"{}"),
+        }
+        values.update({key.replace("_", "/"): value for key, value in overrides.items()})
+        return values
+
+    def run_acceptance(self, values: dict[str, tuple[int, str, bytes]]) -> None:
+        def fake(url: str, method: str = "GET", body: Any = None, headers: Any = None) -> Any:
+            status, content_type, payload = values[url[len("http://x") :]]
+            return status, {"Content-Type": content_type}, payload
+
+        original = ctl.http_request
+        ctl.http_request = fake
+        try:
+            ctl.http_acceptance("http://x", self.CURRENT)
+        finally:
+            ctl.http_request = original
+
+    def test_healthy_release_passes(self) -> None:
+        self.run_acceptance(self.responses())
+
+    def test_spa_fallback_for_api_is_refused(self) -> None:
+        values = self.responses()
+        values["/api/v1/florabase-acceptance-unknown"] = (200, "text/html", self.SHELL)
+        with self.assertRaisesRegex(ctl.Failure, "unknown API path"):
+            self.run_acceptance(values)
+
+    def test_missing_shell_or_asset_is_refused(self) -> None:
+        values = self.responses()
+        values["/"] = (200, "text/html", b"<html>maintenance</html>")
+        with self.assertRaisesRegex(ctl.Failure, "application shell"):
+            self.run_acceptance(values)
+        values = self.responses()
+        values["/assets/index-abc.js"] = (200, "text/html", self.SHELL)
+        with self.assertRaisesRegex(ctl.Failure, "index-abc.js"):
+            self.run_acceptance(values)
 
 
 def recovery_set(
@@ -616,6 +716,30 @@ class ControllerRules(unittest.TestCase):
         with self.assertRaisesRegex(ctl.Refusal, "confirm-migration"):
             self.promote()
         self.assertFalse(self.controller.layout.operation_file.exists())
+
+    def test_installed_controller_announces_a_newer_release_bundle(self) -> None:
+        # A newer release ships a different controller and stack; the installed controller must
+        # still announce it, while installing or promoting with the wrong bundle is refused.
+        self.next["install_bundle"] = {name: digest("next-" + name) for name in ctl.INSTALL_BUNDLE}
+        self.write_next()
+        sha = hashlib.sha256(self.manifest_path.read_bytes()).hexdigest()
+        args = ctl.parser().parse_args(
+            [
+                "--root",
+                str(self.root),
+                "check-release",
+                "--manifest",
+                str(self.manifest_path),
+                "--manifest-sha256",
+                sha,
+            ]
+        )
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+            self.assertEqual(self.controller.check_release(args), 10)
+        self.assertIn("RELEASE_AVAILABLE", output.getvalue())
+        with self.assertRaisesRegex(ctl.Refusal, "install bundle"):
+            self.promote("--confirm-migration")
 
     def test_same_pair_refused(self) -> None:
         self.next = manifest()
@@ -1198,8 +1322,20 @@ class StackContract(unittest.TestCase):
             "os.execvp",
             "heads != [expected]",
             "except Exception",
+            # Actionable refusals: invalid settings, empty, pending and newer/foreign schemas.
+            "get_settings()",
+            "invalid configuration",
+            "walk_revisions()",
+            "florabasectl.py install",
+            "a migration is pending",
+            "florabasectl.py promote",
+            "never downgrade blindly",
+            "This container never migrates",
         ):
             self.assertIn(required, guard)
+        # Settings errors may echo submitted values (the database URL holds the password).
+        self.assertNotIn("str(error)", guard)
+        self.assertNotIn('"input"', guard)
         self.assertNotIn("upgrade", guard)
         self.assertEqual(backend["command"][:2], ["uvicorn", "florabase.main:app"])
         self.assertEqual(backend["environment"]["FLORABASE_EXPECTED_ALEMBIC_HEAD"], "20261013_0042")
@@ -1284,6 +1420,7 @@ def main() -> None:
     cases = [
         ManifestRules,
         PureRules,
+        HttpAcceptance,
         RecoverySets,
         Retention,
         BindAddress,

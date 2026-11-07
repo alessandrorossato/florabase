@@ -1,8 +1,9 @@
 # Deployment and upgrades
 
-The image-only Dockhand/Tailscale beta runtime (versioned stack, `florabasectl` controller,
-recovery and upgrade procedures) is documented in the [beta runtime runbook](beta-runtime-001.md);
-it is not yet accepted on a real host. The commands below describe the existing source-build
+Installing from the published images (no source checkout) is described for end users in the
+[installation guide](installation.md); the operator background for that image-only Dockhand/Tailscale
+beta runtime (versioned stack, `florabasectl` controller, recovery and upgrade procedures) is the
+[beta runtime runbook](beta-runtime-001.md). It is not yet accepted on a real host. The commands below describe the existing source-build
 deployment. Both use the `florabase-prod` project name: do not run them on the same host, and never
 point the beta controller at volumes created by the source build (it refuses to adopt them).
 

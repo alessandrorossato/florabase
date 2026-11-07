@@ -1,0 +1,34 @@
+{
+  "reduced_from": {
+    "sha256": "01342f7eae78c22821f754985fe270bf594b6a65a8a27346e86dfc26b3af35ee",
+    "bytes": 111662
+  },
+  "CreatedAt": "2026-11-06T21:33:27.129733172Z",
+  "Metadata": {
+    "OS": {
+      "Family": "alpine",
+      "Name": "3.24.4"
+    },
+    "ImageID": "sha256:0a634fe66a63659917ec751c791a1369b1bd9400eb2cb68895753dad8dab7d98",
+    "DiffIDs": [
+      "sha256:75f1d9657d880da5f75298e8f40e9928bb6e260c50d26f97af196845307e3064",
+      "sha256:b2ce3aebc78681ccaadbfb9c069dfe1de2fd79dbc82ca875e1d06749c59f4bf1",
+      "sha256:fd6cdf8865d9099e98d07d09a16985d9e84a8773fe43e43037350839ff63775a",
+      "sha256:7510cbb0bc6a4a45feacd4971eb0bc235acf21669da12f6d7e892bdcd1aa0a8a",
+      "sha256:8ff1b6b33f6a9937ff8cccd55caacf69f05832290472320932ebc2a79c67aefb",
+      "sha256:e506043f2265a33424f704f4cf9815ac65d9c2e48c46d219e2712ba33066bdb0",
+      "sha256:e43d05456cdf3dacf26ba2fb9e120f05c2e69e04dc1f2111e9dd6fd6d7727ce2",
+      "sha256:d6cd89ac82f32c32ba1e750fc3da116f9b8895f6db9f58d5f40c017191920ee0",
+      "sha256:89ca1730a42b77e82de43d9720d18bbcb72a18f756f6ada212e977d50bf0ca1e",
+      "sha256:73c81dac5b0b7d9fa1d2fa725ba31b3b3fae24ad22a6c5544e35ab5ff8fd8c2a"
+    ]
+  },
+  "Results": [
+    {
+      "Target": "/artifacts/postgresql.tar (alpine 3.24.4)",
+      "Class": "os-pkgs",
+      "Vulnerabilities": [],
+      "Secrets": []
+    }
+  ]
+}

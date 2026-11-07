@@ -1,0 +1,49 @@
+{
+  "reduced_from": {
+    "sha256": "69a963a71f9220c473873e7895b3534a96cda51820343991924d72aad0b6e8a2",
+    "bytes": 116488,
+    "note": "raw Trivy JSON kept outside Git; package maintainer metadata omitted"
+  },
+  "SchemaVersion": 2,
+  "CreatedAt": "2026-11-06T20:35:32.474067624Z",
+  "ArtifactName": "/artifacts/backend.tar",
+  "Metadata": {
+    "OS": {
+      "Family": "alpine",
+      "Name": "3.24.3"
+    },
+    "ImageID": "sha256:b558eff40b2aef73e610536a0cdc044a05e214471fce3cb2fdc85ce2ad295908",
+    "DiffIDs": [
+      "sha256:75c137aedfb2760f88629236cb7b797630aed0c3d91d626d1d1bb694878fc2ba",
+      "sha256:2a828849b58f2e4110e3dabf1582ecf38d386d04ad8e70a623e3b95030c9546c",
+      "sha256:476229b4f396ca2d8eb3dd65e6085c2e543f3d1741880779176f9e8c604f27ae",
+      "sha256:e4989aeff940b22953dff1ae6f6d2e2b6ba41f286a995927bb34b1330cd63086",
+      "sha256:76f7c5038157d5e563a1ff1055ec941c881c4fed1874d8a9b9d83340a30372fc",
+      "sha256:0a0c54b7f35a5666f30d76c0a128b6728c8516166412f9adc7c836bb70b93e1f",
+      "sha256:addce28101ed769e9c75f828be9370ca228d65f34a94af6ade8d620eb777d0f3",
+      "sha256:990cd1541ade741e489375355f925457b07b657f354d894ecd23cf568a56aae9",
+      "sha256:fd49ac1363b79ffc5800dacac41ff2eac82494426dae316d7f9b99c1b5443063",
+      "sha256:57a1c8171f8a67330a44d25d0aaa6293471a5f042d042a4ef4fa9329a838fd50",
+      "sha256:f257f3c0598894c7045701447b83fbbf3d7cb9eef4d6b82690e73899a33647d2",
+      "sha256:698a7ebdbed377a49d68f7e6dbce51c77cb11de30a651a2d644f837691a963ae",
+      "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+    ],
+    "RepoDigests": null
+  },
+  "Results": [
+    {
+      "Target": "/artifacts/backend.tar (alpine 3.24.3)",
+      "Class": "os-pkgs",
+      "Type": "alpine",
+      "Vulnerabilities": [],
+      "Secrets": []
+    },
+    {
+      "Target": "Python",
+      "Class": "lang-pkgs",
+      "Type": "python-pkg",
+      "Vulnerabilities": [],
+      "Secrets": []
+    }
+  ]
+}

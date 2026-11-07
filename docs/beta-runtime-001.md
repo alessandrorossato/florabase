@@ -63,7 +63,10 @@ artifacts an operator copies to the host; no checkout, Git or package installati
   the running db/backend/frontend containers during acceptance.
 - **Optional datasets.** WFO/WCVP snapshots are mounted read-only from `reference/` and configured
   only when recorded (`reference.env`); an empty setting would otherwise parse as the current
-  directory.
+  directory. Only indexes built by Florabase's builders from the pinned archives are supported:
+  `reference set --sha256` proves the copy is intact, not where it came from, and the backend
+  refuses any index whose schema is not the builder's exact layout
+  ([installation guide](installation.md#optional-botanical-reference-datasets)).
 
 ## Host layout
 
@@ -264,6 +267,13 @@ its forward fix (E). The sequence:
 - schema guard: after a recorded successful start, the database revision is forged. The running
   backend stops itself; plain `docker compose up -d`, `docker restart` and forced recreation never
   become healthy or ready, and the refusal is logged; restoring the revision restores service;
+- BETA-DISTRIBUTION-001 drills: a newer image on the older schema is refused with the pending
+  migration instruction and changes nothing; a missing `secrets/backend.env` fails Compose without
+  replacing the running backend; with PostgreSQL stopped readiness fails while `/healthz` stays live
+  and a restarted backend refuses (`database revision unavailable`), recovering by plain `up -d`; an
+  HTTP canonical origin is refused as invalid configuration without printing secrets;
+- a TLS-terminating nginx proxy with hostile `X-Forwarded-Host`/`Forwarded` headers in front of the
+  loopback port: HTTPS acceptance with owner login/logout/CSRF and identical original media;
 - backup, verification and tamper detection;
 - isolated restore with login, compared to the source and proven not to touch the live database;
 - encrypted restic export, then import of the set from the repository;
@@ -302,11 +312,14 @@ BETA-ACCEPTANCE-001:
   with owner login from desktop and phone.
 - A real reboot, the off-host restic destination and credentials custody, and accepted RPO/RTO,
   retention and maintenance window.
-- Whether WFO/WCVP are needed on day one (`reference set --kind wfo --file … --sha256 …`).
+- Whether WFO/WCVP are needed on day one (`reference set --kind wfo --file … --sha256 …`), built
+  locally with the release's backend image from the pinned archives (not built or installed here).
 
 ## Coordination and limits
 
-- `release/inputs.json` and security-owned image files are unchanged. The controller's default
+- BETA-RUNTIME-001 left `release/inputs.json` and security-owned image files unchanged;
+  BETA-DISTRIBUTION-001 later moved only the PostgreSQL pin to the upstream same-version rebuild
+  (see [installation guide](installation.md) and `docs/security/beta-distribution-001/`). The controller's default
   restic image (`restic/restic:0.17.3@sha256:8f5a62b4…`) is a **new runtime-owned pin** that
   BETA-SECURITY-001 should scan before real use.
 - Restore depends on registry availability of the recorded image digests (GHCR versions are

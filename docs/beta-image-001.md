@@ -133,8 +133,14 @@ References: [GitHub environment protection](https://docs.github.com/en/actions/r
 
 ## Manifest contract and consumption
 
-`release/manifest.schema.json` defines public manifest v1. `scripts/beta_release.py` constructs and
+`release/manifest.schema.json` defines public manifest v2. `scripts/beta_release.py` constructs and
 validates cross-field consistency; consumers must also verify the registry descriptors and provenance.
+
+> **Superseded by BETA-DISTRIBUTION-001 (v2, no v1 manifest was ever published):** `postgresql` now
+> describes the Florabase-built `ghcr.io/alessandrorossato/florabase-postgres` image and records its
+> exact official base under `postgresql.upstream`; see
+> [postgresql-image.md](security/beta-distribution-001/postgresql-image.md). The PostgreSQL rows below
+> describe v1 history.
 
 | Field | Contract |
 | --- | --- |

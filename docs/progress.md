@@ -7476,3 +7476,131 @@ Status remains implemented pending canonical verification.
 - Phase 2 reusable stage evidence is a proposal only. It is documented with its enforced-boundary
   safety analysis in [the handoff](verification-fast-001-handoff.md) and recommended as a separate
   feature. Independent infrastructure QA is pending.
+
+### BETA-DISTRIBUTION-001 — installable beta distribution candidate for independent QA, 6 November 2026
+
+- Worktree `feat/beta-distribution-001` from `fec0398`, writer `claude-beta`; `origin/main` `da80dc6`
+  (#149, verification-workflow files only) merged without rewriting. Operator decisions: keep the
+  image pair, explicit one-shot migrations, `0.1.0-beta.1`.
+- Releases now attach `compose.yaml`, `florabasectl.py` and `florabase.env.example`; no `latest`.
+  The backend guard reports invalid configuration (field names only), unavailable database and
+  empty/pending/newer schemas with the exact action and still never migrates. Acceptance checks the
+  application shell, its scripts and JSON 404 for unknown API paths. New
+  [installation guide](installation.md) with Dockhand workflow; record in
+  [beta-distribution-001.md](beta-distribution-001.md).
+- Security: PostgreSQL pin moved to the upstream same-version `18.6-alpine` rebuild `123b1799…`
+  (brotli/libcurl fixed; data-directory compatibility checked) — **needs operator approval**. Frontend
+  base newly showed 3 HIGH (musl, zlib) with no upstream rebuild; exact Alpine pins restore 0/0;
+  backend 0/0. **Blocker:** 1 CRITICAL / 25 HIGH remain in PostgreSQL's gosu (not executed by the
+  stack; gate stays fail-closed). Reduced reports in `docs/security/beta-distribution-001/`.
+- Checks: `make workflow-check` (incl. `test-beta-runtime` 60 + 48 under Python 3.8.20,
+  `test-beta-images` 26); `check-features` 138 valid; guard refusals in the real backend image;
+  `scripts/smoke-beta-runtime.py` 21/21 from clean `872f076` (830.6 s) and `fd4fc76` (841.4 s),
+  adding pending-migration, missing-secret, stopped-database, HTTP-origin and TLS reverse-proxy
+  drills; zero owned residuals, DEV/UAT/host `florabase-prod` untouched.
+- Not run: independent QA, canonical `make feature-verify` (FULL), frontend/backend unit suites
+  (no application code changed), registry publication, real-host or real Dockhand checks.
+  Observation: readiness has no DB connect timeout. No push, PR, tag or release.
+
+### BETA-DISTRIBUTION-001 — PostgreSQL gosu evaluation and readiness bound, 6 November 2026
+
+- Operator approved the rebuilt `postgres:18.6-alpine@sha256:123b1799…5395` pin for development and
+  isolated verification only; full digest, provenance, compatibility and recovery evidence recorded in
+  [postgresql-gosu-remediation.md](security/beta-distribution-001/postgresql-gosu-remediation.md).
+- No official fix exists: docker-library still pins gosu 1.19 for every PostgreSQL 18 variant and gosu
+  1.20 is built on the same Go 1.24.6. A gosu-free derived prototype (upstream digest, `rm` gosu,
+  `USER 70:70`) builds reproducibly (`b242b556…` twice), scans 0 CRITICAL / 0 HIGH / 0 secrets, and passes
+  hardened 70:70 init, restart/recreation, dump, `pg_restore --list`, restore, old-pin data directory and
+  default-user checks; a root start exits 127 before `initdb` without changing existing data.
+  Recommended; integration into the protected publication workflow awaits operator approval.
+- `985437f`: readiness hung without an answer for 60 s on a paused database; an unpooled engine with
+  `connect_timeout=3` and `statement_timeout=2000` now answers 503 in 3.0 s (stopped database 503 in
+  about 5 s, healthy 200 in 0.1 s).
+- Checks: backend Ruff, format, strict mypy; backend unit suite 986 passed / 3 skipped (90.06%);
+  readiness integration 2 passed; `beta_release.py check` passed; local artifact-only image smoke
+  `LOCAL_BETA_CANDIDATE_PASSED` at `985437f` (docs edited during the run, image contexts unchanged).
+- Runtime smoke 21/21 from clean `3123acf` (819.9 s, evidence refreshed); the drill's 5 s probe still
+  meets the nested daemon's 5 s resolver timeout for a stopped `db`.
+- Still BETA-BLOCKED. Not run: independent QA, canonical FULL, protected
+  publication. No push, PR, tag, GHCR package or release.
+
+### BETA-DISTRIBUTION-001 — Florabase PostgreSQL image integrated, 7 November 2026
+
+- Operator approved integrating the gosu-free image (not publication). `postgres/` builds
+  `florabase-postgres:18.6-alpine-florabase.1` from the approved `postgres:18.6-alpine@sha256:123b1799…`:
+  gosu removed, zlib 1.4-r0, `USER 70:70`, a root guard (exit 64 before any initialization or data
+  change). Deterministic with the pinned BuildKit (fixed epoch, no in-index attestations, apk.log
+  removed); pins index `e5855f0c…` / platform `e625e587…` reproduced from fresh builders.
+- Integrated into release inputs, manifest schema v2 (derived identity plus `upstream`), the protected
+  publisher (refuses unreproducible builds; scan, SBOM, smoke, attestation, promotion with the pair),
+  the controller, artifact, candidate and runtime smokes. Record:
+  [postgresql-image.md](security/beta-distribution-001/postgresql-image.md).
+- Registry-level check on a disposable registry: identity equal to the pins, release gate PASSED on
+  the pulled bytes, Grype squashed and all-layers 0 Critical / 0 High, SBOM without gosu. gosu's
+  original bytes remain in upstream layer 2 (runtime removal, not physical elimination).
+- Grype also found zlib CVE-2026-4738 (Critical) that Trivy misses: fixed in the backend and
+  PostgreSQL images. Backend `sqlite-libs` 3.53.4-r0 keeps 4 High with no Alpine fix, assessed not
+  reachable; whether a second scanner gates releases is an operator decision.
+- Checks: `make workflow-check`; `beta_release.py check`; local candidate passed; runtime smoke 22/22
+  from clean `0d074e7` (858.2 s). Not run: actionlint (declined download), independent QA, canonical
+  FULL, GHCR publication. Still BETA-BLOCKED. No push, PR, tag or release.
+
+### BETA-DISTRIBUTION-001 — independent QA corrections, 7 November 2026
+
+- Independent read-only QA of `794fdfc`: PASS WITH FINDINGS (1 P1, 3 P2, 5 P3); FULL not authorized
+  until P1. All nine addressed in `8ce70c6`:
+  - P1: the manifest binds the install bundle by SHA-256, each bundle file is attested, the controller
+    refuses a differing `compose.yaml`/`florabasectl.py`, and attestation checks are mandatory in the guide;
+  - P2-1/P3-2: an unpublished PostgreSQL identity is built and verified in a loopback registry before
+    any byte reaches GHCR; a published tag must equal the pin (lookup errors fail closed) and is
+    re-verified, not rebuilt;
+  - P2-2: buildx client pinned (v0.38.1) and `postgres-identity --check` in the read-only verify job;
+  - P2-3: release notes name the single-scanner gate; P3-1: upstream `docker-entrypoint.sh` refuses root,
+    covering overridden entry points; P3-3: controller mirrors the identity rules and version label;
+    P3-4: readiness caches a success for 1 s; P3-5: stale text corrected.
+- New pins: index `4edc0790…`, platform `55b1969a…`, reproduced twice and through the verified-copy path.
+- Checks: `make workflow-check` (release 30, runtime 61 + 49 on Python 3.8.20); backend unit 987 passed
+  (90.07%); registry verification (gate PASSED, Grype 0 Critical/High both modes); local candidate passed;
+  runtime smoke 22/22 from clean `52648b5` (857.9 s). Not run: actionlint, canonical FULL, publication.
+  Delta QA requested. No push, PR, tag or release.
+
+### BETA-DISTRIBUTION-001 — delta QA corrections, 7 November 2026
+
+- Delta QA of `c88ea79`: PASS WITH FINDINGS (D-P2-1, D-P3-1, D-P3-2), all fixed: the verify-job identity
+  rebuild is removed (it reintroduced the Alpine-pin release block), `check-release` reads newer manifests
+  without the bundle check, and the guide's attestation loop fails visibly. QA accepted the absent
+  `ci.yml` reproducibility job as a CI-FAST follow-up. Canonical FULL follows on the corrected tree.
+
+### BETA-DISTRIBUTION-001 — SQLite reference-index hardening, 7 November 2026
+
+- Final QA of `4329381` agreed with all four Grype `sqlite-libs` dispositions and demonstrated that a
+  crafted index (a `taxa` view over FTS5) reaches CVE-2026-119373's code path through the WCVP search.
+  The operator approved hardening before public publication.
+- `core/reference_index.py` is now the only WFO/WCVP opener. It enables defensive mode, turns off
+  views, triggers, extension loading, writable schema and trusted schema, sets `query_only` and
+  `cell_size_check`, and holds one read transaction. It then requires the exact builder schema
+  before any query, fails closed with a generic error and an operator log line, and writes nothing.
+  Builders refuse to publish an index that fails the check. Builder DDL is unchanged, so every index
+  from a supported builder stays accepted.
+- Docs: the guide's reference-dataset section requires indexes built by Florabase's builders and
+  separates integrity (SHA-256, seal) from provenance; security record
+  `docs/security/beta-distribution-001/sqlite-reference-indexes.md`.
+- Checks: `test_reference_index.py` (24 tests) and the existing WFO/WCVP suites (90 in total) pass
+  on SQLite 3.40.1 (dev) and 3.53.4 (runtime image). Lint, format and strict mypy pass. Benchmark
+  on 1.4M taxa: plus 0.07 ms per connection, identical results.
+- Not run: indexes from the full official archives (not on this host). Canonical FULL and
+  independent QA follow on the committed tree.
+
+### BETA-DISTRIBUTION-001 — QA of the SQLite hardening, 7 November 2026
+
+- Independent QA of `40200e0`: PASS WITH FINDINGS (3 × P3), all fixed. P3-1: duplicated
+  `sqlite_schema` rows collapsed into the set comparison (a second `sqlite_autoindex_taxa_1`
+  pointing at another b-tree passed and returned wrong data); duplicates are now refused and logged.
+  P3-2: the test count in the security record. P3-3: the guide's `reference set --sha256` now uses
+  the digest from the build output (the WFO seal, or the WCVP digest recorded after the build), not
+  one computed from the copy. QA's informational note: `ATTACH` is now refused (attached-database
+  limit 0). `test_reference_index.py` has 25 tests.
+- Delta QA of `8ef70ec`: PASS WITH FINDINGS (2 × P3), both fixed. P3-4: the duplicate check was
+  quadratic in the schema size (about 32 s of CPU for a crafted 30,000-object schema); it now
+  compares the row count with the contract, and only counts duplicates for the refusal log. P3-5:
+  the security record's suite total is 91.

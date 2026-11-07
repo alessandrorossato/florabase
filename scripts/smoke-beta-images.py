@@ -11,13 +11,20 @@ import os
 import secrets
 import subprocess
 import tempfile
+import time
 import urllib.error
 import urllib.request
 from http.cookies import SimpleCookie
 from pathlib import Path
 from typing import Any
 
-from beta_release import read, registry_record, run, validate_manifest
+from beta_release import (
+    POSTGRES_ENTRYPOINT,
+    read,
+    registry_record,
+    run,
+    validate_manifest,
+)
 from workflow_resources import Disposable, Owner
 
 ORIGIN = "https://beta-image.invalid"
@@ -26,39 +33,71 @@ PNG = base64.b64decode(
 )
 
 
-def smoke(manifest: dict[str, Any], local: bool = False) -> None:
+def check_postgres_image(reference: str, pg: dict[str, Any]) -> None:
+    """Derived PostgreSQL: pinned base label, non-root only, gosu absent, root refused early."""
+    image = json.loads(run("docker", "image", "inspect", reference))[0]
+    config = image["Config"]
+    labels = config.get("Labels") or {}
+    if (
+        config.get("User") != "70:70"
+        or config.get("Entrypoint") != [POSTGRES_ENTRYPOINT]
+        or labels.get("org.opencontainers.image.base.digest") != pg["upstream"]["index_digest"]
+        or labels.get("org.opencontainers.image.version") != pg["version"]
+    ):
+        raise ValueError("PostgreSQL image identity, user or entrypoint mismatch")
+    probe = ["docker", "run", "--rm", "--network", "none"]
+    files = run(
+        *probe,
+        "--entrypoint",
+        "sh",
+        reference,
+        "-c",
+        "test ! -e /usr/local/bin/gosu && ! command -v gosu && id -u && postgres --version",
+    )
+    if files.split()[0] != "70" or "PostgreSQL) 18.6" not in files:
+        raise ValueError("PostgreSQL image must run as 70 without gosu: " + files)
+    # Every entry point, including overridden ones, refuses root before touching the disk.
+    for entrypoint in (
+        [],
+        ["--entrypoint", "docker-entrypoint.sh"],
+        ["--entrypoint", "docker-ensure-initdb.sh"],
+    ):
+        refused = subprocess.run(
+            [*probe, "--user", "0", *entrypoint, reference, "postgres"],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        if refused.returncode != 64 or "refusing to run as root" not in refused.stderr:
+            raise ValueError("PostgreSQL image did not refuse root: " + " ".join(entrypoint))
+
+
+def smoke(manifest: dict[str, Any], local: bool = False, postgres_image: str | None = None) -> None:
     validate_manifest(manifest, local)
+    if local != (postgres_image is not None):
+        raise ValueError("a locally built PostgreSQL image is required for, and only for, --local")
     native = run("docker", "version", "--format", "{{.Server.Os}}/{{.Server.Arch}}")
     if native != "linux/amd64":
         raise ValueError("native linux/amd64 Docker required; emulation is not acceptance")
     images = {name: image["reference"] for name, image in manifest["images"].items()}
-    images["db"] = manifest["postgresql"]["reference"]
+    images["db"] = postgres_image or manifest["postgresql"]["reference"]
     for service, reference in images.items():
-        if not local or service == "db":
+        if not local:
             subprocess.run(["docker", "pull", "--platform", native, reference], check=True)
         image = json.loads(run("docker", "image", "inspect", reference))[0]
         if f"{image['Os']}/{image['Architecture']}" != native:
             raise ValueError("image platform mismatch")
         if service == "db":
-            # The pulled index must resolve to the separately recorded platform identity.
-            raw = json.loads(
-                run(
-                    "docker",
-                    "buildx",
-                    "imagetools",
-                    "inspect",
-                    reference,
-                    "--format",
-                    "{{json .Manifest}}",
-                )
-            )
-            expected = manifest["postgresql"]["platform_digest"]
-            if not any(
-                m["digest"] == expected
-                and m.get("platform") == {"os": "linux", "architecture": "amd64"}
-                for m in raw["manifests"]
-            ):
-                raise ValueError("PostgreSQL platform digest mismatch")
+            pg = manifest["postgresql"]
+            if not local:
+                # The pulled index must be exactly the pinned, reproducible identity.
+                record = registry_record(f"{pg['repository']}@{pg['index_digest']}", native)
+                if (record["index_digest"], record["platform_digest"]) != (
+                    pg["index_digest"],
+                    pg["platform_digest"],
+                ):
+                    raise ValueError("PostgreSQL index/platform identity mismatch")
+            check_postgres_image(reference, pg)
             continue
         if not local and registry_record(reference, native) != manifest["images"][service]:
             raise ValueError("application platform/index identity mismatch")
@@ -326,6 +365,9 @@ def smoke(manifest: dict[str, Any], local: bool = False) -> None:
             request("/api/v1/auth/logout", "POST", b"", {"Origin": ORIGIN, "X-CSRF-Token": csrf})
             request("/api/v1/auth/session", expected=401)
             compose("stop", "db")
+            time.sleep(
+                1.5
+            )  # outlast the backend's one-second cache of a successful readiness probe
             request("/api/v1/ready", expected=503)
             print("BETA_IMAGE_SMOKE_PASSED distribution=" + manifest["distribution"], flush=True)
 
@@ -336,8 +378,9 @@ def main() -> None:
     parser.add_argument(
         "--local", action="store_true", help="local candidate only; never registry-pull evidence"
     )
+    parser.add_argument("--postgres-image", help="--local only: the locally built PostgreSQL ID")
     args = parser.parse_args()
-    smoke(read(args.manifest), args.local)
+    smoke(read(args.manifest), args.local, args.postgres_image)
 
 
 if __name__ == "__main__":

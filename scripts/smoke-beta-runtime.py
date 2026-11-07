@@ -39,6 +39,11 @@ REGISTRY_IMAGE = (
 RESTIC_IMAGE = (
     "restic/restic:0.17.3@sha256:8f5a62b422a2cb1277ea0dd6e826fe1acf649e5b9f02d60e5268d5fd1976255a"
 )
+# The official image the previous releases pinned: its data directories must open unchanged.
+PREVIOUS_OFFICIAL_POSTGRES = (
+    "docker.io/library/postgres:18.6-alpine"
+    "@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5"
+)
 COMPOSE_URL = (
     "https://github.com/docker/compose/releases/download/v2.20.1/docker-compose-linux-x86_64"
 )
@@ -154,10 +159,13 @@ class Smoke:
         expect: int | tuple[int, ...] = 0,
         stdin: str | None = None,
         fault: str | None = None,
+        extra_env: dict[str, str] | None = None,
     ) -> str:
         env = ["-e", "FLORABASECTL_TEST_MODE=1"]
         if fault:
             env += ["-e", "FLORABASECTL_TEST_FAULT=" + fault]
+        for key, value in (extra_env or {}).items():
+            env += ["-e", key + "=" + value]
         command = ["docker", "exec", "-i", *env, self.operator, "python3", "-I"]
         command += ["/opt/florabase/bundle/florabasectl.py", "--root", INSTALL, *args]
         result = subprocess.run(
@@ -196,18 +204,47 @@ class Smoke:
         ]
         return run(*base, *args, input=stdin)
 
-    def client(self, action: str, port: int = LIVE_PORT) -> dict[str, Any]:
+    def stack_result(
+        self, *args: str, env: dict[str, str] | None = None
+    ) -> subprocess.CompletedProcess[str]:
+        """A stack command that is expected to fail; ambient variables mimic a manual edit."""
+        command = ["docker", "exec"]
+        for key, value in (env or {}).items():
+            command += ["-e", key + "=" + value]
+        command += [self.operator, "timeout", "150", "docker", "compose"]
+        command += ["--project-name", "florabase-prod", "--project-directory", INSTALL + "/stack"]
+        command += [
+            "--file",
+            INSTALL + "/stack/compose.yaml",
+            "--env-file",
+            INSTALL + "/stack/.env",
+        ]
+        return subprocess.run(
+            [*command, *args], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        )
+
+    def client(
+        self,
+        action: str,
+        port: int = LIVE_PORT,
+        base: str | None = None,
+        extra_env: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
+        env = []
+        for key, value in (extra_env or {}).items():
+            env += ["-e", key + "=" + value]
         output = run(
             "docker",
             "exec",
             "-i",
+            *env,
             self.operator,
             "python3",
             "-I",
             "/opt/florabase/bundle/smoke_beta_runtime_client.py",
             action,
             "--base",
-            f"http://127.0.0.1:{port}",
+            base or f"http://127.0.0.1:{port}",
             "--origin",
             ORIGIN,
             "--login",
@@ -327,6 +364,19 @@ class Smoke:
         }
         self.version, self.revision = inputs["version"], revision
         self.postgres = inputs["postgresql"]
+        # The derived image is built from this source exactly as the release builds it; the
+        # pinned registry identity itself is proven by `beta_release.py postgres-identity`.
+        self.postgres_tag = f"{self.owner.project}-postgres"
+        self.owned(
+            "docker",
+            "build",
+            "--platform",
+            "linux/amd64",
+            "--tag",
+            self.postgres_tag,
+            *self.labels,
+            str(ROOT / "postgres"),
+        )
         return tags
 
     def start_daemon(self) -> None:
@@ -493,13 +543,14 @@ class Smoke:
             repository = "florabase-frontend" if name == "frontend" else "florabase-backend"
             refs[name] = self.push(self.transfer(tag), repository, name)
         postgres = self.push(
-            self.transfer(self.postgres["reference"]),
-            "postgres",
+            self.transfer(self.postgres_tag),
+            "florabase-postgres",
             self.postgres["version"],
         )
         refs["postgres"] = postgres.replace(
-            "/postgres@", "/postgres:" + self.postgres["version"] + "@"
+            "/florabase-postgres@", "/florabase-postgres:" + self.postgres["version"] + "@"
         )
+        refs["postgres-previous-official"] = self.transfer(PREVIOUS_OFFICIAL_POSTGRES)
         refs["restic"] = self.push(self.transfer(RESTIC_IMAGE), "restic", "0.17.3")
         # Unrelated sentinel workload: must be unchanged by every controller action.
         self.nested("volume", "create", "sentinel")
@@ -540,7 +591,7 @@ class Smoke:
 
         backend = refs["backend" if name == "a" else "backend-" + name]
         value = {
-            "schema_version": 1,
+            "schema_version": 2,
             "distribution": "test-candidate",
             "version": self.version,
             "source": {
@@ -552,10 +603,18 @@ class Smoke:
             "alembic_head": self.heads[name],
             "postgresql": dict(
                 entry(refs["postgres"]),
-                repository=f"{REGISTRY}/postgres",
+                repository=f"{REGISTRY}/florabase-postgres",
                 version=self.postgres["version"],
+                source_date_epoch=self.postgres["source_date_epoch"],
+                upstream=self.postgres["upstream"],
             ),
             "images": {"backend": entry(backend), "frontend": entry(refs["frontend"])},
+            # The copied bundle is byte-identical to deploy/beta; the controller verifies it.
+            "install_bundle": {
+                name: "sha256:"
+                + hashlib.sha256((ROOT / "deploy/beta" / name).read_bytes()).hexdigest()
+                for name in ("compose.yaml", "florabasectl.py", "florabase.env.example")
+            },
             "build_inputs": {},
             "workflow": {"run_id": "0", "run_attempt": "0"},
         }
@@ -729,6 +788,10 @@ class Smoke:
         )
 
         self.schema_guard_drill(baseline)
+        self.pending_migration_drill()
+        self.failure_drills(baseline)
+        self.https_proxy_drill(baseline)
+        self.postgres_image_drill(baseline)
 
         set_one = re.findall(r"BACKUP_COMPLETE (\S+)", self.ctl("backup"))[0]
         self.ctl("verify-backup", set_one)
@@ -1075,6 +1138,331 @@ class Smoke:
         if self.client("snapshot") != baseline:
             raise SystemExit("schema guard drill changed data")
         self.step("schema-guard", refused=results, compatible_after_restore=True)
+
+    def backend_logs(self) -> str:
+        return run(
+            "docker",
+            "exec",
+            self.dind,
+            "docker",
+            "logs",
+            "--tail",
+            "80",
+            self.backend()["Id"],
+            stderr=subprocess.STDOUT,
+        )
+
+    def wait_logs(self, text: str, seconds: int = 90) -> None:
+        deadline = time.monotonic() + seconds
+        while text not in self.backend_logs():
+            if self.http_status("/api/v1/ready") == 200:
+                raise SystemExit(f"backend became ready while waiting for {text!r}")
+            if time.monotonic() > deadline:
+                raise SystemExit(f"backend never logged {text!r}:\n" + self.backend_logs()[-3000:])
+            time.sleep(2)
+
+    def recover(self) -> None:
+        """Ordinary operator recovery once the cause is fixed: plain `up -d`, then acceptance."""
+        deadline = time.monotonic() + 120
+        while True:
+            db = self.nested_json("inspect", self.stack("ps", "-q", "db"))[0]["State"]
+            if (db.get("Health") or {}).get("Status") == "healthy":
+                break
+            if time.monotonic() > deadline:
+                raise SystemExit("database did not become healthy again")
+            time.sleep(2)
+        self.nested("restart", self.backend()["Id"])  # skip the crash-loop backoff delay
+        self.stack("up", "-d")
+        self.ctl("acceptance", "--owner", OWNER_LOGIN, stdin=self.password + "\n")
+
+    def pending_migration_drill(self) -> None:
+        """A newer image on an older schema refuses with the explicit-migration instruction."""
+        revision = self.psql("SELECT version_num FROM alembic_version")
+        result = self.stack_result(
+            "run",
+            "--rm",
+            "--no-deps",
+            "-T",
+            "backend",
+            env={
+                "FLORABASE_BACKEND_IMAGE": self.evidence["references"]["backend-b"],
+                "FLORABASE_EXPECTED_ALEMBIC_HEAD": self.heads["b"],
+            },
+        )
+        if result.returncode == 0 or "a migration is pending" not in result.stdout:
+            raise SystemExit("pending migration was not refused:\n" + result.stdout[-3000:])
+        if self.psql("SELECT version_num FROM alembic_version") != revision:
+            raise SystemExit("the refused start changed the schema")
+        self.ctl("acceptance")
+        message = [line for line in result.stdout.splitlines() if "schema-guard:" in line][-1]
+        self.step("pending-migration-refused", schema_unchanged=revision, message=message)
+
+    def failure_drills(self, baseline: dict[str, Any]) -> None:
+        """Missing secrets, an unavailable database and invalid configuration fail closed."""
+        results: dict[str, Any] = {}
+        secret = INSTALL + "/secrets/backend.env"
+        running = self.backend()["Id"]
+        self.operator_sh(f"mv {secret} {secret}.drill")
+        result = self.stack_result("up", "-d", "--no-deps", "--force-recreate", "backend")
+        self.operator_sh(f"mv {secret}.drill {secret}")
+        if result.returncode == 0 or "backend.env" not in result.stdout:
+            raise SystemExit("missing secret file was not refused:\n" + result.stdout[-3000:])
+        if self.backend()["Id"] != running or self.http_status("/api/v1/ready") != 200:
+            raise SystemExit("a refused configuration replaced the running backend")
+        results["missing-secret"] = {
+            "compose_exit": result.returncode,
+            "message": result.stdout.strip().splitlines()[-1],
+            "running_backend_kept": True,
+        }
+
+        self.stack("stop", "db")
+        deadline = time.monotonic() + 60
+        while (ready := self.http_status("/api/v1/ready")) == 200:
+            if time.monotonic() > deadline:
+                raise SystemExit("readiness stayed 200 with the database stopped")
+            time.sleep(2)
+        liveness = self.http_status("/healthz")
+        self.nested("restart", self.backend()["Id"])
+        self.wait_logs("database revision unavailable")
+        self.stack("start", "db")
+        self.recover()
+        results["database-unavailable"] = {"ready_status": ready, "frontend_healthz": liveness}
+
+        env = INSTALL + "/stack/.env"
+        self.operator_sh(
+            f"cp -p {env} {DATA}/env.drill && sed -i "
+            f"'s#^FLORABASE_CANONICAL_ORIGIN=.*#FLORABASE_CANONICAL_ORIGIN=http://insecure.invalid#' {env}"
+        )
+        self.stack_result("up", "-d", "--no-deps", "--force-recreate", "backend")
+        self.wait_logs("must use HTTPS in production")
+        logs = self.backend_logs()
+        self.operator_sh(f"cp -p {DATA}/env.drill {env} && rm {DATA}/env.drill")
+        key = "POSTGRES_PASSWORD"  # read from the disposable drill's generated secret file
+        database_password = self.operator_sh(f"sed -n 's/^{key}=//p' {INSTALL}/secrets/db.env")
+        if not database_password:
+            raise SystemExit("could not read the drill database password")
+        if "invalid configuration" not in logs or database_password in logs:
+            raise SystemExit("invalid configuration was not reported safely")
+        self.recover()
+        results["invalid-origin"] = {
+            "message": [line for line in logs.splitlines() if "invalid configuration" in line][-1]
+        }
+        if self.client("snapshot") != baseline:
+            raise SystemExit("failure drills changed data")
+        self.step("failure-modes", **results)
+
+    def https_proxy_drill(self, baseline: dict[str, Any]) -> None:
+        """TLS-terminating reverse proxy in front of the loopback port, with hostile headers."""
+        host = ORIGIN.split("://", 1)[1]
+        proxy = self.tools / "proxy"
+        proxy.mkdir()
+        (proxy / "server.ext").write_text(
+            f"subjectAltName=DNS:{host}\nbasicConstraints=CA:FALSE\nextendedKeyUsage=serverAuth\n"
+        )
+        for command in (
+            "openssl req -x509 -newkey rsa:2048 -nodes -days 2 -subj /CN=florabase-smoke-ca "
+            "-addext basicConstraints=critical,CA:TRUE -addext keyUsage=critical,keyCertSign "
+            "-keyout ca.key -out ca.pem",
+            f"openssl req -newkey rsa:2048 -nodes -subj /CN={host} -keyout server.key -out server.csr",
+            "openssl x509 -req -in server.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 2 "
+            "-extfile server.ext -out server.pem",
+        ):
+            subprocess.run(command.split(), cwd=proxy, check=True, capture_output=True)
+        for name in ("ca.key", "server.key"):
+            (proxy / name).chmod(0o644)  # disposable test keys, read by the nested proxy
+        (proxy / "nginx.conf").write_text(
+            "pid /tmp/proxy.pid;\nevents {}\nhttp {\n"
+            "  client_body_temp_path /tmp/body; proxy_temp_path /tmp/proxy;\n"
+            "  fastcgi_temp_path /tmp/fastcgi; uwsgi_temp_path /tmp/uwsgi; scgi_temp_path /tmp/scgi;\n"
+            "  access_log off;\n"
+            "  server {\n"
+            f"    listen 127.0.0.1:443 ssl;\n    server_name {host};\n"
+            "    ssl_certificate /etc/florabase-proxy/server.pem;\n"
+            "    ssl_certificate_key /etc/florabase-proxy/server.key;\n"
+            "    client_max_body_size 32m;\n"
+            "    location / {\n"
+            f"      proxy_pass http://127.0.0.1:{LIVE_PORT};\n"
+            "      proxy_set_header Host $host;\n"
+            "      proxy_set_header X-Forwarded-Proto https;\n"
+            "      proxy_set_header X-Forwarded-For $remote_addr;\n"
+            "      # Hostile values: Florabase must not derive origin or identity from them.\n"
+            "      proxy_set_header X-Forwarded-Host attacker.invalid;\n"
+            '      proxy_set_header Forwarded "for=203.0.113.9;host=attacker.invalid;proto=http";\n'
+            "    }\n  }\n}\n"
+        )
+        self.operator_sh(
+            f"mkdir -p {DATA}/proxy && cp /opt/florabase/proxy/* {DATA}/proxy/ && "
+            f"echo '127.0.0.1 {host}' >> /etc/hosts"
+        )
+        self.nested(
+            "run",
+            "-d",
+            "--name",
+            "https-proxy",
+            "--network",
+            "host",
+            "--user",
+            "0",
+            "-v",
+            f"{DATA}/proxy:/etc/florabase-proxy:ro",
+            "--entrypoint",
+            "nginx",
+            self.evidence["references"]["frontend"],
+            "-c",
+            "/etc/florabase-proxy/nginx.conf",
+            "-g",
+            "daemon off;",
+        )
+        trust = {"SSL_CERT_FILE": "/opt/florabase/proxy/ca.pem"}
+        try:
+            output = self.ctl(
+                "acceptance",
+                "--base-url",
+                ORIGIN,
+                "--owner",
+                OWNER_LOGIN,
+                stdin=self.password + "\n",
+                extra_env=trust,
+            )
+            if "OWNER_LOGIN_PASSED origin=" + ORIGIN not in output:
+                raise SystemExit("owner acceptance did not run through the HTTPS proxy")
+            if self.client("snapshot", base=ORIGIN, extra_env=trust) != baseline:
+                raise SystemExit("data or original media differ through the HTTPS proxy")
+        finally:
+            self.nested("rm", "-f", "https-proxy")
+        self.step(
+            "https-reverse-proxy",
+            base_url=ORIGIN,
+            hostile_forwarded_headers_ignored=True,
+            owner_login_logout_csrf=True,
+            original_media_identical=True,
+        )
+
+    def postgres_image_drill(self, baseline: dict[str, Any]) -> None:
+        """Derived PostgreSQL: no gosu, uid 70, root refused before touching data, old pin data."""
+        image = self.evidence["references"]["postgres"]
+        running = self.stack("exec", "-T", "db", "sh", "-c", "id -u; command -v gosu || echo none")
+        if running.split() != ["70", "none"]:
+            raise SystemExit("database must run as uid 70 without gosu: " + running)
+        tree = f"find {INSTALL}/postgres -printf '%U:%G %m %s %T@ %p\\n' | sort | sha256sum"
+        self.stack("stop")
+        before = self.operator_sh(tree)
+        # Default entrypoint and the overridden upstream ones (initdb helpers source it first).
+        for entrypoint in (
+            [],
+            ["--entrypoint", "docker-entrypoint.sh"],
+            ["--entrypoint", "docker-ensure-initdb.sh"],
+        ):
+            refused = subprocess.run(
+                [
+                    "docker",
+                    "exec",
+                    self.dind,
+                    "docker",
+                    "run",
+                    "--rm",
+                    "--user",
+                    "0",
+                    "--network",
+                    "none",
+                    "-v",
+                    "florabase-prod_postgres_data:/var/lib/postgresql",
+                    *entrypoint,
+                    image,
+                    "postgres",
+                ],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+            if refused.returncode != 64 or "refusing to run as root" not in refused.stdout:
+                raise SystemExit(
+                    f"root start {entrypoint} was not refused: " + refused.stdout[-2000:]
+                )
+        after = self.operator_sh(tree)
+        if before != after:
+            raise SystemExit("refused root start changed the PostgreSQL data directory")
+        self.stack("up", "-d")
+        self.ctl("acceptance", "--owner", OWNER_LOGIN, stdin=self.password + "\n")
+        if self.client("snapshot") != baseline:
+            raise SystemExit("PostgreSQL image drill changed data")
+
+        # A data directory initialized by the previously pinned official image opens unchanged.
+        compat = DATA + "/postgres-compat"
+        self.operator_sh(f"mkdir -m 0700 {compat} && chown 70:70 {compat}")
+        common = [
+            "run",
+            "-d",
+            "--user",
+            "70:70",
+            "--network",
+            "none",
+            # Disposable, network-less drill database: no password exists to protect.
+            "-e",
+            "POSTGRES_HOST_AUTH_METHOD=trust",
+        ]
+        common += ["-v", f"{compat}:/var/lib/postgresql"]
+
+        def wait_ready(name: str) -> None:
+            for _ in range(60):
+                if (
+                    subprocess.run(
+                        [
+                            "docker",
+                            "exec",
+                            self.dind,
+                            "docker",
+                            "exec",
+                            name,
+                            "pg_isready",
+                            "-U",
+                            "postgres",
+                        ],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    ).returncode
+                    == 0
+                ):
+                    return
+                time.sleep(1)
+            raise SystemExit(name + " never became ready")
+
+        self.nested(
+            *common,
+            "--name",
+            "compat-old",
+            self.evidence["references"]["postgres-previous-official"],
+        )
+        wait_ready("compat-old")
+        self.nested(
+            "exec",
+            "compat-old",
+            "psql",
+            "-U",
+            "postgres",
+            "-Atc",
+            "CREATE TABLE compat (v text); INSERT INTO compat VALUES ('written-by-previous-official')",
+        )
+        self.nested("stop", "-t", "30", "compat-old")
+        self.nested("rm", "compat-old")
+        self.nested(*common, "--name", "compat-new", image)
+        wait_ready("compat-new")
+        value = self.nested(
+            "exec", "compat-new", "psql", "-U", "postgres", "-Atc", "SELECT v FROM compat"
+        )
+        self.nested("stop", "-t", "30", "compat-new")
+        self.nested("rm", "compat-new")
+        if value != "written-by-previous-official":
+            raise SystemExit("previous official data directory did not open: " + value)
+        self.step(
+            "postgres-image",
+            uid=70,
+            gosu="absent",
+            root_refused_exit=refused.returncode,
+            root_refused_entrypoints=["default", "docker-entrypoint.sh", "docker-ensure-initdb.sh"],
+            data_directory_unchanged=True,
+            previous_official_data_opened=True,
+        )
 
     def retention_drill(self) -> None:
         """R2 on real sets: a planted traversal entry is never eligible; newest set survives."""

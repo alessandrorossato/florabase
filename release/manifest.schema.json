@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/alessandrorossato/florabase/release/manifest.schema.json",
-  "title": "Florabase beta image release manifest v1",
+  "title": "Florabase beta image release manifest v2",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "const": 1
+      "const": 2
     },
     "distribution": {
       "const": "registry-candidate"
@@ -48,16 +48,18 @@
     "postgresql": {
       "type": "object",
       "additionalProperties": false,
+      "description": "Florabase-built PostgreSQL (official image without gosu), pinned by content and identical across application releases; upstream records its exact base.",
       "properties": {
         "repository": {
-          "const": "docker.io/library/postgres"
+          "const": "ghcr.io/alessandrorossato/florabase-postgres"
         },
         "version": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^18\\.6-alpine-florabase\\.[1-9][0-9]*$"
         },
         "reference": {
           "type": "string",
-          "pattern": "^docker\\.io/library/postgres:[a-zA-Z0-9.-]+@sha256:[a-f0-9]{64}$"
+          "pattern": "^ghcr\\.io/alessandrorossato/florabase-postgres:18\\.6-alpine-florabase\\.[1-9][0-9]*@sha256:[a-f0-9]{64}$"
         },
         "index_digest": {
           "type": "string",
@@ -69,6 +71,45 @@
         },
         "platform": {
           "const": "linux/amd64"
+        },
+        "source_date_epoch": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "upstream": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "repository": {
+              "const": "docker.io/library/postgres"
+            },
+            "version": {
+              "type": "string"
+            },
+            "reference": {
+              "type": "string",
+              "pattern": "^docker\\.io/library/postgres:[a-zA-Z0-9.-]+@sha256:[a-f0-9]{64}$"
+            },
+            "index_digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "platform_digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "platform": {
+              "const": "linux/amd64"
+            }
+          },
+          "required": [
+            "repository",
+            "version",
+            "reference",
+            "index_digest",
+            "platform_digest",
+            "platform"
+          ]
         }
       },
       "required": [
@@ -77,7 +118,9 @@
         "reference",
         "index_digest",
         "platform_digest",
-        "platform"
+        "platform",
+        "source_date_epoch",
+        "upstream"
       ]
     },
     "images": {
@@ -225,6 +268,30 @@
         "run_id",
         "run_attempt"
       ]
+    },
+    "install_bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "SHA-256 of each install-bundle release asset; the controller refuses a bundle that differs.",
+      "properties": {
+        "compose.yaml": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "florabasectl.py": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "florabase.env.example": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "compose.yaml",
+        "florabasectl.py",
+        "florabase.env.example"
+      ]
     }
   },
   "required": [
@@ -237,6 +304,7 @@
     "postgresql",
     "images",
     "build_inputs",
-    "workflow"
+    "workflow",
+    "install_bundle"
   ]
 }

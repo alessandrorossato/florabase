@@ -2444,6 +2444,28 @@
       ],
       "priority": "P1",
       "status": "implemented"
+    },
+    {
+      "id": "BETA-DISTRIBUTION-001",
+      "category": "operations",
+      "description": "Make the existing paired-image beta stack installable from published release assets without a source checkout, with an end-user guide and isolated acceptance evidence",
+      "acceptance_criteria": [
+        "Releases attach the byte-bound install bundle (compose.yaml, florabasectl.py, florabase.env.example) beside the manifest; prerelease promotion writes only the exact version tag and never latest",
+        "The backend guard never migrates and refuses invalid configuration (field names only, no values), unavailable databases, empty, pending and newer or foreign schemas with the exact operator action",
+        "Controller acceptance checks the application shell, its script assets and JSON 404 for unknown API paths through every base URL",
+        "Disposable Engine 24.0.2/Compose 2.20.1 smoke proves registry-pull install from the bundle, owner bootstrap, media persistence across recreation and daemon restart, explicit-migration upgrades, backup/isolated/replacement restore, pending-migration refusal, missing-secret, unavailable-database and invalid-origin failures, and a TLS reverse proxy with hostile forwarded headers",
+        "A reproducible Florabase PostgreSQL 18.6 image (approved official base, gosu removed, non-root only with an early root refusal) is pinned by index and platform digest in release inputs, built, scanned, SBOM'd, attested and promoted only by the protected workflow with the pair, verified by the controller and smokes, and documented with its residual upstream-layer bytes, second-scanner results and maintenance responsibility",
+        "WFO/WCVP reference indexes open read-only with SQLite defensive hardening and only when their schema equals the builder's exact layout, refusing views, triggers, virtual tables and any other object before a query (including the crafted view-over-FTS5 path QA demonstrated), and the guide requires builder-made indexes and distinguishes integrity checks from provenance",
+        "An end-user installation guide covers prerequisites, download and verification, configuration, HTTPS proxies, owner bootstrap, volumes, explicit-migration upgrades, PostgreSQL version boundaries, backup/restore, Dockhand, troubleshooting, uninstalling without data loss and known limitations, separate from development instructions",
+        "Independent infrastructure QA and the canonical gate pass before operator delivery; publication, tags and real-host deployment remain separately authorized"
+      ],
+      "dependencies": [
+        "BETA-IMAGE-001",
+        "BETA-SECURITY-001",
+        "BETA-RUNTIME-001"
+      ],
+      "priority": "P0",
+      "status": "in_progress"
     }
   ]
 }

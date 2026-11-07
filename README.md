@@ -65,6 +65,9 @@ repository currently uses multi-architecture upstream images; host Python and No
 A public deployment requires an operator-managed HTTPS reverse proxy. Florabase production mode
 requires the exact public HTTPS origin and secure same-origin session cookies.
 
+To run Florabase from the published images without a source checkout, follow the
+[installation guide](docs/installation.md) (linux/amd64, Docker Compose or Dockhand).
+
 ## Quick start for development
 
 ```bash
@@ -103,6 +106,7 @@ configuration and secrets still need a separate protected backup.
 
 ## Project information
 
+- [Installing from published images](docs/installation.md)
 - [Deployment and upgrades](docs/deployment.md)
 - [Development guide](docs/development.md)
 - [Domain model](docs/domain-model.md)

@@ -33,7 +33,10 @@ ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-RUN addgroup -S -g 10001 florabase \
+# zlib fix the pinned base predates (CVE-2026-4738, reported by Grype; Trivy does not flag it).
+# The exact version fails the build once Alpine supersedes it; drop it when the base carries it.
+RUN apk add --no-cache zlib=1.4-r0 \
+    && addgroup -S -g 10001 florabase \
     && adduser -S -D -H -u 10001 -G florabase -h /app florabase \
     && install --directory --owner=10001 --group=10001 --mode=0700 /var/lib/florabase/attachments
 

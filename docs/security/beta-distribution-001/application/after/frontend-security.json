@@ -1,0 +1,41 @@
+{
+  "reduced_from": {
+    "sha256": "31fc9a618a0cb5a57962232b6050aeb1f1a3ee4b943d3460c557ceb982797b13",
+    "bytes": 77038,
+    "note": "raw Trivy JSON kept outside Git; package maintainer metadata omitted"
+  },
+  "SchemaVersion": 2,
+  "CreatedAt": "2026-11-06T20:38:40.557625541Z",
+  "ArtifactName": "/artifacts/frontend.tar",
+  "Metadata": {
+    "OS": {
+      "Family": "alpine",
+      "Name": "3.24.2"
+    },
+    "ImageID": "sha256:efaa3d29e1d4b82f82a19f0ce0bd0448e6b50599490ac1305cd1e579104f4c67",
+    "DiffIDs": [
+      "sha256:74d97c428c51a828f9051a7a40a53ff1fc99e54fc30323ce36760701b0b7f711",
+      "sha256:b8edda8641ac49fd7047a93743731efdb098fe4323b0293615a4daf1a6ff6b07",
+      "sha256:ea99b346cd2fd6e72cbcf6e367eeb09afad17bf7c005973dea3e13b74169fa4f",
+      "sha256:2905b9963ff30d787a9c75efa70a68f4372091a4c6794da3c08b5f82237dfc26",
+      "sha256:f3fc23f90da4deec07e69c635dcb622701554b86ca6169b4ce36067c949ace69",
+      "sha256:f3ab0add3da3d203af0bca76efed2ff7070cbdedef5c51bfd89b5013011c9e97",
+      "sha256:76d28e61993f7e88d78daa293c15609e9ff96037fbfd62f89adfe6529064084b",
+      "sha256:00052d18c950c80abaec242318f8bd760ef299966f87d8c6b116f16016f68892",
+      "sha256:87ced49ec7426d757a8ddd79b125d291bed4027be8cf49de44ec02e32f3f4504",
+      "sha256:4873846c1fa254595c51ce51bb6c27a139dc11453bd550729a443badedea3507",
+      "sha256:23e72791167d06bc46bfa4022bc2385b9420afadf1038fa84b89d903ce664a6c",
+      "sha256:dfd9276bc1ba9c21a2ca73e52d5dfe29eb699cc5254699fcf4237421afb1e1a4"
+    ],
+    "RepoDigests": null
+  },
+  "Results": [
+    {
+      "Target": "/artifacts/frontend.tar (alpine 3.24.2)",
+      "Class": "os-pkgs",
+      "Type": "alpine",
+      "Vulnerabilities": [],
+      "Secrets": []
+    }
+  ]
+}

@@ -53,6 +53,7 @@ SERVICES = ("db", "backend", "frontend")
 PHASES = ("validated", "quiesced", "backed_up", "migrated", "pinned", "started", "accepted")
 DIGEST = r"sha256:[a-f0-9]{64}"
 BACKUP_MAX_AGE_HOURS = 26
+INSTALL_BUNDLE = ("compose.yaml", "florabasectl.py", "florabase.env.example")
 LOOPBACK = "127.0.0.1"  # literal in compose.yaml; never configurable in this private beta
 SET_KINDS = ("manual", "pre-upgrade", "safety")
 SET_ID = re.compile(r"[0-9]{8}T[0-9]{6}Z-(?:manual|pre-upgrade|safety)-[a-f0-9]{6}\Z")
@@ -203,7 +204,7 @@ def validate_manifest(manifest: Json, *, test_candidate: bool = False) -> None:
         if not condition:
             raise Refusal("release manifest: " + message)
 
-    need(manifest.get("schema_version") == 1, "schema_version must be 1")
+    need(manifest.get("schema_version") == 2, "schema_version must be 2")
     distribution = "test-candidate" if test_candidate else "registry-candidate"
     need(manifest.get("distribution") == distribution, "distribution must be " + distribution)
     need(
@@ -225,17 +226,60 @@ def validate_manifest(manifest: Json, *, test_candidate: bool = False) -> None:
     postgres = manifest.get("postgresql")
     need(isinstance(postgres, dict), "postgresql is required")
     assert isinstance(postgres, dict)
-    postgres_pattern = r"docker\.io/library/postgres:[a-zA-Z0-9.-]+@" + DIGEST
+    # Florabase-built PostgreSQL (the official image without gosu); its base is recorded.
+    postgres_version = r"18\.6-alpine-florabase\.[1-9][0-9]*"
+    postgres_repository = r"ghcr\.io/alessandrorossato/florabase-postgres"
     if test_candidate:
-        postgres_pattern = (
-            "(?:" + postgres_pattern + "|" + loopback + r"postgres:[a-zA-Z0-9.-]+@" + DIGEST + ")"
-        )
+        postgres_repository = "(?:" + postgres_repository + "|" + loopback + "florabase-postgres)"
     need(
-        bool(re.fullmatch(postgres_pattern, str(postgres.get("reference", "")))),
+        bool(
+            re.fullmatch(
+                postgres_repository + ":" + postgres_version + "@" + DIGEST,
+                str(postgres.get("reference", "")),
+            )
+        ),
         "invalid postgresql reference",
     )
     need(postgres.get("platform") == PLATFORM, "postgresql platform must be linux/amd64")
-    need(isinstance(postgres.get("version"), str), "postgresql version required")
+    need(
+        bool(re.fullmatch(postgres_version, str(postgres.get("version", "")))),
+        "postgresql version required",
+    )
+    need(
+        str(postgres.get("reference", "")).split("@")[0].rsplit(":", 1)[-1]
+        == postgres.get("version"),
+        "postgresql reference tag must equal its version",
+    )
+    need(
+        isinstance(postgres.get("source_date_epoch"), int)
+        and not isinstance(postgres.get("source_date_epoch"), bool)
+        and postgres["source_date_epoch"] > 0,
+        "postgresql source_date_epoch required",
+    )
+    upstream = postgres.get("upstream")
+    need(isinstance(upstream, dict), "postgresql upstream base is required")
+    assert isinstance(upstream, dict)
+    need(
+        upstream.get("repository") == "docker.io/library/postgres"
+        and upstream.get("platform") == PLATFORM
+        and bool(re.fullmatch(DIGEST, str(upstream.get("index_digest", ""))))
+        and bool(re.fullmatch(DIGEST, str(upstream.get("platform_digest", ""))))
+        and upstream.get("reference")
+        == "{}:{}@{}".format(
+            upstream.get("repository"), upstream.get("version"), upstream.get("index_digest")
+        )
+        and str(postgres.get("version", "")).startswith(
+            str(upstream.get("version")) + "-florabase."
+        ),
+        "invalid postgresql upstream base",
+    )
+    bundle = manifest.get("install_bundle")
+    need(
+        isinstance(bundle, dict)
+        and set(bundle) == set(INSTALL_BUNDLE)
+        and all(bool(re.fullmatch(DIGEST, str(value))) for value in bundle.values()),
+        "install_bundle must record the SHA-256 of every bundle file",
+    )
     images = manifest.get("images")
     need(isinstance(images, dict) and set(images) == {"backend", "frontend"}, "images pair")
     assert isinstance(images, dict)
@@ -283,7 +327,9 @@ def release_record(manifest: Json, manifest_sha256: str) -> Json:
     }
 
 
-def load_manifest(path: Path, expected_sha256: str, allow_test: bool) -> tuple[Json, str]:
+def load_manifest(
+    path: Path, expected_sha256: str, allow_test: bool, bundle: bool = True
+) -> tuple[Json, str]:
     if allow_test and not test_mode():
         raise Refusal("--allow-test-candidate requires FLORABASECTL_TEST_MODE=1")
     if not re.fullmatch(r"[a-f0-9]{64}", expected_sha256):
@@ -293,7 +339,24 @@ def load_manifest(path: Path, expected_sha256: str, allow_test: bool) -> tuple[J
         raise Refusal(f"manifest digest {actual} does not match the authorized digest")
     manifest = read_json(path)
     validate_manifest(manifest, test_candidate=allow_test)
+    if bundle:
+        verify_bundle(manifest)
     return manifest, actual
+
+
+def verify_bundle(manifest: Json) -> None:
+    """Refuse mixing: the controller and stack file must be the ones this manifest records.
+
+    This catches an accidental mix of releases; it cannot detect a tampered controller (which
+    checks itself). The mandatory `gh attestation verify` of every bundle file is that control.
+    """
+    for name in ("compose.yaml", "florabasectl.py"):
+        actual = "sha256:" + sha256_file(BUNDLE / name)
+        if actual != manifest["install_bundle"][name]:
+            raise Refusal(
+                f"{name} ({actual}) is not this release's install bundle file; download the "
+                "bundle assets of the same release and verify their attestations"
+            )
 
 
 # --------------------------------------------------------------------------- process runner
@@ -777,7 +840,17 @@ class Controller:
         say("verifying release images and identities")
         for name in ("backend", "frontend"):
             self.verify_image(manifest["images"][name], manifest, name)
-        self.verify_image(manifest["postgresql"], None, "postgresql")
+        postgres = manifest["postgresql"]
+        config = self.verify_image(postgres, None, "postgresql").get("Config") or {}
+        labels = config.get("Labels") or {}
+        if (
+            config.get("User") != "70:70"
+            or config.get("Entrypoint") != ["florabase-postgres-entrypoint"]
+            or labels.get("org.opencontainers.image.base.digest")
+            != postgres["upstream"]["index_digest"]
+            or labels.get("org.opencontainers.image.version") != postgres["version"]
+        ):
+            raise Refusal("postgresql image is not the release's non-root derived image")
         heads = self.image_heads(manifest["images"]["backend"]["reference"])
         if heads != [manifest["alembic_head"]]:
             raise Refusal(f"backend image Alembic heads {heads} differ from manifest")
@@ -1832,9 +1905,13 @@ class Controller:
         return 1 if problems else 0
 
     def check_release(self, args: argparse.Namespace) -> int:
-        """Separate release notification; never relies on Dockhand update badges."""
+        """Separate release notification; never relies on Dockhand update badges.
+
+        It changes nothing, so the installed (older) controller may read a newer manifest; the
+        bundle check applies when that release is actually installed or promoted.
+        """
         manifest, digest = load_manifest(
-            args.manifest, args.manifest_sha256, args.allow_test_candidate
+            args.manifest, args.manifest_sha256, args.allow_test_candidate, bundle=False
         )
         current = self.require_current()
         target = release_record(manifest, digest)
@@ -2041,6 +2118,20 @@ def http_acceptance(base: str, current: Json) -> None:
         or release.get("revision") != current["source_revision"]
     ):
         raise Failure("frontend release surface does not match the deployed release")
+    # Client routes live in the URL fragment, so the server only ever serves the shell; its
+    # script assets must resolve, and an unknown API path must never fall back to the shell.
+    status, headers, body = http_request(base + "/")
+    page = body.decode("utf-8", "replace")
+    scripts = re.findall(r'<script[^>]+src="(/[^"]+\.js)"', page)
+    if status != 200 or '<div id="root">' not in page or not scripts:
+        raise Failure(f"{base}/ did not serve the application shell")
+    for script in scripts:
+        status, headers, _ = http_request(base + script)
+        if status != 200 or "javascript" not in (headers.get("Content-Type") or ""):
+            raise Failure(f"{base}{script} returned {status} {headers.get('Content-Type')}")
+    status, headers, body = http_request(base + "/api/v1/florabase-acceptance-unknown")
+    if status != 404 or not (headers.get("Content-Type") or "").startswith("application/json"):
+        raise Failure(f"unknown API path returned {status} {headers.get('Content-Type')}")
     status, _, _ = http_request(base + "/api/v1/auth/session")
     if status != 401:
         raise Failure(f"anonymous session must be rejected, got {status}")
