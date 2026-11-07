@@ -22,7 +22,10 @@ so they stayed outside Git; re-running the same scan reproduces them.
 Remediation evaluation for the remaining findings, including the recorded approved pin and a
 tested gosu-free prototype (0 / 0): [postgresql-gosu-remediation.md](postgresql-gosu-remediation.md).
 
-**Release blocker.** The fail-closed gate still blocks publication on the 26 gosu findings. gosu
+Integrated derived image, registry-level verification, second-scanner results for all three images
+and the maintenance responsibility: [postgresql-image.md](postgresql-image.md).
+
+**Release blocker (superseded by the derived image; kept for history).** The fail-closed gate still blocks publication on the 26 gosu findings. gosu
 is not executed by this stack (the entrypoint calls it only as root; the stack runs PostgreSQL as
 70:70 with all capabilities dropped and no-new-privileges), but that is applicability evidence, not
 a scanner pass. Resolving it needs an operator decision: wait for an upstream image built with a

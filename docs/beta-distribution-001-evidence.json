@@ -1,18 +1,19 @@
 {
   "candidates": {
     "a_head": "20261013_0042",
-    "revision": "3123acfee61c0142427b7c0863fc32a8ddb29ee0",
+    "revision": "0d074e7027664ec335037822d69e93a98f6904a8",
     "version": "0.1.0-beta.1"
   },
-  "project": "florabase-workflow-smoke-b93adbbf7b85",
+  "project": "florabase-workflow-smoke-7738f1a522b2",
   "references": {
-    "backend": "127.0.0.1:5000/florabase-backend@sha256:682fc5dab717bfb51045b94214f122b67d571206bc75160c249c7f5ca357cb81",
-    "backend-b": "127.0.0.1:5000/florabase-backend@sha256:110e8890da4777dfb278b86c36a74210257127a26a87560a8956c484eb558bfc",
-    "backend-c": "127.0.0.1:5000/florabase-backend@sha256:bf2166da8cd44bb6ad5605380a5d4f25497cd10b775c222089d90e5f0949a339",
-    "backend-d": "127.0.0.1:5000/florabase-backend@sha256:11a3dcc25a61ebbf53f7d2d97de33dd3ecb5fc1174a8f9090190dd1f6eb356c3",
-    "backend-e": "127.0.0.1:5000/florabase-backend@sha256:50fb96f0687ad4fee7eb3b2c72a278548faf5837e908a83236d9c01596a809ef",
-    "frontend": "127.0.0.1:5000/florabase-frontend@sha256:2d9ce94e568525c0065ba5366bd0127ffe1cf5698f3283d5552b7ff8bcefbc9a",
-    "postgres": "127.0.0.1:5000/postgres:18.6-alpine@sha256:926169e7554ef9ceb48b0885a3abd0d63f182ff19cb8e7535d58a018d99d9e66",
+    "backend": "127.0.0.1:5000/florabase-backend@sha256:2738e48b0dacef0f95ef6a14007c29fada107d8cecbf65b023ca79c30ba4db49",
+    "backend-b": "127.0.0.1:5000/florabase-backend@sha256:d4cce30552e424f9d08b5374fff644e73ee79c789d15783a793d81428a3eb422",
+    "backend-c": "127.0.0.1:5000/florabase-backend@sha256:54a0e7b0fa2fe68552f18b3a56dc794d5a512b25fc9493b1be6b8f5bdb765e76",
+    "backend-d": "127.0.0.1:5000/florabase-backend@sha256:c7e47410f61a6b963aea7e03e94a2f64b3bfc84a219fe861d06b40e81f7efa0a",
+    "backend-e": "127.0.0.1:5000/florabase-backend@sha256:4b45fe79b35b7d3623134359d7bb3f982877ce7a54a74bb77abc01c55e58d976",
+    "frontend": "127.0.0.1:5000/florabase-frontend@sha256:10919ccd195b9d708050612465e0db92e600bf9eb57be0cdf6b63ce3ca7f7ecc",
+    "postgres": "127.0.0.1:5000/florabase-postgres:18.6-alpine-florabase.1@sha256:dda6588ce32540ff7973338aa36221e8e234e12c96d7f3c990d95b281faaf204",
+    "postgres-previous-official": "sha256:57b23a0326ee442e83b3d3fa027c5a148be0a392d7c91d1ca4e1e70131ee859a",
     "restic": "127.0.0.1:5000/restic@sha256:ab88c9c22db62009c28138193444ed009ea5b8b5b1bd3f3dfe567405379ca117"
   },
   "runtime": {
@@ -26,13 +27,13 @@
   },
   "source": {
     "clean": true,
-    "commit": "3123acfee61c0142427b7c0863fc32a8ddb29ee0",
-    "tree": "38eaa29023b2e19f6fb5657d62938a52bcd1271b"
+    "commit": "0d074e7027664ec335037822d69e93a98f6904a8",
+    "tree": "b98cf0a930c943643cbf11ec66123fd2d6fea1ea"
   },
   "steps": [
     {
       "compose": "2.20.1",
-      "elapsed_seconds": 47.8,
+      "elapsed_seconds": 36.9,
       "engine": "24.0.2",
       "host_dependent": {
         "disk>=20GiB": true,
@@ -43,7 +44,7 @@
       "step": "preflight"
     },
     {
-      "elapsed_seconds": 85.3,
+      "elapsed_seconds": 74.8,
       "ownership": [
         "/srv/florabase-runtime-smoke/root/postgres 70:70 700",
         "/srv/florabase-runtime-smoke/root/media 10001:10001 700",
@@ -56,20 +57,20 @@
     },
     {
       "assets": 3,
-      "elapsed_seconds": 94.9,
+      "elapsed_seconds": 84.6,
       "seeded": {
-        "external": "01a1b2d3-4770-7696-82a9-a402805db0f6",
-        "shared": "01a1b2d3-474d-74b4-b719-406a72d3f967",
+        "external": "01a1b53b-23cf-769e-a271-bc5add8f1bc5",
+        "shared": "01a1b53b-23a9-7765-8245-2026890f062b",
         "suppliers": [
-          "01a1b2d3-4726-70ee-81e7-4e81c699854d",
-          "01a1b2d3-472c-714b-8dc7-3ba8184c4464"
+          "01a1b53b-237e-7021-a75c-1057bf95607b",
+          "01a1b53b-2385-72d8-811d-c8c991f99438"
         ],
-        "unlinked": "01a1b2d3-4739-7446-9af9-53f436949d3f"
+        "unlinked": "01a1b53b-2393-752d-b8d8-fdbd75ee6177"
       },
       "step": "seed"
     },
     {
-      "elapsed_seconds": 133.2,
+      "elapsed_seconds": 123.6,
       "published": {
         "backend": [],
         "db": [],
@@ -81,8 +82,8 @@
     },
     {
       "daemon_restart": true,
-      "db_restarted_at": "2026-11-06T21:46:16.111495582Z",
-      "elapsed_seconds": 133.2,
+      "db_restarted_at": "2026-11-07T08:58:57.658104406Z",
+      "elapsed_seconds": 123.6,
       "recreated": [
         "backend",
         "frontend"
@@ -91,7 +92,7 @@
     },
     {
       "compatible_after_restore": true,
-      "elapsed_seconds": 362.4,
+      "elapsed_seconds": 352.7,
       "refused": [
         {
           "phase": "running backend schema change",
@@ -126,7 +127,7 @@
       "step": "schema-guard"
     },
     {
-      "elapsed_seconds": 369.4,
+      "elapsed_seconds": 359.9,
       "message": "schema-guard: database revision ['20261013_0042'] is not release head runtime_smoke_b; refusing to start (a migration is pending: back up, then run florabasectl.py promote, which stops writers, backs up and migrates explicitly). This container never migrates",
       "schema_unchanged": "20261013_0042",
       "step": "pending-migration-refused"
@@ -136,7 +137,7 @@
         "frontend_healthz": 200,
         "ready_status": 0
       },
-      "elapsed_seconds": 450.6,
+      "elapsed_seconds": 441.6,
       "invalid-origin": {
         "message": "schema-guard: invalid configuration (ValidationError) settings: Value error, Canonical public origin must use HTTPS in production; refusing to start. Correct the stack .env or secrets/backend.env and start again"
       },
@@ -149,71 +150,80 @@
     },
     {
       "base_url": "https://florabase-runtime-smoke.invalid",
-      "elapsed_seconds": 456.9,
+      "elapsed_seconds": 447.8,
       "hostile_forwarded_headers_ignored": true,
       "original_media_identical": true,
       "owner_login_logout_csrf": true,
       "step": "https-reverse-proxy"
     },
     {
+      "data_directory_unchanged": true,
+      "elapsed_seconds": 490.6,
+      "gosu": "absent",
+      "previous_official_data_opened": true,
+      "root_refused_exit": 64,
+      "step": "postgres-image",
+      "uid": 70
+    },
+    {
       "attachments": 3,
-      "elapsed_seconds": 480.1,
+      "elapsed_seconds": 514.3,
       "revision": [
         "20261013_0042"
       ],
-      "set_id": "20261106T215157Z-manual-0bed5f",
+      "set_id": "20261107T090522Z-manual-8cceab",
       "step": "backup",
       "tables": 40,
       "tamper_detected": true
     },
     {
-      "elapsed_seconds": 517.3,
-      "project": "florabase-restore-3ebb2133",
-      "seconds": 35.1,
-      "set_id": "20261106T215157Z-manual-0bed5f",
+      "elapsed_seconds": 551.6,
+      "project": "florabase-restore-eb6b8dc4",
+      "seconds": 35.3,
+      "set_id": "20261107T090522Z-manual-8cceab",
       "step": "restore-isolated"
     },
     {
-      "elapsed_seconds": 526.2,
+      "elapsed_seconds": 560.5,
       "encrypted": "restic",
       "import_identical": true,
-      "set_id": "20261106T215157Z-manual-0bed5f",
+      "set_id": "20261107T090522Z-manual-8cceab",
       "step": "offhost-export"
     },
     {
-      "elapsed_seconds": 571.2,
-      "postgres_container": "a41cff47dd08",
+      "elapsed_seconds": 606.1,
+      "postgres_container": "e93f59f4ddb2",
       "release": "b",
       "step": "promote-compatible"
     },
     {
-      "elapsed_seconds": 574.1,
+      "elapsed_seconds": 609.0,
       "message": "florabasectl: REFUSED: database revision ['runtime_smoke_b'] is unknown for the target release; no downgrade or adoption",
       "step": "refuse-ahead-schema"
     },
     {
       "aborted": true,
-      "elapsed_seconds": 615.4,
-      "error": "Writers are stopped. Recovery choices: 'abort' (only if the database revision is unchanged), 'promote --after-failed' with a tested forward fix, or 'restore-replace 20261106T215359Z-pre-upgrade-e3560f",
+      "elapsed_seconds": 651.6,
+      "error": "Writers are stopped. Recovery choices: 'abort' (only if the database revision is unchanged), 'promote --after-failed' with a tested forward fix, or 'restore-replace 20261107T090725Z-pre-upgrade-d42c8c",
       "step": "failed-migration"
     },
     {
-      "abort_refused": "florabasectl: REFUSED: database revision ['runtime_smoke_d'] changed; abort cannot downgrade. Use promote --after-failed (forward fix) or restore-replace 20261106T215440Z-pre-upgrade-920e90",
-      "elapsed_seconds": 681.2,
+      "abort_refused": "florabasectl: REFUSED: database revision ['runtime_smoke_d'] changed; abort cannot downgrade. Use promote --after-failed (forward fix) or restore-replace 20261107T090808Z-pre-upgrade-293f5f",
+      "elapsed_seconds": 718.2,
       "forward_fix": "e",
-      "pre_upgrade_set": "20261106T215440Z-pre-upgrade-920e90",
+      "pre_upgrade_set": "20261107T090808Z-pre-upgrade-293f5f",
       "step": "failed-application"
     },
     {
-      "elapsed_seconds": 731.3,
-      "failed_state_preserved": "/srv/florabase-runtime-smoke/root/preserved/20261106T215550Z",
-      "seconds": 43.4,
+      "elapsed_seconds": 768.8,
+      "failed_state_preserved": "/srv/florabase-runtime-smoke/root/preserved/20261107T090919Z",
+      "seconds": 43.7,
       "sessions_invalidated": true,
-      "set_id": "20261106T215440Z-pre-upgrade-920e90",
+      "set_id": "20261107T090808Z-pre-upgrade-293f5f",
       "step": "restore-replace"
     },
     {
-      "elapsed_seconds": 773.4,
+      "elapsed_seconds": 811.2,
       "killed_after": "migrated",
       "observed": {
         "phase": "migrated",
@@ -224,16 +234,16 @@
     },
     {
       "cleared": true,
-      "elapsed_seconds": 812.4,
+      "elapsed_seconds": 850.6,
       "kind": "wfo",
       "read_only": true,
       "step": "reference-datasets"
     },
     {
       "before": 7,
-      "elapsed_seconds": 818.3,
+      "elapsed_seconds": 856.7,
       "idempotent": true,
-      "kept": "20261106T215636Z-pre-upgrade-d6c6ad",
+      "kept": "20261107T091005Z-pre-upgrade-d1ae73",
       "planted_traversal_kept_untouched": true,
       "step": "retention-boundary"
     },
@@ -243,21 +253,21 @@
         "db": "false",
         "frontend": "false"
       },
-      "elapsed_seconds": 819.9,
+      "elapsed_seconds": 858.2,
       "host_florabase_prod_unchanged": true,
       "journal_entries": 65,
       "retention_dry_run": "florabasectl: retaining 1 set(s) (dry run; pass --apply)",
       "status": {
-        "installation_id": "c71e84ddb36a4f4399c2a0759895ee10",
-        "newest_recovery_set": "2026-11-06T21:56:41Z",
+        "installation_id": "17bc98aec4ee4f0992a1368a2ed75d3c",
+        "newest_recovery_set": "2026-11-07T09:10:10Z",
         "operation": null,
         "problems": [],
         "release": {
           "alembic_head": "runtime_smoke_d",
           "images": {
-            "backend": "127.0.0.1:5000/florabase-backend@sha256:50fb96f0687ad4fee7eb3b2c72a278548faf5837e908a83236d9c01596a809ef",
-            "frontend": "127.0.0.1:5000/florabase-frontend@sha256:2d9ce94e568525c0065ba5366bd0127ffe1cf5698f3283d5552b7ff8bcefbc9a",
-            "postgres": "127.0.0.1:5000/postgres:18.6-alpine@sha256:926169e7554ef9ceb48b0885a3abd0d63f182ff19cb8e7535d58a018d99d9e66"
+            "backend": "127.0.0.1:5000/florabase-backend@sha256:4b45fe79b35b7d3623134359d7bb3f982877ce7a54a74bb77abc01c55e58d976",
+            "frontend": "127.0.0.1:5000/florabase-frontend@sha256:10919ccd195b9d708050612465e0db92e600bf9eb57be0cdf6b63ce3ca7f7ecc",
+            "postgres": "127.0.0.1:5000/florabase-postgres:18.6-alpine-florabase.1@sha256:dda6588ce32540ff7973338aa36221e8e234e12c96d7f3c990d95b281faaf204"
           },
           "version": "0.1.0-beta.1"
         },
@@ -271,5 +281,5 @@
       "unrelated_workload_unchanged": true
     }
   ],
-  "total_seconds": 819.9
+  "total_seconds": 858.2
 }

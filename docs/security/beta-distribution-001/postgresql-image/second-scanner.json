@@ -1,0 +1,429 @@
+{
+  "backend_before_zlib_pin": {
+    "raw_sha256": "536e0933d59caa7e23fdb163fa337f0650804d20e38a28912be74342c908b0de",
+    "scanner": "anchore/grype:v0.121.1@sha256:6b06708b036f74b2cd70e94b706b4586af96d1932e6ac46255940b2e39dd44a9",
+    "db_built": "2026-11-07T06:18:48Z",
+    "matches": [
+      {
+        "id": "CVE-2026-119586",
+        "severity": "High",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": ""
+      },
+      {
+        "id": "CVE-2026-4738",
+        "severity": "Critical",
+        "package": "zlib",
+        "version": "1.3.2-r1",
+        "fix": [
+          "1.4-r0"
+        ],
+        "fix_state": "fixed"
+      },
+      {
+        "id": "CVE-2026-119379",
+        "severity": "High",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2025-15367",
+        "severity": "Medium",
+        "package": "python",
+        "version": "3.14.10",
+        "fix": [
+          "3.15.0a6"
+        ],
+        "fix_state": "fixed"
+      },
+      {
+        "id": "GHSA-5639-2j2p-m4mx",
+        "severity": "Medium",
+        "package": "mako",
+        "version": "1.4.1",
+        "fix": [
+          "1.4.2"
+        ],
+        "fix_state": "fixed"
+      },
+      {
+        "id": "CVE-2026-119374",
+        "severity": "High",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "busybox",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      },
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "busybox-binsh",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      },
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "ssl_client",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      },
+      {
+        "id": "CVE-2026-119378",
+        "severity": "Medium",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2026-116566",
+        "severity": "Medium",
+        "package": "python",
+        "version": "3.14.10",
+        "fix": [
+          "3.16.0"
+        ],
+        "fix_state": "fixed"
+      },
+      {
+        "id": "CVE-2026-119373",
+        "severity": "High",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2026-119375",
+        "severity": "Medium",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2026-119371",
+        "severity": "Medium",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2026-119376",
+        "severity": "Medium",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2026-119591",
+        "severity": "Medium",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2026-103995",
+        "severity": "Low",
+        "package": "python",
+        "version": "3.14.10",
+        "fix": [
+          "3.16.0"
+        ],
+        "fix_state": "fixed"
+      },
+      {
+        "id": "CVE-2026-119372",
+        "severity": "Medium",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2026-119377",
+        "severity": "Low",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      }
+    ]
+  },
+  "backend_after_zlib_pin": {
+    "raw_sha256": "0cdcb31b92df6ce50f5fce21c0fcdaee9f569eab0de907f9ba593a90d876dbba",
+    "scanner": "anchore/grype:v0.121.1@sha256:6b06708b036f74b2cd70e94b706b4586af96d1932e6ac46255940b2e39dd44a9",
+    "db_built": "2026-11-07T06:18:48Z",
+    "matches": [
+      {
+        "id": "CVE-2026-119586",
+        "severity": "High",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": ""
+      },
+      {
+        "id": "CVE-2026-119379",
+        "severity": "High",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2025-15367",
+        "severity": "Medium",
+        "package": "python",
+        "version": "3.14.10",
+        "fix": [
+          "3.15.0a6"
+        ],
+        "fix_state": "fixed"
+      },
+      {
+        "id": "GHSA-5639-2j2p-m4mx",
+        "severity": "Medium",
+        "package": "mako",
+        "version": "1.4.1",
+        "fix": [
+          "1.4.2"
+        ],
+        "fix_state": "fixed"
+      },
+      {
+        "id": "CVE-2026-119374",
+        "severity": "High",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "busybox",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      },
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "busybox-binsh",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      },
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "ssl_client",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      },
+      {
+        "id": "CVE-2026-119378",
+        "severity": "Medium",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2026-116566",
+        "severity": "Medium",
+        "package": "python",
+        "version": "3.14.10",
+        "fix": [
+          "3.16.0"
+        ],
+        "fix_state": "fixed"
+      },
+      {
+        "id": "CVE-2026-119373",
+        "severity": "High",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2026-119375",
+        "severity": "Medium",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2026-119371",
+        "severity": "Medium",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2026-119376",
+        "severity": "Medium",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2026-119591",
+        "severity": "Medium",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2026-103995",
+        "severity": "Low",
+        "package": "python",
+        "version": "3.14.10",
+        "fix": [
+          "3.16.0"
+        ],
+        "fix_state": "fixed"
+      },
+      {
+        "id": "CVE-2026-119372",
+        "severity": "Medium",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      },
+      {
+        "id": "CVE-2026-119377",
+        "severity": "Low",
+        "package": "sqlite-libs",
+        "version": "3.53.4-r0",
+        "fix": [],
+        "fix_state": "unknown"
+      }
+    ]
+  },
+  "frontend": {
+    "raw_sha256": "7eae2395a0735d8a91321879f890217a410da4324df040a307dd009cf90bf61f",
+    "scanner": "anchore/grype:v0.121.1@sha256:6b06708b036f74b2cd70e94b706b4586af96d1932e6ac46255940b2e39dd44a9",
+    "db_built": "2026-11-07T06:18:48Z",
+    "matches": [
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "busybox",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      },
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "busybox-binsh",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      },
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "ssl_client",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      }
+    ]
+  },
+  "postgresql_before_zlib_pin": {
+    "raw_sha256": "2afaff719403fbde2f44425be41c957f2f6ac7cbec28ff2676f9b222a075fc8c",
+    "scanner": "anchore/grype:v0.121.1@sha256:6b06708b036f74b2cd70e94b706b4586af96d1932e6ac46255940b2e39dd44a9",
+    "db_built": "2026-11-07T06:18:48Z",
+    "matches": [
+      {
+        "id": "CVE-2026-4738",
+        "severity": "Critical",
+        "package": "zlib",
+        "version": "1.3.2-r1",
+        "fix": [
+          "1.4-r0"
+        ],
+        "fix_state": "fixed"
+      },
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "busybox",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      },
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "busybox-binsh",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      },
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "ssl_client",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      }
+    ]
+  },
+  "backend_after_zlib_pin_trivy": {
+    "raw_sha256": "33582cca738f9b3b1d5af6b0b58926917dc639c71636e63ad054a1e3f2d3d990",
+    "CreatedAt": "2026-11-07T08:53:23.266627984Z",
+    "ImageID": "sha256:690f883ae7ecad40e1229db99b991eac4e0cc62c420b79cdf55d0ffb7340503e",
+    "OS": {
+      "Family": "alpine",
+      "Name": "3.24.3"
+    },
+    "results": [
+      {
+        "target": "/artifacts/backend.tar (alpine 3.24.3)",
+        "class": "os-pkgs",
+        "type": "alpine",
+        "packages": 30,
+        "vulnerabilities": [],
+        "secrets": []
+      },
+      {
+        "target": "Python",
+        "class": "lang-pkgs",
+        "type": "python-pkg",
+        "packages": 34,
+        "vulnerabilities": [],
+        "secrets": []
+      }
+    ]
+  }
+}

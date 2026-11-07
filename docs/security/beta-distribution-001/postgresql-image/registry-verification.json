@@ -1,0 +1,148 @@
+{
+  "pins": {
+    "reference": "ghcr.io/alessandrorossato/florabase-postgres:18.6-alpine-florabase.1@sha256:e5855f0cc6118b2b6dcd8c36d933e9b350d04e1757dfacb26737de0298fb1cbb",
+    "index_digest": "sha256:e5855f0cc6118b2b6dcd8c36d933e9b350d04e1757dfacb26737de0298fb1cbb",
+    "platform_digest": "sha256:e625e5878a90b4b0ae60824dd41b7960c56c033a07ceabae5852d573d2259a50"
+  },
+  "registry_build": {
+    "index_digest": "sha256:e5855f0cc6118b2b6dcd8c36d933e9b350d04e1757dfacb26737de0298fb1cbb",
+    "platform_digest": "sha256:e625e5878a90b4b0ae60824dd41b7960c56c033a07ceabae5852d573d2259a50"
+  },
+  "registry_index": {
+    "schemaVersion": 2,
+    "mediaType": "application/vnd.oci.image.index.v1+json",
+    "manifests": [
+      {
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "digest": "sha256:e625e5878a90b4b0ae60824dd41b7960c56c033a07ceabae5852d573d2259a50",
+        "size": 2821,
+        "platform": {
+          "architecture": "amd64",
+          "os": "linux"
+        }
+      }
+    ]
+  },
+  "pulled_image_id": "sha256:e5855f0cc6118b2b6dcd8c36d933e9b350d04e1757dfacb26737de0298fb1cbb",
+  "config": {
+    "User": "70:70",
+    "Entrypoint": [
+      "florabase-postgres-entrypoint"
+    ],
+    "Cmd": [
+      "postgres"
+    ],
+    "Labels": {
+      "org.opencontainers.image.base.digest": "sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395",
+      "org.opencontainers.image.base.name": "docker.io/library/postgres:18.6-alpine",
+      "org.opencontainers.image.description": "Official postgres:18.6-alpine without gosu; runs only as 70:70",
+      "org.opencontainers.image.licenses": "PostgreSQL AND AGPL-3.0-or-later",
+      "org.opencontainers.image.source": "https://github.com/alessandrorossato/florabase",
+      "org.opencontainers.image.title": "Florabase PostgreSQL",
+      "org.opencontainers.image.version": "18.6-alpine-florabase.1"
+    }
+  },
+  "release_gate_trivy": "PASSED",
+  "trivy_report": {
+    "raw_sha256": "e97c40192fbf629f7415a5a2067331849169956e9bf67cd2f9596c2e951e047c",
+    "CreatedAt": "2026-11-07T08:49:52.665831693Z",
+    "ImageID": "sha256:aaed3df3f464fc801abd5b4939c66489e19a8543d4c4e8886559751aa9a40b9e",
+    "OS": {
+      "Family": "alpine",
+      "Name": "3.24.4"
+    },
+    "results": [
+      {
+        "target": "/artifacts/postgresql.tar (alpine 3.24.4)",
+        "class": "os-pkgs",
+        "type": "alpine",
+        "packages": 53,
+        "vulnerabilities": [],
+        "secrets": []
+      }
+    ]
+  },
+  "sbom": {
+    "components": 54,
+    "contains_gosu": false,
+    "sha256": "a1fc8c5f60a4980c8ad668bae45ecc9bafd19e4129004734558567d9d02f6af6"
+  },
+  "layer_count": 12,
+  "gosu_in_layers": [
+    {
+      "layer": 2,
+      "layer_digest": "sha256:63677b2e422dcc313c982a9f276c5344201e017d48035fb320d0fda846ece913",
+      "path": "usr/local/bin/gosu",
+      "size": 1769900,
+      "sha256": "52c8749d0142edd234e9d6bd5237dff2d81e71f43537e2f4f66f75dd4b243dd0"
+    },
+    {
+      "layer": 11,
+      "layer_digest": "sha256:1f62a779427ea6cf31356b2fd044f479c39d92ab2c879d0dc8a460ecb103f509",
+      "path": "usr/local/bin/.wh.gosu",
+      "size": 0
+    }
+  ],
+  "grype_squashed": {
+    "raw_sha256": "f3a4bb418061fc535a24fbf255d3abf3762550b88aafe36bf1c2b9bd077e1778",
+    "scanner": "anchore/grype:v0.121.1@sha256:6b06708b036f74b2cd70e94b706b4586af96d1932e6ac46255940b2e39dd44a9",
+    "db_built": "2026-11-07T06:18:48Z",
+    "matches": [
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "busybox",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      },
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "busybox-binsh",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      },
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "ssl_client",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      }
+    ]
+  },
+  "grype_all_layers": {
+    "raw_sha256": "58301608de128f2404f04662ebe6209f2d9ac69e1ba661f66e7e55f503c0bf85",
+    "scanner": "anchore/grype:v0.121.1@sha256:6b06708b036f74b2cd70e94b706b4586af96d1932e6ac46255940b2e39dd44a9",
+    "db_built": "2026-11-07T06:18:48Z",
+    "matches": [
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "busybox",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      },
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "busybox-binsh",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      },
+      {
+        "id": "CVE-2025-60876",
+        "severity": "Medium",
+        "package": "ssl_client",
+        "version": "1.37.0-r31",
+        "fix": [],
+        "fix_state": ""
+      }
+    ]
+  }
+}

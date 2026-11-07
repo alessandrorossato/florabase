@@ -7523,3 +7523,24 @@ Status remains implemented pending canonical verification.
   meets the nested daemon's 5 s resolver timeout for a stopped `db`.
 - Still BETA-BLOCKED. Not run: independent QA, canonical FULL, protected
   publication. No push, PR, tag, GHCR package or release.
+
+### BETA-DISTRIBUTION-001 — Florabase PostgreSQL image integrated, 7 November 2026
+
+- Operator approved integrating the gosu-free image (not publication). `postgres/` builds
+  `florabase-postgres:18.6-alpine-florabase.1` from the approved `postgres:18.6-alpine@sha256:123b1799…`:
+  gosu removed, zlib 1.4-r0, `USER 70:70`, a root guard (exit 64 before any initialization or data
+  change). Deterministic with the pinned BuildKit (fixed epoch, no in-index attestations, apk.log
+  removed); pins index `e5855f0c…` / platform `e625e587…` reproduced from fresh builders.
+- Integrated into release inputs, manifest schema v2 (derived identity plus `upstream`), the protected
+  publisher (refuses unreproducible builds; scan, SBOM, smoke, attestation, promotion with the pair),
+  the controller, artifact, candidate and runtime smokes. Record:
+  [postgresql-image.md](security/beta-distribution-001/postgresql-image.md).
+- Registry-level check on a disposable registry: identity equal to the pins, release gate PASSED on
+  the pulled bytes, Grype squashed and all-layers 0 Critical / 0 High, SBOM without gosu. gosu's
+  original bytes remain in upstream layer 2 (runtime removal, not physical elimination).
+- Grype also found zlib CVE-2026-4738 (Critical) that Trivy misses: fixed in the backend and
+  PostgreSQL images. Backend `sqlite-libs` 3.53.4-r0 keeps 4 High with no Alpine fix, assessed not
+  reachable; whether a second scanner gates releases is an operator decision.
+- Checks: `make workflow-check`; `beta_release.py check`; local candidate passed; runtime smoke 22/22
+  from clean `0d074e7` (858.2 s). Not run: actionlint (declined download), independent QA, canonical
+  FULL, GHCR publication. Still BETA-BLOCKED. No push, PR, tag or release.

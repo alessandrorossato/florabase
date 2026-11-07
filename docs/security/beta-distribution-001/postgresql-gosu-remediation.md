@@ -83,7 +83,11 @@ keeps the upstream layers, so provenance stays checkable against the official di
 Not proposed. The derived image removes the component instead of asserting non-applicability. A VEX
 path would remain a separate security review and operator approval.
 
-## Recommendation
+## Recommendation (adopted 7 November 2026)
+
+The operator approved integration; the integrated image, its release contract and the residual
+assessment are in [postgresql-image.md](postgresql-image.md). It also pins zlib 1.4-r0 and guards
+against root, so its digest differs from the prototype's `b242b556…`.
 
 Adopt option 2. It is the only remediation that passes the unchanged fail-closed gate now, it
 preserves upstream provenance and PostgreSQL 18.6 data compatibility, and every supported

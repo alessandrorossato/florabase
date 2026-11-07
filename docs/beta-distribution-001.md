@@ -105,3 +105,35 @@ Mandatory and open: blocker 1, approval 2, independent QA, canonical FULL, prote
 and a clean registry-pull smoke of the published pair, then real-host acceptance (BETA-ACCEPTANCE-001).
 Later: owner password reset/change, guided upgrade automation, arm64 images, configurable origin
 and map tiles, request-path database timeouts, PostgreSQL major-upgrade tooling.
+
+## Update, 7 November 2026: Florabase PostgreSQL image integrated
+
+The operator approved integrating the gosu-free derived image for implementation and verification
+(not publication). Full record: [postgresql-image.md](security/beta-distribution-001/postgresql-image.md).
+
+- `postgres/` (Dockerfile, root guard, license) builds
+  `ghcr.io/alessandrorossato/florabase-postgres:18.6-alpine-florabase.1` from the approved base
+  `sha256:123b1799…`, removes gosu, pins zlib 1.4-r0, sets `USER 70:70`. Pinned and reproduced:
+  index `sha256:e5855f0cc6118b2b6dcd8c36d933e9b350d04e1757dfacb26737de0298fb1cbb`, platform
+  `sha256:e625e5878a90b4b0ae60824dd41b7960c56c033a07ceabae5852d573d2259a50`.
+- Integrated into `release/inputs.json`, manifest schema v2, `beta_release.py` (validation,
+  deterministic build, `postgres-identity [--check]`, SBOM, scan inventory), the protected publisher
+  and workflow (one attestation step), the controller, the artifact smoke, the local candidate and
+  the runtime smoke. Backend also pins zlib 1.4-r0.
+- Superseded findings above: blocker 1 (gosu) is resolved at the filesystem level, with gosu's
+  original bytes remaining in upstream layer 2 (documented, not physically eliminated).
+- New finding: Grype reports 4 High in the backend's `sqlite-libs` 3.53.4-r0 with no Alpine fix
+  that the release gate's Trivy does not report; assessed not reachable through Florabase code.
+  Whether a second scanner should gate releases is an open operator decision.
+
+Checks on `0d074e7` / this tree:
+- `make workflow-check`: pass (release tests 30, runtime 60 + 48 on Python 3.8.20, strict mypy, Ruff).
+- `beta_release.py postgres-identity --check`: reproduced the pins from fresh builders (repeatedly).
+- Registry-level verification against a disposable registry: identity equal to the pins; release
+  gate PASSED on the pulled bytes; Grype squashed and all-layers 0 Critical / 0 High; SBOM 54
+  components without gosu.
+- `build-beta-candidate.py --security-dir`: `LOCAL_BETA_CANDIDATE_PASSED`, Trivy gate passed for
+  backend, frontend and PostgreSQL.
+- Runtime smoke 22/22 from clean `0d074e7` in 858.2 s, zero owned residuals.
+- Not run: actionlint (downloading the binary was declined), independent QA, canonical FULL,
+  protected publication against GHCR.

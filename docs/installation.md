@@ -14,10 +14,12 @@ compiler. Developers working on Florabase itself should read [development](devel
 | --- | --- | --- |
 | `frontend` | `ghcr.io/alessandrorossato/florabase-frontend` | nginx serving the built React app; forwards `/api/` to the backend; the only published port, on `127.0.0.1` |
 | `backend` | `ghcr.io/alessandrorossato/florabase-backend` | FastAPI/Uvicorn API, owner authentication, media storage |
-| `db` | `docker.io/library/postgres:18.6-alpine` | PostgreSQL 18, never published to the host |
+| `db` | `ghcr.io/alessandrorossato/florabase-postgres` | PostgreSQL 18.6: the official `postgres:18.6-alpine` image without its unused `gosu` tool, runs only as uid/gid 70; never published to the host |
 
-Both application images come from one source commit and are pinned by immutable digest from one
-signed release manifest, so the backend and frontend can never be mixed across versions. A small
+All three images are pinned by immutable digest in one signed release manifest, so they can never be
+mixed across versions. The backend and frontend come from one source commit; the PostgreSQL image is
+rebuilt byte-for-byte identically for every release, so application upgrades never change the
+database image ([details](security/beta-distribution-001/postgresql-image.md)). A small
 host program, `florabasectl.py` (Python standard library only), installs, migrates, backs up,
 restores and upgrades the stack. Docker Compose (or Dockhand) runs it.
 
@@ -274,9 +276,12 @@ older images: an older backend refuses a newer schema.
 
 ### PostgreSQL versions
 
-The beta uses **PostgreSQL 18** (`18.6-alpine`, pinned by digest). Application upgrades never change
-the PostgreSQL image; `promote` refuses a release whose PostgreSQL identity differs. A PostgreSQL
-rebuild or minor update is separate, explicitly reviewed maintenance. A **major** version change
+The beta uses **PostgreSQL 18.6** in the Florabase PostgreSQL image (`18.6-alpine-florabase.1`,
+pinned by digest). Application upgrades never change the PostgreSQL image; `promote` refuses a release
+whose PostgreSQL identity differs. A new Florabase PostgreSQL version (an upstream rebuild, a security
+fix or a minor update) is separate, explicitly announced maintenance with its own backup. The image
+runs only as the `postgres` account (uid/gid 70): starting it as root stops immediately with
+`florabase-postgres: refusing to run as root`, before anything on disk changes. A **major** version change
 (for example to 19) cannot reuse the data directory: it needs a new installation restored from a
 logical backup, and it is not automated in this beta. PostgreSQL itself refuses to start on a data
 directory from another major version, so a wrong image fails instead of corrupting data. A database
@@ -365,6 +370,7 @@ has not yet been recorded on a real Dockhand installation for this release.
 | `Failed to load …/secrets/backend.env: … no such file or directory` from Compose | The secrets directory is missing or unreadable; Compose changes nothing. Restore `secrets/` from your configuration backup |
 | Login fails with HTTP 403 | The browser address differs from `--origin`, or the proxy changes the `Origin`/`Host`. Open exactly the configured origin |
 | Uploads fail with HTTP 413 | The reverse proxy's body limit is below 32 MiB |
+| `florabase-postgres: refusing to run as root` | The database container was started as root (for example `user: root` in an edited Compose file, or `docker run --user 0`). Use the release `compose.yaml`, which runs it as `70:70` |
 | `status` reports an old backup or low disk | Check the scheduled `backup`, free space under the root, and `retention --apply` |
 
 Readiness is `GET /api/v1/ready` through the frontend; liveness is `/healthz`. With PostgreSQL
