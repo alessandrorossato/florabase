@@ -104,7 +104,7 @@ def ctl_bundle_names() -> tuple[str, ...]:
 
 class ReleaseTests(unittest.TestCase):
     def test_current_candidate_inputs_and_platform_policy(self) -> None:
-        self.assertEqual(inputs(ROOT)["version"], "0.1.0-beta.1")
+        self.assertEqual(inputs(ROOT)["version"], "0.1.0-beta.2")
         committed = json.loads((ROOT / "release/platform.json").read_text())
         check_platform(committed)
         inputs(ROOT, publication=True)
