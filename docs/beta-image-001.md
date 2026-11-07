@@ -10,15 +10,27 @@ This increment prepares distribution for `0.1.0-beta.1`; it does not approve a h
 deploy a stack or admit real collection use. TEST-DATA-002 is independent and is not consumed here.
 Independent infrastructure QA and the exact-tree canonical FULL remain the next lifecycle steps.
 
-## Platform screening and publication prerequisite
+## Platform policy and publication prerequisite
 
-**Publication is blocked by missing host approval and the security findings in the
-[QA handoff](beta-image-001-qa.md).** The operator selected Synology DS224+ (Linux/amd64), but measured Docker Engine/Compose
-compatibility and capacity acceptance remain pending. `release/platform.json` deliberately remains `pending`.
-The Foundation's initial **linux/amd64** is a candidate, not host approval. Local native amd64 smoke
-is development-machine evidence only. No Synology, Netcup or other persistent environment was accessed.
+Release sequence: (1) publish the verified Linux/amd64 images and GitHub prerelease through the protected
+workflow; (2) afterwards pull and deploy those published images through Compose/Dockhand on a selected
+host; (3) accept that host separately. **Publication does not require approval of any specific host.**
+`release/platform.json` records the supported platform (`linux/amd64`), `publication.host_approval_required=false`
+and a separate `deployment_acceptance` block that is `pending`. Synology DS224+ (Engine 24.0.2, Compose 2.20.1) is
+listed there only as a candidate target. It is not accepted, was not probed here and is not a publication input.
+Local native amd64 smoke is development-machine evidence only; no persistent host was accessed.
 
-Before publication the operator records the intended host's identity/specification and evidence from:
+Publication stays gated by the supported native architecture, immutable digests, vulnerability scanning,
+provenance, the release manifest, tests, release identity, the exact approved source commit, manual
+authorization and fail-closed checks (including the security findings in the [QA handoff](beta-image-001-qa.md)).
+If the first target is ARM, this workflow must first be extended and independently tested on native arm64
+with matching pins and manifest platform identities; emulation does not qualify it.
+
+`deployment_acceptance.status` may be `accepted` only with nonempty structured `evidence` (a list of objects, each with nonempty string `host` and `reference`); `pending` is sufficient for publication.
+
+Host-specific acceptance is a separate deployment gate (BETA-RUNTIME-001) run on the actual host against the
+published images: resource capacity, Docker Engine/Compose compatibility, HTTPS, durable persistence,
+backup/restore and recovery. Useful host evidence commands:
 
 ```sh
 uname -s
@@ -27,15 +39,7 @@ docker version --format '{{.Server.Os}}/{{.Server.Arch}} {{.Server.Version}}'
 docker compose version
 ```
 
-For the current workflow, host evidence must establish Linux, native amd64, Docker Engine and supported
-Compose v2 or newer. Commit the reviewed screening to `release/platform.json` with `status=approved`,
-`candidate_platform=linux/amd64`, operator, screening date, nonempty evidence references and a `host`
-object containing `identity`, `os=linux`, `architecture=amd64`, `runtime=docker`, `engine_version` and
-`compose_version`. Keep secrets and sensitive network names out of public evidence. The screening
-is a human-reviewed input, not a claim that this feature probes or qualifies the remote host.
-If the selected initial host is ARM, this workflow must first be extended and independently tested
-on native arm64, with matching pins and manifest platform identities. Emulation does not qualify it.
-Capacity, durable storage, uptime and Dockhand release qualification belong to BETA-RUNTIME-001.
+Real-host acceptance has not occurred. Keep secrets and sensitive network names out of public evidence.
 
 `python3 scripts/beta_release.py check --publication` fails closed while evidence is missing. A
 successful non-publication `check` validates build inputs only and never grants publication authority.
@@ -93,8 +97,7 @@ Repository/operator prerequisites, deliberately not configured by this feature:
 3. Set environment secret `RELEASE_APPROVED_SHA` to the exact accepted 40-character source commit.
    A missing/auto-created environment has no such secret and fails before package writes. Update this
    value only after independent QA, canonical FULL and explicit publication authorization.
-4. Approve/commit intended-host screening, deliver the implementation through normal protected
-   feature delivery, then select the release commit/tag. This agent does not push or create the tag.
+4. Deliver the implementation through normal protected feature delivery, then select the release commit/tag. This agent does not push or create the tag.
 5. Grant the workflow access to GHCR packages `florabase-backend` and `florabase-frontend`; enable
    immutable GitHub Releases and retention of versioned images/attestations/source. Restrict package
    administration/deletion. The workflow refuses existing release/version identities; GHCR tags alone
@@ -218,8 +221,8 @@ The source directory may no longer exist. Every actual resource must still prove
 project/lifecycle/owner/source labels and have no foreign users. A supplied source is a label claim,
 never authority; wrong or incomplete evidence refuses deletion. Repeated cleanup is safe.
 
-Operator selection: Synology DS224+, Linux/amd64. Capacity and actual Docker/Compose runtime evidence
-remain pending. The application stays portable to compatible amd64 PCs/VPSs using Compose without
+Candidate deployment target: Synology DS224+, Linux/amd64 (not a publication prerequisite). Capacity and actual Docker/Compose runtime evidence
+remain pending deployment acceptance. The application stays portable to compatible amd64 PCs/VPSs using Compose without
 Dockhand. No NAS-specific runtime behavior or deployment is introduced; arm64 remains a later extension.
 
 Artifact verification tools require the pinned host-only packages in release/requirements.txt (downloaded as requirements.txt with a release): install them in an isolated Python environment. Production images do not include JSON Schema tooling.

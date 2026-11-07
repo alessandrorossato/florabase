@@ -1,5 +1,7 @@
 # BETA-FOUNDATION-001 — independent QA corrections B1–B4
 
+> **Superseded in part (RELEASE-PLATFORM-DECOUPLE):** publication no longer requires approval of a specific host. `release/platform.json` records the supported linux/amd64 platform; host capacity, Docker/Compose, HTTPS, persistence and recovery acceptance are separate post-publication deployment gates (BETA-RUNTIME-001). See [BETA-IMAGE-001](beta-image-001.md#platform-policy-and-publication-prerequisite). The text below is preserved as historical record and is not rewritten.
+
 Status: **QA_CORRECTIONS_READY**, awaiting independent delta QA. No canonical FULL run or delivery
 receipt. Feature remains `implemented`. The operator explicitly requires delta QA before FULL.
 

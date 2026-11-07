@@ -42,23 +42,39 @@ def read(path: Path) -> dict[str, Any]:
     return value
 
 
-def check_platform(screen: dict[str, Any]) -> None:
-    host = screen.get("host") or {}
+def _structured_evidence(deployment: dict[str, Any]) -> bool:
+    evidence = deployment.get("evidence")
+    return (
+        isinstance(evidence, list)
+        and bool(evidence)
+        and all(
+            isinstance(item, dict)
+            and all(isinstance(item.get(k), str) and item[k].strip() for k in ("host", "reference"))
+            for item in evidence
+        )
+    )
+
+
+def check_platform(policy: dict[str, Any]) -> None:
+    """Publication needs the supported native platform, not approval of any particular host.
+
+    Host resource, Docker/Compose, HTTPS, persistence and recovery acceptance are separate
+    deployment gates (BETA-RUNTIME-001) recorded under ``deployment_acceptance``; ``pending`` is
+    sufficient for publication and ``accepted`` requires structured evidence.
+    """
+    publication = policy.get("publication")
+    deployment = policy.get("deployment_acceptance")
     if (
-        screen.get("status") != "approved"
-        or screen.get("candidate_platform") != "linux/amd64"
-        or not screen.get("operator")
-        or not screen.get("screened_at")
-        or not screen.get("evidence")
-        or host.get("os") != "linux"
-        or host.get("architecture") != "amd64"
-        or host.get("runtime") != "docker"
-        or not host.get("engine_version")
-        or not re.match(r"(?:v)?(?:[2-9]|[1-9][0-9]+)\.", host.get("compose_version", ""))
-        or not host.get("identity")
+        policy.get("candidate_platform") != "linux/amd64"
+        or not isinstance(publication, dict)
+        or publication.get("host_approval_required") is not False
+        or not isinstance(deployment, dict)
+        or deployment.get("status") not in {"pending", "accepted"}
+        or (deployment["status"] == "accepted" and not _structured_evidence(deployment))
     ):
         raise ValueError(
-            "PUBLICATION BLOCKED: intended-host Linux/amd64 Docker/Compose evidence and operator selection are required"
+            "PUBLICATION BLOCKED: release/platform.json must name the supported linux/amd64 "
+            "platform and keep deployment acceptance separate from publication"
         )
 
 
