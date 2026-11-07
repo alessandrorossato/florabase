@@ -7570,3 +7570,23 @@ Status remains implemented pending canonical verification.
   rebuild is removed (it reintroduced the Alpine-pin release block), `check-release` reads newer manifests
   without the bundle check, and the guide's attestation loop fails visibly. QA accepted the absent
   `ci.yml` reproducibility job as a CI-FAST follow-up. Canonical FULL follows on the corrected tree.
+
+### BETA-DISTRIBUTION-001 — SQLite reference-index hardening, 7 November 2026
+
+- Final QA of `4329381` agreed with all four Grype `sqlite-libs` dispositions and demonstrated that a
+  crafted index (a `taxa` view over FTS5) reaches CVE-2026-119373's code path through the WCVP search.
+  The operator approved hardening before public publication.
+- `core/reference_index.py` is now the only WFO/WCVP opener. It enables defensive mode, turns off
+  views, triggers, extension loading, writable schema and trusted schema, sets `query_only` and
+  `cell_size_check`, and holds one read transaction. It then requires the exact builder schema
+  before any query, fails closed with a generic error and an operator log line, and writes nothing.
+  Builders refuse to publish an index that fails the check. Builder DDL is unchanged, so every index
+  from a supported builder stays accepted.
+- Docs: the guide's reference-dataset section requires indexes built by Florabase's builders and
+  separates integrity (SHA-256, seal) from provenance; security record
+  `docs/security/beta-distribution-001/sqlite-reference-indexes.md`.
+- Checks: `test_reference_index.py` (24 tests) and the existing WFO/WCVP suites (90 in total) pass
+  on SQLite 3.40.1 (dev) and 3.53.4 (runtime image). Lint, format and strict mypy pass. Benchmark
+  on 1.4M taxa: plus 0.07 ms per connection, identical results.
+- Not run: indexes from the full official archives (not on this host). Canonical FULL and
+  independent QA follow on the committed tree.

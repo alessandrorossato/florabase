@@ -24,6 +24,12 @@ cycles, controls and bounds. Validation failures leave the previous SQLite artif
 The index seal detects later byte corruption and is verified once per artifact identity per process;
 requests use indexed reads, never reparse the archive. A source replacement can briefly be unavailable
 until its matching seal exists; it cannot silently acquire different meaning.
+The seal shows integrity, not provenance: use only an index this builder produced from the pinned
+archive. Every connection also requires the exact schema the builder writes (tables `metadata` and
+`taxa`, the `taxa` primary-key index and `search_taxa`; metadata `format_version` 1) and refuses
+views, triggers, virtual tables or any other object before a query runs. It is read-only, with
+SQLite defensive mode on and views, triggers, extension loading and untrusted schema functions
+off ([SQLite reference-index hardening](security/beta-distribution-001/sqlite-reference-indexes.md)).
 
 BotanicalIdentity Reference → Taxonomy searches at most 25 literal source-name prefix candidates.
 Inspect scientific name, authorship, rank, accepted/synonym/unplaced status and complete classification;

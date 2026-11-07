@@ -246,6 +246,49 @@ All persistent data lives in host directories under the root. The Compose volume
 those directories: if a directory is missing the container refuses to start instead of creating an
 empty database, and removing a Docker volume object never deletes the host data.
 
+### Optional botanical reference datasets
+
+Florabase runs without them. The WFO taxonomy index (`--kind wfo`) and the WCVP v16 index
+(`--kind wcvp-v16`) are SQLite files that the backend reads directly, so **use only indexes built
+by Florabase's own builders from the pinned official archives**. Never install an index you
+downloaded or received from someone else: a crafted SQLite file can drive known SQLite
+memory-safety bugs inside the backend process, which holds the database credentials.
+
+Build each index with the backend image of the release you run (its digest is in
+`release-manifest.json`), offline, from the archive named in
+[collection-taxonomy.md](collection-taxonomy.md) or [native-range-enrichment.md](native-range-enrichment.md).
+The builder verifies the archive's pinned SHA-256 before reading it:
+
+```bash
+backend=ghcr.io/alessandrorossato/florabase-backend@sha256:<backend index digest>
+mkdir -m 0700 /srv/florabase-build && chown 10001:10001 /srv/florabase-build
+docker run --rm --network none --read-only --tmpfs /tmp --user 10001:10001 \
+  -v /path/to/wfo_plantlist_2026-06.zip:/in/archive.zip:ro -v /srv/florabase-build:/out \
+  "$backend" python -m florabase.taxonomy.snapshot /in/archive.zip /out/wfo-2026-06.sqlite \
+  --retrieved-at <the archive's actual UTC retrieval time>
+install -m 0644 /srv/florabase-build/wfo-2026-06.sqlite /srv/florabase-build/wfo-2026-06.sha256 \
+  /srv/florabase/reference/
+python3 florabasectl.py --root /srv/florabase reference set --kind wfo \
+  --file wfo-2026-06.sqlite --sha256 "$(sha256sum /srv/florabase/reference/wfo-2026-06.sqlite | cut -d' ' -f1)" \
+  --provenance "florabase.taxonomy.snapshot from the pinned WFO 2026-06 archive"
+```
+
+For WCVP v16, run `python -m florabase.native_range_enrichment.snapshot /out/wcvp-v16.sqlite
+--version 16 --archive /in/archive.zip --retrieved-at …` the same way, then
+`reference set --kind wcvp-v16`.
+
+The SHA-256 you pass to `reference set` (and the WFO `.sha256` seal next to the index) proves
+only that the file was not changed after you built it. It says nothing about who built the file,
+so it does not make an index from another source safe. Provenance comes from building the index
+yourself, as above.
+
+As an additional safeguard, the backend refuses any index whose SQLite schema differs from the
+exact layout the builder writes, including views, triggers, virtual tables and extra or altered
+tables and indexes. It checks this before it runs any query. Each connection is read-only, with
+views, triggers, extension loading and untrusted schema functions disabled. A refused index shows
+as the source being unavailable in the app, and the backend log names the unexpected objects.
+Rebuild such an index with the builder; do not edit it.
+
 ## Database migrations and upgrades
 
 Florabase **never migrates the database on `docker compose up`, a restart or an image update.**
@@ -388,6 +431,7 @@ has not yet been recorded on a real Dockhand installation for this release.
 | Login fails with HTTP 403 | The browser address differs from `--origin`, or the proxy changes the `Origin`/`Host`. Open exactly the configured origin |
 | Uploads fail with HTTP 413 | The reverse proxy's body limit is below 32 MiB |
 | `florabase-postgres: refusing to run as root` | The database container was started as root (for example `user: root` in an edited Compose file, or `docker run --user 0`). Use the release `compose.yaml`, which runs it as `70:70` |
+| `Refusing WFO reference index …` / `Refusing WCVP reference index …` | The reference file is not an index built by Florabase's builder (unexpected or missing schema objects). Rebuild it as described under [optional botanical reference datasets](#optional-botanical-reference-datasets), then `reference set` it again |
 | `status` reports an old backup or low disk | Check the scheduled `backup`, free space under the root, and `retention --apply` |
 
 Readiness is `GET /api/v1/ready` through the frontend; liveness is `/healthz`. With PostgreSQL

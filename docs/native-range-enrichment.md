@@ -148,6 +148,13 @@ The reviewed complete index holds 1,441,152 taxa and 1,986,879 distribution asse
 948,400,128 bytes. Allow roughly 2 GB for existing/temporary indexes plus the 89,508,082-byte archive
 in download temporary storage. Download scratch space is removed on completion/failure. Only the
 current index for each separately configured release is retained; reprovisioning is an explicit operator action, with no automated refresh.
+Use only an index this builder produced from a pinned archive; a file from anywhere else is
+untrusted input to SQLite. Every connection requires the exact layout the builder writes for both
+reviewed releases (`metadata`, `taxa`, `distributions`, their primary-key indexes, `taxa_search`
+and `distribution_taxon`) and refuses views, triggers, virtual tables or any other object before
+a query runs, read-only with SQLite defensive hardening
+([record](security/beta-distribution-001/sqlite-reference-indexes.md)). A builder also refuses to
+publish an index that would fail that check.
 The index is replaceable reference data, not collection backup authority. PostgreSQL provenance
 belongs in normal database backups; optional source indexes can be rebuilt from the pinned archive.
 

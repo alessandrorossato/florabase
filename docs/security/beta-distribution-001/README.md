@@ -25,6 +25,9 @@ tested gosu-free prototype (0 / 0): [postgresql-gosu-remediation.md](postgresql-
 Integrated derived image, registry-level verification, second-scanner results for all three images
 and the maintenance responsibility: [postgresql-image.md](postgresql-image.md).
 
+Backend `sqlite-libs` second-scanner findings, their case-by-case triage and the reference-index
+hardening: [sqlite-reference-indexes.md](sqlite-reference-indexes.md).
+
 **Release blocker (superseded by the derived image; kept for history).** The fail-closed gate still blocks publication on the 26 gosu findings. gosu
 is not executed by this stack (the entrypoint calls it only as root; the stack runs PostgreSQL as
 70:70 with all capabilities dropped and no-new-privileges), but that is applicability evidence, not

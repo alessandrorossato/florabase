@@ -17,8 +17,10 @@ from zipfile import ZipFile
 
 import httpx
 
+from florabase.core.reference_index import open_reference_index
 from florabase.native_range_enrichment.source import (
     RELEASES,
+    SCHEMA,
     SourceMetadata,
     SourceUnavailableError,
     Taxon,
@@ -180,6 +182,8 @@ def build_index(
                 raise ValueError("Distribution refers to a missing taxon")
         if temporary.stat().st_size > 2_000_000_000:
             raise ValueError("WCVP index exceeds disk bound")
+        # Publish only the layout the reader accepts.
+        open_reference_index(temporary, SCHEMA, "WCVP").close()
         temporary.chmod(0o600)
         publish_index(temporary, destination, metadata)
     finally:

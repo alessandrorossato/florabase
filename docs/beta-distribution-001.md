@@ -1,8 +1,8 @@
 # BETA-DISTRIBUTION-001 — installable beta distribution: implementation and QA handoff
 
 Branch `feat/beta-distribution-001`, writer `claude-beta`, base `fec0398`, `origin/main` `da80dc6`
-merged without rewriting. Status `in_progress`: independent infrastructure QA and the canonical
-gate have not run; nothing was pushed, published, tagged or deployed.
+merged without rewriting. Status `in_progress`: SQLite hardening (last section) awaits canonical FULL
+and independent QA; nothing was pushed, published, tagged or deployed.
 
 ## Decisions (operator, 6 November 2026)
 
@@ -147,3 +147,19 @@ all addressed:
   a newer release; installing or promoting with a mismatched bundle is still refused (offline test).
 - D-P3-2: the guide's verification loop now fails visibly, and the docs state that the controller's
   bundle check catches mixed releases while the mandatory attestation check is the authenticity control.
+
+## SQLite reference-index hardening, 7 November 2026
+
+Final QA of `4329381` passed both release-identity checks and agreed that all four `sqlite-libs`
+findings are nonblocking. It also showed that a crafted reference index reaches CVE-2026-119373's
+FTS5 code through the WCVP search. The operator approved hardening before public publication.
+Record: [sqlite-reference-indexes.md](security/beta-distribution-001/sqlite-reference-indexes.md).
+
+- Changed: `backend/src/florabase/core/reference_index.py` (new), the WFO and WCVP `source.py`
+  (contract and opener) and `snapshot.py` (self-check before publishing),
+  `backend/tests/test_reference_index.py` (new), and one message assertion in `test_taxonomy.py`.
+  Docs: installation (reference datasets, troubleshooting), collection-taxonomy,
+  native-range-enrichment, beta-runtime-001, the security records, features and progress.
+- Compatibility: builder DDL is unchanged and the contracts equal what the builders at `4329381`
+  wrote, so every index from a supported builder stays accepted. Anything else is refused.
+- No release, workflow, controller, image, migration or API contract change.

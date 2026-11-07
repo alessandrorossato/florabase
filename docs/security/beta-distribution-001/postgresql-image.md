@@ -121,9 +121,10 @@ without fixes.
 
 SQLite applicability: -119586 concerns the `sqlite3` shell's `.recover`, which `sqlite-libs` does
 not contain; -119373/-119374 need FTS5 and -119379 the session extension, neither of which Florabase
-uses. Florabase opens SQLite only for its own optional WFO/WCVP reference indexes, read-only, which
-the operator provisions with SHA-256 verification. They are not reachable through Florabase's code
-paths, but they are unfixed, and the release gate (Trivy) does not see them. Reduced reports:
+uses. Florabase opens SQLite only for its own optional WFO/WCVP reference indexes, read-only. They
+are unfixed, and the release gate (Trivy) does not see them. Case-by-case triage and the reference
+index hardening that closes the crafted-index path QA demonstrated:
+[sqlite-reference-indexes.md](sqlite-reference-indexes.md). Reduced reports:
 [`postgresql-image/second-scanner.json`](postgresql-image/second-scanner.json).
 
 ## Maintenance responsibility (new)

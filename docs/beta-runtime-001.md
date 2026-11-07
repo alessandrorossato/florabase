@@ -63,7 +63,10 @@ artifacts an operator copies to the host; no checkout, Git or package installati
   the running db/backend/frontend containers during acceptance.
 - **Optional datasets.** WFO/WCVP snapshots are mounted read-only from `reference/` and configured
   only when recorded (`reference.env`); an empty setting would otherwise parse as the current
-  directory.
+  directory. Only indexes built by Florabase's builders from the pinned archives are supported:
+  `reference set --sha256` proves the copy is intact, not where it came from, and the backend
+  refuses any index whose schema is not the builder's exact layout
+  ([installation guide](installation.md#optional-botanical-reference-datasets)).
 
 ## Host layout
 
@@ -309,7 +312,8 @@ BETA-ACCEPTANCE-001:
   with owner login from desktop and phone.
 - A real reboot, the off-host restic destination and credentials custody, and accepted RPO/RTO,
   retention and maintenance window.
-- Whether WFO/WCVP are needed on day one (`reference set --kind wfo --file … --sha256 …`).
+- Whether WFO/WCVP are needed on day one (`reference set --kind wfo --file … --sha256 …`), built
+  locally with the release's backend image from the pinned archives (not built or installed here).
 
 ## Coordination and limits
 

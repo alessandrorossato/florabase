@@ -179,7 +179,7 @@ def test_empty_metadata_table_is_unavailable(tmp_path: Path) -> None:
     with closing(sqlite3.connect(p)) as db:
         db.execute("CREATE TABLE metadata(payload TEXT NOT NULL)")
     p.with_suffix(".sha256").write_text(hashlib.sha256(p.read_bytes()).hexdigest())
-    with pytest.raises(SourceUnavailableError, match="unavailable or invalid"):
+    with pytest.raises(SourceUnavailableError, match="not a supported index"):
         WfoSource(p).metadata()
 
 
