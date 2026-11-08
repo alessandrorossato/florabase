@@ -1393,6 +1393,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/lineage/{kind}/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Ancestry */
+        get: operations["getAncestry"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lineage/{kind}/{item_id}/children": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Children */
+        get: operations["getAncestryChildren"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/locations": {
         parameters: {
             query?: never;
@@ -2673,6 +2707,34 @@ export interface components {
             /** Supplier Id */
             supplier_id?: string | null;
         };
+        /** AncestryChildren */
+        AncestryChildren: {
+            /** Items */
+            items: components["schemas"]["AncestryNode"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
+        /** AncestryNode */
+        AncestryNode: {
+            /** Descendant Count */
+            descendant_count: number;
+            harvest_conversion: components["schemas"]["HarvestConversionEvidence"] | null;
+            /** Origin */
+            origin: components["schemas"]["SeedLotSourceKind"] | components["schemas"]["DirectOriginKind"] | null;
+            /** Record */
+            record: components["schemas"]["SeedLotLineageNode"] | components["schemas"]["SowingLineageNode"] | components["schemas"]["PlantLineageNode"] | components["schemas"]["PlantGroupLineageNode"];
+        };
+        /** AncestryResponse */
+        AncestryResponse: {
+            /** Ancestors */
+            ancestors: components["schemas"]["AncestryNode"][];
+            children: components["schemas"]["AncestryChildren"];
+            focus: components["schemas"]["AncestryNode"];
+        };
         /** ApplicationResponse */
         ApplicationResponse: {
             /** Added */
@@ -3944,6 +4006,30 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * HarvestConversionEvidence
+         * @description The explicit HARVEST-003 conversion that recorded a SeedLot's producer.
+         */
+        HarvestConversionEvidence: {
+            /**
+             * Conversion Id
+             * Format: uuid
+             */
+            conversion_id: string;
+            /**
+             * Harvest Id
+             * Format: uuid
+             */
+            harvest_id: string;
+            /** Harvest Label */
+            harvest_label: string | null;
+            harvested_on: components["schemas"]["PartialDate"] | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "applied" | "reversed";
         };
         /** HarvestItemResponse */
         HarvestItemResponse: {
@@ -11527,6 +11613,75 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ImportPreviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getAncestry: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                kind: "seed_lot" | "sowing" | "plant" | "plant_group";
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AncestryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getAncestryChildren: {
+        parameters: {
+            query?: {
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                kind: "seed_lot" | "sowing" | "plant" | "plant_group";
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AncestryChildren"];
                 };
             };
             /** @description Validation Error */

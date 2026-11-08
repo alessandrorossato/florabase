@@ -3,8 +3,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from florabase.plants.model import PlantGroupLifecycle, PlantLifecycle
-from florabase.seed_lots.model import SeedLotLifecycle
+from florabase.plants.model import DirectOriginKind, PlantGroupLifecycle, PlantLifecycle
+from florabase.seed_lots.model import SeedLotLifecycle, SeedLotSourceKind
+from florabase.seed_lots.schemas import PartialDate
 from florabase.sowings.model import SowingLifecycle
 
 
@@ -53,3 +54,35 @@ LineageNode = Annotated[
 class LineageResponse(BaseModel):
     subject: LineageNode
     ancestors: list[LineageNode]
+
+
+class HarvestConversionEvidence(BaseModel):
+    """The explicit HARVEST-003 conversion that recorded a SeedLot's producer."""
+
+    conversion_id: UUID
+    status: Literal["applied", "reversed"]
+    harvest_id: UUID
+    harvest_label: str | None
+    harvested_on: PartialDate | None
+
+
+class AncestryNode(BaseModel):
+    record: LineageNode
+    # The record's own recorded origin kind; absent for Sowings and records with a recorded source.
+    origin: SeedLotSourceKind | DirectOriginKind | None
+    harvest_conversion: HarvestConversionEvidence | None
+    descendant_count: int
+
+
+class AncestryChildren(BaseModel):
+    total: int
+    offset: int
+    limit: int
+    items: list[AncestryNode]
+
+
+class AncestryResponse(BaseModel):
+    focus: AncestryNode
+    # Nearest first, exactly as the recorded upstream walk.
+    ancestors: list[AncestryNode]
+    children: AncestryChildren

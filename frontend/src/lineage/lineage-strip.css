@@ -252,3 +252,9 @@
     text-align: start;
   }
 }
+
+/* Lineage tab entry to the Material ancestry explorer. */
+.lineage-explore {
+  margin: 0 0 var(--space-3);
+  font-weight: 600;
+}

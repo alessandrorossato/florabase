@@ -26,15 +26,38 @@ export const lineageFallbackLabels: Record<LineageNode["kind"], string> = {
   plant_group: "Unlabelled plant group",
 };
 
-export function lineageHref(kind: LineageNode["kind"], id: string) {
+/** The record's own detail page. */
+export function recordHref(kind: LineageNode["kind"], id: string) {
   const route =
     kind === "seed_lot"
       ? "seeds"
       : kind === "plant_group"
         ? "plant-groups"
         : `${kind}s`;
-  return `#/${route}/${id}?tab=lineage`;
+  return `#/${route}/${id}`;
 }
+
+export function lineageHref(kind: LineageNode["kind"], id: string) {
+  return `${recordHref(kind, id)}?tab=lineage`;
+}
+
+/** The Material ancestry explorer centred on one record. */
+export function ancestryHref(kind: LineageNode["kind"], id: string) {
+  return `#/lineage/${kind}/${id}`;
+}
+
+/**
+ * The recorded relationship between two adjacent steps, named only from their kinds (every
+ * step is an explicitly recorded source, so the pair determines the relationship).
+ */
+export const lineageVerbs: Partial<Record<string, string>> = {
+  "seed_lot>sowing": "sown as",
+  "sowing>plant": "grown into",
+  "sowing>plant_group": "grown into",
+  "plant_group>plant": "extracted",
+  "plant>seed_lot": "produced",
+  "plant_group>seed_lot": "produced",
+};
 
 /**
  * Explicit upstream path, oldest first. The API walks one recorded source per record,

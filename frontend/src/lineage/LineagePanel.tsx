@@ -2,6 +2,7 @@ import { DetailEmptyState } from "../components/DetailEmptyState";
 import { PropagationPath } from "../propagation/PropagationPath";
 import { InfoDisclosure } from "../components/ContextualHelp";
 import {
+  ancestryHref,
   lineageFallbackLabels as fallbackLabels,
   lineageHref as href,
   lineageKindLabels as labels,
@@ -10,6 +11,13 @@ import {
   type LineageEndpoint,
 } from "./useRecordedLineage";
 
+const ancestryKinds = {
+  "seed-lots": "seed_lot",
+  plants: "plant",
+  "plant-groups": "plant_group",
+} as const;
+
+/** The record's Lineage tab: the explorer entry point, then its recorded upstream path. */
 export function LineagePanel({
   kind,
   id,
@@ -17,6 +25,19 @@ export function LineagePanel({
   kind: LineageEndpoint;
   id: string;
 }) {
+  return (
+    <>
+      <p className="lineage-explore">
+        <a href={ancestryHref(ancestryKinds[kind], id)}>
+          Explore material ancestry
+        </a>
+      </p>
+      <RecordedUpstream kind={kind} id={id} />
+    </>
+  );
+}
+
+function RecordedUpstream({ kind, id }: { kind: LineageEndpoint; id: string }) {
   const [state, retry] = useRecordedLineage(kind, id);
   if (state.status === "loading")
     return <p role="status">Loading recorded lineage…</p>;

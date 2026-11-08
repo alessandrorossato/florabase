@@ -5,6 +5,7 @@ import {
   lineageFallbackLabels,
   lineageHref,
   lineageKindLabels,
+  lineageVerbs,
   upstreamPath,
   useRecordedLineage,
   type LineageEndpoint,
@@ -12,18 +13,6 @@ import {
 } from "./useRecordedLineage";
 import "./lineage-strip.css";
 
-/**
- * The recorded relationship between two adjacent steps, named only from their kinds (every
- * step is an explicitly recorded source, so the pair determines the relationship).
- */
-const verbs: Partial<Record<string, string>> = {
-  "seed_lot>sowing": "sown as",
-  "sowing>plant": "grown into",
-  "sowing>plant_group": "grown into",
-  "plant_group>plant": "extracted",
-  "plant>seed_lot": "produced",
-  "plant_group>seed_lot": "produced",
-};
 function Verb({
   from,
   to,
@@ -31,7 +20,7 @@ function Verb({
   from?: LineageNode["kind"];
   to?: LineageNode["kind"];
 }) {
-  const verb = from && to ? verbs[`${from}>${to}`] : undefined;
+  const verb = from && to ? lineageVerbs[`${from}>${to}`] : undefined;
   return verb ? <span className="lineage-strip__verb">{verb}</span> : null;
 }
 

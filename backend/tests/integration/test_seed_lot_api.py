@@ -57,6 +57,7 @@ async def asgi_request(
     headers: dict[str, str] | None = None,
 ) -> tuple[int, dict[str, str], Any]:
     raw_body = json.dumps(body).encode() if body is not None else b""
+    path, _, query = path.partition("?")
     raw_headers = [(b"content-type", b"application/json")]
     raw_headers.extend(
         (name.lower().encode(), value.encode()) for name, value in (headers or {}).items()
@@ -91,7 +92,7 @@ async def asgi_request(
         "scheme": "https",
         "path": path,
         "raw_path": path.encode(),
-        "query_string": b"",
+        "query_string": query.encode(),
         "headers": raw_headers,
         "client": ("127.0.0.1", 1),
         "server": ("florabase.example", 443),

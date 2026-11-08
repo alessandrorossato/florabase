@@ -53,6 +53,7 @@ import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { RecordTimeline } from "../timeline/RecordTimeline";
 import { LineageStrip } from "../lineage/LineageStrip";
+import { ancestryHref } from "../lineage/useRecordedLineage";
 import { sowingFormPanels } from "./SowingFormFields";
 
 import { ApiError } from "../auth/api";
@@ -693,6 +694,11 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-lineage"
         >
+          <p className="lineage-explore">
+            <a href={ancestryHref("sowing", sowing.id)}>
+              Explore material ancestry
+            </a>
+          </p>
           {summary.status === "loading" && (
             <p role="status">Loading propagation summary…</p>
           )}

@@ -54,12 +54,14 @@ from florabase.external_botany.service import confirm_link
 from florabase.geographic_places import service as places
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.schemas import GeographicPlaceCreate
+from florabase.harvests import conversion_service as conversions
 from florabase.harvests import service as harvests
+from florabase.harvests.conversion_schemas import ConversionCreate
 from florabase.harvests.inventory_model import HarvestMaterialInventory
 from florabase.harvests.inventory_schemas import InventoryWrite
 from florabase.harvests.inventory_service import track as initialize_inventory
 from florabase.harvests.model import Harvest, HarvestItem
-from florabase.harvests.schemas import HarvestWrite
+from florabase.harvests.schemas import HarvestQuantity, HarvestWrite
 from florabase.locations import service as locations
 from florabase.locations.model import Location
 from florabase.locations.schemas import LocationCreate
@@ -70,7 +72,18 @@ from florabase.orders.model import Order
 from florabase.orders.schemas import OrderCreate
 from florabase.plants import service as plants
 from florabase.plants.model import Plant, PlantGroup
-from florabase.plants.schemas import PlantCreate, PlantGroupCreate
+from florabase.plants.schemas import (
+    PlantCreate,
+    PlantExtractionCreate,
+    PlantGroupCreate,
+)
+from florabase.propagation import reversal
+from florabase.propagation import service as propagation
+from florabase.propagation.schemas import (
+    PlantFromSowingCreate,
+    PlantGroupFromSowingCreate,
+    SeedLotSowingTransitionCreate,
+)
 from florabase.provenance_sites import service as sites
 from florabase.provenance_sites.model import ProvenanceSite
 from florabase.provenance_sites.schemas import ProvenanceSiteCreate
@@ -428,6 +441,8 @@ def validate_manifest(database: Session, root: Path, manifest: dict[str, Any]) -
         expected.update({"identity:genovese", "seed:genovese", "schedule:collection"})
     if fixture_prefix() == "review" and manifest.get("collection_visual_extension") == 1:
         expected.update(COLLECTION_VISUAL_KEYS)
+    if fixture_prefix() == "review" and manifest.get("lineage_explorer_extension") == 1:
+        expected.update(LINEAGE_KEYS)
     if fixture_prefix() == "sourcing" and manifest.get("sourcing_suppliers_extension") == 1:
         expected.update(SOURCING_SUPPLIER_RECORDS)
     if set(manifest["records"]) != expected:
@@ -861,6 +876,230 @@ def ensure_collection_visual(database: Session, root: Path, manifest: dict[str, 
     write_manifest(root, manifest)
 
 
+LINEAGE_BULK = 27  # More than one 25-record explorer page, so paging is reviewable.
+LINEAGE_KEYS = {
+    "identity:lineage",
+    "seed:lineage_root",
+    "sowing:lineage_a",
+    "group:lineage_tray",
+    "plant:lineage_mother",
+    "plant:lineage_sibling",
+    "plant:lineage_reversed",
+    "plant:lineage_extracted",
+    "harvest:lineage_seed",
+    "event:lineage_harvest",
+    "item:lineage_seed",
+    "inventory:lineage_seed",
+    "seed:lineage_gen2",
+    "seed:lineage_gen2_reversed",
+    "seed:lineage_group_direct",
+    "seed:lineage_orphan",
+    "sowing:lineage_b",
+    "plant:lineage_gen2",
+    "plant:lineage_independent",
+    "sowing:lineage_bulk",
+    *{f"plant:lineage_bulk_{index}" for index in range(LINEAGE_BULK)},
+}
+
+
+def ensure_lineage_explorer(database: Session, root: Path, manifest: dict[str, Any]) -> None:
+    """Review-only LINEAGE-003 ancestry: branching, conversions, unknown origins, reversals.
+
+    Every edge is created by its owning propagation, extraction or Harvest conversion service.
+    """
+    if fixture_prefix() != "review" or manifest.get("lineage_explorer_extension") == 1:
+        return
+    ready = manifest["state"] == "ready"
+    manifest["state"] = "building"
+    write_manifest(root, manifest)
+    records = manifest["records"]
+    identity = identities.create_botanical_identity(
+        database,
+        BotanicalIdentityCreate(
+            scientific_name="Solanum lycopersicum",
+            cultivar_name="Preview Heirloom",
+            common_name="Preview — Lineage tomato",
+        ),
+    )
+    records["identity:lineage"] = str(identity.id)
+
+    def sow(lot_id: UUID, label: str) -> Sowing:
+        sowing, _ = propagation.create_sowing_from_seed_lot(
+            database,
+            lot_id,
+            SeedLotSowingTransitionCreate.model_validate(
+                {"sowing": {"label": label, "notes": NOTE}, "source_adjustment": {"mode": "none"}}
+            ),
+        )
+        return sowing
+
+    def plant_from(sowing_id: UUID, label: str, lifecycle: str = "active") -> Plant:
+        plant, _ = propagation.create_plant_from_sowing(
+            database,
+            sowing_id,
+            PlantFromSowingCreate.model_validate(
+                {
+                    "botanical_identity_id": identity.id,
+                    "label": label,
+                    "lifecycle": lifecycle,
+                    "notes": NOTE,
+                }
+            ),
+            "active",
+        )
+        return plant
+
+    root_lot = seeds.create_seed_lot(
+        database,
+        SeedLotCreate(
+            botanical_identity_id=identity.id,
+            label="Preview — Lineage root packet",
+            source_kind="purchased",
+            notes=NOTE,
+        ),
+    )
+    records["seed:lineage_root"] = str(root_lot.id)
+    first = sow(root_lot.id, "Preview — Lineage spring sowing")
+    records["sowing:lineage_a"] = str(first.id)
+    tray, _ = propagation.create_plant_group_from_sowing(
+        database,
+        first.id,
+        PlantGroupFromSowingCreate.model_validate(
+            {"botanical_identity_id": identity.id, "label": "Preview — Seedling tray"}
+        ),
+        "active",
+    )
+    records["group:lineage_tray"] = str(tray.id)
+    mother = plant_from(first.id, "Preview — Mother plant", "dead")
+    records["plant:lineage_mother"] = str(mother.id)
+    records["plant:lineage_sibling"] = str(
+        plant_from(first.id, "Preview — Transferred sibling", "transferred").id
+    )
+    mistaken = plant_from(first.id, "Preview — Mistaken plant entry")
+    reversal.reverse(database, "plant", mistaken.id, confirm=True)
+    records["plant:lineage_reversed"] = str(mistaken.id)
+    extracted, _, _ = plants.extract_plant(
+        database, tray.id, PlantExtractionCreate(label="Preview — Extracted keeper")
+    )
+    records["plant:lineage_extracted"] = str(extracted.id)
+
+    harvest = harvests.write_harvest(
+        database,
+        HarvestWrite.model_validate(
+            {
+                "plant_id": mother.id,
+                "label": "Preview — Mother plant seed harvest",
+                "occurred_on": {"precision": "month", "year": 2026, "month": 8},
+                "notes": NOTE,
+                "items": [
+                    {
+                        "material_kind": "seed",
+                        "quantity": {"kind": "item_count", "value": "60", "is_approximate": False},
+                    }
+                ],
+            }
+        ),
+    )
+    item = database.scalar(select(HarvestItem).where(HarvestItem.harvest_id == harvest.id))
+    assert item is not None
+    inventory = initialize_inventory(
+        database,
+        item.id,
+        InventoryWrite(
+            state="active",
+            quantity=HarvestQuantity(kind="item_count", value="60", is_approximate=False),
+        ),
+    )
+    records.update(
+        {
+            "harvest:lineage_seed": str(harvest.id),
+            "event:lineage_harvest": str(harvest.event_id),
+            "item:lineage_seed": str(item.id),
+            "inventory:lineage_seed": str(inventory.id),
+        }
+    )
+    converted = []
+    for label, amount in (
+        ("Preview — Second-generation packet", "20"),
+        ("Preview — Reversed packet", "10"),
+    ):
+        converted.append(
+            conversions.create(
+                database,
+                inventory.id,
+                ConversionCreate.model_validate(
+                    {
+                        "mode": "partial",
+                        "label": label,
+                        "quantity": {
+                            "kind": "seed_count",
+                            "value": amount,
+                            "is_approximate": False,
+                        },
+                        "notes": NOTE,
+                    }
+                ),
+            )
+        )
+    conversions.reverse(database, converted[1].id)  # Newest first, as the contract requires.
+    records["seed:lineage_gen2"] = str(converted[0].seed_lot_id)
+    records["seed:lineage_gen2_reversed"] = str(converted[1].seed_lot_id)
+
+    direct = seeds.create_seed_lot(
+        database,
+        SeedLotCreate(
+            botanical_identity_id=identity.id,
+            label="Preview — Tray seed, producer recorded directly",
+            source_kind="collection_produced",
+            producer_plant_group_id=tray.id,
+            notes=NOTE,
+        ),
+    )
+    orphan = seeds.create_seed_lot(
+        database,
+        SeedLotCreate(
+            botanical_identity_id=identity.id,
+            label="Preview — Saved seed, producer not recorded",
+            source_kind="collection_produced",
+            notes=NOTE,
+        ),
+    )
+    second = sow(converted[0].seed_lot_id, "Preview — Second-generation sowing")
+    records.update(
+        {
+            "seed:lineage_group_direct": str(direct.id),
+            "seed:lineage_orphan": str(orphan.id),
+            "sowing:lineage_b": str(second.id),
+            "plant:lineage_gen2": str(
+                plant_from(second.id, "Preview — Second-generation plant").id
+            ),
+        }
+    )
+    independent = plants.create_plant(
+        database,
+        PlantCreate.model_validate(
+            {
+                "botanical_identity_id": identity.id,
+                "label": "Preview — Same identity, independent origin",
+                "direct_origin_kind": "unknown",
+                "notes": NOTE,
+            }
+        ),
+    )
+    records["plant:lineage_independent"] = str(independent.id)
+    bulk = sow(root_lot.id, "Preview — Large seedling flat")
+    records["sowing:lineage_bulk"] = str(bulk.id)
+    for index in range(LINEAGE_BULK):
+        records[f"plant:lineage_bulk_{index}"] = str(
+            plant_from(bulk.id, f"Preview — Flat seedling {index + 1:02d}").id
+        )
+    database.commit()
+    manifest["lineage_explorer_extension"] = 1
+    if ready:
+        manifest["state"] = "ready"
+    write_manifest(root, manifest)
+
+
 SOURCING_SUPPLIER_RECORDS = {
     "supplier:online_seed_shop",
     "supplier:swap_group",
@@ -1082,6 +1321,7 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
         ensure_dashboard(database, root, existing)
         ensure_manual_review(database, root, existing)
         ensure_collection_visual(database, root, existing)
+        ensure_lineage_explorer(database, root, existing)
         ensure_sourcing_suppliers(database, root, existing)
         return existing
     owner = fixture_owner(database) if fixture_prefix() in {"review", "sourcing"} else None
@@ -1581,6 +1821,7 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
     ensure_dashboard(database, root, manifest)
     ensure_manual_review(database, root, manifest)
     ensure_collection_visual(database, root, manifest)
+    ensure_lineage_explorer(database, root, manifest)
     ensure_sourcing_suppliers(database, root, manifest)
     manifest["state"] = "ready"
     write_manifest(root, manifest)

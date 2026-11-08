@@ -261,7 +261,7 @@ def test_live_review_repeat_seed_preserves_owner_records_media_and_operator_edit
         manifest = read_manifest(root)
         assert manifest is not None
         validate_manifest(database, root, manifest)
-        assert len(manifest["records"]) in {66, 68, 80, 82}
+        assert len(manifest["records"]) in {66, 68, 80, 82, 127, 129}
         assert all(
             manifest.get(key) == 1
             for key in (
@@ -334,3 +334,26 @@ def test_collection_visual_extension_preserves_repeated_review_seed(tmp_path: Pa
         ensure_collection_visual(MagicMock(), tmp_path, manifest)
     create.assert_not_called()
     assert manifest["state"] == "ready"
+
+
+@pytest.mark.parametrize(
+    ("prefix", "manifest"),
+    [
+        ("uat", {"state": "ready", "records": {}}),
+        ("sourcing", {"state": "ready", "records": {}}),
+        ("review", {"state": "ready", "lineage_explorer_extension": 1, "records": {}}),
+    ],
+)
+def test_lineage_explorer_extension_is_review_only_and_runs_once(
+    tmp_path: Path, prefix: str, manifest: dict[str, object]
+) -> None:
+    from uat_fixture import ensure_lineage_explorer
+
+    before = dict(manifest)
+    with (
+        patch("uat_fixture.fixture_prefix", return_value=prefix),
+        patch("uat_fixture.identities.create_botanical_identity") as create,
+    ):
+        ensure_lineage_explorer(MagicMock(), tmp_path, manifest)
+    create.assert_not_called()
+    assert manifest == before

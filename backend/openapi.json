@@ -338,6 +338,127 @@
         "title": "AcquisitionContext",
         "type": "object"
       },
+      "AncestryChildren": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AncestryNode"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "offset",
+          "limit",
+          "items"
+        ],
+        "title": "AncestryChildren",
+        "type": "object"
+      },
+      "AncestryNode": {
+        "properties": {
+          "descendant_count": {
+            "title": "Descendant Count",
+            "type": "integer"
+          },
+          "harvest_conversion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HarvestConversionEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeedLotSourceKind"
+              },
+              {
+                "$ref": "#/components/schemas/DirectOriginKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin"
+          },
+          "record": {
+            "discriminator": {
+              "mapping": {
+                "plant": "#/components/schemas/PlantLineageNode",
+                "plant_group": "#/components/schemas/PlantGroupLineageNode",
+                "seed_lot": "#/components/schemas/SeedLotLineageNode",
+                "sowing": "#/components/schemas/SowingLineageNode"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SeedLotLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/SowingLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/PlantLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/PlantGroupLineageNode"
+              }
+            ],
+            "title": "Record"
+          }
+        },
+        "required": [
+          "record",
+          "origin",
+          "harvest_conversion",
+          "descendant_count"
+        ],
+        "title": "AncestryNode",
+        "type": "object"
+      },
+      "AncestryResponse": {
+        "properties": {
+          "ancestors": {
+            "items": {
+              "$ref": "#/components/schemas/AncestryNode"
+            },
+            "title": "Ancestors",
+            "type": "array"
+          },
+          "children": {
+            "$ref": "#/components/schemas/AncestryChildren"
+          },
+          "focus": {
+            "$ref": "#/components/schemas/AncestryNode"
+          }
+        },
+        "required": [
+          "focus",
+          "ancestors",
+          "children"
+        ],
+        "title": "AncestryResponse",
+        "type": "object"
+      },
       "ApplicationResponse": {
         "properties": {
           "added": {
@@ -4238,6 +4359,59 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HarvestConversionEvidence": {
+        "description": "The explicit HARVEST-003 conversion that recorded a SeedLot's producer.",
+        "properties": {
+          "conversion_id": {
+            "format": "uuid",
+            "title": "Conversion Id",
+            "type": "string"
+          },
+          "harvest_id": {
+            "format": "uuid",
+            "title": "Harvest Id",
+            "type": "string"
+          },
+          "harvest_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Harvest Label"
+          },
+          "harvested_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "applied",
+              "reversed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "conversion_id",
+          "status",
+          "harvest_id",
+          "harvest_label",
+          "harvested_on"
+        ],
+        "title": "HarvestConversionEvidence",
         "type": "object"
       },
       "HarvestItemResponse": {
@@ -23359,6 +23533,157 @@
         "summary": "Preview Import",
         "tags": [
           "import-export"
+        ]
+      }
+    },
+    "/api/v1/lineage/{kind}/{item_id}": {
+      "get": {
+        "operationId": "getAncestry",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "seed_lot",
+                "sowing",
+                "plant",
+                "plant_group"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AncestryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Ancestry",
+        "tags": [
+          "lineage"
+        ]
+      }
+    },
+    "/api/v1/lineage/{kind}/{item_id}/children": {
+      "get": {
+        "operationId": "getAncestryChildren",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "seed_lot",
+                "sowing",
+                "plant",
+                "plant_group"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AncestryChildren"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Children",
+        "tags": [
+          "lineage"
         ]
       }
     },

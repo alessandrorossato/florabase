@@ -470,7 +470,10 @@
       ]
     },
     "lineage": {
-      "backend": ["backend/tests/test_lineage.py"],
+      "backend": [
+        "backend/tests/test_lineage.py",
+        "backend/tests/test_lineage_explorer.py"
+      ],
       "integration": [
         "backend/tests/integration/test_lineage_api.py",
         "backend/tests/integration/test_lineage_integrity.py",
@@ -478,6 +481,7 @@
         "backend/tests/integration/test_lineage_migration.py"
       ],
       "frontend": [
+        "frontend/src/lineage/AncestryExplorer.test.tsx",
         "frontend/src/lineage/LineagePanel.test.tsx",
         "frontend/src/lineage/LineageStrip.test.tsx"
       ],

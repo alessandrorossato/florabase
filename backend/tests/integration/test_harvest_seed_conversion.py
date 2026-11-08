@@ -20,7 +20,7 @@ from florabase.harvests.inventory_model import HarvestMaterialInventory as Inven
 from florabase.harvests.inventory_schemas import DispositionCreate, InventoryWrite
 from florabase.harvests.schemas import HarvestWrite
 from florabase.harvests.service import read_harvest, write_harvest
-from florabase.lineage.service import lineage
+from florabase.lineage.service import LineageKey, ancestry, children, lineage
 from florabase.propagation.reversal import reverse as reverse_propagation
 from florabase.propagation.schemas import SeedLotSowingTransitionCreate
 from florabase.propagation.service import create_sowing_from_seed_lot
@@ -101,6 +101,14 @@ def test_exact_conversion_origin_history_and_reversal(
         assert lot.harvest_date_day is None
         assert inventory.quantity_value == 7
         assert lineage(db, ("seed_lot", lot.id)).ancestors[0].id == source.id
+        evidence = ancestry(db, ("seed_lot", lot.id)).focus.harvest_conversion
+        assert evidence is not None
+        assert (evidence.conversion_id, evidence.harvest_id) == (record.id, inventory.harvest_id)
+        assert evidence.status == "applied"
+        assert evidence.harvested_on is not None
+        assert (evidence.harvested_on.year, evidence.harvested_on.month) == (2026, 8)
+        producer: LineageKey = ("plant_group" if group else "plant", source.id)
+        assert lot.id in [node.record.id for node in children(db, producer).items]
         projection = get_seed_lot(db, lot.id)
         assert projection is not None
         response = responses(db, [projection])[0]
@@ -128,6 +136,13 @@ def test_exact_conversion_origin_history_and_reversal(
         assert original.after.quantity.value == 7
         conversions.reverse(db, record.id)
         assert lot.lifecycle == "reversed"
+        # Reversal retains the edge and its evidence, now marked reversed.
+        reversed_node = next(
+            node for node in children(db, producer).items if node.record.id == lot.id
+        )
+        assert reversed_node.record.lifecycle == "reversed"
+        assert reversed_node.harvest_conversion is not None
+        assert reversed_node.harvest_conversion.status == "reversed"
         assert inventory.quantity_value == 10
         assert lot.producer_plant_id or lot.producer_plant_group_id
         assert record.status == "reversed"

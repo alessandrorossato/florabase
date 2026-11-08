@@ -23,6 +23,13 @@ const HarvestScreen = lazy(() =>
   }),
 );
 
+const AncestryExplorer = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./lineage/AncestryExplorer");
+    return { default: module.AncestryExplorer };
+  }),
+);
+
 const MediaScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./media/MediaScreen");
@@ -182,7 +189,19 @@ interface Route {
   labelRecord?: string;
   /** The former Settings QR address (#/settings?tab=general) opens Labels' QR dialog. */
   labelQr?: boolean;
+  /** #/lineage/<kind>/<id>: Material ancestry, within the focus record's own section. */
+  ancestry?: {
+    kind: "seed_lot" | "sowing" | "plant" | "plant_group";
+    id: string;
+  };
 }
+
+const ancestrySections = {
+  seed_lot: "seeds",
+  sowing: "sowings",
+  plant: "plants",
+  plant_group: "plants",
+} as const;
 
 function currentRoute(): Route {
   const raw = window.location.hash.slice(1) || "/dashboard";
@@ -208,6 +227,15 @@ function currentRoute(): Route {
     sowingId,
     creationKind: kind === "plant" || kind === "group" ? kind : undefined,
   } as const;
+  const ancestry =
+    /^\/lineage\/(seed_lot|sowing|plant|plant_group)\/([^/]+)$/.exec(pathname);
+  if (ancestry) {
+    const kind = ancestry[1] as keyof typeof ancestrySections;
+    return {
+      section: ancestrySections[kind],
+      ancestry: { kind, id: ancestry[2] },
+    };
+  }
   const geographic = geographyRoute(window.location.hash);
   if (geographic)
     return {
@@ -432,9 +460,15 @@ function ApplicationShell() {
             key={`${route.section}:${String(navigationReset)}`}
           >
             <Suspense fallback={<WorkspaceLoading />}>
-              {route.section === "sowings" &&
-              route.action === "start" &&
-              route.seedLotId ? (
+              {route.ancestry ? (
+                <AncestryExplorer
+                  key={`${route.ancestry.kind}:${route.ancestry.id}`}
+                  kind={route.ancestry.kind}
+                  id={route.ancestry.id}
+                />
+              ) : route.section === "sowings" &&
+                route.action === "start" &&
+                route.seedLotId ? (
                 <SeedLotSowingWizard seedLotId={route.seedLotId} />
               ) : route.section === "plants" &&
                 route.action === "from-sowing" &&
