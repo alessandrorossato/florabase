@@ -1,3 +1,26 @@
+## 2026-11-08 — CUTTING-001 vegetative propagation domain design
+
+- Defined the pre-schema domain design in [cutting-001-design.md](cutting-001-design.md) on branch
+  `feat/cutting-001-design` from verified `ea4f3ad3` (`v0.1.0-beta.4`), keeping `CUTTING-001` as
+  `planned` in `docs/features.json` without changing production schemas, migrations or beta release
+  artifacts.
+- Compared (1) `VegetativeLot` + `PropagationAttempt` + `RootingObservation`, (2A/2B) single-record
+  and polymorphic `Propagation` models, and (3) existing `HarvestMaterialInventory` + direct
+  `Plant`/`PlantGroup` workflows across migrations, ownership, provenance, API complexity, lineage,
+  Journal, History, Schedule, media and future extensions. Selected Architecture 1 paired with an
+  atomic fast-create workflow and optional `HarvestVegetativeLotConversion` bridge.
+- Specified exact tables, constraints (`ck_plants_origin`, `ck_plant_groups_origin`,
+  `ck_operation_receipts_*`, `ck_schedule_target`, `ck_schedule_kind`, media link/primary photo
+  constraints), lineage cycle triggers (`trg_*_lineage_lock` / `trg_*_lineage_check`), API payloads,
+  migration downgrade refusal guards, UI mockups and acceptance test matrices covering all nine
+  required domain cases (including division, offsets, layering and grafting extension paths).
+- Applied six independent domain-review corrections aligning constraint names, `OperationReceipt`
+  snapshot columns and `trg_operation_receipt_relationships`, `AFTER ... FOR EACH ROW` lineage
+  cycle trigger timing, `harvest_material_inventory` state/conversion semantics, `Schedule` targets
+  and `PartialDate` (`VARCHAR(8)` / `SMALLINT`) column types.
+- Verification: `make verification-plan` classifies the diff as `docs_only: true` (`affected` gate:
+  `feature-graph` and `whitespace`); `make feature-verify AGENT_ID=antigravity-cutting-001` passes.
+
 ## 2026-11-08 — BETA4-PREP-001 release candidate preparation
 
 - Prepared the current release, backend, frontend and installation identities for `0.1.0-beta.4`;

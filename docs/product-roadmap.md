@@ -349,7 +349,10 @@ Mother Plant → vegetative material / cutting batch
 Keep the existing **CUTTING-001** identifier, without treating its older CuttingLot wording as an
 approved final schema. Before v1.0, perform a dedicated propagation-domain design decision comparing
 **VegetativeLot + PropagationAttempt**, a broader **Propagation model with typed source material**,
-or another architecture demonstrated to fit the existing domain. No final schema is chosen here.
+or another architecture demonstrated to fit the existing domain. See
+[Vegetative Propagation Domain Design — CUTTING-001](cutting-001-design.md) for the completed
+architectural comparison, recommended `VegetativeLot` + `PropagationAttempt` + `RootingObservation`
+minimal model, API/migration contracts, and UI workflow specification awaiting implementation approval.
 Avoid a Cutting-only model that makes other vegetative methods awkward, and avoid speculative
 inheritance without concrete workflow evidence.
 

@@ -969,3 +969,14 @@ Completion without Event is always possible. Explicit compatible Plant/PlantGrou
 with actual full occurrence day through the existing Event service, in the same transaction. Exact
 completion retry returns the same durable link; changed completion details and stale writes conflict.
 See [Schedule contract](schedule.md) for dates, supported kinds and lifecycle policy.
+
+## Vegetative propagation domain design — CUTTING-001 (planned)
+
+[Vegetative Propagation Domain Design — CUTTING-001](cutting-001-design.md) specifies the pre-schema
+domain architecture for `Mother Plant / PlantGroup (or External Source) → VegetativeLot →
+PropagationAttempt → Plant / PlantGroup`. It compares `VegetativeLot` + `PropagationAttempt` against
+single-entity and polymorphic `Propagation` models and existing `HarvestMaterialInventory` workflows,
+defines exact constraints for known mother versus external/unknown sources, `PartialDate`, initial
+versus `rooted_count` quantities, retained failed attempts, clonal lineage cycle detection,
+reversible `OperationReceipt` transitions, and future extension paths for division, offsets,
+layering, and grafting. Production schemas remain unchanged until implementation is authorized.
