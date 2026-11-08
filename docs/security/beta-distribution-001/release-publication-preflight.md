@@ -56,12 +56,12 @@ digest mismatch.
 | --- | --- | --- |
 | Local canonical FULL | Workflow checks, product static checks and unit suites, API drift, both production builds, PostgreSQL integration and forced migration cycle | Same, including the focused release regressions |
 | PR CI | Exact PR merge SHA, impact policy, complete product suites and builds for product changes, workflow checks for high-risk changes | Same, plus the publisher-compatible rehearsal in its existing separate workflow |
-| Main push CI | Exact main SHA, full workflow and product checks, integration and both production builds | Same plus a separate forced migration-cycle job |
+| Main push CI | Exact main SHA, full workflow and product checks, integration and both production builds | Same plus a forced migration cycle against the preceding main SHA |
 | Hosted rehearsal | Read-only GHCR probe, registry build/scan/smoke and a separately assembled output layout | Read-only GHCR probe and the actual publisher pipeline, on PR and exact main push SHA. No exhaustive application suite |
 | Protected publication | Exact main CI evidence, then another `make ci` and forced migration cycle before protected publisher | Require successful exact-SHA main CI and main-push rehearsal, including the named migration job. Reuse this evidence during publication retries |
 
-Main CI evidence comes from the platform workflow and its completed jobs for the selected run
-attempt. A PR merge revision, prior SHA, another workflow, a missing job or an incomplete run
+Main CI evidence comes from a successful platform workflow run and its latest completed jobs.
+Successful jobs from the same run and SHA can be reused when only failed jobs are rerun. A PR merge revision, prior SHA, another workflow, a missing job or an incomplete run
 cannot authorize publication. Main CI and local FULL remain distinct trust boundaries. The image
 build and scanner inside protected publication still run on the bytes actually being published.
 

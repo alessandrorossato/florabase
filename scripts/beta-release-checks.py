@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from beta_release import SHA, inputs, run
+from beta_release import SHA, inputs, require_remote_release_tag, run
 
 
 def approved_ci_jobs(
@@ -62,7 +62,7 @@ def require_workflow(repo: str, sha: str, workflow_file: str, required: set[str]
                     "api",
                     "--paginate",
                     "--slurp",
-                    f"repos/{repo}/actions/runs/{workflow['id']}/attempts/{workflow['run_attempt']}/jobs?per_page=100",
+                    f"repos/{repo}/actions/runs/{workflow['id']}/jobs?filter=latest&per_page=100",
                 )
             )
             if approved_ci_jobs([job for batch in jobs for job in batch["jobs"]], sha, required):
@@ -101,8 +101,10 @@ def main() -> None:
         or run("git", "rev-parse", "HEAD") != sha
     ):
         raise ValueError("manual main dispatch at the exact approved source is required")
-    if run("git", "rev-parse", f"refs/tags/v{locked['version']}^{{commit}}") != sha:
+    tag = f"v{locked['version']}"
+    if run("git", "rev-parse", f"refs/tags/{tag}^{{commit}}") != sha:
         raise ValueError("protected version tag does not select this commit")
+    require_remote_release_tag(repo, tag, sha)
     if not args.identity_only:
         require_cli_policy()
         require_workflow(
@@ -116,7 +118,7 @@ def main() -> None:
     releases = json.loads(
         run("gh", "api", "--paginate", "--slurp", f"repos/{repo}/releases?per_page=100")
     )
-    if any(item["tag_name"] == "v" + locked["version"] for page in releases for item in page):
+    if any(item["tag_name"] == tag for page in releases for item in page):
         raise ValueError("release identity already exists; never replace published evidence")
     print("BETA_APPROVED_SOURCE_CHECKS_PASSED")
 

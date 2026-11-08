@@ -40,6 +40,7 @@ from beta_release import (
     release_asset_inventory,
     release_attestation_inputs,
     release_finalization_inputs,
+    require_remote_release_tag,
     run,
     run_artifact_smoke,
     scan_images,
@@ -132,12 +133,17 @@ def lookup_manifest(origin: str, repository: str, tag: str, token: str = "") -> 
             except ValueError:
                 document = None
         errors = document.get("errors") if isinstance(document, dict) else None
-        codes = (
-            {item.get("code") for item in errors if isinstance(item, dict)}
-            if isinstance(errors, list)
-            else set()
-        )
-        if error.code == 404 and codes and codes <= ABSENT_CODES:
+        if (
+            error.code == 404
+            and isinstance(errors, list)
+            and errors
+            and all(
+                isinstance(item, dict)
+                and isinstance(item.get("code"), str)
+                and item["code"] in ABSENT_CODES
+                for item in errors
+            )
+        ):
             return None
         raise ValueError(
             f"cannot determine whether {reference} exists (HTTP {error.code})"
@@ -264,8 +270,8 @@ def pinned_builder(image: str, host: str) -> Iterator[str]:
             config = Path(temporary) / "buildkitd.toml"
             config.write_text(f'[registry."{host}"]\n  http = true\n  insecure = true\n')
             command.extend(["--driver-opt", "network=host", "--buildkitd-config", str(config)])
+        subprocess.run(command, check=True)
         try:
-            subprocess.run(command, check=True)
             yield builder
         finally:
             subprocess.run(["docker", "buildx", "rm", builder], check=True)
@@ -274,8 +280,6 @@ def pinned_builder(image: str, host: str) -> Iterator[str]:
 def check_toolchain() -> None:
     if run("docker", "buildx", "version").split()[1:2] != [BUILDX_VERSION]:
         raise ValueError(f"release requires Docker Buildx {BUILDX_VERSION}")
-    if run("docker", "version", "--format", "{{.Server.Os}}/{{.Server.Arch}}") != "linux/amd64":
-        raise ValueError("release requires native linux/amd64 Docker")
     if (
         os.environ.get("DOCKER_HOST")
         or os.environ.get("DOCKER_CONTEXT", "default") != "default"
@@ -292,6 +296,8 @@ def check_toolchain() -> None:
         != "unix:///var/run/docker.sock"
     ):
         raise ValueError("release requires the default local Docker socket and no builder override")
+    if run("docker", "version", "--format", "{{.Server.Os}}/{{.Server.Arch}}") != "linux/amd64":
+        raise ValueError("release requires native linux/amd64 Docker")
 
 
 def inspect_versions(lookup: RegistryLookup, version: str, pg: dict[str, Any]) -> bool:
@@ -331,6 +337,8 @@ def release_create_command(request: dict[str, Any], assets: Path) -> list[str]:
         "create",
         request["tag"],
         *[str(assets / name) for name in request["assets"]],
+        "--repo",
+        REPOSITORY,
         "--verify-tag",
         "--target",
         request["target_commitish"],
@@ -526,10 +534,33 @@ def protected_state(output: Path) -> Publication:
     return publication
 
 
+def checked_release_request(
+    publication: Publication, assets: Path
+) -> tuple[dict[str, Any], dict[str, tuple[int, str]]]:
+    manifest_value = read(assets / "release-manifest.json")
+    inventory = release_asset_inventory(assets)
+    request = release_finalization_inputs(
+        manifest_value, publication.state["source_sha"], inventory
+    )
+    if request != publication.state["release"]:
+        raise ValueError("release inventory changed after promotion")
+    return request, inventory
+
+
 def record_attestation(output: Path, outcome: str) -> None:
     publication = protected_state(output)
-    if "ATTEST" in publication.state["stages"]:
-        raise ValueError("refuse to record attestation twice")
+    stages = publication.state["stages"]
+    if outcome == "prepare":
+        if "ATTEST" in stages:
+            raise ValueError("refuse to prepare attestation twice")
+        with publication.stage("VALIDATE ATTESTATION ASSETS"):
+            checked_release_request(publication, output / "assets")
+        stages["ATTEST"] = {"status": "running"}
+        publication.save()
+        print("ATTEST: START", flush=True)
+        return
+    if stages.get("ATTEST", {}).get("status") != "running":
+        raise ValueError("refuse to record attestation without a prepared run")
     with publication.stage("ATTEST"):
         if outcome != "passed":
             raise ValueError("one or more protected attestation steps failed")
@@ -543,11 +574,8 @@ def finalize_release(output: Path) -> None:
     if state["stages"].get("ATTEST", {}).get("status") != "passed":
         raise ValueError("refuse to finalize without successful protected attestation")
     with publication.stage("RELEASE"):
-        manifest_value = read(assets / "release-manifest.json")
-        inventory = release_asset_inventory(assets)
-        request = release_finalization_inputs(manifest_value, sha, inventory)
-        if request != state["release"]:
-            raise ValueError("release inventory changed after promotion")
+        request, inventory = checked_release_request(publication, assets)
+        require_remote_release_tag(REPOSITORY, request["tag"], sha)
         subprocess.run(release_create_command(request, assets), check=True)
         draft = locate_draft_release(REPOSITORY, request["tag"], sha)
         validate_release_assets(draft, assets, inventory)
@@ -572,7 +600,7 @@ def main() -> None:
     parser.add_argument("--output", required=True, type=Path)
     action = parser.add_mutually_exclusive_group()
     action.add_argument("--finalize", action="store_true")
-    action.add_argument("--attestation-outcome", choices=("passed", "failed"))
+    action.add_argument("--attestation-outcome", choices=("prepare", "passed", "failed"))
     args = parser.parse_args()
     root = Path.cwd()
     output = args.output.resolve()

@@ -7,7 +7,14 @@
   asset set and recorded digests, retains diagnostic evidence separately, and requires exact-main
   CI, the forced migration cycle and hosted rehearsal before proceeding.
 - [Preflight, coverage matrix, checkpoint and retry policy](security/beta-distribution-001/release-publication-preflight.md).
-  Final local preflight, independent QA, canonical verification and hosted checks are pending.
+  The beta.4-layout preflight at `75d38c7` passed every local stage, including pinned PostgreSQL
+  reproduction, Trivy, artifact-only smoke, validation of seven assets and three local promotions.
+  Independent QA reproduced the old failure and recomputed all seven asset hashes. Its findings
+  led to the previous-main migration base and stricter finalization guards. Beta.5 is the next
+  candidate. The beta.4 tag still peels to `ea4f3ad3`. Read-only checks found no beta.5 Git tag,
+  release or application image tags. Focused release 56, tool lock 4 and verification impact 30
+  passed. Release-script Ruff and mypy, workflow actionlint, feature graph and API generation
+  passed. API declarations remained byte-identical. Final exact-tree evidence is separate.
 
 ## 2026-11-08 — BETA4-PREP-001 release candidate preparation
 

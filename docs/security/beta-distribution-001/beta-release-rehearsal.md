@@ -98,7 +98,10 @@ The run used synthetic local workflow metadata, created no GitHub attestations o
 and is not proof of GitHub-hosted equivalence. The final retained machine-readable report and OCI
 documents are in `/tmp/florabase-beta-release-rehearsal-local-final` on the development host only.
 
-## Non-publishing rehearsal
+## Historical non-publishing rehearsal
+
+The [staged publisher preflight](release-publication-preflight.md) supersedes this workflow layout.
+The details below document the beta.3 diagnostic investigation.
 
 `.github/workflows/beta-release-rehearsal.yml` runs on `ubuntu-24.04`, using the protected workflow's
 checkout and Buildx action revisions and Buildx 0.38.1. It gets package `read` only. It verifies GHCR

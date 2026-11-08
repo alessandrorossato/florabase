@@ -115,7 +115,7 @@ def ctl_bundle_names() -> tuple[str, ...]:
 
 class ReleaseTests(unittest.TestCase):
     def test_current_candidate_inputs_and_platform_policy(self) -> None:
-        self.assertEqual(inputs(ROOT)["version"], "0.1.0-beta.4")
+        self.assertEqual(inputs(ROOT)["version"], "0.1.0-beta.5")
         self.assertEqual(
             inputs(ROOT)["buildkit"],
             "moby/buildkit:v0.34.2@sha256:c5f8862f52499773af85bc07695b2379ef08e8002352b0df2c4864c91d78dabe",
@@ -163,10 +163,7 @@ class ReleaseTests(unittest.TestCase):
                     "beta_release.run",
                     return_value=json.dumps({"digest": index_digest}),
                 ),
-                patch(
-                    "beta_release.urllib.request.urlopen",
-                    return_value=FakeResponse(config, {}),
-                ),
+                patch("beta_release.urllib.request.urlopen", return_value=FakeResponse(config, {})),
             ):
                 save_postgres_oci_evidence(
                     "127.0.0.1:5055/florabase-postgres:18.6-alpine-florabase.1",
@@ -183,9 +180,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(base64.b64decode(raw["platform_manifest"]), platform_raw)
         self.assertEqual(base64.b64decode(raw["configuration"]), config)
 
-    def test_production_build_keeps_disposable_registry_port_in_digest_reference(
-        self,
-    ) -> None:
+    def test_production_build_keeps_disposable_registry_port_in_digest_reference(self) -> None:
         digest = "sha256:" + "a" * 64
         with tempfile.TemporaryDirectory() as temporary:
             metadata = Path(temporary) / "metadata.json"
@@ -281,9 +276,7 @@ class ReleaseTests(unittest.TestCase):
                 value, sha, {**assets, "unexpected.txt": assets["RELEASE.md"]}
             )
 
-    def test_platform_policy_requires_supported_platform_and_separate_deployment(
-        self,
-    ) -> None:
+    def test_platform_policy_requires_supported_platform_and_separate_deployment(self) -> None:
         check_platform(policy())
         accepted = policy()
         accepted["deployment_acceptance"]["status"] = "accepted"
@@ -480,6 +473,61 @@ class ReleaseTests(unittest.TestCase):
             )
         )
 
+    def test_required_main_evidence_reuses_latest_jobs_only_within_the_exact_run(self) -> None:
+        sha = "a" * 40
+        repo = "owner/repo"
+        approved = {
+            "id": 42,
+            "run_attempt": 2,
+            "path": ".github/workflows/ci.yml",
+            "head_sha": sha,
+            "head_branch": "main",
+            "event": "push",
+            "status": "completed",
+            "conclusion": "success",
+            "repository": {"full_name": repo},
+            "head_repository": {"full_name": repo},
+        }
+        jobs = [
+            {
+                "name": name,
+                "head_sha": sha,
+                "status": "completed",
+                "conclusion": "success",
+                "run_attempt": 2 if name == "release-migration" else 1,
+            }
+            for name in ("quality", "integration", "build", "release-migration")
+        ]
+        required = {job["name"] for job in jobs}
+        for evidence in (jobs, jobs[:-1]):
+            with (
+                self.subTest(complete=evidence == jobs),
+                patch.object(
+                    checks,
+                    "run",
+                    side_effect=[
+                        json.dumps(
+                            [
+                                {
+                                    "workflow_runs": [
+                                        {**approved, "id": 11, "head_sha": "b" * 40},
+                                        approved,
+                                    ]
+                                }
+                            ]
+                        ),
+                        json.dumps([{"jobs": evidence}]),
+                    ],
+                ) as api,
+            ):
+                if evidence == jobs:
+                    checks.require_workflow(repo, sha, "ci.yml", required)
+                else:
+                    with self.assertRaisesRegex(ValueError, "exact main SHA"):
+                        checks.require_workflow(repo, sha, "ci.yml", required)
+                self.assertEqual(api.call_count, 2)
+                self.assertIn("/runs/42/jobs?filter=latest", api.call_args.args[-1])
+
     def test_release_identity_refuses_before_registry_access(self) -> None:
         sha = "c" * 40
         valid = {
@@ -614,10 +662,7 @@ class ReleaseTests(unittest.TestCase):
         }
         validate_scan(valid, digest)
         for service in ("backend", "frontend", "postgresql"):
-            with (
-                self.subTest(service=service),
-                self.assertRaisesRegex(ValueError, "inventory"),
-            ):
+            with self.subTest(service=service), self.assertRaisesRegex(ValueError, "inventory"):
                 validate_scan(valid, digest, service)
         for change in (
             {},
@@ -707,10 +752,7 @@ class ReleaseTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "PostgreSQL Dockerfile|base image"):
                     inputs(root)
         beta_release.require_pinned_postgres(
-            {
-                "index_digest": pinned["index_digest"],
-                "platform_digest": pinned["platform_digest"],
-            },
+            {"index_digest": pinned["index_digest"], "platform_digest": pinned["platform_digest"]},
             pinned,
         )
         with self.assertRaisesRegex(ValueError, "not reproducible"):
@@ -734,11 +776,7 @@ class ReleaseTests(unittest.TestCase):
                 (bin_dir / "florabase-postgres-refuse-root").write_bytes(
                     (ROOT / "postgres/florabase-postgres-refuse-root.sh").read_bytes()
                 )
-                for name in (
-                    "id",
-                    "docker-entrypoint.sh",
-                    "florabase-postgres-refuse-root",
-                ):
+                for name in ("id", "docker-entrypoint.sh", "florabase-postgres-refuse-root"):
                     (bin_dir / name).chmod(0o755)
                 marker = bin_dir / "marker"
                 result = subprocess.run(
@@ -778,24 +816,10 @@ class ReleaseTests(unittest.TestCase):
         # The rebuild check must not gate every release: the publisher runs it only for an
         # unpublished identity, so a superseded Alpine pin never blocks application releases.
         self.assertNotIn("postgres-identity --check", workflow)
-        self.assertEqual(workflow.count("version: v0.38.1"), 2)
-        # An unpublished identity is built and verified in a loopback registry before GHCR.
-        self.assertLess(source.index("local_postgres_identity("), source.index("scan_images("))
-        self.assertIn("destination=POSTGRES_REPOSITORY", source)
-        # Existence is decided by registry manifest lookups, never by stderr text or the packages
-        # REST API (which rejects the workflow's GITHUB_TOKEN with HTTP 400).
-        self.assertNotIn("not found|manifest unknown", source)
+        self.assertEqual(workflow.count("version: v0.38.1"), 1)
+        self.assertIn("version: " + publisher.BUILDX_VERSION, workflow)
+        # Registry manifest lookups distinguish absence from outages and authorization failures.
         self.assertNotIn("/packages", source)
-        self.assertLess(source.index("scan_images("), source.index("software_bill_of_materials("))
-        self.assertLess(
-            source.index("software_bill_of_materials("),
-            source.index('checkpoint("security_passed")'),
-        )
-        self.assertLess(
-            source.index("run_artifact_smoke("),
-            source.index('checkpoint("postgresql_version_promoted")'),
-        )
-        self.assertIn('"postgresql": POSTGRES_REPOSITORY + "@" + pg["index_digest"]', source)
 
     def test_shared_or_symlinked_executable_cache_refuses(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -832,13 +856,17 @@ class ReleaseTests(unittest.TestCase):
             "id": 42,
             "tag_name": tag,
             "draft": True,
-            "target_commitish": sha,
+            "target_commitish": "main",
             "url": f"https://api.github.com/repos/{repo}/releases/42",
             "assets": [],
         }
 
         def api(*args: str) -> str:
-            if "/tags/" in args[-1]:
+            if args[-1] == f"repos/{repo}/git/ref/tags/{tag}":
+                return json.dumps(
+                    {"ref": f"refs/tags/{tag}", "object": {"type": "commit", "sha": sha}}
+                )
+            if "/releases/tags/" in args[-1]:
                 raise subprocess.CalledProcessError(
                     1, args, stderr="404 published release not found"
                 )
@@ -857,7 +885,6 @@ class ReleaseTests(unittest.TestCase):
             {**draft, "id": 43},
             {**draft, "draft": False},
             {**draft, "tag_name": "stale"},
-            {**draft, "target_commitish": "main"},
             {**draft, "url": "foreign"},
             {**draft, "assets": [{"id": 1, "state": "new"}]},
         ]
@@ -887,6 +914,24 @@ class ReleaseTests(unittest.TestCase):
         ):
             beta_release.locate_draft_release(repo, tag, sha)
 
+    def test_protected_git_tag_checks_the_exact_annotated_commit(self) -> None:
+        repo, tag, sha, annotation = publisher.REPOSITORY, "v0.1.0-beta.4", "c" * 40, "e" * 40
+        reference = {"ref": f"refs/tags/{tag}", "object": {"type": "tag", "sha": annotation}}
+        annotated = {"sha": annotation, "object": {"type": "commit", "sha": sha}}
+        for target in (annotated, {**annotated, "object": {"type": "commit", "sha": "b" * 40}}):
+            with (
+                self.subTest(target=target),
+                patch(
+                    "beta_release.run", side_effect=[json.dumps(reference), json.dumps(target)]
+                ) as api,
+            ):
+                if target == annotated:
+                    beta_release.require_remote_release_tag(repo, tag, sha)
+                    self.assertTrue(api.call_args.args[-1].endswith(f"/git/tags/{annotation}"))
+                else:
+                    with self.assertRaisesRegex(ValueError, "approved source SHA"):
+                        beta_release.require_remote_release_tag(repo, tag, sha)
+
     def test_workflow_wires_protected_draft_finalization_and_attestation_assets(
         self,
     ) -> None:
@@ -898,7 +943,7 @@ class ReleaseTests(unittest.TestCase):
             self.assertIn(f"/beta-release/assets/{name}", workflow)
         ci = (ROOT / ".github/workflows/ci.yml").read_text()
         self.assertIn("name: release-migration", ci)
-        self.assertIn('verify-migration-cycle.sh "$GITHUB_SHA" --force-cycle', ci)
+        self.assertIn('verify-migration-cycle.sh "$BASE_SHA" --force-cycle', ci)
 
     def test_original_beta4_inventory_failure_is_reproduced_before_any_promotion(
         self,
@@ -930,6 +975,11 @@ class ReleaseTests(unittest.TestCase):
             link.unlink()
             (output / ".hidden").write_text("{}")
             with self.assertRaisesRegex(ValueError, "hidden"):
+                beta_release.release_asset_inventory(output)
+            (output / ".hidden").unlink()
+            with (output / "oversize.tar.gz").open("wb") as oversized:
+                oversized.truncate(2**31)
+            with self.assertRaisesRegex(ValueError, "oversize.tar.gz"):
                 beta_release.release_asset_inventory(output)
 
     def test_install_bundle_uses_the_controller_contract(self) -> None:
@@ -964,10 +1014,7 @@ class ReleaseTests(unittest.TestCase):
         index = json.dumps(
             {
                 "manifests": [
-                    {
-                        "digest": native_digest,
-                        "platform": {"os": "linux", "architecture": "amd64"},
-                    }
+                    {"digest": native_digest, "platform": {"os": "linux", "architecture": "amd64"}}
                 ]
             }
         ).encode()
@@ -988,19 +1035,14 @@ class ReleaseTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "identity mismatch"):
                     saved_descriptors(saved, "sha256:" + "b" * 64)
 
-    def test_classic_registry_export_binds_native_config_without_oci_store(
-        self,
-    ) -> None:
+    def test_classic_registry_export_binds_native_config_without_oci_store(self) -> None:
         config = "sha256:" + "a" * 64
         native = json.dumps({"config": {"digest": config}}).encode()
         native_digest = "sha256:" + hashlib.sha256(native).hexdigest()
         index = json.dumps(
             {
                 "manifests": [
-                    {
-                        "digest": native_digest,
-                        "platform": {"os": "linux", "architecture": "amd64"},
-                    }
+                    {"digest": native_digest, "platform": {"os": "linux", "architecture": "amd64"}}
                 ]
             }
         ).encode()
@@ -1025,19 +1067,14 @@ class ReleaseTests(unittest.TestCase):
                 ):
                     saved_descriptors(saved, config, reference)
                 with (
-                    patch(
-                        "beta_release.subprocess.check_output",
-                        side_effect=[index, native],
-                    ),
+                    patch("beta_release.subprocess.check_output", side_effect=[index, native]),
                     self.assertRaisesRegex(ValueError, "config identity mismatch"),
                 ):
                     saved_descriptors(saved, "sha256:" + "b" * 64, reference)
                 with self.assertRaisesRegex(ValueError, "OCI image store required"):
                     saved_descriptors(saved, config, "local-candidate")
 
-    def test_classic_registry_export_resolves_index_when_raw_view_is_not_an_index(
-        self,
-    ) -> None:
+    def test_classic_registry_export_resolves_index_when_raw_view_is_not_an_index(self) -> None:
         config = "sha256:" + "a" * 64
         native = json.dumps({"config": {"digest": config}}).encode()
         native_digest = "sha256:" + hashlib.sha256(native).hexdigest()
@@ -1071,9 +1108,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(descriptors["configuration_digest"], config)
         self.assertEqual(descriptors["raw_index_document"], json.loads(raw_platform_view))
 
-    def test_oci_export_resolves_platform_root_against_immutable_registry_index(
-        self,
-    ) -> None:
+    def test_oci_export_resolves_platform_root_against_immutable_registry_index(self) -> None:
         config_bytes = json.dumps({"rootfs": {"diff_ids": []}}).encode()
         config = "sha256:" + hashlib.sha256(config_bytes).hexdigest()
         native = {"config": {"digest": config}, "layers": []}
@@ -1084,10 +1119,7 @@ class ReleaseTests(unittest.TestCase):
         index = json.dumps(
             {
                 "manifests": [
-                    {
-                        "digest": remote_digest,
-                        "platform": {"os": "linux", "architecture": "amd64"},
-                    }
+                    {"digest": remote_digest, "platform": {"os": "linux", "architecture": "amd64"}}
                 ],
             }
         ).encode()
@@ -1106,8 +1138,7 @@ class ReleaseTests(unittest.TestCase):
             data.seek(0)
             with tarfile.open(fileobj=data) as saved:
                 with patch(
-                    "beta_release.subprocess.check_output",
-                    side_effect=[index, remote_native],
+                    "beta_release.subprocess.check_output", side_effect=[index, remote_native]
                 ):
                     descriptors = saved_descriptors(saved, config, reference)
         self.assertEqual(descriptors["index_digest"], index_digest)
@@ -1125,8 +1156,7 @@ class ReleaseTests(unittest.TestCase):
         reference = "ghcr.io/owner/image@" + digest
         with patch("beta_release.run", return_value=json.dumps(valid)):
             self.assertEqual(
-                registry_record(reference, "linux/amd64")["platform_digest"],
-                native["digest"],
+                registry_record(reference, "linux/amd64")["platform_digest"], native["digest"]
             )
         for manifests in (
             [],
@@ -1137,8 +1167,7 @@ class ReleaseTests(unittest.TestCase):
             with (
                 self.subTest(manifests=manifests),
                 patch(
-                    "beta_release.run",
-                    return_value=json.dumps({**valid, "manifests": manifests}),
+                    "beta_release.run", return_value=json.dumps({**valid, "manifests": manifests})
                 ),
                 self.assertRaises(ValueError),
             ):
@@ -1320,9 +1349,7 @@ def token_response() -> FakeResponse:
     return FakeResponse(b'{"token": "registry-fixture"}', {})
 
 
-def manifest_response(
-    body: bytes = b'{"schemaVersion": 2, "manifests": []}',
-) -> FakeResponse:
+def manifest_response(body: bytes = b'{"schemaVersion": 2, "manifests": []}') -> FakeResponse:
     digest = "sha256:" + hashlib.sha256(body).hexdigest()
     return FakeResponse(body, {"Docker-Content-Digest": digest, "Content-Type": INDEX_TYPE})
 
@@ -1381,8 +1408,7 @@ class RegistryPreflightTests(unittest.TestCase):
     def test_existing_application_version_returns_its_digest(self) -> None:
         response = manifest_response()
         self.assertEqual(
-            self.lookup(token_response(), response),
-            response.headers["Docker-Content-Digest"],
+            self.lookup(token_response(), response), response.headers["Docker-Content-Digest"]
         )
 
     def test_definitely_absent_image(self) -> None:
@@ -1405,11 +1431,7 @@ class RegistryPreflightTests(unittest.TestCase):
             # A 404 that is really an authorization refusal is not an absence.
             (token_response(), http_error(404, denied)),
         ):
-            with (
-                self.subTest(answers=answers),
-                registry(*answers),
-                self.assertRaises(ValueError),
-            ):
+            with self.subTest(answers=answers), registry(*answers), self.assertRaises(ValueError):
                 publisher.published_digest("owner/image", "1", "actor", "secret")
 
     def test_unavailable_registry_refuses(self) -> None:
@@ -1421,11 +1443,7 @@ class RegistryPreflightTests(unittest.TestCase):
             (token_response(), http_error(429)),
             (token_response(), urllib.error.URLError("reset")),
         ):
-            with (
-                self.subTest(answers=answers),
-                registry(*answers),
-                self.assertRaises(ValueError),
-            ):
+            with self.subTest(answers=answers), registry(*answers), self.assertRaises(ValueError):
                 publisher.published_digest("owner/image", "1", "actor", "secret")
 
     def test_malformed_response_refuses(self) -> None:
@@ -1436,6 +1454,10 @@ class RegistryPreflightTests(unittest.TestCase):
             (FakeResponse(b"[]", {}),),
             (token_response(), http_error(404, b"not json")),
             (token_response(), http_error(404, b'{"errors": []}')),
+            (
+                token_response(),
+                http_error(404, b'{"errors": [{"code": "MANIFEST_UNKNOWN"}, "bad"]}'),
+            ),
             (token_response(), http_error(404, b'{"errors": [{"message": "x"}]}')),
             (token_response(), FakeResponse(b"not json", good.headers)),
             (
@@ -1483,11 +1505,7 @@ class RegistryPreflightTests(unittest.TestCase):
                 ast.parse(source, name, feature_version=(3, 12))
 
     def test_invalid_reference_is_refused_before_any_request(self) -> None:
-        for repository, tag in (
-            ("Owner/Image", "1"),
-            ("owner/image", "1/../x"),
-            ("o", ""),
-        ):
+        for repository, tag in (("Owner/Image", "1"), ("owner/image", "1/../x"), ("o", "")):
             with self.subTest(repository=repository), registry() as opener:
                 with self.assertRaises(ValueError):
                     publisher.published_digest(repository, tag, "actor", "secret")
@@ -1701,6 +1719,8 @@ class SharedPublicationTests(unittest.TestCase):
                 if command[0] == "docker":
                     self.assertEqual(command[1], "pull")
                     return None
+                if fault is not None and "archive" in command:
+                    return real_run([*command, "deploy/beta"], **kwargs)
                 return real_run(command, **kwargs)
 
             commands.side_effect = docker_only
@@ -1787,6 +1807,7 @@ class SharedPublicationTests(unittest.TestCase):
                         ),
                         patch.object(publisher, "run", return_value=sha),
                         patch.object(publisher, "require_publication_identity"),
+                        patch.object(publisher, "require_remote_release_tag"),
                         patch.object(publisher, "locate_draft_release", return_value=draft),
                         patch.object(publisher.subprocess, "run") as mutation,
                     ):

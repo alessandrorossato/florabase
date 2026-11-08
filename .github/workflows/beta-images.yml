@@ -80,7 +80,13 @@ jobs:
           APPROVED_SHA: ${{ secrets.RELEASE_APPROVED_SHA }}
         run: |
           set -euo pipefail
-          python3 scripts/release-tools.py scripts/publish-beta-images.py --output "$RUNNER_TEMP/beta-release"
+          python3 scripts/release-tools.py scripts/publish-beta-images.py --output "$RUNNER_TEMP/beta-release" \
+            2>&1 | tee "$RUNNER_TEMP/beta-publication.log"
+      - name: "ATTEST / Recheck the validated release assets"
+        id: attest_prepare
+        env:
+          APPROVED_SHA: ${{ secrets.RELEASE_APPROVED_SHA }}
+        run: python3 scripts/publish-beta-images.py --attestation-outcome prepare --output "$RUNNER_TEMP/beta-release"
       - name: "ATTEST / exact backend index"
         id: attest_backend
         uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
@@ -113,7 +119,7 @@ jobs:
         with:
           subject-path: ${{ runner.temp }}/beta-release/assets/release-manifest.json
       - name: "ATTEST / Record the protected action outcomes"
-        if: ${{ !cancelled() && steps.pair.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.attest_prepare.outcome == 'success' }}
         env:
           APPROVED_SHA: ${{ secrets.RELEASE_APPROVED_SHA }}
           ALL_ATTESTED: ${{ steps.attest_backend.outcome == 'success' && steps.attest_frontend.outcome == 'success' && steps.attest_postgresql.outcome == 'success' && steps.attest_bundle.outcome == 'success' && steps.attest_manifest.outcome == 'success' }}
@@ -131,6 +137,8 @@ jobs:
         if: always()
         with:
           name: beta-release-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/beta-release/
-          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/beta-release/
+            ${{ runner.temp }}/beta-publication.log
+          if-no-files-found: ignore
           retention-days: 90
