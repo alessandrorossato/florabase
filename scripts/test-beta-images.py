@@ -1104,6 +1104,49 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(descriptors["configuration_digest"], config)
         self.assertEqual(descriptors["raw_index_document"], json.loads(raw_platform_view))
 
+    def test_oci_export_resolves_platform_root_against_immutable_registry_index(self) -> None:
+        config = "sha256:" + "a" * 64
+        native = {"config": {"digest": config}, "layers": []}
+        native_bytes = json.dumps(native).encode()
+        native_digest = "sha256:" + hashlib.sha256(native_bytes).hexdigest()
+        index_digest = "sha256:" + "b" * 64
+        reference = "127.0.0.1:5000/owner/image@" + index_digest
+        index = {
+            "digest": index_digest,
+            "manifests": [
+                {
+                    "digest": native_digest,
+                    "platform": {"os": "linux", "architecture": "amd64"},
+                }
+            ],
+        }
+        with tempfile.TemporaryFile() as data:
+            with tarfile.open(fileobj=data, mode="w") as saved:
+                for name, value in {
+                    "index.json": json.dumps({"manifests": [{"digest": native_digest}]}).encode(),
+                    "blobs/sha256/" + native_digest[7:]: native_bytes,
+                }.items():
+                    info = tarfile.TarInfo(name)
+                    info.size = len(value)
+                    saved.addfile(info, io.BytesIO(value))
+            data.seek(0)
+            with tarfile.open(fileobj=data) as saved:
+                with (
+                    patch(
+                        "beta_release.registry_record",
+                        return_value={
+                            "index_digest": index_digest,
+                            "platform_digest": native_digest,
+                        },
+                    ),
+                    patch("beta_release.run", return_value=json.dumps(index)),
+                ):
+                    descriptors = saved_descriptors(saved, config, reference)
+        self.assertEqual(descriptors["index_digest"], index_digest)
+        self.assertEqual(descriptors["platform_digest"], native_digest)
+        self.assertEqual(descriptors["configuration_digest"], config)
+        self.assertEqual(descriptors["raw_index_document"], native)
+
     def test_registry_descriptor_requires_distinct_native_identity(self) -> None:
         digest = "sha256:" + "a" * 64
         native = {

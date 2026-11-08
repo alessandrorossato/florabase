@@ -7736,3 +7736,12 @@ Status remains implemented pending canonical verification.
   `imagetools inspect --raw` response as an OCI index although it had no `manifests` member. The
   fallback now resolves and checks the root/native descriptors through the same immutable
   registry identity path used by manifest construction and retains the raw response for review.
+- PR #155 hosted run `42485751305` again matched both PostgreSQL index and platform pins on two
+  independent builds and the previous-BuildKit diagnostic; all 13 layers matched. Backend and
+  frontend builds and manifest validation passed. Trivy setup then found another valid Docker
+  export shape: `docker save` emitted an OCI `index.json` whose sole root points directly to the
+  native platform manifest. `saved_descriptors()` treated that root manifest as an index and
+  failed before scans. The follow-up fix binds the local platform descriptor to the already
+  selected immutable registry index and adds regression coverage. Focused release tests passed
+  (55 unit and 4 Python 3.12 compatibility tests). The next hosted rehearsal is still required;
+  security scans and downstream stages have not yet passed on GitHub Actions.

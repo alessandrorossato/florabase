@@ -62,6 +62,19 @@ manifest construction, and retains the raw response alongside those descriptors.
 failed rehearsal until a hosted run passes the scans and the later smoke, bundle, promotion and
 release-input stages.
 
+PR #155 run `42485751305` repeated the PostgreSQL verification on `ubuntu-24.04`: both independent
+builds, the pinned BuildKit identity, the index `sha256:4edc079088c3f78b69fc8f9473e33881ebabea7fea2d82b3227b70a69ae3b7de`,
+platform manifest `sha256:55b1969a7fddad118ca07a15058a43a5916dec3e4dbab38029e671225b392b91`,
+configuration and all 13 layers matched. Backend/frontend production builds and manifest checks
+also passed. The run failed at the start of Trivy scanning: the hosted Docker image store exported
+an OCI layout whose sole `index.json` root was the native platform manifest itself. The retained
+log shows `saved_descriptors()` indexing `manifests` on that platform document. The code now
+resolves this OCI export shape through the immutable registry index, verifies the local root is its
+selected native platform, and retains both the local document and resolved descriptors. A new
+unit regression covers the export shape. Focused release coverage passes (55 unit tests and 4
+Python 3.12 compatibility tests); a hosted run must still pass security scans and every later
+rehearsal stage.
+
 ## Local rehearsal result (not hosted acceptance)
 
 On the TUXEDO, the corrected rehearsal completed against its owned loopback registry. Two independent

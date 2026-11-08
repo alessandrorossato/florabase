@@ -847,6 +847,33 @@ def saved_descriptors(
         index_digest = roots[0]["digest"]
         index = blob(index_digest)
         raw_index = index
+        if "manifests" not in index:
+            # Some Docker image stores save a single-platform OCI layout whose root
+            # descriptor is the platform manifest itself. Bind that local manifest to
+            # the immutable registry index selected for scanning.
+            if not reference or "@" not in reference:
+                raise ValueError("OCI export root is not an image index")
+            record = registry_record(
+                reference,
+                "linux/amd64",
+                registry_host=reference.split("/", maxsplit=1)[0],
+            )
+            if record["platform_digest"] != index_digest:
+                raise ValueError("OCI export root differs from selected native platform")
+            index_digest = record["index_digest"]
+            index = json.loads(
+                run(
+                    "docker",
+                    "buildx",
+                    "imagetools",
+                    "inspect",
+                    reference,
+                    "--format",
+                    "{{json .Manifest}}",
+                )
+            )
+            if index.get("digest") != index_digest or "manifests" not in index:
+                raise ValueError("registry did not return the immutable OCI image index")
     native = [
         m
         for m in index["manifests"]
