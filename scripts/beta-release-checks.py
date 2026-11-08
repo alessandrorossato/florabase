@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 from pathlib import Path
@@ -11,7 +12,9 @@ from typing import Any
 from beta_release import SHA, inputs, run
 
 
-def approved_ci_jobs(jobs: list[dict[str, Any]], sha: str) -> bool:
+def approved_ci_jobs(
+    jobs: list[dict[str, Any]], sha: str, required: set[str] | None = None
+) -> bool:
     passed = {
         job.get("name")
         for job in jobs
@@ -19,12 +22,16 @@ def approved_ci_jobs(jobs: list[dict[str, Any]], sha: str) -> bool:
         and job.get("conclusion") == "success"
         and job.get("status") == "completed"
     }
-    return {"quality", "integration", "build"} <= passed
+    if required is None:
+        required = {"quality", "integration", "build", "release-migration"}
+    return required <= passed and all(
+        sum(job.get("name") == name for job in jobs) == 1 for name in required
+    )
 
 
-def approved_ci_run(value: dict[str, Any], sha: str, repo: str) -> bool:
+def approved_ci_run(value: dict[str, Any], sha: str, repo: str, workflow: str = "ci.yml") -> bool:
     return (
-        value.get("path") == ".github/workflows/ci.yml"
+        value.get("path") == f".github/workflows/{workflow}"
         and value.get("head_sha") == sha
         and value.get("head_branch") == "main"
         and value.get("event") == "push"
@@ -35,7 +42,38 @@ def approved_ci_run(value: dict[str, Any], sha: str, repo: str) -> bool:
     )
 
 
-def main() -> None:
+def require_workflow(repo: str, sha: str, workflow_file: str, required: set[str]) -> None:
+    pages = json.loads(
+        run(
+            "gh",
+            "api",
+            "--paginate",
+            "--slurp",
+            f"repos/{repo}/actions/workflows/{workflow_file}/runs?head_sha={sha}&event=push&per_page=100",
+        )
+    )
+    for page in pages:
+        for workflow in page["workflow_runs"]:
+            if not approved_ci_run(workflow, sha, repo, workflow_file):
+                continue
+            jobs = json.loads(
+                run(
+                    "gh",
+                    "api",
+                    "--paginate",
+                    "--slurp",
+                    f"repos/{repo}/actions/runs/{workflow['id']}/attempts/{workflow['run_attempt']}/jobs?per_page=100",
+                )
+            )
+            if approved_ci_jobs([job for batch in jobs for job in batch["jobs"]], sha, required):
+                print(
+                    f"EVIDENCE PASS: {workflow_file} run {workflow['id']} attempt {workflow['run_attempt']} at {sha}"
+                )
+                return
+    raise ValueError(f"{workflow_file} and {sorted(required)} must succeed on exact main SHA {sha}")
+
+
+def require_cli_policy() -> None:
     help_text = run("gh", "attestation", "verify", "--help")
     for flag in (
         "--signer-workflow",
@@ -47,6 +85,12 @@ def main() -> None:
             raise ValueError(
                 "installed GitHub CLI does not support release verification policy: " + flag
             )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--identity-only", action="store_true")
+    args = parser.parse_args()
     locked = inputs(Path.cwd(), publication=True)
     sha = os.environ["GITHUB_SHA"]
     repo = os.environ["GITHUB_REPOSITORY"]
@@ -59,35 +103,15 @@ def main() -> None:
         raise ValueError("manual main dispatch at the exact approved source is required")
     if run("git", "rev-parse", f"refs/tags/v{locked['version']}^{{commit}}") != sha:
         raise ValueError("protected version tag does not select this commit")
-    pages = json.loads(
-        run(
-            "gh",
-            "api",
-            "--paginate",
-            "--slurp",
-            f"repos/{repo}/actions/workflows/ci.yml/runs?head_sha={sha}&event=push&per_page=100",
+    if not args.identity_only:
+        require_cli_policy()
+        require_workflow(
+            repo,
+            sha,
+            "ci.yml",
+            {"quality", "integration", "build", "release-migration"},
         )
-    )
-    approved = False
-    for page in pages:
-        for workflow in page["workflow_runs"]:
-            if not approved_ci_run(workflow, sha, repo):
-                continue
-            jobs = json.loads(
-                run(
-                    "gh",
-                    "api",
-                    "--paginate",
-                    "--slurp",
-                    f"repos/{repo}/actions/runs/{workflow['id']}/attempts/{workflow['run_attempt']}/jobs?per_page=100",
-                )
-            )
-            if approved_ci_jobs([job for batch in jobs for job in batch["jobs"]], sha):
-                approved = True
-    if not approved:
-        raise ValueError(
-            "canonical main CI workflow and all three jobs must succeed on this exact commit"
-        )
+        require_workflow(repo, sha, "beta-release-rehearsal.yml", {"rehearse"})
     # A failed API request is not evidence of absence. List successfully, then inspect identities.
     releases = json.loads(
         run("gh", "api", "--paginate", "--slurp", f"repos/{repo}/releases?per_page=100")

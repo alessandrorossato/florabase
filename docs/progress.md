@@ -1,3 +1,14 @@
+## 2026-11-08 — beta publication preflight recovery
+
+- Protected beta.4 run `42508727559` passed exhaustive verification and reached `smoke_passed`.
+  Its retained artifact contains `postgres-reproducibility/` alongside the flat release files.
+  The actual beta.4 preparation and inventory functions reproduced the failure on that directory.
+- Shared the staged publisher with local and hosted rehearsal. Publication validates an explicit
+  asset set and recorded digests, retains diagnostic evidence separately, and requires exact-main
+  CI, the forced migration cycle and hosted rehearsal before proceeding.
+- [Preflight, coverage matrix, checkpoint and retry policy](security/beta-distribution-001/release-publication-preflight.md).
+  Final local preflight, independent QA, canonical verification and hosted checks are pending.
+
 ## 2026-11-08 — BETA4-PREP-001 release candidate preparation
 
 - Prepared the current release, backend, frontend and installation identities for `0.1.0-beta.4`;

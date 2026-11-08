@@ -359,3 +359,10 @@ test-beta-runtime: ## Offline beta stack contract and controller safety rules (h
 
 smoke-beta-runtime: ## Disposable Engine 24.0.2/Compose 2.20.1 install, recovery and upgrade drills (no real host)
 	@python3 ./scripts/smoke-beta-runtime.py --evidence /tmp/florabase-beta-runtime-smoke.json
+
+.PHONY: release-preflight-local
+release-preflight-local: ## Rehearse protected release preparation and promotion in an owned local registry
+	@set -eo pipefail; \
+	run_dir=$$(mktemp -d "${TMPDIR:-/tmp}/florabase-release-preflight.XXXXXXXX"); \
+	echo "Release preflight evidence: $$run_dir"; \
+	python3 scripts/release-tools.py scripts/rehearse-beta-release.py --output "$$run_dir/output" 2>&1 | tee "$$run_dir/preflight.log"

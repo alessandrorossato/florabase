@@ -31,6 +31,7 @@ UPSTREAM_POSTGRES = "docker.io/library/postgres"
 POSTGRES_ENTRYPOINT = "florabase-postgres-entrypoint"
 # deploy/beta files attached to every release and bound by hash into the attested manifest.
 INSTALL_BUNDLE = ("compose.yaml", "florabasectl.py", "florabase.env.example")
+POSTGRES_SBOM = "postgresql-sbom.cdx.json"
 REGISTRY_IMAGE = (
     "registry:2.8.3@sha256:a3d8aaa63ed8681a604f1dea0aa03f100d5895b6a58ace528858a7b332415373"
 )
@@ -163,7 +164,14 @@ def validate_postgres_identity(pg: dict[str, Any], repository: str = POSTGRES_RE
         or type(pg["source_date_epoch"]) is not int
         or pg["source_date_epoch"] <= 0
         or set(upstream)
-        != {"repository", "version", "reference", "index_digest", "platform_digest", "platform"}
+        != {
+            "repository",
+            "version",
+            "reference",
+            "index_digest",
+            "platform_digest",
+            "platform",
+        }
         or upstream["repository"] != UPSTREAM_POSTGRES
         or upstream["platform"] != "linux/amd64"
         or not DIGEST.fullmatch(upstream["index_digest"])
@@ -190,7 +198,12 @@ def normalized_postgres_context(root: Path) -> Iterator[None]:
 
 
 def build_postgres_image(
-    root: Path, builder: str, repository: str, tag: str, epoch: int, insecure: bool = False
+    root: Path,
+    builder: str,
+    repository: str,
+    tag: str,
+    epoch: int,
+    insecure: bool = False,
 ) -> dict[str, str]:
     """Deterministic derived PostgreSQL build: one platform manifest wrapped in a bare index.
 
@@ -490,7 +503,12 @@ def local_postgres_identity(
         )
         try:
             built = build_postgres_image(
-                root, builder, repository, pg["version"], pg["source_date_epoch"], insecure=True
+                root,
+                builder,
+                repository,
+                pg["version"],
+                pg["source_date_epoch"],
+                insecure=True,
             )
         finally:
             subprocess.run(["docker", "buildx", "rm", builder], check=False)
@@ -548,7 +566,13 @@ def registry_record(
         raise ValueError("application registry references must use an immutable registry digest")
     descriptor = json.loads(
         run(
-            "docker", "buildx", "imagetools", "inspect", reference, "--format", "{{json .Manifest}}"
+            "docker",
+            "buildx",
+            "imagetools",
+            "inspect",
+            reference,
+            "--format",
+            "{{json .Manifest}}",
         )
     )
     digest = reference.split("@")[1]
@@ -603,6 +627,10 @@ def validate_manifest(
                     return value
 
                 schema["properties"]["images"] = replace_registry(schema["properties"]["images"])
+                if value.get("workflow") == {"run_id": None, "run_attempt": None}:
+                    schema["properties"]["workflow"] = {
+                        "const": {"run_id": None, "run_attempt": None}
+                    }
             validator.Draft202012Validator(schema).validate(value)
         except validator.ValidationError as error:
             raise ValueError(
@@ -785,7 +813,14 @@ def saved_descriptors(
         if not DIGEST.fullmatch(digest):
             raise ValueError("invalid registry descriptor digest")
         data = subprocess.check_output(
-            ["docker", "buildx", "imagetools", "inspect", repository + "@" + digest, "--raw"]
+            [
+                "docker",
+                "buildx",
+                "imagetools",
+                "inspect",
+                repository + "@" + digest,
+                "--raw",
+            ]
         )
         # The CLI terminates its raw JSON output with a display newline.
         candidates = (data, data.removesuffix(b"\n"))
@@ -1035,13 +1070,24 @@ def locate_draft_release(repo: str, tag: str, sha: str) -> dict[str, Any]:
 
 def release_asset_inventory(output: Path) -> dict[str, tuple[int, str]]:
     """Check predictable local asset failures before registry version promotion."""
-    files = list(output.iterdir())
-    if not files or any(not path.is_file() or path.is_symlink() for path in files):
+    files = sorted(output.iterdir())
+    if not files:
         raise ValueError("invalid local release asset inventory")
-    return {
-        path.name: (path.stat().st_size, "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest())
-        for path in files
-    }
+    result = {}
+    for path in files:
+        if (
+            path.is_symlink()
+            or not path.is_file()
+            or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", path.name)
+        ):
+            raise ValueError(f"invalid local release asset inventory entry: {path.name!r}")
+        with path.open("rb") as asset:
+            digest = hashlib.file_digest(asset, "sha256").hexdigest()
+            size = asset.tell()
+        if not size:
+            raise ValueError(f"empty local release asset: {path.name}")
+        result[path.name] = (size, "sha256:" + digest)
+    return result
 
 
 def prepare_release_assets(
@@ -1049,14 +1095,21 @@ def prepare_release_assets(
 ) -> dict[str, tuple[int, str]]:
     """Create the same source, install bundle and release notes used by protected publication."""
     pg = inputs(root, publication=True)["postgresql"]
+    archive = "florabase-" + version + "-source.tar.gz"
+    for name in (*INSTALL_BUNDLE, "RELEASE.md", archive):
+        path = output / name
+        if path.exists() or path.is_symlink():
+            raise ValueError(f"refuse to overwrite release asset: {name}")
     subprocess.run(
         [
             "git",
+            "-C",
+            str(root),
             "archive",
             "--format=tar.gz",
             "--prefix=florabase-" + version + "/",
             "--output",
-            str(output / ("florabase-" + version + "-source.tar.gz")),
+            str(output / archive),
             sha,
         ],
         check=True,
@@ -1081,8 +1134,11 @@ def release_attestation_inputs(
     """Validate the exact provenance subjects and file assets without creating attestations."""
     if workflow != ".github/workflows/beta-images.yml":
         raise ValueError("attestation workflow differs from protected publication")
-    expected = {"backend", "frontend", "postgresql"}
-    if set(refs) != expected or set(asset_digests) != set(INSTALL_BUNDLE):
+    if set(refs) != {
+        "backend",
+        "frontend",
+        "postgresql",
+    } or asset_digests != manifest.get("install_bundle"):
         raise ValueError("attestation subject set differs from the release contract")
     if manifest.get("source", {}).get("dirty") is not False:
         raise ValueError("attestation source must be a clean accepted revision")
@@ -1092,14 +1148,17 @@ def release_attestation_inputs(
     subjects: dict[str, dict[str, str]] = {}
     for service, reference in refs.items():
         name, separator, digest = reference.partition("@")
+        suffix = "postgres" if service == "postgresql" else service
+        expected = (
+            f"{registry_host}/alessandrorossato/florabase-postgres@{manifest['postgresql']['index_digest']}"
+            if service == "postgresql"
+            else manifest["images"][service]["reference"]
+        )
         if (
             not separator
             or not DIGEST.fullmatch(digest)
-            or not re.fullmatch(
-                re.escape(registry_host)
-                + r"/alessandrorossato/florabase-(?:backend|frontend|postgres)",
-                name,
-            )
+            or name != f"{registry_host}/alessandrorossato/florabase-{suffix}"
+            or reference != expected
         ):
             raise ValueError("attestation image subject is not an immutable Florabase image")
         subjects[service] = {"name": name, "digest": digest}
@@ -1131,13 +1190,15 @@ def release_finalization_inputs(
         or manifest.get("source", {}).get("dirty") is not False
     ):
         raise ValueError("Release API source, version or cleanliness input is invalid")
-    if (
-        not assets
-        or "RELEASE.md" not in assets
-        or any(
-            not re.fullmatch(r"[A-Za-z0-9._-]+", name) or size <= 0 or not DIGEST.fullmatch(digest)
-            for name, (size, digest) in assets.items()
-        )
+    if set(assets) != {
+        *INSTALL_BUNDLE,
+        "RELEASE.md",
+        "release-manifest.json",
+        POSTGRES_SBOM,
+        f"florabase-{version}-source.tar.gz",
+    } or any(
+        not re.fullmatch(r"[A-Za-z0-9._-]+", name) or size <= 0 or not DIGEST.fullmatch(digest)
+        for name, (size, digest) in assets.items()
     ):
         raise ValueError("Release API asset inventory is incomplete or malformed")
     return {
@@ -1155,9 +1216,15 @@ def release_finalization_inputs(
     }
 
 
-def validate_release_assets(release: dict[str, Any], output: Path) -> None:
+def validate_release_assets(
+    release: dict[str, Any],
+    output: Path,
+    expected: dict[str, tuple[int, str]] | None = None,
+) -> None:
     """Require a complete private draft, including byte-bound evidence, before publication."""
     files = release_asset_inventory(output)
+    if expected is not None and files != expected:
+        raise ValueError("local release asset bytes changed after validation")
     assets = release.get("assets", [])
     if release.get("draft") is not True or len(assets) != len(files):
         raise ValueError("incomplete draft release")
@@ -1175,7 +1242,10 @@ def scan_images(refs: dict[str, str], output: Path, scanner: str) -> None:
     output.mkdir(parents=True, exist_ok=True)
     owner = Owner.disposable("workflow-smoke", output)
     failures: list[str] = []
-    with Disposable(owner), tempfile.TemporaryDirectory(prefix="florabase-scan-cache-") as cache:
+    with (
+        Disposable(owner),
+        tempfile.TemporaryDirectory(prefix="florabase-scan-cache-") as cache,
+    ):
         for service, ref in refs.items():
             inspected = json.loads(run("docker", "image", "inspect", ref))[0]
             identity = {
@@ -1200,7 +1270,13 @@ def scan_images(refs: dict[str, str], output: Path, scanner: str) -> None:
                 ],
                 check=True,
             )
-            command = ["docker", "run", "--rm", "--user", f"{os.getuid()}:{os.getgid()}"]
+            command = [
+                "docker",
+                "run",
+                "--rm",
+                "--user",
+                f"{os.getuid()}:{os.getgid()}",
+            ]
             for key, value in owner.labels().items():
                 command.extend(["--label", key + "=" + value])
             command.extend(
@@ -1265,7 +1341,13 @@ def scan_images(refs: dict[str, str], output: Path, scanner: str) -> None:
                 result = subprocess.run(command, check=False)
                 try:
                     validate_scan(read(report_path), identity["configuration_digest"], service)
-                except (ValueError, OSError, TypeError, KeyError, AttributeError) as error:
+                except (
+                    ValueError,
+                    OSError,
+                    TypeError,
+                    KeyError,
+                    AttributeError,
+                ) as error:
                     failures.append(service + ": " + str(error))
                 if result.returncode:
                     failures.append(service + ": scanner exit " + str(result.returncode))

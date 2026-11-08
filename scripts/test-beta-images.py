@@ -21,6 +21,7 @@ import textwrap
 import unittest
 import urllib.error
 import urllib.parse
+from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -162,7 +163,10 @@ class ReleaseTests(unittest.TestCase):
                     "beta_release.run",
                     return_value=json.dumps({"digest": index_digest}),
                 ),
-                patch("beta_release.urllib.request.urlopen", return_value=FakeResponse(config, {})),
+                patch(
+                    "beta_release.urllib.request.urlopen",
+                    return_value=FakeResponse(config, {}),
+                ),
             ):
                 save_postgres_oci_evidence(
                     "127.0.0.1:5055/florabase-postgres:18.6-alpine-florabase.1",
@@ -179,7 +183,9 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(base64.b64decode(raw["platform_manifest"]), platform_raw)
         self.assertEqual(base64.b64decode(raw["configuration"]), config)
 
-    def test_production_build_keeps_disposable_registry_port_in_digest_reference(self) -> None:
+    def test_production_build_keeps_disposable_registry_port_in_digest_reference(
+        self,
+    ) -> None:
         digest = "sha256:" + "a" * 64
         with tempfile.TemporaryDirectory() as temporary:
             metadata = Path(temporary) / "metadata.json"
@@ -216,8 +222,10 @@ class ReleaseTests(unittest.TestCase):
         refs = {
             "backend": f"{host}/alessandrorossato/florabase-backend@sha256:{'a' * 64}",
             "frontend": f"{host}/alessandrorossato/florabase-frontend@sha256:{'d' * 64}",
-            "postgresql": f"{host}/alessandrorossato/florabase-postgres@sha256:{'f' * 64}",
+            "postgresql": f"{host}/alessandrorossato/florabase-postgres@{value['postgresql']['index_digest']}",
         }
+        for service in value["images"]:
+            value["images"][service]["reference"] = refs[service]
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "release-manifest.json"
             path.write_text(json.dumps(value))
@@ -245,53 +253,19 @@ class ReleaseTests(unittest.TestCase):
                 host,
             )
 
-    def test_rehearsal_uses_the_locked_postgres_repository_namespace(self) -> None:
-        rehearsal = (ROOT / "scripts/rehearse-beta-release.py").read_text()
-        builder = (ROOT / "scripts/beta_release.py").read_text()
-        self.assertIn('locked["postgresql"][', rehearsal)
-        self.assertIn('.removeprefix("ghcr.io/")', rehearsal)
-        self.assertIn('pg["repository"].removeprefix("ghcr.io/")', builder)
-
-    def test_previous_buildkit_diagnostic_does_not_apply_the_pinned_acceptance_gate(self) -> None:
-        tree = ast.parse((ROOT / "scripts/rehearse-beta-release.py").read_text())
-        diagnostic_calls = [
-            node
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "local_postgres_identity"
-            and any(keyword.arg == "buildkit_image" for keyword in node.keywords)
-        ]
-        self.assertEqual(len(diagnostic_calls), 1)
-        self.assertNotIn("destination", {keyword.arg for keyword in diagnostic_calls[0].keywords})
-
-    def test_rehearsal_retains_postgres_evidence_before_strict_pin_gate(self) -> None:
-        source = (ROOT / "scripts/rehearse-beta-release.py").read_text()
-        calls = [
-            node
-            for node in ast.walk(ast.parse(source))
-            if isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "local_postgres_identity"
-        ]
-        self.assertEqual(len(calls), 2)
-        for call in calls:
-            self.assertIn("evidence_dir", {keyword.arg for keyword in call.keywords})
-            self.assertNotIn("destination", {keyword.arg for keyword in call.keywords})
-        self.assertLess(
-            source.index('report["stages"]["previous_buildkit_diagnostic"]'),
-            source.index('require_pinned_postgres(identity, locked["postgresql"])'),
-        )
-
     def test_release_finalization_inputs_match_protected_draft_request_without_api_call(
         self,
     ) -> None:
         value = candidate()
         sha = value["source"]["revision"]
-        assets = {
-            "RELEASE.md": (21, "sha256:" + "a" * 64),
-            "compose.yaml": (42, "sha256:" + "b" * 64),
-        }
+        names = (
+            *beta_release.INSTALL_BUNDLE,
+            "RELEASE.md",
+            "release-manifest.json",
+            beta_release.POSTGRES_SBOM,
+            f"florabase-{value['version']}-source.tar.gz",
+        )
+        assets = {name: (21, "sha256:" + "a" * 64) for name in names}
         result = release_finalization_inputs(value, sha, assets)
         self.assertEqual(result["tag"], "v" + value["version"])
         self.assertEqual(result["target_commitish"], sha)
@@ -303,9 +277,13 @@ class ReleaseTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             release_finalization_inputs(value, "d" * 40, assets)
         with self.assertRaises(ValueError):
-            release_finalization_inputs(value, sha, {"../RELEASE.md": assets["RELEASE.md"]})
+            release_finalization_inputs(
+                value, sha, {**assets, "unexpected.txt": assets["RELEASE.md"]}
+            )
 
-    def test_platform_policy_requires_supported_platform_and_separate_deployment(self) -> None:
+    def test_platform_policy_requires_supported_platform_and_separate_deployment(
+        self,
+    ) -> None:
         check_platform(policy())
         accepted = policy()
         accepted["deployment_acceptance"]["status"] = "accepted"
@@ -454,7 +432,9 @@ class ReleaseTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_manifest(value)
 
-    def test_check_names_from_other_sources_or_commits_do_not_approve_release(self) -> None:
+    def test_check_names_from_other_sources_or_commits_do_not_approve_release(
+        self,
+    ) -> None:
         sha = "c" * 40
         valid = [
             {
@@ -463,10 +443,11 @@ class ReleaseTests(unittest.TestCase):
                 "conclusion": "success",
                 "status": "completed",
             }
-            for name in ("quality", "integration", "build")
+            for name in ("quality", "integration", "build", "release-migration")
         ]
         self.assertTrue(checks.approved_ci_jobs(valid, sha))
-        self.assertFalse(checks.approved_ci_jobs(valid[:2], sha))
+        self.assertFalse(checks.approved_ci_jobs(valid[:-1], sha))
+        self.assertFalse(checks.approved_ci_jobs([*valid, valid[0]], sha))
         for field, invalid in (
             ("head_sha", "d" * 40),
             ("conclusion", "failure"),
@@ -568,16 +549,24 @@ class ReleaseTests(unittest.TestCase):
             return subprocess.CompletedProcess(command, 0)
 
         for failing, phase in (
-            ("local_postgres_identity", "preflight"),
-            ("scan_images", "frontend_candidate_pushed"),
-            ("run_artifact_smoke", "security_passed"),
+            ("local_postgres_identity", "CANDIDATES"),
+            ("scan_images", "SCAN/SMOKE"),
+            ("run_artifact_smoke", "SCAN/SMOKE"),
         ):
-            with self.subTest(failing=failing), tempfile.TemporaryDirectory() as temporary:
+            with (
+                self.subTest(failing=failing),
+                tempfile.TemporaryDirectory() as temporary,
+            ):
                 target = Path(temporary) / "output"
                 with (
                     patch.dict(os.environ, environment, clear=True),
                     patch.object(sys, "argv", ["publish", "--output", str(target)]),
-                    patch.object(publisher, "inputs", return_value=inputs(ROOT)),
+                    patch.object(publisher, "check_toolchain"),
+                    patch.object(
+                        publisher,
+                        "disposable_registry",
+                        return_value=nullcontext(("127.0.0.1:5055", 5055)),
+                    ),
                     patch.object(publisher, "run", side_effect=output),
                     patch.object(publisher, "manifest", return_value=candidate()),
                     patch.object(publisher, "published_digest", return_value=None),
@@ -593,14 +582,19 @@ class ReleaseTests(unittest.TestCase):
                         },
                     ),
                     patch.object(
-                        publisher, failing, side_effect=ValueError("fixture gate blocked")
+                        publisher,
+                        failing,
+                        side_effect=ValueError("fixture gate blocked"),
                     ),
                     patch.object(publisher.subprocess, "run", side_effect=execute) as commands,
                 ):
                     with self.assertRaisesRegex(ValueError, "fixture gate blocked"):
                         publisher.main()
                     self.assertEqual(
-                        json.loads((target / "publication-state.json").read_text())["phase"], phase
+                        read(target / "diagnostics/publication-state.json")["stages"][phase][
+                            "status"
+                        ],
+                        "failed",
                     )
                     self.assertFalse((target / "RELEASE.md").exists())
                     self.assertFalse(
@@ -620,7 +614,10 @@ class ReleaseTests(unittest.TestCase):
         }
         validate_scan(valid, digest)
         for service in ("backend", "frontend", "postgresql"):
-            with self.subTest(service=service), self.assertRaisesRegex(ValueError, "inventory"):
+            with (
+                self.subTest(service=service),
+                self.assertRaisesRegex(ValueError, "inventory"),
+            ):
                 validate_scan(valid, digest, service)
         for change in (
             {},
@@ -710,7 +707,10 @@ class ReleaseTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "PostgreSQL Dockerfile|base image"):
                     inputs(root)
         beta_release.require_pinned_postgres(
-            {"index_digest": pinned["index_digest"], "platform_digest": pinned["platform_digest"]},
+            {
+                "index_digest": pinned["index_digest"],
+                "platform_digest": pinned["platform_digest"],
+            },
             pinned,
         )
         with self.assertRaisesRegex(ValueError, "not reproducible"):
@@ -734,7 +734,11 @@ class ReleaseTests(unittest.TestCase):
                 (bin_dir / "florabase-postgres-refuse-root").write_bytes(
                     (ROOT / "postgres/florabase-postgres-refuse-root.sh").read_bytes()
                 )
-                for name in ("id", "docker-entrypoint.sh", "florabase-postgres-refuse-root"):
+                for name in (
+                    "id",
+                    "docker-entrypoint.sh",
+                    "florabase-postgres-refuse-root",
+                ):
                     (bin_dir / name).chmod(0o755)
                 marker = bin_dir / "marker"
                 result = subprocess.run(
@@ -770,7 +774,7 @@ class ReleaseTests(unittest.TestCase):
         source = (ROOT / "scripts/publish-beta-images.py").read_text()
         self.assertIn("subject-path: |", workflow)
         for name in ("compose.yaml", "florabasectl.py", "florabase.env.example"):
-            self.assertIn("${{ runner.temp }}/beta-release/" + name, workflow)
+            self.assertIn("${{ runner.temp }}/beta-release/assets/" + name, workflow)
         # The rebuild check must not gate every release: the publisher runs it only for an
         # unpublished identity, so a superseded Alpine pin never blocks application releases.
         self.assertNotIn("postgres-identity --check", workflow)
@@ -861,7 +865,10 @@ class ReleaseTests(unittest.TestCase):
             with (
                 self.subTest(value=value),
                 patch.dict(os.environ, {"GH_TOKEN": "fixture"}),
-                patch("beta_release.run", side_effect=[json.dumps([[draft]]), json.dumps(value)]),
+                patch(
+                    "beta_release.run",
+                    side_effect=[json.dumps([[draft]]), json.dumps(value)],
+                ),
                 self.assertRaises(ValueError),
             ):
                 beta_release.locate_draft_release(repo, tag, sha)
@@ -880,108 +887,55 @@ class ReleaseTests(unittest.TestCase):
         ):
             beta_release.locate_draft_release(repo, tag, sha)
 
-    def test_actual_workflow_draft_finalization_with_published_tag_404(self) -> None:
-        repo, sha, tag = "alessandrorossato/florabase", "c" * 40, "v0.1.0-beta.1"
-        workflow = (ROOT / ".github/workflows/beta-images.yml").read_text()
-        code = textwrap.dedent(workflow.split("<<'PY'\n")[-1].split("          PY")[0])
-        with tempfile.TemporaryDirectory() as temporary:
-            output = Path(temporary)
-            (output / "fixture.json").write_bytes(b"fixture")
-            release: dict[str, Any] = {
-                "id": 42,
-                "tag_name": tag,
-                "draft": True,
-                "target_commitish": sha,
-                "url": f"https://api.github.com/repos/{repo}/releases/42",
-                "assets": [
-                    {
-                        "id": 7,
-                        "state": "uploaded",
-                        "name": "fixture.json",
-                        "size": 7,
-                        "digest": "sha256:" + hashlib.sha256(b"fixture").hexdigest(),
-                    }
-                ],
-            }
-            for valid in (True, False):
-                value = copy.deepcopy(release)
-                if not valid:
-                    value["assets"][0]["digest"] = "wrong"
-                with (
-                    patch.dict(
-                        os.environ,
-                        {"GH_TOKEN": "fixture", "GITHUB_REPOSITORY": repo, "GITHUB_SHA": sha},
-                    ),
-                    patch.object(sys, "argv", ["probe", temporary, tag]),
-                    patch(
-                        "beta_release.run",
-                        side_effect=[json.dumps([[], [value]]), json.dumps(value)],
-                    ),
-                    patch(
-                        "subprocess.check_output",
-                        side_effect=subprocess.CalledProcessError(
-                            1, "published-tag-lookup", stderr="404"
-                        ),
-                    ),
-                    patch("subprocess.run") as mutation,
-                ):
-                    if valid:
-                        exec(code, {})
-                        self.assertEqual(
-                            mutation.call_args.args[0][:5],
-                            ["gh", "api", "--method", "PATCH", f"repos/{repo}/releases/42"],
-                        )
-                    else:
-                        with self.assertRaises(ValueError):
-                            exec(code, {})
-                        mutation.assert_not_called()
-
-    def test_draft_validation_and_promotion_order(self) -> None:
-        source = (ROOT / "scripts/publish-beta-images.py").read_text()
-        self.assertLess(
-            source.index("prepare_release_assets(Path.cwd(), output"),
-            source.index('"--prefer-index=false"'),
-        )
-        import beta_release
-
-        with tempfile.TemporaryDirectory() as temporary:
-            output = Path(temporary)
-            (output / "unexpected-directory").mkdir()
-            with self.assertRaises(ValueError):
-                beta_release.release_asset_inventory(output)
-        with (
-            patch.dict(os.environ, {}, clear=True),
-            patch("beta_release.run") as api,
-            self.assertRaises(ValueError),
-        ):
-            beta_release.locate_draft_release(
-                "alessandrorossato/florabase", "v0.1.0-beta.1", "c" * 40
-            )
-        api.assert_not_called()
-
-    def test_install_bundle_is_attached_before_inventory_and_never_latest(self) -> None:
-        source = (ROOT / "scripts/publish-beta-images.py").read_text()
-        copy = source.index("prepare_release_assets(Path.cwd(), output")
-        self.assertLess(copy, source.index('"--prefer-index=false"'))
-        self.assertLess(copy, source.index('"--prefer-index=false"'))
-        import beta_release
-
-        names = list(beta_release.INSTALL_BUNDLE)
-        self.assertEqual(names, ["compose.yaml", "florabasectl.py", "florabase.env.example"])
-        # The controller pins the same names it verifies against the manifest.
-        self.assertEqual(tuple(names), ctl_bundle_names())
-        for name in names:
-            self.assertTrue((ROOT / "deploy/beta" / name).is_file(), name)
-        # Prerelease promotion writes only the exact version tag.
-        self.assertNotIn(":latest", source)
-        self.assertIn("promote_image(ref, version)", source)
-
-    def test_workflow_draft_lookup_never_uses_published_tag_endpoint(self) -> None:
+    def test_workflow_wires_protected_draft_finalization_and_attestation_assets(
+        self,
+    ) -> None:
         workflow = (ROOT / ".github/workflows/beta-images.yml").read_text()
         self.assertNotIn("/releases/tags/", workflow)
-        self.assertIn("locate_draft_release", workflow)
-        self.assertIn('--target "$GITHUB_SHA"', workflow)
-        self.assertIn('"--method", "PATCH"', workflow)
+        self.assertNotIn("make ci", workflow)
+        self.assertIn("publish-beta-images.py --finalize", workflow)
+        for name in (*beta_release.INSTALL_BUNDLE, "release-manifest.json"):
+            self.assertIn(f"/beta-release/assets/{name}", workflow)
+        ci = (ROOT / ".github/workflows/ci.yml").read_text()
+        self.assertIn("name: release-migration", ci)
+        self.assertIn('verify-migration-cycle.sh "$GITHUB_SHA" --force-cycle', ci)
+
+    def test_original_beta4_inventory_failure_is_reproduced_before_any_promotion(
+        self,
+    ) -> None:
+        version = inputs(ROOT)["version"]
+        sha = beta_release.run("git", "-C", str(ROOT), "rev-parse", "HEAD")
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "assets"
+            output.mkdir()
+            offending = output / "postgres-reproducibility"
+            offending.mkdir()
+            (offending / "postgres-oci-evidence.json").write_text("{}")
+            with self.assertRaisesRegex(
+                ValueError,
+                "invalid local release asset inventory.*postgres-reproducibility",
+            ):
+                beta_release.prepare_release_assets(ROOT, output, version, sha)
+            with self.assertRaisesRegex(ValueError, "postgres-reproducibility"):
+                beta_release.release_asset_inventory(output)
+
+    def test_asset_inventory_rejects_symlinks_and_hidden_files(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "valid.json").write_text("{}")
+            link = output / "symlink"
+            link.symlink_to(output / "valid.json")
+            with self.assertRaisesRegex(ValueError, "symlink"):
+                beta_release.release_asset_inventory(output)
+            link.unlink()
+            (output / ".hidden").write_text("{}")
+            with self.assertRaisesRegex(ValueError, "hidden"):
+                beta_release.release_asset_inventory(output)
+
+    def test_install_bundle_uses_the_controller_contract(self) -> None:
+        self.assertEqual(beta_release.INSTALL_BUNDLE, ctl_bundle_names())
+        for name in beta_release.INSTALL_BUNDLE:
+            self.assertTrue((ROOT / "deploy/beta" / name).is_file(), name)
 
     def test_partial_or_wrong_release_assets_cannot_be_published(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -1010,7 +964,10 @@ class ReleaseTests(unittest.TestCase):
         index = json.dumps(
             {
                 "manifests": [
-                    {"digest": native_digest, "platform": {"os": "linux", "architecture": "amd64"}}
+                    {
+                        "digest": native_digest,
+                        "platform": {"os": "linux", "architecture": "amd64"},
+                    }
                 ]
             }
         ).encode()
@@ -1031,14 +988,19 @@ class ReleaseTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "identity mismatch"):
                     saved_descriptors(saved, "sha256:" + "b" * 64)
 
-    def test_classic_registry_export_binds_native_config_without_oci_store(self) -> None:
+    def test_classic_registry_export_binds_native_config_without_oci_store(
+        self,
+    ) -> None:
         config = "sha256:" + "a" * 64
         native = json.dumps({"config": {"digest": config}}).encode()
         native_digest = "sha256:" + hashlib.sha256(native).hexdigest()
         index = json.dumps(
             {
                 "manifests": [
-                    {"digest": native_digest, "platform": {"os": "linux", "architecture": "amd64"}}
+                    {
+                        "digest": native_digest,
+                        "platform": {"os": "linux", "architecture": "amd64"},
+                    }
                 ]
             }
         ).encode()
@@ -1063,14 +1025,19 @@ class ReleaseTests(unittest.TestCase):
                 ):
                     saved_descriptors(saved, config, reference)
                 with (
-                    patch("beta_release.subprocess.check_output", side_effect=[index, native]),
+                    patch(
+                        "beta_release.subprocess.check_output",
+                        side_effect=[index, native],
+                    ),
                     self.assertRaisesRegex(ValueError, "config identity mismatch"),
                 ):
                     saved_descriptors(saved, "sha256:" + "b" * 64, reference)
                 with self.assertRaisesRegex(ValueError, "OCI image store required"):
                     saved_descriptors(saved, config, "local-candidate")
 
-    def test_classic_registry_export_resolves_index_when_raw_view_is_not_an_index(self) -> None:
+    def test_classic_registry_export_resolves_index_when_raw_view_is_not_an_index(
+        self,
+    ) -> None:
         config = "sha256:" + "a" * 64
         native = json.dumps({"config": {"digest": config}}).encode()
         native_digest = "sha256:" + hashlib.sha256(native).hexdigest()
@@ -1104,7 +1071,9 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(descriptors["configuration_digest"], config)
         self.assertEqual(descriptors["raw_index_document"], json.loads(raw_platform_view))
 
-    def test_oci_export_resolves_platform_root_against_immutable_registry_index(self) -> None:
+    def test_oci_export_resolves_platform_root_against_immutable_registry_index(
+        self,
+    ) -> None:
         config_bytes = json.dumps({"rootfs": {"diff_ids": []}}).encode()
         config = "sha256:" + hashlib.sha256(config_bytes).hexdigest()
         native = {"config": {"digest": config}, "layers": []}
@@ -1115,7 +1084,10 @@ class ReleaseTests(unittest.TestCase):
         index = json.dumps(
             {
                 "manifests": [
-                    {"digest": remote_digest, "platform": {"os": "linux", "architecture": "amd64"}}
+                    {
+                        "digest": remote_digest,
+                        "platform": {"os": "linux", "architecture": "amd64"},
+                    }
                 ],
             }
         ).encode()
@@ -1134,7 +1106,8 @@ class ReleaseTests(unittest.TestCase):
             data.seek(0)
             with tarfile.open(fileobj=data) as saved:
                 with patch(
-                    "beta_release.subprocess.check_output", side_effect=[index, remote_native]
+                    "beta_release.subprocess.check_output",
+                    side_effect=[index, remote_native],
                 ):
                     descriptors = saved_descriptors(saved, config, reference)
         self.assertEqual(descriptors["index_digest"], index_digest)
@@ -1152,7 +1125,8 @@ class ReleaseTests(unittest.TestCase):
         reference = "ghcr.io/owner/image@" + digest
         with patch("beta_release.run", return_value=json.dumps(valid)):
             self.assertEqual(
-                registry_record(reference, "linux/amd64")["platform_digest"], native["digest"]
+                registry_record(reference, "linux/amd64")["platform_digest"],
+                native["digest"],
             )
         for manifests in (
             [],
@@ -1163,7 +1137,8 @@ class ReleaseTests(unittest.TestCase):
             with (
                 self.subTest(manifests=manifests),
                 patch(
-                    "beta_release.run", return_value=json.dumps({**valid, "manifests": manifests})
+                    "beta_release.run",
+                    return_value=json.dumps({**valid, "manifests": manifests}),
                 ),
                 self.assertRaises(ValueError),
             ):
@@ -1207,26 +1182,11 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn("if: always()", workflow)
         self.assertNotIn("packages: write", workflow)
         self.assertNotIn("actions/attest-build-provenance@", workflow)
+        self.assertIn("--hosted", workflow)
+        self.assertIn("push:", workflow)
         source = (ROOT / "scripts/rehearse-beta-release.py").read_text()
-        for helper in (
-            "local_postgres_identity(",
-            "build_application_image(",
-            "manifest(",
-            "scan_images(",
-            "software_bill_of_materials(",
-            "run_artifact_smoke(",
-            "prepare_release_assets(",
-            "promote_image(",
-            "release_attestation_inputs(",
-        ):
-            self.assertIn(helper, source)
-        self.assertIn("local_postgres_identity(", source)
-        self.assertIn("registry_port", source)
-        self.assertIn('"127.0.0.1:{registry_port}:5000"', source)
+        self.assertIn("_publisher.run_pipeline(root, output)", source)
         self.assertNotIn('"docker", "login", "ghcr.io"', source)
-        self.assertIn("pg_builds[0] != pg_builds[1]", source)
-        self.assertIn("PREVIOUS_BUILDKit", source)
-        self.assertIn("first_component_byte_difference", source)
 
     def test_interrupted_artifact_parent_allows_child_cleanup(self) -> None:
         with tempfile.TemporaryDirectory(prefix="beta-child-cleanup-test-") as temporary:
@@ -1335,7 +1295,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn("secrets.RELEASE_APPROVED_SHA", workflow)
         self.assertEqual(workflow.count("packages: write"), 1)
         self.assertIn("needs: verify", workflow)
-        self.assertIn("--verify-tag", workflow)
+        self.assertIn("--verify-tag", (ROOT / "scripts/publish-beta-images.py").read_text())
 
 
 INDEX_TYPE = "application/vnd.oci.image.index.v1+json"
@@ -1360,7 +1320,9 @@ def token_response() -> FakeResponse:
     return FakeResponse(b'{"token": "registry-fixture"}', {})
 
 
-def manifest_response(body: bytes = b'{"schemaVersion": 2, "manifests": []}') -> FakeResponse:
+def manifest_response(
+    body: bytes = b'{"schemaVersion": 2, "manifests": []}',
+) -> FakeResponse:
     digest = "sha256:" + hashlib.sha256(body).hexdigest()
     return FakeResponse(body, {"Docker-Content-Digest": digest, "Content-Type": INDEX_TYPE})
 
@@ -1419,7 +1381,8 @@ class RegistryPreflightTests(unittest.TestCase):
     def test_existing_application_version_returns_its_digest(self) -> None:
         response = manifest_response()
         self.assertEqual(
-            self.lookup(token_response(), response), response.headers["Docker-Content-Digest"]
+            self.lookup(token_response(), response),
+            response.headers["Docker-Content-Digest"],
         )
 
     def test_definitely_absent_image(self) -> None:
@@ -1442,7 +1405,11 @@ class RegistryPreflightTests(unittest.TestCase):
             # A 404 that is really an authorization refusal is not an absence.
             (token_response(), http_error(404, denied)),
         ):
-            with self.subTest(answers=answers), registry(*answers), self.assertRaises(ValueError):
+            with (
+                self.subTest(answers=answers),
+                registry(*answers),
+                self.assertRaises(ValueError),
+            ):
                 publisher.published_digest("owner/image", "1", "actor", "secret")
 
     def test_unavailable_registry_refuses(self) -> None:
@@ -1454,7 +1421,11 @@ class RegistryPreflightTests(unittest.TestCase):
             (token_response(), http_error(429)),
             (token_response(), urllib.error.URLError("reset")),
         ):
-            with self.subTest(answers=answers), registry(*answers), self.assertRaises(ValueError):
+            with (
+                self.subTest(answers=answers),
+                registry(*answers),
+                self.assertRaises(ValueError),
+            ):
                 publisher.published_digest("owner/image", "1", "actor", "secret")
 
     def test_malformed_response_refuses(self) -> None:
@@ -1471,7 +1442,10 @@ class RegistryPreflightTests(unittest.TestCase):
                 token_response(),
                 FakeResponse(good.body, {**good.headers, "Docker-Content-Digest": ""}),
             ),
-            (token_response(), FakeResponse(b'{"schemaVersion": 2, "x": 1}', good.headers)),
+            (
+                token_response(),
+                FakeResponse(b'{"schemaVersion": 2, "x": 1}', good.headers),
+            ),
             (
                 token_response(),
                 FakeResponse(good.body, {**good.headers, "Content-Type": "text/html"}),
@@ -1479,11 +1453,16 @@ class RegistryPreflightTests(unittest.TestCase):
             (
                 token_response(),
                 FakeResponse(
-                    b'{"schemaVersion": 1}', {**manifest_response(b'{"schemaVersion": 1}').headers}
+                    b'{"schemaVersion": 1}',
+                    {**manifest_response(b'{"schemaVersion": 1}').headers},
                 ),
             ),
         ):
-            with self.subTest(answers=answers), registry(*answers), self.assertRaises(ValueError):
+            with (
+                self.subTest(answers=answers),
+                registry(*answers),
+                self.assertRaises(ValueError),
+            ):
                 publisher.published_digest("owner/image", "1", "actor", "secret")
 
     def test_release_scripts_parse_on_the_runner_python(self) -> None:
@@ -1504,7 +1483,11 @@ class RegistryPreflightTests(unittest.TestCase):
                 ast.parse(source, name, feature_version=(3, 12))
 
     def test_invalid_reference_is_refused_before_any_request(self) -> None:
-        for repository, tag in (("Owner/Image", "1"), ("owner/image", "1/../x"), ("o", "")):
+        for repository, tag in (
+            ("Owner/Image", "1"),
+            ("owner/image", "1/../x"),
+            ("o", ""),
+        ):
             with self.subTest(repository=repository), registry() as opener:
                 with self.assertRaises(ValueError):
                     publisher.published_digest(repository, tag, "actor", "secret")
@@ -1548,11 +1531,18 @@ class RegistryPreflightTests(unittest.TestCase):
         with (
             patch.dict(os.environ, environment, clear=True),
             patch.object(sys, "argv", ["publish", "--output", str(target)]),
-            patch.object(publisher, "inputs", return_value=inputs(ROOT)),
+            patch.object(publisher, "check_toolchain"),
+            patch.object(
+                publisher,
+                "disposable_registry",
+                return_value=nullcontext(("127.0.0.1:5055", 5055)),
+            ),
             patch.object(publisher, "run", side_effect=output),
             patch.object(publisher, "published_digest", side_effect=lookup),
             patch.object(
-                publisher, "local_postgres_identity", side_effect=ValueError("stop after preflight")
+                publisher,
+                "local_postgres_identity",
+                side_effect=ValueError("stop after preflight"),
             ) as rebuild,
             patch.object(
                 publisher.subprocess,
@@ -1587,8 +1577,10 @@ class RegistryPreflightTests(unittest.TestCase):
                 self.assertIn("already exists", self.raised)
                 rebuild.assert_not_called()
                 self.assertEqual(
-                    json.loads((target / "publication-state.json").read_text())["phase"],
-                    "preflight",
+                    json.loads((target / "diagnostics/publication-state.json").read_text())[
+                        "stages"
+                    ]["VALIDATE"]["status"],
+                    "failed",
                 )
                 # Cleanup after an early error: no builder existed, so none is removed; the
                 # registry login is always revoked.
@@ -1630,6 +1622,187 @@ class RegistryPreflightTests(unittest.TestCase):
         self.assertEqual(self.raised, "stop after preflight")
         rebuild.assert_called_once()
         self.assertTrue(self.ran(commands, ["docker", "buildx", "rm"]))
+
+
+class SharedPublicationTests(unittest.TestCase):
+    def test_shared_pipeline_validates_complete_output_before_any_version_write(
+        self,
+    ) -> None:
+        for fault in (None, "inventory", "extra", "smoke", "tag appeared", "promotion"):
+            with self.subTest(fault=fault), tempfile.TemporaryDirectory() as temporary:
+                self.exercise_pipeline(Path(temporary) / "output", fault)
+
+    def exercise_pipeline(self, output: Path, fault: str | None) -> None:
+        host = "127.0.0.1:5055"
+        value = candidate()
+        sha = beta_release.run("git", "-C", str(ROOT), "rev-parse", "HEAD")
+        value["source"]["revision"] = sha
+        for image in value["images"].values():
+            image["reference"] = image["reference"].replace("ghcr.io", host)
+        images = value["images"]
+        tagged: dict[tuple[str, str], str] = {}
+
+        def postgres(*args: Any, evidence_dir: Path, **kwargs: Any) -> None:
+            evidence_dir.mkdir()
+            (evidence_dir / "postgres-oci-evidence.json").write_text("{}")
+            if fault == "inventory":
+                (output / "assets/postgres-reproducibility").mkdir()
+            if fault == "extra":
+                (output / "assets/extra.json").write_text("{}")
+
+        def smoke(*args: Any, **kwargs: Any) -> None:
+            if fault == "smoke":
+                raise ValueError("injected smoke failure")
+            if fault == "tag appeared":
+                tagged[("alessandrorossato/florabase-frontend", value["version"])] = "unexpected"
+
+        def promote(reference: str, tag: str, registry: str) -> str:
+            self.assertEqual(registry, host)
+            repository, digest = reference.split("@")
+            if fault == "promotion" and repository.endswith("-frontend"):
+                raise ValueError("injected partial promotion")
+            self.assertTrue((output / "assets/RELEASE.md").is_file())
+            tagged[(repository.split("/", 1)[1], tag)] = digest
+            return digest
+
+        def cli(*args: str) -> str:
+            return {"rev-parse": sha, "status": "", "show": "1762387200"}[args[1]]
+
+        real_run = subprocess.run
+        with (
+            patch.object(publisher, "run", side_effect=cli),
+            patch.object(publisher, "check_toolchain"),
+            patch.object(publisher, "disposable_registry", return_value=nullcontext((host, 5055))),
+            patch.object(publisher, "pinned_builder", return_value=nullcontext("fixture")),
+            patch.object(
+                publisher,
+                "lookup_manifest",
+                side_effect=lambda origin, repo, tag: tagged.get((repo, tag)),
+            ),
+            patch.object(publisher, "local_postgres_identity", side_effect=postgres),
+            patch.object(
+                publisher,
+                "build_application_image",
+                side_effect=lambda root, builder, service, *args: images[service]["reference"],
+            ),
+            patch.object(publisher, "manifest", return_value=value),
+            patch.object(publisher.subprocess, "run", wraps=subprocess.run) as commands,
+            patch.object(publisher, "scan_images"),
+            patch.object(
+                publisher,
+                "software_bill_of_materials",
+                side_effect=lambda ref, path, scanner: path.write_text("{}"),
+            ),
+            patch.object(publisher, "run_artifact_smoke", side_effect=smoke),
+            patch.object(publisher, "promote_image", side_effect=promote) as promotion,
+        ):
+
+            def docker_only(command: list[str], **kwargs: Any) -> Any:
+                if command[0] == "docker":
+                    self.assertEqual(command[1], "pull")
+                    return None
+                return real_run(command, **kwargs)
+
+            commands.side_effect = docker_only
+            if fault is None:
+                publisher.run_pipeline(ROOT, output)
+                self.assertEqual(promotion.call_count, 3)
+            else:
+                with self.assertRaises(ValueError):
+                    publisher.run_pipeline(ROOT, output)
+                self.assertEqual(promotion.call_count, 2 if fault == "promotion" else 0)
+
+        state = read(output / "diagnostics/publication-state.json")
+        self.assertTrue(
+            (output / "diagnostics/postgres-reproducibility/postgres-oci-evidence.json").is_file()
+        )
+        stages = state["stages"]
+        if fault is None:
+            self.assertTrue(all(stage["status"] == "passed" for stage in stages.values()))
+            assets = state["release"]["assets"]
+            self.assertEqual(len(assets), 7)
+            self.assertEqual(
+                {name: (item["size"], item["sha256"]) for name, item in assets.items()},
+                beta_release.release_asset_inventory(output / "assets"),
+            )
+        else:
+            failed = {"smoke": "SCAN/SMOKE", "promotion": "PROMOTE"}.get(fault, "VALIDATE ASSETS")
+            self.assertEqual(stages[failed]["status"], "failed")
+            if fault == "promotion":
+                self.assertEqual(set(state["promoted"]), {"backend"})
+                self.assertEqual(state["promotion_in_progress"], "frontend")
+            else:
+                self.assertNotIn("PROMOTE", stages)
+
+    def test_actual_finalizer_refuses_draft_digest_mismatch_and_refuses_resume(
+        self,
+    ) -> None:
+        value = candidate()
+        sha = value["source"]["revision"]
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "output"
+            publication = publisher.Publication(output)
+            assets = output / "assets"
+            assets.mkdir()
+            for name in (
+                *beta_release.INSTALL_BUNDLE,
+                "RELEASE.md",
+                beta_release.POSTGRES_SBOM,
+                f"florabase-{value['version']}-source.tar.gz",
+            ):
+                (assets / name).write_text("fixture")
+            (assets / "release-manifest.json").write_text(json.dumps(value))
+            inventory = beta_release.release_asset_inventory(assets)
+            request = release_finalization_inputs(value, sha, inventory)
+            publication.state.update(
+                source_sha=sha,
+                mode="protected",
+                release=request,
+                run_id="1",
+                run_attempt="1",
+                stages={
+                    "PROMOTE": {"status": "passed"},
+                    "ATTEST": {"status": "passed"},
+                },
+            )
+            publication.save()
+            valid_draft: dict[str, Any] = {
+                "id": 42,
+                "draft": True,
+                "assets": [
+                    {"name": name, "size": size, "digest": digest}
+                    for name, (size, digest) in inventory.items()
+                ],
+            }
+            for valid in (False, True):
+                with self.subTest(valid=valid):
+                    publication.save()
+                    draft = copy.deepcopy(valid_draft)
+                    if not valid:
+                        draft["assets"][0]["digest"] = "wrong"
+                    with (
+                        patch.dict(
+                            os.environ,
+                            {"GITHUB_RUN_ID": "1", "GITHUB_RUN_ATTEMPT": "1"},
+                        ),
+                        patch.object(publisher, "run", return_value=sha),
+                        patch.object(publisher, "require_publication_identity"),
+                        patch.object(publisher, "locate_draft_release", return_value=draft),
+                        patch.object(publisher.subprocess, "run") as mutation,
+                    ):
+                        if valid:
+                            publisher.finalize_release(output)
+                            self.assertEqual(mutation.call_count, 2)
+                            self.assertEqual(
+                                mutation.call_args.args[0][:4],
+                                ["gh", "api", "--method", "PATCH"],
+                            )
+                        else:
+                            with self.assertRaisesRegex(ValueError, "digest/size"):
+                                publisher.finalize_release(output)
+                            self.assertEqual(mutation.call_count, 1)
+                        with self.assertRaisesRegex(ValueError, "refuse to finalize"):
+                            publisher.finalize_release(output)
 
 
 if __name__ == "__main__":
