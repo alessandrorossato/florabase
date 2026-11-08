@@ -7745,3 +7745,71 @@ Status remains implemented pending canonical verification.
   binds that config to the selected immutable registry index and adds regression coverage. Focused release tests passed
   (55 unit and 4 Python 3.12 compatibility tests). The next hosted rehearsal is still required;
   security scans and downstream stages have not yet passed on GitHub Actions.
+
+### CI-HYGIENE-001 — verification impact for executable documentation, 7 November 2026
+
+- Replaced the blanket `docs/` exemption with an allowlist of static documentation suffixes.
+  Review Compose overlays, Python and browser tooling, the Dockerfile prototype, and unknown formats
+  select FULL. Git mode evidence across the base, HEAD, index and working tree protects executable
+  files and symlinks even when they use a documentation suffix.
+- The baseline impact suite passed 28 tests. The updated suite passed 30 tests, including real Git
+  modifications, additions, deletions, renames in both directions, masked modes and a synthetic
+  PR merge smoke. Independent QA confirmed the suite, the 139-entry feature graph, and the current
+  documentation inventory (65 FULL paths and 3,207 lightweight paths). It also checked unusual Git
+  filenames and masked executable modes. QA reproduced an unmerged Markdown path whose executable
+  stage-3 mode was absent from the raw diff. The planner now refuses unmerged paths, and the
+  regression failed before this correction and passed afterward. Canonical FULL evidence belongs
+  to the exact-tree receipt.
+- The first FULL stopped at the disclosure check, which flagged a synthetic Git fixture address.
+  The fixture now uses a local-only identity. The disclosure check remains in place.
+- Focused Ruff lint, format and strict mypy passed after separating raw and decoded Git paths.
+
+### DOCS-CORRECTNESS-001 — development, source upgrades and beta installation, 8 November 2026
+
+- README uses the DEV targets in order and guards `make setup`. A disposable Makefile check
+  reproduced that the standalone recipe still overwrites an existing `.env` despite its message.
+  The documented guard preserved the existing fixture and created the file in the fresh case.
+- Source-build upgrade instructions keep application writers stopped through the final paired
+  backup and migration, with a maintenance-mode failure and recovery path. Routine `make backup`
+  restarts the backend. Image-only installation checks all four release attestations and the
+  bundle's manifest digests before controller preflight, install or promotion.
+- Checked Make targets and documented commands against the helpers, Compose and protected
+  workflow. Independent shell QA passed the two new snippets with disposable stubs, including
+  backup, download, attestation, version and digest failures. The environment workflow suite
+  passed 35 tests. The beta runtime offline suite passed 62 tests each with Compose 5.7.0 and
+  checksum-verified 2.20.1. With the source DEV overlay, 2.20.1 rendered both frontend ports
+  (5173 and 8080), while 5.7.0 rendered only 5173. The canonical docs-only gate is
+  `make feature-verify` on the final commit.
+- No live attestation verification, real-host beta acceptance or end-to-end source-build
+  upgrade/restore drill was performed in this increment. Earlier disposable runtime evidence
+  remains scoped to its recorded environment.
+
+### RELEASE-READINESS-001 — consolidation, installation and setup safety, 8 November 2026
+
+- Cherry-picked CI-HYGIENE-001 and DOCS-CORRECTNESS-001 in order. Both progress conflicts were
+  resolved by retaining the main release history and appending each workstream's evidence.
+- INSTALL-GUIDE-001 makes verified published images the primary operator path. It binds the four
+  asset attestations to the approved source commit, separates Linux, Synology, Dockhand and Tailscale
+  instructions, and covers explicit upgrades, interrupted operations and fresh-host recovery.
+- SETUP-SAFETY-001 keeps the guard and no-clobber copy in one recipe shell. The disposable
+  `make test-workflow-helpers` fixture passed for creation, mode preservation, repeated invocations
+  and a dangling symlink. `make test-verification-impact` passed all 30 tests, and the feature graph
+  validated 141 entries.
+- Independent QA matched both picked patches outside progress and checked shell syntax, controller
+  arguments and Markdown links. Delta QA passed after fixing the approved-commit attestation check,
+  the nginx and standalone Compose notes, restart ordering, and setup file permissions. The release
+  block succeeded with disposable stubs and rejected source, attestation and bundle digest errors.
+- The consolidated plan requires FULL. `make feature-verify` records the current result and receipt
+  in the worktree metadata. The first run's disclosure check rejected a realistic-looking
+  Tailscale example. The guide now uses explicit device and tailnet placeholders. Prior receipts
+  remain historical evidence. Published-image acceptance and Synology, Dockhand, Tailscale and
+  off-host recovery on a real host remain pending.
+
+- Resume audit: PR #155's passing stage journal totals 1,094.02 s, including 572.50 s for
+  integration and 364.12 s for quality. Pytest itself took 558.81 s in integration. The
+  [verification handoff](verification-fast-001-handoff.md#consolidation-audit-8-november-2026)
+  records the breakdown and follow-ups. Integration now logs its 20 slowest phases at or above
+  0.1 s using the existing pytest runner. The selected taxonomy migration file passed, printed
+  its slow test call and verified disposable cleanup. The planner suite passed 30 tests, and the
+  workflow helper suite and 141-feature graph passed. The plan still selects FULL. The final
+  consolidation gate and receipt remain pending.

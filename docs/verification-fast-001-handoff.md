@@ -229,3 +229,38 @@ the same OS user, which is consistent with the cooperative workflow protocol.
   so it needs coordination.
 - `make check` order is shared with remote CI and other branches. This branch changes only its
   prerequisite order, not its contents.
+
+## Consolidation audit, 8 November 2026
+
+The passing local FULL for PR #155 at `7e7376240fd047fd46e0e47063e5f73c2dabb605` recorded
+1,094.02 seconds of stage execution (18m 14s). This excludes time waiting for the machine lock and
+work outside the stage timer. The measured run does not account for a 25-minute elapsed estimate.
+
+| Stage | Recorded time | Breakdown |
+| --- | ---: | --- |
+| PostgreSQL integration | 572.50 s | 558.81 s inside pytest, 807 passed and 29 skipped. About 14 s outside pytest for build/start/migration and cleanup combined |
+| Quality | 364.12 s | Frontend Vitest took 254.80 s and backend pytest took 16.84 s |
+| Workflow checks and source checks | 144.60 s | Agent workflow fixtures took 97.05 s |
+| Production builds and migration cycle | 12.81 s | 3.20 s for builds and 9.61 s for the separate migration cycle |
+
+The original integration log did not attribute time to individual tests. The integration Compose
+service now reports the 20 slowest setup, call or teardown phases of at least 0.1 s. The same
+report is available through selected-file runs. The test command, isolation and gate coverage are
+unchanged.
+
+- During iteration, use `make verification-plan` to inspect existing affected selection and use
+  `./scripts/test-integration.sh backend/tests/integration/test_taxonomy_migration.py` when only that
+  module needs feedback. Run focused workflow and disclosure checks before freezing CI or operator
+  docs. Run canonical FULL once after review on the finalized tree.
+- Use the timing table to target the most expensive fixture or test first. Compare identical
+  selections on the same host. An integration sharding trial would need a fresh database per shard,
+  equivalent collection and skips, and preserved migration/cleanup guarantees. Some tests change
+  the schema and share a session database. Evaluate frontend worker isolation separately because
+  the current Vitest config disables file parallelism.
+- Retain existing dependency and BuildKit caches. For cold hosted runs, measure download and build
+  costs before adding a cache. Key any new dependency cache by lockfile, toolchain and platform
+  and continue validating locked installs. Keep PostgreSQL state, results and receipts out of caches.
+- For a release failure, correlate the exact SHA, run and attempt with the first failing step,
+  existing release checkpoints and retained artifacts. For a follow-up diagnostics change, surface
+  that phase and link the artifacts in the job summary without including credentials or creating
+  a retry path around an identity or publication check.

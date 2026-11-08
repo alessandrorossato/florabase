@@ -18,7 +18,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from verification_gate import checks_for, execute, run_checks, validate_execution
-from verification_impact import MAP_PATH, changed_paths, load_map, plan_paths
+from verification_impact import MAP_PATH, changed_paths, load_map, make_plan, plan_paths
 
 ROOT = Path(__file__).resolve().parent.parent
 CI_SPEC = importlib.util.spec_from_file_location("ci_verification", ROOT / "scripts/ci-verify.py")
@@ -39,7 +39,13 @@ class SelectionTests(unittest.TestCase):
         return plan_paths(list(paths), "base")
 
     def test_docs_only_never_selects_product_or_docker_stages(self) -> None:
-        plan = self.plan("docs/schedule.md", "README.md", "docs/features.json")
+        plan = self.plan(
+            "docs/schedule.md",
+            "README.md",
+            "docs/features.json",
+            "docs/review/new/evidence.PNG",
+            "docs/design/new/prototype.css",
+        )
         self.assertTrue(plan["docs_only"])
         for key in ("backend", "frontend", "integration", "workflow", "builds"):
             self.assertEqual(plan[key], [])
@@ -48,6 +54,29 @@ class SelectionTests(unittest.TestCase):
             [c["id"] for c in checks_for(plan)],
             ["feature-graph", "whitespace", "staged-whitespace", "untracked-whitespace"],
         )
+
+    def test_executable_and_unclassified_documentation_paths_escalate(self) -> None:
+        for path in (
+            "docs/review/taxonomy-visual-001/compose.yaml",
+            "docs/review/wcvp-version-001/compose.yaml",
+            "docs/review/wcvp-version-001/live-review.py",
+            "docs/review/maps-origins-001/capture.cjs",
+            "docs/design/ui-system-v1/prototype.js",
+            "docs/design/ui-system-v1/prototype.html",
+            "docs/security/beta-distribution-001/postgresql-derived-prototype/Dockerfile.prototype",
+            "docs/review/new/compose.smoke.yml",
+            "docs/review/new/check.PY",
+            "docs/new/run.sh",
+            "docs/new/unknown",
+        ):
+            with self.subTest(path=path):
+                plan = self.plan("docs/review/new/README.md", path)
+                self.assertEqual(plan["mode"], "full")
+                self.assertFalse(plan["docs_only"])
+                self.assertEqual(
+                    plan["escalation_reasons"],
+                    [f"executable or unclassified documentation path: {path}"],
+                )
 
     def test_schedule_regression_boundaries_are_explicit(self) -> None:
         plan = self.plan("backend/src/florabase/schedule/service.py")
@@ -263,6 +292,7 @@ class SelectionTests(unittest.TestCase):
     def test_remote_policy_matrix(self) -> None:
         for path in (
             "docs/example.md",
+            "docs/review/taxonomy-visual-001/compose.yaml",
             "frontend/src/taxonomy/taxonomy.css",
             "frontend/src/taxonomy/TaxonomyScreen.tsx",
             "frontend/src/components/Controls.tsx",
@@ -571,11 +601,11 @@ class RemoteHistoryTests(unittest.TestCase):
                         self.assertEqual(CI.ci_plan()["mode"], "full")
                 event_path.write_text(json.dumps(event))
                 # Merge resolutions and unexpected untracked/index/dirty files participate.
-                (root / "surprise.config").write_text("unsafe\n")
+                (root / "docs/surprise.sh").write_text("exit 0\n")
                 with patch.dict(os.environ, environment), redirect_stdout(io.StringIO()):
                     self.assertEqual(CI.ci_plan()["mode"], "full")
-                git("add", "surprise.config")
-                (root / "surprise.config").unlink()
+                git("add", "docs/surprise.sh")
+                (root / "docs/surprise.sh").unlink()
                 with patch.dict(os.environ, environment), redirect_stdout(io.StringIO()):
                     self.assertEqual(CI.ci_plan()["mode"], "full")
                 fake_bin = root / ".git/fake-bin"
@@ -599,6 +629,98 @@ class RemoteHistoryTests(unittest.TestCase):
 
 
 class InventoryTests(unittest.TestCase):
+    def test_documentation_impact_uses_both_paths_and_all_file_modes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            previous = Path.cwd()
+            os.chdir(root)
+            try:
+                self.check_documentation_history()
+            finally:
+                os.chdir(previous)
+
+    def check_documentation_history(self) -> None:
+        def git(*args: str, stdin: str | None = None) -> str:
+            return subprocess.run(
+                ["git", *args], check=True, text=True, capture_output=True, input=stdin
+            ).stdout.strip()
+
+        git("init", "--initial-branch=main")
+        git("config", "user.name", "Test")
+        git("config", "user.email", "test@localhost")
+        git("config", "core.filemode", "true")
+        adapter = Path("docs/review/adapter.py")
+        note = Path("docs/review/note.md")
+        adapter.parent.mkdir(parents=True)
+        adapter.write_text("print('review')\n")
+        note.write_text("review notes\n")
+        git("add", "docs")
+        git("commit", "-m", "base")
+        base = git("rev-parse", "HEAD")
+
+        def expect(*paths: Path, docs_only: bool = False) -> None:
+            plan = make_plan(base)
+            self.assertEqual(plan["changed_paths"], sorted(map(str, paths)))
+            self.assertEqual(plan["docs_only"], docs_only)
+            self.assertEqual(plan["mode"], "affected" if docs_only else "full")
+
+        adapter.write_text("print('changed')\n")
+        expect(adapter)
+        adapter.unlink()
+        expect(adapter)
+        git("restore", str(adapter))
+
+        overlay = adapter.with_name("compose.smoke.yaml")
+        overlay.write_text("services: {}\n")
+        expect(overlay)
+        overlay.unlink()
+
+        archived_adapter = adapter.with_suffix(".md")
+        git("mv", str(adapter), str(archived_adapter))
+        expect(adapter, archived_adapter)
+        git("mv", str(archived_adapter), str(adapter))
+
+        executable_note = note.with_suffix(".py")
+        git("mv", str(note), str(executable_note))
+        git("commit", "-m", "move into executable path")
+        expect(note, executable_note)
+        git("reset", "--hard", base)
+
+        note.chmod(0o755)
+        expect(note)
+        git("add", str(note))
+        note.chmod(0o644)
+        expect(note)  # The worktree revert masks the index mode.
+        git("commit", "-m", "set executable bit")
+        git("add", str(note))
+        expect(note)  # Only HEAD retains the executable mode.
+        git("reset", "--hard", base)
+
+        note.unlink()
+        note.symlink_to(adapter.name)
+        expect(note)
+        note.unlink()
+        expect(note, docs_only=True)
+        note.write_text("updated review notes\n")
+        evidence = note.with_name("evidence.json")
+        evidence.write_text("{}\n")
+        expect(note, evidence, docs_only=True)
+
+        # The raw diff does not expose the executable mode from unmerged stage 3.
+        blob = git("rev-parse", f"{base}:{note}")
+        git(
+            "update-index",
+            "--index-info",
+            stdin=(
+                f"0 {'0' * len(blob)}\t{note}\n"
+                f"100644 {blob} 1\t{note}\n"
+                f"100644 {blob} 2\t{note}\n"
+                f"100755 {blob} 3\t{note}\n"
+            ),
+        )
+        with self.assertRaisesRegex(ValueError, r"unmerged path.*note\.md"):
+            make_plan(base)
+
     def test_complete_tree_includes_commit_index_worktree_untracked_rename_delete_and_modes(
         self,
     ) -> None:

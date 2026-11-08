@@ -561,14 +561,13 @@ way. It is manual: the default integration suite skips that module, so CI and th
 `make up`, `build`, `migrate`, `down`, `backup`, and `restore` use the explicit `florabase-prod` project.
 `compose.yaml` remains the production distribution topology: immutable non-root backend/frontend
 images, same-origin nginx proxy, internal PostgreSQL/backend, health/readiness, persistent DB/media,
-secure cookies and explicit HTTPS origin. Application startup never migrates. Back up coordinated
-DB/media artifacts before `make migrate`; follow [backup and restore](backup-restore.md).
+secure cookies and explicit HTTPS origin. Application startup never migrates. For source-build upgrades, follow the
+[maintenance procedure](deployment.md#safe-upgrade) to keep writers stopped from backup through migration.
 Production overrides belong in explicit deployment configuration, not the DEV/Review overlays.
 Existing installations previously using the baseline's legacy `florabase` name must inventory and
 migrate their paired data deliberately before adopting `florabase-prod`; this helper does not silently
-attach production to DEV volumes. Public images/GHCR, release packaging and the end-user installer
-remain release/distribution work, not part of this consolidation. The expected future end-user path
-uses immutable published images with this same production topology and explicit upgrade policy.
+attach production to DEV volumes. The separate [image-only beta](installation.md) uses digest-pinned
+release images and its own stack, storage layout and upgrade controller.
 
 ## Review profiles and verification timing
 
@@ -612,7 +611,12 @@ cycling only when impact analysis proves it unnecessary. Generated contracts req
 classified production scope.
 
 True docs-only plans run feature graph and complete whitespace checks with no Docker/product
-suites or image builds. Product plans retain whole-repository Ruff, Prettier, ESLint, mypy, TypeScript
+suites or image builds. Under `docs/`, the impact map allows only known static documentation
+suffixes. Compose overlays, review scripts, browser review HTML and unrecognized formats require
+FULL. Executable modes and symlinks require FULL even with a documentation suffix. The planner
+checks modes across the base, HEAD, index and worktree and considers both sides of a move.
+An unmerged path prevents the planner from safely classifying the tree.
+Product plans retain whole-repository Ruff, Prettier, ESLint, mypy, TypeScript
 and generated API drift checks. Affected unit tests use explicit files and `--no-cov`; exhaustive
 local/remote quality still enforces the existing whole-application coverage threshold. Frontend-only
 changes build frontend; backend-only changes build backend; generated frontend contract changes

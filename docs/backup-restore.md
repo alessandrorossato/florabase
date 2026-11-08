@@ -44,23 +44,68 @@ docker compose run --rm --no-deps -T backend \
 The validator accepts only the server-owned `objects/<shard>/<opaque-key>` layout and rejects
 absolute paths, traversal, links, devices, duplicate members, and unrelated files.
 
+## Backup during a source-build upgrade
+
+The routine `make backup` restarts the backend, even if you stopped it before invoking the target.
+For the final upgrade backup, use the following procedure instead. Start from the running version's
+checkout after completing the [upgrade quiescence steps](deployment.md#safe-upgrade). Confirm that
+frontend and backend are stopped, all other writers are disabled, and PostgreSQL is running.
+
+This uses the same artifact and validation commands as `make backup`. The one-shot backend
+containers verify or read files without launching the API. Run the block from the deployment
+checkout in Bash.
+
+```bash
+(
+  set -e
+  umask 077
+  prod() { python3 ./scripts/workflow_environment.py prod compose -- "$@"; }
+
+  mkdir -p backups
+  stamp=$(date -u +%Y%m%dT%H%M%SZ)
+  backup_dir=$(mktemp -d "backups/pre-upgrade-$stamp.XXXXXX")
+  dump="$backup_dir/florabase-$stamp.dump"
+  media="$backup_dir/florabase-$stamp.attachments.tar"
+
+  prod run --rm --no-deps -T backend python scripts/attachment_artifacts.py verify
+  prod exec -T db sh -c \
+    'pg_dump --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" --format=custom --no-owner --no-privileges' \
+    > "$dump"
+  prod run --rm --no-deps -T backend python scripts/attachment_artifacts.py archive > "$media"
+
+  test -s "$dump"
+  test -s "$media"
+  prod exec -T db pg_restore --list < "$dump" > /dev/null
+  prod run --rm --no-deps -T backend \
+    python scripts/attachment_artifacts.py validate-archive < "$media"
+  printf 'Validated backup pair in %s\n' "$backup_dir"
+)
+```
+
+Continue the upgrade only after the block succeeds, prints the validated pair's directory and you
+have copied the pair off-host. A failed or interrupted attempt can leave partial files in its new
+directory. Discard that attempt as a recovery set, keep writers stopped and diagnose before retrying.
+
 ## Destructive restore
 
 Restore replaces the configured database and attachment content. It validates both artifacts before
 stopping the backend, checks the exact database confirmation, recreates and restores PostgreSQL
 without source ownership/privileges, safely stages and swaps the attachment object tree, verifies
-active stored sizes and SHA-256 digests, and only then restarts the backend:
+active stored sizes and SHA-256 digests, and only then restarts the backend. Substitute the paths
+to your actual pair in the example:
 
 ```bash
 make restore \
-  FILE=backups/example.dump \
-  ATTACHMENTS_FILE=backups/example.attachments.tar \
+  FILE=backups/florabase-20261108T120000Z.dump \
+  ATTACHMENTS_FILE=backups/florabase-20261108T120000Z.attachments.tar \
   CONFIRM_REPLACE=yes \
   CONFIRM_DATABASE=florabase
-make health
 ```
 
 `CONFIRM_DATABASE` must exactly match `POSTGRES_DB` inside the running database container; the restore script checks it before stopping the backend or dropping anything. Confirm the target `.env` and preserve a pre-restore backup first. Test restore procedures against an isolated disposable stack before relying on them in production. A failed restore may leave the backend stopped; inspect logs and database state before retrying.
+After success, bring up the frontend if it was stopped and run `make health` before reopening
+traffic. For upgrade recovery, follow the [source-build guide](deployment.md#safe-upgrade) to
+select the compatible backend image before running restore.
 
 Never mix artifacts from different timestamps: restore rejects names that do not match the
 `florabase-<timestamp>.dump` and `florabase-<timestamp>.attachments.tar` pair. An attachment row in
@@ -74,7 +119,7 @@ restore.
 This existing example validates only the database portion. It does **not** prove complete collection
 recovery. The [beta runtime acceptance contract](beta-foundation-001.md) requires a separate isolated
 restore of both DB and original media, digest/relationship checks and authenticated application use;
-that automated runtime drill remains BETA-RUNTIME-001 work.
+the [image-only beta smoke](beta-runtime-001.md#disposable-verification) exercises that separate runtime.
 
 The following smoke test uses a network-isolated, tmpfs-backed PostgreSQL container. It does not connect to or replace the Compose database. Set `dump_file` to the custom-format dump being tested:
 

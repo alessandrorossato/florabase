@@ -51,6 +51,7 @@
     "scripts/verification-impact.json"
   ],
   "documentation_prefixes": ["docs/"],
+  "documentation_suffixes": [".css", ".jpg", ".json", ".md", ".png", ".txt"],
   "documentation_paths": ["README.md", "CONTRIBUTING.md", "LICENSE"],
   "generated_paths": ["backend/openapi.json", "frontend/src/api/schema.d.ts"],
   "scopes": {

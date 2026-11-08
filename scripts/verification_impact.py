@@ -38,6 +38,10 @@ def fingerprint_module() -> Any:
 
 
 def changed_paths(base: str) -> list[str]:
+    return sorted(changed_path_modes(base))
+
+
+def changed_path_modes(base: str) -> dict[str, set[str]]:
     """Compare final file modes/blobs with base, including all tracked/untracked work.
 
     Comparing inventories (rather than rename heuristics) retains old and new rename paths,
@@ -51,27 +55,49 @@ def changed_paths(base: str) -> list[str]:
     before: dict[str, tuple[str, str]] = {}
     for record in base_tree.split(b"\0"):
         if record:
-            metadata, path = record.split(b"\t", 1)
+            metadata, raw_path = record.split(b"\t", 1)
             mode, kind, blob = metadata.decode().split()
             if kind != "blob":
                 raise ValueError("submodules cannot be safely classified")
-            before[path.decode("utf-8", "surrogateescape")] = (mode, blob)
+            before[raw_path.decode("utf-8", "surrogateescape")] = (mode, blob)
     after = {entry["path"]: (entry["mode"], entry["blob"]) for entry in fp.working_entries()}
-    changed = {path for path in before.keys() | after.keys() if before.get(path) != after.get(path)}
+    changed: dict[str, set[str]] = {
+        path: set() for path in before.keys() | after.keys() if before.get(path) != after.get(path)
+    }
     for revision in ([base, "HEAD"], ["--cached", base], []):
         raw = subprocess.run(
-            ["git", "diff", "--name-only", "--no-renames", "-z", *revision],
+            ["git", "diff", "--raw", "--no-renames", "-z", *revision],
             check=True,
             stdout=subprocess.PIPE,
         ).stdout
-        changed.update(path.decode("utf-8", "surrogateescape") for path in raw.split(b"\0") if path)
-    return sorted(changed)
+        records = iter(raw.split(b"\0")[:-1])
+        for metadata in records:
+            path = next(records).decode("utf-8", "surrogateescape")
+            old_mode, new_mode, _, _, status = metadata[1:].decode().split()
+            if status == "U":
+                raise ValueError(f"unmerged path cannot be safely classified: {path}")
+            changed.setdefault(path, set()).update({old_mode, new_mode} - {"000000"})
+    for path, modes in changed.items():
+        for inventory in (before, after):
+            if path in inventory:
+                modes.add(inventory[path][0])
+    return changed
 
 
 def load_map() -> dict[str, Any]:
     data = cast(dict[str, Any], json.loads(MAP_PATH.read_text()))
     if data["version"] != 1 or not data["scopes"] or not data["rules"]:
         raise ValueError("unsupported or empty impact map")
+    suffixes = data["documentation_suffixes"]
+    if (
+        not isinstance(suffixes, list)
+        or not suffixes
+        or any(
+            not isinstance(suffix, str) or not re.fullmatch(r"\.[a-z0-9]+", suffix)
+            for suffix in suffixes
+        )
+    ):
+        raise ValueError("invalid documentation suffixes")
     for name, scope in data["scopes"].items():
         if any(item not in data["scopes"] for item in scope["affects"]):
             raise ValueError(f"unknown impact dependency in {name}")
@@ -91,7 +117,13 @@ def load_map() -> dict[str, Any]:
     return data
 
 
-def plan_paths(paths: list[str], base: str, *, force_full: bool = False) -> dict[str, Any]:
+def plan_paths(
+    paths: list[str],
+    base: str,
+    *,
+    force_full: bool = False,
+    non_static_paths: frozenset[str] = frozenset(),
+) -> dict[str, Any]:
     data = load_map()
     reasons: list[str] = []
     direct: set[str] = set()
@@ -109,9 +141,16 @@ def plan_paths(paths: list[str], base: str, *, force_full: bool = False) -> dict
             docs_only = False
             continue
         if path in data["documentation_paths"] or any(
-            path.startswith(p) for p in data["documentation_prefixes"]
+            path.startswith(prefix) for prefix in data["documentation_prefixes"]
         ):
-            direct.add("documentation")
+            if path in non_static_paths or (
+                path not in data["documentation_paths"]
+                and Path(path).suffix.lower() not in data["documentation_suffixes"]
+            ):
+                reasons.append(f"executable or unclassified documentation path: {path}")
+                docs_only = False
+            else:
+                direct.add("documentation")
             continue
         docs_only = False
         matches = [
@@ -207,7 +246,13 @@ def make_plan(base: str, *, force_full: bool = False) -> dict[str, Any]:
         text=True,
         stdout=subprocess.PIPE,
     ).stdout.strip()
-    return plan_paths(changed_paths(resolved), resolved, force_full=force_full)
+    changes = changed_path_modes(resolved)
+    return plan_paths(
+        list(changes),
+        resolved,
+        force_full=force_full,
+        non_static_paths=frozenset(path for path, modes in changes.items() if modes != {"100644"}),
+    )
 
 
 def describe(plan: dict[str, Any]) -> str:

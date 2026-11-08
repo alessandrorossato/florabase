@@ -1,19 +1,27 @@
-# Deployment and upgrades
+# Source-build deployment and upgrades
 
-Installing from the published images (no source checkout) is described for end users in the
-[installation guide](installation.md); the operator background for that image-only Dockhand/Tailscale
-beta runtime (versioned stack, `florabasectl` controller, recovery and upgrade procedures) is the
-[beta runtime runbook](beta-runtime-001.md). It is not yet accepted on a real host. The commands below describe the existing source-build
-deployment. Both use the `florabase-prod` project name: do not run them on the same host, and never
-point the beta controller at volumes created by the source build (it refuses to adopt them).
+This guide builds Florabase from a repository checkout. For the linux/amd64 beta distributed as
+digest-pinned container images, use the [image-only installation guide](installation.md) and
+[beta runtime runbook](beta-runtime-001.md). The two paths both use the `florabase-prod` Compose
+project name and have different storage layouts. Keep them on separate hosts. The beta controller
+refuses to adopt source-build volumes.
 
-This is the canonical self-hosting guide. Florabase is pre-release software: review changes and keep
-a tested backup before every upgrade.
+Florabase is pre-release software. Review the incoming changes and keep a tested backup before
+every upgrade.
 
 ## Prerequisites and deployment model
 
-Install Docker Engine with Docker Compose v2, GNU Make, and `curl`. Clone the repository on a host
-where an operator-managed HTTPS reverse proxy can forward to the frontend port.
+For the source checkout workflow, install Docker Engine with Compose **2.24.4 or newer**,
+Python 3, GNU Make, Git and `curl`. Clone the repository on a host where an operator-managed
+HTTPS reverse proxy can reach the frontend port.
+
+The base source-build `compose.yaml` has no custom merge tags. Repository development and
+verification overlays use `!override` and `!reset`, which is why the checkout workflow specifies
+a newer Compose plugin. With 2.20.1,
+the DEV overlay can render both frontend port mappings instead of replacing the production mapping.
+The image-only beta uses a separate stack without those tags and its controller accepts Compose
+**2.20 or newer**. The beta smoke results apply to that image-only stack.
+[Docker Compose merge rules](https://docs.docker.com/reference/compose-file/merge/)
 
 `compose.yaml` builds the production targets in the explicit `florabase-prod` project. DEV retains
 its separate legacy `florabase` project; Review and Preview use their own resources. Existing baseline
@@ -42,10 +50,9 @@ cd florabase
 make setup
 ```
 
-`make setup` creates `.env` from `.env.example` only when `.env` does not exist. The file is ignored
-by Git. Replace the example database password in both `POSTGRES_PASSWORD` and
-`FLORABASE_DATABASE_URL`; use a URL-safe password or percent-encode it in the URL. Do not commit the
-file.
+`make setup` creates `.env` from `.env.example` and preserves an existing configuration.
+Replace the example database password in both `POSTGRES_PASSWORD` and `FLORABASE_DATABASE_URL`.
+Use a URL-safe password or percent-encode it in the URL. Git ignores the file.
 
 Set `FLORABASE_CANONICAL_ORIGIN` to the browser origin exactly:
 
@@ -87,19 +94,27 @@ not geocode, request geolocation or infer provenance from basemap availability.
 
 ## First installation
 
-Build the images, start PostgreSQL, apply all reviewed migrations, and start the application:
+Run source-build commands from the deployment checkout. Define this shell function in each terminal
+where you use the examples. It selects the same production project, Compose file and environment as
+the Make targets.
 
 ```bash
-make build
-docker compose up --detach db
-make migrate
+prod() { python3 ./scripts/workflow_environment.py prod compose -- "$@"; }
+```
+
+Build the images, wait for PostgreSQL, apply all reviewed migrations, and start the application:
+
+```bash
+make build &&
+prod up --detach --wait db &&
+make migrate &&
 make up
 ```
 
 Application startup never runs migrations. Create the first and only initial owner after migration:
 
 ```bash
-docker compose run --rm backend python -m florabase.auth.bootstrap owner
+prod run --rm backend python -m florabase.auth.bootstrap owner
 ```
 
 The password is prompted without echo. Automation may use `--password-stdin` with a secret provider
@@ -110,12 +125,14 @@ Check the internal published endpoint and container state:
 
 ```bash
 make health
-docker compose ps
-docker compose logs --tail=100
+prod ps
+prod logs --tail=100
 ```
 
 `make health` checks the frontend, API liveness, and PostgreSQL-backed readiness through the frontend
-proxy. Also verify login and a read-only application view through the public HTTPS origin.
+proxy. For a non-default bind address or port, pass the deployment values as `APP_BIND_ADDRESS`
+and `APP_PORT` to `make health`. Also verify login and a read-only application view through the
+public HTTPS origin.
 
 ## HTTPS reverse proxy
 
@@ -133,25 +150,61 @@ Deployment configuration, TLS material, and secrets need a separate protected ba
 
 ## Safe upgrade
 
-1. Read the incoming changes and migration notes.
-2. While the existing installation is healthy, run `make backup` and copy both the database dump and
-   matching attachment archive off-host.
-3. Update the checked-out branch with the operator's reviewed Git workflow, for example
-   `git pull --ff-only` on a release branch.
-4. Run `make build`.
-5. Ensure PostgreSQL is running with `docker compose up --detach db`.
-6. Run `make migrate` to apply Alembic migrations to head.
-7. Run `make up`, `make health`, inspect logs, and verify login through HTTPS.
+Run these steps from the deployment checkout with the `prod` function from
+[First installation](#first-installation).
 
-Never use `docker compose down --volumes` or `docker compose down -v` as an upgrade step; either can
-delete the database and attachment volumes. The dedicated attachment volume is initialized from the
-backend image with UID/GID 10001 ownership and mode 0700. An operator replacing it with a host bind
-mount must provide that runtime account compatible ownership and permissions; do not use 0777. A
-code rollback may not be compatible with a migrated database. Plan a reviewed downgrade or restore,
-and use PostgreSQL's supported `pg_upgrade` or dump/restore procedure for major PostgreSQL version
-changes.
+1. Review the target source, migrations and PostgreSQL image. Record the running source revision,
+   image identities and Alembic revision, and retain access to the previous images and configuration.
+   Keep the existing PostgreSQL image and service configuration for this application upgrade.
+   Plan PostgreSQL changes as a separate reviewed operation.
+2. Put the reverse proxy in maintenance mode or otherwise block application traffic. Disable
+   automation that can restart services and stop any external database or media writers. From the
+   **current** checkout, run `prod stop frontend backend` and check `prod ps --all` to confirm both
+   services are stopped. Leave PostgreSQL running.
+3. Create and validate the [final coordinated backup with writers stopped](backup-restore.md#backup-during-a-source-build-upgrade)
+   using the **current** checkout and images. Copy the matched pair off-host and preserve the
+   configuration and secrets separately. Proceed only once the backup and copy succeed.
+4. Update the deployment checkout to the reviewed target, for example with `git pull --ff-only` on a
+   reviewed release branch, then run `make build`. Keep the application services stopped.
+5. With PostgreSQL still running and healthy, run the target backend's migration in a one-shot
+   container. Check that the database revision from `alembic current` matches the head shown by
+   `alembic heads` before starting the application.
 
-See [backup and restore](backup-restore.md) and the [security architecture](security.md).
+   ```bash
+   prod run --rm --no-deps -T backend alembic upgrade head &&
+   prod run --rm --no-deps -T backend alembic current &&
+   prod run --rm --no-deps -T backend alembic heads
+   ```
+
+6. Start the already built application services in order. Each command waits for health and leaves
+   PostgreSQL untouched. Stop if either command fails.
+
+   ```bash
+   prod up --detach --wait --no-build --no-deps backend &&
+   prod up --detach --wait --no-build --no-deps frontend
+   ```
+
+   Check `prod ps` and `make health`, and inspect the logs. Verify login and a read-only view
+   through HTTPS with operator-only access before reopening traffic.
+
+On backup, build, migration or health failure, halt the sequence and keep maintenance mode in place.
+If startup was attempted, stop `frontend` and `backend` again. Inspect the logs and actual database
+revision before deciding how to recover. Resume the prior version only after confirming its
+compatibility with the database and media. After a schema or data change, use a reviewed forward fix
+or restore the matched pre-upgrade database and media with the prior application version. An unchanged
+Alembic revision alone cannot establish that every migration side effect was rolled back.
+
+For a replacement restore, select the prior source, images and configuration first. Ensure the
+stopped backend container uses the prior image, since `make restore` starts that container when
+restore succeeds. If needed, rebuild or recover the prior images and run
+`prod up --no-start --no-deps --no-build --force-recreate backend` to recreate it without starting it.
+Follow the [restore procedure](backup-restore.md#destructive-restore), then bring back the backend
+and frontend in the order shown above using the prior images. Verify health and HTTPS before
+reopening traffic. Keep PostgreSQL and its volumes intact during investigation. Avoid
+`docker compose down --volumes` and `docker compose down -v`, which can delete persistent data.
+
+The attachment volume is initialized with UID/GID 10001 and mode 0700. An operator-provided bind
+mount must grant that runtime account compatible ownership and permissions.
 
 ### Shared media migration
 

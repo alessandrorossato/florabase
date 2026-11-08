@@ -129,6 +129,21 @@
       "status": "implemented"
     },
     {
+      "id": "CI-HYGIENE-001",
+      "category": "infrastructure",
+      "description": "Require full verification for executable and unclassified files under docs/",
+      "acceptance_criteria": [
+        "Compose overlays, executable review tooling, and unknown documentation formats select FULL while ordinary static documentation retains the lightweight profile",
+        "Git-backed regressions cover modifications, additions, deletions, both directions of renames, executable modes, and symlinks across the complete feature tree",
+        "Independent infrastructure QA and canonical FULL verify the frozen change without modifying beta publication or release artifacts"
+      ],
+      "dependencies": [
+        "CI-003"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "AGENT-WORKFLOW-001",
       "category": "infrastructure",
       "description": "Provider-neutral multi-agent development workflow on the existing verified feature lifecycle",
@@ -2486,6 +2501,33 @@
       ],
       "priority": "P0",
       "status": "in_progress"
+    },
+    {
+      "id": "INSTALL-GUIDE-001",
+      "category": "operations",
+      "description": "Provide a published-image beta quick start and host-specific installation and maintenance guidance",
+      "acceptance_criteria": [
+        "The guide verifies the release bundle before controller execution and covers initial migration, owner creation and HTTPS readiness",
+        "Linux, Synology, Dockhand and Tailscale procedures preserve controller ownership and distinguish disposable evidence from pending publication and real-host acceptance",
+        "Maintenance covers backup, restore drills, replacement and fresh-host recovery, explicit migration, interrupted promotion and troubleshooting"
+      ],
+      "dependencies": [
+        "BETA-DISTRIBUTION-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
+      "id": "SETUP-SAFETY-001",
+      "category": "infrastructure",
+      "description": "Create the source checkout environment file without overwriting existing configuration",
+      "acceptance_criteria": [
+        "make setup creates a missing .env from .env.example and leaves an existing .env unchanged across repeated runs",
+        "Disposable workflow fixtures exercise creation, preservation and a dangling destination symlink"
+      ],
+      "dependencies": [],
+      "priority": "P1",
+      "status": "implemented"
     }
   ]
 }

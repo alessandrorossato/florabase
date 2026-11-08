@@ -59,36 +59,43 @@ remain on an internal network.
 
 ## Requirements
 
-The primary workflow requires Docker Engine with Docker Compose v2, GNU Make, and `curl`. The
-repository currently uses multi-architecture upstream images; host Python and Node are optional.
+Repository development requires Docker Engine with Docker Compose **2.24.4 or newer**, GNU Make,
+Python 3 and `curl`. The development overlay uses Compose's `!override` tag. Host Node.js is optional.
+[Docker Compose merge rules](https://docs.docker.com/reference/compose-file/merge/)
 
-A public deployment requires an operator-managed HTTPS reverse proxy. Florabase production mode
-requires the exact public HTTPS origin and secure same-origin session cookies.
+For self-hosting, choose one installation path:
 
-To run Florabase from the published images without a source checkout, follow the
-[installation guide](docs/installation.md) (linux/amd64, Docker Compose or Dockhand).
+- [Install the image-only beta](docs/installation.md) from verified release assets on linux/amd64.
+  Its separate Compose stack supports the 2.20 baseline.
+- [Build from a source checkout](docs/deployment.md) using the repository's production Compose stack.
+
+Both paths require an operator-managed HTTPS reverse proxy and the exact public HTTPS origin.
 
 ## Quick start for development
 
+Run this in the primary checkout:
+
 ```bash
 make setup
-make dev
 ```
 
-`make setup` copies `.env.example` to the ignored `.env` file and never overwrites an existing one.
-Review the file and replace its example credentials. The development override uses
-`http://localhost:5173`; open that exact URL.
-
-In another terminal, apply migrations and create the first owner:
+`make setup` copies `.env.example` to the ignored `.env` file and preserves an existing
+configuration. Review the file and replace its example credentials before starting DEV.
 
 ```bash
-make migrate
-docker compose run --rm backend python -m florabase.auth.bootstrap owner
+make dev-up &&
+make dev-upgrade &&
+make dev-bootstrap-owner LOGIN=owner
 ```
 
-The bootstrap command prompts for the password without accepting it as a command argument. For a
-public or durable installation, follow the [deployment guide](docs/deployment.md) instead of treating
-the development stack as production.
+- `make dev-up` builds and starts persistent DEV from the primary checkout. It preserves existing
+  data and leaves schema migration to the next step.
+- `make dev-upgrade` applies pending Alembic migrations to DEV and verifies that its database reaches
+  the code's migration head.
+- `make dev-bootstrap-owner LOGIN=owner` creates the initial DEV owner and prompts for the password
+  without echoing it.
+
+Open `http://localhost:5173` with the default development port.
 
 ## Development
 

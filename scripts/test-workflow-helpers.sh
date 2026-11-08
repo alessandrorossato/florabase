@@ -193,4 +193,23 @@ fi
 
 grep -Fq 'workflow_environment.py dev upgrade' "${repository_root}/Makefile" || fail "dev-upgrade is not source-aware"
 
+setup_fixture="${temporary_root}/setup"
+mkdir "${setup_fixture}"
+printf 'example configuration\n' >"${setup_fixture}/.env.example"
+chmod 600 "${setup_fixture}/.env.example"
+make -s -C "${setup_fixture}" -f "${repository_root}/Makefile" setup
+cmp "${setup_fixture}/.env.example" "${setup_fixture}/.env" || fail "setup did not create .env"
+[[ "$(stat -c %a "${setup_fixture}/.env")" == 600 ]] || fail "setup widened .env permissions"
+printf 'existing configuration\n' >"${setup_fixture}/expected"
+cp "${setup_fixture}/expected" "${setup_fixture}/.env"
+for invocation in 1 2; do
+  make -s -C "${setup_fixture}" -f "${repository_root}/Makefile" setup
+  cmp "${setup_fixture}/expected" "${setup_fixture}/.env" || fail "setup changed .env on run ${invocation}"
+done
+rm "${setup_fixture}/.env"
+ln -s absent "${setup_fixture}/.env"
+make -s -C "${setup_fixture}" -f "${repository_root}/Makefile" setup
+[[ "$(readlink "${setup_fixture}/.env")" == absent && ! -e "${setup_fixture}/absent" ]] ||
+  fail "setup changed a dangling .env symlink"
+
 printf 'workflow helper tests: all passed\n'

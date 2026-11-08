@@ -3,8 +3,9 @@
 The [development workflow](development-workflow.md) is canonical for DEV, existing Codex worktrees,
 Feature Review, Stable Preview, integration/CI, production, review order and verification receipts.
 
-For a new primary checkout, run `make setup`, `make dev-up`, then `make dev-upgrade` and
-`make dev-bootstrap-owner LOGIN=owner`. DEV always selects the primary checkout. Use `make feature-init`
+Use Docker Compose 2.24.4 or newer for repository overlays. For a new primary checkout, follow
+[the development quick start](../README.md#quick-start-for-development) to configure, start,
+migrate and bootstrap DEV. DEV always selects the primary checkout. Use `make feature-init`
 and `make uat-preview-up`, then explicit `make uat-preview-seed`, inside a Codex-managed feature
 worktree to inspect dirty source with synthetic UAT-only `preview / preview` at
 `http://localhost:15174`. `feature-review-*` remains the engineering/manual-owner alternative on

@@ -14,8 +14,11 @@ help:
 	@awk 'BEGIN {FS = ":.*## "; print "Florabase commands:"} /^[a-zA-Z_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 setup: ## Create local environment configuration
-	@test ! -e .env || { echo ".env already exists; leaving it unchanged"; exit 0; }
-	cp .env.example .env
+	@if [ -e .env ] || [ -L .env ]; then \
+		echo ".env already exists; leaving it unchanged"; \
+	else \
+		cp -n .env.example .env; \
+	fi
 
 up: ## Build and start the production-oriented stack
 	$(COMPOSE) up --detach --build
