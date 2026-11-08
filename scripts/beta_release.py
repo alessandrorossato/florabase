@@ -781,6 +781,30 @@ def saved_descriptors(
             raise ValueError("invalid descriptor digest")
         return document("blobs/sha256/" + digest.removeprefix("sha256:"))
 
+    def registry_blob(repository: str, digest: str) -> dict[str, Any]:
+        if not DIGEST.fullmatch(digest):
+            raise ValueError("invalid registry descriptor digest")
+        data = subprocess.check_output(
+            ["docker", "buildx", "imagetools", "inspect", repository + "@" + digest, "--raw"]
+        )
+        # The CLI terminates its raw JSON output with a display newline.
+        candidates = (data, data.removesuffix(b"\n"))
+        payload = next(
+            (
+                value
+                for value in candidates
+                if "sha256:" + hashlib.sha256(value).hexdigest() == digest
+            ),
+            None,
+        )
+        if payload is None:
+            raise ValueError("registry descriptor digest mismatch")
+        result = json.loads(payload)
+        if not isinstance(result, dict):
+            raise ValueError("invalid registry descriptor")
+        return result
+
+    registry_repository = None
     raw_index: dict[str, Any] | None = None
     if "index.json" not in saved.getnames():
         # Classic Docker saves config/layers without OCI descriptors. Registry release
@@ -789,30 +813,7 @@ def saved_descriptors(
             raise ValueError("OCI image store required for local descriptor retention")
         repository, index_digest = reference.split("@")
 
-        def registry_blob(digest: str) -> dict[str, Any]:
-            if not DIGEST.fullmatch(digest):
-                raise ValueError("invalid registry descriptor digest")
-            data = subprocess.check_output(
-                ["docker", "buildx", "imagetools", "inspect", repository + "@" + digest, "--raw"]
-            )
-            # The CLI terminates its raw JSON output with a display newline.
-            candidates = (data, data.removesuffix(b"\n"))
-            payload = next(
-                (
-                    value
-                    for value in candidates
-                    if "sha256:" + hashlib.sha256(value).hexdigest() == digest
-                ),
-                None,
-            )
-            if payload is None:
-                raise ValueError("registry descriptor digest mismatch")
-            result = json.loads(payload)
-            if not isinstance(result, dict):
-                raise ValueError("invalid registry descriptor")
-            return result
-
-        index = registry_blob(index_digest)
+        index = registry_blob(repository, index_digest)
         raw_index = index
         if "manifests" not in index:
             # A raw registry response may be a manifest document, not an index. Resolve the
@@ -839,7 +840,7 @@ def saved_descriptors(
             )
             if index.get("digest") != index_digest or "manifests" not in index:
                 raise ValueError("registry did not return the immutable OCI image index")
-        blob = registry_blob
+        registry_repository = repository
     else:
         roots = document("index.json")["manifests"]
         if len(roots) != 1:
@@ -848,32 +849,22 @@ def saved_descriptors(
         index = blob(index_digest)
         raw_index = index
         if "manifests" not in index:
-            # Some Docker image stores save a single-platform OCI layout whose root
-            # descriptor is the platform manifest itself. Bind that local manifest to
-            # the immutable registry index selected for scanning.
+            # Docker save can re-encode the registry layers as uncompressed tar blobs.
+            # The configuration binds their uncompressed digests, while the registry
+            # descriptors retain the separate distribution identity.
             if not reference or "@" not in reference:
                 raise ValueError("OCI export root is not an image index")
-            record = registry_record(
-                reference,
-                "linux/amd64",
-                registry_host=reference.split("/", maxsplit=1)[0],
-            )
-            if record["platform_digest"] != index_digest:
-                raise ValueError("OCI export root differs from selected native platform")
-            index_digest = record["index_digest"]
-            index = json.loads(
-                run(
-                    "docker",
-                    "buildx",
-                    "imagetools",
-                    "inspect",
-                    reference,
-                    "--format",
-                    "{{json .Manifest}}",
-                )
-            )
-            if index.get("digest") != index_digest or "manifests" not in index:
-                raise ValueError("registry did not return the immutable OCI image index")
+            repository, selected_digest = reference.rsplit("@", 1)
+            if index["config"]["digest"] != configuration_digest:
+                raise ValueError("saved OCI configuration identity mismatch")
+            config = blob(configuration_digest)
+            if [layer["digest"] for layer in index["layers"]] != config["rootfs"]["diff_ids"]:
+                raise ValueError("saved OCI layers differ from configuration")
+            index_digest = selected_digest
+            index = registry_blob(repository, index_digest)
+
+            registry_repository = repository
+
     native = [
         m
         for m in index["manifests"]
@@ -882,7 +873,11 @@ def saved_descriptors(
     if len(native) != 1:
         raise ValueError("expected one exported native platform")
     platform_digest = native[0]["digest"]
-    platform = blob(platform_digest)
+    platform = (
+        registry_blob(registry_repository, platform_digest)
+        if registry_repository
+        else blob(platform_digest)
+    )
     if platform["config"]["digest"] != configuration_digest:
         raise ValueError("native manifest/config identity mismatch")
     return {

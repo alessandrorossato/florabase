@@ -7741,7 +7741,7 @@ Status remains implemented pending canonical verification.
   frontend builds and manifest validation passed. Trivy setup then found another valid Docker
   export shape: `docker save` emitted an OCI `index.json` whose sole root points directly to the
   native platform manifest. `saved_descriptors()` treated that root manifest as an index and
-  failed before scans. The follow-up fix binds the local platform descriptor to the already
-  selected immutable registry index and adds regression coverage. Focused release tests passed
+  failed before scans. The follow-up fix verifies the exported uncompressed layer digests against the config and
+  binds that config to the selected immutable registry index and adds regression coverage. Focused release tests passed
   (55 unit and 4 Python 3.12 compatibility tests). The next hosted rehearsal is still required;
   security scans and downstream stages have not yet passed on GitHub Actions.
