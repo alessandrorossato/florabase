@@ -27,6 +27,35 @@
 
 # Engineering progress
 
+## 2026-11-08 — beta-postgres-repro-001 implementation candidate
+
+- Branch `fix/beta-postgres-repro-001` starts from verified `933b6984`; writer claim is held by
+  `codex-beta-postgres-repro-001`. beta.1–beta.3 tags and their PostgreSQL identity are untouched.
+- Failed run `42421453830` passed authorization and stopped at the exact PostgreSQL identity gate,
+  before candidate image copy. Its retained artifact has no OCI layer descriptors or raw manifest/config
+  bytes. The failure reports index `e514d64b…` vs pinned `4edc0790…`, platform manifest `72cb11d5…`
+  vs `55b1969a…`, and config `e01ce338…` vs `ef74e207…`. The CI builder was BuildKit 0.33.1; the
+  existing successful local evidence names 0.34.2. This is a testable leading cause; the first old
+  layer byte and a causal CI result are pending hosted reproduction.
+- Restored the exact immutable BuildKit 0.34.2 input without changing PostgreSQL version, source,
+  base, apk pin, expected digests, root hardening or `require_pinned_postgres`. Added an ubuntu-24.04
+  non-publishing rehearsal with pull-only GHCR preflight and a labeled local registry. Publication
+  shares application-build, manifest, scan, SBOM, smoke, assets and digest promotion helpers. The
+  rehearsal keeps two independent pinned-toolchain builds plus a diagnostic build using the prior
+  0.33.1 image, and saves hash-checked raw index/platform/config bytes and layer descriptors.
+- Two independent clean local PostgreSQL identity builds both matched index
+  `sha256:4edc079088c3f78b69fc8f9473e33881ebabea7fea2d82b3227b70a69ae3b7de` and platform manifest
+  `sha256:55b1969a7fddad118ca07a15058a43a5916dec3e4dbab38029e671225b392b91`; their owned builders
+  were removed. Focused checks: release suite **48 passed**, runtime contract **62 passed on Python
+  3.14** and **50 passed on Python 3.8**, repository `workflow-check` passed Ruff, formatting and
+  strict mypy. `beta_release.py check --publication`, feature graph, `py_compile` and whitespace
+  checks passed. `beta-release-checks.py` did not run to completion here because the installed `gh`
+  CLI lacks `gh attestation verify`; the GitHub-hosted rehearsal and its runner-native check remain
+  pending. No beta.4 version update, tag, publication dispatch or remote package/release mutation.
+- [Failure analysis and rehearsal contract](security/beta-distribution-001/beta-release-rehearsal.md).
+  Read-only GHCR findings, real GitHub attestations and Release API finalization are intentionally
+  distinct: only the first is checked in rehearsal; the latter two remain protected-live-only.
+
 ## 2026-11-02 — BETA-FOUNDATION-001 B1–B4 QA corrections ready for delta review
 
 - Continued clean authoritative `3553a9c` / tree `9d986e4`, confirming the existing

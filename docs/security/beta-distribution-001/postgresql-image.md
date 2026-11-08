@@ -27,16 +27,23 @@ name and digest, the image version and source; there is deliberately no per-comm
   `sha256:55b1969a7fddad118ca07a15058a43a5916dec3e4dbab38029e671225b392b91`, the
   `source_date_epoch` (1762387200) and the exact `upstream` identity. `beta_release.py check`
   refuses a Dockerfile whose base, base-digest label or version differs, or that uses `ARG`.
-- **Deterministic build.** The pinned BuildKit builds with `--no-cache`, `rewrite-timestamp`, the
-  fixed epoch and no in-index provenance/SBOM (those embed build times); `/var/log/apk.log` is
-  removed because it records install times. `imagetools create` then wraps the single amd64 manifest
-  in a bare index. Fresh builders reproduced both digests on every run. The workflow pins the buildx
-  client that writes that index (`docker/setup-buildx-action` with `version: v0.38.1`, the version
-  that produced the pins). The reproducibility check runs only where a build happens: the publisher's
-  first-publication path builds in a loopback registry and refuses a mismatch before any package
-  write. It deliberately does not run in every release's verify job, where a superseded Alpine pin
-  would block application releases; a pull-request-time reproducibility job in `ci.yml` is a
-  follow-up for the CI owner.
+- **Deterministic build.** The recorded `moby/buildkit:v0.34.2` image digest builds with `--no-cache`,
+  `rewrite-timestamp`, the fixed epoch and no in-index provenance/SBOM (those embed build times);
+  `/var/log/apk.log` is removed because it records install times. `imagetools create` then wraps the
+  single amd64 manifest in a bare index. Two fresh local builders reproduced both pins. The beta.3
+  GitHub publication used a different BuildKit image (0.33.1) and reported a different platform
+  manifest and config. The old workflow retained no raw manifest/config or layer descriptors, so its
+  first differing byte/component is not established. `release/inputs.json` is restored to the exact
+  previously recorded 0.34.2 image, while the new GitHub-hosted rehearsal compares that toolchain
+  with the failed run's exact 0.33.1 image and retains raw OCI documents and layer descriptor hashes.
+  This change is a candidate correction until that hosted evidence passes. The workflow pins the
+  Buildx client (`docker/setup-buildx-action` with `version: v0.38.1`) and BuildKit daemon image.
+  The rehearsal also exercises shared application build, scan, manifest, smoke, asset and
+  digest-preserving promotion helpers against an owned disposable registry. Remote GHCR writes,
+  GitHub attestations and Release API finalization remain publication-only. The publisher continues
+  to call `require_pinned_postgres` before copying any image to GHCR; it does not accept a new digest.
+  Reproducibility deliberately does not run in every release's verify job, where a superseded Alpine
+  pin would block application releases.
 - **Same release manifest, same identity every release.** Manifest schema v2 records the derived
   image and its upstream base in `postgresql`. Every application release references the identical
   PostgreSQL index, so the controller's rule that `promote` never changes PostgreSQL still holds, and

@@ -19,14 +19,15 @@ from pathlib import Path
 from typing import Any
 
 from beta_release import (
-    INSTALL_BUNDLE,
     POSTGRES_REPOSITORY,
     SOURCE,
+    build_application_image,
     inputs,
     local_postgres_identity,
     manifest,
+    prepare_release_assets,
+    promote_image,
     registry_record,
-    release_asset_inventory,
     run,
     run_artifact_smoke,
     scan_images,
@@ -43,14 +44,14 @@ MANIFEST_MEDIA_TYPES = (
 ABSENT_CODES = {"MANIFEST_UNKNOWN", "NAME_UNKNOWN"}
 
 
-def registry_token(repository: str, actor: str, secret: str) -> str:
+def registry_token(repository: str, actor: str, secret: str, actions: str = "pull,push") -> str:
     """Exchange the workflow credential for a registry token scoped to this repository.
 
     The pull,push scope is the one a push itself requests, so a package that does not exist yet
     is still authorized; the token is only used for read requests here.
     """
     query = urllib.parse.urlencode(
-        {"service": REGISTRY, "scope": "repository:" + repository + ":pull,push"}
+        {"service": REGISTRY, "scope": "repository:" + repository + ":" + actions}
     )
     basic = base64.b64encode((actor + ":" + secret).encode()).decode()
     request = urllib.request.Request(
@@ -73,7 +74,13 @@ def registry_token(repository: str, actor: str, secret: str) -> str:
     return token
 
 
-def published_digest(repository: str, tag: str, actor: str, secret: str) -> str | None:
+def published_digest(
+    repository: str,
+    tag: str,
+    actor: str,
+    secret: str,
+    actions: str = "pull,push",
+) -> str | None:
     """Return the published index/manifest digest, or None only for a definite absence.
 
     Every other outcome (authorization, availability, network, malformed or inconsistent
@@ -81,7 +88,7 @@ def published_digest(repository: str, tag: str, actor: str, secret: str) -> str 
     """
     if not re.fullmatch(r"[a-z0-9_./-]+", repository) or not re.fullmatch(r"[\w.-]+", tag):
         raise ValueError("invalid registry reference")
-    token = registry_token(repository, actor, secret)
+    token = registry_token(repository, actor, secret, actions)
     request = urllib.request.Request(
         "https://" + REGISTRY + "/v2/" + repository + "/manifests/" + tag,
         headers={"Authorization": "Bearer " + token, "Accept": ", ".join(MANIFEST_MEDIA_TYPES)},
@@ -224,6 +231,7 @@ def main() -> None:
             local_postgres_identity(
                 Path.cwd(),
                 destination=POSTGRES_REPOSITORY + ":candidate-" + builder + "-postgres",
+                evidence_dir=output / "postgres-reproducibility",
             )
         # Every release re-verifies the published bytes (identity, gate, SBOM, smoke, attestation)
         # without rebuilding, so a superseded Alpine pin never blocks application releases.
@@ -233,38 +241,17 @@ def main() -> None:
             image = "ghcr.io/" + repository + "-" + service
             candidate = image + ":candidate-" + builder
             metadata = output / (service + "-build.json")
-            subprocess.run(
-                [
-                    "docker",
-                    "buildx",
-                    "build",
-                    "--builder",
-                    builder,
-                    "--platform",
-                    "linux/amd64",
-                    "--target",
-                    "runtime",
-                    "--push",
-                    "--provenance=mode=max",
-                    "--attest=type=sbom,generator=" + locked["sbom_generator"],
-                    "--metadata-file",
-                    str(metadata),
-                    "--tag",
-                    candidate,
-                    "--build-arg",
-                    "VERSION=" + version,
-                    "--build-arg",
-                    "REVISION=" + sha,
-                    "--build-arg",
-                    "SOURCE=" + SOURCE,
-                    "--build-arg",
-                    "SOURCE_DATE_EPOCH=" + run("git", "show", "-s", "--format=%ct", "HEAD"),
-                    service,
-                ],
-                check=True,
+            refs[service] = build_application_image(
+                Path.cwd(),
+                builder,
+                service,
+                candidate,
+                version,
+                sha,
+                int(run("git", "show", "-s", "--format=%ct", "HEAD")),
+                locked["sbom_generator"],
+                metadata,
             )
-            digest = json.loads(metadata.read_text())["containerimage.digest"]
-            refs[service] = image + "@" + digest
             state["images"][service] = refs[service]
             checkpoint(service + "_candidate_pushed")
         value = manifest(Path.cwd(), refs, local=False)
@@ -302,54 +289,11 @@ def main() -> None:
             with (output / "image-smoke.log").open("w") as log:
                 run_artifact_smoke(artifact, local=False, log=log)
         checkpoint("smoke_passed")
-        subprocess.run(
-            [
-                "git",
-                "archive",
-                "--format=tar.gz",
-                "--prefix=florabase-" + version + "/",
-                "--output",
-                str(output / ("florabase-" + version + "-source.tar.gz")),
-                sha,
-            ],
-            check=True,
-        )
-        # The install bundle: an operator needs only these three assets and the manifest, never a
-        # checkout. The attested manifest records their SHA-256 (install_bundle), each file is
-        # also attested, and the controller refuses a bundle that differs from the manifest.
-        for name in INSTALL_BUNDLE:
-            shutil.copyfile(Path("deploy/beta") / name, output / name)
-        (output / "RELEASE.md").write_text(
-            f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair and PostgreSQL passed native amd64 registry-pull smoke and the pinned Trivy gate (HIGH/CRITICAL vulnerabilities and secrets); that gate is a single scanner, and findings it does not report are recorded in docs/security/beta-distribution-001/postgresql-image.md at this source revision. PostgreSQL is the Florabase-built {pg['version']} image ({pg['reference']}): the official {pg['upstream']['reference']} without its gosu executable, which stays in an unchanged upstream layer but is absent from the container filesystem; it is identical in every release. Install with the attached {', '.join(INSTALL_BUNDLE)} and release-manifest.json as described in docs/installation.md at this source revision. This is a prerelease: no stable or latest tag is published. Never overwrite this release or delete its image identities.\n"
-        )
-        release_asset_inventory(output)
+        # The install bundle, source archive and release notes share one implementation with the
+        # non-publishing rehearsal; the manifest binds all three bundle hashes.
+        prepare_release_assets(Path.cwd(), output, version, sha)
         for service, ref in refs.items():
-            subprocess.run(
-                [
-                    "docker",
-                    "buildx",
-                    "imagetools",
-                    "create",
-                    "--prefer-index=false",
-                    "--tag",
-                    ref.split("@")[0] + ":" + version,
-                    ref,
-                ],
-                check=True,
-            )
-
-            promoted = json.loads(
-                run(
-                    "docker",
-                    "buildx",
-                    "imagetools",
-                    "inspect",
-                    ref.split("@")[0] + ":" + version,
-                    "--format",
-                    "{{json .Manifest}}",
-                )
-            )
-            if promoted["digest"] != registry_record(ref, "linux/amd64")["index_digest"]:
+            if promote_image(ref, version) != registry_record(ref, "linux/amd64")["index_digest"]:
                 raise ValueError("promotion changed immutable image identity")
             checkpoint(service + "_version_promoted")
         if not postgres_published:
