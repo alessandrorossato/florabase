@@ -72,10 +72,15 @@ def check_postgres_image(reference: str, pg: dict[str, Any]) -> None:
             raise ValueError("PostgreSQL image did not refuse root: " + " ".join(entrypoint))
 
 
-def smoke(manifest: dict[str, Any], local: bool = False, postgres_image: str | None = None) -> None:
-    validate_manifest(manifest, local)
-    if local != (postgres_image is not None):
-        raise ValueError("a locally built PostgreSQL image is required for, and only for, --local")
+def smoke(
+    manifest: dict[str, Any],
+    local: bool = False,
+    postgres_image: str | None = None,
+    registry_host: str = "ghcr.io",
+) -> None:
+    validate_manifest(manifest, local, registry_host)
+    if local and not postgres_image:
+        raise ValueError("a locally built PostgreSQL image is required for --local")
     native = run("docker", "version", "--format", "{{.Server.Os}}/{{.Server.Arch}}")
     if native != "linux/amd64":
         raise ValueError("native linux/amd64 Docker required; emulation is not acceptance")
@@ -91,7 +96,8 @@ def smoke(manifest: dict[str, Any], local: bool = False, postgres_image: str | N
             pg = manifest["postgresql"]
             if not local:
                 # The pulled index must be exactly the pinned, reproducible identity.
-                record = registry_record(f"{pg['repository']}@{pg['index_digest']}", native)
+                pg_reference = postgres_image or f"{pg['repository']}@{pg['index_digest']}"
+                record = registry_record(pg_reference, native, registry_host)
                 if (record["index_digest"], record["platform_digest"]) != (
                     pg["index_digest"],
                     pg["platform_digest"],
@@ -99,7 +105,10 @@ def smoke(manifest: dict[str, Any], local: bool = False, postgres_image: str | N
                     raise ValueError("PostgreSQL index/platform identity mismatch")
             check_postgres_image(reference, pg)
             continue
-        if not local and registry_record(reference, native) != manifest["images"][service]:
+        if (
+            not local
+            and registry_record(reference, native, registry_host) != manifest["images"][service]
+        ):
             raise ValueError("application platform/index identity mismatch")
         labels = image["Config"]["Labels"]
         for key, expected in {
@@ -378,9 +387,10 @@ def main() -> None:
     parser.add_argument(
         "--local", action="store_true", help="local candidate only; never registry-pull evidence"
     )
-    parser.add_argument("--postgres-image", help="--local only: the locally built PostgreSQL ID")
+    parser.add_argument("--postgres-image", help="Override the manifest PostgreSQL reference")
+    parser.add_argument("--registry-host", default="ghcr.io")
     args = parser.parse_args()
-    smoke(read(args.manifest), args.local, args.postgres_image)
+    smoke(read(args.manifest), args.local, args.postgres_image, args.registry_host)
 
 
 if __name__ == "__main__":

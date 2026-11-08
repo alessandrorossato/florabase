@@ -2299,6 +2299,26 @@
       "status": "in_progress"
     },
     {
+      "id": "beta-postgres-repro-001",
+      "category": "infrastructure",
+      "description": "Rehearse every safe pre-publication beta distribution stage on GitHub-hosted infrastructure",
+      "acceptance_criteria": [
+        "A non-publishing ubuntu-24.04 workflow uses the protected pipeline's pinned release inputs, shared build/manifest/smoke/promotion helpers, and an owned disposable OCI registry",
+        "Two independent clean PostgreSQL builds match the pinned platform and index identities; hash-checked OCI index, platform manifest, config and layer descriptors are retained for byte-level comparison",
+        "Backend and frontend production builds, immutable digest pull, manifest schema and identity, pinned vulnerability and secret scans, SBOM, artifact-only migration/login/media smoke, release asset inventory and local version promotion all pass",
+        "GHCR authentication and version absence are checked with read-only package scope; actual GHCR writes, GitHub attestations and Release API finalization are separately labeled as remote-only and untested",
+        "The beta.3 failure's first differing OCI byte is established from retained source evidence or explicitly bounded by missing historical artifacts; no digest is changed to accommodate a mismatch",
+        "Focused release regressions and the repository-selected canonical FULL pass on the exact final committed tree with a valid per-worktree receipt before protected PR delivery"
+      ],
+      "dependencies": [
+        "BETA-IMAGE-001",
+        "BETA-SECURITY-001",
+        "CI-002"
+      ],
+      "priority": "P0",
+      "status": "in_progress"
+    },
+    {
       "id": "BETA-SECURITY-001",
       "category": "security",
       "description": "Remediate beta image vulnerabilities and harden explicitly authorized GHCR release security without weakening gates",
