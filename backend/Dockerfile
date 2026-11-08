@@ -49,7 +49,7 @@ COPY alembic ./alembic
 COPY scripts/attachment_artifacts.py ./scripts/attachment_artifacts.py
 
 COPY LICENSE /usr/share/licenses/florabase/LICENSE
-ARG VERSION=0.1.0-beta.3
+ARG VERSION=0.1.0-beta.4
 ARG REVISION=unknown
 ARG SOURCE=https://github.com/alessandrorossato/florabase
 LABEL org.opencontainers.image.title="Florabase backend" \

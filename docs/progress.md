@@ -1,3 +1,14 @@
+## 2026-11-08 — BETA4-PREP-001 release candidate preparation
+
+- Prepared the current release, backend, frontend and installation identities for `0.1.0-beta.4`;
+  preserved prior release evidence and the pinned PostgreSQL image. Publication remains separately
+  authorized and has not occurred.
+- Read-only preflight at base `bb6de646` found no beta.4 Git tag, GitHub Release or application
+  image manifests. The hash-locked release regression suite passed 55 tests before and after the
+  identity update; `python3 scripts/beta_release.py check --publication` passed.
+- Canonical FULL verification and independent QA are required before delivery; the hosted rehearsal
+  and protected PR checks must pass for the final candidate. No deployment or publication is implied.
+
 ## 2026-10-29 — WCVP-VERSION-001 explicit v15/v16 implementation for review
 
 - Added immutable two-release definitions, separate optional v16 path and explicit provisioning;
