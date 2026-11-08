@@ -114,7 +114,7 @@ def ctl_bundle_names() -> tuple[str, ...]:
 
 class ReleaseTests(unittest.TestCase):
     def test_current_candidate_inputs_and_platform_policy(self) -> None:
-        self.assertEqual(inputs(ROOT)["version"], "0.1.0-beta.3")
+        self.assertEqual(inputs(ROOT)["version"], "0.1.0-beta.4")
         self.assertEqual(
             inputs(ROOT)["buildkit"],
             "moby/buildkit:v0.34.2@sha256:c5f8862f52499773af85bc07695b2379ef08e8002352b0df2c4864c91d78dabe",
