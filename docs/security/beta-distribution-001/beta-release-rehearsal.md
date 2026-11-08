@@ -26,12 +26,37 @@ BuildKit 0.34.2. That builder change is the leading testable cause, not a proven
 itself: both versions reproduced the pin in separate local trials, so the GitHub-hosted comparison
 must decide it.
 
-The correction restores the exact immutable BuildKit 0.34.2 input already named in the successful
-reproduction evidence. It leaves the PostgreSQL source/base/package pins, expected digests, exact
-identity check and non-root hardening unchanged. The rehearsal also rebuilds once with the exact
-previous beta.3 BuildKit image as a diagnostic. It retains hash-checked raw index, platform-manifest
-and config bytes plus descriptor-level layer digests for both builders. The beta.3 historical first
-component remains unknown unless that controlled old-toolchain run reproduces its recorded failure.
+The candidate correction restores the exact immutable BuildKit 0.34.2 input already named in the
+successful reproduction evidence. It leaves the PostgreSQL source/base/package pins, expected
+digests, exact identity check and non-root hardening unchanged. The rehearsal also rebuilds once
+with the exact previous beta.3 BuildKit image as a diagnostic. It retains hash-checked raw index,
+platform-manifest and config bytes plus descriptor-level layer digests for both builders.
+
+## Local rehearsal result (not hosted acceptance)
+
+On the TUXEDO, the corrected rehearsal completed against its owned loopback registry. Two independent
+clean BuildKit 0.34.2 builds and the exact previous BuildKit image all produced the pinned PostgreSQL
+index `sha256:4edc079088c3f78b69fc8f9473e33881ebabea7fea2d82b3227b70a69ae3b7de` and platform manifest
+`sha256:55b1969a7fddad118ca07a15058a43a5916dec3e4dbab38029e671225b392b91`. Their config digest was
+`sha256:ef74e207ea99325724ca33a7d80cef4d0bb4e58854781636185f274c3e18e02a`; all 13 layer descriptors
+matched. The index, platform manifest and config raw bytes also matched their respective digests.
+The two BuildKit versions were byte-identical at these OCI boundaries on this host. This falsifies
+BuildKit version alone as a sufficient local explanation and does not explain beta.3's GitHub-built
+index `sha256:e514d64b47dc14141baa8cb773e7fca128a7a1784d63738f87ebc384c45a85e8`. The failed run's
+historical raw documents were not retained, so its first differing byte is still unknown. The
+GitHub-hosted old-versus-pinned builder comparison must determine whether the runner environment or
+another build input caused that output; until then, the builder pin change is only a candidate fix.
+
+The local report is marked `github_hosted: false`; it did not run the GHCR read-only check. Backend,
+frontend and PostgreSQL production builds, manifest validation, digest pulls, Trivy 0.69.3
+vulnerability/secret scans (zero findings in each report), PostgreSQL SBOM, artifact-only migration,
+login and media smoke, install bundle hashes, local version-tag promotion and release/attestation
+input validation all passed. Disposable digests were backend
+`sha256:0de1169003643c7185071f71ffc0d9b28c3559cceb4c5f9fa09426c98ed2680c`, frontend
+`sha256:9bc8f3a1aade313fb454ce12c57de489eddbb1432b7b205529721d996df7a23f`, and PostgreSQL as above.
+The run used synthetic local workflow metadata, created no GitHub attestations or Release API request,
+and is not proof of GitHub-hosted equivalence. The final retained machine-readable report and OCI
+documents are in `/tmp/florabase-beta-release-rehearsal-local-final` on the development host only.
 
 ## Non-publishing rehearsal
 

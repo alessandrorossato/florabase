@@ -7689,3 +7689,26 @@ Status remains implemented pending canonical verification.
 - Not verifiable before the protected run: GHCR's answer to `GITHUB_TOKEN` for a never-published package
   (expected `NAME_UNKNOWN`/`MANIFEST_UNKNOWN` 404; any other answer fails closed).
 - Version bumped to `0.1.0-beta.3`; `v0.1.0-beta.1` and `v0.1.0-beta.2` tags are untouched.
+
+### BETA-RELEASE-REHEARSAL — reproducibility hotfix candidate, 8 November 2026
+
+- The beta.3 publication run `42421453830` passed verification, protected authorization and GHCR
+  preflight, then stopped at `require_pinned_postgres`: CI index `e514d64b...` and platform
+  `72cb11d5...` differed from pins `4edc0790...` and `55b1969a...`. No app candidate push occurred.
+  The retained state has no historical raw OCI documents or layer descriptors, so a byte-level
+  first difference cannot be recovered from that run.
+- A non-publishing rehearsal and shared publisher helpers were added. The exact prior BuildKit image
+  and pinned 0.34.2 image both reproduced the pinned index, platform, config and all 13 layer
+  descriptors on the TUXEDO. Thus BuildKit version alone is not the local cause; the GitHub-hosted
+  comparison remains required before claiming root cause or accepting the candidate fix.
+- Full local rehearsal on committed `f719785ba819ecf3bf0dc8ef5b0dc10f9b3f0604` passed all disposable
+  registry stages: two independent PostgreSQL builds, backend/frontend production builds, manifest and
+  digest checks, Trivy 0.69.3 scans (zero reported vulnerabilities/secrets), PostgreSQL SBOM,
+  image-only migration/login/media smoke, install bundle inventory, local tag promotion and release /
+  attestation input validation. First attempt caught and fixed a PostgreSQL repository namespace
+  mismatch before the final run. Local GHCR authentication/absence, GitHub attestation creation and
+  Release API finalization were not exercised.
+- The local rehearsal report and full output are retained at
+  `/tmp/florabase-beta-release-rehearsal-local-final` on the development host. They are not hosted
+  workflow artifacts. Final canonical FULL verification for the current tree and the GitHub-hosted
+  rehearsal remain pending; do not mark this feature verified or prepare beta.4 yet.
