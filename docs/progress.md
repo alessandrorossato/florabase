@@ -14,7 +14,10 @@
   candidate. The beta.4 tag still peels to `ea4f3ad3`. Read-only checks found no beta.5 Git tag,
   release or application image tags. Focused release 56, tool lock 4 and verification impact 30
   passed. Release-script Ruff and mypy, workflow actionlint, feature graph and API generation
-  passed. API declarations remained byte-identical. Final exact-tree evidence is separate.
+  passed. API declarations remained byte-identical. The initial canonical gate stopped at the
+  CI policy test before product stages. Updated its assertion for the main-only job while
+  preserving the three required PR jobs. The focused policy check passed. Final exact-tree
+  evidence is separate.
 
 ## 2026-11-08 — BETA4-PREP-001 release candidate preparation
 

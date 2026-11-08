@@ -102,7 +102,8 @@ for (const name of Object.keys(expected))
 const ci = load(
   readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8"),
 );
-assert.deepEqual(Object.keys(ci.jobs).sort(), [
+const { "release-migration": releaseMigration, ...requiredJobs } = ci.jobs;
+assert.deepEqual(Object.keys(requiredJobs).sort(), [
   "build",
   "integration",
   "quality",
@@ -111,7 +112,7 @@ assert.deepEqual(ci.on, {
   pull_request: { branches: ["main"] },
   push: { branches: ["main"] },
 });
-for (const [name, job] of Object.entries(ci.jobs)) {
+for (const [name, job] of Object.entries(requiredJobs)) {
   assert.equal(job.name, name);
   assert.equal(job.if, undefined);
   assert.equal(job.needs, undefined);
@@ -130,6 +131,23 @@ for (const [name, job] of Object.entries(ci.jobs)) {
   assert.equal(job.steps[2].if, "always()");
   assert.equal(job.steps[2].with["retention-days"], 14);
 }
+assert.equal(releaseMigration.name, "release-migration");
+assert.equal(
+  releaseMigration.if,
+  "github.event_name == 'push' && github.ref == 'refs/heads/main'",
+);
+assert.equal(releaseMigration.needs, undefined);
+assert.equal(releaseMigration["continue-on-error"], undefined);
+assert.equal(releaseMigration.steps[0].with["fetch-depth"], 0);
+assert.equal(releaseMigration.steps[0].with["persist-credentials"], false);
+assert.equal(releaseMigration.steps[1].if, undefined);
+assert.equal(releaseMigration.steps[1]["continue-on-error"], undefined);
+assert.match(releaseMigration.steps[1].run, /set -euo pipefail/);
+assert.match(
+  releaseMigration.steps[1].run,
+  /verify-migration-cycle\.sh "\$BASE_SHA" --force-cycle/,
+);
+assert.equal(releaseMigration.steps[2].if, "always()");
 console.log(
   "WORKFLOW POLICY PASSED: valid YAML; stable required jobs and failure propagation; dependency names/ranges and weekly groups intact",
 );
