@@ -647,3 +647,6 @@ destroys the live database, media, secrets and local backups.
 
 Operator and developer background: [beta runtime runbook](beta-runtime-001.md),
 [image release contract](beta-image-001.md), [security](security.md).
+
+For the first collection pilot and host acceptance record, use the
+[onboarding runbook and Synology checklist](beta-data-001.md).

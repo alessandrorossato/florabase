@@ -14,7 +14,9 @@ TRANSFER.** Use the coordinated database and
 attachment backup/restore process for recovery. These formats do not carry photos, Events, operation
 receipts, provider data, user/session data, or all lineage. Exported collection rows include their
 UUID in `record_ref` for identification, but import does not update or skip an existing SeedLot,
-Plant, or PlantGroup: preview reports a conflict. Import is not synchronization.
+Plant, or PlantGroup: an existing `record_ref` reports a conflict. Replaying a blank-template
+collection CSV without `record_ref` can create duplicate rows. Reconcile source keys against
+saved records before retrying a batch.
 
 ## CSV conventions and bounds
 
@@ -195,3 +197,6 @@ UUID relationships, and record type. Export adds `parent_path` for Locations, pl
 The companion columns are export-only presentation; UUIDs remain authoritative and the export
 headers are intentionally different from import templates. Export does not include attachment
 binaries or secret material.
+
+For source mapping, batch reconciliation and the manual workflows needed for
+first collection entry, see the [onboarding runbook](beta-data-001.md).

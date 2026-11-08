@@ -7824,3 +7824,31 @@ Status remains implemented pending canonical verification.
   its slow test call and verified disposable cleanup. The planner suite passed 30 tests, and the
   workflow helper suite and 141-feature graph passed. The plan still selects FULL. The final
   consolidation gate and receipt remain pending.
+
+### BETA-DATA-001 — synthetic first-collection rehearsal, 8 November 2026
+
+- Added the [onboarding runbook and Synology checklist](beta-data-001.md).
+  It covers the six CSV kinds, manual workflows, source inventory, PartialDate
+  and unknown values, reconciliation and admission blockers.
+- The baseline disposable import suite passed 13 tests. The updated example
+  test applies the downloaded bytes for all six kinds, reconciles counts and
+  linked exports, preserves precision and unknowns, and demonstrates that
+  unidentified replay previews as new. Identified replay is refused with
+  HTTP 409 and leaves the export unchanged. Existing cases cover ambiguous
+  choices, stale confirmation and whole-file rollback.
+- The focused disposable PostgreSQL run passed 262 tests and verified zero
+  residual owned containers, networks and volumes. Selected integration files
+  were `test_import_export_api`, `test_provenance_site_api`, `test_orders`,
+  `test_purchase_context`, `test_sowing_api`, `test_propagation_api`,
+  `test_event_api`, `test_schedule`, `test_harvests`,
+  `test_harvest_inventory`, `test_harvest_seed_conversion`,
+  `test_attachment_api`, `test_shared_media`, `test_external_media_copies`
+  and `test_history`. This is synthetic API and service evidence for manual
+  workflow steps, with browser and host acceptance left to the operator.
+- Independent detached QA checked the mapping and replay contract, lifecycle
+  procedures and relative links. The runbook incorporates its media and
+  reconciliation clarifications. The canonical affected result is recorded
+  in the exact-tree verification receipt.
+- Actual source inventory, owner review, authorized published assets and
+  selected-host acceptance remain pending. BETA-DATA-001 remains in progress.
+  No production records or deployment were changed.
