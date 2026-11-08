@@ -2,11 +2,13 @@
 
 This guide is for people who want to **run** Florabase on their own server from the published
 container images. You do not need the source code, Node.js, a Python development environment or a
-compiler. Developers working on Florabase itself should read [development](development.md) instead.
+compiler. To build and deploy from a checkout, see [source-build deployment](deployment.md). For
+local development, see the [development guide](development.md).
 
-> **Beta status.** `v0.1.0-beta.3` is a private, single-owner prerelease. It is not yet published (the `v0.1.0-beta.1` and `v0.1.0-beta.2` tags exist but their protected publications failed before any release or image was created, so use beta.3);
-> the commands below name the release assets it will carry. Keep a tested backup before every
-> upgrade. Known limitations are listed at the end of this guide.
+> **Beta status.** This guide names the assets for the private, single-owner
+> `v0.1.0-beta.3` prerelease. Proceed only when its GitHub Release and verified assets are
+> available. The protected beta.1 and beta.2 publication attempts failed. Deployment acceptance
+> on a real host remains pending. Keep a tested backup before every upgrade.
 
 ## What you install
 
@@ -37,9 +39,12 @@ Three release assets plus the manifest are all you download:
 - A **linux/amd64** host. linux/arm64 (for example a Raspberry Pi or an ARM NAS) is **not supported
   in this beta**: no arm64 images are built or tested.
 - Docker Engine **24.0 or newer** and the Docker Compose plugin **2.20 or newer**
-  (`docker compose version`). Synology DSM 7.2 Container Manager (Engine 24.0.2, Compose 2.20.1)
-  is the tested minimum.
+  (`docker compose version`). The image-only stack avoids the `!override` and `!reset` tags used in
+  repository overlays. Disposable smoke tests exercised Engine 24.0.2 and Compose 2.20.1 in an
+  isolated daemon. Acceptance on the candidate Synology DSM 7.2 host remains pending.
+  [Beta runtime evidence](beta-runtime-001.md#disposable-verification)
 - Python **3.8 or newer** on the host (`python3 --version`), for `florabasectl.py`.
+- GitHub CLI **2.103.3 or newer** with access to the release attestations, and `curl`.
 - A root shell on the host (`sudo -i`). The controller creates directories owned by the
   container users and protects the secret files.
 - At least 2 GiB of available memory and 20 GiB of free disk for the application, database, media
@@ -48,54 +53,68 @@ Three release assets plus the manifest are all you download:
   Florabase only accepts HTTPS in production and always serves on its own host name, never on a
   sub-path such as `https://example.org/florabase/`.
 
-The controller checks these for you:
+## 1. Download and verify the release
+
+Use a new root-owned directory outside the future installation root. Run the following as one Bash
+block. Any download, attestation or digest failure stops the block. Start over in a fresh directory
+if any check fails.
+
+```bash
+(
+  set -e
+  umask 077
+  tag=v0.1.0-beta.3
+  bundle_dir=$(mktemp -d /srv/florabase-bundle.XXXXXX)
+  cd "$bundle_dir"
+  base="https://github.com/alessandrorossato/florabase/releases/download/$tag"
+  files=(release-manifest.json compose.yaml florabasectl.py florabase.env.example)
+
+  for file in "${files[@]}"; do
+    curl --fail --location --output "$file" "$base/$file"
+  done
+
+  for file in "${files[@]}"; do
+    gh attestation verify "$file" --repo alessandrorossato/florabase \
+      --signer-workflow alessandrorossato/florabase/.github/workflows/beta-images.yml \
+      --source-ref refs/heads/main --deny-self-hosted-runners
+  done
+
+  python3 - "${tag#v}" <<'PYTHON'
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+manifest_bytes = Path("release-manifest.json").read_bytes()
+manifest = json.loads(manifest_bytes)
+if manifest["version"] != sys.argv[1]:
+    sys.exit("STOP: manifest version differs from the selected release tag")
+for name in ("compose.yaml", "florabasectl.py", "florabase.env.example"):
+    digest = hashlib.sha256(Path(name).read_bytes()).hexdigest()
+    if manifest["install_bundle"][name] != "sha256:" + digest:
+        sys.exit("STOP: manifest SHA-256 mismatch for " + name)
+print("Manifest SHA-256:", hashlib.sha256(manifest_bytes).hexdigest())
+PYTHON
+  printf 'Verified bundle directory: %s\n' "$bundle_dir"
+)
+```
+
+Attestation verification checks the downloaded bytes against provenance from the protected release
+workflow. The SHA-256 checks also bind all three bundle files to the selected release's attested
+manifest. Keep the printed manifest hash and use it for install and upgrade. Change to the printed
+bundle directory before running the controller, which runs as root.
+[GitHub CLI attestation verification](https://cli.github.com/manual/gh_attestation_verify)
+
+Now run the verified controller's host preflight. It checks platform, tool versions and local
+resources. Keep the resulting `preflight.json` private and resolve any failed checks before
+initializing the installation.
 
 ```bash
 python3 florabasectl.py --root /srv/florabase preflight --evidence preflight.json
 ```
 
-`preflight.json` describes your host; keep it private.
-
-## 1. Download and verify the release
-
-Use a working directory outside the future installation root, for example `/srv/florabase-bundle`:
-
-```bash
-mkdir -p /srv/florabase-bundle && cd /srv/florabase-bundle
-base=https://github.com/alessandrorossato/florabase/releases/download/v0.1.0-beta.3
-for file in release-manifest.json compose.yaml florabasectl.py florabase.env.example; do
-  curl --fail --location --remote-name "$base/$file"
-done
-```
-
-**Verify every file before running anything** (required: `florabasectl.py` runs as root and
-controls migrations, backups and restores). Each file carries a GitHub build-provenance
-attestation from the protected release workflow; check all four with the GitHub CLI (2.103.3 or
-newer):
-
-```bash
-verified=yes
-for file in release-manifest.json compose.yaml florabasectl.py florabase.env.example; do
-  gh attestation verify "$file" --repo alessandrorossato/florabase \
-    --signer-workflow alessandrorossato/florabase/.github/workflows/beta-images.yml \
-    --source-ref refs/heads/main --deny-self-hosted-runners || verified=no
-done
-if [ "$verified" = yes ]; then sha256sum release-manifest.json; else echo "STOP: a file failed attestation; delete the downloads" >&2; false; fi
-```
-
-Continue only if every file verified and the last command printed the manifest's SHA-256. This
-attestation check is the control that proves the files come from the protected release workflow;
-comparing SHA-256 values with the digests on the release page only proves the download is intact.
-The attested manifest also records the SHA-256 of each bundle file (`install_bundle`), and the
-controller refuses to install or upgrade with a `compose.yaml` or `florabasectl.py` that differs
-from it. That catches files mixed from different releases; it cannot detect a tampered controller
-(which checks itself), so never skip the attestation check.
-
-Keep the manifest's SHA-256: every install and upgrade command requires it, and the controller
-refuses a manifest whose hash differs. The controller never uses image tags.
-
-If the GHCR packages are private for your release, log in first with a read-only token:
-`docker login ghcr.io` (the password is read from the terminal).
+If the GHCR packages are private for your release, use `docker login ghcr.io` with a read-only token
+before pulling images. Docker reads the token from the terminal.
 
 ## 2. Initialize the installation
 
@@ -151,9 +170,11 @@ Secrets live only in `secrets/db.env` (`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES
 
 ## 3. Install the release
 
+From the verified bundle directory, substitute the manifest hash printed in step 1.
+
 ```bash
 python3 florabasectl.py --root /srv/florabase install \
-  --manifest /srv/florabase-bundle/release-manifest.json --manifest-sha256 <manifest-sha256>
+  --manifest release-manifest.json --manifest-sha256 '<manifest-sha256>'
 ```
 
 This pulls the three images by digest, verifies their labels, platform and schema version, starts
@@ -299,12 +320,12 @@ its release and refuses otherwise, with a message that names the action to take 
 [Troubleshooting](#troubleshooting)). A newer image therefore cannot silently change your data.
 
 Download and verify the new release's files into a new directory exactly as in
-[step 1](#1-download-and-verify-the-release), then upgrade with that release's own controller (an
-older or newer `florabasectl.py` or `compose.yaml` is refused):
+[step 1](#1-download-and-verify-the-release), setting `tag` to the target version. Change to the
+new verified bundle directory and substitute the new manifest hash.
 
 ```bash
-python3 /srv/florabase-bundle/<new>/florabasectl.py --root /srv/florabase promote \
-  --manifest /srv/florabase-bundle/<new>/release-manifest.json --manifest-sha256 <sha256> \
+python3 florabasectl.py --root /srv/florabase promote \
+  --manifest release-manifest.json --manifest-sha256 '<manifest-sha256>' \
   --confirm-migration
 ```
 

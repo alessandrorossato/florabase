@@ -7678,3 +7678,23 @@ Status remains implemented pending canonical verification.
 - The first FULL stopped at the disclosure check, which flagged a synthetic Git fixture address.
   The fixture now uses a local-only identity. The disclosure check remains in place.
 - Focused Ruff lint, format and strict mypy passed after separating raw and decoded Git paths.
+
+### DOCS-CORRECTNESS-001 — development, source upgrades and beta installation, 8 November 2026
+
+- README uses the DEV targets in order and guards `make setup`. A disposable Makefile check
+  reproduced that the standalone recipe still overwrites an existing `.env` despite its message.
+  The documented guard preserved the existing fixture and created the file in the fresh case.
+- Source-build upgrade instructions keep application writers stopped through the final paired
+  backup and migration, with a maintenance-mode failure and recovery path. Routine `make backup`
+  restarts the backend. Image-only installation checks all four release attestations and the
+  bundle's manifest digests before controller preflight, install or promotion.
+- Checked Make targets and documented commands against the helpers, Compose and protected
+  workflow. Independent shell QA passed the two new snippets with disposable stubs, including
+  backup, download, attestation, version and digest failures. The environment workflow suite
+  passed 35 tests. The beta runtime offline suite passed 62 tests each with Compose 5.7.0 and
+  checksum-verified 2.20.1. With the source DEV overlay, 2.20.1 rendered both frontend ports
+  (5173 and 8080), while 5.7.0 rendered only 5173. The canonical docs-only gate is
+  `make feature-verify` on the final commit.
+- No live attestation verification, real-host beta acceptance or end-to-end source-build
+  upgrade/restore drill was performed in this increment. Earlier disposable runtime evidence
+  remains scoped to its recorded environment.

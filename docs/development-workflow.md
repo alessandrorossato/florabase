@@ -561,14 +561,13 @@ way. It is manual: the default integration suite skips that module, so CI and th
 `make up`, `build`, `migrate`, `down`, `backup`, and `restore` use the explicit `florabase-prod` project.
 `compose.yaml` remains the production distribution topology: immutable non-root backend/frontend
 images, same-origin nginx proxy, internal PostgreSQL/backend, health/readiness, persistent DB/media,
-secure cookies and explicit HTTPS origin. Application startup never migrates. Back up coordinated
-DB/media artifacts before `make migrate`; follow [backup and restore](backup-restore.md).
+secure cookies and explicit HTTPS origin. Application startup never migrates. For source-build upgrades, follow the
+[maintenance procedure](deployment.md#safe-upgrade) to keep writers stopped from backup through migration.
 Production overrides belong in explicit deployment configuration, not the DEV/Review overlays.
 Existing installations previously using the baseline's legacy `florabase` name must inventory and
 migrate their paired data deliberately before adopting `florabase-prod`; this helper does not silently
-attach production to DEV volumes. Public images/GHCR, release packaging and the end-user installer
-remain release/distribution work, not part of this consolidation. The expected future end-user path
-uses immutable published images with this same production topology and explicit upgrade policy.
+attach production to DEV volumes. The separate [image-only beta](installation.md) uses digest-pinned
+release images and its own stack, storage layout and upgrade controller.
 
 ## Review profiles and verification timing
 
