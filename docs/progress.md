@@ -7710,5 +7710,9 @@ Status remains implemented pending canonical verification.
   Release API finalization were not exercised.
 - The local rehearsal report and full output are retained at
   `/tmp/florabase-beta-release-rehearsal-local-final` on the development host. They are not hosted
-  workflow artifacts. Final canonical FULL verification for the current tree and the GitHub-hosted
-  rehearsal remain pending; do not mark this feature verified or prepare beta.4 yet.
+  workflow artifacts. `make feature-verify AGENT_ID=codex-beta-postgres-repro-001` passed FULL on
+  commit `6dce05f`: workflow checks, static/type/API checks, 1,221 frontend tests, both production
+  builds, full migration cycle and 836 selected PostgreSQL integration tests (29 skipped). The
+  canonical gate reported zero residual owned containers, networks or volumes and wrote a valid
+  receipt. GitHub-hosted rehearsal remains pending; do not mark the feature verified or prepare
+  beta.4 until hosted evidence establishes the failed-run cause and the rehearsal passes there.
