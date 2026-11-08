@@ -441,7 +441,8 @@ def local_postgres_identity(
     owner = Owner.disposable("verification-build", root)
     registry = owner.project + "-registry"
     builder = owner.project + "-builder"
-    repository = f"127.0.0.1:{port}/florabase-postgres"
+    repository_path = pg["repository"].removeprefix("ghcr.io/")
+    repository = f"127.0.0.1:{port}/{repository_path}"
     with Disposable(owner):
         if manage_registry:
             # Owned and labelled: the Disposable owner retires it, as for every workflow resource.

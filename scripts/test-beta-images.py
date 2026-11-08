@@ -245,6 +245,14 @@ class ReleaseTests(unittest.TestCase):
                 host,
             )
 
+    def test_rehearsal_uses_the_locked_postgres_repository_namespace(self) -> None:
+        rehearsal = (ROOT / "scripts/rehearse-beta-release.py").read_text()
+        builder = (ROOT / "scripts/beta_release.py").read_text()
+        self.assertIn(
+            'locked["postgresql"]["repository"].removeprefix("ghcr.io/")', rehearsal
+        )
+        self.assertIn('pg["repository"].removeprefix("ghcr.io/")', builder)
+
     def test_release_finalization_inputs_match_protected_draft_request_without_api_call(
         self,
     ) -> None:
