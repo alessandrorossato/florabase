@@ -211,10 +211,9 @@ def main() -> None:
                 }
                 report["stages"]["toolchain"] = "passed"
 
-                pg_repository = (
-                    f"{registry_host}/"
-                    + locked["postgresql"]["repository"].removeprefix("ghcr.io/")
-                )
+                pg_repository = f"{registry_host}/" + locked["postgresql"][
+                    "repository"
+                ].removeprefix("ghcr.io/")
                 pg_builds: list[dict[str, str]] = []
                 for number in (1, 2):
                     evidence = output / f"postgres-builder-{number}"
