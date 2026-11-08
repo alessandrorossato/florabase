@@ -27,6 +27,35 @@
 
 # Engineering progress
 
+## 2026-11-08 — beta-postgres-repro-001 implementation candidate
+
+- Branch `fix/beta-postgres-repro-001` starts from verified `933b6984`; writer claim is held by
+  `codex-beta-postgres-repro-001`. beta.1–beta.3 tags and their PostgreSQL identity are untouched.
+- Failed run `42421453830` passed authorization and stopped at the exact PostgreSQL identity gate,
+  before candidate image copy. Its retained artifact has no OCI layer descriptors or raw manifest/config
+  bytes. The failure reports index `e514d64b…` vs pinned `4edc0790…`, platform manifest `72cb11d5…`
+  vs `55b1969a…`, and config `e01ce338…` vs `ef74e207…`. The CI builder was BuildKit 0.33.1; the
+  existing successful local evidence names 0.34.2. This is a testable leading cause; the first old
+  layer byte and a causal CI result are pending hosted reproduction.
+- Restored the exact immutable BuildKit 0.34.2 input without changing PostgreSQL version, source,
+  base, apk pin, expected digests, root hardening or `require_pinned_postgres`. Added an ubuntu-24.04
+  non-publishing rehearsal with pull-only GHCR preflight and a labeled local registry. Publication
+  shares application-build, manifest, scan, SBOM, smoke, assets and digest promotion helpers. The
+  rehearsal keeps two independent pinned-toolchain builds plus a diagnostic build using the prior
+  0.33.1 image, and saves hash-checked raw index/platform/config bytes and layer descriptors.
+- Two independent clean local PostgreSQL identity builds both matched index
+  `sha256:4edc079088c3f78b69fc8f9473e33881ebabea7fea2d82b3227b70a69ae3b7de` and platform manifest
+  `sha256:55b1969a7fddad118ca07a15058a43a5916dec3e4dbab38029e671225b392b91`; their owned builders
+  were removed. Focused checks: release suite **48 passed**, runtime contract **62 passed on Python
+  3.14** and **50 passed on Python 3.8**, repository `workflow-check` passed Ruff, formatting and
+  strict mypy. `beta_release.py check --publication`, feature graph, `py_compile` and whitespace
+  checks passed. `beta-release-checks.py` did not run to completion here because the installed `gh`
+  CLI lacks `gh attestation verify`; the GitHub-hosted rehearsal and its runner-native check remain
+  pending. No beta.4 version update, tag, publication dispatch or remote package/release mutation.
+- [Failure analysis and rehearsal contract](security/beta-distribution-001/beta-release-rehearsal.md).
+  Read-only GHCR findings, real GitHub attestations and Release API finalization are intentionally
+  distinct: only the first is checked in rehearsal; the latter two remain protected-live-only.
+
 ## 2026-11-02 — BETA-FOUNDATION-001 B1–B4 QA corrections ready for delta review
 
 - Continued clean authoritative `3553a9c` / tree `9d986e4`, confirming the existing
@@ -7660,3 +7689,59 @@ Status remains implemented pending canonical verification.
 - Not verifiable before the protected run: GHCR's answer to `GITHUB_TOKEN` for a never-published package
   (expected `NAME_UNKNOWN`/`MANIFEST_UNKNOWN` 404; any other answer fails closed).
 - Version bumped to `0.1.0-beta.3`; `v0.1.0-beta.1` and `v0.1.0-beta.2` tags are untouched.
+
+### BETA-RELEASE-REHEARSAL — reproducibility hotfix candidate, 8 November 2026
+
+- The beta.3 publication run `42421453830` passed verification, protected authorization and GHCR
+  preflight, then stopped at `require_pinned_postgres`: CI index `e514d64b...` and platform
+  `72cb11d5...` differed from pins `4edc0790...` and `55b1969a...`. No app candidate push occurred.
+  The retained state has no historical raw OCI documents or layer descriptors, so a byte-level
+  first difference cannot be recovered from that run.
+- A non-publishing rehearsal and shared publisher helpers were added. The exact prior BuildKit image
+  and pinned 0.34.2 image both reproduced the pinned index, platform, config and all 13 layer
+  descriptors on the TUXEDO. Thus BuildKit version alone is not the local cause; the GitHub-hosted
+  comparison remains required before claiming root cause or accepting the candidate fix.
+- Full local rehearsal on committed `f719785ba819ecf3bf0dc8ef5b0dc10f9b3f0604` passed all disposable
+  registry stages: two independent PostgreSQL builds, backend/frontend production builds, manifest and
+  digest checks, Trivy 0.69.3 scans (zero reported vulnerabilities/secrets), PostgreSQL SBOM,
+  image-only migration/login/media smoke, install bundle inventory, local tag promotion and release /
+  attestation input validation. First attempt caught and fixed a PostgreSQL repository namespace
+  mismatch before the final run. Local GHCR authentication/absence, GitHub attestation creation and
+  Release API finalization were not exercised.
+- The local rehearsal report and full output are retained at
+  `/tmp/florabase-beta-release-rehearsal-local-final` on the development host. They are not hosted
+  workflow artifacts. `make feature-verify AGENT_ID=codex-beta-postgres-repro-001` passed FULL on
+  commit `6dce05f`: workflow checks, static/type/API checks, 1,221 frontend tests, both production
+  builds, full migration cycle and 836 selected PostgreSQL integration tests (29 skipped). The
+  canonical gate reported zero residual owned containers, networks or volumes and wrote a valid
+  receipt. GitHub-hosted rehearsal remains pending; do not mark the feature verified or prepare
+  beta.4 until hosted evidence establishes the failed-run cause and the rehearsal passes there.
+- Before hosted delivery, the diagnostic path was corrected so the previous BuildKit build records
+  its OCI evidence even when it differs from the pin; that build is diagnostic and does not weaken
+  the exact acceptance check on the two pinned-toolchain rebuilds. A regression test guards this
+  distinction. Focused `workflow-check` passes; final FULL is rerun on the resulting commit.
+- PR #155's first GitHub-hosted rehearsal (`42474189742`, artifact ID `13614289125`) ran on
+  `ubuntu-24.04` with Docker 28.0.4, Buildx 0.38.1 and the pinned BuildKit 0.34.2, and reproduced
+  the beta.3 mismatch. Its retained OCI evidence shows layers 1–11 and 13 match the pinned local
+  reproduction; layer 12 (`COPY LICENSE`) differs, as does `rootfs.diff_ids[11]`. The local checkout
+  presented `postgres/LICENSE` as 0664; forcing 0644 reproduced the hosted mismatch, while forcing
+  0664 reproduced the pinned platform, config and index. The build helper now normalizes this
+  context file to 0664 without changing Dockerfile history. A regression test checks normalization
+  from a 0644 checkout and evidence collection before the unchanged exact digest gate.
+- PR #155 hosted rehearsal run `42482904548` on `ubuntu-24.04` confirms the PostgreSQL correction:
+  both independent pinned-toolchain builds and the previous-BuildKit diagnostic matched platform
+  `sha256:55b1969a...` and index `sha256:4edc0790...`; all 13 layer digests matched. Backend and
+  frontend production builds plus release-manifest validation passed. The run then exposed a
+  separate registry evidence bug before Trivy: the classic `docker save` fallback indexed the
+  `imagetools inspect --raw` response as an OCI index although it had no `manifests` member. The
+  fallback now resolves and checks the root/native descriptors through the same immutable
+  registry identity path used by manifest construction and retains the raw response for review.
+- PR #155 hosted run `42485751305` again matched both PostgreSQL index and platform pins on two
+  independent builds and the previous-BuildKit diagnostic; all 13 layers matched. Backend and
+  frontend builds and manifest validation passed. Trivy setup then found another valid Docker
+  export shape: `docker save` emitted an OCI `index.json` whose sole root points directly to the
+  native platform manifest. `saved_descriptors()` treated that root manifest as an index and
+  failed before scans. The follow-up fix verifies the exported uncompressed layer digests against the config and
+  binds that config to the selected immutable registry index and adds regression coverage. Focused release tests passed
+  (55 unit and 4 Python 3.12 compatibility tests). The next hosted rehearsal is still required;
+  security scans and downstream stages have not yet passed on GitHub Actions.

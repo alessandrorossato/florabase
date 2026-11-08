@@ -4,14 +4,19 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import importlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import tarfile
 import tempfile
+import urllib.request
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import IO, Any
 
@@ -170,6 +175,20 @@ def validate_postgres_identity(pg: dict[str, Any], repository: str = POSTGRES_RE
         raise ValueError("invalid PostgreSQL identity")
 
 
+@contextmanager
+def normalized_postgres_context(root: Path) -> Iterator[None]:
+    """Use the pinned LICENSE mode while building, then restore the checkout mode."""
+    license_path = root / "postgres/LICENSE"
+    if license_path.is_symlink() or not license_path.is_file():
+        raise ValueError("PostgreSQL LICENSE must be a regular context file")
+    original_mode = license_path.stat().st_mode & 0o777
+    license_path.chmod(0o664)
+    try:
+        yield
+    finally:
+        license_path.chmod(original_mode)
+
+
 def build_postgres_image(
     root: Path, builder: str, repository: str, tag: str, epoch: int, insecure: bool = False
 ) -> dict[str, str]:
@@ -178,37 +197,38 @@ def build_postgres_image(
     In-index provenance/SBOM attestations embed build times, so they are disabled here; the
     protected workflow attests the index with GitHub artifact attestations instead.
     """
-    with tempfile.TemporaryDirectory(prefix="florabase-postgres-build-") as temporary:
-        metadata = Path(temporary) / "metadata.json"
-        output = (
-            f"type=image,name={repository}:{tag}-platform,push=true,"
-            "rewrite-timestamp=true,oci-mediatypes=true"
-        )
-        if insecure:
-            output += ",registry.insecure=true"
-        subprocess.run(
-            [
-                "docker",
-                "buildx",
-                "build",
-                "--builder",
-                builder,
-                "--platform",
-                "linux/amd64",
-                "--provenance=false",
-                "--sbom=false",
-                "--no-cache",
-                "--build-arg",
-                f"SOURCE_DATE_EPOCH={epoch}",
-                "--metadata-file",
-                str(metadata),
-                "--output",
-                output,
-                str(root / "postgres"),
-            ],
-            check=True,
-        )
-        platform_digest = json.loads(metadata.read_text())["containerimage.digest"]
+    with normalized_postgres_context(root):
+        with tempfile.TemporaryDirectory(prefix="florabase-postgres-build-") as temporary:
+            metadata = Path(temporary) / "metadata.json"
+            output = (
+                f"type=image,name={repository}:{tag}-platform,push=true,"
+                "rewrite-timestamp=true,oci-mediatypes=true"
+            )
+            if insecure:
+                output += ",registry.insecure=true"
+            subprocess.run(
+                [
+                    "docker",
+                    "buildx",
+                    "build",
+                    "--builder",
+                    builder,
+                    "--platform",
+                    "linux/amd64",
+                    "--provenance=false",
+                    "--sbom=false",
+                    "--no-cache",
+                    "--build-arg",
+                    f"SOURCE_DATE_EPOCH={epoch}",
+                    "--metadata-file",
+                    str(metadata),
+                    "--output",
+                    output,
+                    str(root / "postgres"),
+                ],
+                check=True,
+            )
+            platform_digest = json.loads(metadata.read_text())["containerimage.digest"]
     if not DIGEST.fullmatch(platform_digest):
         raise ValueError("PostgreSQL build reported no platform digest")
     subprocess.run(
@@ -243,6 +263,91 @@ def build_postgres_image(
     return {"index_digest": index["digest"], "platform_digest": platform_digest}
 
 
+def build_application_image(
+    root: Path,
+    builder: str,
+    service: str,
+    candidate: str,
+    version: str,
+    revision: str,
+    epoch: int,
+    sbom_generator: str,
+    metadata: Path,
+) -> str:
+    """Run the exact protected production build arguments and return its immutable index ref."""
+    if service not in {"backend", "frontend"}:
+        raise ValueError("unsupported production image target")
+    subprocess.run(
+        [
+            "docker",
+            "buildx",
+            "build",
+            "--builder",
+            builder,
+            "--platform",
+            "linux/amd64",
+            "--target",
+            "runtime",
+            "--push",
+            "--provenance=mode=max",
+            "--attest=type=sbom,generator=" + sbom_generator,
+            "--metadata-file",
+            str(metadata),
+            "--tag",
+            candidate,
+            "--build-arg",
+            "VERSION=" + version,
+            "--build-arg",
+            "REVISION=" + revision,
+            "--build-arg",
+            "SOURCE=" + SOURCE,
+            "--build-arg",
+            f"SOURCE_DATE_EPOCH={epoch}",
+            str(root / service),
+        ],
+        check=True,
+    )
+    digest = json.loads(metadata.read_text())["containerimage.digest"]
+    if not isinstance(digest, str) or not DIGEST.fullmatch(digest):
+        raise ValueError(f"{service} build reported no immutable index digest")
+    return candidate.rsplit(":", 1)[0] + "@" + digest
+
+
+def promote_image(reference: str, tag: str, registry_host: str = "ghcr.io") -> str:
+    """Promote a tested immutable image to a tag and prove that the digest is unchanged."""
+    image_repository = reference.split("@")[0]
+    if not re.fullmatch(re.escape(registry_host) + r"/[a-z0-9_./-]+", image_repository):
+        raise ValueError("promotion reference is outside the selected registry")
+    subprocess.run(
+        [
+            "docker",
+            "buildx",
+            "imagetools",
+            "create",
+            "--prefer-index=false",
+            "--tag",
+            image_repository + ":" + tag,
+            reference,
+        ],
+        check=True,
+    )
+    promoted = json.loads(
+        run(
+            "docker",
+            "buildx",
+            "imagetools",
+            "inspect",
+            image_repository + ":" + tag,
+            "--format",
+            "{{json .Manifest}}",
+        )
+    )
+    digest = reference.split("@")[1]
+    if promoted["digest"] != digest:
+        raise ValueError("promotion changed immutable image identity")
+    return digest
+
+
 def require_pinned_postgres(built: dict[str, str], pg: dict[str, Any]) -> None:
     for field in ("index_digest", "platform_digest"):
         if built[field] != pg[field]:
@@ -251,8 +356,97 @@ def require_pinned_postgres(built: dict[str, str], pg: dict[str, Any]) -> None:
             )
 
 
+def save_postgres_oci_evidence(repository_tag: str, port: int, destination: Path) -> None:
+    """Retain hash-checked raw OCI index, platform manifest and config descriptors."""
+    index_bytes = subprocess.check_output(
+        ["docker", "buildx", "imagetools", "inspect", repository_tag, "--raw"]
+    )
+    index_descriptor = json.loads(
+        run(
+            "docker",
+            "buildx",
+            "imagetools",
+            "inspect",
+            repository_tag,
+            "--format",
+            "{{json .Manifest}}",
+        )
+    )
+    index_digest = index_descriptor.get("digest")
+    index_candidates = (index_bytes, index_bytes.removesuffix(b"\n"))
+    index_raw = next(
+        (
+            value
+            for value in index_candidates
+            if "sha256:" + hashlib.sha256(value).hexdigest() == index_digest
+        ),
+        None,
+    )
+    if not isinstance(index_digest, str) or index_raw is None:
+        raise ValueError("could not capture the raw PostgreSQL OCI index")
+    index = json.loads(index_raw)
+    native = [
+        item
+        for item in index.get("manifests", [])
+        if item.get("platform") == {"architecture": "amd64", "os": "linux"}
+    ]
+    if len(native) != 1:
+        raise ValueError("PostgreSQL index must contain exactly one amd64 manifest")
+    platform_digest = native[0]["digest"]
+    repository = repository_tag.rsplit(":", 1)[0]
+    platform_bytes = subprocess.check_output(
+        [
+            "docker",
+            "buildx",
+            "imagetools",
+            "inspect",
+            repository + "@" + platform_digest,
+            "--raw",
+        ]
+    )
+    platform_raw = next(
+        (
+            value
+            for value in (platform_bytes, platform_bytes.removesuffix(b"\n"))
+            if "sha256:" + hashlib.sha256(value).hexdigest() == platform_digest
+        ),
+        None,
+    )
+    if platform_raw is None:
+        raise ValueError("PostgreSQL platform manifest bytes do not match their digest")
+    platform = json.loads(platform_raw)
+    config_digest = platform["config"]["digest"]
+    with urllib.request.urlopen(
+        f"http://127.0.0.1:{port}/v2/{repository.split('/', 1)[1]}/blobs/{config_digest}",
+        timeout=30,
+    ) as response:
+        config_raw = response.read()
+    if "sha256:" + hashlib.sha256(config_raw).hexdigest() != config_digest:
+        raise ValueError("PostgreSQL config bytes do not match their digest")
+    evidence = {
+        "index_digest": index_digest,
+        "platform_digest": platform_digest,
+        "configuration_digest": config_digest,
+        "index": index,
+        "platform_manifest": platform,
+        "configuration": json.loads(config_raw),
+        "layer_descriptors": platform["layers"],
+        "raw_documents_base64": {
+            "index": base64.b64encode(index_raw).decode("ascii"),
+            "platform_manifest": base64.b64encode(platform_raw).decode("ascii"),
+            "configuration": base64.b64encode(config_raw).decode("ascii"),
+        },
+    }
+    (destination / "postgres-oci-evidence.json").write_text(json.dumps(evidence, indent=2) + "\n")
+
+
 def local_postgres_identity(
-    root: Path, port: int = 5055, destination: str | None = None
+    root: Path,
+    port: int = 5055,
+    destination: str | None = None,
+    manage_registry: bool = True,
+    evidence_dir: Path | None = None,
+    buildkit_image: str | None = None,
 ) -> dict[str, str]:
     """Rebuild the derived image with the pinned BuildKit into a disposable loopback registry.
 
@@ -264,17 +458,19 @@ def local_postgres_identity(
     owner = Owner.disposable("verification-build", root)
     registry = owner.project + "-registry"
     builder = owner.project + "-builder"
-    repository = f"127.0.0.1:{port}/florabase-postgres"
+    repository_path = pg["repository"].removeprefix("ghcr.io/")
+    repository = f"127.0.0.1:{port}/{repository_path}"
     with Disposable(owner):
-        # Owned and labelled: the Disposable owner retires it, as for every workflow resource.
-        command = ["docker", "run", "-d", "--name", registry]
-        for key, value in owner.labels().items():
-            command.extend(["--label", key + "=" + value])
-        subprocess.run(
-            [*command, "-p", f"127.0.0.1:{port}:5000", REGISTRY_IMAGE],
-            check=True,
-            stdout=subprocess.DEVNULL,
-        )
+        if manage_registry:
+            # Owned and labelled: the Disposable owner retires it, as for every workflow resource.
+            command = ["docker", "run", "-d", "--name", registry]
+            for key, value in owner.labels().items():
+                command.extend(["--label", key + "=" + value])
+            subprocess.run(
+                [*command, "-p", f"127.0.0.1:{port}:5000", REGISTRY_IMAGE],
+                check=True,
+                stdout=subprocess.DEVNULL,
+            )
         subprocess.run(
             [
                 "docker",
@@ -285,7 +481,7 @@ def local_postgres_identity(
                 "--driver",
                 "docker-container",
                 "--driver-opt",
-                "image=" + locked["buildkit"],
+                "image=" + (buildkit_image or locked["buildkit"]),
                 "--driver-opt",
                 "network=host",
             ],
@@ -298,6 +494,12 @@ def local_postgres_identity(
             )
         finally:
             subprocess.run(["docker", "buildx", "rm", builder], check=False)
+        if evidence_dir is not None:
+            evidence_dir.mkdir(parents=True, exist_ok=True)
+            (evidence_dir / "postgres-build-identity.json").write_text(
+                json.dumps(built, indent=2) + "\n"
+            )
+            save_postgres_oci_evidence(repository + ":" + pg["version"], port, evidence_dir)
         if destination is not None:
             require_pinned_postgres(built, pg)
             subprocess.run(
@@ -337,9 +539,13 @@ def install_bundle(root: Path) -> dict[str, str]:
     }
 
 
-def registry_record(reference: str, platform: str) -> dict[str, str]:
-    if not re.fullmatch(r"ghcr\.io/[a-z0-9_./-]+@sha256:[a-f0-9]{64}", reference):
-        raise ValueError("application registry references must use GHCR digests")
+def registry_record(
+    reference: str, platform: str, registry_host: str = "ghcr.io"
+) -> dict[str, str]:
+    if not re.fullmatch(
+        re.escape(registry_host) + r"/[a-z0-9_./-]+@sha256:[a-f0-9]{64}", reference
+    ):
+        raise ValueError("application registry references must use an immutable registry digest")
     descriptor = json.loads(
         run(
             "docker", "buildx", "imagetools", "inspect", reference, "--format", "{{json .Manifest}}"
@@ -373,14 +579,31 @@ def registry_record(reference: str, platform: str) -> dict[str, str]:
     }
 
 
-def validate_manifest(value: dict[str, Any], local: bool = False) -> None:
+def validate_manifest(
+    value: dict[str, Any], local: bool = False, registry_host: str = "ghcr.io"
+) -> None:
     if not local:
         schema_path = Path(__file__).with_name("manifest.schema.json")
         if not schema_path.exists():
             schema_path = Path(__file__).resolve().parents[1] / "release/manifest.schema.json"
         validator = importlib.import_module("jsonschema")
         try:
-            validator.Draft202012Validator(read(schema_path)).validate(value)
+            schema = read(schema_path)
+            if registry_host != "ghcr.io":
+
+                def replace_registry(value: Any) -> Any:
+                    if isinstance(value, dict):
+                        return {key: replace_registry(item) for key, item in value.items()}
+                    if isinstance(value, list):
+                        return [replace_registry(item) for item in value]
+                    if isinstance(value, str):
+                        return value.replace(r"ghcr\.io", re.escape(registry_host)).replace(
+                            "ghcr.io", registry_host
+                        )
+                    return value
+
+                schema["properties"]["images"] = replace_registry(schema["properties"]["images"])
+            validator.Draft202012Validator(schema).validate(value)
         except validator.ValidationError as error:
             raise ValueError(
                 "release manifest violates published schema: " + error.message
@@ -418,7 +641,10 @@ def validate_manifest(value: dict[str, Any], local: bool = False) -> None:
             if not DIGEST.fullmatch(image["reference"]):
                 raise ValueError("local candidates must select exact image IDs")
         elif (
-            not re.fullmatch(r"ghcr\.io/[a-z0-9_./-]+@sha256:[a-f0-9]{64}", image["reference"])
+            not re.fullmatch(
+                re.escape(registry_host) + r"/[a-z0-9_./-]+@sha256:[a-f0-9]{64}",
+                image["reference"],
+            )
             or image["reference"].split("@")[1] != image["index_digest"]
             or not DIGEST.fullmatch(image["platform_digest"])
         ):
@@ -433,7 +659,13 @@ def validate_manifest(value: dict[str, Any], local: bool = False) -> None:
         raise ValueError("release manifest must bind the install bundle by SHA-256")
 
 
-def manifest(root: Path, refs: dict[str, str], local: bool) -> dict[str, Any]:
+def manifest(
+    root: Path,
+    refs: dict[str, str],
+    local: bool,
+    registry_host: str = "ghcr.io",
+    postgres_reference: str | None = None,
+) -> dict[str, Any]:
     locked = inputs(root, publication=not local)
     revision = run("git", "-C", str(root), "rev-parse", "HEAD")
     if not SHA.fullmatch(revision):
@@ -441,7 +673,11 @@ def manifest(root: Path, refs: dict[str, str], local: bool) -> dict[str, Any]:
     images: dict[str, Any] = {}
     if not local:
         pg = locked["postgresql"]
-        record = registry_record(f"{pg['repository']}@{pg['index_digest']}", "linux/amd64")
+        record = registry_record(
+            postgres_reference or f"{pg['repository']}@{pg['index_digest']}",
+            "linux/amd64",
+            registry_host=registry_host,
+        )
         if record["platform_digest"] != pg["platform_digest"]:
             raise ValueError("published PostgreSQL index does not hold the pinned platform image")
     for service, reference in refs.items():
@@ -449,7 +685,7 @@ def manifest(root: Path, refs: dict[str, str], local: bool) -> dict[str, Any]:
             image = json.loads(run("docker", "image", "inspect", reference))[0]
             images[service] = {"reference": image["Id"], "platform": "linux/amd64"}
         else:
-            images[service] = registry_record(reference, "linux/amd64")
+            images[service] = registry_record(reference, "linux/amd64", registry_host)
     result = {
         "schema_version": 2,
         "distribution": "local-candidate" if local else "registry-candidate",
@@ -477,12 +713,16 @@ def manifest(root: Path, refs: dict[str, str], local: bool) -> dict[str, Any]:
     }
     if not local and result["source"]["dirty"]:
         raise ValueError("publication requires a clean accepted commit")
-    validate_manifest(result, local)
+    validate_manifest(result, local, registry_host)
     return result
 
 
 def run_artifact_smoke(
-    artifact: Path, local: bool, log: IO[str] | None = None, postgres_image: str | None = None
+    artifact: Path,
+    local: bool,
+    log: IO[str] | None = None,
+    postgres_image: str | None = None,
+    registry_host: str = "ghcr.io",
 ) -> None:
     """Let the artifact child unwind its resource owner when the parent is interrupted."""
     command = [
@@ -495,6 +735,10 @@ def run_artifact_smoke(
         if not postgres_image:
             raise ValueError("local artifact smoke needs the locally built PostgreSQL image")
         command.extend(["--local", "--postgres-image", postgres_image])
+    elif registry_host != "ghcr.io":
+        command.extend(["--registry-host", registry_host])
+        if postgres_image:
+            command.extend(["--postgres-image", postgres_image])
     process = subprocess.Popen(
         command, cwd=artifact, stdout=log, stderr=subprocess.STDOUT if log else None
     )
@@ -537,6 +781,31 @@ def saved_descriptors(
             raise ValueError("invalid descriptor digest")
         return document("blobs/sha256/" + digest.removeprefix("sha256:"))
 
+    def registry_blob(repository: str, digest: str) -> dict[str, Any]:
+        if not DIGEST.fullmatch(digest):
+            raise ValueError("invalid registry descriptor digest")
+        data = subprocess.check_output(
+            ["docker", "buildx", "imagetools", "inspect", repository + "@" + digest, "--raw"]
+        )
+        # The CLI terminates its raw JSON output with a display newline.
+        candidates = (data, data.removesuffix(b"\n"))
+        payload = next(
+            (
+                value
+                for value in candidates
+                if "sha256:" + hashlib.sha256(value).hexdigest() == digest
+            ),
+            None,
+        )
+        if payload is None:
+            raise ValueError("registry descriptor digest mismatch")
+        result = json.loads(payload)
+        if not isinstance(result, dict):
+            raise ValueError("invalid registry descriptor")
+        return result
+
+    registry_repository = None
+    raw_index: dict[str, Any] | None = None
     if "index.json" not in saved.getnames():
         # Classic Docker saves config/layers without OCI descriptors. Registry release
         # inputs still have an authoritative index/native manifest to bind those bytes.
@@ -544,37 +813,58 @@ def saved_descriptors(
             raise ValueError("OCI image store required for local descriptor retention")
         repository, index_digest = reference.split("@")
 
-        def registry_blob(digest: str) -> dict[str, Any]:
-            if not DIGEST.fullmatch(digest):
-                raise ValueError("invalid registry descriptor digest")
-            data = subprocess.check_output(
-                ["docker", "buildx", "imagetools", "inspect", repository + "@" + digest, "--raw"]
+        index = registry_blob(repository, index_digest)
+        raw_index = index
+        if "manifests" not in index:
+            # A raw registry response may be a manifest document, not an index. Resolve the
+            # root through the same descriptor view used by manifest construction, while
+            # retaining the raw response for diagnosis. registry_record enforces the exact
+            # index/native pair.
+            record = registry_record(
+                reference,
+                "linux/amd64",
+                registry_host=reference.split("/", maxsplit=1)[0],
             )
-            # The CLI terminates its raw JSON output with a display newline.
-            candidates = (data, data.removesuffix(b"\n"))
-            payload = next(
-                (
-                    value
-                    for value in candidates
-                    if "sha256:" + hashlib.sha256(value).hexdigest() == digest
-                ),
-                None,
+            if record["index_digest"] != index_digest:
+                raise ValueError("registry root descriptor differs from selected image digest")
+            index = json.loads(
+                run(
+                    "docker",
+                    "buildx",
+                    "imagetools",
+                    "inspect",
+                    reference,
+                    "--format",
+                    "{{json .Manifest}}",
+                )
             )
-            if payload is None:
-                raise ValueError("registry descriptor digest mismatch")
-            result = json.loads(payload)
-            if not isinstance(result, dict):
-                raise ValueError("invalid registry descriptor")
-            return result
-
-        index = registry_blob(index_digest)
-        blob = registry_blob
+            if index.get("digest") != index_digest or "manifests" not in index:
+                raise ValueError("registry did not return the immutable OCI image index")
+        registry_repository = repository
     else:
         roots = document("index.json")["manifests"]
         if len(roots) != 1:
             raise ValueError("expected one exported image index")
         index_digest = roots[0]["digest"]
         index = blob(index_digest)
+        raw_index = index
+        if "manifests" not in index:
+            # Docker save can re-encode the registry layers as uncompressed tar blobs.
+            # The configuration binds their uncompressed digests, while the registry
+            # descriptors retain the separate distribution identity.
+            if not reference or "@" not in reference:
+                raise ValueError("OCI export root is not an image index")
+            repository, selected_digest = reference.rsplit("@", 1)
+            if index["config"]["digest"] != configuration_digest:
+                raise ValueError("saved OCI configuration identity mismatch")
+            config = blob(configuration_digest)
+            if [layer["digest"] for layer in index["layers"]] != config["rootfs"]["diff_ids"]:
+                raise ValueError("saved OCI layers differ from configuration")
+            index_digest = selected_digest
+            index = registry_blob(repository, index_digest)
+
+            registry_repository = repository
+
     native = [
         m
         for m in index["manifests"]
@@ -583,7 +873,11 @@ def saved_descriptors(
     if len(native) != 1:
         raise ValueError("expected one exported native platform")
     platform_digest = native[0]["digest"]
-    platform = blob(platform_digest)
+    platform = (
+        registry_blob(registry_repository, platform_digest)
+        if registry_repository
+        else blob(platform_digest)
+    )
     if platform["config"]["digest"] != configuration_digest:
         raise ValueError("native manifest/config identity mismatch")
     return {
@@ -591,6 +885,7 @@ def saved_descriptors(
         "platform_digest": platform_digest,
         "configuration_digest": configuration_digest,
         "index": index,
+        "raw_index_document": raw_index,
         "native_manifest": platform,
     }
 
@@ -746,6 +1041,117 @@ def release_asset_inventory(output: Path) -> dict[str, tuple[int, str]]:
     return {
         path.name: (path.stat().st_size, "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest())
         for path in files
+    }
+
+
+def prepare_release_assets(
+    root: Path, output: Path, version: str, sha: str
+) -> dict[str, tuple[int, str]]:
+    """Create the same source, install bundle and release notes used by protected publication."""
+    pg = inputs(root, publication=True)["postgresql"]
+    subprocess.run(
+        [
+            "git",
+            "archive",
+            "--format=tar.gz",
+            "--prefix=florabase-" + version + "/",
+            "--output",
+            str(output / ("florabase-" + version + "-source.tar.gz")),
+            sha,
+        ],
+        check=True,
+    )
+    for name in INSTALL_BUNDLE:
+        shutil.copyfile(root / "deploy/beta" / name, output / name)
+    (output / "RELEASE.md").write_text(
+        f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair and PostgreSQL passed native amd64 registry-pull smoke and the pinned Trivy gate (HIGH/CRITICAL vulnerabilities and secrets); that gate is a single scanner, and findings it does not report are recorded in docs/security/beta-distribution-001/postgresql-image.md at this source revision. PostgreSQL is the Florabase-built {pg['version']} image ({pg['reference']}): the official {pg['upstream']['reference']} without its gosu executable, which stays in an unchanged upstream layer but is absent from the container filesystem; it is identical in every release. Install with the attached {', '.join(INSTALL_BUNDLE)} and release-manifest.json as described in docs/installation.md at this source revision. This is a prerelease: no stable or latest tag is published. Never overwrite this release or delete its image identities.\n"
+    )
+    return release_asset_inventory(output)
+
+
+def release_attestation_inputs(
+    manifest: dict[str, Any],
+    refs: dict[str, str],
+    manifest_path: Path,
+    source_sha: str,
+    workflow: str,
+    asset_digests: dict[str, str],
+    registry_host: str = "ghcr.io",
+) -> dict[str, Any]:
+    """Validate the exact provenance subjects and file assets without creating attestations."""
+    if workflow != ".github/workflows/beta-images.yml":
+        raise ValueError("attestation workflow differs from protected publication")
+    expected = {"backend", "frontend", "postgresql"}
+    if set(refs) != expected or set(asset_digests) != set(INSTALL_BUNDLE):
+        raise ValueError("attestation subject set differs from the release contract")
+    if manifest.get("source", {}).get("dirty") is not False:
+        raise ValueError("attestation source must be a clean accepted revision")
+    revision = manifest.get("source", {}).get("revision")
+    if not isinstance(revision, str) or not SHA.fullmatch(revision) or revision != source_sha:
+        raise ValueError("attestation source revision is invalid")
+    subjects: dict[str, dict[str, str]] = {}
+    for service, reference in refs.items():
+        name, separator, digest = reference.partition("@")
+        if (
+            not separator
+            or not DIGEST.fullmatch(digest)
+            or not re.fullmatch(
+                re.escape(registry_host)
+                + r"/alessandrorossato/florabase-(?:backend|frontend|postgres)",
+                name,
+            )
+        ):
+            raise ValueError("attestation image subject is not an immutable Florabase image")
+        subjects[service] = {"name": name, "digest": digest}
+    if not all(DIGEST.fullmatch(value) for value in asset_digests.values()):
+        raise ValueError("attestation file asset hash is invalid")
+    manifest_digest = "sha256:" + hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+    return {
+        "workflow": workflow,
+        "source_sha": revision,
+        "subjects": subjects,
+        "file_subjects": asset_digests,
+        "release_manifest_sha256": manifest_digest,
+        "attestations_created": False,
+    }
+
+
+def release_finalization_inputs(
+    manifest: dict[str, Any],
+    source_sha: str,
+    assets: dict[str, tuple[int, str]],
+) -> dict[str, Any]:
+    """Validate the protected Release API request shape without contacting GitHub."""
+    version = manifest.get("version")
+    if (
+        not isinstance(version, str)
+        or not re.fullmatch(r"0\.1\.0-beta\.[1-9][0-9]*", version)
+        or manifest.get("source", {}).get("revision") != source_sha
+        or not SHA.fullmatch(source_sha)
+        or manifest.get("source", {}).get("dirty") is not False
+    ):
+        raise ValueError("Release API source, version or cleanliness input is invalid")
+    if (
+        not assets
+        or "RELEASE.md" not in assets
+        or any(
+            not re.fullmatch(r"[A-Za-z0-9._-]+", name) or size <= 0 or not DIGEST.fullmatch(digest)
+            for name, (size, digest) in assets.items()
+        )
+    ):
+        raise ValueError("Release API asset inventory is incomplete or malformed")
+    return {
+        "tag": "v" + version,
+        "target_commitish": source_sha,
+        "title": "Florabase v" + version,
+        "draft": True,
+        "prerelease": True,
+        "verify_tag": True,
+        "release_notes_sha256": assets["RELEASE.md"][1],
+        "assets": {
+            name: {"size": size, "sha256": digest} for name, (size, digest) in assets.items()
+        },
+        "release_api_called": False,
     }
 
 
