@@ -1,4 +1,4 @@
-# Installing Florabase (v0.1.0-beta.4)
+# Installing Florabase (v0.1.0-beta.5)
 
 This guide is for people who want to **run** Florabase on their own server from the published
 container images. You do not need the source code, Node.js, a Python development environment or a
@@ -6,9 +6,8 @@ compiler. To build and deploy from a checkout, see [source-build deployment](dep
 local development, see the [development guide](development.md).
 
 > **Beta status.** This guide names the assets for the private, single-owner
-> `v0.1.0-beta.4` prerelease. Proceed only when its GitHub Release and verified assets are
-> available. The beta.4 publication has not yet occurred. A Git tag or a workflow artifact alone
-> does not provide an installable release. Keep a tested backup before every upgrade.
+> `v0.1.0-beta.5` prerelease. Proceed only when its GitHub Release and verified assets are
+> available. Keep a tested backup before every upgrade.
 
 ## What you install
 
@@ -76,7 +75,7 @@ admin directory. Any download, attestation or digest failure stops the block.
 (
   set -e
   umask 077
-  tag=v0.1.0-beta.4
+  tag=v0.1.0-beta.5
   authorized_commit='<approved-40-character-commit>'
   [[ "$authorized_commit" =~ ^[0-9a-f]{40}$ ]]
   repo=alessandrorossato/florabase

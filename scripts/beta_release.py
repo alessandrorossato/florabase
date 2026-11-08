@@ -31,6 +31,7 @@ UPSTREAM_POSTGRES = "docker.io/library/postgres"
 POSTGRES_ENTRYPOINT = "florabase-postgres-entrypoint"
 # deploy/beta files attached to every release and bound by hash into the attested manifest.
 INSTALL_BUNDLE = ("compose.yaml", "florabasectl.py", "florabase.env.example")
+POSTGRES_SBOM = "postgresql-sbom.cdx.json"
 REGISTRY_IMAGE = (
     "registry:2.8.3@sha256:a3d8aaa63ed8681a604f1dea0aa03f100d5895b6a58ace528858a7b332415373"
 )
@@ -603,6 +604,10 @@ def validate_manifest(
                     return value
 
                 schema["properties"]["images"] = replace_registry(schema["properties"]["images"])
+                if value.get("workflow") == {"run_id": None, "run_attempt": None}:
+                    schema["properties"]["workflow"] = {
+                        "const": {"run_id": None, "run_attempt": None}
+                    }
             validator.Draft202012Validator(schema).validate(value)
         except validator.ValidationError as error:
             raise ValueError(
@@ -983,6 +988,34 @@ def software_bill_of_materials(reference: str, destination: Path, scanner: str) 
         destination.write_text(json.dumps(sbom, indent=2) + "\n")
 
 
+def require_remote_release_tag(repo: str, tag: str, sha: str) -> None:
+    """Resolve the live protected tag. Release target_commitish is unused for existing tags."""
+    if (
+        repo != SOURCE.removeprefix("https://github.com/")
+        or not re.fullmatch(r"v0\.1\.0-beta\.[1-9][0-9]*", tag)
+        or not SHA.fullmatch(sha)
+    ):
+        raise ValueError("invalid protected release tag identity")
+    endpoint = f"repos/{repo}/git"
+    ref = json.loads(run("gh", "api", f"{endpoint}/ref/tags/{tag}"))
+    if ref["ref"] != f"refs/tags/{tag}":
+        raise ValueError("GitHub returned a different release tag")
+    target = ref["object"]
+    for _ in range(8):
+        kind, oid = target["type"], target["sha"]
+        if not isinstance(oid, str) or not SHA.fullmatch(oid):
+            break
+        if kind == "commit" and oid == sha:
+            return
+        if kind != "tag":
+            break
+        annotated = json.loads(run("gh", "api", f"{endpoint}/tags/{oid}"))
+        if annotated["sha"] != oid:
+            break
+        target = annotated["object"]
+    raise ValueError("protected GitHub version tag does not select the approved source SHA")
+
+
 def locate_draft_release(repo: str, tag: str, sha: str) -> dict[str, Any]:
     """Authenticated listing includes drafts; the published-tag endpoint does not."""
     if (
@@ -1018,7 +1051,6 @@ def locate_draft_release(repo: str, tag: str, sha: str) -> dict[str, Any]:
             or value.get("id") != identity
             or value.get("tag_name") != tag
             or value.get("draft") is not True
-            or value.get("target_commitish") != sha
             or value.get("url") != f"https://api.github.com/repos/{repo}/releases/{identity}"
         ):
             raise ValueError("stale or inconsistent draft release identity")
@@ -1030,33 +1062,57 @@ def locate_draft_release(repo: str, tag: str, sha: str) -> dict[str, Any]:
         or any(asset.get("state") != "uploaded" for asset in assets)
     ):
         raise ValueError("invalid or incomplete draft asset identities")
+    require_remote_release_tag(repo, tag, sha)
     return release
 
 
 def release_asset_inventory(output: Path) -> dict[str, tuple[int, str]]:
     """Check predictable local asset failures before registry version promotion."""
-    files = list(output.iterdir())
-    if not files or any(not path.is_file() or path.is_symlink() for path in files):
+    files = sorted(output.iterdir())
+    if not files:
         raise ValueError("invalid local release asset inventory")
-    return {
-        path.name: (path.stat().st_size, "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest())
-        for path in files
-    }
+    result = {}
+    for path in files:
+        if (
+            path.is_symlink()
+            or not path.is_file()
+            or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", path.name)
+        ):
+            raise ValueError(f"invalid local release asset inventory entry: {path.name!r}")
+        with path.open("rb") as asset:
+            size = os.fstat(asset.fileno()).st_size
+            if not 0 < size < 2**31:
+                raise ValueError(f"invalid GitHub release asset size: {path.name} ({size} bytes)")
+            digest = hashlib.file_digest(asset, "sha256").hexdigest()
+        result[path.name] = (size, "sha256:" + digest)
+    return result
 
 
 def prepare_release_assets(
     root: Path, output: Path, version: str, sha: str
 ) -> dict[str, tuple[int, str]]:
     """Create the same source, install bundle and release notes used by protected publication."""
-    pg = inputs(root, publication=True)["postgresql"]
+    locked = inputs(root, publication=True)
+    if version != locked["version"] or not SHA.fullmatch(sha):
+        raise ValueError(
+            "release asset preparation requires the locked version and exact source SHA"
+        )
+    pg = locked["postgresql"]
+    archive = "florabase-" + version + "-source.tar.gz"
+    for name in (*INSTALL_BUNDLE, "RELEASE.md", archive):
+        path = output / name
+        if path.exists() or path.is_symlink():
+            raise ValueError(f"refuse to overwrite release asset: {name}")
     subprocess.run(
         [
             "git",
+            "-C",
+            str(root),
             "archive",
             "--format=tar.gz",
             "--prefix=florabase-" + version + "/",
             "--output",
-            str(output / ("florabase-" + version + "-source.tar.gz")),
+            str(output / archive),
             sha,
         ],
         check=True,
@@ -1081,8 +1137,11 @@ def release_attestation_inputs(
     """Validate the exact provenance subjects and file assets without creating attestations."""
     if workflow != ".github/workflows/beta-images.yml":
         raise ValueError("attestation workflow differs from protected publication")
-    expected = {"backend", "frontend", "postgresql"}
-    if set(refs) != expected or set(asset_digests) != set(INSTALL_BUNDLE):
+    if set(refs) != {
+        "backend",
+        "frontend",
+        "postgresql",
+    } or asset_digests != manifest.get("install_bundle"):
         raise ValueError("attestation subject set differs from the release contract")
     if manifest.get("source", {}).get("dirty") is not False:
         raise ValueError("attestation source must be a clean accepted revision")
@@ -1092,14 +1151,17 @@ def release_attestation_inputs(
     subjects: dict[str, dict[str, str]] = {}
     for service, reference in refs.items():
         name, separator, digest = reference.partition("@")
+        suffix = "postgres" if service == "postgresql" else service
+        expected = (
+            f"{registry_host}/alessandrorossato/florabase-postgres@{manifest['postgresql']['index_digest']}"
+            if service == "postgresql"
+            else manifest["images"][service]["reference"]
+        )
         if (
             not separator
             or not DIGEST.fullmatch(digest)
-            or not re.fullmatch(
-                re.escape(registry_host)
-                + r"/alessandrorossato/florabase-(?:backend|frontend|postgres)",
-                name,
-            )
+            or name != f"{registry_host}/alessandrorossato/florabase-{suffix}"
+            or reference != expected
         ):
             raise ValueError("attestation image subject is not an immutable Florabase image")
         subjects[service] = {"name": name, "digest": digest}
@@ -1131,13 +1193,17 @@ def release_finalization_inputs(
         or manifest.get("source", {}).get("dirty") is not False
     ):
         raise ValueError("Release API source, version or cleanliness input is invalid")
-    if (
-        not assets
-        or "RELEASE.md" not in assets
-        or any(
-            not re.fullmatch(r"[A-Za-z0-9._-]+", name) or size <= 0 or not DIGEST.fullmatch(digest)
-            for name, (size, digest) in assets.items()
-        )
+    if set(assets) != {
+        *INSTALL_BUNDLE,
+        "RELEASE.md",
+        "release-manifest.json",
+        POSTGRES_SBOM,
+        f"florabase-{version}-source.tar.gz",
+    } or any(
+        not re.fullmatch(r"[A-Za-z0-9._-]+", name)
+        or not 0 < size < 2**31
+        or not DIGEST.fullmatch(digest)
+        for name, (size, digest) in assets.items()
     ):
         raise ValueError("Release API asset inventory is incomplete or malformed")
     return {
@@ -1155,9 +1221,15 @@ def release_finalization_inputs(
     }
 
 
-def validate_release_assets(release: dict[str, Any], output: Path) -> None:
+def validate_release_assets(
+    release: dict[str, Any],
+    output: Path,
+    expected: dict[str, tuple[int, str]] | None = None,
+) -> None:
     """Require a complete private draft, including byte-bound evidence, before publication."""
     files = release_asset_inventory(output)
+    if expected is not None and files != expected:
+        raise ValueError("local release asset bytes changed after validation")
     assets = release.get("assets", [])
     if release.get("draft") is not True or len(assets) != len(files):
         raise ValueError("incomplete draft release")

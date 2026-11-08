@@ -1,3 +1,24 @@
+## 2026-11-08 — beta publication preflight recovery
+
+- Protected beta.4 run `42508727559` passed exhaustive verification and reached `smoke_passed`.
+  Its retained artifact contains `postgres-reproducibility/` alongside the flat release files.
+  The actual beta.4 preparation and inventory functions reproduced the failure on that directory.
+- Shared the staged publisher with local and hosted rehearsal. Publication validates an explicit
+  asset set and recorded digests, retains diagnostic evidence separately, and requires exact-main
+  CI, the forced migration cycle and hosted rehearsal before proceeding.
+- [Preflight, coverage matrix, checkpoint and retry policy](security/beta-distribution-001/release-publication-preflight.md).
+  The beta.4-layout preflight at `75d38c7` passed every local stage, including pinned PostgreSQL
+  reproduction, Trivy, artifact-only smoke, validation of seven assets and three local promotions.
+  Independent QA reproduced the old failure and recomputed all seven asset hashes. Its findings
+  led to the previous-main migration base and stricter finalization guards. Beta.5 is the next
+  candidate. The beta.4 tag still peels to `ea4f3ad3`. Read-only checks found no beta.5 Git tag,
+  release or application image tags. Focused release 56, tool lock 4 and verification impact 30
+  passed. Release-script Ruff and mypy, workflow actionlint, feature graph and API generation
+  passed. API declarations remained byte-identical. The initial canonical gate stopped at the
+  CI policy test before product stages. Updated its assertion for the main-only job while
+  preserving the three required PR jobs. The focused policy check passed. Final exact-tree
+  evidence is separate.
+
 ## 2026-11-08 — BETA4-PREP-001 release candidate preparation
 
 - Prepared the current release, backend, frontend and installation identities for `0.1.0-beta.4`;

@@ -464,7 +464,9 @@ class SelectionTests(unittest.TestCase):
             self.assertIn(f"python3 scripts/ci-verify.py {job} 2>&1 | tee", workflow)
         self.assertEqual(workflow.count("set -o pipefail"), 3)
         self.assertEqual(workflow.count("fetch-depth: 2"), 3)
-        self.assertEqual(workflow.count("if: always()"), 3)
+        self.assertEqual(workflow.count("if: always()"), 4)
+        self.assertIn("BASE_SHA: ${{ github.event.before }}", workflow)
+        self.assertIn('git merge-base --is-ancestor "$BASE_SHA" "$GITHUB_SHA"', workflow)
         result = subprocess.run(["bash", "-o", "pipefail", "-c", "exit 7 | cat"])
         self.assertEqual(result.returncode, 7)
 

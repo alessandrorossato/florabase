@@ -20,12 +20,7 @@ jobs:
   verify:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
-    env:
-      POSTGRES_DB: florabase_ci
-      POSTGRES_USER: florabase_ci
-      POSTGRES_PASSWORD: disposable-ci-password
-      FLORABASE_DATABASE_URL: postgresql+psycopg://florabase_ci:disposable-ci-password@db:5432/florabase_ci
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -42,26 +37,6 @@ jobs:
           version=$(python3 -c 'import json; print(json.load(open("release/inputs.json"))["version"])')
           test "$(git rev-parse "refs/tags/v${version}^{commit}")" = "$GITHUB_SHA"
           python3 scripts/beta-release-checks.py
-      # The buildx client writes the PostgreSQL index; pin the version that produced the pins.
-      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-        with:
-          version: v0.38.1
-          driver: docker
-          use: false
-      - name: Exhaustive verification of the selected commit
-        run: |
-          set -euo pipefail
-          {
-            make ci
-            ./scripts/verify-migration-cycle.sh HEAD --force-cycle
-          } 2>&1 | tee "$RUNNER_TEMP/beta-verification.log"
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        if: always()
-        with:
-          name: beta-verification-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/beta-verification.log
-          if-no-files-found: ignore
-          retention-days: 90
 
   publish:
     needs: verify
@@ -80,7 +55,6 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      # Same pinned buildx client as verification.
       # The buildx client writes the PostgreSQL index; pin the version that produced the pins.
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
         with:
@@ -97,7 +71,7 @@ jobs:
           test "$APPROVED_SHA" = "$GITHUB_SHA"
           test "$SELECTED_SHA" = "$GITHUB_SHA"
           python3 scripts/beta_release.py check --publication
-          python3 scripts/beta-release-checks.py
+          python3 scripts/beta-release-checks.py --identity-only
       - name: Build, scan and smoke immutable candidates; promote only the tested pair
         id: pair
         env:
@@ -106,56 +80,65 @@ jobs:
           APPROVED_SHA: ${{ secrets.RELEASE_APPROVED_SHA }}
         run: |
           set -euo pipefail
-          python3 scripts/release-tools.py scripts/publish-beta-images.py --output "$RUNNER_TEMP/beta-release"
-      - name: Attest exact backend index
+          python3 scripts/release-tools.py scripts/publish-beta-images.py --output "$RUNNER_TEMP/beta-release" \
+            2>&1 | tee "$RUNNER_TEMP/beta-publication.log"
+      - name: "ATTEST / Recheck the validated release assets"
+        id: attest_prepare
+        env:
+          APPROVED_SHA: ${{ secrets.RELEASE_APPROVED_SHA }}
+        run: python3 scripts/publish-beta-images.py --attestation-outcome prepare --output "$RUNNER_TEMP/beta-release"
+      - name: "ATTEST / exact backend index"
+        id: attest_backend
         uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
         with:
           subject-name: ${{ steps.pair.outputs.backend_name }}
           subject-digest: ${{ steps.pair.outputs.backend_digest }}
-      - name: Attest exact frontend index
+      - name: "ATTEST / exact frontend index"
+        id: attest_frontend
         uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
         with:
           subject-name: ${{ steps.pair.outputs.frontend_name }}
           subject-digest: ${{ steps.pair.outputs.frontend_digest }}
-      - name: Attest exact PostgreSQL index
+      - name: "ATTEST / exact PostgreSQL index"
+        id: attest_postgresql
         uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
         with:
           subject-name: ${{ steps.pair.outputs.postgresql_name }}
           subject-digest: ${{ steps.pair.outputs.postgresql_digest }}
-      - name: Attest install bundle files
+      - name: "ATTEST / install bundle files"
+        id: attest_bundle
         uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
         with:
           subject-path: |
-            ${{ runner.temp }}/beta-release/compose.yaml
-            ${{ runner.temp }}/beta-release/florabasectl.py
-            ${{ runner.temp }}/beta-release/florabase.env.example
-      - name: Attest release manifest
+            ${{ runner.temp }}/beta-release/assets/compose.yaml
+            ${{ runner.temp }}/beta-release/assets/florabasectl.py
+            ${{ runner.temp }}/beta-release/assets/florabase.env.example
+      - name: "ATTEST / release manifest"
+        id: attest_manifest
         uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
         with:
-          subject-path: ${{ runner.temp }}/beta-release/release-manifest.json
+          subject-path: ${{ runner.temp }}/beta-release/assets/release-manifest.json
+      - name: "ATTEST / Record the protected action outcomes"
+        if: ${{ !cancelled() && steps.attest_prepare.outcome == 'success' }}
+        env:
+          APPROVED_SHA: ${{ secrets.RELEASE_APPROVED_SHA }}
+          ALL_ATTESTED: ${{ steps.attest_backend.outcome == 'success' && steps.attest_frontend.outcome == 'success' && steps.attest_postgresql.outcome == 'success' && steps.attest_bundle.outcome == 'success' && steps.attest_manifest.outcome == 'success' }}
+        run: |
+          outcome=failed
+          if [[ "$ALL_ATTESTED" == true ]]; then outcome=passed; fi
+          python3 scripts/publish-beta-images.py --attestation-outcome "$outcome" --output "$RUNNER_TEMP/beta-release"
+      - name: "RELEASE / Create and validate the private draft, then publish"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APPROVED_SHA: ${{ secrets.RELEASE_APPROVED_SHA }}
+        run: python3 scripts/publish-beta-images.py --finalize --output "$RUNNER_TEMP/beta-release"
       - name: Retain immutable manifest, security reports and matching source
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
           name: beta-release-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/beta-release/
-          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/beta-release/
+            ${{ runner.temp }}/beta-publication.log
+          if-no-files-found: ignore
           retention-days: 90
-      - name: Create a new prerelease without modifying previous releases
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          version=$(python3 -c 'import json; print(json.load(open("release/inputs.json"))["version"])')
-          gh release create "v${version}" "$RUNNER_TEMP/beta-release/"* \
-            --verify-tag --target "$GITHUB_SHA" --draft --prerelease --title "Florabase v${version}" \
-            --notes-file "$RUNNER_TEMP/beta-release/RELEASE.md"
-          python3 - "$RUNNER_TEMP/beta-release" "v${version}" <<'PY'
-          import os, pathlib, subprocess, sys
-          sys.path.insert(0, "scripts")
-          from beta_release import locate_draft_release, validate_release_assets
-          repo = os.environ["GITHUB_REPOSITORY"]
-          release = locate_draft_release(repo, sys.argv[2], os.environ["GITHUB_SHA"])
-          validate_release_assets(release, pathlib.Path(sys.argv[1]))
-          subprocess.run(["gh", "api", "--method", "PATCH", f"repos/{repo}/releases/{release['id']}", "-F", "draft=false", "-F", "prerelease=true"], check=True)
-          PY
