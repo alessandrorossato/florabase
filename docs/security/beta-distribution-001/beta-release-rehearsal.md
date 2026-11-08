@@ -21,19 +21,34 @@ and layer count, but not its raw platform manifest or layer descriptor list. Con
 byte-level historical first difference can be asserted from the failed run's retained artifacts.
 The old job log shows the same pinned Dockerfile frontend, PostgreSQL base index/platform, zlib
 version, fixed `SOURCE_DATE_EPOCH`, and `rewrite-timestamp` export setting. Its locked
-`buildx-stable-1` BuildKit image ran BuildKit 0.33.1; the committed reproduction record names
-BuildKit 0.34.2. That builder change is the leading testable cause, not a proven explanation by
-itself: both versions reproduced the pin in separate local trials, so the GitHub-hosted comparison
-must decide it.
+`buildx-stable-1` BuildKit image ran BuildKit 0.33.1. The hosted run below proves BuildKit version
+was not the cause: pinned BuildKit 0.34.2 generated the same mismatch on GitHub Actions.
 
-The candidate correction restores the exact immutable BuildKit 0.34.2 input already named in the
-successful reproduction evidence. It leaves the PostgreSQL source/base/package pins, expected
-digests, exact identity check and non-root hardening unchanged. The rehearsal also rebuilds once
-with the exact previous beta.3 BuildKit image as a diagnostic. It retains hash-checked raw index,
-platform-manifest and config bytes plus descriptor-level layer digests for both builders.
-The diagnostic build is not sent through the pinned acceptance check, so a differing old-builder
-result is retained and compared instead of aborting before diagnosis. Only the two acceptance builds
-must reproduce both immutable PostgreSQL pins.
+The initial candidate restored the pinned BuildKit 0.34.2 input but did not solve the hosted
+mismatch. PR #155 rehearsal run `42474189742` reproduced index `e514d64b...`, platform manifest
+`72cb11d5...`, and config `e01ce338...` on the GitHub-hosted Ubuntu 24.04 image using Docker
+28.0.4, Buildx 0.38.1 and BuildKit 0.34.2. The pinned Dockerfile frontend, PostgreSQL base digest,
+zlib package, `SOURCE_DATE_EPOCH` and timestamp rewriting were all the expected values.
+
+The retained run artifact `beta-release-rehearsal-42474189742-1` contains the raw index, platform
+manifest, config and all layer descriptors. Comparing it with the successful pinned-builder OCI
+evidence locates the first difference in layer 12, the `COPY LICENSE` layer. Layers 1–11 and 13
+match. Hosted layer 12 is `sha256:fe684aec...`; the pinned reproduction is
+`sha256:ac8fe658...`. The config's corresponding `rootfs.diff_ids[11]` also differs, which changes
+the config, platform manifest and index digests. The repository's local checkout had presented
+`postgres/LICENSE` as mode 0664, while GitHub's checkout of the tracked 100644 file presents mode
+0644. A controlled rebuild with mode 0644 reproduced hosted `72cb11d5...` / `e514d64b...`; a
+rebuild with mode 0664 reproduced the pinned platform, config and index exactly. `COPY LICENSE`
+therefore inherited an unlocked source mode into layer 12. This explains why identical source and
+build tooling produced different identities across the local and hosted environments.
+
+The correction normalizes the context license to mode 0664 before each PostgreSQL build. This keeps
+the Dockerfile instruction and OCI history unchanged, preserving the pinned image identity. The
+regression test checks normalization from a 0644 checkout. The license is root-owned and the
+PostgreSQL process still runs as 70:70, so this group-write bit grants no write access to the runtime
+identity. Source/base/package pins, expected digests, the strict acceptance gate and other hardening
+are unchanged. The rehearsal records both clean builds and the previous-BuildKit diagnostic before
+applying the exact digest gate, so mismatches retain comparable evidence.
 
 ## Local rehearsal result (not hosted acceptance)
 
@@ -43,12 +58,9 @@ index `sha256:4edc079088c3f78b69fc8f9473e33881ebabea7fea2d82b3227b70a69ae3b7de` 
 `sha256:55b1969a7fddad118ca07a15058a43a5916dec3e4dbab38029e671225b392b91`. Their config digest was
 `sha256:ef74e207ea99325724ca33a7d80cef4d0bb4e58854781636185f274c3e18e02a`; all 13 layer descriptors
 matched. The index, platform manifest and config raw bytes also matched their respective digests.
-The two BuildKit versions were byte-identical at these OCI boundaries on this host. This falsifies
-BuildKit version alone as a sufficient local explanation and does not explain beta.3's GitHub-built
-index `sha256:e514d64b47dc14141baa8cb773e7fca128a7a1784d63738f87ebc384c45a85e8`. The failed run's
-historical raw documents were not retained, so its first differing byte is still unknown. The
-GitHub-hosted old-versus-pinned builder comparison must determine whether the runner environment or
-another build input caused that output; until then, the builder pin change is only a candidate fix.
+The two BuildKit versions were byte-identical at these OCI boundaries on this host. The later
+GitHub-hosted evidence identified the actual environment-dependent input as the copied license
+mode, rather than BuildKit version.
 
 The local report is marked `github_hosted: false`; it did not run the GHCR read-only check. Backend,
 frontend and PostgreSQL production builds, manifest validation, digest pulls, Trivy 0.69.3

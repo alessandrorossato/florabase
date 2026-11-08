@@ -265,6 +265,24 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(len(diagnostic_calls), 1)
         self.assertNotIn("destination", {keyword.arg for keyword in diagnostic_calls[0].keywords})
 
+    def test_rehearsal_retains_postgres_evidence_before_strict_pin_gate(self) -> None:
+        source = (ROOT / "scripts/rehearse-beta-release.py").read_text()
+        calls = [
+            node
+            for node in ast.walk(ast.parse(source))
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "local_postgres_identity"
+        ]
+        self.assertEqual(len(calls), 2)
+        for call in calls:
+            self.assertIn("evidence_dir", {keyword.arg for keyword in call.keywords})
+            self.assertNotIn("destination", {keyword.arg for keyword in call.keywords})
+        self.assertLess(
+            source.index('report["stages"]["previous_buildkit_diagnostic"]'),
+            source.index('require_pinned_postgres(identity, locked["postgresql"])'),
+        )
+
     def test_release_finalization_inputs_match_protected_draft_request_without_api_call(
         self,
     ) -> None:
@@ -657,6 +675,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(pinned["upstream"]["repository"], "docker.io/library/postgres")
         dockerfile = (ROOT / "postgres/Dockerfile").read_text()
         self.assertIn("\nFROM " + pinned["upstream"]["reference"] + "\n", dockerfile)
+        self.assertIn("COPY LICENSE /usr/share/licenses/florabase/LICENSE", dockerfile)
         self.assertIn("    && rm /usr/local/bin/gosu \\\n", dockerfile)
         # The upstream entrypoint (sourced first by docker-ensure-initdb.sh) refuses root too.
         self.assertIn("sed -i '1a florabase-postgres-refuse-root || exit 64'", dockerfile)
@@ -731,6 +750,19 @@ class ReleaseTests(unittest.TestCase):
                     self.assertFalse(marker.exists(), "upstream entrypoint must not run as root")
                 else:
                     self.assertEqual(marker.read_text(), "upstream-entrypoint postgres\n")
+
+    def test_postgres_build_context_normalizes_checkout_license_mode(self) -> None:
+        import beta_release
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            license_path = root / "postgres/LICENSE"
+            license_path.parent.mkdir()
+            license_path.write_text("license")
+            license_path.chmod(0o644)
+            with beta_release.normalized_postgres_context(root):
+                self.assertEqual(license_path.stat().st_mode & 0o777, 0o664)
+            self.assertEqual(license_path.stat().st_mode & 0o777, 0o644)
 
     def test_publication_attests_and_pins_postgres(self) -> None:
         workflow = (ROOT / ".github/workflows/beta-images.yml").read_text()

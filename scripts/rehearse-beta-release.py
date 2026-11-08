@@ -220,11 +220,9 @@ def main() -> None:
                     identity = local_postgres_identity(
                         root,
                         port=registry_port,
-                        destination=f"{pg_repository}:{candidate}-postgres-{number}",
                         manage_registry=False,
                         evidence_dir=evidence,
                     )
-                    require_pinned_postgres(identity, locked["postgresql"])
                     pg_builds.append(identity)
                     for item in evidence.iterdir():
                         item.replace(output / f"postgres-builder-{number}-{item.name}")
@@ -325,8 +323,21 @@ def main() -> None:
                 for item in legacy_evidence.iterdir():
                     item.replace(output / ("postgres-previous-toolchain-" + item.name))
                 legacy_evidence.rmdir()
+                try:
+                    for identity in pg_builds:
+                        require_pinned_postgres(identity, locked["postgresql"])
+                except ValueError as error:
+                    report["stages"]["postgresql_registry_identity"] = {
+                        "status": "failed",
+                        "builds": pg_builds,
+                        "error": str(error),
+                    }
+                    raise
                 pg_reference = pg_repository + "@" + pg_builds[0]["index_digest"]
-                report["stages"]["postgresql_registry_identity"] = "passed"
+                report["stages"]["postgresql_registry_identity"] = {
+                    "status": "passed",
+                    "builds": pg_builds,
+                }
 
                 refs: dict[str, str] = {}
                 epoch = int(run("git", "show", "-s", "--format=%ct", "HEAD"))

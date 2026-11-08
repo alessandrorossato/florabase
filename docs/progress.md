@@ -7720,3 +7720,11 @@ Status remains implemented pending canonical verification.
   its OCI evidence even when it differs from the pin; that build is diagnostic and does not weaken
   the exact acceptance check on the two pinned-toolchain rebuilds. A regression test guards this
   distinction. Focused `workflow-check` passes; final FULL is rerun on the resulting commit.
+- PR #155's first GitHub-hosted rehearsal (`42474189742`, artifact ID `13614289125`) ran on
+  `ubuntu-24.04` with Docker 28.0.4, Buildx 0.38.1 and the pinned BuildKit 0.34.2, and reproduced
+  the beta.3 mismatch. Its retained OCI evidence shows layers 1–11 and 13 match the pinned local
+  reproduction; layer 12 (`COPY LICENSE`) differs, as does `rootfs.diff_ids[11]`. The local checkout
+  presented `postgres/LICENSE` as 0664; forcing 0644 reproduced the hosted mismatch, while forcing
+  0664 reproduced the pinned platform, config and index. The build helper now normalizes this
+  context file to 0664 without changing Dockerfile history. A regression test checks normalization
+  from a 0644 checkout and evidence collection before the unchanged exact digest gate.

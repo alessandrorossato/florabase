@@ -15,6 +15,8 @@ import subprocess
 import tarfile
 import tempfile
 import urllib.request
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import IO, Any
 
@@ -173,6 +175,20 @@ def validate_postgres_identity(pg: dict[str, Any], repository: str = POSTGRES_RE
         raise ValueError("invalid PostgreSQL identity")
 
 
+@contextmanager
+def normalized_postgres_context(root: Path) -> Iterator[None]:
+    """Use the pinned LICENSE mode while building, then restore the checkout mode."""
+    license_path = root / "postgres/LICENSE"
+    if license_path.is_symlink() or not license_path.is_file():
+        raise ValueError("PostgreSQL LICENSE must be a regular context file")
+    original_mode = license_path.stat().st_mode & 0o777
+    license_path.chmod(0o664)
+    try:
+        yield
+    finally:
+        license_path.chmod(original_mode)
+
+
 def build_postgres_image(
     root: Path, builder: str, repository: str, tag: str, epoch: int, insecure: bool = False
 ) -> dict[str, str]:
@@ -181,37 +197,38 @@ def build_postgres_image(
     In-index provenance/SBOM attestations embed build times, so they are disabled here; the
     protected workflow attests the index with GitHub artifact attestations instead.
     """
-    with tempfile.TemporaryDirectory(prefix="florabase-postgres-build-") as temporary:
-        metadata = Path(temporary) / "metadata.json"
-        output = (
-            f"type=image,name={repository}:{tag}-platform,push=true,"
-            "rewrite-timestamp=true,oci-mediatypes=true"
-        )
-        if insecure:
-            output += ",registry.insecure=true"
-        subprocess.run(
-            [
-                "docker",
-                "buildx",
-                "build",
-                "--builder",
-                builder,
-                "--platform",
-                "linux/amd64",
-                "--provenance=false",
-                "--sbom=false",
-                "--no-cache",
-                "--build-arg",
-                f"SOURCE_DATE_EPOCH={epoch}",
-                "--metadata-file",
-                str(metadata),
-                "--output",
-                output,
-                str(root / "postgres"),
-            ],
-            check=True,
-        )
-        platform_digest = json.loads(metadata.read_text())["containerimage.digest"]
+    with normalized_postgres_context(root):
+        with tempfile.TemporaryDirectory(prefix="florabase-postgres-build-") as temporary:
+            metadata = Path(temporary) / "metadata.json"
+            output = (
+                f"type=image,name={repository}:{tag}-platform,push=true,"
+                "rewrite-timestamp=true,oci-mediatypes=true"
+            )
+            if insecure:
+                output += ",registry.insecure=true"
+            subprocess.run(
+                [
+                    "docker",
+                    "buildx",
+                    "build",
+                    "--builder",
+                    builder,
+                    "--platform",
+                    "linux/amd64",
+                    "--provenance=false",
+                    "--sbom=false",
+                    "--no-cache",
+                    "--build-arg",
+                    f"SOURCE_DATE_EPOCH={epoch}",
+                    "--metadata-file",
+                    str(metadata),
+                    "--output",
+                    output,
+                    str(root / "postgres"),
+                ],
+                check=True,
+            )
+            platform_digest = json.loads(metadata.read_text())["containerimage.digest"]
     if not DIGEST.fullmatch(platform_digest):
         raise ValueError("PostgreSQL build reported no platform digest")
     subprocess.run(
