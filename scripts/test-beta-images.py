@@ -1112,11 +1112,13 @@ class ReleaseTests(unittest.TestCase):
         native_digest = "sha256:" + hashlib.sha256(native_bytes).hexdigest()
         remote_native = json.dumps({**native, "annotations": {"source": "registry"}}).encode()
         remote_digest = "sha256:" + hashlib.sha256(remote_native).hexdigest()
-        index = json.dumps({
-            "manifests": [
-                {"digest": remote_digest, "platform": {"os": "linux", "architecture": "amd64"}}
-            ],
-        }).encode()
+        index = json.dumps(
+            {
+                "manifests": [
+                    {"digest": remote_digest, "platform": {"os": "linux", "architecture": "amd64"}}
+                ],
+            }
+        ).encode()
         index_digest = "sha256:" + hashlib.sha256(index).hexdigest()
         reference = "127.0.0.1:5000/owner/image@" + index_digest
         with tempfile.TemporaryFile() as data:
@@ -1131,7 +1133,9 @@ class ReleaseTests(unittest.TestCase):
                     saved.addfile(info, io.BytesIO(value))
             data.seek(0)
             with tarfile.open(fileobj=data) as saved:
-                with patch("beta_release.subprocess.check_output", side_effect=[index, remote_native]):
+                with patch(
+                    "beta_release.subprocess.check_output", side_effect=[index, remote_native]
+                ):
                     descriptors = saved_descriptors(saved, config, reference)
         self.assertEqual(descriptors["index_digest"], index_digest)
         self.assertEqual(descriptors["platform_digest"], remote_digest)
