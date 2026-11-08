@@ -7728,3 +7728,11 @@ Status remains implemented pending canonical verification.
   0664 reproduced the pinned platform, config and index. The build helper now normalizes this
   context file to 0664 without changing Dockerfile history. A regression test checks normalization
   from a 0644 checkout and evidence collection before the unchanged exact digest gate.
+- PR #155 hosted rehearsal run `42482904548` on `ubuntu-24.04` confirms the PostgreSQL correction:
+  both independent pinned-toolchain builds and the previous-BuildKit diagnostic matched platform
+  `sha256:55b1969a...` and index `sha256:4edc0790...`; all 13 layer digests matched. Backend and
+  frontend production builds plus release-manifest validation passed. The run then exposed a
+  separate registry evidence bug before Trivy: the classic `docker save` fallback indexed the
+  `imagetools inspect --raw` response as an OCI index although it had no `manifests` member. The
+  fallback now resolves and checks the root/native descriptors through the same immutable
+  registry identity path used by manifest construction and retains the raw response for review.

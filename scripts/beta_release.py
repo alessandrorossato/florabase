@@ -781,6 +781,7 @@ def saved_descriptors(
             raise ValueError("invalid descriptor digest")
         return document("blobs/sha256/" + digest.removeprefix("sha256:"))
 
+    raw_index: dict[str, Any] | None = None
     if "index.json" not in saved.getnames():
         # Classic Docker saves config/layers without OCI descriptors. Registry release
         # inputs still have an authoritative index/native manifest to bind those bytes.
@@ -812,6 +813,32 @@ def saved_descriptors(
             return result
 
         index = registry_blob(index_digest)
+        raw_index = index
+        if "manifests" not in index:
+            # A raw registry response may be a manifest document, not an index. Resolve the
+            # root through the same descriptor view used by manifest construction, while
+            # retaining the raw response for diagnosis. registry_record enforces the exact
+            # index/native pair.
+            record = registry_record(
+                reference,
+                "linux/amd64",
+                registry_host=reference.split("/", maxsplit=1)[0],
+            )
+            if record["index_digest"] != index_digest:
+                raise ValueError("registry root descriptor differs from selected image digest")
+            index = json.loads(
+                run(
+                    "docker",
+                    "buildx",
+                    "imagetools",
+                    "inspect",
+                    reference,
+                    "--format",
+                    "{{json .Manifest}}",
+                )
+            )
+            if index.get("digest") != index_digest or "manifests" not in index:
+                raise ValueError("registry did not return the immutable OCI image index")
         blob = registry_blob
     else:
         roots = document("index.json")["manifests"]
@@ -819,6 +846,7 @@ def saved_descriptors(
             raise ValueError("expected one exported image index")
         index_digest = roots[0]["digest"]
         index = blob(index_digest)
+        raw_index = index
     native = [
         m
         for m in index["manifests"]
@@ -835,6 +863,7 @@ def saved_descriptors(
         "platform_digest": platform_digest,
         "configuration_digest": configuration_digest,
         "index": index,
+        "raw_index_document": raw_index,
         "native_manifest": platform,
     }
 

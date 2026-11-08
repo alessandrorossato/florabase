@@ -1070,6 +1070,40 @@ class ReleaseTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "OCI image store required"):
                     saved_descriptors(saved, config, "local-candidate")
 
+    def test_classic_registry_export_resolves_index_when_raw_view_is_not_an_index(self) -> None:
+        config = "sha256:" + "a" * 64
+        native = json.dumps({"config": {"digest": config}}).encode()
+        native_digest = "sha256:" + hashlib.sha256(native).hexdigest()
+        raw_platform_view = json.dumps({"config": {}, "layers": []}).encode()
+        index_digest = "sha256:" + hashlib.sha256(raw_platform_view).hexdigest()
+        reference = "127.0.0.1:5000/owner/image@" + index_digest
+        index = {
+            "digest": index_digest,
+            "manifests": [
+                {
+                    "digest": native_digest,
+                    "platform": {"os": "linux", "architecture": "amd64"},
+                }
+            ],
+        }
+        with tempfile.TemporaryFile() as data:
+            with tarfile.open(fileobj=data, mode="w"):
+                pass
+            data.seek(0)
+            with tarfile.open(fileobj=data) as saved:
+                with (
+                    patch("beta_release.run", return_value=json.dumps(index)),
+                    patch(
+                        "beta_release.subprocess.check_output",
+                        side_effect=[raw_platform_view + b"\n", native + b"\n"],
+                    ),
+                ):
+                    descriptors = saved_descriptors(saved, config, reference)
+        self.assertEqual(descriptors["index_digest"], index_digest)
+        self.assertEqual(descriptors["platform_digest"], native_digest)
+        self.assertEqual(descriptors["configuration_digest"], config)
+        self.assertEqual(descriptors["raw_index_document"], json.loads(raw_platform_view))
+
     def test_registry_descriptor_requires_distinct_native_identity(self) -> None:
         digest = "sha256:" + "a" * 64
         native = {

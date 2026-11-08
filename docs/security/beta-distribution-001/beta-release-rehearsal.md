@@ -50,6 +50,18 @@ identity. Source/base/package pins, expected digests, the strict acceptance gate
 are unchanged. The rehearsal records both clean builds and the previous-BuildKit diagnostic before
 applying the exact digest gate, so mismatches retain comparable evidence.
 
+PR #155 run `42482904548` confirmed the fix on the hosted runner. Both clean PostgreSQL builds and
+the previous-BuildKit diagnostic matched the pinned index
+`sha256:4edc079088c3f78b69fc8f9473e33881ebabea7fea2d82b3227b70a69ae3b7de` and platform manifest
+`sha256:55b1969a7fddad118ca07a15058a43a5916dec3e4dbab38029e671225b392b91`; all 13 layer digests,
+the config and OCI documents matched. Backend/frontend production builds and manifest validation
+also passed. The run then stopped before scans because `saved_descriptors()` assumed the raw
+`imagetools inspect` response had an OCI index `manifests` array. The fallback now resolves the
+root index and native platform descriptors via the registry identity check already used by
+manifest construction, and retains the raw response alongside those descriptors. This remains a
+failed rehearsal until a hosted run passes the scans and the later smoke, bundle, promotion and
+release-input stages.
+
 ## Local rehearsal result (not hosted acceptance)
 
 On the TUXEDO, the corrected rehearsal completed against its owned loopback registry. Two independent
