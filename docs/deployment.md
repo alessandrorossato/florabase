@@ -47,10 +47,10 @@ media/database growth and backups in addition to measured application containers
 ```bash
 git clone https://github.com/alessandrorossato/florabase.git
 cd florabase
-if [ ! -e .env ]; then make setup; fi
+make setup
 ```
 
-`make setup` copies `.env.example` to `.env`. The guard preserves an existing configuration.
+`make setup` creates `.env` from `.env.example` and preserves an existing configuration.
 Replace the example database password in both `POSTGRES_PASSWORD` and `FLORABASE_DATABASE_URL`.
 Use a URL-safe password or percent-encode it in the URL. Git ignores the file.
 

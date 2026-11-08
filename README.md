@@ -65,9 +65,9 @@ Python 3 and `curl`. The development overlay uses Compose's `!override` tag. Hos
 
 For self-hosting, choose one installation path:
 
-- [Build from a source checkout](docs/deployment.md) using the repository's production Compose stack.
 - [Install the image-only beta](docs/installation.md) from verified release assets on linux/amd64.
-  Its separate Compose stack supports the older 2.20 baseline and works with Compose or Dockhand.
+  Its separate Compose stack supports the 2.20 baseline.
+- [Build from a source checkout](docs/deployment.md) using the repository's production Compose stack.
 
 Both paths require an operator-managed HTTPS reverse proxy and the exact public HTTPS origin.
 
@@ -76,10 +76,10 @@ Both paths require an operator-managed HTTPS reverse proxy and the exact public 
 Run this in the primary checkout:
 
 ```bash
-if [ ! -e .env ]; then make setup; fi
+make setup
 ```
 
-`make setup` copies `.env.example` to the ignored `.env` file. The guard preserves an existing
+`make setup` copies `.env.example` to the ignored `.env` file and preserves an existing
 configuration. Review the file and replace its example credentials before starting DEV.
 
 ```bash

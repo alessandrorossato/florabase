@@ -7698,3 +7698,33 @@ Status remains implemented pending canonical verification.
 - No live attestation verification, real-host beta acceptance or end-to-end source-build
   upgrade/restore drill was performed in this increment. Earlier disposable runtime evidence
   remains scoped to its recorded environment.
+
+### RELEASE-READINESS-001 — consolidation, installation and setup safety, 8 November 2026
+
+- Cherry-picked CI-HYGIENE-001 and DOCS-CORRECTNESS-001 in order. Both progress conflicts were
+  resolved by retaining the main release history and appending each workstream's evidence.
+- INSTALL-GUIDE-001 makes verified published images the primary operator path. It binds the four
+  asset attestations to the approved source commit, separates Linux, Synology, Dockhand and Tailscale
+  instructions, and covers explicit upgrades, interrupted operations and fresh-host recovery.
+- SETUP-SAFETY-001 keeps the guard and no-clobber copy in one recipe shell. The disposable
+  `make test-workflow-helpers` fixture passed for creation, mode preservation, repeated invocations
+  and a dangling symlink. `make test-verification-impact` passed all 30 tests, and the feature graph
+  validated 141 entries.
+- Independent QA matched both picked patches outside progress and checked shell syntax, controller
+  arguments and Markdown links. Delta QA passed after fixing the approved-commit attestation check,
+  the nginx and standalone Compose notes, restart ordering, and setup file permissions. The release
+  block succeeded with disposable stubs and rejected source, attestation and bundle digest errors.
+- The consolidated plan requires FULL. `make feature-verify` records the current result and receipt
+  in the worktree metadata. The first run's disclosure check rejected a realistic-looking
+  Tailscale example. The guide now uses explicit device and tailnet placeholders. Prior receipts
+  remain historical evidence. Published-image acceptance and Synology, Dockhand, Tailscale and
+  off-host recovery on a real host remain pending.
+
+- Resume audit: PR #155's passing stage journal totals 1,094.02 s, including 572.50 s for
+  integration and 364.12 s for quality. Pytest itself took 558.81 s in integration. The
+  [verification handoff](verification-fast-001-handoff.md#consolidation-audit-8-november-2026)
+  records the breakdown and follow-ups. Integration now logs its 20 slowest phases at or above
+  0.1 s using the existing pytest runner. The selected taxonomy migration file passed, printed
+  its slow test call and verified disposable cleanup. The planner suite passed 30 tests, and the
+  workflow helper suite and 141-feature graph passed. The plan still selects FULL. The final
+  consolidation gate and receipt remain pending.
