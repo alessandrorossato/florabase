@@ -7716,3 +7716,7 @@ Status remains implemented pending canonical verification.
   canonical gate reported zero residual owned containers, networks or volumes and wrote a valid
   receipt. GitHub-hosted rehearsal remains pending; do not mark the feature verified or prepare
   beta.4 until hosted evidence establishes the failed-run cause and the rehearsal passes there.
+- Before hosted delivery, the diagnostic path was corrected so the previous BuildKit build records
+  its OCI evidence even when it differs from the pin; that build is diagnostic and does not weaken
+  the exact acceptance check on the two pinned-toolchain rebuilds. A regression test guards this
+  distinction. Focused `workflow-check` passes; final FULL is rerun on the resulting commit.

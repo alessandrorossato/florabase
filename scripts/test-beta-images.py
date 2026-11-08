@@ -252,6 +252,19 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn('.removeprefix("ghcr.io/")', rehearsal)
         self.assertIn('pg["repository"].removeprefix("ghcr.io/")', builder)
 
+    def test_previous_buildkit_diagnostic_does_not_apply_the_pinned_acceptance_gate(self) -> None:
+        tree = ast.parse((ROOT / "scripts/rehearse-beta-release.py").read_text())
+        diagnostic_calls = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "local_postgres_identity"
+            and any(keyword.arg == "buildkit_image" for keyword in node.keywords)
+        ]
+        self.assertEqual(len(diagnostic_calls), 1)
+        self.assertNotIn("destination", {keyword.arg for keyword in diagnostic_calls[0].keywords})
+
     def test_release_finalization_inputs_match_protected_draft_request_without_api_call(
         self,
     ) -> None:

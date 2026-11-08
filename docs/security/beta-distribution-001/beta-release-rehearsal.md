@@ -31,6 +31,9 @@ successful reproduction evidence. It leaves the PostgreSQL source/base/package p
 digests, exact identity check and non-root hardening unchanged. The rehearsal also rebuilds once
 with the exact previous beta.3 BuildKit image as a diagnostic. It retains hash-checked raw index,
 platform-manifest and config bytes plus descriptor-level layer digests for both builders.
+The diagnostic build is not sent through the pinned acceptance check, so a differing old-builder
+result is retained and compared instead of aborting before diagnosis. Only the two acceptance builds
+must reproduce both immutable PostgreSQL pins.
 
 ## Local rehearsal result (not hosted acceptance)
 

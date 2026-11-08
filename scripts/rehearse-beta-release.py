@@ -243,7 +243,6 @@ def main() -> None:
                 legacy_identity = local_postgres_identity(
                     root,
                     port=registry_port,
-                    destination=f"{pg_repository}:{candidate}-previous-toolchain",
                     manage_registry=False,
                     evidence_dir=legacy_evidence,
                     buildkit_image=PREVIOUS_BUILDKit,
