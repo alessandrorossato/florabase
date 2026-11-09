@@ -107,6 +107,7 @@ def test_schema_uses_native_types_named_constraints_and_only_one_botanical_table
         "botanical_profiles",
         "botanical_profile_native_ranges",
         "collection_primary_photos",
+        "event_measurement_corrections",
         "events",
         "external_provider_cache",
         "media_assets",

@@ -12,13 +12,18 @@ import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { TaskDialog } from "../components/TaskDialog";
 import { StatusBadge } from "../components/WorkspaceUI";
-import { eventSourceLabel } from "./eventData";
+import {
+  eventSourceLabel,
+  formatPartialDate,
+  measurementText,
+} from "./eventData";
 import "./activity.css";
 import { FieldHelp } from "../components/ContextualHelp";
 import { locationsForScope, type LocationResponse } from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
 import { PhotosSection } from "../photos/PhotosSection";
 import { EventTargetPhoto } from "./EventTargetPhoto";
+import { HeightHistory } from "./HeightHistory";
 import type { PartialDate } from "../seed-lots/api";
 import {
   createEvent,
@@ -53,6 +58,9 @@ interface EventFormState {
   destinationLocationId: string;
   recipient: string;
   resultingPlantId: string;
+  measurementValue: string;
+  measurementUnit: "mm" | "cm" | "m";
+  measurementApproximate: boolean;
 }
 
 const eventKindLabels: Record<EventKind, string> = {
@@ -70,11 +78,12 @@ const eventKindLabels: Record<EventKind, string> = {
   death: "Death",
   loss: "Loss",
   discarded: "Discarded",
+  measurement: "Measurement",
   other: "Other",
 };
 
 const filterKinds: Record<Exclude<EventFilter, "all">, EventKind[]> = {
-  observations: ["observation", "flowering", "fruiting"],
+  observations: ["observation", "flowering", "fruiting", "measurement"],
   cultivation: [
     "movement",
     "repotting",
@@ -102,6 +111,9 @@ function blankForm(): EventFormState {
     destinationLocationId: "",
     recipient: "",
     resultingPlantId: "",
+    measurementValue: "",
+    measurementUnit: "cm",
+    measurementApproximate: false,
   };
 }
 
@@ -113,6 +125,9 @@ function formFrom(event: EventResponse): EventFormState {
     destinationLocationId: event.destination_location_id ?? "",
     recipient: event.recipient ?? "",
     resultingPlantId: event.resulting_plant_id ?? "",
+    measurementValue: event.measurement?.value ?? "",
+    measurementUnit: event.measurement?.unit ?? "cm",
+    measurementApproximate: event.measurement?.is_approximate ?? false,
   };
 }
 
@@ -264,6 +279,27 @@ export function EventJournal({
       });
       return;
     }
+    const measuring = form.kind === "measurement";
+    if (measuring && !form.occurredOn) {
+      setMutation({
+        status: "error",
+        message:
+          "Enter when this height was measured. Year or month precision is fine.",
+      });
+      return;
+    }
+    const height = form.measurementValue.trim();
+    if (
+      measuring &&
+      (!/^\d+(\.\d{1,3})?$/.test(height) || Number(height) <= 0)
+    ) {
+      setMutation({
+        status: "error",
+        message:
+          "Enter the height as a positive number with up to 3 decimal places, using a point for decimals (for example 12.5).",
+      });
+      return;
+    }
     const payload = {
       kind: form.kind,
       occurred_on: form.occurredOn,
@@ -276,6 +312,14 @@ export function EventJournal({
         form.kind === "extraction" || form.kind === "reintegration"
           ? form.resultingPlantId
           : null,
+      measurement: measuring
+        ? {
+            quantity: "height" as const,
+            value: height,
+            unit: form.measurementUnit,
+            is_approximate: form.measurementApproximate,
+          }
+        : null,
     };
     setMutation({ status: "pending" });
     try {
@@ -453,6 +497,7 @@ export function EventJournal({
               ),
             )}
           </fieldset>
+          <HeightHistory events={visible} />
           {visible.length === 0 ? (
             <p>No Journal entries match this filter.</p>
           ) : (
@@ -569,6 +614,39 @@ export function EventJournal({
                         {item.destination_location.display_path}
                       </p>
                     )}
+                    {item.measurement && (
+                      <p className="event-destination">
+                        <strong>{measurementText(item.measurement)}</strong>
+                      </p>
+                    )}
+                    {item.measurement_corrections.length > 0 && (
+                      // Earlier values stay traceable; chart and table use only the current one.
+                      <details className="event-corrections">
+                        <summary>
+                          Corrected {item.measurement_corrections.length}{" "}
+                          {item.measurement_corrections.length === 1
+                            ? "time"
+                            : "times"}
+                        </summary>
+                        <ol>
+                          {item.measurement_corrections.map(
+                            (correction, index) => (
+                              <li
+                                key={`${correction.replaced_at}-${String(index)}`}
+                              >
+                                {index === 0 ? "Originally" : "Then"}{" "}
+                                {measurementText(correction.measurement)} on{" "}
+                                {formatPartialDate(correction.occurred_on)};
+                                replaced{" "}
+                                <time dateTime={correction.replaced_at}>
+                                  {correction.replaced_at.slice(0, 10)}
+                                </time>
+                              </li>
+                            ),
+                          )}
+                        </ol>
+                      </details>
+                    )}
                     {item.recipient && (
                       <p className="event-destination">
                         <strong>Recipient:</strong> {item.recipient}
@@ -664,8 +742,9 @@ export function EventJournal({
                 {(Object.keys(eventKindLabels) as EventKind[])
                   .filter(
                     (kind) =>
-                      !["extraction", "reintegration"].includes(kind) ||
-                      (editor !== "create" && editor.kind === kind),
+                      (!["extraction", "reintegration"].includes(kind) ||
+                        (editor !== "create" && editor.kind === kind)) &&
+                      (kind !== "measurement" || targetKind === "plant"),
                   )
                   .map((kind) => (
                     <option value={kind} key={kind}>
@@ -674,9 +753,10 @@ export function EventJournal({
                   ))}
               </select>
               <FieldHelp id={`event-kind-help-${targetId}`}>
-                Choose Observation or Other for a note. Movement and lifecycle
-                entries also change current state when created. Use the owning
-                Harvest or operation workflow for structured records.
+                Choose Observation or Other for a note, or Measurement for a
+                dated Plant height. Movement and lifecycle entries also change
+                current state when created. Use the owning Harvest or operation
+                workflow for structured records.
               </FieldHelp>
             </div>
             <PartialDateField
@@ -689,9 +769,9 @@ export function EventJournal({
               }}
             />
             <p className="field-help">
-              When did this happen? Keep the date unknown or use year/month
-              precision when needed. Recording time does not establish an
-              occurrence date.
+              {form.kind === "measurement"
+                ? "When was this measured? A date is required; year or month precision is fine when the day is not known."
+                : "When did this happen? Keep the date unknown or use year/month precision when needed. Recording time does not establish an occurrence date."}
             </p>
             {form.kind === "movement" && (
               <div className="field">
@@ -725,6 +805,71 @@ export function EventJournal({
                   ))}
                 </select>
               </div>
+            )}
+            {form.kind === "measurement" && (
+              <fieldset className="field">
+                <legend>Height</legend>
+                <div className="sowing-fast-fields">
+                  <div className="field">
+                    <FieldLabel required htmlFor={`event-height-${targetId}`}>
+                      Value
+                    </FieldLabel>
+                    <input
+                      id={`event-height-${targetId}`}
+                      inputMode="decimal"
+                      aria-required="true"
+                      value={form.measurementValue}
+                      disabled={pending}
+                      onChange={(event) => {
+                        const measurementValue = event.currentTarget.value;
+                        setForm((current) => ({
+                          ...current,
+                          measurementValue,
+                        }));
+                      }}
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`event-height-unit-${targetId}`}>
+                      Unit
+                    </label>
+                    <select
+                      id={`event-height-unit-${targetId}`}
+                      value={form.measurementUnit}
+                      disabled={pending}
+                      onChange={(event) => {
+                        const measurementUnit = event.currentTarget
+                          .value as EventFormState["measurementUnit"];
+                        setForm((current) => ({ ...current, measurementUnit }));
+                      }}
+                    >
+                      <option value="mm">mm</option>
+                      <option value="cm">cm</option>
+                      <option value="m">m</option>
+                    </select>
+                  </div>
+                </div>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={form.measurementApproximate}
+                    disabled={pending}
+                    onChange={(event) => {
+                      const measurementApproximate =
+                        event.currentTarget.checked;
+                      setForm((current) => ({
+                        ...current,
+                        measurementApproximate,
+                      }));
+                    }}
+                  />
+                  Approximate (estimated, not measured)
+                </label>
+                <p className="field-help">
+                  Ground or potting-mix surface to the highest living tip. The
+                  value keeps the decimal places and unit you enter.
+                </p>
+              </fieldset>
             )}
             {form.kind === "transfer" && (
               <div className="field">

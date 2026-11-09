@@ -231,6 +231,19 @@ def test_observations_confirm_and_metadata_preserved(
         record.label = "A corrected label"
         for event_kind in ("observation", "flowering", "fruiting"):
             db.add(Event(**{f"{kind}_id": record.id}, kind=event_kind, notes="Retain me"))
+        if kind == "plant":
+            db.add(
+                Event(
+                    plant_id=record.id,
+                    kind="measurement",
+                    occurred_on_precision="year",
+                    occurred_on_year=2026,
+                    measurement_quantity="height",
+                    measurement_value=Decimal("8"),
+                    measurement_unit="cm",
+                    measurement_is_approximate=False,
+                )
+            )
         db.commit()
     assert (
         read(browser, path(kind, result_id) + "/creation-reversal")["status"]
@@ -242,7 +255,7 @@ def test_observations_confirm_and_metadata_preserved(
     code, _, result = undo(browser, kind, result_id, True)
     assert code == 200, result
     assert result[kind]["notes"] == "Keep my notes"
-    assert len(read(browser, path(kind, result_id) + "/events")) == 3
+    assert len(read(browser, path(kind, result_id) + "/events")) == (4 if kind == "plant" else 3)
 
 
 @pytest.mark.parametrize(

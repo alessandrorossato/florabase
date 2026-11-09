@@ -3303,6 +3303,7 @@ export interface components {
             /** Destination Location Id */
             destination_location_id?: string | null;
             kind: components["schemas"]["EventKind"];
+            measurement?: components["schemas"]["Measurement-Input"] | null;
             /** Notes */
             notes?: string | null;
             occurred_on?: components["schemas"]["PartialDate"] | null;
@@ -3315,7 +3316,7 @@ export interface components {
          * EventKind
          * @enum {string}
          */
-        EventKind: "observation" | "movement" | "repotting" | "flowering" | "fruiting" | "pruning" | "treatment" | "harvest" | "extraction" | "reintegration" | "transfer" | "death" | "loss" | "discarded" | "other";
+        EventKind: "observation" | "movement" | "repotting" | "flowering" | "fruiting" | "pruning" | "treatment" | "harvest" | "extraction" | "reintegration" | "transfer" | "death" | "loss" | "discarded" | "measurement" | "other";
         /** EventResponse */
         EventResponse: {
             /**
@@ -3337,6 +3338,12 @@ export interface components {
              */
             id: string;
             kind: components["schemas"]["EventKind"];
+            measurement?: components["schemas"]["Measurement-Output"] | null;
+            /**
+             * Measurement Corrections
+             * @default []
+             */
+            measurement_corrections: components["schemas"]["MeasurementCorrectionResponse"][];
             /** Notes */
             notes: string | null;
             occurred_on: components["schemas"]["PartialDate"] | null;
@@ -3362,6 +3369,7 @@ export interface components {
             /** Destination Location Id */
             destination_location_id?: string | null;
             kind: components["schemas"]["EventKind"];
+            measurement?: components["schemas"]["Measurement-Input"] | null;
             /** Notes */
             notes?: string | null;
             occurred_on?: components["schemas"]["PartialDate"] | null;
@@ -4138,6 +4146,11 @@ export interface components {
             state: "active" | "depleted";
         };
         JsonValue: unknown;
+        /**
+         * LengthUnit
+         * @enum {string}
+         */
+        LengthUnit: "mm" | "cm" | "m";
         /** LineageResponse */
         LineageResponse: {
             /** Ancestors */
@@ -4436,6 +4449,51 @@ export interface components {
          * @enum {string}
          */
         MaterialKind: "fruit" | "flower" | "leaf" | "root" | "seed" | "stem_or_shoot" | "whole_plant" | "other";
+        /** Measurement */
+        "Measurement-Input": {
+            /**
+             * Is Approximate
+             * @default false
+             */
+            is_approximate: boolean;
+            quantity: components["schemas"]["MeasurementQuantity"];
+            unit: components["schemas"]["LengthUnit"];
+            /** Value */
+            value: number | string;
+        };
+        /** Measurement */
+        "Measurement-Output": {
+            /**
+             * Is Approximate
+             * @default false
+             */
+            is_approximate: boolean;
+            quantity: components["schemas"]["MeasurementQuantity"];
+            unit: components["schemas"]["LengthUnit"];
+            /**
+             * Value
+             * @description An exact non-negative decimal serialized as a JSON string.
+             */
+            value: string;
+        };
+        /**
+         * MeasurementCorrectionResponse
+         * @description The measurement as recorded before a correction replaced it at `replaced_at`.
+         */
+        MeasurementCorrectionResponse: {
+            measurement: components["schemas"]["Measurement-Output"];
+            occurred_on: components["schemas"]["PartialDate"];
+            /**
+             * Replaced At
+             * Format: date-time
+             */
+            replaced_at: string;
+        };
+        /**
+         * MeasurementQuantity
+         * @enum {string}
+         */
+        MeasurementQuantity: "height";
         /** NativeRangeIdentity */
         NativeRangeIdentity: {
             /** Common Name */
@@ -5771,7 +5829,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "observation" | "flowering" | "fruiting";
+            kind: "observation" | "flowering" | "fruiting" | "measurement";
             /** Notes */
             notes: string | null;
             occurred_on: components["schemas"]["PartialDate"] | null;

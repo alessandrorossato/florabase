@@ -163,5 +163,6 @@ export const eventKinds = [
   "death",
   "loss",
   "discarded",
+  "measurement",
   "other",
 ];

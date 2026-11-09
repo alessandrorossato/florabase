@@ -2580,6 +2580,24 @@
       "dependencies": ["BETA-DISTRIBUTION-001", "BETA-RUNTIME-001"],
       "priority": "P1",
       "status": "implemented"
+    },
+    {
+      "id": "MEASUREMENT-001",
+      "category": "event",
+      "description": "Record and browse longitudinal Plant height measurements as typed Journal Events",
+      "acceptance_criteria": [
+        "A documented contract defines measurable subject, quantity, unit, PartialDate precision, correction, uncertainty and retention; measurements reuse Event, Journal and History without a separate event system or per-trait Plant columns",
+        "Height measurements on individual Plants persist an exact positive decimal with its recorded unit (mm, cm or m), approximation flag and required PartialDate; incompatible units, PlantGroup targets, missing dates and invalid values are refused by API validation and database constraints",
+        "Corrections update the same Event non-destructively for current state; measurements are retainable observations for reintegration and propagation reversal, and History shows quantity, value and unit",
+        "The Plant detail Journal shows a responsive accessible height history table and a chart that never invents day precision for month or year dates",
+        "Focused backend, migration and frontend tests demonstrate two dated measurements, a correction and a rejected invalid measurement"
+      ],
+      "dependencies": [
+        "EVENT-002",
+        "HISTORY-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
     }
   ]
 }

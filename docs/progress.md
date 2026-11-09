@@ -7989,3 +7989,82 @@ Status remains implemented pending canonical verification.
 - Source UAT used synthetic data. Actual source inventory and operator review,
   an authorized published bundle, and Synology acceptance remain outstanding.
   BETA-DATA-001 remains in progress.
+
+### MEASUREMENT-001 — structured Plant height history, 8 November 2026
+
+- Registered MEASUREMENT-001 after confirming no backlog item covered roadmap theme 4. The
+  [measurement contract](measurements.md) defines subject, quantity, unit, PartialDate precision,
+  correction, uncertainty and retention. A measurement is a `measurement` Event, so Journal,
+  History, photos and correction rules are reused; Plant gains no columns.
+- Height slice: individual Plants only; exact positive decimal with preserved resolution; `mm`,
+  `cm` or `m` stored as recorded; `is_approximate`; required PartialDate of any precision.
+  Migration 0043 adds four generic Event columns and `ck_events_measurement`; downgrade refuses
+  while measurement Events exist. Measurements are retainable observations for reintegration and
+  propagation reversal. History context reads `Height: 0.3 m (approximate)`.
+- The Plant Journal shows a Height history table and an SVG chart. Day dates are dots; month and
+  year dates span their whole period; approximate values are dashed or hollow.
+- Feature Review demonstration on synthetic data: 12.50 cm on 2026-03-14, an approximate 0.3 m in
+  2026-06, a refused `1,2`, and a correction to 125 mm on the same Event. History listed both.
+  The 375 px layout had no horizontal overflow.
+- Independent read-only QA found no blockers. Fixed: the 200 m bound is now also a database CHECK
+  (an implausible row would otherwise break Journal reads), the chart end label uses the latest
+  period end, the reversal confirmation names measurements, and measurement date help states that
+  a date is required. Scientific-notation input is normalized to plain decimals. Added tests for a
+  PlantGroup-target row, the database bound and propagation reversal retaining a measurement.
+- Focused checks: backend ruff, mypy and unit suite (1,025 passed, coverage 90.09%); integration
+  for measurements, events, Plants, propagation reversal, History, event migration and autogenerate
+  parity; frontend lint, typecheck and 117 Plant, Journal and propagation tests (full suite 1,222
+  passed before the final copy changes). Status stays `implemented` until the operator approves
+  the domain decisions in the contract: Event-kind storage, Plant-only subject, required date and
+  overwrite-in-place correction. Unchecked: light-theme chart rendering.
+- Rebased onto `origin/main` after #158 without conflicts. The first FULL gate passed every stage
+  before integration, where the golden SMOKE baseline had no reviewed pin for 0043. The reviewed
+  digest changed only the schema revision, `canonical_sha256` and the `events` table hash (still 20
+  rows; the four new columns are NULL), with no completion problems. The pin and
+  [TEST-DATA-001 design](test-data-001-design.md) now record the new values.
+- Operator domain review approved Event storage, Plant-only subject and a required PartialDate,
+  and asked for a correction audit trail. No existing infrastructure keeps durable revisions:
+  History is explicitly not an audit log, and OperationReceipts snapshot reversible operations
+  one-to-one. Migration 0044 adds the append-only `event_measurement_corrections` table, owned
+  by `events`. Under a row lock, a correction that changes value, resolution, unit, approximation
+  or date first copies the stored measurement with its PartialDate precision and UTC
+  `replaced_at`. Chart and table show only the current value; the Journal card lists the trail.
+  Explicit Event deletion cascades the trail. Lineage, reintegration and reversal are unchanged.
+- The single-field tests exposed a defect in the first slice: the ORM treated `12.5` and `12.50` as
+  equal and skipped resolution-only corrections. The value column is now always written.
+- The first SMOKE re-pin had also set the COMPREHENSIVE block's revision to 0043 without new hashes.
+  COMPREHENSIVE is back at its reviewed `20261013_0042`, which is `baseline-unavailable` until a
+  manual re-pin, per policy. SMOKE is pinned at 0044; the only table change is the new empty one.
+- Focused checks: backend ruff and mypy; 161 integration tests (measurements, golden SMOKE, events,
+  Plants, History, propagation reversal, autogenerate parity), then 34 after the lock and
+  persistence fixes; frontend lint, typecheck and the full suite (1,222). Independent QA reported
+  no blockers. Its lock-ordering note and test gaps are addressed.
+
+### MEASUREMENT-001 — PR #163 release rehearsal recovery, 9 November 2026
+
+- The hosted rehearsal failed with "versioned GHCR image already exists" because v0.1.0-beta.5 is
+  published. Ported only the rehearsal policy from MULTIBRANCH-UAT-001 commit `7de4080`
+  (`beta-release-rehearsal.yml`, `rehearse-beta-release.py`, `test-beta-images.py`, byte-identical):
+  a change is a release candidate unless its base names the same `release/inputs.json` version.
+  Candidates and protected publication keep the strict reuse refusal; the PostgreSQL identity gate
+  is unchanged. No measurement code, migration or golden baseline changed.
+- Checks: `make test-beta-images` (58 + 4), `make workflow-check`; independent delta QA passed.
+
+### MEASUREMENT-001 — integrate current main into PR #163, 9 November 2026
+
+- Merged main at `7665df3` into the published feature history at `db2ca96`.
+  Resolved `docs/features.json` and `docs/progress.md` by keeping both histories
+  and all 146 feature records. API regeneration produced the merged artifacts
+  byte for byte and the drift check passed. The release rehearsal policy and
+  Portable Compose inputs match main.
+- The Alembic chain advances from main's `20261013_0042` through
+  `20261108_0043` to `20261109_0044`. Two freshly generated SMOKE copies
+  matched the reviewed 0044 baseline. COMPREHENSIVE retains its reviewed 0042
+  pin and reports baseline unavailable at 0044.
+- Focused PostgreSQL regressions passed (176 tests across measurements, Events,
+  Plants, History, propagation reversal, import/export and golden fixtures),
+  with zero residual disposable resources. Focused frontend regressions passed
+  (114 tests across Plants, Events and propagation). Independent detached QA
+  reproduced both conflicts, compared both parents, and passed the 50 UAT and
+  62 release policy and tooling tests. Canonical FULL evidence belongs to the
+  exact committed-tree receipt.

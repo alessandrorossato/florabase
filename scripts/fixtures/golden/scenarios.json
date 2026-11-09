@@ -72,10 +72,10 @@
           "provenance.without_coordinates": 1
         },
         "baseline": {
-          "schema_revision": "20261013_0042",
+          "schema_revision": "20261109_0044",
           "volume": 12,
           "plan_sha256": "5afd6ffe46fce10ac62b1ef1233c9944d8c206bef9d407ce4396b5e6ce64b0d7",
-          "canonical_sha256": "70a1b1ae037cdfce7fa494096bbb557e266cfe7df5780183acda2c7d8dbef967",
+          "canonical_sha256": "7398e0dc2235679a8edf121528cbfc39fe395970a446a26ecf2ae9636d4d8d79",
           "media_files": 3,
           "media_sha256": "d3583210516d857e6f7c8c8c78a2c3e051d8fe31d001bb0f420c226bc5b39f6e",
           "scenario_keys_sha256": "e7d0d666d58604b23a8d3a8d8cd661b839265743501ad742225c3998a9ec7ffa",
@@ -108,9 +108,13 @@
               "rows": 2,
               "sha256": "a09a156a8621f8e1f06a3e152de5034e1406c11edd8726cae4948964170ee3e3"
             },
+            "event_measurement_corrections": {
+              "rows": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
             "events": {
               "rows": 20,
-              "sha256": "09a838fe23d97643672e70774fe09e64da53b5ced0610c6983b2bb00a6f80456"
+              "sha256": "50e16c893080329d454c99cb9244ef957f28bb6065ffed4aae91973af2d66883"
             },
             "external_provider_cache": {
               "rows": 1,

@@ -1039,8 +1039,21 @@ def test_reintegration_restores_receipt_snapshot_and_retains_history(
     )
 
 
+@pytest.mark.parametrize(
+    "entry",
+    [
+        {"kind": "observation", "notes": "New leaf"},
+        {
+            "kind": "measurement",
+            "occurred_on": {"precision": "year", "year": 2026},
+            "measurement": {"quantity": "height", "value": "8", "unit": "cm"},
+        },
+    ],
+)
 def test_reintegration_confirmation_retains_observations(
-    authenticated_browser: tuple[str, str], plant_references: dict[str, str]
+    authenticated_browser: tuple[str, str],
+    plant_references: dict[str, str],
+    entry: dict[str, object],
 ) -> None:
     _, _, group = mutate(
         authenticated_browser,
@@ -1062,7 +1075,7 @@ def test_reintegration_confirmation_retains_observations(
         authenticated_browser,
         "POST",
         f"/api/v1/plants/{plant_id}/events",
-        {"kind": "observation", "notes": "New leaf"},
+        entry,
     )[2]
     cookie, _ = authenticated_browser
     eligibility = request(

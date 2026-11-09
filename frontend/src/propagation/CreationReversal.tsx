@@ -259,8 +259,8 @@ export function CreationReversal({
                       />
                       I confirm that{" "}
                       {eligibility.retained_observation_ids.length} observation,
-                      flowering, or fruiting records will remain attached to
-                      this historical result.
+                      flowering, fruiting, or measurement records will remain
+                      attached to this historical result.
                     </label>
                   )}
                   <details className="operation-explanation">

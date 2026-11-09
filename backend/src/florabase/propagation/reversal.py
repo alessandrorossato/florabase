@@ -27,7 +27,7 @@ RESULTS: dict[ResultType, tuple[type[Sowing] | type[Plant] | type[PlantGroup], O
     "plant": (Plant, OperationKind.SOWING_TO_PLANT),
     "plant_group": (PlantGroup, OperationKind.SOWING_TO_PLANT_GROUP),
 }
-RETAINABLE = {"observation", "flowering", "fruiting"}
+RETAINABLE = {"observation", "flowering", "fruiting", "measurement"}
 
 
 @dataclass(frozen=True)

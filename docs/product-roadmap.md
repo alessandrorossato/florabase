@@ -262,7 +262,7 @@ increment is selected and its queue priority is reviewed.
 | HIGH                | 1              | Material lineage                            | LINEAGE-003                                                    |
 | HIGH                | 2              | Accepted-name reconciliation/correction     | TAXONOMY-001                                                   |
 | HIGH                | 3              | Synonyms and BotanicalIdentity name history | TAXONOMY-002                                                   |
-| HIGH                | 4              | Measurements / growth history               | Theme; select bounded increment later.                         |
+| HIGH                | 4              | Measurements / growth history               | MEASUREMENT-001 (height slice); further quantities proposed.   |
 | HIGH                | 5              | Phenology                                   | Theme; EVENT-003 is related, not blanket implementation scope. |
 | HIGH                | 6              | Vegetative propagation / cuttings (talee)   | CUTTING-001; domain design required first.                     |
 | NEXT                | 7              | Recurring care plans                        | Theme building on delivered SCHEDULE-001/002.                  |

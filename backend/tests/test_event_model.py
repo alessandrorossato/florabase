@@ -22,6 +22,10 @@ def test_event_is_focused_uuidv7_mapping_with_exact_vocabulary() -> None:
         "recipient",
         "resulting_plant_id",
         "reversed_operation_receipt_id",
+        "measurement_quantity",
+        "measurement_value",
+        "measurement_unit",
+        "measurement_is_approximate",
         "created_at",
         "updated_at",
     ]
@@ -46,6 +50,7 @@ def test_event_is_focused_uuidv7_mapping_with_exact_vocabulary() -> None:
         "death",
         "loss",
         "discarded",
+        "measurement",
         "other",
     }
     assert "payload" not in Event.__table__.columns

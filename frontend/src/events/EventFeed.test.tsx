@@ -21,6 +21,7 @@ const event: EventResponse = {
   recipient: null,
   resulting_plant_id: null,
   resulting_plant: null,
+  measurement_corrections: [],
   created_at: "2026-09-30T00:00:00Z",
   updated_at: "2026-09-30T00:00:00Z",
 };

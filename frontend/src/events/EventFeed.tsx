@@ -6,7 +6,12 @@ import { RecordVisual } from "../photos/RecordVisual";
 import { precisionGroups } from "../timeline/almanac";
 
 import type { EventResponse } from "../collection/api";
-import { eventLabels, eventSourceLabel, formatPartialDate } from "./eventData";
+import {
+  eventLabels,
+  eventSourceLabel,
+  formatPartialDate,
+  measurementText,
+} from "./eventData";
 
 export function EventFeed({
   events,
@@ -62,6 +67,7 @@ export function EventFeed({
               </a>
             </p>
           )}
+          {event.measurement && <p>{measurementText(event.measurement)}</p>}
           {event.recipient && <p>Recipient: {event.recipient}</p>}
           {event.kind === "extraction" && event.resulting_plant && (
             <p>

@@ -195,6 +195,7 @@ function journalEvent(kind: string, overrides: Record<string, unknown> = {}) {
     recipient: null,
     resulting_plant_id: null,
     resulting_plant: null,
+    measurement_corrections: [] as unknown[],
     created_at: "2026-09-02T10:00:00Z",
     updated_at: "2026-09-02T10:00:00Z",
     ...overrides,
@@ -1906,9 +1907,13 @@ test("PlantGroup detail has the same responsive Event journal and a useful empty
   expect(
     screen.getByText(/observations, cultivation work/),
   ).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Add the first entry" }));
+  // A group value needs aggregation rules that are not decided yet.
   expect(
-    screen.getByRole("button", { name: "Add the first entry" }),
-  ).toBeInTheDocument();
+    within(screen.getByRole("dialog")).queryByRole("option", {
+      name: "Measurement",
+    }),
+  ).not.toBeInTheDocument();
 
   cleanup();
   vi.restoreAllMocks();
@@ -3356,5 +3361,161 @@ test("an entry=new deep link opens the record's own Journal form once and leaves
   expect(screen.getByRole("tab", { name: "Journal" })).toHaveAttribute(
     "aria-selected",
     "true",
+  );
+});
+
+test("height measurements are recorded, corrected and plotted without inventing day precision", async () => {
+  const march = { precision: "day", year: 2026, month: 3, day: 14 };
+  let events: ReturnType<typeof journalEvent>[] = [
+    journalEvent("measurement", {
+      id: `${eventId.slice(0, -2)}90`,
+      occurred_on: march,
+      measurement: {
+        quantity: "height",
+        value: "12.50",
+        unit: "cm",
+        is_approximate: false,
+      },
+    }),
+  ];
+  const writes: { method: string; payload: Record<string, unknown> }[] = [];
+  mockApi(
+    plantHandler([plant()], [], (path, init) => {
+      if (path === `/api/v1/plants/${plantId}/events`) {
+        if (init?.method === "POST") {
+          const payload = body(init);
+          writes.push({ method: "POST", payload });
+          const created = journalEvent("measurement", {
+            ...payload,
+            id: `${eventId.slice(0, -2)}91`,
+          });
+          events = [created, ...events];
+          return json(created, 201);
+        }
+        return json(events);
+      }
+      if (
+        path === `/api/v1/events/${events[1]?.id}` &&
+        init?.method === "PUT"
+      ) {
+        const payload = body(init);
+        writes.push({ method: "PUT", payload });
+        const replaced = {
+          measurement: {
+            quantity: "height",
+            value: "12.50",
+            unit: "cm",
+            is_approximate: false,
+          },
+          occurred_on: march,
+          replaced_at: "2026-11-09T08:00:00Z",
+        };
+        events = [
+          events[0],
+          {
+            ...events[1],
+            ...payload,
+            measurement_corrections: [replaced],
+          },
+        ];
+        return json(events[1]);
+      }
+      if (path === `/api/v1/plants/${plantId}`) return json(plant());
+      return undefined;
+    }),
+  );
+  const user = await openPlants();
+  await user.click(
+    await screen.findByRole("button", {
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
+  await assertDedicatedDetails();
+  await user.click(screen.getByRole("tab", { name: "Journal" }));
+  const history = await screen.findByRole("region", { name: "Height history" });
+  expect(within(history).getByText("12.50 cm")).toBeInTheDocument();
+  // One value is not a series: the table stays, the chart does not.
+  expect(within(history).queryByRole("img")).not.toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "Add entry" }));
+  await user.selectOptions(screen.getByLabelText("Entry type"), "measurement");
+  const dialog = screen.getByRole("dialog");
+  const submit = within(dialog).getByRole("button", { name: "Add entry" });
+  await user.type(screen.getByLabelText(/^Value/), "0.3");
+  await user.click(submit);
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Enter when this height was measured",
+  );
+  await user.selectOptions(screen.getByLabelText("Precision"), "month");
+  await user.clear(screen.getByLabelText("Year"));
+  await user.type(screen.getByLabelText("Year"), "2026");
+  await user.clear(screen.getByLabelText("Month"));
+  await user.type(screen.getByLabelText("Month"), "6");
+  await user.clear(screen.getByLabelText(/^Value/));
+  await user.type(screen.getByLabelText(/^Value/), "-3");
+  await user.click(submit);
+  expect(screen.getByRole("alert")).toHaveTextContent("positive number");
+  expect(writes).toHaveLength(0);
+  await user.clear(screen.getByLabelText(/^Value/));
+  await user.type(screen.getByLabelText(/^Value/), "0.3");
+  await user.selectOptions(screen.getByLabelText("Unit"), "m");
+  await user.click(screen.getByLabelText(/Approximate/));
+  await user.click(submit);
+  expect(
+    await screen.findByText("Journal entry was recorded."),
+  ).toBeInTheDocument();
+  expect(writes[0].payload).toMatchObject({
+    kind: "measurement",
+    occurred_on: { precision: "month", year: 2026, month: 6 },
+    measurement: {
+      quantity: "height",
+      value: "0.3",
+      unit: "m",
+      is_approximate: true,
+    },
+  });
+
+  const chart = within(
+    screen.getByRole("region", { name: "Height history" }),
+  ).getByRole("img");
+  expect(chart).toHaveAccessibleName(
+    "Height in m from 2026-03-14 to 2026-06, 2 measurements",
+  );
+  // The day value is a dot; the month value spans its month instead of a guessed day.
+  expect(chart.querySelectorAll("circle")).toHaveLength(1);
+  expect(chart.querySelectorAll("line.height-span")).toHaveLength(1);
+  expect(screen.getByText("Height: 0.3 m (approximate)")).toBeInTheDocument();
+
+  const original = screen
+    .getByText("Height: 12.50 cm")
+    .closest("li") as HTMLElement;
+  await user.click(within(original).getByRole("button", { name: "Edit" }));
+  expect(screen.getByLabelText(/^Value/)).toHaveValue("12.50");
+  await user.clear(screen.getByLabelText(/^Value/));
+  await user.type(screen.getByLabelText(/^Value/), "125");
+  await user.selectOptions(screen.getByLabelText("Unit"), "mm");
+  await user.click(screen.getByRole("button", { name: "Save changes" }));
+  expect(
+    await screen.findByText("Journal entry changes were saved."),
+  ).toBeInTheDocument();
+  expect(writes[1]).toMatchObject({
+    method: "PUT",
+    payload: {
+      kind: "measurement",
+      occurred_on: march,
+      measurement: { value: "125", unit: "mm", is_approximate: false },
+    },
+  });
+  expect(screen.getByText("Height: 125 mm")).toBeInTheDocument();
+  // The chart and table show only the current value; the original stays traceable.
+  const corrected = within(
+    screen.getByRole("region", { name: "Height history" }),
+  );
+  expect(corrected.getByText("125 mm")).toBeInTheDocument();
+  expect(corrected.queryByText("12.50 cm")).not.toBeInTheDocument();
+  const card = screen.getByText("Height: 125 mm").closest("li") as HTMLElement;
+  expect(within(card).getByText("Corrected 1 time")).toBeInTheDocument();
+  expect(card.querySelector(".event-corrections li")).toHaveTextContent(
+    "Originally Height: 12.50 cm on 2026-03-14; replaced 2026-11-09",
   );
 });
