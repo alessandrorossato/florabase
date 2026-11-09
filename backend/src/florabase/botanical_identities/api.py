@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, NoReturn
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
@@ -10,14 +10,25 @@ from florabase.auth.dependencies import (
     require_csrf,
     require_owner,
 )
+from florabase.botanical_identities.reconciliation import (
+    ReconciliationConflictError,
+    ReconciliationNotFoundError,
+    correct_accepted_name,
+    inspect_reconciliation,
+    merge_duplicate_identity,
+)
 from florabase.botanical_identities.schemas import (
+    AcceptedNameCorrectionWrite,
     BotanicalIdentityCreate,
     BotanicalIdentityResponse,
     BotanicalIdentityUpdate,
+    DuplicateIdentityMergeWrite,
+    IdentityReconciliationResponse,
 )
 from florabase.botanical_identities.service import (
     BotanicalIdentityConflictError,
     BotanicalIdentityCoverReferencedError,
+    BotanicalIdentityMergedError,
     BotanicalIdentityReferencedError,
     create_botanical_identity,
     delete_botanical_identity,
@@ -27,9 +38,53 @@ from florabase.botanical_identities.service import (
 )
 from florabase.collection_views.schemas import BotanicalIdentityCollectionResponse
 from florabase.collection_views.service import botanical_identity_collection
+from florabase.core.config import Settings, get_settings
 from florabase.db.session import get_database_session
+from florabase.native_range_enrichment.source import WcvpSource
+from florabase.taxonomy.source import WfoSource
 
 router = APIRouter(prefix="/botanical-identities", tags=["botanical identities"])
+
+
+def wfo_source_dependency(settings: Annotated[Settings, Depends(get_settings)]) -> WfoSource:
+    return WfoSource(settings.wfo_snapshot_path)
+
+
+def wcvp_v15_source_dependency(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> WcvpSource:
+    return WcvpSource(settings.wcvp_snapshot_path, "15")
+
+
+def wcvp_v16_source_dependency(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> WcvpSource:
+    return WcvpSource(settings.wcvp_v16_snapshot_path, "16")
+
+
+def _reconciliation_fail(error: Exception) -> NoReturn:
+    if isinstance(error, ReconciliationNotFoundError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "botanical_identity_not_found",
+                "message": "Botanical identity not found",
+            },
+        ) from error
+    if isinstance(error, ReconciliationConflictError):
+        detail: dict[str, object] = {
+            "code": error.code,
+            "message": error.message,
+        }
+        if error.existing_id is not None:
+            detail["existing_id"] = str(error.existing_id)
+        if error.conflicting_fields is not None:
+            detail["conflicting_fields"] = error.conflicting_fields
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=detail,
+        ) from error
+    raise error
 
 
 def _conflict_detail(existing_id: UUID | None) -> dict[str, str | None]:
@@ -176,12 +231,120 @@ def update(
         )
     try:
         updated = update_botanical_identity(database, botanical_identity, payload)
+    except BotanicalIdentityMergedError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "botanical_identity_merged",
+                "message": "Botanical identity has been merged into another identity",
+                "existing_id": str(error.merged_into_id),
+            },
+        ) from error
     except BotanicalIdentityConflictError as error:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=_conflict_detail(error.existing_id),
         ) from error
     return BotanicalIdentityResponse.from_model(updated)
+
+
+@router.get(
+    "/{botanical_identity_id}/reconciliation",
+    response_model=IdentityReconciliationResponse,
+    operation_id="getBotanicalIdentityReconciliation",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"description": "Authentication required"},
+        status.HTTP_404_NOT_FOUND: {"description": "Botanical identity not found"},
+    },
+)
+def read_reconciliation(
+    botanical_identity_id: UUID,
+    _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
+    wfo_source: Annotated[WfoSource, Depends(wfo_source_dependency)],
+    wcvp_v15_source: Annotated[WcvpSource, Depends(wcvp_v15_source_dependency)],
+    wcvp_v16_source: Annotated[WcvpSource, Depends(wcvp_v16_source_dependency)],
+) -> IdentityReconciliationResponse:
+    try:
+        return inspect_reconciliation(
+            database,
+            botanical_identity_id,
+            wfo_source=wfo_source,
+            wcvp_v15_source=wcvp_v15_source,
+            wcvp_v16_source=wcvp_v16_source,
+        )
+    except (ReconciliationNotFoundError, ReconciliationConflictError) as error:
+        _reconciliation_fail(error)
+
+
+@router.post(
+    "/{botanical_identity_id}/reconciliation/correct-name",
+    response_model=IdentityReconciliationResponse,
+    operation_id="correctBotanicalIdentityAcceptedName",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"description": "Authentication required"},
+        status.HTTP_403_FORBIDDEN: {"description": "Request forbidden"},
+        status.HTTP_404_NOT_FOUND: {"description": "Botanical identity not found"},
+        status.HTTP_409_CONFLICT: {"description": "Reconciliation conflict"},
+    },
+)
+def correct_name(
+    botanical_identity_id: UUID,
+    payload: AcceptedNameCorrectionWrite,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
+    wfo_source: Annotated[WfoSource, Depends(wfo_source_dependency)],
+    wcvp_v15_source: Annotated[WcvpSource, Depends(wcvp_v15_source_dependency)],
+    wcvp_v16_source: Annotated[WcvpSource, Depends(wcvp_v16_source_dependency)],
+) -> IdentityReconciliationResponse:
+    require_owner(actor)
+    try:
+        return correct_accepted_name(
+            database,
+            botanical_identity_id,
+            payload,
+            actor_user_id=actor.user_id,
+            wfo_source=wfo_source,
+            wcvp_v15_source=wcvp_v15_source,
+            wcvp_v16_source=wcvp_v16_source,
+        )
+    except (ReconciliationNotFoundError, ReconciliationConflictError) as error:
+        _reconciliation_fail(error)
+
+
+@router.post(
+    "/{botanical_identity_id}/reconciliation/merge-duplicate",
+    response_model=IdentityReconciliationResponse,
+    operation_id="mergeDuplicateBotanicalIdentity",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"description": "Authentication required"},
+        status.HTTP_403_FORBIDDEN: {"description": "Request forbidden"},
+        status.HTTP_404_NOT_FOUND: {"description": "Botanical identity not found"},
+        status.HTTP_409_CONFLICT: {"description": "Reconciliation conflict"},
+    },
+)
+def merge_duplicate(
+    botanical_identity_id: UUID,
+    payload: DuplicateIdentityMergeWrite,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
+    wfo_source: Annotated[WfoSource, Depends(wfo_source_dependency)],
+    wcvp_v15_source: Annotated[WcvpSource, Depends(wcvp_v15_source_dependency)],
+    wcvp_v16_source: Annotated[WcvpSource, Depends(wcvp_v16_source_dependency)],
+) -> IdentityReconciliationResponse:
+    require_owner(actor)
+    try:
+        return merge_duplicate_identity(
+            database,
+            botanical_identity_id,
+            payload,
+            actor_user_id=actor.user_id,
+            wfo_source=wfo_source,
+            wcvp_v15_source=wcvp_v15_source,
+            wcvp_v16_source=wcvp_v16_source,
+        )
+    except (ReconciliationNotFoundError, ReconciliationConflictError) as error:
+        _reconciliation_fail(error)
 
 
 @router.delete(

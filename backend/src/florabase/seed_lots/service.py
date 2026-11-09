@@ -85,7 +85,7 @@ def _require_references(
     PlantGroup | None,
 ]:
     botanical_identity = database.get(BotanicalIdentity, payload.botanical_identity_id)
-    if botanical_identity is None:
+    if botanical_identity is None or botanical_identity.merged_into_id is not None:
         raise SeedLotReferenceNotFoundError(
             "botanical_identity_not_found", "Botanical identity not found"
         )

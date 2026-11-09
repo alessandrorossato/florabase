@@ -81,15 +81,16 @@ async def asgi_request(
         elif message["type"] == "http.response.body":
             response_body.extend(message.get("body", b""))
 
+    path_only, _, query_str = path.partition("?")
     scope: Scope = {
         "type": "http",
         "asgi": {"version": "3.0"},
         "http_version": "1.1",
         "method": method,
         "scheme": "https",
-        "path": path,
-        "raw_path": path.encode("ascii"),
-        "query_string": b"",
+        "path": path_only,
+        "raw_path": path_only.encode("ascii"),
+        "query_string": query_str.encode("ascii"),
         "headers": raw_headers,
         "client": ("127.0.0.1", 1234),
         "server": ("florabase.example", 443),
@@ -545,3 +546,579 @@ def test_directory_counts_active_records_without_join_multiplication(
     assert by_id[second["id"]]["compact_external_cover_url"] is None
     directory_queries = [sql for sql in statements if "botanical_identities.scientific_name" in sql]
     assert len(directory_queries) == 1
+
+
+def test_reconciliation_inspects_sources_conflicts_and_corrects_accepted_name_in_place(
+    authenticated_browser: tuple[str, str],
+    database_connection: Connection,
+    tmp_path: Any,
+) -> None:
+    from datetime import UTC
+
+    from florabase.botanical_identities.api import (
+        wcvp_v15_source_dependency,
+        wcvp_v16_source_dependency,
+        wfo_source_dependency,
+    )
+    from florabase.external_botany.model import ExternalTaxonLink
+    from florabase.native_range_enrichment.snapshot import (
+        DISTRIBUTION_FIELDS,
+        NAMES_FIELDS,
+    )
+    from florabase.native_range_enrichment.snapshot import (
+        build_index as build_wcvp_index,
+    )
+    from florabase.native_range_enrichment.source import (
+        SourceMetadata as WcvpSourceMetadata,
+    )
+    from florabase.native_range_enrichment.source import (
+        WcvpSource,
+    )
+    from florabase.plants.model import Plant, PlantGroup
+    from florabase.seed_lots.model import SeedLot
+    from florabase.taxonomy import service as taxonomy_service
+    from florabase.taxonomy.schemas import TaxonomyLinkWrite
+    from florabase.taxonomy.snapshot import build_index as build_wfo_index
+    from florabase.taxonomy.source import CODE, ROOT, WfoMetadata, WfoSource
+
+    cookie, csrf_token = authenticated_browser
+    headers = {"cookie": cookie, "origin": ORIGIN, "x-csrf-token": csrf_token}
+
+    # Build WFO snapshot where "Lycopersicon esculentum" is a synonym of "Solanum lycopersicum"
+    wfo_path = tmp_path / "wfo.sqlite"
+    wfo_meta = WfoMetadata(retrieved_at="2026-10-09T14:48:29Z")
+    wfo_names = [
+        {"ID": ROOT, "scientificName": "Plantae", "authorship": "", "rank": "kingdom"},
+        {
+            "ID": "wfo-4000000001",
+            "scientificName": "Solanaceae",
+            "authorship": "",
+            "rank": "family",
+        },
+        {"ID": "wfo-4000000002", "scientificName": "Solanum", "authorship": "L.", "rank": "genus"},
+        {
+            "ID": "wfo-0001020304",
+            "scientificName": "Solanum lycopersicum",
+            "authorship": "L.",
+            "rank": "species",
+        },
+        {
+            "ID": "wfo-0009999999",
+            "scientificName": "Lycopersicon esculentum",
+            "authorship": "Mill.",
+            "rank": "species",
+        },
+    ]
+    wfo_concepts = [
+        {"ID": ROOT, "nameID": ROOT, "parentID": CODE},
+        {"ID": "wfo-4000000001", "nameID": "wfo-4000000001", "parentID": ROOT},
+        {"ID": "wfo-4000000002", "nameID": "wfo-4000000002", "parentID": "wfo-4000000001"},
+        {"ID": "wfo-0001020304", "nameID": "wfo-0001020304", "parentID": "wfo-4000000002"},
+    ]
+    wfo_synonyms = [
+        {"ID": "wfo-0009999999-2026-06", "nameID": "wfo-0009999999", "taxonID": "wfo-0001020304"}
+    ]
+    build_wfo_index(wfo_path, wfo_names, wfo_concepts, wfo_synonyms, wfo_meta)
+    wfo_source = WfoSource(wfo_path)
+
+    # Build WCVP v15 (synonym -> Solanum lycopersicum) and WCVP v16 (conflicting)
+    wcvp_v15_path = tmp_path / "wcvp_v15.sqlite"
+    build_wcvp_index(
+        wcvp_v15_path,
+        [
+            dict.fromkeys(NAMES_FIELDS, "")
+            | {
+                "plant_name_id": "10",
+                "taxon_name": "Lycopersicon esculentum",
+                "taxon_authors": "Mill.",
+                "taxon_rank": "Species",
+                "taxon_status": "Synonym",
+                "accepted_plant_name_id": "20",
+            },
+            dict.fromkeys(NAMES_FIELDS, "")
+            | {
+                "plant_name_id": "20",
+                "taxon_name": "Solanum lycopersicum",
+                "taxon_authors": "L.",
+                "taxon_rank": "Species",
+                "taxon_status": "Accepted",
+                "accepted_plant_name_id": "20",
+            },
+        ],
+        [
+            dict.fromkeys(DISTRIBUTION_FIELDS, "")
+            | {
+                "plant_locality_id": "1",
+                "plant_name_id": "20",
+                "area_code_l3": "PER",
+                "introduced": "0",
+                "extinct": "0",
+                "location_doubtful": "0",
+            }
+        ],
+        WcvpSourceMetadata.for_release("15", "2026-10-09T00:00:00Z"),
+    )
+    wcvp_v15 = WcvpSource(wcvp_v15_path, "15")
+
+    wcvp_v16_path = tmp_path / "wcvp_v16.sqlite"
+    build_wcvp_index(
+        wcvp_v16_path,
+        [
+            dict.fromkeys(NAMES_FIELDS, "")
+            | {
+                "plant_name_id": "10",
+                "taxon_name": "Lycopersicon esculentum",
+                "taxon_authors": "Mill.",
+                "taxon_rank": "Species",
+                "taxon_status": "Synonym",
+                "accepted_plant_name_id": "30",
+            },
+            dict.fromkeys(NAMES_FIELDS, "")
+            | {
+                "plant_name_id": "30",
+                "taxon_name": "Solanum pimpinellifolium",
+                "taxon_authors": "L.",
+                "taxon_rank": "Species",
+                "taxon_status": "Accepted",
+                "accepted_plant_name_id": "30",
+            },
+        ],
+        [
+            dict.fromkeys(DISTRIBUTION_FIELDS, "")
+            | {
+                "plant_locality_id": "1",
+                "plant_name_id": "30",
+                "area_code_l3": "PER",
+                "introduced": "0",
+                "extinct": "0",
+                "location_doubtful": "0",
+            }
+        ],
+        WcvpSourceMetadata.for_release("16", "2026-10-09T00:00:00Z"),
+    )
+    wcvp_v16 = WcvpSource(wcvp_v16_path, "16")
+
+    app.dependency_overrides[wfo_source_dependency] = lambda: wfo_source
+    app.dependency_overrides[wcvp_v15_source_dependency] = lambda: wcvp_v15
+    app.dependency_overrides[wcvp_v16_source_dependency] = lambda: wcvp_v16
+
+    _, _, created = create_identity(
+        authenticated_browser,
+        {
+            "scientific_name": "Lycopersicon esculentum",
+            "cultivar_name": "San Marzano",
+            "common_name": "Plum tomato",
+        },
+    )
+    identity_id = UUID(created["id"])
+
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        seed_lot = SeedLot(botanical_identity_id=identity_id)
+        plant = Plant(botanical_identity_id=identity_id, direct_origin_kind="unknown")
+        group = PlantGroup(botanical_identity_id=identity_id, direct_origin_kind="unknown")
+        now = datetime.now(UTC)
+        taxonomy_service.confirm(
+            database,
+            identity_id,
+            TaxonomyLinkWrite(
+                source_taxon_id="wfo-0009999999",
+                checksum=wfo_meta.checksum,
+                expected_version=None,
+                identity_updated_at=datetime.fromisoformat(created["updated_at"]),
+            ),
+            wfo_source,
+        )
+        gbif_link = ExternalTaxonLink(
+            botanical_identity_id=identity_id,
+            provider="gbif",
+            external_id="2930137",
+            scientific_name="Lycopersicon esculentum Mill.",
+            canonical_name="Lycopersicon esculentum",
+            authorship="Mill.",
+            rank="SPECIES",
+            taxonomic_status="SYNONYM",
+            accepted_external_id="2930136",
+            accepted_name="Solanum lycopersicum L.",
+            linked_at=now,
+            last_refreshed_at=now,
+            last_refresh_attempt_at=now,
+        )
+        database.add_all([seed_lot, plant, group, gbif_link])
+        database.commit()
+        seed_lot_id = str(seed_lot.id)
+        plant_id = str(plant.id)
+        group_id = str(group.id)
+
+    status_code, _, recon = request(
+        "GET",
+        f"/api/v1/botanical-identities/{identity_id}/reconciliation",
+        headers={"cookie": cookie},
+    )
+    assert status_code == 200
+    assert recon["original_scientific_name"] == "Lycopersicon esculentum"
+    assert recon["original_display_label"] == "Lycopersicon esculentum \u2018San Marzano\u2019"
+    assert recon["former_names"] == []
+    assert recon["has_source_conflict"] is True
+    conflict_kinds = {c["kind"] for c in recon["conflicts"]}
+    assert "wcvp_version_conflict" in conflict_kinds
+    assert "cross_source_conflict" in conflict_kinds
+
+    wfo_suggestion = next(s for s in recon["suggestions"] if s["source_provider"] == "wfo")
+    assert wfo_suggestion["accepted_scientific_name"] == "Solanum lycopersicum"
+    gbif_suggestion = next(s for s in recon["suggestions"] if s["source_provider"] == "gbif")
+    assert gbif_suggestion["accepted_scientific_name"] == "Solanum lycopersicum"
+    assert gbif_suggestion["accepted_authorship"] == "L."
+
+    # Unacknowledged conflict is refused with 409
+    refused_code, _, refused_body = request(
+        "POST",
+        f"/api/v1/botanical-identities/{identity_id}/reconciliation/correct-name",
+        headers=headers,
+        body={
+            "scientific_name": "Solanum lycopersicum",
+            "cultivar_name": "San Marzano",
+            "common_name": "Plum tomato",
+            "source_provider": "wfo",
+            "source_version": wfo_suggestion["source_version"],
+            "source_checksum": wfo_suggestion["source_checksum"],
+            "link_version": wfo_suggestion["link_version"],
+            "matched_taxon_id": wfo_suggestion["matched_taxon_id"],
+            "accepted_taxon_id": wfo_suggestion["accepted_taxon_id"],
+            "accepted_authorship": wfo_suggestion["accepted_authorship"],
+            "acknowledge_conflict": False,
+            "notes": "Confirming accepted WFO name",
+            "identity_updated_at": recon["identity"]["updated_at"],
+        },
+    )
+    assert refused_code == 409
+    assert refused_body["detail"]["code"] == "reconciliation_conflict_unacknowledged"
+
+    # Acknowledged correction succeeds in place and preserves identity UUID and holdings
+    ok_code, _, corrected = request(
+        "POST",
+        f"/api/v1/botanical-identities/{identity_id}/reconciliation/correct-name",
+        headers=headers,
+        body={
+            "scientific_name": "Solanum lycopersicum",
+            "cultivar_name": "San Marzano",
+            "common_name": "Plum tomato",
+            "source_provider": "wfo",
+            "source_version": wfo_suggestion["source_version"],
+            "source_checksum": wfo_suggestion["source_checksum"],
+            "link_version": wfo_suggestion["link_version"],
+            "matched_taxon_id": wfo_suggestion["matched_taxon_id"],
+            "accepted_taxon_id": wfo_suggestion["accepted_taxon_id"],
+            "accepted_authorship": wfo_suggestion["accepted_authorship"],
+            "acknowledge_conflict": True,
+            "notes": "Confirmed WFO accepted name despite WCVP v16 split",
+            "identity_updated_at": recon["identity"]["updated_at"],
+        },
+    )
+    assert ok_code == 200, corrected
+    assert corrected["identity"]["id"] == str(identity_id)
+    assert corrected["identity"]["scientific_name"] == "Solanum lycopersicum"
+    assert corrected["identity"]["display_label"] == "Solanum lycopersicum \u2018San Marzano\u2019"
+    assert corrected["original_scientific_name"] == "Lycopersicon esculentum"
+    assert corrected["original_display_label"] == "Lycopersicon esculentum \u2018San Marzano\u2019"
+    assert len(corrected["former_names"]) == 1
+    assert corrected["former_names"][0]["scientific_name"] == "Lycopersicon esculentum"
+    assert corrected["former_names"][0]["status_kind"] == "initial_recorded"
+    assert corrected["former_names"][0]["source_provider"] == "wfo"
+    assert len(corrected["reconciliations"]) == 1
+    assert corrected["reconciliations"][0]["kind"] == "accepted_name_correction"
+    assert (
+        corrected["reconciliations"][0]["evidence"]["notes"]
+        == "Confirmed WFO accepted name despite WCVP v16 split"
+    )
+
+    # Collection holdings remain attached to the exact same BotanicalIdentity UUID
+    assert request("GET", f"/api/v1/seed-lots/{seed_lot_id}", headers={"cookie": cookie})[2][
+        "botanical_identity"
+    ]["id"] == str(identity_id)
+    assert request("GET", f"/api/v1/plants/{plant_id}", headers={"cookie": cookie})[2][
+        "botanical_identity"
+    ]["id"] == str(identity_id)
+    assert request("GET", f"/api/v1/plant-groups/{group_id}", headers={"cookie": cookie})[2][
+        "botanical_identity"
+    ]["id"] == str(identity_id)
+
+    # Search finds the corrected identity by its historical acquisition name
+    search_code, _, search_body = request(
+        "GET", "/api/v1/search?q=Lycopersicon", headers={"cookie": cookie}
+    )
+    assert search_code == 200
+    identity_hits = [
+        item
+        for grp in search_body["groups"]
+        if grp["kind"] == "botanical_identity"
+        for item in grp["items"]
+    ]
+    assert len(identity_hits) == 1
+    assert identity_hits[0]["id"] == str(identity_id)
+    assert identity_hits[0]["title"] == "Solanum lycopersicum San Marzano"
+    assert "Formerly Lycopersicon esculentum" in identity_hits[0]["context"]
+
+
+def test_reconciliation_refuses_silent_merge_and_merges_duplicate_into_explicit_survivor(
+    authenticated_browser: tuple[str, str],
+    database_connection: Connection,
+) -> None:
+    from datetime import UTC, date
+
+    from florabase.botanical_profiles.model import BotanicalProfile, BotanicalProfileNativeRange
+    from florabase.collection_photos.model import BotanicalIdentityCoverImage, MediaAsset
+    from florabase.external_botany.model import ExternalTaxonLink
+    from florabase.geographic_places.model import GeographicPlace
+    from florabase.native_range_enrichment.model import (
+        NativeRangeApplication,
+        NativeRangeProposal,
+    )
+    from florabase.plants.model import Plant, PlantGroup
+    from florabase.schedule.model import ScheduledActivity
+    from florabase.seed_lots.model import SeedLot
+
+    cookie, csrf_token = authenticated_browser
+    headers = {"cookie": cookie, "origin": ORIGIN, "x-csrf-token": csrf_token}
+
+    _, _, duplicate = create_identity(
+        authenticated_browser,
+        {"scientific_name": "Lycopersicon esculentum", "common_name": "Old tomato"},
+    )
+    _, _, survivor = create_identity(
+        authenticated_browser,
+        {"scientific_name": "Solanum lycopersicum", "common_name": "Garden tomato"},
+    )
+    dup_id = UUID(duplicate["id"])
+    surv_id = UUID(survivor["id"])
+
+    # In-place correction onto an existing identity is refused with 409 duplicate_botanical_identity
+    collision_code, _, collision_body = request(
+        "POST",
+        f"/api/v1/botanical-identities/{dup_id}/reconciliation/correct-name",
+        headers=headers,
+        body={
+            "scientific_name": "Solanum lycopersicum",
+            "cultivar_name": None,
+            "common_name": "Garden tomato",
+            "source_provider": "operator",
+            "acknowledge_conflict": True,
+            "identity_updated_at": duplicate["updated_at"],
+        },
+    )
+    assert collision_code == 409
+    assert collision_body["detail"]["code"] == "duplicate_botanical_identity"
+    assert collision_body["detail"]["existing_id"] == str(surv_id)
+
+    # Populate holdings, profiles, native ranges, cover image, external link, and receipt
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        now = datetime.now(UTC)
+        places = list(
+            database.scalars(select(GeographicPlace).order_by(GeographicPlace.id).limit(2))
+        )
+        assert len(places) == 2
+
+        dup_profile = BotanicalProfile(
+            botanical_identity_id=dup_id,
+            description="Duplicate description text",
+            uses="Culinary fruit",
+        )
+        surv_profile = BotanicalProfile(
+            botanical_identity_id=surv_id,
+            description="Survivor description text",
+            uses=None,
+        )
+        database.add_all([dup_profile, surv_profile])
+        database.flush()
+
+        database.add_all(
+            [
+                BotanicalProfileNativeRange(
+                    botanical_profile_id=dup_id,
+                    geographic_place_id=places[0].id,
+                    created_at=now,
+                ),
+                BotanicalProfileNativeRange(
+                    botanical_profile_id=dup_id,
+                    geographic_place_id=places[1].id,
+                    created_at=now,
+                ),
+                BotanicalProfileNativeRange(
+                    botanical_profile_id=surv_id,
+                    geographic_place_id=places[0].id,
+                    created_at=now,
+                ),
+            ]
+        )
+
+        lot = SeedLot(botanical_identity_id=dup_id)
+        plant = Plant(botanical_identity_id=dup_id, direct_origin_kind="unknown")
+        group = PlantGroup(botanical_identity_id=dup_id, direct_origin_kind="unknown")
+        activity = ScheduledActivity(
+            title="Inspect foliage",
+            activity_kind="inspect",
+            status="planned",
+            due_on=date(2026, 6, 1),
+            botanical_identity_id=dup_id,
+        )
+        asset = MediaAsset(
+            kind="external",
+            image_url="https://example.test/cover.jpg",
+            source_url="https://example.test/page",
+            attribution="Photo author",
+        )
+        database.add_all([lot, plant, group, activity, asset])
+        database.flush()
+
+        cover = BotanicalIdentityCoverImage(
+            botanical_identity_id=dup_id,
+            media_asset_id=asset.id,
+            source_mode="external",
+        )
+        ext_link = ExternalTaxonLink(
+            botanical_identity_id=dup_id,
+            provider="gbif",
+            external_id="2930137",
+            scientific_name="Lycopersicon esculentum Mill.",
+            canonical_name="Lycopersicon esculentum",
+            linked_at=now,
+            last_refreshed_at=now,
+            last_refresh_attempt_at=now,
+        )
+        proposal = NativeRangeProposal(
+            id=uuid7(),
+            identity_id=dup_id,
+            evidence={"format_version": "1"},
+        )
+        database.add_all([cover, ext_link, proposal])
+        database.flush()
+
+        application = NativeRangeApplication(
+            proposal_id=proposal.id,
+            identity_id=dup_id,
+            evidence={"format_version": "1"},
+        )
+        database.add(application)
+        database.commit()
+        lot_id = str(lot.id)
+        plant_id = str(plant.id)
+        group_id = str(group.id)
+        activity_id = str(activity.id)
+        proposal_id = proposal.id
+
+    # Merge refuses conflicting BotanicalProfile text unless profile_resolution='keep_survivor'
+    prof_conflict_code, _, prof_conflict_body = request(
+        "POST",
+        f"/api/v1/botanical-identities/{dup_id}/reconciliation/merge-duplicate",
+        headers=headers,
+        body={
+            "survivor_identity_id": str(surv_id),
+            "profile_resolution": "fail_on_conflict",
+            "duplicate_updated_at": duplicate["updated_at"],
+            "survivor_updated_at": survivor["updated_at"],
+        },
+    )
+    assert prof_conflict_code == 409
+    assert prof_conflict_body["detail"]["code"] == "botanical_profile_conflict"
+    assert prof_conflict_body["detail"]["conflicting_fields"] == ["description"]
+
+    # Merge succeeds transactionally with profile_resolution='keep_survivor'
+    merge_code, _, merged_recon = request(
+        "POST",
+        f"/api/v1/botanical-identities/{dup_id}/reconciliation/merge-duplicate",
+        headers=headers,
+        body={
+            "survivor_identity_id": str(surv_id),
+            "profile_resolution": "keep_survivor",
+            "notes": "Merged synonym identity into accepted Solanum lycopersicum",
+            "duplicate_updated_at": duplicate["updated_at"],
+            "survivor_updated_at": survivor["updated_at"],
+        },
+    )
+    assert merge_code == 200
+    assert merged_recon["identity"]["id"] == str(surv_id)
+    assert len(merged_recon["former_names"]) == 1
+    assert merged_recon["former_names"][0]["scientific_name"] == "Lycopersicon esculentum"
+    assert merged_recon["former_names"][0]["status_kind"] == "merged_duplicate"
+    assert merged_recon["former_names"][0]["origin_identity_id"] == str(dup_id)
+    assert len(merged_recon["reconciliations"]) == 1
+    event_rec = merged_recon["reconciliations"][0]
+    assert event_rec["kind"] == "duplicate_identity_merge"
+    assert event_rec["duplicate_identity_id"] == str(dup_id)
+    assert event_rec["evidence"]["repointed_records"] == {
+        "seed_lot_ids": [lot_id],
+        "plant_ids": [plant_id],
+        "plant_group_ids": [group_id],
+        "scheduled_activity_ids": [activity_id],
+    }
+    assert event_rec["evidence"]["copied_profile_fields"] == ["uses"]
+
+    # Verify holdings were repointed to survivor
+    assert request("GET", f"/api/v1/seed-lots/{lot_id}", headers={"cookie": cookie})[2][
+        "botanical_identity"
+    ]["id"] == str(surv_id)
+    assert request("GET", f"/api/v1/plants/{plant_id}", headers={"cookie": cookie})[2][
+        "botanical_identity"
+    ]["id"] == str(surv_id)
+    assert request("GET", f"/api/v1/plant-groups/{group_id}", headers={"cookie": cookie})[2][
+        "botanical_identity"
+    ]["id"] == str(surv_id)
+
+    # Verify survivor profile kept description, copied missing 'uses', and unioned ranges
+    _, _, surv_prof_body = request(
+        "GET", f"/api/v1/botanical-identities/{surv_id}/profile", headers={"cookie": cookie}
+    )
+    assert surv_prof_body["description"] == "Survivor description text"
+    assert surv_prof_body["uses"] == "Culinary fruit"
+    _, _, surv_ranges_body = request(
+        "GET",
+        f"/api/v1/botanical-identities/{surv_id}/profile/native-ranges",
+        headers={"cookie": cookie},
+    )
+    assert len(surv_ranges_body) == 2
+
+    # Verify retired tombstone is excluded from directory and search, but readable by ID
+    _, _, directory_body = request(
+        "GET", "/api/v1/botanical-identities", headers={"cookie": cookie}
+    )
+    assert [item["id"] for item in directory_body] == [str(surv_id)]
+
+    _, _, tombstone_body = request(
+        "GET", f"/api/v1/botanical-identities/{dup_id}", headers={"cookie": cookie}
+    )
+    assert tombstone_body["merged_into_id"] == str(surv_id)
+    assert tombstone_body["merged_at"] is not None
+
+    # Search for the retired duplicate's scientific name returns only the active survivor
+    _, _, search_body = request("GET", "/api/v1/search?q=Lycopersicon", headers={"cookie": cookie})
+    identity_hits = [
+        item
+        for grp in search_body["groups"]
+        if grp["kind"] == "botanical_identity"
+        for item in grp["items"]
+    ]
+    assert [item["id"] for item in identity_hits] == [str(surv_id)]
+
+    # Further edits or new seed lots on the retired tombstone are refused with 409
+    assert (
+        request(
+            "PUT",
+            f"/api/v1/botanical-identities/{dup_id}",
+            headers=headers,
+            body={"scientific_name": "Lycopersicon esculentum", "common_name": "Mutated"},
+        )[0]
+        == 409
+    )
+    assert (
+        request(
+            "POST",
+            "/api/v1/seed-lots",
+            headers=headers,
+            body={"botanical_identity_id": str(dup_id)},
+        )[0]
+        == 404
+    )
+
+    # Retained native range enrichment audit rows remain intact on the tombstone
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        assert database.get(NativeRangeProposal, proposal_id) is not None
+        assert database.get(NativeRangeApplication, proposal_id) is not None

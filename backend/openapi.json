@@ -1,6 +1,298 @@
 {
   "components": {
     "schemas": {
+      "AcceptedNameCorrectionWrite": {
+        "additionalProperties": false,
+        "properties": {
+          "accepted_authorship": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Authorship"
+          },
+          "accepted_taxon_id": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Taxon Id"
+          },
+          "acknowledge_conflict": {
+            "default": false,
+            "title": "Acknowledge Conflict",
+            "type": "boolean"
+          },
+          "common_name": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Common Name"
+          },
+          "cultivar_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cultivar Name"
+          },
+          "identity_updated_at": {
+            "format": "date-time",
+            "title": "Identity Updated At",
+            "type": "string"
+          },
+          "link_version": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Link Version"
+          },
+          "matched_taxon_id": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched Taxon Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "scientific_name": {
+            "maxLength": 255,
+            "title": "Scientific Name",
+            "type": "string"
+          },
+          "source_checksum": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Checksum"
+          },
+          "source_provider": {
+            "default": "operator",
+            "enum": [
+              "wfo",
+              "wcvp",
+              "gbif",
+              "operator"
+            ],
+            "title": "Source Provider",
+            "type": "string"
+          },
+          "source_version": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Version"
+          }
+        },
+        "required": [
+          "scientific_name",
+          "identity_updated_at"
+        ],
+        "title": "AcceptedNameCorrectionWrite",
+        "type": "object"
+      },
+      "AcceptedNameSuggestionResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "accepted_authorship": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Authorship"
+          },
+          "accepted_rank": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Rank"
+          },
+          "accepted_scientific_name": {
+            "title": "Accepted Scientific Name",
+            "type": "string"
+          },
+          "accepted_taxon_id": {
+            "title": "Accepted Taxon Id",
+            "type": "string"
+          },
+          "advisory_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Advisory Note"
+          },
+          "colliding_identity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CollidingIdentitySummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "link_version": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Link Version"
+          },
+          "matched_authorship": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched Authorship"
+          },
+          "matched_scientific_name": {
+            "title": "Matched Scientific Name",
+            "type": "string"
+          },
+          "matched_status": {
+            "title": "Matched Status",
+            "type": "string"
+          },
+          "matched_taxon_id": {
+            "title": "Matched Taxon Id",
+            "type": "string"
+          },
+          "source_checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Checksum"
+          },
+          "source_label": {
+            "title": "Source Label",
+            "type": "string"
+          },
+          "source_provider": {
+            "enum": [
+              "wfo",
+              "wcvp",
+              "gbif"
+            ],
+            "title": "Source Provider",
+            "type": "string"
+          },
+          "source_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Version"
+          },
+          "stale": {
+            "default": false,
+            "title": "Stale",
+            "type": "boolean"
+          },
+          "suggestion_id": {
+            "title": "Suggestion Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "suggestion_id",
+          "source_provider",
+          "source_label",
+          "matched_taxon_id",
+          "matched_scientific_name",
+          "matched_status",
+          "accepted_taxon_id",
+          "accepted_scientific_name"
+        ],
+        "title": "AcceptedNameSuggestionResponse",
+        "type": "object"
+      },
       "AcquisitionContext": {
         "additionalProperties": false,
         "properties": {
@@ -1032,6 +1324,30 @@
             "title": "Id",
             "type": "string"
           },
+          "merged_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Merged At"
+          },
+          "merged_into_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Merged Into Id"
+          },
           "scientific_name": {
             "title": "Scientific Name",
             "type": "string"
@@ -1603,6 +1919,75 @@
         ],
         "title": "CollectionRecordCategory",
         "type": "string"
+      },
+      "CollidingIdentitySummary": {
+        "additionalProperties": false,
+        "properties": {
+          "collection_counts": {
+            "$ref": "#/components/schemas/IdentityCollectionCounts"
+          },
+          "common_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Common Name"
+          },
+          "conflicting_profile_fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Conflicting Profile Fields",
+            "type": "array"
+          },
+          "cultivar_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cultivar Name"
+          },
+          "display_label": {
+            "title": "Display Label",
+            "type": "string"
+          },
+          "has_conflicting_profile_fields": {
+            "default": false,
+            "title": "Has Conflicting Profile Fields",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "scientific_name": {
+            "title": "Scientific Name",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "scientific_name",
+          "display_label",
+          "updated_at",
+          "collection_counts"
+        ],
+        "title": "CollidingIdentitySummary",
+        "type": "object"
       },
       "ConversionCreate": {
         "additionalProperties": false,
@@ -2298,6 +2683,54 @@
           "created_at"
         ],
         "title": "DispositionResponse",
+        "type": "object"
+      },
+      "DuplicateIdentityMergeWrite": {
+        "additionalProperties": false,
+        "properties": {
+          "duplicate_updated_at": {
+            "format": "date-time",
+            "title": "Duplicate Updated At",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "profile_resolution": {
+            "default": "fail_on_conflict",
+            "enum": [
+              "fail_on_conflict",
+              "keep_survivor"
+            ],
+            "title": "Profile Resolution",
+            "type": "string"
+          },
+          "survivor_identity_id": {
+            "format": "uuid",
+            "title": "Survivor Identity Id",
+            "type": "string"
+          },
+          "survivor_updated_at": {
+            "format": "date-time",
+            "title": "Survivor Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "survivor_identity_id",
+          "duplicate_updated_at",
+          "survivor_updated_at"
+        ],
+        "title": "DuplicateIdentityMergeWrite",
         "type": "object"
       },
       "EventCreate": {
@@ -4521,6 +4954,353 @@
           "plant_groups"
         ],
         "title": "IdentityCollectionCounts",
+        "type": "object"
+      },
+      "IdentityHistoricalNameResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "accepted_source_taxon_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Source Taxon Id"
+          },
+          "authorship": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authorship"
+          },
+          "common_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Common Name"
+          },
+          "cultivar_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cultivar Name"
+          },
+          "display_label": {
+            "title": "Display Label",
+            "type": "string"
+          },
+          "effective_from": {
+            "format": "date-time",
+            "title": "Effective From",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "origin_identity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Identity Id"
+          },
+          "scientific_name": {
+            "title": "Scientific Name",
+            "type": "string"
+          },
+          "source_provider": {
+            "enum": [
+              "wfo",
+              "wcvp",
+              "gbif",
+              "operator"
+            ],
+            "title": "Source Provider",
+            "type": "string"
+          },
+          "source_taxon_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Taxon Id"
+          },
+          "source_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Version"
+          },
+          "status_kind": {
+            "enum": [
+              "initial_recorded",
+              "former_accepted",
+              "merged_duplicate",
+              "source_synonym",
+              "operator_synonym"
+            ],
+            "title": "Status Kind",
+            "type": "string"
+          },
+          "superseded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Superseded At"
+          }
+        },
+        "required": [
+          "id",
+          "scientific_name",
+          "display_label",
+          "status_kind",
+          "source_provider",
+          "effective_from"
+        ],
+        "title": "IdentityHistoricalNameResponse",
+        "type": "object"
+      },
+      "IdentityReconciliationEventResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "applied_common_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied Common Name"
+          },
+          "applied_cultivar_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied Cultivar Name"
+          },
+          "applied_scientific_name": {
+            "title": "Applied Scientific Name",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "duplicate_identity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicate Identity Id"
+          },
+          "evidence": {
+            "additionalProperties": true,
+            "title": "Evidence",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "accepted_name_correction",
+              "duplicate_identity_merge"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "previous_common_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Common Name"
+          },
+          "previous_cultivar_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Cultivar Name"
+          },
+          "previous_scientific_name": {
+            "title": "Previous Scientific Name",
+            "type": "string"
+          },
+          "source_provider": {
+            "enum": [
+              "wfo",
+              "wcvp",
+              "gbif",
+              "operator"
+            ],
+            "title": "Source Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "previous_scientific_name",
+          "applied_scientific_name",
+          "source_provider",
+          "evidence",
+          "created_at"
+        ],
+        "title": "IdentityReconciliationEventResponse",
+        "type": "object"
+      },
+      "IdentityReconciliationResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "conflicts": {
+            "items": {
+              "$ref": "#/components/schemas/ReconciliationConflictResponse"
+            },
+            "title": "Conflicts",
+            "type": "array"
+          },
+          "former_names": {
+            "items": {
+              "$ref": "#/components/schemas/IdentityHistoricalNameResponse"
+            },
+            "title": "Former Names",
+            "type": "array"
+          },
+          "has_source_conflict": {
+            "title": "Has Source Conflict",
+            "type": "boolean"
+          },
+          "identity": {
+            "$ref": "#/components/schemas/BotanicalIdentityResponse"
+          },
+          "original_common_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Common Name"
+          },
+          "original_cultivar_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Cultivar Name"
+          },
+          "original_display_label": {
+            "title": "Original Display Label",
+            "type": "string"
+          },
+          "original_scientific_name": {
+            "title": "Original Scientific Name",
+            "type": "string"
+          },
+          "reconciliations": {
+            "items": {
+              "$ref": "#/components/schemas/IdentityReconciliationEventResponse"
+            },
+            "title": "Reconciliations",
+            "type": "array"
+          },
+          "source_assessments": {
+            "items": {
+              "$ref": "#/components/schemas/SourceTaxonomicAssessmentResponse"
+            },
+            "title": "Source Assessments",
+            "type": "array"
+          },
+          "suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/AcceptedNameSuggestionResponse"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "identity",
+          "original_scientific_name",
+          "original_display_label",
+          "former_names",
+          "suggestions",
+          "source_assessments",
+          "conflicts",
+          "has_source_conflict",
+          "reconciliations"
+        ],
+        "title": "IdentityReconciliationResponse",
         "type": "object"
       },
       "IdentityTaxonomy": {
@@ -9949,6 +10729,50 @@
         "title": "RangeChoice",
         "type": "object"
       },
+      "ReconciliationConflictResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "colliding_identity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Colliding Identity Id"
+          },
+          "kind": {
+            "enum": [
+              "wcvp_version_conflict",
+              "cross_source_conflict",
+              "duplicate_identity_collision"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "message",
+          "sources"
+        ],
+        "title": "ReconciliationConflictResponse",
+        "type": "object"
+      },
       "RecordedPlaceCoverage": {
         "properties": {
           "display_path": {
@@ -12325,6 +13149,162 @@
           "available"
         ],
         "title": "SourceStatus",
+        "type": "object"
+      },
+      "SourceTaxonomicAssessmentResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "accepted_authorship": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Authorship"
+          },
+          "accepted_scientific_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Scientific Name"
+          },
+          "accepted_taxon_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Taxon Id"
+          },
+          "authorship": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authorship"
+          },
+          "link_version": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Link Version"
+          },
+          "linked": {
+            "title": "Linked",
+            "type": "boolean"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "scientific_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scientific Name"
+          },
+          "source_checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Checksum"
+          },
+          "source_label": {
+            "title": "Source Label",
+            "type": "string"
+          },
+          "source_provider": {
+            "enum": [
+              "wfo",
+              "wcvp",
+              "gbif"
+            ],
+            "title": "Source Provider",
+            "type": "string"
+          },
+          "source_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Version"
+          },
+          "stale": {
+            "default": false,
+            "title": "Stale",
+            "type": "boolean"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "taxon_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taxon Id"
+          }
+        },
+        "required": [
+          "source_provider",
+          "source_label",
+          "linked"
+        ],
+        "title": "SourceTaxonomicAssessmentResponse",
         "type": "object"
       },
       "SowingCreate": {
@@ -17376,6 +18356,217 @@
         "summary": "Remove Native Range",
         "tags": [
           "botanical profiles"
+        ]
+      }
+    },
+    "/api/v1/botanical-identities/{botanical_identity_id}/reconciliation": {
+      "get": {
+        "operationId": "getBotanicalIdentityReconciliation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityReconciliationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Botanical identity not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Reconciliation",
+        "tags": [
+          "botanical identities"
+        ]
+      }
+    },
+    "/api/v1/botanical-identities/{botanical_identity_id}/reconciliation/correct-name": {
+      "post": {
+        "operationId": "correctBotanicalIdentityAcceptedName",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptedNameCorrectionWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityReconciliationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Request forbidden"
+          },
+          "404": {
+            "description": "Botanical identity not found"
+          },
+          "409": {
+            "description": "Reconciliation conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Correct Name",
+        "tags": [
+          "botanical identities"
+        ]
+      }
+    },
+    "/api/v1/botanical-identities/{botanical_identity_id}/reconciliation/merge-duplicate": {
+      "post": {
+        "operationId": "mergeDuplicateBotanicalIdentity",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DuplicateIdentityMergeWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityReconciliationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Request forbidden"
+          },
+          "404": {
+            "description": "Botanical identity not found"
+          },
+          "409": {
+            "description": "Reconciliation conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Merge Duplicate",
+        "tags": [
+          "botanical identities"
         ]
       }
     },

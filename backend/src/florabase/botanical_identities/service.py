@@ -1,11 +1,16 @@
+from datetime import UTC, datetime
 from typing import Literal, cast
 from uuid import UUID
 
-from sqlalchemy import case, func, select
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from florabase.botanical_identities.model import BotanicalIdentity
+from florabase.botanical_identities.model import (
+    BotanicalIdentity,
+    BotanicalIdentityName,
+    BotanicalIdentityReconciliation,
+)
 from florabase.botanical_identities.schemas import (
     BotanicalIdentityCreate,
     BotanicalIdentityUpdate,
@@ -24,6 +29,12 @@ class BotanicalIdentityConflictError(Exception):
         super().__init__("Botanical identity already exists")
 
 
+class BotanicalIdentityMergedError(Exception):
+    def __init__(self, merged_into_id: UUID) -> None:
+        self.merged_into_id = merged_into_id
+        super().__init__("Botanical identity has been merged into another identity")
+
+
 class BotanicalIdentityReferencedError(Exception):
     pass
 
@@ -36,7 +47,8 @@ def find_duplicate(
     database: Session, scientific_name: str, cultivar_name: str | None
 ) -> BotanicalIdentity | None:
     statement = select(BotanicalIdentity).where(
-        func.lower(BotanicalIdentity.scientific_name) == scientific_name.lower()
+        BotanicalIdentity.merged_into_id.is_(None),
+        func.lower(BotanicalIdentity.scientific_name) == scientific_name.lower(),
     )
     if cultivar_name is None:
         statement = statement.where(BotanicalIdentity.cultivar_name.is_(None))
@@ -80,9 +92,23 @@ def update_botanical_identity(
     botanical_identity: BotanicalIdentity,
     payload: BotanicalIdentityUpdate,
 ) -> BotanicalIdentity:
+    if botanical_identity.merged_into_id is not None:
+        raise BotanicalIdentityMergedError(botanical_identity.merged_into_id)
     existing = find_duplicate(database, payload.scientific_name, payload.cultivar_name)
     if existing is not None and existing.id != botanical_identity.id:
         raise BotanicalIdentityConflictError(existing.id)
+    if (
+        botanical_identity.scientific_name != payload.scientific_name
+        or botanical_identity.cultivar_name != payload.cultivar_name
+    ):
+        from florabase.botanical_identities.reconciliation import record_superseded_identity_name
+
+        record_superseded_identity_name(
+            database,
+            botanical_identity,
+            now=datetime.now(UTC),
+            source_provider="operator",
+        )
     for field, value in payload.model_dump().items():
         setattr(botanical_identity, field, value)
     try:
@@ -113,6 +139,8 @@ def delete_botanical_identity(database: Session, botanical_identity: BotanicalId
         is None
     ):
         return
+    if botanical_identity.merged_into_id is not None:
+        raise BotanicalIdentityReferencedError
     cover_count = database.scalar(
         select(func.count())
         .select_from(BotanicalIdentityCoverImage)
@@ -129,6 +157,26 @@ def delete_botanical_identity(database: Session, botanical_identity: BotanicalId
             select(func.count())
             .select_from(NativeRangeApplication)
             .where(NativeRangeApplication.identity_id == identity_id)
+        ),
+        database.scalar(
+            select(func.count())
+            .select_from(BotanicalIdentityReconciliation)
+            .where(
+                or_(
+                    BotanicalIdentityReconciliation.identity_id == identity_id,
+                    BotanicalIdentityReconciliation.duplicate_identity_id == identity_id,
+                )
+            )
+        ),
+        database.scalar(
+            select(func.count())
+            .select_from(BotanicalIdentityName)
+            .where(BotanicalIdentityName.origin_identity_id == identity_id)
+        ),
+        database.scalar(
+            select(func.count())
+            .select_from(BotanicalIdentity)
+            .where(BotanicalIdentity.merged_into_id == identity_id)
         ),
         database.scalar(
             select(func.count())
@@ -159,10 +207,14 @@ def get_botanical_identity(
 
 
 def list_botanical_identities(database: Session) -> list[BotanicalIdentity]:
-    statement = select(BotanicalIdentity).order_by(
-        func.lower(BotanicalIdentity.scientific_name),
-        func.lower(BotanicalIdentity.cultivar_name).nulls_first(),
-        BotanicalIdentity.id,
+    statement = (
+        select(BotanicalIdentity)
+        .where(BotanicalIdentity.merged_into_id.is_(None))
+        .order_by(
+            func.lower(BotanicalIdentity.scientific_name),
+            func.lower(BotanicalIdentity.cultivar_name).nulls_first(),
+            BotanicalIdentity.id,
+        )
     )
     return list(database.scalars(statement))
 
@@ -222,6 +274,7 @@ def list_botanical_identity_directory(
             ),
             *[func.coalesce(c.c.total, 0) for c in counts],
         )
+        .where(BotanicalIdentity.merged_into_id.is_(None))
         .outerjoin(
             BotanicalIdentityCoverImage,
             BotanicalIdentityCoverImage.botanical_identity_id == BotanicalIdentity.id,

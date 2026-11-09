@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.orm import Session, aliased
 
 from florabase.attachments.model import Attachment
-from florabase.botanical_identities.model import BotanicalIdentity
+from florabase.botanical_identities.model import BotanicalIdentity, BotanicalIdentityName
 from florabase.botanical_profiles.model import BotanicalProfile
 from florabase.collection_photos.model import MediaAsset
 from florabase.events.model import Event, EventKind
@@ -544,31 +544,73 @@ def search(
         add(SearchKind.MEDIA_ASSET, statement)
 
     if not filters.collection_only():
+        former_context = (
+            select(func.concat("Formerly ", BotanicalIdentityName.scientific_name))
+            .where(
+                BotanicalIdentityName.botanical_identity_id == BotanicalIdentity.id,
+                _matches(
+                    query,
+                    BotanicalIdentityName.scientific_name,
+                    BotanicalIdentityName.cultivar_name,
+                    BotanicalIdentityName.common_name,
+                ),
+            )
+            .order_by(
+                BotanicalIdentityName.effective_from.asc(),
+                BotanicalIdentityName.id.asc(),
+            )
+            .limit(1)
+            .correlate(BotanicalIdentity)
+            .scalar_subquery()
+            if query
+            else literal(None)
+        )
         statement = select(
             BotanicalIdentity.id.label("id"),
             _identity_label(BotanicalIdentity).label("title"),
-            func.coalesce(BotanicalIdentity.common_name, "Botanical identity").label("context"),
+            func.concat_ws(
+                " · ",
+                func.coalesce(BotanicalIdentity.common_name, "Botanical identity"),
+                former_context,
+            ).label("context"),
             BotanicalIdentity.id.label("route_id"),
             literal("").label("route_kind"),
-        )
+        ).where(BotanicalIdentity.merged_into_id.is_(None))
         if query:
             statement = statement.where(
-                _matches(
-                    query,
-                    BotanicalIdentity.scientific_name,
-                    BotanicalIdentity.cultivar_name,
-                    BotanicalIdentity.common_name,
+                or_(
+                    _matches(
+                        query,
+                        BotanicalIdentity.scientific_name,
+                        BotanicalIdentity.cultivar_name,
+                        BotanicalIdentity.common_name,
+                    ),
+                    select(BotanicalIdentityName.id)
+                    .where(
+                        BotanicalIdentityName.botanical_identity_id == BotanicalIdentity.id,
+                        _matches(
+                            query,
+                            BotanicalIdentityName.scientific_name,
+                            BotanicalIdentityName.cultivar_name,
+                            BotanicalIdentityName.common_name,
+                        ),
+                    )
+                    .exists(),
                 )
             )
         add(SearchKind.BOTANICAL_IDENTITY, statement)
 
-        statement = select(
-            BotanicalProfile.botanical_identity_id.label("id"),
-            _identity_label(identity).label("title"),
-            literal("Reference knowledge").label("context"),
-            BotanicalProfile.botanical_identity_id.label("route_id"),
-            literal("").label("route_kind"),
-        ).join(identity, identity.id == BotanicalProfile.botanical_identity_id)
+        statement = (
+            select(
+                BotanicalProfile.botanical_identity_id.label("id"),
+                _identity_label(identity).label("title"),
+                literal("Reference knowledge").label("context"),
+                BotanicalProfile.botanical_identity_id.label("route_id"),
+                literal("").label("route_kind"),
+            )
+            .join(identity, identity.id == BotanicalProfile.botanical_identity_id)
+            .where(identity.merged_into_id.is_(None))
+        )
         if query:
             statement = statement.where(
                 _matches(

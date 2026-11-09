@@ -72,7 +72,7 @@
           "provenance.without_coordinates": 1
         },
         "baseline": {
-          "schema_revision": "20261109_0044",
+          "schema_revision": "20261109_0045",
           "volume": 12,
           "plan_sha256": "5afd6ffe46fce10ac62b1ef1233c9944d8c206bef9d407ce4396b5e6ce64b0d7",
           "canonical_sha256": "7398e0dc2235679a8edf121528cbfc39fe395970a446a26ecf2ae9636d4d8d79",
@@ -90,11 +90,19 @@
             },
             "botanical_identities": {
               "rows": 21,
-              "sha256": "cc95a10e78301f366b0c4eb839ee0c569b6f1c98d6888c0b3f7ff4a89bed9a29"
+              "sha256": "f958679375089a2a091938166a41cb97a51e06dd2255e1e70899371b7ec96e25"
             },
             "botanical_identity_cover_images": {
               "rows": 1,
               "sha256": "fa259d8062c975092d9dfa4694b8ad4e875076b62fc3335db1d872afc51f200e"
+            },
+            "botanical_identity_names": {
+              "rows": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "botanical_identity_reconciliations": {
+              "rows": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
             },
             "botanical_profile_native_ranges": {
               "rows": 3,

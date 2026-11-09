@@ -6,7 +6,11 @@ from alembic import context
 from florabase.application_settings.model import ApplicationSettings
 from florabase.attachments.model import Attachment
 from florabase.auth.model import AuthSession, LoginThrottle, User
-from florabase.botanical_identities.model import BotanicalIdentity
+from florabase.botanical_identities.model import (
+    BotanicalIdentity,
+    BotanicalIdentityName,
+    BotanicalIdentityReconciliation,
+)
 from florabase.botanical_profiles.model import BotanicalProfile, BotanicalProfileNativeRange
 from florabase.collection_photos.model import (
     CollectionPrimaryPhoto,
@@ -52,7 +56,10 @@ target_metadata = Base.metadata
 autogenerate_plugins = ["alembic.autogenerate.*", "alembic.ext.checkconstraint_byname"]
 
 # Importing the mapping registers it with the shared metadata used by Alembic.
-assert BotanicalIdentity.__table__.metadata is target_metadata
+assert all(
+    model.__table__.metadata is target_metadata
+    for model in (BotanicalIdentity, BotanicalIdentityName, BotanicalIdentityReconciliation)
+)
 assert ApplicationSettings.__table__.metadata is target_metadata
 assert Attachment.__table__.metadata is target_metadata
 assert MediaAsset.__table__.metadata is target_metadata

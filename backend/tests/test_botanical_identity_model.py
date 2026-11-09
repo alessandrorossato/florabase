@@ -13,12 +13,17 @@ def test_mapping_has_only_the_verified_contract() -> None:
         "scientific_name",
         "cultivar_name",
         "common_name",
+        "merged_into_id",
+        "merged_at",
         "created_at",
         "updated_at",
     ]
     assert isinstance(BotanicalIdentity.__table__.c.id.type, Uuid)
+    assert isinstance(BotanicalIdentity.__table__.c.merged_into_id.type, Uuid)
+    assert isinstance(BotanicalIdentity.__table__.c.merged_at.type, DateTime)
     assert isinstance(BotanicalIdentity.__table__.c.created_at.type, DateTime)
     assert isinstance(BotanicalIdentity.__table__.c.updated_at.type, DateTime)
+    assert BotanicalIdentity.__table__.c.merged_at.type.timezone is True
     assert BotanicalIdentity.__table__.c.created_at.type.timezone is True
     assert BotanicalIdentity.__table__.c.updated_at.type.timezone is True
 

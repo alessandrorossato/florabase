@@ -424,6 +424,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/botanical-identities/{botanical_identity_id}/reconciliation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Reconciliation */
+        get: operations["getBotanicalIdentityReconciliation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/botanical-identities/{botanical_identity_id}/reconciliation/correct-name": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Correct Name */
+        post: operations["correctBotanicalIdentityAcceptedName"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/botanical-identities/{botanical_identity_id}/reconciliation/merge-duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Merge Duplicate */
+        post: operations["mergeDuplicateBotanicalIdentity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/botanical-identities/{identity_id}/native-range-enrichment/link": {
         parameters: {
             query?: never;
@@ -2531,6 +2582,87 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AcceptedNameCorrectionWrite */
+        AcceptedNameCorrectionWrite: {
+            /** Accepted Authorship */
+            accepted_authorship?: string | null;
+            /** Accepted Taxon Id */
+            accepted_taxon_id?: string | null;
+            /**
+             * Acknowledge Conflict
+             * @default false
+             */
+            acknowledge_conflict: boolean;
+            /** Common Name */
+            common_name?: string | null;
+            /** Cultivar Name */
+            cultivar_name?: string | null;
+            /**
+             * Identity Updated At
+             * Format: date-time
+             */
+            identity_updated_at: string;
+            /** Link Version */
+            link_version?: string | null;
+            /** Matched Taxon Id */
+            matched_taxon_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Scientific Name */
+            scientific_name: string;
+            /** Source Checksum */
+            source_checksum?: string | null;
+            /**
+             * Source Provider
+             * @default operator
+             * @enum {string}
+             */
+            source_provider: "wfo" | "wcvp" | "gbif" | "operator";
+            /** Source Version */
+            source_version?: string | null;
+        };
+        /** AcceptedNameSuggestionResponse */
+        AcceptedNameSuggestionResponse: {
+            /** Accepted Authorship */
+            accepted_authorship?: string | null;
+            /** Accepted Rank */
+            accepted_rank?: string | null;
+            /** Accepted Scientific Name */
+            accepted_scientific_name: string;
+            /** Accepted Taxon Id */
+            accepted_taxon_id: string;
+            /** Advisory Note */
+            advisory_note?: string | null;
+            colliding_identity?: components["schemas"]["CollidingIdentitySummary"] | null;
+            /** Link Version */
+            link_version?: string | null;
+            /** Matched Authorship */
+            matched_authorship?: string | null;
+            /** Matched Scientific Name */
+            matched_scientific_name: string;
+            /** Matched Status */
+            matched_status: string;
+            /** Matched Taxon Id */
+            matched_taxon_id: string;
+            /** Source Checksum */
+            source_checksum?: string | null;
+            /** Source Label */
+            source_label: string;
+            /**
+             * Source Provider
+             * @enum {string}
+             */
+            source_provider: "wfo" | "wcvp" | "gbif";
+            /** Source Version */
+            source_version?: string | null;
+            /**
+             * Stale
+             * @default false
+             */
+            stale: boolean;
+            /** Suggestion Id */
+            suggestion_id: string;
+        };
         /** AcquisitionContext */
         AcquisitionContext: {
             acquisition_date?: components["schemas"]["PartialDate"] | null;
@@ -2843,6 +2975,10 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Merged At */
+            merged_at?: string | null;
+            /** Merged Into Id */
+            merged_into_id?: string | null;
             /** Scientific Name */
             scientific_name: string;
             /**
@@ -3054,6 +3190,35 @@ export interface components {
          * @enum {string}
          */
         CollectionRecordCategory: "seed_lot" | "sowing" | "plant" | "plant_group" | "stored_material";
+        /** CollidingIdentitySummary */
+        CollidingIdentitySummary: {
+            collection_counts: components["schemas"]["IdentityCollectionCounts"];
+            /** Common Name */
+            common_name?: string | null;
+            /** Conflicting Profile Fields */
+            conflicting_profile_fields?: string[];
+            /** Cultivar Name */
+            cultivar_name?: string | null;
+            /** Display Label */
+            display_label: string;
+            /**
+             * Has Conflicting Profile Fields
+             * @default false
+             */
+            has_conflicting_profile_fields: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Scientific Name */
+            scientific_name: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** ConversionCreate */
         ConversionCreate: {
             /** Botanical Identity Id */
@@ -3297,6 +3462,32 @@ export interface components {
             notes: string | null;
             occurred_on: components["schemas"]["PartialDate"] | null;
             quantity: components["schemas"]["HarvestQuantity-Output"] | null;
+        };
+        /** DuplicateIdentityMergeWrite */
+        DuplicateIdentityMergeWrite: {
+            /**
+             * Duplicate Updated At
+             * Format: date-time
+             */
+            duplicate_updated_at: string;
+            /** Notes */
+            notes?: string | null;
+            /**
+             * Profile Resolution
+             * @default fail_on_conflict
+             * @enum {string}
+             */
+            profile_resolution: "fail_on_conflict" | "keep_survivor";
+            /**
+             * Survivor Identity Id
+             * Format: uuid
+             */
+            survivor_identity_id: string;
+            /**
+             * Survivor Updated At
+             * Format: date-time
+             */
+            survivor_updated_at: string;
         };
         /** EventCreate */
         EventCreate: {
@@ -3974,6 +4165,114 @@ export interface components {
             seed_lots: number;
             /** Sowings */
             sowings: number;
+        };
+        /** IdentityHistoricalNameResponse */
+        IdentityHistoricalNameResponse: {
+            /** Accepted Source Taxon Id */
+            accepted_source_taxon_id?: string | null;
+            /** Authorship */
+            authorship?: string | null;
+            /** Common Name */
+            common_name?: string | null;
+            /** Cultivar Name */
+            cultivar_name?: string | null;
+            /** Display Label */
+            display_label: string;
+            /**
+             * Effective From
+             * Format: date-time
+             */
+            effective_from: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Origin Identity Id */
+            origin_identity_id?: string | null;
+            /** Scientific Name */
+            scientific_name: string;
+            /**
+             * Source Provider
+             * @enum {string}
+             */
+            source_provider: "wfo" | "wcvp" | "gbif" | "operator";
+            /** Source Taxon Id */
+            source_taxon_id?: string | null;
+            /** Source Version */
+            source_version?: string | null;
+            /**
+             * Status Kind
+             * @enum {string}
+             */
+            status_kind: "initial_recorded" | "former_accepted" | "merged_duplicate" | "source_synonym" | "operator_synonym";
+            /** Superseded At */
+            superseded_at?: string | null;
+        };
+        /** IdentityReconciliationEventResponse */
+        IdentityReconciliationEventResponse: {
+            /** Applied Common Name */
+            applied_common_name?: string | null;
+            /** Applied Cultivar Name */
+            applied_cultivar_name?: string | null;
+            /** Applied Scientific Name */
+            applied_scientific_name: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Duplicate Identity Id */
+            duplicate_identity_id?: string | null;
+            /** Evidence */
+            evidence: {
+                [key: string]: unknown;
+            };
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "accepted_name_correction" | "duplicate_identity_merge";
+            /** Previous Common Name */
+            previous_common_name?: string | null;
+            /** Previous Cultivar Name */
+            previous_cultivar_name?: string | null;
+            /** Previous Scientific Name */
+            previous_scientific_name: string;
+            /**
+             * Source Provider
+             * @enum {string}
+             */
+            source_provider: "wfo" | "wcvp" | "gbif" | "operator";
+        };
+        /** IdentityReconciliationResponse */
+        IdentityReconciliationResponse: {
+            /** Conflicts */
+            conflicts: components["schemas"]["ReconciliationConflictResponse"][];
+            /** Former Names */
+            former_names: components["schemas"]["IdentityHistoricalNameResponse"][];
+            /** Has Source Conflict */
+            has_source_conflict: boolean;
+            identity: components["schemas"]["BotanicalIdentityResponse"];
+            /** Original Common Name */
+            original_common_name?: string | null;
+            /** Original Cultivar Name */
+            original_cultivar_name?: string | null;
+            /** Original Display Label */
+            original_display_label: string;
+            /** Original Scientific Name */
+            original_scientific_name: string;
+            /** Reconciliations */
+            reconciliations: components["schemas"]["IdentityReconciliationEventResponse"][];
+            /** Source Assessments */
+            source_assessments: components["schemas"]["SourceTaxonomicAssessmentResponse"][];
+            /** Suggestions */
+            suggestions: components["schemas"]["AcceptedNameSuggestionResponse"][];
         };
         /** IdentityTaxonomy */
         IdentityTaxonomy: {
@@ -5702,6 +6001,20 @@ export interface components {
              */
             place_id: string;
         };
+        /** ReconciliationConflictResponse */
+        ReconciliationConflictResponse: {
+            /** Colliding Identity Id */
+            colliding_identity_id?: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "wcvp_version_conflict" | "cross_source_conflict" | "duplicate_identity_collision";
+            /** Message */
+            message: string;
+            /** Sources */
+            sources: string[];
+        };
         /** RecordedPlaceCoverage */
         RecordedPlaceCoverage: {
             /** Display Path */
@@ -6439,6 +6752,45 @@ export interface components {
             /** Message */
             message?: string | null;
             source?: components["schemas"]["SourceMetadata"] | null;
+        };
+        /** SourceTaxonomicAssessmentResponse */
+        SourceTaxonomicAssessmentResponse: {
+            /** Accepted Authorship */
+            accepted_authorship?: string | null;
+            /** Accepted Scientific Name */
+            accepted_scientific_name?: string | null;
+            /** Accepted Taxon Id */
+            accepted_taxon_id?: string | null;
+            /** Authorship */
+            authorship?: string | null;
+            /** Link Version */
+            link_version?: string | null;
+            /** Linked */
+            linked: boolean;
+            /** Message */
+            message?: string | null;
+            /** Scientific Name */
+            scientific_name?: string | null;
+            /** Source Checksum */
+            source_checksum?: string | null;
+            /** Source Label */
+            source_label: string;
+            /**
+             * Source Provider
+             * @enum {string}
+             */
+            source_provider: "wfo" | "wcvp" | "gbif";
+            /** Source Version */
+            source_version?: string | null;
+            /**
+             * Stale
+             * @default false
+             */
+            stale: boolean;
+            /** Status */
+            status?: string | null;
+            /** Taxon Id */
+            taxon_id?: string | null;
         };
         /** SowingCreate */
         SowingCreate: {
@@ -8642,6 +8994,181 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getBotanicalIdentityReconciliation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityReconciliationResponse"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Botanical identity not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    correctBotanicalIdentityAcceptedName: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptedNameCorrectionWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityReconciliationResponse"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Botanical identity not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reconciliation conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mergeDuplicateBotanicalIdentity: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DuplicateIdentityMergeWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityReconciliationResponse"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Botanical identity not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reconciliation conflict */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

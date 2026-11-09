@@ -77,25 +77,33 @@ def test_schema_uses_native_types_named_constraints_and_only_one_botanical_table
         )
     ).scalar_one()
 
-    assert list(columns) == [
+    assert set(columns) == {
         "id",
         "scientific_name",
         "cultivar_name",
         "common_name",
+        "merged_into_id",
+        "merged_at",
         "created_at",
         "updated_at",
-    ]
+    }
     assert columns["id"].udt_name == "uuid"
+    assert columns["merged_into_id"].udt_name == "uuid"
+    assert columns["merged_at"].data_type == "timestamp with time zone"
     assert columns["created_at"].data_type == "timestamp with time zone"
     assert columns["updated_at"].data_type == "timestamp with time zone"
     assert columns["cultivar_name"].is_nullable == "YES"
     assert columns["common_name"].is_nullable == "YES"
+    assert columns["merged_into_id"].is_nullable == "YES"
+    assert columns["merged_at"].is_nullable == "YES"
     assert "pk_botanical_identities" in constraints
     assert "ck_botanical_identities_scientific_name_normalized" in constraints
     assert "ck_botanical_identities_cultivar_name_unquoted" in constraints
+    assert "ck_botanical_identities_merge_state" in constraints
     assert "NULLS NOT DISTINCT" in index_definition
     assert "lower((scientific_name)::text)" in index_definition
     assert "lower((cultivar_name)::text)" in index_definition
+    assert "merged_into_id IS NULL" in index_definition
     assert tables == {
         "alembic_version",
         "application_settings",
@@ -104,6 +112,8 @@ def test_schema_uses_native_types_named_constraints_and_only_one_botanical_table
         "auth_sessions",
         "botanical_identities",
         "botanical_identity_cover_images",
+        "botanical_identity_names",
+        "botanical_identity_reconciliations",
         "botanical_profiles",
         "botanical_profile_native_ranges",
         "collection_primary_photos",

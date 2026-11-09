@@ -47,7 +47,11 @@ def dashboard(database: Session, today: date | None = None) -> DashboardResponse
                         ("active_plant_groups", PlantGroup, (PlantGroup.lifecycle == "active",)),
                         ("active_seed_lots", SeedLot, (SeedLot.lifecycle == "active",)),
                         ("active_sowings", Sowing, (Sowing.lifecycle == "active",)),
-                        ("botanical_identities", BotanicalIdentity, ()),
+                        (
+                            "botanical_identities",
+                            BotanicalIdentity,
+                            (BotanicalIdentity.merged_into_id.is_(None),),
+                        ),
                         ("events", Event, ()),
                     )
                 ]
