@@ -633,8 +633,8 @@ secure cookies and explicit HTTPS origin. Application startup never migrates. Fo
 Production overrides belong in explicit deployment configuration, not the DEV/Review overlays.
 Existing installations previously using the baseline's legacy `florabase` name must inventory and
 migrate their paired data deliberately before adopting `florabase-prod`; this helper does not silently
-attach production to DEV volumes. The separate [image-only beta](installation.md) uses digest-pinned
-release images and its own stack, storage layout and upgrade controller.
+attach production to DEV volumes. Published releases offer [portable Compose](portable-installation.md) and an
+[advanced controller bundle](installation.md) with its own storage layout and upgrade controller.
 
 ## Review profiles and verification timing
 

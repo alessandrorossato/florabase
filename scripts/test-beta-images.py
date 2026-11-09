@@ -115,7 +115,7 @@ def ctl_bundle_names() -> tuple[str, ...]:
 
 class ReleaseTests(unittest.TestCase):
     def test_current_candidate_inputs_and_platform_policy(self) -> None:
-        self.assertEqual(inputs(ROOT)["version"], "0.1.0-beta.5")
+        self.assertEqual(inputs(ROOT)["version"], "0.1.0-beta.6")
         self.assertEqual(
             inputs(ROOT)["buildkit"],
             "moby/buildkit:v0.34.2@sha256:c5f8862f52499773af85bc07695b2379ef08e8002352b0df2c4864c91d78dabe",
@@ -255,6 +255,7 @@ class ReleaseTests(unittest.TestCase):
         sha = value["source"]["revision"]
         names = (
             *beta_release.INSTALL_BUNDLE,
+            beta_release.PORTABLE_COMPOSE,
             "RELEASE.md",
             "release-manifest.json",
             beta_release.POSTGRES_SBOM,
@@ -939,7 +940,11 @@ class ReleaseTests(unittest.TestCase):
         self.assertNotIn("/releases/tags/", workflow)
         self.assertNotIn("make ci", workflow)
         self.assertIn("publish-beta-images.py --finalize", workflow)
-        for name in (*beta_release.INSTALL_BUNDLE, "release-manifest.json"):
+        for name in (
+            *beta_release.INSTALL_BUNDLE,
+            beta_release.PORTABLE_COMPOSE,
+            "release-manifest.json",
+        ):
             self.assertIn(f"/beta-release/assets/{name}", workflow)
         ci = (ROOT / ".github/workflows/ci.yml").read_text()
         self.assertIn("name: release-migration", ci)
@@ -1714,7 +1719,7 @@ class SharedPublicationTests(unittest.TestCase):
     def test_shared_pipeline_validates_complete_output_before_any_version_write(
         self,
     ) -> None:
-        for fault in (None, "inventory", "extra", "smoke", "tag appeared", "promotion"):
+        for fault in (None, "inventory", "extra", "smoke", "portable", "tag appeared", "promotion"):
             with self.subTest(fault=fault), tempfile.TemporaryDirectory() as temporary:
                 self.exercise_pipeline(Path(temporary) / "output", fault)
 
@@ -1741,6 +1746,11 @@ class SharedPublicationTests(unittest.TestCase):
                 raise ValueError("injected smoke failure")
             if fault == "tag appeared":
                 tagged[("alessandrorossato/florabase-frontend", value["version"])] = "unexpected"
+
+        def portable_smoke(_root: Path, compose: Path, backend: str, _log_path: Path) -> None:
+            self.assertIn(f'image: "{backend}"', compose.read_text())
+            if fault == "portable":
+                raise ValueError("injected portable smoke failure")
 
         def promote(reference: str, tag: str, registry: str) -> str:
             self.assertEqual(registry, host)
@@ -1780,6 +1790,7 @@ class SharedPublicationTests(unittest.TestCase):
                 side_effect=lambda ref, path, scanner: path.write_text("{}"),
             ),
             patch.object(publisher, "run_artifact_smoke", side_effect=smoke),
+            patch.object(publisher, "run_portable_smoke", side_effect=portable_smoke),
             patch.object(publisher, "promote_image", side_effect=promote) as promotion,
         ):
 
@@ -1808,13 +1819,15 @@ class SharedPublicationTests(unittest.TestCase):
         if fault is None:
             self.assertTrue(all(stage["status"] == "passed" for stage in stages.values()))
             assets = state["release"]["assets"]
-            self.assertEqual(len(assets), 7)
+            self.assertEqual(len(assets), 8)
             self.assertEqual(
                 {name: (item["size"], item["sha256"]) for name, item in assets.items()},
                 beta_release.release_asset_inventory(output / "assets"),
             )
         else:
-            failed = {"smoke": "SCAN/SMOKE", "promotion": "PROMOTE"}.get(fault, "VALIDATE ASSETS")
+            failed = {"smoke": "SCAN/SMOKE", "portable": "SCAN/SMOKE", "promotion": "PROMOTE"}.get(
+                fault, "VALIDATE ASSETS"
+            )
             self.assertEqual(stages[failed]["status"], "failed")
             if fault == "promotion":
                 self.assertEqual(set(state["promoted"]), {"backend"})
@@ -1834,6 +1847,7 @@ class SharedPublicationTests(unittest.TestCase):
             assets.mkdir()
             for name in (
                 *beta_release.INSTALL_BUNDLE,
+                beta_release.PORTABLE_COMPOSE,
                 "RELEASE.md",
                 beta_release.POSTGRES_SBOM,
                 f"florabase-{value['version']}-source.tar.gz",

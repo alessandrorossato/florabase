@@ -7886,3 +7886,39 @@ Status remains implemented pending canonical verification.
   publication, not by ordinary PR rehearsal.
 - Checks: `test-uat-instance` (16, also in a detached checkout), `make test-beta-images` (58 + 4),
   3.12 parse, ruff; independent review approved.
+
+### PORTABLE-COMPOSE-001 — three-service beta.6 distribution, 8 November 2026
+
+- Protected publication renders and attests `portable-compose.yaml` from the tested candidate
+  image digests and requires its disposable install/recovery smoke before promotion. The advanced
+  controller assets and PostgreSQL image pin are preserved. The beta.5 tag and published assets
+  were untouched.
+- The runtime database opens an existing cluster only. The image checks its single Alembic head
+  before launching Uvicorn. Explicit schema initialization requires an empty database and upgrades
+  require the named previous head, with a serialized PostgreSQL transaction for pending changes.
+- Focused release regressions (56 tests and 4 release-tool lock tests) and controller compatibility
+  checks (62 host and 50 Python 3.8 tests) passed. Independent QA checked the exact asset wiring and
+  refused initialization and restore paths. Its follow-up passed after fail-fast setup, dependency
+  restart and smoke cleanup fixes.
+- Disposable runtime drills on Engine 29.9.3 exercised fresh cluster and schema initialization,
+  owner login, original media, restart persistence, empty and mismatched-schema refusal, a failed
+  migration with the previous revision preserved, a successful retry, and isolated paired restore.
+  The final run used Compose 2.20.1, local-registry candidate app digests and the published GHCR
+  PostgreSQL digest. A Compose 5.7.0 SIGTERM drill confirmed removal of the disposable binds and
+  zero remaining project resources.
+- The first FULL run passed workflow and static checks and stopped at 89.54% backend unit coverage.
+  Fifteen schema guard regressions passed focused Ruff, mypy and pytest. The backend suite then
+  passed with 1,027 tests and 90.11% coverage. Runtime source and Compose were unchanged.
+- The canonical FULL result belongs to the exact-tree verification receipt. Protected beta.6
+  publication and deployment on a real manager or HTTPS host remain pending.
+
+### PORTABLE-COMPOSE-001 — integrate PR #162, 9 November 2026
+
+- Merged main at `6f17913` into the published feature history. Both feature records and workflow
+  check lists were preserved. Beta.6 remains a strict release rehearsal candidate against beta.5
+  main, with the protected publisher's tag-reuse refusal and PostgreSQL pin intact.
+- Independent QA approved the conflict resolution. The 145-entry feature graph, UAT workflow tests
+  (19 + 15 + 16), release policy tests (58 + 4), resource tests (19), API drift, and golden dataset
+  integration (34) passed. The two-instance smoke requires a committed HEAD containing main, so its
+  pre-commit attempt refused at the ancestry guard and cleaned up. The committed-tree rerun and
+  canonical gate are tracked separately.
