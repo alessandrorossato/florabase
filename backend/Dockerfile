@@ -49,7 +49,7 @@ COPY alembic ./alembic
 COPY scripts/attachment_artifacts.py ./scripts/attachment_artifacts.py
 
 COPY LICENSE /usr/share/licenses/florabase/LICENSE
-ARG VERSION=0.1.0-beta.4
+ARG VERSION=0.1.0-beta.6
 ARG REVISION=unknown
 ARG SOURCE=https://github.com/alessandrorossato/florabase
 LABEL org.opencontainers.image.title="Florabase backend" \
@@ -62,7 +62,7 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=6 \
 RUN find /usr /bin /sbin -xdev -type f -perm /6000 -exec chmod a-s {} +
 USER florabase
 EXPOSE 8000
-CMD ["uvicorn", "florabase.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-server-header", "--no-proxy-headers"]
+CMD ["python", "-m", "florabase.db.release_schema", "serve"]
 
 FROM development-builder AS development
 COPY requirements-dev.lock ./

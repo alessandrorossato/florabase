@@ -1,3 +1,24 @@
+## 2026-11-08 — beta publication preflight recovery
+
+- Protected beta.4 run `42508727559` passed exhaustive verification and reached `smoke_passed`.
+  Its retained artifact contains `postgres-reproducibility/` alongside the flat release files.
+  The actual beta.4 preparation and inventory functions reproduced the failure on that directory.
+- Shared the staged publisher with local and hosted rehearsal. Publication validates an explicit
+  asset set and recorded digests, retains diagnostic evidence separately, and requires exact-main
+  CI, the forced migration cycle and hosted rehearsal before proceeding.
+- [Preflight, coverage matrix, checkpoint and retry policy](security/beta-distribution-001/release-publication-preflight.md).
+  The beta.4-layout preflight at `75d38c7` passed every local stage, including pinned PostgreSQL
+  reproduction, Trivy, artifact-only smoke, validation of seven assets and three local promotions.
+  Independent QA reproduced the old failure and recomputed all seven asset hashes. Its findings
+  led to the previous-main migration base and stricter finalization guards. Beta.5 is the next
+  candidate. The beta.4 tag still peels to `ea4f3ad3`. Read-only checks found no beta.5 Git tag,
+  release or application image tags. Focused release 56, tool lock 4 and verification impact 30
+  passed. Release-script Ruff and mypy, workflow actionlint, feature graph and API generation
+  passed. API declarations remained byte-identical. The initial canonical gate stopped at the
+  CI policy test before product stages. Updated its assertion for the main-only job while
+  preserving the three required PR jobs. The focused policy check passed. Final exact-tree
+  evidence is separate.
+
 ## 2026-11-08 — BETA4-PREP-001 release candidate preparation
 
 - Prepared the current release, backend, frontend and installation identities for `0.1.0-beta.4`;
@@ -7824,6 +7845,83 @@ Status remains implemented pending canonical verification.
   its slow test call and verified disposable cleanup. The planner suite passed 30 tests, and the
   workflow helper suite and 141-feature graph passed. The plan still selects FULL. The final
   consolidation gate and receipt remain pending.
+
+### MULTIBRANCH-UAT-001 — parallel per-worktree UAT instances, 8 November 2026
+
+- Added `make uat-instance-{up,status,seed,validate,stop,reset,remove,list}` (`scripts/uat_instance.py`,
+  `compose.uat-instance.yaml`). Each linked worktree can own one instance, `florabase-uat-branch-<branch>`.
+  It gets a port from a four-slot pool (15180–15183) recorded in immutable volume labels, its own
+  `golden_uat` PostgreSQL, media and dependencies, and the inherited UAT Preview identity guards. Seeding
+  uses the existing golden runtime with an explicit SMOKE or COMPREHENSIVE profile through one narrow
+  `uat-instance` target. Heavy up, seed and reset share canonical FULL's capacity lock. The singleton UAT
+  Preview was refactored to class attributes only, with no behaviour change. Golden `table_counts` now skips
+  session tables, as the digest already did. [Handoff](multibranch-uat-001-handoff.md).
+- Scope: the TUXEDO golden reference on production image digests is GOLDEN-REFERENCE-001 (planned).
+  TEST-DATA-001/002 statuses are unchanged; the handoff separates their evidence from missing acceptance.
+- Independent infrastructure QA: 3 P1 and 4 P2 findings fixed with regressions, P3 findings documented.
+- Checks: `make test-uat-preview` (19 + 15 + 14), `test-workflow-resources`, `test-environment-workflow`
+  (35), `test-agent-workflow` (63, 3 skipped), `make golden-dataset-check` (34 passed, 292 s),
+  `make workflow-check`, `check-features` (144), and `make smoke-uat-instance` passing on run 6 in 195 s
+  with zero residual state; runs 1–5 and their fixes are in the handoff. Operator environments unchanged.
+- Canonical `make feature-verify` (FULL, 17 stages) passed in 933 s; integration 809 passed, 29 skipped.
+- Delta QA: all P1/P2 fixes passed; its new P2 (manifest unreadable after a rebuilding `up` on the
+  containerd image store, seen in run 6) is fixed and asserted by the smoke; run 7 passed in 224 s.
+- Unresolved: operator UAT; orphaned-source cleanup; the same latent `marker_state` issue in the
+  singleton UAT Preview. Synthetic WFO/WCVP
+  indexes are not provisioned in instances, and same-browser localhost cookies are shared across ports.
+
+### MULTIBRANCH-UAT-001 — PR #162 CI recovery, 9 November 2026
+
+- Quality: `test_reset_keeps_port_and_may_change_profile_only_when_confirmed` assumed an attached
+  checkout; CI tests the detached merge commit, where the one-off cleanup is correctly skipped
+  because base reset refuses detached owners. The test now pins an attached identity, and a new test
+  proves a detached reset is refused before any cleanup, guard or Docker call. No implementation change.
+- Release rehearsal: every PR failed once v0.1.0-beta.5 was published, because the hosted rehearsal
+  required the version's GHCR tags to be absent. A PR or push is now a release candidate unless its
+  base commit already names the same `release/inputs.json` version. Candidates (version bumps such as
+  beta.6, manual runs, unknown bases) keep the strict absence refusal. Others accept the published
+  base tags and still run the full local publisher-equivalent pipeline. The PostgreSQL identity gate
+  is unchanged. Protected publication is unchanged and still refuses tag reuse. Consequence:
+  release-input drift without a version bump is caught at the next bump's strict rehearsal and at
+  publication, not by ordinary PR rehearsal.
+- Checks: `test-uat-instance` (16, also in a detached checkout), `make test-beta-images` (58 + 4),
+  3.12 parse, ruff; independent review approved.
+
+### PORTABLE-COMPOSE-001 — three-service beta.6 distribution, 8 November 2026
+
+- Protected publication renders and attests `portable-compose.yaml` from the tested candidate
+  image digests and requires its disposable install/recovery smoke before promotion. The advanced
+  controller assets and PostgreSQL image pin are preserved. The beta.5 tag and published assets
+  were untouched.
+- The runtime database opens an existing cluster only. The image checks its single Alembic head
+  before launching Uvicorn. Explicit schema initialization requires an empty database and upgrades
+  require the named previous head, with a serialized PostgreSQL transaction for pending changes.
+- Focused release regressions (56 tests and 4 release-tool lock tests) and controller compatibility
+  checks (62 host and 50 Python 3.8 tests) passed. Independent QA checked the exact asset wiring and
+  refused initialization and restore paths. Its follow-up passed after fail-fast setup, dependency
+  restart and smoke cleanup fixes.
+- Disposable runtime drills on Engine 29.9.3 exercised fresh cluster and schema initialization,
+  owner login, original media, restart persistence, empty and mismatched-schema refusal, a failed
+  migration with the previous revision preserved, a successful retry, and isolated paired restore.
+  The final run used Compose 2.20.1, local-registry candidate app digests and the published GHCR
+  PostgreSQL digest. A Compose 5.7.0 SIGTERM drill confirmed removal of the disposable binds and
+  zero remaining project resources.
+- The first FULL run passed workflow and static checks and stopped at 89.54% backend unit coverage.
+  Fifteen schema guard regressions passed focused Ruff, mypy and pytest. The backend suite then
+  passed with 1,027 tests and 90.11% coverage. Runtime source and Compose were unchanged.
+- The canonical FULL result belongs to the exact-tree verification receipt. Protected beta.6
+  publication and deployment on a real manager or HTTPS host remain pending.
+
+### PORTABLE-COMPOSE-001 — integrate PR #162, 9 November 2026
+
+- Merged main at `6f17913` into the published feature history. Both feature records and workflow
+  check lists were preserved. Beta.6 remains a strict release rehearsal candidate against beta.5
+  main, with the protected publisher's tag-reuse refusal and PostgreSQL pin intact.
+- Independent QA approved the conflict resolution. The 145-entry feature graph, UAT workflow tests
+  (19 + 15 + 16), release policy tests (58 + 4), resource tests (19), API drift, and golden dataset
+  integration (34) passed. The two-instance smoke requires a committed HEAD containing main, so its
+  pre-commit attempt refused at the ancestry guard and cleaned up. The committed-tree rerun and
+  canonical gate are tracked separately.
 
 ### BETA-DATA-001 — synthetic first-collection rehearsal, 8 November 2026
 

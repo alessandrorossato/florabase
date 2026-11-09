@@ -88,3 +88,31 @@ jobs:
           name: ci-build-${{ github.run_attempt }}
           path: ${{ runner.temp }}/ci-build.log
           retention-days: 14
+
+  release-migration:
+    name: release-migration
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out exact main commit
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Run required release migration cycle
+        env:
+          BASE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          [[ "$BASE_SHA" =~ ^[0-9a-f]{40}$ && "$BASE_SHA" != "$GITHUB_SHA" ]]
+          git merge-base --is-ancestor "$BASE_SHA" "$GITHUB_SHA"
+          ./scripts/verify-migration-cycle.sh "$BASE_SHA" --force-cycle 2>&1 | tee "$RUNNER_TEMP/ci-release-migration.log"
+      - name: Retain complete release migration log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-release-migration-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-release-migration.log
+          retention-days: 14

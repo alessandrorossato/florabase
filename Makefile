@@ -258,9 +258,9 @@ smoke-dev-upgrade: ## Prove upgrade image freshness/retry on unique disposable s
 	@python3 ./scripts/smoke-dev-upgrade.py
 
 workflow-check: test-dependabot-policy test-beta-images test-beta-runtime ## Lint, format-check and strictly type-check the new environment helpers
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff check --no-cache --isolated --select E4,E7,E9,F,I,B,UP /workflow/workflow_resources.py /workflow/feature_worktree.py /workflow/test-agent-workflow.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/ci-verify.py /workflow/feature-tree-fingerprint.py /workflow/test-verification-impact.py /workflow/test-workflow-resources.py /workflow/smoke-workflow-resources.py /workflow/smoke-migration-cycle.py /workflow/workflow_environment.py /workflow/sourcing_preview.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_source.py /workflow/uat_preview.py /workflow/test-uat-source.py /workflow/test-uat-preview.py /workflow/smoke-uat-preview.py /workflow/uat_fixture.py /workflow/review_dataset_v5.py /workflow/golden_plan.py /workflow/golden_dataset.py /workflow/test-uat-fixture.py /workflow/test-review-fixture.py /workflow/beta_release.py /workflow/beta-release-checks.py /workflow/publish-beta-images.py /workflow/smoke-beta-images.py /workflow/rehearse-beta-release.py /workflow/build-beta-candidate.py /workflow/test-beta-images.py /workflow/test-release-tools-lock.py /workflow/release-tools.py /workflow/test-beta-lifecycle.py /workflow/smoke-beta-runtime.py
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff format --no-cache --check /workflow/workflow_resources.py /workflow/feature_worktree.py /workflow/test-agent-workflow.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/ci-verify.py /workflow/feature-tree-fingerprint.py /workflow/test-verification-impact.py /workflow/test-workflow-resources.py /workflow/smoke-workflow-resources.py /workflow/smoke-migration-cycle.py /workflow/workflow_environment.py /workflow/sourcing_preview.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_source.py /workflow/uat_preview.py /workflow/test-uat-source.py /workflow/test-uat-preview.py /workflow/smoke-uat-preview.py /workflow/uat_fixture.py /workflow/review_dataset_v5.py /workflow/golden_plan.py /workflow/golden_dataset.py /workflow/test-uat-fixture.py /workflow/test-review-fixture.py /workflow/beta_release.py /workflow/beta-release-checks.py /workflow/publish-beta-images.py /workflow/smoke-beta-images.py /workflow/rehearse-beta-release.py /workflow/build-beta-candidate.py /workflow/test-beta-images.py /workflow/test-release-tools-lock.py /workflow/release-tools.py /workflow/test-beta-lifecycle.py /workflow/smoke-beta-runtime.py
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend mypy --strict --follow-imports=skip /workflow/workflow_resources.py /workflow/feature_worktree.py /workflow/test-agent-workflow.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/ci-verify.py /workflow/feature-tree-fingerprint.py /workflow/smoke-workflow-resources.py /workflow/smoke-migration-cycle.py /workflow/workflow_environment.py /workflow/sourcing_preview.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_source.py /workflow/uat_preview.py /workflow/smoke-uat-preview.py /workflow/beta_release.py /workflow/beta-release-checks.py /workflow/publish-beta-images.py /workflow/smoke-beta-images.py /workflow/rehearse-beta-release.py /workflow/build-beta-candidate.py /workflow/test-beta-images.py /workflow/test-release-tools-lock.py /workflow/release-tools.py /workflow/test-beta-lifecycle.py /workflow/smoke-beta-runtime.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff check --no-cache --isolated --select E4,E7,E9,F,I,B,UP /workflow/workflow_resources.py /workflow/feature_worktree.py /workflow/test-agent-workflow.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/ci-verify.py /workflow/feature-tree-fingerprint.py /workflow/test-verification-impact.py /workflow/test-workflow-resources.py /workflow/smoke-workflow-resources.py /workflow/smoke-migration-cycle.py /workflow/workflow_environment.py /workflow/sourcing_preview.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_source.py /workflow/uat_preview.py /workflow/uat_instance.py /workflow/test-uat-instance.py /workflow/smoke-uat-instance.py /workflow/test-uat-source.py /workflow/test-uat-preview.py /workflow/smoke-uat-preview.py /workflow/uat_fixture.py /workflow/review_dataset_v5.py /workflow/golden_plan.py /workflow/golden_dataset.py /workflow/test-uat-fixture.py /workflow/test-review-fixture.py /workflow/beta_release.py /workflow/beta-release-checks.py /workflow/publish-beta-images.py /workflow/smoke-beta-images.py /workflow/rehearse-beta-release.py /workflow/build-beta-candidate.py /workflow/test-beta-images.py /workflow/test-release-tools-lock.py /workflow/release-tools.py /workflow/test-beta-lifecycle.py /workflow/smoke-beta-runtime.py /workflow/smoke-portable-compose.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff format --no-cache --check /workflow/workflow_resources.py /workflow/feature_worktree.py /workflow/test-agent-workflow.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/ci-verify.py /workflow/feature-tree-fingerprint.py /workflow/test-verification-impact.py /workflow/test-workflow-resources.py /workflow/smoke-workflow-resources.py /workflow/smoke-migration-cycle.py /workflow/workflow_environment.py /workflow/sourcing_preview.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_source.py /workflow/uat_preview.py /workflow/uat_instance.py /workflow/test-uat-instance.py /workflow/smoke-uat-instance.py /workflow/test-uat-source.py /workflow/test-uat-preview.py /workflow/smoke-uat-preview.py /workflow/uat_fixture.py /workflow/review_dataset_v5.py /workflow/golden_plan.py /workflow/golden_dataset.py /workflow/test-uat-fixture.py /workflow/test-review-fixture.py /workflow/beta_release.py /workflow/beta-release-checks.py /workflow/publish-beta-images.py /workflow/smoke-beta-images.py /workflow/rehearse-beta-release.py /workflow/build-beta-candidate.py /workflow/test-beta-images.py /workflow/test-release-tools-lock.py /workflow/release-tools.py /workflow/test-beta-lifecycle.py /workflow/smoke-beta-runtime.py /workflow/smoke-portable-compose.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend mypy --strict --follow-imports=skip /workflow/workflow_resources.py /workflow/feature_worktree.py /workflow/test-agent-workflow.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/ci-verify.py /workflow/feature-tree-fingerprint.py /workflow/smoke-workflow-resources.py /workflow/smoke-migration-cycle.py /workflow/workflow_environment.py /workflow/sourcing_preview.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_source.py /workflow/uat_preview.py /workflow/uat_instance.py /workflow/smoke-uat-instance.py /workflow/smoke-uat-preview.py /workflow/beta_release.py /workflow/beta-release-checks.py /workflow/publish-beta-images.py /workflow/smoke-beta-images.py /workflow/rehearse-beta-release.py /workflow/build-beta-candidate.py /workflow/test-beta-images.py /workflow/test-release-tools-lock.py /workflow/release-tools.py /workflow/test-beta-lifecycle.py /workflow/smoke-beta-runtime.py /workflow/smoke-portable-compose.py
 	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR):/repo:ro" backend ruff check --no-cache --isolated --target-version py38 --select E4,E7,E9,F,I,B,UP /repo/deploy/beta/florabasectl.py /repo/scripts/smoke_beta_runtime_client.py /repo/scripts/test-beta-runtime.py
 	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR):/repo:ro" backend ruff format --no-cache --isolated --line-length 100 --target-version py38 --check /repo/deploy/beta/florabasectl.py /repo/scripts/smoke_beta_runtime_client.py /repo/scripts/test-beta-runtime.py
 	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR):/repo:ro" backend mypy --strict /repo/deploy/beta/florabasectl.py /repo/scripts/smoke_beta_runtime_client.py /repo/scripts/test-beta-runtime.py
@@ -288,6 +288,39 @@ UAT_RETIREMENT_HELPER := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))scripts/u
 uat-preview-remove: export CONFIRM_REMOVE_UAT_PREVIEW := $(CONFIRM_REMOVE_UAT_PREVIEW)
 uat-preview-remove: ## Retire ONLY owning UAT state; CONFIRM_REMOVE_UAT_PREVIEW=florabase-uat-preview
 	@python3 "$(UAT_RETIREMENT_HELPER)" remove
+
+UAT_INSTANCE_HELPER := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))scripts/uat_instance.py
+PROFILE ?=
+
+.PHONY: uat-instance-up uat-instance-status uat-instance-seed uat-instance-validate uat-instance-stop uat-instance-reset uat-instance-remove uat-instance-list smoke-uat-instance
+uat-instance-up: ## Start/rebuild THIS worktree's own UAT instance (port 15180-15183); PROFILE=smoke|comprehensive on first use
+	@python3 "$(UAT_INSTANCE_HELPER)" up --profile "$(PROFILE)"
+
+uat-instance-status: ## Show this worktree's instance: project, port, source/SHA, migrations, dataset manifest
+	@python3 "$(UAT_INSTANCE_HELPER)" status
+
+uat-instance-seed: ## Explicitly generate the instance's golden SMOKE/COMPREHENSIVE dataset (idempotent)
+	@python3 "$(UAT_INSTANCE_HELPER)" seed --profile "$(PROFILE)"
+
+uat-instance-validate: ## Verify the instance dataset against the reviewed golden baseline (exit 0/1/3/4)
+	@python3 "$(UAT_INSTANCE_HELPER)" validate
+
+uat-instance-stop: ## Stop this worktree's instance, preserving its DB/media/dependencies
+	@python3 "$(UAT_INSTANCE_HELPER)" stop
+
+uat-instance-reset: export CONFIRM_RESET_UAT_INSTANCE := $(CONFIRM_RESET_UAT_INSTANCE)
+uat-instance-reset: ## Recreate ONLY this instance and reseed; CONFIRM_RESET_UAT_INSTANCE=<its project> [PROFILE=...]
+	@python3 "$(UAT_INSTANCE_HELPER)" reset --profile "$(PROFILE)"
+
+uat-instance-remove: export CONFIRM_REMOVE_UAT_INSTANCE := $(CONFIRM_REMOVE_UAT_INSTANCE)
+uat-instance-remove: ## Retire ONLY this instance's containers/network/volumes/image tags; CONFIRM_REMOVE_UAT_INSTANCE=<its project>
+	@python3 "$(UAT_INSTANCE_HELPER)" remove
+
+uat-instance-list: ## Read-only machine-wide list of UAT instance slots, owners and state
+	@python3 "$(UAT_INSTANCE_HELPER)" list
+
+smoke-uat-instance: ## Prove two coexisting instances, isolation, refusals and exact cleanup on disposable state
+	@python3 ./scripts/smoke-uat-instance.py
 
 SOURCING_HELPER := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))scripts/sourcing_preview.py
 
@@ -323,6 +356,7 @@ test-dependabot-policy: ## Validate YAML and dependency deferral/group contracts
 test-uat-preview: ## Test UAT workflow identity, retirement, reset and fixture isolation
 	@python3 ./scripts/test-uat-preview.py
 	@python3 ./scripts/test-uat-source.py
+	@python3 ./scripts/test-uat-instance.py
 
 smoke-uat-preview: ## Prove UAT seed/auth/reset/persistence/ownership transition on disposable Compose state
 	@python3 ./scripts/smoke-uat-preview.py
@@ -359,3 +393,10 @@ test-beta-runtime: ## Offline beta stack contract and controller safety rules (h
 
 smoke-beta-runtime: ## Disposable Engine 24.0.2/Compose 2.20.1 install, recovery and upgrade drills (no real host)
 	@python3 ./scripts/smoke-beta-runtime.py --evidence /tmp/florabase-beta-runtime-smoke.json
+
+.PHONY: release-preflight-local
+release-preflight-local: ## Rehearse protected release preparation and promotion in an owned local registry
+	@set -eo pipefail; \
+	run_dir=$$(mktemp -d "$${TMPDIR:-/tmp}/florabase-release-preflight.XXXXXXXX"); \
+	echo "Release preflight evidence: $$run_dir"; \
+	python3 scripts/release-tools.py scripts/rehearse-beta-release.py --output "$$run_dir/output" 2>&1 | tee "$$run_dir/preflight.log"

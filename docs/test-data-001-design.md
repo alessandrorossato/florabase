@@ -10,6 +10,11 @@ The SMOKE profile generates, validates and retires isolated synthetic copies fro
 declared in the manifest and refuses until reviewed. [TEST-DATA-002](test-data-002-design.md) later made
 COMPREHENSIVE executable and resolved some gaps listed below. No environment lifecycle or restore
 workflow changed, and no Review, UAT, Sourcing, Preview, DEV or production command can reach this code.
+Later, [MULTIBRANCH-UAT-001](development-workflow.md#uat-instances-parallel-per-worktree) added exactly one
+persistent target, per-worktree UAT instances (`golden_uat`, workflow mode `uat-instance`); the copy
+lifecycle and every other environment remain refused. That guard reads the workflow mode and project
+from the environment; the host helper proves Docker identity first, and any other container would also
+need a `golden_uat` database and user plus a mounted runtime, so a forged variable still fails closed.
 
 ```bash
 make golden-dataset-check   # Disposable Compose project; proves generation, isolation and validation

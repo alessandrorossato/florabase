@@ -21,6 +21,7 @@ import textwrap
 import unittest
 import urllib.error
 import urllib.parse
+from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -114,7 +115,7 @@ def ctl_bundle_names() -> tuple[str, ...]:
 
 class ReleaseTests(unittest.TestCase):
     def test_current_candidate_inputs_and_platform_policy(self) -> None:
-        self.assertEqual(inputs(ROOT)["version"], "0.1.0-beta.4")
+        self.assertEqual(inputs(ROOT)["version"], "0.1.0-beta.6")
         self.assertEqual(
             inputs(ROOT)["buildkit"],
             "moby/buildkit:v0.34.2@sha256:c5f8862f52499773af85bc07695b2379ef08e8002352b0df2c4864c91d78dabe",
@@ -216,8 +217,10 @@ class ReleaseTests(unittest.TestCase):
         refs = {
             "backend": f"{host}/alessandrorossato/florabase-backend@sha256:{'a' * 64}",
             "frontend": f"{host}/alessandrorossato/florabase-frontend@sha256:{'d' * 64}",
-            "postgresql": f"{host}/alessandrorossato/florabase-postgres@sha256:{'f' * 64}",
+            "postgresql": f"{host}/alessandrorossato/florabase-postgres@{value['postgresql']['index_digest']}",
         }
+        for service in value["images"]:
+            value["images"][service]["reference"] = refs[service]
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "release-manifest.json"
             path.write_text(json.dumps(value))
@@ -245,53 +248,20 @@ class ReleaseTests(unittest.TestCase):
                 host,
             )
 
-    def test_rehearsal_uses_the_locked_postgres_repository_namespace(self) -> None:
-        rehearsal = (ROOT / "scripts/rehearse-beta-release.py").read_text()
-        builder = (ROOT / "scripts/beta_release.py").read_text()
-        self.assertIn('locked["postgresql"][', rehearsal)
-        self.assertIn('.removeprefix("ghcr.io/")', rehearsal)
-        self.assertIn('pg["repository"].removeprefix("ghcr.io/")', builder)
-
-    def test_previous_buildkit_diagnostic_does_not_apply_the_pinned_acceptance_gate(self) -> None:
-        tree = ast.parse((ROOT / "scripts/rehearse-beta-release.py").read_text())
-        diagnostic_calls = [
-            node
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "local_postgres_identity"
-            and any(keyword.arg == "buildkit_image" for keyword in node.keywords)
-        ]
-        self.assertEqual(len(diagnostic_calls), 1)
-        self.assertNotIn("destination", {keyword.arg for keyword in diagnostic_calls[0].keywords})
-
-    def test_rehearsal_retains_postgres_evidence_before_strict_pin_gate(self) -> None:
-        source = (ROOT / "scripts/rehearse-beta-release.py").read_text()
-        calls = [
-            node
-            for node in ast.walk(ast.parse(source))
-            if isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "local_postgres_identity"
-        ]
-        self.assertEqual(len(calls), 2)
-        for call in calls:
-            self.assertIn("evidence_dir", {keyword.arg for keyword in call.keywords})
-            self.assertNotIn("destination", {keyword.arg for keyword in call.keywords})
-        self.assertLess(
-            source.index('report["stages"]["previous_buildkit_diagnostic"]'),
-            source.index('require_pinned_postgres(identity, locked["postgresql"])'),
-        )
-
     def test_release_finalization_inputs_match_protected_draft_request_without_api_call(
         self,
     ) -> None:
         value = candidate()
         sha = value["source"]["revision"]
-        assets = {
-            "RELEASE.md": (21, "sha256:" + "a" * 64),
-            "compose.yaml": (42, "sha256:" + "b" * 64),
-        }
+        names = (
+            *beta_release.INSTALL_BUNDLE,
+            beta_release.PORTABLE_COMPOSE,
+            "RELEASE.md",
+            "release-manifest.json",
+            beta_release.POSTGRES_SBOM,
+            f"florabase-{value['version']}-source.tar.gz",
+        )
+        assets = {name: (21, "sha256:" + "a" * 64) for name in names}
         result = release_finalization_inputs(value, sha, assets)
         self.assertEqual(result["tag"], "v" + value["version"])
         self.assertEqual(result["target_commitish"], sha)
@@ -303,7 +273,9 @@ class ReleaseTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             release_finalization_inputs(value, "d" * 40, assets)
         with self.assertRaises(ValueError):
-            release_finalization_inputs(value, sha, {"../RELEASE.md": assets["RELEASE.md"]})
+            release_finalization_inputs(
+                value, sha, {**assets, "unexpected.txt": assets["RELEASE.md"]}
+            )
 
     def test_platform_policy_requires_supported_platform_and_separate_deployment(self) -> None:
         check_platform(policy())
@@ -454,7 +426,9 @@ class ReleaseTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_manifest(value)
 
-    def test_check_names_from_other_sources_or_commits_do_not_approve_release(self) -> None:
+    def test_check_names_from_other_sources_or_commits_do_not_approve_release(
+        self,
+    ) -> None:
         sha = "c" * 40
         valid = [
             {
@@ -463,10 +437,11 @@ class ReleaseTests(unittest.TestCase):
                 "conclusion": "success",
                 "status": "completed",
             }
-            for name in ("quality", "integration", "build")
+            for name in ("quality", "integration", "build", "release-migration")
         ]
         self.assertTrue(checks.approved_ci_jobs(valid, sha))
-        self.assertFalse(checks.approved_ci_jobs(valid[:2], sha))
+        self.assertFalse(checks.approved_ci_jobs(valid[:-1], sha))
+        self.assertFalse(checks.approved_ci_jobs([*valid, valid[0]], sha))
         for field, invalid in (
             ("head_sha", "d" * 40),
             ("conclusion", "failure"),
@@ -498,6 +473,61 @@ class ReleaseTests(unittest.TestCase):
                 {**valid, "path": ".github/workflows/spoof.yml"}, "a" * 40, "owner/repo"
             )
         )
+
+    def test_required_main_evidence_reuses_latest_jobs_only_within_the_exact_run(self) -> None:
+        sha = "a" * 40
+        repo = "owner/repo"
+        approved = {
+            "id": 42,
+            "run_attempt": 2,
+            "path": ".github/workflows/ci.yml",
+            "head_sha": sha,
+            "head_branch": "main",
+            "event": "push",
+            "status": "completed",
+            "conclusion": "success",
+            "repository": {"full_name": repo},
+            "head_repository": {"full_name": repo},
+        }
+        jobs = [
+            {
+                "name": name,
+                "head_sha": sha,
+                "status": "completed",
+                "conclusion": "success",
+                "run_attempt": 2 if name == "release-migration" else 1,
+            }
+            for name in ("quality", "integration", "build", "release-migration")
+        ]
+        required = {job["name"] for job in jobs}
+        for evidence in (jobs, jobs[:-1]):
+            with (
+                self.subTest(complete=evidence == jobs),
+                patch.object(
+                    checks,
+                    "run",
+                    side_effect=[
+                        json.dumps(
+                            [
+                                {
+                                    "workflow_runs": [
+                                        {**approved, "id": 11, "head_sha": "b" * 40},
+                                        approved,
+                                    ]
+                                }
+                            ]
+                        ),
+                        json.dumps([{"jobs": evidence}]),
+                    ],
+                ) as api,
+            ):
+                if evidence == jobs:
+                    checks.require_workflow(repo, sha, "ci.yml", required)
+                else:
+                    with self.assertRaisesRegex(ValueError, "exact main SHA"):
+                        checks.require_workflow(repo, sha, "ci.yml", required)
+                self.assertEqual(api.call_count, 2)
+                self.assertIn("/runs/42/jobs?filter=latest", api.call_args.args[-1])
 
     def test_release_identity_refuses_before_registry_access(self) -> None:
         sha = "c" * 40
@@ -568,16 +598,24 @@ class ReleaseTests(unittest.TestCase):
             return subprocess.CompletedProcess(command, 0)
 
         for failing, phase in (
-            ("local_postgres_identity", "preflight"),
-            ("scan_images", "frontend_candidate_pushed"),
-            ("run_artifact_smoke", "security_passed"),
+            ("local_postgres_identity", "CANDIDATES"),
+            ("scan_images", "SCAN/SMOKE"),
+            ("run_artifact_smoke", "SCAN/SMOKE"),
         ):
-            with self.subTest(failing=failing), tempfile.TemporaryDirectory() as temporary:
+            with (
+                self.subTest(failing=failing),
+                tempfile.TemporaryDirectory() as temporary,
+            ):
                 target = Path(temporary) / "output"
                 with (
                     patch.dict(os.environ, environment, clear=True),
                     patch.object(sys, "argv", ["publish", "--output", str(target)]),
-                    patch.object(publisher, "inputs", return_value=inputs(ROOT)),
+                    patch.object(publisher, "check_toolchain"),
+                    patch.object(
+                        publisher,
+                        "disposable_registry",
+                        return_value=nullcontext(("127.0.0.1:5055", 5055)),
+                    ),
                     patch.object(publisher, "run", side_effect=output),
                     patch.object(publisher, "manifest", return_value=candidate()),
                     patch.object(publisher, "published_digest", return_value=None),
@@ -593,14 +631,19 @@ class ReleaseTests(unittest.TestCase):
                         },
                     ),
                     patch.object(
-                        publisher, failing, side_effect=ValueError("fixture gate blocked")
+                        publisher,
+                        failing,
+                        side_effect=ValueError("fixture gate blocked"),
                     ),
                     patch.object(publisher.subprocess, "run", side_effect=execute) as commands,
                 ):
                     with self.assertRaisesRegex(ValueError, "fixture gate blocked"):
                         publisher.main()
                     self.assertEqual(
-                        json.loads((target / "publication-state.json").read_text())["phase"], phase
+                        read(target / "diagnostics/publication-state.json")["stages"][phase][
+                            "status"
+                        ],
+                        "failed",
                     )
                     self.assertFalse((target / "RELEASE.md").exists())
                     self.assertFalse(
@@ -770,28 +813,14 @@ class ReleaseTests(unittest.TestCase):
         source = (ROOT / "scripts/publish-beta-images.py").read_text()
         self.assertIn("subject-path: |", workflow)
         for name in ("compose.yaml", "florabasectl.py", "florabase.env.example"):
-            self.assertIn("${{ runner.temp }}/beta-release/" + name, workflow)
+            self.assertIn("${{ runner.temp }}/beta-release/assets/" + name, workflow)
         # The rebuild check must not gate every release: the publisher runs it only for an
         # unpublished identity, so a superseded Alpine pin never blocks application releases.
         self.assertNotIn("postgres-identity --check", workflow)
-        self.assertEqual(workflow.count("version: v0.38.1"), 2)
-        # An unpublished identity is built and verified in a loopback registry before GHCR.
-        self.assertLess(source.index("local_postgres_identity("), source.index("scan_images("))
-        self.assertIn("destination=POSTGRES_REPOSITORY", source)
-        # Existence is decided by registry manifest lookups, never by stderr text or the packages
-        # REST API (which rejects the workflow's GITHUB_TOKEN with HTTP 400).
-        self.assertNotIn("not found|manifest unknown", source)
+        self.assertEqual(workflow.count("version: v0.38.1"), 1)
+        self.assertIn("version: " + publisher.BUILDX_VERSION, workflow)
+        # Registry manifest lookups distinguish absence from outages and authorization failures.
         self.assertNotIn("/packages", source)
-        self.assertLess(source.index("scan_images("), source.index("software_bill_of_materials("))
-        self.assertLess(
-            source.index("software_bill_of_materials("),
-            source.index('checkpoint("security_passed")'),
-        )
-        self.assertLess(
-            source.index("run_artifact_smoke("),
-            source.index('checkpoint("postgresql_version_promoted")'),
-        )
-        self.assertIn('"postgresql": POSTGRES_REPOSITORY + "@" + pg["index_digest"]', source)
 
     def test_shared_or_symlinked_executable_cache_refuses(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -828,13 +857,17 @@ class ReleaseTests(unittest.TestCase):
             "id": 42,
             "tag_name": tag,
             "draft": True,
-            "target_commitish": sha,
+            "target_commitish": "main",
             "url": f"https://api.github.com/repos/{repo}/releases/42",
             "assets": [],
         }
 
         def api(*args: str) -> str:
-            if "/tags/" in args[-1]:
+            if args[-1] == f"repos/{repo}/git/ref/tags/{tag}":
+                return json.dumps(
+                    {"ref": f"refs/tags/{tag}", "object": {"type": "commit", "sha": sha}}
+                )
+            if "/releases/tags/" in args[-1]:
                 raise subprocess.CalledProcessError(
                     1, args, stderr="404 published release not found"
                 )
@@ -853,7 +886,6 @@ class ReleaseTests(unittest.TestCase):
             {**draft, "id": 43},
             {**draft, "draft": False},
             {**draft, "tag_name": "stale"},
-            {**draft, "target_commitish": "main"},
             {**draft, "url": "foreign"},
             {**draft, "assets": [{"id": 1, "state": "new"}]},
         ]
@@ -861,7 +893,10 @@ class ReleaseTests(unittest.TestCase):
             with (
                 self.subTest(value=value),
                 patch.dict(os.environ, {"GH_TOKEN": "fixture"}),
-                patch("beta_release.run", side_effect=[json.dumps([[draft]]), json.dumps(value)]),
+                patch(
+                    "beta_release.run",
+                    side_effect=[json.dumps([[draft]]), json.dumps(value)],
+                ),
                 self.assertRaises(ValueError),
             ):
                 beta_release.locate_draft_release(repo, tag, sha)
@@ -880,108 +915,82 @@ class ReleaseTests(unittest.TestCase):
         ):
             beta_release.locate_draft_release(repo, tag, sha)
 
-    def test_actual_workflow_draft_finalization_with_published_tag_404(self) -> None:
-        repo, sha, tag = "alessandrorossato/florabase", "c" * 40, "v0.1.0-beta.1"
-        workflow = (ROOT / ".github/workflows/beta-images.yml").read_text()
-        code = textwrap.dedent(workflow.split("<<'PY'\n")[-1].split("          PY")[0])
-        with tempfile.TemporaryDirectory() as temporary:
-            output = Path(temporary)
-            (output / "fixture.json").write_bytes(b"fixture")
-            release: dict[str, Any] = {
-                "id": 42,
-                "tag_name": tag,
-                "draft": True,
-                "target_commitish": sha,
-                "url": f"https://api.github.com/repos/{repo}/releases/42",
-                "assets": [
-                    {
-                        "id": 7,
-                        "state": "uploaded",
-                        "name": "fixture.json",
-                        "size": 7,
-                        "digest": "sha256:" + hashlib.sha256(b"fixture").hexdigest(),
-                    }
-                ],
-            }
-            for valid in (True, False):
-                value = copy.deepcopy(release)
-                if not valid:
-                    value["assets"][0]["digest"] = "wrong"
-                with (
-                    patch.dict(
-                        os.environ,
-                        {"GH_TOKEN": "fixture", "GITHUB_REPOSITORY": repo, "GITHUB_SHA": sha},
-                    ),
-                    patch.object(sys, "argv", ["probe", temporary, tag]),
-                    patch(
-                        "beta_release.run",
-                        side_effect=[json.dumps([[], [value]]), json.dumps(value)],
-                    ),
-                    patch(
-                        "subprocess.check_output",
-                        side_effect=subprocess.CalledProcessError(
-                            1, "published-tag-lookup", stderr="404"
-                        ),
-                    ),
-                    patch("subprocess.run") as mutation,
-                ):
-                    if valid:
-                        exec(code, {})
-                        self.assertEqual(
-                            mutation.call_args.args[0][:5],
-                            ["gh", "api", "--method", "PATCH", f"repos/{repo}/releases/42"],
-                        )
-                    else:
-                        with self.assertRaises(ValueError):
-                            exec(code, {})
-                        mutation.assert_not_called()
+    def test_protected_git_tag_checks_the_exact_annotated_commit(self) -> None:
+        repo, tag, sha, annotation = publisher.REPOSITORY, "v0.1.0-beta.4", "c" * 40, "e" * 40
+        reference = {"ref": f"refs/tags/{tag}", "object": {"type": "tag", "sha": annotation}}
+        annotated = {"sha": annotation, "object": {"type": "commit", "sha": sha}}
+        for target in (annotated, {**annotated, "object": {"type": "commit", "sha": "b" * 40}}):
+            with (
+                self.subTest(target=target),
+                patch(
+                    "beta_release.run", side_effect=[json.dumps(reference), json.dumps(target)]
+                ) as api,
+            ):
+                if target == annotated:
+                    beta_release.require_remote_release_tag(repo, tag, sha)
+                    self.assertTrue(api.call_args.args[-1].endswith(f"/git/tags/{annotation}"))
+                else:
+                    with self.assertRaisesRegex(ValueError, "approved source SHA"):
+                        beta_release.require_remote_release_tag(repo, tag, sha)
 
-    def test_draft_validation_and_promotion_order(self) -> None:
-        source = (ROOT / "scripts/publish-beta-images.py").read_text()
-        self.assertLess(
-            source.index("prepare_release_assets(Path.cwd(), output"),
-            source.index('"--prefer-index=false"'),
-        )
-        import beta_release
-
-        with tempfile.TemporaryDirectory() as temporary:
-            output = Path(temporary)
-            (output / "unexpected-directory").mkdir()
-            with self.assertRaises(ValueError):
-                beta_release.release_asset_inventory(output)
-        with (
-            patch.dict(os.environ, {}, clear=True),
-            patch("beta_release.run") as api,
-            self.assertRaises(ValueError),
-        ):
-            beta_release.locate_draft_release(
-                "alessandrorossato/florabase", "v0.1.0-beta.1", "c" * 40
-            )
-        api.assert_not_called()
-
-    def test_install_bundle_is_attached_before_inventory_and_never_latest(self) -> None:
-        source = (ROOT / "scripts/publish-beta-images.py").read_text()
-        copy = source.index("prepare_release_assets(Path.cwd(), output")
-        self.assertLess(copy, source.index('"--prefer-index=false"'))
-        self.assertLess(copy, source.index('"--prefer-index=false"'))
-        import beta_release
-
-        names = list(beta_release.INSTALL_BUNDLE)
-        self.assertEqual(names, ["compose.yaml", "florabasectl.py", "florabase.env.example"])
-        # The controller pins the same names it verifies against the manifest.
-        self.assertEqual(tuple(names), ctl_bundle_names())
-        for name in names:
-            self.assertTrue((ROOT / "deploy/beta" / name).is_file(), name)
-        # Prerelease promotion writes only the exact version tag.
-        self.assertNotIn(":latest", source)
-        self.assertIn("promote_image(ref, version)", source)
-
-    def test_workflow_draft_lookup_never_uses_published_tag_endpoint(self) -> None:
+    def test_workflow_wires_protected_draft_finalization_and_attestation_assets(
+        self,
+    ) -> None:
         workflow = (ROOT / ".github/workflows/beta-images.yml").read_text()
         self.assertNotIn("/releases/tags/", workflow)
-        self.assertIn("locate_draft_release", workflow)
-        self.assertIn('--target "$GITHUB_SHA"', workflow)
-        self.assertIn('"--method", "PATCH"', workflow)
+        self.assertNotIn("make ci", workflow)
+        self.assertIn("publish-beta-images.py --finalize", workflow)
+        for name in (
+            *beta_release.INSTALL_BUNDLE,
+            beta_release.PORTABLE_COMPOSE,
+            "release-manifest.json",
+        ):
+            self.assertIn(f"/beta-release/assets/{name}", workflow)
+        ci = (ROOT / ".github/workflows/ci.yml").read_text()
+        self.assertIn("name: release-migration", ci)
+        self.assertIn('verify-migration-cycle.sh "$BASE_SHA" --force-cycle', ci)
+
+    def test_original_beta4_inventory_failure_is_reproduced_before_any_promotion(
+        self,
+    ) -> None:
+        version = inputs(ROOT)["version"]
+        sha = beta_release.run("git", "-C", str(ROOT), "rev-parse", "HEAD")
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "assets"
+            output.mkdir()
+            offending = output / "postgres-reproducibility"
+            offending.mkdir()
+            (offending / "postgres-oci-evidence.json").write_text("{}")
+            with self.assertRaisesRegex(
+                ValueError,
+                "invalid local release asset inventory.*postgres-reproducibility",
+            ):
+                beta_release.prepare_release_assets(ROOT, output, version, sha)
+            with self.assertRaisesRegex(ValueError, "postgres-reproducibility"):
+                beta_release.release_asset_inventory(output)
+
+    def test_asset_inventory_rejects_symlinks_and_hidden_files(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "valid.json").write_text("{}")
+            link = output / "symlink"
+            link.symlink_to(output / "valid.json")
+            with self.assertRaisesRegex(ValueError, "symlink"):
+                beta_release.release_asset_inventory(output)
+            link.unlink()
+            (output / ".hidden").write_text("{}")
+            with self.assertRaisesRegex(ValueError, "hidden"):
+                beta_release.release_asset_inventory(output)
+            (output / ".hidden").unlink()
+            with (output / "oversize.tar.gz").open("wb") as oversized:
+                oversized.truncate(2**31)
+            with self.assertRaisesRegex(ValueError, "oversize.tar.gz"):
+                beta_release.release_asset_inventory(output)
+
+    def test_install_bundle_uses_the_controller_contract(self) -> None:
+        self.assertEqual(beta_release.INSTALL_BUNDLE, ctl_bundle_names())
+        for name in beta_release.INSTALL_BUNDLE:
+            self.assertTrue((ROOT / "deploy/beta" / name).is_file(), name)
 
     def test_partial_or_wrong_release_assets_cannot_be_published(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -1207,26 +1216,11 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn("if: always()", workflow)
         self.assertNotIn("packages: write", workflow)
         self.assertNotIn("actions/attest-build-provenance@", workflow)
+        self.assertIn("--hosted", workflow)
+        self.assertIn("push:", workflow)
         source = (ROOT / "scripts/rehearse-beta-release.py").read_text()
-        for helper in (
-            "local_postgres_identity(",
-            "build_application_image(",
-            "manifest(",
-            "scan_images(",
-            "software_bill_of_materials(",
-            "run_artifact_smoke(",
-            "prepare_release_assets(",
-            "promote_image(",
-            "release_attestation_inputs(",
-        ):
-            self.assertIn(helper, source)
-        self.assertIn("local_postgres_identity(", source)
-        self.assertIn("registry_port", source)
-        self.assertIn('"127.0.0.1:{registry_port}:5000"', source)
+        self.assertIn("_publisher.run_pipeline(root, output)", source)
         self.assertNotIn('"docker", "login", "ghcr.io"', source)
-        self.assertIn("pg_builds[0] != pg_builds[1]", source)
-        self.assertIn("PREVIOUS_BUILDKit", source)
-        self.assertIn("first_component_byte_difference", source)
 
     def test_interrupted_artifact_parent_allows_child_cleanup(self) -> None:
         with tempfile.TemporaryDirectory(prefix="beta-child-cleanup-test-") as temporary:
@@ -1335,7 +1329,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn("secrets.RELEASE_APPROVED_SHA", workflow)
         self.assertEqual(workflow.count("packages: write"), 1)
         self.assertIn("needs: verify", workflow)
-        self.assertIn("--verify-tag", workflow)
+        self.assertIn("--verify-tag", (ROOT / "scripts/publish-beta-images.py").read_text())
 
 
 INDEX_TYPE = "application/vnd.oci.image.index.v1+json"
@@ -1428,6 +1422,74 @@ class RegistryPreflightTests(unittest.TestCase):
             with self.subTest(code=code):
                 self.assertIsNone(self.lookup(token_response(), http_error(404, body)))
 
+    def test_rehearsal_candidate_policy_follows_the_base_version(self) -> None:
+        rehearsal = load_tool("rehearse-beta-release")
+        with tempfile.TemporaryDirectory(prefix="rehearsal-base-") as temporary:
+            root = Path(temporary)
+
+            def git(*args: str) -> str:
+                return subprocess.run(
+                    ["git", "-C", temporary, "-c", "user.name=t", "-c", "user.email=t@t", *args],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                ).stdout.strip()
+
+            git("init", "-q")
+            git("commit", "-q", "--allow-empty", "-m", "no inputs")
+            empty = git("rev-parse", "HEAD")
+            (root / "release").mkdir()
+            (root / "release/inputs.json").write_text('{"version": "0.1.0-beta.5"}')
+            git("add", ".")
+            git("commit", "-q", "-m", "beta.5")
+            base = git("rev-parse", "HEAD")
+            candidate = rehearsal.release_candidate
+            self.assertFalse(candidate(root, base, "0.1.0-beta.5"))  # Ordinary development PR.
+            self.assertTrue(candidate(root, base, "0.1.0-beta.6"))  # Version bump: candidate.
+            for strict in ("", "0" * 40, "f" * 40, empty, "HEAD", base[:12]):
+                with self.subTest(base=strict):
+                    self.assertTrue(candidate(root, strict, "0.1.0-beta.5"))
+
+    def test_rehearsal_refuses_reuse_only_for_release_candidates(self) -> None:
+        rehearsal = load_tool("rehearse-beta-release")
+        pinned = "sha256:" + "a" * 64
+        locked = {
+            "version": "0.1.0-beta.5",
+            "postgresql": {"version": "18.6", "index_digest": pinned},
+        }
+        published = "sha256:" + "b" * 64
+
+        def lookups(app: str | None, postgres: str | None) -> Any:
+            def lookup(repository: str, tag: str, *_: object, **__: object) -> str | None:
+                return postgres if repository.endswith("postgres") else app
+
+            return patch.object(rehearsal, "published_digest", side_effect=lookup)
+
+        environment = {"GITHUB_TOKEN": "t", "GITHUB_ACTOR": "a"}
+        with patch.dict(os.environ, environment):
+            with lookups(published, pinned), self.assertRaisesRegex(ValueError, "refuses reuse"):
+                rehearsal.verify_ghcr_read_only(locked, True)
+            with lookups(published, pinned):
+                observed = rehearsal.verify_ghcr_read_only(locked, False)
+            self.assertFalse(observed["release_candidate"])
+            self.assertEqual(observed["tags"]["backend"]["status"], "published_base_version")
+            with lookups(None, None):
+                observed = rehearsal.verify_ghcr_read_only(locked, True)
+            self.assertEqual(observed["tags"]["frontend"]["status"], "absent")
+            # The PostgreSQL identity gate applies to every rehearsal.
+            for candidate in (True, False):
+                with (
+                    self.subTest(candidate=candidate),
+                    lookups(None if candidate else published, published),
+                    self.assertRaisesRegex(ValueError, "PostgreSQL"),
+                ):
+                    rehearsal.verify_ghcr_read_only(locked, candidate)
+        workflow = (ROOT / ".github/workflows/beta-release-rehearsal.yml").read_text()
+        self.assertIn("github.event.pull_request.base.sha || github.event.before", workflow)
+        self.assertIn('--base "$BASE_SHA"', workflow)
+        # Protected publication keeps its own unconditional reuse refusal.
+        self.assertNotIn("release_candidate", (ROOT / "scripts/publish-beta-images.py").read_text())
+
     def test_rehearsal_ghcr_probe_requests_pull_only(self) -> None:
         body = json.dumps({"errors": [{"code": "MANIFEST_UNKNOWN", "message": "unknown"}]}).encode()
         self.assertIsNone(self.lookup(token_response(), http_error(404, body), actions="pull"))
@@ -1465,13 +1527,20 @@ class RegistryPreflightTests(unittest.TestCase):
             (FakeResponse(b"[]", {}),),
             (token_response(), http_error(404, b"not json")),
             (token_response(), http_error(404, b'{"errors": []}')),
+            (
+                token_response(),
+                http_error(404, b'{"errors": [{"code": "MANIFEST_UNKNOWN"}, "bad"]}'),
+            ),
             (token_response(), http_error(404, b'{"errors": [{"message": "x"}]}')),
             (token_response(), FakeResponse(b"not json", good.headers)),
             (
                 token_response(),
                 FakeResponse(good.body, {**good.headers, "Docker-Content-Digest": ""}),
             ),
-            (token_response(), FakeResponse(b'{"schemaVersion": 2, "x": 1}', good.headers)),
+            (
+                token_response(),
+                FakeResponse(b'{"schemaVersion": 2, "x": 1}', good.headers),
+            ),
             (
                 token_response(),
                 FakeResponse(good.body, {**good.headers, "Content-Type": "text/html"}),
@@ -1479,11 +1548,16 @@ class RegistryPreflightTests(unittest.TestCase):
             (
                 token_response(),
                 FakeResponse(
-                    b'{"schemaVersion": 1}', {**manifest_response(b'{"schemaVersion": 1}').headers}
+                    b'{"schemaVersion": 1}',
+                    {**manifest_response(b'{"schemaVersion": 1}').headers},
                 ),
             ),
         ):
-            with self.subTest(answers=answers), registry(*answers), self.assertRaises(ValueError):
+            with (
+                self.subTest(answers=answers),
+                registry(*answers),
+                self.assertRaises(ValueError),
+            ):
                 publisher.published_digest("owner/image", "1", "actor", "secret")
 
     def test_release_scripts_parse_on_the_runner_python(self) -> None:
@@ -1548,11 +1622,18 @@ class RegistryPreflightTests(unittest.TestCase):
         with (
             patch.dict(os.environ, environment, clear=True),
             patch.object(sys, "argv", ["publish", "--output", str(target)]),
-            patch.object(publisher, "inputs", return_value=inputs(ROOT)),
+            patch.object(publisher, "check_toolchain"),
+            patch.object(
+                publisher,
+                "disposable_registry",
+                return_value=nullcontext(("127.0.0.1:5055", 5055)),
+            ),
             patch.object(publisher, "run", side_effect=output),
             patch.object(publisher, "published_digest", side_effect=lookup),
             patch.object(
-                publisher, "local_postgres_identity", side_effect=ValueError("stop after preflight")
+                publisher,
+                "local_postgres_identity",
+                side_effect=ValueError("stop after preflight"),
             ) as rebuild,
             patch.object(
                 publisher.subprocess,
@@ -1587,8 +1668,10 @@ class RegistryPreflightTests(unittest.TestCase):
                 self.assertIn("already exists", self.raised)
                 rebuild.assert_not_called()
                 self.assertEqual(
-                    json.loads((target / "publication-state.json").read_text())["phase"],
-                    "preflight",
+                    json.loads((target / "diagnostics/publication-state.json").read_text())[
+                        "stages"
+                    ]["VALIDATE"]["status"],
+                    "failed",
                 )
                 # Cleanup after an early error: no builder existed, so none is removed; the
                 # registry login is always revoked.
@@ -1630,6 +1713,199 @@ class RegistryPreflightTests(unittest.TestCase):
         self.assertEqual(self.raised, "stop after preflight")
         rebuild.assert_called_once()
         self.assertTrue(self.ran(commands, ["docker", "buildx", "rm"]))
+
+
+class SharedPublicationTests(unittest.TestCase):
+    def test_shared_pipeline_validates_complete_output_before_any_version_write(
+        self,
+    ) -> None:
+        for fault in (None, "inventory", "extra", "smoke", "portable", "tag appeared", "promotion"):
+            with self.subTest(fault=fault), tempfile.TemporaryDirectory() as temporary:
+                self.exercise_pipeline(Path(temporary) / "output", fault)
+
+    def exercise_pipeline(self, output: Path, fault: str | None) -> None:
+        host = "127.0.0.1:5055"
+        value = candidate()
+        sha = beta_release.run("git", "-C", str(ROOT), "rev-parse", "HEAD")
+        value["source"]["revision"] = sha
+        for image in value["images"].values():
+            image["reference"] = image["reference"].replace("ghcr.io", host)
+        images = value["images"]
+        tagged: dict[tuple[str, str], str] = {}
+
+        def postgres(*args: Any, evidence_dir: Path, **kwargs: Any) -> None:
+            evidence_dir.mkdir()
+            (evidence_dir / "postgres-oci-evidence.json").write_text("{}")
+            if fault == "inventory":
+                (output / "assets/postgres-reproducibility").mkdir()
+            if fault == "extra":
+                (output / "assets/extra.json").write_text("{}")
+
+        def smoke(*args: Any, **kwargs: Any) -> None:
+            if fault == "smoke":
+                raise ValueError("injected smoke failure")
+            if fault == "tag appeared":
+                tagged[("alessandrorossato/florabase-frontend", value["version"])] = "unexpected"
+
+        def portable_smoke(_root: Path, compose: Path, backend: str, _log_path: Path) -> None:
+            self.assertIn(f'image: "{backend}"', compose.read_text())
+            if fault == "portable":
+                raise ValueError("injected portable smoke failure")
+
+        def promote(reference: str, tag: str, registry: str) -> str:
+            self.assertEqual(registry, host)
+            repository, digest = reference.split("@")
+            if fault == "promotion" and repository.endswith("-frontend"):
+                raise ValueError("injected partial promotion")
+            self.assertTrue((output / "assets/RELEASE.md").is_file())
+            tagged[(repository.split("/", 1)[1], tag)] = digest
+            return digest
+
+        def cli(*args: str) -> str:
+            return {"rev-parse": sha, "status": "", "show": "1762387200"}[args[1]]
+
+        real_run = subprocess.run
+        with (
+            patch.object(publisher, "run", side_effect=cli),
+            patch.object(publisher, "check_toolchain"),
+            patch.object(publisher, "disposable_registry", return_value=nullcontext((host, 5055))),
+            patch.object(publisher, "pinned_builder", return_value=nullcontext("fixture")),
+            patch.object(
+                publisher,
+                "lookup_manifest",
+                side_effect=lambda origin, repo, tag: tagged.get((repo, tag)),
+            ),
+            patch.object(publisher, "local_postgres_identity", side_effect=postgres),
+            patch.object(
+                publisher,
+                "build_application_image",
+                side_effect=lambda root, builder, service, *args: images[service]["reference"],
+            ),
+            patch.object(publisher, "manifest", return_value=value),
+            patch.object(publisher.subprocess, "run", wraps=subprocess.run) as commands,
+            patch.object(publisher, "scan_images"),
+            patch.object(
+                publisher,
+                "software_bill_of_materials",
+                side_effect=lambda ref, path, scanner: path.write_text("{}"),
+            ),
+            patch.object(publisher, "run_artifact_smoke", side_effect=smoke),
+            patch.object(publisher, "run_portable_smoke", side_effect=portable_smoke),
+            patch.object(publisher, "promote_image", side_effect=promote) as promotion,
+        ):
+
+            def docker_only(command: list[str], **kwargs: Any) -> Any:
+                if command[0] == "docker":
+                    self.assertEqual(command[1], "pull")
+                    return None
+                if fault is not None and "archive" in command:
+                    return real_run([*command, "deploy/beta"], **kwargs)
+                return real_run(command, **kwargs)
+
+            commands.side_effect = docker_only
+            if fault is None:
+                publisher.run_pipeline(ROOT, output)
+                self.assertEqual(promotion.call_count, 3)
+            else:
+                with self.assertRaises(ValueError):
+                    publisher.run_pipeline(ROOT, output)
+                self.assertEqual(promotion.call_count, 2 if fault == "promotion" else 0)
+
+        state = read(output / "diagnostics/publication-state.json")
+        self.assertTrue(
+            (output / "diagnostics/postgres-reproducibility/postgres-oci-evidence.json").is_file()
+        )
+        stages = state["stages"]
+        if fault is None:
+            self.assertTrue(all(stage["status"] == "passed" for stage in stages.values()))
+            assets = state["release"]["assets"]
+            self.assertEqual(len(assets), 8)
+            self.assertEqual(
+                {name: (item["size"], item["sha256"]) for name, item in assets.items()},
+                beta_release.release_asset_inventory(output / "assets"),
+            )
+        else:
+            failed = {"smoke": "SCAN/SMOKE", "portable": "SCAN/SMOKE", "promotion": "PROMOTE"}.get(
+                fault, "VALIDATE ASSETS"
+            )
+            self.assertEqual(stages[failed]["status"], "failed")
+            if fault == "promotion":
+                self.assertEqual(set(state["promoted"]), {"backend"})
+                self.assertEqual(state["promotion_in_progress"], "frontend")
+            else:
+                self.assertNotIn("PROMOTE", stages)
+
+    def test_actual_finalizer_refuses_draft_digest_mismatch_and_refuses_resume(
+        self,
+    ) -> None:
+        value = candidate()
+        sha = value["source"]["revision"]
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "output"
+            publication = publisher.Publication(output)
+            assets = output / "assets"
+            assets.mkdir()
+            for name in (
+                *beta_release.INSTALL_BUNDLE,
+                beta_release.PORTABLE_COMPOSE,
+                "RELEASE.md",
+                beta_release.POSTGRES_SBOM,
+                f"florabase-{value['version']}-source.tar.gz",
+            ):
+                (assets / name).write_text("fixture")
+            (assets / "release-manifest.json").write_text(json.dumps(value))
+            inventory = beta_release.release_asset_inventory(assets)
+            request = release_finalization_inputs(value, sha, inventory)
+            publication.state.update(
+                source_sha=sha,
+                mode="protected",
+                release=request,
+                run_id="1",
+                run_attempt="1",
+                stages={
+                    "PROMOTE": {"status": "passed"},
+                    "ATTEST": {"status": "passed"},
+                },
+            )
+            publication.save()
+            valid_draft: dict[str, Any] = {
+                "id": 42,
+                "draft": True,
+                "assets": [
+                    {"name": name, "size": size, "digest": digest}
+                    for name, (size, digest) in inventory.items()
+                ],
+            }
+            for valid in (False, True):
+                with self.subTest(valid=valid):
+                    publication.save()
+                    draft = copy.deepcopy(valid_draft)
+                    if not valid:
+                        draft["assets"][0]["digest"] = "wrong"
+                    with (
+                        patch.dict(
+                            os.environ,
+                            {"GITHUB_RUN_ID": "1", "GITHUB_RUN_ATTEMPT": "1"},
+                        ),
+                        patch.object(publisher, "run", return_value=sha),
+                        patch.object(publisher, "require_publication_identity"),
+                        patch.object(publisher, "require_remote_release_tag"),
+                        patch.object(publisher, "locate_draft_release", return_value=draft),
+                        patch.object(publisher.subprocess, "run") as mutation,
+                    ):
+                        if valid:
+                            publisher.finalize_release(output)
+                            self.assertEqual(mutation.call_count, 2)
+                            self.assertEqual(
+                                mutation.call_args.args[0][:4],
+                                ["gh", "api", "--method", "PATCH"],
+                            )
+                        else:
+                            with self.assertRaisesRegex(ValueError, "digest/size"):
+                                publisher.finalize_release(output)
+                            self.assertEqual(mutation.call_count, 1)
+                        with self.assertRaisesRegex(ValueError, "refuse to finalize"):
+                            publisher.finalize_release(output)
 
 
 if __name__ == "__main__":

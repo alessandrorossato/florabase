@@ -3,6 +3,8 @@ name: Non-publishing beta release rehearsal
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -33,17 +35,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_ACTOR: ${{ github.actor }}
+          # Pull requests compare with their base, pushes with the previous main; manual runs stay strict.
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
         run: |
           set -euo pipefail
           log="$RUNNER_TEMP/beta-release-rehearsal.log"
           output="$RUNNER_TEMP/beta-release-rehearsal"
-          trap 'if test -d "$output"; then cp "$log" "$output/rehearsal.log"; fi' EXIT
           python3 scripts/release-tools.py scripts/rehearse-beta-release.py \
-            --output "$output" 2>&1 | tee "$log"
+            --hosted --base "$BASE_SHA" --output "$output" 2>&1 | tee "$log"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
           name: beta-release-rehearsal-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/beta-release-rehearsal/
+          path: |
+            ${{ runner.temp }}/beta-release-rehearsal/
+            ${{ runner.temp }}/beta-release-rehearsal.log
           if-no-files-found: ignore
           retention-days: 90
