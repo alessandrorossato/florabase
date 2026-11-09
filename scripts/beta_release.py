@@ -31,6 +31,7 @@ UPSTREAM_POSTGRES = "docker.io/library/postgres"
 POSTGRES_ENTRYPOINT = "florabase-postgres-entrypoint"
 # deploy/beta files attached to every release and bound by hash into the attested manifest.
 INSTALL_BUNDLE = ("compose.yaml", "florabasectl.py", "florabase.env.example")
+PORTABLE_COMPOSE = "portable-compose.yaml"
 POSTGRES_SBOM = "postgresql-sbom.cdx.json"
 REGISTRY_IMAGE = (
     "registry:2.8.3@sha256:a3d8aaa63ed8681a604f1dea0aa03f100d5895b6a58ace528858a7b332415373"
@@ -744,8 +745,13 @@ def run_artifact_smoke(
         command.extend(["--registry-host", registry_host])
         if postgres_image:
             command.extend(["--postgres-image", postgres_image])
+    run_smoke_process(command, artifact, log)
+
+
+def run_smoke_process(command: list[str], cwd: Path, log: IO[str] | None) -> None:
+    """Let the smoke child unwind its owned resources on interruption."""
     process = subprocess.Popen(
-        command, cwd=artifact, stdout=log, stderr=subprocess.STDOUT if log else None
+        command, cwd=cwd, stdout=log, stderr=subprocess.STDOUT if log else None
     )
     try:
         status = process.wait()
@@ -1088,6 +1094,21 @@ def release_asset_inventory(output: Path) -> dict[str, tuple[int, str]]:
     return result
 
 
+def render_portable_compose(root: Path, version: str, refs: dict[str, str]) -> str:
+    """Render the same immutable stack for rehearsal and protected publication."""
+    if set(refs) != {"backend", "frontend", "postgresql"} or not all(
+        re.fullmatch(r"[a-z0-9.:/-]+@sha256:[a-f0-9]{64}", ref) for ref in refs.values()
+    ):
+        raise ValueError("portable Compose requires all three immutable image references")
+    template = (root / "deploy/portable" / PORTABLE_COMPOSE).read_text()
+    for name, value in {"version": version, **refs}.items():
+        token = "@" + name.upper() + "@"
+        if template.count(token) != 1:
+            raise ValueError(f"portable Compose requires exactly one {token} slot")
+        template = template.replace(token, value)
+    return template
+
+
 def prepare_release_assets(
     root: Path, output: Path, version: str, sha: str
 ) -> dict[str, tuple[int, str]]:
@@ -1120,7 +1141,7 @@ def prepare_release_assets(
     for name in INSTALL_BUNDLE:
         shutil.copyfile(root / "deploy/beta" / name, output / name)
     (output / "RELEASE.md").write_text(
-        f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair and PostgreSQL passed native amd64 registry-pull smoke and the pinned Trivy gate (HIGH/CRITICAL vulnerabilities and secrets); that gate is a single scanner, and findings it does not report are recorded in docs/security/beta-distribution-001/postgresql-image.md at this source revision. PostgreSQL is the Florabase-built {pg['version']} image ({pg['reference']}): the official {pg['upstream']['reference']} without its gosu executable, which stays in an unchanged upstream layer but is absent from the container filesystem; it is identical in every release. Install with the attached {', '.join(INSTALL_BUNDLE)} and release-manifest.json as described in docs/installation.md at this source revision. This is a prerelease: no stable or latest tag is published. Never overwrite this release or delete its image identities.\n"
+        f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair and PostgreSQL passed native amd64 registry-pull smoke and the pinned Trivy gate (HIGH/CRITICAL vulnerabilities and secrets); that gate is a single scanner, and findings it does not report are recorded in docs/security/beta-distribution-001/postgresql-image.md at this source revision. PostgreSQL is the Florabase-built {pg['version']} image ({pg['reference']}): the official {pg['upstream']['reference']} without its gosu executable, which stays in an unchanged upstream layer but is absent from the container filesystem; it is identical in every release. Install with the attested {PORTABLE_COMPOSE} as described in docs/portable-installation.md at this source revision. The advanced controller bundle remains available as described in docs/installation.md. This is a prerelease: no stable or latest tag is published. Never overwrite this release or delete its image identities.\n"
     )
     return release_asset_inventory(output)
 
@@ -1195,6 +1216,7 @@ def release_finalization_inputs(
         raise ValueError("Release API source, version or cleanliness input is invalid")
     if set(assets) != {
         *INSTALL_BUNDLE,
+        PORTABLE_COMPOSE,
         "RELEASE.md",
         "release-manifest.json",
         POSTGRES_SBOM,

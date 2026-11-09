@@ -2529,6 +2529,21 @@
       "dependencies": [],
       "priority": "P1",
       "status": "implemented"
+    },
+    {
+      "id": "PORTABLE-COMPOSE-001",
+      "category": "infrastructure",
+      "description": "Ship an attested three-service portable Compose distribution alongside the advanced controller bundle",
+      "acceptance_criteria": [
+        "The new prerelease attaches an independently attested Compose with immutable PostgreSQL, backend and frontend digests, explicit durable binds and one published frontend port",
+        "The non-root runtime never initializes PostgreSQL or migrates on startup, and the backend image refuses an empty or mismatched schema",
+        "Document one-time cluster and schema initialization, owner bootstrap, explicit upgrade, paired backup and isolated restore",
+        "Disposable runtime smoke proves install, persistence, restart, mismatched-schema refusal, upgrade failure and recovery, and isolated restore before release promotion",
+        "Independent infrastructure QA and the canonical FULL gate pass before operator delivery"
+      ],
+      "dependencies": ["BETA-DISTRIBUTION-001", "BETA-RUNTIME-001"],
+      "priority": "P1",
+      "status": "implemented"
     }
   ]
 }

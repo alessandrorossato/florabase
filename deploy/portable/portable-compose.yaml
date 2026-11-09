@@ -1,0 +1,79 @@
+# Florabase @VERSION@, linux/amd64. See docs/portable-installation.md for first use and recovery.
+services:
+  db:
+    image: "@POSTGRESQL@"
+    # Start the server directly. A missing cluster fails even after a restart or a path change.
+    entrypoint: ["postgres"]
+    command: ["-c", "listen_addresses=*"]
+    user: "70:70"
+    environment:
+      POSTGRES_DB: florabase
+      POSTGRES_USER: florabase
+      POSTGRES_PASSWORD: ${FLORABASE_DB_PASSWORD:?Set FLORABASE_DB_PASSWORD}
+    volumes:
+      - type: bind
+        source: ${FLORABASE_POSTGRES_DIR:?Set FLORABASE_POSTGRES_DIR}
+        target: /var/lib/postgresql
+        bind:
+          create_host_path: false
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "florabase", "-d", "florabase"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    read_only: true
+    tmpfs: ["/tmp", "/var/run/postgresql"]
+    shm_size: 128m
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+    stop_grace_period: 60s
+    networks: [internal]
+
+  backend:
+    image: "@BACKEND@"
+    user: "10001:10001"
+    environment:
+      FLORABASE_ENVIRONMENT: production
+      FLORABASE_DATABASE_URL: postgresql+psycopg://florabase@db:5432/florabase
+      PGPASSWORD: ${FLORABASE_DB_PASSWORD:?Set FLORABASE_DB_PASSWORD}
+      FLORABASE_CANONICAL_ORIGIN: ${FLORABASE_CANONICAL_ORIGIN:?Set FLORABASE_CANONICAL_ORIGIN}
+      FLORABASE_COOKIE_MODE: secure
+      FLORABASE_CORS_ORIGINS: "[]"
+      FLORABASE_ATTACHMENT_STORAGE_ROOT: /var/lib/florabase/attachments
+    volumes:
+      - type: bind
+        source: ${FLORABASE_MEDIA_DIR:?Set FLORABASE_MEDIA_DIR}
+        target: /var/lib/florabase/attachments
+        bind:
+          create_host_path: false
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+    read_only: true
+    tmpfs: ["/tmp"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+    networks: [internal, app]
+
+  frontend:
+    image: "@FRONTEND@"
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${FLORABASE_HTTP_PORT:-8080}:8080"
+    read_only: true
+    tmpfs: ["/tmp"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+    networks: [app]
+
+networks:
+  internal:
+    internal: true
+  # This bridge carries frontend traffic and lets the API reach external providers.
+  app:

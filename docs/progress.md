@@ -7845,3 +7845,28 @@ Status remains implemented pending canonical verification.
   its slow test call and verified disposable cleanup. The planner suite passed 30 tests, and the
   workflow helper suite and 141-feature graph passed. The plan still selects FULL. The final
   consolidation gate and receipt remain pending.
+
+### PORTABLE-COMPOSE-001 — three-service beta.6 distribution, 8 November 2026
+
+- Protected publication renders and attests `portable-compose.yaml` from the tested candidate
+  image digests and requires its disposable install/recovery smoke before promotion. The advanced
+  controller assets and PostgreSQL image pin are preserved. The beta.5 tag and published assets
+  were untouched.
+- The runtime database opens an existing cluster only. The image checks its single Alembic head
+  before launching Uvicorn. Explicit schema initialization requires an empty database and upgrades
+  require the named previous head, with a serialized PostgreSQL transaction for pending changes.
+- Focused release regressions (56 tests and 4 release-tool lock tests) and controller compatibility
+  checks (62 host and 50 Python 3.8 tests) passed. Independent QA checked the exact asset wiring and
+  refused initialization and restore paths. Its follow-up passed after fail-fast setup, dependency
+  restart and smoke cleanup fixes.
+- Disposable runtime drills on Engine 29.9.3 exercised fresh cluster and schema initialization,
+  owner login, original media, restart persistence, empty and mismatched-schema refusal, a failed
+  migration with the previous revision preserved, a successful retry, and isolated paired restore.
+  The final run used Compose 2.20.1, local-registry candidate app digests and the published GHCR
+  PostgreSQL digest. A Compose 5.7.0 SIGTERM drill confirmed removal of the disposable binds and
+  zero remaining project resources.
+- The first FULL run passed workflow and static checks and stopped at 89.54% backend unit coverage.
+  Fifteen schema guard regressions passed focused Ruff, mypy and pytest. The backend suite then
+  passed with 1,027 tests and 90.11% coverage. Runtime source and Compose were unchanged.
+- The canonical FULL result belongs to the exact-tree verification receipt. Protected beta.6
+  publication and deployment on a real manager or HTTPS host remain pending.
