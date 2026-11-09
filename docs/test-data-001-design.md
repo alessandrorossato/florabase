@@ -2,7 +2,7 @@
 
 2 November 2026 · `feat/test-data-001` · implementation candidate with independent QA corrections applied.
 
-Reviewed SMOKE baseline: `70a1b1ae037cdfce7fa494096bbb557e266cfe7df5780183acda2c7d8dbef967` (schema `20261013_0042`, volume 12).
+Reviewed SMOKE baseline: `dce3df1da0ab8aca784dcb02ddda65ede292d240435d5c5c2f48dc974e45303f` (schema `20261108_0043`, volume 12).
 
 ## Result of this increment
 

@@ -7845,3 +7845,36 @@ Status remains implemented pending canonical verification.
   its slow test call and verified disposable cleanup. The planner suite passed 30 tests, and the
   workflow helper suite and 141-feature graph passed. The plan still selects FULL. The final
   consolidation gate and receipt remain pending.
+
+### MEASUREMENT-001 — structured Plant height history, 8 November 2026
+
+- Registered MEASUREMENT-001 after confirming no backlog item covered roadmap theme 4. The
+  [measurement contract](measurements.md) defines subject, quantity, unit, PartialDate precision,
+  correction, uncertainty and retention. A measurement is a `measurement` Event, so Journal,
+  History, photos and correction rules are reused; Plant gains no columns.
+- Height slice: individual Plants only; exact positive decimal with preserved resolution; `mm`,
+  `cm` or `m` stored as recorded; `is_approximate`; required PartialDate of any precision.
+  Migration 0043 adds four generic Event columns and `ck_events_measurement`; downgrade refuses
+  while measurement Events exist. Measurements are retainable observations for reintegration and
+  propagation reversal. History context reads `Height: 0.3 m (approximate)`.
+- The Plant Journal shows a Height history table and an SVG chart. Day dates are dots; month and
+  year dates span their whole period; approximate values are dashed or hollow.
+- Feature Review demonstration on synthetic data: 12.50 cm on 2026-03-14, an approximate 0.3 m in
+  2026-06, a refused `1,2`, and a correction to 125 mm on the same Event. History listed both.
+  The 375 px layout had no horizontal overflow.
+- Independent read-only QA found no blockers. Fixed: the 200 m bound is now also a database CHECK
+  (an implausible row would otherwise break Journal reads), the chart end label uses the latest
+  period end, the reversal confirmation names measurements, and measurement date help states that
+  a date is required. Scientific-notation input is normalized to plain decimals. Added tests for a
+  PlantGroup-target row, the database bound and propagation reversal retaining a measurement.
+- Focused checks: backend ruff, mypy and unit suite (1,025 passed, coverage 90.09%); integration
+  for measurements, events, Plants, propagation reversal, History, event migration and autogenerate
+  parity; frontend lint, typecheck and 117 Plant, Journal and propagation tests (full suite 1,222
+  passed before the final copy changes). Status stays `implemented` until the operator approves
+  the domain decisions in the contract: Event-kind storage, Plant-only subject, required date and
+  overwrite-in-place correction. Unchecked: light-theme chart rendering.
+- Rebased onto `origin/main` after #158 without conflicts. The first FULL gate passed every stage
+  before integration, where the golden SMOKE baseline had no reviewed pin for 0043. The reviewed
+  digest changed only the schema revision, `canonical_sha256` and the `events` table hash (still 20
+  rows; the four new columns are NULL), with no completion problems. The pin and
+  [TEST-DATA-001 design](test-data-001-design.md) now record the new values.

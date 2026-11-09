@@ -2318,6 +2318,16 @@
           "kind": {
             "$ref": "#/components/schemas/EventKind"
           },
+          "measurement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Measurement-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "notes": {
             "anyOf": [
               {
@@ -2387,6 +2397,7 @@
           "death",
           "loss",
           "discarded",
+          "measurement",
           "other"
         ],
         "title": "EventKind",
@@ -2461,6 +2472,16 @@
           },
           "kind": {
             "$ref": "#/components/schemas/EventKind"
+          },
+          "measurement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Measurement-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "notes": {
             "anyOf": [
@@ -2596,6 +2617,16 @@
           },
           "kind": {
             "$ref": "#/components/schemas/EventKind"
+          },
+          "measurement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Measurement-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "notes": {
             "anyOf": [
@@ -4960,6 +4991,15 @@
         "type": "object"
       },
       "JsonValue": {},
+      "LengthUnit": {
+        "enum": [
+          "mm",
+          "cm",
+          "m"
+        ],
+        "title": "LengthUnit",
+        "type": "string"
+      },
       "LineageResponse": {
         "properties": {
           "ancestors": {
@@ -5712,6 +5752,77 @@
           "other"
         ],
         "title": "MaterialKind",
+        "type": "string"
+      },
+      "Measurement-Input": {
+        "additionalProperties": false,
+        "properties": {
+          "is_approximate": {
+            "default": false,
+            "title": "Is Approximate",
+            "type": "boolean"
+          },
+          "quantity": {
+            "$ref": "#/components/schemas/MeasurementQuantity"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/LengthUnit"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "quantity",
+          "value",
+          "unit"
+        ],
+        "title": "Measurement",
+        "type": "object"
+      },
+      "Measurement-Output": {
+        "additionalProperties": false,
+        "properties": {
+          "is_approximate": {
+            "default": false,
+            "title": "Is Approximate",
+            "type": "boolean"
+          },
+          "quantity": {
+            "$ref": "#/components/schemas/MeasurementQuantity"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/LengthUnit"
+          },
+          "value": {
+            "description": "An exact non-negative decimal serialized as a JSON string.",
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "quantity",
+          "value",
+          "unit"
+        ],
+        "title": "Measurement",
+        "type": "object"
+      },
+      "MeasurementQuantity": {
+        "enum": [
+          "height"
+        ],
+        "title": "MeasurementQuantity",
         "type": "string"
       },
       "NativeRangeIdentity": {
@@ -10134,7 +10245,8 @@
             "enum": [
               "observation",
               "flowering",
-              "fruiting"
+              "fruiting",
+              "measurement"
             ],
             "title": "Kind",
             "type": "string"

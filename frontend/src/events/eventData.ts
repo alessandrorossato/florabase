@@ -32,11 +32,12 @@ export const eventLabels: Record<EventResponse["kind"], string> = {
   death: "Death",
   loss: "Loss",
   discarded: "Discarded",
+  measurement: "Measurement",
   other: "Other",
 };
 
 const groups: Record<Exclude<EventFilter, "all">, EventResponse["kind"][]> = {
-  observations: ["observation", "flowering", "fruiting"],
+  observations: ["observation", "flowering", "fruiting", "measurement"],
   cultivation: [
     "movement",
     "repotting",
@@ -48,6 +49,15 @@ const groups: Record<Exclude<EventFilter, "all">, EventResponse["kind"][]> = {
   ],
   status: ["transfer", "death", "loss", "discarded"],
 };
+
+type Measurement = NonNullable<EventResponse["measurement"]>;
+const quantityLabels: Record<Measurement["quantity"], string> = {
+  height: "Height",
+};
+
+export function measurementText(measurement: Measurement): string {
+  return `${quantityLabels[measurement.quantity]}: ${measurement.value} ${measurement.unit}${measurement.is_approximate ? " (approximate)" : ""}`;
+}
 
 export function formatPartialDate(value: EventResponse["occurred_on"]): string {
   if (!value) return "Date not recorded";
@@ -106,6 +116,8 @@ export function searchJournal(
       event.target.botanical_identity.display_label,
       event.destination_location?.display_path,
       event.recipient,
+      event.measurement &&
+        `height ${event.measurement.value} ${event.measurement.unit}`,
     ].some((value) => value?.toLocaleLowerCase().includes(query)),
   );
 }

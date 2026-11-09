@@ -147,6 +147,19 @@ def candidates() -> Any:
             date=Event,
             context=case(
                 (Event.recipient.is_not(None), func.concat("Recipient: ", Event.recipient)),
+                (
+                    Event.measurement_quantity.is_not(None),
+                    func.concat(
+                        func.initcap(Event.measurement_quantity),
+                        ": ",
+                        cast(Event.measurement_value, String),
+                        " ",
+                        Event.measurement_unit,
+                        case(
+                            (Event.measurement_is_approximate.is_(True), " (approximate)"), else_=""
+                        ),
+                    ),
+                ),
                 else_="",
             ),
             related=event_refs,

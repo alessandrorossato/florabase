@@ -521,8 +521,13 @@ An Event is an explicitly recorded historical occurrence for exactly one Plant o
 has a UUIDv7 identity, a controlled kind, an optional year/month/day-precision occurrence date,
 optional notes, and exact UTC creation/update timestamps. The initial vocabulary is observation,
 movement, repotting, flowering, fruiting, pruning, treatment, harvest, extraction, transfer, death,
-loss, discarded, reintegration, and other. Collection observations remain separate from
+loss, discarded, reintegration, measurement, and other. Collection observations remain separate from
 BotanicalProfile reference knowledge.
+
+A measurement Event (MEASUREMENT-001) records one Plant height as an exact positive decimal with its
+recorded unit (`mm`, `cm` or `m`), an approximation flag and a required PartialDate. It never
+changes current state, is refused for PlantGroups, and counts as a retainable observation. See
+[measurements](measurements.md).
 
 Movement additionally requires one destination Location. Creating a movement Event atomically
 updates the target's current Location. Creating death, loss, or discarded Events atomically updates
@@ -561,8 +566,8 @@ boundary. A protected global Event read endpoint uses the same deterministic ord
 target and BotanicalIdentity summaries. The collection-wide Journal page (`#/events`) applies the same filters and
 links each item to its Plant or PlantGroup Event context. Generic Event creation cannot fabricate an
 extraction; only the authoritative extraction operation creates one and its resulting-Plant link.
-Structured per-kind payloads beyond movement destination, transfer recipient, and the extraction
-result are deferred.
+Structured per-kind payloads beyond movement destination, transfer recipient, the extraction
+result, and the measurement value are deferred.
 
 ## Collection information architecture
 

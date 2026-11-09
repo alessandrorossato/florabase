@@ -1,13 +1,16 @@
 from datetime import UTC, datetime
+from decimal import Decimal
 from enum import StrEnum
 from uuid import UUID, uuid7
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
     Index,
+    Numeric,
     SmallInteger,
     String,
     Text,
@@ -37,7 +40,18 @@ class EventKind(StrEnum):
     DEATH = "death"
     LOSS = "loss"
     DISCARDED = "discarded"
+    MEASUREMENT = "measurement"
     OTHER = "other"
+
+
+class MeasurementQuantity(StrEnum):
+    HEIGHT = "height"
+
+
+class LengthUnit(StrEnum):
+    MM = "mm"
+    CM = "cm"
+    M = "m"
 
 
 class Event(Base):
@@ -51,7 +65,7 @@ class Event(Base):
             "kind IN ('observation', 'movement', 'repotting', 'flowering', 'fruiting', "
             "'pruning', 'treatment', 'harvest', 'extraction', 'reintegration', 'transfer', "
             "'death', 'loss', "
-            "'discarded', 'other')",
+            "'discarded', 'other', 'measurement')",
             name="ck_events_kind",
         ),
         CheckConstraint(
@@ -89,6 +103,16 @@ class Event(Base):
             "((kind = 'reintegration' AND reversed_operation_receipt_id IS NOT NULL) OR "
             "(kind <> 'reintegration' AND reversed_operation_receipt_id IS NULL)) IS TRUE",
             name="ck_events_reintegration_receipt",
+        ),
+        CheckConstraint(
+            "((kind = 'measurement' AND plant_id IS NOT NULL AND occurred_on_precision IS NOT NULL "
+            "AND measurement_quantity = 'height' AND measurement_unit IN ('mm', 'cm', 'm') "
+            "AND measurement_value > 0 AND measurement_value * CASE measurement_unit "
+            "WHEN 'mm' THEN 1 WHEN 'cm' THEN 10 ELSE 1000 END <= 200000 "
+            "AND scale(measurement_value) <= 3 AND measurement_is_approximate IS NOT NULL) OR "
+            "(kind <> 'measurement' AND measurement_quantity IS NULL AND measurement_value IS NULL "
+            "AND measurement_unit IS NULL AND measurement_is_approximate IS NULL)) IS TRUE",
+            name="ck_events_measurement",
         ),
         ForeignKeyConstraint(
             ["resulting_plant_id", "plant_group_id"],
@@ -129,6 +153,11 @@ class Event(Base):
         nullable=True,
         unique=True,
     )
+    # Unscaled numeric keeps the recorded resolution: 12.50 stays 12.50.
+    measurement_quantity: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    measurement_value: Mapped[Decimal | None] = mapped_column(Numeric(), nullable=True)
+    measurement_unit: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    measurement_is_approximate: Mapped[bool | None] = mapped_column(Boolean(), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now

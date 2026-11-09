@@ -14,6 +14,7 @@ from florabase.events.schemas import (
     EventCreate,
     EventResponse,
     EventUpdate,
+    Measurement,
     PlantEventTarget,
     PlantGroupEventTarget,
     ResultingPlantSummary,
@@ -74,7 +75,12 @@ def _partial_date_values(value: PartialDate | None) -> dict[str, object]:
 
 
 def _write_values(payload: EventCreate | EventUpdate) -> dict[str, object]:
+    measurement = payload.measurement
     return {
+        "measurement_quantity": measurement.quantity.value if measurement else None,
+        "measurement_value": measurement.value if measurement else None,
+        "measurement_unit": measurement.unit.value if measurement else None,
+        "measurement_is_approximate": measurement.is_approximate if measurement else None,
         "kind": payload.kind.value,
         "notes": payload.notes,
         "destination_location_id": payload.destination_location_id,
@@ -108,6 +114,14 @@ def _require_destination(database: Session, location_id: UUID | None) -> None:
         raise EventReferenceNotFoundError("location_not_found", "Location not found") from error
     except LocationIntegrityError as error:
         raise EventDomainConflictError(error.code, error.message) from error
+
+
+def _require_measurement_subject(is_plant: bool, payload: EventCreate | EventUpdate) -> None:
+    if payload.kind == EventKind.MEASUREMENT and not is_plant:
+        raise EventDomainConflictError(
+            "measurement_requires_plant",
+            "Measurements are recorded for individual Plants, not PlantGroups",
+        )
 
 
 def _apply_creation_side_effect(target: Target, payload: EventCreate) -> None:
@@ -168,6 +182,7 @@ def create_event(
         )
     _require_destination(database, payload.destination_location_id)
     target = _lock_target(database, target_type, target_id)
+    _require_measurement_subject(isinstance(target, Plant), payload)
     event = Event(
         plant_id=target.id if isinstance(target, Plant) else None,
         plant_group_id=target.id if isinstance(target, PlantGroup) else None,
@@ -253,6 +268,7 @@ def update_event(database: Session, event: Event, payload: EventUpdate) -> Event
             "An authoritative operation Event cannot be converted into another Event kind",
         )
     _require_destination(database, payload.destination_location_id)
+    _require_measurement_subject(event.plant_id is not None, payload)
     for field, value in _write_values(payload).items():
         setattr(event, field, value)
     event.updated_at = datetime.now(UTC)
@@ -485,6 +501,19 @@ def event_responses(database: Session, projections: list[EventProjection]) -> li
                     )
                     if projection.resulting_plant is not None
                     and projection.resulting_plant_identity is not None
+                    else None
+                ),
+                measurement=(
+                    Measurement(
+                        quantity=event.measurement_quantity,
+                        value=event.measurement_value,
+                        unit=event.measurement_unit,
+                        is_approximate=event.measurement_is_approximate,
+                    )
+                    if event.measurement_quantity is not None
+                    and event.measurement_value is not None
+                    and event.measurement_unit is not None
+                    and event.measurement_is_approximate is not None
                     else None
                 ),
                 harvest_id=harvests[event.id].id if event.id in harvests else None,

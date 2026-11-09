@@ -1,12 +1,13 @@
 import unicodedata
 from datetime import datetime
+from decimal import Decimal
 from typing import Annotated, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from florabase.collection_photos.schemas import PrimaryPhotoResponse
-from florabase.events.model import EventKind
+from florabase.events.model import EventKind, LengthUnit, MeasurementQuantity
 from florabase.plants.model import PlantGroupLifecycle, PlantLifecycle
 from florabase.plants.schemas import (
     BotanicalIdentitySummary,
@@ -14,7 +15,7 @@ from florabase.plants.schemas import (
     PlantGroupResponse,
     PlantResponse,
 )
-from florabase.seed_lots.schemas import PartialDate
+from florabase.seed_lots.schemas import DecimalString, PartialDate
 
 
 def _notes(value: str | None) -> str | None:
@@ -42,6 +43,32 @@ def _single_line(value: str | None) -> str | None:
     return normalized
 
 
+_MILLIMETRES = {LengthUnit.MM: Decimal(1), LengthUnit.CM: Decimal(10), LengthUnit.M: Decimal(1000)}
+_MAX_HEIGHT_MM = Decimal(200_000)  # Tallest recorded trees are ~116 m; larger values are typos.
+
+
+class Measurement(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    quantity: MeasurementQuantity
+    value: DecimalString
+    unit: LengthUnit
+    is_approximate: bool = False
+
+    @model_validator(mode="after")
+    def validate_value(self) -> Self:
+        if not self.value.is_finite() or self.value <= 0:
+            raise ValueError("Measurement value must be a positive number")
+        # Plain notation keeps the recorded resolution and matches what PostgreSQL returns.
+        self.value = Decimal(format(self.value, "f"))
+        exponent = self.value.as_tuple().exponent
+        if isinstance(exponent, int) and exponent < -3:
+            raise ValueError("Measurement value must have at most 3 decimal places")
+        if self.value * _MILLIMETRES[self.unit] > _MAX_HEIGHT_MM:
+            raise ValueError("Height must not exceed 200 m")
+        return self
+
+
 class EventWrite(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -51,6 +78,7 @@ class EventWrite(BaseModel):
     destination_location_id: UUID | None = None
     recipient: str | None = Field(default=None, max_length=255)
     resulting_plant_id: UUID | None = None
+    measurement: Measurement | None = None
 
     @field_validator("notes", mode="before")
     @classmethod
@@ -79,6 +107,13 @@ class EventWrite(BaseModel):
             raise ValueError("Extraction and reintegration require a resulting Plant")
         if self.kind not in operation_kinds and self.resulting_plant_id is not None:
             raise ValueError("Only extraction or reintegration may have a resulting Plant")
+        if self.kind == EventKind.MEASUREMENT:
+            if self.measurement is None:
+                raise ValueError("Measurement requires a quantity, value and unit")
+            if self.occurred_on is None:
+                raise ValueError("Measurement requires an occurrence date")
+        elif self.measurement is not None:
+            raise ValueError("Only measurement may have a measured value")
         return self
 
 
@@ -153,6 +188,7 @@ class EventResponse(BaseModel):
     recipient: str | None
     resulting_plant_id: UUID | None
     resulting_plant: ResultingPlantSummary | None
+    measurement: Measurement | None = None
     harvest_id: UUID | None = None
     harvest_title: str | None = None
     harvest_primary_photo: PrimaryPhotoResponse | None = None
