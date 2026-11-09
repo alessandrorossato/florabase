@@ -20,6 +20,7 @@ from florabase.collection_photos.model import (
     RecordMediaLink,
 )
 from florabase.core.config import get_settings
+from florabase.cuttings.model import PropagationAttempt, RootingObservation, VegetativeLot
 from florabase.db.base import Base
 from florabase.events.model import Event
 from florabase.external_botany.model import ExternalProviderCache, ExternalTaxonLink
@@ -81,6 +82,10 @@ assert Supplier.__table__.metadata is target_metadata
 assert Location.__table__.metadata is target_metadata
 assert GeographicPlace.__table__.metadata is target_metadata
 assert ProvenanceSite.__table__.metadata is target_metadata
+assert all(
+    model.__table__.metadata is target_metadata
+    for model in (VegetativeLot, PropagationAttempt, RootingObservation)
+)
 assert SeedLot.__table__.metadata is target_metadata
 assert Sowing.__table__.metadata is target_metadata
 assert GerminationObservation.__table__.metadata is target_metadata

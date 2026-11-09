@@ -406,6 +406,14 @@ point where useful. T50 is unavailable without dated observations, an exact Sowi
 or a reached 50% threshold. Decimal results are derived estimates, not measurement precision.
 Observations do not create Events, change lifecycle or descendants, or replay propagation.
 
+### Vegetative propagation
+
+Vegetative lots retain the identity, acquisition or taking date, material type, mother or external
+source, and original and remaining count of stem, leaf or root cuttings. Rooting attempts retain
+their own starting count, recorded rooted count, cultivation setup and dated rooting checks. A
+recorded zero and an unknown count remain distinct. Failed and abandoned attempts remain readable.
+The [cuttings contract](cuttings.md) describes stock use, clonal lineage and reversal.
+
 ### Explicit propagation transitions
 
 Propagation operations are forward data-entry assistance, not inventory accounting, event sourcing,

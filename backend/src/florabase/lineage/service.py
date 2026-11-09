@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
+from florabase.cuttings.model import PropagationAttempt, VegetativeLot
 from florabase.harvests.conversion_model import HarvestSeedLotConversion
 from florabase.harvests.inventory_model import HarvestMaterialInventory as Inventory
 from florabase.harvests.model import Harvest, HarvestItem
@@ -20,15 +21,19 @@ from florabase.lineage.schemas import (
     LineageResponse,
     PlantGroupLineageNode,
     PlantLineageNode,
+    PropagationAttemptLineageNode,
     SeedLotLineageNode,
     SowingLineageNode,
+    VegetativeLotLineageNode,
 )
 from florabase.plants.model import DirectOriginKind, Plant, PlantGroup
 from florabase.seed_lots.model import SeedLot, SeedLotSourceKind
 from florabase.seed_lots.schemas import PartialDate
 from florabase.sowings.model import Sowing
 
-LineageKind = Literal["seed_lot", "sowing", "plant", "plant_group"]
+LineageKind = Literal[
+    "seed_lot", "sowing", "plant", "plant_group", "vegetative_lot", "propagation_attempt"
+]
 LineageKey = tuple[LineageKind, UUID]
 
 
@@ -77,6 +82,28 @@ _WALK = text(
             SELECT 'seed_lot'::text, sowing.seed_lot_id
             FROM sowings AS sowing
             WHERE walk.kind = 'sowing' AND sowing.id = walk.id
+            UNION ALL
+            SELECT 'plant'::text, lot.mother_plant_id FROM vegetative_lots AS lot
+            WHERE walk.kind = 'vegetative_lot' AND lot.id = walk.id
+              AND lot.mother_plant_id IS NOT NULL
+            UNION ALL
+            SELECT 'plant_group'::text, lot.mother_plant_group_id FROM vegetative_lots AS lot
+            WHERE walk.kind = 'vegetative_lot' AND lot.id = walk.id
+              AND lot.mother_plant_group_id IS NOT NULL
+            UNION ALL
+            SELECT 'vegetative_lot'::text, attempt.vegetative_lot_id
+            FROM propagation_attempts AS attempt
+            WHERE walk.kind = 'propagation_attempt' AND attempt.id = walk.id
+            UNION ALL
+            SELECT 'propagation_attempt'::text, plant.originating_propagation_attempt_id
+            FROM plants AS plant
+            WHERE walk.kind = 'plant' AND plant.id = walk.id
+              AND plant.originating_propagation_attempt_id IS NOT NULL
+            UNION ALL
+            SELECT 'propagation_attempt'::text, plant_group.originating_propagation_attempt_id
+            FROM plant_groups AS plant_group
+            WHERE walk.kind = 'plant_group' AND plant_group.id = walk.id
+              AND plant_group.originating_propagation_attempt_id IS NOT NULL
         ) AS next
         WHERE NOT walk.is_cycle
     )
@@ -98,7 +125,7 @@ def _walk(database: Session, subject: LineageKey) -> list[LineageKey]:
 
 
 def lock_lineage_writes(database: Session) -> None:
-    """Serialize changes to the existing four-table lineage, before aggregate locks.
+    """Serialize changes to the collection lineage, before aggregate locks.
 
     The migration's statement triggers use the same transaction-scoped namespace.
     Readers and operations that cannot write origin columns do not take this lock.
@@ -148,6 +175,8 @@ def _summaries(
         "sowing": [],
         "plant": [],
         "plant_group": [],
+        "vegetative_lot": [],
+        "propagation_attempt": [],
     }
     for kind, item_id in keys:
         grouped[kind].append(item_id)
@@ -206,6 +235,36 @@ def _summaries(
                     botanical_identity=_identity_summary(identity),
                 ),
                 _direct_origin(item.direct_origin_kind),
+            )
+    if grouped["vegetative_lot"]:
+        lot_statement = (
+            select(VegetativeLot, BotanicalIdentity)
+            .join(BotanicalIdentity, BotanicalIdentity.id == VegetativeLot.botanical_identity_id)
+            .where(VegetativeLot.id.in_(grouped["vegetative_lot"]))
+        )
+        for item, identity in database.execute(lot_statement):
+            result[("vegetative_lot", item.id)] = (
+                VegetativeLotLineageNode(
+                    id=item.id,
+                    label=item.label,
+                    lifecycle=item.lifecycle,
+                    botanical_identity=_identity_summary(identity),
+                ),
+                None,
+            )
+    if grouped["propagation_attempt"]:
+        for item in database.scalars(
+            select(PropagationAttempt).where(
+                PropagationAttempt.id.in_(grouped["propagation_attempt"])
+            )
+        ):
+            result[("propagation_attempt", item.id)] = (
+                PropagationAttemptLineageNode(
+                    id=item.id,
+                    label=item.label,
+                    lifecycle=item.lifecycle,
+                ),
+                None,
             )
     return result
 

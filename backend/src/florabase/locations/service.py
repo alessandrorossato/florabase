@@ -6,6 +6,7 @@ from sqlalchemy import func, literal, select, union_all
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import Select
 
+from florabase.cuttings.model import PropagationAttempt, VegetativeLot
 from florabase.events.model import Event
 from florabase.harvests.inventory_model import HarvestMaterialInventory
 from florabase.locations.model import Location
@@ -71,6 +72,8 @@ def validate_location_scope(location: Location, scope: LocationUsageScope) -> No
         LocationUsageScope.PLANTS: location.supports_plants,
         LocationUsageScope.SOWINGS: location.supports_sowings,
         LocationUsageScope.SEED_LOTS: location.supports_seed_lots,
+        LocationUsageScope.VEGETATIVE_LOTS: location.supports_vegetative_lots,
+        LocationUsageScope.PROPAGATION_ATTEMPTS: location.supports_propagation_attempts,
         LocationUsageScope.HARVEST_INVENTORY: location.supports_harvest_inventory,
     }[scope]
     if supported is False:
@@ -86,7 +89,9 @@ def _grouped_usage(
     | type[PlantGroup]
     | type[Sowing]
     | type[SeedLot]
-    | type[HarvestMaterialInventory],
+    | type[HarvestMaterialInventory]
+    | type[PropagationAttempt]
+    | type[VegetativeLot],
 ) -> dict[UUID, LocationUsageCount]:
     rows = database.execute(
         select(
@@ -113,12 +118,24 @@ def location_usage(database: Session) -> dict[UUID, LocationUsageSummary]:
     sowings = _grouped_usage(database, Sowing)
     seed_lots = _grouped_usage(database, SeedLot)
     inventory = _grouped_usage(database, HarvestMaterialInventory)
-    location_ids = set(plants) | set(groups) | set(sowings) | set(seed_lots) | set(inventory)
+    vegetative_lots = _grouped_usage(database, VegetativeLot)
+    propagation_attempts = _grouped_usage(database, PropagationAttempt)
+    location_ids = (
+        set(plants)
+        | set(groups)
+        | set(sowings)
+        | set(seed_lots)
+        | set(inventory)
+        | set(propagation_attempts)
+        | set(vegetative_lots)
+    )
     result: dict[UUID, LocationUsageSummary] = {}
     for location_id in location_ids:
         plant = plants.get(location_id, LocationUsageCount())
         group = groups.get(location_id, LocationUsageCount())
         result[location_id] = LocationUsageSummary(
+            vegetative_lots=vegetative_lots.get(location_id, LocationUsageCount()),
+            propagation_attempts=propagation_attempts.get(location_id, LocationUsageCount()),
             harvest_inventory=inventory.get(location_id, LocationUsageCount()),
             plants=LocationUsageCount(
                 active=plant.active + group.active,
@@ -141,6 +158,8 @@ class LocationUsageAggregation:
                 active=self.direct.plants.active + self.direct.plant_groups.active,
                 total=self.direct.plants.total + self.direct.plant_groups.total,
             ),
+            vegetative_lots=self.direct.vegetative_lots,
+            propagation_attempts=self.direct.propagation_attempts,
             harvest_inventory=self.direct.harvest_inventory,
             sowings=self.direct.sowings,
             seed_lots=self.direct.seed_lots,
@@ -178,6 +197,8 @@ def location_usage_statement() -> Select[tuple[UUID, str, int, int, int, int]]:
                 ("plant_groups", PlantGroup),
                 ("sowings", Sowing),
                 ("seed_lots", SeedLot),
+                ("vegetative_lots", VegetativeLot),
+                ("propagation_attempts", PropagationAttempt),
                 ("harvest_inventory", HarvestMaterialInventory),
             )
         )
@@ -288,6 +309,9 @@ def create_location(database: Session, payload: LocationCreate) -> Location:
         supports_plants=LocationUsageScope.PLANTS in payload.usage_scopes,
         supports_sowings=LocationUsageScope.SOWINGS in payload.usage_scopes,
         supports_seed_lots=LocationUsageScope.SEED_LOTS in payload.usage_scopes,
+        supports_vegetative_lots=LocationUsageScope.VEGETATIVE_LOTS in payload.usage_scopes,
+        supports_propagation_attempts=LocationUsageScope.PROPAGATION_ATTEMPTS
+        in payload.usage_scopes,
         supports_harvest_inventory=LocationUsageScope.HARVEST_INVENTORY in payload.usage_scopes,
     )
     database.add(location)
@@ -304,6 +328,16 @@ def update_location(database: Session, location_id: UUID, payload: LocationUpdat
         (LocationUsageScope.PLANTS, location.supports_plants, usage.plants.total),
         (LocationUsageScope.SOWINGS, location.supports_sowings, usage.sowings.total),
         (LocationUsageScope.SEED_LOTS, location.supports_seed_lots, usage.seed_lots.total),
+        (
+            LocationUsageScope.VEGETATIVE_LOTS,
+            location.supports_vegetative_lots,
+            usage.vegetative_lots.total,
+        ),
+        (
+            LocationUsageScope.PROPAGATION_ATTEMPTS,
+            location.supports_propagation_attempts,
+            usage.propagation_attempts.total,
+        ),
         (
             LocationUsageScope.HARVEST_INVENTORY,
             location.supports_harvest_inventory,
@@ -322,6 +356,10 @@ def update_location(database: Session, location_id: UUID, payload: LocationUpdat
     location.supports_plants = LocationUsageScope.PLANTS in payload.usage_scopes
     location.supports_sowings = LocationUsageScope.SOWINGS in payload.usage_scopes
     location.supports_seed_lots = LocationUsageScope.SEED_LOTS in payload.usage_scopes
+    location.supports_vegetative_lots = LocationUsageScope.VEGETATIVE_LOTS in payload.usage_scopes
+    location.supports_propagation_attempts = (
+        LocationUsageScope.PROPAGATION_ATTEMPTS in payload.usage_scopes
+    )
     location.supports_harvest_inventory = (
         LocationUsageScope.HARVEST_INVENTORY in payload.usage_scopes
     )
@@ -342,6 +380,8 @@ def delete_location(database: Session, location_id: UUID) -> None:
         usage.plants.total
         + usage.sowings.total
         + usage.seed_lots.total
+        + usage.vegetative_lots.total
+        + usage.propagation_attempts.total
         + usage.harvest_inventory.total
     )
     event_count = database.scalar(

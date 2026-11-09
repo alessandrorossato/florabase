@@ -8163,3 +8163,17 @@ Status remains implemented pending canonical verification.
 - Active filters and tombstone guards applied across collection views, explore, import/export, plants, schedule, search, and seed lots. Search indexes historical names with `"Formerly <name>"` context.
 - Migration `20261109_0045` tested with bidirectional migration cycles (`verify-migration-cycle.sh`) and golden smoke dataset baseline updated in `scripts/fixtures/golden/scenarios.json`.
 - Static checks (`make format && make lint && make typecheck && make api-check`), backend unit tests (`make test-backend`), frontend tests, and integration test suites passed. Canonical gate `make feature-verify AGENT_ID=antigravity-taxonomy-001` completed with verified receipt.
+
+### CUTTING-001 — backend development milestone, 9 November 2026
+
+- Added vegetative lots, rooting attempts and observations, explicit clonal origin, typed receipts
+  and guarded reversal. Added Location scopes, Schedule and shared media targets, History facts,
+  and Explore representation. See the [cuttings contract](cuttings.md).
+- Backend Ruff and mypy passed, and all 17 focused unit tests passed. The focused disposable
+  PostgreSQL run passed 86 tests across CUTTING, History, LINEAGE-002,
+  propagation reversal, Measurements and CSV. It included rollback, concurrent stock deduction,
+  cycle refusal, descendant undo, empty schema round-trip, and populated-downgrade refusal.
+  The disposable project reported zero remaining containers, networks and volumes.
+- The branch uses temporary revision `cutting_001_dev` above main's `20261109_0044`. Final
+  revision assignment after TAXONOMY, LINEAGE-003 explorer integration, UAT, independent QA and
+  the frozen-tree FULL gate are still pending. Status is `in_progress`.

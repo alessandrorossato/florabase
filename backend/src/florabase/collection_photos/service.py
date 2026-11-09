@@ -32,6 +32,7 @@ from florabase.collection_photos.schemas import (
     LocalPhotoResponse,
     PhotoMetadataWrite,
 )
+from florabase.cuttings.model import PropagationAttempt, VegetativeLot
 from florabase.events.model import Event
 from florabase.harvests.model import Harvest
 from florabase.plants.model import Plant, PlantGroup
@@ -39,7 +40,17 @@ from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import Sowing
 from florabase.suppliers.model import Supplier
 
-TargetType = Literal["seed_lot", "sowing", "plant", "plant_group", "event", "harvest", "supplier"]
+TargetType = Literal[
+    "seed_lot",
+    "sowing",
+    "plant",
+    "plant_group",
+    "event",
+    "harvest",
+    "supplier",
+    "vegetative_lot",
+    "propagation_attempt",
+]
 TARGET_MODELS: dict[
     str,
     tuple[
@@ -49,7 +60,9 @@ TARGET_MODELS: dict[
         | type[PlantGroup]
         | type[Event]
         | type[Harvest]
-        | type[Supplier],
+        | type[Supplier]
+        | type[VegetativeLot]
+        | type[PropagationAttempt],
         str,
     ],
 ] = {
@@ -60,6 +73,8 @@ TARGET_MODELS: dict[
     "event": (Event, "event_id"),
     "harvest": (Harvest, "harvest_id"),
     "supplier": (Supplier, "supplier_id"),
+    "vegetative_lot": (VegetativeLot, "vegetative_lot_id"),
+    "propagation_attempt": (PropagationAttempt, "propagation_attempt_id"),
 }
 IDENTITY_COVER_THUMBNAIL_MAX_EDGE = 320
 

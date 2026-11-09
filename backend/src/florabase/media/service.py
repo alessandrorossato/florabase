@@ -25,6 +25,7 @@ from florabase.collection_photos.model import (
     RecordMediaLink,
 )
 from florabase.collection_photos.service import TARGET_MODELS, CollectionPhotoError
+from florabase.cuttings.model import PropagationAttempt, VegetativeLot
 from florabase.media.schemas import (
     AssetDetailResponse,
     AssetMetadataWrite,
@@ -273,6 +274,8 @@ def target_url(target: MediaTarget, target_id: UUID) -> str:
         "event": "events",
         "harvest": "harvests",
         "supplier": "suppliers",
+        "vegetative_lot": "cuttings/lots",
+        "propagation_attempt": "cuttings/attempts",
     }
     return f"#/{routes[target]}/{target_id}"
 
@@ -667,6 +670,13 @@ def target_choices(
     if target == "sowing":
         statement = statement.join(SeedLot, SeedLot.id == Sowing.seed_lot_id)
         identity_id = SeedLot.botanical_identity_id
+    elif target == "propagation_attempt":
+        statement = statement.join(
+            VegetativeLot, VegetativeLot.id == PropagationAttempt.vegetative_lot_id
+        )
+        identity_id = VegetativeLot.botanical_identity_id
+    elif target == "vegetative_lot":
+        identity_id = VegetativeLot.botanical_identity_id
     elif target in {"event", "harvest"}:
         statement = statement.outerjoin(
             Plant, Plant.id == (Event.plant_id if target == "event" else Harvest.plant_id)

@@ -3,6 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from florabase.cuttings.model import AttemptLifecycle, LotLifecycle
 from florabase.plants.model import DirectOriginKind, PlantGroupLifecycle, PlantLifecycle
 from florabase.seed_lots.model import SeedLotLifecycle, SeedLotSourceKind
 from florabase.seed_lots.schemas import PartialDate
@@ -45,8 +46,28 @@ class PlantGroupLineageNode(BaseModel):
     botanical_identity: BotanicalIdentitySummary
 
 
+class VegetativeLotLineageNode(BaseModel):
+    kind: Literal["vegetative_lot"] = "vegetative_lot"
+    id: UUID
+    label: str | None
+    lifecycle: LotLifecycle
+    botanical_identity: BotanicalIdentitySummary
+
+
+class PropagationAttemptLineageNode(BaseModel):
+    kind: Literal["propagation_attempt"] = "propagation_attempt"
+    id: UUID
+    label: str | None
+    lifecycle: AttemptLifecycle
+
+
 LineageNode = Annotated[
-    SeedLotLineageNode | SowingLineageNode | PlantLineageNode | PlantGroupLineageNode,
+    SeedLotLineageNode
+    | SowingLineageNode
+    | PlantLineageNode
+    | PlantGroupLineageNode
+    | VegetativeLotLineageNode
+    | PropagationAttemptLineageNode,
     Field(discriminator="kind"),
 ]
 

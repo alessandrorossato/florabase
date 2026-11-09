@@ -1,9 +1,40 @@
 """Closed, typed propagation result snapshot contract (version 1)."""
 
+from florabase.cuttings.model import PropagationAttempt, VegetativeLot
 from florabase.plants.model import Plant, PlantGroup
 from florabase.reversals.service import QuantitySnapshot, group_quantity, seed_quantity
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import Sowing
+
+
+def date_snapshot(record: object, prefix: str, output: str) -> dict[str, object]:
+    return {
+        f"{output}_{part}": getattr(record, f"{prefix}_{part}")
+        for part in ("precision", "year", "month", "day")
+    }
+
+
+def cutting_source_snapshot(
+    source: VegetativeLot | PropagationAttempt, lot: VegetativeLot
+) -> dict[str, object]:
+    return {
+        "source_location_id": source.location_id,
+        "source_botanical_identity_id": lot.botanical_identity_id,
+        **date_snapshot(
+            source, "taken_on" if isinstance(source, VegetativeLot) else "started_on", "source_date"
+        ),
+    }
+
+
+def attempt_snapshot(result: PropagationAttempt, lot: VegetativeLot) -> dict[str, object]:
+    return {
+        "result_snapshot_version": 1,
+        "result_lifecycle": result.lifecycle,
+        **group_quantity(result).columns("result"),
+        "result_botanical_identity_id": lot.botanical_identity_id,
+        "result_location_id": result.location_id,
+        **date_snapshot(result, "started_on", "result_date"),
+    }
 
 
 def result_snapshot(result: Sowing | Plant | PlantGroup) -> dict[str, object]:

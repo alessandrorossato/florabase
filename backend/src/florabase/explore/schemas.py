@@ -12,6 +12,8 @@ class CollectionRecordCategory(StrEnum):
     SOWING = "sowing"
     PLANT = "plant"
     PLANT_GROUP = "plant_group"
+    VEGETATIVE_LOT = "vegetative_lot"
+    PROPAGATION_ATTEMPT = "propagation_attempt"
     STORED_MATERIAL = "stored_material"
 
 

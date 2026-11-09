@@ -224,6 +224,7 @@ class PlantCommonResponse(BaseModel):
     botanical_identity_id: UUID
     botanical_identity: BotanicalIdentitySummary
     originating_sowing_id: UUID | None
+    originating_propagation_attempt_id: UUID | None = None
     originating_sowing: OriginatingSowingSummary | None
     direct_origin_kind: DirectOriginKind | None
     direct_origin_detail: str | None

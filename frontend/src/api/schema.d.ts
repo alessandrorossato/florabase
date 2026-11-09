@@ -804,6 +804,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/cutting-operations/{receipt_id}/reversal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Reversal Eligibility */
+        get: operations["getCuttingReversalEligibility"];
+        put?: never;
+        /** Reverse Cutting Operation */
+        post: operations["reverseCuttingOperation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/dashboard": {
         parameters: {
             query?: never;
@@ -2071,6 +2089,161 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/propagation-attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Attempts */
+        get: operations["listPropagationAttempts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/propagation-attempts/fast-create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Fast Create */
+        post: operations["fastCreateCuttings"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/propagation-attempts/{attempt_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Attempt */
+        get: operations["getPropagationAttempt"];
+        /** Update Attempt */
+        put: operations["updatePropagationAttempt"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/propagation-attempts/{attempt_id}/lineage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Attempt Lineage */
+        get: operations["getPropagationAttemptLineage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/propagation-attempts/{attempt_id}/observations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Observation */
+        post: operations["createRootingObservation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/propagation-attempts/{attempt_id}/observations/{observation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Observation */
+        put: operations["updateRootingObservation"];
+        post?: never;
+        /** Delete Observation */
+        delete: operations["deleteRootingObservation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/propagation-attempts/{attempt_id}/plant-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Establish Group */
+        post: operations["establishCuttingPlantGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/propagation-attempts/{attempt_id}/plants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Establish Plant */
+        post: operations["establishCuttingPlant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/propagation-attempts/{attempt_id}/propagation-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Propagation Summary */
+        get: operations["getCuttingPropagationSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/provenance-sites": {
         parameters: {
             query?: never;
@@ -2612,6 +2785,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/vegetative-lots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Lots */
+        get: operations["listVegetativeLots"];
+        put?: never;
+        /** Create Lot */
+        post: operations["createVegetativeLot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vegetative-lots/{lot_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Lot */
+        get: operations["getVegetativeLot"];
+        /** Update Lot */
+        put: operations["updateVegetativeLot"];
+        post?: never;
+        /** Delete Lot */
+        delete: operations["deleteVegetativeLot"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vegetative-lots/{lot_id}/lineage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lot Lineage */
+        get: operations["getVegetativeLotLineage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vegetative-lots/{lot_id}/propagation-attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Attempt */
+        post: operations["startRootingAttempt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2952,6 +3196,44 @@ export interface components {
              */
             state: "active" | "pending_delete";
         };
+        /** AttemptCreate */
+        AttemptCreate: {
+            propagation_attempt: components["schemas"]["AttemptSetup"];
+            source_adjustment: components["schemas"]["SourceAdjustment"];
+        };
+        /** AttemptSetup */
+        AttemptSetup: {
+            /** Container */
+            container?: string | null;
+            /** Environment */
+            environment?: string | null;
+            /** Hormone Treatment */
+            hormone_treatment?: string | null;
+            /** Label */
+            label?: string | null;
+            /** Location Id */
+            location_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+            quantity?: components["schemas"]["PositiveCuttingQuantity"] | null;
+            started_on?: components["schemas"]["PartialDate"] | null;
+            /** Substrate */
+            substrate?: string | null;
+            /** Temperature Max C */
+            temperature_max_c?: number | string | null;
+            /** Temperature Min C */
+            temperature_min_c?: number | string | null;
+        };
+        /** AttemptTransitionResponse */
+        AttemptTransitionResponse: {
+            /**
+             * Operation Receipt Id
+             * Format: uuid
+             */
+            operation_receipt_id: string;
+            propagation_attempt: components["schemas"]["PropagationAttemptResponse"];
+            vegetative_lot: components["schemas"]["VegetativeLotResponse"];
+        };
         /** Body_createAttachment */
         Body_createAttachment: {
             /**
@@ -3251,7 +3533,7 @@ export interface components {
          * CollectionRecordCategory
          * @enum {string}
          */
-        CollectionRecordCategory: "seed_lot" | "sowing" | "plant" | "plant_group" | "stored_material";
+        CollectionRecordCategory: "seed_lot" | "sowing" | "plant" | "plant_group" | "vegetative_lot" | "propagation_attempt" | "stored_material";
         /** CollidingIdentitySummary */
         CollidingIdentitySummary: {
             collection_counts: components["schemas"]["IdentityCollectionCounts"];
@@ -3381,6 +3663,36 @@ export interface components {
         CsrfResponse: {
             /** Csrf Token */
             csrf_token: string;
+        };
+        /** CuttingPropagationSummary */
+        CuttingPropagationSummary: {
+            /** Approximate Plant Group Count */
+            approximate_plant_group_count: number;
+            /**
+             * Attempt Id
+             * Format: uuid
+             */
+            attempt_id: string;
+            /** Exact Descendant Count */
+            exact_descendant_count: number;
+            /**
+             * Lifecycle
+             * @enum {string}
+             */
+            lifecycle: "active" | "completed" | "failed" | "abandoned" | "reversed";
+            /** Offspring */
+            offspring: components["schemas"]["EstablishedCutting"][];
+            /** Rooted Count */
+            rooted_count: number | null;
+            /** Unknown Plant Group Count */
+            unknown_plant_group_count: number;
+        };
+        /** CuttingQuantity */
+        CuttingQuantity: {
+            /** Is Approximate */
+            is_approximate: boolean;
+            /** Value */
+            value: number;
         };
         /** DashboardCounts */
         DashboardCounts: {
@@ -3550,6 +3862,77 @@ export interface components {
              * Format: date-time
              */
             survivor_updated_at: string;
+        };
+        /** EstablishPlant */
+        EstablishPlant: {
+            collection_entry_date?: components["schemas"]["PartialDate"] | null;
+            /** Label */
+            label?: string | null;
+            /** Location Id */
+            location_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /**
+             * Resulting Attempt Lifecycle
+             * @default active
+             * @enum {string}
+             */
+            resulting_attempt_lifecycle: "active" | "completed" | "abandoned";
+        };
+        /** EstablishPlantGroup */
+        EstablishPlantGroup: {
+            collection_entry_date?: components["schemas"]["PartialDate"] | null;
+            /** Label */
+            label?: string | null;
+            /** Location Id */
+            location_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+            quantity?: components["schemas"]["PositiveCuttingQuantity"] | null;
+            /**
+             * Resulting Attempt Lifecycle
+             * @default active
+             * @enum {string}
+             */
+            resulting_attempt_lifecycle: "active" | "completed" | "abandoned";
+        };
+        /** EstablishedCutting */
+        EstablishedCutting: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "plant" | "plant_group";
+            /** Label */
+            label: string | null;
+            /** Lifecycle */
+            lifecycle: string;
+            /** Operation Receipt Id */
+            operation_receipt_id: string | null;
+            quantity: components["schemas"]["CuttingQuantity"] | null;
+        };
+        /** EstablishmentResponse */
+        EstablishmentResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "plant" | "plant_group";
+            /**
+             * Operation Receipt Id
+             * Format: uuid
+             */
+            operation_receipt_id: string;
         };
         /** EventCreate */
         EventCreate: {
@@ -3837,6 +4220,12 @@ export interface components {
             stale: boolean;
             /** Taxonomic Status */
             taxonomic_status: string | null;
+        };
+        /** FastCreate */
+        FastCreate: {
+            propagation_attempt: components["schemas"]["AttemptSetup"];
+            source_adjustment: components["schemas"]["SourceAdjustment"];
+            vegetative_lot: components["schemas"]["VegetativeLotCreate"];
         };
         /** GeographicPlaceCreate */
         GeographicPlaceCreate: {
@@ -4200,7 +4589,7 @@ export interface components {
              * Source Kind
              * @enum {string}
              */
-            source_kind: "event" | "operation_receipt" | "germination" | "harvest" | "disposition" | "conversion" | "scheduled_activity";
+            source_kind: "event" | "operation_receipt" | "germination" | "rooting_observation" | "harvest" | "disposition" | "conversion" | "scheduled_activity";
             /** Status */
             status: ("applied" | "reversed") | null;
             /** Subtype */
@@ -4237,7 +4626,7 @@ export interface components {
          * HistorySubjectKind
          * @enum {string}
          */
-        HistorySubjectKind: "plant" | "plant_group" | "sowing" | "harvest" | "harvest_inventory" | "seed_lot" | "scheduled_activity";
+        HistorySubjectKind: "plant" | "plant_group" | "sowing" | "vegetative_lot" | "propagation_attempt" | "harvest" | "harvest_inventory" | "seed_lot" | "scheduled_activity";
         /**
          * IdentityCollectionCounts
          * @description Active collection records, never quantities or inferred lineage.
@@ -4539,9 +4928,9 @@ export interface components {
         /** LineageResponse */
         LineageResponse: {
             /** Ancestors */
-            ancestors: (components["schemas"]["SeedLotLineageNode"] | components["schemas"]["SowingLineageNode"] | components["schemas"]["PlantLineageNode"] | components["schemas"]["PlantGroupLineageNode"])[];
+            ancestors: (components["schemas"]["SeedLotLineageNode"] | components["schemas"]["SowingLineageNode"] | components["schemas"]["PlantLineageNode"] | components["schemas"]["PlantGroupLineageNode"] | components["schemas"]["VegetativeLotLineageNode"] | components["schemas"]["PropagationAttemptLineageNode"])[];
             /** Subject */
-            subject: components["schemas"]["SeedLotLineageNode"] | components["schemas"]["SowingLineageNode"] | components["schemas"]["PlantLineageNode"] | components["schemas"]["PlantGroupLineageNode"];
+            subject: components["schemas"]["SeedLotLineageNode"] | components["schemas"]["SowingLineageNode"] | components["schemas"]["PlantLineageNode"] | components["schemas"]["PlantGroupLineageNode"] | components["schemas"]["VegetativeLotLineageNode"] | components["schemas"]["PropagationAttemptLineageNode"];
         };
         /** LinkCreate */
         LinkCreate: {
@@ -4595,7 +4984,7 @@ export interface components {
              * Target Type
              * @enum {string}
              */
-            target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier";
+            target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier" | "vegetative_lot" | "propagation_attempt";
             /** Target Url */
             target_url: string;
             /**
@@ -4722,8 +5111,10 @@ export interface components {
             harvest_inventory?: components["schemas"]["LocationUsageCount"];
             plant_groups?: components["schemas"]["LocationUsageCount"];
             plants?: components["schemas"]["LocationUsageCount"];
+            propagation_attempts?: components["schemas"]["LocationUsageCount"];
             seed_lots?: components["schemas"]["LocationUsageCount"];
             sowings?: components["schemas"]["LocationUsageCount"];
+            vegetative_lots?: components["schemas"]["LocationUsageCount"];
         };
         /** LocationCreate */
         LocationCreate: {
@@ -4804,13 +5195,15 @@ export interface components {
          * LocationUsageScope
          * @enum {string}
          */
-        LocationUsageScope: "plants" | "sowings" | "seed_lots" | "harvest_inventory";
+        LocationUsageScope: "plants" | "sowings" | "seed_lots" | "harvest_inventory" | "vegetative_lots" | "propagation_attempts";
         /** LocationUsageSummary */
         LocationUsageSummary: {
             harvest_inventory?: components["schemas"]["LocationUsageCount"];
             plants?: components["schemas"]["LocationUsageCount"];
+            propagation_attempts?: components["schemas"]["LocationUsageCount"];
             seed_lots?: components["schemas"]["LocationUsageCount"];
             sowings?: components["schemas"]["LocationUsageCount"];
+            vegetative_lots?: components["schemas"]["LocationUsageCount"];
         };
         /** LoginRequest */
         LoginRequest: {
@@ -5446,6 +5839,8 @@ export interface components {
             material_provenance_place_id: string | null;
             /** Notes */
             notes: string | null;
+            /** Originating Propagation Attempt Id */
+            originating_propagation_attempt_id?: string | null;
             originating_sowing: components["schemas"]["OriginatingSowingSummary"] | null;
             /** Originating Sowing Id */
             originating_sowing_id: string | null;
@@ -5586,6 +5981,8 @@ export interface components {
             originating_plant_group: components["schemas"]["OriginatingPlantGroupSummary"] | null;
             /** Originating Plant Group Id */
             originating_plant_group_id: string | null;
+            /** Originating Propagation Attempt Id */
+            originating_propagation_attempt_id?: string | null;
             originating_sowing: components["schemas"]["OriginatingSowingSummary"] | null;
             /** Originating Sowing Id */
             originating_sowing_id: string | null;
@@ -5634,6 +6031,13 @@ export interface components {
             provenance_site_id?: string | null;
             /** Supplier Id */
             supplier_id?: string | null;
+        };
+        /** PositiveCuttingQuantity */
+        PositiveCuttingQuantity: {
+            /** Is Approximate */
+            is_approximate: boolean;
+            /** Value */
+            value: number;
         };
         /** PrimaryPhotoResponse */
         PrimaryPhotoResponse: {
@@ -5686,6 +6090,180 @@ export interface components {
             /** Label */
             label: string | null;
             lifecycle: components["schemas"]["PlantLifecycle"];
+        };
+        /** PropagationAttemptDetail */
+        PropagationAttemptDetail: {
+            /**
+             * Attempt Kind
+             * @default cutting
+             * @constant
+             */
+            attempt_kind: "cutting";
+            /** Container */
+            container?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            ended_on?: components["schemas"]["PartialDate"] | null;
+            /** Environment */
+            environment?: string | null;
+            /** Hormone Treatment */
+            hormone_treatment?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label?: string | null;
+            /**
+             * Lifecycle
+             * @enum {string}
+             */
+            lifecycle: "active" | "completed" | "failed" | "abandoned" | "reversed";
+            /** Location Id */
+            location_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Observations */
+            observations: components["schemas"]["RootingObservationResponse"][];
+            /** Operation Receipt Id */
+            operation_receipt_id: string | null;
+            quantity?: components["schemas"]["PositiveCuttingQuantity"] | null;
+            /** Rooted Count */
+            rooted_count?: number | null;
+            /** Rooting Rate Percent */
+            rooting_rate_percent: number | null;
+            started_on?: components["schemas"]["PartialDate"] | null;
+            /** Substrate */
+            substrate?: string | null;
+            /** Temperature Max C */
+            temperature_max_c?: string | null;
+            /** Temperature Min C */
+            temperature_min_c?: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            vegetative_lot: components["schemas"]["VegetativeLotResponse"];
+            /**
+             * Vegetative Lot Id
+             * Format: uuid
+             */
+            vegetative_lot_id: string;
+        };
+        /** PropagationAttemptLineageNode */
+        PropagationAttemptLineageNode: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "propagation_attempt";
+            /** Label */
+            label: string | null;
+            /**
+             * Lifecycle
+             * @enum {string}
+             */
+            lifecycle: "active" | "completed" | "failed" | "abandoned" | "reversed";
+        };
+        /** PropagationAttemptResponse */
+        PropagationAttemptResponse: {
+            /**
+             * Attempt Kind
+             * @default cutting
+             * @constant
+             */
+            attempt_kind: "cutting";
+            /** Container */
+            container?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            ended_on?: components["schemas"]["PartialDate"] | null;
+            /** Environment */
+            environment?: string | null;
+            /** Hormone Treatment */
+            hormone_treatment?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label?: string | null;
+            /**
+             * Lifecycle
+             * @enum {string}
+             */
+            lifecycle: "active" | "completed" | "failed" | "abandoned" | "reversed";
+            /** Location Id */
+            location_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+            quantity?: components["schemas"]["PositiveCuttingQuantity"] | null;
+            /** Rooted Count */
+            rooted_count?: number | null;
+            /** Rooting Rate Percent */
+            rooting_rate_percent: number | null;
+            started_on?: components["schemas"]["PartialDate"] | null;
+            /** Substrate */
+            substrate?: string | null;
+            /** Temperature Max C */
+            temperature_max_c?: string | null;
+            /** Temperature Min C */
+            temperature_min_c?: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /**
+             * Vegetative Lot Id
+             * Format: uuid
+             */
+            vegetative_lot_id: string;
+        };
+        /** PropagationAttemptUpdate */
+        PropagationAttemptUpdate: {
+            /** Container */
+            container?: string | null;
+            ended_on?: components["schemas"]["PartialDate"] | null;
+            /** Environment */
+            environment?: string | null;
+            /** Hormone Treatment */
+            hormone_treatment?: string | null;
+            /** Label */
+            label?: string | null;
+            /**
+             * Lifecycle
+             * @enum {string}
+             */
+            lifecycle: "active" | "completed" | "failed" | "abandoned";
+            /** Location Id */
+            location_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+            quantity?: components["schemas"]["PositiveCuttingQuantity"] | null;
+            /** Rooted Count */
+            rooted_count?: number | null;
+            started_on?: components["schemas"]["PartialDate"] | null;
+            /** Substrate */
+            substrate?: string | null;
+            /** Temperature Max C */
+            temperature_max_c?: number | string | null;
+            /** Temperature Min C */
+            temperature_min_c?: number | string | null;
         };
         /** PropagationPlantGroupSummary */
         PropagationPlantGroupSummary: {
@@ -5746,7 +6324,7 @@ export interface components {
              * Source Type
              * @enum {string}
              */
-            source_type: "seed_lot" | "sowing";
+            source_type: "seed_lot" | "sowing" | "vegetative_lot" | "propagation_attempt";
             /**
              * Status
              * @enum {string}
@@ -6239,13 +6817,59 @@ export interface components {
              * Code
              * @enum {string}
              */
-            code: "propagation_receipt_not_found" | "receipt_relationship_mismatch" | "receipt_already_reversed" | "legacy_receipt_missing_result_snapshot" | "result_lifecycle_changed" | "result_structural_state_changed" | "result_terminal_lifecycle" | "source_lifecycle_changed" | "source_quantity_changed" | "source_structural_state_changed" | "later_source_operation" | "transfer_exists" | "active_downstream_operation" | "downstream_lineage" | "produced_seed_lot_exists" | "later_extraction_exists" | "incompatible_result_history";
+            code: "propagation_receipt_not_found" | "receipt_relationship_mismatch" | "receipt_already_reversed" | "legacy_receipt_missing_result_snapshot" | "result_lifecycle_changed" | "result_structural_state_changed" | "result_terminal_lifecycle" | "source_lifecycle_changed" | "source_quantity_changed" | "source_structural_state_changed" | "later_source_operation" | "transfer_exists" | "active_downstream_operation" | "downstream_lineage" | "produced_seed_lot_exists" | "produced_vegetative_lot_exists" | "linked_media_exists" | "scheduled_work_exists" | "later_extraction_exists" | "incompatible_result_history";
             /** Entity Id */
             entity_id?: string | null;
             /** Entity Type */
-            entity_type?: ("seed_lot" | "sowing" | "plant" | "plant_group") | null;
+            entity_type?: ("seed_lot" | "sowing" | "plant" | "plant_group" | "vegetative_lot" | "propagation_attempt") | null;
             /** Message */
             message: string;
+        };
+        /** RootingObservationResponse */
+        RootingObservationResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Notes */
+            notes?: string | null;
+            observed_on?: components["schemas"]["PartialDate"] | null;
+            /**
+             * Propagation Attempt Id
+             * Format: uuid
+             */
+            propagation_attempt_id: string;
+            /** Rooted Count */
+            rooted_count?: number | null;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "callus" | "root_initials" | "rooted" | "loss" | "inspection";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** RootingObservationWrite */
+        RootingObservationWrite: {
+            /** Notes */
+            notes?: string | null;
+            observed_on?: components["schemas"]["PartialDate"] | null;
+            /** Rooted Count */
+            rooted_count?: number | null;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "callus" | "root_initials" | "rooted" | "loss" | "inspection";
         };
         /** SavedViewCreate */
         SavedViewCreate: {
@@ -6356,7 +6980,7 @@ export interface components {
              * Activity Kind
              * @enum {string}
              */
-            activity_kind: "repot" | "water" | "fertilize" | "move" | "check_germination" | "inspect" | "harvest" | "follow_up";
+            activity_kind: "repot" | "water" | "fertilize" | "move" | "check_germination" | "check_rooting" | "inspect" | "harvest" | "follow_up";
             /** Cancelled At */
             cancelled_at: string | null;
             /** Completed At */
@@ -6409,7 +7033,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location";
+            kind: "botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location" | "vegetative_lot" | "propagation_attempt";
         };
         /** ScheduleTargetPage */
         ScheduleTargetPage: {
@@ -6431,7 +7055,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location";
+            kind: "botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location" | "vegetative_lot" | "propagation_attempt";
             /** Label */
             label: string;
             /** Lifecycle */
@@ -6445,7 +7069,7 @@ export interface components {
              * Activity Kind
              * @enum {string}
              */
-            activity_kind: "repot" | "water" | "fertilize" | "move" | "check_germination" | "inspect" | "harvest" | "follow_up";
+            activity_kind: "repot" | "water" | "fertilize" | "move" | "check_germination" | "check_rooting" | "inspect" | "harvest" | "follow_up";
             /**
              * Due On
              * Format: date
@@ -6470,7 +7094,7 @@ export interface components {
              * Activity Kind
              * @enum {string}
              */
-            activity_kind: "repot" | "water" | "fertilize" | "move" | "check_germination" | "inspect" | "harvest" | "follow_up";
+            activity_kind: "repot" | "water" | "fertilize" | "move" | "check_germination" | "check_rooting" | "inspect" | "harvest" | "follow_up";
             /**
              * Due On
              * Format: date
@@ -6766,6 +7390,15 @@ export interface components {
             owner: boolean;
             /** User Id */
             user_id: string;
+        };
+        /** SourceAdjustment */
+        SourceAdjustment: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "none" | "partial" | "use_all";
+            resulting_quantity?: components["schemas"]["PositiveCuttingQuantity"] | null;
         };
         /** SourceAssertion */
         SourceAssertion: {
@@ -7757,6 +8390,234 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** VegetativeLotCreate */
+        VegetativeLotCreate: {
+            /** Botanical Identity Id */
+            botanical_identity_id?: string | null;
+            initial_quantity?: components["schemas"]["PositiveCuttingQuantity"] | null;
+            /** Label */
+            label?: string | null;
+            /** Location Id */
+            location_id?: string | null;
+            /** Material Provenance Place Id */
+            material_provenance_place_id?: string | null;
+            /**
+             * Material Type
+             * @enum {string}
+             */
+            material_type: "stem_cutting" | "leaf_cutting" | "root_cutting";
+            /** Mother Plant Group Id */
+            mother_plant_group_id?: string | null;
+            /** Mother Plant Id */
+            mother_plant_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Order Id */
+            order_id?: string | null;
+            /** Provenance Site Id */
+            provenance_site_id?: string | null;
+            /** Source Detail */
+            source_detail?: string | null;
+            /**
+             * Source Kind
+             * @default unknown
+             * @enum {string}
+             */
+            source_kind: "collection_produced" | "purchased" | "gift_exchange" | "self_collected" | "other" | "unknown";
+            /** Supplier Id */
+            supplier_id?: string | null;
+            taken_on?: components["schemas"]["PartialDate"] | null;
+        };
+        /** VegetativeLotDetail */
+        VegetativeLotDetail: {
+            /** Attempts */
+            attempts: components["schemas"]["PropagationAttemptResponse"][];
+            /**
+             * Botanical Identity Id
+             * Format: uuid
+             */
+            botanical_identity_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            initial_quantity: components["schemas"]["PositiveCuttingQuantity"] | null;
+            /** Label */
+            label?: string | null;
+            /**
+             * Lifecycle
+             * @enum {string}
+             */
+            lifecycle: "active" | "exhausted" | "discarded" | "lost" | "reversed";
+            /** Location Id */
+            location_id?: string | null;
+            /** Material Provenance Place Id */
+            material_provenance_place_id?: string | null;
+            /**
+             * Material Type
+             * @enum {string}
+             */
+            material_type: "stem_cutting" | "leaf_cutting" | "root_cutting";
+            /** Mother Plant Group Id */
+            mother_plant_group_id?: string | null;
+            /** Mother Plant Id */
+            mother_plant_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Order Id */
+            order_id?: string | null;
+            /** Provenance Site Id */
+            provenance_site_id?: string | null;
+            quantity: components["schemas"]["CuttingQuantity"] | null;
+            /** Source Detail */
+            source_detail?: string | null;
+            /**
+             * Source Kind
+             * @default unknown
+             * @enum {string}
+             */
+            source_kind: "collection_produced" | "purchased" | "gift_exchange" | "self_collected" | "other" | "unknown";
+            /** Supplier Id */
+            supplier_id?: string | null;
+            taken_on?: components["schemas"]["PartialDate"] | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** VegetativeLotLineageNode */
+        VegetativeLotLineageNode: {
+            botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "vegetative_lot";
+            /** Label */
+            label: string | null;
+            /**
+             * Lifecycle
+             * @enum {string}
+             */
+            lifecycle: "active" | "exhausted" | "discarded" | "lost" | "reversed";
+        };
+        /** VegetativeLotResponse */
+        VegetativeLotResponse: {
+            /**
+             * Botanical Identity Id
+             * Format: uuid
+             */
+            botanical_identity_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            initial_quantity: components["schemas"]["PositiveCuttingQuantity"] | null;
+            /** Label */
+            label?: string | null;
+            /**
+             * Lifecycle
+             * @enum {string}
+             */
+            lifecycle: "active" | "exhausted" | "discarded" | "lost" | "reversed";
+            /** Location Id */
+            location_id?: string | null;
+            /** Material Provenance Place Id */
+            material_provenance_place_id?: string | null;
+            /**
+             * Material Type
+             * @enum {string}
+             */
+            material_type: "stem_cutting" | "leaf_cutting" | "root_cutting";
+            /** Mother Plant Group Id */
+            mother_plant_group_id?: string | null;
+            /** Mother Plant Id */
+            mother_plant_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Order Id */
+            order_id?: string | null;
+            /** Provenance Site Id */
+            provenance_site_id?: string | null;
+            quantity: components["schemas"]["CuttingQuantity"] | null;
+            /** Source Detail */
+            source_detail?: string | null;
+            /**
+             * Source Kind
+             * @default unknown
+             * @enum {string}
+             */
+            source_kind: "collection_produced" | "purchased" | "gift_exchange" | "self_collected" | "other" | "unknown";
+            /** Supplier Id */
+            supplier_id?: string | null;
+            taken_on?: components["schemas"]["PartialDate"] | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** VegetativeLotUpdate */
+        VegetativeLotUpdate: {
+            /** Botanical Identity Id */
+            botanical_identity_id?: string | null;
+            /** Label */
+            label?: string | null;
+            /**
+             * Lifecycle
+             * @enum {string}
+             */
+            lifecycle: "active" | "exhausted" | "discarded" | "lost";
+            /** Location Id */
+            location_id?: string | null;
+            /** Material Provenance Place Id */
+            material_provenance_place_id?: string | null;
+            /**
+             * Material Type
+             * @enum {string}
+             */
+            material_type: "stem_cutting" | "leaf_cutting" | "root_cutting";
+            /** Mother Plant Group Id */
+            mother_plant_group_id?: string | null;
+            /** Mother Plant Id */
+            mother_plant_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Order Id */
+            order_id?: string | null;
+            /** Provenance Site Id */
+            provenance_site_id?: string | null;
+            quantity: components["schemas"]["CuttingQuantity"] | null;
+            /** Source Detail */
+            source_detail?: string | null;
+            /**
+             * Source Kind
+             * @default unknown
+             * @enum {string}
+             */
+            source_kind: "collection_produced" | "purchased" | "gift_exchange" | "self_collected" | "other" | "unknown";
+            /** Supplier Id */
+            supplier_id?: string | null;
+            taken_on?: components["schemas"]["PartialDate"] | null;
         };
         /** WcvpLinkResponse */
         WcvpLinkResponse: {
@@ -9897,7 +10758,7 @@ export interface operations {
                 "X-CSRF-Token"?: string | null;
             };
             path: {
-                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier";
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier" | "vegetative_lot" | "propagation_attempt";
                 target_id: string;
             };
             cookie?: never;
@@ -9933,7 +10794,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier";
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier" | "vegetative_lot" | "propagation_attempt";
                 target_id: string;
             };
             cookie?: never;
@@ -9967,7 +10828,7 @@ export interface operations {
                 "X-CSRF-Token"?: string | null;
             };
             path: {
-                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier";
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier" | "vegetative_lot" | "propagation_attempt";
                 target_id: string;
             };
             cookie?: never;
@@ -10005,7 +10866,7 @@ export interface operations {
                 "X-CSRF-Token"?: string | null;
             };
             path: {
-                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier";
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier" | "vegetative_lot" | "propagation_attempt";
                 target_id: string;
             };
             cookie?: never;
@@ -10041,7 +10902,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                target_type: "seed_lot" | "plant" | "plant_group" | "harvest" | "supplier";
+                target_type: "seed_lot" | "plant" | "plant_group" | "harvest" | "supplier" | "vegetative_lot" | "propagation_attempt";
                 target_id: string;
             };
             cookie?: never;
@@ -10075,7 +10936,7 @@ export interface operations {
                 "X-CSRF-Token"?: string | null;
             };
             path: {
-                target_type: "seed_lot" | "plant" | "plant_group" | "harvest" | "supplier";
+                target_type: "seed_lot" | "plant" | "plant_group" | "harvest" | "supplier" | "vegetative_lot" | "propagation_attempt";
                 target_id: string;
             };
             cookie?: never;
@@ -10113,12 +10974,78 @@ export interface operations {
                 "X-CSRF-Token"?: string | null;
             };
             path: {
-                target_type: "seed_lot" | "plant" | "plant_group" | "harvest" | "supplier";
+                target_type: "seed_lot" | "plant" | "plant_group" | "harvest" | "supplier" | "vegetative_lot" | "propagation_attempt";
                 target_id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getCuttingReversalEligibility: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                receipt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PropagationReversalEligibility"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reverseCuttingOperation: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                receipt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PropagationReversalCreate"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             204: {
@@ -11921,7 +12848,7 @@ export interface operations {
                 query?: string;
                 kind?: ("local" | "external") | null;
                 association?: "all" | "linked" | "unlinked";
-                target?: ("collection" | "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier") | null;
+                target?: ("collection" | "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier" | "vegetative_lot" | "propagation_attempt") | null;
                 limit?: number;
                 offset?: number;
             };
@@ -12329,7 +13256,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier";
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier" | "vegetative_lot" | "propagation_attempt";
             };
             cookie?: never;
         };
@@ -13429,6 +14356,391 @@ export interface operations {
             };
         };
     };
+    listPropagationAttempts: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                vegetative_lot_id?: string | null;
+                lifecycle?: ("active" | "completed" | "failed" | "abandoned" | "reversed") | null;
+                botanical_identity_id?: string | null;
+                mother_plant_id?: string | null;
+                mother_plant_group_id?: string | null;
+                location_id?: string | null;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PropagationAttemptResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fastCreateCuttings: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FastCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttemptTransitionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getPropagationAttempt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attempt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PropagationAttemptDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updatePropagationAttempt: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                attempt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PropagationAttemptUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PropagationAttemptResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getPropagationAttemptLineage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attempt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LineageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createRootingObservation: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                attempt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RootingObservationWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RootingObservationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateRootingObservation: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                attempt_id: string;
+                observation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RootingObservationWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RootingObservationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteRootingObservation: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                attempt_id: string;
+                observation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    establishCuttingPlantGroup: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                attempt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EstablishPlantGroup"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EstablishmentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    establishCuttingPlant: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                attempt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EstablishPlant"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EstablishmentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getCuttingPropagationSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attempt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CuttingPropagationSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     listProvenanceSites: {
         parameters: {
             query?: never;
@@ -13765,8 +15077,8 @@ export interface operations {
                 today?: string | null;
                 status?: ("planned" | "completed" | "cancelled")[] | null;
                 window?: "all" | "overdue" | "today" | "next_seven_days" | "later";
-                activity_kind?: ("repot" | "water" | "fertilize" | "move" | "check_germination" | "inspect" | "harvest" | "follow_up")[] | null;
-                target_kind?: ("botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location")[] | null;
+                activity_kind?: ("repot" | "water" | "fertilize" | "move" | "check_germination" | "check_rooting" | "inspect" | "harvest" | "follow_up")[] | null;
+                target_kind?: ("botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location" | "vegetative_lot" | "propagation_attempt")[] | null;
                 target_id?: string | null;
                 q?: string;
                 offset?: number;
@@ -13849,7 +15161,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                kind: "botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location";
+                kind: "botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location" | "vegetative_lot" | "propagation_attempt";
             };
             cookie?: never;
         };
@@ -13880,7 +15192,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                kind: "botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location";
+                kind: "botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location" | "vegetative_lot" | "propagation_attempt";
                 identifier: string;
             };
             cookie?: never;
@@ -14906,6 +16218,249 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SupplierResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listVegetativeLots: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                material_type?: ("stem_cutting" | "leaf_cutting" | "root_cutting") | null;
+                source_kind?: ("collection_produced" | "purchased" | "gift_exchange" | "self_collected" | "other" | "unknown") | null;
+                lifecycle?: ("active" | "exhausted" | "discarded" | "lost" | "reversed") | null;
+                botanical_identity_id?: string | null;
+                mother_plant_id?: string | null;
+                mother_plant_group_id?: string | null;
+                location_id?: string | null;
+                has_known_mother?: boolean | null;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VegetativeLotResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createVegetativeLot: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VegetativeLotCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VegetativeLotResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getVegetativeLot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VegetativeLotDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateVegetativeLot: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VegetativeLotUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VegetativeLotResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteVegetativeLot: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getVegetativeLotLineage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LineageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    startRootingAttempt: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttemptCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttemptTransitionResponse"];
                 };
             };
             /** @description Validation Error */

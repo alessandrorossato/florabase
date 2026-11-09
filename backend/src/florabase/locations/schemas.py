@@ -24,6 +24,8 @@ class LocationUsageScope(StrEnum):
     SOWINGS = "sowings"
     SEED_LOTS = "seed_lots"
     HARVEST_INVENTORY = "harvest_inventory"
+    VEGETATIVE_LOTS = "vegetative_lots"
+    PROPAGATION_ATTEMPTS = "propagation_attempts"
 
 
 class LocationWrite(BaseModel):
@@ -32,7 +34,13 @@ class LocationWrite(BaseModel):
     name: str = Field(max_length=255)
     parent_id: UUID | None = None
     usage_scopes: set[LocationUsageScope] = Field(
-        default_factory=lambda: set(LocationUsageScope), min_length=1
+        default_factory=lambda: {
+            LocationUsageScope.PLANTS,
+            LocationUsageScope.SOWINGS,
+            LocationUsageScope.SEED_LOTS,
+            LocationUsageScope.HARVEST_INVENTORY,
+        },
+        min_length=1,
     )
 
     @field_validator("name", mode="before")
@@ -55,6 +63,8 @@ class LocationUsageCount(BaseModel):
 
 
 class LocationUsageSummary(BaseModel):
+    vegetative_lots: LocationUsageCount = Field(default_factory=LocationUsageCount)
+    propagation_attempts: LocationUsageCount = Field(default_factory=LocationUsageCount)
     harvest_inventory: LocationUsageCount = Field(default_factory=LocationUsageCount)
     plants: LocationUsageCount = Field(default_factory=LocationUsageCount)
     sowings: LocationUsageCount = Field(default_factory=LocationUsageCount)
@@ -104,6 +114,8 @@ class LocationResponse(BaseModel):
                 (LocationUsageScope.PLANTS, location.supports_plants),
                 (LocationUsageScope.SOWINGS, location.supports_sowings),
                 (LocationUsageScope.SEED_LOTS, location.supports_seed_lots),
+                (LocationUsageScope.VEGETATIVE_LOTS, location.supports_vegetative_lots),
+                (LocationUsageScope.PROPAGATION_ATTEMPTS, location.supports_propagation_attempts),
                 (LocationUsageScope.HARVEST_INVENTORY, location.supports_harvest_inventory),
             )
             if supported
