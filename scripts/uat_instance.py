@@ -318,7 +318,9 @@ class UATInstance(UATPreview):
                 f"type=volume,src={self.project}_attachment_data,dst={MEDIA_ROOT},readonly",
                 "--entrypoint",
                 "python",
-                backend["Image"],
+                # The project's own current tag: with the containerd image store a rebuild
+                # replaces the manifest-list ID a retained container still names.
+                f"{self.project}-backend-development",
                 "-c",
                 program,
             ],
@@ -399,7 +401,8 @@ class UATInstance(UATPreview):
         if confirm == self.project and self.requested_profile:
             self.profile = self.requested_profile  # Fresh volumes carry the new profile label.
         self.require_recorded()
-        if confirm == self.project:
+        if confirm == self.project and self.repository.identity()["branch"] != "detached":
+            self.require_context()  # Prove the source before removing anything.
             self.remove_oneoffs()
         super().reset(confirm)
 
@@ -410,6 +413,7 @@ class UATInstance(UATPreview):
     def remove(self, confirm: str) -> None:
         self.require_recorded()
         if confirm == self.project:
+            self.require_context(retiring=True)  # Prove the source before removing anything.
             self.remove_oneoffs()
         super().remove(confirm)
         # Exact development tags only this project builds; a tag still in use is retained.

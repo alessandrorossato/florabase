@@ -7864,5 +7864,8 @@ Status remains implemented pending canonical verification.
   `make workflow-check`, `check-features` (144), and `make smoke-uat-instance` passing on run 6 in 195 s
   with zero residual state; runs 1–5 and their fixes are in the handoff. Operator environments unchanged.
 - Canonical `make feature-verify` (FULL, 17 stages) passed in 933 s; integration 809 passed, 29 skipped.
-- Unresolved: independent delta QA of the QA fixes, operator UAT, and orphaned-source cleanup. Synthetic WFO/WCVP
+- Delta QA: all P1/P2 fixes passed; its new P2 (manifest unreadable after a rebuilding `up` on the
+  containerd image store, seen in run 6) is fixed and asserted by the smoke; run 7 passed in 224 s.
+- Unresolved: operator UAT; orphaned-source cleanup; the same latent `marker_state` issue in the
+  singleton UAT Preview. Synthetic WFO/WCVP
   indexes are not provisioned in instances, and same-browser localhost cookies are shared across ports.

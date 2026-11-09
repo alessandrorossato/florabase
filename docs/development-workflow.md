@@ -482,7 +482,7 @@ worktree whose source still owns instance volumes, so remove the instance first.
 Limits: synthetic WFO/WCVP indexes built during generation are not provisioned for the running app (see the [TEST-DATA-002 decisions](test-data-002-design.md#next-step-separately-review-and-uat)). Browsers share `localhost` cookies across ports, so signing in to a second instance in the
 same browser profile signs out the first (use separate profiles). An instance whose source worktree
 was deleted cannot be retired by these commands; `make uat-instance-list` marks it as MISSING SOURCE
-for operator cleanup. The workstation golden reference running production images is a separate
+for operator cleanup. A leftover `dev-state-init` one-off is refused, not removed; inspect it manually. The workstation golden reference running production images is a separate
 planned increment (GOLDEN-REFERENCE-001). Proof: `make test-uat-preview` (offline) and
 `make smoke-uat-instance` (real disposable Docker).
 

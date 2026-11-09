@@ -225,6 +225,7 @@ class InstanceTests(unittest.TestCase):
         with (
             patch.object(UATPreview, "reset") as reset,
             patch.object(instance, "remove_oneoffs") as oneoffs,
+            patch.object(instance, "require_context") as context,
         ):
             instance.reset("wrong")  # The base refuses it; the profile must not change first.
             self.assertEqual(instance.profile, "smoke")
@@ -232,6 +233,7 @@ class InstanceTests(unittest.TestCase):
             reset.reset_mock()
             instance.reset(instance.project)
         oneoffs.assert_called_once()
+        context.assert_called_once()
         reset.assert_called_once_with(instance.project)
         self.assertEqual((instance.port, instance.profile), (15182, "comprehensive"))
 
@@ -273,6 +275,26 @@ class InstanceTests(unittest.TestCase):
             rm = [call[-1] for call in calls if call[:2] == ["docker", "rm"]]
             self.assertEqual(rm, removed or [])
 
+    def test_manifest_is_read_through_the_current_project_image(self) -> None:
+        instance = self.make(volumes(str(ROOT), "feat-example-001", 15180))
+        backend = {"Config": {"Labels": {"com.docker.compose.service": "backend"}}}
+        backend["Image"] = "sha256:" + "0" * 64  # Retained, possibly no longer existing, ID.
+        with (
+            patch.object(instance, "containers", return_value=[backend]),
+            patch.object(
+                instance, "environment", return_value={"LOCAL_UID": "1", "LOCAL_GID": "1"}
+            ),
+            patch("uat_instance.run", return_value="null") as run,
+        ):
+            self.assertEqual(instance.marker_state(), {uat_instance.LEDGER: None})
+        command = run.call_args.args[0]
+        self.assertIn(f"{instance.project}-backend-development", command)
+        self.assertNotIn(backend["Image"], command)
+        self.assertIn(
+            f"src={instance.project}_attachment_data,dst=/var/lib/florabase/attachments,readonly",
+            " ".join(command),
+        )
+
     def test_host_run_modules_parse_on_the_ci_python(self) -> None:
         # CI runs these with Python 3.12; the formatter targets 3.14 and may rewrite `except (A, B)`.
         for name in ("uat_instance.py", "test-uat-instance.py", "smoke-uat-instance.py"):
@@ -290,9 +312,11 @@ class InstanceTests(unittest.TestCase):
 
         with (
             patch.object(UATPreview, "remove") as remove,
+            patch.object(instance, "require_context") as context,
             patch("uat_instance.run", side_effect=docker),
         ):
             instance.remove(instance.project)
+        context.assert_called_once_with(retiring=True)
         remove.assert_called_once_with(instance.project)
         self.assertEqual(
             [call for call in calls if call[:3] == ["docker", "image", "rm"]],

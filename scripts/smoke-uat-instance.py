@@ -18,7 +18,7 @@ from urllib.error import HTTPError
 from urllib.request import HTTPCookieProcessor, Request, build_opener, urlopen
 
 from smoke_lifecycle import SmokeLifecycle, operator_snapshot
-from uat_instance import LABEL_INSTANCE, PREFIX, UATInstance, instance_volumes
+from uat_instance import LABEL_INSTANCE, LEDGER, PREFIX, UATInstance, instance_volumes
 from workflow_environment import Repository, WorkflowError, run
 from workflow_resources import machine_lock
 
@@ -281,6 +281,8 @@ def main() -> None:
         a.up()
         require(database_digest(a) == a_digest, "A's data survives B's removal and restart")
         require(a.validate_dataset() == 0, "A still baseline-verified")
+        # Rebuilt images must not hide the manifest (status and detached owners read it).
+        require(a.require_marker()[LEDGER]["profile"] == "smoke", "A's manifest after restart")
         login(a)
     for project in (a.project, b.project, c.project):
         require(

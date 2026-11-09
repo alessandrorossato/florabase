@@ -90,6 +90,16 @@ reports, rather than fails on, content changes to a live database owned by anoth
 was correctly refused by the capacity lock while another worktree ran canonical FULL. Run 6 waited
 for that lock and passed with no live-database notes.
 
+**Delta QA (9 November).** All seven P1/P2 fixes passed. Its one new P2 came from run 6's log: after
+stop and a rebuilding `up`, status printed `Dataset: unavailable` (line 1188) because the manifest
+reader ran the retained container's image ID. With the containerd image store (Docker 29.9.3) a
+rebuild replaces that manifest-list ID (`No such image`, line 1035), which would also have refused
+detached owners. The reader now uses the project's current `<project>-backend-development` tag, and
+the smoke asserts the manifest after restart. Run 7 passed in 224 s with the manifest read after
+restart, no `No such image` and zero residual state. The P3 follow-up: reset and remove now prove the source before
+one-off cleanup. The singleton UAT Preview's `marker_state` has the same pre-existing latent issue; it
+is unchanged here and left as a follow-up.
+
 Every run, failed ones included, retired all of its own containers, networks, volumes, images and
 temporary branches. The singleton UAT Preview volumes (owner `florabase-ui-consistency-8e4313`,
 created 4 November) were never touched; Docker reports no events for that project during this work.
