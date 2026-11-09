@@ -757,7 +757,11 @@ class References:
         self, database: Session, selections: dict[tuple[int, str], DecisionOption] | None = None
     ) -> None:
         self.selections = selections or {}
-        self.identities = list(database.scalars(select(BotanicalIdentity)))
+        self.identities = list(
+            database.scalars(
+                select(BotanicalIdentity).where(BotanicalIdentity.merged_into_id.is_(None))
+            )
+        )
         self.suppliers = list(database.scalars(select(Supplier)))
         self.locations = list(database.scalars(select(Location)))
         self.places = list(database.scalars(select(GeographicPlace)))

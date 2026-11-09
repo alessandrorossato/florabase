@@ -15,6 +15,16 @@ export type ExternalCoverResponse =
   components["schemas"]["ExternalCoverResponse"];
 export type BotanicalIdentityCover = LocalCoverResponse | ExternalCoverResponse;
 export type TaxonSearchResponse = components["schemas"]["TaxonSearchResponse"];
+export type IdentityReconciliationResponse =
+  components["schemas"]["IdentityReconciliationResponse"];
+export type AcceptedNameSuggestionResponse =
+  components["schemas"]["AcceptedNameSuggestionResponse"];
+export type CollidingIdentitySummary =
+  components["schemas"]["CollidingIdentitySummary"];
+export type AcceptedNameCorrectionWrite =
+  components["schemas"]["AcceptedNameCorrectionWrite"];
+export type DuplicateIdentityMergeWrite =
+  components["schemas"]["DuplicateIdentityMergeWrite"];
 type HTTPValidationError = components["schemas"]["HTTPValidationError"];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -235,5 +245,51 @@ export function unlinkExternalTaxon(
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/external-taxon-link`,
     { method: "DELETE", headers: { "X-CSRF-Token": csrfToken } },
+  );
+}
+
+export function getBotanicalIdentityReconciliation(
+  id: string,
+  signal?: AbortSignal,
+): Promise<IdentityReconciliationResponse> {
+  return requestJson(
+    `/api/v1/botanical-identities/${encodeURIComponent(id)}/reconciliation`,
+    { signal },
+  );
+}
+
+export function correctBotanicalIdentityAcceptedName(
+  id: string,
+  payload: AcceptedNameCorrectionWrite,
+  csrfToken: string,
+): Promise<IdentityReconciliationResponse> {
+  return requestJson(
+    `/api/v1/botanical-identities/${encodeURIComponent(id)}/reconciliation/correct-name`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": csrfToken,
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function mergeDuplicateBotanicalIdentity(
+  id: string,
+  payload: DuplicateIdentityMergeWrite,
+  csrfToken: string,
+): Promise<IdentityReconciliationResponse> {
+  return requestJson(
+    `/api/v1/botanical-identities/${encodeURIComponent(id)}/reconciliation/merge-duplicate`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": csrfToken,
+      },
+      body: JSON.stringify(payload),
+    },
   );
 }

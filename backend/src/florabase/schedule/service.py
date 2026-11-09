@@ -80,6 +80,8 @@ def _target_ref(activity: ScheduledActivity) -> ScheduleTarget | None:
 def _lifecycle(record: TargetRecord) -> str | None:
     if isinstance(record, Location):
         return "retired" if record.retired_at is not None else "active"
+    if isinstance(record, BotanicalIdentity):
+        return "retired" if record.merged_into_id is not None else "active"
     return cast(str | None, getattr(record, "lifecycle", None))
 
 
@@ -387,6 +389,8 @@ def target_choices(
         else cast(type[SeedLot] | type[Sowing] | type[Plant] | type[PlantGroup], model).label
     )
     criteria = [label.icontains(q.strip(), autoescape=True)] if q.strip() else []
+    if model is BotanicalIdentity:
+        criteria.append(BotanicalIdentity.merged_into_id.is_(None))
     count = database.scalar(select(func.count()).select_from(model).where(*criteria)) or 0
     rows = database.scalars(
         select(model)

@@ -1,3 +1,40 @@
+## 2026-11-09 — TAXONOMY-001 integrated with MEASUREMENT-001 and renumbered to 20261109_0045
+
+- Accepted [ADR 0007](decisions/0007-accepted-name-reconciliation.md) and added Alembic revision
+  `20261109_0045` (renumbered from `20261108_0043` to follow `MEASUREMENT-001` revisions `20261108_0043`
+  and `20261109_0044` on latest `main` `5fbcfd5`) for `botanical_identity_names` (TAXONOMY-002-ready
+  historical/synonym ledger), `botanical_identity_reconciliations` (immutable JSONB-evidenced receipts
+  enforced by a PostgreSQL immutability trigger), soft-retired duplicate-merge tombstones (`merged_into_id`,
+  `merged_at`), and active-only case-insensitive scientific/cultivar uniqueness (`WHERE merged_into_id IS NULL`).
+- Added `GET /api/v1/botanical-identities/{id}/reconciliation`, `POST .../correct-name`, and
+  `POST .../merge-duplicate`. Inspection aggregates advisory accepted-name suggestions and
+  cross-source/cross-version conflicts across confirmed WFO links, confirmed WCVP links, local WCVP
+  `15`/`16` reference indexes, and confirmed GBIF taxon links without automatically mutating records.
+  Ordinary `PUT /api/v1/botanical-identities/{id}` name edits also append superseded names to
+  `botanical_identity_names` (`source_provider = "operator"`).
+- In-place correction updates the current accepted name while preserving the stable BotanicalIdentity
+  UUID, all collection holdings (`SeedLot`, `Plant`, `PlantGroup`, `ScheduledActivity`), and the
+  originally recorded name (`initial_recorded`), and refuses silent merges (`409 duplicate_botanical_identity`)
+  or unacknowledged source conflicts (`409 reconciliation_conflict_unacknowledged`).
+- Explicit survivor duplicate-identity merge transactionally repoints holdings to the selected active
+  survivor, unions `BotanicalProfileNativeRange` rows, adopts missing `BotanicalProfile` fields and
+  cover/source links while refusing conflicting non-empty profile text (`409 botanical_profile_conflict`)
+  unless `profile_resolution="keep_survivor"` is selected, soft-retires the duplicate tombstone, and
+  preserves `ENRICHMENT-001` receipts and propagation reversal snapshot invariants.
+- Verified cross-domain integrity with MEASUREMENT-001: duplicate reconciliation updates `plants.botanical_identity_id`
+  while preserving plant identities, historical measurement events, and `event_measurement_corrections`
+  intact without orphaned records.
+- Updated global search (`SearchKind.BOTANICAL_IDENTITY`) to match historical names in
+  `botanical_identity_names` and exclude retired tombstones from directories, pickers, Explore, and
+  exports. Added the Reference tab `IdentityReconciliationPanel` UI and updated generated OpenAPI and
+  TypeScript declarations.
+- Checks: 1048 backend unit tests (90.12% coverage), 1224 frontend tests (112 test files), PostgreSQL
+  integration tests (migration cycle `0044 → 0045 → 0044 → 0045`, trigger immutability, multi-source conflict
+  detection, in-place correction, and transactional survivor merge preserving measurement event audit history),
+  all 34 SMOKE golden dataset tests (`canonical_sha256 = a331986b8a419aeeee6e0d9d5c53fa82c3b89d47b9fe7705c0f696c480974f12`),
+  Ruff, strict mypy, Prettier, ESLint, TypeScript, and `make api-check`. Canonical `make feature-verify` passed on
+  the frozen tree; `TAXONOMY-001` is ready for PR review. No unresolved issues.
+
 ## 2026-11-08 — beta publication preflight recovery
 
 - Protected beta.4 run `42508727559` passed exhaustive verification and reached `smoke_passed`.
@@ -8068,3 +8105,13 @@ Status remains implemented pending canonical verification.
   reproduced both conflicts, compared both parents, and passed the 50 UAT and
   62 release policy and tooling tests. Canonical FULL evidence belongs to the
   exact committed-tree receipt.
+
+### TAXONOMY-001 — Accepted-name reconciliation and historical name ledger, 9 November 2026
+
+- Implemented assisted accepted-name reconciliation for `BotanicalIdentity` via ADR 0007.
+- Proposes accepted name suggestions from confirmed external taxonomic links (WFO, WCVP) with evidence and classification comparison (`GET /api/v1/botanical-identities/{id}/reconciliation`).
+- Supports in-place accepted-name correction (`POST .../correct-name`) recording historical names into `botanical_identity_names` ledger while preserving identity UUID and collection relations. Refuses silent merges.
+- Supports explicit survivor duplicate identity merge (`POST .../merge-duplicate`) repointing SeedLots, Plants, PlantGroups, and ScheduledActivities, unioning native ranges, adopting missing profiles, and soft-retiring duplicate identities via `merged_into_id` and `merged_at`.
+- Active filters and tombstone guards applied across collection views, explore, import/export, plants, schedule, search, and seed lots. Search indexes historical names with `"Formerly <name>"` context.
+- Migration `20261109_0045` tested with bidirectional migration cycles (`verify-migration-cycle.sh`) and golden smoke dataset baseline updated in `scripts/fixtures/golden/scenarios.json`.
+- Static checks (`make format && make lint && make typecheck && make api-check`), backend unit tests (`make test-backend`), frontend tests, and integration test suites passed. Canonical gate `make feature-verify AGENT_ID=antigravity-taxonomy-001` completed with verified receipt.

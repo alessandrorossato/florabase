@@ -136,8 +136,12 @@ def _require_references(database: Session, payload: PlantCommonWrite) -> None:
         ),
     )
     for model, item_id, code, message in references:
-        if item_id is not None and database.get(model, item_id) is None:
-            raise PlantReferenceNotFoundError(code, message)
+        if item_id is not None:
+            record = database.get(model, item_id)
+            if record is None or (
+                isinstance(record, BotanicalIdentity) and record.merged_into_id is not None
+            ):
+                raise PlantReferenceNotFoundError(code, message)
     try:
         require_location_for_scope(database, payload.location_id, LocationUsageScope.PLANTS)
     except LocationNotFoundError as error:
@@ -276,7 +280,11 @@ def extract_plant(
         if "location_id" in payload.model_fields_set
         else plant_group.location_id
     )
-    if database.get(BotanicalIdentity, identity_id) is None:
+    identity_record = database.get(BotanicalIdentity, identity_id)
+    if identity_record is None or (
+        isinstance(identity_record, BotanicalIdentity)
+        and identity_record.merged_into_id is not None
+    ):
         raise PlantReferenceNotFoundError(
             "botanical_identity_not_found", "Botanical identity not found"
         )

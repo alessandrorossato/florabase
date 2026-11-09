@@ -91,6 +91,7 @@ def projection() -> Select[tuple[BotanicalIdentity, int, int, int, str | None, i
         )
         .join(counts, counts.c.identity_id == BotanicalIdentity.id)
         .outerjoin(links, links.c.identity_id == BotanicalIdentity.id)
+        .where(BotanicalIdentity.merged_into_id.is_(None))
     )
 
 

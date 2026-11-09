@@ -36,8 +36,10 @@ Inspect scientific name, authorship, rank, accepted/synonym/unplaced status and 
 **Confirm taxonomy link** is a separate operator action. Existing links are visibly replaced only by
 explicit confirmation. No GBIF/WCVP ID conversion, crosswalk, fuzzy matching or local name correction.
 Unplaced bare names have no classification and cannot be confirmed. A source synonym remains the exact
-linked name; WFO's accepted concept provides its advisory classification. No synonyms/name-history or
-reconciliation capability is implemented.
+linked name; WFO's accepted concept provides its advisory classification. Assisted accepted-name
+reconciliation, historical-name retention (`botanical_identity_names`), and explicit survivor
+duplicate-identity merge are governed by [ADR 0007](decisions/0007-accepted-name-reconciliation.md)
+(`TAXONOMY-001`) and never trigger automatically during WFO link confirmation.
 
 The canonical `wfo_links` table stores one current relationship per identity, opaque WFO ID, UUIDv7
 link version, confirmation timestamp, reviewed source/taxon/path evidence and identity update timestamp.

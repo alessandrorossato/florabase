@@ -68,6 +68,7 @@ import { PhotoDialog } from "../photos/PhotosSection";
 import { IdentityTaxonomyPanel } from "../taxonomy/IdentityTaxonomyPanel";
 import { taxonomyReturnHash } from "../taxonomy/state";
 import { ExternalBotanicalDataPanel } from "./ExternalBotanicalDataPanel";
+import { IdentityReconciliationPanel } from "./IdentityReconciliationPanel";
 import {
   IdentityCardContext,
   IdentityImage,
@@ -490,6 +491,17 @@ function IdentityDetails({
           }
         />
         <div className="identity-detail-main">
+          {identity.merged_into_id && (
+            <div className="notice" role="status">
+              <p>
+                This botanical identity has been reconciled and merged into{" "}
+                <a href={`#/identities/${identity.merged_into_id}`}>
+                  survivor botanical identity
+                </a>
+                . All active collection holdings now belong to the survivor.
+              </p>
+            </div>
+          )}
           {mutationError && !editing && (
             <div className="notice notice--error" role="alert">
               {mutationError}
@@ -1042,6 +1054,12 @@ function IdentityDetails({
                     key={`${identity.id}:${identity.updated_at}`}
                     identityId={identity.id}
                     updatedAt={identity.updated_at}
+                  />
+                  <IdentityReconciliationPanel
+                    key={`reconciliation-${identity.id}-${identity.updated_at}`}
+                    identity={identity}
+                    csrfToken={csrfToken}
+                    onIdentityUpdated={onSaved}
                   />
                   <section id="identity-source">
                     <ExternalBotanicalDataPanel

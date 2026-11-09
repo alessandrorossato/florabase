@@ -13,10 +13,38 @@ than becoming invented placeholders.
 
 A BotanicalIdentity is the stable, installation-wide identity Florabase assigns to material. It has
 an application-generated UUIDv7, required normalized scientific name, optional unquoted cultivar
-name, optional common name, and UTC timestamps. Scientific name plus cultivar is case-insensitively
-unique. An identity can be corrected after creation. Deletion is allowed only while it is unused;
-references from SeedLots, Plants, or PlantGroups produce a domain conflict and no collection record
-is cascaded. Merging duplicates, automatic synonym correction, and name history are deferred.
+name, optional common name, UTC timestamps, and optional duplicate-merge tombstone fields
+(`merged_into_id`, `merged_at`). Scientific name plus cultivar is case-insensitively unique across
+active (`merged_into_id IS NULL`) identities. Deletion is allowed only while an identity is unused,
+unmerged, and has no reconciliation history; references from SeedLots, Plants, or PlantGroups produce
+a domain conflict and no collection record is cascaded.
+
+Per [ADR 0007](decisions/0007-accepted-name-reconciliation.md) (`TAXONOMY-001`), accepted-name
+reconciliation is advisory until explicit operator confirmation. Inspecting an identity aggregates
+advisory accepted-name suggestions and source/version conflicts across confirmed WFO links, confirmed
+WCVP links, local WCVP `15`/`16` reference indexes, and confirmed GBIF external taxon links. Two
+explicit operator actions are distinguished:
+
+- **In-place accepted-name correction** updates the identity's current `scientific_name` (and optional
+  `cultivar_name`/`common_name`) without changing its UUID or touching any `SeedLot`, `Plant`,
+  `PlantGroup`, or `ScheduledActivity` foreign key. It never silently merges into an existing
+  identity.
+- **Explicit survivor duplicate-identity merge** repoints all holdings (`SeedLot`, `Plant`,
+  `PlantGroup`, `ScheduledActivity`) transactionally to an operator-selected active survivor, unions
+  `BotanicalProfileNativeRange` rows, adopts missing `BotanicalProfile` fields (refusing conflicting
+  non-empty profile text unless `profile_resolution="keep_survivor"` is chosen) and missing cover/source
+  links, and soft-retires the duplicate as a single-hop tombstone (`merged_into_id = survivor.id`,
+  `merged_at = now`). Retained `NativeRangeProposal` and `NativeRangeApplication` receipts stay on the
+  tombstone for `ENRICHMENT-001` auditability, and propagation reversal snapshot invariants remain
+  unchanged.
+
+Both reconciliation actions and ordinary `PUT /api/v1/botanical-identities/{id}` name edits append
+superseded names to `botanical_identity_names` (`initial_recorded`, `former_accepted`,
+`merged_duplicate`, `source_synonym`, or `operator_synonym`) and write immutable JSONB-evidenced receipts to
+`botanical_identity_reconciliations` (protected by a PostgreSQL trigger against `UPDATE`/`DELETE`).
+Global search matches historical names on active identities and includes the matched former name in
+the result context while excluding retired tombstones from active directories, pickers, Explore, and
+exports. Full manual synonym authoring (`TAXONOMY-002`) builds on `botanical_identity_names` later.
 
 Collection records reference its UUID and do not copy botanical names as authoritative data.
 

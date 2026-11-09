@@ -299,23 +299,19 @@ decision. Existing lineage integrity/receipts remain the foundation; no generic 
 
 ### 2–3. Taxonomy reconciliation and botanical name history
 
-Restore **TAXONOMY-001 — accepted-name reconciliation / correction** as high-priority work.
+**TAXONOMY-001 — accepted-name reconciliation / correction** is `verified` ([ADR 0007](decisions/0007-accepted-name-reconciliation.md)).
 An operator can move an identity toward a currently accepted botanical name without losing the
-identity/name under which material was originally acquired or recorded. Source candidates remain
-advisory until explicit confirmation. Name correction and duplicate-identity reconciliation are
-separate decisions; a name update must not silently merge material. Retain the graph's explicit
-survivor/reference safety contract where a merge is actually selected.
+identity/name under which material was originally acquired or recorded. Source candidates across
+WFO, WCVP (`15`/`16`), and GBIF remain advisory until explicit confirmation, and cross-source or
+cross-version conflicts require explicit acknowledgement. Name correction (`POST .../correct-name`)
+and duplicate-identity reconciliation (`POST .../merge-duplicate`) are separate decisions; a name
+update never silently merges material, while an explicit survivor merge transactionally repoints
+collection holdings, preserves historical names in `botanical_identity_names`, writes immutable
+receipts in `botanical_identity_reconciliations`, and soft-retires the duplicate identity.
 
-**TAXONOMY-002 — synonyms and BotanicalIdentity name history** retains historical names,
-distinguishes accepted/current names and preserves stable identity references. Acquisition and
-provenance evidence must remain historically accurate; historical-name search must not create a
-new identity for every synonym. No destructive rename may erase botanical history.
-
-Acceptance direction: demonstrate an accepted-name change and, separately, a justified duplicate
-reconciliation while all material links and originally recorded names remain attributable. The
-current History projection uses current labels; historically accurate naming requires a dedicated
-design decision, not a claim that this evidence already exists. Name-retention design must inform
-TAXONOMY-001 before any mutation, even though TAXONOMY-002 delivery follows it in the graph.
+**TAXONOMY-002 — synonyms and BotanicalIdentity name history** builds on the `botanical_identity_names`
+ledger delivered in `TAXONOMY-001` to add operator-authored manual synonym management and richer
+historical-name presentation while keeping stable identity UUID references.
 
 ### 4. Measurements / growth history
 
