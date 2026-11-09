@@ -54,6 +54,7 @@ const event: EventResponse = {
   recipient: null,
   resulting_plant_id: null,
   resulting_plant: null,
+  measurement_corrections: [],
   harvest_id: null,
   harvest_title: null,
 };

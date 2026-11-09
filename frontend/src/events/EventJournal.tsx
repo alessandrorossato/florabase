@@ -12,7 +12,11 @@ import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { TaskDialog } from "../components/TaskDialog";
 import { StatusBadge } from "../components/WorkspaceUI";
-import { eventSourceLabel, measurementText } from "./eventData";
+import {
+  eventSourceLabel,
+  formatPartialDate,
+  measurementText,
+} from "./eventData";
 import "./activity.css";
 import { FieldHelp } from "../components/ContextualHelp";
 import { locationsForScope, type LocationResponse } from "../locations/api";
@@ -614,6 +618,34 @@ export function EventJournal({
                       <p className="event-destination">
                         <strong>{measurementText(item.measurement)}</strong>
                       </p>
+                    )}
+                    {item.measurement_corrections.length > 0 && (
+                      // Earlier values stay traceable; chart and table use only the current one.
+                      <details className="event-corrections">
+                        <summary>
+                          Corrected {item.measurement_corrections.length}{" "}
+                          {item.measurement_corrections.length === 1
+                            ? "time"
+                            : "times"}
+                        </summary>
+                        <ol>
+                          {item.measurement_corrections.map(
+                            (correction, index) => (
+                              <li
+                                key={`${correction.replaced_at}-${String(index)}`}
+                              >
+                                {index === 0 ? "Originally" : "Then"}{" "}
+                                {measurementText(correction.measurement)} on{" "}
+                                {formatPartialDate(correction.occurred_on)};
+                                replaced{" "}
+                                <time dateTime={correction.replaced_at}>
+                                  {correction.replaced_at.slice(0, 10)}
+                                </time>
+                              </li>
+                            ),
+                          )}
+                        </ol>
+                      </details>
                     )}
                     {item.recipient && (
                       <p className="event-destination">

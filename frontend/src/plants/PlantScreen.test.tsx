@@ -195,6 +195,7 @@ function journalEvent(kind: string, overrides: Record<string, unknown> = {}) {
     recipient: null,
     resulting_plant_id: null,
     resulting_plant: null,
+    measurement_corrections: [] as unknown[],
     created_at: "2026-09-02T10:00:00Z",
     updated_at: "2026-09-02T10:00:00Z",
     ...overrides,
@@ -3399,7 +3400,24 @@ test("height measurements are recorded, corrected and plotted without inventing 
       ) {
         const payload = body(init);
         writes.push({ method: "PUT", payload });
-        events = [events[0], { ...events[1], ...payload }];
+        const replaced = {
+          measurement: {
+            quantity: "height",
+            value: "12.50",
+            unit: "cm",
+            is_approximate: false,
+          },
+          occurred_on: march,
+          replaced_at: "2026-11-09T08:00:00Z",
+        };
+        events = [
+          events[0],
+          {
+            ...events[1],
+            ...payload,
+            measurement_corrections: [replaced],
+          },
+        ];
         return json(events[1]);
       }
       if (path === `/api/v1/plants/${plantId}`) return json(plant());
@@ -3489,4 +3507,15 @@ test("height measurements are recorded, corrected and plotted without inventing 
     },
   });
   expect(screen.getByText("Height: 125 mm")).toBeInTheDocument();
+  // The chart and table show only the current value; the original stays traceable.
+  const corrected = within(
+    screen.getByRole("region", { name: "Height history" }),
+  );
+  expect(corrected.getByText("125 mm")).toBeInTheDocument();
+  expect(corrected.queryByText("12.50 cm")).not.toBeInTheDocument();
+  const card = screen.getByText("Height: 125 mm").closest("li") as HTMLElement;
+  expect(within(card).getByText("Corrected 1 time")).toBeInTheDocument();
+  expect(card.querySelector(".event-corrections li")).toHaveTextContent(
+    "Originally Height: 12.50 cm on 2026-03-14; replaced 2026-11-09",
+  );
 });

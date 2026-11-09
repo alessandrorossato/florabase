@@ -184,3 +184,52 @@ Index(
 )
 Index("ix_events_destination_location_id", Event.destination_location_id)
 Index("ix_events_resulting_plant_id", Event.resulting_plant_id)
+
+MEASUREMENT_CORRECTION_VALUE = (
+    "(quantity = 'height' AND unit IN ('mm', 'cm', 'm') AND value > 0 "
+    "AND value * CASE unit WHEN 'mm' THEN 1 WHEN 'cm' THEN 10 ELSE 1000 END <= 200000 "
+    "AND scale(value) <= 3) IS TRUE"
+)
+MEASUREMENT_CORRECTION_DATE = (
+    "(occurred_on_year BETWEEN 1 AND 9999 AND ("
+    "(occurred_on_precision = 'year' AND occurred_on_month IS NULL AND occurred_on_day IS NULL) OR "
+    "(occurred_on_precision = 'month' AND occurred_on_month BETWEEN 1 AND 12 "
+    "AND occurred_on_day IS NULL) OR "
+    "(occurred_on_precision = 'day' AND occurred_on_month BETWEEN 1 AND 12 "
+    "AND occurred_on_day BETWEEN 1 AND 31 AND "
+    "make_date(occurred_on_year, occurred_on_month, occurred_on_day) IS NOT NULL))) IS TRUE"
+)
+
+
+class MeasurementCorrection(Base):
+    """Append-only snapshot of a measurement as it was before one correction replaced it."""
+
+    __tablename__ = "event_measurement_corrections"
+    __table_args__ = (
+        CheckConstraint(
+            MEASUREMENT_CORRECTION_VALUE, name="ck_event_measurement_corrections_value"
+        ),
+        CheckConstraint(MEASUREMENT_CORRECTION_DATE, name="ck_event_measurement_corrections_date"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid7)
+    # Deleting the Event explicitly removes the entry and its trail, like its History projection.
+    event_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("events.id", ondelete="CASCADE"), nullable=False
+    )
+    quantity: Mapped[str] = mapped_column(String(16))
+    value: Mapped[Decimal] = mapped_column(Numeric())
+    unit: Mapped[str] = mapped_column(String(8))
+    is_approximate: Mapped[bool] = mapped_column(Boolean())
+    occurred_on_precision: Mapped[str] = mapped_column(String(8))
+    occurred_on_year: Mapped[int] = mapped_column(SmallInteger())
+    occurred_on_month: Mapped[int | None] = mapped_column(SmallInteger(), nullable=True)
+    occurred_on_day: Mapped[int | None] = mapped_column(SmallInteger(), nullable=True)
+    replaced_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+Index(
+    "ix_event_measurement_corrections_event",
+    MeasurementCorrection.event_id,
+    MeasurementCorrection.replaced_at,
+)

@@ -5,16 +5,18 @@ from uuid import UUID
 
 from sqlalchemy import case, desc, select
 from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm.attributes import flag_modified
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
 from florabase.collection_photos.primary import primary_summaries
-from florabase.events.model import Event, EventKind
+from florabase.events.model import Event, EventKind, MeasurementCorrection
 from florabase.events.schemas import (
     EventCreate,
     EventResponse,
     EventUpdate,
     Measurement,
+    MeasurementCorrectionResponse,
     PlantEventTarget,
     PlantGroupEventTarget,
     ResultingPlantSummary,
@@ -249,6 +251,7 @@ def _protect_harvest(database: Session, event: Event) -> None:
 
 
 def update_event(database: Session, event: Event, payload: EventUpdate) -> Event:
+    database.refresh(event, with_for_update=True)  # Check and snapshot stored state, one writer.
     _protect_harvest(database, event)
     operation_kinds = {EventKind.EXTRACTION.value, EventKind.REINTEGRATION.value}
     if event.kind in operation_kinds:
@@ -269,11 +272,60 @@ def update_event(database: Session, event: Event, payload: EventUpdate) -> Event
         )
     _require_destination(database, payload.destination_location_id)
     _require_measurement_subject(event.plant_id is not None, payload)
-    for field, value in _write_values(payload).items():
+    values = _write_values(payload)
+    _retain_replaced_measurement(database, event, values)
+    for field, value in values.items():
         setattr(event, field, value)
+    if values["measurement_value"] is not None:
+        # Decimal("12.5") == Decimal("12.50"), so the ORM would skip a resolution-only correction.
+        flag_modified(event, "measurement_value")
     event.updated_at = datetime.now(UTC)
     database.flush()
     return event
+
+
+_MEASURED = (
+    "measurement_quantity",
+    "measurement_value",
+    "measurement_unit",
+    "measurement_is_approximate",
+    "occurred_on_precision",
+    "occurred_on_year",
+    "occurred_on_month",
+    "occurred_on_day",
+)
+
+
+def _retain_replaced_measurement(
+    database: Session, event: Event, values: dict[str, object]
+) -> None:
+    if event.kind != EventKind.MEASUREMENT.value:
+        return
+    # str() so a change of recorded resolution (12.5 -> 12.50) also counts as a correction.
+    if all(str(getattr(event, field)) == str(values[field]) for field in _MEASURED):
+        return
+    if (
+        event.measurement_quantity is None
+        or event.measurement_value is None
+        or event.measurement_unit is None
+        or event.measurement_is_approximate is None
+        or event.occurred_on_precision is None
+        or event.occurred_on_year is None
+    ):
+        raise RuntimeError("Measurement Event payload invariant was violated")
+    database.add(
+        MeasurementCorrection(
+            event_id=event.id,
+            quantity=event.measurement_quantity,
+            value=event.measurement_value,
+            unit=event.measurement_unit,
+            is_approximate=event.measurement_is_approximate,
+            occurred_on_precision=event.occurred_on_precision,
+            occurred_on_year=event.occurred_on_year,
+            occurred_on_month=event.occurred_on_month,
+            occurred_on_day=event.occurred_on_day,
+        )
+    )
 
 
 def delete_event(database: Session, event: Event) -> None:
@@ -426,6 +478,30 @@ def event_responses(database: Session, projections: list[EventProjection]) -> li
         else {}
     )
     locations = list_locations(database)
+    corrections: dict[UUID, list[MeasurementCorrectionResponse]] = {}
+    if projections:
+        for row in database.scalars(
+            select(MeasurementCorrection)
+            .where(MeasurementCorrection.event_id.in_([item.event.id for item in projections]))
+            .order_by(MeasurementCorrection.replaced_at, MeasurementCorrection.id)
+        ):
+            corrections.setdefault(row.event_id, []).append(
+                MeasurementCorrectionResponse(
+                    measurement=Measurement(
+                        quantity=row.quantity,
+                        value=row.value,
+                        unit=row.unit,
+                        is_approximate=row.is_approximate,
+                    ),
+                    occurred_on=PartialDate(
+                        precision=row.occurred_on_precision,
+                        year=row.occurred_on_year,
+                        month=row.occurred_on_month,
+                        day=row.occurred_on_day,
+                    ),
+                    replaced_at=row.replaced_at,
+                )
+            )
     # The concrete Event target owns this designation; related records never supply it.
     plant_photos = primary_summaries(
         database, "plant", list({item.plant.id for item in projections if item.plant is not None})
@@ -516,6 +592,7 @@ def event_responses(database: Session, projections: list[EventProjection]) -> li
                     and event.measurement_is_approximate is not None
                     else None
                 ),
+                measurement_corrections=corrections.get(event.id, []),
                 harvest_id=harvests[event.id].id if event.id in harvests else None,
                 harvest_title=harvests[event.id].display_title if event.id in harvests else None,
                 harvest_primary_photo=(harvests[event.id].primary_photo)

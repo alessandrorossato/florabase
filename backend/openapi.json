@@ -2483,6 +2483,14 @@
               }
             ]
           },
+          "measurement_corrections": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/MeasurementCorrectionResponse"
+            },
+            "title": "Measurement Corrections",
+            "type": "array"
+          },
           "notes": {
             "anyOf": [
               {
@@ -5816,6 +5824,29 @@
           "unit"
         ],
         "title": "Measurement",
+        "type": "object"
+      },
+      "MeasurementCorrectionResponse": {
+        "description": "The measurement as recorded before a correction replaced it at `replaced_at`.",
+        "properties": {
+          "measurement": {
+            "$ref": "#/components/schemas/Measurement-Output"
+          },
+          "occurred_on": {
+            "$ref": "#/components/schemas/PartialDate"
+          },
+          "replaced_at": {
+            "format": "date-time",
+            "title": "Replaced At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "measurement",
+          "occurred_on",
+          "replaced_at"
+        ],
+        "title": "MeasurementCorrectionResponse",
         "type": "object"
       },
       "MeasurementQuantity": {

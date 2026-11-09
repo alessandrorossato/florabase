@@ -3339,6 +3339,11 @@ export interface components {
             id: string;
             kind: components["schemas"]["EventKind"];
             measurement?: components["schemas"]["Measurement-Output"] | null;
+            /**
+             * Measurement Corrections
+             * @default []
+             */
+            measurement_corrections: components["schemas"]["MeasurementCorrectionResponse"][];
             /** Notes */
             notes: string | null;
             occurred_on: components["schemas"]["PartialDate"] | null;
@@ -4470,6 +4475,19 @@ export interface components {
              * @description An exact non-negative decimal serialized as a JSON string.
              */
             value: string;
+        };
+        /**
+         * MeasurementCorrectionResponse
+         * @description The measurement as recorded before a correction replaced it at `replaced_at`.
+         */
+        MeasurementCorrectionResponse: {
+            measurement: components["schemas"]["Measurement-Output"];
+            occurred_on: components["schemas"]["PartialDate"];
+            /**
+             * Replaced At
+             * Format: date-time
+             */
+            replaced_at: string;
         };
         /**
          * MeasurementQuantity

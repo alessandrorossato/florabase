@@ -504,3 +504,11 @@ body:has(.activity-page dialog[open]) {
   fill: var(--surface);
   stroke-dasharray: 3 2;
 }
+.event-corrections {
+  color: var(--text-muted);
+  font-size: var(--type-small);
+}
+.event-corrections ol {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-4);
+}

@@ -177,6 +177,14 @@ class ResultingPlantSummary(BaseModel):
     botanical_identity: BotanicalIdentitySummary
 
 
+class MeasurementCorrectionResponse(BaseModel):
+    """The measurement as recorded before a correction replaced it at `replaced_at`."""
+
+    measurement: Measurement
+    occurred_on: PartialDate
+    replaced_at: datetime
+
+
 class EventResponse(BaseModel):
     id: UUID
     target: EventTarget
@@ -189,6 +197,7 @@ class EventResponse(BaseModel):
     resulting_plant_id: UUID | None
     resulting_plant: ResultingPlantSummary | None
     measurement: Measurement | None = None
+    measurement_corrections: list[MeasurementCorrectionResponse] = []
     harvest_id: UUID | None = None
     harvest_title: str | None = None
     harvest_primary_photo: PrimaryPhotoResponse | None = None

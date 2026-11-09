@@ -526,7 +526,8 @@ BotanicalProfile reference knowledge.
 
 A measurement Event (MEASUREMENT-001) records one Plant height as an exact positive decimal with its
 recorded unit (`mm`, `cm` or `m`), an approximation flag and a required PartialDate. It never
-changes current state, is refused for PlantGroups, and counts as a retainable observation. See
+changes current state, is refused for PlantGroups, and counts as a retainable observation.
+Corrections keep each replaced value in an append-only correction trail. See
 [measurements](measurements.md).
 
 Movement additionally requires one destination Location. Creating a movement Event atomically

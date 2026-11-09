@@ -19,7 +19,7 @@ and History projects it like every other Event.
 | Unit | Required and stored exactly as recorded. Height accepts `mm`, `cm`, `m`. No conversion is persisted. Quantity/unit compatibility is enforced in both Pydantic and a database CHECK, so a mass unit can never be attached to height. |
 | Uncertainty | Two explicit signals: recorded resolution (preserved decimal places) and `is_approximate` for an estimate rather than an instrument reading. A ± tolerance is deferred until real use needs it. |
 | Date | An occurrence PartialDate is **required** for a measurement (any precision: year, month or day). An undated value has no longitudinal meaning; record it as an Observation note instead. Month or year precision is never converted to a day. |
-| Correction | Same as every Event: `PUT /api/v1/events/{id}` overwrites value, unit, approximation, date or notes in place and advances `updated_at`. Florabase is not event-sourced; earlier wrong values are not retained. Changing the kind away from `measurement` clears the payload. A revision trail is deferred. |
+| Correction | `PUT /api/v1/events/{id}` updates the same Event in place and advances `updated_at`; Florabase is not event-sourced, so the Event always holds the current value. Before a correction changes the value (including its recorded resolution), unit, approximation or date, the stored measurement is copied to an append-only `event_measurement_corrections` row with its PartialDate precision and the UTC `replaced_at` instant. Notes-only edits add no row. Changing the kind away from `measurement` clears the payload but keeps the trail. Explicitly deleting the Event deletes its trail with it, matching History, which drops deleted Events. |
 | Retention | Measurements never write current state. Plant has no "current height" column; the latest value is derived from history. Restrictive Event foreign keys keep measurements when the Plant becomes dead, lost, transferred, discarded, reintegrated or reversed. Measurements may still be recorded for inactive Plants. Like observation, flowering and fruiting, a measurement is a retainable observation: it neither blocks reintegration nor propagation reversal, and it is listed in their confirmation step. |
 | Ownership | The `events` capability owns validation and persistence. History only projects (`Measurement` title, `Height: 42.5 cm (approximate)` context). |
 
@@ -32,9 +32,19 @@ They are generic over quantities, not one column per botanical trait, and Plant 
 date, and restricts units per quantity. Migration 0043 extends `ck_events_kind`; downgrade refuses
 while measurement Events exist instead of silently deleting them.
 
+### Correction trail
+
+No existing infrastructure keeps durable revisions: History is a read-only projection that is
+explicitly not an audit log, and OperationReceipts snapshot reversible operations one-to-one. The
+trail is therefore one small append-only table owned by the `events` capability (migration 0044),
+written only in the correction path under a row lock. It holds no current state, so lineage,
+reintegration and propagation reversal are unchanged. Corrections are not History occurrences.
+
 ### API
 
 `EventWrite` and `EventResponse` gain `measurement: {quantity, value, unit, is_approximate} | null`.
+`EventResponse.measurement_corrections` lists the replaced values oldest first, each with
+`measurement`, `occurred_on` and `replaced_at`.
 `measurement` is required exactly when `kind = "measurement"`. Existing endpoints carry it; no new
 route is added.
 
@@ -49,7 +59,9 @@ The Plant detail Journal shows a **Height history** panel when the Plant has hei
   the axis states the unit;
 - day-precision values are dots; month- or year-precision values are drawn as a horizontal span
   over the whole recorded period, never as an invented day. Approximate values are hollow;
-- with fewer than two dated values the chart is omitted and the table remains.
+- with fewer than two dated values the chart is omitted and the table remains;
+- chart and table use only the current value. The Journal card of a corrected measurement has a
+  "Corrected N times" disclosure listing each replaced value, its date and when it was replaced.
 
 Measurements appear in the Journal under the Observations filter and in the collection Journal and
 History with their value and unit.
@@ -65,5 +77,6 @@ Propose after the height slice is used on real data:
 | `weight` | `g`, `kg` | Mostly meaningful for whole potted Plants or tubers; clarify with/without container. |
 | custom | operator-defined label + unit | Needs a controlled unit catalogue so `cm` and `CM` or `in` and `cm` are never silently mixed. |
 
-Each is a migration widening `ck_events_measurement` plus vocabulary, not a new table. Multi-value
+Each is a migration widening `ck_events_measurement` and `ck_event_measurement_corrections_value`
+plus vocabulary, not a new table. Multi-value
 sessions (height and canopy on one visit) are separate Events for now.

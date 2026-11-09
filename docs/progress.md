@@ -7878,3 +7878,20 @@ Status remains implemented pending canonical verification.
   digest changed only the schema revision, `canonical_sha256` and the `events` table hash (still 20
   rows; the four new columns are NULL), with no completion problems. The pin and
   [TEST-DATA-001 design](test-data-001-design.md) now record the new values.
+- Operator domain review approved Event storage, Plant-only subject and a required PartialDate,
+  and asked for a correction audit trail. No existing infrastructure keeps durable revisions:
+  History is explicitly not an audit log, and OperationReceipts snapshot reversible operations
+  one-to-one. Migration 0044 adds the append-only `event_measurement_corrections` table, owned
+  by `events`. Under a row lock, a correction that changes value, resolution, unit, approximation
+  or date first copies the stored measurement with its PartialDate precision and UTC
+  `replaced_at`. Chart and table show only the current value; the Journal card lists the trail.
+  Explicit Event deletion cascades the trail. Lineage, reintegration and reversal are unchanged.
+- The single-field tests exposed a defect in the first slice: the ORM treated `12.5` and `12.50` as
+  equal and skipped resolution-only corrections. The value column is now always written.
+- The first SMOKE re-pin had also set the COMPREHENSIVE block's revision to 0043 without new hashes.
+  COMPREHENSIVE is back at its reviewed `20261013_0042`, which is `baseline-unavailable` until a
+  manual re-pin, per policy. SMOKE is pinned at 0044; the only table change is the new empty one.
+- Focused checks: backend ruff and mypy; 161 integration tests (measurements, golden SMOKE, events,
+  Plants, History, propagation reversal, autogenerate parity), then 34 after the lock and
+  persistence fixes; frontend lint, typecheck and the full suite (1,222). Independent QA reported
+  no blockers. Its lock-ordering note and test gaps are addressed.
