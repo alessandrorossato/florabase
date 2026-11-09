@@ -14,7 +14,7 @@ from florabase.auth.service import bootstrap_owner
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.core.config import CookieMode, Environment, Settings, get_settings
 from florabase.db.session import get_database_session
-from florabase.import_export.service import COLUMNS, IMPORT_COLUMNS, example_csv
+from florabase.import_export.service import COLUMNS, IMPORT_COLUMNS
 from florabase.locations.model import Location
 from florabase.main import app
 from florabase.seed_lots.model import SeedLot
@@ -658,11 +658,12 @@ def test_supplier_choices_normalization_update_blank_and_stale_state(
     asyncio.run(scenario())
 
 
-def test_downloadable_examples_validate_in_documented_order(configured_app: None) -> None:
+def test_downloadable_examples_reconcile_in_documented_order(configured_app: None) -> None:
     async def scenario() -> None:
         transport = httpx.ASGITransport(app=app)
         async with httpx.AsyncClient(transport=transport, base_url=ORIGIN) as client:
             csrf = await _login(client)
+            exports: dict[str, list[dict[str, str]]] = {}
             for kind in IMPORT_COLUMNS:
                 example = await client.get(f"/api/v1/imports/examples/{kind}.csv")
                 template = await client.get(f"/api/v1/imports/templates/{kind}.csv")
@@ -674,7 +675,7 @@ def test_downloadable_examples_validate_in_documented_order(configured_app: None
                 assert next(csv.reader(io.StringIO(template.text.lstrip("\ufeff")))) == list(
                     IMPORT_COLUMNS[kind]
                 )
-                data = example_csv(kind).encode()
+                data = example.content
                 path = f"/api/v1/imports/{kind}"
                 report = (await client.post(path + "/preview", content=data)).json()
                 assert report["ready"] == len(report["rows"]), (kind, report)
@@ -688,6 +689,61 @@ def test_downloadable_examples_validate_in_documented_order(configured_app: None
                     },
                 )
                 assert result.status_code == 200, (kind, result.text)
+                assert result.json() == {
+                    "created": len(report["rows"]),
+                    "already_exists": 0,
+                    "updated": 0,
+                }
+                export = await client.get(f"/api/v1/exports/{kind}.csv")
+                assert export.status_code == 200
+                rows = list(csv.DictReader(io.StringIO(export.text.lstrip("\ufeff"))))
+                assert len(rows) == len(report["rows"])
+                exports[kind] = rows
+
+                if kind in {"seed-lots", "plants", "plant-groups"}:
+                    replay = (await client.post(path + "/preview", content=data)).json()
+                    assert replay["ready"] == len(rows)
+                    identified = _csv(kind, [{field: rows[0][field] for field in COLUMNS[kind]}])
+                    conflict = (await client.post(path + "/preview", content=identified)).json()
+                    assert conflict["rows"][0]["outcome"] == "conflict"
+                    refused = await client.post(
+                        path + "/apply",
+                        content=identified,
+                        headers={
+                            "Origin": ORIGIN,
+                            "X-CSRF-Token": csrf,
+                            "X-Import-Confirmation": conflict["confirmation_token"],
+                        },
+                    )
+                    assert refused.status_code == 409
+                    after_refusal = await client.get(f"/api/v1/exports/{kind}.csv")
+                    assert after_refusal.content == export.content
+
+            identities = {
+                row["scientific_name"]: row["record_ref"] for row in exports["botanical-identities"]
+            }
+            locations = {row["name"]: row for row in exports["locations"]}
+            cabinet = locations["Seed cabinet"]["record_ref"]
+            drawer = locations["Drawer 3"]
+            assert drawer["parent_ref"] == cabinet
+            lots = {row["label"]: row for row in exports["seed-lots"]}
+            paracress = lots["Paracress, 2024"]
+            assert paracress["identity_ref"] == identities["Acmella oleracea"]
+            assert paracress["supplier_ref"] == exports["suppliers"][0]["record_ref"]
+            assert paracress["location_ref"] == drawer["record_ref"]
+            assert paracress["acquisition_date"] == "2024-05"
+            assert paracress["quantity_certainty"] == "approximate"
+            onion = lots["Spring onion"]
+            assert onion["identity_ref"] == identities["Allium fistulosum"]
+            assert onion["acquisition_date"] == onion["quantity_value"] == ""
+            assert onion["source_kind"] == "unknown"
+            plant = exports["plants"][0]
+            group = exports["plant-groups"][0]
+            assert plant["identity_ref"] == identities["Acmella oleracea"]
+            assert group["identity_ref"] == identities["Allium fistulosum"]
+            assert plant["location_ref"] == group["location_ref"] == cabinet
+            assert plant["collection_entry_date"] == "2024"
+            assert group["collection_entry_date"] == "2024-05"
 
     asyncio.run(scenario())
 

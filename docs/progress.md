@@ -7922,3 +7922,70 @@ Status remains implemented pending canonical verification.
   integration (34) passed. The two-instance smoke requires a committed HEAD containing main, so its
   pre-commit attempt refused at the ancestry guard and cleaned up. The committed-tree rerun and
   canonical gate are tracked separately.
+
+### BETA-DATA-001 — synthetic first-collection rehearsal, 8 November 2026
+
+- Added the [onboarding runbook and Synology checklist](beta-data-001.md).
+  It covers the six CSV kinds, manual workflows, source inventory, PartialDate
+  and unknown values, reconciliation and admission blockers.
+- The baseline disposable import suite passed 13 tests. The updated example
+  test applies the downloaded bytes for all six kinds, reconciles counts and
+  linked exports, preserves precision and unknowns, and demonstrates that
+  unidentified replay previews as new. Identified replay is refused with
+  HTTP 409 and leaves the export unchanged. Existing cases cover ambiguous
+  choices, stale confirmation and whole-file rollback.
+- The focused disposable PostgreSQL run passed 262 tests and verified zero
+  residual owned containers, networks and volumes. Selected integration files
+  were `test_import_export_api`, `test_provenance_site_api`, `test_orders`,
+  `test_purchase_context`, `test_sowing_api`, `test_propagation_api`,
+  `test_event_api`, `test_schedule`, `test_harvests`,
+  `test_harvest_inventory`, `test_harvest_seed_conversion`,
+  `test_attachment_api`, `test_shared_media`, `test_external_media_copies`
+  and `test_history`. This is synthetic API and service evidence for manual
+  workflow steps, with browser and host acceptance left to the operator.
+- Independent detached QA checked the mapping and replay contract, lifecycle
+  procedures and relative links. The runbook incorporates its media and
+  reconciliation clarifications. The canonical affected result is recorded
+  in the exact-tree verification receipt.
+- Actual source inventory, owner review, authorized published assets and
+  selected-host acceptance remain pending. BETA-DATA-001 remains in progress.
+  No production records or deployment were changed.
+
+### BETA-DATA-001 — Portable Compose and branch UAT rehearsal, 9 November 2026
+
+- Merged main at `988c384` into the existing PR branch. The only merge conflict
+  was in progress history. Kept both the main entries and the prior onboarding
+  evidence. The runbook now separates Portable Compose from the advanced
+  controller, and includes blank private inventory, field mapping, UUID
+  reconciliation and batch templates.
+- Started and seeded this branch's Multi-Branch UAT SMOKE instance. Authenticated
+  HTTP requests through the loopback frontend imported one new record in each
+  of the six kinds. Preview left exports unchanged. Verified label and UUID
+  references, supplier ambiguity and explicit candidate selection, linked
+  exports, year/month precision and unknown cells. A mixed valid/invalid file,
+  changed bytes and an unresolved choice each returned 409 with unchanged
+  exports. A fresh reviewed retry created one lot. Identity, Supplier and
+  Location replays presented reuse choices. Unidentified collection replays
+  previewed as creates. Identified replays were refused with unchanged exports.
+- Manual-workflow HTTP trials exercised geographic provenance, order linking,
+  Sowing, germination, Plant lineage, observation, Schedule, Harvest, tracked
+  stock correction, seed conversion and shared local media. The setup used four
+  writes and three downstream chains used 12 writes each (0.25, 0.16 and 0.11 s
+  of local scripted HTTP time). Human entry time remains unmeasured.
+- Stored material refused a Location lacking `harvest_inventory`. CSV import
+  accepted the scope, Location details retained it, and the Location export
+  omitted it. Corrected tracking succeeded and replay returned 409 with one
+  saved record. The runbook specifies a details check. Portable Compose omits
+  the Dockhand update-exclusion labels present on the advanced bundle, so its
+  Dockhand acceptance requires separately proven exclusions.
+- The same 15 disposable integration files listed in the preceding milestone
+  passed again on the merged base (262 tests, zero residual owned containers,
+  networks or volumes). The canonical plan is affected because the PR diff
+  against merged main is limited to onboarding docs and import tests.
+- Retired the exact synthetic branch instance using its guarded project
+  confirmation. Independent detached QA checked the merge, templates,
+  runbook links, scope discrepancy and both installation paths. Clarified
+  the Location scope list and controller stack editing restriction.
+- Source UAT used synthetic data. Actual source inventory and operator review,
+  an authorized published bundle, and Synology acceptance remain outstanding.
+  BETA-DATA-001 remains in progress.
