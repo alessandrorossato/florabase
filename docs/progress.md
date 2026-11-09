@@ -7869,3 +7869,20 @@ Status remains implemented pending canonical verification.
 - Unresolved: operator UAT; orphaned-source cleanup; the same latent `marker_state` issue in the
   singleton UAT Preview. Synthetic WFO/WCVP
   indexes are not provisioned in instances, and same-browser localhost cookies are shared across ports.
+
+### MULTIBRANCH-UAT-001 — PR #162 CI recovery, 9 November 2026
+
+- Quality: `test_reset_keeps_port_and_may_change_profile_only_when_confirmed` assumed an attached
+  checkout; CI tests the detached merge commit, where the one-off cleanup is correctly skipped
+  because base reset refuses detached owners. The test now pins an attached identity, and a new test
+  proves a detached reset is refused before any cleanup, guard or Docker call. No implementation change.
+- Release rehearsal: every PR failed once v0.1.0-beta.5 was published, because the hosted rehearsal
+  required the version's GHCR tags to be absent. A PR or push is now a release candidate unless its
+  base commit already names the same `release/inputs.json` version. Candidates (version bumps such as
+  beta.6, manual runs, unknown bases) keep the strict absence refusal. Others accept the published
+  base tags and still run the full local publisher-equivalent pipeline. The PostgreSQL identity gate
+  is unchanged. Protected publication is unchanged and still refuses tag reuse. Consequence:
+  release-input drift without a version bump is caught at the next bump's strict rehearsal and at
+  publication, not by ordinary PR rehearsal.
+- Checks: `test-uat-instance` (16, also in a detached checkout), `make test-beta-images` (58 + 4),
+  3.12 parse, ruff; independent review approved.

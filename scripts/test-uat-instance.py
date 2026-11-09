@@ -220,9 +220,15 @@ class InstanceTests(unittest.TestCase):
             with self.subTest(action=action.__name__), self.assertRaises(WorkflowError):
                 action()
 
+    @staticmethod
+    def identity(branch: str) -> dict[str, str]:
+        return {"source": str(ROOT), "branch": branch, "sha": "a" * 40, "dirty": "no"}
+
     def test_reset_keeps_port_and_may_change_profile_only_when_confirmed(self) -> None:
+        # Attached owner, pinned: CI checks out a detached merge commit.
         instance = self.make(volumes(str(ROOT), "feat-example-001", 15182), profile="comprehensive")
         with (
+            patch.object(instance.repository, "identity", return_value=self.identity("feat/x")),
             patch.object(UATPreview, "reset") as reset,
             patch.object(instance, "remove_oneoffs") as oneoffs,
             patch.object(instance, "require_context") as context,
@@ -230,12 +236,29 @@ class InstanceTests(unittest.TestCase):
             instance.reset("wrong")  # The base refuses it; the profile must not change first.
             self.assertEqual(instance.profile, "smoke")
             oneoffs.assert_not_called()
+            context.assert_not_called()
             reset.reset_mock()
             instance.reset(instance.project)
-        oneoffs.assert_called_once()
         context.assert_called_once()
+        oneoffs.assert_called_once()
         reset.assert_called_once_with(instance.project)
         self.assertEqual((instance.port, instance.profile), (15182, "comprehensive"))
+
+    def test_detached_owner_reset_is_refused_before_any_cleanup(self) -> None:
+        instance = self.make(volumes(str(ROOT), "feat-example-001", 15182), branch="detached")
+        with (
+            patch.object(instance.repository, "identity", return_value=self.identity("detached")),
+            patch.object(instance, "remove_oneoffs") as oneoffs,
+            patch.object(instance, "require_context") as context,
+            patch.object(instance, "require_identity") as guard,
+            patch("uat_preview.run") as run,
+            patch("uat_instance.run") as instance_run,
+        ):
+            # The real base refusal: detached delivered owners use guarded remove instead.
+            with self.assertRaisesRegex(WorkflowError, "attached feature owner"):
+                instance.reset(instance.project)
+        for mock in (oneoffs, context, guard, run, instance_run):
+            mock.assert_not_called()
 
     def test_interrupted_oneoffs_are_removed_only_when_exactly_owned(self) -> None:
         instance = self.make(volumes(str(ROOT), "feat-example-001", 15180))
