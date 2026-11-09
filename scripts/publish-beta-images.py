@@ -25,6 +25,7 @@ from typing import Any
 
 from beta_release import (
     INSTALL_BUNDLE,
+    PORTABLE_COMPOSE,
     POSTGRES_REPOSITORY,
     POSTGRES_SBOM,
     REGISTRY_IMAGE,
@@ -40,9 +41,11 @@ from beta_release import (
     release_asset_inventory,
     release_attestation_inputs,
     release_finalization_inputs,
+    render_portable_compose,
     require_remote_release_tag,
     run,
     run_artifact_smoke,
+    run_smoke_process,
     scan_images,
     software_bill_of_materials,
     validate_release_assets,
@@ -330,6 +333,15 @@ def copy_smoke_artifact(root: Path, artifact: Path, manifest_path: Path) -> None
     shutil.copyfile(manifest_path, artifact / manifest_path.name)
 
 
+def run_portable_smoke(root: Path, compose: Path, backend: str, log_path: Path) -> None:
+    with log_path.open("w") as log:
+        run_smoke_process(
+            ["python3", str(root / "scripts/smoke-portable-compose.py"), str(compose), backend],
+            root,
+            log,
+        )
+
+
 def release_create_command(request: dict[str, Any], assets: Path) -> list[str]:
     return [
         "gh",
@@ -444,6 +456,10 @@ def run_pipeline(
             manifest_path = assets / "release-manifest.json"
             manifest_path.write_text(json.dumps(value, indent=2) + "\n")
 
+            portable = assets / PORTABLE_COMPOSE
+            portable_bytes = render_portable_compose(root, version, refs).encode()
+            portable.write_bytes(portable_bytes)
+
         with publication.stage("SCAN/SMOKE"):
             for ref in refs.values():
                 subprocess.run(["docker", "pull", "--platform", "linux/amd64", ref], check=True)
@@ -460,8 +476,12 @@ def run_pipeline(
                     registry_host=host,
                 )
 
+            run_portable_smoke(root, portable, refs["backend"], diagnostics / "portable-smoke.log")
+
         with publication.stage("VALIDATE ASSETS"):
             inventory = prepare_release_assets(root, assets, version, sha)
+            if portable.read_bytes() != portable_bytes:
+                raise ValueError("portable Compose changed after the artifact smoke")
             if read(manifest_path) != value:
                 raise ValueError("release manifest changed after the artifact smoke")
             request = release_finalization_inputs(value, sha, inventory)

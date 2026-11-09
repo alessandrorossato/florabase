@@ -111,6 +111,7 @@ jobs:
         with:
           subject-path: |
             ${{ runner.temp }}/beta-release/assets/compose.yaml
+            ${{ runner.temp }}/beta-release/assets/portable-compose.yaml
             ${{ runner.temp }}/beta-release/assets/florabasectl.py
             ${{ runner.temp }}/beta-release/assets/florabase.env.example
       - name: "ATTEST / release manifest"

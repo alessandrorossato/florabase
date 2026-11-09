@@ -74,6 +74,8 @@ class FileLock(AbstractContextManager["FileLock"]):
         handle.truncate(0)
         identity = {
             "pid": os.getpid(),
+            # Shared capacity locks have several kinds of holder; name this one for the loser.
+            "purpose": self.purpose,
             "source": str(Path.cwd()),
             "started_at": datetime.now(UTC).isoformat(),
         }
@@ -148,7 +150,7 @@ class Owner:
             "workflow-smoke",
         }:
             safe_smoke = self.role == "workflow-smoke" and re.fullmatch(
-                r"florabase-(?:dev-recovery-smoke|dev-upgrade-smoke|preview-smoke|feature-review-smoke|uat-preview-smoke)-[a-f0-9]{12}",
+                r"florabase-(?:dev-recovery-smoke|dev-upgrade-smoke|preview-smoke|feature-review-smoke|uat-preview-smoke|uat-branch-smoke)-[a-f0-9]{12}",
                 self.project,
             )
             if not re.fullmatch(r"[a-f0-9]{32}", self.identity) or (
@@ -465,6 +467,8 @@ def report() -> dict[str, Any]:
                 or (
                     "Quality (legacy)"
                     if project.startswith("florabase-quality-")
+                    else "UAT instance"
+                    if project.startswith("florabase-uat-branch-")
                     else "Unknown Florabase-labelled resources"
                 ),
             )

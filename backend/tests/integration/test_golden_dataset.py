@@ -525,6 +525,20 @@ def test_business_timestamp_changes_are_detected(copies: list[str]) -> None:
     assert run("verify-baseline", "--copy", name).returncode == 0
 
 
+def test_session_state_is_not_dataset_state(first: str) -> None:
+    """A sign-in attempt in a long-lived copy (a UAT instance) is not a dataset change."""
+    execute(
+        first,
+        "INSERT INTO login_throttles (login_name, failed_attempts, expires_at, updated_at) "
+        "VALUES ('golden-owner', 1, now(), now())",
+    )
+    try:
+        assert succeed("validate", "--copy", first)["domain"] == "valid"
+        assert run("verify-baseline", "--copy", first).returncode == 0
+    finally:
+        execute(first, "DELETE FROM login_throttles")
+
+
 def test_digest_retains_every_populated_timestamp(first: str) -> None:
     """Exhaustive, so a blanket normalizer or a too-wide allowlist cannot return unnoticed."""
     runtime = pytest.importorskip("golden_dataset", reason="available in integration runner only")
@@ -962,6 +976,50 @@ def test_generation_refuses_any_other_target(
     assert result.returncode == 1
     assert "not empty" in result.stderr
     (COPIES / name / "foreign").unlink()
+
+
+def test_uat_instance_target_is_exact_and_never_a_copy_lifecycle(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runtime = pytest.importorskip("golden_dataset", reason="available in integration runner only")
+    url = "postgresql+psycopg://golden_uat:local-isolated-only-password@db:5432/golden_uat"
+    instance = get_settings().model_copy(
+        update={
+            "environment": Environment.DEVELOPMENT,
+            "database_disposable": False,
+            "database_url": url,
+            "attachment_storage_root": Path("/var/lib/florabase/attachments"),
+        }
+    )
+    monkeypatch.setenv("FLORABASE_WORKFLOW_MODE", "uat-instance")
+    monkeypatch.setenv("FLORABASE_UAT_PROJECT", "florabase-uat-branch-feat-example-001")
+    assert runtime.uat_instance_target(instance)
+    assert runtime.configured_copy(instance) == "golden_uat"
+    for update in (
+        {"environment": Environment.TEST},
+        {"environment": Environment.PRODUCTION},
+        {"database_disposable": True},
+        {"database_url": url.replace("golden_uat", "florabase_uat")},
+        {"database_url": url.replace("@db:", "@localhost:")},
+        {"database_url": url.replace(":5432/", ":6543/")},
+        {"attachment_storage_root": COPIES / "golden_uat"},
+    ):
+        assert not runtime.uat_instance_target(instance.model_copy(update=update)), update
+    for name, value in (
+        ("FLORABASE_WORKFLOW_MODE", "uat"),
+        ("FLORABASE_WORKFLOW_MODE", "review"),
+        ("FLORABASE_UAT_PROJECT", "florabase-uat-preview"),
+        ("FLORABASE_UAT_PROJECT", "florabase"),
+        ("FLORABASE_UAT_PROJECT", "florabase-uat-branch-"),
+    ):
+        with monkeypatch.context() as patch:
+            patch.setenv(name, value)
+            assert not runtime.uat_instance_target(instance), (name, value)
+            with pytest.raises(runtime.GoldenError):
+                runtime.configured_copy(instance)
+    # Instances are created by Compose and Alembic; the copy lifecycle stays disposable-only.
+    with pytest.raises(runtime.GoldenError):
+        runtime.copy_environment("golden_uat", instance)
 
 
 def test_stale_schema_is_refused(copies: list[str]) -> None:

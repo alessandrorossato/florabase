@@ -65,7 +65,7 @@ Python 3 and `curl`. The development overlay uses Compose's `!override` tag. Hos
 
 For self-hosting, choose one installation path:
 
-- [Install the image-only beta](docs/installation.md) from verified release assets on linux/amd64.
+- [Install with portable Docker Compose](docs/portable-installation.md) from verified release assets on linux/amd64.
   Its separate Compose stack supports the 2.20 baseline.
 - [Build from a source checkout](docs/deployment.md) using the repository's production Compose stack.
 
@@ -113,7 +113,8 @@ configuration and secrets still need a separate protected backup.
 
 ## Project information
 
-- [Installing from published images](docs/installation.md)
+- [Portable Docker Compose](docs/portable-installation.md)
+- [Advanced controller-based installation and recovery](docs/installation.md)
 - [Deployment and upgrades](docs/deployment.md)
 - [Development guide](docs/development.md)
 - [Domain model](docs/domain-model.md)

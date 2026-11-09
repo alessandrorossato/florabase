@@ -7846,6 +7846,150 @@ Status remains implemented pending canonical verification.
   workflow helper suite and 141-feature graph passed. The plan still selects FULL. The final
   consolidation gate and receipt remain pending.
 
+### MULTIBRANCH-UAT-001 — parallel per-worktree UAT instances, 8 November 2026
+
+- Added `make uat-instance-{up,status,seed,validate,stop,reset,remove,list}` (`scripts/uat_instance.py`,
+  `compose.uat-instance.yaml`). Each linked worktree can own one instance, `florabase-uat-branch-<branch>`.
+  It gets a port from a four-slot pool (15180–15183) recorded in immutable volume labels, its own
+  `golden_uat` PostgreSQL, media and dependencies, and the inherited UAT Preview identity guards. Seeding
+  uses the existing golden runtime with an explicit SMOKE or COMPREHENSIVE profile through one narrow
+  `uat-instance` target. Heavy up, seed and reset share canonical FULL's capacity lock. The singleton UAT
+  Preview was refactored to class attributes only, with no behaviour change. Golden `table_counts` now skips
+  session tables, as the digest already did. [Handoff](multibranch-uat-001-handoff.md).
+- Scope: the TUXEDO golden reference on production image digests is GOLDEN-REFERENCE-001 (planned).
+  TEST-DATA-001/002 statuses are unchanged; the handoff separates their evidence from missing acceptance.
+- Independent infrastructure QA: 3 P1 and 4 P2 findings fixed with regressions, P3 findings documented.
+- Checks: `make test-uat-preview` (19 + 15 + 14), `test-workflow-resources`, `test-environment-workflow`
+  (35), `test-agent-workflow` (63, 3 skipped), `make golden-dataset-check` (34 passed, 292 s),
+  `make workflow-check`, `check-features` (144), and `make smoke-uat-instance` passing on run 6 in 195 s
+  with zero residual state; runs 1–5 and their fixes are in the handoff. Operator environments unchanged.
+- Canonical `make feature-verify` (FULL, 17 stages) passed in 933 s; integration 809 passed, 29 skipped.
+- Delta QA: all P1/P2 fixes passed; its new P2 (manifest unreadable after a rebuilding `up` on the
+  containerd image store, seen in run 6) is fixed and asserted by the smoke; run 7 passed in 224 s.
+- Unresolved: operator UAT; orphaned-source cleanup; the same latent `marker_state` issue in the
+  singleton UAT Preview. Synthetic WFO/WCVP
+  indexes are not provisioned in instances, and same-browser localhost cookies are shared across ports.
+
+### MULTIBRANCH-UAT-001 — PR #162 CI recovery, 9 November 2026
+
+- Quality: `test_reset_keeps_port_and_may_change_profile_only_when_confirmed` assumed an attached
+  checkout; CI tests the detached merge commit, where the one-off cleanup is correctly skipped
+  because base reset refuses detached owners. The test now pins an attached identity, and a new test
+  proves a detached reset is refused before any cleanup, guard or Docker call. No implementation change.
+- Release rehearsal: every PR failed once v0.1.0-beta.5 was published, because the hosted rehearsal
+  required the version's GHCR tags to be absent. A PR or push is now a release candidate unless its
+  base commit already names the same `release/inputs.json` version. Candidates (version bumps such as
+  beta.6, manual runs, unknown bases) keep the strict absence refusal. Others accept the published
+  base tags and still run the full local publisher-equivalent pipeline. The PostgreSQL identity gate
+  is unchanged. Protected publication is unchanged and still refuses tag reuse. Consequence:
+  release-input drift without a version bump is caught at the next bump's strict rehearsal and at
+  publication, not by ordinary PR rehearsal.
+- Checks: `test-uat-instance` (16, also in a detached checkout), `make test-beta-images` (58 + 4),
+  3.12 parse, ruff; independent review approved.
+
+### PORTABLE-COMPOSE-001 — three-service beta.6 distribution, 8 November 2026
+
+- Protected publication renders and attests `portable-compose.yaml` from the tested candidate
+  image digests and requires its disposable install/recovery smoke before promotion. The advanced
+  controller assets and PostgreSQL image pin are preserved. The beta.5 tag and published assets
+  were untouched.
+- The runtime database opens an existing cluster only. The image checks its single Alembic head
+  before launching Uvicorn. Explicit schema initialization requires an empty database and upgrades
+  require the named previous head, with a serialized PostgreSQL transaction for pending changes.
+- Focused release regressions (56 tests and 4 release-tool lock tests) and controller compatibility
+  checks (62 host and 50 Python 3.8 tests) passed. Independent QA checked the exact asset wiring and
+  refused initialization and restore paths. Its follow-up passed after fail-fast setup, dependency
+  restart and smoke cleanup fixes.
+- Disposable runtime drills on Engine 29.9.3 exercised fresh cluster and schema initialization,
+  owner login, original media, restart persistence, empty and mismatched-schema refusal, a failed
+  migration with the previous revision preserved, a successful retry, and isolated paired restore.
+  The final run used Compose 2.20.1, local-registry candidate app digests and the published GHCR
+  PostgreSQL digest. A Compose 5.7.0 SIGTERM drill confirmed removal of the disposable binds and
+  zero remaining project resources.
+- The first FULL run passed workflow and static checks and stopped at 89.54% backend unit coverage.
+  Fifteen schema guard regressions passed focused Ruff, mypy and pytest. The backend suite then
+  passed with 1,027 tests and 90.11% coverage. Runtime source and Compose were unchanged.
+- The canonical FULL result belongs to the exact-tree verification receipt. Protected beta.6
+  publication and deployment on a real manager or HTTPS host remain pending.
+
+### PORTABLE-COMPOSE-001 — integrate PR #162, 9 November 2026
+
+- Merged main at `6f17913` into the published feature history. Both feature records and workflow
+  check lists were preserved. Beta.6 remains a strict release rehearsal candidate against beta.5
+  main, with the protected publisher's tag-reuse refusal and PostgreSQL pin intact.
+- Independent QA approved the conflict resolution. The 145-entry feature graph, UAT workflow tests
+  (19 + 15 + 16), release policy tests (58 + 4), resource tests (19), API drift, and golden dataset
+  integration (34) passed. The two-instance smoke requires a committed HEAD containing main, so its
+  pre-commit attempt refused at the ancestry guard and cleaned up. The committed-tree rerun and
+  canonical gate are tracked separately.
+
+### BETA-DATA-001 — synthetic first-collection rehearsal, 8 November 2026
+
+- Added the [onboarding runbook and Synology checklist](beta-data-001.md).
+  It covers the six CSV kinds, manual workflows, source inventory, PartialDate
+  and unknown values, reconciliation and admission blockers.
+- The baseline disposable import suite passed 13 tests. The updated example
+  test applies the downloaded bytes for all six kinds, reconciles counts and
+  linked exports, preserves precision and unknowns, and demonstrates that
+  unidentified replay previews as new. Identified replay is refused with
+  HTTP 409 and leaves the export unchanged. Existing cases cover ambiguous
+  choices, stale confirmation and whole-file rollback.
+- The focused disposable PostgreSQL run passed 262 tests and verified zero
+  residual owned containers, networks and volumes. Selected integration files
+  were `test_import_export_api`, `test_provenance_site_api`, `test_orders`,
+  `test_purchase_context`, `test_sowing_api`, `test_propagation_api`,
+  `test_event_api`, `test_schedule`, `test_harvests`,
+  `test_harvest_inventory`, `test_harvest_seed_conversion`,
+  `test_attachment_api`, `test_shared_media`, `test_external_media_copies`
+  and `test_history`. This is synthetic API and service evidence for manual
+  workflow steps, with browser and host acceptance left to the operator.
+- Independent detached QA checked the mapping and replay contract, lifecycle
+  procedures and relative links. The runbook incorporates its media and
+  reconciliation clarifications. The canonical affected result is recorded
+  in the exact-tree verification receipt.
+- Actual source inventory, owner review, authorized published assets and
+  selected-host acceptance remain pending. BETA-DATA-001 remains in progress.
+  No production records or deployment were changed.
+
+### BETA-DATA-001 — Portable Compose and branch UAT rehearsal, 9 November 2026
+
+- Merged main at `988c384` into the existing PR branch. The only merge conflict
+  was in progress history. Kept both the main entries and the prior onboarding
+  evidence. The runbook now separates Portable Compose from the advanced
+  controller, and includes blank private inventory, field mapping, UUID
+  reconciliation and batch templates.
+- Started and seeded this branch's Multi-Branch UAT SMOKE instance. Authenticated
+  HTTP requests through the loopback frontend imported one new record in each
+  of the six kinds. Preview left exports unchanged. Verified label and UUID
+  references, supplier ambiguity and explicit candidate selection, linked
+  exports, year/month precision and unknown cells. A mixed valid/invalid file,
+  changed bytes and an unresolved choice each returned 409 with unchanged
+  exports. A fresh reviewed retry created one lot. Identity, Supplier and
+  Location replays presented reuse choices. Unidentified collection replays
+  previewed as creates. Identified replays were refused with unchanged exports.
+- Manual-workflow HTTP trials exercised geographic provenance, order linking,
+  Sowing, germination, Plant lineage, observation, Schedule, Harvest, tracked
+  stock correction, seed conversion and shared local media. The setup used four
+  writes and three downstream chains used 12 writes each (0.25, 0.16 and 0.11 s
+  of local scripted HTTP time). Human entry time remains unmeasured.
+- Stored material refused a Location lacking `harvest_inventory`. CSV import
+  accepted the scope, Location details retained it, and the Location export
+  omitted it. Corrected tracking succeeded and replay returned 409 with one
+  saved record. The runbook specifies a details check. Portable Compose omits
+  the Dockhand update-exclusion labels present on the advanced bundle, so its
+  Dockhand acceptance requires separately proven exclusions.
+- The same 15 disposable integration files listed in the preceding milestone
+  passed again on the merged base (262 tests, zero residual owned containers,
+  networks or volumes). The canonical plan is affected because the PR diff
+  against merged main is limited to onboarding docs and import tests.
+- Retired the exact synthetic branch instance using its guarded project
+  confirmation. Independent detached QA checked the merge, templates,
+  runbook links, scope discrepancy and both installation paths. Clarified
+  the Location scope list and controller stack editing restriction.
+- Source UAT used synthetic data. Actual source inventory and operator review,
+  an authorized published bundle, and Synology acceptance remain outstanding.
+  BETA-DATA-001 remains in progress.
+
 ### MEASUREMENT-001 — structured Plant height history, 8 November 2026
 
 - Registered MEASUREMENT-001 after confirming no backlog item covered roadmap theme 4. The
@@ -7905,3 +8049,22 @@ Status remains implemented pending canonical verification.
   Candidates and protected publication keep the strict reuse refusal; the PostgreSQL identity gate
   is unchanged. No measurement code, migration or golden baseline changed.
 - Checks: `make test-beta-images` (58 + 4), `make workflow-check`; independent delta QA passed.
+
+### MEASUREMENT-001 — integrate current main into PR #163, 9 November 2026
+
+- Merged main at `7665df3` into the published feature history at `db2ca96`.
+  Resolved `docs/features.json` and `docs/progress.md` by keeping both histories
+  and all 146 feature records. API regeneration produced the merged artifacts
+  byte for byte and the drift check passed. The release rehearsal policy and
+  Portable Compose inputs match main.
+- The Alembic chain advances from main's `20261013_0042` through
+  `20261108_0043` to `20261109_0044`. Two freshly generated SMOKE copies
+  matched the reviewed 0044 baseline. COMPREHENSIVE retains its reviewed 0042
+  pin and reports baseline unavailable at 0044.
+- Focused PostgreSQL regressions passed (176 tests across measurements, Events,
+  Plants, History, propagation reversal, import/export and golden fixtures),
+  with zero residual disposable resources. Focused frontend regressions passed
+  (114 tests across Plants, Events and propagation). Independent detached QA
+  reproduced both conflicts, compared both parents, and passed the 50 UAT and
+  62 release policy and tooling tests. Canonical FULL evidence belongs to the
+  exact committed-tree receipt.

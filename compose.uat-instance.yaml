@@ -1,0 +1,23 @@
+# Per-worktree UAT instance (MULTIBRANCH-UAT-001). Merge only through scripts/uat_instance.py, after
+# compose.yaml + compose.dev.yaml + compose.review.yaml + compose.uat.yaml. Never merge into DEV,
+# Feature Review, the singleton UAT Preview, Stable Preview or production.
+# Volume labels are the durable allocation record: Docker cannot relabel an existing volume, so the
+# instance's port and dataset profile stay fixed until its guarded reset or removal.
+x-instance: &instance
+  io.florabase.source: ${FLORABASE_SOURCE:?UAT instance source required}
+  io.florabase.uat.instance: ${FLORABASE_UAT_INSTANCE:?UAT instance name required}
+  io.florabase.uat.port: ${FRONTEND_PORT:?UAT instance port required}
+  io.florabase.uat.profile: ${FLORABASE_UAT_PROFILE:?UAT instance dataset profile required}
+
+services:
+  backend:
+    environment:
+      FLORABASE_WORKFLOW_MODE: uat-instance
+
+volumes:
+  postgres_data:
+    labels: *instance
+  attachment_data:
+    labels: *instance
+  frontend_node_modules:
+    labels: *instance
