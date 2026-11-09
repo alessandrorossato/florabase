@@ -63,12 +63,12 @@ def test_accepted_name_reconciliation_migration_cycle_and_immutability_guards(
 
     config = Config("alembic.ini")
     try:
-        command.downgrade(config, "20261013_0042")
+        command.downgrade(config, "20261109_0044")
         inspector = inspect(database_engine)
         assert not inspector.has_table("botanical_identity_names")
         assert not inspector.has_table("botanical_identity_reconciliations")
-        cols_0042 = {c["name"] for c in inspector.get_columns("botanical_identities")}
-        assert "merged_into_id" not in cols_0042
+        cols_0044 = {c["name"] for c in inspector.get_columns("botanical_identities")}
+        assert "merged_into_id" not in cols_0044
 
         command.upgrade(config, "head")
         inspector = inspect(database_engine)
@@ -117,7 +117,7 @@ def test_accepted_name_reconciliation_migration_cycle_and_immutability_guards(
             )
 
         with pytest.raises(RuntimeError, match="Accepted-name reconciliations"):
-            command.downgrade(config, "20261013_0042")
+            command.downgrade(config, "20261109_0044")
     finally:
         with database_engine.begin() as conn:
             if inspect(database_engine).has_table("botanical_identity_reconciliations"):

@@ -1122,3 +1122,107 @@ def test_reconciliation_refuses_silent_merge_and_merges_duplicate_into_explicit_
     with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
         assert database.get(NativeRangeProposal, proposal_id) is not None
         assert database.get(NativeRangeApplication, proposal_id) is not None
+
+
+def test_merge_duplicate_identity_preserves_plant_measurements_and_correction_history(
+    authenticated_browser: tuple[str, str],
+    database_connection: Connection,
+) -> None:
+    from florabase.plants.model import Plant
+
+    cookie, csrf_token = authenticated_browser
+    headers = {"cookie": cookie, "origin": ORIGIN, "x-csrf-token": csrf_token}
+
+    _, _, duplicate = create_identity(
+        authenticated_browser,
+        {"scientific_name": "Echinocactus williamsii", "common_name": "Old peyote"},
+    )
+    _, _, survivor = create_identity(
+        authenticated_browser,
+        {"scientific_name": "Lophophora williamsii", "common_name": "Peyote"},
+    )
+    dup_id = UUID(duplicate["id"])
+    surv_id = UUID(survivor["id"])
+
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        plant = Plant(botanical_identity_id=dup_id, direct_origin_kind="unknown")
+        database.add(plant)
+        database.commit()
+        plant_id = str(plant.id)
+
+    # Record initial measurement event on the plant under duplicate identity
+    status, _, first_event = request(
+        "POST",
+        f"/api/v1/plants/{plant_id}/events",
+        headers=headers,
+        body={
+            "kind": "measurement",
+            "occurred_on": {"precision": "day", "year": 2026, "month": 4, "day": 1},
+            "measurement": {
+                "quantity": "height",
+                "value": "12.50",
+                "unit": "cm",
+                "is_approximate": False,
+            },
+        },
+    )
+    assert status == 201
+    event_id = first_event["id"]
+
+    # Record a measurement correction
+    status, _, corrected_event = request(
+        "PUT",
+        f"/api/v1/events/{event_id}",
+        headers=headers,
+        body={
+            "kind": "measurement",
+            "occurred_on": {"precision": "day", "year": 2026, "month": 4, "day": 1},
+            "measurement": {
+                "quantity": "height",
+                "value": "125",
+                "unit": "mm",
+                "is_approximate": False,
+            },
+        },
+    )
+    assert status == 200
+    assert corrected_event["measurement"]["value"] == "125"
+    assert len(corrected_event["measurement_corrections"]) == 1
+    assert corrected_event["measurement_corrections"][0]["measurement"]["value"] == "12.50"
+
+    # Merge duplicate identity into survivor
+    status, _, merge_body = request(
+        "POST",
+        f"/api/v1/botanical-identities/{dup_id}/reconciliation/merge-duplicate",
+        headers=headers,
+        body={
+            "survivor_identity_id": str(surv_id),
+            "profile_resolution": "fail_on_conflict",
+            "duplicate_updated_at": duplicate["updated_at"],
+            "survivor_updated_at": survivor["updated_at"],
+        },
+    )
+    assert status == 200
+    assert merge_body["identity"]["id"] == str(surv_id)
+    event_rec = merge_body["reconciliations"][0]
+    assert event_rec["kind"] == "duplicate_identity_merge"
+    assert event_rec["evidence"]["repointed_records"]["plant_ids"] == [plant_id]
+
+    # Plant's botanical identity now points to the active survivor
+    status, _, plant_body = request("GET", f"/api/v1/plants/{plant_id}", headers={"cookie": cookie})
+    assert status == 200
+    assert plant_body["botanical_identity"]["id"] == str(surv_id)
+
+    # Measurement events and correction history on the plant are completely preserved
+    status, _, plant_events = request(
+        "GET", f"/api/v1/plants/{plant_id}/events", headers={"cookie": cookie}
+    )
+    assert status == 200
+    assert len(plant_events) == 1
+    retained_event = plant_events[0]
+    assert retained_event["id"] == event_id
+    assert retained_event["measurement"]["value"] == "125"
+    assert retained_event["measurement"]["unit"] == "mm"
+    assert len(retained_event["measurement_corrections"]) == 1
+    assert retained_event["measurement_corrections"][0]["measurement"]["value"] == "12.50"
+    assert retained_event["measurement_corrections"][0]["measurement"]["unit"] == "cm"
