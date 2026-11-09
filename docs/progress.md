@@ -7950,3 +7950,42 @@ Status remains implemented pending canonical verification.
 - Actual source inventory, owner review, authorized published assets and
   selected-host acceptance remain pending. BETA-DATA-001 remains in progress.
   No production records or deployment were changed.
+
+### BETA-DATA-001 — Portable Compose and branch UAT rehearsal, 9 November 2026
+
+- Merged main at `988c384` into the existing PR branch. The only merge conflict
+  was in progress history. Kept both the main entries and the prior onboarding
+  evidence. The runbook now separates Portable Compose from the advanced
+  controller, and includes blank private inventory, field mapping, UUID
+  reconciliation and batch templates.
+- Started and seeded this branch's Multi-Branch UAT SMOKE instance. Authenticated
+  HTTP requests through the loopback frontend imported one new record in each
+  of the six kinds. Preview left exports unchanged. Verified label and UUID
+  references, supplier ambiguity and explicit candidate selection, linked
+  exports, year/month precision and unknown cells. A mixed valid/invalid file,
+  changed bytes and an unresolved choice each returned 409 with unchanged
+  exports. A fresh reviewed retry created one lot. Identity, Supplier and
+  Location replays presented reuse choices. Unidentified collection replays
+  previewed as creates. Identified replays were refused with unchanged exports.
+- Manual-workflow HTTP trials exercised geographic provenance, order linking,
+  Sowing, germination, Plant lineage, observation, Schedule, Harvest, tracked
+  stock correction, seed conversion and shared local media. The setup used four
+  writes and three downstream chains used 12 writes each (0.25, 0.16 and 0.11 s
+  of local scripted HTTP time). Human entry time remains unmeasured.
+- Stored material refused a Location lacking `harvest_inventory`. CSV import
+  accepted the scope, Location details retained it, and the Location export
+  omitted it. Corrected tracking succeeded and replay returned 409 with one
+  saved record. The runbook specifies a details check. Portable Compose omits
+  the Dockhand update-exclusion labels present on the advanced bundle, so its
+  Dockhand acceptance requires separately proven exclusions.
+- The same 15 disposable integration files listed in the preceding milestone
+  passed again on the merged base (262 tests, zero residual owned containers,
+  networks or volumes). The canonical plan is affected because the PR diff
+  against merged main is limited to onboarding docs and import tests.
+- Retired the exact synthetic branch instance using its guarded project
+  confirmation. Independent detached QA checked the merge, templates,
+  runbook links, scope discrepancy and both installation paths. Clarified
+  the Location scope list and controller stack editing restriction.
+- Source UAT used synthetic data. Actual source inventory and operator review,
+  an authorized published bundle, and Synology acceptance remain outstanding.
+  BETA-DATA-001 remains in progress.

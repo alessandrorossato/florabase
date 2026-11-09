@@ -98,13 +98,17 @@ the operator chooses the intended candidate; no first-match rule applies.
 | `import_key`   | Optional unique key within this file; required if another row uses it as parent          | `cabinet`           |
 | `name`         | Required physical Location name, up to 255 characters                                    | `Seed cabinet`      |
 | `parent_ref`   | Optional existing Location UUID/full exact path or `@import_key` in this file            | `@cabinet`          |
-| `usage_scopes` | Required: `plants`, `sowings`, or `seed_lots`, separated by a vertical bar; at least one | `seed_lots\|plants` |
+| `usage_scopes` | Required: `plants`, `sowings`, `seed_lots`, or `harvest_inventory`, separated by a vertical bar; at least one | `seed_lots\|plants` |
 
 A child may precede its parent in the file. Preview detects missing or duplicate parent keys,
 cycles, and invalid scopes. Scopes do not inherit from parents. For example, a `cabinet` row can
 have an empty parent; a `drawer3` row can use `@cabinet`. Existing Location names need not be unique;
 an exact full path resolves one; repeated paths require a Preview choice. For a root or an existing
 parent, an exact same-name child offers Use existing or Create separate. UUID is an advanced fallback.
+
+Use `harvest_inventory` for stored harvested material. The in-app field guide
+and Location CSV export currently omit this scope. Verify it in Location details
+after Apply.
 
 ## Seed lots
 
