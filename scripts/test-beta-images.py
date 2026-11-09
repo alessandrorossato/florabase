@@ -1422,6 +1422,74 @@ class RegistryPreflightTests(unittest.TestCase):
             with self.subTest(code=code):
                 self.assertIsNone(self.lookup(token_response(), http_error(404, body)))
 
+    def test_rehearsal_candidate_policy_follows_the_base_version(self) -> None:
+        rehearsal = load_tool("rehearse-beta-release")
+        with tempfile.TemporaryDirectory(prefix="rehearsal-base-") as temporary:
+            root = Path(temporary)
+
+            def git(*args: str) -> str:
+                return subprocess.run(
+                    ["git", "-C", temporary, "-c", "user.name=t", "-c", "user.email=t@t", *args],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                ).stdout.strip()
+
+            git("init", "-q")
+            git("commit", "-q", "--allow-empty", "-m", "no inputs")
+            empty = git("rev-parse", "HEAD")
+            (root / "release").mkdir()
+            (root / "release/inputs.json").write_text('{"version": "0.1.0-beta.5"}')
+            git("add", ".")
+            git("commit", "-q", "-m", "beta.5")
+            base = git("rev-parse", "HEAD")
+            candidate = rehearsal.release_candidate
+            self.assertFalse(candidate(root, base, "0.1.0-beta.5"))  # Ordinary development PR.
+            self.assertTrue(candidate(root, base, "0.1.0-beta.6"))  # Version bump: candidate.
+            for strict in ("", "0" * 40, "f" * 40, empty, "HEAD", base[:12]):
+                with self.subTest(base=strict):
+                    self.assertTrue(candidate(root, strict, "0.1.0-beta.5"))
+
+    def test_rehearsal_refuses_reuse_only_for_release_candidates(self) -> None:
+        rehearsal = load_tool("rehearse-beta-release")
+        pinned = "sha256:" + "a" * 64
+        locked = {
+            "version": "0.1.0-beta.5",
+            "postgresql": {"version": "18.6", "index_digest": pinned},
+        }
+        published = "sha256:" + "b" * 64
+
+        def lookups(app: str | None, postgres: str | None) -> Any:
+            def lookup(repository: str, tag: str, *_: object, **__: object) -> str | None:
+                return postgres if repository.endswith("postgres") else app
+
+            return patch.object(rehearsal, "published_digest", side_effect=lookup)
+
+        environment = {"GITHUB_TOKEN": "t", "GITHUB_ACTOR": "a"}
+        with patch.dict(os.environ, environment):
+            with lookups(published, pinned), self.assertRaisesRegex(ValueError, "refuses reuse"):
+                rehearsal.verify_ghcr_read_only(locked, True)
+            with lookups(published, pinned):
+                observed = rehearsal.verify_ghcr_read_only(locked, False)
+            self.assertFalse(observed["release_candidate"])
+            self.assertEqual(observed["tags"]["backend"]["status"], "published_base_version")
+            with lookups(None, None):
+                observed = rehearsal.verify_ghcr_read_only(locked, True)
+            self.assertEqual(observed["tags"]["frontend"]["status"], "absent")
+            # The PostgreSQL identity gate applies to every rehearsal.
+            for candidate in (True, False):
+                with (
+                    self.subTest(candidate=candidate),
+                    lookups(None if candidate else published, published),
+                    self.assertRaisesRegex(ValueError, "PostgreSQL"),
+                ):
+                    rehearsal.verify_ghcr_read_only(locked, candidate)
+        workflow = (ROOT / ".github/workflows/beta-release-rehearsal.yml").read_text()
+        self.assertIn("github.event.pull_request.base.sha || github.event.before", workflow)
+        self.assertIn('--base "$BASE_SHA"', workflow)
+        # Protected publication keeps its own unconditional reuse refusal.
+        self.assertNotIn("release_candidate", (ROOT / "scripts/publish-beta-images.py").read_text())
+
     def test_rehearsal_ghcr_probe_requests_pull_only(self) -> None:
         body = json.dumps({"errors": [{"code": "MANIFEST_UNKNOWN", "message": "unknown"}]}).encode()
         self.assertIsNone(self.lookup(token_response(), http_error(404, body), actions="pull"))

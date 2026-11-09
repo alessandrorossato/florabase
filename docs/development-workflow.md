@@ -10,6 +10,7 @@ primary checkout off `main`.
 | Feature Review   | Current feature worktree, including dirty/untracked files   | baseline + DEV + `compose.review.yaml`       | `florabase-feature-review`               | `http://localhost:15174`   | Persistent, isolated DB/media/dependencies                    |
 | UAT Preview      | Owning feature source or clean delivered detached owner     | baseline + DEV + Review + `compose.uat.yaml` | `florabase-uat-preview`                  | `http://localhost:15174`   | Persistent isolated synthetic DB/media/dependencies           |
 | Sourcing Preview | Current Sourcing worktree, including dirty/untracked files  | baseline + DEV + Review + `compose.sourcing.yaml` | `florabase-sourcing-preview`         | `http://localhost:15175`   | Persistent isolated synthetic DB/media/dependencies           |
+| UAT instance     | Its owning linked feature worktree (one instance each)      | UAT Preview files + `compose.uat-instance.yaml` | `florabase-uat-branch-<branch>`      | `http://localhost:15180`–`15183` | Persistent isolated golden SMOKE/COMPREHENSIVE DB/media       |
 | Stable Preview   | Clean detached checkout of fetched `origin/main` by default | baseline + `compose.preview.yaml`            | `florabase-preview`                      | `http://localhost:15173`   | Persistent isolated DB/media, immutable frontend dependencies |
 | Quality checks   | Current feature worktree                                    | baseline + DEV                               | `florabase-quality-<metadata-path-hash>` | None started               | Isolated dependency/media volumes, no live DB required        |
 | Integration / CI | Current source / CI checkout                                | `compose.integration.yaml`                   | `florabase-integration-<random-run-id>`  | None                       | Disposable PostgreSQL tmpfs and test state                    |
@@ -123,6 +124,7 @@ production `exec` and `run` stay available because backup and restore depend on 
 | Quality project, integration, migration, build | Parallel; project is unique per worktree/run | Existing exact ownership labels |
 | Feature Review, Sourcing Preview | One owner per project; others refused | Owner labels plus machine lock on lifecycle commands |
 | UAT Preview | One owner; shares port 15174 with Review | Owner labels plus machine and per-owner locks |
+| UAT instances | One per worktree, at most four; ports 15180-15183 | Volume-label allocation, per-instance locks, FULL capacity lock for up/seed/reset |
 | CPU, shared BuildKit, Docker address pools | Exhausted by concurrent FULL | Machine FULL lock |
 | Same worktree's gate and receipt | One at a time | Per-worktree verification lock |
 
@@ -418,6 +420,71 @@ destructive, with exact project confirmation and individually proved resource id
 only when intentionally discarding the synthetic collection, edits and media; they are unnecessary
 for finish or later delivered-main updates. A different feature worktree cannot adopt persisted UAT.
 See the [INFRA-MAINT-001 handoff](infra-maint-001-handoff.md) for proof, smoke and recovery evidence.
+
+## UAT instances (parallel, per worktree)
+
+UAT Preview remains the one manual-review environment with the v4 fixture. When several features
+need acceptance at the same time, each linked feature worktree can instead own one **UAT instance**
+(MULTIBRANCH-UAT-001):
+
+```bash
+make uat-instance-up [PROFILE=smoke|comprehensive]   # First use allocates a port; default smoke
+make uat-instance-seed                               # Explicit golden dataset generation
+make uat-instance-status                             # Source/SHA, port, migrations, dataset manifest
+make uat-instance-validate                           # Exit 0 verified, 1 invalid/refused, 3 changed, 4 unavailable
+make uat-instance-stop                               # Preserve DB, media and dependencies
+make uat-instance-list                               # Read-only: every slot, owner and state
+make uat-instance-reset CONFIRM_RESET_UAT_INSTANCE=florabase-uat-branch-<branch> [PROFILE=...]
+make uat-instance-remove CONFIRM_REMOVE_UAT_INSTANCE=florabase-uat-branch-<branch>
+```
+
+The project is `florabase-uat-branch-` plus the branch with `/` replaced by `-` (for example
+`florabase-uat-branch-feat-example-001`); branches with `.` or `_` or longer than 40 characters are
+refused. It reuses every UAT Preview guard (linked source, origin, exact container labels, mounts,
+networks, internal DB/backend, loopback-only frontend, foreign volume users) with its own role label
+`uat-instance`, `golden_uat` database and the additional `compose.uat-instance.yaml` overlay. It
+resolves no `.env` secrets and never reads, copies or mounts another environment's data.
+
+**Allocation.** Four slots, ports 15180–15183, bound networks, image tags and memory. The record is
+the labels of the instance's own volumes (`io.florabase.uat.instance`, `.port`, `.profile`), which
+Docker cannot change, so a finished detached owner still finds its instance and the port and profile
+stay fixed until reset or removal. First `up` takes the lowest slot that no other instance records,
+no container (running or stopped) publishes and no other listener holds; it refuses another source's
+instance name, a full pool and, by creating and removing one uniquely named probe network, Docker
+address-pool exhaustion, all before building anything. Later starts re-prove the recorded port.
+
+**Dataset.** Startup never seeds. `seed` runs the existing TEST-DATA-001/002 golden runtime
+(`scripts/golden_dataset.py generate --profile <profile>`) in a one-off backend container with the
+scripts mounted read-only. Its target guard accepts one persistent target only: workflow mode
+`uat-instance`, a `florabase-uat-branch-*` project, development (never disposable) settings, the
+instance's own `db:5432/golden_uat` and the standard media root; the disposable copy lifecycle
+(`create-copy`, `retire-copy`) stays test-only. The golden ledger in the instance's media volume is the
+dataset manifest that status prints (profile, seed, anchor date, plan digest, schema revision, state,
+record count). Repeat seed is idempotent; a failed seed requires reset. `validate` runs
+`verify-baseline`: an operator edit reports `invariant-valid-baseline-modified` (3), or `domain-invalid` (1)
+when it moves a pinned read projection such as search counts; neither is an environment failure. Sign
+in with the synthetic **golden-owner / disposable-golden-owner-password**, UAT INSTANCE ONLY.
+Golden timestamps are anchored to the plan's fixed date, so schedules can read as past due.
+
+**Capacity and locks.** Every mutating command holds a nonblocking per-instance lock. `up`, `seed`
+and `reset` also hold the machine-wide `verification-full` capacity lock, so at most one heavy
+instance build or seed runs and never beside a canonical FULL gate; the loser is refused with the
+holder's purpose. `stop`, `remove` and `status` are never blocked by another instance. Only claims inside the pool count
+against its four slots; `make smoke-uat-instance` uses ephemeral ports and also takes the capacity lock.
+
+**Retirement.** Reset and remove refuse anything but the instance's exact project before any Docker
+mutation, remove one-off seed/validate containers an interrupted run left (all proven to be this
+project's backend from this source before any is removed), then use the UAT Preview retirement path: stop proven writers, remove only the proven
+containers, network and three volumes, never `down -v`. Remove also deletes the two exact
+`<project>-backend/frontend-development` tags unless still in use. `feature-retire` refuses a
+worktree whose source still owns instance volumes, so remove the instance first.
+
+Limits: synthetic WFO/WCVP indexes built during generation are not provisioned for the running app (see the [TEST-DATA-002 decisions](test-data-002-design.md#next-step-separately-review-and-uat)). Browsers share `localhost` cookies across ports, so signing in to a second instance in the
+same browser profile signs out the first (use separate profiles). An instance whose source worktree
+was deleted cannot be retired by these commands; `make uat-instance-list` marks it as MISSING SOURCE
+for operator cleanup. A leftover `dev-state-init` one-off is refused, not removed; inspect it manually. The workstation golden reference running production images is a separate
+planned increment (GOLDEN-REFERENCE-001). Proof: `make test-uat-preview` (offline) and
+`make smoke-uat-instance` (real disposable Docker).
 
 ## Feature Review and browser acceptance
 

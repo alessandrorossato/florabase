@@ -767,9 +767,32 @@ def code_head() -> str:
     return str(head)
 
 
+# MULTIBRANCH-UAT-001: the one persistent target, a per-worktree synthetic UAT instance whose
+# own PostgreSQL container holds only this database. The host helper proves Docker identity first.
+UAT_INSTANCE_PROJECT = re.compile(r"florabase-uat-branch-[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?")
+UAT_INSTANCE_DATABASE = "golden_uat"
+UAT_INSTANCE_MEDIA = Path("/var/lib/florabase/attachments")
+
+
+def uat_instance_target(settings: Settings) -> bool:
+    url = make_url(settings.database_url)
+    return bool(
+        os.environ.get("FLORABASE_WORKFLOW_MODE") == "uat-instance"
+        and UAT_INSTANCE_PROJECT.fullmatch(os.environ.get("FLORABASE_UAT_PROJECT", ""))
+        and settings.environment is Environment.DEVELOPMENT
+        and not settings.database_disposable
+        and url.host == "db"
+        and url.port in {None, 5432}
+        and url.database == url.username == UAT_INSTANCE_DATABASE
+        and Path(settings.attachment_storage_root) == UAT_INSTANCE_MEDIA
+    )
+
+
 def configured_copy(settings: Settings) -> str:
     """The copy this configuration names, checked without touching any database or file."""
     name = make_url(settings.database_url).database or ""
+    if uat_instance_target(settings):
+        return name
     if not (
         settings.database_disposable
         and settings.environment is Environment.TEST
@@ -1084,6 +1107,9 @@ def canonical_digest(database: Session, root: Path) -> dict[str, Any]:
 def table_counts(database: Session) -> dict[str, int]:
     counts = {}
     for table in application_tables():
+        # Sign-ins in a long-lived copy (a UAT instance) are session state, as in the digest.
+        if table.name in EXCLUDED_TABLES:
+            continue
         statement = select(func.count()).select_from(table)
         if table.name == "geographic_places":
             statement = statement.where(table.c.place_kind == "custom")

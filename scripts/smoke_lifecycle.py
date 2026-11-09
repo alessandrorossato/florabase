@@ -3,13 +3,14 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import tempfile
 from contextlib import AbstractContextManager
 from pathlib import Path
 from typing import Any
 
-from workflow_environment import Environment
+from workflow_environment import Environment, Repository, run
 from workflow_resources import Disposable, Owner
 
 
@@ -58,3 +59,81 @@ class SmokeLifecycle(AbstractContextManager["SmokeLifecycle"]):
             self.env.workflow_overlay = None
             if self.temporary:
                 self.temporary.cleanup()
+
+
+def operator_snapshot(repo: Repository, extra: tuple[str, ...] = ()) -> dict[str, Any]:
+    """Persistent environments' containers, volumes and live database content digests."""
+    snapshot: dict[str, Any] = {
+        "git": Environment(repo, "dev").repo.identity(),
+        "projects": {},
+    }
+    for project in (
+        "florabase",
+        "florabase-feature-review",
+        "florabase-preview",
+        "florabase-prod",
+        "florabase-uat-preview",
+        "florabase-sourcing-preview",
+        *extra,
+    ):
+        ids = run(
+            [
+                "docker",
+                "ps",
+                "-aq",
+                "--filter",
+                f"label=com.docker.compose.project={project}",
+            ],
+            capture=True,
+        ).splitlines()
+        volumes = run(
+            [
+                "docker",
+                "volume",
+                "ls",
+                "-q",
+                "--filter",
+                f"label=com.docker.compose.project={project}",
+            ],
+            capture=True,
+        ).splitlines()
+        containers = json.loads(run(["docker", "inspect", *ids], capture=True)) if ids else []
+        result: dict[str, Any] = {
+            "containers": [
+                (
+                    item["Id"],
+                    item["State"]["StartedAt"],
+                    item["State"]["Running"],
+                    item["Mounts"],
+                )
+                for item in containers
+            ],
+            "volumes": json.loads(run(["docker", "volume", "inspect", *volumes], capture=True))
+            if volumes
+            else [],
+        }
+        for item in containers:
+            if (
+                item["State"].get("Running")
+                and item["Config"]["Labels"].get("com.docker.compose.service") == "db"
+            ):
+                data = run(
+                    [
+                        "docker",
+                        "exec",
+                        item["Id"],
+                        "sh",
+                        "-ec",
+                        'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --data-only --inserts --no-owner --no-privileges',
+                    ],
+                    capture=True,
+                )
+                # PostgreSQL dump restriction tokens are random; exclude them from the checksum.
+                data = "\n".join(
+                    line
+                    for line in data.splitlines()
+                    if not line.startswith(("\\restrict", "\\unrestrict"))
+                )
+                result["database_digest"] = hashlib.sha256(data.encode()).hexdigest()
+        snapshot["projects"][project] = result
+    return snapshot

@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import http.cookiejar
 import json
 import os
@@ -19,10 +18,9 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import HTTPCookieProcessor, Request, build_opener
 
-from smoke_lifecycle import SmokeLifecycle
+from smoke_lifecycle import SmokeLifecycle, operator_snapshot
 from uat_preview import UATPreview
 from workflow_environment import (
-    Environment,
     Repository,
     WorkflowError,
     code_heads,
@@ -34,81 +32,6 @@ from workflow_environment import (
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise WorkflowError(f"UAT smoke: {message}")
-
-
-def operator_snapshot(repo: Repository) -> dict[str, Any]:
-    snapshot: dict[str, Any] = {
-        "git": Environment(repo, "dev").repo.identity(),
-        "projects": {},
-    }
-    for project in (
-        "florabase",
-        "florabase-feature-review",
-        "florabase-preview",
-        "florabase-prod",
-        "florabase-uat-preview",
-    ):
-        ids = run(
-            [
-                "docker",
-                "ps",
-                "-aq",
-                "--filter",
-                f"label=com.docker.compose.project={project}",
-            ],
-            capture=True,
-        ).splitlines()
-        volumes = run(
-            [
-                "docker",
-                "volume",
-                "ls",
-                "-q",
-                "--filter",
-                f"label=com.docker.compose.project={project}",
-            ],
-            capture=True,
-        ).splitlines()
-        containers = json.loads(run(["docker", "inspect", *ids], capture=True)) if ids else []
-        result: dict[str, Any] = {
-            "containers": [
-                (
-                    item["Id"],
-                    item["State"]["StartedAt"],
-                    item["State"]["Running"],
-                    item["Mounts"],
-                )
-                for item in containers
-            ],
-            "volumes": json.loads(run(["docker", "volume", "inspect", *volumes], capture=True))
-            if volumes
-            else [],
-        }
-        for item in containers:
-            if (
-                item["State"].get("Running")
-                and item["Config"]["Labels"].get("com.docker.compose.service") == "db"
-            ):
-                data = run(
-                    [
-                        "docker",
-                        "exec",
-                        item["Id"],
-                        "sh",
-                        "-ec",
-                        'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --data-only --inserts --no-owner --no-privileges',
-                    ],
-                    capture=True,
-                )
-                # PostgreSQL dump restriction tokens are random; exclude them from the checksum.
-                data = "\n".join(
-                    line
-                    for line in data.splitlines()
-                    if not line.startswith(("\\restrict", "\\unrestrict"))
-                )
-                result["database_digest"] = hashlib.sha256(data.encode()).hexdigest()
-        snapshot["projects"][project] = result
-    return snapshot
 
 
 class SmokeUAT(UATPreview):
