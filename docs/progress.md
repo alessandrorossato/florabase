@@ -7895,3 +7895,13 @@ Status remains implemented pending canonical verification.
   Plants, History, propagation reversal, autogenerate parity), then 34 after the lock and
   persistence fixes; frontend lint, typecheck and the full suite (1,222). Independent QA reported
   no blockers. Its lock-ordering note and test gaps are addressed.
+
+### MEASUREMENT-001 — PR #163 release rehearsal recovery, 9 November 2026
+
+- The hosted rehearsal failed with "versioned GHCR image already exists" because v0.1.0-beta.5 is
+  published. Ported only the rehearsal policy from MULTIBRANCH-UAT-001 commit `7de4080`
+  (`beta-release-rehearsal.yml`, `rehearse-beta-release.py`, `test-beta-images.py`, byte-identical):
+  a change is a release candidate unless its base names the same `release/inputs.json` version.
+  Candidates and protected publication keep the strict reuse refusal; the PostgreSQL identity gate
+  is unchanged. No measurement code, migration or golden baseline changed.
+- Checks: `make test-beta-images` (58 + 4), `make workflow-check`; independent delta QA passed.
