@@ -243,3 +243,9 @@ design still stand, and this work informs them:
    environment reading the taxonomy tree would need the same index provisioned, or those links read as unavailable.
 4. **Fresh timestamps.** Whether a copy for humans should be anchored near today needs deciding; the pinned anchor
    makes all Schedule states and link freshness read as old.
+
+MULTIBRANCH-UAT-001 (8 November 2026) settled decision 2 for UAT instances only: a narrow persistent
+`uat-instance` target, never a general `golden` mode; Review and the singleton UAT Preview are unchanged.
+Decisions 1, 3 and 4 remain open: instances regenerate from source, do not provision the synthetic
+WFO/WCVP indexes for the running app (taxonomy and native-range views may read their sources as
+unavailable), and keep the pinned anchor date.

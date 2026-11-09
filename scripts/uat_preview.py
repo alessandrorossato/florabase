@@ -31,6 +31,14 @@ VOLUMES = {"postgres_data", "attachment_data", "frontend_node_modules"}
 
 
 class UATPreview(Environment):
+    # Overridden only by per-worktree UAT instances (uat_instance.py); the singleton keeps these.
+    PROJECT_PATTERN = r"florabase-uat-preview(?:-smoke-[0-9a-f]{12})?"
+    ROLE_LABEL = "uat"
+    WORKFLOW_MODE = "uat"
+    LABEL = "UAT Preview"
+    CONFIRM_RESET = "CONFIRM_RESET_UAT_PREVIEW"
+    CONFIRM_REMOVE = "CONFIRM_REMOVE_UAT_PREVIEW"
+
     def __init__(self, repository: Repository) -> None:
         super().__init__(repository, "uat")
         # UAT has fixed local configuration, never reads workstation secrets.
@@ -42,7 +50,7 @@ class UATPreview(Environment):
             or self.repository.metadata == self.repository.common
         ):
             raise WorkflowError("UAT Preview requires the current linked feature worktree")
-        if not re.fullmatch(r"florabase-uat-preview(?:-smoke-[0-9a-f]{12})?", self.project):
+        if not re.fullmatch(self.PROJECT_PATTERN, self.project):
             raise WorkflowError("unexpected UAT project; refused")
 
         origin = self.repository.git("remote", "get-url", "origin")
@@ -100,7 +108,7 @@ class UATPreview(Environment):
                 service not in {"db", "backend", "frontend", "dev-state-init"}
                 or service in services
                 or labels.get("com.docker.compose.project") != self.project
-                or labels.get("io.florabase.role") != "uat"
+                or labels.get("io.florabase.role") != self.ROLE_LABEL
                 or labels.get("io.florabase.source") != str(self.source)
                 or labels.get("com.docker.compose.project.working_dir") != str(self.source)
                 or labels.get("com.docker.compose.oneoff", "False") != "False"
@@ -185,7 +193,7 @@ class UATPreview(Environment):
                 raise WorkflowError("wrong running UAT database identity; refused")
             if service == "backend":
                 required = {
-                    "FLORABASE_WORKFLOW_MODE": "uat",
+                    "FLORABASE_WORKFLOW_MODE": self.WORKFLOW_MODE,
                     "FLORABASE_UAT_PROJECT": self.project,
                     "FLORABASE_UAT_SOURCE": str(self.source),
                     "FLORABASE_DATABASE_URL": expected["FLORABASE_DATABASE_URL"],
@@ -295,7 +303,7 @@ class UATPreview(Environment):
         expected = {
             "project": self.project,
             "source": str(self.source),
-            "database": "florabase_uat",
+            "database": self.database,
             "origin": self.url,
         }
         fixture = state.get(".uat-fixture.json")
@@ -318,6 +326,10 @@ class UATPreview(Environment):
         else:
             self.compose("up", "-d", "--wait", "--wait-timeout", "120", "db")
 
+    @property
+    def database(self) -> str:
+        return self.environment()["POSTGRES_DB"]
+
     def current(self) -> list[str]:
         database = self.compose(
             "exec",
@@ -325,14 +337,14 @@ class UATPreview(Environment):
             "db",
             "psql",
             "-U",
-            "florabase_uat",
+            self.database,
             "-d",
-            "florabase_uat",
+            self.database,
             "-Atc",
             "SELECT current_database() || '|' || current_user;",
             capture=True,
         )
-        if database != "florabase_uat|florabase_uat":
+        if database != f"{self.database}|{self.database}":
             raise WorkflowError("actual UAT database identity mismatch; refused")
         revisions = super().current()
         if len(revisions) > 1:
@@ -552,7 +564,7 @@ class UATPreview(Environment):
             run(["docker", "container", "stop", *containers])
         self.require_identity()
         print(
-            "UAT Preview stopped; containers, network, database, media and dependencies preserved"
+            f"{self.LABEL} stopped; containers, network, database, media and dependencies preserved"
         )
 
     def retirement_resources(self) -> tuple[list[str], list[dict[str, Any]], list[str]]:
@@ -587,7 +599,7 @@ class UATPreview(Environment):
     def remove(self, confirm: str) -> None:
         if confirm != self.project:
             raise WorkflowError(
-                f"remove deletes ONLY UAT state; set CONFIRM_REMOVE_UAT_PREVIEW={self.project}"
+                f"remove deletes ONLY UAT state; set {self.CONFIRM_REMOVE}={self.project}"
             )
         containers, volumes, networks = self.retirement_resources()
         print("Retiring UAT owned by: " + str(self.source))
@@ -609,12 +621,12 @@ class UATPreview(Environment):
             raise WorkflowError("UAT resources changed before volume removal; refused")
         for volume in volumes:
             run(["docker", "volume", "rm", volume["Name"]])
-        print("UAT Preview removed; next feature worktree can run up and seed fresh UAT")
+        print(f"{self.LABEL} removed; next feature worktree can run up and seed fresh UAT")
 
     def reset(self, confirm: str) -> None:
         if confirm != self.project:
             raise WorkflowError(
-                f"reset deletes ONLY UAT state; set CONFIRM_RESET_UAT_PREVIEW={self.project}"
+                f"reset deletes ONLY UAT state; set {self.CONFIRM_RESET}={self.project}"
             )
         if self.repository.identity()["branch"] == "detached":
             raise WorkflowError(
