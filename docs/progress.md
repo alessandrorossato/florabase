@@ -7845,3 +7845,24 @@ Status remains implemented pending canonical verification.
   its slow test call and verified disposable cleanup. The planner suite passed 30 tests, and the
   workflow helper suite and 141-feature graph passed. The plan still selects FULL. The final
   consolidation gate and receipt remain pending.
+
+### MULTIBRANCH-UAT-001 — parallel per-worktree UAT instances, 8 November 2026
+
+- Added `make uat-instance-{up,status,seed,validate,stop,reset,remove,list}` (`scripts/uat_instance.py`,
+  `compose.uat-instance.yaml`). Each linked worktree can own one instance, `florabase-uat-branch-<branch>`.
+  It gets a port from a four-slot pool (15180–15183) recorded in immutable volume labels, its own
+  `golden_uat` PostgreSQL, media and dependencies, and the inherited UAT Preview identity guards. Seeding
+  uses the existing golden runtime with an explicit SMOKE or COMPREHENSIVE profile through one narrow
+  `uat-instance` target. Heavy up, seed and reset share canonical FULL's capacity lock. The singleton UAT
+  Preview was refactored to class attributes only, with no behaviour change. Golden `table_counts` now skips
+  session tables, as the digest already did. [Handoff](multibranch-uat-001-handoff.md).
+- Scope: the TUXEDO golden reference on production image digests is GOLDEN-REFERENCE-001 (planned).
+  TEST-DATA-001/002 statuses are unchanged; the handoff separates their evidence from missing acceptance.
+- Independent infrastructure QA: 3 P1 and 4 P2 findings fixed with regressions, P3 findings documented.
+- Checks: `make test-uat-preview` (19 + 15 + 14), `test-workflow-resources`, `test-environment-workflow`
+  (35), `test-agent-workflow` (63, 3 skipped), `make golden-dataset-check` (34 passed, 292 s),
+  `make workflow-check`, `check-features` (144), and `make smoke-uat-instance` passing on run 6 in 195 s
+  with zero residual state; runs 1–5 and their fixes are in the handoff. Operator environments unchanged.
+- Canonical `make feature-verify` (FULL, 17 stages) passed in 933 s; integration 809 passed, 29 skipped.
+- Unresolved: independent delta QA of the QA fixes, operator UAT, and orphaned-source cleanup. Synthetic WFO/WCVP
+  indexes are not provisioned in instances, and same-browser localhost cookies are shared across ports.
