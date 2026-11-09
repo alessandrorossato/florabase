@@ -7922,3 +7922,18 @@ Status remains implemented pending canonical verification.
   integration (34) passed. The two-instance smoke requires a committed HEAD containing main, so its
   pre-commit attempt refused at the ancestry guard and cleaned up. The committed-tree rerun and
   canonical gate are tracked separately.
+
+### Dependabot compatibility review, 9 November 2026
+
+- PR #148's lockfile reproduces six deprecated listener errors. The Plant, SeedLot and Sowing
+  screen mocks now share a typed EventTarget-based media query fixture. Viewport values and test
+  assertions are preserved. Independent QA confirmed the Plant patch applies to PR #163 at
+  `db2ca96` without touching its measurement cases.
+- Checks: the baseline frontend suite passed (1,221 tests). With PR #148's dependencies, full
+  frontend ESLint, changed-file Prettier, TypeScript and all 163 affected tests passed. Canonical
+  FULL evidence is recorded separately in the worktree receipt.
+- PR #153 updates only the backend manifest. The runtime and development Docker lockfiles still
+  pin FastAPI 0.143.0. A disposable install of the declared updates passed `pip check`, the
+  OpenAPI byte comparison and 40 focused attachment, collection photo, media and authentication
+  tests with FastAPI 0.162.0. The application declares only optional text fields in multipart
+  forms. Both locks still need regeneration and FULL verification with the updated pins.

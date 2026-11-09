@@ -1,5 +1,6 @@
 import { browserBack, browserForward } from "../test/history";
 import { openFormSection } from "../test/formSections";
+import { createMediaQueryList } from "../test/mediaQuery";
 import { selectDirectoryFilter } from "../test/directoryFilters";
 import {
   act,
@@ -192,16 +193,9 @@ function directoryHandler(seedLots: unknown[], custom?: Handler): Handler {
 }
 
 function setViewportMatches(matches: boolean) {
-  vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
-    matches,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  }));
+  vi.spyOn(window, "matchMedia").mockImplementation((query) =>
+    createMediaQueryList(query, matches),
+  );
 }
 
 async function openSeeds() {
