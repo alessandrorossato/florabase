@@ -3519,3 +3519,109 @@ test("height measurements are recorded, corrected and plotted without inventing 
     "Originally Height: 12.50 cm on 2026-03-14; replaced 2026-11-09",
   );
 });
+
+test("phenology is recorded stage first, shown once in the Journal and compared by year", async () => {
+  let events: ReturnType<typeof journalEvent>[] = [
+    // A pre-existing flowering entry without a stage stays phenology evidence.
+    journalEvent("flowering", {
+      id: `${eventId.slice(0, -2)}80`,
+      occurred_on: { precision: "day", year: 2025, month: 5, day: 14 },
+    }),
+  ];
+  const writes: Record<string, unknown>[] = [];
+  mockApi(
+    plantHandler([plant()], [], (path, init) => {
+      if (path === `/api/v1/plants/${plantId}/events`) {
+        if (init?.method === "POST") {
+          const payload = body(init);
+          writes.push(payload);
+          const created = journalEvent(String(payload.kind), {
+            ...payload,
+            id: `${eventId.slice(0, -2)}81`,
+          });
+          events = [created, ...events];
+          return json(created, 201);
+        }
+        return json(events);
+      }
+      if (path === `/api/v1/plants/${plantId}`) return json(plant());
+      return undefined;
+    }),
+  );
+  const user = await openPlants();
+  await user.click(
+    await screen.findByRole("button", {
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
+  await assertDedicatedDetails();
+  await user.click(screen.getByRole("tab", { name: "Journal" }));
+  const phenology = await screen.findByRole("region", { name: "Phenology" });
+  expect(
+    within(phenology).getByText(/Flowering, stage not recorded/),
+  ).toBeInTheDocument();
+
+  await user.click(
+    within(phenology).getByRole("button", { name: "Record phenology" }),
+  );
+  const dialog = screen.getByRole("dialog");
+  // Stage first: the Entry type follows from the chosen stage.
+  expect(within(dialog).queryByLabelText("Entry type")).not.toBeInTheDocument();
+  const submit = within(dialog).getByRole("button", { name: "Add entry" });
+  await user.click(submit);
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Choose the phenological stage",
+  );
+  await user.selectOptions(
+    within(dialog).getByLabelText(/Phenological stage/),
+    "fruit_ripening",
+  );
+  await user.click(within(dialog).getByLabelText(/Approximate date/));
+  await user.click(submit);
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Enter the estimated date",
+  );
+  expect(writes).toHaveLength(0);
+  await user.selectOptions(screen.getByLabelText("Precision"), "month");
+  await user.clear(screen.getByLabelText("Year"));
+  await user.type(screen.getByLabelText("Year"), "2026");
+  await user.clear(screen.getByLabelText("Month"));
+  await user.type(screen.getByLabelText("Month"), "8");
+  await user.click(submit);
+  expect(
+    await screen.findByText("Journal entry was recorded."),
+  ).toBeInTheDocument();
+  expect(writes[0]).toMatchObject({
+    kind: "fruiting",
+    occurred_on: { precision: "month", year: 2026, month: 8 },
+    phenology: { phase: "fruit_ripening", date_is_approximate: true },
+    measurement: null,
+  });
+
+  // One Journal card per Event, carrying its stage.
+  expect(
+    screen.getAllByText("Stage: Fruit ripening", { exact: false }),
+  ).toHaveLength(1);
+  const year2026 = within(
+    screen.getByRole("region", { name: "Phenology" }),
+  ).getByRole("group", { name: "2026" });
+  expect(
+    within(year2026)
+      .getByText(/Fruit ripening/)
+      .closest("li"),
+  ).toHaveTextContent("Fruit ripening: about Aug");
+  // The 2025 flowering year has no staged fruit ripening record: say so, nothing more.
+  const year2025 = within(
+    screen.getByRole("region", { name: "Phenology" }),
+  ).getByRole("group", { name: "2025" });
+  expect(
+    within(year2025).getByText("No “Fruit ripening” observation recorded"),
+  ).toBeInTheDocument();
+  await user.click(
+    within(year2026).getByRole("button", { name: /show Journal entry/ }),
+  );
+  expect(document.activeElement).toHaveAttribute(
+    "id",
+    `journal-entry-${eventId.slice(0, -2)}81`,
+  );
+});

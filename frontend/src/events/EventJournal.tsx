@@ -16,6 +16,9 @@ import {
   eventSourceLabel,
   formatPartialDate,
   measurementText,
+  phenophaseKinds,
+  phenophaseLabels,
+  type Phenophase,
 } from "./eventData";
 import "./activity.css";
 import { FieldHelp } from "../components/ContextualHelp";
@@ -24,6 +27,7 @@ import { PartialDateField } from "../seed-lots/PartialDateField";
 import { PhotosSection } from "../photos/PhotosSection";
 import { EventTargetPhoto } from "./EventTargetPhoto";
 import { HeightHistory } from "./HeightHistory";
+import { PhenologyHistory } from "./PhenologyHistory";
 import type { PartialDate } from "../seed-lots/api";
 import {
   createEvent,
@@ -61,7 +65,17 @@ interface EventFormState {
   measurementValue: string;
   measurementUnit: "mm" | "cm" | "m";
   measurementApproximate: boolean;
+  phenophase: Phenophase | "";
+  phenologyApproximate: boolean;
 }
+
+type StagedKind = keyof typeof phenophaseKinds;
+const stagedKind = (kind: EventKind): kind is StagedKind =>
+  kind in phenophaseKinds;
+const kindOfPhase = (phase: Phenophase) =>
+  (Object.keys(phenophaseKinds) as StagedKind[]).find((kind) =>
+    phenophaseKinds[kind].includes(phase),
+  ) ?? "observation";
 
 const eventKindLabels: Record<EventKind, string> = {
   observation: "Observation",
@@ -114,6 +128,8 @@ function blankForm(): EventFormState {
     measurementValue: "",
     measurementUnit: "cm",
     measurementApproximate: false,
+    phenophase: "",
+    phenologyApproximate: false,
   };
 }
 
@@ -128,6 +144,8 @@ function formFrom(event: EventResponse): EventFormState {
     measurementValue: event.measurement?.value ?? "",
     measurementUnit: event.measurement?.unit ?? "cm",
     measurementApproximate: event.measurement?.is_approximate ?? false,
+    phenophase: event.phenology?.phase ?? "",
+    phenologyApproximate: event.phenology?.date_is_approximate ?? false,
   };
 }
 
@@ -189,6 +207,8 @@ export function EventJournal({
   useEffect(() => {
     clearEntryRequest();
   }, []);
+  // "Record phenology" opens the same entry form, stage first, with the kind derived.
+  const [phenologyEntry, setPhenologyEntry] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [deleting, setDeleting] = useState<EventResponse | null>(null);
   const [photoEvent, setPhotoEvent] = useState<EventResponse | null>(null);
@@ -255,7 +275,8 @@ export function EventJournal({
     setTimeline({ status: "ready", events });
   }
 
-  function openCreate() {
+  function openCreate(phenology = false) {
+    setPhenologyEntry(phenology);
     setForm(blankForm());
     setMutation({ status: "idle" });
     setNotice(null);
@@ -263,6 +284,7 @@ export function EventJournal({
   }
 
   function openEdit(event: EventResponse) {
+    setPhenologyEntry(false);
     setForm(formFrom(event));
     setMutation({ status: "idle" });
     setNotice(null);
@@ -276,6 +298,23 @@ export function EventJournal({
       setMutation({
         status: "error",
         message: "Choose the destination Location for this movement.",
+      });
+      return;
+    }
+    const staged =
+      stagedKind(form.kind) && form.phenophase ? form.phenophase : null;
+    if (phenologyEntry && !staged) {
+      setMutation({
+        status: "error",
+        message: "Choose the phenological stage you observed.",
+      });
+      return;
+    }
+    if (staged && form.phenologyApproximate && !form.occurredOn) {
+      setMutation({
+        status: "error",
+        message:
+          "Enter the estimated date before marking it approximate, or clear Approximate date.",
       });
       return;
     }
@@ -319,6 +358,9 @@ export function EventJournal({
             unit: form.measurementUnit,
             is_approximate: form.measurementApproximate,
           }
+        : null,
+      phenology: staged
+        ? { phase: staged, date_is_approximate: form.phenologyApproximate }
         : null,
     };
     setMutation({ status: "pending" });
@@ -428,7 +470,12 @@ export function EventJournal({
           <p className="eyebrow">Journal</p>
           <h4 id={`events-${targetId}`}>Journal entries</h4>
         </div>
-        <button type="button" onClick={openCreate}>
+        <button
+          type="button"
+          onClick={() => {
+            openCreate();
+          }}
+        >
           Add entry
         </button>
       </div>
@@ -468,8 +515,22 @@ export function EventJournal({
             Entries record observations, cultivation work, movement, and status
             changes.
           </p>
-          <button type="button" onClick={openCreate}>
+          <button
+            type="button"
+            onClick={() => {
+              openCreate();
+            }}
+          >
             Add the first entry
+          </button>
+          <button
+            type="button"
+            className="button--secondary"
+            onClick={() => {
+              openCreate(true);
+            }}
+          >
+            Record phenology
           </button>
         </div>
       ) : (
@@ -498,6 +559,22 @@ export function EventJournal({
             )}
           </fieldset>
           <HeightHistory events={visible} />
+          {(filter === "all" || filter === "observations") && (
+            <PhenologyHistory
+              targetId={targetId}
+              events={timeline.events}
+              onRecord={() => {
+                openCreate(true);
+              }}
+              onShow={(entry) => {
+                const card = document.getElementById(
+                  `journal-entry-${entry.id}`,
+                );
+                card?.scrollIntoView({ block: "center" });
+                card?.focus();
+              }}
+            />
+          )}
           {visible.length === 0 ? (
             <p>No Journal entries match this filter.</p>
           ) : (
@@ -513,7 +590,11 @@ export function EventJournal({
                     <p className="event-period">{periodStarts.get(item.id)}</p>
                   )}
                   <div className="event-marker" aria-hidden="true" />
-                  <article className="event-card">
+                  <article
+                    className="event-card"
+                    id={`journal-entry-${item.id}`}
+                    tabIndex={-1}
+                  >
                     <EventTargetPhoto
                       photo={
                         item.harvest_id
@@ -619,6 +700,15 @@ export function EventJournal({
                         <strong>{measurementText(item.measurement)}</strong>
                       </p>
                     )}
+                    {item.phenology && (
+                      <p className="event-destination">
+                        <strong>
+                          Stage: {phenophaseLabels[item.phenology.phase]}
+                        </strong>
+                        {item.phenology.date_is_approximate &&
+                          " (approximate date)"}
+                      </p>
+                    )}
                     {item.measurement_corrections.length > 0 && (
                       // Earlier values stay traceable; chart and table use only the current one.
                       <details className="event-corrections">
@@ -710,7 +800,13 @@ export function EventJournal({
       )}
       {editor && (
         <EventDialog
-          title={editor === "create" ? "Add entry" : "Edit entry"}
+          title={
+            editor === "create"
+              ? phenologyEntry
+                ? "Record phenology"
+                : "Add entry"
+              : "Edit entry"
+          }
           onClose={dismissEditor}
         >
           <form
@@ -718,47 +814,114 @@ export function EventJournal({
             onSubmit={(event) => void submit(event)}
             noValidate
           >
-            <div className="field">
-              <FieldLabel htmlFor={`event-kind-${targetId}`} required>
-                Entry type
-              </FieldLabel>
-              <select
-                aria-describedby={`event-kind-help-${targetId}`}
-                id={`event-kind-${targetId}`}
-                aria-required="true"
-                value={form.kind}
-                disabled={pending}
-                onChange={(event) => {
-                  const kind = event.currentTarget.value as EventKind;
-                  setForm((current) => ({
-                    ...current,
-                    kind,
-                    destinationLocationId:
-                      kind === "movement" ? current.destinationLocationId : "",
-                  }));
-                  setMutation({ status: "idle" });
-                }}
-              >
-                {(Object.keys(eventKindLabels) as EventKind[])
-                  .filter(
-                    (kind) =>
-                      (!["extraction", "reintegration"].includes(kind) ||
-                        (editor !== "create" && editor.kind === kind)) &&
-                      (kind !== "measurement" || targetKind === "plant"),
-                  )
-                  .map((kind) => (
-                    <option value={kind} key={kind}>
-                      {eventKindLabels[kind]}
-                    </option>
-                  ))}
-              </select>
-              <FieldHelp id={`event-kind-help-${targetId}`}>
-                Choose Observation or Other for a note, or Measurement for a
-                dated Plant height. Movement and lifecycle entries also change
-                current state when created. Use the owning Harvest or operation
-                workflow for structured records.
-              </FieldHelp>
-            </div>
+            {!phenologyEntry && (
+              <div className="field">
+                <FieldLabel htmlFor={`event-kind-${targetId}`} required>
+                  Entry type
+                </FieldLabel>
+                <select
+                  aria-describedby={`event-kind-help-${targetId}`}
+                  id={`event-kind-${targetId}`}
+                  aria-required="true"
+                  value={form.kind}
+                  disabled={pending}
+                  onChange={(event) => {
+                    const kind = event.currentTarget.value as EventKind;
+                    setForm((current) => ({
+                      ...current,
+                      kind,
+                      destinationLocationId:
+                        kind === "movement"
+                          ? current.destinationLocationId
+                          : "",
+                      // A stage from another kind is cleared with its approximate flag.
+                      ...(stagedKind(kind) &&
+                      current.phenophase &&
+                      phenophaseKinds[kind].includes(current.phenophase)
+                        ? {}
+                        : { phenophase: "", phenologyApproximate: false }),
+                    }));
+                    setMutation({ status: "idle" });
+                  }}
+                >
+                  {(Object.keys(eventKindLabels) as EventKind[])
+                    .filter(
+                      (kind) =>
+                        (!["extraction", "reintegration"].includes(kind) ||
+                          (editor !== "create" && editor.kind === kind)) &&
+                        (kind !== "measurement" || targetKind === "plant"),
+                    )
+                    .map((kind) => (
+                      <option value={kind} key={kind}>
+                        {eventKindLabels[kind]}
+                      </option>
+                    ))}
+                </select>
+                <FieldHelp id={`event-kind-help-${targetId}`}>
+                  Choose Observation or Other for a note, or Measurement for a
+                  dated Plant height. Movement and lifecycle entries also change
+                  current state when created. Use the owning Harvest or
+                  operation workflow for structured records.
+                </FieldHelp>
+              </div>
+            )}
+            {(phenologyEntry || stagedKind(form.kind)) && (
+              <div className="field">
+                <FieldLabel
+                  htmlFor={`event-stage-${targetId}`}
+                  required={phenologyEntry}
+                >
+                  Phenological stage
+                </FieldLabel>
+                <select
+                  id={`event-stage-${targetId}`}
+                  aria-describedby={`event-stage-help-${targetId}`}
+                  aria-required={phenologyEntry}
+                  value={form.phenophase}
+                  disabled={pending}
+                  onChange={(event) => {
+                    const phenophase = event.currentTarget.value as
+                      Phenophase | "";
+                    setForm((current) => ({
+                      ...current,
+                      phenophase,
+                      kind: phenophase ? kindOfPhase(phenophase) : current.kind,
+                      phenologyApproximate: phenophase
+                        ? current.phenologyApproximate
+                        : false,
+                    }));
+                    setMutation({ status: "idle" });
+                  }}
+                >
+                  <option value="">
+                    {phenologyEntry ? "Choose a stage" : "No stage (note only)"}
+                  </option>
+                  {(Object.keys(phenophaseKinds) as StagedKind[])
+                    .filter((kind) => phenologyEntry || kind === form.kind)
+                    .map((kind) => (
+                      <optgroup
+                        key={kind}
+                        label={
+                          kind === "observation"
+                            ? "Leaves, growth and dormancy"
+                            : eventKindLabels[kind]
+                        }
+                      >
+                        {phenophaseKinds[kind].map((phase) => (
+                          <option value={phase} key={phase}>
+                            {phenophaseLabels[phase]}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                </select>
+                <FieldHelp id={`event-stage-help-${targetId}`}>
+                  Record what you saw. Florabase never infers a stage you did
+                  not record. On a plant group the stage was seen in the group,
+                  not necessarily in every plant.
+                </FieldHelp>
+              </div>
+            )}
             <PartialDateField
               id={`event-date-${targetId}`}
               label="Occurrence date"
@@ -773,6 +936,23 @@ export function EventJournal({
                 ? "When was this measured? A date is required; year or month precision is fine when the day is not known."
                 : "When did this happen? Keep the date unknown or use year/month precision when needed. Recording time does not establish an occurrence date."}
             </p>
+            {stagedKind(form.kind) && form.phenophase && (
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={form.phenologyApproximate}
+                  disabled={pending}
+                  onChange={(event) => {
+                    const phenologyApproximate = event.currentTarget.checked;
+                    setForm((current) => ({
+                      ...current,
+                      phenologyApproximate,
+                    }));
+                  }}
+                />
+                Approximate date (estimated or recalled later)
+              </label>
+            )}
             {form.kind === "movement" && (
               <div className="field">
                 <FieldLabel required htmlFor={`event-destination-${targetId}`}>

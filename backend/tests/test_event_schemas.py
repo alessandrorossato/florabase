@@ -3,6 +3,7 @@ from uuid import uuid7
 import pytest
 from pydantic import ValidationError
 
+from florabase.events.model import Phenophase
 from florabase.events.schemas import EventCreate, EventUpdate
 
 
@@ -121,3 +122,66 @@ def test_height_measurement_keeps_recorded_resolution_and_unit() -> None:
 def test_invalid_measurements_are_refused(body: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
         EventCreate.model_validate(body)
+
+
+_STAGES = {
+    "observation": [
+        "bud_break",
+        "leaf_color_change",
+        "leaf_fall",
+        "dormancy_entry",
+        "dormancy_exit",
+    ],
+    "flowering": ["flowering_onset", "flowering_ongoing", "flowering_end"],
+    "fruiting": ["fruit_set", "fruit_ripening", "fruit_ripe"],
+}
+
+
+@pytest.mark.parametrize(
+    ("kind", "phase"), [(kind, phase) for kind, phases in _STAGES.items() for phase in phases]
+)
+def test_every_phenophase_is_accepted_on_its_own_kind_only(kind: str, phase: str) -> None:
+    payload = EventCreate(kind=kind, phenology={"phase": phase})
+    assert payload.phenology is not None
+    assert payload.phenology.model_dump(mode="json") == {
+        "phase": phase,
+        "date_is_approximate": False,
+    }
+    for other in ("observation", "flowering", "fruiting", "measurement", "other", "pruning"):
+        if other != kind:
+            with pytest.raises(ValidationError):
+                EventCreate.model_validate(
+                    {
+                        "kind": other,
+                        "occurred_on": DAY,
+                        "measurement": _height() if other == "measurement" else None,
+                        "phenology": {"phase": phase},
+                    }
+                )
+
+
+def test_phenology_vocabulary_is_closed_and_approximation_needs_a_date() -> None:
+    assert {phase for phases in _STAGES.values() for phase in phases} == {
+        item.value for item in Phenophase
+    }
+    month = {"precision": "month", "year": 2025, "month": 5}
+    approximate = EventCreate(
+        kind="flowering",
+        occurred_on=month,
+        phenology={"phase": "flowering_onset", "date_is_approximate": True},
+    )
+    assert approximate.phenology is not None
+    assert approximate.phenology.date_is_approximate
+    for body in (
+        {
+            "kind": "flowering",
+            "phenology": {"phase": "flowering_onset", "date_is_approximate": True},
+        },
+        {"kind": "flowering", "phenology": {"phase": "Flowering"}},
+        {"kind": "flowering", "phenology": {"phase": "flowering_onset", "certainty": "low"}},
+        {"kind": "flowering", "phenology": {}},
+    ):
+        with pytest.raises(ValidationError):
+            EventCreate.model_validate(body)
+    # Existing stage-less flowering and fruiting entries remain valid.
+    assert EventUpdate(kind="fruiting").phenology is None

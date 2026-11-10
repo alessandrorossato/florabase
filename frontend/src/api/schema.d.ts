@@ -3498,6 +3498,7 @@ export interface components {
             /** Notes */
             notes?: string | null;
             occurred_on?: components["schemas"]["PartialDate"] | null;
+            phenology?: components["schemas"]["Phenology"] | null;
             /** Recipient */
             recipient?: string | null;
             /** Resulting Plant Id */
@@ -3542,6 +3543,7 @@ export interface components {
             operation_kind?: string | null;
             /** Operation Status */
             operation_status?: string | null;
+            phenology?: components["schemas"]["Phenology"] | null;
             /** Recipient */
             recipient: string | null;
             resulting_plant: components["schemas"]["ResultingPlantSummary"] | null;
@@ -3564,6 +3566,7 @@ export interface components {
             /** Notes */
             notes?: string | null;
             occurred_on?: components["schemas"]["PartialDate"] | null;
+            phenology?: components["schemas"]["Phenology"] | null;
             /** Recipient */
             recipient?: string | null;
             /** Resulting Plant Id */
@@ -5120,6 +5123,23 @@ export interface components {
             mode: "partial";
             resulting_quantity?: components["schemas"]["SeedQuantity-Input"] | null;
         };
+        /**
+         * Phenology
+         * @description A controlled phenological stage; see docs/phenology.md.
+         */
+        Phenology: {
+            /**
+             * Date Is Approximate
+             * @default false
+             */
+            date_is_approximate: boolean;
+            phase: components["schemas"]["Phenophase"];
+        };
+        /**
+         * Phenophase
+         * @enum {string}
+         */
+        Phenophase: "bud_break" | "leaf_color_change" | "leaf_fall" | "dormancy_entry" | "dormancy_exit" | "flowering_onset" | "flowering_ongoing" | "flowering_end" | "fruit_set" | "fruit_ripening" | "fruit_ripe";
         /** PlantCreate */
         PlantCreate: {
             /**

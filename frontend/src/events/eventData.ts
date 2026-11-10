@@ -59,6 +59,46 @@ export function measurementText(measurement: Measurement): string {
   return `${quantityLabels[measurement.quantity]}: ${measurement.value} ${measurement.unit}${measurement.is_approximate ? " (approximate)" : ""}`;
 }
 
+export type Phenophase = NonNullable<EventResponse["phenology"]>["phase"];
+
+/** Controlled stages, grouped by the existing Event kind that owns them (docs/phenology.md). */
+export const phenophaseKinds: Record<
+  "observation" | "flowering" | "fruiting",
+  Phenophase[]
+> = {
+  observation: [
+    "bud_break",
+    "leaf_color_change",
+    "leaf_fall",
+    "dormancy_entry",
+    "dormancy_exit",
+  ],
+  flowering: ["flowering_onset", "flowering_ongoing", "flowering_end"],
+  fruiting: ["fruit_set", "fruit_ripening", "fruit_ripe"],
+};
+
+export const phenophaseLabels: Record<Phenophase, string> = {
+  bud_break: "Bud break / new growth",
+  leaf_color_change: "Leaf colour change",
+  leaf_fall: "Leaf loss",
+  dormancy_entry: "Entering dormancy",
+  dormancy_exit: "Dormancy exit / renewed growth",
+  flowering_onset: "Flowering began",
+  flowering_ongoing: "In flower",
+  flowering_end: "Flowering ended",
+  fruit_set: "Fruit set",
+  fruit_ripening: "Fruit ripening",
+  fruit_ripe: "Fruit ready for harvest",
+};
+
+/** The stage of a phenology entry; stage-less flowering/fruiting is still phenology evidence. */
+export function phenologyStage(event: EventResponse): string | null {
+  if (event.phenology) return phenophaseLabels[event.phenology.phase];
+  if (event.kind === "flowering") return "Flowering, stage not recorded";
+  if (event.kind === "fruiting") return "Fruiting, stage not recorded";
+  return null;
+}
+
 export function formatPartialDate(value: EventResponse["occurred_on"]): string {
   if (!value) return "Date not recorded";
   if (value.precision === "year") return String(value.year);
@@ -118,6 +158,7 @@ export function searchJournal(
       event.recipient,
       event.measurement &&
         `height ${event.measurement.value} ${event.measurement.unit}`,
+      event.phenology && phenophaseLabels[event.phenology.phase],
     ].some((value) => value?.toLocaleLowerCase().includes(query)),
   );
 }

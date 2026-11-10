@@ -17,6 +17,7 @@ from florabase.events.schemas import (
     EventUpdate,
     Measurement,
     MeasurementCorrectionResponse,
+    Phenology,
     PlantEventTarget,
     PlantGroupEventTarget,
     ResultingPlantSummary,
@@ -78,7 +79,10 @@ def _partial_date_values(value: PartialDate | None) -> dict[str, object]:
 
 def _write_values(payload: EventCreate | EventUpdate) -> dict[str, object]:
     measurement = payload.measurement
+    phenology = payload.phenology
     return {
+        "phenophase": phenology.phase.value if phenology else None,
+        "phenophase_date_is_approximate": phenology.date_is_approximate if phenology else None,
         "measurement_quantity": measurement.quantity.value if measurement else None,
         "measurement_value": measurement.value if measurement else None,
         "measurement_unit": measurement.unit.value if measurement else None,
@@ -593,6 +597,15 @@ def event_responses(database: Session, projections: list[EventProjection]) -> li
                     else None
                 ),
                 measurement_corrections=corrections.get(event.id, []),
+                phenology=(
+                    Phenology(
+                        phase=event.phenophase,
+                        date_is_approximate=event.phenophase_date_is_approximate,
+                    )
+                    if event.phenophase is not None
+                    and event.phenophase_date_is_approximate is not None
+                    else None
+                ),
                 harvest_id=harvests[event.id].id if event.id in harvests else None,
                 harvest_title=harvests[event.id].display_title if event.id in harvests else None,
                 harvest_primary_photo=(harvests[event.id].primary_photo)

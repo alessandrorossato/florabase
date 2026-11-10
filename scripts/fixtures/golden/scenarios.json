@@ -72,10 +72,10 @@
           "provenance.without_coordinates": 1
         },
         "baseline": {
-          "schema_revision": "20261109_0045",
+          "schema_revision": "20261110_0046",
           "volume": 12,
           "plan_sha256": "5afd6ffe46fce10ac62b1ef1233c9944d8c206bef9d407ce4396b5e6ce64b0d7",
-          "canonical_sha256": "a331986b8a419aeeee6e0d9d5c53fa82c3b89d47b9fe7705c0f696c480974f12",
+          "canonical_sha256": "de25687b281866752bb689f2181c95363cdf80c325786be5e6ea710b77957fce",
           "media_files": 3,
           "media_sha256": "d3583210516d857e6f7c8c8c78a2c3e051d8fe31d001bb0f420c226bc5b39f6e",
           "scenario_keys_sha256": "e7d0d666d58604b23a8d3a8d8cd661b839265743501ad742225c3998a9ec7ffa",
@@ -122,7 +122,7 @@
             },
             "events": {
               "rows": 20,
-              "sha256": "50e16c893080329d454c99cb9244ef957f28bb6065ffed4aae91973af2d66883"
+              "sha256": "6933e7dab26ddbf5100b95500c0adf4efc9c95665506401ee0e8479bc4ad55db"
             },
             "external_provider_cache": {
               "rows": 1,

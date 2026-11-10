@@ -2598,6 +2598,25 @@
       ],
       "priority": "P2",
       "status": "implemented"
+    },
+    {
+      "id": "PHENOLOGY-001",
+      "category": "event",
+      "description": "Record and compare structured phenological observations year by year as typed Journal Events",
+      "acceptance_criteria": [
+        "A documented decision compares Event fields, new Event kinds and a separate model; phenology reuses Event, Journal and History without a competing event system",
+        "A controlled phenophase vocabulary (bud break, flowering onset/ongoing/end, fruit set/ripening/ready, leaf colour change, leaf loss, dormancy entry/exit) is enforced per observation, flowering and fruiting kind by API validation and a database constraint; an approximate-date flag requires a date",
+        "Observations keep PartialDate precision or an unknown date, may repeat within a season, never change current Plant or PlantGroup state, and survive correction, inactive lifecycles and botanical name correction; existing stage-less flowering and fruiting Events remain valid",
+        "Plant and PlantGroup Journals offer a stage-first recording workflow and a responsive, keyboard-accessible year-by-year comparison that labels missing stages as no observation recorded and never invents month or day precision",
+        "Focused unit, PostgreSQL integration, migration and frontend tests cover every stage, repeated and multiple flowering, incomplete dates, PlantGroups, correction, deletion, authorization, inactive Plants, identity correction and measurement coexistence"
+      ],
+      "dependencies": [
+        "EVENT-002",
+        "HISTORY-001",
+        "MEASUREMENT-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
     }
   ]
 }

@@ -1,3 +1,27 @@
+## 2026-11-09 — PHENOLOGY-001 phenology observations on Events (migration 20261110_0046)
+
+- Decision and contract in [phenology](phenology.md): a controlled `phenophase` and
+  `phenophase_date_is_approximate` on existing observation/flowering/fruiting Events, rejecting new
+  kinds or a separate table. 11 stages; `ck_events_phenology` ties each stage to its kind and requires
+  a date for the approximate flag. Stage-less flowering/fruiting Events stay valid. No current-state
+  side effect; Journal, History, photos, correction, deletion, retention and Schedule rules reused.
+- API: `phenology: {phase, date_is_approximate} | null` on `EventWrite`/`EventResponse`; History
+  context `Stage: <label>`; generated OpenAPI/TypeScript updated (`make api-check` clean).
+- UI: Plant/PlantGroup Journal has a **Phenology** section with a stage-first "Record phenology"
+  entry, a stage field on observation/flowering/fruiting edits, a 12-month strip per year (month
+  dates as bars, year-only dates never placed in a month), "No “…” observation recorded" for stages
+  seen in other years, and keyboard links that focus the underlying Journal card.
+- Migration `20261110_0046` (after `20261109_0045`); downgrade refuses while staged Events exist.
+  CUTTING-001 (`cutting_001_dev`, unmerged) must rebase onto it.
+- Checks run: backend unit (event schemas/model/history) and ruff/format/mypy clean; PostgreSQL
+  integration `test_phenology_api`, `test_measurement_api`, `test_event_api`, `test_history`,
+  `test_autogenerate_checks`, `test_propagation_reversal`, `test_schedule`,
+  `test_botanical_identity_api` pass (incl. upgrade/downgrade round trip with populated rows);
+  frontend typecheck/lint/prettier and `src/events` + `PlantScreen` vitest (89) pass.
+- Golden SMOKE re-pinned for `20261110_0046` (only `events` hash and canonical digest changed,
+  `de25687b…7fce`); all 38 golden + phenology integration tests pass. COMPREHENSIVE untouched. Independent read-only QA: no P1/P2 code issues; P3 label,
+  wording, flag-reset and landmark nits fixed.
+
 ## 2026-11-09 — TAXONOMY-001 integrated with MEASUREMENT-001 and renumbered to 20261109_0045
 
 - Accepted [ADR 0007](decisions/0007-accepted-name-reconciliation.md) and added Alembic revision

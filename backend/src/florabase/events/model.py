@@ -48,6 +48,48 @@ class MeasurementQuantity(StrEnum):
     HEIGHT = "height"
 
 
+class Phenophase(StrEnum):
+    BUD_BREAK = "bud_break"
+    LEAF_COLOR_CHANGE = "leaf_color_change"
+    LEAF_FALL = "leaf_fall"
+    DORMANCY_ENTRY = "dormancy_entry"
+    DORMANCY_EXIT = "dormancy_exit"
+    FLOWERING_ONSET = "flowering_onset"
+    FLOWERING_ONGOING = "flowering_ongoing"
+    FLOWERING_END = "flowering_end"
+    FRUIT_SET = "fruit_set"
+    FRUIT_RIPENING = "fruit_ripening"
+    FRUIT_RIPE = "fruit_ripe"
+
+
+# Each stage belongs to exactly one existing Event kind; see docs/phenology.md.
+PHENOPHASE_KINDS: dict[str, tuple[Phenophase, ...]] = {
+    "observation": (
+        Phenophase.BUD_BREAK,
+        Phenophase.LEAF_COLOR_CHANGE,
+        Phenophase.LEAF_FALL,
+        Phenophase.DORMANCY_ENTRY,
+        Phenophase.DORMANCY_EXIT,
+    ),
+    "flowering": (
+        Phenophase.FLOWERING_ONSET,
+        Phenophase.FLOWERING_ONGOING,
+        Phenophase.FLOWERING_END,
+    ),
+    "fruiting": (Phenophase.FRUIT_SET, Phenophase.FRUIT_RIPENING, Phenophase.FRUIT_RIPE),
+}
+PHENOLOGY_CHECK = (
+    "((phenophase IS NULL AND phenophase_date_is_approximate IS NULL) OR "
+    "(phenophase_date_is_approximate IS NOT NULL AND "
+    "(phenophase_date_is_approximate IS FALSE OR occurred_on_precision IS NOT NULL) AND ("
+    + " OR ".join(
+        f"(kind = '{kind}' AND phenophase IN ({', '.join(repr(p.value) for p in phases)}))"
+        for kind, phases in PHENOPHASE_KINDS.items()
+    )
+    + "))) IS TRUE"
+)
+
+
 class LengthUnit(StrEnum):
     MM = "mm"
     CM = "cm"
@@ -114,6 +156,7 @@ class Event(Base):
             "AND measurement_unit IS NULL AND measurement_is_approximate IS NULL)) IS TRUE",
             name="ck_events_measurement",
         ),
+        CheckConstraint(PHENOLOGY_CHECK, name="ck_events_phenology"),
         ForeignKeyConstraint(
             ["resulting_plant_id", "plant_group_id"],
             ["plants.id", "plants.originating_plant_group_id"],
@@ -158,6 +201,8 @@ class Event(Base):
     measurement_value: Mapped[Decimal | None] = mapped_column(Numeric(), nullable=True)
     measurement_unit: Mapped[str | None] = mapped_column(String(8), nullable=True)
     measurement_is_approximate: Mapped[bool | None] = mapped_column(Boolean(), nullable=True)
+    phenophase: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    phenophase_date_is_approximate: Mapped[bool | None] = mapped_column(Boolean(), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now

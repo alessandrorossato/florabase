@@ -116,6 +116,22 @@ def _branch(
     )
 
 
+# Same wording as the Journal (frontend eventData.phenophaseLabels).
+_STAGES = {
+    "bud_break": "Bud break / new growth",
+    "leaf_color_change": "Leaf colour change",
+    "leaf_fall": "Leaf loss",
+    "dormancy_entry": "Entering dormancy",
+    "dormancy_exit": "Dormancy exit / renewed growth",
+    "flowering_onset": "Flowering began",
+    "flowering_ongoing": "In flower",
+    "flowering_end": "Flowering ended",
+    "fruit_set": "Fruit set",
+    "fruit_ripening": "Fruit ripening",
+    "fruit_ripe": "Fruit ready for harvest",
+}
+
+
 def candidates() -> Any:
     target_kind = case((Event.plant_id.is_not(None), "plant"), else_="plant_group")
     target_id = func.coalesce(Event.plant_id, Event.plant_group_id)
@@ -157,6 +173,17 @@ def candidates() -> Any:
                         Event.measurement_unit,
                         case(
                             (Event.measurement_is_approximate.is_(True), " (approximate)"), else_=""
+                        ),
+                    ),
+                ),
+                (
+                    Event.phenophase.is_not(None),
+                    func.concat(
+                        "Stage: ",
+                        case(*((Event.phenophase == key, label) for key, label in _STAGES.items())),
+                        case(
+                            (Event.phenophase_date_is_approximate.is_(True), " (approximate date)"),
+                            else_="",
                         ),
                     ),
                 ),

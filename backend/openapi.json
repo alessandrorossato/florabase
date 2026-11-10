@@ -2783,6 +2783,16 @@
               }
             ]
           },
+          "phenology": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Phenology"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "recipient": {
             "anyOf": [
               {
@@ -2967,6 +2977,16 @@
             ],
             "title": "Operation Status"
           },
+          "phenology": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Phenology"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "recipient": {
             "anyOf": [
               {
@@ -3085,6 +3105,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "phenology": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Phenology"
               },
               {
                 "type": "null"
@@ -7661,6 +7691,42 @@
         ],
         "title": "PartialSourceAdjustment",
         "type": "object"
+      },
+      "Phenology": {
+        "additionalProperties": false,
+        "description": "A controlled phenological stage; see docs/phenology.md.",
+        "properties": {
+          "date_is_approximate": {
+            "default": false,
+            "title": "Date Is Approximate",
+            "type": "boolean"
+          },
+          "phase": {
+            "$ref": "#/components/schemas/Phenophase"
+          }
+        },
+        "required": [
+          "phase"
+        ],
+        "title": "Phenology",
+        "type": "object"
+      },
+      "Phenophase": {
+        "enum": [
+          "bud_break",
+          "leaf_color_change",
+          "leaf_fall",
+          "dormancy_entry",
+          "dormancy_exit",
+          "flowering_onset",
+          "flowering_ongoing",
+          "flowering_end",
+          "fruit_set",
+          "fruit_ripening",
+          "fruit_ripe"
+        ],
+        "title": "Phenophase",
+        "type": "string"
       },
       "PlantCreate": {
         "additionalProperties": false,
