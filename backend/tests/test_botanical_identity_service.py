@@ -147,7 +147,7 @@ def test_directory_uses_one_aggregate_query_and_maps_cover_and_collection_counts
     identity = BotanicalIdentity(id=uuid7(), scientific_name="Acer palmatum")
     database = MagicMock()
     database.execute.return_value.all.return_value = [
-        (identity, "external", "https://example.test/maple.jpg", 2, 3, 4, 5)
+        (identity, "external", "https://example.test/maple.jpg", 2, 3, 4, 5, 6, 7)
     ]
 
     result = list_botanical_identity_directory(database)
@@ -157,7 +157,14 @@ def test_directory_uses_one_aggregate_query_and_maps_cover_and_collection_counts
             identity,
             "external",
             "https://example.test/maple.jpg",
-            IdentityCollectionCounts(seed_lots=2, sowings=3, plants=4, plant_groups=5),
+            IdentityCollectionCounts(
+                seed_lots=2,
+                sowings=3,
+                plants=4,
+                plant_groups=5,
+                vegetative_lots=6,
+                propagation_attempts=7,
+            ),
         )
     ]
     database.execute.assert_called_once()
@@ -852,6 +859,7 @@ def test_correct_accepted_name_and_merge_duplicate_identity_complete_flows() -> 
         [lot_id],  # seed_lot_ids
         [plant_id],  # plant_ids
         [group_id],  # plant_group_ids
+        [],  # vegetative_lot_ids
         [act_id],  # scheduled_activity_ids
         [],  # surv_ext_providers
         [ext_link],  # duplicate external links

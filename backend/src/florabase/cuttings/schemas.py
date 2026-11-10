@@ -190,6 +190,11 @@ class PropagationAttemptResponse(AttemptState):
     updated_at: datetime
 
 
+class PropagationAttemptListItem(PropagationAttemptResponse):
+    botanical_identity_id: UUID
+    botanical_display_label: str
+
+
 class SourceAdjustment(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

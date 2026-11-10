@@ -15,6 +15,7 @@ from florabase.auth.dependencies import (
     require_owner,
 )
 from florabase.botanical_identities.model import BotanicalIdentity
+from florabase.botanical_identities.schemas import format_identity_display_label
 from florabase.cuttings import service
 from florabase.cuttings.model import (
     AttemptLifecycle,
@@ -36,6 +37,7 @@ from florabase.cuttings.schemas import (
     EstablishPlantGroup,
     FastCreate,
     PropagationAttemptDetail,
+    PropagationAttemptListItem,
     PropagationAttemptResponse,
     PropagationAttemptUpdate,
     RootingObservationResponse,
@@ -193,9 +195,11 @@ def list_attempts(
     location_id: UUID | None = None,
     offset: Offset = 0,
     limit: Limit = 50,
-) -> list[PropagationAttemptResponse]:
-    statement = select(PropagationAttempt).join(
-        VegetativeLot, VegetativeLot.id == PropagationAttempt.vegetative_lot_id
+) -> list[PropagationAttemptListItem]:
+    statement = (
+        select(PropagationAttempt, BotanicalIdentity)
+        .join(VegetativeLot, VegetativeLot.id == PropagationAttempt.vegetative_lot_id)
+        .join(BotanicalIdentity, BotanicalIdentity.id == VegetativeLot.botanical_identity_id)
     )
     for column, value in (
         (PropagationAttempt.vegetative_lot_id, vegetative_lot_id),
@@ -209,9 +213,7 @@ def list_attempts(
             statement = statement.where(column == value)
     if q and q.strip():
         needle = q.strip()
-        statement = statement.join(
-            BotanicalIdentity, BotanicalIdentity.id == VegetativeLot.botanical_identity_id
-        ).where(
+        statement = statement.where(
             or_(
                 *(
                     column.icontains(needle, autoescape=True)
@@ -227,8 +229,14 @@ def list_attempts(
             )
         )
     return [
-        service.attempt_response(row)
-        for row in database.scalars(
+        PropagationAttemptListItem(
+            **service.attempt_response(attempt).model_dump(),
+            botanical_identity_id=identity.id,
+            botanical_display_label=format_identity_display_label(
+                identity.scientific_name, identity.cultivar_name
+            ),
+        )
+        for attempt, identity in database.execute(
             statement.order_by(PropagationAttempt.id.desc()).offset(offset).limit(limit)
         )
     ]

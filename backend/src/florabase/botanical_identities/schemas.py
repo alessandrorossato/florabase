@@ -92,6 +92,8 @@ class IdentityCollectionCounts(BaseModel):
     sowings: int = Field(ge=0)
     plants: int = Field(ge=0)
     plant_groups: int = Field(ge=0)
+    vegetative_lots: int = Field(default=0, ge=0)
+    propagation_attempts: int = Field(default=0, ge=0)
 
 
 class BotanicalIdentityResponse(BaseModel):

@@ -12,7 +12,9 @@ Uncounted material keeps a null quantity. An exact count may be used partially u
 An approximate partial remainder is supplied by the operator. Using all of an exact lot sets an
 exact zero remainder and exhausts the lot. Using all of an approximate or unknown lot exhausts it
 while preserving the quantity representation. The no-adjustment mode leaves inventory alone.
-Fast creation saves both records and the operation receipt in one request transaction.
+Fast creation saves both records and the operation receipt in one request transaction. The start
+date defaults to the lot date and can be explicitly left unknown. When using all of an approximate
+or uncounted lot, the operator can record a new count for the attempt.
 
 Rooting rate is available for an exact starting count and a recorded rooted count. An active attempt
 may report zero while rooting is still pending. A completed attempt can record full or partial
@@ -26,7 +28,8 @@ A collection-produced lot may link one mother Plant or PlantGroup. External sour
 belong to the lot. Establishment links a Plant or PlantGroup to its originating attempt, so the
 ordinary upstream lineage path can continue from the lot through its mother. Writes use the
 LINEAGE-002 advisory lock and database cycle guard. The resulting record's origin is protected from
-ordinary editing.
+ordinary editing. Corrections to a lot's source, location, lifecycle or remainder use the version
+displayed by the editor. A stale edit is rejected.
 
 Start and establishment operations issue typed receipts. Undo checks the receipt's structural
 snapshots and downstream records. It restores the exact stored pre-operation stock or attempt
@@ -44,7 +47,10 @@ active cuttings as current and terminal, unreversed cuttings as historical.
 The existing CSV formats cover direct-entry specimens. They do not restore propagation graphs.
 Database backup and restore preserve the cutting tables, receipts and lineage links.
 
-The development revision `cutting_001_dev` currently follows `20261109_0044`. Before review
-handoff, rebase onto the merged TAXONOMY and LINEAGE work, assign the next final Alembic revision,
-review the golden SMOKE baseline, extend the LINEAGE-003 explorer to traverse cutting records in
-both directions, and run canonical FULL verification on the final tree.
+Migration `20261110_0046` follows TAXONOMY-001 revision `20261109_0045`. When duplicate
+identities merge, lots follow the survivor and the reconciliation ledger records their IDs.
+Attempts get their identity through the lot. Existing receipts retain their original snapshots,
+so a subsequent undo still checks the identity recorded at the time of the operation.
+
+Before delivery, integrate both directions of clonal lineage into the merged LINEAGE-003
+ancestry explorer and run canonical FULL verification on the frozen result.

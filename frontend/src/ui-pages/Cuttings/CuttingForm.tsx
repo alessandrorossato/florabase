@@ -1,4 +1,4 @@
-import { useId, useState, type SyntheticEvent } from "react";
+import { useId, useState, type ReactNode, type SyntheticEvent } from "react";
 import type { components } from "../../api/schema";
 import type { BotanicalIdentityResponse } from "../../botanical-identities/api";
 import {
@@ -13,7 +13,7 @@ import {
 } from "../../components/recordNavigation";
 import type { GeographicPlaceResponse } from "../../geographic-places/api";
 import type { LocationResponse, LocationUsageScope } from "../../locations/api";
-import { orderTitle, type OrderPage } from "../../orders/api";
+import { OrderPicker } from "../../orders/OrderPicker";
 import type { PlantGroupResponse, PlantResponse } from "../../plants/api";
 import type { ProvenanceSiteResponse } from "../../provenance-sites/api";
 import { PartialDateField } from "../../seed-lots/PartialDateField";
@@ -24,7 +24,7 @@ import {
   cuttingError,
   lots,
   materialLabels,
-  saveCutting,
+  useSaveCutting,
   sourceLabels,
   useCuttingData,
   type CuttingQuantity,
@@ -452,17 +452,10 @@ function ExternalOriginFields({
   const [sites, retrySites] = useCuttingData<ProvenanceSiteResponse[]>(
     "/api/v1/provenance-sites",
   );
-  const [orders, retryOrders] = useCuttingData<OrderPage>(
-    lot.source_kind === "purchased" ? "/api/v1/orders?limit=100" : "",
-  );
   function picker(
     label: string,
     items: ChoiceItem[],
-    key:
-      | "supplier_id"
-      | "material_provenance_place_id"
-      | "provenance_site_id"
-      | "order_id",
+    key: "supplier_id" | "material_provenance_place_id" | "provenance_site_id",
   ) {
     return (
       <ReferencePicker
@@ -491,23 +484,19 @@ function ExternalOriginFields({
         "supplier_id",
       )}
       {lot.source_kind === "purchased" && (
-        <>
-          {orders.state === "error" && (
-            <ErrorState onRetry={retryOrders}>
-              Could not load purchase orders.
-            </ErrorState>
-          )}
-          {picker(
-            "Purchase order",
-            orders.state === "ready"
-              ? orders.value.items.map((item) => ({
-                  id: item.id,
-                  label: orderTitle(item),
-                }))
-              : [],
-            "order_id",
-          )}
-        </>
+        <OrderPicker
+          value={lot.order_id ?? ""}
+          disabled={disabled}
+          supplierId={lot.supplier_id ?? ""}
+          onChange={(orderId) => {
+            change({ ...lot, order_id: orderId || null });
+          }}
+          independentFields={
+            <p className="field-help">
+              Link the purchase transaction for this lot.
+            </p>
+          }
+        />
       )}
       {places.state === "error" && (
         <ErrorState onRetry={retryPlaces}>
@@ -540,6 +529,132 @@ function ExternalOriginFields({
   );
 }
 
+export function LotFields({
+  lot,
+  change,
+  disabled,
+  children,
+}: {
+  lot: LotWrite;
+  change: (lot: LotWrite) => void;
+  disabled: boolean;
+  children: ReactNode;
+}) {
+  const [identities, retryIdentities] = useCuttingData<
+    BotanicalIdentityResponse[]
+  >("/api/v1/botanical-identities");
+  const knownMother = Boolean(lot.mother_plant_id ?? lot.mother_plant_group_id);
+
+  return (
+    <>
+      {identities.state === "loading" && (
+        <LoadingState>Loading botanical identities…</LoadingState>
+      )}
+      {identities.state === "error" && (
+        <ErrorState onRetry={retryIdentities}>
+          Could not load botanical identities.
+        </ErrorState>
+      )}
+      <FormSection title="Source and material">
+        <Choice
+          label="Material type"
+          items={choices(materialLabels)}
+          value={lot.material_type}
+          onChange={(material_type) => {
+            change({ ...lot, material_type });
+          }}
+        />
+        <Choice
+          label="Source"
+          items={choices(sourceLabels)}
+          value={lot.source_kind}
+          onChange={(source_kind) => {
+            change({
+              ...lot,
+              source_kind,
+              source_detail: null,
+              mother_plant_id: null,
+              mother_plant_group_id: null,
+              supplier_id: null,
+              order_id: null,
+              material_provenance_place_id: null,
+              provenance_site_id: null,
+            });
+          }}
+        />
+        {lot.source_kind === "collection_produced" ? (
+          <MotherPicker lot={lot} change={change} disabled={disabled} />
+        ) : (
+          <ExternalOriginFields lot={lot} change={change} disabled={disabled} />
+        )}
+        {lot.source_kind === "other" && (
+          <TextField
+            label="Source detail"
+            value={lot.source_detail}
+            onChange={(source_detail) => {
+              change({ ...lot, source_detail });
+            }}
+          />
+        )}
+        <ReferencePicker
+          label="Botanical identity"
+          required={!knownMother}
+          value={lot.botanical_identity_id ?? ""}
+          disabled={disabled || identities.state !== "ready"}
+          choices={
+            identities.state === "ready"
+              ? identities.value.map((item) => ({
+                  id: item.id,
+                  label: item.display_label,
+                  scientificName: item.scientific_name,
+                }))
+              : []
+          }
+          onChange={(value) => {
+            change({ ...lot, botanical_identity_id: value || null });
+          }}
+          help={
+            knownMother && !lot.botanical_identity_id
+              ? "Defaults to the mother specimen’s identity."
+              : undefined
+          }
+        />
+        <TextField
+          label="Material lot label"
+          value={lot.label}
+          onChange={(label) => {
+            change({ ...lot, label });
+          }}
+        />
+        <PartialDateField
+          id="cuttings-taken"
+          label="Taken or acquired on"
+          value={lot.taken_on ?? null}
+          disabled={disabled}
+          onChange={(taken_on) => {
+            change({ ...lot, taken_on });
+          }}
+        />
+        {children}
+        <LocationField
+          scope="vegetative_lots"
+          value={lot.location_id}
+          disabled={disabled}
+          onChange={(location_id) => {
+            change({ ...lot, location_id });
+          }}
+        />
+        <NotesField
+          value={lot.notes}
+          onChange={(notes) => {
+            change({ ...lot, notes });
+          }}
+        />
+      </FormSection>
+    </>
+  );
+}
+
 export function CuttingForm({
   token,
   identityId,
@@ -565,10 +680,10 @@ export function CuttingForm({
   const [remainder, setRemainder] = useState<CuttingQuantity | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
-  const [identities, retryIdentities] = useCuttingData<
-    BotanicalIdentityResponse[]
-  >("/api/v1/botanical-identities");
+  const saveCutting = useSaveCutting(token);
   const knownMother = Boolean(lot.mother_plant_id ?? lot.mother_plant_group_id);
+  const useExactLotCount =
+    useAll && lot.initial_quantity?.is_approximate === false;
 
   async function submit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
@@ -590,13 +705,14 @@ export function CuttingForm({
               : { mode: "partial", resulting_quantity: remainder },
             propagation_attempt: {
               ...setup,
-              started_on: sameDate ? (lot.taken_on ?? null) : setup.started_on,
-              quantity: useAll
-                ? (lot.initial_quantity ?? null)
-                : setup.quantity,
+              started_on: sameDate
+                ? (lot.taken_on ?? null)
+                : (setup.started_on ?? null),
+              quantity: useExactLotCount
+                ? lot.initial_quantity
+                : (setup.quantity ?? null),
             },
           },
-          token,
         );
         setRecordRoute(
           `#/cuttings/attempts/${result.propagation_attempt.id}`,
@@ -606,7 +722,6 @@ export function CuttingForm({
         const result = await saveCutting<Schema["VegetativeLotResponse"]>(
           lots,
           lot,
-          token,
         );
         setRecordRoute(`#/cuttings/lots/${result.id}`, true);
       }
@@ -623,104 +738,13 @@ export function CuttingForm({
         title={sourceId ? "Take cuttings" : "Take or add cuttings"}
         eyebrow="Cuttings"
       />
-      {identities.state === "loading" && (
-        <LoadingState>Loading botanical identities…</LoadingState>
-      )}
-      {identities.state === "error" && (
-        <ErrorState onRetry={retryIdentities}>
-          Could not load botanical identities.
-        </ErrorState>
-      )}
       <form
         onSubmit={(event) => {
           void submit(event);
         }}
       >
         <fieldset disabled={pending} className="form-section">
-          <FormSection title="Source and material">
-            <Choice
-              label="Material type"
-              items={choices(materialLabels)}
-              value={lot.material_type}
-              onChange={(material_type) => {
-                setLot({ ...lot, material_type });
-              }}
-            />
-            <Choice
-              label="Source"
-              items={choices(sourceLabels)}
-              value={lot.source_kind}
-              onChange={(source_kind) => {
-                setLot({
-                  ...lot,
-                  source_kind,
-                  source_detail: null,
-                  mother_plant_id: null,
-                  mother_plant_group_id: null,
-                  supplier_id: null,
-                  order_id: null,
-                  material_provenance_place_id: null,
-                  provenance_site_id: null,
-                });
-              }}
-            />
-            {lot.source_kind === "collection_produced" ? (
-              <MotherPicker lot={lot} change={setLot} disabled={pending} />
-            ) : (
-              <ExternalOriginFields
-                lot={lot}
-                change={setLot}
-                disabled={pending}
-              />
-            )}
-            {lot.source_kind === "other" && (
-              <TextField
-                label="Source detail"
-                value={lot.source_detail}
-                onChange={(source_detail) => {
-                  setLot({ ...lot, source_detail });
-                }}
-              />
-            )}
-            <ReferencePicker
-              label="Botanical identity"
-              required={!knownMother}
-              value={lot.botanical_identity_id ?? ""}
-              disabled={pending || identities.state !== "ready"}
-              choices={
-                identities.state === "ready"
-                  ? identities.value.map((item) => ({
-                      id: item.id,
-                      label: item.display_label,
-                      scientificName: item.scientific_name,
-                    }))
-                  : []
-              }
-              onChange={(value) => {
-                setLot({ ...lot, botanical_identity_id: value || null });
-              }}
-              help={
-                knownMother && !lot.botanical_identity_id
-                  ? "Defaults to the mother specimen’s identity."
-                  : undefined
-              }
-            />
-            <TextField
-              label="Material lot label"
-              value={lot.label}
-              onChange={(label) => {
-                setLot({ ...lot, label });
-              }}
-            />
-            <PartialDateField
-              id="cuttings-taken"
-              label="Taken or acquired on"
-              value={lot.taken_on ?? null}
-              disabled={pending}
-              onChange={(taken_on) => {
-                setLot({ ...lot, taken_on });
-              }}
-            />
+          <LotFields lot={lot} change={setLot} disabled={pending}>
             <QuantityField
               label="Initial lot quantity"
               value={lot.initial_quantity}
@@ -728,21 +752,7 @@ export function CuttingForm({
                 setLot({ ...lot, initial_quantity });
               }}
             />
-            <LocationField
-              scope="vegetative_lots"
-              value={lot.location_id}
-              disabled={pending}
-              onChange={(location_id) => {
-                setLot({ ...lot, location_id });
-              }}
-            />
-            <NotesField
-              value={lot.notes}
-              onChange={(notes) => {
-                setLot({ ...lot, notes });
-              }}
-            />
-          </FormSection>
+          </LotFields>
           <FormSection title="Rooting setup">
             <label>
               <input
@@ -785,7 +795,7 @@ export function CuttingForm({
                 )}
                 <AttemptSetupFields
                   setup={setup}
-                  showQuantity={!useAll}
+                  showQuantity={!useExactLotCount}
                   onChange={setSetup}
                   disabled={pending}
                   sameDate={sameDate}

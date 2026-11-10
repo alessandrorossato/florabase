@@ -535,12 +535,16 @@ def test_directory_counts_active_records_without_join_multiplication(
         "sowings": 2,
         "plants": 1,
         "plant_groups": 1,
+        "vegetative_lots": 0,
+        "propagation_attempts": 0,
     }
     assert by_id[second["id"]]["collection_counts"] == {
         "seed_lots": 0,
         "sowings": 0,
         "plants": 0,
         "plant_groups": 0,
+        "vegetative_lots": 0,
+        "propagation_attempts": 0,
     }
     assert by_id[first["id"]]["compact_external_cover_url"] is None
     assert by_id[second["id"]]["compact_external_cover_url"] is None
@@ -1049,6 +1053,7 @@ def test_reconciliation_refuses_silent_merge_and_merges_duplicate_into_explicit_
         "plant_ids": [plant_id],
         "plant_group_ids": [group_id],
         "scheduled_activity_ids": [activity_id],
+        "vegetative_lot_ids": [],
     }
     assert event_rec["evidence"]["copied_profile_fields"] == ["uses"]
 

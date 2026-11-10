@@ -1,15 +1,15 @@
 """Add explicit vegetative material, rooting attempts, and observations.
 
-Revision ID: cutting_001_dev
-Revises: 20261109_0044
+Revision ID: 20261110_0046
+Revises: 20261109_0045
 """
 
 import sqlalchemy as sa
 
 from alembic import op
 
-revision = "cutting_001_dev"
-down_revision = "20261109_0044"
+revision = "20261110_0046"
+down_revision = "20261109_0045"
 branch_labels = None
 depends_on = None
 

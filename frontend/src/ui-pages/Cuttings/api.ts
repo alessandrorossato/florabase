@@ -1,10 +1,12 @@
 import type { components } from "../../api/schema";
 import { ApiError, requestJson } from "../../auth/api";
+import { useAuth } from "../../auth/context";
 import { useEffect, useState } from "react";
 
 type Schema = components["schemas"];
 export type Lot = Schema["VegetativeLotResponse"];
 export type LotDetail = Schema["VegetativeLotDetail"];
+export type AttemptListItem = Schema["PropagationAttemptListItem"];
 export type Attempt = Schema["PropagationAttemptResponse"];
 export type AttemptDetail = Schema["PropagationAttemptDetail"];
 export type AttemptSummary = Schema["CuttingPropagationSummary"];
@@ -21,29 +23,37 @@ type Resource<T> =
   | { state: "ready"; value: T }
   | { state: "error"; error: unknown };
 
-export function useCuttingData<T>(path: string) {
+export function useCuttingData<T>(path: string, keepOnRefresh = false) {
+  const { sessionExpired } = useAuth();
   const [version, setVersion] = useState(0);
   const key = `${path}:${String(version)}`;
-  const [result, setResult] = useState<{ key: string; data: Resource<T> }>();
+  const [result, setResult] = useState<{
+    key: string;
+    path: string;
+    data: Resource<T>;
+  }>();
   useEffect(() => {
     if (!path) return;
     const controller = new AbortController();
     void requestJson<T>(path, { signal: controller.signal }).then(
       (value) => {
         if (!controller.signal.aborted)
-          setResult({ key, data: { state: "ready", value } });
+          setResult({ key, path, data: { state: "ready", value } });
       },
       (error: unknown) => {
-        if (!controller.signal.aborted)
-          setResult({ key, data: { state: "error", error } });
+        if (controller.signal.aborted) return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
+        else setResult({ key, path, data: { state: "error", error } });
       },
     );
     return () => {
       controller.abort();
     };
-  }, [key, path]);
+  }, [key, path, sessionExpired]);
   const data: Resource<T> =
-    result?.key === key ? result.data : { state: "loading" };
+    result && (result.key === key || (keepOnRefresh && result.path === path))
+      ? result.data
+      : { state: "loading" };
   return [
     data,
     () => {
@@ -52,17 +62,24 @@ export function useCuttingData<T>(path: string) {
   ] as const;
 }
 
-export function saveCutting<T>(
-  path: string,
-  body: object,
-  token: string,
-  method = "POST",
-): Promise<T> {
-  return requestJson(path, {
-    method,
-    headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
-    body: JSON.stringify(body),
-  });
+export function useSaveCutting(token: string) {
+  const { sessionExpired } = useAuth();
+  return async function saveCutting<T>(
+    path: string,
+    body: object,
+    method = "POST",
+  ): Promise<T> {
+    try {
+      return await requestJson<T>(path, {
+        method,
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
+        body: JSON.stringify(body),
+      });
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) sessionExpired();
+      throw error;
+    }
+  };
 }
 
 export function cuttingError(error: unknown): string {

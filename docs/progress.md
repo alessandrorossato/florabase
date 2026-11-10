@@ -8194,3 +8194,21 @@ Status remains implemented pending canonical verification.
   the owned UAT instance with its state preserved.
 - This checkpoint precedes integration with TAXONOMY revision 0045. Canonical FULL and final
   ancestry-explorer acceptance remain pending.
+
+### CUTTING-001 — TAXONOMY integration and Wave B corrections, 10 November 2026
+
+- Rebased onto TAXONOMY-001 at `48f35ea` and assigned Alembic revision `20261110_0046` after
+  `20261109_0045`. Duplicate identity merges repoint lots and record their IDs. Attempts follow
+  their lots and original receipts retain their reversal evidence.
+- Independent Wave B review found gaps in date and count entry, lot correction, session expiry,
+  Order lookup, and directory navigation. Fast-create now preserves an explicit unknown start and
+  accepts a counted start for uncounted stock. Lot corrections use optimistic concurrency.
+  The workspace uses searchable Order selection, preserves filtered return routes and focus,
+  and shows a botanical label on otherwise unnamed attempts.
+- Backend Ruff, strict mypy, and 1,084 unit tests passed at 90.32% coverage. The final isolated
+  CUTTING PostgreSQL suite passed all 12 cases. The broader PostgreSQL run passed all 92 cases
+  across CUTTING, taxonomy, History and golden SMOKE. Both fresh 0046 copies matched the pinned
+  digest. The full frontend suite passed 1,233 tests, including the Workbench navigation and
+  Location regression updates. Frontend lint and types, API drift and the feature graph passed.
+- LINEAGE-003 remains outside `origin/main`. Both directions of the merged explorer must support
+  clonal edges before final UAT and canonical FULL verification. Status remains `in_progress`.

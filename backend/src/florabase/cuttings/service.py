@@ -171,7 +171,12 @@ def _lot_values(
         (ProvenanceSite, payload.provenance_site_id, "provenance_site"),
     )
     for model, reference, kind in references:
-        if reference is not None and database.get(model, reference) is None:
+        if reference is None:
+            continue
+        record = database.get(model, reference)
+        if record is None or (
+            isinstance(record, BotanicalIdentity) and record.merged_into_id is not None
+        ):
             raise PropagationNotFoundError(
                 f"{kind}_not_found", f"{kind.replace('_', ' ').capitalize()} not found"
             )

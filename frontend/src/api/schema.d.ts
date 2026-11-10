@@ -4636,10 +4636,20 @@ export interface components {
             plant_groups: number;
             /** Plants */
             plants: number;
+            /**
+             * Propagation Attempts
+             * @default 0
+             */
+            propagation_attempts: number;
             /** Seed Lots */
             seed_lots: number;
             /** Sowings */
             sowings: number;
+            /**
+             * Vegetative Lots
+             * @default 0
+             */
+            vegetative_lots: number;
         };
         /** IdentityHistoricalNameResponse */
         IdentityHistoricalNameResponse: {
@@ -6174,6 +6184,72 @@ export interface components {
              * @enum {string}
              */
             lifecycle: "active" | "completed" | "failed" | "abandoned" | "reversed";
+        };
+        /** PropagationAttemptListItem */
+        PropagationAttemptListItem: {
+            /**
+             * Attempt Kind
+             * @default cutting
+             * @constant
+             */
+            attempt_kind: "cutting";
+            /** Botanical Display Label */
+            botanical_display_label: string;
+            /**
+             * Botanical Identity Id
+             * Format: uuid
+             */
+            botanical_identity_id: string;
+            /** Container */
+            container?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            ended_on?: components["schemas"]["PartialDate"] | null;
+            /** Environment */
+            environment?: string | null;
+            /** Hormone Treatment */
+            hormone_treatment?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label?: string | null;
+            /**
+             * Lifecycle
+             * @enum {string}
+             */
+            lifecycle: "active" | "completed" | "failed" | "abandoned" | "reversed";
+            /** Location Id */
+            location_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+            quantity?: components["schemas"]["PositiveCuttingQuantity"] | null;
+            /** Rooted Count */
+            rooted_count?: number | null;
+            /** Rooting Rate Percent */
+            rooting_rate_percent: number | null;
+            started_on?: components["schemas"]["PartialDate"] | null;
+            /** Substrate */
+            substrate?: string | null;
+            /** Temperature Max C */
+            temperature_max_c?: string | null;
+            /** Temperature Min C */
+            temperature_min_c?: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /**
+             * Vegetative Lot Id
+             * Format: uuid
+             */
+            vegetative_lot_id: string;
         };
         /** PropagationAttemptResponse */
         PropagationAttemptResponse: {
@@ -14401,7 +14477,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PropagationAttemptResponse"][];
+                    "application/json": components["schemas"]["PropagationAttemptListItem"][];
                 };
             };
             /** @description Validation Error */

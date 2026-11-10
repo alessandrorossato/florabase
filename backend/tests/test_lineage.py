@@ -76,3 +76,62 @@ def test_cycle_correction_returns_domain_conflict_before_writing(
             code = group_rejected.value.code
     assert code == "lineage_cycle"
     database.flush.assert_not_called()
+
+
+def test_lineage_projects_cuttings_and_preserves_the_existing_ancestry_types() -> None:
+    from florabase.botanical_identities.model import BotanicalIdentity
+    from florabase.cuttings import api as cutting_api
+    from florabase.cuttings.model import PropagationAttempt, VegetativeLot, utc_now
+    from florabase.seed_lots.model import SeedLot
+
+    now = utc_now()
+    identity = BotanicalIdentity(
+        id=uuid7(),
+        scientific_name="Salvia rosmarinus",
+        created_at=now,
+        updated_at=now,
+    )
+    plant = Plant(id=uuid7(), label="Mother", lifecycle="active")
+    group = PlantGroup(id=uuid7(), label="Original group", lifecycle="active")
+    seed = SeedLot(id=uuid7(), label="Original seed", lifecycle="active")
+    sowing = Sowing(id=uuid7(), label="Original sowing", lifecycle="active")
+    lot = VegetativeLot(id=uuid7(), label="Taken material", lifecycle="exhausted")
+    attempt = PropagationAttempt(id=uuid7(), label="Clonal attempt", lifecycle="failed")
+    path = [
+        ("propagation_attempt", attempt.id),
+        ("vegetative_lot", lot.id),
+        ("plant", plant.id),
+        ("plant_group", group.id),
+        ("sowing", sowing.id),
+        ("seed_lot", seed.id),
+    ]
+    walk = MagicMock()
+    walk.mappings.return_value = [
+        {"kind": kind, "id": key, "is_cycle": False} for kind, key in path
+    ]
+    database = MagicMock()
+    database.get.return_value = attempt
+    database.execute.side_effect = [
+        walk,
+        [(seed, identity)],
+        [(plant, identity)],
+        [(group, identity)],
+        [(lot, identity)],
+    ]
+    database.scalars.side_effect = [[sowing], [attempt]]
+    result = cutting_api.attempt_lineage(attempt.id, MagicMock(), database)
+    assert result.subject.id == attempt.id
+    assert [(entry.kind, entry.id) for entry in result.ancestors] == path[1:]
+    assert [entry.label for entry in result.ancestors] == [
+        "Taken material",
+        "Mother",
+        "Original group",
+        "Original sowing",
+        "Original seed",
+    ]
+
+    walk.mappings.return_value = [{"kind": "vegetative_lot", "id": lot.id, "is_cycle": False}]
+    database.execute.side_effect = [walk, []]
+    database.get.return_value = lot
+    with pytest.raises(RuntimeError, match="missing concrete record"):
+        cutting_api.lot_lineage(lot.id, MagicMock(), database)

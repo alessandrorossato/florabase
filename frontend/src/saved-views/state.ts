@@ -362,6 +362,14 @@ export function directoryState<S extends DirectorySurface>(
     // Empty UI selections use defaults, except explicit all-state storage choice.
     result[key] = normalized;
   }
+  if (
+    surface === "cuttings" &&
+    (result.record_type === "attempts"
+      ? ["exhausted", "discarded", "lost"]
+      : ["completed", "failed", "abandoned"]
+    ).some((status) => status === result.lifecycle)
+  )
+    result.lifecycle = "";
   return result as DirectoryStates[S];
 }
 

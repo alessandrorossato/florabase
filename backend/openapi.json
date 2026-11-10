@@ -5631,6 +5631,12 @@
             "title": "Plants",
             "type": "integer"
           },
+          "propagation_attempts": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Propagation Attempts",
+            "type": "integer"
+          },
           "seed_lots": {
             "minimum": 0.0,
             "title": "Seed Lots",
@@ -5639,6 +5645,12 @@
           "sowings": {
             "minimum": 0.0,
             "title": "Sowings",
+            "type": "integer"
+          },
+          "vegetative_lots": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Vegetative Lots",
             "type": "integer"
           }
         },
@@ -10524,6 +10536,231 @@
           "lifecycle"
         ],
         "title": "PropagationAttemptLineageNode",
+        "type": "object"
+      },
+      "PropagationAttemptListItem": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_kind": {
+            "const": "cutting",
+            "default": "cutting",
+            "title": "Attempt Kind",
+            "type": "string"
+          },
+          "botanical_display_label": {
+            "title": "Botanical Display Label",
+            "type": "string"
+          },
+          "botanical_identity_id": {
+            "format": "uuid",
+            "title": "Botanical Identity Id",
+            "type": "string"
+          },
+          "container": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "ended_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "environment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environment"
+          },
+          "hormone_treatment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hormone Treatment"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "enum": [
+              "active",
+              "completed",
+              "failed",
+              "abandoned",
+              "reversed"
+            ],
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositiveCuttingQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rooted_count": {
+            "anyOf": [
+              {
+                "maximum": 2147483647.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rooted Count"
+          },
+          "rooting_rate_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rooting Rate Percent"
+          },
+          "started_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "substrate": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Substrate"
+          },
+          "temperature_max_c": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Max C"
+          },
+          "temperature_min_c": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Min C"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "vegetative_lot_id": {
+            "format": "uuid",
+            "title": "Vegetative Lot Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "vegetative_lot_id",
+          "lifecycle",
+          "rooting_rate_percent",
+          "created_at",
+          "updated_at",
+          "botanical_identity_id",
+          "botanical_display_label"
+        ],
+        "title": "PropagationAttemptListItem",
         "type": "object"
       },
       "PropagationAttemptResponse": {
@@ -29362,7 +29599,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/PropagationAttemptResponse"
+                    "$ref": "#/components/schemas/PropagationAttemptListItem"
                   },
                   "title": "Response Listpropagationattempts",
                   "type": "array"

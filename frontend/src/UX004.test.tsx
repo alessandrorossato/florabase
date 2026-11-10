@@ -18,7 +18,14 @@ const identity = {
   common_name: "Red okra",
   display_label: "Abelmoschus esculentus L. ‘Okra Burgundy’",
   compact_cover_kind: "local",
-  collection_counts: { seed_lots: 1, sowings: 1, plants: 2, plant_groups: 0 },
+  collection_counts: {
+    seed_lots: 1,
+    sowings: 1,
+    plants: 2,
+    plant_groups: 0,
+    vegetative_lots: 0,
+    propagation_attempts: 0,
+  },
   created_at: "2026-09-01T10:00:00Z",
   updated_at: "2026-09-01T10:00:00Z",
 };

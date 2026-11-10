@@ -93,6 +93,11 @@ export function openCollectionPage(
     window.location.hash.split("?", 1)[0] === parent
   )
     parent = window.location.hash;
+  if (
+    hash.split("?", 1)[0] === "#/cuttings/new" &&
+    /^#\/(cuttings(?:\?|$)|identities\/)/.test(window.location.hash)
+  )
+    parent = window.location.hash;
   // Insert the directory/source entry before the task, without rewriting older history.
   if (window.location.hash !== parent)
     window.history.pushState(null, "", parent);
@@ -100,20 +105,24 @@ export function openCollectionPage(
     {
       ...window.history.state,
       collectionReturnFocus:
-        hash.startsWith("#/harvests?action=create") && parent !== "#/harvests"
-          ? "harvest"
-          : parent.startsWith("#/plant-groups/")
-            ? "extract"
-            : [
-                  "#/seeds",
-                  "#/sowings",
-                  "#/plants",
-                  "#/harvests",
-                  "#/suppliers",
-                  "#/orders",
-                ].includes(parent)
-              ? "create"
-              : undefined,
+        hash.startsWith("#/cuttings/new") &&
+        parent.split("?", 1)[0] === "#/cuttings"
+          ? "create"
+          : hash.startsWith("#/harvests?action=create") &&
+              parent !== "#/harvests"
+            ? "harvest"
+            : parent.startsWith("#/plant-groups/")
+              ? "extract"
+              : [
+                    "#/seeds",
+                    "#/sowings",
+                    "#/plants",
+                    "#/harvests",
+                    "#/suppliers",
+                    "#/orders",
+                  ].includes(parent)
+                ? "create"
+                : undefined,
     },
     "",
     parent,

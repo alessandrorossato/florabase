@@ -98,7 +98,10 @@ def test_fast_creation_preserves_precision_and_rolls_back_on_stock_conflict(
     assert attempt["rooted_count"] is None
     assert attempt["rooting_rate_percent"] is None
     assert _read(browser, f"{LOTS}?q=rosmarinus")[0]["id"] == lot["id"]
-    assert _read(browser, f"{ATTEMPTS}?q=Perlite")[0]["id"] == attempt["id"]
+    listed = _read(browser, f"{ATTEMPTS}?q=Perlite")[0]
+    assert listed["id"] == attempt["id"]
+    assert listed["botanical_identity_id"] == cutting_identity
+    assert "rosmarinus" in listed["botanical_display_label"]
 
 
 @pytest.mark.parametrize("group", [False, True])
@@ -224,10 +227,12 @@ def test_split_approximate_and_unknown_stock_retains_uncertainty(
         is None
     )
     unknown = _payload(cutting_identity, initial_quantity=None, material_type="root_cutting")
-    unknown["propagation_attempt"] = {}
+    unknown["propagation_attempt"] = {"started_on": None, "quantity": _count(3)}
     saved = _write(browser, "POST", FAST, unknown)
     assert saved["vegetative_lot"]["quantity"] is None
-    assert saved["propagation_attempt"]["quantity"] is None
+    assert saved["vegetative_lot"]["taken_on"] is not None
+    assert saved["propagation_attempt"]["quantity"] == _count(3)
+    assert saved["propagation_attempt"]["started_on"] is None
 
 
 def test_failed_attempt_history_explore_schedule_and_media(
@@ -553,3 +558,50 @@ def test_purchase_reference_and_saved_view_contracts(
     )
     assert view["state"] == state
     assert view["compatibility"] == "supported"
+
+
+def test_identity_merge_repoints_cuttings_and_keeps_receipt_snapshots(
+    authenticated_browser: tuple[str, str],
+    cutting_identity: str,
+) -> None:
+    browser = authenticated_browser
+    duplicate = _read(browser, f"/api/v1/botanical-identities/{cutting_identity}")
+    survivor = _write(
+        browser,
+        "POST",
+        "/api/v1/botanical-identities",
+        {
+            "scientific_name": "Salvia rosmarinus cultivar group",
+        },
+    )
+    payload = _payload(cutting_identity)
+    payload["source_adjustment"] = {"mode": "none"}
+    operation = _write(browser, "POST", FAST, payload)
+    lot_id = operation["vegetative_lot"]["id"]
+    attempt_id = operation["propagation_attempt"]["id"]
+    reverse_url = f"/api/v1/cutting-operations/{operation['operation_receipt_id']}/reversal"
+    assert _read(browser, reverse_url)["status"] == "safe"
+
+    reconciled = _write(
+        browser,
+        "POST",
+        f"/api/v1/botanical-identities/{cutting_identity}/reconciliation/merge-duplicate",
+        {
+            "survivor_identity_id": survivor["id"],
+            "duplicate_updated_at": duplicate["updated_at"],
+            "survivor_updated_at": survivor["updated_at"],
+        },
+        200,
+    )
+    assert reconciled["reconciliations"][0]["evidence"]["repointed_records"][
+        "vegetative_lot_ids"
+    ] == [lot_id]
+    counts = reconciled["identity"]["collection_counts"]
+    assert counts["vegetative_lots"] == 1
+    assert counts["propagation_attempts"] == 1
+    attempt = _read(browser, f"{ATTEMPTS}/{attempt_id}")
+    assert attempt["vegetative_lot"]["botanical_identity_id"] == survivor["id"]
+    receipt = _read(browser, reverse_url)
+    assert receipt["status"] == "blocked"
+    assert "source_structural_state_changed" in {item["code"] for item in receipt["reasons"]}
+    _write(browser, "POST", FAST, _payload(cutting_identity), 404)

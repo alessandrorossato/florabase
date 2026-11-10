@@ -16,6 +16,7 @@ from florabase.botanical_identities.schemas import (
     BotanicalIdentityUpdate,
     IdentityCollectionCounts,
 )
+from florabase.cuttings.model import PropagationAttempt, VegetativeLot
 from florabase.plants.model import Plant, PlantGroup
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import Sowing
@@ -127,7 +128,6 @@ def update_botanical_identity(
 def delete_botanical_identity(database: Session, botanical_identity: BotanicalIdentity) -> None:
     identity_id = botanical_identity.id
     from florabase.collection_photos.model import BotanicalIdentityCoverImage
-    from florabase.cuttings.model import VegetativeLot
     from florabase.native_range_enrichment.model import NativeRangeApplication
 
     # Serialize deletion with proposal Apply before checking retained references.
@@ -251,7 +251,7 @@ def list_botanical_identity_directory(
         .where(model.lifecycle == "active")
         .group_by(model.botanical_identity_id)
         .subquery()
-        for model in (SeedLot, Plant, PlantGroup)
+        for model in (SeedLot, Plant, PlantGroup, VegetativeLot)
     ]
     sowings = (
         select(SeedLot.botanical_identity_id.label("identity_id"), func.count().label("total"))
@@ -262,6 +262,16 @@ def list_botanical_identity_directory(
         .subquery()
     )
     counts.insert(1, sowings)
+    counts.append(
+        select(
+            VegetativeLot.botanical_identity_id.label("identity_id"), func.count().label("total")
+        )
+        .select_from(PropagationAttempt)
+        .join(VegetativeLot, PropagationAttempt.vegetative_lot_id == VegetativeLot.id)
+        .where(PropagationAttempt.lifecycle == "active")
+        .group_by(VegetativeLot.botanical_identity_id)
+        .subquery()
+    )
     statement = (
         select(
             BotanicalIdentity,
@@ -297,10 +307,15 @@ def list_botanical_identity_directory(
         (
             identity,
             cast(Literal["local", "external"] | None, cover_kind),
-            external_cover_url,
+            cover_url,
             IdentityCollectionCounts(
-                seed_lots=seeds, sowings=sown, plants=plants, plant_groups=groups
+                seed_lots=seeds,
+                sowings=sown,
+                plants=plants,
+                plant_groups=groups,
+                vegetative_lots=lots,
+                propagation_attempts=attempts,
             ),
         )
-        for identity, cover_kind, external_cover_url, seeds, sown, plants, groups in rows
+        for identity, cover_kind, cover_url, seeds, sown, plants, groups, lots, attempts in rows
     ]

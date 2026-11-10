@@ -2408,7 +2408,14 @@ test("location creation supports roots and the selected create-child shortcut", 
   ).toBeInTheDocument();
   const posts = requests.filter(({ init }) => init?.method === "POST");
   expect(posts).toHaveLength(2);
-  const scopes = ["plants", "sowings", "seed_lots", "harvest_inventory"];
+  const scopes = [
+    "plants",
+    "sowings",
+    "seed_lots",
+    "harvest_inventory",
+    "vegetative_lots",
+    "propagation_attempts",
+  ];
   expect(posts[0]?.init?.body).toBe(
     JSON.stringify({ name: "House", usage_scopes: scopes }),
   );
@@ -3269,8 +3276,10 @@ test("Location empty usage avoids repeated zeroes in directory and preview, deta
     "Sowings",
     "Seed lots",
     "Stored material",
+    "Vegetative lots",
+    "Rooting attempts",
   ]);
-  expect(within(table).getAllByRole("cell")).toHaveLength(10);
+  expect(within(table).getAllByRole("cell")).toHaveLength(14);
   for (const cell of within(table).getAllByRole("cell"))
     expect(cell).toHaveTextContent("0 total (0 active)");
 });
@@ -3564,6 +3573,7 @@ test("Workbench workspaces, panels and mobile sheets retain every destination an
     "Today",
     "Seeds",
     "Sowings",
+    "Cuttings",
     "Plants",
     "Harvests",
     "Locations",
@@ -3617,6 +3627,7 @@ test("Workbench workspaces, panels and mobile sheets retain every destination an
     "dashboard",
     "seeds",
     "sowings",
+    "cuttings",
     "plants",
     "harvests",
     "locations",
@@ -3632,6 +3643,7 @@ test("Workbench workspaces, panels and mobile sheets retain every destination an
   ];
   const categories = [
     "Overview",
+    "Collection",
     "Collection",
     "Collection",
     "Collection",

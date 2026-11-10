@@ -245,6 +245,8 @@ test("IdentityReconciliationPanel blocks silent merge on collision and enables e
       sowings: 1,
       plants: 1,
       plant_groups: 0,
+      vegetative_lots: 0,
+      propagation_attempts: 0,
     },
   };
   const survivorSummary = {
@@ -259,6 +261,8 @@ test("IdentityReconciliationPanel blocks silent merge on collision and enables e
       sowings: 0,
       plants: 2,
       plant_groups: 1,
+      vegetative_lots: 0,
+      propagation_attempts: 0,
     },
     has_conflicting_profile_fields: true,
     conflicting_profile_fields: ["description"],

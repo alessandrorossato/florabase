@@ -20,6 +20,7 @@ import {
   LoadingState,
 } from "../../components/WorkspaceUI";
 import { useDirectoryPresentation } from "../../components/directoryPresentation";
+import { useCollectionPageReturnFocus } from "../../components/useCollectionPageReturnFocus";
 import { useRecordName } from "../../components/recordPresentation";
 import { formatPartialDate } from "../../events/eventData";
 import type { LocationResponse } from "../../locations/api";
@@ -36,7 +37,7 @@ import {
   rootingLabel,
   sourceLabels,
   useCuttingData,
-  type Attempt,
+  type AttemptListItem,
   type Lot,
 } from "./api";
 
@@ -129,18 +130,20 @@ function CuttingsDirectory({
       continue;
     params.set(key, value);
   }
-  const [data, retry] = useCuttingData<(Lot | Attempt)[]>(
+  const [data, retry] = useCuttingData<(Lot | AttemptListItem)[]>(
     `${surface === "lots" ? lots : attempts}?${params}`,
   );
+  useCollectionPageReturnFocus(data.state !== "loading");
   const rows = data.state === "ready" ? data.value : [];
   const record = rows.find((item) => item.id === preview);
-  const isLot = (item: Lot | Attempt): item is Lot => "material_type" in item;
-  function label(item: Lot | Attempt) {
+  const isLot = (item: Lot | AttemptListItem): item is Lot =>
+    "material_type" in item;
+  function label(item: Lot | AttemptListItem) {
     return isLot(item)
       ? recordName(item, materialLabels[item.material_type])
-      : (item.label ?? item.substrate ?? "Rooting attempt");
+      : (item.label ?? item.botanical_display_label);
   }
-  function detail(item: Lot | Attempt) {
+  function detail(item: Lot | AttemptListItem) {
     return isLot(item)
       ? `${materialLabels[item.material_type]} · ${sourceLabels[item.source_kind]} · ${countLabel(item.quantity)} remaining`
       : rootingLabel(item);
@@ -232,6 +235,7 @@ function CuttingsDirectory({
                 <a
                   className="button-link"
                   ref={fallback}
+                  data-collection-return="create"
                   href={
                     sourceId
                       ? `#/cuttings/new?sourceType=${sourceType ?? "plant"}&source=${sourceId}`

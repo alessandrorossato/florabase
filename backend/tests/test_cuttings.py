@@ -139,9 +139,10 @@ def test_create_start_update_observe_and_establish_cutting_records() -> None:
     from unittest.mock import MagicMock, patch
 
     from florabase.botanical_identities.model import BotanicalIdentity
-    from florabase.cuttings import service
+    from florabase.cuttings import api, service
     from florabase.cuttings.model import CuttingRecord
     from florabase.cuttings.schemas import (
+        AttemptCreate,
         EstablishPlant,
         EstablishPlantGroup,
         FastCreate,
@@ -184,8 +185,13 @@ def test_create_start_update_observe_and_establish_cutting_records() -> None:
             "propagation_attempt": {"quantity": {"value": 4, "is_approximate": False}},
         }
     )
-    lot, attempt, receipt = service.fast_create(database, payload)
-    remaining = service.lot_response(lot).quantity
+    transition = api.fast_create(payload, None, database)
+    lot = service.require_record(database, VegetativeLot, transition.vegetative_lot.id)
+    attempt = service.require_record(
+        database, PropagationAttempt, transition.propagation_attempt.id
+    )
+    receipt = database.get(OperationReceipt, transition.operation_receipt_id)
+    remaining = transition.vegetative_lot.quantity
     assert remaining is not None
     assert remaining.model_dump() == {"value": 1, "is_approximate": False}
     response = service.attempt_response(attempt)
@@ -193,8 +199,7 @@ def test_create_start_update_observe_and_establish_cutting_records() -> None:
     assert receipt.vegetative_lot_id == lot.id
     assert receipt.propagation_attempt_id == attempt.id
 
-    service.update_lot(
-        database,
+    api.update_lot(
         lot.id,
         VegetativeLotUpdate.model_validate(
             {
@@ -205,18 +210,27 @@ def test_create_start_update_observe_and_establish_cutting_records() -> None:
                 "quantity": None,
             }
         ),
+        None,
+        database,
     )
     assert lot.material_type == "root_cutting"
     assert lot.quantity_value is None
 
-    check = service.save_observation(
-        database,
+    check = api.create_observation(
         attempt.id,
-        RootingObservationWrite(stage="rooted", rooted_count=3),
-    )
-    assert service.observation_response(check).rooted_count == 3
-    service.update_attempt(
+        RootingObservationWrite(stage="inspection"),
+        None,
         database,
+    )
+    corrected = api.update_observation(
+        attempt.id,
+        check.id,
+        RootingObservationWrite(stage="rooted", rooted_count=3),
+        None,
+        database,
+    )
+    assert corrected.rooted_count == 3
+    updated_attempt = api.update_attempt(
         attempt.id,
         PropagationAttemptUpdate.model_validate(
             {
@@ -226,8 +240,10 @@ def test_create_start_update_observe_and_establish_cutting_records() -> None:
                 "quantity": {"value": 4, "is_approximate": False},
             }
         ),
+        None,
+        database,
     )
-    assert service.attempt_response(attempt).rooting_rate_percent == 75
+    assert updated_attempt.rooting_rate_percent == 75
     with pytest.raises(PropagationConflictError, match="exceeds the recorded"):
         service.establish(
             database,
@@ -240,28 +256,50 @@ def test_create_start_update_observe_and_establish_cutting_records() -> None:
         )
     child = Plant(id=uuid7(), botanical_identity_id=identity.id, lifecycle="active")
     with patch.object(service, "create_plant", return_value=child) as create:
-        plant, establishment = service.establish(
-            database, attempt.id, EstablishPlant(label="Clone")
-        )
-    assert plant is child
+        result = api.establish_plant(attempt.id, EstablishPlant(label="Clone"), None, database)
+    assert result.id == child.id
+    assert result.kind == "plant"
+    establishment = database.get(OperationReceipt, result.operation_receipt_id)
     assert establishment.plant_id == child.id
     assert create.call_args.kwargs["propagation_attempt_id"] == attempt.id
     group = PlantGroup(id=uuid7(), botanical_identity_id=identity.id, lifecycle="active")
     with patch.object(service, "create_plant_group", return_value=group) as create:
-        result, establishment = service.establish(
-            database,
+        result = api.establish_group(
             attempt.id,
             EstablishPlantGroup(resulting_attempt_lifecycle="completed"),
+            None,
+            database,
         )
-    assert result is group
+    assert result.id == group.id
+    assert result.kind == "plant_group"
+    establishment = database.get(OperationReceipt, result.operation_receipt_id)
     assert establishment.plant_group_id == group.id
     assert create.call_args.kwargs["propagation_attempt_id"] == attempt.id
     assert establishment.after_lifecycle == "completed"
+
+    assert api.delete_observation(attempt.id, check.id, None, database).status_code == 204
+    spare = api.create_lot(payload.vegetative_lot, None, database)
+    split = api.start_attempt(
+        spare.id,
+        AttemptCreate.model_validate(
+            {
+                "propagation_attempt": {},
+                "source_adjustment": {"mode": "none"},
+            }
+        ),
+        None,
+        database,
+    )
+    assert split.vegetative_lot.quantity == spare.quantity
+    assert split.propagation_attempt.quantity is None
+    free_lot = api.create_lot(payload.vegetative_lot, None, database)
+    assert api.delete_lot(free_lot.id, None, database).status_code == 204
 
 
 def test_cutting_directory_and_detail_routes_preserve_observations_and_unknown_counts() -> None:
     from unittest.mock import MagicMock
 
+    from florabase.botanical_identities.model import BotanicalIdentity
     from florabase.cuttings import api
     from florabase.cuttings.model import RootingObservation
     from florabase.plants.model import Plant, PlantGroup
@@ -298,7 +336,9 @@ def test_cutting_directory_and_detail_routes_preserve_observations_and_unknown_c
     receipt_id = uuid7()
     records = {(VegetativeLot, lot.id): lot, (PropagationAttempt, attempt.id): attempt}
     database.get.side_effect = lambda model, key, **_: records.get((model, key))
-    database.scalars.side_effect = [[lot], [attempt], [attempt], [observation]]
+    database.scalars.side_effect = [[lot], [attempt], [observation]]
+    identity = BotanicalIdentity(id=identity_id, scientific_name="Salvia rosmarinus")
+    database.execute.return_value = [(attempt, identity)]
     database.scalar.return_value = receipt_id
     result = api.list_lots(
         reader,
@@ -309,7 +349,10 @@ def test_cutting_directory_and_detail_routes_preserve_observations_and_unknown_c
     )
     assert result[0].quantity is None
     assert "NOT (" in str(database.scalars.call_args.args[0])
-    assert api.list_attempts(reader, database, q="Perlite", lifecycle="active")[0].id == attempt.id
+    listed = api.list_attempts(reader, database, q="Perlite", lifecycle="active")[0]
+    assert listed.id == attempt.id
+    assert listed.botanical_identity_id == identity_id
+    assert listed.botanical_display_label == "Salvia rosmarinus"
     assert api.get_lot(lot.id, reader, database).attempts[0].id == attempt.id
     detail = api.get_attempt(attempt.id, reader, database)
     assert detail.observations[0].rooted_count == 0
@@ -373,3 +416,179 @@ def test_approximate_lot_requires_explicit_partial_remainder(mode: str) -> None:
     assert lot.quantity_value == (7 if mode == "partial" else 10)
     assert lot.quantity_is_approximate is True
     assert lot.lifecycle == ("exhausted" if mode == "use_all" else "active")
+
+
+@pytest.mark.parametrize("has_dependency", [False, True])
+def test_cutting_attempt_reversal_requires_confirmation_and_restores_snapshot(
+    has_dependency: bool,
+) -> None:
+    from unittest.mock import MagicMock
+
+    from fastapi import HTTPException
+
+    from florabase.cuttings import api
+    from florabase.propagation.reversal_schemas import PropagationReversalCreate
+    from florabase.propagation.snapshots import attempt_snapshot, cutting_source_snapshot
+    from florabase.reversals.model import OperationKind, OperationReceipt
+    from florabase.reversals.service import group_quantity
+
+    lot = VegetativeLot(
+        id=uuid7(),
+        botanical_identity_id=uuid7(),
+        lifecycle="active",
+        quantity_value=3,
+        quantity_is_approximate=True,
+    )
+    attempt = PropagationAttempt(id=uuid7(), vegetative_lot_id=lot.id, lifecycle="active")
+    before_quantity = group_quantity(lot)
+    lot.lifecycle = "exhausted"
+    receipt = OperationReceipt(
+        id=uuid7(),
+        kind=OperationKind.VEGETATIVE_LOT_TO_PROPAGATION_ATTEMPT,
+        vegetative_lot_id=lot.id,
+        propagation_attempt_id=attempt.id,
+        before_lifecycle="active",
+        after_lifecycle="exhausted",
+        status="applied",
+        **before_quantity.columns("before"),
+        **group_quantity(lot).columns("after"),
+        **attempt_snapshot(attempt, lot),
+        **cutting_source_snapshot(lot, lot),
+    )
+    check_id = uuid7()
+    database = MagicMock()
+    database.get.return_value = receipt
+
+    def reset_reads() -> None:
+        database.scalar.side_effect = [lot, attempt, has_dependency, False, False, False]
+        database.scalars.side_effect = [[receipt], [], [], [check_id]]
+
+    reader = MagicMock()
+    reset_reads()
+    eligibility = api.reversal_eligibility(receipt.id, reader, database)
+    assert eligibility.retained_observation_ids == [check_id]
+    if has_dependency:
+        assert eligibility.status == "blocked"
+        assert eligibility.reasons[0].code == "linked_media_exists"
+        return
+
+    assert eligibility.status == "confirmation_required"
+    reset_reads()
+    with pytest.raises(HTTPException) as rejected:
+        api.reverse_cutting_operation(receipt.id, PropagationReversalCreate(), None, database)
+    assert rejected.value.status_code == 409
+    reset_reads()
+    response = api.reverse_cutting_operation(
+        receipt.id,
+        PropagationReversalCreate(confirm_retained_observations=True),
+        None,
+        database,
+    )
+    assert response.status_code == 204
+    assert lot.lifecycle in {"active"}
+    assert lot.quantity_value == 3
+    assert lot.quantity_is_approximate is True
+    assert attempt.lifecycle == "reversed"
+    assert receipt.status == "reversed"
+
+
+@pytest.mark.parametrize("case", ["plant", "group", "missing", "historical", "order", "mismatch"])
+def test_lot_source_uses_concrete_mother_and_checks_purchase_transaction(case: str) -> None:
+    from unittest.mock import MagicMock
+
+    from fastapi import HTTPException
+
+    from florabase.botanical_identities.model import BotanicalIdentity
+    from florabase.cuttings import api
+    from florabase.orders.model import Order
+    from florabase.plants.model import Plant, PlantGroup
+    from florabase.suppliers.model import Supplier
+
+    now = utc_now()
+    identity_id, mother_id, order_id, supplier_id = uuid7(), uuid7(), uuid7(), uuid7()
+    mother = Plant(
+        id=mother_id,
+        botanical_identity_id=identity_id,
+        lifecycle="reversed" if case == "historical" else "active",
+    )
+    group = PlantGroup(id=mother_id, botanical_identity_id=identity_id, lifecycle="active")
+    database = MagicMock()
+    records = {
+        (Plant, mother_id): None if case == "missing" else mother,
+        (PlantGroup, mother_id): group,
+        (BotanicalIdentity, identity_id): BotanicalIdentity(id=identity_id),
+        (Supplier, supplier_id): Supplier(id=supplier_id),
+        (Order, order_id): Order(id=order_id, supplier_id=uuid7()) if case == "mismatch" else None,
+    }
+    database.get.side_effect = lambda model, key, **_: records.get((model, key))
+
+    def assign_defaults(lot: VegetativeLot) -> None:
+        lot.created_at = lot.updated_at = now
+        lot.lifecycle = "active"
+
+    database.add.side_effect = assign_defaults
+    if case in {"order", "mismatch"}:
+        payload = VegetativeLotCreate(
+            material_type="stem_cutting",
+            source_kind="purchased",
+            botanical_identity_id=identity_id,
+            order_id=order_id,
+            supplier_id=supplier_id,
+        )
+    else:
+        payload = VegetativeLotCreate(
+            material_type="stem_cutting",
+            source_kind="collection_produced",
+            mother_plant_id=None if case == "group" else mother_id,
+            mother_plant_group_id=mother_id if case == "group" else None,
+        )
+    if case in {"plant", "group"}:
+        lot = api.create_lot(payload, None, database)
+        assert lot.botanical_identity_id == identity_id
+        model = Plant if case == "plant" else PlantGroup
+        database.get.assert_any_call(model, mother_id, with_for_update=True)
+        return
+
+    with pytest.raises(HTTPException) as rejected:
+        api.create_lot(payload, None, database)
+    expected = {
+        "missing": "mother_not_found",
+        "historical": "historical_mother",
+        "order": "order_not_found",
+        "mismatch": "order_supplier_mismatch",
+    }
+    assert isinstance(rejected.value.detail, dict)
+    assert rejected.value.detail["code"] == expected[case]
+    database.add.assert_not_called()
+
+
+@pytest.mark.parametrize("sqlstate", ["23503", "40P01", "99999"])
+def test_cutting_link_conflicts_and_retryable_sql_errors_use_the_http_contract(
+    sqlstate: str,
+) -> None:
+    from unittest.mock import MagicMock
+
+    from fastapi import HTTPException
+    from sqlalchemy.exc import IntegrityError, OperationalError
+
+    from florabase.cuttings import api
+
+    class DatabaseFailureError(Exception):
+        def __init__(self, state: str) -> None:
+            self.sqlstate = state
+
+    original = DatabaseFailureError(sqlstate)
+    error_type = IntegrityError if sqlstate == "23503" else OperationalError
+    database = MagicMock()
+    database.get.side_effect = error_type(None, None, original)
+    if sqlstate == "99999":
+        with pytest.raises(OperationalError):
+            api.get_lot(uuid7(), MagicMock(), database)
+        return
+    with pytest.raises(HTTPException) as rejected:
+        api.get_lot(uuid7(), MagicMock(), database)
+    assert rejected.value.status_code == 409
+    assert isinstance(rejected.value.detail, dict)
+    assert rejected.value.detail["code"] == (
+        "cutting_reference_conflict" if sqlstate == "23503" else "cutting_concurrency_conflict"
+    )

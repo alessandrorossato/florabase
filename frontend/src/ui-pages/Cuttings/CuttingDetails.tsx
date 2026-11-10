@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import type { components } from "../../api/schema";
 import { SpecimenPlate } from "../../components/CollectionUI";
 import { setRecordRoute } from "../../components/recordNavigation";
@@ -25,6 +25,7 @@ import {
   Choice,
   CountField,
   LocationField,
+  LotFields,
   NotesField,
   QuantityField,
   TextField,
@@ -36,7 +37,7 @@ import {
   lots,
   materialLabels,
   rootingLabel,
-  saveCutting,
+  useSaveCutting,
   sourceLabels,
   useCuttingData,
   type Attempt,
@@ -45,6 +46,7 @@ import {
   type AttemptWrite,
   type Lot,
   type LotDetail,
+  type LotWrite,
   type ReceiptEligibility,
   type RootingObservation,
 } from "./api";
@@ -83,17 +85,18 @@ function CuttingPhotos({
       : "",
   );
   const own = primary.state === "ready" ? primary.value : null;
-  const inherited =
-    (lotPhoto.state === "ready" ? lotPhoto.value : null) ??
-    (motherPhoto.state === "ready" ? motherPhoto.value : null);
+  const inherited = [
+    lotPhoto.state === "ready" ? lotPhoto.value : null,
+    motherPhoto.state === "ready" ? motherPhoto.value : null,
+  ];
   return (
     <>
       <SpecimenPlate>
         <RecordVisual
           photo={own}
-          fallbackPhoto={inherited}
+          fallbackPhotos={inherited}
           showSource
-          kind="sowing"
+          kind="cutting"
           label={label}
           identity={{ id: lot.botanical_identity_id, display_label: label }}
         />
@@ -195,6 +198,16 @@ function LotFacts({ lot }: { lot: Lot }) {
           </dd>
         </div>
       )}
+      {lot.material_provenance_place_id && (
+        <div>
+          <dt>Geographic place</dt>
+          <dd>
+            <a href={`#/geography?place=${lot.material_provenance_place_id}`}>
+              Open geographic place
+            </a>
+          </dd>
+        </div>
+      )}
       {lot.provenance_site_id && (
         <div>
           <dt>Provenance</dt>
@@ -229,8 +242,8 @@ function IdentityLink({ id }: { id: string }) {
 }
 
 export function LotPage({ id, token }: { id: string; token: string }) {
-  const [data, retry] = useCuttingData<LotDetail>(`${lots}/${id}`);
-  const [start, setStart] = useState(false);
+  const [data, retry] = useCuttingData<LotDetail>(`${lots}/${id}`, true);
+  const [dialog, setDialog] = useState<"start" | "edit">();
   const lot = data.state === "ready" ? data.value : undefined;
   return (
     <Page titleId="cutting-lot-title">
@@ -240,12 +253,22 @@ export function LotPage({ id, token }: { id: string; token: string }) {
         eyebrow="Cuttings"
         actions={
           <DetailNavigation>
+            {lot && lot.lifecycle !== "reversed" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDialog("edit");
+                }}
+              >
+                Edit vegetative lot
+              </button>
+            )}
             {lot?.lifecycle === "active" && (
               <>
                 <button
                   type="button"
                   onClick={() => {
-                    setStart(true);
+                    setDialog("start");
                   }}
                 >
                   Start rooting attempt
@@ -298,12 +321,23 @@ export function LotPage({ id, token }: { id: string; token: string }) {
             id={id}
             label={lot.label ?? "vegetative lot"}
           />
-          {start && (
+          {dialog === "edit" && lot.lifecycle !== "reversed" && (
+            <LotEditDialog
+              lot={lot}
+              lifecycle={lot.lifecycle}
+              token={token}
+              close={() => {
+                setDialog(undefined);
+              }}
+              refresh={retry}
+            />
+          )}
+          {dialog === "start" && (
             <StartDialog
               lot={lot}
               token={token}
               close={() => {
-                setStart(false);
+                setDialog(undefined);
               }}
             />
           )}
@@ -339,6 +373,14 @@ function SaveDialog({
       <form
         onChange={() => {
           setDirty(true);
+        }}
+        onKeyDownCapture={(event) => {
+          if (
+            event.key === "Enter" &&
+            event.target instanceof Element &&
+            event.target.matches('input[role="combobox"][aria-expanded="true"]')
+          )
+            setDirty(true);
         }}
         onClickCapture={(event) => {
           if (
@@ -387,6 +429,77 @@ function SaveDialog({
   );
 }
 
+function LotEditDialog({
+  lot,
+  lifecycle,
+  token,
+  close,
+  refresh,
+}: {
+  lot: Lot;
+  lifecycle: Schema["VegetativeLotUpdate"]["lifecycle"];
+  token: string;
+  close: () => void;
+  refresh: () => void;
+}) {
+  const saveCutting = useSaveCutting(token);
+  const [details, setDetails] = useState<LotWrite>({
+    botanical_identity_id: lot.botanical_identity_id,
+    label: lot.label,
+    material_type: lot.material_type,
+    source_kind: lot.source_kind,
+    source_detail: lot.source_detail,
+    mother_plant_id: lot.mother_plant_id,
+    mother_plant_group_id: lot.mother_plant_group_id,
+    supplier_id: lot.supplier_id,
+    order_id: lot.order_id,
+    material_provenance_place_id: lot.material_provenance_place_id,
+    provenance_site_id: lot.provenance_site_id,
+    location_id: lot.location_id,
+    taken_on: lot.taken_on,
+    notes: lot.notes,
+  });
+  const [status, setStatus] = useState(lifecycle);
+  const [quantity, setQuantity] = useState(lot.quantity);
+  return (
+    <SaveDialog
+      title="Edit vegetative lot"
+      label="Save lot"
+      close={close}
+      onSave={async () => {
+        const payload: Schema["VegetativeLotUpdate"] = {
+          ...details,
+          expected_updated_at: lot.updated_at,
+          lifecycle: status,
+          quantity,
+        };
+        await saveCutting(`${lots}/${lot.id}`, payload, "PUT");
+        refresh();
+      }}
+    >
+      <LotFields lot={details} change={setDetails} disabled={false}>
+        <Choice
+          label="Lot status"
+          value={status}
+          onChange={setStatus}
+          items={[
+            { id: "active", label: "Active" },
+            { id: "exhausted", label: "Exhausted" },
+            { id: "discarded", label: "Discarded" },
+            { id: "lost", label: "Lost" },
+          ]}
+        />
+        <QuantityField
+          label="Remaining quantity"
+          value={quantity}
+          onChange={setQuantity}
+          minimum={status === "exhausted" ? 0 : 1}
+        />
+      </LotFields>
+    </SaveDialog>
+  );
+}
+
 function StartDialog({
   lot,
   token,
@@ -396,12 +509,15 @@ function StartDialog({
   token: string;
   close: () => void;
 }) {
+  const saveCutting = useSaveCutting(token);
   const [setup, setSetup] = useState<AttemptWrite["propagation_attempt"]>({
     started_on: lot.taken_on,
   });
   const [mode, setMode] =
     useState<AttemptWrite["source_adjustment"]["mode"]>("use_all");
   const [remainder, setRemainder] = useState<Lot["quantity"]>(null);
+  const useExactLotCount =
+    mode === "use_all" && lot.quantity?.is_approximate === false;
   return (
     <SaveDialog
       title="Start rooting attempt"
@@ -415,10 +531,13 @@ function StartDialog({
               mode,
               ...(mode === "partial" ? { resulting_quantity: remainder } : {}),
             },
-            propagation_attempt:
-              mode === "use_all" ? { ...setup, quantity: lot.quantity } : setup,
+            propagation_attempt: {
+              ...setup,
+              quantity: useExactLotCount
+                ? lot.quantity
+                : (setup.quantity ?? null),
+            },
           },
-          token,
         );
         setRecordRoute(`#/cuttings/attempts/${result.propagation_attempt.id}`);
       }}
@@ -445,7 +564,7 @@ function StartDialog({
           setup={setup}
           onChange={setSetup}
           disabled={false}
-          showQuantity={mode !== "use_all"}
+          showQuantity={!useExactLotCount}
         />
       </FormSection>
     </SaveDialog>
@@ -465,6 +584,7 @@ function ObservationDialog({
   close: () => void;
   refresh: () => void;
 }) {
+  const saveCutting = useSaveCutting(token);
   const [values, setValues] = useState<Schema["RootingObservationWrite"]>({
     stage: observation?.stage ?? "inspection",
     observed_on: observation?.observed_on,
@@ -483,7 +603,6 @@ function ObservationDialog({
         await saveCutting(
           observation ? `${path}/${observation.id}` : path,
           values,
-          token,
           observation ? "PUT" : "POST",
         );
         refresh();
@@ -542,6 +661,7 @@ function EstablishDialog({
   close: () => void;
   refresh: () => void;
 }) {
+  const saveCutting = useSaveCutting(token);
   const [kind, setKind] = useState<"plant" | "plant_group">("plant");
   const [values, setValues] = useState<Schema["EstablishPlantGroup"]>({
     resulting_attempt_lifecycle: "active",
@@ -556,7 +676,6 @@ function EstablishDialog({
         await saveCutting(
           `${attempts}/${attempt.id}/${kind === "plant" ? "plants" : "plant-groups"}`,
           kind === "plant" ? plant : { ...plant, quantity },
-          token,
         );
         refresh();
       }}
@@ -637,6 +756,7 @@ function AttemptEditDialog({
   close: () => void;
   refresh: () => void;
 }) {
+  const saveCutting = useSaveCutting(token);
   const [setup, setSetup] = useState<Schema["AttemptSetup"]>({
     label: attempt.label,
     quantity: attempt.quantity,
@@ -670,7 +790,6 @@ function AttemptEditDialog({
             ended_on: ended,
             expected_updated_at: attempt.updated_at,
           },
-          token,
           "PUT",
         );
         refresh();
@@ -725,6 +844,7 @@ function UndoDialog({
   close: () => void;
   refresh: () => void;
 }) {
+  const saveCutting = useSaveCutting(token);
   const path = `/api/v1/cutting-operations/${receipt}/reversal`;
   const [eligibility, retry] = useCuttingData<ReceiptEligibility>(path);
   const [confirmed, setConfirmed] = useState(false);
@@ -742,11 +862,7 @@ function UndoDialog({
     setError("");
     setPending(true);
     try {
-      await saveCutting(
-        path,
-        { confirm_retained_observations: confirmed },
-        token,
-      );
+      await saveCutting(path, { confirm_retained_observations: confirmed });
       refresh();
       close();
     } catch (reason) {
@@ -834,11 +950,15 @@ function UndoDialog({
 }
 
 export function AttemptPage({ id, token }: { id: string; token: string }) {
-  const [data, retry] = useCuttingData<AttemptDetail>(`${attempts}/${id}`);
+  const [data, retry] = useCuttingData<AttemptDetail>(
+    `${attempts}/${id}`,
+    true,
+  );
   const [summary, retrySummary] = useCuttingData<AttemptSummary>(
     `${attempts}/${id}/propagation-summary`,
   );
   const [dialog, setDialog] = useState<DialogMode>();
+  const overview = useRef<HTMLHeadingElement>(null);
   const attempt = data.state === "ready" ? data.value : undefined;
   const editable = attempt && attempt.lifecycle !== "reversed";
   const active = attempt?.lifecycle === "active";
@@ -848,6 +968,10 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
   function refresh() {
     retry();
     retrySummary();
+  }
+  function refreshAfterTransition() {
+    refresh();
+    requestAnimationFrame(() => overview.current?.focus());
   }
 
   return (
@@ -896,7 +1020,9 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
       {attempt && (
         <>
           <section aria-labelledby="rooting-overview">
-            <h3 id="rooting-overview">Rooting overview</h3>
+            <h3 id="rooting-overview" ref={overview} tabIndex={-1}>
+              Rooting overview
+            </h3>
             <dl className="record-facts">
               <div>
                 <dt>Status</dt>
@@ -1112,7 +1238,7 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
               attempt={attempt}
               token={token}
               close={close}
-              refresh={refresh}
+              refresh={refreshAfterTransition}
             />
           )}
           {dialog?.type === "undo" && (
@@ -1120,7 +1246,7 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
               receipt={dialog.receipt}
               token={token}
               close={close}
-              refresh={refresh}
+              refresh={refreshAfterTransition}
             />
           )}
         </>

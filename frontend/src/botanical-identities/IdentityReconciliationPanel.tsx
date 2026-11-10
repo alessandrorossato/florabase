@@ -417,6 +417,16 @@ export function IdentityReconciliationPanel({
                             suggestion.colliding_identity.collection_counts
                               .plant_groups
                           }
+                          , Vegetative lots:{" "}
+                          {
+                            suggestion.colliding_identity.collection_counts
+                              .vegetative_lots
+                          }
+                          , Rooting attempts:{" "}
+                          {
+                            suggestion.colliding_identity.collection_counts
+                              .propagation_attempts
+                          }
                           ). In-place renaming is refused so identities are
                           never merged silently.
                         </p>
@@ -550,11 +560,13 @@ export function IdentityReconciliationPanel({
                 {state.data.identity.collection_counts?.seed_lots ?? 0}), Plants
                 ({state.data.identity.collection_counts?.plants ?? 0}), Plant
                 groups (
-                {state.data.identity.collection_counts?.plant_groups ?? 0}), and
-                planned activities on {state.data.identity.display_label} will
-                be transactionally repointed to {mergeTarget.display_label}, and{" "}
-                {state.data.identity.display_label} will be retained as a merged
-                historical name on the survivor.
+                {state.data.identity.collection_counts?.plant_groups ?? 0}),
+                vegetative lots (
+                {state.data.identity.collection_counts?.vegetative_lots ?? 0}),
+                and planned activities on {state.data.identity.display_label}{" "}
+                will be transactionally repointed to {mergeTarget.display_label}
+                , and {state.data.identity.display_label} will be retained as a
+                merged historical name on the survivor.
               </p>
               {mergeTarget.has_conflicting_profile_fields && (
                 <div>
