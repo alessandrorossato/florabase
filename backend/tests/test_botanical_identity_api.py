@@ -244,3 +244,141 @@ def test_reconciliation_api_endpoints_and_error_mapping(
     assert detail["code"] == "duplicate_botanical_identity"
     assert detail["existing_id"] == str(colliding_id)
     assert detail["conflicting_fields"] == ["description"]
+
+
+def test_botanical_identity_synonym_api_endpoints(monkeypatch: pytest.MonkeyPatch) -> None:
+    from florabase.botanical_identities.model import BotanicalIdentityName
+    from florabase.botanical_identities.schemas import (
+        OperatorSynonymCreate,
+        OperatorSynonymUpdate,
+    )
+    from florabase.botanical_identities.service import (
+        BotanicalIdentityConflictError,
+        BotanicalIdentityMergedError,
+        BotanicalIdentityNotFoundError,
+        ImmutableHistoricalNameError,
+        SynonymNotFoundError,
+        SynonymValidationError,
+    )
+
+    item = identity()
+    actor = cast(Any, SimpleNamespace(owner=True))
+    database = MagicMock()
+    now = datetime.now(UTC)
+    synonym_row = BotanicalIdentityName(
+        id=uuid7(),
+        botanical_identity_id=item.id,
+        scientific_name="Echinopsis lageniformis",
+        cultivar_name=None,
+        common_name="Bolivian torch",
+        authorship=None,
+        status_kind="operator_synonym",
+        source_provider="operator",
+        source_version=None,
+        source_taxon_id=None,
+        accepted_source_taxon_id=None,
+        origin_identity_id=None,
+        effective_from=now,
+        superseded_at=now,
+        created_at=now,
+    )
+
+    # 1. list_synonyms
+    monkeypatch.setattr(api, "list_identity_synonyms", lambda *_args, **_kwargs: [synonym_row])
+    listed = api.list_synonyms(item.id, actor, database)
+    assert len(listed) == 1
+    assert listed[0].scientific_name == "Echinopsis lageniformis"
+    assert listed[0].status_kind == "operator_synonym"
+
+    monkeypatch.setattr(
+        api,
+        "list_identity_synonyms",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(BotanicalIdentityNotFoundError()),
+    )
+    with pytest.raises(HTTPException) as not_found:
+        api.list_synonyms(item.id, actor, database)
+    assert not_found.value.status_code == 404
+
+    # 2. create_synonym
+    create_payload = OperatorSynonymCreate(scientific_name="Echinopsis lageniformis")
+    monkeypatch.setattr(api, "add_operator_synonym", lambda *_args, **_kwargs: synonym_row)
+    res = Response()
+    created = api.create_synonym(item.id, create_payload, res, actor, database)
+    assert created.id == synonym_row.id
+    assert res.headers["Location"].endswith(str(synonym_row.id))
+
+    # create_synonym error translations
+    errors_and_codes = [
+        (BotanicalIdentityNotFoundError(), 404),
+        (BotanicalIdentityMergedError(uuid7()), 409),
+        (SynonymValidationError("synonym_equals_accepted_name", "Same as accepted"), 409),
+        (BotanicalIdentityConflictError(uuid7(), "Collision"), 409),
+    ]
+    for exc, code in errors_and_codes:
+        monkeypatch.setattr(
+            api,
+            "add_operator_synonym",
+            lambda *_args, exc=exc, **_kwargs: (_ for _ in ()).throw(exc),
+        )
+        with pytest.raises(HTTPException) as err:
+            api.create_synonym(item.id, create_payload, Response(), actor, database)
+        assert err.value.status_code == code
+
+    # 3. update_synonym
+    update_payload = OperatorSynonymUpdate(scientific_name="Echinopsis lageniformis")
+    monkeypatch.setattr(api, "update_operator_synonym", lambda *_args, **_kwargs: synonym_row)
+    updated = api.update_synonym(item.id, synonym_row.id, update_payload, actor, database)
+    assert updated.id == synonym_row.id
+
+    update_errors = [
+        (BotanicalIdentityNotFoundError(), 404),
+        (SynonymNotFoundError(), 404),
+        (BotanicalIdentityMergedError(uuid7()), 409),
+        (ImmutableHistoricalNameError(), 409),
+        (SynonymValidationError("duplicate_identity_name", "Duplicate"), 409),
+        (BotanicalIdentityConflictError(uuid7(), "Collision"), 409),
+    ]
+    for exc, code in update_errors:
+        monkeypatch.setattr(
+            api,
+            "update_operator_synonym",
+            lambda *_args, exc=exc, **_kwargs: (_ for _ in ()).throw(exc),
+        )
+        with pytest.raises(HTTPException) as err:
+            api.update_synonym(item.id, synonym_row.id, update_payload, actor, database)
+        assert err.value.status_code == code
+
+    # 4. delete_synonym
+    monkeypatch.setattr(api, "remove_operator_synonym", lambda *_args, **_kwargs: None)
+    del_res = api.delete_synonym(item.id, synonym_row.id, actor, database)
+    assert del_res.status_code == 204
+
+    delete_errors = [
+        (BotanicalIdentityNotFoundError(), 404),
+        (SynonymNotFoundError(), 404),
+        (BotanicalIdentityMergedError(uuid7()), 409),
+        (ImmutableHistoricalNameError(), 409),
+    ]
+    for exc, code in delete_errors:
+        monkeypatch.setattr(
+            api,
+            "remove_operator_synonym",
+            lambda *_args, exc=exc, **_kwargs: (_ for _ in ()).throw(exc),
+        )
+        with pytest.raises(HTTPException) as err:
+            api.delete_synonym(item.id, synonym_row.id, actor, database)
+        assert err.value.status_code == code
+
+
+def test_synonyms_for_identities_excludes_active_name_and_deduplicates() -> None:
+    ident = identity()
+    database = MagicMock()
+    database.execute.return_value.all.return_value = [
+        (ident.id, ident.scientific_name, ident.cultivar_name),
+        (ident.id, "Cereus bridgesii", None),
+        (ident.id, "Cereus bridgesii", "Inermis"),
+        (ident.id, "Echinopsis lageniformis", None),
+    ]
+    assert api._synonyms_for_identities(database, []) == {}
+    result = api._synonyms_for_identities(database, [ident])
+    assert result[ident.id] == ["Cereus bridgesii", "Echinopsis lageniformis"]

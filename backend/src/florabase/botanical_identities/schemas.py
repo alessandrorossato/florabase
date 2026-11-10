@@ -110,6 +110,7 @@ class BotanicalIdentityResponse(BaseModel):
     compact_external_cover_url: str | None = None
 
     collection_counts: IdentityCollectionCounts | None = None
+    synonyms: list[str] = Field(default_factory=list)
 
     @classmethod
     def from_model(
@@ -119,6 +120,7 @@ class BotanicalIdentityResponse(BaseModel):
         compact_cover_kind: Literal["local", "external"] | None = None,
         compact_external_cover_url: str | None = None,
         collection_counts: IdentityCollectionCounts | None = None,
+        synonyms: list[str] | None = None,
     ) -> Self:
         display_label = format_identity_display_label(
             botanical_identity.scientific_name,
@@ -138,6 +140,7 @@ class BotanicalIdentityResponse(BaseModel):
                 "compact_cover_kind": compact_cover_kind,
                 "compact_external_cover_url": compact_external_cover_url,
                 "collection_counts": collection_counts,
+                "synonyms": synonyms or [],
             }
         )
 
@@ -181,6 +184,41 @@ class IdentityHistoricalNameResponse(BaseModel):
     origin_identity_id: UUID | None = None
     effective_from: datetime
     superseded_at: datetime | None = None
+
+
+class OperatorSynonymCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    scientific_name: str = Field(max_length=255)
+    cultivar_name: str | None = Field(default=None, max_length=120)
+    common_name: str | None = Field(default=None, max_length=160)
+    authorship: str | None = Field(default=None, max_length=255)
+    source_citation: str | None = Field(default=None, max_length=64)
+
+    @field_validator("scientific_name", mode="before")
+    @classmethod
+    def normalize_scientific_name(cls, value: object) -> object:
+        if not isinstance(value, str):
+            return value
+        return _normalize_required(value)
+
+    @field_validator("cultivar_name", mode="before")
+    @classmethod
+    def normalize_cultivar_name(cls, value: object) -> object:
+        if value is not None and not isinstance(value, str):
+            return value
+        return _normalize_cultivar(value)
+
+    @field_validator("common_name", "authorship", "source_citation", mode="before")
+    @classmethod
+    def normalize_optional_fields(cls, value: object) -> object:
+        if value is not None and not isinstance(value, str):
+            return value
+        return _normalize_optional(value)
+
+
+class OperatorSynonymUpdate(OperatorSynonymCreate):
+    pass
 
 
 class CollidingIdentitySummary(BaseModel):

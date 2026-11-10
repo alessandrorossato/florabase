@@ -1,7 +1,7 @@
 import asyncio
 import json
 from collections.abc import Iterator, Mapping
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, cast
 from uuid import UUID, uuid7
 
@@ -1226,3 +1226,563 @@ def test_merge_duplicate_identity_preserves_plant_measurements_and_correction_hi
     assert len(retained_event["measurement_corrections"]) == 1
     assert retained_event["measurement_corrections"][0]["measurement"]["value"] == "12.50"
     assert retained_event["measurement_corrections"][0]["measurement"]["unit"] == "cm"
+
+
+def test_operator_synonyms_crud_validation_and_search_integration(
+    authenticated_browser: tuple[str, str],
+    database_connection: Connection,
+) -> None:
+    from florabase.botanical_identities.model import BotanicalIdentityName
+
+    cookie, csrf_token = authenticated_browser
+    headers = {"cookie": cookie, "origin": ORIGIN, "x-csrf-token": csrf_token}
+
+    # 1. Create two active botanical identities
+    _, _, ident_1 = create_identity(
+        authenticated_browser,
+        {"scientific_name": "Trichocereus bridgesii", "common_name": "Bolivian torch"},
+    )
+    _, _, ident_2 = create_identity(
+        authenticated_browser,
+        {"scientific_name": "Echinopsis pachanoi", "common_name": "San Pedro"},
+    )
+    ident_1_id = ident_1["id"]
+    ident_2_id = ident_2["id"]
+
+    # 2. Add an operator-managed synonym
+    syn_create_status, syn_create_headers, syn_data = request(
+        "POST",
+        f"/api/v1/botanical-identities/{ident_1_id}/synonyms",
+        headers=headers,
+        body={
+            "scientific_name": "  Echinopsis lageniformis ",
+            "cultivar_name": " \u2018Monstrose\u2019 ",
+            "common_name": " Penis cactus ",
+            "authorship": " (M.Frohlich) Friedrich & Rowley ",
+            "source_citation": " Hortus Third ",
+        },
+    )
+    assert syn_create_status == 201
+    assert syn_data["scientific_name"] == "Echinopsis lageniformis"
+    assert syn_data["cultivar_name"] == "Monstrose"
+    assert syn_data["common_name"] == "Penis cactus"
+    assert syn_data["authorship"] == "(M.Frohlich) Friedrich & Rowley"
+    assert syn_data["source_version"] == "Hortus Third"
+    assert syn_data["status_kind"] == "operator_synonym"
+    assert syn_data["source_provider"] == "operator"
+    syn_id = syn_data["id"]
+    assert syn_create_headers["location"].endswith(f"/synonyms/{syn_id}")
+
+    # 3. Reject proposed synonym matching current accepted name
+    eq_status, _, eq_body = request(
+        "POST",
+        f"/api/v1/botanical-identities/{ident_1_id}/synonyms",
+        headers=headers,
+        body={"scientific_name": "Trichocereus bridgesii"},
+    )
+    assert eq_status == 409
+    assert eq_body["detail"]["code"] == "synonym_equals_accepted_name"
+
+    # 4. Reject duplicate synonym on same identity
+    dup_status, _, dup_body = request(
+        "POST",
+        f"/api/v1/botanical-identities/{ident_1_id}/synonyms",
+        headers=headers,
+        body={"scientific_name": "Echinopsis lageniformis", "cultivar_name": "Monstrose"},
+    )
+    assert dup_status == 409
+    assert dup_body["detail"]["code"] == "duplicate_identity_name"
+
+    # 5. Reject synonym colliding with another active collection identity
+    coll_status, _, coll_body = request(
+        "POST",
+        f"/api/v1/botanical-identities/{ident_1_id}/synonyms",
+        headers=headers,
+        body={"scientific_name": "Echinopsis pachanoi"},
+    )
+    assert coll_status == 409
+    assert coll_body["detail"]["code"] == "duplicate_botanical_identity"
+    assert coll_body["detail"]["existing_id"] == ident_2_id
+
+    # 6. List synonyms
+    list_status, _, list_body = request(
+        "GET",
+        f"/api/v1/botanical-identities/{ident_1_id}/synonyms",
+        headers={"cookie": cookie},
+    )
+    assert list_status == 200
+    assert len(list_body) == 1
+    assert list_body[0]["id"] == syn_id
+    assert list_body[0]["status_kind"] == "operator_synonym"
+
+    # Filter by status_kind
+    _, _, empty_filter = request(
+        "GET",
+        f"/api/v1/botanical-identities/{ident_1_id}/synonyms?status_kind=former_accepted",
+        headers={"cookie": cookie},
+    )
+    assert len(empty_filter) == 0
+
+    # 7. Global search finds active identity via operator synonym
+    search_status, _, search_body = request(
+        "GET",
+        "/api/v1/search?q=lageniformis",
+        headers={"cookie": cookie},
+    )
+    assert search_status == 200
+    hits = [
+        item
+        for grp in search_body["groups"]
+        if grp["kind"] == "botanical_identity"
+        for item in grp["items"]
+    ]
+    assert len(hits) == 1
+    assert hits[0]["id"] == ident_1_id
+    assert "Synonym Echinopsis lageniformis" in hits[0]["context"]
+
+    # 8. GET /api/v1/botanical-identities/{id} exposes synonyms
+    read_status, _, read_body = request(
+        "GET",
+        f"/api/v1/botanical-identities/{ident_1_id}",
+        headers={"cookie": cookie},
+    )
+    assert read_status == 200
+    assert "Echinopsis lageniformis" in read_body["synonyms"]
+
+    # 9. Update operator synonym
+    up_status, _, up_body = request(
+        "PUT",
+        f"/api/v1/botanical-identities/{ident_1_id}/synonyms/{syn_id}",
+        headers=headers,
+        body={
+            "scientific_name": "Echinopsis lageniformis",
+            "cultivar_name": "Inermis",
+            "common_name": "Smooth Bolivian torch",
+            "authorship": "(M.Frohlich) Friedrich",
+            "source_citation": "RHS Index 2026",
+        },
+    )
+    assert up_status == 200
+    assert up_body["cultivar_name"] == "Inermis"
+    assert up_body["common_name"] == "Smooth Bolivian torch"
+    assert up_body["source_version"] == "RHS Index 2026"
+
+    # 10. Immutability guard: initial_recorded or former_accepted rows cannot be modified or deleted
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        now = datetime.now(UTC)
+        initial_name = BotanicalIdentityName(
+            botanical_identity_id=UUID(ident_1_id),
+            scientific_name="Trichocereus bridgesii",
+            status_kind="initial_recorded",
+            source_provider="operator",
+            effective_from=now,
+            superseded_at=now,
+            created_at=now,
+        )
+        database.add(initial_name)
+        database.commit()
+        initial_name_id = str(initial_name.id)
+
+    guard_put_status, _, guard_put_body = request(
+        "PUT",
+        f"/api/v1/botanical-identities/{ident_1_id}/synonyms/{initial_name_id}",
+        headers=headers,
+        body={"scientific_name": "Mutated initial name"},
+    )
+    assert guard_put_status == 409
+    assert guard_put_body["detail"]["code"] == "immutable_historical_name"
+
+    guard_del_status, _, guard_del_body = request(
+        "DELETE",
+        f"/api/v1/botanical-identities/{ident_1_id}/synonyms/{initial_name_id}",
+        headers=headers,
+    )
+    assert guard_del_status == 409
+    assert guard_del_body["detail"]["code"] == "immutable_historical_name"
+
+    # 11. Delete operator synonym
+    del_status, _, _ = request(
+        "DELETE",
+        f"/api/v1/botanical-identities/{ident_1_id}/synonyms/{syn_id}",
+        headers=headers,
+    )
+    assert del_status == 204
+
+    # Verify synonym was deleted
+    _, _, list_after = request(
+        "GET",
+        f"/api/v1/botanical-identities/{ident_1_id}/synonyms?status_kind=operator_synonym",
+        headers={"cookie": cookie},
+    )
+    assert len(list_after) == 0
+
+    # Search for deleted synonym returns no results
+    _, _, search_after = request(
+        "GET",
+        "/api/v1/search?q=lageniformis",
+        headers={"cookie": cookie},
+    )
+    hits_after = [
+        item
+        for grp in search_after["groups"]
+        if grp["kind"] == "botanical_identity"
+        for item in grp["items"]
+    ]
+    assert len(hits_after) == 0
+
+
+def test_lineage_preserves_references_across_synonyms_correction_and_merge(
+    authenticated_browser: tuple[str, str],
+    database_connection: Connection,
+) -> None:
+    from florabase.propagation.schemas import (
+        PlantFromSowingCreate,
+        SeedLotSowingTransitionCreate,
+    )
+    from florabase.propagation.service import (
+        create_plant_from_sowing,
+        create_sowing_from_seed_lot,
+    )
+    from florabase.seed_lots.schemas import SeedLotCreate
+    from florabase.seed_lots.service import create_seed_lot
+
+    cookie, csrf_token = authenticated_browser
+    headers = {"cookie": cookie, "origin": ORIGIN, "x-csrf-token": csrf_token}
+
+    _, _, dup = create_identity(
+        authenticated_browser,
+        {"scientific_name": "Cereus bridgesii", "common_name": "Old bridgesii"},
+    )
+    _, _, surv = create_identity(
+        authenticated_browser,
+        {"scientific_name": "Trichocereus bridgesii", "common_name": "Bolivian torch"},
+    )
+    dup_id = dup["id"]
+    surv_id = surv["id"]
+
+    # Add operator synonyms on both duplicate and survivor before reconciliation
+    dup_syn_status, _, _ = request(
+        "POST",
+        f"/api/v1/botanical-identities/{dup_id}/synonyms",
+        headers=headers,
+        body={"scientific_name": "Cereus lagenaeformis"},
+    )
+    assert dup_syn_status == 201
+    surv_syn_status, _, _ = request(
+        "POST",
+        f"/api/v1/botanical-identities/{surv_id}/synonyms",
+        headers=headers,
+        body={"scientific_name": "Trichocereus lageniformis"},
+    )
+    assert surv_syn_status == 201
+
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        lot = create_seed_lot(
+            database,
+            SeedLotCreate.model_validate(
+                {
+                    "botanical_identity_id": UUID(dup_id),
+                    "quantity": {"kind": "seed_count", "value": 50, "is_approximate": False},
+                }
+            ),
+        )
+        sowing, _ = create_sowing_from_seed_lot(
+            database,
+            lot.id,
+            SeedLotSowingTransitionCreate.model_validate(
+                {
+                    "sowing": {
+                        "quantity": {"kind": "seed_count", "value": 10, "is_approximate": False}
+                    },
+                    "source_adjustment": {"mode": "partial"},
+                }
+            ),
+        )
+        plant, _ = create_plant_from_sowing(
+            database,
+            sowing.id,
+            PlantFromSowingCreate(botanical_identity_id=UUID(dup_id), label="Bridgesii seedling 1"),
+            "active",
+        )
+        database.commit()
+        lot_id = str(lot.id)
+        plant_id = str(plant.id)
+
+    # Verify lineage before merge points to dup_id
+    lin_status, _, lin_before = request(
+        "GET", f"/api/v1/plants/{plant_id}/lineage", headers={"cookie": cookie}
+    )
+    assert lin_status == 200
+    assert lin_before["subject"]["botanical_identity"]["id"] == dup_id
+    assert [
+        node["botanical_identity"]["id"]
+        for node in lin_before["ancestors"]
+        if "botanical_identity" in node
+    ] == [dup_id]
+
+    _, _, dup_after_syn = request(
+        "GET", f"/api/v1/botanical-identities/{dup_id}", headers={"cookie": cookie}
+    )
+    _, _, surv_after_syn = request(
+        "GET", f"/api/v1/botanical-identities/{surv_id}", headers={"cookie": cookie}
+    )
+
+    # Correct survivor accepted name in place (preserves surv_id UUID & existing synonym)
+    corr_status, _, corr_body = request(
+        "POST",
+        f"/api/v1/botanical-identities/{surv_id}/reconciliation/correct-name",
+        headers=headers,
+        body={
+            "scientific_name": "Echinopsis lageniformis",
+            "cultivar_name": None,
+            "common_name": "Bolivian torch",
+            "source_provider": "operator",
+            "acknowledge_conflict": False,
+            "identity_updated_at": surv_after_syn["updated_at"],
+        },
+    )
+    assert corr_status == 200
+    surv_updated_at = corr_body["identity"]["updated_at"]
+
+    # Merge duplicate into survivor: repoints SeedLot + Plant lineage to surv_id
+    merge_status, _, merged_recon = request(
+        "POST",
+        f"/api/v1/botanical-identities/{dup_id}/reconciliation/merge-duplicate",
+        headers=headers,
+        body={
+            "survivor_identity_id": surv_id,
+            "profile_resolution": "fail_on_conflict",
+            "duplicate_updated_at": dup_after_syn["updated_at"],
+            "survivor_updated_at": surv_updated_at,
+        },
+    )
+    assert merge_status == 200
+
+    # Lineage endpoints for both Plant and SeedLot reflect survivor UUID & updated accepted name
+    lin_after_status, _, lin_after = request(
+        "GET", f"/api/v1/plants/{plant_id}/lineage", headers={"cookie": cookie}
+    )
+    assert lin_after_status == 200
+    expected_identity_summary = {
+        "id": surv_id,
+        "display_label": "Echinopsis lageniformis",
+    }
+    assert lin_after["subject"]["botanical_identity"] == expected_identity_summary
+    assert [
+        node["botanical_identity"]
+        for node in lin_after["ancestors"]
+        if "botanical_identity" in node
+    ] == [expected_identity_summary]
+
+    lot_lin_status, _, lot_lin = request(
+        "GET", f"/api/v1/seed-lots/{lot_id}/lineage", headers={"cookie": cookie}
+    )
+    assert lot_lin_status == 200
+    assert lot_lin["subject"]["botanical_identity"] == expected_identity_summary
+    assert lot_lin["ancestors"] == []
+
+    # Survivor retains operator synonym, former accepted name, and merged duplicate provenance
+    syn_names = {entry["scientific_name"] for entry in merged_recon["former_names"]}
+    assert {
+        "Trichocereus lageniformis",
+        "Trichocereus bridgesii",
+        "Cereus bridgesii",
+        "Cereus lagenaeformis",
+    }.issubset(syn_names)
+
+
+def test_synonyms_enforce_auth_csrf_owner_tombstone_and_edit_cleanup(
+    authenticated_browser: tuple[str, str],
+    database_connection: Connection,
+) -> None:
+    cookie, csrf_token = authenticated_browser
+    headers = {"cookie": cookie, "origin": ORIGIN, "x-csrf-token": csrf_token}
+
+    _, _, ident = create_identity(
+        authenticated_browser,
+        {"scientific_name": "Cereus bridgesii", "common_name": "Torch"},
+    )
+    ident_id = ident["id"]
+
+    # Create operator synonym for later cleanup verification
+    create_st, _, syn = request(
+        "POST",
+        f"/api/v1/botanical-identities/{ident_id}/synonyms",
+        headers=headers,
+        body={"scientific_name": "Trichocereus bridgesii"},
+    )
+    assert create_st == 201
+    syn_id = syn["id"]
+
+    # Unauthenticated GET / POST / PUT / DELETE are rejected with 401
+    assert request("GET", f"/api/v1/botanical-identities/{ident_id}/synonyms")[0] == 401
+    assert (
+        request(
+            "POST",
+            f"/api/v1/botanical-identities/{ident_id}/synonyms",
+            headers={"origin": ORIGIN, "x-csrf-token": csrf_token},
+            body={"scientific_name": "Echinopsis bridgesii"},
+        )[0]
+        == 401
+    )
+
+    # Missing / bad origin or CSRF token on POST / PUT / DELETE are rejected with 403
+    for bad_headers in (
+        {"cookie": cookie, "origin": ORIGIN},
+        {"cookie": cookie, "origin": ORIGIN, "x-csrf-token": "wrong"},
+        {"cookie": cookie, "x-csrf-token": csrf_token},
+        {"cookie": cookie, "origin": "https://evil.example", "x-csrf-token": csrf_token},
+    ):
+        assert (
+            request(
+                "POST",
+                f"/api/v1/botanical-identities/{ident_id}/synonyms",
+                headers=bad_headers,
+                body={"scientific_name": "Echinopsis bridgesii"},
+            )[0]
+            == 403
+        )
+        assert (
+            request(
+                "PUT",
+                f"/api/v1/botanical-identities/{ident_id}/synonyms/{syn_id}",
+                headers=bad_headers,
+                body={"scientific_name": "Echinopsis bridgesii"},
+            )[0]
+            == 403
+        )
+        assert (
+            request(
+                "DELETE",
+                f"/api/v1/botanical-identities/{ident_id}/synonyms/{syn_id}",
+                headers=bad_headers,
+            )[0]
+            == 403
+        )
+
+    # Non-owner authenticated actor is refused with 403
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        owner = database.scalars(select(User)).one()
+        auth_session = database.scalars(select(AuthSession)).one()
+        member_actor = AuthenticatedActor(
+            user_id=owner.id,
+            login_name=owner.login_name,
+            display_name=owner.display_name,
+            owner=False,
+            session=auth_session,
+        )
+    previous_override = app.dependency_overrides.get(require_csrf)
+    app.dependency_overrides[require_csrf] = lambda: member_actor
+    try:
+        assert (
+            request(
+                "POST",
+                f"/api/v1/botanical-identities/{ident_id}/synonyms",
+                body={"scientific_name": "Echinopsis bridgesii"},
+            )[0]
+            == 403
+        )
+    finally:
+        if previous_override is None:
+            app.dependency_overrides.pop(require_csrf, None)
+        else:
+            app.dependency_overrides[require_csrf] = previous_override
+
+    # Standard PUT rename to match existing operator_synonym cleans up the duplicate
+    # synonym and omits the active name from BotanicalIdentityResponse.synonyms
+    put_st, _, put_body = request(
+        "PUT",
+        f"/api/v1/botanical-identities/{ident_id}",
+        headers=headers,
+        body={"scientific_name": "Trichocereus bridgesii", "common_name": "Torch"},
+    )
+    assert put_st == 200
+    assert put_body["scientific_name"] == "Trichocereus bridgesii"
+    assert "Cereus bridgesii" in put_body["synonyms"]
+    assert "Trichocereus bridgesii" not in put_body["synonyms"]
+    _, _, op_syns_after_put = request(
+        "GET",
+        f"/api/v1/botanical-identities/{ident_id}/synonyms?status_kind=operator_synonym",
+        headers={"cookie": cookie},
+    )
+    assert len(op_syns_after_put) == 0
+
+    # Correct accepted name in place onto an operator_synonym cleans it up as well
+    add_2_st, _, _syn_2 = request(
+        "POST",
+        f"/api/v1/botanical-identities/{ident_id}/synonyms",
+        headers=headers,
+        body={"scientific_name": "Echinopsis lageniformis"},
+    )
+    assert add_2_st == 201
+    _, _, fresh_ident = request(
+        "GET", f"/api/v1/botanical-identities/{ident_id}", headers={"cookie": cookie}
+    )
+    corr_st, _, corr_body = request(
+        "POST",
+        f"/api/v1/botanical-identities/{ident_id}/reconciliation/correct-name",
+        headers=headers,
+        body={
+            "scientific_name": "Echinopsis lageniformis",
+            "cultivar_name": None,
+            "common_name": "Torch",
+            "source_provider": "operator",
+            "acknowledge_conflict": False,
+            "identity_updated_at": fresh_ident["updated_at"],
+        },
+    )
+    assert corr_st == 200
+    assert not any(
+        row["status_kind"] == "operator_synonym"
+        and row["scientific_name"] == "Echinopsis lageniformis"
+        for row in corr_body["former_names"]
+    )
+
+    # Merged tombstone rejects POST / PUT / DELETE /synonyms with 409 botanical_identity_merged
+    _, _, tombstone = create_identity(
+        authenticated_browser,
+        {"scientific_name": "Echinopsis bridgesii", "common_name": "Alias"},
+    )
+    tomb_id = tombstone["id"]
+    _, _, tomb_syn = request(
+        "POST",
+        f"/api/v1/botanical-identities/{tomb_id}/synonyms",
+        headers=headers,
+        body={"scientific_name": "Cactus bridgesii"},
+    )
+    _, _, fresh_tomb = request(
+        "GET", f"/api/v1/botanical-identities/{tomb_id}", headers={"cookie": cookie}
+    )
+    _, _, fresh_surv = request(
+        "GET", f"/api/v1/botanical-identities/{ident_id}", headers={"cookie": cookie}
+    )
+    merge_st, _, _ = request(
+        "POST",
+        f"/api/v1/botanical-identities/{tomb_id}/reconciliation/merge-duplicate",
+        headers=headers,
+        body={
+            "survivor_identity_id": ident_id,
+            "profile_resolution": "keep_survivor",
+            "duplicate_updated_at": fresh_tomb["updated_at"],
+            "survivor_updated_at": fresh_surv["updated_at"],
+        },
+    )
+    assert merge_st == 200
+
+    for method, url, payload in (
+        (
+            "POST",
+            f"/api/v1/botanical-identities/{tomb_id}/synonyms",
+            {"scientific_name": "New syn"},
+        ),
+        (
+            "PUT",
+            f"/api/v1/botanical-identities/{tomb_id}/synonyms/{tomb_syn['id']}",
+            {"scientific_name": "New syn"},
+        ),
+        ("DELETE", f"/api/v1/botanical-identities/{tomb_id}/synonyms/{tomb_syn['id']}", None),
+    ):
+        m_st, _, m_body = request(method, url, headers=headers, body=payload)
+        assert m_st == 409
+        assert m_body["detail"]["code"] == "botanical_identity_merged"
+        assert m_body["detail"]["existing_id"] == ident_id

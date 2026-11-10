@@ -1595,7 +1595,7 @@
         "TAXONOMY-001"
       ],
       "priority": "P3",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "WEATHER-001",

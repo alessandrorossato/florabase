@@ -545,7 +545,17 @@ def search(
 
     if not filters.collection_only():
         former_context = (
-            select(func.concat("Formerly ", BotanicalIdentityName.scientific_name))
+            select(
+                case(
+                    (
+                        BotanicalIdentityName.status_kind.in_(
+                            ("operator_synonym", "source_synonym")
+                        ),
+                        func.concat("Synonym ", BotanicalIdentityName.scientific_name),
+                    ),
+                    else_=func.concat("Formerly ", BotanicalIdentityName.scientific_name),
+                )
+            )
             .where(
                 BotanicalIdentityName.botanical_identity_id == BotanicalIdentity.id,
                 _matches(

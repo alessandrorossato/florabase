@@ -57,25 +57,40 @@ export function IdentityStats({
 
 export function IdentityCardContext({
   identity,
+  filterQuery,
 }: {
   identity: BotanicalIdentityResponse;
+  filterQuery?: string;
 }) {
   const counts = identity.collection_counts;
-  if (!counts) return null;
-  const items = [
-    [counts.seed_lots, "seed lot", "seed lots"],
-    [counts.plants, "plant", "plants"],
-    [counts.plant_groups, "plant group", "plant groups"],
-    [counts.sowings, "sowing", "sowings"],
-  ] as const;
-  const text = items
-    .filter(([n]) => n > 0)
-    .slice(0, 2)
-    .map(([n, one, many]) => `${String(n)} ${n === 1 ? one : many}`)
-    .join(" · ");
-  return (
-    <small className="identity-card-context">
-      {text || "No active records"}
-    </small>
-  );
+  const synonyms = identity.synonyms ?? [];
+  const trimmedQuery = filterQuery?.trim().toLocaleLowerCase() ?? "";
+  const matchedSynonym = trimmedQuery
+    ? synonyms.find((synonym) =>
+        synonym.toLocaleLowerCase().includes(trimmedQuery),
+      )
+    : undefined;
+  const synonymText = matchedSynonym
+    ? `Synonym: ${matchedSynonym}`
+    : synonyms.length > 0
+      ? `${String(synonyms.length)} ${synonyms.length === 1 ? "synonym" : "synonyms"}`
+      : null;
+
+  if (!counts && !synonymText) return null;
+  const countText = counts
+    ? (
+        [
+          [counts.seed_lots, "seed lot", "seed lots"],
+          [counts.plants, "plant", "plants"],
+          [counts.plant_groups, "plant group", "plant groups"],
+          [counts.sowings, "sowing", "sowings"],
+        ] as const
+      )
+        .filter(([n]) => n > 0)
+        .slice(0, 2)
+        .map(([n, one, many]) => `${String(n)} ${n === 1 ? one : many}`)
+        .join(" · ") || "No active records"
+    : null;
+  const parts = [countText, synonymText].filter(Boolean);
+  return <small className="identity-card-context">{parts.join(" · ")}</small>;
 }

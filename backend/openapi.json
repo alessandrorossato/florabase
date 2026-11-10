@@ -1352,6 +1352,13 @@
             "title": "Scientific Name",
             "type": "string"
           },
+          "synonyms": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Synonyms",
+            "type": "array"
+          },
           "updated_at": {
             "format": "date-time",
             "title": "Updated At",
@@ -7016,6 +7023,132 @@
           "has_geospatial_issue"
         ],
         "title": "OccurrenceQualityPolicy",
+        "type": "object"
+      },
+      "OperatorSynonymCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "authorship": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authorship"
+          },
+          "common_name": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Common Name"
+          },
+          "cultivar_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cultivar Name"
+          },
+          "scientific_name": {
+            "maxLength": 255,
+            "title": "Scientific Name",
+            "type": "string"
+          },
+          "source_citation": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Citation"
+          }
+        },
+        "required": [
+          "scientific_name"
+        ],
+        "title": "OperatorSynonymCreate",
+        "type": "object"
+      },
+      "OperatorSynonymUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "authorship": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authorship"
+          },
+          "common_name": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Common Name"
+          },
+          "cultivar_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cultivar Name"
+          },
+          "scientific_name": {
+            "maxLength": 255,
+            "title": "Scientific Name",
+            "type": "string"
+          },
+          "source_citation": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Citation"
+          }
+        },
+        "required": [
+          "scientific_name"
+        ],
+        "title": "OperatorSynonymUpdate",
         "type": "object"
       },
       "OrderCreate": {
@@ -18565,6 +18698,332 @@
           }
         },
         "summary": "Merge Duplicate",
+        "tags": [
+          "botanical identities"
+        ]
+      }
+    },
+    "/api/v1/botanical-identities/{botanical_identity_id}/synonyms": {
+      "get": {
+        "operationId": "listBotanicalIdentitySynonyms",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status_kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "initial_recorded",
+                    "former_accepted",
+                    "merged_duplicate",
+                    "source_synonym",
+                    "operator_synonym"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Kind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/IdentityHistoricalNameResponse"
+                  },
+                  "title": "Response Listbotanicalidentitysynonyms",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Botanical identity not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Synonyms",
+        "tags": [
+          "botanical identities"
+        ]
+      },
+      "post": {
+        "operationId": "createBotanicalIdentitySynonym",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OperatorSynonymCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityHistoricalNameResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Location": {
+                "description": "Canonical URL of the created synonym",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Request forbidden"
+          },
+          "404": {
+            "description": "Botanical identity not found"
+          },
+          "409": {
+            "description": "Synonym conflict or validation failure"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Synonym",
+        "tags": [
+          "botanical identities"
+        ]
+      }
+    },
+    "/api/v1/botanical-identities/{botanical_identity_id}/synonyms/{name_id}": {
+      "delete": {
+        "operationId": "deleteBotanicalIdentitySynonym",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Name Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Request forbidden"
+          },
+          "404": {
+            "description": "Synonym or botanical identity not found"
+          },
+          "409": {
+            "description": "Immutable historical name or merged identity"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Synonym",
+        "tags": [
+          "botanical identities"
+        ]
+      },
+      "put": {
+        "operationId": "updateBotanicalIdentitySynonym",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Name Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OperatorSynonymUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityHistoricalNameResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Request forbidden"
+          },
+          "404": {
+            "description": "Synonym or botanical identity not found"
+          },
+          "409": {
+            "description": "Synonym conflict or immutable historical name"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Synonym",
         "tags": [
           "botanical identities"
         ]

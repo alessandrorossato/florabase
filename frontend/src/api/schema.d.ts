@@ -475,6 +475,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/botanical-identities/{botanical_identity_id}/synonyms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Synonyms */
+        get: operations["listBotanicalIdentitySynonyms"];
+        put?: never;
+        /** Create Synonym */
+        post: operations["createBotanicalIdentitySynonym"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/botanical-identities/{botanical_identity_id}/synonyms/{name_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Synonym */
+        put: operations["updateBotanicalIdentitySynonym"];
+        post?: never;
+        /** Delete Synonym */
+        delete: operations["deleteBotanicalIdentitySynonym"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/botanical-identities/{identity_id}/native-range-enrichment/link": {
         parameters: {
             query?: never;
@@ -2981,6 +3017,8 @@ export interface components {
             merged_into_id?: string | null;
             /** Scientific Name */
             scientific_name: string;
+            /** Synonyms */
+            synonyms?: string[];
             /**
              * Updated At
              * Format: date-time
@@ -4937,6 +4975,32 @@ export interface components {
             has_geospatial_issue: boolean;
             /** Occurrence Status */
             occurrence_status: string;
+        };
+        /** OperatorSynonymCreate */
+        OperatorSynonymCreate: {
+            /** Authorship */
+            authorship?: string | null;
+            /** Common Name */
+            common_name?: string | null;
+            /** Cultivar Name */
+            cultivar_name?: string | null;
+            /** Scientific Name */
+            scientific_name: string;
+            /** Source Citation */
+            source_citation?: string | null;
+        };
+        /** OperatorSynonymUpdate */
+        OperatorSynonymUpdate: {
+            /** Authorship */
+            authorship?: string | null;
+            /** Common Name */
+            common_name?: string | null;
+            /** Cultivar Name */
+            cultivar_name?: string | null;
+            /** Scientific Name */
+            scientific_name: string;
+            /** Source Citation */
+            source_citation?: string | null;
         };
         /** OrderCreate */
         OrderCreate: {
@@ -9168,6 +9232,246 @@ export interface operations {
                 content?: never;
             };
             /** @description Reconciliation conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listBotanicalIdentitySynonyms: {
+        parameters: {
+            query?: {
+                status_kind?: ("initial_recorded" | "former_accepted" | "merged_duplicate" | "source_synonym" | "operator_synonym") | null;
+            };
+            header?: never;
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityHistoricalNameResponse"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Botanical identity not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createBotanicalIdentitySynonym: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperatorSynonymCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    /** @description Canonical URL of the created synonym */
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityHistoricalNameResponse"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Botanical identity not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Synonym conflict or validation failure */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateBotanicalIdentitySynonym: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                botanical_identity_id: string;
+                name_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperatorSynonymUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityHistoricalNameResponse"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Synonym or botanical identity not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Synonym conflict or immutable historical name */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteBotanicalIdentitySynonym: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                botanical_identity_id: string;
+                name_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Synonym or botanical identity not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Immutable historical name or merged identity */
             409: {
                 headers: {
                     [name: string]: unknown;
