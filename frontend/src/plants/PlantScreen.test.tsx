@@ -3576,17 +3576,15 @@ test("phenology is recorded stage first, shown once in the Journal and compared 
     within(dialog).getByLabelText(/Phenological stage/),
     "fruit_ripening",
   );
-  await user.click(within(dialog).getByLabelText(/Approximate date/));
-  await user.click(submit);
-  expect(screen.getByRole("alert")).toHaveTextContent(
-    "Enter the estimated date",
-  );
+  // Only a recorded date can be approximate.
+  expect(within(dialog).getByLabelText(/Approximate date/)).toBeDisabled();
   expect(writes).toHaveLength(0);
   await user.selectOptions(screen.getByLabelText("Precision"), "month");
   await user.clear(screen.getByLabelText("Year"));
   await user.type(screen.getByLabelText("Year"), "2026");
   await user.clear(screen.getByLabelText("Month"));
   await user.type(screen.getByLabelText("Month"), "8");
+  await user.click(within(dialog).getByLabelText(/Approximate date/));
   await user.click(submit);
   expect(
     await screen.findByText("Journal entry was recorded."),

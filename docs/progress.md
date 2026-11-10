@@ -21,6 +21,12 @@
 - Golden SMOKE re-pinned for `20261110_0046` (only `events` hash and canonical digest changed,
   `de25687b…7fce`); all 38 golden + phenology integration tests pass. COMPREHENSIVE untouched. Independent read-only QA: no P1/P2 code issues; P3 label,
   wording, flag-reset and landmark nits fixed.
+- Final QA and visual review (10 November): two independent read-only reviews PASS (no P1/P2); P3
+  fixes plus a duplicate-merge regression test; 103 focused integration tests, 89 frontend tests,
+  `make api-check` pass. Authenticated UAT screenshots at 1440/768/390 px in
+  `docs/review/phenology-001/`. READY_FOR_INTEGRATION; canonical FULL deferred to the consolidated
+  tree ([handoff](phenology-001-handoff.md)).
+
 
 ## 2026-11-09 — TAXONOMY-001 integrated with MEASUREMENT-001 and renumbered to 20261109_0045
 

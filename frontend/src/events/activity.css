@@ -624,4 +624,9 @@ body:has(.activity-page dialog[open]) {
     font-size: 0.625rem;
     letter-spacing: -0.02em;
   }
+  /* WCAG 2.5.8: at least 24px touch height for the date links on phones. */
+  .phenology-stages button {
+    min-height: 1.5rem;
+    padding-block: 0.125rem;
+  }
 }

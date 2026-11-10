@@ -941,7 +941,8 @@ export function EventJournal({
                 <input
                   type="checkbox"
                   checked={form.phenologyApproximate}
-                  disabled={pending}
+                  // Only a recorded date can be approximate (ck_events_phenology).
+                  disabled={pending || !form.occurredOn}
                   onChange={(event) => {
                     const phenologyApproximate = event.currentTarget.checked;
                     setForm((current) => ({

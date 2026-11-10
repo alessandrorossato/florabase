@@ -179,6 +179,54 @@ def test_seasonal_history_scenarios_keep_recorded_evidence_only(
     assert [item["phenology"] for item in renamed[1:]] == [item["phenology"] for item in listed]
 
 
+def test_duplicate_identity_merge_keeps_phenology_on_the_same_records(
+    authenticated_browser: tuple[str, str],
+    event_targets: dict[str, str],
+    event_references: dict[str, str],
+) -> None:
+    cookie, csrf = authenticated_browser
+    headers = {"cookie": cookie, "origin": ORIGIN, "x-csrf-token": csrf}
+    plant_events = f"/api/v1/plants/{event_targets['plant']}/events"
+    group_events = f"/api/v1/plant-groups/{event_targets['group']}/events"
+    on_plant = _record(
+        authenticated_browser, plant_events, "flowering", _day(2025, 5, 14), "flowering_onset"
+    )
+    on_group = _record(
+        authenticated_browser, group_events, "fruiting", _month(2025, 8), "fruit_set"
+    )
+    status, _, survivor = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/botanical-identities",
+        {"scientific_name": "Eventus acceptus"},
+    )
+    assert status == 201
+    duplicate = _get(
+        authenticated_browser, f"/api/v1/botanical-identities/{event_references['identity']}"
+    )
+    status, _, merged = request(
+        "POST",
+        f"/api/v1/botanical-identities/{duplicate['id']}/reconciliation/merge-duplicate",
+        headers=headers,
+        body={
+            "survivor_identity_id": survivor["id"],
+            "duplicate_updated_at": duplicate["updated_at"],
+            "survivor_updated_at": survivor["updated_at"],
+        },
+    )
+    assert status == 200, merged
+    # The same Events, stages and dates now display the survivor's accepted name.
+    for path, original in ((plant_events, on_plant), (group_events, on_group)):
+        [after] = [
+            item for item in _get(authenticated_browser, path) if item["id"] == original["id"]
+        ]
+        assert (after["phenology"], after["occurred_on"]) == (
+            original["phenology"],
+            original["occurred_on"],
+        )
+        assert after["target"]["botanical_identity"]["id"] == survivor["id"]
+
+
 def test_phenology_correction_deletion_groups_inactive_and_measurements(
     authenticated_browser: tuple[str, str],
     event_targets: dict[str, str],

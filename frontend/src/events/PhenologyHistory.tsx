@@ -176,7 +176,7 @@ export function PhenologyHistory({
                           {index > 0 && ", "}
                           <button
                             type="button"
-                            aria-label={`${phenologyStage(event) ?? ""}, ${withinYear(event)} ${heading}: show Journal entry`}
+                            aria-label={`${phenologyStage(event) ?? ""}, ${withinYear(event)}${year === null ? "" : ` ${heading}`}: show Journal entry`}
                             onClick={() => {
                               onShow(event);
                             }}
