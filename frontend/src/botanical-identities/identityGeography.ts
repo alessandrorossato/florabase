@@ -21,6 +21,9 @@ export function identityOriginSites(
               plant_groups: records.filter(
                 (r) => r.record_type === "plant_group",
               ).length,
+              vegetative_lots: records.filter(
+                (r) => r.record_type === "vegetative_lot",
+              ).length,
               total: records.length,
             },
           },

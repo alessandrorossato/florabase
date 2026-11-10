@@ -6241,6 +6241,11 @@ export interface components {
             ended_on?: components["schemas"]["PartialDate"] | null;
             /** Environment */
             environment?: string | null;
+            /**
+             * Expected Updated At
+             * Format: date-time
+             */
+            expected_updated_at: string;
             /** Hormone Treatment */
             hormone_treatment?: string | null;
             /** Label */
@@ -6407,7 +6412,7 @@ export interface components {
              * Record Type
              * @enum {string}
              */
-            record_type: "seed_lot" | "plant" | "plant_group";
+            record_type: "seed_lot" | "plant" | "plant_group" | "vegetative_lot";
         };
         /** ProvenanceMapResponse */
         ProvenanceMapResponse: {
@@ -6451,6 +6456,11 @@ export interface components {
             seed_lots: number;
             /** Total */
             total: number;
+            /**
+             * Vegetative Lots
+             * @default 0
+             */
+            vegetative_lots: number;
         };
         /** ProvenanceSiteCreate */
         ProvenanceSiteCreate: {
@@ -6548,6 +6558,11 @@ export interface components {
              * @default 0
              */
             seed_lots: number;
+            /**
+             * Vegetative Lots
+             * @default 0
+             */
+            vegetative_lots: number;
         };
         /** PurchaseApplyRequest */
         PurchaseApplyRequest: {
@@ -6919,7 +6934,7 @@ export interface components {
          * SavedViewSurface
          * @enum {string}
          */
-        SavedViewSurface: "global_search" | "seed_lots" | "sowings" | "plants" | "harvests" | "stored_material" | "events" | "history" | "media" | "botanical_identities" | "suppliers" | "orders" | "locations" | "geography" | "species_distribution" | "native_ranges" | "provenance_map";
+        SavedViewSurface: "global_search" | "seed_lots" | "sowings" | "cuttings" | "plants" | "harvests" | "stored_material" | "events" | "history" | "media" | "botanical_identities" | "suppliers" | "orders" | "locations" | "geography" | "species_distribution" | "native_ranges" | "provenance_map";
         /** SavedViewUpdate */
         SavedViewUpdate: {
             /** Name */
@@ -8580,6 +8595,11 @@ export interface components {
         VegetativeLotUpdate: {
             /** Botanical Identity Id */
             botanical_identity_id?: string | null;
+            /**
+             * Expected Updated At
+             * Format: date-time
+             */
+            expected_updated_at: string;
             /** Label */
             label?: string | null;
             /**

@@ -155,12 +155,6 @@ class PlantGroupWrite(PlantCommonWrite):
     lifecycle: PlantGroupLifecycle = PlantGroupLifecycle.ACTIVE
 
     @model_validator(mode="after")
-    def default_direct_origin(self) -> Self:
-        if self.originating_sowing_id is None and self.direct_origin_kind is None:
-            self.direct_origin_kind = DirectOriginKind.UNKNOWN
-        return self
-
-    @model_validator(mode="after")
     def validate_quantity_lifecycle(self) -> Self:
         if (
             self.quantity is not None
@@ -178,6 +172,12 @@ class PlantGroupWrite(PlantCommonWrite):
 
 
 class PlantGroupCreate(PlantGroupWrite):
+    @model_validator(mode="after")
+    def default_direct_origin(self) -> Self:
+        if self.originating_sowing_id is None and self.direct_origin_kind is None:
+            self.direct_origin_kind = DirectOriginKind.UNKNOWN
+        return self
+
     @model_validator(mode="after")
     def reject_reversed(self) -> Self:
         if self.lifecycle == PlantGroupLifecycle.REVERSED:

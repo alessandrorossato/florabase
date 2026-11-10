@@ -8177,3 +8177,20 @@ Status remains implemented pending canonical verification.
 - The branch uses temporary revision `cutting_001_dev` above main's `20261109_0044`. Final
   revision assignment after TAXONOMY, LINEAGE-003 explorer integration, UAT, independent QA and
   the frozen-tree FULL gate are still pending. Status is `in_progress`.
+
+### CUTTING-001 — workspace and isolated UAT checkpoint, 10 November 2026
+
+- Added the Cuttings directory, source and rooting forms, contextual Plant and PlantGroup actions,
+  rooting observations, establishment and guarded undo. Added cutting targets to the existing
+  Schedule, media, Collection Origins and Saved Views surfaces.
+- Detached backend QA found stale full-record writes and reference lifecycle gaps. Lot and attempt
+  corrections now check their revision after taking the row lock. Linked Orders retain supplier
+  consistency, cutting-only reference deletion returns a domain conflict, and ordinary edits
+  preserve the originating attempt on rooted PlantGroups.
+- In isolated synthetic UAT, took four cuttings from a PlantGroup, recorded two rooted, established
+  a Plant, and undid the establishment and attempt in order. Undo retained the observation only
+  after confirmation. A second attempt retained a failed result with a recorded zero. Checked
+  1440, 1024 and 390 px layouts and keyboard dismissal with focus returning to Filters. Stopped
+  the owned UAT instance with its state preserved.
+- This checkpoint precedes integration with TAXONOMY revision 0045. Canonical FULL and final
+  ancestry-explorer acceptance remain pending.

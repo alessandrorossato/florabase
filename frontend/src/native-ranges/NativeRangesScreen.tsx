@@ -785,6 +785,8 @@ const categoryLabels: Record<RecordCategory, string> = {
   plant: "Plants",
   plant_group: "Plant groups",
   stored_material: "Stored material",
+  vegetative_lot: "Vegetative lots",
+  propagation_attempt: "Rooting attempts",
 };
 
 export function NativeRangesScreen() {

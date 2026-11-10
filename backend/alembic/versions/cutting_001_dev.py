@@ -544,6 +544,19 @@ def _add_receipt_source_snapshot() -> None:
     )
 
 
+_PREVIOUS_SAVED_VIEW_SURFACES = (
+    "'global_search', 'seed_lots', 'sowings', 'plants', 'harvests', 'stored_material', 'events', "
+    "'history', 'media', 'botanical_identities', 'suppliers', 'orders', 'locations', 'geography', "
+    "'provenance_map', 'species_distribution', 'native_ranges'"
+)
+
+
+def _saved_view_surface(*, cutting: bool) -> None:
+    surfaces = _PREVIOUS_SAVED_VIEW_SURFACES + (", 'cuttings'" if cutting else "")
+    op.drop_constraint("ck_saved_views_surface", "saved_views", type_="check")
+    op.create_check_constraint("ck_saved_views_surface", "saved_views", f"surface IN ({surfaces})")
+
+
 def upgrade() -> None:
     op.execute(
         "LOCK TABLE seed_lots, sowings, plants, plant_groups, locations, operation_receipts "
@@ -913,13 +926,14 @@ def upgrade() -> None:
     _lineage_guards(cutting=True)
     _add_targets()
     _add_receipt_source_snapshot()
+    _saved_view_surface(cutting=True)
 
 
 def downgrade() -> None:
     op.execute(
         "LOCK TABLE seed_lots, sowings, plants, plant_groups, locations, operation_receipts, "
         "vegetative_lots, propagation_attempts, rooting_observations, scheduled_activities, "
-        "record_media_links, collection_primary_photos IN ACCESS EXCLUSIVE MODE"
+        "record_media_links, collection_primary_photos, saved_views IN ACCESS EXCLUSIVE MODE"
     )
     op.execute("""
         DO $$ BEGIN
@@ -927,6 +941,7 @@ def downgrade() -> None:
                 OR EXISTS (SELECT 1 FROM propagation_attempts)
                 OR EXISTS (SELECT 1 FROM rooting_observations)
                 OR EXISTS (SELECT 1 FROM scheduled_activities WHERE activity_kind = 'check_rooting')
+                OR EXISTS (SELECT 1 FROM saved_views WHERE surface = 'cuttings')
                 OR EXISTS (SELECT 1 FROM locations WHERE
                     supports_vegetative_lots OR supports_propagation_attempts) THEN
                 RAISE EXCEPTION
@@ -937,6 +952,7 @@ def downgrade() -> None:
     op.drop_constraint(_SOURCE_CHECK, "operation_receipts", type_="check")
     for column, _ in _SOURCE_COLUMNS:
         op.drop_column("operation_receipts", column)
+    _saved_view_surface(cutting=False)
     _drop_targets()
     _lineage_guards(cutting=False)
     _replace_checks(_PREVIOUS_CHECKS)

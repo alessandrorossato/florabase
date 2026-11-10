@@ -10777,6 +10777,11 @@
             ],
             "title": "Environment"
           },
+          "expected_updated_at": {
+            "format": "date-time",
+            "title": "Expected Updated At",
+            "type": "string"
+          },
           "hormone_treatment": {
             "anyOf": [
               {
@@ -10916,6 +10921,7 @@
           }
         },
         "required": [
+          "expected_updated_at",
           "lifecycle"
         ],
         "title": "PropagationAttemptUpdate",
@@ -11278,7 +11284,8 @@
             "enum": [
               "seed_lot",
               "plant",
-              "plant_group"
+              "plant_group",
+              "vegetative_lot"
             ],
             "title": "Record Type",
             "type": "string"
@@ -11418,6 +11425,11 @@
           },
           "total": {
             "title": "Total",
+            "type": "integer"
+          },
+          "vegetative_lots": {
+            "default": 0,
+            "title": "Vegetative Lots",
             "type": "integer"
           }
         },
@@ -11789,6 +11801,11 @@
           "seed_lots": {
             "default": 0,
             "title": "Seed Lots",
+            "type": "integer"
+          },
+          "vegetative_lots": {
+            "default": 0,
+            "title": "Vegetative Lots",
             "type": "integer"
           }
         },
@@ -12893,6 +12910,7 @@
           "global_search",
           "seed_lots",
           "sowings",
+          "cuttings",
           "plants",
           "harvests",
           "stored_material",
@@ -18591,6 +18609,11 @@
             ],
             "title": "Botanical Identity Id"
           },
+          "expected_updated_at": {
+            "format": "date-time",
+            "title": "Expected Updated At",
+            "type": "string"
+          },
           "label": {
             "anyOf": [
               {
@@ -18766,6 +18789,7 @@
         },
         "required": [
           "material_type",
+          "expected_updated_at",
           "lifecycle",
           "quantity"
         ],
@@ -25583,7 +25607,7 @@
                   "items": {
                     "$ref": "#/components/schemas/HistorySubjectKind"
                   },
-                  "maxItems": 7,
+                  "maxItems": 9,
                   "type": "array"
                 },
                 {

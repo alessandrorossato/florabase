@@ -164,6 +164,12 @@ const OrderScreen = lazy(() =>
 );
 
 type HealthResponse = components["schemas"]["HealthResponse"];
+const CuttingsScreen = lazy(() =>
+  import("./ui-pages/Cuttings/Cuttings").then((module) => ({
+    default: module.Cuttings,
+  })),
+);
+
 type HealthState =
   | { status: "loading" }
   | { status: "ready"; response: HealthResponse }
@@ -173,6 +179,7 @@ interface Route {
   section: Section;
   geographyView?: GeographyView;
   recordId?: string;
+  cuttingRoute?: string;
   recordKind?: "plant" | "group";
   recordTypeFilter?: "plant" | "group";
   tab?: string;
@@ -206,7 +213,9 @@ const ancestrySections = {
 function currentRoute(): Route {
   const raw = window.location.hash.slice(1) || "/dashboard";
   const [pathname, query = ""] = raw.split("?", 2);
-  const [first = "dashboard", id] = pathname.split("/").filter(Boolean);
+  const [first = "dashboard", id, detailId] = pathname
+    .split("/")
+    .filter(Boolean);
   const tab = new URLSearchParams(query).get("tab") ?? undefined;
   const params = new URLSearchParams(query);
   const type = params.get("type");
@@ -236,6 +245,13 @@ function currentRoute(): Route {
       ancestry: { kind, id: ancestry[2] },
     };
   }
+  if (first === "cuttings")
+    return {
+      section: "cuttings",
+      cuttingRoute: id,
+      recordId: detailId,
+      ...context,
+    };
   const geographic = geographyRoute(window.location.hash);
   if (geographic)
     return {
@@ -453,6 +469,7 @@ function ApplicationShell() {
             route.section === "dashboard" ||
             route.section === "events" ||
             route.section === "sowings" ||
+            route.section === "cuttings" ||
             route.section === "harvests"
           }
         >
@@ -506,6 +523,15 @@ function ApplicationShell() {
                   initialIdentityId={route.identityId}
                   initialOrderId={route.orderId}
                   startCreating={route.action === "create"}
+                />
+              ) : route.section === "cuttings" ? (
+                <CuttingsScreen
+                  key={window.location.hash.split("?", 1)[0]}
+                  route={route.cuttingRoute}
+                  id={route.recordId}
+                  identityId={route.identityId}
+                  sourceId={route.sourceId}
+                  sourceType={route.sourceType}
                 />
               ) : route.section === "sowings" ? (
                 <SowingScreen

@@ -151,6 +151,7 @@ def test_clonal_lineage_db_and_api_cycle_guards_and_downstream_first_undo(
         maternal_field: offspring["id"],
         "quantity": lot["quantity"],
         "lifecycle": lot["lifecycle"],
+        "expected_updated_at": lot["updated_at"],
     }
     assert (
         _write(browser, "PUT", f"{LOTS}/{lot['id']}", correction, 409)["detail"]["code"]
@@ -212,6 +213,7 @@ def test_split_approximate_and_unknown_stock_retains_uncertainty(
         f"{ATTEMPTS}/{first['propagation_attempt']['id']}",
         {
             "lifecycle": "completed",
+            "expected_updated_at": first["propagation_attempt"]["updated_at"],
             "quantity": _count(4, True),
             "rooted_count": 5,
         },
@@ -271,13 +273,19 @@ def test_failed_attempt_history_explore_schedule_and_media(
             "attribution": "Collection",
         },
     )
-    assert media["id"]
+    photo_path = f"/api/v1/collection-records/propagation_attempt/{attempt_id}/primary-photo"
+    selected = _write(
+        browser, "PUT", photo_path, {"kind": "external", "photo_id": media["id"]}, 200
+    )
+    assert selected["photo_id"] == media["id"]
+    assert _read(browser, photo_path)["photo_id"] == media["id"]
     result = _write(
         browser,
         "PUT",
         url,
         {
             "lifecycle": "failed",
+            "expected_updated_at": attempt["updated_at"],
             "rooted_count": 0,
             "quantity": _count(5),
             "started_on": attempt["started_on"],
@@ -410,3 +418,138 @@ def test_populated_downgrade_refuses_and_empty_schema_round_trips(
         database_connection.begin_nested(),
     ):
         command.downgrade(config, "-1")
+
+
+def test_stale_lot_edit_does_not_restore_consumed_stock(
+    authenticated_browser: tuple[str, str],
+    cutting_identity: str,
+) -> None:
+    browser = authenticated_browser
+    original = _write(browser, "POST", LOTS, _payload(cutting_identity)["vegetative_lot"])
+    path = f"{LOTS}/{original['id']}"
+    _write(
+        browser,
+        "POST",
+        f"{path}/propagation-attempts",
+        {
+            "source_adjustment": {"mode": "partial"},
+            "propagation_attempt": {"quantity": _count(4)},
+        },
+    )
+    rejected = _write(
+        browser,
+        "PUT",
+        path,
+        {
+            "botanical_identity_id": cutting_identity,
+            "material_type": "stem_cutting",
+            "lifecycle": "active",
+            "quantity": _count(5),
+            "expected_updated_at": original["updated_at"],
+            "notes": "A stale update",
+        },
+        409,
+    )
+    assert rejected["detail"]["code"] == "cutting_record_changed"
+    assert _read(browser, path)["quantity"] == _count(1)
+
+
+def test_rooted_group_correction_keeps_clonal_origin(
+    authenticated_browser: tuple[str, str],
+    cutting_identity: str,
+) -> None:
+    browser = authenticated_browser
+    saved = _write(browser, "POST", FAST, _payload(cutting_identity))
+    attempt = saved["propagation_attempt"]
+    group = _write(
+        browser, "POST", f"{ATTEMPTS}/{attempt['id']}/plant-groups", {"quantity": _count(3)}
+    )
+    path = f"/api/v1/plant-groups/{group['id']}"
+    values = {
+        "botanical_identity_id": cutting_identity,
+        "label": "Three clones",
+        "quantity": _count(3),
+    }
+    corrected = _write(browser, "PUT", path, values, 200)
+    assert corrected["originating_propagation_attempt_id"] == attempt["id"]
+    _write(browser, "PUT", path, {**values, "direct_origin_kind": "purchased"}, 409)
+
+
+def test_self_collected_cuttings_appear_on_origin_map_and_retain_references(
+    authenticated_browser: tuple[str, str],
+    cutting_identity: str,
+) -> None:
+    browser = authenticated_browser
+    site = _write(
+        browser,
+        "POST",
+        "/api/v1/provenance-sites",
+        {
+            "name": "Cutting origin fixture",
+            "latitude": 43.1,
+            "longitude": 11.1,
+        },
+    )
+    lot = _write(
+        browser,
+        "POST",
+        LOTS,
+        {
+            "material_type": "root_cutting",
+            "source_kind": "self_collected",
+            "botanical_identity_id": cutting_identity,
+            "provenance_site_id": site["id"],
+        },
+    )
+    mapped = _read(browser, "/api/v1/provenance-sites/map")
+    marker = next(item for item in mapped["sites"] if item["id"] == site["id"])
+    assert marker["usage"]["vegetative_lots"] == 1
+    assert [(row["record_type"], row["id"]) for row in marker["records"]] == [
+        ("vegetative_lot", lot["id"])
+    ]
+    _write(browser, "DELETE", f"/api/v1/provenance-sites/{site['id']}", {}, 409)
+    _write(browser, "DELETE", f"/api/v1/botanical-identities/{cutting_identity}", {}, 409)
+
+
+def test_purchase_reference_and_saved_view_contracts(
+    authenticated_browser: tuple[str, str],
+    cutting_identity: str,
+) -> None:
+    browser = authenticated_browser
+    original = _write(
+        browser, "POST", "/api/v1/suppliers", {"name": "Cuttings Nursery", "kind": "seller"}
+    )
+    different = _write(
+        browser, "POST", "/api/v1/suppliers", {"name": "Another Nursery", "kind": "seller"}
+    )
+    order = _write(browser, "POST", "/api/v1/orders", {"supplier_id": original["id"]})
+    _write(
+        browser,
+        "POST",
+        LOTS,
+        {
+            "material_type": "stem_cutting",
+            "source_kind": "purchased",
+            "botanical_identity_id": cutting_identity,
+            "supplier_id": original["id"],
+            "order_id": order["id"],
+        },
+    )
+    order_path = f"/api/v1/orders/{order['id']}"
+    _write(browser, "PATCH", order_path, {"supplier_id": different["id"]}, 409)
+    _write(browser, "DELETE", order_path, {}, 409)
+
+    state = {"record_type": "attempts", "lifecycle": "failed"}
+    view = _write(
+        browser,
+        "POST",
+        "/api/v1/saved-views",
+        {
+            "name": "Failed attempts",
+            "surface": "cuttings",
+            "state": state,
+            "state_version": 1,
+        },
+    )
+    assert view["state"] == state
+    assert view["compatibility"] == "supported"

@@ -229,7 +229,7 @@ def evaluate(
             ):
                 block(
                     "source_structural_state_changed",
-                    "The source location or SeedLot relationship changed after this operation.",
+                    "The source location, lineage, identity or date changed after this operation.",
                 )
 
         # Later operations sharing the mutable source must be compensated first even if

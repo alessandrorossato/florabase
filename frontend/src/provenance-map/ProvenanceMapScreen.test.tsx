@@ -70,7 +70,13 @@ const site: ProvenanceMapSite = {
   geographic_place_id: "01900000-0000-7000-8000-000000000020",
   geographic_place_path:
     "World → Europe → Italy → Sicily → Palermo → Monte Pellegrino upper collection locality",
-  usage: { seed_lots: 1, plants: 1, plant_groups: 1, total: 3 },
+  usage: {
+    seed_lots: 1,
+    plants: 1,
+    plant_groups: 1,
+    vegetative_lots: 0,
+    total: 3,
+  },
   records: [
     {
       record_type: "seed_lot",
@@ -146,14 +152,26 @@ test("filters records deterministically and hides a site with no matching record
       plants: false,
       identityQuery: "clitoria",
     })[0]?.usage,
-  ).toEqual({ seed_lots: 1, plants: 0, plant_groups: 0, total: 1 });
+  ).toEqual({
+    seed_lots: 1,
+    plants: 0,
+    plant_groups: 0,
+    vegetative_lots: 0,
+    total: 1,
+  });
   expect(
     filterMapSites([site], {
       seedLots: false,
       plants: true,
       identityQuery: "chamaerops",
     })[0]?.usage,
-  ).toEqual({ seed_lots: 0, plants: 1, plant_groups: 1, total: 2 });
+  ).toEqual({
+    seed_lots: 0,
+    plants: 1,
+    plant_groups: 1,
+    vegetative_lots: 0,
+    total: 2,
+  });
   expect(
     filterMapSites([site], {
       seedLots: true,
@@ -291,7 +309,13 @@ test("mapped sites without linked material remain inspectable in the unfiltered 
     id: "empty",
     name: "Recorded locality",
     records: [],
-    usage: { total: 0, plants: 0, seed_lots: 0, plant_groups: 0 },
+    usage: {
+      total: 0,
+      plants: 0,
+      seed_lots: 0,
+      plant_groups: 0,
+      vegetative_lots: 0,
+    },
   };
   expect(
     filterMapSites([unlinked], {

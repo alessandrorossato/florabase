@@ -26,6 +26,10 @@ export function historyHref(
       return `#/plants/${ref.id}${source === "event" ? "?tab=events" : ""}`;
     case "plant_group":
       return `#/plant-groups/${ref.id}${source === "event" ? "?tab=events" : ""}`;
+    case "vegetative_lot":
+      return `#/cuttings/lots/${ref.id}`;
+    case "propagation_attempt":
+      return `#/cuttings/attempts/${ref.id}`;
     case "sowing":
       return `#/sowings/${ref.id}${source === "germination" ? "?tab=germination" : ""}`;
     case "harvest":

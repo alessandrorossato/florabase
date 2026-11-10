@@ -359,6 +359,9 @@ function IdentityDetails({
           >
             Add seed lot
           </IdentityTaskLink>
+          <IdentityTaskLink href={`#/cuttings/new?identity=${identity.id}`}>
+            Add cuttings
+          </IdentityTaskLink>
           <button
             type="button"
             onClick={() => {

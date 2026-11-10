@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
+from florabase.cuttings.model import VegetativeLot
 from florabase.orders.model import Order
 from florabase.orders.schemas import (
     OrderCreate,
@@ -115,6 +116,20 @@ def update_order(database: Session, order_id: UUID, patch: OrderUpdate) -> Order
             "order_supplier_conflict",
             "Order Supplier conflicts with a linked SeedLot. Correct or unlink that lot first.",
         )
+    if payload.supplier_id is not None and database.scalar(
+        select(VegetativeLot.id)
+        .where(
+            VegetativeLot.order_id == order.id,
+            VegetativeLot.supplier_id.is_not(None),
+            VegetativeLot.supplier_id != payload.supplier_id,
+        )
+        .limit(1)
+    ):
+        raise OrderError(
+            "order_supplier_conflict",
+            "Order Supplier conflicts with a linked vegetative lot. "
+            "Correct or unlink that lot first.",
+        )
     _assign(order, payload)
     order.updated_at = datetime.now(UTC)
     database.flush()
@@ -127,6 +142,11 @@ def delete_order(database: Session, order_id: UUID) -> None:
         raise OrderError(
             "order_in_use",
             "This Order has linked SeedLots. Unlink them explicitly before deleting it.",
+        )
+    if database.scalar(select(VegetativeLot.id).where(VegetativeLot.order_id == order.id).limit(1)):
+        raise OrderError(
+            "order_in_use",
+            "This Order has linked vegetative lots. Unlink them before deleting it.",
         )
     database.delete(order)
     database.flush()

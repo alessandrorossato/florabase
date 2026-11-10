@@ -5,8 +5,13 @@ import { requestJson } from "../auth/api";
 
 export type LineageResponse = components["schemas"]["LineageResponse"];
 export type LineageNode = LineageResponse["subject"];
-/** The three record kinds with a recorded-lineage endpoint. */
-export type LineageEndpoint = "seed-lots" | "plants" | "plant-groups";
+/** Collection resources with a recorded-lineage endpoint. */
+export type LineageEndpoint =
+  | "seed-lots"
+  | "plants"
+  | "plant-groups"
+  | "vegetative-lots"
+  | "propagation-attempts";
 
 export type RecordedLineage =
   | { status: "loading" }
@@ -18,16 +23,22 @@ export const lineageKindLabels: Record<LineageNode["kind"], string> = {
   sowing: "Sowing",
   plant: "Plant",
   plant_group: "Plant group",
+  vegetative_lot: "Vegetative lot",
+  propagation_attempt: "Rooting attempt",
 };
 export const lineageFallbackLabels: Record<LineageNode["kind"], string> = {
   seed_lot: "Unlabelled seed lot",
   sowing: "Unlabelled sowing",
   plant: "Unlabelled plant",
   plant_group: "Unlabelled plant group",
+  vegetative_lot: "Unlabelled vegetative lot",
+  propagation_attempt: "Unlabelled rooting attempt",
 };
 
 /** The record's own detail page. */
 export function recordHref(kind: LineageNode["kind"], id: string) {
+  if (kind === "vegetative_lot") return `#/cuttings/lots/${id}`;
+  if (kind === "propagation_attempt") return `#/cuttings/attempts/${id}`;
   const route =
     kind === "seed_lot"
       ? "seeds"

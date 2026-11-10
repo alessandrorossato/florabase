@@ -95,6 +95,7 @@ class VegetativeLotCreate(LotSource):
 
 
 class VegetativeLotUpdate(LotSource):
+    expected_updated_at: datetime
     lifecycle: Literal["active", "exhausted", "discarded", "lost"]
     quantity: CuttingQuantity | None
 
@@ -169,6 +170,7 @@ class AttemptState(AttemptSetup):
 
 
 class PropagationAttemptUpdate(AttemptState):
+    expected_updated_at: datetime
     lifecycle: Literal["active", "completed", "failed", "abandoned"]
 
     @model_validator(mode="after")

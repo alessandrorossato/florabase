@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID, uuid7
 
 from sqlalchemy import func, select
@@ -187,7 +188,9 @@ def _lot_values(
             database, payload.location_id, LocationUsageScope.VEGETATIVE_LOTS
         )
     return {
-        **payload.model_dump(exclude={"initial_quantity", "quantity", "taken_on"}),
+        **payload.model_dump(
+            exclude={"initial_quantity", "quantity", "taken_on", "expected_updated_at"}
+        ),
         "botanical_identity_id": identity_id,
         **date_values("taken_on", payload.taken_on),
     }
@@ -207,9 +210,18 @@ def create_lot(database: Session, payload: VegetativeLotCreate) -> VegetativeLot
     return lot
 
 
+def _check_revision(record: CuttingRecord, expected: datetime) -> None:
+    if record.updated_at != expected:
+        raise PropagationConflictError(
+            "cutting_record_changed",
+            "This record changed. Refresh the record before saving.",
+        )
+
+
 def update_lot(database: Session, lot_id: UUID, payload: VegetativeLotUpdate) -> VegetativeLot:
     lock_lineage_writes(database)
     lot = require_record(database, VegetativeLot, lot_id, lock=True)
+    _check_revision(lot, payload.expected_updated_at)
     if lot.lifecycle == "reversed":
         raise PropagationConflictError("lot_reversed", "A reversed lot is historical")
     for key, value in {
@@ -281,7 +293,7 @@ def apply_adjustment(
 
 def _setup_values(payload: AttemptSetup) -> dict[str, object]:
     return {
-        **payload.model_dump(exclude={"started_on", "ended_on", "quantity"}),
+        **payload.model_dump(exclude={"started_on", "ended_on", "quantity", "expected_updated_at"}),
         **date_values("started_on", payload.started_on),
         **_quantity_values("quantity", payload.quantity),
     }
@@ -354,6 +366,7 @@ def update_attempt(
     database: Session, attempt_id: UUID, payload: PropagationAttemptUpdate
 ) -> PropagationAttempt:
     attempt = require_record(database, PropagationAttempt, attempt_id, lock=True)
+    _check_revision(attempt, payload.expected_updated_at)
     if attempt.lifecycle == "reversed":
         raise PropagationConflictError("attempt_reversed", "A reversed attempt is historical")
     if payload.lifecycle == "failed" and _offspring_exists(database, attempt.id):
@@ -426,6 +439,35 @@ def require_observation(
     return observation
 
 
+def _exact_established_count(database: Session, attempt_id: UUID) -> int:
+    groups = select(PlantGroup.id).where(
+        PlantGroup.originating_propagation_attempt_id == attempt_id,
+        PlantGroup.lifecycle != "reversed",
+    )
+    individual_count = (
+        database.scalar(
+            select(func.count())
+            .select_from(Plant)
+            .where(
+                (Plant.originating_propagation_attempt_id == attempt_id)
+                | Plant.originating_plant_group_id.in_(groups),
+                Plant.lifecycle.not_in(("reversed", "reintegrated")),
+            )
+        )
+        or 0
+    )
+    group_count = (
+        database.scalar(
+            select(func.sum(PlantGroup.quantity_value)).where(
+                PlantGroup.id.in_(groups),
+                PlantGroup.quantity_is_approximate.is_(False),
+            )
+        )
+        or 0
+    )
+    return individual_count + group_count
+
+
 def establish(
     database: Session, attempt_id: UUID, payload: EstablishPlant
 ) -> tuple[Plant | PlantGroup, OperationReceipt]:
@@ -436,6 +478,23 @@ def establish(
         raise PropagationConflictError(
             "attempt_cannot_establish",
             "Establishment requires an active attempt without a recorded zero rooted count",
+        )
+    if isinstance(payload, EstablishPlantGroup):
+        count = (
+            payload.quantity.value
+            if payload.quantity and not payload.quantity.is_approximate
+            else None
+        )
+    else:
+        count = 1
+    if (
+        attempt.rooted_count is not None
+        and count is not None
+        and (count + _exact_established_count(database, attempt.id) > attempt.rooted_count)
+    ):
+        raise PropagationConflictError(
+            "rooted_count_exceeded",
+            "Establishment exceeds the recorded number of rooted cuttings",
         )
     before_lifecycle = attempt.lifecycle
     values = {

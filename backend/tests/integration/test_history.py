@@ -450,7 +450,7 @@ def test_authenticated_read_only_api_and_bounds(authenticated_browser: tuple[str
         )[0]
         == 200
     )
-    assert _api_get("/api/v1/history?" + "&".join(["subject_kind=plant"] * 8), cookie)[0] == 422
+    assert _api_get("/api/v1/history?" + "&".join(["subject_kind=plant"] * 10), cookie)[0] == 422
     assert request("POST", "/api/v1/history", headers={"cookie": cookie})[0] == 405
 
 

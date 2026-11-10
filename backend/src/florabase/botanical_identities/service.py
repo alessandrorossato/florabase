@@ -127,6 +127,7 @@ def update_botanical_identity(
 def delete_botanical_identity(database: Session, botanical_identity: BotanicalIdentity) -> None:
     identity_id = botanical_identity.id
     from florabase.collection_photos.model import BotanicalIdentityCoverImage
+    from florabase.cuttings.model import VegetativeLot
     from florabase.native_range_enrichment.model import NativeRangeApplication
 
     # Serialize deletion with proposal Apply before checking retained references.
@@ -194,7 +195,9 @@ def delete_botanical_identity(database: Session, botanical_identity: BotanicalId
             .where(PlantGroup.botanical_identity_id == identity_id)
         ),
     )
-    if any(references):
+    if any(references) or database.scalar(
+        select(VegetativeLot.id).where(VegetativeLot.botanical_identity_id == identity_id).limit(1)
+    ):
         raise BotanicalIdentityReferencedError
     database.delete(botanical_identity)
     database.flush()

@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from florabase.botanical_profiles.model import BotanicalProfileNativeRange
+from florabase.cuttings.model import VegetativeLot
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.schemas import GeographicPlaceCreate, GeographicPlaceUpdate
 from florabase.plants.model import Plant, PlantGroup
@@ -28,7 +29,7 @@ def geographic_place_usage(
     database: Session,
 ) -> tuple[dict[UUID, int], dict[UUID, int], dict[UUID, int]]:
     direct: dict[UUID, int] = {}
-    for model in (SeedLot, Plant, PlantGroup):
+    for model in (SeedLot, Plant, PlantGroup, VegetativeLot):
         rows = database.execute(
             select(model.material_provenance_place_id, func.count())
             .where(model.material_provenance_place_id.is_not(None))

@@ -117,7 +117,7 @@ def test_update_corrects_the_same_identity_and_rejects_a_duplicate() -> None:
 def test_delete_allows_unused_identity_and_rejects_collection_references() -> None:
     identity = BotanicalIdentity(id=uuid7(), scientific_name="Acer palmatum")
     database = MagicMock()
-    database.scalar.side_effect = [identity.id, 0, None, 0, 0, 0, 0, 0, 0, 0]
+    database.scalar.side_effect = [identity.id, 0, None, 0, 0, 0, 0, 0, 0, 0, None]
     delete_botanical_identity(database, identity)
     database.delete.assert_called_once_with(identity)
 

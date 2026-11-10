@@ -6,6 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, StrictBool, field_validator
 
+from florabase.cuttings.model import AttemptLifecycle, LotLifecycle, MaterialType, SourceKind
 from florabase.explore.schemas import CollectionRecordCategory, RepresentationScope
 from florabase.harvests.model import MaterialKind
 from florabase.history.schemas import HistoryCategory, HistorySubjectKind
@@ -18,6 +19,7 @@ class SavedViewSurface(StrEnum):
     GLOBAL_SEARCH = "global_search"
     SEED_LOTS = "seed_lots"
     SOWINGS = "sowings"
+    CUTTINGS = "cuttings"
     PLANTS = "plants"
     HARVESTS = "harvests"
     STORED_MATERIAL = "stored_material"
@@ -47,7 +49,7 @@ class SpeciesDistributionState(TextState):
 class NativeRangesState(TextState):
     scope: RepresentationScope = "all"
     identity: list[UUID] = Field(default_factory=list, max_length=20)
-    record: list[CollectionRecordCategory] = Field(default_factory=list, max_length=5)
+    record: list[CollectionRecordCategory] = Field(default_factory=list, max_length=7)
 
     @field_validator("identity", mode="before")
     @classmethod
@@ -78,6 +80,15 @@ class SeedLotState(TextState):
 class SowingState(TextState):
     identity_id: UUID | None = None
     lifecycle: Literal["active", "completed", "all"] = "active"
+
+
+class CuttingsState(TextState):
+    record_type: Literal["lots", "attempts"] = "lots"
+    lifecycle: LotLifecycle | AttemptLifecycle | None = None
+    material_type: MaterialType | None = None
+    source_kind: SourceKind | None = None
+    location_id: UUID | None = None
+    has_known_mother: Literal["true", "false"] | None = None
 
 
 class PlantState(SeedLotState):
@@ -117,7 +128,7 @@ class EventState(TextState):
 
 class HistoryState(TextState):
     category: list[HistoryCategory] = Field(default_factory=list, max_length=6)
-    subject_kind: list[HistorySubjectKind] = Field(default_factory=list, max_length=7)
+    subject_kind: list[HistorySubjectKind] = Field(default_factory=list, max_length=9)
 
     @field_validator("subject_kind", mode="before")
     @classmethod
@@ -159,6 +170,7 @@ class GeographyState(TextState):
 class ProvenanceMapState(TextState):
     seed_lots: StrictBool = True
     plants: StrictBool = True
+    cuttings: StrictBool = True
 
 
 STATE_MODELS: dict[SavedViewSurface, type[BaseModel]] = {
@@ -167,6 +179,7 @@ STATE_MODELS: dict[SavedViewSurface, type[BaseModel]] = {
     SavedViewSurface.GLOBAL_SEARCH: SearchViewState,
     SavedViewSurface.SEED_LOTS: SeedLotState,
     SavedViewSurface.SOWINGS: SowingState,
+    SavedViewSurface.CUTTINGS: CuttingsState,
     SavedViewSurface.PLANTS: PlantState,
     SavedViewSurface.HARVESTS: HarvestState,
     SavedViewSurface.STORED_MATERIAL: StoredMaterialState,

@@ -5,6 +5,7 @@ export const navigationIcons = {
   dashboard: "overview",
   seeds: "seed",
   sowings: "sprout",
+  cuttings: "sprout",
   plants: "plant",
   harvests: "harvest",
   locations: "pin",

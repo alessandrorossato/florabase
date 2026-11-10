@@ -3,6 +3,7 @@ import type { ProvenanceMapRecord, ProvenanceMapSite } from "./api";
 export interface MapFilters {
   seedLots: boolean;
   plants: boolean;
+  cuttings?: boolean;
   identityQuery: string;
 }
 
@@ -12,7 +13,9 @@ function recordMatches(
 ): boolean {
   const typeMatches =
     (record.record_type === "seed_lot" && filters.seedLots) ||
-    (record.record_type !== "seed_lot" && filters.plants);
+    ((record.record_type === "plant" || record.record_type === "plant_group") &&
+      filters.plants) ||
+    (record.record_type === "vegetative_lot" && (filters.cuttings ?? true));
   const query = filters.identityQuery.trim().toLocaleLowerCase();
   return (
     typeMatches &&
@@ -39,6 +42,7 @@ export function filterMapSites(
         site.records.length === 0 &&
         filters.seedLots &&
         filters.plants &&
+        (filters.cuttings ?? true) &&
         !filters.identityQuery.trim()
       )
     )
@@ -52,6 +56,9 @@ export function filterMapSites(
     const plantGroups = records.filter(
       ({ record_type }) => record_type === "plant_group",
     ).length;
+    const cuttings = records.filter(
+      ({ record_type }) => record_type === "vegetative_lot",
+    ).length;
     return [
       {
         ...site,
@@ -60,6 +67,7 @@ export function filterMapSites(
           seed_lots: seedLots,
           plants,
           plant_groups: plantGroups,
+          vegetative_lots: cuttings,
           total: records.length,
         },
       },

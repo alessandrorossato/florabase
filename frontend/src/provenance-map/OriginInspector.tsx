@@ -190,6 +190,8 @@ export function OriginInspector({
             <p className="field-help">
               {selected.usage.seed_lots} SeedLots · {selected.usage.plants}{" "}
               Plants · {selected.usage.plant_groups} PlantGroups
+              {selected.usage.vegetative_lots > 0 &&
+                ` · ${String(selected.usage.vegetative_lots)} vegetative lots`}
             </p>
             <ActionLink icon="edit" href={`#/geography/${selected.id}`}>
               Manage provenance site

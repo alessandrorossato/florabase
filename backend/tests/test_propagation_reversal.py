@@ -102,6 +102,7 @@ def database_for(
             queries.extend([children or [], []])
         else:
             queries.append([uuid7()] if produced else [])
+            queries.append([])
             if kind == "plant_group":
                 queries.append(children or [])
             queries.append(events or [])
