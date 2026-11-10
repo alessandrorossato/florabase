@@ -8,6 +8,7 @@ receipt in this worktree's own Git metadata, and disappears with the worktree.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -174,13 +175,45 @@ class AgentState:
         self.lock = repo.metadata / "florabase-agent-state.lock"
 
     def load(self) -> dict[str, Any]:
+        if self.path.is_symlink():
+            raise WorkflowError(f"unreadable writer state {self.path}; inspect it")
         try:
             value = json.loads(self.path.read_text(encoding="utf-8"))
         except FileNotFoundError:
             return {"version": 1, "writer": None, "handoff": None}
         except (OSError, json.JSONDecodeError) as error:
             raise WorkflowError(f"unreadable writer state {self.path}; inspect it") from error
-        if not isinstance(value, dict) or value.get("version") != 1:
+        if (
+            not isinstance(value, dict)
+            or type(value.get("version")) is not int
+            or value["version"] != 1
+            or "writer" not in value
+            or "handoff" not in value
+        ):
+            raise WorkflowError(f"unknown writer state {self.path}; inspect it")
+        writer, handoff = value["writer"], value["handoff"]
+        if writer is not None and (
+            not isinstance(writer, dict)
+            or not isinstance(writer.get("agent"), str)
+            or not AGENT_PATTERN.fullmatch(writer["agent"])
+            or not isinstance(writer.get("claim_id"), str)
+            or not writer["claim_id"]
+        ):
+            raise WorkflowError(f"unknown writer state {self.path}; inspect it")
+        if handoff is not None and (
+            not isinstance(handoff, dict)
+            or not isinstance(handoff.get("id"), str)
+            or not handoff["id"]
+            or not isinstance(handoff.get("to"), str)
+            or not AGENT_PATTERN.fullmatch(handoff["to"])
+            or not isinstance(handoff.get("branch"), str)
+            or not isinstance(handoff.get("head"), str)
+            or not isinstance(handoff.get("worktree_digest"), str)
+            or (
+                handoff.get("accepted_at") is not None
+                and not isinstance(handoff["accepted_at"], str)
+            )
+        ):
             raise WorkflowError(f"unknown writer state {self.path}; inspect it")
         return value
 
@@ -416,19 +449,39 @@ def require_writer(repo: Repository) -> None:
         )
 
 
-def require_operator(repo: Repository) -> None:
-    """Delivery and finish stay operator actions; an agent that identifies itself is refused."""
-    if agent_id() not in ("", OPERATOR):
+def require_operator_identity() -> None:
+    """Refuse declared agent identities before any mutation.
+
+    AGENT_ID is a cooperative convention, not authenticated security; omitting it or setting
+    AGENT_ID=operator selects the operator path for delivery, finish and retirement.
+    """
+    current = agent_id()
+    if current not in ("", OPERATOR):
         raise WorkflowError(
-            f"delivery and finish are operator actions; {agent_id()} must stop at READY_FOR_DELIVERY"
+            f"delivery, finish and retirement are operator actions; {current} must stop at READY_FOR_DELIVERY"
         )
+
+
+def require_no_pending_handoff(repo: Repository) -> dict[str, Any]:
     value = AgentState(repo).load()
     if value["handoff"] and not value["handoff"].get("accepted_at"):
         raise WorkflowError("a handoff is pending; its receiver must accept it first")
+    return value
+
+
+def require_operator(repo: Repository) -> None:
+    """Delivery, finish and retirement stay operator actions; an identified agent is refused."""
+    require_operator_identity()
+    require_no_pending_handoff(repo)
     require_idle_verification(repo)
 
 
 def mark_finished(repo: Repository, branch: str, sha: str, merge: str) -> None:
+    require_operator(repo)
+    if not BRANCH_PATTERN.fullmatch(branch):
+        raise WorkflowError("branch must use feat/, fix/, docs/, or ci/")
+    if not re.fullmatch(r"[0-9a-f]{40}", sha) or not re.fullmatch(r"[0-9a-f]{40}", merge):
+        raise WorkflowError("mark-finished requires full commit SHAs")
     current = repo.git("branch", "--show-current")
     if current == branch or (not current and repo.git("rev-parse", "HEAD") != sha):
         raise WorkflowError(
@@ -436,12 +489,20 @@ def mark_finished(repo: Repository, branch: str, sha: str, merge: str) -> None:
         )
     repo.git("merge-base", "--is-ancestor", merge, "origin/main")
     state = AgentState(repo)
-    state.path.parent.mkdir(parents=True, exist_ok=True)
-    proof = {"branch": branch, "sha": sha, "merge": merge, "finished_at": now()}
-    (repo.metadata / "info/florabase-finished.json").write_text(
-        json.dumps(proof, sort_keys=True) + "\n", encoding="utf-8"
-    )
-    state.path.unlink(missing_ok=True)
+    with FileLock(state.lock, "writer state update"), verification_lock(repo.metadata):
+        require_no_pending_handoff(repo)
+        info_dir = repo.metadata / "info"
+        if info_dir.is_symlink():
+            raise WorkflowError(f"refusing symlinked metadata directory {info_dir}")
+        finished_path = info_dir / "florabase-finished.json"
+        if finished_path.is_symlink():
+            raise WorkflowError(f"refusing symlinked finish proof {finished_path}")
+        info_dir.mkdir(parents=True, exist_ok=True)
+        proof = {"branch": branch, "sha": sha, "merge": merge, "finished_at": now()}
+        temporary = finished_path.with_name(f"{finished_path.name}.{uuid.uuid4().hex}")
+        temporary.write_text(json.dumps(proof, sort_keys=True) + "\n", encoding="utf-8")
+        os.replace(temporary, finished_path)
+        state.path.unlink(missing_ok=True)
 
 
 def undisposable_ignored(target: Repository) -> list[str]:
@@ -603,24 +664,56 @@ def validate_retirement_tree(path: Path) -> None:
         raise WorkflowError(f"cannot establish safe removal of {path}: {error}") from error
 
 
-def retire(repo: Repository, identifier: str, confirmation: str) -> None:
-    """Remove one finished managed worktree; provider-managed and foreign paths always refuse."""
-    if not re.fullmatch(r"[a-z0-9][a-z0-9._-]*", identifier):
-        raise WorkflowError("FEATURE must be a feature worktree id, for example event-001")
-    root = worktree_root(repo).resolve()
-    path = root / identifier
-    if confirmation != identifier:
-        raise WorkflowError(f"retirement requires CONFIRM_RETIRE={identifier}")
-    record = next(
-        (item for item in worktrees(repo) if Path(item["worktree"]).resolve() == path), None
+def matching_worktree(repo: Repository, path: Path) -> dict[str, str] | None:
+    return next(
+        (item for item in worktrees(repo) if Path(item["worktree"]).resolve() == path),
+        None,
     )
+
+
+def require_valid_managed_target(
+    repo: Repository, path: Path, root: Path, record: dict[str, str] | None
+) -> Repository:
     if record is None or path == repo.primary.resolve():
         raise WorkflowError(f"{path} is not a registered managed worktree under {root}")
-    if Path.cwd().resolve().is_relative_to(path):
-        raise WorkflowError("run retirement from the primary checkout, not the retiring worktree")
+    if "prunable" in record or "locked" in record:
+        raise WorkflowError(f"{path} worktree metadata is missing, damaged, or locked; inspect it")
+    if path.is_symlink() or not path.is_dir():
+        raise WorkflowError(f"{path} worktree metadata is missing or damaged; inspect it")
+    git_pointer = path / ".git"
+    if git_pointer.is_symlink() or not git_pointer.is_file():
+        raise WorkflowError(f"{path} worktree metadata is missing or damaged; inspect it")
     target = Repository(path)
-    if not managed_marker(target).is_file():
+    if (
+        target.source.resolve() != path
+        or target.common.resolve() != repo.common.resolve()
+        or target.metadata.resolve() == repo.metadata.resolve()
+        or target.metadata.resolve() == repo.common.resolve()
+        or target.metadata.resolve().parent != (repo.common / "worktrees").resolve()
+        or not target.metadata.is_dir()
+    ):
+        raise WorkflowError(f"{path} worktree metadata is missing or damaged; inspect it")
+    gitdir_file = target.metadata / "gitdir"
+    if gitdir_file.is_symlink() or not gitdir_file.is_file():
+        raise WorkflowError(f"{path} worktree metadata is missing or damaged; inspect it")
+    try:
+        raw_gitdir = gitdir_file.read_text(encoding="utf-8").strip()
+        recorded_pointer = (
+            Path(raw_gitdir) if Path(raw_gitdir).is_absolute() else (target.metadata / raw_gitdir)
+        )
+        if not raw_gitdir or recorded_pointer.resolve() != git_pointer.resolve():
+            raise WorkflowError(f"{path} worktree metadata is missing or damaged; inspect it")
+    except (OSError, ValueError) as error:
+        raise WorkflowError(
+            f"{path} worktree metadata is missing or damaged; inspect it"
+        ) from error
+    marker = managed_marker(target)
+    if marker.is_symlink() or not marker.is_file():
         raise WorkflowError(f"{path} was not created by make feature-worktree; retire it elsewhere")
+    return target
+
+
+def require_clean_finished_proof(target: Repository, path: Path) -> None:
     if target.git("branch", "--show-current"):
         raise WorkflowError(f"{path} is still on a branch; run make feature-finish after merge")
     if target.git("status", "--porcelain"):
@@ -628,29 +721,75 @@ def retire(repo: Repository, identifier: str, confirmation: str) -> None:
     blocked = undisposable_ignored(target)
     if blocked:
         raise WorkflowError(f"ignored local files need a decision first: {', '.join(blocked)}")
+    proof_path = target.metadata / "info/florabase-finished.json"
+    if proof_path.is_symlink():
+        raise WorkflowError(f"{path} has damaged make feature-finish proof")
     try:
-        proof = json.loads(
-            (target.metadata / "info/florabase-finished.json").read_text(encoding="utf-8")
-        )
-        branch, sha, merge = proof["branch"], proof["sha"], proof["merge"]
-    except (OSError, ValueError, KeyError, TypeError) as error:
+        proof = json.loads(proof_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
         raise WorkflowError(f"{path} has no make feature-finish proof") from error
-    if sha != target.git("rev-parse", "HEAD") or target.git("branch", "--list", branch):
+    if not isinstance(proof, dict):
+        raise WorkflowError(f"{path} has damaged make feature-finish proof")
+    try:
+        branch, sha, merge = proof["branch"], proof["sha"], proof["merge"]
+    except KeyError as error:
+        raise WorkflowError(f"{path} has no make feature-finish proof") from error
+    if (
+        not isinstance(branch, str)
+        or not isinstance(sha, str)
+        or not isinstance(merge, str)
+        or not BRANCH_PATTERN.fullmatch(branch)
+        or not re.fullmatch(r"[0-9a-f]{40}", sha)
+        or not re.fullmatch(r"[0-9a-f]{40}", merge)
+    ):
+        raise WorkflowError(f"{path} has damaged make feature-finish proof")
+    if sha != target.git("rev-parse", "HEAD") or target.git("branch", "--list", "--", branch):
         raise WorkflowError(f"{path} moved after finish or {branch} still exists")
-    target.git("merge-base", "--is-ancestor", merge, "origin/main")
-    if AgentState(target).path.exists():
-        raise WorkflowError(f"{path} has writer state again; inspect it")
-    require_idle_verification(target)
-    owned = owned_resources(target)
-    if owned:
+    try:
+        target.git("merge-base", "--is-ancestor", merge, "origin/main")
+    except WorkflowError as error:
         raise WorkflowError(
-            f"{path} still owns Docker resources {sorted(owned)}; retire them from it first"
-        )
-    # Git unregisters before deleting, so an unremovable directory would leave an orphan.
-    require_no_running_mounts(path)
-    validate_retirement_tree(path)
-    # No --force: Git must still refuse anything it considers unsafe.
-    repo.git("worktree", "remove", str(path))
+            f"{path} finish merge {merge} is not verified on origin/main"
+        ) from error
+
+
+def retire(repo: Repository, identifier: str, confirmation: str) -> None:
+    """Remove one finished managed worktree; provider-managed and foreign paths always refuse."""
+    require_operator_identity()
+    if not re.fullmatch(r"[a-z0-9][a-z0-9._-]*", identifier):
+        raise WorkflowError("FEATURE must be a feature worktree id, for example event-001")
+    root = worktree_root(repo).resolve()
+    path = root / identifier
+    if confirmation != identifier:
+        raise WorkflowError(f"retirement requires CONFIRM_RETIRE={identifier}")
+    if path == repo.primary.resolve() or matching_worktree(repo, path) is None:
+        raise WorkflowError(f"{path} is not a registered managed worktree under {root}")
+    if Path.cwd().resolve().is_relative_to(path):
+        raise WorkflowError("run retirement from the primary checkout, not the retiring worktree")
+    lock_suffix = hashlib.sha256(str(path).encode("utf-8")).hexdigest()[:12]
+    retire_lock = repo.common / f"florabase-retire-{lock_suffix}.lock"
+    with FileLock(retire_lock, f"retirement of {path}"):
+        target = require_valid_managed_target(repo, path, root, matching_worktree(repo, path))
+        state = require_no_pending_handoff(target)
+        if os.path.lexists(AgentState(target).path):
+            writer = state["writer"]
+            if writer:
+                raise WorkflowError(
+                    f"{path} has writer state held by {writer['agent']}; inspect it"
+                )
+            raise WorkflowError(f"{path} has writer state again; inspect it")
+        with verification_lock(target.metadata):
+            require_clean_finished_proof(target, path)
+            owned = owned_resources(target)
+            if owned:
+                raise WorkflowError(
+                    f"{path} still owns Docker resources {sorted(owned)}; retire them from it first"
+                )
+            # Git unregisters before deleting, so an unremovable directory would leave an orphan.
+            require_no_running_mounts(path)
+            validate_retirement_tree(path)
+            # No --force: Git must still refuse anything it considers unsafe.
+            repo.git("worktree", "remove", str(path))
     print(f"FEATURE WORKTREE RETIRED: {path}; volumes, branches and other worktrees unchanged")
 
 
