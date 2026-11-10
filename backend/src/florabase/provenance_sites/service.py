@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
+from florabase.cuttings.model import VegetativeLot
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.service import display_path, list_geographic_places
 from florabase.plants.model import Plant, PlantGroup
@@ -43,6 +44,7 @@ def site_usage(database: Session) -> dict[UUID, ProvenanceSiteUsage]:
         (SeedLot, "seed_lots"),
         (Plant, "plants"),
         (PlantGroup, "plant_groups"),
+        (VegetativeLot, "vegetative_lots"),
     ):
         rows = database.execute(
             select(model.provenance_site_id, func.count())
@@ -91,7 +93,7 @@ def update_provenance_site(
 def delete_provenance_site(database: Session, site: ProvenanceSite) -> None:
     database.refresh(site, with_for_update=True)
     usage = site_usage(database).get(site.id, ProvenanceSiteUsage())
-    if usage.seed_lots + usage.plants + usage.plant_groups:
+    if usage.seed_lots + usage.plants + usage.plant_groups + usage.vegetative_lots:
         raise ProvenanceSiteError(
             "provenance_site_in_use",
             "This ProvenanceSite is retained by collection records and cannot be deleted",
@@ -147,9 +149,9 @@ def _map_records(
     site_ids = list(by_site)
 
     def append_record(
-        record: SeedLot | Plant | PlantGroup,
+        record: SeedLot | Plant | PlantGroup | VegetativeLot,
         identity: BotanicalIdentity,
-        record_type: Literal["seed_lot", "plant", "plant_group"],
+        record_type: Literal["seed_lot", "plant", "plant_group", "vegetative_lot"],
     ) -> None:
         if record.provenance_site_id is None:
             return
@@ -197,7 +199,18 @@ def _map_records(
     )
     for plant_group, identity in database.execute(plant_groups).tuples():
         append_record(plant_group, identity, "plant_group")
-    record_type_order = {"seed_lot": 0, "plant": 1, "plant_group": 2}
+    cuttings = (
+        select(VegetativeLot, BotanicalIdentity)
+        .join(BotanicalIdentity, BotanicalIdentity.id == VegetativeLot.botanical_identity_id)
+        .where(
+            VegetativeLot.provenance_site_id.in_(site_ids),
+            VegetativeLot.source_kind != "collection_produced",
+            VegetativeLot.lifecycle != "reversed",
+        )
+    )
+    for lot, identity in database.execute(cuttings).tuples():
+        append_record(lot, identity, "vegetative_lot")
+    record_type_order = {"seed_lot": 0, "plant": 1, "plant_group": 2, "vegetative_lot": 3}
     for records in by_site.values():
         records.sort(
             key=lambda item: (
@@ -253,6 +266,9 @@ def collection_provenance_map(database: Session) -> ProvenanceMapResponse:
                     plants=plants,
                     plant_groups=plant_groups,
                     total=len(records),
+                    vegetative_lots=sum(
+                        record.record_type == "vegetative_lot" for record in records
+                    ),
                 ),
                 records=records,
             )

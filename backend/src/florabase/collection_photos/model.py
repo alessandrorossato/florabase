@@ -35,6 +35,8 @@ TARGET_COLUMNS = (
     "event_id",
     "harvest_id",
     "supplier_id",
+    "vegetative_lot_id",
+    "propagation_attempt_id",
 )
 
 
@@ -252,6 +254,12 @@ class RecordMediaLink(AssetMetadataMixin, Base):
     supplier_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("suppliers.id", ondelete="RESTRICT"), nullable=True, index=True
     )
+    vegetative_lot_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("vegetative_lots.id", ondelete="RESTRICT"), index=True
+    )
+    propagation_attempt_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("propagation_attempts.id", ondelete="RESTRICT"), index=True
+    )
     caption: Mapped[str | None] = mapped_column(Text(), nullable=True)
     display_order: Mapped[int] = mapped_column(Integer(), default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
@@ -278,7 +286,8 @@ class CollectionPrimaryPhoto(Base):
     __tablename__ = "collection_primary_photos"
     __table_args__ = (
         CheckConstraint(
-            "num_nonnulls(seed_lot_id, plant_id, plant_group_id, harvest_id, supplier_id) = 1",
+            "num_nonnulls(seed_lot_id, plant_id, plant_group_id, harvest_id, supplier_id, "
+            "vegetative_lot_id, propagation_attempt_id) = 1",
             name="ck_collection_primary_photos_exactly_one_target",
         ),
         CheckConstraint(
@@ -293,6 +302,8 @@ class CollectionPrimaryPhoto(Base):
                 "plant_group_id",
                 "harvest_id",
                 "supplier_id",
+                "vegetative_lot_id",
+                "propagation_attempt_id",
                 "local_collection_photo_id",
                 "external_image_reference_id",
             )
@@ -305,7 +316,15 @@ class CollectionPrimaryPhoto(Base):
                 name=f"fk_primary_{source}_{target}",
             )
             for source in ("local_collection_photo_id", "external_image_reference_id")
-            for target in ("seed_lot_id", "plant_id", "plant_group_id", "harvest_id", "supplier_id")
+            for target in (
+                "seed_lot_id",
+                "plant_id",
+                "plant_group_id",
+                "harvest_id",
+                "supplier_id",
+                "vegetative_lot_id",
+                "propagation_attempt_id",
+            )
         ],
     )
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid7)
@@ -323,6 +342,12 @@ class CollectionPrimaryPhoto(Base):
     )
     supplier_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("suppliers.id", ondelete="RESTRICT"), nullable=True
+    )
+    vegetative_lot_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("vegetative_lots.id", ondelete="RESTRICT")
+    )
+    propagation_attempt_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("propagation_attempts.id", ondelete="RESTRICT")
     )
     local_collection_photo_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("record_media_links.id", ondelete="CASCADE"), nullable=True

@@ -111,3 +111,24 @@ test.each([
     expect(window.location.hash).toBe(parent);
   },
 );
+
+test("starting cuttings from a filtered directory preserves the active filters on Cancel", async () => {
+  const parent = "#/cuttings?record_type=attempts&lifecycle=failed";
+  window.history.replaceState(null, "", parent);
+  openCollectionPage("#/cuttings/new");
+  const traversal = new Promise<void>((resolve) => {
+    window.addEventListener(
+      "popstate",
+      () => {
+        resolve();
+      },
+      { once: true },
+    );
+  });
+  closeCollectionPage("#/cuttings");
+  await traversal;
+  expect(window.location.hash).toBe(parent);
+  expect(window.history.state as unknown).toMatchObject({
+    collectionReturnFocus: "create",
+  });
+});

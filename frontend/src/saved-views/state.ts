@@ -24,9 +24,20 @@ export const recordCategories = [
   "plant",
   "plant_group",
   "stored_material",
+  "vegetative_lot",
+  "propagation_attempt",
 ] as const;
 export type RecordCategory = (typeof recordCategories)[number];
 export interface DirectoryStates {
+  cuttings: {
+    record_type: "lots" | "attempts";
+    q: string;
+    lifecycle: string;
+    material_type: string;
+    source_kind: string;
+    location_id: string;
+    has_known_mother: string;
+  };
   seed_lots: {
     identity_id: string;
     q: string;
@@ -73,7 +84,9 @@ export interface DirectoryStates {
       | "plant_group"
       | "event"
       | "harvest"
-      | "supplier";
+      | "supplier"
+      | "vegetative_lot"
+      | "propagation_attempt";
   };
   species_distribution: {
     q: string;
@@ -94,16 +107,22 @@ export interface DirectoryStates {
   locations: {
     q: string;
     state: "active" | "retired" | "all";
-    scope: "all" | "plants" | "sowings" | "seed_lots" | "harvest_inventory";
+    scope: "all" | components["schemas"]["LocationUsageScope"];
   };
   geography: { q: string; mode: "places" | "sites" | "map" };
-  provenance_map: { q: string; seed_lots: boolean; plants: boolean };
+  provenance_map: {
+    q: string;
+    seed_lots: boolean;
+    plants: boolean;
+    cuttings: boolean;
+  };
 }
 
 export const surfaceLabels: Record<Surface, string> = {
   global_search: "Global Search",
   seed_lots: "Seed lots",
   sowings: "Sowings",
+  cuttings: "Cuttings",
   plants: "Plants and Plant groups",
   harvests: "Harvests",
   stored_material: "Stored material",
@@ -122,6 +141,7 @@ export const surfaceLabels: Record<Surface, string> = {
 export const directoryRoutes: Record<DirectorySurface, string> = {
   seed_lots: "seeds",
   sowings: "sowings",
+  cuttings: "cuttings",
   plants: "plants",
   harvests: "harvests",
   stored_material: "harvests?tab=stored-material",
@@ -137,6 +157,15 @@ export const directoryRoutes: Record<DirectorySurface, string> = {
   provenance_map: "map",
 };
 export const defaults: DirectoryStates = {
+  cuttings: {
+    record_type: "lots",
+    q: "",
+    lifecycle: "",
+    material_type: "",
+    source_kind: "",
+    location_id: "",
+    has_known_mother: "",
+  },
   seed_lots: { identity_id: "", q: "", lifecycle: "active" },
   sowings: { identity_id: "", q: "", lifecycle: "active" },
   plants: { identity_id: "", q: "", lifecycle: "active", type: "all" },
@@ -164,7 +193,7 @@ export const defaults: DirectoryStates = {
   orders: { q: "", supplier_id: "" },
   locations: { q: "", state: "active", scope: "all" },
   geography: { q: "", mode: "places" },
-  provenance_map: { q: "", seed_lots: true, plants: true },
+  provenance_map: { q: "", seed_lots: true, plants: true, cuttings: true },
 };
 const materials = [
   "fruit",
@@ -209,11 +238,44 @@ const choices: Partial<
       "event",
       "harvest",
       "supplier",
+      "vegetative_lot",
+      "propagation_attempt",
     ],
+  },
+  cuttings: {
+    record_type: ["lots", "attempts"],
+    lifecycle: [
+      "active",
+      "exhausted",
+      "discarded",
+      "lost",
+      "completed",
+      "failed",
+      "abandoned",
+      "reversed",
+    ],
+    material_type: ["stem_cutting", "leaf_cutting", "root_cutting"],
+    source_kind: [
+      "collection_produced",
+      "purchased",
+      "gift_exchange",
+      "self_collected",
+      "other",
+      "unknown",
+    ],
+    has_known_mother: ["true", "false"],
   },
   locations: {
     state: ["active", "retired", "all"],
-    scope: ["all", "plants", "sowings", "seed_lots", "harvest_inventory"],
+    scope: [
+      "all",
+      "plants",
+      "sowings",
+      "seed_lots",
+      "harvest_inventory",
+      "vegetative_lots",
+      "propagation_attempts",
+    ],
   },
   geography: { mode: ["places", "sites", "map"] },
 };
@@ -300,6 +362,14 @@ export function directoryState<S extends DirectorySurface>(
     // Empty UI selections use defaults, except explicit all-state storage choice.
     result[key] = normalized;
   }
+  if (
+    surface === "cuttings" &&
+    (result.record_type === "attempts"
+      ? ["exhausted", "discarded", "lost"]
+      : ["completed", "failed", "abandoned"]
+    ).some((status) => status === result.lifecycle)
+  )
+    result.lifecycle = "";
   return result as DirectoryStates[S];
 }
 

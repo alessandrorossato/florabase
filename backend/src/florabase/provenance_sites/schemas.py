@@ -73,6 +73,7 @@ class ProvenanceSiteUsage(BaseModel):
     seed_lots: int = 0
     plants: int = 0
     plant_groups: int = 0
+    vegetative_lots: int = 0
 
 
 class ProvenanceSiteResponse(ProvenanceSiteWrite):
@@ -97,7 +98,7 @@ class ProvenanceMapBotanicalIdentity(BaseModel):
 
 
 class ProvenanceMapRecord(BaseModel):
-    record_type: Literal["seed_lot", "plant", "plant_group"]
+    record_type: Literal["seed_lot", "plant", "plant_group", "vegetative_lot"]
     id: UUID
     label: str | None
     botanical_identity: ProvenanceMapBotanicalIdentity
@@ -109,6 +110,7 @@ class ProvenanceMapUsage(BaseModel):
     seed_lots: int
     plants: int
     plant_groups: int
+    vegetative_lots: int = 0
     total: int
 
 

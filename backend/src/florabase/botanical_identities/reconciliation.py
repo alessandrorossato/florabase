@@ -39,7 +39,9 @@ from florabase.botanical_profiles.model import (
     BotanicalProfileNativeRange,
 )
 from florabase.collection_photos.model import BotanicalIdentityCoverImage
+from florabase.cuttings.model import PropagationAttempt, VegetativeLot
 from florabase.external_botany.model import ExternalTaxonLink
+from florabase.lineage.service import lock_lineage_writes
 from florabase.native_range_enrichment.model import WcvpLink
 from florabase.native_range_enrichment.source import (
     SourceMetadata as WcvpSourceMetadata,
@@ -180,11 +182,36 @@ def identity_collection_counts(database: Session, identity_id: UUID) -> Identity
         )
         or 0
     )
+    vegetative_lots = int(
+        database.scalar(
+            select(func.count())
+            .select_from(VegetativeLot)
+            .where(
+                VegetativeLot.botanical_identity_id == identity_id,
+                VegetativeLot.lifecycle == "active",
+            )
+        )
+        or 0
+    )
+    propagation_attempts = int(
+        database.scalar(
+            select(func.count())
+            .select_from(PropagationAttempt)
+            .join(VegetativeLot, PropagationAttempt.vegetative_lot_id == VegetativeLot.id)
+            .where(
+                VegetativeLot.botanical_identity_id == identity_id,
+                PropagationAttempt.lifecycle == "active",
+            )
+        )
+        or 0
+    )
     return IdentityCollectionCounts(
         seed_lots=seed_lots,
         sowings=sowings,
         plants=plants,
         plant_groups=plant_groups,
+        vegetative_lots=vegetative_lots,
+        propagation_attempts=propagation_attempts,
     )
 
 
@@ -1228,6 +1255,9 @@ def merge_duplicate_identity(
             message="A botanical identity cannot be merged into itself.",
         )
 
+    # A cutting write may derive its identity from its mother. Serialize before either
+    # identity or collection row is locked so the merge cannot leave a new lot on a tombstone.
+    lock_lineage_writes(database)
     for lock_id in sorted((duplicate_identity_id, survivor_identity_id)):
         database.scalar(
             select(BotanicalIdentity)
@@ -1360,6 +1390,21 @@ def merge_duplicate_identity(
         database.execute(
             update(PlantGroup)
             .where(PlantGroup.botanical_identity_id == duplicate.id)
+            .values(botanical_identity_id=survivor.id)
+        )
+
+    vegetative_lot_ids = [
+        str(item_id)
+        for item_id in database.scalars(
+            select(VegetativeLot.id)
+            .where(VegetativeLot.botanical_identity_id == duplicate.id)
+            .order_by(VegetativeLot.id)
+        )
+    ]
+    if vegetative_lot_ids:
+        database.execute(
+            update(VegetativeLot)
+            .where(VegetativeLot.botanical_identity_id == duplicate.id)
             .values(botanical_identity_id=survivor.id)
         )
 
@@ -1504,6 +1549,7 @@ def merge_duplicate_identity(
                 "plant_ids": plant_ids,
                 "plant_group_ids": plant_group_ids,
                 "scheduled_activity_ids": scheduled_activity_ids,
+                "vegetative_lot_ids": vegetative_lot_ids,
             },
             "profile_resolution": payload.profile_resolution,
             "conflicting_profile_fields": conflicting_fields,

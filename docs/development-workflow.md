@@ -515,6 +515,8 @@ runtime guards also verify `florabase_review`, loopback development authenticati
 media root. It refuses every other project, foreign ownership, shared resources and ambiguous state.
 One enabled Review owner must already exist; its login, password, sessions and settings are retained.
 Collection records use the application's existing single-owner collection model and domain services.
+Review-only additive `lineage_explorer_extension=1` adds 47 [LINEAGE-003 ancestry](lineage-explorer.md)
+records (branching, conversions, unknown origins, reversals and a paged flat) through owning services.
 
 `make feature-review-extended-seed` adds the separately versioned
 [Extended Botanical Review Dataset v5](review/extended-botanical-dataset-v5.md) to a ready v4 Review.

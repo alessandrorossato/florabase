@@ -71,7 +71,7 @@ def native_identities(
     q: Annotated[str, Query(max_length=200)] = "",
     scope: RepresentationScope = "all",
     with_range: bool = False,
-    record: Annotated[list[CollectionRecordCategory] | None, Query(max_length=5)] = None,
+    record: Annotated[list[CollectionRecordCategory] | None, Query(max_length=7)] = None,
     offset: Annotated[int, Query(ge=0, le=100000)] = 0,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
 ) -> NativeRangeIdentityPage:
@@ -97,7 +97,7 @@ def native_overview(
     q: Annotated[str, Query(max_length=200)] = "",
     scope: RepresentationScope = "all",
     with_range: bool = False,
-    record: Annotated[list[CollectionRecordCategory] | None, Query(max_length=5)] = None,
+    record: Annotated[list[CollectionRecordCategory] | None, Query(max_length=7)] = None,
     offset: Annotated[int, Query(ge=0, le=100000)] = 0,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
 ) -> NativeRangeOverview:
@@ -124,7 +124,7 @@ def native_selected(
     scope: RepresentationScope = "all",
     q: Annotated[str, Query(max_length=200)] = "",
     with_range: bool = False,
-    record: Annotated[list[CollectionRecordCategory] | None, Query(max_length=5)] = None,
+    record: Annotated[list[CollectionRecordCategory] | None, Query(max_length=7)] = None,
     offset: Annotated[int, Query(ge=0, le=100000)] = 0,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
 ) -> SelectedNativeRanges:
@@ -161,7 +161,7 @@ def native_selection(
     scope: RepresentationScope = "all",
     q: Annotated[str, Query(max_length=200)] = "",
     with_range: bool = False,
-    record: Annotated[list[CollectionRecordCategory] | None, Query(max_length=5)] = None,
+    record: Annotated[list[CollectionRecordCategory] | None, Query(max_length=7)] = None,
 ) -> NativeRangeSelection:
     return native_ranges.selection(
         database, identity, scope=scope, q=q, with_range=with_range, record=record or ()
@@ -184,7 +184,7 @@ def native_territory_identities(
     q: Annotated[str, Query(max_length=200)] = "",
     scope: RepresentationScope = "all",
     with_range: bool = False,
-    record: Annotated[list[CollectionRecordCategory] | None, Query(max_length=5)] = None,
+    record: Annotated[list[CollectionRecordCategory] | None, Query(max_length=7)] = None,
     offset: Annotated[int, Query(ge=0, le=100000)] = 0,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
 ) -> TerritoryRangeIdentityPage:

@@ -72,7 +72,9 @@ function payloadFrom(form: HTMLFormElement): LocationCreate {
         value === "plants" ||
         value === "sowings" ||
         value === "seed_lots" ||
-        value === "harvest_inventory",
+        value === "harvest_inventory" ||
+        value === "vegetative_lots" ||
+        value === "propagation_attempts",
     );
   return {
     name: typeof name === "string" ? name : "",
@@ -86,6 +88,8 @@ const scopeLabels: Record<LocationUsageScope, string> = {
   sowings: "Sowings",
   seed_lots: "Seed lots",
   harvest_inventory: "Stored material",
+  vegetative_lots: "Vegetative lots",
+  propagation_attempts: "Rooting attempts",
 };
 
 const allScopes: LocationUsageScope[] = [
@@ -93,6 +97,8 @@ const allScopes: LocationUsageScope[] = [
   "sowings",
   "seed_lots",
   "harvest_inventory",
+  "vegetative_lots",
+  "propagation_attempts",
 ];
 
 const recordKinds = [
@@ -101,6 +107,8 @@ const recordKinds = [
   "sowings",
   "seed_lots",
   "harvest_inventory",
+  "vegetative_lots",
+  "propagation_attempts",
 ] as const;
 const recordLabels = {
   plants: "Plants",
@@ -108,6 +116,8 @@ const recordLabels = {
   sowings: "Sowings",
   seed_lots: "Seed lots",
   harvest_inventory: "Stored material",
+  vegetative_lots: "Vegetative lots",
+  propagation_attempts: "Rooting attempts",
 };
 
 function CompactUsage({
@@ -813,6 +823,10 @@ export function LocationScreen({
                       <option value="sowings">Sowings</option>
                       <option value="plants">Plants</option>
                       <option value="harvest_inventory">Stored material</option>
+                      <option value="vegetative_lots">Vegetative lots</option>
+                      <option value="propagation_attempts">
+                        Rooting attempts
+                      </option>
                     </select>
                   </div>
                 </>
@@ -838,6 +852,8 @@ export function LocationScreen({
                           sowings: "Sowings",
                           plants: "Plants",
                           harvest_inventory: "Stored material",
+                          vegetative_lots: "Vegetative lots",
+                          propagation_attempts: "Rooting attempts",
                         }[scopeFilter],
                         onRemove: () => {
                           setScopeFilter("all");

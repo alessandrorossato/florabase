@@ -19,7 +19,7 @@ from florabase.geographic_places.schemas import GeographicPlaceCreate, Geographi
 from florabase.geographic_places.service import create_geographic_place, update_geographic_place
 from florabase.harvests.schemas import HarvestWrite
 from florabase.harvests.service import delete_harvest, write_harvest
-from florabase.lineage.service import LineageKey, lineage
+from florabase.lineage.service import LineageKey, ancestry, children, lineage
 from florabase.locations.schemas import LocationCreate, LocationUpdate
 from florabase.locations.service import create_location, update_location
 from florabase.media.schemas import ExternalAssetCreate, LinkWrite, MediaTarget
@@ -259,10 +259,18 @@ def test_five_generations_use_concrete_edges_and_batched_lineage_queries(
         event.listen(database_connection, "before_cursor_execute", record)
         try:
             assert path(db, ("plant", final.id)) == expected
+            walked = len(queries)
+            explored = ancestry(db, ("plant", final.id))
         finally:
             event.remove(database_connection, "before_cursor_execute", record)
         assert len(expected) == 22
-        assert len(queries) == 5  # One recursive walk plus one summary batch per concrete type.
+        assert walked == 5  # One recursive walk plus one summary batch per concrete type.
+        # Explorer: the same five, one grouped descendant count, one conversion lookup, and the
+        # (empty) child page plus its total. Independent of path length.
+        assert len(queries) - walked == 9
+        assert [(n.record.kind, n.record.id) for n in explored.ancestors] == expected
+        assert all(n.descendant_count >= 1 for n in explored.ancestors)
+        assert explored.focus.descendant_count == explored.children.total == 0
 
 
 def test_event_location_identity_provenance_media_and_harvest_never_supply_lineage(
@@ -359,6 +367,8 @@ def test_event_location_identity_provenance_media_and_harvest_never_supply_linea
             )
             create_link(db, "harvest", harvest.id, asset.id, LinkWrite(), commit=False)
             assert {key: path(db, key) for key in subjects} == before
+            assert children(db, ("plant", plant.id)).total == 0
+            assert children(db, ("plant_group", group.id)).total == 0
             # Correct production context to an unrelated specimen; it never moves ancestry.
             write_harvest(
                 db,
@@ -372,6 +382,13 @@ def test_event_location_identity_provenance_media_and_harvest_never_supply_linea
             unlink(db, link.id)
         assert {key: path(db, key) for key in subjects} == before
         assert before[("plant", independent.id)] == []
+        # Same identity, provenance site and media: still not a descendant of the Sowing.
+        explored = children(db, ("sowing", sowing.id))
+        assert {(n.record.kind, n.record.id) for n in explored.items} == {
+            ("plant", plant.id),
+            ("plant_group", group.id),
+        }
+        assert ancestry(db, ("plant", independent.id)).focus.origin == "unknown"
         assert lot.producer_plant_id is None  # Seed HarvestItem never becomes a producer edge.
 
 

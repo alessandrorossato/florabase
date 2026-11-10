@@ -26,7 +26,12 @@ const paths = {
   plant_group: "plant-groups",
 };
 const labels = { sowing: "sowing", plant: "plant", plant_group: "plant group" };
-const entityPaths = { seed_lot: "seeds", ...paths };
+const entityPaths = {
+  seed_lot: "seeds",
+  vegetative_lot: "cuttings/lots",
+  propagation_attempt: "cuttings/attempts",
+  ...paths,
+};
 
 export function CreationReversal({
   kind,

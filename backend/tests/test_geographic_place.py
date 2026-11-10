@@ -250,11 +250,12 @@ def test_geographic_usage_and_safe_leaf_delete(monkeypatch: pytest.MonkeyPatch) 
         [(used_id, 1)],
         [(used_id, 2)],
         [(used_id, 3)],
+        [(used_id, 6)],
         [(used_id, 4)],
         [(used_id, 5)],
     ]
     direct, sites, native_ranges = geographic_service.geographic_place_usage(database)
-    assert direct[used_id] == 6
+    assert direct[used_id] == 12
     assert sites[used_id] == 4
     assert native_ranges[used_id] == 5
 

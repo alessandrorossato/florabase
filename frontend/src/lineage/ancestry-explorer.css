@@ -1,0 +1,167 @@
+/* Material ancestry explorer: one vertical stem, read top (oldest) to bottom (newest) in both
+   DOM and visual order; descendants branch as nested, progressively loaded levels. Vertical
+   flow needs no separate phone layout beyond a narrower branch indent. */
+.ancestry-explorer {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+/* The grid gap owns vertical rhythm here; the header's own block margin would double it. */
+.ancestry-explorer > .page-header {
+  margin-block-end: 0;
+}
+.ancestry-explorer > .ancestry-section + .ancestry-section {
+  margin-block-start: var(--space-4);
+}
+.ancestry-section {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.ancestry-section > h3 {
+  margin: 0;
+}
+.ancestry-origin {
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+
+.ancestry-chain,
+.ancestry-tree {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ancestry-chain > li,
+.ancestry-tree > li {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+.ancestry-chain > li::before,
+.ancestry-tree > li::before {
+  content: none;
+}
+/* Nested levels hang from the stem with a rule in the lineage colour. */
+.ancestry-tree .ancestry-tree {
+  margin-inline-start: var(--space-4);
+  padding-inline-start: var(--space-4);
+  border-inline-start: 1px solid var(--lineage);
+}
+.ancestry-section > .ancestry-tree,
+.ancestry-section > .ancestry-chain {
+  padding-inline-start: var(--space-4);
+  border-inline-start: 2px solid var(--lineage);
+}
+
+.ancestry-verb {
+  color: var(--lineage);
+  font: var(--type-label);
+  font-weight: 500;
+}
+.ancestry-verb::before {
+  content: "↓ " / "";
+}
+
+.ancestry-node {
+  display: grid;
+  gap: var(--space-1);
+  inline-size: min(100%, 34rem);
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  overflow-wrap: anywhere;
+}
+.ancestry-node[aria-current="true"] {
+  background: var(--lineage-subtle);
+  border-color: var(--lineage);
+  border-inline-start-width: 4px;
+}
+.ancestry-node p {
+  margin: 0;
+}
+.ancestry-node__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  color: var(--text-muted);
+  font: var(--type-eyebrow);
+}
+.ancestry-node__name {
+  font: var(--type-strong);
+}
+.ancestry-node__facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.ancestry-evidence {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.ancestry-node__focus {
+  justify-self: start;
+  font: var(--type-small);
+  font-weight: 600;
+}
+
+.ancestry-toggle,
+.ancestry-more > button {
+  min-block-size: var(--control-height-compact);
+}
+/* "Show more" lines up with its own level's list (indent + rule of that list). */
+.ancestry-section > .ancestry-more {
+  padding-inline-start: calc(var(--space-4) + 2px);
+}
+.ancestry-tree .ancestry-more {
+  margin-inline-start: calc(var(--space-8) + 1px);
+}
+.ancestry-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* The house touch rule: narrow or coarse-pointer screens get touch-height controls. */
+@media (max-width: 48rem), (any-pointer: coarse) {
+  .ancestry-toggle,
+  .ancestry-more > button,
+  .ancestry-node__focus {
+    min-block-size: var(--control-height-touch, 2.75rem);
+  }
+  .ancestry-node__focus {
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+/* Phones: a narrower branch indent keeps deep levels readable. */
+@media (max-width: 40rem) {
+  .ancestry-section > .ancestry-more {
+    padding-inline-start: calc(var(--space-3) + 2px);
+  }
+  .ancestry-tree .ancestry-more {
+    margin-inline-start: calc(var(--space-4) + 1px);
+  }
+  .ancestry-tree .ancestry-tree {
+    margin-inline-start: var(--space-1);
+    padding-inline-start: var(--space-3);
+  }
+  .ancestry-section > .ancestry-tree,
+  .ancestry-section > .ancestry-chain {
+    padding-inline-start: var(--space-3);
+  }
+}

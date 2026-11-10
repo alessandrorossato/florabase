@@ -10,7 +10,13 @@ test("identity origins exclude unrelated and unlinked sites and recalculate shar
     coordinate_accuracy_m: "1000",
     geographic_place_id: null,
     geographic_place_path: null,
-    usage: { seed_lots: 2, plants: 1, plant_groups: 0, total: 3 },
+    usage: {
+      seed_lots: 2,
+      plants: 1,
+      plant_groups: 0,
+      vegetative_lots: 0,
+      total: 3,
+    },
     records: [
       {
         id: "ours",
@@ -43,6 +49,7 @@ test("identity origins exclude unrelated and unlinked sites and recalculate shar
     seed_lots: 1,
     plants: 0,
     plant_groups: 0,
+    vegetative_lots: 0,
     total: 1,
   });
   expect(result[0].coordinate_accuracy_m).toBe("1000");

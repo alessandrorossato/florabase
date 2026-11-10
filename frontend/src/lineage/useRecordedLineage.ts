@@ -5,8 +5,13 @@ import { requestJson } from "../auth/api";
 
 export type LineageResponse = components["schemas"]["LineageResponse"];
 export type LineageNode = LineageResponse["subject"];
-/** The three record kinds with a recorded-lineage endpoint. */
-export type LineageEndpoint = "seed-lots" | "plants" | "plant-groups";
+/** Collection resources with a recorded-lineage endpoint. */
+export type LineageEndpoint =
+  | "seed-lots"
+  | "plants"
+  | "plant-groups"
+  | "vegetative-lots"
+  | "propagation-attempts";
 
 export type RecordedLineage =
   | { status: "loading" }
@@ -18,23 +23,60 @@ export const lineageKindLabels: Record<LineageNode["kind"], string> = {
   sowing: "Sowing",
   plant: "Plant",
   plant_group: "Plant group",
+  vegetative_lot: "Vegetative lot",
+  propagation_attempt: "Rooting attempt",
 };
 export const lineageFallbackLabels: Record<LineageNode["kind"], string> = {
   seed_lot: "Unlabelled seed lot",
   sowing: "Unlabelled sowing",
   plant: "Unlabelled plant",
   plant_group: "Unlabelled plant group",
+  vegetative_lot: "Unlabelled vegetative lot",
+  propagation_attempt: "Unlabelled rooting attempt",
 };
 
-export function lineageHref(kind: LineageNode["kind"], id: string) {
+/** The record's own detail page. */
+export function recordHref(kind: LineageNode["kind"], id: string) {
+  if (kind === "vegetative_lot") return `#/cuttings/lots/${id}`;
+  if (kind === "propagation_attempt") return `#/cuttings/attempts/${id}`;
   const route =
     kind === "seed_lot"
       ? "seeds"
       : kind === "plant_group"
         ? "plant-groups"
         : `${kind}s`;
-  return `#/${route}/${id}?tab=lineage`;
+  return `#/${route}/${id}`;
 }
+
+export function lineageHref(kind: LineageNode["kind"], id: string) {
+  const href = recordHref(kind, id);
+  return kind === "vegetative_lot" || kind === "propagation_attempt"
+    ? href
+    : `${href}?tab=lineage`;
+}
+
+/** The Material ancestry explorer centred on one record. */
+export function ancestryHref(kind: LineageNode["kind"], id: string) {
+  return `#/lineage/${kind}/${id}`;
+}
+
+/**
+ * The recorded relationship between two adjacent steps, named only from their kinds (every
+ * step is an explicitly recorded source, so the pair determines the relationship).
+ */
+export const lineageVerbs: Partial<Record<string, string>> = {
+  "seed_lot>sowing": "sown as",
+  "sowing>plant": "grown into",
+  "sowing>plant_group": "grown into",
+  "plant_group>plant": "extracted",
+  "plant>seed_lot": "produced",
+  "plant_group>seed_lot": "produced",
+  "plant>vegetative_lot": "provided cuttings for",
+  "plant_group>vegetative_lot": "provided cuttings for",
+  "vegetative_lot>propagation_attempt": "struck in",
+  "propagation_attempt>plant": "rooted into",
+  "propagation_attempt>plant_group": "rooted into",
+};
 
 /**
  * Explicit upstream path, oldest first. The API walks one recorded source per record,

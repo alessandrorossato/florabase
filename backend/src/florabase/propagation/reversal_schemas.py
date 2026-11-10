@@ -25,6 +25,9 @@ ReversalReasonCode = Literal[
     "active_downstream_operation",
     "downstream_lineage",
     "produced_seed_lot_exists",
+    "produced_vegetative_lot_exists",
+    "linked_media_exists",
+    "scheduled_work_exists",
     "later_extraction_exists",
     "incompatible_result_history",
 ]
@@ -33,7 +36,12 @@ ReversalReasonCode = Literal[
 class ReversalReason(BaseModel):
     code: ReversalReasonCode
     message: str
-    entity_type: Literal["seed_lot", "sowing", "plant", "plant_group"] | None = None
+    entity_type: (
+        Literal[
+            "seed_lot", "sowing", "plant", "plant_group", "vegetative_lot", "propagation_attempt"
+        ]
+        | None
+    ) = None
     entity_id: UUID | None = None
 
 
@@ -42,7 +50,7 @@ class PropagationReversalEligibility(BaseModel):
     operation_receipt_id: UUID | None
     operation_status: Literal["applied", "reversed"] | None
     source_id: UUID | None
-    source_type: Literal["seed_lot", "sowing"]
+    source_type: Literal["seed_lot", "sowing", "vegetative_lot", "propagation_attempt"]
     reasons: list[ReversalReason]
     retained_observation_ids: list[UUID]
 

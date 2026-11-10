@@ -274,7 +274,9 @@ export function PhotosSection({
     target === "plant" ||
     target === "plant_group" ||
     target === "harvest" ||
-    target === "supplier";
+    target === "supplier" ||
+    target === "vegetative_lot" ||
+    target === "propagation_attempt";
 
   useEffect(() => {
     const controller = new AbortController();

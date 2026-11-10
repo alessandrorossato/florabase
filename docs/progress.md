@@ -126,6 +126,54 @@
 
 # Engineering progress
 
+## 2026-11-09 — LINEAGE-003 material ancestry explorer
+
+- Built on `feat/lineage-003` (`be03434`, canonical FULL passed on `4c845b1`); integrated as
+  `feat/lineage-003-integration` on `48f35ea`, writer `claude-code-integration`. Read-only
+  `GET /api/v1/lineage/{kind}/{id}` (recorded upstream chain + first child page) and
+  `/children?offset&limit` (≤100) over the six persisted source columns only; nodes carry own origin
+  kind, optional HARVEST-003 conversion evidence (applied/reversed) and descendant counts. No
+  migration; existing node schemas and endpoints unchanged. Ancestry for a 22-record chain uses 9
+  statements (asserted).
+- `#/lineage/{kind}/{id}` page inside the focus record's section; every Lineage tab links to it.
+  Oldest-first chain with honest roots, generations and evidence; progressive, paged, keyboard
+  expandable descendants; phone/tablet layouts; existing tokens and primitives only.
+- Independent correctness review found five defects (contradictory directly-produced Plant origin,
+  non-indexable count query, paging duplicates, dead-end Retry for malformed IDs, collapse losing
+  pages); all fixed with regressions. Independent visual review recorded in the
+  [Review README](review/lineage-003/README.md).
+- Review-only fixture `lineage_explorer_extension=1` (47 records, owning services): branching,
+  extraction, applied/reversed conversions, reversed Plant, unknown/orphan origins, 27-Plant paging.
+- Feature Review was owned by another worktree, so an isolated adapter (`docs/review/lineage-003`,
+  project `florabase-lineage-003-review`, port 15176, own DB/media/deps/network) reuses the canonical
+  Environment guards. Seeded 127 records; repeat seed preserved them; 21 authenticated captures in all
+  eight themes and 390/768/1280 widths. The other Review was not touched.
+- Focused: lineage/conversion/integrity PostgreSQL 62 passed; frontend 1228 passed; ruff, mypy,
+  ESLint, tsc, API drift and fixture/adapter self-checks passed. `test-uat-fixture.py` cases needing a
+  UAT runtime identity refuse outside UAT (unchanged).
+- Integration onto `5fbcfd5` (MULTIBRANCH-UAT-001, PORTABLE-COMPOSE-001, BETA-DATA-001,
+  MEASUREMENT-001): clean cherry-pick, no migration. Overlapping OpenAPI/TypeScript artifacts
+  regenerated with `make api-generate` with no diff; `make api-check` passed. Focused: PostgreSQL
+  lineage/conversion/seed-lot/measurement/plant/reversal 188 passed; backend unit 1048 passed
+  (90.13%); frontend 1229 passed on 3 consecutive uncontended runs (2 earlier runs each timed out
+  once in the unrelated `Geography dedicated record…` App test); ruff, mypy, ESLint, format, review
+  fixture (27 passed, 1 skipped), adapter self-checks and verification inventory passed. Independent
+  integration QA found no defects; measurement Events add no edge and leave the six source columns
+  untouched.
+- Rebased onto `48f35ea` (TAXONOMY-001, Alembic head `20261109_0045`): clean, no migration, API
+  artifacts regenerated with no diff. New integration regression: an in-place accepted-name
+  correction and a duplicate-identity merge leave all seven explorer views' edges, order, counts,
+  origins, lifecycles and UUIDs unchanged; nodes follow the survivor or corrected name; the merged
+  duplicate and former names never appear; measurement Events and their correction trail stay on the
+  same Plant UUID. Focused: cross-domain PostgreSQL (lineage, conversions, seed lots, measurements,
+  plants, reversal, botanical identities) 259 passed; golden SMOKE 34 passed against the reviewed
+  `0045` baseline (COMPREHENSIVE unchanged at `0042`); backend unit 1056 passed (90.18%); frontend
+  1231 passed; ruff, mypy, ESLint, format and inventory passed. Visual check on this worktree's own
+  UAT instance (golden SMOKE) at 1280/768/390. Independent integration QA found no defects; two
+  TAXONOMY-owned concurrency risks (merge vs concurrent Plant write deadlock abort; create racing an
+  uncommitted merge) do not affect lineage edges.
+- [Contract](lineage-explorer.md). Status `implemented` pending canonical verification.
+
 ## 2026-11-08 — beta-postgres-repro-001 implementation candidate
 
 - Branch `fix/beta-postgres-repro-001` starts from verified `933b6984`; writer claim is held by
@@ -8145,3 +8193,86 @@ Status remains implemented pending canonical verification.
 - Active filters and tombstone guards applied across collection views, explore, import/export, plants, schedule, search, and seed lots. Search indexes historical names with `"Formerly <name>"` context.
 - Migration `20261109_0045` tested with bidirectional migration cycles (`verify-migration-cycle.sh`) and golden smoke dataset baseline updated in `scripts/fixtures/golden/scenarios.json`.
 - Static checks (`make format && make lint && make typecheck && make api-check`), backend unit tests (`make test-backend`), frontend tests, and integration test suites passed. Canonical gate `make feature-verify AGENT_ID=antigravity-taxonomy-001` completed with verified receipt.
+
+### CUTTING-001 — backend development milestone, 9 November 2026
+
+- Added vegetative lots, rooting attempts and observations, explicit clonal origin, typed receipts
+  and guarded reversal. Added Location scopes, Schedule and shared media targets, History facts,
+  and Explore representation. See the [cuttings contract](cuttings.md).
+- Backend Ruff and mypy passed, and all 17 focused unit tests passed. The focused disposable
+  PostgreSQL run passed 86 tests across CUTTING, History, LINEAGE-002,
+  propagation reversal, Measurements and CSV. It included rollback, concurrent stock deduction,
+  cycle refusal, descendant undo, empty schema round-trip, and populated-downgrade refusal.
+  The disposable project reported zero remaining containers, networks and volumes.
+- The branch uses temporary revision `cutting_001_dev` above main's `20261109_0044`. Final
+  revision assignment after TAXONOMY, LINEAGE-003 explorer integration, UAT, independent QA and
+  the frozen-tree FULL gate are still pending. Status is `in_progress`.
+
+### CUTTING-001 — workspace and isolated UAT checkpoint, 10 November 2026
+
+- Added the Cuttings directory, source and rooting forms, contextual Plant and PlantGroup actions,
+  rooting observations, establishment and guarded undo. Added cutting targets to the existing
+  Schedule, media, Collection Origins and Saved Views surfaces.
+- Detached backend QA found stale full-record writes and reference lifecycle gaps. Lot and attempt
+  corrections now check their revision after taking the row lock. Linked Orders retain supplier
+  consistency, cutting-only reference deletion returns a domain conflict, and ordinary edits
+  preserve the originating attempt on rooted PlantGroups.
+- In isolated synthetic UAT, took four cuttings from a PlantGroup, recorded two rooted, established
+  a Plant, and undid the establishment and attempt in order. Undo retained the observation only
+  after confirmation. A second attempt retained a failed result with a recorded zero. Checked
+  1440, 1024 and 390 px layouts and keyboard dismissal with focus returning to Filters. Stopped
+  the owned UAT instance with its state preserved.
+- This checkpoint precedes integration with TAXONOMY revision 0045. Canonical FULL and final
+  ancestry-explorer acceptance remain pending.
+
+### CUTTING-001 — TAXONOMY integration and Wave B corrections, 10 November 2026
+
+- Rebased onto TAXONOMY-001 at `48f35ea` and assigned Alembic revision `20261110_0046` after
+  `20261109_0045`. Duplicate identity merges repoint lots and record their IDs. Attempts follow
+  their lots and original receipts retain their reversal evidence.
+- Independent Wave B review found gaps in date and count entry, lot correction, session expiry,
+  Order lookup, and directory navigation. Fast-create now preserves an explicit unknown start and
+  accepts a counted start for uncounted stock. Lot corrections use optimistic concurrency.
+  The workspace uses searchable Order selection, preserves filtered return routes and focus,
+  and shows a botanical label on otherwise unnamed attempts.
+- Backend Ruff, strict mypy, and 1,084 unit tests passed at 90.32% coverage. The final isolated
+  CUTTING PostgreSQL suite passed all 12 cases. The broader PostgreSQL run passed all 92 cases
+  across CUTTING, taxonomy, History and golden SMOKE. Both fresh 0046 copies matched the pinned
+  digest. The full frontend suite passed 1,233 tests, including the Workbench navigation and
+  Location regression updates. Frontend lint and types, API drift and the feature graph passed.
+- LINEAGE-003 remains outside `origin/main`. Both directions of the merged explorer must support
+  clonal edges before final UAT and canonical FULL verification. Status remains `in_progress`.
+
+### CUTTING-001 — shared ancestry explorer integration, 10 November 2026
+
+- Replayed CUTTING onto verified LINEAGE-003 commit `639d5ed9685c5c6f16aa32e98cff9ee7c0d55429`
+  in the CUTTING worktree. The LINEAGE branch is preserved.
+- Extended its existing upstream walker, concrete summaries, downstream edges, grouped descendant
+  counts, route kinds and visual relationship labels for lots and attempts. Details link into the
+  same explorer. Explicit mother → lot → attempt → offspring paths work in both directions.
+- Focused checks passed 47 backend tests, 24 disposable PostgreSQL cases and 26 frontend tests.
+  Ruff, strict mypy, frontend types and scoped ESLint passed. PostgreSQL tests exercised Plant
+  and PlantGroup mothers, descendants, cycles, reversal and legacy explorer behavior. Disposable
+  resource cleanup reported zero residual containers, networks and volumes.
+- Frozen PHENOLOGY `1049214597e27eaeebdd6c5ad0bbed22d203fc10` supersedes `faf4d53`.
+  Both local feature schemas currently use revision 0046 after 0045. CUTTING's migration is
+  provisional. Finalization requires an agreed integration branch containing that exact PHENOLOGY
+  commit, then CUTTING revision 0047 with parent 0046, single-head and upgrade/downgrade checks,
+  and a final SMOKE pin. COMPREHENSIVE is unchanged.
+- The operator-selected consolidated FULL remains the acceptance gate. No CUTTING-only canonical
+  FULL was run. Feature status remains `in_progress`; final integration and acceptance are pending.
+
+### CUTTING-001 — PHENOLOGY staging handoff, 10 November 2026
+
+- Staged the CUTTING history and explorer changes on `feat/cutting-001-phenology-integration`
+  with frozen PHENOLOGY `1049214597e27eaeebdd6c5ad0bbed22d203fc10` as first parent. The staging
+  tree also contains exact LINEAGE-003 `639d5ed9685c6f16aa32e98cff9ee7c0d55429`.
+- Alembic has one head, `20261110_0047`, after PHENOLOGY `20261110_0046` and TAXONOMY
+  `20261109_0045`. Tested downgrade to 0046 and re-upgrade with PHENOLOGY columns present,
+  CUTTING's populated-downgrade guard, and the PHENOLOGY round trip through 0045.
+- Focused verification passed 90 backend tests, 51 disposable PostgreSQL tests and 96 frontend
+  tests. Ruff, mypy, frontend type checking, scoped ESLint and generated API drift checks passed.
+  Two fresh disposable SMOKE copies matched the new 0047 pin. The COMPREHENSIVE pin is preserved.
+- Independent explorer QA findings were addressed in the generated contracts and help text.
+  The operator-selected consolidated FULL remains the acceptance gate, and CUTTING remains
+  `in_progress` pending that gate.

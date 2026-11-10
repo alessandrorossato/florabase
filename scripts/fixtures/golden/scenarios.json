@@ -72,10 +72,10 @@
           "provenance.without_coordinates": 1
         },
         "baseline": {
-          "schema_revision": "20261110_0046",
+          "schema_revision": "20261110_0047",
           "volume": 12,
           "plan_sha256": "5afd6ffe46fce10ac62b1ef1233c9944d8c206bef9d407ce4396b5e6ce64b0d7",
-          "canonical_sha256": "de25687b281866752bb689f2181c95363cdf80c325786be5e6ea710b77957fce",
+          "canonical_sha256": "d0a9b3fc1a935458a3544ce51d9f6697411f6111037b086c02736cc1ed8be167",
           "media_files": 3,
           "media_sha256": "d3583210516d857e6f7c8c8c78a2c3e051d8fe31d001bb0f420c226bc5b39f6e",
           "scenario_keys_sha256": "e7d0d666d58604b23a8d3a8d8cd661b839265743501ad742225c3998a9ec7ffa",
@@ -114,7 +114,7 @@
             },
             "collection_primary_photos": {
               "rows": 2,
-              "sha256": "a09a156a8621f8e1f06a3e152de5034e1406c11edd8726cae4948964170ee3e3"
+              "sha256": "76728802a797ca95a07469cb3a5452addc132c4f153fd4dd00c3cc20e2aab0d0"
             },
             "event_measurement_corrections": {
               "rows": 0,
@@ -162,7 +162,7 @@
             },
             "locations": {
               "rows": 9,
-              "sha256": "3ce7288afeea24dc073dc0632e2c2171ed8db3eb2a604cda83b19a0fbb6790a0"
+              "sha256": "15c6474d4958efbaf1a903253dc65317b0eb841c886528d59a89df83afbf1a7e"
             },
             "media_assets": {
               "rows": 5,
@@ -182,7 +182,7 @@
             },
             "operation_receipts": {
               "rows": 8,
-              "sha256": "1e2e8a2c53043f9d88d5ab71b13101c3f7eb038fe225b7cccccb6581c26084ef"
+              "sha256": "ca739f2bff4b83d725a77baa54a7a6b07d49888843e33db6986e64606a82f4e9"
             },
             "orders": {
               "rows": 4,
@@ -190,11 +190,15 @@
             },
             "plant_groups": {
               "rows": 7,
-              "sha256": "f1694564b19a4aab1ce4606bf5b1f1a12048373fcc960273df467385ec1192c8"
+              "sha256": "31d1474a78985bd1a40dde347dad95196979bec5f46920abe42427d32406ea5b"
             },
             "plants": {
               "rows": 19,
-              "sha256": "6ad316f2392c1c01b3fdbd9f98e2911ccffd49edf36b6dbf664553c35b79cf07"
+              "sha256": "93d8b2a28bafbd81ae82fe67c8d74d7238d084051a644545b99764b9a0b23ef1"
+            },
+            "propagation_attempts": {
+              "rows": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
             },
             "provenance_sites": {
               "rows": 5,
@@ -202,7 +206,11 @@
             },
             "record_media_links": {
               "rows": 4,
-              "sha256": "797a947805b40068286cb3c1103d2e51752b65edbf0d7ef179a9cf0d75c5fc40"
+              "sha256": "8f242d0d83558346daa79e3b5b8af016f7cf620b78e2a9f5119da1ed35d06ef7"
+            },
+            "rooting_observations": {
+              "rows": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
             },
             "saved_views": {
               "rows": 3,
@@ -210,7 +218,7 @@
             },
             "scheduled_activities": {
               "rows": 10,
-              "sha256": "27b4521ea244ede1da70ad779f0027ff25b518943bfc061889d9715399b916af"
+              "sha256": "4c25204160b8011d34ababd10b8e1c67321d7c4124dcf48764e3b2fbb4b3c769"
             },
             "seed_lots": {
               "rows": 31,
@@ -227,6 +235,10 @@
             "users": {
               "rows": 1,
               "sha256": "e01b9b5d814f998a2bc30ad65b9bae1950c464dc3abf0cb572ffe2ad85c05490"
+            },
+            "vegetative_lots": {
+              "rows": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
             },
             "wcvp_links": {
               "rows": 0,

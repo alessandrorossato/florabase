@@ -34,6 +34,7 @@ export function ProvenanceMapScreen() {
     () => ({
       seedLots: view.state.seed_lots,
       plants: view.state.plants,
+      cuttings: view.state.cuttings,
       identityQuery: view.state.q,
     }),
     [view.state],
@@ -67,10 +68,13 @@ export function ProvenanceMapScreen() {
   const records = uniqueRecords(visibleSites);
   const identities = identityGroups(records);
   const filtered = Boolean(
-    view.state.q.trim() || !view.state.seed_lots || !view.state.plants,
+    view.state.q.trim() ||
+    !view.state.seed_lots ||
+    !view.state.plants ||
+    !view.state.cuttings,
   );
   const clearFilters = () => {
-    view.replace({ q: "", seed_lots: true, plants: true });
+    view.replace({ q: "", seed_lots: true, plants: true, cuttings: true });
   };
   return (
     <section
@@ -133,6 +137,16 @@ export function ProvenanceMapScreen() {
                   />
                   <span>Plants and plant groups</span>
                 </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={view.state.cuttings}
+                    onChange={(event) => {
+                      view.update("cuttings", event.currentTarget.checked);
+                    }}
+                  />
+                  <span>Vegetative lots</span>
+                </label>
                 <p className="field-help">
                   Includes retained historical records. Botanical search matches
                   recorded identity labels only.
@@ -151,6 +165,17 @@ export function ProvenanceMapScreen() {
                     },
                   ]
                 : []),
+              ...(!view.state.cuttings
+                ? [
+                    {
+                      label: "Vegetative lots",
+                      value: "Excluded",
+                      onRemove: () => {
+                        view.update("cuttings", true);
+                      },
+                    },
+                  ]
+                : []),
               ...(!view.state.plants
                 ? [
                     {
@@ -164,7 +189,12 @@ export function ProvenanceMapScreen() {
                 : []),
             ]}
             onReset={() => {
-              view.replace({ ...view.state, seed_lots: true, plants: true });
+              view.replace({
+                ...view.state,
+                seed_lots: true,
+                plants: true,
+                cuttings: true,
+              });
             }}
           />
         }

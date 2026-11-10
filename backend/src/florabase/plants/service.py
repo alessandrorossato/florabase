@@ -11,6 +11,7 @@ from sqlalchemy.sql import Select
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
 from florabase.collection_photos.primary import primary_summaries
+from florabase.cuttings.model import VegetativeLot
 from florabase.events.model import Event, EventKind
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.service import display_path as geographic_display_path
@@ -180,11 +181,17 @@ def _common_write_values(payload: PlantCommonWrite) -> dict[str, object]:
     return values
 
 
-def create_plant(database: Session, payload: PlantCreate) -> Plant:
+def create_plant(
+    database: Session, payload: PlantCreate, *, propagation_attempt_id: UUID | None = None
+) -> Plant:
     lock_lineage_writes(database)
     _lock_forward_sowing(database, payload.originating_sowing_id)
     _require_references(database, payload)
-    plant = Plant(**_common_write_values(payload), lifecycle=payload.lifecycle.value)
+    values = _common_write_values(payload)
+    if propagation_attempt_id is not None:
+        values["direct_origin_kind"] = None
+        values["originating_propagation_attempt_id"] = propagation_attempt_id
+    plant = Plant(**values, lifecycle=payload.lifecycle.value)
     database.add(plant)
     database.flush()
     return plant
@@ -249,6 +256,21 @@ def update_plant(database: Session, plant: Plant, payload: PlantUpdate) -> Plant
     else:
         values = _common_write_values(payload)
     values["lifecycle"] = payload.lifecycle.value
+    if plant.originating_propagation_attempt_id is not None:
+        if any(
+            (
+                payload.originating_sowing_id,
+                payload.direct_origin_kind,
+                payload.direct_origin_detail,
+                payload.supplier_id,
+                payload.material_provenance_place_id,
+                payload.provenance_site_id,
+            )
+        ):
+            raise PlantDomainConflictError(
+                "cutting_origin_immutable", "Rooted cutting origin cannot be replaced"
+            )
+        values["direct_origin_kind"] = None
     for field, value in values.items():
         setattr(plant, field, value)
     plant.updated_at = datetime.now(UTC)
@@ -498,6 +520,16 @@ def evaluate_reintegration(
             )
         )
 
+    if database.scalar(
+        select(VegetativeLot.id).where(VegetativeLot.mother_plant_id == plant.id).limit(1)
+    ):
+        reasons.append(
+            _reason(
+                "produced_vegetative_lot_exists",
+                "This Plant is the mother of a retained vegetative lot.",
+            )
+        )
+
     later_group_receipts = list(
         database.scalars(
             select(OperationReceipt).where(
@@ -625,7 +657,9 @@ def reintegrate_plant(
     return evaluation.plant, plant_group, event, receipt
 
 
-def create_plant_group(database: Session, payload: PlantGroupCreate) -> PlantGroup:
+def create_plant_group(
+    database: Session, payload: PlantGroupCreate, *, propagation_attempt_id: UUID | None = None
+) -> PlantGroup:
     lock_lineage_writes(database)
     _lock_forward_sowing(database, payload.originating_sowing_id)
     _require_references(database, payload)
@@ -637,6 +671,9 @@ def create_plant_group(database: Session, payload: PlantGroupCreate) -> PlantGro
         ),
         lifecycle=payload.lifecycle.value,
     )
+    if propagation_attempt_id is not None:
+        values["direct_origin_kind"] = None
+        values["originating_propagation_attempt_id"] = propagation_attempt_id
     plant_group = PlantGroup(**values)
     database.add(plant_group)
     database.flush()
@@ -682,6 +719,21 @@ def update_plant_group(
         ),
         lifecycle=payload.lifecycle.value,
     )
+    if plant_group.originating_propagation_attempt_id is not None:
+        if any(
+            (
+                payload.originating_sowing_id,
+                payload.direct_origin_kind,
+                payload.direct_origin_detail,
+                payload.supplier_id,
+                payload.material_provenance_place_id,
+                payload.provenance_site_id,
+            )
+        ):
+            raise PlantDomainConflictError(
+                "cutting_origin_immutable", "Rooted cutting origin cannot be replaced"
+            )
+        values["direct_origin_kind"] = None
     for field, value in values.items():
         setattr(plant_group, field, value)
     plant_group.updated_at = datetime.now(UTC)
@@ -881,6 +933,7 @@ def _common_response_values(
             id=botanical.id, display_label=botanical.display_label
         ),
         "originating_sowing_id": record.originating_sowing_id,
+        "originating_propagation_attempt_id": record.originating_propagation_attempt_id,
         "originating_sowing": (
             OriginatingSowingSummary(
                 id=originating_sowing.id,

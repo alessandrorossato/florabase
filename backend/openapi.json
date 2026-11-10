@@ -338,6 +338,146 @@
         "title": "AcquisitionContext",
         "type": "object"
       },
+      "AncestryChildren": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AncestryNode"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "offset",
+          "limit",
+          "items"
+        ],
+        "title": "AncestryChildren",
+        "type": "object"
+      },
+      "AncestryNode": {
+        "properties": {
+          "descendant_count": {
+            "title": "Descendant Count",
+            "type": "integer"
+          },
+          "harvest_conversion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HarvestConversionEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeedLotSourceKind"
+              },
+              {
+                "$ref": "#/components/schemas/DirectOriginKind"
+              },
+              {
+                "enum": [
+                  "collection_produced",
+                  "purchased",
+                  "gift_exchange",
+                  "self_collected",
+                  "other",
+                  "unknown"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin"
+          },
+          "record": {
+            "discriminator": {
+              "mapping": {
+                "plant": "#/components/schemas/PlantLineageNode",
+                "plant_group": "#/components/schemas/PlantGroupLineageNode",
+                "propagation_attempt": "#/components/schemas/PropagationAttemptLineageNode",
+                "seed_lot": "#/components/schemas/SeedLotLineageNode",
+                "sowing": "#/components/schemas/SowingLineageNode",
+                "vegetative_lot": "#/components/schemas/VegetativeLotLineageNode"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SeedLotLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/SowingLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/PlantLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/PlantGroupLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/VegetativeLotLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/PropagationAttemptLineageNode"
+              }
+            ],
+            "title": "Record"
+          }
+        },
+        "required": [
+          "record",
+          "origin",
+          "harvest_conversion",
+          "descendant_count"
+        ],
+        "title": "AncestryNode",
+        "type": "object"
+      },
+      "AncestryResponse": {
+        "properties": {
+          "ancestors": {
+            "items": {
+              "$ref": "#/components/schemas/AncestryNode"
+            },
+            "title": "Ancestors",
+            "type": "array"
+          },
+          "children": {
+            "$ref": "#/components/schemas/AncestryChildren"
+          },
+          "focus": {
+            "$ref": "#/components/schemas/AncestryNode"
+          }
+        },
+        "required": [
+          "focus",
+          "ancestors",
+          "children"
+        ],
+        "title": "AncestryResponse",
+        "type": "object"
+      },
       "ApplicationResponse": {
         "properties": {
           "added": {
@@ -1042,6 +1182,190 @@
           "created_at"
         ],
         "title": "AttachmentResponse",
+        "type": "object"
+      },
+      "AttemptCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "propagation_attempt": {
+            "$ref": "#/components/schemas/AttemptSetup"
+          },
+          "source_adjustment": {
+            "$ref": "#/components/schemas/SourceAdjustment"
+          }
+        },
+        "required": [
+          "propagation_attempt",
+          "source_adjustment"
+        ],
+        "title": "AttemptCreate",
+        "type": "object"
+      },
+      "AttemptSetup": {
+        "additionalProperties": false,
+        "properties": {
+          "container": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container"
+          },
+          "environment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environment"
+          },
+          "hormone_treatment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hormone Treatment"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositiveCuttingQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "started_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "substrate": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Substrate"
+          },
+          "temperature_max_c": {
+            "anyOf": [
+              {
+                "maximum": 70.0,
+                "minimum": -50.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Max C"
+          },
+          "temperature_min_c": {
+            "anyOf": [
+              {
+                "maximum": 70.0,
+                "minimum": -50.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Min C"
+          }
+        },
+        "title": "AttemptSetup",
+        "type": "object"
+      },
+      "AttemptTransitionResponse": {
+        "properties": {
+          "operation_receipt_id": {
+            "format": "uuid",
+            "title": "Operation Receipt Id",
+            "type": "string"
+          },
+          "propagation_attempt": {
+            "$ref": "#/components/schemas/PropagationAttemptResponse"
+          },
+          "vegetative_lot": {
+            "$ref": "#/components/schemas/VegetativeLotResponse"
+          }
+        },
+        "required": [
+          "vegetative_lot",
+          "propagation_attempt",
+          "operation_receipt_id"
+        ],
+        "title": "AttemptTransitionResponse",
         "type": "object"
       },
       "Body_createAttachment": {
@@ -1915,6 +2239,8 @@
           "sowing",
           "plant",
           "plant_group",
+          "vegetative_lot",
+          "propagation_attempt",
           "stored_material"
         ],
         "title": "CollectionRecordCategory",
@@ -2254,6 +2580,88 @@
           "csrf_token"
         ],
         "title": "CsrfResponse",
+        "type": "object"
+      },
+      "CuttingPropagationSummary": {
+        "properties": {
+          "approximate_plant_group_count": {
+            "title": "Approximate Plant Group Count",
+            "type": "integer"
+          },
+          "attempt_id": {
+            "format": "uuid",
+            "title": "Attempt Id",
+            "type": "string"
+          },
+          "exact_descendant_count": {
+            "title": "Exact Descendant Count",
+            "type": "integer"
+          },
+          "lifecycle": {
+            "enum": [
+              "active",
+              "completed",
+              "failed",
+              "abandoned",
+              "reversed"
+            ],
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "offspring": {
+            "items": {
+              "$ref": "#/components/schemas/EstablishedCutting"
+            },
+            "title": "Offspring",
+            "type": "array"
+          },
+          "rooted_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rooted Count"
+          },
+          "unknown_plant_group_count": {
+            "title": "Unknown Plant Group Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "attempt_id",
+          "lifecycle",
+          "rooted_count",
+          "offspring",
+          "exact_descendant_count",
+          "approximate_plant_group_count",
+          "unknown_plant_group_count"
+        ],
+        "title": "CuttingPropagationSummary",
+        "type": "object"
+      },
+      "CuttingQuantity": {
+        "additionalProperties": false,
+        "properties": {
+          "is_approximate": {
+            "title": "Is Approximate",
+            "type": "boolean"
+          },
+          "value": {
+            "maximum": 2147483647.0,
+            "minimum": 0.0,
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value",
+          "is_approximate"
+        ],
+        "title": "CuttingQuantity",
         "type": "object"
       },
       "DashboardCounts": {
@@ -2731,6 +3139,235 @@
           "survivor_updated_at"
         ],
         "title": "DuplicateIdentityMergeWrite",
+        "type": "object"
+      },
+      "EstablishPlant": {
+        "additionalProperties": false,
+        "properties": {
+          "collection_entry_date": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "resulting_attempt_lifecycle": {
+            "default": "active",
+            "enum": [
+              "active",
+              "completed",
+              "abandoned"
+            ],
+            "title": "Resulting Attempt Lifecycle",
+            "type": "string"
+          }
+        },
+        "title": "EstablishPlant",
+        "type": "object"
+      },
+      "EstablishPlantGroup": {
+        "additionalProperties": false,
+        "properties": {
+          "collection_entry_date": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositiveCuttingQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resulting_attempt_lifecycle": {
+            "default": "active",
+            "enum": [
+              "active",
+              "completed",
+              "abandoned"
+            ],
+            "title": "Resulting Attempt Lifecycle",
+            "type": "string"
+          }
+        },
+        "title": "EstablishPlantGroup",
+        "type": "object"
+      },
+      "EstablishedCutting": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "plant",
+              "plant_group"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "operation_receipt_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operation Receipt Id"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CuttingQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "lifecycle",
+          "quantity",
+          "operation_receipt_id"
+        ],
+        "title": "EstablishedCutting",
+        "type": "object"
+      },
+      "EstablishmentResponse": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "plant",
+              "plant_group"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "operation_receipt_id": {
+            "format": "uuid",
+            "title": "Operation Receipt Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "operation_receipt_id"
+        ],
+        "title": "EstablishmentResponse",
         "type": "object"
       },
       "EventCreate": {
@@ -3842,6 +4479,27 @@
         "title": "ExternalTaxonLinkResponse",
         "type": "object"
       },
+      "FastCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "propagation_attempt": {
+            "$ref": "#/components/schemas/AttemptSetup"
+          },
+          "source_adjustment": {
+            "$ref": "#/components/schemas/SourceAdjustment"
+          },
+          "vegetative_lot": {
+            "$ref": "#/components/schemas/VegetativeLotCreate"
+          }
+        },
+        "required": [
+          "propagation_attempt",
+          "source_adjustment",
+          "vegetative_lot"
+        ],
+        "title": "FastCreate",
+        "type": "object"
+      },
       "GeographicPlaceCreate": {
         "additionalProperties": false,
         "properties": {
@@ -4268,6 +4926,59 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HarvestConversionEvidence": {
+        "description": "The explicit HARVEST-003 conversion that recorded a SeedLot's producer.",
+        "properties": {
+          "conversion_id": {
+            "format": "uuid",
+            "title": "Conversion Id",
+            "type": "string"
+          },
+          "harvest_id": {
+            "format": "uuid",
+            "title": "Harvest Id",
+            "type": "string"
+          },
+          "harvest_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Harvest Label"
+          },
+          "harvested_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "applied",
+              "reversed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "conversion_id",
+          "status",
+          "harvest_id",
+          "harvest_label",
+          "harvested_on"
+        ],
+        "title": "HarvestConversionEvidence",
         "type": "object"
       },
       "HarvestItemResponse": {
@@ -4811,6 +5522,7 @@
               "event",
               "operation_receipt",
               "germination",
+              "rooting_observation",
               "harvest",
               "disposition",
               "conversion",
@@ -4945,6 +5657,8 @@
           "plant",
           "plant_group",
           "sowing",
+          "vegetative_lot",
+          "propagation_attempt",
           "harvest",
           "harvest_inventory",
           "seed_lot",
@@ -4966,6 +5680,12 @@
             "title": "Plants",
             "type": "integer"
           },
+          "propagation_attempts": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Propagation Attempts",
+            "type": "integer"
+          },
           "seed_lots": {
             "minimum": 0.0,
             "title": "Seed Lots",
@@ -4974,6 +5694,12 @@
           "sowings": {
             "minimum": 0.0,
             "title": "Sowings",
+            "type": "integer"
+          },
+          "vegetative_lots": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Vegetative Lots",
             "type": "integer"
           }
         },
@@ -5826,8 +6552,10 @@
                 "mapping": {
                   "plant": "#/components/schemas/PlantLineageNode",
                   "plant_group": "#/components/schemas/PlantGroupLineageNode",
+                  "propagation_attempt": "#/components/schemas/PropagationAttemptLineageNode",
                   "seed_lot": "#/components/schemas/SeedLotLineageNode",
-                  "sowing": "#/components/schemas/SowingLineageNode"
+                  "sowing": "#/components/schemas/SowingLineageNode",
+                  "vegetative_lot": "#/components/schemas/VegetativeLotLineageNode"
                 },
                 "propertyName": "kind"
               },
@@ -5843,6 +6571,12 @@
                 },
                 {
                   "$ref": "#/components/schemas/PlantGroupLineageNode"
+                },
+                {
+                  "$ref": "#/components/schemas/VegetativeLotLineageNode"
+                },
+                {
+                  "$ref": "#/components/schemas/PropagationAttemptLineageNode"
                 }
               ]
             },
@@ -5854,8 +6588,10 @@
               "mapping": {
                 "plant": "#/components/schemas/PlantLineageNode",
                 "plant_group": "#/components/schemas/PlantGroupLineageNode",
+                "propagation_attempt": "#/components/schemas/PropagationAttemptLineageNode",
                 "seed_lot": "#/components/schemas/SeedLotLineageNode",
-                "sowing": "#/components/schemas/SowingLineageNode"
+                "sowing": "#/components/schemas/SowingLineageNode",
+                "vegetative_lot": "#/components/schemas/VegetativeLotLineageNode"
               },
               "propertyName": "kind"
             },
@@ -5871,6 +6607,12 @@
               },
               {
                 "$ref": "#/components/schemas/PlantGroupLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/VegetativeLotLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/PropagationAttemptLineageNode"
               }
             ],
             "title": "Subject"
@@ -5975,7 +6717,9 @@
               "plant_group",
               "event",
               "harvest",
-              "supplier"
+              "supplier",
+              "vegetative_lot",
+              "propagation_attempt"
             ],
             "title": "Target Type",
             "type": "string"
@@ -6279,10 +7023,16 @@
           "plants": {
             "$ref": "#/components/schemas/LocationUsageCount"
           },
+          "propagation_attempts": {
+            "$ref": "#/components/schemas/LocationUsageCount"
+          },
           "seed_lots": {
             "$ref": "#/components/schemas/LocationUsageCount"
           },
           "sowings": {
+            "$ref": "#/components/schemas/LocationUsageCount"
+          },
+          "vegetative_lots": {
             "$ref": "#/components/schemas/LocationUsageCount"
           }
         },
@@ -6486,7 +7236,9 @@
           "plants",
           "sowings",
           "seed_lots",
-          "harvest_inventory"
+          "harvest_inventory",
+          "vegetative_lots",
+          "propagation_attempts"
         ],
         "title": "LocationUsageScope",
         "type": "string"
@@ -6499,10 +7251,16 @@
           "plants": {
             "$ref": "#/components/schemas/LocationUsageCount"
           },
+          "propagation_attempts": {
+            "$ref": "#/components/schemas/LocationUsageCount"
+          },
           "seed_lots": {
             "$ref": "#/components/schemas/LocationUsageCount"
           },
           "sowings": {
+            "$ref": "#/components/schemas/LocationUsageCount"
+          },
+          "vegetative_lots": {
             "$ref": "#/components/schemas/LocationUsageCount"
           }
         },
@@ -8582,6 +9340,18 @@
             ],
             "title": "Notes"
           },
+          "originating_propagation_attempt_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Originating Propagation Attempt Id"
+          },
           "originating_sowing": {
             "anyOf": [
               {
@@ -9147,6 +9917,18 @@
             ],
             "title": "Originating Plant Group Id"
           },
+          "originating_propagation_attempt_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Originating Propagation Attempt Id"
+          },
           "originating_sowing": {
             "anyOf": [
               {
@@ -9408,6 +10190,28 @@
         "title": "PlantUpdate",
         "type": "object"
       },
+      "PositiveCuttingQuantity": {
+        "additionalProperties": false,
+        "properties": {
+          "is_approximate": {
+            "title": "Is Approximate",
+            "type": "boolean"
+          },
+          "value": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 2147483647.0,
+            "minimum": 0.0,
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value",
+          "is_approximate"
+        ],
+        "title": "PositiveCuttingQuantity",
+        "type": "object"
+      },
       "PrimaryPhotoResponse": {
         "additionalProperties": false,
         "properties": {
@@ -9534,6 +10338,915 @@
           "botanical_identity"
         ],
         "title": "ProducerPlantSummary",
+        "type": "object"
+      },
+      "PropagationAttemptDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_kind": {
+            "const": "cutting",
+            "default": "cutting",
+            "title": "Attempt Kind",
+            "type": "string"
+          },
+          "container": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "ended_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "environment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environment"
+          },
+          "hormone_treatment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hormone Treatment"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "enum": [
+              "active",
+              "completed",
+              "failed",
+              "abandoned",
+              "reversed"
+            ],
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "observations": {
+            "items": {
+              "$ref": "#/components/schemas/RootingObservationResponse"
+            },
+            "title": "Observations",
+            "type": "array"
+          },
+          "operation_receipt_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operation Receipt Id"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositiveCuttingQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rooted_count": {
+            "anyOf": [
+              {
+                "maximum": 2147483647.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rooted Count"
+          },
+          "rooting_rate_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rooting Rate Percent"
+          },
+          "started_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "substrate": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Substrate"
+          },
+          "temperature_max_c": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Max C"
+          },
+          "temperature_min_c": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Min C"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "vegetative_lot": {
+            "$ref": "#/components/schemas/VegetativeLotResponse"
+          },
+          "vegetative_lot_id": {
+            "format": "uuid",
+            "title": "Vegetative Lot Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "vegetative_lot_id",
+          "lifecycle",
+          "rooting_rate_percent",
+          "created_at",
+          "updated_at",
+          "vegetative_lot",
+          "observations",
+          "operation_receipt_id"
+        ],
+        "title": "PropagationAttemptDetail",
+        "type": "object"
+      },
+      "PropagationAttemptLineageNode": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "propagation_attempt",
+            "default": "propagation_attempt",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "enum": [
+              "active",
+              "completed",
+              "failed",
+              "abandoned",
+              "reversed"
+            ],
+            "title": "Lifecycle",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "lifecycle"
+        ],
+        "title": "PropagationAttemptLineageNode",
+        "type": "object"
+      },
+      "PropagationAttemptListItem": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_kind": {
+            "const": "cutting",
+            "default": "cutting",
+            "title": "Attempt Kind",
+            "type": "string"
+          },
+          "botanical_display_label": {
+            "title": "Botanical Display Label",
+            "type": "string"
+          },
+          "botanical_identity_id": {
+            "format": "uuid",
+            "title": "Botanical Identity Id",
+            "type": "string"
+          },
+          "container": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "ended_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "environment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environment"
+          },
+          "hormone_treatment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hormone Treatment"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "enum": [
+              "active",
+              "completed",
+              "failed",
+              "abandoned",
+              "reversed"
+            ],
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositiveCuttingQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rooted_count": {
+            "anyOf": [
+              {
+                "maximum": 2147483647.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rooted Count"
+          },
+          "rooting_rate_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rooting Rate Percent"
+          },
+          "started_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "substrate": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Substrate"
+          },
+          "temperature_max_c": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Max C"
+          },
+          "temperature_min_c": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Min C"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "vegetative_lot_id": {
+            "format": "uuid",
+            "title": "Vegetative Lot Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "vegetative_lot_id",
+          "lifecycle",
+          "rooting_rate_percent",
+          "created_at",
+          "updated_at",
+          "botanical_identity_id",
+          "botanical_display_label"
+        ],
+        "title": "PropagationAttemptListItem",
+        "type": "object"
+      },
+      "PropagationAttemptResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_kind": {
+            "const": "cutting",
+            "default": "cutting",
+            "title": "Attempt Kind",
+            "type": "string"
+          },
+          "container": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "ended_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "environment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environment"
+          },
+          "hormone_treatment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hormone Treatment"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "enum": [
+              "active",
+              "completed",
+              "failed",
+              "abandoned",
+              "reversed"
+            ],
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositiveCuttingQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rooted_count": {
+            "anyOf": [
+              {
+                "maximum": 2147483647.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rooted Count"
+          },
+          "rooting_rate_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rooting Rate Percent"
+          },
+          "started_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "substrate": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Substrate"
+          },
+          "temperature_max_c": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Max C"
+          },
+          "temperature_min_c": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Min C"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "vegetative_lot_id": {
+            "format": "uuid",
+            "title": "Vegetative Lot Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "vegetative_lot_id",
+          "lifecycle",
+          "rooting_rate_percent",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PropagationAttemptResponse",
+        "type": "object"
+      },
+      "PropagationAttemptUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "container": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container"
+          },
+          "ended_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "environment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environment"
+          },
+          "expected_updated_at": {
+            "format": "date-time",
+            "title": "Expected Updated At",
+            "type": "string"
+          },
+          "hormone_treatment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hormone Treatment"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "enum": [
+              "active",
+              "completed",
+              "failed",
+              "abandoned"
+            ],
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositiveCuttingQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rooted_count": {
+            "anyOf": [
+              {
+                "maximum": 2147483647.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rooted Count"
+          },
+          "started_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "substrate": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Substrate"
+          },
+          "temperature_max_c": {
+            "anyOf": [
+              {
+                "maximum": 70.0,
+                "minimum": -50.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Max C"
+          },
+          "temperature_min_c": {
+            "anyOf": [
+              {
+                "maximum": 70.0,
+                "minimum": -50.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Min C"
+          }
+        },
+        "required": [
+          "expected_updated_at",
+          "lifecycle"
+        ],
+        "title": "PropagationAttemptUpdate",
         "type": "object"
       },
       "PropagationPlantGroupSummary": {
@@ -9702,7 +11415,9 @@
           "source_type": {
             "enum": [
               "seed_lot",
-              "sowing"
+              "sowing",
+              "vegetative_lot",
+              "propagation_attempt"
             ],
             "title": "Source Type",
             "type": "string"
@@ -9891,7 +11606,8 @@
             "enum": [
               "seed_lot",
               "plant",
-              "plant_group"
+              "plant_group",
+              "vegetative_lot"
             ],
             "title": "Record Type",
             "type": "string"
@@ -10031,6 +11747,11 @@
           },
           "total": {
             "title": "Total",
+            "type": "integer"
+          },
+          "vegetative_lots": {
+            "default": 0,
+            "title": "Vegetative Lots",
             "type": "integer"
           }
         },
@@ -10402,6 +12123,11 @@
           "seed_lots": {
             "default": 0,
             "title": "Seed Lots",
+            "type": "integer"
+          },
+          "vegetative_lots": {
+            "default": 0,
+            "title": "Vegetative Lots",
             "type": "integer"
           }
         },
@@ -11222,6 +12948,9 @@
               "active_downstream_operation",
               "downstream_lineage",
               "produced_seed_lot_exists",
+              "produced_vegetative_lot_exists",
+              "linked_media_exists",
+              "scheduled_work_exists",
               "later_extraction_exists",
               "incompatible_result_history"
             ],
@@ -11247,7 +12976,9 @@
                   "seed_lot",
                   "sowing",
                   "plant",
-                  "plant_group"
+                  "plant_group",
+                  "vegetative_lot",
+                  "propagation_attempt"
                 ],
                 "type": "string"
               },
@@ -11267,6 +12998,142 @@
           "message"
         ],
         "title": "ReversalReason",
+        "type": "object"
+      },
+      "RootingObservationResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "observed_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "propagation_attempt_id": {
+            "format": "uuid",
+            "title": "Propagation Attempt Id",
+            "type": "string"
+          },
+          "rooted_count": {
+            "anyOf": [
+              {
+                "maximum": 2147483647.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rooted Count"
+          },
+          "stage": {
+            "enum": [
+              "callus",
+              "root_initials",
+              "rooted",
+              "loss",
+              "inspection"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "id",
+          "propagation_attempt_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "RootingObservationResponse",
+        "type": "object"
+      },
+      "RootingObservationWrite": {
+        "additionalProperties": false,
+        "properties": {
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "observed_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rooted_count": {
+            "anyOf": [
+              {
+                "maximum": 2147483647.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rooted Count"
+          },
+          "stage": {
+            "enum": [
+              "callus",
+              "root_initials",
+              "rooted",
+              "loss",
+              "inspection"
+            ],
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage"
+        ],
+        "title": "RootingObservationWrite",
         "type": "object"
       },
       "SavedViewCreate": {
@@ -11365,6 +13232,7 @@
           "global_search",
           "seed_lots",
           "sowings",
+          "cuttings",
           "plants",
           "harvests",
           "stored_material",
@@ -11559,6 +13427,7 @@
               "fertilize",
               "move",
               "check_germination",
+              "check_rooting",
               "inspect",
               "harvest",
               "follow_up"
@@ -11699,7 +13568,9 @@
               "sowing",
               "plant",
               "plant_group",
-              "location"
+              "location",
+              "vegetative_lot",
+              "propagation_attempt"
             ],
             "title": "Kind",
             "type": "string"
@@ -11759,7 +13630,9 @@
               "sowing",
               "plant",
               "plant_group",
-              "location"
+              "location",
+              "vegetative_lot",
+              "propagation_attempt"
             ],
             "title": "Kind",
             "type": "string"
@@ -11810,6 +13683,7 @@
               "fertilize",
               "move",
               "check_germination",
+              "check_rooting",
               "inspect",
               "harvest",
               "follow_up"
@@ -11890,6 +13764,7 @@
               "fertilize",
               "move",
               "check_germination",
+              "check_rooting",
               "inspect",
               "harvest",
               "follow_up"
@@ -13067,6 +14942,35 @@
           "canonical_origin"
         ],
         "title": "SessionResponse",
+        "type": "object"
+      },
+      "SourceAdjustment": {
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "enum": [
+              "none",
+              "partial",
+              "use_all"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "resulting_quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositiveCuttingQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "SourceAdjustment",
         "type": "object"
       },
       "SourceAssertion": {
@@ -16330,6 +18234,888 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "VegetativeLotCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "botanical_identity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Botanical Identity Id"
+          },
+          "initial_quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositiveCuttingQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "material_provenance_place_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Provenance Place Id"
+          },
+          "material_type": {
+            "enum": [
+              "stem_cutting",
+              "leaf_cutting",
+              "root_cutting"
+            ],
+            "title": "Material Type",
+            "type": "string"
+          },
+          "mother_plant_group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mother Plant Group Id"
+          },
+          "mother_plant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mother Plant Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "order_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Id"
+          },
+          "provenance_site_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Site Id"
+          },
+          "source_detail": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Detail"
+          },
+          "source_kind": {
+            "default": "unknown",
+            "enum": [
+              "collection_produced",
+              "purchased",
+              "gift_exchange",
+              "self_collected",
+              "other",
+              "unknown"
+            ],
+            "title": "Source Kind",
+            "type": "string"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id"
+          },
+          "taken_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "material_type"
+        ],
+        "title": "VegetativeLotCreate",
+        "type": "object"
+      },
+      "VegetativeLotDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "attempts": {
+            "items": {
+              "$ref": "#/components/schemas/PropagationAttemptResponse"
+            },
+            "title": "Attempts",
+            "type": "array"
+          },
+          "botanical_identity_id": {
+            "format": "uuid",
+            "title": "Botanical Identity Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "initial_quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositiveCuttingQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "enum": [
+              "active",
+              "exhausted",
+              "discarded",
+              "lost",
+              "reversed"
+            ],
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "material_provenance_place_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Provenance Place Id"
+          },
+          "material_type": {
+            "enum": [
+              "stem_cutting",
+              "leaf_cutting",
+              "root_cutting"
+            ],
+            "title": "Material Type",
+            "type": "string"
+          },
+          "mother_plant_group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mother Plant Group Id"
+          },
+          "mother_plant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mother Plant Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "order_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Id"
+          },
+          "provenance_site_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Site Id"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CuttingQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_detail": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Detail"
+          },
+          "source_kind": {
+            "default": "unknown",
+            "enum": [
+              "collection_produced",
+              "purchased",
+              "gift_exchange",
+              "self_collected",
+              "other",
+              "unknown"
+            ],
+            "title": "Source Kind",
+            "type": "string"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id"
+          },
+          "taken_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "botanical_identity_id",
+          "material_type",
+          "id",
+          "initial_quantity",
+          "quantity",
+          "lifecycle",
+          "created_at",
+          "updated_at",
+          "attempts"
+        ],
+        "title": "VegetativeLotDetail",
+        "type": "object"
+      },
+      "VegetativeLotLineageNode": {
+        "properties": {
+          "botanical_identity": {
+            "$ref": "#/components/schemas/BotanicalIdentitySummary"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "vegetative_lot",
+            "default": "vegetative_lot",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "enum": [
+              "active",
+              "exhausted",
+              "discarded",
+              "lost",
+              "reversed"
+            ],
+            "title": "Lifecycle",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "lifecycle",
+          "botanical_identity"
+        ],
+        "title": "VegetativeLotLineageNode",
+        "type": "object"
+      },
+      "VegetativeLotResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "botanical_identity_id": {
+            "format": "uuid",
+            "title": "Botanical Identity Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "initial_quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositiveCuttingQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "enum": [
+              "active",
+              "exhausted",
+              "discarded",
+              "lost",
+              "reversed"
+            ],
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "material_provenance_place_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Provenance Place Id"
+          },
+          "material_type": {
+            "enum": [
+              "stem_cutting",
+              "leaf_cutting",
+              "root_cutting"
+            ],
+            "title": "Material Type",
+            "type": "string"
+          },
+          "mother_plant_group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mother Plant Group Id"
+          },
+          "mother_plant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mother Plant Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "order_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Id"
+          },
+          "provenance_site_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Site Id"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CuttingQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_detail": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Detail"
+          },
+          "source_kind": {
+            "default": "unknown",
+            "enum": [
+              "collection_produced",
+              "purchased",
+              "gift_exchange",
+              "self_collected",
+              "other",
+              "unknown"
+            ],
+            "title": "Source Kind",
+            "type": "string"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id"
+          },
+          "taken_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "botanical_identity_id",
+          "material_type",
+          "id",
+          "initial_quantity",
+          "quantity",
+          "lifecycle",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "VegetativeLotResponse",
+        "type": "object"
+      },
+      "VegetativeLotUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "botanical_identity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Botanical Identity Id"
+          },
+          "expected_updated_at": {
+            "format": "date-time",
+            "title": "Expected Updated At",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "enum": [
+              "active",
+              "exhausted",
+              "discarded",
+              "lost"
+            ],
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "material_provenance_place_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Provenance Place Id"
+          },
+          "material_type": {
+            "enum": [
+              "stem_cutting",
+              "leaf_cutting",
+              "root_cutting"
+            ],
+            "title": "Material Type",
+            "type": "string"
+          },
+          "mother_plant_group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mother Plant Group Id"
+          },
+          "mother_plant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mother Plant Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "order_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Id"
+          },
+          "provenance_site_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Site Id"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CuttingQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_detail": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Detail"
+          },
+          "source_kind": {
+            "default": "unknown",
+            "enum": [
+              "collection_produced",
+              "purchased",
+              "gift_exchange",
+              "self_collected",
+              "other",
+              "unknown"
+            ],
+            "title": "Source Kind",
+            "type": "string"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id"
+          },
+          "taken_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "material_type",
+          "expected_updated_at",
+          "lifecycle",
+          "quantity"
+        ],
+        "title": "VegetativeLotUpdate",
         "type": "object"
       },
       "WcvpLinkResponse": {
@@ -19802,7 +22588,9 @@
                 "plant_group",
                 "event",
                 "harvest",
-                "supplier"
+                "supplier",
+                "vegetative_lot",
+                "propagation_attempt"
               ],
               "title": "Target Type",
               "type": "string"
@@ -19889,7 +22677,9 @@
                 "plant_group",
                 "event",
                 "harvest",
-                "supplier"
+                "supplier",
+                "vegetative_lot",
+                "propagation_attempt"
               ],
               "title": "Target Type",
               "type": "string"
@@ -19968,7 +22758,9 @@
                 "plant_group",
                 "event",
                 "harvest",
-                "supplier"
+                "supplier",
+                "vegetative_lot",
+                "propagation_attempt"
               ],
               "title": "Target Type",
               "type": "string"
@@ -20055,7 +22847,9 @@
                 "plant_group",
                 "event",
                 "harvest",
-                "supplier"
+                "supplier",
+                "vegetative_lot",
+                "propagation_attempt"
               ],
               "title": "Target Type",
               "type": "string"
@@ -20140,7 +22934,9 @@
                 "plant",
                 "plant_group",
                 "harvest",
-                "supplier"
+                "supplier",
+                "vegetative_lot",
+                "propagation_attempt"
               ],
               "title": "Target Type",
               "type": "string"
@@ -20206,7 +23002,9 @@
                 "plant",
                 "plant_group",
                 "harvest",
-                "supplier"
+                "supplier",
+                "vegetative_lot",
+                "propagation_attempt"
               ],
               "title": "Target Type",
               "type": "string"
@@ -20271,7 +23069,9 @@
                 "plant",
                 "plant_group",
                 "harvest",
-                "supplier"
+                "supplier",
+                "vegetative_lot",
+                "propagation_attempt"
               ],
               "title": "Target Type",
               "type": "string"
@@ -20339,6 +23139,109 @@
         "summary": "Set Collection Primary Photo",
         "tags": [
           "collection photos"
+        ]
+      }
+    },
+    "/api/v1/cutting-operations/{receipt_id}/reversal": {
+      "get": {
+        "operationId": "getCuttingReversalEligibility",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "receipt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Receipt Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropagationReversalEligibility"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reversal Eligibility",
+        "tags": [
+          "cuttings"
+        ]
+      },
+      "post": {
+        "operationId": "reverseCuttingOperation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "receipt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Receipt Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropagationReversalCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reverse Cutting Operation",
+        "tags": [
+          "cuttings"
         ]
       }
     },
@@ -20630,7 +23533,7 @@
                   "items": {
                     "$ref": "#/components/schemas/CollectionRecordCategory"
                   },
-                  "maxItems": 5,
+                  "maxItems": 7,
                   "type": "array"
                 },
                 {
@@ -20754,7 +23657,7 @@
                   "items": {
                     "$ref": "#/components/schemas/CollectionRecordCategory"
                   },
-                  "maxItems": 5,
+                  "maxItems": 7,
                   "type": "array"
                 },
                 {
@@ -20868,7 +23771,7 @@
                   "items": {
                     "$ref": "#/components/schemas/CollectionRecordCategory"
                   },
-                  "maxItems": 5,
+                  "maxItems": 7,
                   "type": "array"
                 },
                 {
@@ -20996,7 +23899,7 @@
                   "items": {
                     "$ref": "#/components/schemas/CollectionRecordCategory"
                   },
-                  "maxItems": 5,
+                  "maxItems": 7,
                   "type": "array"
                 },
                 {
@@ -21136,7 +24039,7 @@
                   "items": {
                     "$ref": "#/components/schemas/CollectionRecordCategory"
                   },
-                  "maxItems": 5,
+                  "maxItems": 7,
                   "type": "array"
                 },
                 {
@@ -23026,7 +25929,7 @@
                   "items": {
                     "$ref": "#/components/schemas/HistorySubjectKind"
                   },
-                  "maxItems": 7,
+                  "maxItems": 9,
                   "type": "array"
                 },
                 {
@@ -23425,6 +26328,161 @@
         "summary": "Preview Import",
         "tags": [
           "import-export"
+        ]
+      }
+    },
+    "/api/v1/lineage/{kind}/{item_id}": {
+      "get": {
+        "operationId": "getAncestry",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "seed_lot",
+                "sowing",
+                "plant",
+                "plant_group",
+                "vegetative_lot",
+                "propagation_attempt"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AncestryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Ancestry",
+        "tags": [
+          "lineage"
+        ]
+      }
+    },
+    "/api/v1/lineage/{kind}/{item_id}/children": {
+      "get": {
+        "operationId": "getAncestryChildren",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "seed_lot",
+                "sowing",
+                "plant",
+                "plant_group",
+                "vegetative_lot",
+                "propagation_attempt"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AncestryChildren"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Children",
+        "tags": [
+          "lineage"
         ]
       }
     },
@@ -23853,7 +26911,9 @@
                     "plant_group",
                     "event",
                     "harvest",
-                    "supplier"
+                    "supplier",
+                    "vegetative_lot",
+                    "propagation_attempt"
                   ],
                   "type": "string"
                 },
@@ -24561,7 +27621,9 @@
                 "plant_group",
                 "event",
                 "harvest",
-                "supplier"
+                "supplier",
+                "vegetative_lot",
+                "propagation_attempt"
               ],
               "title": "Target Type",
               "type": "string"
@@ -26466,6 +29528,793 @@
         ]
       }
     },
+    "/api/v1/propagation-attempts": {
+      "get": {
+        "operationId": "listPropagationAttempts",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "vegetative_lot_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Vegetative Lot Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lifecycle",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "active",
+                    "completed",
+                    "failed",
+                    "abandoned",
+                    "reversed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lifecycle"
+            }
+          },
+          {
+            "in": "query",
+            "name": "botanical_identity_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Botanical Identity Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "mother_plant_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Mother Plant Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "mother_plant_group_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Mother Plant Group Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "location_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Location Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PropagationAttemptListItem"
+                  },
+                  "title": "Response Listpropagationattempts",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Attempts",
+        "tags": [
+          "cuttings"
+        ]
+      }
+    },
+    "/api/v1/propagation-attempts/fast-create": {
+      "post": {
+        "operationId": "fastCreateCuttings",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FastCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptTransitionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Fast Create",
+        "tags": [
+          "cuttings"
+        ]
+      }
+    },
+    "/api/v1/propagation-attempts/{attempt_id}": {
+      "get": {
+        "operationId": "getPropagationAttempt",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attempt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attempt Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropagationAttemptDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Attempt",
+        "tags": [
+          "cuttings"
+        ]
+      },
+      "put": {
+        "operationId": "updatePropagationAttempt",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attempt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attempt Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropagationAttemptUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropagationAttemptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Attempt",
+        "tags": [
+          "cuttings"
+        ]
+      }
+    },
+    "/api/v1/propagation-attempts/{attempt_id}/lineage": {
+      "get": {
+        "operationId": "getPropagationAttemptLineage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attempt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attempt Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LineageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Attempt Lineage",
+        "tags": [
+          "cuttings"
+        ]
+      }
+    },
+    "/api/v1/propagation-attempts/{attempt_id}/observations": {
+      "post": {
+        "operationId": "createRootingObservation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attempt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attempt Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RootingObservationWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RootingObservationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Observation",
+        "tags": [
+          "cuttings"
+        ]
+      }
+    },
+    "/api/v1/propagation-attempts/{attempt_id}/observations/{observation_id}": {
+      "delete": {
+        "operationId": "deleteRootingObservation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attempt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attempt Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "observation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Observation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Observation",
+        "tags": [
+          "cuttings"
+        ]
+      },
+      "put": {
+        "operationId": "updateRootingObservation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attempt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attempt Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "observation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Observation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RootingObservationWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RootingObservationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Observation",
+        "tags": [
+          "cuttings"
+        ]
+      }
+    },
+    "/api/v1/propagation-attempts/{attempt_id}/plant-groups": {
+      "post": {
+        "operationId": "establishCuttingPlantGroup",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attempt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attempt Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EstablishPlantGroup"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstablishmentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Establish Group",
+        "tags": [
+          "cuttings"
+        ]
+      }
+    },
+    "/api/v1/propagation-attempts/{attempt_id}/plants": {
+      "post": {
+        "operationId": "establishCuttingPlant",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attempt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attempt Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EstablishPlant"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstablishmentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Establish Plant",
+        "tags": [
+          "cuttings"
+        ]
+      }
+    },
+    "/api/v1/propagation-attempts/{attempt_id}/propagation-summary": {
+      "get": {
+        "operationId": "getCuttingPropagationSummary",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attempt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attempt Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CuttingPropagationSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Propagation Summary",
+        "tags": [
+          "cuttings"
+        ]
+      }
+    },
     "/api/v1/provenance-sites": {
       "get": {
         "operationId": "listProvenanceSites",
@@ -27070,6 +30919,7 @@
                       "fertilize",
                       "move",
                       "check_germination",
+                      "check_rooting",
                       "inspect",
                       "harvest",
                       "follow_up"
@@ -27100,7 +30950,9 @@
                       "sowing",
                       "plant",
                       "plant_group",
-                      "location"
+                      "location",
+                      "vegetative_lot",
+                      "propagation_attempt"
                     ],
                     "type": "string"
                   },
@@ -27324,7 +31176,9 @@
                 "sowing",
                 "plant",
                 "plant_group",
-                "location"
+                "location",
+                "vegetative_lot",
+                "propagation_attempt"
               ],
               "title": "Kind",
               "type": "string"
@@ -27409,7 +31263,9 @@
                 "sowing",
                 "plant",
                 "plant_group",
-                "location"
+                "location",
+                "vegetative_lot",
+                "propagation_attempt"
               ],
               "title": "Kind",
               "type": "string"
@@ -29354,6 +33210,565 @@
         "summary": "Retire",
         "tags": [
           "suppliers"
+        ]
+      }
+    },
+    "/api/v1/vegetative-lots": {
+      "get": {
+        "operationId": "listVegetativeLots",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "material_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "stem_cutting",
+                    "leaf_cutting",
+                    "root_cutting"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Material Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "source_kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "collection_produced",
+                    "purchased",
+                    "gift_exchange",
+                    "self_collected",
+                    "other",
+                    "unknown"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lifecycle",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "active",
+                    "exhausted",
+                    "discarded",
+                    "lost",
+                    "reversed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lifecycle"
+            }
+          },
+          {
+            "in": "query",
+            "name": "botanical_identity_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Botanical Identity Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "mother_plant_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Mother Plant Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "mother_plant_group_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Mother Plant Group Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "location_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Location Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "has_known_mother",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Has Known Mother"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/VegetativeLotResponse"
+                  },
+                  "title": "Response Listvegetativelots",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Lots",
+        "tags": [
+          "cuttings"
+        ]
+      },
+      "post": {
+        "operationId": "createVegetativeLot",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VegetativeLotCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VegetativeLotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Lot",
+        "tags": [
+          "cuttings"
+        ]
+      }
+    },
+    "/api/v1/vegetative-lots/{lot_id}": {
+      "delete": {
+        "operationId": "deleteVegetativeLot",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Lot",
+        "tags": [
+          "cuttings"
+        ]
+      },
+      "get": {
+        "operationId": "getVegetativeLot",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VegetativeLotDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Lot",
+        "tags": [
+          "cuttings"
+        ]
+      },
+      "put": {
+        "operationId": "updateVegetativeLot",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VegetativeLotUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VegetativeLotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Lot",
+        "tags": [
+          "cuttings"
+        ]
+      }
+    },
+    "/api/v1/vegetative-lots/{lot_id}/lineage": {
+      "get": {
+        "operationId": "getVegetativeLotLineage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LineageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Lot Lineage",
+        "tags": [
+          "cuttings"
+        ]
+      }
+    },
+    "/api/v1/vegetative-lots/{lot_id}/propagation-attempts": {
+      "post": {
+        "operationId": "startRootingAttempt",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttemptCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptTransitionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Attempt",
+        "tags": [
+          "cuttings"
         ]
       }
     }

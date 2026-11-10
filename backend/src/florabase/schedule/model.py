@@ -12,6 +12,7 @@ KINDS = (
     "fertilize",
     "move",
     "check_germination",
+    "check_rooting",
     "inspect",
     "harvest",
     "follow_up",
@@ -23,6 +24,8 @@ TARGETS = {
     "plant": "plants",
     "plant_group": "plant_groups",
     "location": "locations",
+    "vegetative_lot": "vegetative_lots",
+    "propagation_attempt": "propagation_attempts",
 }
 
 
@@ -55,7 +58,7 @@ class ScheduledActivity(Base):
         CheckConstraint(
             (
                 "num_nonnulls(botanical_identity_id, seed_lot_id, sowing_id, plant_id, "
-                "plant_group_id, location_id) <= 1"
+                "plant_group_id, location_id, vegetative_lot_id, propagation_attempt_id) <= 1"
             ),
             name="ck_schedule_target",
         ),
@@ -100,6 +103,12 @@ class ScheduledActivity(Base):
     )
     location_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("locations.id", ondelete="RESTRICT"), index=True
+    )
+    vegetative_lot_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("vegetative_lots.id", ondelete="RESTRICT"), index=True
+    )
+    propagation_attempt_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("propagation_attempts.id", ondelete="RESTRICT"), index=True
     )
     linked_event_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("events.id", ondelete="RESTRICT"), unique=True

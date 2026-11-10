@@ -89,6 +89,7 @@ test("the navigation model lists every former destination and Settings tool exac
       "dashboard",
       "seeds",
       "sowings",
+      "cuttings",
       "plants",
       "harvests",
       "locations",

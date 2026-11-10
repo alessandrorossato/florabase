@@ -8,6 +8,7 @@ export const activityLabels = {
   fertilize: "Fertilize",
   move: "Move / relocate",
   check_germination: "Check germination",
+  check_rooting: "Check rooting",
   inspect: "Inspect",
   harvest: "Harvest",
   follow_up: "General follow-up",
@@ -19,6 +20,8 @@ export const targetLabels = {
   plant: "Plant",
   plant_group: "Plant group",
   location: "Location",
+  vegetative_lot: "Vegetative lot",
+  propagation_attempt: "Rooting attempt",
 } as const;
 export const windowLabels = {
   all: "All dates",
@@ -133,6 +136,8 @@ export function targetHref(target: { kind: TargetKind; id: string }): string {
     botanical_identity: "identities",
     seed_lot: "seeds",
     sowing: "sowings",
+    vegetative_lot: "cuttings/lots",
+    propagation_attempt: "cuttings/attempts",
     plant: "plants",
     plant_group: "plant-groups",
     location: "locations",

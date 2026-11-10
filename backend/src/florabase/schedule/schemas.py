@@ -8,10 +8,27 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_valida
 from florabase.events.schemas import _notes, _single_line
 
 ActivityKind = Literal[
-    "repot", "water", "fertilize", "move", "check_germination", "inspect", "harvest", "follow_up"
+    "repot",
+    "water",
+    "fertilize",
+    "move",
+    "check_germination",
+    "check_rooting",
+    "inspect",
+    "harvest",
+    "follow_up",
 ]
 ScheduleStatus = Literal["planned", "completed", "cancelled"]
-TargetKind = Literal["botanical_identity", "seed_lot", "sowing", "plant", "plant_group", "location"]
+TargetKind = Literal[
+    "botanical_identity",
+    "seed_lot",
+    "sowing",
+    "plant",
+    "plant_group",
+    "location",
+    "vegetative_lot",
+    "propagation_attempt",
+]
 DateWindow = Literal["all", "overdue", "today", "next_seven_days", "later"]
 
 

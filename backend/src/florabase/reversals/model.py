@@ -27,6 +27,9 @@ class OperationKind(StrEnum):
     SOWING_TO_PLANT = "sowing_to_plant"
     SOWING_TO_PLANT_GROUP = "sowing_to_plant_group"
     PLANT_GROUP_EXTRACTION = "plant_group_extraction"
+    VEGETATIVE_LOT_TO_PROPAGATION_ATTEMPT = "vegetative_lot_to_propagation_attempt"
+    PROPAGATION_ATTEMPT_TO_PLANT = "propagation_attempt_to_plant"
+    PROPAGATION_ATTEMPT_TO_PLANT_GROUP = "propagation_attempt_to_plant_group"
     PLANT_TRANSFER = "plant_transfer"
     PLANT_GROUP_TRANSFER = "plant_group_transfer"
 
@@ -36,9 +39,63 @@ class OperationStatus(StrEnum):
     REVERSED = "reversed"
 
 
+_CUTTING_KINDS = (
+    "('vegetative_lot_to_propagation_attempt', 'propagation_attempt_to_plant', "
+    "'propagation_attempt_to_plant_group')"
+)
+
+_CUTTING_REFERENCES = (
+    "seed_lot_id IS NULL AND sowing_id IS NULL AND source_seed_lot_id IS NULL "
+    "AND event_id IS NULL AND propagation_attempt_id IS NOT NULL AND ("
+    "(kind = 'vegetative_lot_to_propagation_attempt' AND vegetative_lot_id IS NOT NULL "
+    "AND source_vegetative_lot_id IS NULL AND plant_id IS NULL AND plant_group_id IS NULL "
+    "AND adjustment_mode IS NOT NULL) OR "
+    "(kind = 'propagation_attempt_to_plant' AND vegetative_lot_id IS NULL "
+    "AND source_vegetative_lot_id IS NOT NULL AND plant_id IS NOT NULL "
+    "AND plant_group_id IS NULL AND adjustment_mode IS NULL) OR "
+    "(kind = 'propagation_attempt_to_plant_group' AND vegetative_lot_id IS NULL "
+    "AND source_vegetative_lot_id IS NOT NULL AND plant_group_id IS NOT NULL "
+    "AND plant_id IS NULL AND adjustment_mode IS NULL))"
+)
+
+_CUTTING_STATE = (
+    "before_lifecycle = 'active' "
+    "AND (before_quantity_kind IS NULL OR before_quantity_kind = 'count') "
+    "AND (after_quantity_kind IS NULL OR after_quantity_kind = 'count') "
+    "AND (CASE WHEN kind = 'vegetative_lot_to_propagation_attempt' "
+    "THEN after_lifecycle IN ('active', 'exhausted') "
+    "ELSE after_lifecycle IN ('active', 'completed', 'abandoned') END)"
+)
+
+_CUTTING_SNAPSHOT = (
+    "result_snapshot_version = 1 AND result_botanical_identity_id IS NOT NULL AND ("
+    "(kind = 'vegetative_lot_to_propagation_attempt' AND result_lifecycle = 'active' "
+    "AND (result_quantity_kind IS NULL OR result_quantity_kind = 'count')) OR "
+    "(kind = 'propagation_attempt_to_plant' AND result_lifecycle = 'active' "
+    "AND result_quantity_kind IS NULL) OR "
+    "(kind = 'propagation_attempt_to_plant_group' AND result_lifecycle = 'active' "
+    "AND (result_quantity_kind IS NULL OR result_quantity_kind = 'count')))"
+)
+
+
+def _with_cuttings(existing: str, cutting: str, *, unrelated: str = "true") -> str:
+    return (
+        f"(CASE WHEN kind IN {_CUTTING_KINDS} THEN ({cutting}) "
+        f"ELSE (({existing}) AND ({unrelated})) END) IS TRUE"
+    )
+
+
 class OperationReceipt(Base):
     __tablename__ = "operation_receipts"
     __table_args__ = (
+        CheckConstraint(
+            "(CASE WHEN kind IN "
+            + _CUTTING_KINDS
+            + " THEN source_botanical_identity_id IS NOT NULL ELSE "
+            "num_nonnulls(source_botanical_identity_id, source_date_precision, source_date_year, "
+            "source_date_month, source_date_day) = 0 END) IS TRUE",
+            name="ck_operation_receipts_cutting_source",
+        ),
         CheckConstraint(
             "((result_date_precision IS NULL AND result_date_year IS NULL AND res"
             "ult_date_month IS NU"
@@ -71,40 +128,45 @@ class OperationReceipt(Base):
             name="ck_operation_receipts_result_quantity",
         ),
         CheckConstraint(
-            "((result_snapshot_version IS NULL AND result_lifecycle IS NULL AND r"
-            "esult_quantity_kind "
-            "IS NULL AND result_quantity_value IS NULL AND result_quantity_unit I"
-            "S NULL AND result_qu"
-            "antity_is_approximate IS NULL AND result_botanical_identity_id IS NU"
-            "LL AND result_locati"
-            "on_id IS NULL AND result_date_precision IS NULL AND result_date_year"
-            " IS NULL AND result_"
-            "date_month IS NULL AND result_date_day IS NULL AND source_location_i"
-            "d IS NULL AND source"
-            "_seed_lot_id IS NULL) OR (result_snapshot_version = 1 AND ((kind = '"
-            "seed_lot_to_sowing' "
-            "AND result_lifecycle IN ('active', 'completed', 'failed', 'abandoned"
-            "') AND result_botani"
-            "cal_identity_id IS NULL AND source_seed_lot_id IS NULL AND (result_q"
-            "uantity_kind IS NULL"
-            " OR result_quantity_kind IN ('seed_count', 'weight'))) OR (kind = 's"
-            "owing_to_plant' AND "
-            "result_lifecycle IN ('active', 'transferred', 'dead', 'lost', 'disca"
-            "rded') AND result_bo"
-            "tanical_identity_id IS NOT NULL AND source_seed_lot_id IS NOT NULL A"
-            "ND result_quantity_k"
-            "ind IS NULL) OR (kind = 'sowing_to_plant_group' AND result_lifecycle"
-            " IN ('active', 'tran"
-            "sferred', 'completed', 'dead', 'lost', 'discarded') AND result_botan"
-            "ical_identity_id IS "
-            "NOT NULL AND source_seed_lot_id IS NOT NULL AND (result_quantity_kin"
-            "d IS NULL OR result_"
-            "quantity_kind = 'count'))))) IS TRUE",
+            _with_cuttings(
+                "((result_snapshot_version IS NULL AND result_lifecycle IS NULL AND r"
+                "esult_quantity_kind "
+                "IS NULL AND result_quantity_value IS NULL AND result_quantity_unit I"
+                "S NULL AND result_qu"
+                "antity_is_approximate IS NULL AND result_botanical_identity_id IS NU"
+                "LL AND result_locati"
+                "on_id IS NULL AND result_date_precision IS NULL AND result_date_year"
+                " IS NULL AND result_"
+                "date_month IS NULL AND result_date_day IS NULL AND source_location_i"
+                "d IS NULL AND source"
+                "_seed_lot_id IS NULL) OR (result_snapshot_version = 1 AND ((kind = '"
+                "seed_lot_to_sowing' "
+                "AND result_lifecycle IN ('active', 'completed', 'failed', 'abandoned"
+                "') AND result_botani"
+                "cal_identity_id IS NULL AND source_seed_lot_id IS NULL AND (result_q"
+                "uantity_kind IS NULL"
+                " OR result_quantity_kind IN ('seed_count', 'weight'))) OR (kind = 's"
+                "owing_to_plant' AND "
+                "result_lifecycle IN ('active', 'transferred', 'dead', 'lost', 'disca"
+                "rded') AND result_bo"
+                "tanical_identity_id IS NOT NULL AND source_seed_lot_id IS NOT NULL A"
+                "ND result_quantity_k"
+                "ind IS NULL) OR (kind = 'sowing_to_plant_group' AND result_lifecycle"
+                " IN ('active', 'tran"
+                "sferred', 'completed', 'dead', 'lost', 'discarded') AND result_botan"
+                "ical_identity_id IS "
+                "NOT NULL AND source_seed_lot_id IS NOT NULL AND (result_quantity_kin"
+                "d IS NULL OR result_"
+                "quantity_kind = 'count'))))) IS TRUE",
+                _CUTTING_SNAPSHOT,
+            ),
             name="ck_operation_receipts_result_snapshot",
         ),
         CheckConstraint(
             "kind IN ('seed_lot_to_sowing', 'sowing_to_plant', 'sowing_to_plant_group', "
-            "'plant_group_extraction', 'plant_transfer', 'plant_group_transfer')",
+            "'plant_group_extraction', 'plant_transfer', 'plant_group_transfer', "
+            "'vegetative_lot_to_propagation_attempt', 'propagation_attempt_to_plant', "
+            "'propagation_attempt_to_plant_group')",
             name="ck_operation_receipts_kind",
         ),
         CheckConstraint(
@@ -116,24 +178,31 @@ class OperationReceipt(Base):
             name="ck_operation_receipts_adjustment_mode",
         ),
         CheckConstraint(
-            "((kind = 'seed_lot_to_sowing' AND seed_lot_id IS NOT NULL AND "
-            "sowing_id IS NOT NULL AND plant_id IS NULL AND plant_group_id IS NULL AND "
-            "event_id IS NULL AND adjustment_mode IS NOT NULL) OR "
-            "(kind = 'sowing_to_plant' AND seed_lot_id IS NULL AND sowing_id IS NOT NULL "
-            "AND plant_id IS NOT NULL AND plant_group_id IS NULL AND event_id IS NULL "
-            "AND adjustment_mode IS NULL) OR "
-            "(kind = 'sowing_to_plant_group' AND seed_lot_id IS NULL AND sowing_id IS NOT NULL "
-            "AND plant_id IS NULL AND plant_group_id IS NOT NULL AND event_id IS NULL "
-            "AND adjustment_mode IS NULL) OR "
-            "(kind = 'plant_group_extraction' AND seed_lot_id IS NULL AND sowing_id IS NULL "
-            "AND plant_id IS NOT NULL AND plant_group_id IS NOT NULL AND event_id IS NOT NULL "
-            "AND adjustment_mode IS NULL) OR "
-            "(kind = 'plant_transfer' AND seed_lot_id IS NULL AND sowing_id IS NULL "
-            "AND plant_id IS NOT NULL AND plant_group_id IS NULL AND event_id IS NOT NULL "
-            "AND adjustment_mode IS NULL) OR "
-            "(kind = 'plant_group_transfer' AND seed_lot_id IS NULL AND sowing_id IS NULL "
-            "AND plant_id IS NULL AND plant_group_id IS NOT NULL AND event_id IS NOT NULL "
-            "AND adjustment_mode IS NULL)) IS TRUE",
+            _with_cuttings(
+                "((kind = 'seed_lot_to_sowing' AND seed_lot_id IS NOT NULL AND "
+                "sowing_id IS NOT NULL AND plant_id IS NULL AND plant_group_id IS NULL AND "
+                "event_id IS NULL AND adjustment_mode IS NOT NULL) OR "
+                "(kind = 'sowing_to_plant' AND seed_lot_id IS NULL AND sowing_id IS NOT NULL "
+                "AND plant_id IS NOT NULL AND plant_group_id IS NULL AND event_id IS NULL "
+                "AND adjustment_mode IS NULL) OR "
+                "(kind = 'sowing_to_plant_group' AND seed_lot_id IS NULL AND sowing_id IS NOT NULL "
+                "AND plant_id IS NULL AND plant_group_id IS NOT NULL AND event_id IS NULL "
+                "AND adjustment_mode IS NULL) OR "
+                "(kind = 'plant_group_extraction' AND seed_lot_id IS NULL AND sowing_id IS NULL "
+                "AND plant_id IS NOT NULL AND plant_group_id IS NOT NULL AND event_id IS NOT NULL "
+                "AND adjustment_mode IS NULL) OR "
+                "(kind = 'plant_transfer' AND seed_lot_id IS NULL AND sowing_id IS NULL "
+                "AND plant_id IS NOT NULL AND plant_group_id IS NULL AND event_id IS NOT NULL "
+                "AND adjustment_mode IS NULL) OR "
+                "(kind = 'plant_group_transfer' AND seed_lot_id IS NULL AND sowing_id IS NULL "
+                "AND plant_id IS NULL AND plant_group_id IS NOT NULL AND event_id IS NOT NULL "
+                "AND adjustment_mode IS NULL)) IS TRUE",
+                _CUTTING_REFERENCES,
+                unrelated=(
+                    "num_nonnulls(vegetative_lot_id, propagation_attempt_id, "
+                    "source_vegetative_lot_id) = 0"
+                ),
+            ),
             name="ck_operation_receipts_typed_references",
         ),
         CheckConstraint(
@@ -165,40 +234,45 @@ class OperationReceipt(Base):
             name="ck_operation_receipts_after_quantity",
         ),
         CheckConstraint(
-            "((kind = 'seed_lot_to_sowing' AND before_lifecycle IN "
-            "('active', 'exhausted', 'discarded', 'lost') AND after_lifecycle IN "
-            "('active', 'exhausted', 'discarded', 'lost') AND "
-            "(before_quantity_kind IS NULL OR before_quantity_kind IN ('seed_count', 'weight')) "
-            "AND (after_quantity_kind IS NULL OR "
-            "after_quantity_kind IN ('seed_count', 'weight'))) OR "
-            "(kind IN ('sowing_to_plant', 'sowing_to_plant_group') AND before_lifecycle IN "
-            "('active', 'completed', 'failed', 'abandoned') AND after_lifecycle IN "
-            "('active', 'completed', 'failed', 'abandoned') AND "
-            "(before_quantity_kind IS NULL OR before_quantity_kind IN ('seed_coun"
-            "t', 'weight')) AND "
-            "(after_quantity_kind IS NULL OR after_quantity_kind IN ('seed_count', 'weight'))) OR "
-            "(kind = 'plant_group_extraction' AND before_lifecycle = 'active' AND "
-            "after_lifecycle IN ('active', 'completed') AND "
-            "(before_quantity_kind IS NULL OR before_quantity_kind = 'count') AND "
-            "(after_quantity_kind IS NULL OR after_quantity_kind = 'count')) OR "
-            "(kind = 'plant_transfer' AND before_lifecycle IN "
-            "('active', 'dead', 'lost', 'discarded') AND "
-            "after_lifecycle = 'transferred' AND before_quantity_kind IS NULL AND "
-            "before_quantity_value IS NULL AND before_quantity_unit IS NULL AND "
-            "before_quantity_is_approximate IS NULL AND after_quantity_kind IS NULL AND "
-            "after_quantity_value IS NULL AND after_quantity_unit IS NULL AND "
-            "after_quantity_is_approximate IS NULL) OR "
-            "(kind = 'plant_group_transfer' AND before_lifecycle IN "
-            "('active', 'completed', 'dead', 'lost', 'discarded') AND "
-            "after_lifecycle = 'transferred' AND "
-            "(before_quantity_kind IS NULL OR before_quantity_kind = 'count') AND "
-            "(after_quantity_kind IS NULL OR after_quantity_kind = 'count'))) IS TRUE",
+            _with_cuttings(
+                "((kind = 'seed_lot_to_sowing' AND before_lifecycle IN "
+                "('active', 'exhausted', 'discarded', 'lost') AND after_lifecycle IN "
+                "('active', 'exhausted', 'discarded', 'lost') AND "
+                "(before_quantity_kind IS NULL OR before_quantity_kind IN ('seed_count', "
+                "'weight')) "
+                "AND (after_quantity_kind IS NULL OR "
+                "after_quantity_kind IN ('seed_count', 'weight'))) OR "
+                "(kind IN ('sowing_to_plant', 'sowing_to_plant_group') AND before_lifecycle IN "
+                "('active', 'completed', 'failed', 'abandoned') AND after_lifecycle IN "
+                "('active', 'completed', 'failed', 'abandoned') AND "
+                "(before_quantity_kind IS NULL OR before_quantity_kind IN ('seed_coun"
+                "t', 'weight')) AND "
+                "(after_quantity_kind IS NULL OR after_quantity_kind IN ('seed_count', "
+                "'weight'))) OR "
+                "(kind = 'plant_group_extraction' AND before_lifecycle = 'active' AND "
+                "after_lifecycle IN ('active', 'completed') AND "
+                "(before_quantity_kind IS NULL OR before_quantity_kind = 'count') AND "
+                "(after_quantity_kind IS NULL OR after_quantity_kind = 'count')) OR "
+                "(kind = 'plant_transfer' AND before_lifecycle IN "
+                "('active', 'dead', 'lost', 'discarded') AND "
+                "after_lifecycle = 'transferred' AND before_quantity_kind IS NULL AND "
+                "before_quantity_value IS NULL AND before_quantity_unit IS NULL AND "
+                "before_quantity_is_approximate IS NULL AND after_quantity_kind IS NULL AND "
+                "after_quantity_value IS NULL AND after_quantity_unit IS NULL AND "
+                "after_quantity_is_approximate IS NULL) OR "
+                "(kind = 'plant_group_transfer' AND before_lifecycle IN "
+                "('active', 'completed', 'dead', 'lost', 'discarded') AND "
+                "after_lifecycle = 'transferred' AND "
+                "(before_quantity_kind IS NULL OR before_quantity_kind = 'count') AND "
+                "(after_quantity_kind IS NULL OR after_quantity_kind = 'count'))) IS TRUE",
+                _CUTTING_STATE,
+            ),
             name="ck_operation_receipts_typed_state",
         ),
     )
 
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid7)
-    kind: Mapped[str] = mapped_column(String(32))
+    kind: Mapped[str] = mapped_column(String(40))
     status: Mapped[str] = mapped_column(String(16), default=OperationStatus.APPLIED.value)
     seed_lot_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("seed_lots.id", ondelete="RESTRICT"), nullable=True
@@ -214,6 +288,15 @@ class OperationReceipt(Base):
     )
     event_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("events.id", ondelete="RESTRICT"), nullable=True, unique=True
+    )
+    vegetative_lot_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("vegetative_lots.id", ondelete="RESTRICT"), index=True
+    )
+    propagation_attempt_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("propagation_attempts.id", ondelete="RESTRICT"), index=True
+    )
+    source_vegetative_lot_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("vegetative_lots.id", ondelete="RESTRICT"), index=True
     )
     adjustment_mode: Mapped[str | None] = mapped_column(String(16), nullable=True)
     before_lifecycle: Mapped[str] = mapped_column(String(16))
@@ -240,5 +323,10 @@ class OperationReceipt(Base):
     result_date_month: Mapped[int | None] = mapped_column(SmallInteger(), nullable=True)
     result_date_day: Mapped[int | None] = mapped_column(SmallInteger(), nullable=True)
     source_location_id: Mapped[UUID | None] = mapped_column(Uuid(), nullable=True)
+    source_botanical_identity_id: Mapped[UUID | None] = mapped_column(Uuid(), nullable=True)
+    source_date_precision: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    source_date_year: Mapped[int | None] = mapped_column(SmallInteger(), nullable=True)
+    source_date_month: Mapped[int | None] = mapped_column(SmallInteger(), nullable=True)
+    source_date_day: Mapped[int | None] = mapped_column(SmallInteger(), nullable=True)
     source_seed_lot_id: Mapped[UUID | None] = mapped_column(Uuid(), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

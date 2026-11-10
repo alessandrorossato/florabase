@@ -16,7 +16,7 @@ def read_history(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
     database: Annotated[Session, Depends(get_database_session, scope="function")],
     category: Annotated[list[HistoryCategory] | None, Query(max_length=6)] = None,
-    subject_kind: Annotated[list[HistorySubjectKind] | None, Query(max_length=7)] = None,
+    subject_kind: Annotated[list[HistorySubjectKind] | None, Query(max_length=9)] = None,
     year: Annotated[int | None, Query(ge=1, le=9999)] = None,
     offset: Annotated[int, Query(ge=0, le=100_000)] = 0,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
