@@ -10,7 +10,9 @@ from florabase.reversals.model import OperationKind, OperationReceipt
 
 class LifecycleRecord(Protocol):
     id: UUID
-    lifecycle: str
+
+    @property
+    def lifecycle(self) -> str: ...
 
 
 class QuantityRecord(LifecycleRecord, Protocol):
@@ -74,6 +76,9 @@ def add_receipt(
     plant_group_id: UUID | None = None,
     event_id: UUID | None = None,
     adjustment_mode: str | None = None,
+    vegetative_lot_id: UUID | None = None,
+    propagation_attempt_id: UUID | None = None,
+    source_vegetative_lot_id: UUID | None = None,
     propagation_snapshot: dict[str, object] | None = None,
 ) -> OperationReceipt:
     receipt = OperationReceipt(
@@ -85,6 +90,9 @@ def add_receipt(
         plant_group_id=plant_group_id,
         event_id=event_id,
         adjustment_mode=adjustment_mode,
+        vegetative_lot_id=vegetative_lot_id,
+        propagation_attempt_id=propagation_attempt_id,
+        source_vegetative_lot_id=source_vegetative_lot_id,
         before_lifecycle=before_lifecycle,
         after_lifecycle=after_lifecycle,
         **(before_quantity or QuantitySnapshot(None, None, None, None)).columns("before"),

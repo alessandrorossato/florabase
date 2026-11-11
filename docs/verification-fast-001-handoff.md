@@ -1,7 +1,8 @@
 # VERIFICATION-FAST-001: fast, deterministic canonical verification
 
-Status: Phase 1 implemented on `ci/verification-fast-001`; Phase 2 (reusable stage evidence) is a
-**proposal only** and changes nothing in this branch.
+Status: Phase 1 implemented on `ci/verification-fast-001`. Phase 2 (reusable stage evidence) is
+implemented separately as opt-in [VERIFICATION-EVIDENCE-001](verification-evidence-001-handoff.md);
+the proposal below is kept as its design record.
 
 ## Root causes addressed
 

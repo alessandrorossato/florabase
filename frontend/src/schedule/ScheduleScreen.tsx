@@ -84,7 +84,11 @@ export function ActivityDialog({
   const item = dialog.item;
   const [title, setTitle] = useState(item?.title ?? "");
   const [kind, setKind] = useState<ActivityKind>(
-    item?.activity_kind ?? "inspect",
+    item?.activity_kind ??
+      (dialog.target?.kind === "vegetative_lot" ||
+      dialog.target?.kind === "propagation_attempt"
+        ? "check_rooting"
+        : "inspect"),
   );
   const [due, setDue] = useState(item?.due_on ?? dialog.due ?? localDay());
   const [notes, setNotes] = useState(item?.notes ?? "");

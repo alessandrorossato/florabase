@@ -99,7 +99,12 @@ test("creates, edits, and deletes a path-aware ProvenanceSite", async () => {
           longitude: payload.longitude,
           coordinate_accuracy_m: payload.coordinate_accuracy_m,
           notes: payload.notes,
-          usage: { seed_lots: 0, plants: 0, plant_groups: 0 },
+          usage: {
+            seed_lots: 0,
+            plants: 0,
+            plant_groups: 0,
+            vegetative_lots: 0,
+          },
           created_at: "2026-09-08T00:00:00Z",
           updated_at: "2026-09-08T00:00:00Z",
         },
@@ -266,7 +271,7 @@ test("List and Map share all sites and selection; only stored coordinate pairs c
     longitude: "13.3",
     coordinate_accuracy_m: null,
     notes: null,
-    usage: { seed_lots: 1, plants: 0, plant_groups: 0 },
+    usage: { seed_lots: 1, plants: 0, plant_groups: 0, vegetative_lots: 0 },
     created_at: "2026-09-08T00:00:00Z",
     updated_at: "2026-09-08T00:00:00Z",
   };
@@ -355,7 +360,7 @@ test("shows zero accuracy and distinguishes delete conflicts from other failures
     longitude: "0",
     coordinate_accuracy_m: "0",
     notes: null,
-    usage: { seed_lots: 0, plants: 0, plant_groups: 0 },
+    usage: { seed_lots: 0, plants: 0, plant_groups: 0, vegetative_lots: 0 },
     created_at: "2026-09-08T00:00:00Z",
     updated_at: "2026-09-08T00:00:00Z",
   };
@@ -402,7 +407,7 @@ test("associated sites use exact place identity independently of matching names 
     longitude: null,
     coordinate_accuracy_m: null,
     notes: null,
-    usage: { seed_lots: 0, plants: 0, plant_groups: 0 },
+    usage: { seed_lots: 0, plants: 0, plant_groups: 0, vegetative_lots: 0 },
     created_at: "2026-10-24T00:00:00Z",
     updated_at: "2026-10-24T00:00:00Z",
   }));

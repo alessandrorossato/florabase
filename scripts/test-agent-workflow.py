@@ -8,6 +8,7 @@ values, GitHub and Docker are PATH mocks, and every Docker argument is recorded 
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import io
 import itertools
 import json
@@ -411,7 +412,7 @@ class AgentWorkflowTests(unittest.TestCase):
         program = (
             f"import sys; sys.path.insert(0, {str(ROOT / 'scripts')!r})\n"
             "from pathlib import Path\n"
-            "from workflow_resources import machine_lock, verification_lock\n"
+            "from workflow_resources import FileLock, machine_lock, verification_lock\n"
             f"with {expression}:\n"
             "    print('held', flush=True)\n"
             "    sys.stdin.read()\n"
@@ -573,6 +574,53 @@ class AgentWorkflowTests(unittest.TestCase):
         moved = ("--branch", "feat/example-001", "--sha", "0" * 40, "--merge", sha)
         self.assertEqual(self.helper(worktree, "mark-finished", *moved).returncode, 1)
         self.refused("codex holds", worktree, "require-writer")
+
+    def test_mark_finished_enforces_handoff_lock_and_symlink_guards(self) -> None:
+        worktree = self.create("feat/example-002")
+        self.ok(worktree, "claim", AGENT_ID="claude-code")
+        sha = self.git(worktree, "rev-parse", "HEAD")
+        merge = self.git(self.primary, "rev-parse", "HEAD")
+        self.ok(worktree, "handoff", AGENT_ID="claude-code", TO="codex", REPORT=self.report())
+        self.git(worktree, "switch", "--detach")
+        metadata = Path(self.git(worktree, "rev-parse", "--absolute-git-dir"))
+        state_file = metadata / "info/florabase-agent-state.json"
+        proof_file = metadata / "info/florabase-finished.json"
+        args = ("mark-finished", "--branch", "feat/example-002", "--sha", sha, "--merge", merge)
+
+        def assert_refused(needle: str, expected_state: str) -> None:
+            result = self.helper(worktree, *args, AGENT_ID="operator")
+            self.assertEqual(result.returncode, 1, result.stdout)
+            self.assertIn(needle, result.stderr)
+            self.assertEqual(state_file.read_text(), expected_state)
+
+        state_before = state_file.read_text()
+        assert_refused("is pending", state_before)
+        self.assertFalse(proof_file.exists())
+
+        # Accept the handoff on the branch, detach again, then test lock and symlink refusal.
+        self.git(worktree, "switch", "feat/example-002")
+        self.ok(worktree, "claim", AGENT_ID="codex")
+        self.git(worktree, "switch", "--detach")
+        claimed_state = state_file.read_text()
+
+        holder = self.hold(worktree, f"verification_lock(Path({str(metadata)!r}))")
+        try:
+            assert_refused("already running", claimed_state)
+            self.assertFalse(proof_file.exists())
+        finally:
+            self.release(holder)
+
+        outside = self.root / "outside-proof.json"
+        outside.write_text("sentinel\n")
+        proof_file.parent.mkdir(parents=True, exist_ok=True)
+        proof_file.symlink_to(outside)
+        assert_refused("symlinked finish proof", claimed_state)
+        self.assertEqual(outside.read_text(), "sentinel\n")
+        proof_file.unlink()
+
+        self.ok(worktree, *args, AGENT_ID="operator")
+        self.assertTrue(proof_file.is_file())
+        self.assertFalse(state_file.exists())
 
     # Compose passthrough -----------------------------------------------------------------------
 
@@ -1107,7 +1155,8 @@ class AgentWorkflowTests(unittest.TestCase):
     def finished(self, branch: str = "feat/example-001", *, frontend: bool = False) -> Path:
         worktree = self.create(branch)
         self.ok(worktree, "claim", AGENT_ID="claude-code")
-        (worktree / "feature.txt").write_text("feature\n")
+        content = "feature\n" if branch == "feat/example-001" else f"{branch}\n"
+        (worktree / "feature.txt").write_text(content)
         if frontend:
             (worktree / "frontend").mkdir()
             (worktree / "frontend/package.json").write_text("{}\n")
@@ -1501,7 +1550,10 @@ class AgentWorkflowTests(unittest.TestCase):
                 raise AssertionError("Git removal reached before safe refusal")
             return original_git(repo, *args)
 
-        with patch.object(Repository, "git", guarded_git):
+        with (
+            patch.object(Repository, "git", guarded_git),
+            patch.dict(os.environ, self.env(AGENT_ID="operator"), clear=True),
+        ):
             with self.assertRaisesRegex(workflow_environment.WorkflowError, reason):
                 feature_worktree.retire(Repository(self.primary), "example-001", "example-001")
         self.assertEqual(removals, [])
@@ -1759,6 +1811,437 @@ class AgentWorkflowTests(unittest.TestCase):
                 CONFIRM_RETIRE=name,
             )
         self.assertTrue(provider.is_dir())
+
+    def assert_finished_intact(self, worktree: Path) -> None:
+        self.assertTrue(worktree.is_dir())
+        self.assertTrue((worktree / "feature.txt").is_file())
+        self.assertIn(str(worktree), self.git(self.primary, "worktree", "list"))
+        metadata = Path(self.git(worktree, "rev-parse", "--absolute-git-dir"))
+        self.assertTrue((metadata / "info/florabase-managed-worktree").is_file())
+        self.assertTrue((metadata / "info/florabase-finished.json").is_file())
+
+    def test_retirement_enforces_operator_identity_at_all_entry_points_without_side_effects(
+        self,
+    ) -> None:
+        worktree = self.finished()
+        metadata = Path(self.git(worktree, "rev-parse", "--absolute-git-dir"))
+        common = Path(self.git(self.primary, "rev-parse", "--absolute-git-dir"))
+        args = {"FEATURE": "example-001", "CONFIRM_RETIRE": "example-001"}
+        self.docker_log.unlink(missing_ok=True)
+        lock_stat = (metadata / "florabase-verification.lock").stat()
+        for agent in ("claude-code", "codex", "opencode", "operator-2"):
+            self.refused("operator actions", self.primary, "retire", AGENT_ID=agent, **args)
+            self.assertFalse(self.docker_log.exists())
+            self.assertEqual(list(common.glob("florabase-retire-*.lock")), [])
+            self.assertEqual((metadata / "florabase-verification.lock").stat(), lock_stat)
+            self.assert_finished_intact(worktree)
+            with patch.dict(os.environ, self.env(AGENT_ID=agent), clear=True):
+                with self.assertRaisesRegex(workflow_environment.WorkflowError, "operator actions"):
+                    feature_worktree.retire(Repository(self.primary), "example-001", "example-001")
+            self.assert_finished_intact(worktree)
+            mark_refused = self.helper(
+                worktree,
+                "mark-finished",
+                "--branch",
+                "feat/example-001",
+                "--sha",
+                self.git(worktree, "rev-parse", "HEAD"),
+                "--merge",
+                self.git(self.primary, "rev-parse", "HEAD"),
+                AGENT_ID=agent,
+            )
+            self.assertEqual(mark_refused.returncode, 1, mark_refused.stdout)
+            self.assertIn("operator actions", mark_refused.stderr)
+        # Makefile target enforces the same operator boundary and allows explicit AGENT_ID=operator.
+        shutil.copy2(ROOT / "Makefile", self.primary / "Makefile")
+        scripts_copy = self.primary / "scripts"
+        shutil.copytree(
+            ROOT / "scripts", scripts_copy, ignore=shutil.ignore_patterns("__pycache__")
+        )
+        for cmd in (
+            [
+                "make",
+                "feature-retire",
+                "FEATURE=example-001",
+                "CONFIRM_RETIRE=example-001",
+                "AGENT_ID=codex",
+            ],
+            [
+                "make",
+                "feature-retire",
+                "FEATURE=example-001",
+                "CONFIRM_RETIRE=example-001",
+                "AGENT_ID=Bad Name",
+            ],
+        ):
+            refused = subprocess.run(
+                cmd, cwd=self.primary, env=self.env(), capture_output=True, text=True
+            )
+            self.assertNotEqual(refused.returncode, 0, cmd)
+            self.assertFalse(self.docker_log.exists())
+            self.assert_finished_intact(worktree)
+        allowed = subprocess.run(
+            [
+                "make",
+                "feature-retire",
+                "FEATURE=example-001",
+                "CONFIRM_RETIRE=example-001",
+                "AGENT_ID=operator",
+            ],
+            cwd=self.primary,
+            env=self.env(),
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(allowed.returncode, 0, allowed.stderr)
+        self.assertIn("FEATURE WORKTREE RETIRED", allowed.stdout)
+        self.assertFalse(worktree.exists())
+
+    def test_retirement_refuses_missing_and_invalid_identities_with_no_side_effects(self) -> None:
+        worktree = self.finished()
+        common = Path(self.git(self.primary, "rev-parse", "--absolute-git-dir"))
+        self.docker_log.unlink(missing_ok=True)
+        for bad_agent in ("Bad Name", "OPERATOR", " ", "../evil", "-bad", "a" * 65, "operator\n"):
+            self.refused(
+                "safe lowercase",
+                self.primary,
+                "retire",
+                AGENT_ID=bad_agent,
+                FEATURE="example-001",
+                CONFIRM_RETIRE="example-001",
+            )
+        for bad_feature in ("", " ", "../evil", "UPPER", "feat/example-001", "-dash"):
+            self.refused(
+                "feature worktree id",
+                self.primary,
+                "retire",
+                AGENT_ID="operator",
+                FEATURE=bad_feature,
+                CONFIRM_RETIRE=bad_feature,
+            )
+        self.refused(
+            "requires CONFIRM_RETIRE",
+            self.primary,
+            "retire",
+            AGENT_ID="operator",
+            FEATURE="example-001",
+            CONFIRM_RETIRE="",
+        )
+        self.refused(
+            "not a registered",
+            self.primary,
+            "retire",
+            AGENT_ID="operator",
+            FEATURE="absent-001",
+            CONFIRM_RETIRE="absent-001",
+        )
+        self.assertFalse(self.docker_log.exists())
+        self.assertEqual(list(common.glob("florabase-retire-*.lock")), [])
+        self.assert_finished_intact(worktree)
+        # Explicit empty AGENT_ID clears an ambient agent setting like the other operator commands.
+        self.ok(
+            self.primary,
+            "retire",
+            AGENT_ID="",
+            FEATURE="example-001",
+            CONFIRM_RETIRE="example-001",
+        )
+        self.assertFalse(worktree.exists())
+
+    def test_retirement_refuses_pending_handoffs_and_corrupt_writer_state(self) -> None:
+        pending_wt = self.create("feat/pending-001")
+        self.ok(pending_wt, "claim", AGENT_ID="claude-code")
+        self.ok(pending_wt, "handoff", AGENT_ID="claude-code", TO="codex", REPORT=self.report())
+        pending_meta = Path(self.git(pending_wt, "rev-parse", "--absolute-git-dir"))
+        state_before = (pending_meta / "info/florabase-agent-state.json").read_text()
+        self.refused(
+            "is pending",
+            self.primary,
+            "retire",
+            AGENT_ID="operator",
+            FEATURE="pending-001",
+            CONFIRM_RETIRE="pending-001",
+        )
+        self.assertTrue(pending_wt.is_dir())
+        self.assertEqual(
+            (pending_meta / "info/florabase-agent-state.json").read_text(), state_before
+        )
+
+        finished_wt = self.finished("feat/pending-002")
+        finished_meta = Path(self.git(finished_wt, "rev-parse", "--absolute-git-dir"))
+        state_file = finished_meta / "info/florabase-agent-state.json"
+        state_file.write_text(state_before)
+        self.refused(
+            "is pending",
+            self.primary,
+            "retire",
+            AGENT_ID="operator",
+            FEATURE="pending-002",
+            CONFIRM_RETIRE="pending-002",
+        )
+        self.assert_finished_intact(finished_wt)
+        for bad_state in (
+            "{ interrupted",
+            json.dumps({"version": 1}),
+            json.dumps({"version": True, "writer": None, "handoff": None}),
+            json.dumps({"version": 1, "writer": "corrupt", "handoff": None}),
+            json.dumps({"version": 1, "writer": None, "handoff": "corrupt"}),
+            json.dumps({"version": 1, "writer": None, "handoff": {}}),
+            json.dumps({"version": 1, "writer": None, "handoff": {"id": "abc"}}),
+        ):
+            state_file.write_text(bad_state)
+            self.refused("writer state", finished_wt, "require-operator", AGENT_ID="operator")
+            self.refused(
+                "writer state",
+                self.primary,
+                "retire",
+                AGENT_ID="operator",
+                FEATURE="pending-002",
+                CONFIRM_RETIRE="pending-002",
+            )
+            self.assert_finished_intact(finished_wt)
+        state_file.unlink()
+        outside = self.root / "outside.json"
+        outside.write_text(state_before)
+        state_file.symlink_to(outside)
+        self.refused(
+            "writer state",
+            self.primary,
+            "retire",
+            AGENT_ID="operator",
+            FEATURE="pending-002",
+            CONFIRM_RETIRE="pending-002",
+        )
+        state_file.unlink()
+        self.ok(
+            self.primary,
+            "retire",
+            AGENT_ID="operator",
+            FEATURE="pending-002",
+            CONFIRM_RETIRE="pending-002",
+        )
+        self.assertFalse(finished_wt.exists())
+
+    def test_retirement_refuses_unmerged_branches_and_damaged_delivery_proof(self) -> None:
+        unmerged = self.create("feat/unmerged-001")
+        (unmerged / "unmerged.txt").write_text("unmerged\n")
+        self.git(unmerged, "add", ".")
+        self.git(unmerged, "commit", "-m", "unmerged")
+        unmerged_sha = self.git(unmerged, "rev-parse", "HEAD")
+        args = {"FEATURE": "unmerged-001", "CONFIRM_RETIRE": "unmerged-001", "AGENT_ID": "operator"}
+        self.refused("still on a branch", self.primary, "retire", **args)
+        self.git(unmerged, "switch", "--detach")
+        self.refused("no make feature-finish proof", self.primary, "retire", **args)
+        metadata = Path(self.git(unmerged, "rev-parse", "--absolute-git-dir"))
+        proof_path = metadata / "info/florabase-finished.json"
+        for bad_proof, needle in (
+            ("[]", "damaged"),
+            (json.dumps({"branch": "", "sha": unmerged_sha, "merge": unmerged_sha}), "damaged"),
+            (
+                json.dumps({"branch": "feat/unmerged-001", "sha": "bad", "merge": unmerged_sha}),
+                "damaged",
+            ),
+            (
+                json.dumps(
+                    {
+                        "branch": "feat/unmerged-001",
+                        "sha": unmerged_sha,
+                        "merge": unmerged_sha,
+                    }
+                ),
+                "still exists",
+            ),
+        ):
+            proof_path.write_text(bad_proof)
+            self.refused(needle, self.primary, "retire", **args)
+        self.git(self.primary, "branch", "-D", "feat/unmerged-001")
+        proof_path.write_text(
+            json.dumps(
+                {
+                    "branch": "feat/unmerged-001",
+                    "sha": unmerged_sha,
+                    "merge": unmerged_sha,
+                }
+            )
+        )
+        self.refused("not verified on origin/main", self.primary, "retire", **args)
+        proof_path.unlink()
+        outside = self.root / "forged-proof.json"
+        main_sha = self.git(self.primary, "rev-parse", "HEAD")
+        outside.write_text(
+            json.dumps({"branch": "feat/unmerged-001", "sha": unmerged_sha, "merge": main_sha})
+        )
+        proof_path.symlink_to(outside)
+        self.refused("damaged", self.primary, "retire", **args)
+        self.assertTrue(unmerged.is_dir())
+        self.assertEqual((unmerged / "unmerged.txt").read_text(), "unmerged\n")
+
+    def test_retirement_refuses_review_and_uat_resources(self) -> None:
+        worktree = self.finished()
+        args = {"FEATURE": "example-001", "CONFIRM_RETIRE": "example-001", "AGENT_ID": "operator"}
+        for project, kind in (
+            ("florabase-feature-review", "container"),
+            ("florabase-uat-preview", "volume"),
+            ("florabase-uat-branch-feat-example-001", "container"),
+            ("florabase-uat-branch-feat-example-001", "volume"),
+        ):
+            with self.subTest(project=project, kind=kind):
+                if kind == "container":
+                    self.write_tool(
+                        "docker",
+                        'printf \'%s\\n\' "$*" >>"${DOCKER_LOG}"\n'
+                        f'if [[ "$1 $2" == "ps -a" && "$*" == *"source={worktree}"* ]]; then '
+                        f"printf '{project}\\texited\\n'; fi\n",
+                    )
+                else:
+                    self.write_tool(
+                        "docker",
+                        'printf \'%s\\n\' "$*" >>"${DOCKER_LOG}"\n'
+                        f'if [[ "$1 $2" == "volume ls" && "$*" == *"source={worktree}"* ]]; then '
+                        f"printf '{project}\\t{project}_postgres_data\\n'; fi\n",
+                    )
+                self.refused(project, self.primary, "retire", **args)
+                self.assert_finished_intact(worktree)
+
+    def test_retirement_refuses_missing_or_damaged_worktree_metadata(self) -> None:
+        args = {"FEATURE": "example-001", "CONFIRM_RETIRE": "example-001", "AGENT_ID": "operator"}
+        # 1. Locked worktree refuses cleanly.
+        worktree = self.finished()
+        self.git(self.primary, "worktree", "lock", str(worktree))
+        self.refused("metadata is missing, damaged, or locked", self.primary, "retire", **args)
+        self.assert_finished_intact(worktree)
+        self.git(self.primary, "worktree", "unlock", str(worktree))
+
+        # 2. Missing .git file in worktree (prunable) refuses cleanly.
+        metadata = Path(self.git(worktree, "rev-parse", "--absolute-git-dir"))
+        git_pointer = worktree / ".git"
+        git_pointer_text = git_pointer.read_text()
+        git_pointer.unlink()
+        self.refused("metadata is missing, damaged, or locked", self.primary, "retire", **args)
+        self.assertTrue(worktree.is_dir())
+        git_pointer.write_text(git_pointer_text)
+
+        # 3. Symlinked .git pointer refuses cleanly.
+        real_pointer = self.root / "real-git-pointer"
+        real_pointer.write_text(git_pointer_text)
+        git_pointer.unlink()
+        git_pointer.symlink_to(real_pointer)
+        self.refused("metadata is missing or damaged", self.primary, "retire", **args)
+        git_pointer.unlink()
+        git_pointer.write_text(git_pointer_text)
+
+        # 4. Cross-wired gitdir back-pointer refuses cleanly.
+        other = self.finished("feat/other-002")
+        other_meta = Path(self.git(other, "rev-parse", "--absolute-git-dir"))
+        git_pointer.write_text(f"gitdir: {other_meta}\n")
+        self.refused("metadata is missing or damaged", self.primary, "retire", **args)
+        git_pointer.write_text(git_pointer_text)
+
+        # 5. Missing managed marker refuses cleanly.
+        marker = metadata / "info/florabase-managed-worktree"
+        marker_text = marker.read_text()
+        marker.unlink()
+        self.refused("not created by make feature-worktree", self.primary, "retire", **args)
+        marker.write_text(marker_text)
+
+        # 6. Symlinked worktree path refuses cleanly.
+        moved = self.root / "moved-worktree"
+        worktree.rename(moved)
+        worktree.symlink_to(moved)
+        self.refused("not a registered managed worktree", self.primary, "retire", **args)
+        worktree.unlink()
+        moved.rename(worktree)
+
+        # 7. Missing worktree directory (prunable) refuses cleanly.
+        shutil.rmtree(worktree)
+        self.refused("metadata is missing, damaged, or locked", self.primary, "retire", **args)
+
+    def test_concurrent_retirement_is_serialized_per_target_and_blocks_active_verification(
+        self,
+    ) -> None:
+        first = self.finished("feat/first-001")
+        second = self.finished("feat/second-002")
+        common = Path(self.git(self.primary, "rev-parse", "--absolute-git-dir"))
+        first_suffix = hashlib.sha256(str(first.resolve()).encode("utf-8")).hexdigest()[:12]
+        first_lock = common / f"florabase-retire-{first_suffix}.lock"
+        holder = self.hold(
+            self.primary, f"FileLock(Path({str(first_lock)!r}), 'retirement of {first}')"
+        )
+        self.docker_log.unlink(missing_ok=True)
+        self.refused(
+            "already running",
+            self.primary,
+            "retire",
+            AGENT_ID="operator",
+            FEATURE="first-001",
+            CONFIRM_RETIRE="first-001",
+        )
+        self.assertFalse(self.docker_log.exists())
+        self.assert_finished_intact(first)
+        # Retiring a different worktree proceeds without contention.
+        self.ok(
+            self.primary,
+            "retire",
+            AGENT_ID="operator",
+            FEATURE="second-002",
+            CONFIRM_RETIRE="second-002",
+        )
+        self.assertFalse(second.exists())
+        self.release(holder)
+
+        # Real concurrent processes targeting the same worktree: at most one succeeds.
+        results = [
+            subprocess.Popen(
+                [sys.executable, str(HELPER), "retire"],
+                cwd=self.primary,
+                env=self.env(AGENT_ID="operator", FEATURE="first-001", CONFIRM_RETIRE="first-001"),
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            for _ in range(3)
+        ]
+        outcomes = [(proc.communicate()[1], proc.returncode) for proc in results]
+        codes = [code for _, code in outcomes]
+        self.assertEqual(codes.count(0), 1, outcomes)
+        for err, code in outcomes:
+            if code != 0:
+                self.assertTrue(
+                    "already running" in err or "not a registered managed worktree" in err, err
+                )
+        self.assertFalse(first.exists())
+        self.assertFalse((common / "worktrees/first-001").exists())
+
+        # Active retirement holds target verification lock during Docker/mount preflight.
+        third = self.finished("feat/third-003")
+        third_meta = Path(self.git(third, "rev-parse", "--absolute-git-dir"))
+        verify_during_retire: list[int] = []
+
+        def probe_lock(target_repo: Repository) -> dict[str, dict[str, int]]:
+            probe = subprocess.run(
+                [sys.executable, str(HELPER), "require-operator"],
+                cwd=third,
+                env=self.env(AGENT_ID="operator"),
+                stdin=subprocess.DEVNULL,
+                capture_output=True,
+                text=True,
+            )
+            verify_during_retire.append(probe.returncode)
+            self.assertIn("verification of this worktree is already running", probe.stderr)
+            return {}
+
+        with (
+            contextlib.chdir(self.primary),
+            patch.dict(os.environ, self.env(AGENT_ID="operator"), clear=True),
+            patch.object(feature_worktree, "owned_resources", side_effect=probe_lock),
+            patch.object(feature_worktree, "require_no_running_mounts"),
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            feature_worktree.retire(Repository(self.primary), "third-003", "third-003")
+        self.assertEqual(verify_during_retire, [1])
+        self.assertFalse(third.exists())
+        self.assertFalse(third_meta.exists())
 
     # Instructions ------------------------------------------------------------------------------
 

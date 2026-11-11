@@ -75,6 +75,8 @@ def test_location_schema_constraints_foreign_key_and_same_names(
         "supports_sowings",
         "supports_seed_lots",
         "supports_harvest_inventory",
+        "supports_vegetative_lots",
+        "supports_propagation_attempts",
         "retired_at",
         "created_at",
         "updated_at",
@@ -88,6 +90,8 @@ def test_location_schema_constraints_foreign_key_and_same_names(
             "supports_sowings",
             "supports_seed_lots",
             "supports_harvest_inventory",
+            "supports_vegetative_lots",
+            "supports_propagation_attempts",
         )
     )
     assert "TIMESTAMP" in str(columns["created_at"]["type"])

@@ -21,6 +21,8 @@ class HistorySubjectKind(StrEnum):
     PLANT = "plant"
     PLANT_GROUP = "plant_group"
     SOWING = "sowing"
+    VEGETATIVE_LOT = "vegetative_lot"
+    PROPAGATION_ATTEMPT = "propagation_attempt"
     HARVEST = "harvest"
     HARVEST_INVENTORY = "harvest_inventory"
     SEED_LOT = "seed_lot"
@@ -41,6 +43,7 @@ class HistoryEntry(BaseModel):
         "event",
         "operation_receipt",
         "germination",
+        "rooting_observation",
         "harvest",
         "disposition",
         "conversion",

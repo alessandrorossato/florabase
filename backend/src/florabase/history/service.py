@@ -19,6 +19,7 @@ from sqlalchemy.dialects.postgresql import JSONB, JSONPATH
 from sqlalchemy.orm import Session, aliased
 
 from florabase.botanical_identities.model import BotanicalIdentity
+from florabase.cuttings.model import PropagationAttempt, RootingObservation, VegetativeLot
 from florabase.events.model import Event
 from florabase.harvests.conversion_model import HarvestSeedLotConversion as Conversion
 from florabase.harvests.inventory_model import HarvestMaterialDisposition as Disposition
@@ -77,6 +78,7 @@ def _branch(
     primary: Any,
     *,
     date: Any = None,
+    date_prefix: str = "occurred_on",
     instant: Any = None,
     context: Any = "",
     related: Any = None,
@@ -85,10 +87,12 @@ def _branch(
 ) -> Select[Any]:
     stamp = instant if instant is not None else record.created_at
     # Cast NULLs explicitly so each UNION column has one PostgreSQL type.
-    precision = date.occurred_on_precision if date is not None else literal(None, String)
-    year = date.occurred_on_year if date is not None else None
-    month = date.occurred_on_month if date is not None else None
-    day = date.occurred_on_day if date is not None else None
+    precision = (
+        getattr(date, f"{date_prefix}_precision") if date is not None else literal(None, String)
+    )
+    year = getattr(date, f"{date_prefix}_year") if date is not None else None
+    month = getattr(date, f"{date_prefix}_month") if date is not None else None
+    day = getattr(date, f"{date_prefix}_day") if date is not None else None
     if instant is not None:
         precision = literal("day")
         utc = func.timezone("UTC", instant)
@@ -114,6 +118,22 @@ def _branch(
         (related if related is not None else func.jsonb_build_array()).label("related"),
         cast(status, String).label("status"),
     )
+
+
+# Same wording as the Journal (frontend eventData.phenophaseLabels).
+_STAGES = {
+    "bud_break": "Bud break / new growth",
+    "leaf_color_change": "Leaf colour change",
+    "leaf_fall": "Leaf loss",
+    "dormancy_entry": "Entering dormancy",
+    "dormancy_exit": "Dormancy exit / renewed growth",
+    "flowering_onset": "Flowering began",
+    "flowering_ongoing": "In flower",
+    "flowering_end": "Flowering ended",
+    "fruit_set": "Fruit set",
+    "fruit_ripening": "Fruit ripening",
+    "fruit_ripe": "Fruit ready for harvest",
+}
 
 
 def candidates() -> Any:
@@ -157,6 +177,17 @@ def candidates() -> Any:
                         Event.measurement_unit,
                         case(
                             (Event.measurement_is_approximate.is_(True), " (approximate)"), else_=""
+                        ),
+                    ),
+                ),
+                (
+                    Event.phenophase.is_not(None),
+                    func.concat(
+                        "Stage: ",
+                        case(*((Event.phenophase == key, label) for key, label in _STAGES.items())),
+                        case(
+                            (Event.phenophase_date_is_approximate.is_(True), " (approximate date)"),
+                            else_="",
                         ),
                     ),
                 ),
@@ -377,6 +408,91 @@ def candidates() -> Any:
         conversions.append(
             statement.where(Conversion.reversed_at.is_not(None)) if reversed_entry else statement
         )
+    rooting_checks = (
+        _branch(
+            "rooting_observation",
+            RootingObservation,
+            "propagation",
+            RootingObservation.stage,
+            literal("Rooting check recorded"),
+            _ref(
+                "propagation_attempt",
+                PropagationAttempt.id,
+                _label(PropagationAttempt, "Rooting attempt"),
+            ),
+            date=RootingObservation,
+            date_prefix="observed_on",
+            context=case(
+                (
+                    RootingObservation.rooted_count.is_not(None),
+                    func.concat(RootingObservation.rooted_count, " rooted"),
+                ),
+                else_="Rooted count unrecorded",
+            ),
+        )
+        .select_from(RootingObservation)
+        .join(
+            PropagationAttempt, PropagationAttempt.id == RootingObservation.propagation_attempt_id
+        )
+        .join(VegetativeLot, VegetativeLot.id == PropagationAttempt.vegetative_lot_id)
+        .join(BotanicalIdentity, BotanicalIdentity.id == VegetativeLot.botanical_identity_id)
+    )
+    for kind, cutting_model, result_id, subject_kind, title in (
+        (
+            OperationKind.VEGETATIVE_LOT_TO_PROPAGATION_ATTEMPT,
+            PropagationAttempt,
+            Receipt.propagation_attempt_id,
+            "propagation_attempt",
+            "Rooting attempt started",
+        ),
+        (
+            OperationKind.PROPAGATION_ATTEMPT_TO_PLANT,
+            Plant,
+            Receipt.plant_id,
+            "plant",
+            "Plant established from cuttings",
+        ),
+        (
+            OperationKind.PROPAGATION_ATTEMPT_TO_PLANT_GROUP,
+            PlantGroup,
+            Receipt.plant_group_id,
+            "plant_group",
+            "Plant group established from cuttings",
+        ),
+    ):
+        from_lot = cutting_model is PropagationAttempt
+        cutting_parent = VegetativeLot if from_lot else PropagationAttempt
+        parent_kind = "vegetative_lot" if from_lot else "propagation_attempt"
+        statement = (
+            _branch(
+                "operation_receipt",
+                Receipt,
+                "propagation",
+                Receipt.kind,
+                literal(title),
+                _ref(subject_kind, result_id, _label(cutting_model, title)),
+                status=Receipt.status,
+                related=func.jsonb_build_array(
+                    _ref(parent_kind, cutting_parent.id, _label(cutting_parent, "Cuttings"))
+                ),
+            )
+            .select_from(Receipt)
+            .join(cutting_model, cutting_model.id == result_id)
+            .where(Receipt.kind == kind.value, Receipt.event_id.is_(None))
+        )
+        if cutting_model is PropagationAttempt:
+            statement = statement.join(VegetativeLot, VegetativeLot.id == Receipt.vegetative_lot_id)
+            identity_id = VegetativeLot.botanical_identity_id
+        else:
+            statement = statement.join(
+                PropagationAttempt, PropagationAttempt.id == Receipt.propagation_attempt_id
+            )
+            identity_id = (
+                Plant.botanical_identity_id
+                if cutting_model is Plant
+                else PlantGroup.botanical_identity_id
+            )
+        receipts.append(statement.join(BotanicalIdentity, BotanicalIdentity.id == identity_id))
     # A terminal planning fact has its own persisted instant. It never borrows due_on
     # or implies the optional linked Journal occurrence happened at completion time.
     activity = ScheduledActivity
@@ -386,6 +502,8 @@ def candidates() -> Any:
         ("plant_group", PlantGroup, _label(PlantGroup, "Unlabelled plant group")),
         ("seed_lot", SeedLot, _label(SeedLot, "Unlabelled seed lot")),
         ("sowing", Sowing, _label(Sowing, "Unlabelled sowing")),
+        ("vegetative_lot", VegetativeLot, _label(VegetativeLot, "Vegetative lot")),
+        ("propagation_attempt", PropagationAttempt, _label(PropagationAttempt, "Rooting attempt")),
         ("location", Location, Location.name),
         ("botanical_identity", BotanicalIdentity, BotanicalIdentity.scientific_name),
     ):
@@ -419,6 +537,12 @@ def candidates() -> Any:
         .outerjoin(Sowing, Sowing.id == activity.sowing_id)
         .outerjoin(SeedLot, SeedLot.id == func.coalesce(activity.seed_lot_id, Sowing.seed_lot_id))
         .outerjoin(Location, Location.id == activity.location_id)
+        .outerjoin(PropagationAttempt, PropagationAttempt.id == activity.propagation_attempt_id)
+        .outerjoin(
+            VegetativeLot,
+            VegetativeLot.id
+            == func.coalesce(activity.vegetative_lot_id, PropagationAttempt.vegetative_lot_id),
+        )
         .outerjoin(
             BotanicalIdentity,
             BotanicalIdentity.id
@@ -427,12 +551,20 @@ def candidates() -> Any:
                 Plant.botanical_identity_id,
                 PlantGroup.botanical_identity_id,
                 SeedLot.botanical_identity_id,
+                VegetativeLot.botanical_identity_id,
             ),
         )
         .where(activity.status == "completed", activity.completed_at.is_not(None))
     )
     return union_all(
-        events, harvests, germination, *receipts, dispositions, *conversions, completions
+        events,
+        harvests,
+        germination,
+        rooting_checks,
+        *receipts,
+        dispositions,
+        *conversions,
+        completions,
     ).subquery()
 
 

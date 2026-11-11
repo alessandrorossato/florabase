@@ -6,6 +6,7 @@ export type Section =
   | "dashboard"
   | "seeds"
   | "sowings"
+  | "cuttings"
   | "plants"
   | "harvests"
   | "events"
@@ -87,6 +88,7 @@ export const workspaces: Workspace[] = [
     destinations: [
       destination("seeds", "Seeds"),
       destination("sowings", "Sowings"),
+      destination("cuttings", "Cuttings"),
       destination("plants", "Plants", [
         {
           label: "Plant groups",

@@ -1,0 +1,98 @@
+:root {
+  --bg: #f6f7f3;
+  --surface: #ffffff;
+  --text: #1e2621;
+  --muted: #5c665e;
+  --border: #dde3dc;
+  --primary: #2f684f;
+  --primary-hover: #24533e;
+  --btn-text: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #151c18;
+    --surface: #1d2721;
+    --text: #e5ece6;
+    --muted: #b1beb4;
+    --border: #3b4a40;
+    --primary: #8dc5a3;
+    --primary-hover: #acd8bd;
+    --btn-text: #151c18;
+  }
+}
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.offline-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2.5rem 2rem;
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+.brand-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1.25rem;
+  display: block;
+}
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 0.75rem;
+  color: var(--text);
+}
+p {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--muted);
+  margin-bottom: 1.75rem;
+}
+.retry-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary);
+  color: var(--btn-text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding: 0.75rem 1.75rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease-in-out;
+}
+.retry-btn:hover {
+  background-color: var(--primary-hover);
+}
+.retry-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}

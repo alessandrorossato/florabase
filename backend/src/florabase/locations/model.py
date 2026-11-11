@@ -26,7 +26,8 @@ class Location(Base):
         CheckConstraint(
             (
                 "supports_plants OR supports_sowings OR supports_seed_lots OR "
-                "supports_harvest_inventory"
+                "supports_harvest_inventory OR supports_vegetative_lots OR "
+                "supports_propagation_attempts"
             ),
             name="ck_locations_at_least_one_scope",
         ),
@@ -41,6 +42,12 @@ class Location(Base):
     supports_sowings: Mapped[bool] = mapped_column(Boolean(), default=True, server_default=true())
     supports_seed_lots: Mapped[bool] = mapped_column(Boolean(), default=True, server_default=true())
     supports_harvest_inventory: Mapped[bool] = mapped_column(
+        Boolean(), default=False, server_default="false"
+    )
+    supports_vegetative_lots: Mapped[bool] = mapped_column(
+        Boolean(), default=False, server_default="false"
+    )
+    supports_propagation_attempts: Mapped[bool] = mapped_column(
         Boolean(), default=False, server_default="false"
     )
     retired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

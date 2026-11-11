@@ -76,7 +76,7 @@ recorded as `implemented`.
 | Self-hosted foundation, local owner authentication, typed API and guarded DB/media recovery      | FOUNDATION-001, SECURITY-001/002, OPS-001, CI-001/002/003 are `verified`; [workflow](development-workflow.md), [security](security.md), [recovery](backup-restore.md).                                                                                      |
 | Botanical identities/profiles, suppliers, collection Locations and geographic provenance         | Core identity/profile/supplier/location features are `verified`; GEOGRAPHY-002/003, LOCATION-002/003 and MAP-001 remain `implemented`; [domain](domain-model.md), [Location aggregation](location-descendant-aggregation.md).                               |
 | Seed lots, Sowings, dated germination observations, Plants and Plant groups                      | SEED-001–004, SOWING-001–003 and PLANT-001–006 are `verified`; GERMINATION-001 remains `implemented`. Unknown quantity/date precision is retained.                                                                                                          |
-| Explicit material ancestry, propagation, extraction and supported guarded reversals              | LINEAGE-001/002 and PROPAGATION-001–003 are `verified`; [integrity audit](lineage-integrity.md). First-class visual lineage remains LINEAGE-003, `planned`.                                                                                                 |
+| Explicit material ancestry, propagation, extraction and supported guarded reversals              | LINEAGE-001/002 and PROPAGATION-001–003 are `verified`; [integrity audit](lineage-integrity.md). LINEAGE-003 [ancestry explorer](lineage-explorer.md) is `implemented`.                                                                                      |
 | Journal and read-only cross-domain History                                                       | EVENT-001/002 and HISTORY-001 are `verified`; [History contract](operational-history.md), [handoff](history-001-handoff.md). Product pass remains required.                                                                                                 |
 | Harvests, stored material and explicit harvested-seed conversion                                 | HARVEST-001 remains `implemented`; HARVEST-002/003 are `verified`; [Harvests](harvests.md), [inventory](harvest-inventory.md), [conversion](harvest-seed-conversion.md).                                                                                    |
 | Shared media, collection photos and primary imagery                                              | ATTACHMENT-002 and SUPPLIER-003 are `verified`; ATTACHMENT-003/004/005 remain `implemented`; [Media library](media-library.md), [Supplier handoff](supplier-003-handoff.md).                                                                                |
@@ -263,7 +263,7 @@ increment is selected and its queue priority is reviewed.
 | HIGH                | 2              | Accepted-name reconciliation/correction     | TAXONOMY-001                                                   |
 | HIGH                | 3              | Synonyms and BotanicalIdentity name history | TAXONOMY-002                                                   |
 | HIGH                | 4              | Measurements / growth history               | MEASUREMENT-001 (height slice); further quantities proposed.   |
-| HIGH                | 5              | Phenology                                   | Theme; EVENT-003 is related, not blanket implementation scope. |
+| HIGH                | 5              | Phenology                                   | PHENOLOGY-001 (stages on Events); EVENT-003 remains separate.  |
 | HIGH                | 6              | Vegetative propagation / cuttings (talee)   | CUTTING-001; domain design required first.                     |
 | NEXT                | 7              | Recurring care plans                        | Theme building on delivered SCHEDULE-001/002.                  |
 | NEXT                | 8              | Plant health / issue workflow               | Theme reusing Journal / Schedule / History.                    |
@@ -331,6 +331,11 @@ growth observations. Support meaningful year-to-year history such as first flowe
 Acceptance direction: comparable seasonal observations preserve uncertainty and distinguish recorded
 first flowering from proof that no earlier flowering occurred. Integrate Journal/History rather
 than introducing disconnected duplicate timelines; decide the needed structure before extending Events.
+
+**PHENOLOGY-001** ([contract](phenology.md)) records a controlled stage on existing observation,
+flowering and fruiting Events and compares recorded observations year by year in the Plant and
+PlantGroup Journal. A correction trail, group proportions and cross-collection comparison are not
+part of this slice.
 
 ### 6. Vegetative propagation / cuttings (talee)
 

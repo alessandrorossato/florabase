@@ -117,7 +117,7 @@ def test_update_corrects_the_same_identity_and_rejects_a_duplicate() -> None:
 def test_delete_allows_unused_identity_and_rejects_collection_references() -> None:
     identity = BotanicalIdentity(id=uuid7(), scientific_name="Acer palmatum")
     database = MagicMock()
-    database.scalar.side_effect = [identity.id, 0, None, 0, 0, 0, 0, 0, 0, 0]
+    database.scalar.side_effect = [identity.id, 0, None, 0, 0, 0, 0, 0, 0, 0, None]
     delete_botanical_identity(database, identity)
     database.delete.assert_called_once_with(identity)
 
@@ -147,7 +147,7 @@ def test_directory_uses_one_aggregate_query_and_maps_cover_and_collection_counts
     identity = BotanicalIdentity(id=uuid7(), scientific_name="Acer palmatum")
     database = MagicMock()
     database.execute.return_value.all.return_value = [
-        (identity, "external", "https://example.test/maple.jpg", 2, 3, 4, 5)
+        (identity, "external", "https://example.test/maple.jpg", 2, 3, 4, 5, 6, 7)
     ]
 
     result = list_botanical_identity_directory(database)
@@ -157,7 +157,14 @@ def test_directory_uses_one_aggregate_query_and_maps_cover_and_collection_counts
             identity,
             "external",
             "https://example.test/maple.jpg",
-            IdentityCollectionCounts(seed_lots=2, sowings=3, plants=4, plant_groups=5),
+            IdentityCollectionCounts(
+                seed_lots=2,
+                sowings=3,
+                plants=4,
+                plant_groups=5,
+                vegetative_lots=6,
+                propagation_attempts=7,
+            ),
         )
     ]
     database.execute.assert_called_once()
@@ -852,10 +859,12 @@ def test_correct_accepted_name_and_merge_duplicate_identity_complete_flows() -> 
         [lot_id],  # seed_lot_ids
         [plant_id],  # plant_ids
         [group_id],  # plant_group_ids
+        [],  # vegetative_lot_ids
         [act_id],  # scheduled_activity_ids
         [],  # surv_ext_providers
         [ext_link],  # duplicate external links
         [dup_former],  # dup_former_names
+        [],  # surv_existing_names
     ]
 
     with patch(
@@ -1174,3 +1183,339 @@ def test_reconciliation_edge_cases_and_stale_guards() -> None:
     assert get_botanical_identity(s_db, identity.id) is identity
     s_db.scalars.return_value = [identity]
     assert list_botanical_identities(s_db) == [identity]
+
+
+def test_operator_synonym_crud_and_validation() -> None:
+    from florabase.botanical_identities.model import BotanicalIdentityName
+    from florabase.botanical_identities.schemas import (
+        OperatorSynonymCreate,
+        OperatorSynonymUpdate,
+    )
+    from florabase.botanical_identities.service import (
+        BotanicalIdentityConflictError,
+        BotanicalIdentityMergedError,
+        BotanicalIdentityNotFoundError,
+        ImmutableHistoricalNameError,
+        SynonymNotFoundError,
+        SynonymValidationError,
+        add_operator_synonym,
+        list_identity_synonyms,
+        remove_operator_synonym,
+        update_operator_synonym,
+    )
+
+    now = datetime.now(UTC)
+    identity = BotanicalIdentity(
+        id=uuid7(),
+        scientific_name="Trichocereus bridgesii",
+        cultivar_name=None,
+        common_name="Bolivian torch",
+        created_at=now,
+        updated_at=now,
+    )
+    merged_identity = BotanicalIdentity(
+        id=uuid7(),
+        scientific_name="Cereus bridgesii",
+        merged_into_id=identity.id,
+        merged_at=now,
+        created_at=now,
+        updated_at=now,
+    )
+    other_identity = BotanicalIdentity(
+        id=uuid7(),
+        scientific_name="Echinopsis pachanoi",
+        created_at=now,
+        updated_at=now,
+    )
+
+    # 1. list_identity_synonyms
+    db = MagicMock()
+    db.get.return_value = None
+    with pytest.raises(BotanicalIdentityNotFoundError):
+        list_identity_synonyms(db, uuid7())
+
+    synonym_entry = BotanicalIdentityName(
+        id=uuid7(),
+        botanical_identity_id=identity.id,
+        scientific_name="Echinopsis lageniformis",
+        status_kind="operator_synonym",
+        source_provider="operator",
+        effective_from=now,
+        superseded_at=now,
+        created_at=now,
+    )
+    db.get.return_value = identity
+    db.scalars.return_value = [synonym_entry]
+    assert list_identity_synonyms(db, identity.id) == [synonym_entry]
+    assert list_identity_synonyms(db, identity.id, status_kind="operator_synonym") == [
+        synonym_entry
+    ]
+
+    # 2. add_operator_synonym validations
+    db.get.return_value = None
+    with pytest.raises(BotanicalIdentityNotFoundError):
+        add_operator_synonym(
+            db,
+            identity.id,
+            OperatorSynonymCreate(scientific_name="Echinopsis lageniformis"),
+        )
+
+    db.get.return_value = merged_identity
+    with pytest.raises(BotanicalIdentityMergedError):
+        add_operator_synonym(
+            db,
+            merged_identity.id,
+            OperatorSynonymCreate(scientific_name="Echinopsis lageniformis"),
+        )
+
+    db.get.return_value = identity
+    # Rejects proposed synonym identical to current accepted name
+    with pytest.raises(SynonymValidationError) as eq_err:
+        add_operator_synonym(
+            db,
+            identity.id,
+            OperatorSynonymCreate(scientific_name="Trichocereus bridgesii"),
+        )
+    assert eq_err.value.code == "synonym_equals_accepted_name"
+
+    # Rejects proposed synonym already recorded on identity
+    db.scalar.return_value = synonym_entry
+    with pytest.raises(SynonymValidationError) as dup_err:
+        add_operator_synonym(
+            db,
+            identity.id,
+            OperatorSynonymCreate(scientific_name="Echinopsis lageniformis"),
+        )
+    assert dup_err.value.code == "duplicate_identity_name"
+
+    # Rejects proposed synonym colliding with another active identity in collection
+    db.scalar.return_value = None
+    with (
+        patch(
+            "florabase.botanical_identities.service.find_duplicate",
+            return_value=other_identity,
+        ),
+        pytest.raises(BotanicalIdentityConflictError),
+    ):
+        add_operator_synonym(
+            db,
+            identity.id,
+            OperatorSynonymCreate(scientific_name="Echinopsis pachanoi"),
+        )
+
+    # Successful creation
+    with patch(
+        "florabase.botanical_identities.service.find_duplicate",
+        return_value=None,
+    ):
+        created = add_operator_synonym(
+            db,
+            identity.id,
+            OperatorSynonymCreate(
+                scientific_name="  Echinopsis lageniformis ",
+                cultivar_name=" \u2018Monstrose\u2019 ",
+                common_name=" Penis cactus ",
+                authorship=" (M.Frohlich) Friedrich & G.D.Rowley ",
+                source_citation=" Cact. Succ. J. (GB) 1974 ",
+            ),
+        )
+    assert created.scientific_name == "Echinopsis lageniformis"
+    assert created.cultivar_name == "Monstrose"
+    assert created.common_name == "Penis cactus"
+    assert created.authorship == "(M.Frohlich) Friedrich & G.D.Rowley"
+    assert created.source_version == "Cact. Succ. J. (GB) 1974"
+    assert created.status_kind == "operator_synonym"
+    assert created.source_provider == "operator"
+    assert identity.updated_at > now
+    db.add.assert_called_with(created)
+    db.flush.assert_called()
+
+    # 3. update_operator_synonym validations
+    db.get.side_effect = lambda model, key, **kwargs: (
+        None if model is BotanicalIdentity else synonym_entry
+    )
+    with pytest.raises(BotanicalIdentityNotFoundError):
+        update_operator_synonym(
+            db,
+            identity.id,
+            synonym_entry.id,
+            OperatorSynonymUpdate(scientific_name="Echinopsis lageniformis"),
+        )
+
+    db.get.side_effect = lambda model, key, **kwargs: (
+        merged_identity if model is BotanicalIdentity else synonym_entry
+    )
+    with pytest.raises(BotanicalIdentityMergedError):
+        update_operator_synonym(
+            db,
+            merged_identity.id,
+            synonym_entry.id,
+            OperatorSynonymUpdate(scientific_name="Echinopsis lageniformis"),
+        )
+
+    db.get.side_effect = lambda model, key, **kwargs: (
+        identity if model is BotanicalIdentity else None
+    )
+    with pytest.raises(SynonymNotFoundError):
+        update_operator_synonym(
+            db,
+            identity.id,
+            uuid7(),
+            OperatorSynonymUpdate(scientific_name="Echinopsis lageniformis"),
+        )
+
+    # Immutable historical names cannot be updated
+    immutable_entry = BotanicalIdentityName(
+        id=uuid7(),
+        botanical_identity_id=identity.id,
+        scientific_name="Initial Name",
+        status_kind="initial_recorded",
+        source_provider="operator",
+        effective_from=now,
+        superseded_at=now,
+        created_at=now,
+    )
+    db.get.side_effect = lambda model, key, **kwargs: (
+        identity if model is BotanicalIdentity else immutable_entry
+    )
+    with pytest.raises(ImmutableHistoricalNameError):
+        update_operator_synonym(
+            db,
+            identity.id,
+            immutable_entry.id,
+            OperatorSynonymUpdate(scientific_name="New Name"),
+        )
+
+    db.get.side_effect = lambda model, key, **kwargs: (
+        identity if model is BotanicalIdentity else synonym_entry
+    )
+    with pytest.raises(SynonymValidationError) as u_eq_err:
+        update_operator_synonym(
+            db,
+            identity.id,
+            synonym_entry.id,
+            OperatorSynonymUpdate(scientific_name="Trichocereus bridgesii"),
+        )
+    assert u_eq_err.value.code == "synonym_equals_accepted_name"
+
+    other_synonym = BotanicalIdentityName(
+        id=uuid7(),
+        botanical_identity_id=identity.id,
+        scientific_name="Cereus bridgesii",
+        status_kind="operator_synonym",
+        source_provider="operator",
+        effective_from=now,
+        superseded_at=now,
+        created_at=now,
+    )
+    db.scalar.return_value = other_synonym
+    with pytest.raises(SynonymValidationError) as u_dup_err:
+        update_operator_synonym(
+            db,
+            identity.id,
+            synonym_entry.id,
+            OperatorSynonymUpdate(scientific_name="Cereus bridgesii"),
+        )
+    assert u_dup_err.value.code == "duplicate_identity_name"
+
+    db.scalar.return_value = None
+    with (
+        patch(
+            "florabase.botanical_identities.service.find_duplicate",
+            return_value=other_identity,
+        ),
+        pytest.raises(BotanicalIdentityConflictError),
+    ):
+        update_operator_synonym(
+            db,
+            identity.id,
+            synonym_entry.id,
+            OperatorSynonymUpdate(scientific_name="Echinopsis pachanoi"),
+        )
+
+    # Successful update
+    with patch(
+        "florabase.botanical_identities.service.find_duplicate",
+        return_value=None,
+    ):
+        updated = update_operator_synonym(
+            db,
+            identity.id,
+            synonym_entry.id,
+            OperatorSynonymUpdate(
+                scientific_name="Echinopsis lageniformis",
+                cultivar_name="Inermis",
+                common_name="Smooth bolivian torch",
+                authorship="(M.Frohlich) Friedrich",
+                source_citation="RHS 2026",
+            ),
+        )
+    assert updated.cultivar_name == "Inermis"
+    assert updated.common_name == "Smooth bolivian torch"
+    assert updated.source_version == "RHS 2026"
+
+    # 4. remove_operator_synonym validations
+    db.get.side_effect = lambda model, key, **kwargs: None
+    with pytest.raises(BotanicalIdentityNotFoundError):
+        remove_operator_synonym(db, identity.id, synonym_entry.id)
+
+    db.get.side_effect = lambda model, key, **kwargs: (
+        merged_identity if model is BotanicalIdentity else synonym_entry
+    )
+    with pytest.raises(BotanicalIdentityMergedError):
+        remove_operator_synonym(db, merged_identity.id, synonym_entry.id)
+
+    db.get.side_effect = lambda model, key, **kwargs: (
+        identity if model is BotanicalIdentity else None
+    )
+    with pytest.raises(SynonymNotFoundError):
+        remove_operator_synonym(db, identity.id, uuid7())
+
+    # Cannot delete immutable historical names
+    db.get.side_effect = lambda model, key, **kwargs: (
+        identity if model is BotanicalIdentity else immutable_entry
+    )
+    with pytest.raises(ImmutableHistoricalNameError):
+        remove_operator_synonym(db, identity.id, immutable_entry.id)
+
+    # Successful removal
+    db.get.side_effect = lambda model, key, **kwargs: (
+        identity if model is BotanicalIdentity else synonym_entry
+    )
+    remove_operator_synonym(db, identity.id, synonym_entry.id)
+    db.delete.assert_called_with(synonym_entry)
+    db.flush.assert_called()
+
+
+def test_operator_synonym_flush_integrity_error_raises_validation_error() -> None:
+    from sqlalchemy.exc import IntegrityError
+
+    from florabase.botanical_identities.model import BotanicalIdentity
+    from florabase.botanical_identities.schemas import OperatorSynonymCreate
+    from florabase.botanical_identities.service import (
+        SynonymValidationError,
+        add_operator_synonym,
+    )
+
+    now = datetime.now(UTC)
+    identity = BotanicalIdentity(
+        id=uuid7(),
+        scientific_name="Trichocereus bridgesii",
+        cultivar_name=None,
+        created_at=now,
+        updated_at=now,
+    )
+    db = MagicMock()
+    db.get.return_value = identity
+    db.scalar.return_value = None
+    db.flush.side_effect = IntegrityError("stmt", "params", Exception("dup"))
+    with (
+        patch("florabase.botanical_identities.service.find_duplicate", return_value=None),
+        pytest.raises(SynonymValidationError) as err,
+    ):
+        add_operator_synonym(
+            db,
+            identity.id,
+            OperatorSynonymCreate(scientific_name="Echinopsis lageniformis"),
+        )
+    assert err.value.code == "duplicate_identity_name"

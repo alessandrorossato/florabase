@@ -128,7 +128,7 @@ def test_order_errors_and_safe_delete() -> None:
     database.scalar.side_effect = [order, uuid7()]
     with pytest.raises(OrderError, match="linked SeedLots"):
         delete_order(database, order.id)
-    database.scalar.side_effect = [order, None]
+    database.scalar.side_effect = [order, None, None]
     delete_order(database, order.id)
     database.delete.assert_called_once_with(order)
 
@@ -223,7 +223,7 @@ def test_create_and_supplier_change_domain_rules() -> None:
     with pytest.raises(OrderError, match="conflicts with a linked SeedLot"):
         update_order(database, created.id, OrderUpdate(supplier_id=supplier.id))
     supplier.retired_at = datetime.now(UTC)
-    database.scalar.side_effect = [created, None]
+    database.scalar.side_effect = [created, None, None]
     update_order(database, created.id, OrderUpdate(notes=" Historical link retained "))
     assert created.notes == "Historical link retained"
     assert created.supplier_id == supplier.id

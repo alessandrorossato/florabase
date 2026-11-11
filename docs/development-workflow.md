@@ -84,12 +84,14 @@ A takeover also accepts a drifted handoff after inspection. Give each live sessi
 (`codex`, `codex-2`): reclaiming under the same name succeeds with a warning, because the helper has
 no way to tell two sessions apart. Keep `REPORT` outside the worktree, where it cannot change the tree.
 `feature-verify`, Review/Sourcing up/seed/remove and their mutating Compose passthrough refuse a pending handoff and any other or missing
-`AGENT_ID` once a worktree is claimed. A never-claimed worktree behaves as before. `feature-deliver` and
-`feature-finish` refuse any `AGENT_ID` except `operator` and a pending handoff. **`AGENT_ID` and the local Git metadata enforce a cooperative protocol, not
+`AGENT_ID` once a worktree is claimed. A never-claimed worktree behaves as before. `feature-deliver`,
+`feature-finish`, `mark-finished` and `feature-retire` refuse any `AGENT_ID` except `operator`, a
+pending handoff and an active verification gate (omitting `AGENT_ID` behaves like
+`AGENT_ID=operator`, and `feature-retire` also requires explicit `CONFIRM_RETIRE=<id>`). **`AGENT_ID` and the local Git metadata enforce a cooperative protocol, not
 authenticated security:** identity is declared, the state files are writable by any local process
 and raw file edits are not intercepted. The claim coordinates cooperating agents and gates their
-shared steps; it is not a sandbox. The terminal requirement for takeover and the identity check at
-delivery stop a cooperating agent acting by mistake, not a determined one. Read-only reviewers use
+shared steps; it is not a sandbox. The terminal requirement for takeover and the identity checks at
+delivery, finish and retirement stop a cooperating agent acting by mistake, not a determined one. Read-only reviewers use
 `git worktree add --detach <path> <sha>` or a clean clone, in any number, and never hold a claim.
 
 **Compose passthrough** (`workflow_environment.py <role> compose`, `make sourcing-preview-compose`)
@@ -127,6 +129,7 @@ production `exec` and `run` stay available because backup and restore depend on 
 | UAT instances | One per worktree, at most four; ports 15180-15183 | Volume-label allocation, per-instance locks, FULL capacity lock for up/seed/reset |
 | CPU, shared BuildKit, Docker address pools | Exhausted by concurrent FULL | Machine FULL lock |
 | Same worktree's gate and receipt | One at a time | Per-worktree verification lock |
+| Same worktree's retirement | One at a time | Per-target retirement lock in Git common metadata plus target verification lock |
 
 Owner labels exist only after creation, so two sources starting Review together could both pass that
 check; the lock closes the window. FULL runs share no fixed name or port, so its lock protects capacity
@@ -142,10 +145,15 @@ Remote CI and direct `make ci` take no lock. Parallel Review ports are deliberat
 make feature-retire FEATURE=example-001 CONFIRM_RETIRE=example-001
 ```
 
-It removes one worktree directly under the managed root that `make feature-worktree` created, and only
-with finish's proof at the same HEAD, a merge on cached `origin/main`, a deleted branch, clean status, no running gate and no Docker
-containers or volumes labelled with that source (Docker unavailable refuses). Ignored files other than
-regenerable caches, such as `.env` or backups, refuse for a decision, and so does any directory it
+It is an operator-only step: any declared agent `AGENT_ID` (anything other than unset, empty, or
+`operator`) or invalid `AGENT_ID` is refused before any target worktree lookup, lock, Docker query or
+filesystem change. It removes one worktree directly under the managed root that
+`make feature-worktree` created, and only with valid linked-worktree metadata, no pending handoff
+or writer state, no active verification gate (the target verification lock is held from preflight
+through `git worktree remove`), finish's proof at the same HEAD, a merge on cached `origin/main`,
+a deleted branch, clean status and no Docker containers or volumes labelled with that source
+(Docker unavailable refuses). Missing, prunable, locked, cross-wired or symlinked worktree
+metadata refuse before removal. Ignored files other than regenerable caches, such as `.env` or backups, refuse for a decision, and so does any directory it
 could not delete. The removal preflight permits a readable empty directory without child write
 permission when its parent permits removal (including sticky-directory ownership checks). Nonempty
 directories still require write/search permission; sticky-parent ownership is checked for files and
@@ -155,8 +163,15 @@ Missing/changing Docker evidence and unsupported custom volume backing refuse be
 Symlinks and any host-visible mounted path within the candidate are refused. Linux
 `/proc/self/mountinfo` is required to detect same-device bind mounts; missing or unreadable
 traversal/mount evidence fails closed before Git removal. No ownership/permission changes
-or recursive deletion fallback are performed. Operators must stop external source/mount writers;
-preflight is not atomic against concurrent external changes. It uses `git worktree remove` without force, so worktrees from agent tools, clones,
+or recursive deletion fallback are performed. A non-blocking per-target `flock` in shared Git
+common metadata serializes concurrent `feature-retire` invocations for the same worktree while
+allowing independent worktrees to retire in parallel. Remaining cooperative concurrency limits:
+`AGENT_ID` is cooperative convention rather than authenticated security (omitted `AGENT_ID` is
+treated as operator and direct `git`/`docker`/shell commands bypass the CLI); advisory `flock`s
+coordinate local helper invocations on the same host and release on exit or SIGKILL, but preflight
+checks and `git worktree remove` remain non-atomic against external non-locking writers, mount
+changes or newly started containers, so operators must stop external source and Docker writers
+before retirement. It uses `git worktree remove` without force, so worktrees from agent tools, clones,
 branches and all volumes are out of its reach.
 A branch-less worktree with no proof, or an abandoned feature, stays for the operator to decide.
 
@@ -515,6 +530,8 @@ runtime guards also verify `florabase_review`, loopback development authenticati
 media root. It refuses every other project, foreign ownership, shared resources and ambiguous state.
 One enabled Review owner must already exist; its login, password, sessions and settings are retained.
 Collection records use the application's existing single-owner collection model and domain services.
+Review-only additive `lineage_explorer_extension=1` adds 47 [LINEAGE-003 ancestry](lineage-explorer.md)
+records (branching, conversions, unknown origins, reversals and a paged flat) through owning services.
 
 `make feature-review-extended-seed` adds the separately versioned
 [Extended Botanical Review Dataset v5](review/extended-botanical-dataset-v5.md) to a ready v4 Review.
@@ -700,11 +717,32 @@ summary (passed, failed, interrupted or not run, with elapsed time) at the end o
 keeps the latest run's timings in `<git-dir>/info/florabase-verification-last-run.json`, which is
 diagnostics only and never evidence. Because source-state checks run first, the closing
 frozen-state comparison covers the working tree, the index and HEAD. See
-[VERIFICATION-FAST-001](verification-fast-001-handoff.md); its stage-evidence reuse proposal is not
-implemented.
+[VERIFICATION-FAST-001](verification-fast-001-handoff.md).
+
+Stage evidence is opt-in and local
+([VERIFICATION-EVIDENCE-001](verification-evidence-001-handoff.md)).
+
+- `make feature-verify REUSE=1` may skip **only** Quality and integration. It skips them when a
+  record in this worktree's Git metadata proves that their complete input closure is unchanged.
+  The closure covers rendered Compose models, every bind source and build context (including
+  untracked and ignored files), scripts and top-level files, environment, tools and exact image
+  identity.
+- `REUSE=dry-run` runs everything and reports what would be reused.
+- `FRESH=1` ignores records and takes precedence over the reuse controls.
+- `make verification-evidence` previews the decision without running stages.
+- Every other stage, including the real migration cycle, always runs.
+- Unknown, corrupt or stale evidence runs the stage fresh, and the log states why. Local records
+  expire 24 hours after completion in UTC. Missing, malformed, timezone-naive, future-dated or
+  out-of-order timestamps refuse reuse.
+- BuildKit and dependency caches are never evidence.
+- Receipts are version 3 and name every reused stage. Version 2 receipts remain valid.
+- Delivery always refuses a receipt containing reused stages. For consolidated integration,
+  commit and freeze the tree, then run `env -u REUSE FRESH=1 make verify-full AGENT_ID=<writer>`.
+  Require a version 3 FULL receipt with an empty reused-stage list and validate it against HEAD
+  using `feature-tree-fingerprint.py verify`.
 
 Freeze source before the final gate. It invalidates old evidence at startup and rejects source edits
-while stages run. Version 2 receipts cover file content, modes and symlinks, exact base/branch, mode,
+while stages run. Receipts cover file content, modes and symlinks, exact base/branch, mode,
 impact-map version/digest, changed/affected scopes, escalation reasons, selected suites, completed
 commands, static checks, migration/build decisions and results, and a UTC completion timestamp.
 Migration evidence distinguishes the decision, cycle requirement, actual execution and result. Required

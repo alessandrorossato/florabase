@@ -28,6 +28,8 @@ export const subjectLabels: Record<SubjectKind, string> = {
   plant: "Plant",
   plant_group: "Plant group",
   sowing: "Sowing",
+  vegetative_lot: "Vegetative lot",
+  propagation_attempt: "Rooting attempt",
   harvest: "Harvest",
   harvest_inventory: "Stored material",
   seed_lot: "Seed lot",

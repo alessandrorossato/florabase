@@ -885,7 +885,7 @@
         "SOWING-003"
       ],
       "priority": "P2",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "ORDER-001",
@@ -962,16 +962,19 @@
         "Rooting or establishment into Plants or PlantGroups preserves known parent-Plant lineage without using Sowing",
         "Known or unknown starting quantity remains separate from rooted/surviving quantity; unknown, successful, failed and partial outcomes preserve uncertainty and failed propagation evidence",
         "Journal observations, History facts and concrete Schedule follow-ups integrate with material lineage without duplicate event systems",
+        "The ancestry explorer traverses clonal edges in both directions alongside existing genealogy",
         "The implementation follows concrete cutting workflows rather than speculative inheritance"
       ],
       "dependencies": [
         "PLANT-003",
         "SUPPLIER-001",
         "LOCATION-001",
-        "LINEAGE-002"
+        "LINEAGE-002",
+        "LINEAGE-003",
+        "TAXONOMY-001"
       ],
       "priority": "P2",
-      "status": "planned"
+      "status": "in_progress"
     },
     {
       "id": "LABEL-001",
@@ -1513,7 +1516,7 @@
         "PLANT-004"
       ],
       "priority": "P2",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "ENRICHMENT-001",
@@ -1595,7 +1598,7 @@
         "TAXONOMY-001"
       ],
       "priority": "P3",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "WEATHER-001",
@@ -2406,7 +2409,7 @@
         "AGENT-WORKFLOW-001"
       ],
       "priority": "P1",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "TEST-DATA-002",
@@ -2595,6 +2598,43 @@
       "dependencies": [
         "EVENT-002",
         "HISTORY-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "PHENOLOGY-001",
+      "category": "event",
+      "description": "Record and compare structured phenological observations year by year as typed Journal Events",
+      "acceptance_criteria": [
+        "A documented decision compares Event fields, new Event kinds and a separate model; phenology reuses Event, Journal and History without a competing event system",
+        "A controlled phenophase vocabulary (bud break, flowering onset/ongoing/end, fruit set/ripening/ready, leaf colour change, leaf loss, dormancy entry/exit) is enforced per observation, flowering and fruiting kind by API validation and a database constraint; an approximate-date flag requires a date",
+        "Observations keep PartialDate precision or an unknown date, may repeat within a season, never change current Plant or PlantGroup state, and survive correction, inactive lifecycles and botanical name correction; existing stage-less flowering and fruiting Events remain valid",
+        "Plant and PlantGroup Journals offer a stage-first recording workflow and a responsive, keyboard-accessible year-by-year comparison that labels missing stages as no observation recorded and never invents month or day precision",
+        "Focused unit, PostgreSQL integration, migration and frontend tests cover every stage, repeated and multiple flowering, incomplete dates, PlantGroups, correction, deletion, authorization, inactive Plants, identity correction and measurement coexistence"
+      ],
+      "dependencies": [
+        "EVENT-002",
+        "HISTORY-001",
+        "MEASUREMENT-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "VERIFICATION-EVIDENCE-001",
+      "category": "infrastructure",
+      "description": "Opt-in reusable local evidence for the Quality and PostgreSQL integration gate stages, proven by a derived input closure and never accepted as delivery proof",
+      "acceptance_criteria": [
+        "Records live in the owning worktree's Git metadata, name the exact stage and argv, are written atomically and durably only after a successful stage whose inputs did not change while it ran, and carry a body digest and verifiable input manifest",
+        "The input closure is derived from rendered Compose models, observed container mounts, build contexts and exact image identity, plus scripts, top-level files, environment, env files and tool versions; unknown or unprovable inputs refuse reuse",
+        "Feature graph, whitespace, workflow suites, workflow-check, production builds and the real migration cycle always execute; remote CI never reads or writes evidence and its required checks are unchanged",
+        "Reuse is disabled by default; REUSE=1, REUSE=dry-run and FRESH=1 behave as documented and report reuse or the exact invalidation reason, including the 24-hour UTC expiration",
+        "Receipt version 3 names every reused stage, version 2 receipts remain valid, and delivery always refuses reused stages",
+        "Regressions cover every input class, corrupt and foreign records, failed, interrupted and self-mutating stages, concurrency, distinct worktrees, controls, receipt compatibility and the docs-only post-gate edit"
+      ],
+      "dependencies": [
+        "VERIFICATION-FAST-001"
       ],
       "priority": "P2",
       "status": "implemented"

@@ -6,10 +6,29 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from florabase.collection_photos.schemas import normalize_text, validate_https_url
 
-MediaTarget = Literal["seed_lot", "sowing", "plant", "plant_group", "event", "harvest", "supplier"]
+MediaTarget = Literal[
+    "seed_lot",
+    "sowing",
+    "plant",
+    "plant_group",
+    "event",
+    "harvest",
+    "supplier",
+    "vegetative_lot",
+    "propagation_attempt",
+]
 
 MediaTargetFilter = Literal[
-    "collection", "seed_lot", "sowing", "plant", "plant_group", "event", "harvest", "supplier"
+    "collection",
+    "seed_lot",
+    "sowing",
+    "plant",
+    "plant_group",
+    "event",
+    "harvest",
+    "supplier",
+    "vegetative_lot",
+    "propagation_attempt",
 ]
 
 

@@ -7,7 +7,13 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from florabase.collection_photos.schemas import PrimaryPhotoResponse
-from florabase.events.model import EventKind, LengthUnit, MeasurementQuantity
+from florabase.events.model import (
+    PHENOPHASE_KINDS,
+    EventKind,
+    LengthUnit,
+    MeasurementQuantity,
+    Phenophase,
+)
 from florabase.plants.model import PlantGroupLifecycle, PlantLifecycle
 from florabase.plants.schemas import (
     BotanicalIdentitySummary,
@@ -69,6 +75,16 @@ class Measurement(BaseModel):
         return self
 
 
+class Phenology(BaseModel):
+    """A controlled phenological stage; see docs/phenology.md."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    phase: Phenophase
+    # The occurrence date is an estimate (recalled or approximate), not observed on that date.
+    date_is_approximate: bool = False
+
+
 class EventWrite(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -79,6 +95,7 @@ class EventWrite(BaseModel):
     recipient: str | None = Field(default=None, max_length=255)
     resulting_plant_id: UUID | None = None
     measurement: Measurement | None = None
+    phenology: Phenology | None = None
 
     @field_validator("notes", mode="before")
     @classmethod
@@ -114,6 +131,14 @@ class EventWrite(BaseModel):
                 raise ValueError("Measurement requires an occurrence date")
         elif self.measurement is not None:
             raise ValueError("Only measurement may have a measured value")
+        if self.phenology is not None:
+            if self.phenology.phase not in PHENOPHASE_KINDS.get(self.kind.value, ()):
+                raise ValueError(
+                    "This phenological stage requires its matching Event kind "
+                    "(observation, flowering or fruiting)"
+                )
+            if self.phenology.date_is_approximate and self.occurred_on is None:
+                raise ValueError("Only a recorded date can be marked approximate")
         return self
 
 
@@ -198,6 +223,7 @@ class EventResponse(BaseModel):
     resulting_plant: ResultingPlantSummary | None
     measurement: Measurement | None = None
     measurement_corrections: list[MeasurementCorrectionResponse] = []
+    phenology: Phenology | None = None
     harvest_id: UUID | None = None
     harvest_title: str | None = None
     harvest_primary_photo: PrimaryPhotoResponse | None = None

@@ -464,6 +464,10 @@ export function ProvenanceSiteManager({
                         label: "Plant groups",
                         value: selected.usage.plant_groups,
                       },
+                      {
+                        label: "Vegetative lots",
+                        value: selected.usage.vegetative_lots,
+                      },
                     ]}
                   />
                   {initialSiteId && (

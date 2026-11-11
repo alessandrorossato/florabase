@@ -8,6 +8,7 @@ import { ScheduleTargetPicker } from "../schedule/ScheduleTargetPicker";
 const recordWorkflows = [
   { label: "Record harvest", href: "#/harvests?action=create" },
   { label: "Record sowing", href: "#/sowings?action=create" },
+  { label: "Take or add cuttings", href: "#/cuttings/new" },
   { label: "Move plants / groups", href: "#/plants" },
   { label: "Complete scheduled work", href: "#/schedule" },
 ] as const;

@@ -3,8 +3,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from florabase.plants.model import PlantGroupLifecycle, PlantLifecycle
-from florabase.seed_lots.model import SeedLotLifecycle
+from florabase.cuttings.model import AttemptLifecycle, LotLifecycle, SourceKind
+from florabase.plants.model import DirectOriginKind, PlantGroupLifecycle, PlantLifecycle
+from florabase.seed_lots.model import SeedLotLifecycle, SeedLotSourceKind
+from florabase.seed_lots.schemas import PartialDate
 from florabase.sowings.model import SowingLifecycle
 
 
@@ -44,8 +46,28 @@ class PlantGroupLineageNode(BaseModel):
     botanical_identity: BotanicalIdentitySummary
 
 
+class VegetativeLotLineageNode(BaseModel):
+    kind: Literal["vegetative_lot"] = "vegetative_lot"
+    id: UUID
+    label: str | None
+    lifecycle: LotLifecycle
+    botanical_identity: BotanicalIdentitySummary
+
+
+class PropagationAttemptLineageNode(BaseModel):
+    kind: Literal["propagation_attempt"] = "propagation_attempt"
+    id: UUID
+    label: str | None
+    lifecycle: AttemptLifecycle
+
+
 LineageNode = Annotated[
-    SeedLotLineageNode | SowingLineageNode | PlantLineageNode | PlantGroupLineageNode,
+    SeedLotLineageNode
+    | SowingLineageNode
+    | PlantLineageNode
+    | PlantGroupLineageNode
+    | VegetativeLotLineageNode
+    | PropagationAttemptLineageNode,
     Field(discriminator="kind"),
 ]
 
@@ -53,3 +75,35 @@ LineageNode = Annotated[
 class LineageResponse(BaseModel):
     subject: LineageNode
     ancestors: list[LineageNode]
+
+
+class HarvestConversionEvidence(BaseModel):
+    """The explicit HARVEST-003 conversion that recorded a SeedLot's producer."""
+
+    conversion_id: UUID
+    status: Literal["applied", "reversed"]
+    harvest_id: UUID
+    harvest_label: str | None
+    harvested_on: PartialDate | None
+
+
+class AncestryNode(BaseModel):
+    record: LineageNode
+    # The record's own recorded origin kind; absent for Sowings and records with a recorded source.
+    origin: SeedLotSourceKind | DirectOriginKind | SourceKind | None
+    harvest_conversion: HarvestConversionEvidence | None
+    descendant_count: int
+
+
+class AncestryChildren(BaseModel):
+    total: int
+    offset: int
+    limit: int
+    items: list[AncestryNode]
+
+
+class AncestryResponse(BaseModel):
+    focus: AncestryNode
+    # Nearest first, exactly as the recorded upstream walk.
+    ancestors: list[AncestryNode]
+    children: AncestryChildren

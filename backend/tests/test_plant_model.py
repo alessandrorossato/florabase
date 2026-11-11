@@ -19,6 +19,7 @@ def test_plant_and_group_are_distinct_focused_mappings() -> None:
     common = [
         "id",
         "botanical_identity_id",
+        "originating_propagation_attempt_id",
         "originating_sowing_id",
     ]
     plant_origin = ["originating_plant_group_id"]

@@ -122,9 +122,19 @@ def test_provenance_site_service_crud_usage_and_safe_delete(
     assert updated.notes == "Known point"
 
     used_id = created.id
-    database.execute.side_effect = [[(used_id, 2)], [(used_id, 3)], [(used_id, 4)]]
+    database.execute.return_value.tuples.return_value = [
+        (used_id, "seed_lots", 2),
+        (used_id, "plants", 3),
+        (used_id, "plant_groups", 4),
+        (used_id, "vegetative_lots", 5),
+    ]
     usage = site_service.site_usage(database)[used_id]
-    assert (usage.seed_lots, usage.plants, usage.plant_groups) == (2, 3, 4)
+    assert (usage.seed_lots, usage.plants, usage.plant_groups, usage.vegetative_lots) == (
+        2,
+        3,
+        4,
+        5,
+    )
 
     monkeypatch.setattr(
         site_service,
@@ -282,6 +292,7 @@ def test_collection_provenance_map_bulk_projection_and_ordering(
         rows([(seed_lot, identity)]),
         rows([(plant, identity)]),
         rows([(group, identity)]),
+        rows([]),
     ]
     monkeypatch.setattr(site_service, "list_geographic_places", lambda _: [world, thailand])
 
@@ -295,6 +306,7 @@ def test_collection_provenance_map_bulk_projection_and_ordering(
         "seed_lots": 1,
         "plants": 1,
         "plant_groups": 1,
+        "vegetative_lots": 0,
         "total": 3,
     }
     assert [record.record_type for record in projected.records] == [
@@ -306,7 +318,7 @@ def test_collection_provenance_map_bulk_projection_and_ordering(
     assert projected.records[0].botanical_identity.display_label == (
         "Clitoria ternatea \u2018Map blue\u2019"
     )
-    assert database.execute.call_count == 3
+    assert database.execute.call_count == 4
 
 
 def test_collection_provenance_map_empty_projection_and_api(

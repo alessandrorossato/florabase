@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.selectable import Subquery
 
 from florabase.botanical_identities.model import BotanicalIdentity
+from florabase.cuttings.model import PropagationAttempt, VegetativeLot
 from florabase.explore.schemas import (
     CollectionIdentity,
     CollectionRecordCategory,
@@ -38,6 +39,20 @@ def collection_records() -> Subquery:
                 (PlantGroup, True, "plant_group"),
             )
         ],
+        select(
+            VegetativeLot.botanical_identity_id,
+            literal("vegetative_lot"),
+            case((VegetativeLot.lifecycle == "active", 1), else_=0),
+            literal(0),
+        ).where(VegetativeLot.lifecycle != "reversed"),
+        select(
+            VegetativeLot.botanical_identity_id,
+            literal("propagation_attempt"),
+            case((PropagationAttempt.lifecycle == "active", 1), else_=0),
+            literal(0),
+        )
+        .join(VegetativeLot, VegetativeLot.id == PropagationAttempt.vegetative_lot_id)
+        .where(PropagationAttempt.lifecycle != "reversed"),
         select(
             SeedLot.botanical_identity_id,
             literal("sowing"),

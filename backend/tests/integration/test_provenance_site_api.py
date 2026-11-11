@@ -60,7 +60,7 @@ def test_provenance_site_crud_coordinates_and_place_usage(
     assert status == 201
     assert site["geographic_place_path"].endswith("Thailand")
     assert site["latitude"] == "18.804900"
-    assert site["usage"] == {"seed_lots": 0, "plants": 0, "plant_groups": 0}
+    assert site["usage"] == {"seed_lots": 0, "plants": 0, "plant_groups": 0, "vegetative_lots": 0}
 
     status, _, updated = mutate(
         authenticated_browser,
@@ -270,7 +270,13 @@ def test_collection_provenance_map_dataset_and_direct_origin_semantics(
     assert mapped["longitude"] == "-98.921600"
     assert mapped["coordinate_accuracy_m"] == "25.500"
     assert mapped["geographic_place_path"].endswith("Thailand")
-    assert mapped["usage"] == {"seed_lots": 1, "plants": 1, "plant_groups": 1, "total": 3}
+    assert mapped["usage"] == {
+        "seed_lots": 1,
+        "plants": 1,
+        "plant_groups": 1,
+        "vegetative_lots": 0,
+        "total": 3,
+    }
     assert [(record["record_type"], record["id"]) for record in mapped["records"]] == [
         ("seed_lot", lot["id"]),
         ("plant", plant["id"]),

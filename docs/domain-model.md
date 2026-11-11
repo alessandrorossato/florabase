@@ -406,6 +406,14 @@ point where useful. T50 is unavailable without dated observations, an exact Sowi
 or a reached 50% threshold. Decimal results are derived estimates, not measurement precision.
 Observations do not create Events, change lifecycle or descendants, or replay propagation.
 
+### Vegetative propagation
+
+Vegetative lots retain the identity, acquisition or taking date, material type, mother or external
+source, and original and remaining count of stem, leaf or root cuttings. Rooting attempts retain
+their own starting count, recorded rooted count, cultivation setup and dated rooting checks. A
+recorded zero and an unknown count remain distinct. Failed and abandoned attempts remain readable.
+The [cuttings contract](cuttings.md) describes stock use, clonal lineage and reversal.
+
 ### Explicit propagation transitions
 
 Propagation operations are forward data-entry assistance, not inventory accounting, event sourcing,
@@ -558,6 +566,13 @@ changes current state, is refused for PlantGroups, and counts as a retainable ob
 Corrections keep each replaced value in an append-only correction trail. See
 [measurements](measurements.md).
 
+A phenology observation (PHENOLOGY-001) is an observation, flowering or fruiting Event with an
+optional controlled phenological stage (for example bud break, flowering onset, fruit ripening or
+dormancy entry, each tied to its kind) and an approximate-date flag. It never changes current state,
+keeps PartialDate precision or an unknown date, may repeat within a season, and is a retainable
+observation. Stage-less flowering and fruiting Events remain valid. Absence of a recorded stage
+never means the stage did not occur. See [phenology](phenology.md).
+
 Movement additionally requires one destination Location. Creating a movement Event atomically
 updates the target's current Location. Creating death, loss, or discarded Events atomically updates
 the target's lifecycle to dead, lost, or discarded, subject to the existing PlantGroup quantity and
@@ -596,7 +611,7 @@ target and BotanicalIdentity summaries. The collection-wide Journal page (`#/eve
 links each item to its Plant or PlantGroup Event context. Generic Event creation cannot fabricate an
 extraction; only the authoritative extraction operation creates one and its resulting-Plant link.
 Structured per-kind payloads beyond movement destination, transfer recipient, the extraction
-result, and the measurement value are deferred.
+result, the measurement value and the phenological stage are deferred.
 
 ## Collection information architecture
 

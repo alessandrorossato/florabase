@@ -15,6 +15,7 @@
     "backend/src/florabase/application_settings/",
     "backend/src/florabase/auth/",
     "backend/src/florabase/core/",
+    "backend/src/florabase/cuttings/",
     "backend/src/florabase/db/",
     "backend/src/florabase/api/",
     "backend/src/florabase/main.py",
@@ -23,6 +24,8 @@
     "frontend/src/auth/",
     "frontend/src/App.tsx",
     "frontend/src/main.tsx",
+    "frontend/src/pwa/",
+    "frontend/src/ui-pages/Cuttings/",
     "frontend/src/styles.css",
     "frontend/src/styles/",
     "frontend/src/maps/",
@@ -69,11 +72,13 @@
         "backend/tests/integration/test_botanical_identity_migration.py"
       ],
       "frontend": [
+        "frontend/src/botanical-identities/BotanicalIdentitySynonymsScreen.test.tsx",
         "frontend/src/botanical-identities/ExternalBotanicalDataPanel.test.tsx",
         "frontend/src/botanical-identities/IdentityCollectionHub.test.tsx",
         "frontend/src/botanical-identities/IdentityCoverMetadata.test.tsx",
         "frontend/src/botanical-identities/IdentityMaps.test.tsx",
         "frontend/src/botanical-identities/IdentityMedia.test.tsx",
+        "frontend/src/botanical-identities/IdentityReconciliationPanel.test.tsx",
         "frontend/src/botanical-identities/IdentityRecordMedia.test.tsx",
         "frontend/src/botanical-identities/IdentityReferenceSummary.test.tsx",
         "frontend/src/botanical-identities/IdentitySourceAction.test.tsx",
@@ -258,12 +263,14 @@
       ],
       "integration": [
         "backend/tests/integration/test_event_api.py",
-        "backend/tests/integration/test_event_migration.py"
+        "backend/tests/integration/test_event_migration.py",
+        "backend/tests/integration/test_phenology_api.py"
       ],
       "frontend": [
         "frontend/src/events/EventFeed.test.tsx",
         "frontend/src/events/EventTargetPhoto.test.tsx",
-        "frontend/src/events/GlobalEventsScreen.test.tsx"
+        "frontend/src/events/GlobalEventsScreen.test.tsx",
+        "frontend/src/events/PhenologyHistory.test.tsx"
       ],
       "affects": ["history-regression", "schedule-regression", "activity"]
     },
@@ -470,7 +477,10 @@
       ]
     },
     "lineage": {
-      "backend": ["backend/tests/test_lineage.py"],
+      "backend": [
+        "backend/tests/test_lineage.py",
+        "backend/tests/test_lineage_explorer.py"
+      ],
       "integration": [
         "backend/tests/integration/test_lineage_api.py",
         "backend/tests/integration/test_lineage_integrity.py",
@@ -478,6 +488,7 @@
         "backend/tests/integration/test_lineage_migration.py"
       ],
       "frontend": [
+        "frontend/src/lineage/AncestryExplorer.test.tsx",
         "frontend/src/lineage/LineagePanel.test.tsx",
         "frontend/src/lineage/LineageStrip.test.tsx"
       ],
@@ -1165,6 +1176,11 @@
     },
     {
       "path": "backend/tests/integration/test_event_migration.py",
+      "scope": "events",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_phenology_api.py",
       "scope": "events",
       "layer": "backend"
     },

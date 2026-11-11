@@ -309,7 +309,8 @@ FIELD_INFO: dict[str, tuple[str, str, str]] = {
     ),
     "usage_scopes": (
         "Kinds of collection records this Location can hold",
-        "plants, sowings, seed_lots; separate multiple with |",
+        "plants, sowings, seed_lots, harvest_inventory, vegetative_lots, "
+        "propagation_attempts; separate multiple with |",
         "Scopes do not inherit from parents.",
     ),
     "identity_ref": (
@@ -1522,6 +1523,9 @@ def export_csv(database: Session, kind: str) -> str:
                         ("plants", item.supports_plants),
                         ("sowings", item.supports_sowings),
                         ("seed_lots", item.supports_seed_lots),
+                        ("harvest_inventory", item.supports_harvest_inventory),
+                        ("vegetative_lots", item.supports_vegetative_lots),
+                        ("propagation_attempts", item.supports_propagation_attempts),
                     )
                     if active
                 ),

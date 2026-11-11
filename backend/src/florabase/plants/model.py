@@ -55,22 +55,14 @@ class PlantGroupLifecycle(StrEnum):
 def _common_constraints(
     table: str, lifecycles: str, *, plant_group_origin: bool = False
 ) -> tuple[CheckConstraint, ...]:
+    origins = "originating_sowing_id, originating_propagation_attempt_id"
+    if plant_group_origin:
+        origins += ", originating_plant_group_id"
     origin_constraint = (
-        "((originating_plant_group_id IS NOT NULL AND originating_sowing_id IS NULL "
-        "AND direct_origin_kind IS NULL AND direct_origin_detail IS NULL "
-        "AND supplier_id IS NULL AND material_provenance_place_id IS NULL "
-        "AND provenance_site_id IS NULL) OR "
-        "(originating_plant_group_id IS NULL AND ((originating_sowing_id IS NOT NULL "
-        "AND direct_origin_kind IS NULL AND direct_origin_detail IS NULL AND supplier_id IS NULL "
-        "AND material_provenance_place_id IS NULL AND provenance_site_id IS NULL) OR "
-        "(originating_sowing_id IS NULL "
-        "AND direct_origin_kind IN ('purchased', 'gift_exchange', 'collection_produced', "
-        "'other', 'unknown'))))) IS TRUE"
-        if plant_group_origin
-        else "((originating_sowing_id IS NOT NULL AND direct_origin_kind IS NULL "
+        f"((num_nonnulls({origins}) = 1 AND direct_origin_kind IS NULL "
         "AND direct_origin_detail IS NULL AND supplier_id IS NULL "
         "AND material_provenance_place_id IS NULL AND provenance_site_id IS NULL) OR "
-        "(originating_sowing_id IS NULL AND direct_origin_kind IN "
+        f"(num_nonnulls({origins}) = 0 AND direct_origin_kind IN "
         "('purchased', 'gift_exchange', 'collection_produced', 'other', 'unknown'))) IS TRUE"
     )
     return (
@@ -134,6 +126,9 @@ class Plant(Base):
     botanical_identity_id: Mapped[UUID] = mapped_column(
         Uuid(), ForeignKey("botanical_identities.id", ondelete="RESTRICT"), index=True
     )
+    originating_propagation_attempt_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("propagation_attempts.id", ondelete="RESTRICT"), index=True
+    )
     originating_sowing_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("sowings.id", ondelete="RESTRICT"), nullable=True, index=True
     )
@@ -186,6 +181,9 @@ class PlantGroup(Base):
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid7)
     botanical_identity_id: Mapped[UUID] = mapped_column(
         Uuid(), ForeignKey("botanical_identities.id", ondelete="RESTRICT"), index=True
+    )
+    originating_propagation_attempt_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("propagation_attempts.id", ondelete="RESTRICT"), index=True
     )
     originating_sowing_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("sowings.id", ondelete="RESTRICT"), nullable=True, index=True

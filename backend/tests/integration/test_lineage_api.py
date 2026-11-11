@@ -1,5 +1,6 @@
 from collections.abc import Iterator
 from decimal import Decimal
+from typing import Any
 from uuid import UUID, uuid7
 
 import pytest
@@ -545,3 +546,250 @@ def test_source_corrections_cannot_close_a_producer_cycle(
     )
     assert after_status == 200
     assert after == before
+
+
+def _explore(cookie: str, path: str) -> tuple[int, Any]:
+    status_code, _, body = request("GET", f"/api/v1/lineage/{path}", headers={"cookie": cookie})
+    return status_code, body
+
+
+def _keys(nodes: list[dict[str, Any]]) -> list[tuple[str, str]]:
+    return [(node["record"]["kind"], node["record"]["id"]) for node in nodes]
+
+
+def test_ancestry_explorer_branches_pages_and_keeps_unknown_and_inactive_honest(
+    authenticated_browser: tuple[str, str], lineage_records: dict[str, str]
+) -> None:
+    cookie, _ = authenticated_browser
+    records = lineage_records
+
+    status_code, root = _explore(cookie, f"seed_lot/{records['root_lot']}")
+    assert status_code == 200
+    assert root["focus"]["origin"] == "unknown"
+    assert root["focus"]["harvest_conversion"] is None
+    assert root["ancestors"] == []
+    assert root["focus"]["descendant_count"] == root["children"]["total"] == 1
+    assert _keys(root["children"]["items"]) == [("sowing", records["root_sowing"])]
+    assert root["children"]["items"][0]["descendant_count"] == 2
+
+    # Branching: groups before plants, each with its own expandable count; paging is bounded.
+    _, branch = _explore(cookie, f"sowing/{records['root_sowing']}/children")
+    assert branch["total"] == 2
+    assert _keys(branch["items"]) == [
+        ("plant_group", records["group_a"]),
+        ("plant", records["plant_a"]),
+    ]
+    assert [item["descendant_count"] for item in branch["items"]] == [1, 1]
+    _, second = _explore(cookie, f"sowing/{records['root_sowing']}/children?offset=1&limit=1")
+    assert (second["total"], second["offset"], second["limit"]) == (2, 1, 1)
+    assert _keys(second["items"]) == [("plant", records["plant_a"])]
+    _, beyond = _explore(cookie, f"sowing/{records['root_sowing']}/children?offset=9")
+    assert (beyond["total"], beyond["items"]) == (2, [])
+
+    _, extracted = _explore(cookie, f"plant_group/{records['group_a']}/children")
+    assert _keys(extracted["items"]) == [("plant", records["extracted_plant"])]
+    _, produced = _explore(cookie, f"plant/{records['plant_a']}/children")
+    assert _keys(produced["items"]) == [("seed_lot", records["lot_b"])]
+    # A directly recorded producer, without a Harvest conversion, says so.
+    assert produced["items"][0]["origin"] == "collection_produced"
+    assert produced["items"][0]["harvest_conversion"] is None
+
+    # Backward: the full recorded chain, nearest first, with inactive lifecycles retained.
+    _, leaf = _explore(cookie, f"plant/{records['plant_b']}")
+    assert leaf["focus"]["origin"] is None
+    assert leaf["focus"]["record"]["lifecycle"] == "lost"
+    assert _keys(leaf["ancestors"]) == [
+        ("sowing", records["sowing_b"]),
+        ("seed_lot", records["lot_b"]),
+        ("plant", records["plant_a"]),
+        ("sowing", records["root_sowing"]),
+        ("seed_lot", records["root_lot"]),
+    ]
+    assert [node["record"]["lifecycle"] for node in leaf["ancestors"]] == [
+        "failed",
+        "active",
+        "dead",
+        "completed",
+        "active",
+    ]
+
+    # Independent material of the same identity is never attached to anyone's lineage.
+    _, direct = _explore(cookie, f"plant/{records['direct_plant']}")
+    assert direct["focus"]["origin"] == "unknown"
+    assert direct["ancestors"] == []
+    assert direct["children"] == {"total": 0, "offset": 0, "limit": 25, "items": []}
+    for path in (
+        f"seed_lot/{records['root_lot']}",
+        f"sowing/{records['root_sowing']}/children",
+        f"plant/{records['plant_a']}/children",
+    ):
+        assert records["direct_plant"] not in str(_explore(cookie, path)[1])
+
+    # A collection-produced SeedLot whose producer was never recorded stays an unknown parent.
+    _, _, unknown = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/seed-lots",
+        _producer_payload(records["root_identity"]),
+    )
+    _, orphan = _explore(cookie, f"seed_lot/{unknown['id']}")
+    assert orphan["focus"]["origin"] == "collection_produced"
+    assert orphan["ancestors"] == []
+
+
+def test_ancestry_explorer_requires_authentication_and_validates_inputs(
+    authenticated_browser: tuple[str, str], lineage_records: dict[str, str]
+) -> None:
+    cookie, _ = authenticated_browser
+    plant = lineage_records["plant_a"]
+    assert request("GET", f"/api/v1/lineage/plant/{plant}")[0] == 401
+    assert request("GET", f"/api/v1/lineage/plant/{plant}/children")[0] == 401
+    assert _explore(cookie, f"plant/{uuid7()}")[0] == 404
+    assert _explore(cookie, f"plant/{uuid7()}/children")[0] == 404
+    # Concrete types scope UUIDs: a Plant ID is not a SeedLot.
+    assert _explore(cookie, f"seed_lot/{plant}")[0] == 404
+    assert _explore(cookie, f"harvest/{plant}")[0] == 422
+    assert _explore(cookie, f"plant/{plant}/children?limit=101")[0] == 422
+    assert _explore(cookie, f"plant/{plant}/children?offset=-1")[0] == 422
+
+
+# Every view the explorer offers over the fixture: chains from both ends and each branch level.
+_VIEWS = (
+    "seed_lot/{root_lot}",
+    "sowing/{root_sowing}/children",
+    "plant_group/{group_a}",
+    "plant_group/{group_a}/children",
+    "plant/{plant_a}/children",
+    "plant/{extracted_plant}",
+    "plant/{plant_b}",
+)
+
+
+def _shape(value: Any) -> Any:
+    """The ancestry with identity labels removed: edges, order, counts, origins, lifecycles."""
+    if isinstance(value, dict):
+        return {key: _shape(item) for key, item in value.items() if key != "botanical_identity"}
+    if isinstance(value, list):
+        return [_shape(item) for item in value]
+    return value
+
+
+def _identities(value: Any) -> dict[str, tuple[str, str]]:
+    found: dict[str, tuple[str, str]] = {}
+    if isinstance(value, dict):
+        identity = value.get("botanical_identity")
+        if "id" in value and isinstance(identity, dict):
+            found[value["id"]] = (identity["id"], identity["display_label"])
+        for item in value.values():
+            found |= _identities(item)
+    elif isinstance(value, list):
+        for item in value:
+            found |= _identities(item)
+    return found
+
+
+def _identity(cookie: str, identity_id: str) -> Any:
+    status_code, _, body = request(
+        "GET", f"/api/v1/botanical-identities/{identity_id}", headers={"cookie": cookie}
+    )
+    assert status_code == 200, body
+    return body
+
+
+def _view(cookie: str, path: str) -> Any:
+    status_code, body = _explore(cookie, path)
+    assert status_code == 200, (path, body)
+    return body
+
+
+def test_taxonomy_reconciliation_keeps_lineage_measurements_and_uuids_intact(
+    authenticated_browser: tuple[str, str], lineage_records: dict[str, str]
+) -> None:
+    cookie, _ = authenticated_browser
+    records = lineage_records
+    views = [view.format(**records) for view in _VIEWS]
+    measured = records["extracted_plant"]
+    events_path = f"/api/v1/plants/{measured}/events"
+    march = {"precision": "day", "year": 2026, "month": 3, "day": 14}
+    height = {"quantity": "height", "value": "12.5", "unit": "cm", "is_approximate": False}
+    status_code, _, event = mutate(
+        authenticated_browser,
+        "POST",
+        events_path,
+        {"kind": "measurement", "occurred_on": march, "measurement": height},
+    )
+    assert status_code == 201, event
+    status_code, _, event = mutate(
+        authenticated_browser,
+        "PUT",
+        f"/api/v1/events/{event['id']}",
+        {"kind": "measurement", "occurred_on": march, "measurement": height | {"value": "13"}},
+    )
+    assert status_code == 200, event
+    events_status, _, events_before = request("GET", events_path, headers={"cookie": cookie})
+    assert events_status == 200, events_before
+
+    before = {view: _view(cookie, view) for view in views}
+    identities_before = _identities(list(before.values()))
+    assert identities_before[records["plant_b"]][0] == records["descendant_identity"]
+
+    # 1. Accepted-name correction in place: same identity UUID, new name, old name in the ledger.
+    root = _identity(cookie, records["root_identity"])
+    status_code, _, corrected = mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/botanical-identities/{root['id']}/reconciliation/correct-name",
+        {"scientific_name": "Solanum lycopersicum", "identity_updated_at": root["updated_at"]},
+    )
+    assert status_code == 200, corrected
+    assert [name["scientific_name"] for name in corrected["former_names"]] == ["Solanum sp."]
+
+    # 2. Duplicate merge: every descendant-identity holding is repointed to the survivor.
+    duplicate = _identity(cookie, records["descendant_identity"])
+    survivor = _identity(cookie, records["producer_identity"])
+    status_code, _, merged = mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/botanical-identities/{duplicate['id']}/reconciliation/merge-duplicate",
+        {
+            "survivor_identity_id": survivor["id"],
+            "duplicate_updated_at": duplicate["updated_at"],
+            "survivor_updated_at": survivor["updated_at"],
+            "profile_resolution": "keep_survivor",
+        },
+    )
+    assert status_code == 200, merged
+    assert _identity(cookie, duplicate["id"])["merged_into_id"] == survivor["id"]
+
+    after = {view: _view(cookie, view) for view in views}
+    for view in views:
+        # Identity work neither creates, removes nor reorders any edge, count or lifecycle,
+        # and keeps every Plant, PlantGroup, Sowing and SeedLot UUID.
+        assert _shape(after[view]) == _shape(before[view]), view
+
+    identities_after = _identities(list(after.values()))
+    assert identities_after.keys() == identities_before.keys()
+    for record_id, (identity_id, label) in identities_before.items():
+        if identity_id == records["descendant_identity"]:
+            assert identities_after[record_id] == (survivor["id"], survivor["display_label"])
+        elif identity_id == records["root_identity"]:
+            assert identities_after[record_id] == (root["id"], "Solanum lycopersicum")
+        else:
+            assert identities_after[record_id] == (identity_id, label)
+    # The retired duplicate and the historical name are not nodes or labels anywhere.
+    for body in after.values():
+        assert duplicate["id"] not in str(body)
+        assert "Solanum sp." not in str(body)
+        assert "Solanum descendant" not in str(body)
+
+    # Measurement history stays on the same Plant UUID, untouched and outside the ancestry.
+    events_status, _, events_after = request("GET", events_path, headers={"cookie": cookie})
+    assert events_status == 200, events_after
+    # Same events, values, dates and correction trail on the same Plant UUID; only the
+    # Plant's displayed identity follows the merge to the survivor.
+    assert _shape(events_after) == _shape(events_before)
+    assert _identities(events_after) == {measured: (survivor["id"], survivor["display_label"])}
+    assert [item["measurement"]["value"] for item in events_after] == ["13"]
+    assert len(events_after[0]["measurement_corrections"]) == 1
+    for body in after.values():
+        assert event["id"] not in str(body)

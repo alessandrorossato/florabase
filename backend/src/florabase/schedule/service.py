@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
+from florabase.cuttings.model import PropagationAttempt, VegetativeLot
 from florabase.events.schemas import EventCreate
 from florabase.events.service import (
     EventDomainConflictError,
@@ -36,7 +37,16 @@ from florabase.seed_lots.model import SeedLot
 from florabase.seed_lots.schemas import PartialDate
 from florabase.sowings.model import Sowing
 
-TargetRecord = BotanicalIdentity | SeedLot | Sowing | Plant | PlantGroup | Location
+TargetRecord = (
+    BotanicalIdentity
+    | SeedLot
+    | Sowing
+    | Plant
+    | PlantGroup
+    | Location
+    | PropagationAttempt
+    | VegetativeLot
+)
 
 MODELS: dict[
     str,
@@ -45,7 +55,9 @@ MODELS: dict[
     | type[Sowing]
     | type[Plant]
     | type[PlantGroup]
-    | type[Location],
+    | type[Location]
+    | type[VegetativeLot]
+    | type[PropagationAttempt],
 ] = {
     "botanical_identity": BotanicalIdentity,
     "seed_lot": SeedLot,
@@ -53,6 +65,8 @@ MODELS: dict[
     "plant": Plant,
     "plant_group": PlantGroup,
     "location": Location,
+    "vegetative_lot": VegetativeLot,
+    "propagation_attempt": PropagationAttempt,
 }
 EVENT_KINDS = {
     "repot": {"repotting"},
@@ -120,7 +134,7 @@ def require_target(
 def responses(
     database: Session, activities: list[ScheduledActivity], today: date
 ) -> list[ScheduleResponse]:
-    # At most six target queries regardless of page size. No inferred related targets.
+    # At most one query per target kind regardless of page size. No inferred related targets.
     targets: dict[tuple[str, UUID], ScheduleTargetResponse] = {}
     for kind, model in MODELS.items():
         identifiers = {getattr(item, f"{kind}_id") for item in activities} - {None}
@@ -386,7 +400,15 @@ def target_choices(
         if model is BotanicalIdentity
         else model.name
         if model is Location
-        else cast(type[SeedLot] | type[Sowing] | type[Plant] | type[PlantGroup], model).label
+        else cast(
+            type[SeedLot]
+            | type[Sowing]
+            | type[Plant]
+            | type[PlantGroup]
+            | type[VegetativeLot]
+            | type[PropagationAttempt],
+            model,
+        ).label
     )
     criteria = [label.icontains(q.strip(), autoescape=True)] if q.strip() else []
     if model is BotanicalIdentity:

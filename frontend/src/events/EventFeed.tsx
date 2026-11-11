@@ -11,6 +11,7 @@ import {
   eventSourceLabel,
   formatPartialDate,
   measurementText,
+  phenophaseLabels,
 } from "./eventData";
 
 export function EventFeed({
@@ -68,6 +69,12 @@ export function EventFeed({
             </p>
           )}
           {event.measurement && <p>{measurementText(event.measurement)}</p>}
+          {event.phenology && (
+            <p>
+              Stage: {phenophaseLabels[event.phenology.phase]}
+              {event.phenology.date_is_approximate ? " (approximate date)" : ""}
+            </p>
+          )}
           {event.recipient && <p>Recipient: {event.recipient}</p>}
           {event.kind === "extraction" && event.resulting_plant && (
             <p>

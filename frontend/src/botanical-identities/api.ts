@@ -25,6 +25,12 @@ export type AcceptedNameCorrectionWrite =
   components["schemas"]["AcceptedNameCorrectionWrite"];
 export type DuplicateIdentityMergeWrite =
   components["schemas"]["DuplicateIdentityMergeWrite"];
+export type OperatorSynonymCreate =
+  components["schemas"]["OperatorSynonymCreate"];
+export type OperatorSynonymUpdate =
+  components["schemas"]["OperatorSynonymUpdate"];
+export type IdentityHistoricalNameResponse =
+  components["schemas"]["IdentityHistoricalNameResponse"];
 type HTTPValidationError = components["schemas"]["HTTPValidationError"];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -42,6 +48,8 @@ function fieldLabel(location: (string | number)[]): string | null {
   if (field === "scientific_name") return "Scientific name";
   if (field === "cultivar_name") return "Cultivar";
   if (field === "common_name") return "Common name";
+  if (field === "authorship") return "Authorship";
+  if (field === "source_citation") return "Source citation";
   return null;
 }
 
@@ -290,6 +298,71 @@ export function mergeDuplicateBotanicalIdentity(
         "X-CSRF-Token": csrfToken,
       },
       body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function listBotanicalIdentitySynonyms(
+  id: string,
+  statusKind?: IdentityHistoricalNameResponse["status_kind"],
+  signal?: AbortSignal,
+): Promise<IdentityHistoricalNameResponse[]> {
+  const query = statusKind
+    ? `?status_kind=${encodeURIComponent(statusKind)}`
+    : "";
+  return requestJson(
+    `/api/v1/botanical-identities/${encodeURIComponent(id)}/synonyms${query}`,
+    { signal },
+  );
+}
+
+export function createBotanicalIdentitySynonym(
+  id: string,
+  payload: OperatorSynonymCreate,
+  csrfToken: string,
+): Promise<IdentityHistoricalNameResponse> {
+  return requestJson(
+    `/api/v1/botanical-identities/${encodeURIComponent(id)}/synonyms`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": csrfToken,
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function updateBotanicalIdentitySynonym(
+  id: string,
+  nameId: string,
+  payload: OperatorSynonymUpdate,
+  csrfToken: string,
+): Promise<IdentityHistoricalNameResponse> {
+  return requestJson(
+    `/api/v1/botanical-identities/${encodeURIComponent(id)}/synonyms/${encodeURIComponent(nameId)}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": csrfToken,
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function deleteBotanicalIdentitySynonym(
+  id: string,
+  nameId: string,
+  csrfToken: string,
+): Promise<undefined> {
+  return requestJson(
+    `/api/v1/botanical-identities/${encodeURIComponent(id)}/synonyms/${encodeURIComponent(nameId)}`,
+    {
+      method: "DELETE",
+      headers: { "X-CSRF-Token": csrfToken },
     },
   );
 }

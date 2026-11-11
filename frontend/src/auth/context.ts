@@ -24,7 +24,7 @@ export interface AuthContextValue {
   state: AuthState;
   logIn(payload: LoginRequest): Promise<void>;
   logOut(): Promise<void>;
-  sessionExpired(): void;
+  sessionExpired: () => void;
   retryRestoration(): void;
   cancelLogout(): void;
 }

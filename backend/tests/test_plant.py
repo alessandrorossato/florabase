@@ -494,7 +494,7 @@ def reintegration_database(
     later_events: list[Event] | None = None,
 ) -> MagicMock:
     database = MagicMock()
-    database.scalar.side_effect = [receipt, group, plant, seed_lot_count, cutoff]
+    database.scalar.side_effect = [receipt, group, plant, seed_lot_count, None, cutoff]
     database.get.return_value = event
     database.scalars.side_effect = [
         later_plant_receipts or [],

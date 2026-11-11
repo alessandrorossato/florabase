@@ -4,6 +4,7 @@ export type DirectoryView = "list" | "gallery";
 export const directoryViewDefaults = {
   seed_lots: "list",
   sowings: "list",
+  cuttings: "list",
   plants: "gallery",
   botanical_identities: "gallery",
   suppliers: "list",

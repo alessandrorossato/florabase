@@ -14,6 +14,7 @@ export function historyOrigin(entry: HistoryEntry) {
   const labels = {
     operation_receipt: "Propagation",
     germination: "Germination",
+    rooting_observation: "Rooting observation",
     harvest: "Harvest",
     disposition: "Stored material",
     conversion: "Stored material",

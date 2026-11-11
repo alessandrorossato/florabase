@@ -421,12 +421,21 @@ function Detail({
       : []),
     {
       label: "Origin",
-      value: originatingGroup
-        ? "Extracted from group"
-        : value.originating_sowing
-          ? "From sowing"
-          : originLabels[value.direct_origin_kind ?? "unknown"],
+      value: value.originating_propagation_attempt_id ? (
+        <a
+          href={`#/cuttings/attempts/${value.originating_propagation_attempt_id}`}
+        >
+          Rooted from cuttings
+        </a>
+      ) : originatingGroup ? (
+        "Extracted from group"
+      ) : value.originating_sowing ? (
+        "From sowing"
+      ) : (
+        originLabels[value.direct_origin_kind ?? "unknown"]
+      ),
       unknown:
+        !value.originating_propagation_attempt_id &&
         !originatingGroup &&
         !value.originating_sowing &&
         (value.direct_origin_kind ?? "unknown") === "unknown",
@@ -595,7 +604,17 @@ function Detail({
                   Record harvest
                 </a>
               )}
-              {value.lifecycle === "active" ? primaryActions : undefined}
+              {value.lifecycle === "active" && (
+                <>
+                  {primaryActions}
+                  <a
+                    className="button-link button--secondary"
+                    href={`#/cuttings/new?sourceType=${record.kind === "plant" ? "plant" : "plant_group"}&source=${value.id}&identity=${value.botanical_identity_id}`}
+                  >
+                    Take cuttings
+                  </a>
+                </>
+              )}
             </>
           }
           secondaryActions={
@@ -648,6 +667,17 @@ function Detail({
             role="tabpanel"
             aria-labelledby="tab-overview"
           >
+            <section
+              className="plant-fact-group"
+              aria-labelledby="plant-cuttings-title"
+            >
+              <h4 id="plant-cuttings-title">Vegetative offspring</h4>
+              <a
+                href={`#/cuttings?sourceType=${record.kind === "plant" ? "plant" : "plant_group"}&source=${value.id}`}
+              >
+                View cuttings from this specimen
+              </a>
+            </section>
             {record.kind === "group" && (
               <section
                 className="plant-fact-group"
@@ -1405,6 +1435,9 @@ export function PlantScreen({
     !extractionSource &&
     selected?.kind === "plant" &&
     Boolean(selected.value.originating_plant_group_id);
+  const cuttingEdit = Boolean(
+    selected?.value.originating_propagation_attempt_id,
+  );
 
   function startCreate() {
     openCollectionPage("#/plants?action=create");
@@ -1759,7 +1792,7 @@ export function PlantScreen({
         const value = selected
           ? await updatePlant(
               selected.value.id,
-              extractedEdit
+              extractedEdit || cuttingEdit
                 ? {
                     botanical_identity_id: form.botanicalIdentityId,
                     label: form.label || null,
@@ -1777,7 +1810,9 @@ export function PlantScreen({
         const value = selected
           ? await updatePlantGroup(
               selected.value.id,
-              groupPayload(form),
+              cuttingEdit
+                ? { ...groupPayload(form), direct_origin_kind: null }
+                : groupPayload(form),
               csrfToken,
             )
           : await createPlantGroup(groupPayload(form), csrfToken);
@@ -2089,7 +2124,7 @@ export function PlantScreen({
                 label: "Origin",
                 content: (
                   <>
-                    {!extractionSource && !extractedEdit ? (
+                    {!cuttingEdit && !extractionSource && !extractedEdit ? (
                       <>
                         <fieldset className="origin-mode-field field--full">
                           <legend className="sr-only">Origin</legend>
@@ -2313,9 +2348,11 @@ export function PlantScreen({
                     ) : (
                       <div className="field--full inherited-origin">
                         <strong>Origin is read-only.</strong>{" "}
-                        {extractionSource
-                          ? `Inherited from ${recordName(extractionSource, "Unlabelled plant group")}.`
-                          : `This Plant was extracted from ${selected?.kind === "plant" ? recordName(selected.value.originating_plant_group, "Unlabelled plant group") : "its Plant group"}.`}
+                        {cuttingEdit
+                          ? "This specimen was established from cuttings."
+                          : extractionSource
+                            ? `Inherited from ${recordName(extractionSource, "Unlabelled plant group")}.`
+                            : `This Plant was extracted from ${selected?.kind === "plant" ? recordName(selected.value.originating_plant_group, "Unlabelled plant group") : "its Plant group"}.`}
                       </div>
                     )}
                     <PlantEntryDateField

@@ -26,6 +26,8 @@ def test_event_is_focused_uuidv7_mapping_with_exact_vocabulary() -> None:
         "measurement_value",
         "measurement_unit",
         "measurement_is_approximate",
+        "phenophase",
+        "phenophase_date_is_approximate",
         "created_at",
         "updated_at",
     ]

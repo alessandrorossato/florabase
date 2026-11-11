@@ -14,14 +14,16 @@ export type PhotoTarget =
   | "plant_group"
   | "event"
   | "harvest"
-  | "supplier";
+  | "supplier"
+  | "vegetative_lot"
+  | "propagation_attempt";
 
 function targetPath(target: PhotoTarget, id: string): string {
   return `/api/v1/collection-records/${target}/${encodeURIComponent(id)}/photos`;
 }
 
 export function getPrimaryPhoto(
-  target: "seed_lot" | "plant" | "plant_group" | "harvest" | "supplier",
+  target: Exclude<PhotoTarget, "sowing" | "event">,
   id: string,
 ): Promise<PrimaryPhoto | null> {
   return requestJson(
@@ -30,7 +32,7 @@ export function getPrimaryPhoto(
 }
 
 export function setPrimaryPhoto(
-  target: "seed_lot" | "plant" | "plant_group" | "harvest" | "supplier",
+  target: Exclude<PhotoTarget, "sowing" | "event">,
   id: string,
   photo: Pick<PrimaryPhoto, "kind" | "photo_id">,
   csrfToken: string,
@@ -49,7 +51,7 @@ export function setPrimaryPhoto(
 }
 
 export function clearPrimaryPhoto(
-  target: "seed_lot" | "plant" | "plant_group" | "harvest" | "supplier",
+  target: Exclude<PhotoTarget, "sowing" | "event">,
   id: string,
   csrfToken: string,
 ): Promise<void> {

@@ -8,6 +8,7 @@ type Identity = Pick<BotanicalIdentityResponse, "id" | "display_label"> &
   Partial<BotanicalIdentityResponse>;
 export type RecordVisualKind =
   | "seed"
+  | "cutting"
   | "sowing"
   | "plant"
   | "group"
@@ -20,6 +21,8 @@ const placeholderPaths: Record<RecordVisualKind, string> = {
   supplier: "M3 10h18M5 10v11h14V10M3 10l2-7h14l2 7M9 21v-7h6v7",
   harvest: "M4 10h16l-2 10H6L4 10ZM8 10l4-7 4 7M9 14v3M15 14v3",
   seed: "M17 5C5 4 4 13 8 17s13 3 9-12ZM9 15l7-8",
+  cutting:
+    "M12 21v-5M12 11V3M12 9c5 0 7-2 7-6-5 0-7 3-7 6ZM5 15l3-2 2 2 3-2 2 2 4-2",
   sowing:
     "M4 18h16M6 18v-5h12v5M12 13V5M12 9C6 10 5 6 6 4c4 0 6 2 6 5ZM12 11c5 0 7-3 6-6-4 0-6 3-6 6Z",
   plant:
@@ -32,6 +35,7 @@ const placeholderPaths: Record<RecordVisualKind, string> = {
 export function RecordVisual({
   photo,
   fallbackPhoto,
+  fallbackPhotos = [],
   identity: summary,
   kind,
   label,
@@ -43,6 +47,7 @@ export function RecordVisual({
   photo?: PrimaryPhoto | null;
   // Activity-owned target/source evidence remains supported. Collection callers omit this.
   fallbackPhoto?: PrimaryPhoto | null;
+  fallbackPhotos?: readonly (PrimaryPhoto | null)[];
   identity?: Identity;
   kind: RecordVisualKind;
   label: string;
@@ -77,15 +82,17 @@ export function RecordVisual({
       : allowExternalCover && identity?.compact_cover_kind === "external"
         ? identity.compact_external_cover_url
         : null;
-  const inherited = fallbackPhoto?.thumbnail_url ?? null;
-  const source = [direct, inherited, cover].find(
+  const inherited = [fallbackPhoto, ...fallbackPhotos].map(
+    (item) => item?.thumbnail_url,
+  );
+  const source = [direct, ...inherited, cover].find(
     (src) => src && !broken.has(src),
   );
   const primary = source === direct;
   const sourceLabel = source
     ? primary
       ? "Record primary photo"
-      : source === inherited
+      : inherited.includes(source)
         ? "Source primary photo"
         : "Botanical identity cover · reference"
     : broken.size
@@ -99,7 +106,7 @@ export function RecordVisual({
       {source ? (
         <img
           src={source}
-          alt={`${primary ? "Primary photo" : source === inherited ? "Source primary photo" : "Botanical identity cover"} for ${label}`}
+          alt={`${primary ? "Primary photo" : inherited.includes(source) ? "Source primary photo" : "Botanical identity cover"} for ${label}`}
           loading="lazy"
           decoding="async"
           referrerPolicy={

@@ -4,6 +4,7 @@ export function recordKey(record: ProvenanceMapRecord): string {
   return `${record.record_type}:${record.id}`;
 }
 export function recordTypeLabel(record: ProvenanceMapRecord): string {
+  if (record.record_type === "vegetative_lot") return "Vegetative lot";
   return record.record_type === "seed_lot"
     ? "SeedLot"
     : record.record_type === "plant_group"
@@ -11,6 +12,8 @@ export function recordTypeLabel(record: ProvenanceMapRecord): string {
       : "Plant";
 }
 export function recordHref(record: ProvenanceMapRecord): string {
+  if (record.record_type === "vegetative_lot")
+    return `#/cuttings/lots/${record.id}`;
   const route =
     record.record_type === "seed_lot"
       ? "seeds"
