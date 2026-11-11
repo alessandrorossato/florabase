@@ -24,6 +24,10 @@
   The operator requires a fresh canonical FULL with version 3 delivery evidence and no reused
   stages on the frozen committed tree. Record the result in the receipt, since edits to this
   milestone after verification would invalidate that evidence.
+- The first fresh FULL stopped in `test-agent-workflow` before product stages. Three direct
+  retirement fixtures inherited the gate's agent identity and reached the operator refusal
+  before the mount and sticky-file assertions. The fixture now declares an operator identity
+  in its disposable context. Production authorization and the test assertions are preserved.
 
 ## 2026-11-11 — Pre-beta consolidated integration, phase 1
 

@@ -1550,7 +1550,10 @@ class AgentWorkflowTests(unittest.TestCase):
                 raise AssertionError("Git removal reached before safe refusal")
             return original_git(repo, *args)
 
-        with patch.object(Repository, "git", guarded_git):
+        with (
+            patch.object(Repository, "git", guarded_git),
+            patch.dict(os.environ, self.env(AGENT_ID="operator"), clear=True),
+        ):
             with self.assertRaisesRegex(workflow_environment.WorkflowError, reason):
                 feature_worktree.retire(Repository(self.primary), "example-001", "example-001")
         self.assertEqual(removals, [])
