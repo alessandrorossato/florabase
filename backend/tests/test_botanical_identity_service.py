@@ -1331,7 +1331,9 @@ def test_operator_synonym_crud_and_validation() -> None:
     db.flush.assert_called()
 
     # 3. update_operator_synonym validations
-    db.get.side_effect = lambda model, key: None if model is BotanicalIdentity else synonym_entry
+    db.get.side_effect = lambda model, key, **kwargs: (
+        None if model is BotanicalIdentity else synonym_entry
+    )
     with pytest.raises(BotanicalIdentityNotFoundError):
         update_operator_synonym(
             db,
@@ -1340,7 +1342,7 @@ def test_operator_synonym_crud_and_validation() -> None:
             OperatorSynonymUpdate(scientific_name="Echinopsis lageniformis"),
         )
 
-    db.get.side_effect = lambda model, key: (
+    db.get.side_effect = lambda model, key, **kwargs: (
         merged_identity if model is BotanicalIdentity else synonym_entry
     )
     with pytest.raises(BotanicalIdentityMergedError):
@@ -1351,7 +1353,9 @@ def test_operator_synonym_crud_and_validation() -> None:
             OperatorSynonymUpdate(scientific_name="Echinopsis lageniformis"),
         )
 
-    db.get.side_effect = lambda model, key: identity if model is BotanicalIdentity else None
+    db.get.side_effect = lambda model, key, **kwargs: (
+        identity if model is BotanicalIdentity else None
+    )
     with pytest.raises(SynonymNotFoundError):
         update_operator_synonym(
             db,
@@ -1371,7 +1375,7 @@ def test_operator_synonym_crud_and_validation() -> None:
         superseded_at=now,
         created_at=now,
     )
-    db.get.side_effect = lambda model, key: (
+    db.get.side_effect = lambda model, key, **kwargs: (
         identity if model is BotanicalIdentity else immutable_entry
     )
     with pytest.raises(ImmutableHistoricalNameError):
@@ -1382,7 +1386,7 @@ def test_operator_synonym_crud_and_validation() -> None:
             OperatorSynonymUpdate(scientific_name="New Name"),
         )
 
-    db.get.side_effect = lambda model, key: (
+    db.get.side_effect = lambda model, key, **kwargs: (
         identity if model is BotanicalIdentity else synonym_entry
     )
     with pytest.raises(SynonymValidationError) as u_eq_err:
@@ -1451,29 +1455,31 @@ def test_operator_synonym_crud_and_validation() -> None:
     assert updated.source_version == "RHS 2026"
 
     # 4. remove_operator_synonym validations
-    db.get.side_effect = lambda model, key: None
+    db.get.side_effect = lambda model, key, **kwargs: None
     with pytest.raises(BotanicalIdentityNotFoundError):
         remove_operator_synonym(db, identity.id, synonym_entry.id)
 
-    db.get.side_effect = lambda model, key: (
+    db.get.side_effect = lambda model, key, **kwargs: (
         merged_identity if model is BotanicalIdentity else synonym_entry
     )
     with pytest.raises(BotanicalIdentityMergedError):
         remove_operator_synonym(db, merged_identity.id, synonym_entry.id)
 
-    db.get.side_effect = lambda model, key: identity if model is BotanicalIdentity else None
+    db.get.side_effect = lambda model, key, **kwargs: (
+        identity if model is BotanicalIdentity else None
+    )
     with pytest.raises(SynonymNotFoundError):
         remove_operator_synonym(db, identity.id, uuid7())
 
     # Cannot delete immutable historical names
-    db.get.side_effect = lambda model, key: (
+    db.get.side_effect = lambda model, key, **kwargs: (
         identity if model is BotanicalIdentity else immutable_entry
     )
     with pytest.raises(ImmutableHistoricalNameError):
         remove_operator_synonym(db, identity.id, immutable_entry.id)
 
     # Successful removal
-    db.get.side_effect = lambda model, key: (
+    db.get.side_effect = lambda model, key, **kwargs: (
         identity if model is BotanicalIdentity else synonym_entry
     )
     remove_operator_synonym(db, identity.id, synonym_entry.id)
