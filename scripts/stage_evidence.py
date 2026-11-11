@@ -181,23 +181,25 @@ def host_closure(repo: Path) -> dict[str, str]:
     links = [repo / name for name in top if top[name][0] == "link"]
     for directory, _dirs, files in os.walk(repo / "scripts"):
         links += [Path(directory, f) for f in _dirs + files if Path(directory, f).is_symlink()]
+    resolved_links: dict[str, str] = {}
     for link in links:
+        name = link.relative_to(repo).as_posix()
         try:
             target = link.resolve(strict=True)
         except (OSError, RuntimeError) as error:
-            raise Unknown(f"unresolvable host program symlink: {link.relative_to(repo)}") from error
+            raise Unknown(f"unresolvable host program symlink: {name}") from error
         if not target.is_relative_to(repo):
-            raise Unknown(f"host program symlink leaves the repository: {link.relative_to(repo)}")
+            raise Unknown(f"host program symlink leaves the repository: {name}")
         relative = target.relative_to(repo)
         hashed_script = relative.parts[:1] == ("scripts",) and "__pycache__" not in relative.parts
         hashed_top_file = len(relative.parts) == 1 and top.get(relative.name, [None])[0] == "file"
         if not target.is_file() or not (hashed_script or hashed_top_file):
-            raise Unknown(
-                f"host program symlink leaves the input closure: {link.relative_to(repo)}"
-            )
+            raise Unknown(f"host program symlink leaves the input closure: {name}")
+        resolved_links[name] = relative.as_posix()
     return {
         "scripts": tree_digest(repo, "scripts", skip=frozenset({"__pycache__"})),
         "top-level files": digest(top),
+        "host symlinks": digest(resolved_links),
     }
 
 

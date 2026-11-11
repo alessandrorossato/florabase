@@ -43,7 +43,7 @@ directory, fsyncs it, uses `os.replace`, then fsyncs the directory.
   "manifest": {
     "compose": {"<model>": "<sha256 of the rendered model without labels and x-* fields>"},
     "mounts": {"<repo-relative source> (excluding <shadowed paths>)": "<tree sha256>"},
-    "policy": {"scripts": "<tree sha256>", "top-level files": "<sha256>"},
+    "policy": {"scripts": "<tree sha256>", "top-level files": "<sha256>", "host symlinks": "<sha256>"},
     "environment": {"<NAME>": "<HMAC-SHA256(salt, NAME=value)>"},
     "env_files": {"<model>": "<sha256 of path and content>"},
     "volume_content": {"<model>/<volume>": "<content sha256> | absent"},
@@ -125,8 +125,9 @@ Host-side programs are not sandboxed, so the following all count as inputs:
 
 - **Verification policy.** The whole `scripts/` tree, minus CPython `__pycache__`, and every
   top-level file, including the Makefile, Compose files and `.env`. A host program symlink must
-  resolve to a regular file already covered by that closure. An unresolved link or an unmeasured
-  target refuses reuse.
+  resolve to a regular file already covered by that closure. The manifest includes the resolved
+  targets, so changing an intermediate link invalidates evidence. An unresolved link or an
+  unmeasured target refuses reuse.
 - **Environment.** Every variable except `REUSE`, `FRESH`, `_`, `OLDPWD`, `PWD` and `SHLVL`.
   `MAKEFLAGS` and `MFLAGS` count with those controls stripped.
 - **Tool identity.** Docker client and server, daemon ID, kernel and driver, Compose, Buildx,
@@ -225,6 +226,8 @@ The final run with the final code:
   offline by someone who can already read the 0600 record.
 - **Host reads.** Host scripts can read files outside the closure. Every script is part of the key,
   and the current Quality and integration helpers read only Git metadata, `.env` and Compose files.
+  Bind digests assume Docker reads the same worktree files as the host. A remote daemon with a
+  different filesystem at the same path falls outside this proof.
 - **Dependency volume.** `frontend_node_modules` content is trusted to lockfile reconciliation and
   is not hashed.
 - **Unhashed lock.** `backend/requirements-dev.lock` has no hashes. On a BuildKit cache miss, a
@@ -242,7 +245,7 @@ The final run with the final code:
 
 ## Tests
 
-`scripts/test-stage-evidence.py` (20 tests, about 95 s, run by `make test-verification-impact`)
+`scripts/test-stage-evidence.py` (run by `make test-verification-impact`)
 drives the real `feature-verify.sh`, gate and receipt helper in Git fixtures. A fake Docker
 renders Compose with volatile labels and `x-*` fields, streams create events, answers volume,
 inspect and version queries, and mints a fresh image ID and labels on every inspect. The suite

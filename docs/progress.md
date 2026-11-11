@@ -1,3 +1,30 @@
+## 2026-11-11 — Pre-beta consolidated integration, phase 2 freeze
+
+- Merged frozen VERIFICATION-EVIDENCE-001 `b805796` into the clean phase 1 tree `37ee860`.
+  Resolved the backlog and progress conflicts by keeping both features' entries. The workflow
+  code keeps the operator retirement, writer, handoff and verification-lock guards alongside
+  the version 3 receipt and stage-evidence support. Application code, generated API contracts,
+  CI job definitions and Golden pins match phase 1.
+- Local evidence expires 24 hours after its completion instant in UTC. Reuse and dry-run refuse
+  missing, malformed, timezone-naive, out-of-order and future-dated timestamps. Independent
+  review also caught host symlinks that could switch to unmeasured or differently resolved
+  targets, and Dockerfile continuations that could hide unpinned image sources. Focused
+  regressions cover these cases. Delivery always refuses reused stages.
+- The disclosure fixture now generates synthetic credentials at runtime. Workflow fixture
+  gates choose their own freshness controls, including when launched by a fresh canonical gate.
+  Python 3.12 checks under the GitHub Actions environment cover 30 impact cases, 22 evidence
+  cases, legacy v2 and v3 receipt behavior, FRESH precedence, locks, and remote fresh execution.
+  The real retirement suite passed all 71 agent-workflow cases.
+- Focused application checks passed 209 backend tests, 352 frontend tests, 112 disposable
+  PostgreSQL tests including the phase 1 synonym race, and generated API drift. All 13
+  `UX004.test.tsx` cases passed this run. The reported intermittent deep-link failure remains
+  tracked. Two fresh Golden SMOKE copies matched the 0047 pin and disposable cleanup passed.
+  Alembic has 47 unique revisions and one head at `20261110_0047` after 0046 and 0045.
+- The two TAXONOMY-001 concurrency findings and physical Android/iOS installation remain open.
+  The operator requires a fresh canonical FULL with version 3 delivery evidence and no reused
+  stages on the frozen committed tree. Record the result in the receipt, since edits to this
+  milestone after verification would invalidate that evidence.
+
 ## 2026-11-11 — Pre-beta consolidated integration, phase 1
 
 - Fetched GitHub main at `48f35ea` and claimed `feat/pre-beta-integration` as

@@ -1230,6 +1230,15 @@ class ClosureClassificationTests(unittest.TestCase):
 
         docs = self.repo / "docs"
         docs.mkdir()
+        (scripts / "another.sh").write_text("exit 2")
+        alias = docs / "alias"
+        alias.symlink_to("../scripts/tool.sh")
+        (scripts / "indirect").symlink_to("../docs/alias")
+        first = stage_evidence.host_closure(self.repo)
+        alias.unlink()
+        alias.symlink_to("../scripts/another.sh")
+        self.assertNotEqual(stage_evidence.host_closure(self.repo), first)
+
         (docs / "unmeasured.sh").write_text("exit 0")
         (scripts / "unmeasured").symlink_to("../docs/unmeasured.sh")
         with self.assertRaisesRegex(Unknown, "host program symlink leaves the input closure"):
