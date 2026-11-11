@@ -264,7 +264,7 @@ increment is selected and its queue priority is reviewed.
 | HIGH                | 3              | Synonyms and BotanicalIdentity name history | TAXONOMY-002                                                   |
 | HIGH                | 4              | Measurements / growth history               | MEASUREMENT-001 (height slice); further quantities proposed.   |
 | HIGH                | 5              | Phenology                                   | PHENOLOGY-001 (stages on Events); EVENT-003 remains separate.  |
-| HIGH                | 6              | Vegetative propagation / cuttings (talee)   | CUTTING-001; domain design required first.                     |
+| HIGH                | 6              | Vegetative propagation / cuttings (talee)   | CUTTING-001; see the architecture decision below.              |
 | NEXT                | 7              | Recurring care plans                        | Theme building on delivered SCHEDULE-001/002.                  |
 | NEXT                | 8              | Plant health / issue workflow               | Theme reusing Journal / Schedule / History.                    |
 | NEXT                | 9              | Contextual entity timelines                 | Theme reusing HISTORY-001 semantics.                           |
@@ -294,8 +294,8 @@ new SeedLot only through the explicit conversion/producer evidence; shared ident
 media does not prove ancestry. This is neither taxonomic lineage nor phylogeny.
 
 Acceptance direction: branching/generational navigation stays authorized and usable at realistic
-sizes; each edge identifies its owning evidence. Integrate vegetative propagation after its domain
-decision. Existing lineage integrity/receipts remain the foundation; no generic graph engine is implied.
+sizes; each edge identifies its owning evidence. Clonal edges follow the
+[CUTTING-001 decision](cutting-001-design.md) and use the existing lineage integrity and receipts.
 
 ### 2–3. Taxonomy reconciliation and botanical name history
 
@@ -347,14 +347,11 @@ Mother Plant → vegetative material / cutting batch
              → rooting / propagation attempt → resulting Plant / PlantGroup
 ```
 
-Keep the existing **CUTTING-001** identifier, without treating its older CuttingLot wording as an
-approved final schema. Before v1.0, perform a dedicated propagation-domain design decision comparing
-**VegetativeLot + PropagationAttempt**, a broader **Propagation model with typed source material**,
-or another architecture demonstrated to fit the existing domain. No final schema is chosen here.
-Avoid a Cutting-only model that makes other vegetative methods awkward, and avoid speculative
-inheritance without concrete workflow evidence.
+CUTTING-001 uses **VegetativeLot + PropagationAttempt**, with a separate RootingObservation
+for rooting checks. The [architecture decision](cutting-001-design.md) records the alternatives
+and compares the original design with the shipped implementation.
 
-The future contract must preserve:
+The domain contract preserves:
 
 - Source/mother Plant when known and explicit clonal lineage; unknown source stays unknown.
 - Taken/start dates using Florabase PartialDate; one or multiple cuttings and known or unknown
@@ -362,14 +359,13 @@ The future contract must preserve:
 - Initially unknown rooting outcome; successful, failed or partial results; starting quantity kept
   separately from rooted/surviving quantity. Never erase failed propagation evidence or equate
   unknown success with failure.
-- Resulting Plant and/or PlantGroup; appropriate Location; notes; media; Journal observations;
+- Resulting Plant and/or PlantGroup; appropriate Location; notes; media; rooting observations;
   History facts; Schedule follow-up/check-rooting work.
 - Material ancestry and provenance continuity in the first-class lineage view, without routing
   vegetative material through SeedLot or Sowing.
 
-Design must consider division, offsets/pups/suckers, layering/air layering and grafting as extension
-cases, without implementing them all immediately. TUBER-001 remains a separate deferred material
-candidate, not permission to force all organs into seeds. Acceptance direction: prove complete,
+Division, offsets/pups/suckers, layering/air layering and grafting remain extension cases.
+TUBER-001 remains a separate deferred material candidate. Acceptance direction: prove complete,
 failed, partial and still-unknown rooting examples with retained starting/outcome evidence and
 correct descendant links before declaring this core propagation contract stable.
 
@@ -484,7 +480,7 @@ Required stability evidence:
 
 - Core acquisition/receiving, seed and vegetative propagation, material ancestry, inventory/lifecycle
   and correction/reversal boundaries have accepted domain decisions and representative retained-data
-  UAT. Vegetative propagation design must be resolved before 1.0, with no silent seed reinterpretation.
+  UAT.
 - Stable botanical identity references, accepted/current names and historical acquisition/provenance
   evidence survive name correction/reconciliation. Unknown quantities, units and PartialDate retain
   honest meaning across views, API, migrations and portable data contracts.
@@ -497,8 +493,8 @@ Required stability evidence:
   accessibility/responsive use, fresh installation, resource measurements, documentation and
   reproducible versioned distribution. Address material regressions found during sustained real use.
 
-Remaining product-domain decisions include vegetative material/attempt boundaries, historical-name
-retention, measurement/unit semantics, phenology structure, recurrence generation, lightweight
-health linkage, evidence coverage for contextual timelines, receiving reconciliation and portable
+Remaining product-domain decisions include historical-name retention, measurement/unit semantics,
+phenology structure, recurrence generation, lightweight health linkage, evidence coverage for
+contextual timelines, receiving reconciliation and portable
 round trips. Decide them in their selected increments, not by speculative schema in this roadmap.
 1.0 establishes a mature stable contract; it leaves room for continued compatible product development.

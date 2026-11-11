@@ -412,7 +412,8 @@ Vegetative lots retain the identity, acquisition or taking date, material type, 
 source, and original and remaining count of stem, leaf or root cuttings. Rooting attempts retain
 their own starting count, recorded rooted count, cultivation setup and dated rooting checks. A
 recorded zero and an unknown count remain distinct. Failed and abandoned attempts remain readable.
-The [cuttings contract](cuttings.md) describes stock use, clonal lineage and reversal.
+The [cuttings contract](cuttings.md) describes stock use, clonal lineage and reversal. The
+[architecture decision](cutting-001-design.md) records the alternatives and implementation differences.
 
 ### Explicit propagation transitions
 

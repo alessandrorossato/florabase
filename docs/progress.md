@@ -8496,3 +8496,14 @@ Status remains implemented pending canonical verification.
   Candidate acceptance requires a fresh identity reproduction, the local non-publishing beta
   rehearsal and independent QA. Integration and its exact-tree FULL, CI and hosted rehearsal
   remain separate operator steps.
+
+### CUTTING-001 — architecture documentation recovery, 11 November 2026
+
+- Recovered the [architecture decision](cutting-001-design.md) from PR #160 at `d4816e7`
+  and reconciled it against the implementation on `95f5646`. The decision records the
+  alternatives, shipped domain boundaries, deviations and deferred extensions. The feature
+  register still records CUTTING-001 as `in_progress`.
+- Checked relative Markdown links and anchors and reviewed model, service, migration, API,
+  frontend and test references independently. Canonical gate for this documentation change
+  is `make feature-verify AGENT_ID=codex-cutting-doc-recovery` (affected, feature graph and
+  whitespace). Existing product acceptance remains separate from the documentation gate.
