@@ -9,6 +9,7 @@ from sqlalchemy import Connection, event, select, text
 from sqlalchemy.orm import Session
 
 from florabase.botanical_profiles.service import add_botanical_native_range
+from florabase.cuttings.model import PropagationAttempt, VegetativeLot
 from florabase.explore import native_ranges, service
 from florabase.explore.schemas import CollectionRecordCategory as Category
 from florabase.geographic_places.model import GeographicPlace
@@ -312,7 +313,28 @@ def test_category_or_status_selection_and_constant_queries(database_connection: 
             for item in inventory_identity
             if item.id not in {both.id, seed_only.id, dormant.id, sown.id, grouped.id}
         )
-        for taxon_id in (both.id, seed_only.id, dormant.id, sown.id, grouped.id, stored_id):
+        lot_only, attempted = [identity(db, name) for name in ("Cutting lot", "Rooting attempt")]
+        lots = [
+            VegetativeLot(
+                botanical_identity_id=taxon.id,
+                material_type="stem_cutting",
+                source_kind="unknown",
+            )
+            for taxon in (lot_only, attempted)
+        ]
+        db.add_all(lots)
+        db.flush()
+        db.add(PropagationAttempt(vegetative_lot_id=lots[1].id))
+        for taxon_id in (
+            both.id,
+            seed_only.id,
+            dormant.id,
+            sown.id,
+            grouped.id,
+            stored_id,
+            lot_only.id,
+            attempted.id,
+        ):
             add_botanical_native_range(db, taxon_id, place(db, "BR").id)
         add_botanical_native_range(db, both.id, place(db, "005").id)
         add_botanical_native_range(db, seed_only.id, place(db, "IT").id)
@@ -322,15 +344,17 @@ def test_category_or_status_selection_and_constant_queries(database_connection: 
             Category.PLANT: {both.id, stored_id},
             Category.PLANT_GROUP: {grouped.id, stored_id},
             Category.STORED_MATERIAL: {stored_id},
+            Category.VEGETATIVE_LOT: {lot_only.id, attempted.id},
+            Category.PROPAGATION_ATTEMPT: {attempted.id},
         }
-        # Every single type and every OR pair uses identical directory/overview eligibility.
-        for size in (1, 2, 5):
+        # Single types and OR selections use identical directory/overview eligibility.
+        for size in (1, 2, 5, len(Category)):
             for categories in combinations(Category, size):
                 expected = set().union(*(all_sets[category] for category in categories))
                 result = native_ranges.list_identities(db, record=categories)
                 assert {item.id for item in result.items} == expected
                 assert native_ranges.overview(db, record=categories).represented == len(expected)
-        assert native_ranges.overview(db, record=[]).represented == 6
+        assert native_ranges.overview(db, record=[]).represented == 8
         assert (
             native_ranges.overview(db, scope="living", record=[Category.SEED_LOT]).represented == 0
         )

@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, literal, select, union_all
 from sqlalchemy.orm import Session
 
 from florabase.botanical_identities.model import BotanicalIdentity
@@ -39,22 +39,24 @@ def _require_place(database: Session, place_id: UUID | None) -> None:
 
 
 def site_usage(database: Session) -> dict[UUID, ProvenanceSiteUsage]:
-    result: dict[UUID, ProvenanceSiteUsage] = {}
-    for model, field in (
-        (SeedLot, "seed_lots"),
-        (Plant, "plants"),
-        (PlantGroup, "plant_groups"),
-        (VegetativeLot, "vegetative_lots"),
-    ):
-        rows = database.execute(
-            select(model.provenance_site_id, func.count())
+    counts = union_all(
+        *(
+            select(model.provenance_site_id, literal(field), func.count())
             .where(model.provenance_site_id.is_not(None))
             .group_by(model.provenance_site_id)
+            for model, field in (
+                (SeedLot, "seed_lots"),
+                (Plant, "plants"),
+                (PlantGroup, "plant_groups"),
+                (VegetativeLot, "vegetative_lots"),
+            )
         )
-        for site_id, count in rows:
-            if site_id is not None:
-                current = result.setdefault(site_id, ProvenanceSiteUsage())
-                setattr(current, field, count)
+    )
+    result: dict[UUID, ProvenanceSiteUsage] = {}
+    for site_id, field, count in database.execute(counts).tuples():
+        if site_id is not None:
+            current = result.setdefault(site_id, ProvenanceSiteUsage())
+            setattr(current, field, count)
     return result
 
 

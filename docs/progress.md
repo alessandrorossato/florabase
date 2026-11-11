@@ -28,6 +28,14 @@
   retirement fixtures inherited the gate's agent identity and reached the operator refusal
   before the mount and sticky-file assertions. The fixture now declares an operator identity
   in its disposable context. Production authorization and the test assertions are preserved.
+- The next FULL passed all source, workflow, quality, build and migration stages. PostgreSQL
+  found seven Cutting integration regressions. The directory projections now batch all four
+  provenance usage counts into one query. Tests require five total queries for SeedLots and
+  four for Plants and PlantGroups at both directory sizes, including a retained cutting.
+  The schema and migration checks explicitly cover Cutting tables, Location flags and empty
+  legacy media targets. Native Ranges now exercises both new Cutting categories with real rows.
+  The corrected focused PostgreSQL selection passed 98 tests. Backend static checks, 12
+  provenance unit tests and API drift passed. No schema revision or fixture pin changed.
 
 ## 2026-11-11 — Pre-beta consolidated integration, phase 1
 

@@ -6,6 +6,7 @@ from sqlalchemy import Connection, event, select
 from sqlalchemy.orm import Session
 
 from florabase.botanical_identities.model import BotanicalIdentity
+from florabase.cuttings.model import VegetativeLot
 from florabase.geographic_places.model import GeographicPlace
 from florabase.plants.model import Plant, PlantGroup
 from florabase.plants.schemas import PlantGroupResponse, PlantResponse
@@ -16,6 +17,7 @@ from florabase.plants.service import (
     plant_responses,
 )
 from florabase.provenance_sites.model import ProvenanceSite
+from florabase.provenance_sites.service import site_usage
 from florabase.seed_lots.model import SeedLot
 from florabase.seed_lots.schemas import SeedLotResponse
 from florabase.seed_lots.service import list_seed_lots, responses
@@ -43,6 +45,16 @@ def test_geography_is_loaded_once_at_both_directory_sizes(
         site = ProvenanceSite(id=uuid7(), name="Perf site", geographic_place_id=place.id)
         database.add(site)
         database.flush()
+        database.add(
+            VegetativeLot(
+                botanical_identity_id=identity.id,
+                material_type="stem_cutting",
+                source_kind="purchased",
+                provenance_site_id=site.id,
+            )
+        )
+        database.flush()
+        assert site_usage(database)[site.id].vegetative_lots == 1
         model = {"seed": SeedLot, "plant": Plant, "group": PlantGroup}[kind]
         results: Sequence[SeedLotResponse | PlantResponse | PlantGroupResponse]
         for size in (1, 20):
@@ -85,8 +97,8 @@ def test_geography_is_loaded_once_at_both_directory_sizes(
             ]
             assert len(geography_queries) == 1
             # SeedLot also batches nullable conversion IDs for Harvest cross-navigation.
-            # Projection, geography, three site-usage queries and primary designation.
-            assert len(statements) == (7 if kind == "seed" else 6)
+            # Projection, geography, batched site usage and primary designation.
+            assert len(statements) == (5 if kind == "seed" else 4)
             assert all(
                 item.material_provenance is not None
                 and item.material_provenance.display_path == f"{root.name} → Perf locality"

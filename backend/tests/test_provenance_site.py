@@ -122,7 +122,12 @@ def test_provenance_site_service_crud_usage_and_safe_delete(
     assert updated.notes == "Known point"
 
     used_id = created.id
-    database.execute.side_effect = [[(used_id, 2)], [(used_id, 3)], [(used_id, 4)], [(used_id, 5)]]
+    database.execute.return_value.tuples.return_value = [
+        (used_id, "seed_lots", 2),
+        (used_id, "plants", 3),
+        (used_id, "plant_groups", 4),
+        (used_id, "vegetative_lots", 5),
+    ]
     usage = site_service.site_usage(database)[used_id]
     assert (usage.seed_lots, usage.plants, usage.plant_groups, usage.vegetative_lots) == (
         2,
