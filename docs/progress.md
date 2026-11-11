@@ -35,6 +35,53 @@
 - Updated `IdentityReconciliationPanel.tsx`, `BotanicalIdentityScreen.tsx`, `IdentitySummary.tsx`, and `botanical-identities.css` to distinctly badge accepted, original recorded, operator-managed, source-provided, and immutable historical ledger names; provide accessible Add/Edit/Remove synonym workflows (with Escape/Cancel focus restoration and confirmation dialog); prefill synonyms from read-only source assessments without auto-acceptance; support synonym-aware directory filtering, Saved Views/URL preservation, and direct retired tombstone resolution.
 - Marked `TAXONOMY-002` as `implemented` in `docs/features.json` (not `verified`, per consolidated integration workflow policy — no individual canonical FULL verification receipt generated on this branch).
 - Verification on current code (`make check`, feature graph, and focused PostgreSQL integration suites): `ruff check .`, `ruff format --check .` (408 files), `mypy` (359 source files), Prettier (`pnpm format:check`), ESLint (`eslint . --max-warnings 0`), TypeScript (`tsc -b --pretty false`), `make api-check`, `python3 scripts/check-features.py` (146 features valid), `pytest -m "not integration"` (1052 passed, 3 skipped, 784 deselected, 90.20% coverage), `pnpm test:run` (114 test files, 1232 tests passed), and 118 PostgreSQL integration tests (`test_botanical_identity_api.py`, `test_lineage_integrity.py`, `test_search.py`, `test_search002.py`: 79 passed in 14.60s; `test_botanical_identities.py`, `test_botanical_identity_migration.py`, `test_lineage_api.py`, `test_measurement_api.py`: 39 passed in 9.09s; covering synonym CRUD, auth/CSRF/owner/tombstone guards, search, migrations, measurements, and `LINEAGE-003`/lineage graph continuity across corrections & merges).
+## 2026-11-10 — PWA-001: mobile and desktop installable progressive web app (online-first)
+
+- Implemented W3C-compliant web app manifest ([`manifest.webmanifest`](../frontend/public/manifest.webmanifest))
+  with standalone display mode (`start_url: /`, `scope: /`, `theme_color`/`background_color` `#153a2c`),
+  standard & adaptive maskable botanical icons (192×192, 512×512), Apple touch icon (180×180),
+  multi-resolution favicons, and CSP-safe light/dark `/offline.html` fallback (preserving existing
+  `appearance.js` dynamic `<meta name="theme-color">` behavior across all light and dark themes).
+- Added deterministic icon generator `scripts/generate_pwa_icons.py` using Florabase's botanical palette
+  (`#153a2c`, `#f4f8f5`, `#8dc5a3`), keeping maskable artwork inside the Android adaptive 80% safe circle
+  (30.37% max radius <= 40% limit).
+- Configured production Nginx caching and MIME types in `frontend/nginx.conf`:
+  `no-cache, no-store, must-revalidate` for `/sw.js`, `no-cache` for `/manifest.webmanifest`,
+  `/offline.html`, `/offline.css`, `/offline.js`, and `/index.html`, and 1-day `public, max-age=86400`
+  cache for `/icons/`, `/favicon.ico`, and `/favicon.svg`. `/api/*`, `/release.json` (`no-store`),
+  `/runtime-config.js` (`no-store`), and `/appearance.js` (`no-cache`) remain excluded from stale caching.
+- Implemented strictly online-first service worker (`frontend/public/sw.js`) and registration helper
+  (`frontend/src/pwa/registerServiceWorker.ts`, `updateViaCache: "none"`):
+  - Leaves all `/api/*` requests, auth/session/CSRF calls, private media/attachments, mutations
+    (`POST`/`PUT`/`PATCH`/`DELETE`), cross-origin requests, `/assets/*` bundles, and dynamic endpoints
+    (`/runtime-config.js`, `/release.json`, `/appearance.js`, `/healthz`) directly to browser networking.
+  - Enforces strict network-first navigations (never cached) with external `/offline.{html,css,js}`
+    zero-data fallback on network loss or reverse-proxy `502`/`503`/`504` responses (zero inline scripts
+    or styles under strict `script-src 'self'; style-src 'self'` CSP), recovering via **Retry connection**.
+  - Activates worker updates cleanly (`skipWaiting`, `clients.claim`) with no silent page reload and wraps
+    shell asset cache updates in `event.waitUntil` with `!response.redirected`.
+- Added non-intrusive release watcher and update banner (`frontend/src/pwa/releaseWatcher.ts`,
+  `frontend/src/pwa/UpdateNotice.tsx`, `frontend/src/pwa/update-notice.css`) polling unauthenticated
+  `/release.json` on visibility, reconnect, and 15-minute intervals, using `--wb-obscured-bottom` and
+  safe-area insets to clear the mobile bottom bar and a pre-mounted `role="status"` live region so
+  screen readers announce updates without disturbing unsaved form edits. Documented browser install,
+  update, and removal steps in [pwa.md](pwa.md) and linked from [installation.md](installation.md#tailscale-and-https).
+- Checks:
+  - Focused PWA suites (`src/pwa/`): 5 files passed (65 tests: VM-executed `public/sw.js` behavioral
+    suite including `502`/`503`/`504` shell-asset fallback and redirect exclusion, `UpdateNotice`
+    pre-mounted live region, `releaseWatcher`, manifest/meta, Nginx config, and registration).
+  - Real Chromium headless CDP verification against built Docker Nginx runtime images (`pwa-001-qa-a`
+    -> `pwa-001-qa-b`) behind HTTP localhost and HTTPS TLS proxies: `Page.getAppManifest` and
+    `Page.getInstallabilityErrors` returned `[]`, SW activated at `/`, Auth/CSRF/`HttpOnly` login &
+    logout, `/#/plants` deep-link reload, session expiry, `CacheStorage`/`localStorage` privacy audits
+    (only the 12 public shell assets cached), HTTP `503` (under strict `script-src 'self'; style-src 'self'` CSP)
+    and offline fallback recovery, dark/light theme colors, `390x844` mobile layout (`UpdateNotice`
+    above `.wb-bottombar` with 16px clearance), and simulated `qa-a -> qa-b` upgrade preserving unsaved
+    form input.
+  - TypeScript strict check, ESLint (`--max-warnings 0`), Prettier, `check-features.py`, and untracked
+    whitespace checks passed.
+  - Real physical Android Chromium and iOS/iPadOS Safari devices were not available locally (documented as
+    pending real-device verification in [pwa.md](pwa.md)); `PWA-001` status kept at `implemented`.
 
 ## 2026-11-09 — TAXONOMY-001 integrated with MEASUREMENT-001 and renumbered to 20261109_0045
 

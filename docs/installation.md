@@ -336,6 +336,10 @@ Serve's background mode is designed to persist across restarts. Florabase accept
 Tailscale host, including certificate renewal and reboot, is pending.
 [Tailscale Serve reference](https://tailscale.com/docs/reference/tailscale-cli/serve)
 
+Once Florabase answers on its HTTPS origin, phones, tablets and desktop browsers can install it as an
+online-only app. See [Install Florabase as an app](pwa.md) for browser steps, update behavior and
+what the app does while the server is unreachable.
+
 ## Day-to-day operation
 
 Containers restart automatically (`restart: unless-stopped`) after a crash, a Docker restart or a

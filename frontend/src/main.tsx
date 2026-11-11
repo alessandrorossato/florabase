@@ -3,6 +3,8 @@ import { createRoot } from "react-dom/client";
 
 import { App } from "./App.tsx";
 import { trackInputModality } from "./focusModality";
+import { registerServiceWorker } from "./pwa/registerServiceWorker";
+import { UpdateNotice } from "./pwa/UpdateNotice";
 import "leaflet/dist/leaflet.css";
 import "@fontsource-variable/source-sans-3";
 import "@fontsource-variable/source-sans-3/wght-italic.css";
@@ -29,8 +31,10 @@ if (root === null) {
 }
 
 trackInputModality();
+void registerServiceWorker();
 createRoot(root).render(
   <StrictMode>
     <App />
+    <UpdateNotice />
   </StrictMode>,
 );
