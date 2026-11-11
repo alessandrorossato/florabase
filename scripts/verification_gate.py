@@ -7,9 +7,11 @@ import argparse
 import contextlib
 import json
 import os
+import re
 import subprocess
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +22,9 @@ from workflow_resources import ResourceError, machine_lock, verification_lock
 # Workflow suites that need the Quality Docker project; the others are offline host suites.
 DOCKER_WORKFLOW = frozenset({"workflow-check"})
 JOURNAL_NAME = "florabase-verification-last-run.json"
+# Only stages whose Docker inputs can be proven (VERIFICATION-EVIDENCE-001). Graph, whitespace,
+# workflow suites, builds and the PostgreSQL migration cycle always execute.
+REUSABLE_STAGES = frozenset({"quality", "integration"})
 
 
 def checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
@@ -114,7 +119,37 @@ def checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
     return checks
 
 
-def validate_execution(plan: dict[str, Any], completed: object) -> None:
+def reused_stages(completed: list[dict[str, Any]]) -> list[str]:
+    return [item["id"] for item in completed if "reused_from" in item]
+
+
+def strip_reuse(completed: object, *, reuse_allowed: bool) -> object:
+    """Validate reuse references; the remaining entry must equal a fresh execution exactly."""
+    if not isinstance(completed, list):
+        return completed
+    stripped: list[object] = []
+    for item in completed:
+        if isinstance(item, dict) and "reused_from" in item:
+            reference = item["reused_from"]
+            if (
+                not reuse_allowed
+                or item.get("id") not in REUSABLE_STAGES
+                or not isinstance(reference, dict)
+                or set(reference) != {"run_id", "key", "finished_at"}
+                or not all(isinstance(value, str) for value in reference.values())
+                or not re.fullmatch(r"[0-9a-f]{64}", reference["key"])
+                or datetime.fromisoformat(reference["finished_at"]).tzinfo is None
+            ):
+                raise ValueError("invalid reused stage evidence reference")
+            item = {key: value for key, value in item.items() if key != "reused_from"}
+        stripped.append(item)
+    return stripped
+
+
+def validate_execution(
+    plan: dict[str, Any], completed: object, *, reuse_allowed: bool = True
+) -> None:
+    completed = strip_reuse(completed, reuse_allowed=reuse_allowed)
     expected = []
     for check in checks_for(plan):
         item = {**check, "result": "passed"}
@@ -163,8 +198,33 @@ def write_journal(path: Path | None, plan: dict[str, Any], records: list[dict[st
     os.replace(temporary, path)
 
 
+def start_recording(check: dict[str, Any], evidence: str) -> Any:
+    """Return a Recording, or None when this stage cannot produce evidence (it still runs)."""
+    if evidence == "off" or check["id"] not in REUSABLE_STAGES:
+        return None
+    import stage_evidence
+
+    try:
+        return stage_evidence.Recording(check)
+    except Exception as error:  # evidence is optional; a doubt only means no record
+        print(f"stage evidence not recorded: {check['id']}: {error}", flush=True)
+        return None
+
+
+def finish_recording(recording: Any, check: dict[str, Any]) -> None:
+    try:
+        key = recording.finish()
+    except Exception as error:
+        print(f"stage evidence not recorded: {check['id']}: {error}", flush=True)
+    else:
+        print(f"stage evidence recorded: {check['id']} key {key[:12]}", flush=True)
+
+
 def run_checks(
-    plan: dict[str, Any], checks: list[dict[str, Any]], journal: Path | None = None
+    plan: dict[str, Any],
+    checks: list[dict[str, Any]],
+    journal: Path | None = None,
+    evidence: str = "off",
 ) -> list[dict[str, Any]]:
     completed: list[dict[str, Any]] = []
     records: list[dict[str, Any]] = []
@@ -173,7 +233,17 @@ def run_checks(
             f"\n== feature verification: {check['id']} ==\nCommand: {' '.join(check['command'])}",
             flush=True,
         )
+        if evidence != "off" and check["id"] in REUSABLE_STAGES:
+            import stage_evidence
+
+            reused = stage_evidence.decide(check, evidence)
+            if reused is not None:
+                completed.append({**check, "result": "passed", "reused_from": reused})
+                records.append({"id": check["id"], "status": "reused", "elapsed": 0.0})
+                write_journal(journal, plan, records)
+                continue
         migration = check["id"] == "migration-cycle"
+        recording = start_recording(check, evidence)
         started = time.monotonic()
         try:
             # Stages never read the launcher's stdin: a terminal, a pipe and CI behave identically.
@@ -183,7 +253,11 @@ def run_checks(
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE if migration else None,
             )
-        except KeyboardInterrupt:
+        except BaseException as error:
+            if recording:
+                recording.abort()
+            if not isinstance(error, KeyboardInterrupt):
+                raise
             records.append(
                 {"id": check["id"], "status": "interrupted", "elapsed": time.monotonic() - started}
             )
@@ -199,6 +273,8 @@ def run_checks(
         if migration:
             print(result.stdout, end="", flush=True)
         if result.returncode:
+            if recording:
+                recording.abort()
             records.append({"id": check["id"], "status": "failed", "elapsed": elapsed})
             write_journal(journal, plan, records)
             print(
@@ -228,6 +304,8 @@ def run_checks(
                 write_journal(journal, plan, records)
                 raise ValueError("migration cycle did not report verified execution and cleanup")
             item["evidence"] = json.loads(reports[0])
+        if recording:
+            finish_recording(recording, check)
         completed.append(item)
         records.append({"id": check["id"], "status": "passed", "elapsed": elapsed})
         write_journal(journal, plan, records)
@@ -236,22 +314,31 @@ def run_checks(
     return completed
 
 
-def execute(plan: dict[str, Any], path: Path, journal: Path | None = None) -> None:
+def execute(
+    plan: dict[str, Any], path: Path, journal: Path | None = None, evidence: str = "off"
+) -> None:
     print(describe(plan), flush=True)
     checks = checks_for(plan)
     print("Stage order: " + " -> ".join(c["id"] for c in checks), flush=True)
-    completed = run_checks(plan, checks, journal)
+    if evidence != "off":
+        print(f"Stage evidence: {evidence} (reuse candidates: quality, integration)", flush=True)
+    completed = run_checks(plan, checks, journal, evidence)
     validate_execution(plan, completed)
     path.write_text(
         json.dumps(
-            {"plan": plan, "completed": completed, "migration": migration_result(plan, completed)},
+            {
+                "plan": plan,
+                "completed": completed,
+                "migration": migration_result(plan, completed),
+                "evidence_mode": evidence,
+            },
             sort_keys=True,
         )
         + "\n"
     )
 
 
-def execute_locked(plan: dict[str, Any], path: Path) -> None:
+def execute_locked(plan: dict[str, Any], path: Path, evidence: str = "off") -> None:
     metadata = Path(
         subprocess.run(
             ["git", "rev-parse", "--absolute-git-dir"],
@@ -268,7 +355,7 @@ def execute_locked(plan: dict[str, Any], path: Path) -> None:
     )
     with verification_lock(metadata), full_lock:
         (metadata / "info").mkdir(parents=True, exist_ok=True)
-        execute(plan, path, metadata / "info" / JOURNAL_NAME)
+        execute(plan, path, metadata / "info" / JOURNAL_NAME, evidence)
 
 
 def check_untracked_whitespace() -> None:
@@ -296,14 +383,22 @@ def main() -> None:
     parser.add_argument("--untracked-whitespace", action="store_true")
     parser.add_argument("--full", action="store_true")
     parser.add_argument("--execution", type=Path)
+    parser.add_argument(
+        "--evidence",
+        choices=["off", "reuse", "dry-run", "fresh"],
+        default="off",
+        help="local stage evidence: off (default), reuse, dry-run (report only) or fresh",
+    )
     args = parser.parse_args()
     if args.untracked_whitespace:
         check_untracked_whitespace()
         return
     if not args.base or not args.execution:
         parser.error("--base and --execution are required for gate execution")
+    if args.evidence != "off" and os.environ.get("GITHUB_ACTIONS") == "true":
+        parser.error("remote CI never reads or writes local stage evidence")
     try:
-        execute_locked(make_plan(args.base, force_full=args.full), args.execution)
+        execute_locked(make_plan(args.base, force_full=args.full), args.execution, args.evidence)
     except ResourceError as error:
         print(f"verification refused: {error}", file=sys.stderr)
         raise SystemExit(1) from error

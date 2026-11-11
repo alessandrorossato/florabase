@@ -100,14 +100,10 @@ def safe_suites(paths: list[str], root: Path) -> list[str]:
     return sorted(set(safe))
 
 
-def execute(
-    role: str, *, base: str = "", suites: list[str] | None = None, builds: list[str] | None = None
-) -> None:
-    root = Path.cwd().resolve()
-    selected = safe_suites(suites or [], root)
-    evidence = expected_migration_evidence(base) if role == "feature-migration" else None
-    revision = evidence["verified_revisions"][0] if evidence else ""
-    owner = Owner.disposable(role, root)
+def compose_invocation(
+    role: str, root: Path, owner: Owner, selected: list[str], directory: Path
+) -> tuple[list[str], dict[str, str]]:
+    """Exact Compose argv and environment for a disposable run; stage evidence renders the same."""
     # Labels are applied to all resources before creation, including built image outputs.
     services = ["backend", "frontend"] if role == "verification-build" else ["db", "tests"]
     labels = {
@@ -135,34 +131,45 @@ def execute(
             "selected-integration",
             *selected,
         ]
+    path = directory / "ownership.json"
+    path.write_text(json.dumps(override))
+    env = {k: v for k, v in os.environ.items() if not k.startswith("COMPOSE_")}
+    if role == "verification-build":
+        env.update(
+            POSTGRES_DB="build_only",
+            POSTGRES_USER="build_only",
+            POSTGRES_PASSWORD="disposable-build-only",
+            FLORABASE_DATABASE_URL="postgresql+psycopg://build_only:disposable-build-only@db:5432/build_only",
+        )
+    command = [
+        "docker",
+        "compose",
+        "--env-file",
+        "/dev/null",
+        "--project-name",
+        owner.project,
+        "--project-directory",
+        str(root),
+        "--file",
+        str(
+            root / ("compose.yaml" if role == "verification-build" else "compose.integration.yaml")
+        ),
+        "--file",
+        str(path),
+    ]
+    return command, env
+
+
+def execute(
+    role: str, *, base: str = "", suites: list[str] | None = None, builds: list[str] | None = None
+) -> None:
+    root = Path.cwd().resolve()
+    selected = safe_suites(suites or [], root)
+    evidence = expected_migration_evidence(base) if role == "feature-migration" else None
+    revision = evidence["verified_revisions"][0] if evidence else ""
+    owner = Owner.disposable(role, root)
     with tempfile.TemporaryDirectory(prefix="florabase-disposable-config-") as temporary:
-        path = Path(temporary) / "ownership.json"
-        path.write_text(json.dumps(override))
-        env = {k: v for k, v in os.environ.items() if not k.startswith("COMPOSE_")}
-        if role == "verification-build":
-            env.update(
-                POSTGRES_DB="build_only",
-                POSTGRES_USER="build_only",
-                POSTGRES_PASSWORD="disposable-build-only",
-                FLORABASE_DATABASE_URL="postgresql+psycopg://build_only:disposable-build-only@db:5432/build_only",
-            )
-        command = [
-            "docker",
-            "compose",
-            "--env-file",
-            "/dev/null",
-            "--project-name",
-            owner.project,
-            "--project-directory",
-            str(root),
-            "--file",
-            str(
-                root
-                / ("compose.yaml" if role == "verification-build" else "compose.integration.yaml")
-            ),
-            "--file",
-            str(path),
-        ]
+        command, env = compose_invocation(role, root, owner, selected, Path(temporary))
         try:
             with Disposable(owner):
                 if role == "verification-build":

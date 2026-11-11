@@ -38,6 +38,21 @@ initial_state="$(python3 ./scripts/feature-tree-fingerprint.py frozen-state)"
 
 execution="$(mktemp)"
 trap 'rm -f "${execution}"' EXIT
+# Stage evidence (VERIFICATION-EVIDENCE-001) is opt-in and local: REUSE=1 may skip Quality and
+# integration only when their recorded input closure is proven unchanged; REUSE=dry-run reports
+# what would be reused and still runs everything; FRESH=1 runs everything and wins over REUSE.
+evidence="off"
+case "${REUSE:-}" in
+  "" | 0) ;;
+  1) evidence="reuse" ;;
+  dry-run) evidence="dry-run" ;;
+  *) fail "REUSE must be 1 or dry-run" ;;
+esac
+case "${FRESH:-}" in
+  "" | 0) ;;
+  1) evidence="fresh" ;;
+  *) fail "FRESH must be 1" ;;
+esac
 mode_args=()
 case "${1:-}" in
   "") ;;
@@ -45,7 +60,7 @@ case "${1:-}" in
   *) fail "only --full is supported; focused checks cannot produce a delivery receipt" ;;
 esac
 # The gate never reads stdin, so terminal, pipe and CI launches select identical behaviour.
-run_stage "selected gate" python3 ./scripts/verification_gate.py --base "${base_sha}" "${mode_args[@]}" --execution "${execution}" </dev/null
+run_stage "selected gate" python3 ./scripts/verification_gate.py --base "${base_sha}" "${mode_args[@]}" --evidence "${evidence}" --execution "${execution}" </dev/null
 [[ "$(python3 ./scripts/feature-tree-fingerprint.py frozen-state)" == "${initial_state}" ]] ||
   fail "source tree changed during verification (working tree, index or HEAD); freeze them and rerun make feature-verify"
 run_stage "verification receipt" python3 ./scripts/feature-tree-fingerprint.py write --branch "${branch}" --base "${base_sha}" --execution "${execution}"

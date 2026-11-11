@@ -128,8 +128,10 @@ class VerifyHelperTests(unittest.TestCase):
             "FLORABASE_LOCK_DIR": str(self.root / "locks"),
             **environment,
         }
-        if "AGENT_ID" not in environment:
-            env.pop("AGENT_ID", None)
+        # Fixture gates choose their own writer and execution mode, independently of the caller.
+        for name in ("AGENT_ID", "REUSE", "FRESH"):
+            if name not in environment:
+                env.pop(name, None)
         return subprocess.run(
             [str(self.work / "scripts/feature-verify.sh"), *(["--full"] if full else [])],
             cwd=self.work,

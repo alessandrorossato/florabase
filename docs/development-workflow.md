@@ -717,11 +717,32 @@ summary (passed, failed, interrupted or not run, with elapsed time) at the end o
 keeps the latest run's timings in `<git-dir>/info/florabase-verification-last-run.json`, which is
 diagnostics only and never evidence. Because source-state checks run first, the closing
 frozen-state comparison covers the working tree, the index and HEAD. See
-[VERIFICATION-FAST-001](verification-fast-001-handoff.md); its stage-evidence reuse proposal is not
-implemented.
+[VERIFICATION-FAST-001](verification-fast-001-handoff.md).
+
+Stage evidence is opt-in and local
+([VERIFICATION-EVIDENCE-001](verification-evidence-001-handoff.md)).
+
+- `make feature-verify REUSE=1` may skip **only** Quality and integration. It skips them when a
+  record in this worktree's Git metadata proves that their complete input closure is unchanged.
+  The closure covers rendered Compose models, every bind source and build context (including
+  untracked and ignored files), scripts and top-level files, environment, tools and exact image
+  identity.
+- `REUSE=dry-run` runs everything and reports what would be reused.
+- `FRESH=1` ignores records and takes precedence over the reuse controls.
+- `make verification-evidence` previews the decision without running stages.
+- Every other stage, including the real migration cycle, always runs.
+- Unknown, corrupt or stale evidence runs the stage fresh, and the log states why. Local records
+  expire 24 hours after completion in UTC. Missing, malformed, timezone-naive, future-dated or
+  out-of-order timestamps refuse reuse.
+- BuildKit and dependency caches are never evidence.
+- Receipts are version 3 and name every reused stage. Version 2 receipts remain valid.
+- Delivery always refuses a receipt containing reused stages. For consolidated integration,
+  commit and freeze the tree, then run `env -u REUSE FRESH=1 make verify-full AGENT_ID=<writer>`.
+  Require a version 3 FULL receipt with an empty reused-stage list and validate it against HEAD
+  using `feature-tree-fingerprint.py verify`.
 
 Freeze source before the final gate. It invalidates old evidence at startup and rejects source edits
-while stages run. Version 2 receipts cover file content, modes and symlinks, exact base/branch, mode,
+while stages run. Receipts cover file content, modes and symlinks, exact base/branch, mode,
 impact-map version/digest, changed/affected scopes, escalation reasons, selected suites, completed
 commands, static checks, migration/build decisions and results, and a UTC completion timestamp.
 Migration evidence distinguishes the decision, cycle requirement, actual execution and result. Required

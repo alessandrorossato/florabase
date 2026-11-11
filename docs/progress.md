@@ -8407,3 +8407,41 @@ Status remains implemented pending canonical verification.
 - Independent explorer QA findings were addressed in the generated contracts and help text.
   The operator-selected consolidated FULL remains the acceptance gate, and CUTTING remains
   `in_progress` pending that gate.
+
+### VERIFICATION-EVIDENCE-001 — opt-in reusable stage evidence, 11 November 2026
+
+- **What it adds.**
+  - `REUSE=1` lets the gate skip only Quality and PostgreSQL integration, when a per-worktree
+    record proves their derived input closure is unchanged.
+  - `REUSE=dry-run`, `FRESH=1` and the read-only `make verification-evidence` complete the
+    controls.
+  - Every other stage always runs, including the real migration cycle. Remote CI and the required
+    checks are unchanged.
+  - Receipt version 3 names every reused stage. Version 2 stays valid. Delivery refuses reused
+    stages pending an operator policy decision.
+  - See the [handoff](verification-evidence-001-handoff.md).
+- **Real Docker runs.**
+  - Earlier runs found and fixed four gaps: pnpm store growth, a mutable `attachment_data` volume,
+    per-rebuild image IDs, and the SHA in `x-source`.
+  - The final run recorded Quality (355 s) and integration (818 passed, 543 s) and reused both in
+    1.8 s.
+  - Docs-only edits and a new commit kept the evidence valid. Backend and frontend edits
+    invalidated exactly the affected stages.
+- **Checks.**
+  - `scripts/test-stage-evidence.py` (20 tests) passed.
+  - `test-verification-impact`, `test-feature-workflow`, `test-agent-workflow` (3 skipped as
+    before) and `test-workflow-resources` passed.
+  - The exact `workflow-check` ruff/format/mypy invocations passed, as did `check-features.py`
+    and `git diff --check`.
+  - The new and changed host scripts also import under Python 3.12, which remote CI uses for
+    the workflow suites.
+  - Independent read-only infrastructure QA found no unsafe reuse path. Its practical findings are
+    fixed, and the rest are documented as residual risks.
+- **Unresolved.**
+  - Canonical FULL is deferred to the operator's consolidated integration gate. It must run
+    without `REUSE=1`, and this feature was not used to verify itself.
+  - Pending decisions: reused-stage delivery policy and a record maximum age.
+  - The pre-existing flaky `frontend/src/UX004.test.tsx` deep-link test failed once in four full
+    runs.
+  - Coordinate with WORKFLOW-RETIRE-AUTH-001. Both touch the Makefile `workflow-check` lists and
+    `feature_worktree.py`.

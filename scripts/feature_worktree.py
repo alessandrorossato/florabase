@@ -126,6 +126,8 @@ def receipt_state(repo: Repository, branch: str, base: str) -> str:
     if worktree.returncode:
         return "invalid: " + worktree.stderr.strip().removeprefix("feature receipt: ")
     committed = subprocess.run(command, cwd=repo.source, text=True, capture_output=True)
+    if "not delivery proof" in committed.stderr:
+        return "valid for review; reused stage evidence requires a fresh gate before delivery"
     return "valid, commit pending" if committed.returncode else "valid for committed HEAD"
 
 

@@ -85,6 +85,16 @@ def digest(entries: list[dict[str, str]]) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
+def valid_stage_evidence(value: object) -> bool:
+    return (
+        isinstance(value, dict)
+        and set(value) == {"mode", "reused"}
+        and value["mode"] in {"off", "reuse", "dry-run", "fresh"}
+        and isinstance(value["reused"], list)
+        and (not value["reused"] or value["mode"] == "reuse")
+    )
+
+
 def fail(message: str) -> None:
     print(f"feature receipt: {message}", file=sys.stderr)
     raise SystemExit(1)
@@ -133,7 +143,11 @@ def main() -> None:
         return
 
     if args.command == "write":
-        from verification_gate import migration_result, validate_execution
+        from verification_gate import (
+            migration_result,
+            reused_stages,
+            validate_execution,
+        )
         from verification_impact import make_plan
 
         execution = json.loads(args.execution.read_text())
@@ -142,12 +156,18 @@ def main() -> None:
         if plan != make_plan(args.base, force_full=full):
             fail("execution plan differs from the current impact policy")
         validate_execution(plan, execution["completed"])
+        stage_evidence = {
+            "mode": execution.get("evidence_mode"),
+            "reused": reused_stages(execution["completed"]),
+        }
+        if not valid_stage_evidence(stage_evidence):
+            fail("stage evidence mode is inconsistent with the completed checks")
         if json.dumps(execution["migration"], sort_keys=True) != json.dumps(
             migration_result(plan, execution["completed"]), sort_keys=True
         ):
             fail("migration execution evidence differs from the completed checks")
         receipt = {
-            "version": 2,
+            "version": 3,
             "branch": args.branch,
             "base": args.base,
             "working_tree_digest": digest(working_entries()),
@@ -156,6 +176,8 @@ def main() -> None:
             "completed_at": datetime.now(UTC).isoformat(),
             "migration": execution["migration"],
             "build_result": "passed" if plan["builds"] else "not_required",
+            # A fresh receipt for this exact tree that names every reused stage (none by default).
+            "stage_evidence": stage_evidence,
         }
         receipt_path.parent.mkdir(parents=True, exist_ok=True)
         receipt_path.write_text(json.dumps(receipt, sort_keys=True) + "\n", encoding="utf-8")
@@ -166,7 +188,8 @@ def main() -> None:
         receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
         fail(f"no usable verification receipt ({error}); rerun make feature-verify")
-    if not isinstance(receipt, dict) or receipt.get("version") != 2:
+    # Version 2 (before VERIFICATION-EVIDENCE-001) remains valid; it can never contain reuse.
+    if not isinstance(receipt, dict) or receipt.get("version") not in (2, 3):
         fail("unknown/incomplete receipt version; rerun make feature-verify")
     if receipt.get("branch") != args.branch:
         fail("receipt belongs to another branch; rerun make feature-verify")
@@ -179,14 +202,24 @@ def main() -> None:
             "HEAD tree differs from verified working tree; commit the verified tree before delivery"
         )
     try:
-        from verification_gate import migration_result, validate_execution
+        from verification_gate import (
+            migration_result,
+            reused_stages,
+            validate_execution,
+        )
         from verification_impact import make_plan
 
         plan = receipt["verification"]
         full = "operator requested full verification" in plan["escalation_reasons"]
         if plan != make_plan(args.base, force_full=full):
             fail("impact mapping or selected plan differs; rerun make feature-verify")
-        validate_execution(plan, receipt["completed"])
+        validate_execution(plan, receipt["completed"], reuse_allowed=receipt["version"] == 3)
+        reused = reused_stages(receipt["completed"])
+        if receipt["version"] == 3 and (
+            not valid_stage_evidence(receipt["stage_evidence"])
+            or receipt["stage_evidence"]["reused"] != reused
+        ):
+            raise ValueError("stage evidence summary differs from the completed checks")
         completed_at = datetime.fromisoformat(receipt["completed_at"])
         if completed_at.tzinfo is None:
             raise ValueError("missing completion timezone")
@@ -198,10 +231,19 @@ def main() -> None:
             raise ValueError("incomplete production build result")
     except (KeyError, TypeError, ValueError) as error:
         fail(f"incomplete verification evidence ({error}); rerun make feature-verify")
+    if reused and not args.worktree:
+        # Reused stages can support local review only.
+        fail(
+            f"receipt reuses stage evidence ({', '.join(reused)}), which is not delivery proof; "
+            "rerun make feature-verify without REUSE=1"
+        )
     print(
-        "feature receipt: exact worktree matches verified tree"
-        if args.worktree
-        else "feature receipt: current HEAD matches verified working tree"
+        (
+            "feature receipt: exact worktree matches verified tree"
+            if args.worktree
+            else "feature receipt: current HEAD matches verified working tree"
+        )
+        + (f" (reused stage evidence: {', '.join(reused)})" if reused else "")
     )
 
 
