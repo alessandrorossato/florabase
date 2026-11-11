@@ -4,7 +4,7 @@
 #
 #    pip-compile --extra=dev --output-file=requirements-dev.lock --strip-extras pyproject.toml
 #
-alembic==1.20.0
+alembic==1.20.1
     # via florabase-backend (pyproject.toml)
 annotated-doc==0.0.5
     # via fastapi
@@ -34,7 +34,7 @@ click==8.5.0
     #   uvicorn
 coverage==7.15.4
     # via pytest-cov
-fastapi==0.143.0
+fastapi==0.162.0
     # via florabase-backend (pyproject.toml)
 greenlet==3.5.5
     # via sqlalchemy
@@ -58,7 +58,7 @@ mako==1.4.1
     # via alembic
 markupsafe==3.0.3
     # via mako
-mypy==2.4.0
+mypy==2.4.1
     # via florabase-backend (pyproject.toml)
 mypy-extensions==1.1.0
     # via mypy
@@ -79,9 +79,9 @@ pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-psycopg==3.3.6
+psycopg==3.3.8
     # via florabase-backend (pyproject.toml)
-psycopg-binary==3.3.6
+psycopg-binary==3.3.8
     # via psycopg
 pwdlib==0.3.1
     # via florabase-backend (pyproject.toml)
@@ -93,7 +93,7 @@ pydantic==2.13.4
     #   pydantic-settings
 pydantic-core==2.46.4
     # via pydantic
-pydantic-settings==2.15.0
+pydantic-settings==2.16.2
     # via florabase-backend (pyproject.toml)
 pygments==2.21.0
     # via pytest
@@ -101,7 +101,7 @@ pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
-pytest==9.1.1
+pytest==9.2.0
     # via
     #   florabase-backend (pyproject.toml)
     #   pytest-cov
@@ -109,11 +109,11 @@ pytest-cov==7.1.0
     # via florabase-backend (pyproject.toml)
 python-dotenv==1.2.3
     # via pydantic-settings
-python-multipart==0.0.32
+python-multipart==0.0.33
     # via florabase-backend (pyproject.toml)
-ruff==0.17.0
+ruff==0.17.4
     # via florabase-backend (pyproject.toml)
-sqlalchemy==2.0.54
+sqlalchemy==2.0.57
     # via
     #   alembic
     #   florabase-backend (pyproject.toml)
@@ -127,6 +127,7 @@ typing-extensions==4.16.0
     #   opentelemetry-api
     #   pydantic
     #   pydantic-core
+    #   pydantic-settings
     #   sqlalchemy
     #   typing-inspection
 typing-inspection==0.4.4

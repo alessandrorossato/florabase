@@ -8507,3 +8507,30 @@ Status remains implemented pending canonical verification.
   frontend and test references independently. Canonical gate for this documentation change
   is `make feature-verify AGENT_ID=codex-cutting-doc-recovery` (affected, feature graph and
   whitespace). Existing product acceptance remains separate from the documentation gate.
+
+### Backend dependency alignment (PR #153 recovery), 11 November 2026
+
+- Branch `fix/backend-dependency-alignment-001` from `95f5646`, moved onto docs-only `18dda87`. Recovers the nine backend
+  minor/patch updates proposed by Dependabot PR #153, which changed only `pyproject.toml` and
+  left both locks stale. The bot branch was not merged.
+- **Pins.** Alembic 1.20.0 → 1.20.1, FastAPI 0.143.0 → 0.162.0, psycopg/binary 3.3.6 → 3.3.8,
+  pydantic-settings 2.15.0 → 2.16.2, python-multipart 0.0.32 → 0.0.33, SQLAlchemy 2.0.54 →
+  2.0.57 (2.1 stays deferred), mypy 2.4.0 → 2.4.1, pytest 9.1.1 → 9.2.0, Ruff 0.17.0 → 0.17.4.
+  FastAPI 0.162.1–0.162.3 are docs/packaging-only and 0.162.4 was under the 24-hour age policy.
+- **Locks.** Both locks were regenerated with the Quality image's pinned pip-tools 7.6.2 and the
+  `make dependency-update` commands, run in a writable temporary copy because `/app` is not
+  writable. Only the intended pins changed; no transitive package moved. A second run matched
+  both SHA-256 digests byte-for-byte, and every hash set in `requirements.lock` equals PyPI's
+  complete artifact list for that version. The production lock header now records
+  `--generate-hashes` instead of the hand-written note from #142.
+- **Compatibility.** FastAPI 0.144–0.162 changes default, empty-form, unselected-file and JSON
+  `null` handling; OpenAPI is unchanged (`make api-check` clean) and the backend suites cover the
+  upload, auth, session and CSRF paths. Alembic still registers `checkconstraint_byname`; no
+  migration changed. The other updates are bug fixes with no code changes needed.
+- **Checks.** Quality image `pip check` clean with the intended versions installed; Ruff format
+  and lint, strict mypy (369 files), 1108 backend unit tests at 90.47% coverage, and
+  `make api-check` passed. Independent read-only QA returned PASS_WITH_RISKS: no affected
+  FastAPI, auth/CSRF, settings or migration usage; musllinux wheels exist for every hashed pin.
+  Its stale-baseline finding is fixed in `dependency-maintenance-baseline.md`.
+- **Unresolved.** pytest 9.2 adds a `CallSpec2` deprecation warning from the AnyIO plugin, and
+  Starlette's existing `httpx2` test-client warning remains. Neither fails tests.
