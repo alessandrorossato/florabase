@@ -35,6 +35,7 @@
 - Updated `IdentityReconciliationPanel.tsx`, `BotanicalIdentityScreen.tsx`, `IdentitySummary.tsx`, and `botanical-identities.css` to distinctly badge accepted, original recorded, operator-managed, source-provided, and immutable historical ledger names; provide accessible Add/Edit/Remove synonym workflows (with Escape/Cancel focus restoration and confirmation dialog); prefill synonyms from read-only source assessments without auto-acceptance; support synonym-aware directory filtering, Saved Views/URL preservation, and direct retired tombstone resolution.
 - Marked `TAXONOMY-002` as `implemented` in `docs/features.json` (not `verified`, per consolidated integration workflow policy — no individual canonical FULL verification receipt generated on this branch).
 - Verification on current code (`make check`, feature graph, and focused PostgreSQL integration suites): `ruff check .`, `ruff format --check .` (408 files), `mypy` (359 source files), Prettier (`pnpm format:check`), ESLint (`eslint . --max-warnings 0`), TypeScript (`tsc -b --pretty false`), `make api-check`, `python3 scripts/check-features.py` (146 features valid), `pytest -m "not integration"` (1052 passed, 3 skipped, 784 deselected, 90.20% coverage), `pnpm test:run` (114 test files, 1232 tests passed), and 118 PostgreSQL integration tests (`test_botanical_identity_api.py`, `test_lineage_integrity.py`, `test_search.py`, `test_search002.py`: 79 passed in 14.60s; `test_botanical_identities.py`, `test_botanical_identity_migration.py`, `test_lineage_api.py`, `test_measurement_api.py`: 39 passed in 9.09s; covering synonym CRUD, auth/CSRF/owner/tombstone guards, search, migrations, measurements, and `LINEAGE-003`/lineage graph continuity across corrections & merges).
+
 ## 2026-11-10 — PWA-001: mobile and desktop installable progressive web app (online-first)
 
 - Implemented W3C-compliant web app manifest ([`manifest.webmanifest`](../frontend/public/manifest.webmanifest))
@@ -82,6 +83,7 @@
     whitespace checks passed.
   - Real physical Android Chromium and iOS/iPadOS Safari devices were not available locally (documented as
     pending real-device verification in [pwa.md](pwa.md)); `PWA-001` status kept at `implemented`.
+
 ## 2026-11-10 — WORKFLOW-RETIRE-AUTH-001 operator retirement boundary implemented
 
 - Aligned `scripts/feature_worktree.py`, `scripts/test-agent-workflow.py`, and

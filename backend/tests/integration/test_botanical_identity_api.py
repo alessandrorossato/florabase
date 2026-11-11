@@ -1,12 +1,15 @@
 import asyncio
 import json
 from collections.abc import Iterator, Mapping
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
+from queue import Queue
+from time import monotonic, sleep
 from typing import Any, cast
 from uuid import UUID, uuid7
 
 import pytest
-from sqlalchemy import Connection, func, select
+from sqlalchemy import Connection, Engine, func, select, text
 from sqlalchemy.orm import Session
 from starlette.types import Message, Receive, Scope, Send
 
@@ -14,6 +17,12 @@ from florabase.auth.dependencies import AuthenticatedActor, require_csrf
 from florabase.auth.model import AuthSession, User
 from florabase.auth.service import bootstrap_owner
 from florabase.botanical_identities.model import BotanicalIdentity
+from florabase.botanical_identities.schemas import OperatorSynonymCreate
+from florabase.botanical_identities.service import (
+    SynonymValidationError,
+    add_operator_synonym,
+    list_identity_synonyms,
+)
 from florabase.core.config import CookieMode, Environment, Settings, get_settings
 from florabase.db.session import get_database_session
 from florabase.main import app
@@ -1231,6 +1240,54 @@ def test_merge_duplicate_identity_preserves_plant_measurements_and_correction_hi
     assert len(retained_event["measurement_corrections"]) == 1
     assert retained_event["measurement_corrections"][0]["measurement"]["value"] == "12.50"
     assert retained_event["measurement_corrections"][0]["measurement"]["unit"] == "cm"
+
+
+def test_concurrent_operator_synonym_additions_reject_the_duplicate(
+    database_engine: Engine,
+) -> None:
+    with Session(database_engine) as database, database.begin():
+        identity = BotanicalIdentity(scientific_name=f"Synonym concurrency {uuid7()}")
+        database.add(identity)
+        database.flush()
+        identity_id = identity.id
+
+    worker_pids: Queue[int] = Queue()
+
+    def add_duplicate() -> str:
+        try:
+            with Session(database_engine) as database, database.begin():
+                database.execute(text("SET LOCAL lock_timeout = '10s'"))
+                worker_pids.put(database.execute(text("SELECT pg_backend_pid()")).scalar_one())
+                add_operator_synonym(
+                    database, identity_id, OperatorSynonymCreate(scientific_name="SALVIA ARIDA")
+                )
+        except SynonymValidationError as error:
+            return error.code
+        return "created"
+
+    try:
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            with Session(database_engine) as database, database.begin():
+                add_operator_synonym(
+                    database, identity_id, OperatorSynonymCreate(scientific_name="Salvia arida")
+                )
+                duplicate = executor.submit(add_duplicate)
+                worker_pid = worker_pids.get(timeout=5)
+                deadline = monotonic() + 5
+                while not database.execute(
+                    text("SELECT cardinality(pg_blocking_pids(:pid))"), {"pid": worker_pid}
+                ).scalar_one():
+                    assert monotonic() < deadline, "The competing write did not wait for the lock"
+                    sleep(0.02)
+            assert duplicate.result(timeout=5) == "duplicate_identity_name"
+        with Session(database_engine) as database:
+            entries = list_identity_synonyms(database, identity_id)
+            assert [entry.scientific_name for entry in entries] == ["Salvia arida"]
+    finally:
+        with Session(database_engine) as database, database.begin():
+            created_identity = database.get(BotanicalIdentity, identity_id)
+            assert created_identity is not None
+            database.delete(created_identity)
 
 
 def test_operator_synonyms_crud_validation_and_search_integration(

@@ -404,8 +404,11 @@ def list_identity_synonyms(
     return list(database.scalars(statement))
 
 
-def _get_active_identity(database: Session, identity_id: UUID) -> BotanicalIdentity:
-    identity = database.get(BotanicalIdentity, identity_id)
+def _lock_active_identity(database: Session, identity_id: UUID) -> BotanicalIdentity:
+    # Serialize synonym validation with other synonym writes and reconciliation.
+    identity = database.get(
+        BotanicalIdentity, identity_id, populate_existing=True, with_for_update=True
+    )
     if identity is None:
         raise BotanicalIdentityNotFoundError
     if identity.merged_into_id is not None:
@@ -416,8 +419,8 @@ def _get_active_identity(database: Session, identity_id: UUID) -> BotanicalIdent
 def _get_modifiable_operator_synonym(
     database: Session, identity_id: UUID, name_id: UUID
 ) -> tuple[BotanicalIdentity, BotanicalIdentityName]:
-    identity = _get_active_identity(database, identity_id)
-    entry = database.get(BotanicalIdentityName, name_id)
+    identity = _lock_active_identity(database, identity_id)
+    entry = database.get(BotanicalIdentityName, name_id, populate_existing=True)
     if entry is None or entry.botanical_identity_id != identity_id:
         raise SynonymNotFoundError
     if entry.status_kind != "operator_synonym":
@@ -491,7 +494,7 @@ def add_operator_synonym(
     identity_id: UUID,
     payload: OperatorSynonymCreate,
 ) -> BotanicalIdentityName:
-    identity = _get_active_identity(database, identity_id)
+    identity = _lock_active_identity(database, identity_id)
     _validate_operator_synonym_target(
         database, identity, payload.scientific_name, payload.cultivar_name
     )
