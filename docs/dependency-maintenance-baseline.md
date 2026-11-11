@@ -164,11 +164,14 @@ weekly run for compatible updates. Closure alone never substitutes for the sourc
 | jsdom / Node declarations         | 30.0.1 / 24.13.3         |
 | Leaflet declarations / user-event | 1.9.22 / 14.6.7 (PR #86) |
 | Python image / supported Python   | 3.14.7 / `>=3.12,<3.15`  |
-| FastAPI / Uvicorn                 | 0.143.0 / 0.54.0         |
-| SQLAlchemy / Alembic              | 2.0.54 / 1.20.0          |
-| psycopg / binary                  | 3.3.6 / 3.3.6            |
+| FastAPI / Uvicorn                 | 0.162.0 / 0.54.0         |
+| SQLAlchemy / Alembic              | 2.0.57 / 1.20.1          |
+| psycopg / binary                  | 3.3.8 / 3.3.8            |
 | PostgreSQL                        | 18.6-alpine              |
-| mypy / Ruff / pip-tools           | 2.4.0 / 0.17.0 / 7.6.2   |
+| mypy / Ruff / pip-tools           | 2.4.1 / 0.17.4 / 7.6.2   |
+
+FastAPI, SQLAlchemy/Alembic, psycopg, mypy and Ruff rows were refreshed on 11 November 2026 by
+the backend dependency alignment that recovered Dependabot PR #153; see `docs/progress.md`.
 
 Framework-required OpenTelemetry API is not an adopted telemetry feature: no SDK
 or exporter extras were installed and automatic instrumentation stays disabled.
