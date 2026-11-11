@@ -8534,3 +8534,15 @@ Status remains implemented pending canonical verification.
   Its stale-baseline finding is fixed in `dependency-maintenance-baseline.md`.
 - **Unresolved.** pytest 9.2 adds a `CallSpec2` deprecation warning from the AnyIO plugin, and
   Starlette's existing `httpx2` test-client warning remains. Neither fails tests.
+
+### Frontend dependency and test recovery, 11 November 2026
+
+- Recovered the typed media-query fixture from #164 for Plant, SeedLot and Sowing tests.
+  Reused it in the Botanical Identity synonyms test to resolve the upgraded linter's
+  deprecated DOM method errors without changing the zero-warning policy.
+- Adopted all 11 direct updates from #148. Regenerated the lockfile from main and passed
+  frozen install and supply-chain policy checks with Node 24.19.0 and pnpm 11.19.0.
+- On Node 24.22.1 with pnpm 11.19.0, Prettier, ESLint, strict TypeScript and the production
+  frontend build passed. Vitest passed 165 focused tests and all 1,317 tests across 122 files.
+- Independent QA confirmed manifest and lockfile alignment, installed versions, peer ranges
+  and fixture behavior. Canonical FULL was pending while another worktree held its capacity lock.
