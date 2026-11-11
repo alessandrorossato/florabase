@@ -82,6 +82,42 @@
     whitespace checks passed.
   - Real physical Android Chromium and iOS/iPadOS Safari devices were not available locally (documented as
     pending real-device verification in [pwa.md](pwa.md)); `PWA-001` status kept at `implemented`.
+## 2026-11-10 — WORKFLOW-RETIRE-AUTH-001 operator retirement boundary implemented
+
+- Aligned `scripts/feature_worktree.py`, `scripts/test-agent-workflow.py`, and
+  [docs/development-workflow.md](development-workflow.md) with the documented operator-only contract
+  for feature retirement (`AGENT_ID` treated strictly as a cooperative convention rather than
+  cryptographic authentication): `retire`, `make feature-retire`, `feature_worktree.retire()`,
+  `require-operator`, and `mark-finished` refuse declared agent or invalid `AGENT_ID` values before
+  any target lookup, lock acquisition, Docker query, or filesystem change while preserving the
+  operator path (`AGENT_ID=operator`, unset, or empty `""` alongside explicit `CONFIRM_RETIRE=<id>`
+  for retirement).
+- Preserved and tightened lifecycle safety: per-target non-blocking `FileLock` in `repo.common`,
+  post-lock `matching_worktree()` re-validation, `verification_lock(target.metadata)` held from
+  preflight through `git worktree remove`, pending-handoff/active-writer/corrupt-state/symlink
+  refusals (`AgentState.load()` now rejects boolean `version` and malformed `handoff` records),
+  worktree metadata integrity checks (`prunable`/`locked`/symlinked worktree or `.git`/cross-wired
+  `gitdir`/managed-root marker), finish-proof schema and `origin/main` ancestry checks, Docker
+  ownership and running container mount inspection, and safe atomic `mark_finished` proof writing
+  under `state.lock` + `verification_lock` with `require_operator(repo)`.
+- Resolved all independent QA findings (blocking `mark_finished` guard/doc gap plus non-blocking
+  `AgentState.load()` handoff/version validation and doc wording), documented cooperative concurrency
+  limits in [docs/development-workflow.md](development-workflow.md), kept `WORKFLOW-RETIRE-AUTH-001`
+  as `implemented` in [docs/features.json](features.json) with zero edits to `VERIFICATION-EVIDENCE-001`
+  verification gate/impact/fingerprint files, and preserved canonical FULL for the consolidated
+  integration branch.
+- Checks: `make test-agent-workflow` (`71 tests`, `OK (skipped=3)` — opt-in
+  `FLORABASE_RETIRE_DOCKER_SMOKE` tests skipped because `node:24.19.0-bookworm-slim` is not tagged
+  locally), `make test-feature-workflow` (`49 tests`, `OK`), `make test-workflow-helpers` (passed),
+  `make test-workflow-resources` (`19 tests`, `OK`), `make test-environment-workflow` (`35 + 19 tests`,
+  `OK`), `make test-uat-preview` (`15 + 15 tests`, `OK`), `make test-verification-impact` (`16 tests`,
+  `OK`), `make test-preview-workflow` (`30 + 19 tests`, `OK`), `scripts/test-uat-instance.py`
+  (`16 tests`, `OK`), `scripts/test-uat-source.py` (`15 tests`, `OK`), `make workflow-check
+  AGENT_ID=antigravity-retire-auth-001` (dependabot policy, `test-beta-images` `58 + 4`,
+  `test-beta-runtime` `62 + 50`, `ruff check`, `ruff format --check` `45 + 3`, `mypy --strict`
+  `33 + 3 + 5`), `make format-check`, `make lint`, `make typecheck`, `make api-check`, and a real
+  Docker disposable retirement smoke test using
+  `florabase-quality-5ffa1976fec5-frontend-development:latest` (zero residual containers/volumes).
 
 ## 2026-11-09 — TAXONOMY-001 integrated with MEASUREMENT-001 and renumbered to 20261109_0045
 

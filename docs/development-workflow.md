@@ -84,12 +84,14 @@ A takeover also accepts a drifted handoff after inspection. Give each live sessi
 (`codex`, `codex-2`): reclaiming under the same name succeeds with a warning, because the helper has
 no way to tell two sessions apart. Keep `REPORT` outside the worktree, where it cannot change the tree.
 `feature-verify`, Review/Sourcing up/seed/remove and their mutating Compose passthrough refuse a pending handoff and any other or missing
-`AGENT_ID` once a worktree is claimed. A never-claimed worktree behaves as before. `feature-deliver` and
-`feature-finish` refuse any `AGENT_ID` except `operator` and a pending handoff. **`AGENT_ID` and the local Git metadata enforce a cooperative protocol, not
+`AGENT_ID` once a worktree is claimed. A never-claimed worktree behaves as before. `feature-deliver`,
+`feature-finish`, `mark-finished` and `feature-retire` refuse any `AGENT_ID` except `operator`, a
+pending handoff and an active verification gate (omitting `AGENT_ID` behaves like
+`AGENT_ID=operator`, and `feature-retire` also requires explicit `CONFIRM_RETIRE=<id>`). **`AGENT_ID` and the local Git metadata enforce a cooperative protocol, not
 authenticated security:** identity is declared, the state files are writable by any local process
 and raw file edits are not intercepted. The claim coordinates cooperating agents and gates their
-shared steps; it is not a sandbox. The terminal requirement for takeover and the identity check at
-delivery stop a cooperating agent acting by mistake, not a determined one. Read-only reviewers use
+shared steps; it is not a sandbox. The terminal requirement for takeover and the identity checks at
+delivery, finish and retirement stop a cooperating agent acting by mistake, not a determined one. Read-only reviewers use
 `git worktree add --detach <path> <sha>` or a clean clone, in any number, and never hold a claim.
 
 **Compose passthrough** (`workflow_environment.py <role> compose`, `make sourcing-preview-compose`)
@@ -127,6 +129,7 @@ production `exec` and `run` stay available because backup and restore depend on 
 | UAT instances | One per worktree, at most four; ports 15180-15183 | Volume-label allocation, per-instance locks, FULL capacity lock for up/seed/reset |
 | CPU, shared BuildKit, Docker address pools | Exhausted by concurrent FULL | Machine FULL lock |
 | Same worktree's gate and receipt | One at a time | Per-worktree verification lock |
+| Same worktree's retirement | One at a time | Per-target retirement lock in Git common metadata plus target verification lock |
 
 Owner labels exist only after creation, so two sources starting Review together could both pass that
 check; the lock closes the window. FULL runs share no fixed name or port, so its lock protects capacity
@@ -142,10 +145,15 @@ Remote CI and direct `make ci` take no lock. Parallel Review ports are deliberat
 make feature-retire FEATURE=example-001 CONFIRM_RETIRE=example-001
 ```
 
-It removes one worktree directly under the managed root that `make feature-worktree` created, and only
-with finish's proof at the same HEAD, a merge on cached `origin/main`, a deleted branch, clean status, no running gate and no Docker
-containers or volumes labelled with that source (Docker unavailable refuses). Ignored files other than
-regenerable caches, such as `.env` or backups, refuse for a decision, and so does any directory it
+It is an operator-only step: any declared agent `AGENT_ID` (anything other than unset, empty, or
+`operator`) or invalid `AGENT_ID` is refused before any target worktree lookup, lock, Docker query or
+filesystem change. It removes one worktree directly under the managed root that
+`make feature-worktree` created, and only with valid linked-worktree metadata, no pending handoff
+or writer state, no active verification gate (the target verification lock is held from preflight
+through `git worktree remove`), finish's proof at the same HEAD, a merge on cached `origin/main`,
+a deleted branch, clean status and no Docker containers or volumes labelled with that source
+(Docker unavailable refuses). Missing, prunable, locked, cross-wired or symlinked worktree
+metadata refuse before removal. Ignored files other than regenerable caches, such as `.env` or backups, refuse for a decision, and so does any directory it
 could not delete. The removal preflight permits a readable empty directory without child write
 permission when its parent permits removal (including sticky-directory ownership checks). Nonempty
 directories still require write/search permission; sticky-parent ownership is checked for files and
@@ -155,8 +163,15 @@ Missing/changing Docker evidence and unsupported custom volume backing refuse be
 Symlinks and any host-visible mounted path within the candidate are refused. Linux
 `/proc/self/mountinfo` is required to detect same-device bind mounts; missing or unreadable
 traversal/mount evidence fails closed before Git removal. No ownership/permission changes
-or recursive deletion fallback are performed. Operators must stop external source/mount writers;
-preflight is not atomic against concurrent external changes. It uses `git worktree remove` without force, so worktrees from agent tools, clones,
+or recursive deletion fallback are performed. A non-blocking per-target `flock` in shared Git
+common metadata serializes concurrent `feature-retire` invocations for the same worktree while
+allowing independent worktrees to retire in parallel. Remaining cooperative concurrency limits:
+`AGENT_ID` is cooperative convention rather than authenticated security (omitted `AGENT_ID` is
+treated as operator and direct `git`/`docker`/shell commands bypass the CLI); advisory `flock`s
+coordinate local helper invocations on the same host and release on exit or SIGKILL, but preflight
+checks and `git worktree remove` remain non-atomic against external non-locking writers, mount
+changes or newly started containers, so operators must stop external source and Docker writers
+before retirement. It uses `git worktree remove` without force, so worktrees from agent tools, clones,
 branches and all volumes are out of its reach.
 A branch-less worktree with no proof, or an abandoned feature, stays for the operator to decide.
 
