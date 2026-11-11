@@ -1404,3 +1404,95 @@
     box-shadow: inset 0 -2px 0 var(--primary);
   }
 }
+
+/* TAXONOMY-002: distinct name badges, operator synonyms, and historical ledger */
+.identity-reconciliation-panel .name-classification-grid {
+  display: grid;
+  gap: var(--space-2);
+  margin-block: var(--space-2) var(--space-3);
+}
+.identity-reconciliation-panel .name-classification-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+}
+.identity-reconciliation-panel .name-classification-row p {
+  margin: 0;
+}
+.identity-reconciliation-panel .name-badge {
+  flex-shrink: 0;
+}
+.identity-reconciliation-panel .name-badge--accepted {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--primary-subtle);
+}
+.identity-reconciliation-panel .name-badge--operator {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.identity-reconciliation-panel .name-badge--original {
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+.identity-reconciliation-panel .name-badge--historical {
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+.identity-reconciliation-panel .name-badge--source {
+  color: var(--warning-text);
+  border-color: var(--warning);
+}
+.identity-reconciliation-panel .synonym-section-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-block: var(--space-3) var(--space-1);
+}
+.identity-reconciliation-panel .synonym-section-header h4 {
+  margin: 0;
+}
+.identity-reconciliation-panel .synonym-ledger-list {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-2) 0;
+  display: grid;
+  gap: var(--space-2);
+}
+.identity-reconciliation-panel .synonym-ledger-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+}
+.identity-reconciliation-panel .synonym-item-main {
+  overflow-wrap: anywhere;
+}
+.identity-reconciliation-panel .synonym-item-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+.identity-reconciliation-panel .synonym-editor-form {
+  margin-block: var(--space-2);
+}
+.identity-header-synonyms {
+  margin: var(--space-1) 0 0;
+}
+@media (max-width: 40rem) {
+  .identity-reconciliation-panel .synonym-section-header {
+    align-items: stretch;
+  }
+  .identity-reconciliation-panel .synonym-item-actions :is(button, a) {
+    min-block-size: var(--control-height-touch, 2.75rem);
+  }
+}

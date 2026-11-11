@@ -32,6 +32,7 @@ from florabase.botanical_identities.service import (
     UNIQUE_IDENTITY_CONSTRAINT,
     _constraint_name,
     find_duplicate,
+    remove_matching_operator_synonyms,
 )
 from florabase.botanical_profiles.model import (
     PROFILE_FIELDS,
@@ -1156,6 +1157,11 @@ def correct_accepted_name(
     identity.common_name = payload.common_name
     identity.updated_at = max(now, identity.updated_at + timedelta(microseconds=1))
 
+    # Clean up any operator_synonym that matches the newly applied accepted name
+    remove_matching_operator_synonyms(
+        database, identity.id, payload.scientific_name, payload.cultivar_name
+    )
+
     reconciliation = BotanicalIdentityReconciliation(
         identity_id=identity.id,
         duplicate_identity_id=None,
@@ -1461,44 +1467,61 @@ def merge_duplicate_identity(
             )
         )
     )
+    surv_existing_name_keys = {
+        (survivor.scientific_name.lower(), (survivor.cultivar_name or "").lower())
+    }
+    for row in database.scalars(
+        select(BotanicalIdentityName).where(
+            BotanicalIdentityName.botanical_identity_id == survivor.id
+        )
+    ):
+        surv_existing_name_keys.add(
+            (row.scientific_name.lower(), (row.cultivar_name or "").lower())
+        )
+
     for dup_name in dup_former_names:
+        key = (dup_name.scientific_name.lower(), (dup_name.cultivar_name or "").lower())
+        if key not in surv_existing_name_keys:
+            surv_existing_name_keys.add(key)
+            database.add(
+                BotanicalIdentityName(
+                    botanical_identity_id=survivor.id,
+                    scientific_name=dup_name.scientific_name,
+                    cultivar_name=dup_name.cultivar_name,
+                    common_name=dup_name.common_name,
+                    authorship=dup_name.authorship,
+                    status_kind="merged_duplicate",
+                    source_provider=dup_name.source_provider,
+                    source_version=dup_name.source_version,
+                    source_taxon_id=dup_name.source_taxon_id,
+                    accepted_source_taxon_id=dup_name.accepted_source_taxon_id,
+                    origin_identity_id=dup_name.origin_identity_id or duplicate.id,
+                    effective_from=dup_name.effective_from,
+                    superseded_at=dup_name.superseded_at or max(now, dup_name.effective_from),
+                    created_at=now,
+                )
+            )
+
+    dup_key = (duplicate.scientific_name.lower(), (duplicate.cultivar_name or "").lower())
+    if dup_key not in surv_existing_name_keys:
         database.add(
             BotanicalIdentityName(
                 botanical_identity_id=survivor.id,
-                scientific_name=dup_name.scientific_name,
-                cultivar_name=dup_name.cultivar_name,
-                common_name=dup_name.common_name,
-                authorship=dup_name.authorship,
+                scientific_name=duplicate.scientific_name,
+                cultivar_name=duplicate.cultivar_name,
+                common_name=duplicate.common_name,
+                authorship=None,
                 status_kind="merged_duplicate",
-                source_provider=dup_name.source_provider,
-                source_version=dup_name.source_version,
-                source_taxon_id=dup_name.source_taxon_id,
-                accepted_source_taxon_id=dup_name.accepted_source_taxon_id,
-                origin_identity_id=dup_name.origin_identity_id or duplicate.id,
-                effective_from=dup_name.effective_from,
-                superseded_at=dup_name.superseded_at or max(now, dup_name.effective_from),
+                source_provider="operator",
+                source_version=None,
+                source_taxon_id=None,
+                accepted_source_taxon_id=None,
+                origin_identity_id=duplicate.id,
+                effective_from=duplicate.created_at,
+                superseded_at=max(now, duplicate.created_at),
                 created_at=now,
             )
         )
-
-    database.add(
-        BotanicalIdentityName(
-            botanical_identity_id=survivor.id,
-            scientific_name=duplicate.scientific_name,
-            cultivar_name=duplicate.cultivar_name,
-            common_name=duplicate.common_name,
-            authorship=None,
-            status_kind="merged_duplicate",
-            source_provider="operator",
-            source_version=None,
-            source_taxon_id=None,
-            accepted_source_taxon_id=None,
-            origin_identity_id=duplicate.id,
-            effective_from=duplicate.created_at,
-            superseded_at=max(now, duplicate.created_at),
-            created_at=now,
-        )
-    )
 
     database.execute(
         update(BotanicalIdentity)

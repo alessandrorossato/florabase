@@ -485,8 +485,26 @@ function IdentityDetails({
             </a>
           }
           secondary={
-            identity.common_name ? (
-              <p className="entity-common-name">{identity.common_name}</p>
+            identity.common_name || (identity.synonyms?.length ?? 0) > 0 ? (
+              <>
+                {identity.common_name && (
+                  <p className="entity-common-name">{identity.common_name}</p>
+                )}
+                {identity.synonyms && identity.synonyms.length > 0 && (
+                  <p className="identity-header-synonyms field-help">
+                    Synonyms &amp; former names:{" "}
+                    {identity.synonyms.slice(0, 3).map((name, idx) => (
+                      <span key={`${name}-${String(idx)}`}>
+                        {idx > 0 ? ", " : ""}
+                        <em>{name}</em>
+                      </span>
+                    ))}
+                    {identity.synonyms.length > 3
+                      ? ` (+${String(identity.synonyms.length - 3)} more)`
+                      : ""}
+                  </p>
+                )}
+              </>
             ) : undefined
           }
           primaryActions={
@@ -1059,7 +1077,7 @@ function IdentityDetails({
                     updatedAt={identity.updated_at}
                   />
                   <IdentityReconciliationPanel
-                    key={`reconciliation-${identity.id}-${identity.updated_at}`}
+                    key={`reconciliation-${identity.id}`}
                     identity={identity}
                     csrfToken={csrfToken}
                     onIdentityUpdated={onSaved}
@@ -1186,6 +1204,12 @@ export function BotanicalIdentityScreen({
     previousDetail.current = initialId;
     if (!previousId || initialId) return;
     const frame = requestAnimationFrame(() => {
+      if (
+        document.activeElement instanceof HTMLInputElement ||
+        document.activeElement instanceof HTMLTextAreaElement ||
+        document.activeElement instanceof HTMLSelectElement
+      )
+        return;
       const trigger = Array.from(
         directoryRef.current?.querySelectorAll<HTMLButtonElement>(
           "[data-record-id]",
@@ -1269,6 +1293,43 @@ export function BotanicalIdentityScreen({
       ? createState.messages.find((message) => message.startsWith(label))
       : undefined;
 
+  const [fallbackDetail, setFallbackDetail] = useState<
+    | { id: string; status: "ready"; identity: BotanicalIdentityResponse }
+    | { id: string; status: "missing" }
+    | { id: string; status: "error" }
+    | null
+  >(null);
+
+  useEffect(() => {
+    if (
+      !initialId ||
+      directory.status !== "ready" ||
+      directory.identities.some(({ id }) => id === initialId)
+    ) {
+      return;
+    }
+    const controller = new AbortController();
+    void getBotanicalIdentity(initialId, controller.signal)
+      .then((identity) => {
+        if (!controller.signal.aborted) {
+          setFallbackDetail({ id: initialId, status: "ready", identity });
+        }
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        if (error instanceof ApiError && error.status === 401) {
+          auth.sessionExpired();
+        } else if (error instanceof ApiError && error.status === 404) {
+          setFallbackDetail({ id: initialId, status: "missing" });
+        } else {
+          setFallbackDetail({ id: initialId, status: "error" });
+        }
+      });
+    return () => {
+      controller.abort();
+    };
+  }, [auth, directory, initialId, loadAttempt]);
+
   const filteredIdentities = useMemo(() => {
     if (directory.status !== "ready") return [];
     const query = filter.trim().toLocaleLowerCase();
@@ -1279,6 +1340,7 @@ export function BotanicalIdentityScreen({
         identity.scientific_name,
         identity.cultivar_name,
         identity.common_name,
+        ...(identity.synonyms ?? []),
       ].some((value) => value?.toLocaleLowerCase().includes(query)),
     );
   }, [directory, filter]);
@@ -1413,29 +1475,49 @@ export function BotanicalIdentityScreen({
     }
   }
 
-  const detail =
+  const directoryMatch =
     directory.status === "ready"
       ? directory.identities.find(({ id }) => id === initialId)
       : null;
+  const matchedFallback =
+    fallbackDetail !== null && initialId && fallbackDetail.id === initialId
+      ? fallbackDetail
+      : null;
+  const detail =
+    directoryMatch ??
+    (matchedFallback?.status === "ready" ? matchedFallback.identity : null);
+  const fallbackLoading = Boolean(
+    initialId &&
+    directory.status === "ready" &&
+    !directoryMatch &&
+    matchedFallback === null,
+  );
+  const fallbackError = Boolean(
+    initialId &&
+    directory.status === "ready" &&
+    !directoryMatch &&
+    matchedFallback?.status === "error",
+  );
   if (initialId)
     return (
       <section
         className="workspace identity-reference-page"
         aria-label="Botanical identity detail"
       >
-        {directory.status === "loading" ? (
+        {directory.status === "loading" || fallbackLoading ? (
           <DetailLoading
             eyebrow="Botanical identity"
             label="Loading botanical identity…"
             parents={[{ label: "Botanical identities", href: "#/identities" }]}
             className="identity-detail-stack"
           />
-        ) : directory.status === "error" ? (
+        ) : directory.status === "error" || fallbackError ? (
           <div role="alert">
             <p>Florabase could not load this botanical identity.</p>
             <button
               onClick={() => {
                 setDirectory({ status: "loading" });
+                setFallbackDetail(null);
                 setLoadAttempt((n) => n + 1);
               }}
             >
@@ -1447,16 +1529,23 @@ export function BotanicalIdentityScreen({
             key={detail.id}
             identity={detail}
             directoryHref={`#/identities${filter ? `?q=${encodeURIComponent(filter)}` : ""}`}
-            adjacent={{
-              previous:
-                directory.identities[
-                  directory.identities.findIndex(({ id }) => id === detail.id) -
-                    1
-                ],
-              next: directory.identities[
-                directory.identities.findIndex(({ id }) => id === detail.id) + 1
-              ],
-            }}
+            adjacent={
+              directoryMatch
+                ? {
+                    previous:
+                      directory.identities[
+                        directory.identities.findIndex(
+                          ({ id }) => id === detail.id,
+                        ) - 1
+                      ],
+                    next: directory.identities[
+                      directory.identities.findIndex(
+                        ({ id }) => id === detail.id,
+                      ) + 1
+                    ],
+                  }
+                : {}
+            }
             csrfToken={csrfToken}
             initialTab={initialTab}
             onSaved={refreshAndSelect}
@@ -1492,7 +1581,7 @@ export function BotanicalIdentityScreen({
                 hideLabel
                 id="identity-filter"
                 label="Search botanical identities"
-                placeholder="Search names and cultivars"
+                placeholder="Search names, cultivars, and synonyms"
                 value={filter}
                 onChange={setFilter}
                 disabled={
@@ -1620,7 +1709,12 @@ export function BotanicalIdentityScreen({
                         }
                         name={<IdentityName identity={identity} />}
                         secondary={identity.common_name}
-                        summary={<IdentityCardContext identity={identity} />}
+                        summary={
+                          <IdentityCardContext
+                            identity={identity}
+                            filterQuery={filter}
+                          />
+                        }
                       />
                     </button>
                     <div className="ui-directory-record-actions">
