@@ -2598,6 +2598,24 @@
       ],
       "priority": "P2",
       "status": "implemented"
+    },
+    {
+      "id": "VERIFICATION-EVIDENCE-001",
+      "category": "infrastructure",
+      "description": "Opt-in reusable local evidence for the Quality and PostgreSQL integration gate stages, proven by a derived input closure and never accepted as delivery proof by default",
+      "acceptance_criteria": [
+        "Records live in the owning worktree's Git metadata, name the exact stage and argv, are written atomically and durably only after a successful stage whose inputs did not change while it ran, and carry a body digest and verifiable input manifest",
+        "The input closure is derived from rendered Compose models, observed container mounts, build contexts and exact image identity, plus scripts, top-level files, environment, env files and tool versions; unknown or unprovable inputs refuse reuse",
+        "Feature graph, whitespace, workflow suites, workflow-check, production builds and the real migration cycle always execute; remote CI never reads or writes evidence and its required checks are unchanged",
+        "Reuse is disabled by default; REUSE=1, REUSE=dry-run and FRESH=1 behave as documented and report reuse or the exact invalidation reason",
+        "Receipt version 3 names every reused stage, version 2 receipts remain valid, and delivery refuses reused stages pending an operator policy decision",
+        "Regressions cover every input class, corrupt and foreign records, failed, interrupted and self-mutating stages, concurrency, distinct worktrees, controls, receipt compatibility and the docs-only post-gate edit"
+      ],
+      "dependencies": [
+        "VERIFICATION-FAST-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
     }
   ]
 }
