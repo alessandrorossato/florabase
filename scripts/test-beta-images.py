@@ -728,7 +728,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn('ENTRYPOINT ["florabase-postgres-entrypoint"]', dockerfile)
         for drift in (
             dockerfile.replace(pinned["upstream"]["index_digest"], "sha256:" + "f" * 64, 1),
-            dockerfile.replace('version="18.6-alpine-florabase.1"', 'version="other"'),
+            dockerfile.replace(f'version="{pinned["version"]}"', 'version="other"'),
             dockerfile.replace("FROM ", "ARG BASE\nFROM ", 1),
         ):
             with tempfile.TemporaryDirectory() as temporary:

@@ -479,9 +479,9 @@ older images: an older backend refuses a newer schema.
 
 ### PostgreSQL versions
 
-The beta uses **PostgreSQL 18.6** in the Florabase PostgreSQL image (`18.6-alpine-florabase.1`,
-pinned by digest). Application upgrades never change the PostgreSQL image; `promote` refuses a release
-whose PostgreSQL identity differs. A new Florabase PostgreSQL version (an upstream rebuild, a security
+The beta uses **PostgreSQL 18.6** in the Florabase PostgreSQL image pinned by digest in
+the release manifest. Application upgrades never change the PostgreSQL image. The `promote` command
+refuses a release whose PostgreSQL identity differs. A new PostgreSQL image (an upstream rebuild, a security
 fix or a minor update) is separate, explicitly announced maintenance with its own backup. The image
 runs only as the `postgres` account (uid/gid 70): starting it as root stops immediately with
 `florabase-postgres: refusing to run as root`, before anything on disk changes. This holds for the

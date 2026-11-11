@@ -8484,3 +8484,15 @@ Status remains implemented pending canonical verification.
     runs.
   - Coordinate with WORKFLOW-RETIRE-AUTH-001. Both touch the Makefile `workflow-check` lists and
     `feature_worktree.py`.
+
+### Beta PostgreSQL security gate remediation, 11 November 2026
+
+- Rehearsal 42988505037 blocked the original PostgreSQL digest on 18 HIGH findings in
+  `krb5-libs` and `libxslt`. The retained reports showed no CRITICAL findings or secrets.
+- The isolated fix pins both corrected Alpine 3.24 packages on the approved PostgreSQL 18.6
+  base and assigns `18.6-alpine-florabase.2` its own index and amd64 manifest pins. See the
+  [PostgreSQL image record](security/beta-distribution-001/postgresql-image.md).
+- Baseline `make test-beta-images test-beta-runtime` passed on the consolidated source.
+  Candidate acceptance requires a fresh identity reproduction, the local non-publishing beta
+  rehearsal and independent QA. Integration and its exact-tree FULL, CI and hosted rehearsal
+  remain separate operator steps.

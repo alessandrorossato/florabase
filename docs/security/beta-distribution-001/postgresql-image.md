@@ -1,7 +1,24 @@
 # Florabase PostgreSQL image (`florabase-postgres`)
 
-Status: integrated for implementation and verification (operator approval, 7 November 2026).
-**Not published.** Publication, tags and real-host use remain separately authorized.
+## November 2026 security rebuild
+
+[Rehearsal 42988505037, job 130415337490](https://github.com/alessandrorossato/florabase/actions/runs/42988505037/job/130415337490)
+blocked the `18.6-alpine-florabase.1` index recorded below. The retained Trivy JSON reported 16 HIGH
+findings in `krb5-libs` 1.22.2-r1 and two in `libxslt` 1.1.43-r3. There were zero CRITICAL
+findings and zero secrets. The application images had zero HIGH or CRITICAL findings.
+
+`18.6-alpine-florabase.2` keeps the approved PostgreSQL 18.6 base and pins Alpine 3.24 packages
+`krb5-libs=1.22.3-r0` and `libxslt=1.1.43-r4` alongside `zlib=1.4-r0`. The current index and
+linux/amd64 manifest digests are in [release inputs](../../../release/inputs.json). The scan
+policy, gosu removal, user 70:70 and entrypoint guards continue to apply. The publisher
+checks the new version tag and copies only the bytes that match both pins. Existing .1
+installations require separately approved PostgreSQL maintenance with a paired backup and
+restore rehearsal before switching digests. The controller refuses that switch during an
+application upgrade.
+
+The sections below record the original .1 image and its historical verification. GHCR
+served .1 at its original digest during the 11 November 2026 read-only preflight. The .2
+image is a local candidate pending separate integration and publication authorization.
 
 ## What it is
 
