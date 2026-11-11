@@ -1160,6 +1160,10 @@ class Environment:
         print(f"{self.project}: {'removed' if remove else 'stopped; all volumes preserved'}")
 
 
+def dev_golden_pending(env: Environment) -> Path:
+    return env.repo.common / "info" / "florabase-dev-golden" / "pending.json"
+
+
 def dispatch(env: Environment, args: argparse.Namespace) -> None:
     if args.action == "compose":
         command = compose_arguments(args.args)
@@ -1229,6 +1233,12 @@ def main() -> int:
         elif args.role == "dev" and (args.action in {"up", "stop", "upgrade"} or mutating):
             # DEV has no feature writer; it belongs to the operator and takes only the lock.
             with machine_lock(env.project, f"{env.project} lifecycle"):
+                if dev_golden_pending(env).exists():
+                    raise WorkflowError(
+                        "DEV Golden maintenance pending; use make dev-golden-reset RECOVER=1"
+                    )
+                if args.action != "stop" and env.repo.git("branch", "--show-current") != "main":
+                    raise WorkflowError("DEV must use the primary main checkout")
                 dispatch(env, args)
         else:
             dispatch(env, args)

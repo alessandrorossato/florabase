@@ -3255,6 +3255,124 @@ def comprehensive_volume_mix(s: Scenario) -> None:
         s.add("retire_supplier", f"s{index}", {"supplier_id": ref(suppliers[index])}, record="op")
 
 
+@scenario("current-collection-history")
+def current_collection_history(s: Scenario) -> None:
+    mother = ref("plant:seed-collection-produced/second-generation")
+    lot = s.add(
+        "cutting_lot",
+        "mother",
+        {
+            "mother_plant_id": mother,
+            "source_kind": "collection_produced",
+            "material_type": "stem_cutting",
+            "label": "Golden — second-generation stem cuttings",
+            "initial_quantity": group_count(6),
+            "taken_on": ago(s, 140),
+        },
+    )
+    for local, quantity in (("rooted", 4), ("failed", 2)):
+        attempt = s.add(
+            "cutting_attempt",
+            local,
+            {
+                "lot_id": ref(lot),
+                "propagation_attempt": {
+                    "quantity": group_count(quantity),
+                    "started_on": ago(s, 139),
+                    "substrate": "Golden — perlite and coir",
+                    "temperature_min_c": "18",
+                    "temperature_max_c": "23",
+                },
+                "source_adjustment": {"mode": "partial" if local == "rooted" else "use_all"},
+            },
+        )
+        s.add(
+            "cutting_observation",
+            local,
+            {
+                "attempt_id": ref(attempt),
+                "observed_on": ago(s, 115),
+                "stage": "rooted" if local == "rooted" else "loss",
+                "rooted_count": 3 if local == "rooted" else 0,
+            },
+        )
+        if local == "failed":
+            s.add("cutting_fail", local, {"attempt_id": ref(attempt)}, record="op")
+    offspring = s.add(
+        "cutting_establish",
+        "offspring",
+        {
+            "attempt_id": ref(s.key("cutting_attempt", "rooted")),
+            "label": "Golden — rooted cutting established as a plant",
+            "collection_entry_date": ago(s, 95),
+            "resulting_attempt_lifecycle": "completed",
+        },
+        record="plant",
+    )
+    for local, days, value, unit, approximate in (
+        ("establishment", 90, "63", "mm", False),
+        ("growth", 55, "12.50", "cm", True),
+        ("latest", 20, "18.20", "cm", False),
+    ):
+        payload: Payload = {
+            "kind": "measurement",
+            "occurred_on": ago(s, days),
+            "measurement": {
+                "quantity": "height",
+                "value": value,
+                "unit": unit,
+                "is_approximate": approximate,
+            },
+        }
+        event = s.add("event", local, {"plant_id": ref(offspring), **payload})
+        if local == "latest":
+            corrected = {**payload["measurement"], "value": "18.02"}
+            s.add(
+                "correct_measurement",
+                local,
+                {"event_id": ref(event), **payload, "measurement": corrected},
+                record="op",
+            )
+    for days, kind, phase in (
+        (36, "flowering", "flowering_onset"),
+        (23, "flowering", "flowering_ongoing"),
+        (4, "fruiting", "fruit_set"),
+    ):
+        s.add(
+            "event",
+            phase,
+            {
+                "plant_id": ref(offspring),
+                "kind": kind,
+                "occurred_on": ago(s, days),
+                "phenology": {"phase": phase, "date_is_approximate": days == 36},
+                "notes": NOTE,
+            },
+        )
+
+    identity = s.add(
+        "identity",
+        "operator-name",
+        {"scientific_name": "Aloe barbadensis", "cultivar_name": "Golden Name History"},
+    )
+    s.add(
+        "seed",
+        "name-history",
+        {"botanical_identity_id": ref(identity), "label": "Golden — retained former name example"},
+    )
+    s.add(
+        "correct_name",
+        "operator-name",
+        {
+            "identity_id": ref(identity),
+            "scientific_name": "Aloe vera",
+            "cultivar_name": "Golden Name History",
+            "notes": "Golden synthetic operator correction; no source evidence claimed.",
+        },
+        record="op",
+    )
+
+
 def build_plan(
     profile: str, *, manifest: dict[str, Any] | None = None, volume: int | None = None
 ) -> dict[str, Any]:

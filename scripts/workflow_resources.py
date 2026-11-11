@@ -150,7 +150,7 @@ class Owner:
             "workflow-smoke",
         }:
             safe_smoke = self.role == "workflow-smoke" and re.fullmatch(
-                r"florabase-(?:dev-recovery-smoke|dev-upgrade-smoke|preview-smoke|feature-review-smoke|uat-preview-smoke|uat-branch-smoke)-[a-f0-9]{12}",
+                r"florabase-(?:dev-recovery-smoke|dev-upgrade-smoke|dev-golden-smoke|preview-smoke|feature-review-smoke|uat-preview-smoke|uat-branch-smoke)-[a-f0-9]{12}",
                 self.project,
             )
             if not re.fullmatch(r"[a-f0-9]{32}", self.identity) or (

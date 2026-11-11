@@ -2553,6 +2553,30 @@
       "status": "implemented"
     },
     {
+      "id": "DEV-GOLDEN-001",
+      "category": "infrastructure",
+      "description": "Persistent comprehensive synthetic Golden collection in primary main DEV",
+      "acceptance_criteria": [
+        "Primary main DEV on localhost:5173 keeps PostgreSQL, original media and operator edits across restart and explicit forward upgrades; lifecycle commands never reseed",
+        "COMPREHENSIVE is reproducible at schema 20261110_0047, including cutting ancestry, measurement correction, phenology, retained former names, and existing media and domain scenarios; routine CI and UAT remain lightweight",
+        "Status and verification are read-only for DEV; initialization refuses occupied data, and explicit replacement proves the exact local project, source, database and volume identities before writing",
+        "Replacement and recovery serialize with DEV lifecycle and FULL, prove a recoverable paired backup, preserve the private owner credentials and restore healthy service; a partial cutover leaves a durable recovery journal",
+        "Offline adversarial tests, disposable real DEV lifecycle and recovery smoke, independent infrastructure and data QA, and canonical FULL pass before operator integration"
+      ],
+      "dependencies": [
+        "MULTIBRANCH-UAT-001",
+        "TEST-DATA-002",
+        "LINEAGE-003",
+        "CUTTING-001",
+        "MEASUREMENT-001",
+        "PHENOLOGY-001",
+        "TAXONOMY-001",
+        "TAXONOMY-002"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "GOLDEN-REFERENCE-001",
       "category": "operations",
       "description": "Stopped-by-default golden reference environment on the workstation running the approved production image digest pair with independent synthetic data",

@@ -230,6 +230,13 @@ volume ownership. Retrying when the DB is already at code head is safe: images a
 Alembic performs no pending migration, and ownership initialization repeats without replacing data
 or volumes. No command automatically downgrades.
 
+### Persistent Golden DEV
+
+DEV can hold the reviewed COMPREHENSIVE synthetic collection. Start, stop, builds and forward
+migrations preserve the PostgreSQL and attachment volumes. Golden initialization and replacement
+are explicit operator actions. See [Golden DEV operations](dev-golden.md) for target checks,
+verification, backup locations, and interruption recovery.
+
 ### Returning old-worktree DEV to primary
 
 Use the supported commands from the current feature worktree or the updated primary checkout:

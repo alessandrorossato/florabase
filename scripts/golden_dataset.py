@@ -46,7 +46,12 @@ from florabase.attachments.model import Attachment
 from florabase.attachments.storage import AttachmentStorage
 from florabase.auth.model import User
 from florabase.auth.service import bootstrap_owner
-from florabase.botanical_identities.schemas import BotanicalIdentityUpdate
+from florabase.botanical_identities.model import BotanicalIdentity
+from florabase.botanical_identities.reconciliation import correct_accepted_name
+from florabase.botanical_identities.schemas import (
+    AcceptedNameCorrectionWrite,
+    BotanicalIdentityUpdate,
+)
 from florabase.botanical_identities.service import (
     list_botanical_identities,
     update_botanical_identity,
@@ -70,10 +75,24 @@ from florabase.collection_photos.service import (
 )
 from florabase.collection_views.dashboard import overview
 from florabase.core.config import Environment, Settings, get_settings
+from florabase.cuttings import service as cuttings
+from florabase.cuttings.model import (
+    PropagationAttempt,
+    RootingObservation,
+    VegetativeLot,
+)
+from florabase.cuttings.schemas import (
+    AttemptCreate,
+    EstablishPlant,
+    PropagationAttemptUpdate,
+    RootingObservationWrite,
+    VegetativeLotCreate,
+)
 from florabase.db.base import Base
 from florabase.db.session import get_engine
-from florabase.events.model import EventKind
-from florabase.events.schemas import TransferCreate
+from florabase.events.model import Event, EventKind, MeasurementCorrection
+from florabase.events.schemas import EventUpdate, TransferCreate
+from florabase.events.service import update_event
 from florabase.external_botany import service as external_botany
 from florabase.external_botany.provider import GbifBotanicalProvider
 from florabase.external_botany.service import confirm_link
@@ -85,7 +104,7 @@ from florabase.harvests.inventory_schemas import DispositionCreate
 from florabase.harvests.inventory_service import list_inventory, record_disposition
 from florabase.history.schemas import HistoryCategory
 from florabase.history.service import list_history
-from florabase.lineage.service import lineage
+from florabase.lineage.service import ancestry, lineage
 from florabase.locations.model import Location
 from florabase.locations.service import list_locations
 from florabase.media import copies as media_copies
@@ -151,6 +170,9 @@ MODELS: dict[str, type[Base]] = {
     "wcvp_link": WcvpLink,
     "proposal": NativeRangeProposal,
     "application": NativeRangeApplication,
+    "cutting_lot": VegetativeLot,
+    "cutting_attempt": PropagationAttempt,
+    "cutting_observation": RootingObservation,
 }
 # Session state never describes the dataset and generation writes none, so these tables are empty.
 # This is the only timestamp exclusion: generation's clock makes every other timestamp reproducible.
@@ -678,6 +700,80 @@ def external_cover(
     ).one()
 
 
+def cutting_lot(
+    database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any
+) -> VegetativeLot:
+    return cuttings.create_lot(database, VegetativeLotCreate.model_validate(payload))
+
+
+def cutting_attempt(
+    database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any
+) -> PropagationAttempt:
+    lot_id = payload.pop("lot_id")
+    _, attempt, _ = cuttings.start_attempt(database, lot_id, AttemptCreate.model_validate(payload))
+    return attempt
+
+
+def cutting_observation(
+    database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any
+) -> RootingObservation:
+    attempt_id = payload.pop("attempt_id")
+    return cuttings.save_observation(
+        database, attempt_id, RootingObservationWrite.model_validate(payload)
+    )
+
+
+def cutting_fail(database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any) -> None:
+    attempt_id = payload["attempt_id"]
+    attempt = cuttings.require_record(database, PropagationAttempt, attempt_id)
+    setup = cuttings.attempt_response(attempt).model_dump(
+        include={"started_on", "quantity", "substrate", "temperature_min_c", "temperature_max_c"}
+    )
+    cuttings.update_attempt(
+        database,
+        attempt_id,
+        PropagationAttemptUpdate.model_validate(
+            {
+                **setup,
+                "expected_updated_at": attempt.updated_at,
+                "lifecycle": "failed",
+                "rooted_count": 0,
+            }
+        ),
+    )
+
+
+def cutting_establish(
+    database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any
+) -> Plant | PlantGroup:
+    attempt_id = payload.pop("attempt_id")
+    row, _ = cuttings.establish(database, attempt_id, EstablishPlant.model_validate(payload))
+    return row
+
+
+def correct_measurement(
+    database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any
+) -> None:
+    row = database.get(Event, payload.pop("event_id"))
+    assert row is not None
+    update_event(database, row, EventUpdate.model_validate(payload))
+
+
+def correct_name(database: Session, _: AttachmentStorage, payload: dict[str, Any], __: Any) -> None:
+    row = database.get(BotanicalIdentity, payload.pop("identity_id"))
+    assert row is not None
+    correct_accepted_name(
+        database,
+        row.id,
+        AcceptedNameCorrectionWrite.model_validate(
+            {
+                **payload,
+                "identity_updated_at": row.updated_at,
+            }
+        ),
+    )
+
+
 OPERATIONS: dict[str, Operation] = {
     "owner": owner_node,
     "generated_asset": generated_asset,
@@ -717,6 +813,13 @@ OPERATIONS: dict[str, Operation] = {
     "media_copy": media_copy,
     "media_copy_remove": media_copy_remove,
     "schedule_update": schedule_update,
+    "cutting_lot": cutting_lot,
+    "cutting_attempt": cutting_attempt,
+    "cutting_observation": cutting_observation,
+    "cutting_fail": cutting_fail,
+    "cutting_establish": cutting_establish,
+    "correct_measurement": correct_measurement,
+    "correct_name": correct_name,
 }
 # These owning services always commit, so they run only after the atomic graph has committed.
 COMMITTING_KINDS = {"primary", "external_cover", "local_cover", "media_copy", "media_copy_remove"}
@@ -1169,6 +1272,9 @@ def comprehensive_projections(
     descendant = lineage(
         database, ("plant", UUID(records["plant:seed-collection-produced/second-generation"]))
     )
+    clone = ancestry(
+        database, ("plant", UUID(records["plant:current-collection-history/offspring"]))
+    )
     locations = list_locations(database)
     plants = v4.plants.list_plants(database)
     groups = v4.plants.list_plant_groups(database)
@@ -1182,6 +1288,13 @@ def comprehensive_projections(
         "taxonomy.stale": reasons["Identity changed since source confirmation; review the link"],
         "taxonomy.nodes": len(tree.nodes),
         "lineage.generation2_ancestors": len(descendant.ancestors),
+        "lineage.cutting_ancestors": [node.record.kind for node in clone.ancestors],
+        "journal.measurement_corrections": database.scalar(
+            select(func.count()).select_from(MeasurementCorrection)
+        ),
+        "journal.phenology": sorted(
+            database.scalars(select(Event.phenophase).where(Event.phenophase.is_not(None)))
+        ),
         "search.golden": global_search(database, "Golden", SearchFilters()).total,
         "search.unicode": global_search(database, "植物", SearchFilters()).total,
         "search.synonym_name": global_search(database, "Rosmarinus", SearchFilters()).total,
@@ -1285,6 +1398,14 @@ def media_problems(
     return problems
 
 
+def planned_copy_ids(plan: dict[str, Any], records: dict[str, Any]) -> frozenset[str]:
+    return frozenset(
+        str(records.get(node["payload"]["asset_id"]["$ref"]))
+        for node in plan["nodes"]
+        if node["kind"] == "media_copy"
+    )
+
+
 def validate(database: Session, root: Path, plan: dict[str, Any]) -> list[str]:
     """Return every detected problem; an empty list is the only success."""
     ledger = read_ledger(root)
@@ -1320,12 +1441,7 @@ def validate(database: Session, root: Path, plan: dict[str, Any]) -> list[str]:
             failure = check_invariant(database, ledger, invariant)
             if failure:
                 problems.append(f"{entry['id']}: {failure}")
-    copied = {
-        records.get(node["payload"]["asset_id"]["$ref"])
-        for node in plan["nodes"]
-        if node["kind"] == "media_copy"
-    }
-    problems.extend(media_problems(database, root, frozenset(str(item) for item in copied)))
+    problems.extend(media_problems(database, root, planned_copy_ids(plan, records)))
     problems.extend(completion_state(database, plan, records)[1])
     for model, column in SYNTHETIC_LABELS:
         unmarked = database.scalars(
