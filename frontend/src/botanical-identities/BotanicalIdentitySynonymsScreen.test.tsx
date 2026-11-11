@@ -8,6 +8,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 import { App } from "../App";
+import { createMediaQueryList } from "../test/mediaQuery";
 import "./BotanicalIdentityScreen";
 
 const activeIdentity = {
@@ -183,16 +184,9 @@ test("directory filters by synonyms, preserves URL query and Saved Views state, 
 });
 
 test("restores synonym filter from URL query on narrow viewport and preserves Saved views control", async () => {
-  vi.spyOn(window, "matchMedia").mockReturnValue({
-    matches: true,
-    media: "(max-width: 40rem)",
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  } as MediaQueryList);
+  vi.spyOn(window, "matchMedia").mockReturnValue(
+    createMediaQueryList("(max-width: 40rem)", true),
+  );
   mockIdentityAppFetch();
 
   window.history.replaceState(null, "", "#/identities?q=lageniformis");
