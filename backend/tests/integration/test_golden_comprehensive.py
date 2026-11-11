@@ -206,9 +206,9 @@ def test_record_count_is_within_the_reviewed_target(first: str) -> None:
     )
     assert counts["geographic_places"] == 7
     assert tables["geographic_places"]["rows"] == 294
-    assert sum(counts.values()) == 3982
-    assert sum(item["rows"] for item in tables.values()) == 4269
-    assert domain == 3973
+    assert sum(counts.values()) == 4004
+    assert sum(item["rows"] for item in tables.values()) == 4291
+    assert domain == 3995
     # Volume must not come from one table: each of these is a separately reviewed domain area.
     for table, least in {
         "botanical_identities": 100,
@@ -306,6 +306,26 @@ def test_semantic_coverage_reaches_every_domain_state(first: str) -> None:
     assert projections["taxonomy.stale"] == 1
     assert projections["lineage.generation2_ancestors"] >= 3
     assert projections["search.unicode"] >= 1
+    assert projections["lineage.cutting_ancestors"] == [
+        "propagation_attempt",
+        "vegetative_lot",
+        "plant",
+        "sowing",
+        "seed_lot",
+        "plant",
+    ]
+    assert (
+        query(first, "SELECT count(*) FROM event_measurement_corrections WHERE value = 18.20") == 1
+    )
+    assert query(first, "SELECT count(*) FROM events WHERE phenophase_date_is_approximate") == 1
+    assert (
+        query(
+            first,
+            "SELECT count(*) FROM botanical_identity_reconciliations "
+            "WHERE source_provider = 'operator'",
+        )
+        == 1
+    )
 
 
 def test_every_timestamp_comes_from_the_plan(first: str) -> None:

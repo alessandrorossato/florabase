@@ -68,14 +68,19 @@ def verify() -> None:
     sys.stdout.write(f"Verified {verified} stored attachment file(s) against database metadata\n")
 
 
-def iter_archive_paths(attachment_storage: AttachmentStorage) -> Iterator[Path]:
-    yield attachment_storage.objects
-    for path in sorted(attachment_storage.objects.rglob("*")):
+def iter_archive_paths(root: Path) -> Iterator[Path]:
+    objects = root / "objects"
+    if objects.is_symlink():
+        fail("unsafe symlink in attachment storage: objects")
+    if not objects.exists():
+        return
+    if not objects.is_dir():
+        fail("attachment objects must be a directory")
+    yield objects
+    for path in sorted(objects.rglob("*")):
         if path.is_symlink():
-            fail(
-                f"unsafe symlink in attachment storage: {path.relative_to(attachment_storage.root)}"
-            )
-        relative = path.relative_to(attachment_storage.root).as_posix()
+            fail(f"unsafe symlink in attachment storage: {path.relative_to(root)}")
+        relative = path.relative_to(root).as_posix()
         if path.is_dir() and not DIRECTORY_PATTERN.fullmatch(relative):
             fail(f"unexpected directory in attachment storage: {relative}")
         if path.is_file() and not KEY_PATTERN.fullmatch(relative):
@@ -85,13 +90,13 @@ def iter_archive_paths(attachment_storage: AttachmentStorage) -> Iterator[Path]:
         yield path
 
 
-def archive() -> None:
-    attachment_storage = storage()
+def archive(root: Path | None = None) -> None:
+    root = storage().root if root is None else root
     with tarfile.open(fileobj=sys.stdout.buffer, mode="w|") as output:
-        for path in iter_archive_paths(attachment_storage):
+        for path in iter_archive_paths(root):
             output.add(
                 path,
-                arcname=path.relative_to(attachment_storage.root).as_posix(),
+                arcname=path.relative_to(root).as_posix(),
                 recursive=False,
             )
 
@@ -148,6 +153,14 @@ def staged_restore(attachment_storage: AttachmentStorage) -> Iterator[tuple[Path
         shutil.rmtree(stage, ignore_errors=True)
 
 
+def sync_directory(path: Path) -> None:
+    descriptor = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
 def extract_archive(archive_path: Path, stage: Path) -> int:
     count = 0
     seen: set[str] = set()
@@ -168,9 +181,13 @@ def extract_archive(archive_path: Path, stage: Path) -> int:
                 fail(f"could not read archive member: {name}")
             with source, destination.open("xb") as output:
                 shutil.copyfileobj(source, output, 1024 * 1024)
-            destination.chmod(0o600)
+                output.flush()
+                os.fchmod(output.fileno(), 0o600)
+                os.fsync(output.fileno())
             count += 1
     (stage / "objects").mkdir(mode=0o700, exist_ok=True)
+    for directory, _, _ in os.walk(stage, topdown=False):
+        sync_directory(Path(directory))
     return count
 
 
@@ -186,7 +203,9 @@ def restore() -> None:
         except OSError:
             previous.rename(attachment_storage.objects)
             raise
+        sync_directory(attachment_storage.root)
         shutil.rmtree(previous)
+    sync_directory(attachment_storage.root)
     sys.stdout.write(f"Restored {count} attachment file(s)\n")
 
 

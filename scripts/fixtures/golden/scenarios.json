@@ -257,17 +257,20 @@
       "purpose": "Approximately 3,000–5,000 domain records with semantic coverage and realistic relationships; run manually, not in CI",
       "volume": 420,
       "expected": {
-        "plan_sha256": "9b7387daf49e03b9d87392bcaf194196201932b62d48e8b3a002e740cf27e6cf",
-        "nodes": 3183,
+        "plan_sha256": "8a1da67623c1f9c77071cf39e9bd0346a72483fa2a71cf5f1438877eb81c8c3f",
+        "nodes": 3200,
         "tables": {
           "application_settings": 1,
           "attachments": 32,
-          "botanical_identities": 114,
+          "botanical_identities": 115,
           "botanical_identity_cover_images": 4,
+          "botanical_identity_names": 3,
+          "botanical_identity_reconciliations": 1,
           "botanical_profile_native_ranges": 32,
           "botanical_profiles": 28,
           "collection_primary_photos": 7,
-          "events": 845,
+          "event_measurement_corrections": 1,
+          "events": 851,
           "external_provider_cache": 7,
           "external_taxon_links": 6,
           "geographic_places": 7,
@@ -282,18 +285,21 @@
           "native_range_applications": 2,
           "native_range_proposals": 3,
           "native_range_revisions": 28,
-          "operation_receipts": 650,
+          "operation_receipts": 653,
           "orders": 50,
           "plant_groups": 137,
-          "plants": 212,
+          "plants": 213,
+          "propagation_attempts": 2,
           "provenance_sites": 24,
           "record_media_links": 34,
+          "rooting_observations": 2,
           "saved_views": 20,
           "scheduled_activities": 69,
-          "seed_lots": 428,
+          "seed_lots": 429,
           "sowings": 538,
           "suppliers": 24,
           "users": 1,
+          "vegetative_lots": 1,
           "wcvp_links": 4,
           "wfo_links": 9
         },
@@ -313,14 +319,28 @@
             "transferred": 8
           },
           "harvests": 62,
-          "history": 1916,
-          "history.event": 783,
+          "history": 1927,
+          "history.event": 789,
           "history.germination": 390,
           "history.harvest": 62,
           "history.material": 28,
-          "history.propagation": 628,
+          "history.propagation": 633,
           "history.schedule": 25,
-          "identities": 114,
+          "identities": 115,
+          "journal.measurement_corrections": 1,
+          "journal.phenology": [
+            "flowering_ongoing",
+            "flowering_onset",
+            "fruit_set"
+          ],
+          "lineage.cutting_ancestors": [
+            "propagation_attempt",
+            "vegetative_lot",
+            "plant",
+            "sowing",
+            "seed_lot",
+            "plant"
+          ],
           "lineage.generation2_ancestors": 3,
           "locations": 34,
           "locations.retired": 1,
@@ -330,9 +350,9 @@
           "media.unlinked": 16,
           "orders": 50,
           "plant_groups": 137,
-          "plants": 212,
+          "plants": 213,
           "plants.by_lifecycle": {
-            "active": 176,
+            "active": 177,
             "dead": 11,
             "discarded": 8,
             "lost": 8,
@@ -345,33 +365,33 @@
           "saved_views": 20,
           "schedule.planned": 38,
           "search.events_death": 18,
-          "search.golden": 2452,
+          "search.golden": 2461,
           "search.retired_supplier": 1,
           "search.synonym_name": 11,
           "search.unicode": 1,
-          "seed_lots": 428,
+          "seed_lots": 429,
           "sowings": 538,
           "stored_material": 45,
           "suppliers": 24,
           "taxonomy.available": true,
           "taxonomy.nodes": 13,
-          "taxonomy.represented": 91,
+          "taxonomy.represented": 92,
           "taxonomy.stale": 1,
           "taxonomy.synonyms": [
             "Aloe barbadensis",
             "Lycopersicon esculentum",
             "Rosmarinus officinalis"
           ],
-          "taxonomy.unresolved": 83
+          "taxonomy.unresolved": 84
         },
         "baseline": {
-          "schema_revision": "20261013_0042",
+          "schema_revision": "20261110_0047",
           "volume": 420,
-          "plan_sha256": "9b7387daf49e03b9d87392bcaf194196201932b62d48e8b3a002e740cf27e6cf",
-          "canonical_sha256": "cf42370751a9d32d6d2cfcca3e7b39b6edb429d5cc2f5793108f3de8e7963a11",
+          "plan_sha256": "8a1da67623c1f9c77071cf39e9bd0346a72483fa2a71cf5f1438877eb81c8c3f",
+          "canonical_sha256": "a6141fc43cf46012007f342b0ba71b005f31141ae34c85f4cdb79bb30a9da88b",
           "media_files": 34,
           "media_sha256": "50894e8a2283bf88349875824e1d3615d70d15be2ff43f708038c72a715afb93",
-          "scenario_keys_sha256": "b3e81413b0970e531643df9395f5742538e0d1101cbbb4db92fcee4f5c3de6d2",
+          "scenario_keys_sha256": "f72fe62a3ec0bc139a4f6d18ba730e5218467d8a8fc98699214b38cfc5001971",
           "tables": {
             "application_settings": {
               "rows": 1,
@@ -379,15 +399,23 @@
             },
             "attachments": {
               "rows": 32,
-              "sha256": "1d134716f5c52d9216cf0d5e01e94928cd166eb92332d4a166a011cbc3b8b200"
+              "sha256": "51711e272d6d002c1360b135617bef9f3f924982fbc82f4d9aafa66288aa8f74"
             },
             "botanical_identities": {
-              "rows": 114,
-              "sha256": "f7059c1a2c17036db87f8cf593743c2d64b75053c4526d860245b618a8e6cb8a"
+              "rows": 115,
+              "sha256": "f9ad24dc96bacbace0023331682a1ff25ebd3e72209ecaa4ee02617c5cf74636"
             },
             "botanical_identity_cover_images": {
               "rows": 4,
-              "sha256": "a21fc591bf07f3ed04b7b37870697b9fedb8eeec68eb0cd9dc57f1a74abbb432"
+              "sha256": "7f5f8aa6581bbf9da75e9a54e99d9ddff2714e2f11894f7067ce9cf3aeae474b"
+            },
+            "botanical_identity_names": {
+              "rows": 3,
+              "sha256": "d070a5b2b154ee473e4f385caf34b664170aa532d070313df863d0bafcbf176b"
+            },
+            "botanical_identity_reconciliations": {
+              "rows": 1,
+              "sha256": "34ff3ece7ed66981571c43f37e2104887a222e7e6b9c94def2f61bbffab068d0"
             },
             "botanical_profile_native_ranges": {
               "rows": 32,
@@ -399,11 +427,15 @@
             },
             "collection_primary_photos": {
               "rows": 7,
-              "sha256": "90d5c9ced55ae6233dae2d6fd5a486ff8c073baf805f4cdbe75fa017c4432827"
+              "sha256": "8cb42b6aedb3db597aa8b59750d728b5a21f9fdf1c66b83c15f87d0a41567527"
+            },
+            "event_measurement_corrections": {
+              "rows": 1,
+              "sha256": "d0d6d117d30c511668dbc1b740294f71acab245cd3171dc1e3cfe0628c54889f"
             },
             "events": {
-              "rows": 845,
-              "sha256": "7c39f34315d493d9a3e18597dcb4a17bf0096407f395d3b82a9dff16705da5f9"
+              "rows": 851,
+              "sha256": "74bcf7bed5d95a609d3626424f2a4f9c56726e9acd2b5e5d33d4d44ce87a7807"
             },
             "external_provider_cache": {
               "rows": 7,
@@ -443,11 +475,11 @@
             },
             "locations": {
               "rows": 34,
-              "sha256": "59d12e10a6ab554971a74e6218397e0adcfc8e6119df67c49673edf0a45bba67"
+              "sha256": "8d22e80105d53793d8147cdba5497035afb98bde34675afbd04d9eb250d660eb"
             },
             "media_assets": {
               "rows": 37,
-              "sha256": "80279c7d1eda36b243b4b7c16db111be71c86962ff788612f65e1d567b8780db"
+              "sha256": "682feff4df39d283641af8a5861b15dc7d93b073a06059dc8fae9010e918d85b"
             },
             "native_range_applications": {
               "rows": 2,
@@ -462,8 +494,8 @@
               "sha256": "b2887cdc2edb6b9fdc73b4952d2e4a6ecc28cc690d665ba4b80a9bec7fd4adce"
             },
             "operation_receipts": {
-              "rows": 650,
-              "sha256": "532da8df1c861d50384f7f74fcb80423d6d58c874f14f7b84a93ffb79e743b04"
+              "rows": 653,
+              "sha256": "75d7e1b67464b89b81c900f38516366e9b7e978bce803f3e02e5364c1e064554"
             },
             "orders": {
               "rows": 50,
@@ -471,11 +503,15 @@
             },
             "plant_groups": {
               "rows": 137,
-              "sha256": "69c101eee1f2ea61d3350b2b0ff5671baceb8d2168cbdd7683202ee255404145"
+              "sha256": "bc2204c1d4d0113c292a5d5ce926c3f0f908cb042ea3f0e5e0b3c4d4d7dc5eae"
             },
             "plants": {
-              "rows": 212,
-              "sha256": "6217c55638385a59f433068deaa883a2ad23d56f2eb15ea5491c82288abafd94"
+              "rows": 213,
+              "sha256": "6486b80c9bb4cdce6e01cd258688827f395987b7ddac07113541eeb92f728e35"
+            },
+            "propagation_attempts": {
+              "rows": 2,
+              "sha256": "60145116dee384f3772af681d05859b5f51add502ece9a35e2c3e00c8519ba89"
             },
             "provenance_sites": {
               "rows": 24,
@@ -483,7 +519,11 @@
             },
             "record_media_links": {
               "rows": 34,
-              "sha256": "38f674a151244860fd45d81a9321e69a9ebc3aed06c2a5ddd8013819129f520f"
+              "sha256": "0a2a85edfab2626b46166a8a92d28629fbf06f25c2fcd490f113aade74a2d123"
+            },
+            "rooting_observations": {
+              "rows": 2,
+              "sha256": "77db2fb268abfab04ffd33b97d754175314304a4de5141bf160c55a7734733f1"
             },
             "saved_views": {
               "rows": 20,
@@ -491,11 +531,11 @@
             },
             "scheduled_activities": {
               "rows": 69,
-              "sha256": "e48e5cb77f00d7fd645eb54233bcba2a745b8715f8ff4cb6dae15929239d3c35"
+              "sha256": "ae74f59ed878f27ae1cefa914d196c356fc90545a0bcb9aa19a0c851c8e60dc0"
             },
             "seed_lots": {
-              "rows": 428,
-              "sha256": "bd35288c118c341def60db3206c0bfac5ae1028a9577ab28754fb6bf60d6fffb"
+              "rows": 429,
+              "sha256": "08fa83c824407b7e4f1a019059a7dbfc91817d01c035f1bb5e9eddf68efe3987"
             },
             "sowings": {
               "rows": 538,
@@ -508,6 +548,10 @@
             "users": {
               "rows": 1,
               "sha256": "e01b9b5d814f998a2bc30ad65b9bae1950c464dc3abf0cb572ffe2ad85c05490"
+            },
+            "vegetative_lots": {
+              "rows": 1,
+              "sha256": "a058a4d45399c77d47bba17071e306de971c244e59e8687d0cb42fc8f9ac24a0"
             },
             "wcvp_links": {
               "rows": 4,
@@ -1976,6 +2020,77 @@
         "separately generated large dataset for performance experiments"
       ],
       "invariants": []
+    },
+    {
+      "id": "current-collection-history",
+      "domain": "Collection history",
+      "status": "implemented",
+      "profiles": [
+        "comprehensive"
+      ],
+      "covers": [
+        "multi-generation seed and cutting ancestry",
+        "successful and failed cutting attempts with rooting observations",
+        "mixed-unit plant height series and a retained correction",
+        "exact and estimated phenology dates",
+        "operator-attributed accepted-name correction with retained former name"
+      ],
+      "invariants": [
+        {
+          "check": "field",
+          "key": "cutting_lot:current-collection-history/mother",
+          "field": "lifecycle",
+          "equals": "exhausted"
+        },
+        {
+          "check": "field",
+          "key": "cutting_attempt:current-collection-history/rooted",
+          "field": "lifecycle",
+          "equals": "completed"
+        },
+        {
+          "check": "field",
+          "key": "cutting_attempt:current-collection-history/failed",
+          "field": "lifecycle",
+          "equals": "failed"
+        },
+        {
+          "check": "field",
+          "key": "cutting_observation:current-collection-history/rooted",
+          "field": "rooted_count",
+          "equals": 3
+        },
+        {
+          "check": "field",
+          "key": "event:current-collection-history/latest",
+          "field": "measurement_value",
+          "equals": "18.02"
+        },
+        {
+          "check": "field",
+          "key": "event:current-collection-history/flowering_onset",
+          "field": "phenophase_date_is_approximate",
+          "equals": true
+        },
+        {
+          "check": "field",
+          "key": "identity:current-collection-history/operator-name",
+          "field": "scientific_name",
+          "equals": "Aloe vera"
+        },
+        {
+          "check": "field",
+          "key": "cutting_lot:current-collection-history/mother",
+          "field": "mother_plant_id",
+          "equals_ref": "plant:seed-collection-produced/second-generation"
+        },
+        {
+          "check": "field",
+          "key": "plant:current-collection-history/offspring",
+          "field": "originating_propagation_attempt_id",
+          "equals_ref": "cutting_attempt:current-collection-history/rooted"
+        }
+      ]
     }
   ]
 }

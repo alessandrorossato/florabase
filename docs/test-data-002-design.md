@@ -1,5 +1,10 @@
 # TEST-DATA-002 comprehensive golden dataset
 
+
+> The original `20261013_0042` measurements and review below are historical. DEV-GOLDEN-001
+> re-pins the current plan at `20261110_0047` and records the current counts and supported
+> primary DEV workflow in [Golden DEV operations](dev-golden.md).
+
 2 November 2026 · `feat/test-data-002` · extends [TEST-DATA-001](test-data-001-design.md), which still
 defines the architecture, locking, guards and baseline contract. Awaiting independent QA.
 

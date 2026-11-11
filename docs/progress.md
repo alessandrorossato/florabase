@@ -8546,3 +8546,25 @@ Status remains implemented pending canonical verification.
   frontend build passed. Vitest passed 165 focused tests and all 1,317 tests across 122 files.
 - Independent QA confirmed manifest and lockfile alignment, installed versions, peer ranges
   and fixture behavior. Canonical FULL was pending while another worktree held its capacity lock.
+
+### DEV-GOLDEN-001 — persistent Comprehensive DEV candidate, 11 November 2026
+
+- Added explicit status, init, verify and reset for the exact primary-main DEV stack. A disposable
+  TEST-DATA generator produces and validates the pair. Cutover verifies the previous pair in
+  scratch, then replaces only the proven local DEV database and original media with the DEV
+  writers stopped. Private owner credentials carry forward.
+- The COMPREHENSIVE pin at `20261110_0047` covers 3,995 domain records and 32 originals.
+  Two dedicated copies and separate disposable stacks matched the reviewed digest. The SMOKE
+  plan and pin are unchanged. Counts, timings, commands and recovery are in [the runbook](dev-golden.md).
+- `make golden-dataset-comprehensive-check` passed 29 tests. `make test-environment-workflow`
+  passed 42 tests. Focused workflow Ruff, mypy, feature graph and whitespace checks passed.
+  `make smoke-dev-golden` covered first init, foreign resource refusal, occupied protection,
+  repeated verify, interruption between DB and media, recovery, reset, real login and main
+  update without reseeding. The focused archived-restore Docker smoke confirmed the current
+  password survived and an archived session was rejected. Disposable cleanup left no owned
+  containers, networks or volumes.
+- Independent infrastructure and data QA confirmed the reproducible pins and reviewed fixes
+  for durable media and journal writes, partial-ledger cleanup, backup identity, credential
+  preservation and tracking-ref movement. Canonical `make feature-verify` selects FULL with
+  fresh stages and writes the candidate receipt. The occupied operator DEV awaits separately
+  authorized replacement after integration.
