@@ -1,6 +1,6 @@
 # Cuttings
 
-CUTTING-001 uses Architecture 1 from the design in draft PR #160. A `VegetativeLot` owns
+CUTTING-001 uses Architecture 1 from the [recovered architecture decision](cutting-001-design.md). A `VegetativeLot` owns
 the material and source facts. A `PropagationAttempt` owns one rooting setup and its outcome.
 A `RootingObservation` records a check of that setup. Stem, leaf and root cuttings use these
 records. Seed inventory and germination retain their existing meanings.
@@ -47,12 +47,9 @@ active cuttings as current and terminal, unreversed cuttings as historical.
 The existing CSV formats cover direct-entry specimens. They do not restore propagation graphs.
 Database backup and restore preserve the cutting tables, receipts and lineage links.
 
-CUTTING migration `20261110_0047` follows PHENOLOGY revision `20261110_0046`
-on the staging branch based on frozen PHENOLOGY `1049214597e27eaeebdd6c5ad0bbed22d203fc10`.
-When duplicate
-identities merge, lots follow the survivor and the reconciliation ledger records their IDs.
-Attempts get their identity through the lot. Existing receipts retain their original snapshots,
-so a subsequent undo still checks the identity recorded at the time of the operation.
+CUTTING migration `20261110_0047` follows PHENOLOGY revision `20261110_0046`.
+When duplicate identities merge, lots follow the survivor and the reconciliation ledger records
+their IDs. Attempts get their identity through the lot. Existing receipts retain their original
+snapshots, so a subsequent undo still checks the identity recorded at the time of the operation.
 
-Both directions of clonal lineage extend the shared LINEAGE-003 explorer at `639d5ed`.
-The operator will run one canonical FULL on the final consolidated tree before acceptance.
+The shared LINEAGE-003 explorer traverses clonal lineage in both directions.
