@@ -1,16 +1,20 @@
 """Read a locally provisioned pinned WCVP index; never fetch during an API request."""
 
+import hashlib
 import json
 import sqlite3
 from contextlib import closing
 from dataclasses import dataclass
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
+from stat import S_ISREG
 from types import MappingProxyType
-from typing import Literal
+from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
+from florabase.core.config import Settings
 from florabase.core.reference_index import (
     SchemaContract,
     UnsupportedIndexError,
@@ -181,14 +185,65 @@ class SourceMetadata(BaseModel):
         return value
 
 
+def file_identity(path: Path) -> tuple[int, int, int, int, int]:
+    stat = path.lstat()
+    if not S_ISREG(stat.st_mode):
+        raise ValueError("WCVP index and seal must be regular files")
+    return stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns
+
+
+@lru_cache(maxsize=4)
+def verify_index_seal(
+    path: Path,
+    index_identity: tuple[int, int, int, int, int],
+    seal_identity: tuple[int, int, int, int, int],
+) -> None:
+    seal = path.with_suffix(".sha256")
+    if seal_identity[2] != 65:
+        raise SourceUnavailableError("The WCVP index provisioning seal is invalid.")
+    expected = seal.read_text(encoding="ascii").strip()
+    with path.open("rb") as stream:
+        checksum = hashlib.file_digest(stream, "sha256").hexdigest()
+    if checksum != expected:
+        raise SourceUnavailableError(
+            "The WCVP index checksum does not match its provisioning seal."
+        )
+    if index_identity != file_identity(path) or seal_identity != file_identity(seal):
+        raise SourceUnavailableError("The WCVP index changed during validation.")
+
+
 class WcvpSource:
-    def __init__(self, path: Path | None, version: WcvpVersion = "15"):
+    def __init__(
+        self, path: Path | None, version: WcvpVersion = "15", *, require_seal: bool = False
+    ):
         self.path = path
         self.release = reviewed_release(version)
+        self.require_seal = require_seal
+
+    @classmethod
+    def from_settings(cls, settings: Settings, version: WcvpVersion) -> Self:
+        if version == "16":
+            return cls(
+                settings.wcvp_v16_snapshot_path,
+                version,
+                require_seal=settings.wcvp_v16_require_seal,
+            )
+        return cls(settings.wcvp_snapshot_path, version)
 
     def _connect(self) -> sqlite3.Connection:
         if self.path is None or not self.path.is_file() or self.path.stat().st_size > 2_000_000_000:
             raise SourceUnavailableError("The reviewed WCVP snapshot is not installed.")
+        if self.require_seal:
+            try:
+                verify_index_seal(
+                    self.path,
+                    file_identity(self.path),
+                    file_identity(self.path.with_suffix(".sha256")),
+                )
+            except (OSError, ValueError) as error:
+                raise SourceUnavailableError(
+                    "The WCVP index provisioning seal is unavailable."
+                ) from error
         try:
             return open_reference_index(self.path, SCHEMA, "WCVP")
         except UnsupportedIndexError as error:

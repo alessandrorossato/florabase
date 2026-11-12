@@ -69,13 +69,13 @@ def wfo_source_dependency(settings: Annotated[Settings, Depends(get_settings)]) 
 def wcvp_v15_source_dependency(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> WcvpSource:
-    return WcvpSource(settings.wcvp_snapshot_path, "15")
+    return WcvpSource.from_settings(settings, "15")
 
 
 def wcvp_v16_source_dependency(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> WcvpSource:
-    return WcvpSource(settings.wcvp_v16_snapshot_path, "16")
+    return WcvpSource.from_settings(settings, "16")
 
 
 def _reconciliation_fail(error: Exception) -> NoReturn:

@@ -237,6 +237,9 @@ migrations preserve the PostgreSQL and attachment volumes. Golden initialization
 are explicit operator actions. See [Golden DEV operations](dev-golden.md) for target checks,
 verification, backup locations, and interruption recovery.
 
+See [DEV reference indexes](dev-references.md) for the pinned WFO and WCVP cache and
+the explicit setup and verification commands.
+
 ### Returning old-worktree DEV to primary
 
 Use the supported commands from the current feature worktree or the updated primary checkout:

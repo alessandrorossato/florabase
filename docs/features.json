@@ -2577,6 +2577,23 @@
       "status": "implemented"
     },
     {
+      "id": "DEV-REFERENCES-001",
+      "category": "infrastructure",
+      "description": "Discover and explicitly provision approved reference indexes in persistent DEV",
+      "acceptance_criteria": [
+        "DEV discovers WFO 2026-06 and full WCVP v16 at source-local cache paths, with optional historical v15 and healthy startup when indexes are absent",
+        "Explicit status, setup and verification preserve the reviewed WFO artifact and validate the pinned WCVP archive, SQLite schema and integrity before publishing the full sealed v16 index",
+        "Disposable Compose smoke proves source availability and accepted searches, index persistence and corruption refusal, and preservation of PostgreSQL collection data and the Golden ledger",
+        "Independent infrastructure QA and canonical FULL pass before operator integration"
+      ],
+      "dependencies": [
+        "DEV-GOLDEN-001",
+        "WCVP-VERSION-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "GOLDEN-REFERENCE-001",
       "category": "operations",
       "description": "Stopped-by-default golden reference environment on the workstation running the approved production image digest pair with independent synthetic data",

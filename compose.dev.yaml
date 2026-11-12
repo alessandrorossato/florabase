@@ -42,6 +42,10 @@ services:
       FLORABASE_COOKIE_MODE: loopback-development
       FLORABASE_LOG_FORMAT: text
       FLORABASE_ATTACHMENT_STORAGE_ROOT: /var/lib/florabase/attachments
+      FLORABASE_WFO_SNAPSHOT_PATH: ${FLORABASE_WFO_SNAPSHOT_PATH:-/app/src/.source-cache/wfo-2026-06.sqlite}
+      FLORABASE_WCVP_SNAPSHOT_PATH: ${FLORABASE_WCVP_SNAPSHOT_PATH:-/app/src/.source-cache/wcvp-v15.sqlite}
+      FLORABASE_WCVP_V16_SNAPSHOT_PATH: ${FLORABASE_WCVP_V16_SNAPSHOT_PATH:-/app/src/.source-cache/wcvp-v16/index.sqlite}
+      FLORABASE_WCVP_V16_REQUIRE_SEAL: ${FLORABASE_WCVP_V16_REQUIRE_SEAL:-false}
       COVERAGE_FILE: /tmp/florabase-coverage
       MYPY_CACHE_DIR: /tmp/florabase-mypy
       PYTEST_ADDOPTS: -o cache_dir=/tmp/florabase-pytest

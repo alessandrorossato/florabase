@@ -53,6 +53,7 @@ class Settings(BaseSettings):
     attachment_storage_root: Path = Path("/var/lib/florabase/attachments")
     wcvp_snapshot_path: Path | None = None
     wcvp_v16_snapshot_path: Path | None = None
+    wcvp_v16_require_seal: bool = False
     wfo_snapshot_path: Path | None = None
     attachment_max_bytes: int = Field(default=25 * 1024 * 1024, ge=1, le=25 * 1024 * 1024)
 
