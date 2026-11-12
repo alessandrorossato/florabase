@@ -44,10 +44,7 @@ def source_dependency(
     settings: Annotated[Settings, Depends(get_settings)],
     version: Annotated[WcvpVersion, Query()] = "15",
 ) -> WcvpSource:
-    return WcvpSource(
-        settings.wcvp_snapshot_path if version == "15" else settings.wcvp_v16_snapshot_path,
-        version,
-    )
+    return WcvpSource.from_settings(settings, version)
 
 
 Source = Annotated[WcvpSource, Depends(source_dependency)]

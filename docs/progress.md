@@ -8568,3 +8568,23 @@ Status remains implemented pending canonical verification.
   preservation and tracking-ref movement. Canonical `make feature-verify` selects FULL with
   fresh stages and writes the candidate receipt. The occupied operator DEV awaits separately
   authorized replacement after integration.
+
+### DEV-REFERENCES-001 — pinned reference cache for DEV, 12 November 2026
+
+- DEV resolves WFO 2026-06 and the full sealed WCVP v16 bundle in the primary checkout's
+  ignored source cache. The explicit setup command reused the 413,069,312-byte WFO index and
+  built WCVP v16 from Kew archive SHA-256
+  `d32ea2b3a85e489b14e83bcc9eae7274532e1d113753f7be290d4b2dfde573fa`.
+  The resulting 952,799,232-byte index contains 1,448,984 taxa and 1,995,338 distributions.
+- Passed 121 focused source/API tests, 43 environment/Golden workflow tests, scoped Ruff,
+  standalone provisioning CLI mypy, feature graph and whitespace checks. Independent QA
+  verified the DEV seal requirement, legacy Review compatibility, worktree-local UAT paths
+  and absence of DEV settings in production.
+- Disposable Golden DEV smoke verified frontend/backend health with absent indexes, accepted
+  API searches before and after restart, reuse without rewriting, and refusal of a wrong
+  archive checksum, invalid index checksum and invalid SQLite schema. The PostgreSQL data
+  dump and Golden ledger had identical before/after SHA-256 values. Cleanup left zero
+  fixture containers, networks and volumes. The per-worktree canonical FULL receipt records
+  the final gate for the exact candidate tree.
+- WCVP v15 remains the product default. The original Golden links and ledger are preserved.
+  See the [operator activation and follow-up handoffs](dev-references.md).

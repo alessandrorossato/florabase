@@ -34,6 +34,18 @@ dev-status: ## Identify DEV source, project, health and migration state
 dev-stop: ## Stop identified DEV (including old-source DEV), preserving all state
 	@python3 ./scripts/workflow_environment.py dev stop
 
+.PHONY: dev-references-status dev-references-setup dev-references-verify
+dev-references-status: ## Show local reference cache paths and artifact presence
+	$(DEV_COMPOSE) run --rm --no-deps -T backend python scripts/dev_references.py status
+
+dev-references-setup: export WCVP_ARCHIVE := $(WCVP_ARCHIVE)
+dev-references-setup: export WCVP_RETRIEVED_AT := $(WCVP_RETRIEVED_AT)
+dev-references-setup: ## Reuse sealed WFO and explicitly provision the pinned official WCVP v16
+	$(DEV_COMPOSE) run --rm --no-deps -T -e WCVP_ARCHIVE -e WCVP_RETRIEVED_AT backend python scripts/dev_references.py setup
+
+dev-references-verify: ## Check installed reference seals, releases, SQLite integrity and searches
+	$(DEV_COMPOSE) run --rm --no-deps -T backend python scripts/dev_references.py verify
+
 .PHONY: dev-golden-status dev-golden-init dev-golden-verify dev-golden-reset smoke-dev-golden
 
 dev-golden-status: ## Show the primary DEV Golden ledger and recovery state

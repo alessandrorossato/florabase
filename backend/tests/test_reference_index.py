@@ -19,6 +19,7 @@ from test_taxonomy import GENUS, META, data
 
 import florabase.native_range_enrichment.snapshot as wcvp_snapshot
 import florabase.taxonomy.snapshot as wfo_snapshot
+from florabase.core.config import Settings
 from florabase.core.reference_index import UnsupportedIndexError, open_reference_index
 from florabase.native_range_enrichment import source as wcvp
 from florabase.taxonomy import source as wfo
@@ -91,6 +92,26 @@ def test_supported_indexes_keep_their_reference_operations(tmp_path: Path) -> No
         assert [t.external_id for t in index.search("fixture")] == ["100", "101"]
         assert index.taxon("101").accepted_name == "Fixture species"
         assert index.distribution("100")[0]["area_code_l3"] == "BOL"
+
+
+def test_dev_wcvp16_requires_seal_and_refuses_modified_index(tmp_path: Path) -> None:
+    v15 = wcvp_index(tmp_path)
+    v16 = wcvp_index(tmp_path, "16")
+    settings = Settings(
+        wcvp_snapshot_path=v15, wcvp_v16_snapshot_path=v16, wcvp_v16_require_seal=True
+    )
+    assert wcvp.WcvpSource.from_settings(settings, "15").metadata().version == "15"
+    assert wcvp.WcvpSource(v16, "16").metadata().version == "16"
+    source = wcvp.WcvpSource.from_settings(settings, "16")
+    with pytest.raises(wcvp.SourceUnavailableError, match="seal is unavailable"):
+        source.metadata()
+    reseal(v16)
+    assert source.search("fixture")[0].name == "Fixture species"
+
+    with closing(sqlite3.connect(v16)) as connection, connection:
+        connection.execute("UPDATE taxa SET name = 'Modified species' WHERE external_id = '100'")
+    with pytest.raises(wcvp.SourceUnavailableError, match="checksum does not match"):
+        source.search("fixture")
 
 
 def test_connection_is_hardened_read_only_and_holds_one_read_transaction(tmp_path: Path) -> None:

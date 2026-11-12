@@ -346,6 +346,14 @@ class EnvironmentTests(unittest.TestCase):
                 str(self.feature / "compose.dev.yaml"), Environment(self.repo, "prod").command()
             )
 
+    def test_only_dev_workflow_enforces_wcvp_v16_seal(self) -> None:
+        setting = "FLORABASE_WCVP_V16_REQUIRE_SEAL"
+        with patch.dict(os.environ, {setting: "false"}):
+            self.assertEqual(Environment(self.repo, "dev").environment()[setting], "true")
+            for role in ("review", "uat", "sourcing", "quality", "prod"):
+                with self.subTest(role=role):
+                    self.assertEqual(Environment(self.repo, role).environment()[setting], "false")
+
     def test_missing_host_identity_apis_require_explicit_non_root_identity(self) -> None:
         with (
             patch("workflow_environment.os.getuid", None),

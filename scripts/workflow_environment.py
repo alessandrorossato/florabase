@@ -415,6 +415,8 @@ class Environment:
         env.update({f"FLORABASE_{key.upper()}": value for key, value in identity.items()})
         env["COMPOSE_PROJECT_NAME"] = self.project
         env["FLORABASE_ROLE"] = self.role
+        if self.role == "dev":
+            env["FLORABASE_WCVP_V16_REQUIRE_SEAL"] = "true"
         if self.role == "quality":
             env["FLORABASE_WORKFLOW_OWNER"] = str(self.repository.metadata.resolve())
         if self.role in {"dev", "review", "uat", "sourcing", "quality"}:
