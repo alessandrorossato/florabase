@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
+  DEFAULT_WCVP_VERSION,
   getRangeSource,
   searchWcvpTaxa,
   confirmWcvpTaxon,
@@ -33,7 +34,7 @@ export function NativeRangeEnrichmentPanel({
 }) {
   const auth = useAuth();
   const [open, setOpen] = useState(false);
-  const [version, setVersion] = useState<WcvpVersion>("15");
+  const [version, setVersion] = useState<WcvpVersion>(DEFAULT_WCVP_VERSION);
   const [source, setSource] = useState<SourceStatus | null>(null);
   const [query, setQuery] = useState("");
   const [taxa, setTaxa] = useState<WcvpTaxon[]>([]);
@@ -165,8 +166,8 @@ export function NativeRangeEnrichmentPanel({
                 setSuccess("");
               }}
             >
-              <option value="15">WCVP v15 (default)</option>
-              <option value="16">WCVP v16</option>
+              <option value="16">WCVP v16 (default)</option>
+              <option value="15">WCVP v15</option>
             </select>
             <p>
               Choosing a version only changes source review. Confirming a new

@@ -1553,6 +1553,22 @@
       "status": "implemented"
     },
     {
+      "id": "WCVP-DEFAULT-001",
+      "category": "enrichment",
+      "description": "Make pinned WCVP v16 the primary default across frontend, backend, API, and snapshot CLI while preserving historical v15 evidence and explicit v15 support",
+      "acceptance_criteria": [
+        "Frontend NativeRangeEnrichmentPanel and enrichment API client, backend WcvpSource/API dependency defaults, and snapshot CLI default to WCVP v16 while retaining explicit v15 selection",
+        "Historical v15 links, frozen proposals, applications, citations, SourceMetadata field defaults, existing botanical identities, and recorded native ranges remain preserved without automatic ID translation",
+        "Missing v16 snapshot index fails closed explicitly with no silent fallback to v15",
+        "Focused backend unit/integration tests, frontend tests, OpenAPI schema artifacts, and documentation are updated and independently QA-reviewed"
+      ],
+      "dependencies": [
+        "WCVP-VERSION-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "ENRICHMENT-002",
       "category": "enrichment",
       "description": "Automate refresh of approved source-scoped enrichment",

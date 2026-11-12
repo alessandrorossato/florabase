@@ -33,6 +33,7 @@ CITATION = (
 
 
 WcvpVersion = Literal["15", "16"]
+DEFAULT_VERSION: WcvpVersion = "16"
 
 
 @dataclass(frozen=True)
@@ -141,6 +142,8 @@ class Taxon(BaseModel):
 
 
 class SourceMetadata(BaseModel):
+    """Frozen release evidence; retains v15 field defaults for historical records."""
+
     model_config = ConfigDict(extra="forbid")
     provider: str = "kew_wcvp"
     version: str = VERSION
@@ -214,14 +217,18 @@ def verify_index_seal(
 
 class WcvpSource:
     def __init__(
-        self, path: Path | None, version: WcvpVersion = "15", *, require_seal: bool = False
+        self,
+        path: Path | None,
+        version: WcvpVersion = DEFAULT_VERSION,
+        *,
+        require_seal: bool = False,
     ):
         self.path = path
         self.release = reviewed_release(version)
         self.require_seal = require_seal
 
     @classmethod
-    def from_settings(cls, settings: Settings, version: WcvpVersion) -> Self:
+    def from_settings(cls, settings: Settings, version: WcvpVersion = DEFAULT_VERSION) -> Self:
         if version == "16":
             return cls(
                 settings.wcvp_v16_snapshot_path,

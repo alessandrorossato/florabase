@@ -42,6 +42,8 @@ from florabase.native_range_enrichment.snapshot import (
 )
 from florabase.native_range_enrichment.source import (
     ARCHIVE_SHA256,
+    DEFAULT_VERSION,
+    RELEASES,
     SourceMetadata,
     SourceUnavailableError,
     WcvpSource,
@@ -88,7 +90,7 @@ def source(tmp_path: Path, request: pytest.FixtureRequest) -> WcvpSource:
             ]
         )
     ]
-    version = cast(WcvpVersion, getattr(request, "param", "15"))
+    version = cast(WcvpVersion, getattr(request, "param", DEFAULT_VERSION))
     build_index(path, names, rows, SourceMetadata.for_release(version, "2026-10-09T00:00:00Z"))
     return WcvpSource(path, version)
 
@@ -146,7 +148,8 @@ def test_compare_selective_apply_preserves_manual_and_qualifiers_and_receipt(
     receipt = database.get(NativeRangeApplication, proposal.id)
     assert receipt is not None
     retained = ProposalResponse.model_validate(receipt.evidence["proposal"])
-    assert retained.source.checksum == ARCHIVE_SHA256
+    assert retained.source.version == DEFAULT_VERSION
+    assert retained.source.checksum == RELEASES[DEFAULT_VERSION].checksum
     assert retained.assertions[0].original["area_code_l3"] == "BOL"
     assert receipt.evidence["removed"] == []
     assert inspect_proposal(database, identity.id, proposal.id).applied_at is not None
@@ -441,6 +444,7 @@ def test_apply_and_identity_deletion_serialize_without_losing_evidence(
             assert database.get(BotanicalIdentity, identity_id) is None
 
 
+@pytest.mark.parametrize("source", ["15"], indirect=True)
 def test_dual_version_frozen_apply_and_explicit_reconfirmation(
     database: Session, identity: BotanicalIdentity, source: WcvpSource, tmp_path: Path
 ) -> None:
@@ -510,6 +514,7 @@ def test_dual_version_frozen_apply_and_explicit_reconfirmation(
     assert inspect_proposal(database, identity.id, old.id).source.version == "15"
 
 
+@pytest.mark.parametrize("source", ["15"], indirect=True)
 @pytest.mark.parametrize("change", ["removed", "synonym", "accepted_id"])
 def test_v16_transitions_do_not_automatically_migrate_v15_links(
     database: Session, identity: BotanicalIdentity, source: WcvpSource, tmp_path: Path, change: str

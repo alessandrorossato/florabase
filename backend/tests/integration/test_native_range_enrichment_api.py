@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from florabase.main import app
 from florabase.native_range_enrichment.api import source_dependency
 from florabase.native_range_enrichment.model import NativeRangeApplication
-from florabase.native_range_enrichment.source import ARCHIVE_SHA256, WcvpSource
+from florabase.native_range_enrichment.source import DEFAULT_VERSION, RELEASES, WcvpSource
 
 from .test_botanical_profile_api import authenticated_browser as authenticated_browser
 from .test_botanical_profile_api import identity_id as identity_id
@@ -42,7 +42,7 @@ def test_authenticated_proposal_flow_and_security(
             "PUT",
             path + "/link",
             headers=missing,
-            body={"external_id": "100", "checksum": ARCHIVE_SHA256},
+            body={"external_id": "100", "checksum": RELEASES[DEFAULT_VERSION].checksum},
         )[0] in {401, 403}
     assert (
         request(
@@ -58,7 +58,7 @@ def test_authenticated_proposal_flow_and_security(
             "PUT",
             path + "/link",
             headers=headers,
-            body={"external_id": "100", "checksum": ARCHIVE_SHA256},
+            body={"external_id": "100", "checksum": RELEASES[DEFAULT_VERSION].checksum},
         )[0]
         == 200
     )
@@ -125,7 +125,7 @@ def test_reprovisioned_source_marks_confirmed_link_stale(
             "PUT",
             path + "/link",
             headers=headers,
-            body={"external_id": "100", "checksum": ARCHIVE_SHA256},
+            body={"external_id": "100", "checksum": RELEASES[DEFAULT_VERSION].checksum},
         )[0]
         == 200
     )
@@ -140,6 +140,7 @@ def test_reprovisioned_source_marks_confirmed_link_stale(
     assert request("POST", path + "/proposals", headers=headers)[0] == 409
 
 
+@pytest.mark.parametrize("source", ["15"], indirect=True)
 @pytest.mark.parametrize("installed", [(), ("15",), ("16",), ("15", "16")])
 def test_explicit_release_http_configuration(
     authenticated_browser: tuple[str, str],
@@ -207,8 +208,10 @@ def test_explicit_release_http_configuration(
     path = f"/api/v1/botanical-identities/{identity_id}/native-range-enrichment"
     cookie, csrf = authenticated_browser
     headers = {"cookie": cookie, "origin": "https://florabase.example", "x-csrf-token": csrf}
-    assert release_request("GET", path + "/source", headers=headers)[2]["available"] == (
-        "15" in installed
+    default_status = release_request("GET", path + "/source", headers=headers)[2]
+    assert default_status["available"] == ("16" in installed)
+    assert release_request("GET", path + "/taxa?q=Fixture", headers=headers)[0] == (
+        200 if "16" in installed else 503
     )
     assert release_request("GET", path + "/source?version=17", headers=headers)[0] == 422
     for version in ("15", "16"):
@@ -238,3 +241,9 @@ def test_explicit_release_http_configuration(
         assert code == 201
         assert proposal["source"]["version"] == version
         assert proposal["crosswalk_version"] == RELEASES[version].crosswalk_version
+    if installed == ("15",):
+        after_link = release_request("GET", path + "/source", headers=headers)[2]
+        assert after_link["available"] is False
+        assert after_link["link"]["source"]["version"] == "15"
+        assert release_request("GET", path + "/taxa?q=Fixture", headers=headers)[0] == 503
+        assert release_request("POST", path + "/proposals", headers=headers)[0] == 503

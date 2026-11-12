@@ -18,7 +18,8 @@ from florabase.native_range_enrichment.snapshot import (
     install_archive,
 )
 from florabase.native_range_enrichment.source import (
-    ARCHIVE_URL,
+    DEFAULT_VERSION,
+    RELEASES,
     SourceMetadata,
     SourceUnavailableError,
     Taxon,
@@ -69,7 +70,7 @@ def source(tmp_path: Path) -> WcvpSource:
             distribution("CZE", identifier="2"),
             distribution("BUL", "1", identifier="3"),
         ],
-        SourceMetadata(retrieved_at="2026-10-09T00:00:00Z"),
+        SourceMetadata.for_release(DEFAULT_VERSION, "2026-10-09T00:00:00Z"),
     )
     return WcvpSource(path)
 
@@ -137,7 +138,7 @@ def test_source_missing_corrupt_and_wrong_version_do_not_create_files(
     assert source.path is not None
     with sqlite3.connect(source.path) as connection:
         metadata = source.metadata().model_dump()
-        metadata["version"] = "16"
+        metadata["version"] = "15"
         connection.execute("UPDATE metadata SET payload=?", (json.dumps(metadata),))
     with pytest.raises(SourceUnavailableError):
         source.search("Fixture")
@@ -162,7 +163,7 @@ def test_index_rejects_duplicate_ids_unknown_flags_and_missing_taxon_atomically(
                 source.path,
                 names,
                 distributions,
-                SourceMetadata(retrieved_at="2026-10-09T00:00:00Z"),
+                SourceMetadata.for_release(DEFAULT_VERSION, "2026-10-09T00:00:00Z"),
             )
         assert source.path.read_bytes() == before
         assert source.taxon("100").eligible
@@ -220,7 +221,7 @@ def test_fixed_download_failure_preserves_previous_index(
     original_client = httpx.Client
 
     def handler(request: httpx.Request) -> httpx.Response:
-        assert str(request.url) == ARCHIVE_URL
+        assert str(request.url) == RELEASES[DEFAULT_VERSION].archive_url
         if failure == "timeout":
             raise httpx.ReadTimeout("source unavailable", request=request)
         if failure == "redirect":
@@ -258,7 +259,7 @@ def test_source_rejects_distribution_above_review_bound(tmp_path: Path) -> None:
         path,
         [name()],
         [distribution(identifier=str(i)) for i in range(501)],
-        SourceMetadata(retrieved_at="2026-10-09T00:00:00Z"),
+        SourceMetadata.for_release(DEFAULT_VERSION, "2026-10-09T00:00:00Z"),
     )
     with pytest.raises(SourceUnavailableError, match="review limit"):
         WcvpSource(path).distribution("100")
@@ -331,3 +332,28 @@ def test_simultaneous_provisioning_never_replaces_another_release(tmp_path: Path
     winner = next(v for v in results if v != "refused")
     assert WcvpSource(path, cast(WcvpVersion, winner)).metadata().version == winner
     assert not list(tmp_path.glob("wcvp-*.sqlite"))
+
+
+def test_snapshot_cli_defaults_to_v16_and_supports_explicit_v15(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import sys
+
+    from florabase.native_range_enrichment import snapshot
+
+    seen: list[tuple[Path, WcvpVersion]] = []
+    monkeypatch.setattr(
+        snapshot, "download", lambda destination, version="16": seen.append((destination, version))
+    )
+    target = tmp_path / "index.sqlite"
+    monkeypatch.setattr(sys, "argv", ["snapshot", str(target)])
+    snapshot.main()
+    monkeypatch.setattr(sys, "argv", ["snapshot", str(target), "--version", "15"])
+    snapshot.main()
+    assert seen == [(target, "16"), (target, "15")]
+
+
+def test_historical_v15_metadata_defaults_remain_valid() -> None:
+    legacy = SourceMetadata(retrieved_at="2026-10-09T00:00:00Z")
+    assert legacy.version == "15"
+    assert legacy.reviewed_release() == RELEASES["15"]

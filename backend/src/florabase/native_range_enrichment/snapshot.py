@@ -19,6 +19,7 @@ import httpx
 
 from florabase.core.reference_index import open_reference_index
 from florabase.native_range_enrichment.source import (
+    DEFAULT_VERSION,
     RELEASES,
     SCHEMA,
     SourceMetadata,
@@ -191,7 +192,10 @@ def build_index(
 
 
 def install_archive(
-    archive_path: Path, destination: Path, retrieved_at: str, version: WcvpVersion = "15"
+    archive_path: Path,
+    destination: Path,
+    retrieved_at: str,
+    version: WcvpVersion = DEFAULT_VERSION,
 ) -> None:
     release = reviewed_release(version)
     if archive_path.stat().st_size > MAX_ARCHIVE_BYTES:
@@ -220,7 +224,7 @@ def install_archive(
         )
 
 
-def download(destination: Path, version: WcvpVersion = "15") -> None:
+def download(destination: Path, version: WcvpVersion = DEFAULT_VERSION) -> None:
     release = reviewed_release(version)
     with tempfile.TemporaryDirectory(prefix="florabase-wcvp-") as directory:
         archive = Path(directory) / "wcvp.zip"
@@ -253,8 +257,8 @@ def main() -> None:
     parser.add_argument(
         "--version",
         choices=list(RELEASES),
-        default="15",
-        help="Explicit reviewed release (default: 15)",
+        default=DEFAULT_VERSION,
+        help=f"Explicit reviewed release (default: {DEFAULT_VERSION})",
     )
     parser.add_argument("--archive", type=Path, help="Already downloaded exact official archive")
     parser.add_argument(

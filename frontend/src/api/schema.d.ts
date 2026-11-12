@@ -7598,7 +7598,10 @@ export interface components {
              */
             status: "native" | "introduced" | "qualified";
         };
-        /** SourceMetadata */
+        /**
+         * SourceMetadata
+         * @description Frozen release evidence; retains v15 field defaults for historical records.
+         */
         SourceMetadata: {
             /**
              * Archive Url
