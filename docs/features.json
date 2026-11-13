@@ -2766,6 +2766,25 @@
       ],
       "priority": "P1",
       "status": "implemented"
+    },
+    {
+      "id": "UX-TODAY-001",
+      "category": "ux",
+      "description": "Work-first Today (approved Variant A, Operational): planned work grouped by Schedule window ahead of supporting content, reversing the DASHBOARD-001 photo-first layout (audit finding UX-003)",
+      "acceptance_criteria": [
+        "DOM order equals visual order at every width: summary, Next work, Recent activity, Record, Collection snapshot, To review, photos; no CSS reordering",
+        "The dashboard response adds bounded overdue, due-today and next-seven-days lists that share the day, planned-status filter and window boundaries of the existing counts; the upcoming field and its meaning are unchanged",
+        "Each window shows its rows with a calendar-day relative age, states when it is capped and links to the full list in Schedule",
+        "Today renders no placeholder image: one line with a link to Plants when no sampled Plant has a loadable image, otherwise only Plants with an image",
+        "Search, Filters, Saved views, Schedule, Journal, History and count links, and loading, error and retry states are preserved",
+        "The first work row is visible without scrolling at 390 by 844"
+      ],
+      "dependencies": [
+        "DASHBOARD-001",
+        "SCHEDULE-UX-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
     }
   ]
 }

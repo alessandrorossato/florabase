@@ -2780,6 +2780,13 @@
             "title": "Due Today",
             "type": "integer"
           },
+          "due_today_items": {
+            "items": {
+              "$ref": "#/components/schemas/ScheduleResponse"
+            },
+            "title": "Due Today Items",
+            "type": "array"
+          },
           "identities_with_profile": {
             "title": "Identities With Profile",
             "type": "integer"
@@ -2792,9 +2799,23 @@
             "title": "Next Seven Days",
             "type": "integer"
           },
+          "next_seven_days_items": {
+            "items": {
+              "$ref": "#/components/schemas/ScheduleResponse"
+            },
+            "title": "Next Seven Days Items",
+            "type": "array"
+          },
           "overdue": {
             "title": "Overdue",
             "type": "integer"
+          },
+          "overdue_items": {
+            "items": {
+              "$ref": "#/components/schemas/ScheduleResponse"
+            },
+            "title": "Overdue Items",
+            "type": "array"
           },
           "purchase_packets_without_order": {
             "title": "Purchase Packets Without Order",
@@ -2845,6 +2866,9 @@
           "due_today",
           "next_seven_days",
           "upcoming",
+          "overdue_items",
+          "due_today_items",
+          "next_seven_days_items",
           "recent_activity"
         ],
         "title": "DashboardOverview",

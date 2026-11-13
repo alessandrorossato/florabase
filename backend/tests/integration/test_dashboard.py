@@ -24,7 +24,9 @@ from florabase.harvests.inventory_service import record_disposition
 from florabase.harvests.model import Harvest
 from florabase.orders.model import Order
 from florabase.plants.model import Plant, PlantGroup
+from florabase.schedule import service as schedule
 from florabase.schedule.model import ScheduledActivity
+from florabase.schedule.schemas import ScheduleComplete, ScheduleWrite
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import GerminationObservation, Sowing
 from florabase.taxonomy.model import WfoLink
@@ -227,6 +229,60 @@ def test_schedule_windows_bounded_lists_history_sources_and_query_bound(
         assert len(statements) <= 25
         next_day = dashboard(db, DAY + timedelta(days=1)).overview
         assert (next_day.overdue, next_day.due_today, next_day.next_seven_days) == (3, 1, 2)
+
+
+def test_each_schedule_window_has_its_own_bounded_list_when_overdue_work_dominates(
+    database_connection: Connection, authenticated_browser: tuple[str, str]
+) -> None:
+    """UX-TODAY-001: 30 overdue items must not hide today's and the coming week's work."""
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as db:
+        # Three per day exercises the id tie-break; +8 and +30 lie outside every window.
+        deltas = [-(index // 3 + 1) for index in range(30)] + [0, 0, 1, 2, 3, 6, 7, 8, 30]
+        planned = [
+            ScheduledActivity(
+                activity_kind="inspect", title=f"Plan {delta}", due_on=DAY + timedelta(days=delta)
+            )
+            for delta in deltas
+        ]
+        db.add_all(planned)
+        for state in ("completed", "cancelled"):
+            done = schedule.create(
+                db, ScheduleWrite(activity_kind="inspect", title=state, due_on=DAY)
+            )
+            if state == "completed":
+                schedule.complete(db, done.id, ScheduleComplete(expected_version=1))
+            else:
+                schedule.cancel(db, done.id, 1)
+        db.flush()
+        planned.sort(key=lambda activity: (activity.due_on, activity.id))
+        expected = {
+            "upcoming": [str(a.id) for a in planned[:5]],
+            "overdue_items": [str(a.id) for a in planned[:5]],
+            "due_today_items": [str(a.id) for a in planned[30:32]],
+            "next_seven_days_items": [str(a.id) for a in planned[32:35]],
+        }
+        result = dashboard(db, DAY).overview
+        assert (result.overdue, result.due_today, result.next_seven_days) == (30, 2, 5)
+        for field, identifiers in expected.items():
+            assert [str(item.id) for item in getattr(result, field)] == identifiers, field
+        assert all(item.overdue for item in result.overdue_items)
+        assert not any(item.overdue for item in result.due_today_items)
+        # The window boundary moves with the caller's day, for counts and lists alike.
+        tomorrow = dashboard(db, DAY + timedelta(days=1)).overview
+        assert (tomorrow.overdue, tomorrow.due_today, tomorrow.next_seven_days) == (32, 1, 5)
+        assert [item.id for item in tomorrow.due_today_items] == [planned[32].id]
+        assert tomorrow.next_seven_days_items[0].id == planned[33].id
+        db.commit()
+    # API contract: new fields are additive; existing consumers still read `upcoming` and counts.
+    status, body = _api_get(f"/api/v1/dashboard?today={DAY.isoformat()}", authenticated_browser[0])
+    assert status == 200
+    overview = body["overview"]
+    assert isinstance(overview, dict)
+    assert (overview["overdue"], overview["due_today"], overview["next_seven_days"]) == (30, 2, 5)
+    for field, identifiers in expected.items():
+        assert [item["id"] for item in overview[field]] == identifiers, field
+    assert overview["due_today_items"][0]["due_on"] == DAY.isoformat()
+    assert set(overview["overdue_items"][0]) == set(overview["upcoming"][0])
 
 
 def test_dashboard_auth_and_calendar_validation(authenticated_browser: tuple[str, str]) -> None:

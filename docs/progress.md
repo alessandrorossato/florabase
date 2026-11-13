@@ -8736,3 +8736,28 @@ Status remains implemented pending canonical verification.
   implementation has no canonical receipt. Docker network pool exhaustion prevented its prior
   isolated FULL attempt at migration-cycle. No DEV, Golden, NAS, production or shared Feature Review
   resources were used.
+
+### UX-TODAY-001 — work-first Today (Variant A, Operational), 13 November 2026
+
+- Today now reads in one order on screen and in the DOM: summary, Next work, Recent activity,
+  Record, Collection snapshot, To review, photos. This deliberately reverses the verified
+  DASHBOARD-001 photo-first layout, following audit finding UX-003; see the
+  [layout reversal](dashboard-001-handoff.md#layout-reversal--ux-today-001).
+- `GET /api/v1/dashboard` adds `overdue_items`, `due_today_items` and `next_seven_days_items`
+  (5, 5 and 3 items, `due_on, id`), consistent with the existing counts. `upcoming` is unchanged.
+  No migration. Completion stays in Schedule; rows link to the Schedule item.
+- Focused checks: disposable PostgreSQL `test_dashboard.py` (8 passed, including the new 30/2/5
+  scenario and API contract), backend Ruff, format, strict mypy and collection-view unit tests,
+  `api-check` with no drift, frontend lint, Prettier, typecheck and Vitest for
+  `src/collection`, `src/events`, `UX001` and `App`.
+- Independent QA (separate read-only checkout) found no blockers. Fixed: phone icon-only rule
+  also hid the Saved views dialog's Close label (now scoped to the toolbar triggers); badge
+  rendered only for planned rows; photo-line wording; design README pointer. Version skew with
+  an older backend shows the Today error state rather than partial data. Phone icon-only labels
+  are visually hidden text, not zero-sized, so they remain accessible names.
+- Rendering (production build, synthetic 30/2/5 fixture, loopback only): 1440, 1024 and 390
+  wide, light and dark, and 720×422 for 200 % zoom. No horizontal scroll at any width; first work
+  row ends at y = 572 of 844 at 390; DOM order matches visual order; no placeholder tiles with or
+  without photos; Saved views dialog Close keeps its label on phones.
+- Status IMPLEMENTED_UNVERIFIED: under the operator's UX closeout batch policy the canonical
+  gate runs once on the integrated HEAD, not in this worktree. No receipt exists here.

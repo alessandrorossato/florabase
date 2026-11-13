@@ -35,6 +35,10 @@ class DashboardOverview(BaseModel):
     due_today: int
     next_seven_days: int
     upcoming: list[ScheduleResponse]
+    # Bounded earliest-first lists per window; the counts above remain the totals.
+    overdue_items: list[ScheduleResponse]
+    due_today_items: list[ScheduleResponse]
+    next_seven_days_items: list[ScheduleResponse]
     recent_activity: list[HistoryEntry]
 
 
