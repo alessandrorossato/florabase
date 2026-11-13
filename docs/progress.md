@@ -8794,3 +8794,8 @@ Status remains implemented pending canonical verification.
   retired an ownership-labelled bridge. An unrelated unattached disposable integration
   network from the missing Lineage worktree was found and left for exact operator cleanup.
   No source-branch worktrees, primary DEV data, or Golden data were changed.
+
+- The operator approved the visual evidence. The first FULL stopped at the impact inventory
+  check because the new OccurrenceDateChoice test was missing from the events scope. The
+  follow-up registers the test without changing product source. Lineage bridge cleanup is
+  deferred and the batch UAT Preview remains available.
