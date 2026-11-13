@@ -8784,7 +8784,10 @@ Status remains implemented pending canonical verification.
   1440 and 390 pixels in both themes, with 5/2/3 rows for the 30/2/5 fixture and a text-only
   fallback when no photo was usable. Cuttings list and gallery, both record types, search,
   status filtering, Saved Views, keyboard preview focus and native Chromium 200% zoom were
-  exercised. Plant hash switching and Back/Forward preserved or cleared incomplete dates as
+  exercised. Native zoom exposed a zero-height results pane in short viewports. The Cuttings
+  directory now scrolls in document flow at that height; both record types and status chips
+  passed browser hit testing in both themes without horizontal overflow. Plant hash switching
+  and Back/Forward preserved or cleared incomplete dates as
   appropriate. A year-only Journal entry was saved through the UI and reopened with the same
   value; the API confirmed neither month nor day was stored.
 - Pending operator visual acceptance and one fresh canonical FULL. Docker allocated and

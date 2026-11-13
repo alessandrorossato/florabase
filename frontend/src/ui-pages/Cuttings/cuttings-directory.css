@@ -88,3 +88,22 @@
     padding-block-start: 0;
   }
 }
+
+/* The toolbar can consume the entire results scrollport at native browser
+   zoom. Keep the whole directory in document flow in short viewports. */
+@media (max-height: 30rem) {
+  main:has(.cuttings-directory),
+  .application-shell:has(.cuttings-directory),
+  .application-shell > .app-content:has(.cuttings-directory),
+  .app-content .cuttings-directory:has(.ui-directory-records),
+  .app-content
+    .cuttings-directory:has(.ui-directory-records)
+    :is(.ui-directory-frame, .ui-directory-main) {
+    block-size: auto;
+    overflow: visible;
+  }
+  main:has(.cuttings-directory),
+  .application-shell:has(.cuttings-directory) {
+    min-block-size: 100dvh;
+  }
+}
