@@ -1,3 +1,34 @@
+## 2026-11-12 — WCVP-DEFAULT-001: Make WCVP v16 the primary default
+
+- Switched the primary default WCVP release from `15` to `16` across backend
+  (`DEFAULT_VERSION = "16"` in `native_range_enrichment/source.py`, `api.py`, and
+  `snapshot.py`), OpenAPI schema (`backend/openapi.json` and generated
+  `frontend/src/api/schema.d.ts`), and frontend (`DEFAULT_WCVP_VERSION = "16"` in
+  `enrichment-api.ts` and `NativeRangeEnrichmentPanel.tsx`), while keeping explicit
+  `version=15` selection and `--version 15` CLI support intact.
+- Preserved all historical v15 links, frozen proposals, immutable applications,
+  citations, `SourceMetadata` field defaults (for stored historical v15 JSONB
+  records), recorded native ranges, and botanical identities without automatic ID
+  translation or silent fallback when `FLORABASE_WCVP_V16_SNAPSHOT_PATH` is absent
+  or mismatched.
+- Updated backend unit/integration tests, frontend enrichment panel tests, and
+  documentation (`docs/wcvp-version-001.md`, `docs/native-range-enrichment.md`,
+  `docs/decisions/0007-accepted-name-reconciliation.md`, `docs/domain-model.md`,
+  and `docs/features.json` with `WCVP-DEFAULT-001` marked `implemented`).
+- Rebased onto merged `DEV-REFERENCES-001` (`40988c0`), reconciling
+  `WcvpSource.__init__` / `from_settings` (`DEFAULT_VERSION = "16"` with
+  `require_seal`) and `test_dev_wcvp16_requires_seal_and_refuses_modified_index`.
+- Focused verification passed backend static checks (`ruff check`, `ruff format --check`,
+  `mypy`), API drift (`make api-check`), `scripts/check-features.py` (151 features
+  valid), 104 focused backend unit tests (`--no-cov`), 63 disposable PostgreSQL
+  integration tests across `test_native_range_enrichment.py`,
+  `test_native_range_enrichment_api.py`, and `test_botanical_identity_api.py`,
+  frontend static checks (`lint`, `format:check`, `typecheck`), and 16 focused Vitest
+  cases (`NativeRangeEnrichmentPanel`, `IdentityReconciliationPanel`,
+  `IdentityReferenceSummary`).
+- Canonical `make feature-verify` (FULL) and independent QA review run on the frozen
+  rebased commit.
+
 ## 2026-11-11 — Pre-beta consolidated integration, phase 2 freeze
 
 - Merged frozen VERIFICATION-EVIDENCE-001 `b805796` into the clean phase 1 tree `37ee860`.

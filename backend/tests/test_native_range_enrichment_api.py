@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
 from uuid import uuid7
@@ -100,8 +101,9 @@ def test_error_translation_and_identity_lookup() -> None:
 def test_source_dependency_uses_optional_configured_path() -> None:
     from pathlib import Path
 
-    settings = Settings(wcvp_snapshot_path=Path("/tmp/wcvp.sqlite"))
-    assert api.source_dependency(settings).path == settings.wcvp_snapshot_path
+    settings = Settings(wcvp_v16_snapshot_path=Path("/tmp/wcvp-v16.sqlite"))
+    assert api.source_dependency(settings).path == settings.wcvp_v16_snapshot_path
+    assert api.source_dependency(settings).release.version == "16"
 
 
 def test_source_status_marks_reprovisioned_link_stale(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -277,17 +279,40 @@ def inspect_and_record(
 
 
 @pytest.mark.parametrize("installed", [(), ("15",), ("16",), ("15", "16")])
-def test_version_path_selection_keeps_v15_default(installed: tuple[str, ...]) -> None:
+def test_version_path_selection_defaults_to_v16_without_fallback(
+    installed: tuple[str, ...],
+) -> None:
     from pathlib import Path
 
     settings = Settings(
         wcvp_snapshot_path=Path("/v15.sqlite") if "15" in installed else None,
         wcvp_v16_snapshot_path=Path("/v16.sqlite") if "16" in installed else None,
     )
-    assert api.source_dependency(settings).release.version == "15"
-    assert api.source_dependency(settings).path == settings.wcvp_snapshot_path
+    assert api.source_dependency(settings).release.version == "16"
+    assert api.source_dependency(settings).path == settings.wcvp_v16_snapshot_path
+    assert api.source_dependency(settings, "15").release.version == "15"
+    assert api.source_dependency(settings, "15").path == settings.wcvp_snapshot_path
     assert api.source_dependency(settings, "16").path == settings.wcvp_v16_snapshot_path
     assert api.source_dependency(settings, "16").release.version == "16"
+
+
+def test_missing_v16_keeps_v15_link_current_without_silent_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    previous = link(source_metadata())
+    monkeypatch.setattr(service, "link_response", lambda *_: previous)
+    response = api.source_status(
+        uuid7(),
+        as_session(),
+        actor(),
+        api.source_dependency(Settings(wcvp_snapshot_path=Path("/v15.sqlite"))),
+    )
+    assert response.available is False
+    assert response.source is None
+    assert response.message is not None
+    assert response.link is not None
+    assert response.link.stale is False
+    assert response.link.source.version == "15"
 
 
 def test_browsing_v16_keeps_a_v15_link_current(monkeypatch: pytest.MonkeyPatch) -> None:

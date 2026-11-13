@@ -2,9 +2,10 @@ import type { components } from "../api/schema";
 import { requestJson } from "../auth/api";
 
 export type WcvpVersion = "15" | "16";
+export const DEFAULT_WCVP_VERSION: WcvpVersion = "16";
 
 function versionQuery(version: WcvpVersion) {
-  return version === "15" ? "" : "?version=16";
+  return version === DEFAULT_WCVP_VERSION ? "" : `?version=${version}`;
 }
 
 export type SourceStatus = components["schemas"]["SourceStatus"];
@@ -24,7 +25,7 @@ function write<T>(url: string, method: string, csrf: string, body?: unknown) {
 export function getRangeSource(
   identity: string,
   signal?: AbortSignal,
-  version: WcvpVersion = "15",
+  version: WcvpVersion = DEFAULT_WCVP_VERSION,
 ) {
   return requestJson<SourceStatus>(
     `${path(identity)}/source${versionQuery(version)}`,
@@ -35,10 +36,10 @@ export function searchWcvpTaxa(
   identity: string,
   query: string,
   signal?: AbortSignal,
-  version: WcvpVersion = "15",
+  version: WcvpVersion = DEFAULT_WCVP_VERSION,
 ) {
   return requestJson<WcvpTaxon[]>(
-    `${path(identity)}/taxa?q=${encodeURIComponent(query)}${version === "15" ? "" : "&version=16"}`,
+    `${path(identity)}/taxa?q=${encodeURIComponent(query)}${version === DEFAULT_WCVP_VERSION ? "" : `&version=${version}`}`,
     { signal },
   );
 }
@@ -47,7 +48,7 @@ export function confirmWcvpTaxon(
   taxon: WcvpTaxon,
   checksum: string,
   csrf: string,
-  version: WcvpVersion = "15",
+  version: WcvpVersion = DEFAULT_WCVP_VERSION,
 ) {
   return write<components["schemas"]["WcvpLinkResponse"]>(
     `${path(identity)}/link${versionQuery(version)}`,
@@ -59,7 +60,7 @@ export function confirmWcvpTaxon(
 export function createRangeProposal(
   identity: string,
   csrf: string,
-  version: WcvpVersion = "15",
+  version: WcvpVersion = DEFAULT_WCVP_VERSION,
 ) {
   return write<RangeProposal>(
     `${path(identity)}/proposals${versionQuery(version)}`,

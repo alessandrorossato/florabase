@@ -1,8 +1,9 @@
 # Reviewable structured native-range enrichment (ENRICHMENT-001)
 
 The optional trusted-source panel in BotanicalIdentity → Native ranges uses the reviewed
-**Kew WCVP version 15** archive by default.
-[WCVP-VERSION-001](wcvp-version-001.md) adds explicitly selected, separately provisioned v16. [Exact source approval](native-range-enrichment-source-v15.md)
+**Kew WCVP version 16** archive by default (updated from v15 by `WCVP-DEFAULT-001`), while retaining
+explicit **version 15** support, historical links, proposals, and applications.
+[WCVP-VERSION-001](wcvp-version-001.md) documents both pinned releases and crosswalks. [Exact source approval](native-range-enrichment-source-v15.md)
 records its schema, licence, attribution, complete inspection and checksum. Only explicit Apply
 writes canonical `BotanicalProfileNativeRange` relationships. Opening, searching, confirming a
 source link and retrieving proposals never create a profile or change recorded ranges or text.
@@ -124,10 +125,10 @@ calls. Missing/corrupt/unapproved local snapshots fail closed without affecting 
 The standalone CLI is independent of startup, PostgreSQL and health checks:
 
 ```sh
-python -m florabase.native_range_enrichment.snapshot /wcvp/wcvp-v15.sqlite
+python -m florabase.native_range_enrichment.snapshot /wcvp/wcvp-v16.sqlite
 ```
 
-It accepts only the two pinned official HTTPS releases, with `--version 15|16` (default15);
+It accepts only the two pinned official HTTPS releases, with `--version 15|16` (default `16`);
 no user-supplied URL. Use a separate destination for each release. Connect/read timeouts
 are 10/60 seconds, total streamed-download bound 240 seconds, compressed bound 100 MB, redirects
 rejected, ZIP/octet-stream content required and SHA-256 pinned. ZIP members must match the exact
@@ -140,7 +141,7 @@ For an already audited archive, preserve its **actual retrieval timestamp**, not
 
 ```sh
 python -m florabase.native_range_enrichment.snapshot /wcvp/wcvp-v15.sqlite \
-  --archive /audit/wcvp_v15.zip \
+  --version 15 --archive /audit/wcvp_v15.zip \
   --retrieved-at 2026-10-09T06:16:20.117071+00:00
 ```
 
@@ -160,7 +161,8 @@ belongs in normal database backups; optional source indexes can be rebuilt from 
 
 Production starts normally without this optional file. Provision it as the backend container's
 runtime user into a separately managed directory, then supply a read-only bind mount and
-`FLORABASE_WCVP_SNAPSHOT_PATH=/wcvp/wcvp-v15.sqlite` in a deployment override. Keep it outside
+`FLORABASE_WCVP_V16_SNAPSHOT_PATH=/wcvp/wcvp-v16.sqlite` (and optionally
+`FLORABASE_WCVP_SNAPSHOT_PATH=/wcvp/wcvp-v15.sqlite` for explicit v15) in a deployment override. Keep it outside
 source/build contexts and uploads; do not expose a database or introduce startup downloads.
 The default setting is absent. No production/DEV/Stable Preview source cache was provisioned here.
 

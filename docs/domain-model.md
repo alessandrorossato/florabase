@@ -159,7 +159,7 @@ overwritten.
 ### Reviewable structured range proposals
 
 ENRICHMENT-001 adds separate operator-confirmed WCVP links and frozen source proposals. Its exact
-version-15 Native assertions use a reviewed twelve-unit TDWG crosswalk; introduced, qualified,
+version-16 (default) and version-15 Native assertions use reviewed twelve-unit TDWG crosswalks; introduced, qualified,
 partial and unresolved units remain source context. Only explicit selective Apply adds canonical
 `BotanicalProfileNativeRange` links. Existing ranges and all profile text are kept. Immutable
 application evidence retains original source assertions and mapping decisions independently of

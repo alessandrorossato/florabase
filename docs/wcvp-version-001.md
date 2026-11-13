@@ -12,7 +12,7 @@ SHA-256 `1b8047ccc8409601691324cb6f47c1d271880e1b856c6a9786735aba637288ce`.
 Its manifests, exact-ID comparisons and source records informed this bounded extension.
 No download, licensing or archive-discovery investigation was repeated.
 
-| Definition | v15 (default) | v16 (explicit) |
+| Definition | v15 (explicit) | v16 (default via `WCVP-DEFAULT-001`) |
 | --- | --- | --- |
 | Official URL | `https://sftp.kew.org/pub/data-repositories/WCVP/Archive/wcvp_v15.zip` | `https://sftp.kew.org/pub/data-repositories/WCVP/wcvp.zip` |
 | SHA-256 | `693e05b31ea6ce724c88ccf38bb964db2f22424b396f7ed1fd04fdb203af7e81` | `d32ea2b3a85e489b14e83bcc9eae7274532e1d113753f7be290d4b2dfde573fa` |
@@ -40,8 +40,8 @@ THA→TH, URU→UY and VIE→VN. The literal mapping implementation is unchanged
 
 | Configuration / durable evidence | Behavior |
 | --- | --- |
-| v15 only | Existing clients and UI start on v15; selecting v16 reports unavailable |
-| v16 only | Default v15 reports unavailable; explicit v16 selection enables search/confirmation |
+| v15 only | Default v16 reports unavailable without silent fallback; explicit v15 selection enables search/confirmation and preserves historical v15 links |
+| v16 only | Default UI and API start on v16; explicit v15 selection reports unavailable |
 | Both | Independent bounded searches; selection does not mutate a confirmed link |
 | Neither / corrupt / wrong-version index | Startup and operator data remain usable; source review fails closed |
 | v15 link while browsing v16 | Retains v15 identity and version; new v16 proposal requires explicit reconfirmation |
@@ -51,7 +51,7 @@ THA→TH, URU→UY and VIE→VN. The literal mapping implementation is unchanged
 | Removed ID / synonym / different accepted ID | No automatic migration or accepted-ID following; operator must choose an eligible exact record |
 | Changed/absent distribution | Existing native ranges remain KEEP/CURRENT-ONLY; Apply never removes them |
 
-`GET source`, `GET taxa`, `PUT link` and `POST proposals` accept `version=15|16`, default `15`.
+`GET source`, `GET taxa`, `PUT link` and `POST proposals` accept `version=15|16`, default `16` (updated from initial `15` by `WCVP-DEFAULT-001`; historical `SourceMetadata` field defaults remain v15 so stored v15 JSONB payloads validate unchanged).
 History, proposal inspection and Apply do not accept a release selector: frozen proposal evidence
 is authoritative. Unknown versions receive HTTP422. Checksums are checked against the selected
 release; no fallback occurs between paths. The Native ranges panel exposes an explicit version

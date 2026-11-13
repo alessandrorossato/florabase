@@ -25,6 +25,7 @@ from florabase.native_range_enrichment.schemas import (
     WcvpLinkWrite,
 )
 from florabase.native_range_enrichment.source import (
+    DEFAULT_VERSION,
     SourceUnavailableError,
     Taxon,
     WcvpSource,
@@ -42,7 +43,7 @@ Writer = Annotated[AuthenticatedActor, Depends(require_csrf)]
 
 def source_dependency(
     settings: Annotated[Settings, Depends(get_settings)],
-    version: Annotated[WcvpVersion, Query()] = "15",
+    version: Annotated[WcvpVersion, Query()] = DEFAULT_VERSION,
 ) -> WcvpSource:
     return WcvpSource.from_settings(settings, version)
 

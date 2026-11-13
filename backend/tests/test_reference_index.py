@@ -48,7 +48,7 @@ def wfo_index(directory: Path) -> Path:
     return destination
 
 
-def wcvp_index(directory: Path, version: wcvp.WcvpVersion = "15") -> Path:
+def wcvp_index(directory: Path, version: wcvp.WcvpVersion = wcvp.DEFAULT_VERSION) -> Path:
     destination = directory / f"wcvp-{version}.sqlite"
     wcvp_snapshot.build_index(
         destination,
@@ -95,17 +95,18 @@ def test_supported_indexes_keep_their_reference_operations(tmp_path: Path) -> No
 
 
 def test_dev_wcvp16_requires_seal_and_refuses_modified_index(tmp_path: Path) -> None:
-    v15 = wcvp_index(tmp_path)
+    v15 = wcvp_index(tmp_path, "15")
     v16 = wcvp_index(tmp_path, "16")
     settings = Settings(
         wcvp_snapshot_path=v15, wcvp_v16_snapshot_path=v16, wcvp_v16_require_seal=True
     )
     assert wcvp.WcvpSource.from_settings(settings, "15").metadata().version == "15"
     assert wcvp.WcvpSource(v16, "16").metadata().version == "16"
-    source = wcvp.WcvpSource.from_settings(settings, "16")
+    source = wcvp.WcvpSource.from_settings(settings)
     with pytest.raises(wcvp.SourceUnavailableError, match="seal is unavailable"):
         source.metadata()
     reseal(v16)
+    assert source.metadata().version == "16"
     assert source.search("fixture")[0].name == "Fixture species"
 
     with closing(sqlite3.connect(v16)) as connection, connection:
@@ -142,7 +143,9 @@ def test_view_over_fts5_exploit_is_refused_before_the_search_runs(tmp_path: Path
     with closing(sqlite3.connect(crafted)) as db:
         db.executescript(EXPLOIT)
         db.execute("CREATE TABLE metadata(payload TEXT NOT NULL)")
-        payload = wcvp.SourceMetadata(retrieved_at="2026-10-28T00:00:00Z").model_dump_json()
+        payload = wcvp.SourceMetadata.for_release(
+            wcvp.DEFAULT_VERSION, "2026-10-28T00:00:00Z"
+        ).model_dump_json()
         db.execute("INSERT INTO metadata VALUES (?)", (payload,))
         db.commit()
     # Control: an unhardened read-only connection runs the FTS5 prefix MATCH from the search.
@@ -321,6 +324,8 @@ def test_unsupported_wfo_format_version_is_refused(tmp_path: Path) -> None:
 def test_wcvp_release_mismatch_is_still_refused_with_a_valid_layout(tmp_path: Path) -> None:
     with pytest.raises(wcvp.SourceUnavailableError, match="unavailable or invalid"):
         wcvp.WcvpSource(wcvp_index(tmp_path, "16"), "15").metadata()
+    with pytest.raises(wcvp.SourceUnavailableError, match="unavailable or invalid"):
+        wcvp.WcvpSource(wcvp_index(tmp_path, "15")).metadata()
 
 
 @pytest.mark.parametrize(
@@ -330,7 +335,10 @@ def test_wcvp_release_mismatch_is_still_refused_with_a_valid_layout(tmp_path: Pa
         (
             wcvp_snapshot,
             lambda path: wcvp_snapshot.build_index(
-                path, [name()], [], wcvp.SourceMetadata(retrieved_at="2026-10-28T00:00:00Z")
+                path,
+                [name()],
+                [],
+                wcvp.SourceMetadata.for_release(wcvp.DEFAULT_VERSION, "2026-10-28T00:00:00Z"),
             ),
         ),
     ],

@@ -25,9 +25,8 @@ const taxon = {
 };
 const source = {
   provider: "kew_wcvp",
-  version: "15",
-  archive_url:
-    "https://sftp.kew.org/pub/data-repositories/WCVP/Archive/wcvp_v15.zip",
+  version: "16",
+  archive_url: "https://sftp.kew.org/pub/data-repositories/WCVP/wcvp.zip",
   checksum: "a".repeat(64),
   license: "https://creativecommons.org/licenses/by/3.0/",
   citation: "Kew fixture citation",
@@ -313,27 +312,36 @@ test("missing snapshot does not prevent viewing recorded ranges", async () => {
   ).not.toBeInTheDocument();
 });
 
-test("v16 requires an explicit choice and confirmation, then uses its checksum and proposal", async () => {
-  const v16 = { ...source, version: "16", checksum: "b".repeat(64) };
+test("defaults to v16 and requires an explicit choice and confirmation when switching to v15", async () => {
+  const v15 = {
+    ...source,
+    version: "15",
+    archive_url:
+      "https://sftp.kew.org/pub/data-repositories/WCVP/Archive/wcvp_v15.zip",
+    checksum: "b".repeat(64),
+  };
   let currentLink = link;
   const fetch = vi
     .spyOn(globalThis, "fetch")
     .mockImplementation((input, init) => {
       const url = new URL(requestUrl(input), "http://localhost");
       const selectedSource =
-        url.searchParams.get("version") === "16" ? v16 : source;
+        url.searchParams.get("version") === "15" ? v15 : source;
       if (url.pathname.endsWith("/source"))
         return Promise.resolve(
           json({ available: true, source: selectedSource, link: currentLink }),
         );
-      if (url.pathname.endsWith("/taxa")) return Promise.resolve(json([taxon]));
+      if (url.pathname.endsWith("/taxa")) {
+        expect(url.searchParams.get("version")).toBe("15");
+        return Promise.resolve(json([taxon]));
+      }
       if (url.pathname.endsWith("/link")) {
-        expect(selectedSource.version).toBe("16");
+        expect(selectedSource.version).toBe("15");
         expect(JSON.parse(requestBody(init?.body))).toEqual({
           external_id: "100",
-          checksum: v16.checksum,
+          checksum: v15.checksum,
         });
-        currentLink = { ...link, source: v16 };
+        currentLink = { ...link, source: v15 };
         return Promise.resolve(json(currentLink));
       }
       if (url.pathname.endsWith("/proposals"))
@@ -354,10 +362,17 @@ test("v16 requires an explicit choice and confirmation, then uses its checksum a
     screen.getByRole("button", { name: "Check trusted source" }),
   );
   const selector = await screen.findByLabelText("WCVP source version");
-  expect(selector).toHaveValue("15");
+  expect(selector).toHaveValue("16");
+  expect(
+    screen.getByRole("option", { name: "WCVP v16 (default)" }),
+  ).toBeInTheDocument();
+  expect(screen.getByRole("option", { name: "WCVP v15" })).toBeInTheDocument();
+  expect(
+    new URL(requestUrl(fetch.mock.calls[0][0]), "http://localhost").search,
+  ).toBe("");
   await screen.findByRole("button", { name: "Retrieve source proposal" });
-  await user.selectOptions(selector, "16");
-  await screen.findByText(/Kew WCVP v16 · source/);
+  await user.selectOptions(selector, "15");
+  await screen.findByText(/Kew WCVP v15 · source/);
   expect(
     screen.queryByRole("button", { name: "Retrieve source proposal" }),
   ).not.toBeInTheDocument();
@@ -367,37 +382,47 @@ test("v16 requires an explicit choice and confirmation, then uses its checksum a
   await user.type(screen.getByLabelText(/WCVP scientific name/), "Fixture");
   await user.click(screen.getByRole("button", { name: "Search WCVP taxa" }));
   await user.click(await screen.findByRole("radio"));
-  expect(screen.getByText(/, WCVP v16 · 100/)).toBeInTheDocument();
+  expect(screen.getByText(/, WCVP v15 · 100/)).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Confirm this taxon" }));
   await user.click(
     await screen.findByRole("button", { name: "Retrieve source proposal" }),
   );
-  expect(await screen.findByText(/Frozen Kew WCVP v16/)).toBeInTheDocument();
+  expect(await screen.findByText(/Frozen Kew WCVP v15/)).toBeInTheDocument();
   const writes = fetch.mock.calls.filter(
     ([, init]) => init?.method === "PUT" || init?.method === "POST",
   );
   expect(writes).toHaveLength(2);
-  expect(writes.every(([url]) => requestUrl(url).endsWith("?version=16"))).toBe(
+  expect(writes.every(([url]) => requestUrl(url).endsWith("?version=15"))).toBe(
     true,
   );
 });
 
-test("missing selected v16 keeps frozen v15 history inspectable", async () => {
-  vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+test("missing default v16 keeps frozen v15 history inspectable without silent fallback", async () => {
+  const v15Source = {
+    ...source,
+    version: "15",
+    archive_url:
+      "https://sftp.kew.org/pub/data-repositories/WCVP/Archive/wcvp_v15.zip",
+  };
+  const v15Link = { ...link, source: v15Source };
+  const v15Proposal = {
+    ...proposal,
+    source: v15Source,
+    applied_at: "2026-10-09T01:00:00Z",
+  };
+  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
     const url = new URL(requestUrl(input), "http://localhost");
     if (url.pathname.endsWith("/source"))
       return Promise.resolve(
         json({
           available: false,
           source: null,
-          link,
+          link: v15Link,
           message: "Snapshot unavailable",
         }),
       );
     if (url.pathname.endsWith("/proposals"))
-      return Promise.resolve(
-        json([{ ...proposal, applied_at: "2026-10-09T01:00:00Z" }]),
-      );
+      return Promise.resolve(json([v15Proposal]));
     throw new Error(`Unexpected ${url.href}`);
   });
   const user = userEvent.setup();
@@ -407,7 +432,10 @@ test("missing selected v16 keeps frozen v15 history inspectable", async () => {
   await user.click(
     screen.getByRole("button", { name: "Check trusted source" }),
   );
-  await user.selectOptions(screen.getByLabelText("WCVP source version"), "16");
+  expect(screen.getByLabelText("WCVP source version")).toHaveValue("16");
+  expect(
+    new URL(requestUrl(fetch.mock.calls[0][0]), "http://localhost").search,
+  ).toBe("");
   await screen.findByText(/Snapshot unavailable/);
   expect(screen.getByText(/Confirmed taxon:/)).toHaveTextContent("WCVP v15");
   await user.click(await screen.findByText(/Recent retained proposals/));
