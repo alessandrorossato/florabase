@@ -19,6 +19,11 @@
   `test_botanical_matching_classifier.py`), disposable PostgreSQL integration tests
   (`tests/integration/test_botanical_matching_readonly.py`), `docs/botanical-matching.md`, and
   `BOTANICAL-MATCH-1A` (`implemented`) in `docs/features.json`.
+- Rebased cleanly onto merged `WGSRPD-CROSSWALK-V2` (`#175`, `51f78841c46f0b16f9c3e00603ecc193fc42b1cf`)
+  preserving WGSRPD v2 crosswalk expansion, frozen v1 compatibility, `DEFAULT_VERSION = "16"`,
+  reference index schema/seal validation, and strictly read-only batched WFO/WCVP lookup; post-rebase
+  focused checks passed `160` backend unit tests, `47` disposable PostgreSQL integration tests,
+  Ruff, mypy, and `scripts/check-features.py`.
 
 ## 2026-11-12 — WCVP-DEFAULT-001: Make WCVP v16 the primary default
 
