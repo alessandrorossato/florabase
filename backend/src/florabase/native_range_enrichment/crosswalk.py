@@ -1,16 +1,21 @@
 """Reviewed literal WGSRPD/ISO crosswalk; absence never authorizes a fallback."""
 
+from types import MappingProxyType
+
 from florabase.native_range_enrichment.schemas import SourceAssertion
 
-CROSSWALK_VERSION = "wcvp15-wgsrpd2-cldr48.2.1-v1"
 GEOGRAPHY_SOURCE = ("unicode_cldr", "48.2.1", "iso_3166_1_alpha_2")
-# WGSRPD edition 2, tables 3/4/5. Each of these level-3 units has a single
-# level-4 OO unit and an exact ISO counterpart. See docs/native-range-enrichment.md.
-EQUIVALENT = {
+CROSSWALK_VERSIONS = MappingProxyType(
+    {
+        "15": ("wcvp15-wgsrpd2-cldr48.2.1-v1", "wcvp15-wgsrpd2-cldr48.2.1-v2"),
+        "16": ("wcvp16-wgsrpd2-cldr48.2.1-v1", "wcvp16-wgsrpd2-cldr48.2.1-v2"),
+    }
+)
+# The eleven pairs shared by v1 and v2. See the WGSRPD evidence in the native-range runbook.
+_RETAINED = {
     "BOL": "BO",
     "BUL": "BG",
     "CBD": "KH",
-    "COS": "CR",
     "HUN": "HU",
     "LAO": "LA",
     "OMA": "OM",
@@ -20,11 +25,38 @@ EQUIVALENT = {
     "URU": "UY",
     "VIE": "VN",
 }
+_V1_EQUIVALENT = MappingProxyType(_RETAINED | {"COS": "CR"})
+EQUIVALENT = MappingProxyType(
+    _RETAINED
+    | {
+        "ALB": "AL",
+        "BLR": "BY",
+        "DEN": "DK",
+        "GER": "DE",
+        "ICE": "IS",
+        "POL": "PL",
+        "ROM": "RO",
+        "SWE": "SE",
+        "SWI": "CH",
+    }
+)
+
+
+def frozen_equivalences(source_version: str, crosswalk_version: str) -> MappingProxyType[str, str]:
+    historical, current = CROSSWALK_VERSIONS[source_version]
+    if crosswalk_version == historical:
+        return _V1_EQUIVALENT
+    if crosswalk_version == current:
+        return EQUIVALENT
+    raise ValueError("Unreviewed crosswalk for this WCVP release")
+
+
 # Display limitations; these are explicitly NOT applicable mappings.
 SPLITS = {
-    "CZE": ("CZ", "SK"),
-    "BLT": ("EE", "LV", "LT"),
-    "LBS": ("LB", "SY"),
+    "CZE": "Source unit spans CZ, SK. No policy authorizes finer assertions.",
+    "BLT": "Source unit spans Estonia, Latvia, Lithuania and Kaliningrad (part of Russia).",
+    "FIN": "Source unit includes Finland and Åland, which have separate canonical places.",
+    "LBS": "Source unit spans LB, SY. No policy authorizes finer assertions.",
 }
 PARTIAL = {"ITA", "SAR", "SIC", "FRA", "COR", "SPA", "BAL", "BZN", "BZS", "BZL", "BZE", "BZC"}
 
@@ -43,9 +75,10 @@ def classify(row: dict[str, str]) -> SourceAssertion:
         note = "Reviewed level-3 / ISO equivalence."
     elif code in SPLITS:
         mapping = "unsupported_split"
-        note = (
-            f"Source unit spans {', '.join(SPLITS[code])}. No policy authorizes finer assertions."
-        )
+        note = SPLITS[code]
+    elif code == "COS":
+        mapping = "partial"
+        note = "Source unit excludes Cocos Island, which is part of Costa Rica."
     elif code in PARTIAL:
         mapping = "partial"
         note = (

@@ -24,35 +24,33 @@ false meaning. No existing opaque external IDs or provider links are rewritten.
 
 ## Geography contract
 
-Crosswalk **`wcvp15-wgsrpd2-cldr48.2.1-v1`** (v15) or
-**`wcvp16-wgsrpd2-cldr48.2.1-v1`** (v16) derives the same exact equivalence from the official
-[WGSRPD second edition](https://www.tdwg.org/standards/wgsrpd/), Table 4's level-3, single
-level-4 `OO`, and single ISO code entries. It resolves canonical GeographicPlaces only by the
-existing source tuple `unicode_cldr / 48.2.1 / iso_3166_1_alpha_2 / <code>`.
+New proposals use `wcvp15-wgsrpd2-cldr48.2.1-v2` or
+`wcvp16-wgsrpd2-cldr48.2.1-v2`, depending on the confirmed release. Both use the
+same 20 reviewed literal pairs. The review checked level-3 membership, reverse ISO
+entries and the gazetteer in Brummitt's WGSRPD second edition (2001), Tables 3–6,
+against modern ISO assignments and the CLDR seed. An `OO` child alone is insufficient.
+Destinations resolve by the exact tuple `unicode_cldr / 48.2.1 / iso_3166_1_alpha_2 / <code>`.
+[Official TDWG standard](https://www.tdwg.org/standards/wgsrpd/) · [CLDR seed evidence](geography-data.md)
 
-| WCVP level-3 | Canonical ISO code | Geographic unit |
-| --- | --- | --- |
-| BOL | BO | Bolivia |
-| BUL | BG | Bulgaria |
-| CBD | KH | Cambodia |
-| COS | CR | Costa Rica |
-| HUN | HU | Hungary |
-| LAO | LA | Laos |
-| OMA | OM | Oman |
-| PAR | PY | Paraguay |
-| PER | PE | Peru |
-| THA | TH | Thailand |
-| URU | UY | Uruguay |
-| VIE | VN | Vietnam |
+| Decision | WCVP level-3 → ISO alpha-2 |
+| --- | --- |
+| Nine added | ALB→AL, BLR→BY, DEN→DK, GER→DE, ICE→IS, POL→PL, ROM→RO, SWE→SE, SWI→CH |
+| Eleven retained | BOL→BO, BUL→BG, CBD→KH, HUN→HU, LAO→LA, OMA→OM, PAR→PY, PER→PE, THA→TH, URU→UY, VIE→VN |
 
-This intentionally small whitelist does not claim global mapping completeness. `CZE`, `BLT`
-and `LBS` contain multiple country units: they are **unsupported splits**, visible but excluded.
-`ITA/SAR/SIC`, `FRA/COR`, `SPA/BAL` and the five Brazilian subregions are explicitly partial,
-not rounded to ISO countries. Every other code (including blank/lowercase codes) is unresolved.
-The reviewed official WGSRPD PDF has SHA-256
+`COS` is partial. WGSRPD Tables 4–6 place Cocos Island separately under `CPI-CO`.
+Cocos Island is part of Costa Rica, so the v1 `COS→CR` mapping is withdrawn for new writes.
+`FIN` includes Åland, while the modern reference seeds separate `FI` and `AX` destinations.
+`BLT` remains a split covering Estonia, Latvia, Lithuania and Kaliningrad (part of Russia).
+Table 4 prints `RU` for Latvia, while Table 5 and the gazetteer support `LV`.
+`CZE` and `LBS` remain unsupported splits. Italy, France, Spain and Brazil partials remain
+excluded. Unknown codes and missing or retired exact destinations remain unresolved.
+[WGSRPD Tables 3–6](https://raw.githubusercontent.com/tdwg/wgsrpd/master/109-488-1-ED/2nd%20Edition/TDWG_geo2.pdf) ·
+[Costa Rica Constitution, Article 5](https://sinalevi.go.cr/ResultadosNormativa/Informacion?param1=871&param2=147492&param3=3&param4=4853) ·
+[ISO assignment of AX](https://www.iso.org/files/live/sites/isoorg/files/archive/pdf/en/newsletter_v-9_aland_islands.pdf)
+
+The reviewed WGSRPD PDF SHA-256 is
 `079221f42c20686591780676c115bcd8ca6bcb1abb10d225ef0ceff66cea78ec`.
-No display-name joins, geometry-based intersections, inferred descendants, geographic hierarchy
-expansion or inferred botanical detail occurs. Missing or retired exact places remain unresolved.
+Only the literal decisions are included in Florabase.
 
 An assertion is eligible only when `introduced=0`, `extinct=0` and `location_doubtful=0`.
 Introduced and qualified assertions remain separate context, with all original flags and the
@@ -82,6 +80,62 @@ original v15 or v16 evidence even if the optional index disappears or is reprovi
 provider/cache access; it validates durable source/link evidence and the original approved
 pinned release and its matching crosswalk. Link reconfirmation invalidates earlier proposals. A deliberate release change requires a new exact-taxon confirmation and fresh proposals. A source failure cannot silently refresh or
 replace evidence. Confirm Apply explicitly names the frozen source version.
+
+### Historical crosswalk compatibility
+
+History retains the stored v1 or v2 evidence and version. Apply recognizes the two
+release-specific v1 IDs and their v2 successors. It checks each selected destination against the
+linked frozen native assertions and the literal map for the stored release and crosswalk.
+A submitted v1 selection containing the COS-backed CR choice returns 409 with code
+`native_range_mapping_withdrawn` and writes no ranges or application. The operator may deselect
+CR and retry the safe subset of that proposal while it remains current. A fresh proposal retains
+already recorded CR as CURRENT-ONLY. Existing source links can create v2 proposals without
+reconfirmation when their identity and exact source still match.
+
+### Read-only review of historical COS additions
+
+Run against an operator-authorized backup or read replica, using an account with read-only
+permissions. The query identifies actual v1 additions linked to a frozen COS assertion.
+The application receipt's `kept` list includes pre-existing ranges and is unsuitable for this
+purpose. `currently_recorded` indicates present membership. A range could have been independently
+removed and re-added since the historical application.
+
+```sql
+BEGIN READ ONLY;
+
+SELECT a.identity_id, a.proposal_id, a.applied_at,
+       (c.choice ->> 'place_id')::uuid AS geographic_place_id,
+       (r.geographic_place_id IS NOT NULL) AS currently_recorded
+FROM native_range_applications AS a
+JOIN native_range_proposals AS p ON p.id = a.proposal_id
+CROSS JOIN LATERAL jsonb_array_elements(p.evidence -> 'choices') AS c(choice)
+LEFT JOIN botanical_profile_native_ranges AS r
+  ON r.botanical_profile_id = a.identity_id
+ AND r.geographic_place_id = (c.choice ->> 'place_id')::uuid
+WHERE (p.evidence #>> '{source,version}', p.evidence ->> 'crosswalk_version') IN (
+    ('15', 'wcvp15-wgsrpd2-cldr48.2.1-v1'),
+    ('16', 'wcvp16-wgsrpd2-cldr48.2.1-v1')
+)
+AND c.choice ->> 'code' = 'CR'
+AND c.choice ->> 'change' = 'ADD'
+AND (a.evidence -> 'added') ? (c.choice ->> 'place_id')
+AND EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(p.evidence -> 'assertions') AS source(assertion)
+    WHERE assertion #>> '{original,area_code_l3}' = 'COS'
+      AND assertion ->> 'mapping' = 'equivalent'
+      AND assertion ->> 'status' = 'native'
+      AND (c.choice -> 'assertions') ? (assertion ->> 'assertion_id')
+      AND (assertion -> 'place_ids') ? (c.choice ->> 'place_id')
+)
+ORDER BY a.applied_at, a.proposal_id;
+
+ROLLBACK;
+```
+
+For recovery, use a build that recognizes both revisions and retains the COS write guard.
+Rolling back to a v1-only binary can restore the withdrawn Apply behavior and reject v2 Apply.
+Suspend enrichment writes if only that binary is available. Keep the frozen evidence intact.
 
 ## Durable provenance and lifecycle
 
@@ -119,6 +173,78 @@ Reads require authentication; writes require owner role, Origin and CSRF checks.
 extra fields. Source failures return retryable 503 (status instead reports availability); stale
 Apply returns 409; missing identity/proposal returns 404. API requests never make outbound network
 calls. Missing/corrupt/unapproved local snapshots fail closed without affecting recorded ranges.
+
+## Optional coverage qualification
+
+Use trusted, complete indexes built from the pinned archives. For v16 bundles, verify the
+existing seal through the normal provisioning verification first. The check opens each index
+read-only through Florabase's hardened SQLite opener. It has no runtime or CI dependency.
+Save the Python block as `qualify.py` and run `python qualify.py 16 /path/to/v16/index.sqlite`
+in the backend Python environment. Use `15` and the v15 path for the second release.
+
+```python
+"""Compare reviewed native-range policies using an existing complete WCVP index."""
+from contextlib import closing
+from pathlib import Path
+import sys
+
+from florabase.core.reference_index import open_reference_index
+from florabase.native_range_enrichment.crosswalk import CROSSWALK_VERSIONS, frozen_equivalences
+from florabase.native_range_enrichment.source import SCHEMA, WcvpSource
+
+version, filename = sys.argv[1:]
+if version not in ("15", "16"):
+    raise SystemExit("Supply WCVP release 15 or 16 and the corresponding trusted index path.")
+path = Path(filename)
+source = WcvpSource(path, version)
+source.metadata()
+historical, current = CROSSWALK_VERSIONS[version]
+old = set(frozen_equivalences(version, historical))
+new = set(frozen_equivalences(version, current))
+added = new - old
+assert len(added) == 9 and old - new == {"COS"}
+
+with closing(open_reference_index(path, SCHEMA, "WCVP coverage")) as connection:
+    for label, codes in (
+        ("original ten", added | {"FIN"}),
+        ("added nine", added),
+        ("historical twelve", old),
+        ("current twenty", new),
+    ):
+        placeholders = ", ".join("?" for _ in codes)
+        row = connection.execute(
+            f"""
+            WITH assertions AS (
+              SELECT t.external_id,
+                     json_extract(d.payload, '$.area_code_l3') AS area,
+                     json_extract(d.payload, '$.introduced') = '0'
+                       AND json_extract(d.payload, '$.extinct') = '0'
+                       AND json_extract(d.payload, '$.location_doubtful') = '0' AS native,
+                     t.status = 'Accepted' AND t.accepted_id = t.external_id
+                       AND t.rank IN ('Species', 'Subspecies', 'Variety', 'Form') AS eligible
+              FROM distributions AS d
+              JOIN taxa AS t ON t.external_id = d.external_id
+            )
+            SELECT count(*), count(DISTINCT external_id),
+                   count(*) FILTER (WHERE native),
+                   count(DISTINCT external_id) FILTER (WHERE native),
+                   count(*) FILTER (WHERE native AND eligible),
+                   count(DISTINCT external_id) FILTER (WHERE native AND eligible)
+            FROM assertions WHERE area IN ({placeholders})
+            """,
+            sorted(codes),
+        ).fetchone()
+        print(label, *tuple(row))
+```
+
+Columns are raw rows, distinct source taxon IDs, unqualified native rows, distinct unqualified
+taxa, eligible native assertions and distinct eligible taxa. These are source counts. Eligibility
+requires the same self-accepted ranks as the application.
+
+| Release | Original ten native rows, including FIN | Nine new native rows | Nine new eligible assertions / taxa | v1 eligible assertions | v2 eligible assertions | Net |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 15 | 45,754 | 41,965 | 35,785 / 14,963 | 107,656 | 131,806 | +24,150 |
+| 16 | 45,864 | 42,065 | 35,904 / 15,057 | 108,197 | 132,438 | +24,241 |
 
 ## Optional snapshot provisioning and deployment
 

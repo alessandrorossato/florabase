@@ -150,7 +150,12 @@ afterEach(() => {
 });
 
 function setup(
-  options: { available?: boolean; linked?: boolean; failure?: number } = {},
+  options: {
+    available?: boolean;
+    linked?: boolean;
+    failure?: number;
+    withdrawn?: boolean;
+  } = {},
 ) {
   const applied = vi.fn();
   const fetch = vi
@@ -181,18 +186,42 @@ function setup(
             ? json({ detail: {} }, 503)
             : json(proposal, 201),
         );
-      if (path.endsWith("/proposals")) return Promise.resolve(json([]));
+      if (path.endsWith("/proposals"))
+        return Promise.resolve(
+          json(
+            options.withdrawn
+              ? [
+                  {
+                    ...proposal,
+                    choices: [
+                      ...proposal.choices,
+                      {
+                        place_id: "cr",
+                        name: "Costa Rica",
+                        path: "Central America → Costa Rica",
+                        code: "CR",
+                        change: "ADD",
+                        assertions: ["cos"],
+                      },
+                    ],
+                  },
+                ]
+              : [],
+          ),
+        );
       if (path.endsWith("/apply"))
         return Promise.resolve(
-          options.failure === 409
-            ? json({ detail: {} }, 409)
-            : json({
-                proposal_id: identityId,
-                applied_at: "2026-10-09T01:00:00Z",
-                added: [bo],
-                kept: [it],
-                destination_version: 4,
-              }),
+          options.withdrawn && requestBody(init?.body).includes('"cr"')
+            ? json({ detail: { code: "native_range_mapping_withdrawn" } }, 409)
+            : options.failure === 409
+              ? json({ detail: {} }, 409)
+              : json({
+                  proposal_id: identityId,
+                  applied_at: "2026-10-09T01:00:00Z",
+                  added: [bo],
+                  kept: [it],
+                  destination_version: 4,
+                }),
         );
       throw new Error(`Unexpected request ${path}`);
     });
@@ -285,6 +314,45 @@ test("stale Apply shows a focused conflict and does not refresh canonical ranges
   });
   expect(error).toHaveTextContent(/changed/);
   expect(applied).not.toHaveBeenCalled();
+});
+test("withdrawn Costa Rica choice can be deselected and the safe subset retried", async () => {
+  const { fetch, applied, user } = setup({ withdrawn: true });
+  await user.click(
+    screen.getByRole("button", { name: "Check trusted source" }),
+  );
+  await user.click(await screen.findByText(/Recent retained proposals/));
+  await user.click(screen.getByRole("button", { name: /Review pending/ }));
+  const costaRica = await screen.findByRole("checkbox", {
+    name: /ADD: Costa Rica/,
+  });
+  const bolivia = screen.getByRole("checkbox", { name: /ADD: Bolivia/ });
+  expect(costaRica).not.toBeChecked();
+  expect(bolivia).not.toBeChecked();
+  await user.click(costaRica);
+  await user.click(bolivia);
+  await user.click(
+    screen.getByRole("button", { name: "Apply reviewed changes" }),
+  );
+  await user.click(screen.getByRole("button", { name: "Confirm Apply" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    /Deselect Costa Rica and retry/,
+  );
+  expect(applied).not.toHaveBeenCalled();
+
+  await user.click(costaRica);
+  await user.click(
+    screen.getByRole("button", { name: "Apply reviewed changes" }),
+  );
+  await user.click(screen.getByRole("button", { name: "Confirm Apply" }));
+  await waitFor(() => {
+    expect(applied).toHaveBeenCalledOnce();
+  });
+  const calls = fetch.mock.calls.filter(([url]) =>
+    requestUrl(url).endsWith("/apply"),
+  );
+  expect(JSON.parse(requestBody(calls.at(-1)?.[1]?.body))).toEqual({
+    selected_place_ids: [bo],
+  });
 });
 test("source failure retains current workflow and gives retryable feedback", async () => {
   const { user, applied } = setup({ failure: 503 });

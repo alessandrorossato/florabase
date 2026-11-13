@@ -240,7 +240,7 @@ def test_explicit_release_http_configuration(
         code, _, proposal = release_request("POST", path + "/proposals" + query, headers=headers)
         assert code == 201
         assert proposal["source"]["version"] == version
-        assert proposal["crosswalk_version"] == RELEASES[version].crosswalk_version
+        assert proposal["crosswalk_version"] == f"wcvp{version}-wgsrpd2-cldr48.2.1-v2"
     if installed == ("15",):
         after_link = release_request("GET", path + "/source", headers=headers)[2]
         assert after_link["available"] is False

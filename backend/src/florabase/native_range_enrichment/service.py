@@ -10,9 +10,11 @@ from florabase.botanical_profiles.model import BotanicalProfile, BotanicalProfil
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.service import display_path, list_geographic_places
 from florabase.native_range_enrichment.crosswalk import (
+    CROSSWALK_VERSIONS,
     EQUIVALENT,
     GEOGRAPHY_SOURCE,
     classify,
+    frozen_equivalences,
 )
 from florabase.native_range_enrichment.model import (
     NativeRangeApplication,
@@ -36,6 +38,10 @@ from florabase.native_range_enrichment.source import (
 
 
 class EnrichmentConflictError(Exception):
+    pass
+
+
+class WithdrawnRangeMappingError(EnrichmentConflictError):
     pass
 
 
@@ -186,7 +192,7 @@ def propose(database: Session, identity_id: UUID, source: WcvpSource) -> Proposa
         source=metadata,
         taxon=taxon,
         retrieved_at=datetime.now(UTC),
-        crosswalk_version=metadata.reviewed_release().crosswalk_version,
+        crosswalk_version=CROSSWALK_VERSIONS[metadata.version][1],
         choices=sorted(choices.values(), key=lambda p: (p.path.casefold(), p.place_id)),
         assertions=assertions,
     )
@@ -228,6 +234,12 @@ def apply(
         release = proposal.source.reviewed_release()
     except ValueError as error:
         raise EnrichmentConflictError("The frozen source release is not approved.") from error
+    try:
+        equivalences = frozen_equivalences(release.version, proposal.crosswalk_version)
+    except ValueError as error:
+        raise EnrichmentConflictError(
+            "The frozen crosswalk is not approved for this WCVP release."
+        ) from error
     selected = set(selection.selected_place_ids)
     choices = {c.place_id: c for c in proposal.choices if c.change in {"ADD", "KEEP"}}
     if not selected <= choices.keys():
@@ -261,13 +273,38 @@ def apply(
         or proposal.identity_snapshot != identity_snapshot(identity)
         or proposal.destination_version != range_version(database, identity_id)
         or proposal.current_ids != current_ids(database, identity_id)
-        or proposal.crosswalk_version != release.crosswalk_version
         or link.source != proposal.source.model_dump(mode="json")
         or link.taxon != proposal.taxon.model_dump(mode="json")
     ):
         raise EnrichmentConflictError(
             "Proposal, identity, link or recorded ranges changed. Retrieve and re-review."
         )
+    # In the historical allowlist CR could only come from COS. Freeze that original
+    # decision in history, while refusing a new write under the withdrawn mapping.
+    if equivalences.get("COS") == "CR" and any(p.source_code == "CR" for p in places):
+        raise WithdrawnRangeMappingError(
+            "Costa Rica is no longer selectable from the historical COS mapping, which excludes "
+            "Cocos Island. Deselect Costa Rica and retry, or retrieve a new proposal."
+        )
+    assertions = {assertion.assertion_id: assertion for assertion in proposal.assertions}
+    for place in places:
+        choice = choices[place.id]
+        if not choice.assertions or any(
+            (assertion := assertions.get(assertion_id)) is None
+            or assertion.mapping != "equivalent"
+            or assertion.status != "native"
+            or assertion.place_ids != [place.id]
+            or assertion.original.get("plant_name_id") != proposal.taxon.external_id
+            or any(
+                assertion.original.get(flag) != "0"
+                for flag in ("introduced", "extinct", "location_doubtful")
+            )
+            or equivalences.get(assertion.original.get("area_code_l3", "")) != place.source_code
+            for assertion_id in choice.assertions
+        ):
+            raise EnrichmentConflictError(
+                "The selected range lacks approved frozen evidence. Retrieve a new proposal."
+            )
     added = sorted(p for p in selected if choices[p].change == "ADD")
     kept = sorted(set(proposal.current_ids))
     if added:

@@ -1569,6 +1569,23 @@
       "status": "implemented"
     },
     {
+      "id": "WGSRPD-CROSSWALK-V2",
+      "category": "enrichment",
+      "description": "Expand exact native-range mappings and preserve frozen WCVP evidence",
+      "acceptance_criteria": [
+        "Fresh proposals use the corresponding v2 crosswalk for both pinned WCVP releases, with nine new and eleven retained exact WGSRPD to ISO pairs",
+        "COS is partial and FIN and BLT are non-selectable splits with explicit geographic evidence",
+        "Historical v1 proposals and applications remain readable, safe frozen selections remain applicable and legacy COS-backed selections fail atomically with a safe-subset retry",
+        "Frozen assertions, source release, identity, link, destination and concurrency guards are enforced without changing the schema, indexes, seals or existing ranges",
+        "Focused regressions, independent QA, the canonical FULL gate and optional read-only coverage qualification establish delivery readiness"
+      ],
+      "dependencies": [
+        "WCVP-DEFAULT-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "ENRICHMENT-002",
       "category": "enrichment",
       "description": "Automate refresh of approved source-scoped enrichment",

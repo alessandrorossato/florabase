@@ -1,3 +1,4 @@
+import json
 import sqlite3
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
@@ -25,12 +26,20 @@ from florabase.geographic_places.model import GeographicPlace
 from florabase.native_range_enrichment.model import (
     NativeRangeApplication,
     NativeRangeProposal,
+    WcvpLink,
 )
-from florabase.native_range_enrichment.schemas import ApplyWrite, ProposalResponse
+from florabase.native_range_enrichment.schemas import (
+    ApplyWrite,
+    ProposalResponse,
+    RangeChoice,
+    SourceAssertion,
+)
 from florabase.native_range_enrichment.service import (
     EnrichmentConflictError,
+    WithdrawnRangeMappingError,
     apply,
     confirm_link,
+    current_ids,
     inspect_proposal,
     propose,
     range_version,
@@ -119,6 +128,137 @@ def linked(database: Session, identity: BotanicalIdentity, source: WcvpSource) -
     confirm_link(database, identity.id, "100", source.metadata().checksum, source)
 
 
+@pytest.mark.parametrize("source", ["15", "16"], indirect=True)
+@pytest.mark.parametrize("already_recorded", [False, True])
+def test_v1_cos_evidence_is_frozen_but_only_safe_choices_can_apply(
+    database: Session, identity: BotanicalIdentity, source: WcvpSource, already_recorded: bool
+) -> None:
+    costa_rica = place(database, "CR")
+    bolivia = place(database, "BO")
+    albania = place(database, "AL")
+    if already_recorded:
+        add_botanical_native_range(database, identity.id, costa_rica.id)
+    linked(database, identity, source)
+    assert source.path is not None
+    row = source.distribution("100")[0]
+    with sqlite3.connect(source.path) as index:
+        for code in ("COS", "ALB", "BLT", "FIN"):
+            payload = row | {
+                "area_code_l3": code,
+                "plant_locality_id": code,
+            }
+            index.execute(
+                "INSERT INTO distributions VALUES (?, ?, ?)", (code, "100", json.dumps(payload))
+            )
+    fresh = propose(database, identity.id, source)
+    assert fresh.crosswalk_version == f"wcvp{source.release.version}-wgsrpd2-cldr48.2.1-v2"
+    link = database.get(WcvpLink, identity.id)
+    assert link is not None
+    assert fresh.link_version == link.version
+    mappings = {a.original["area_code_l3"]: a.mapping for a in fresh.assertions}
+    assert (mappings["COS"], mappings["FIN"], mappings["BLT"]) == (
+        "partial",
+        "unsupported_split",
+        "unsupported_split",
+    )
+    assert next(c for c in fresh.choices if c.code == "AL").change == "ADD"
+    assert [c.change for c in fresh.choices if c.code == "CR"] == (
+        ["CURRENT-ONLY"] if already_recorded else []
+    )
+
+    # Reproduce the old stored shape without calling the current classifier for v1.
+    evidence = fresh.model_copy(deep=True)
+    evidence.crosswalk_version = f"wcvp{source.release.version}-wgsrpd2-cldr48.2.1-v1"
+    cos = next(a for a in evidence.assertions if a.assertion_id == "COS")
+    evidence.assertions = [
+        SourceAssertion(
+            assertion_id="COS",
+            original=cos.original,
+            status="native",
+            mapping="equivalent",
+            note="Reviewed level-3 / ISO equivalence.",
+            place_ids=[costa_rica.id],
+        ),
+        *[
+            a
+            for a in evidence.assertions
+            if a.original["area_code_l3"] not in {"COS", "ALB", "FIN", "BLT"}
+        ],
+    ]
+    evidence.choices = [
+        c for c in evidence.choices if c.place_id not in {costa_rica.id, albania.id}
+    ] + [
+        RangeChoice(
+            place_id=costa_rica.id,
+            name=costa_rica.name,
+            path=costa_rica.name,
+            code="CR",
+            change="KEEP" if already_recorded else "ADD",
+            assertions=["COS"],
+        )
+    ]
+    frozen = evidence.model_dump(
+        mode="json", exclude={"id", "created_at", "applied_at", "application"}
+    )
+    legacy = NativeRangeProposal(identity_id=identity.id, evidence=frozen)
+    database.add(legacy)
+    database.flush()
+    if already_recorded:
+        previous = NativeRangeProposal(
+            identity_id=identity.id,
+            evidence=frozen
+            | {
+                "current_ids": [],
+                "destination_version": fresh.destination_version - 1,
+                "choices": [
+                    c | {"change": "ADD"} if c["code"] == "CR" else c for c in frozen["choices"]
+                ],
+            },
+        )
+        database.add(previous)
+        database.flush()
+        previous_proposal = inspect_proposal(database, identity.id, previous.id)
+        receipt = {
+            "format_version": 1,
+            "proposal": previous_proposal.model_dump(mode="json"),
+            "selected_place_ids": [str(costa_rica.id)],
+            "added": [str(costa_rica.id)],
+            "kept": [],
+            "removed": [],
+            "destination_version_after": fresh.destination_version,
+        }
+        database.add(
+            NativeRangeApplication(
+                proposal_id=previous.id, identity_id=identity.id, evidence=receipt
+            )
+        )
+        database.flush()
+
+    source.path.unlink()
+    assert (
+        inspect_proposal(database, identity.id, legacy.id).assertions[0].note
+        == "Reviewed level-3 / ISO equivalence."
+    )
+    current = current_ids(database, identity.id)
+    for selection in ([costa_rica.id], [costa_rica.id, bolivia.id]):
+        with pytest.raises(WithdrawnRangeMappingError, match="Deselect Costa Rica"):
+            apply(database, identity.id, legacy.id, ApplyWrite(selected_place_ids=selection))
+        assert current_ids(database, identity.id) == current
+        assert range_version(database, identity.id) == fresh.destination_version
+        assert database.get(NativeRangeApplication, legacy.id) is None
+
+    result = apply(database, identity.id, legacy.id, ApplyWrite(selected_place_ids=[bolivia.id]))
+    assert result.added == [bolivia.id]
+    assert result.kept == current
+    database.refresh(legacy)
+    assert legacy.evidence == frozen
+    if already_recorded:
+        historical = database.get(NativeRangeApplication, previous.id, populate_existing=True)
+        assert historical is not None
+        assert historical.evidence == receipt
+        assert inspect_proposal(database, identity.id, previous.id).applied_at is not None
+
+
 def test_compare_selective_apply_preserves_manual_and_qualifiers_and_receipt(
     database: Session, identity: BotanicalIdentity, source: WcvpSource
 ) -> None:
@@ -170,7 +310,8 @@ def test_compare_selective_apply_preserves_manual_and_qualifiers_and_receipt(
 
 
 @pytest.mark.parametrize(
-    "change", ["range", "roundtrip", "identity", "link", "source", "crosswalk"]
+    "change",
+    ["range", "roundtrip", "identity", "link", "source", "crosswalk", "wrong-release", "forged"],
 )
 @pytest.mark.parametrize("source", ["15", "16"], indirect=True)
 def test_stale_apply_is_atomic(
@@ -195,6 +336,12 @@ def test_stale_apply_is_atomic(
         )
         if change == "source":
             evidence["source"]["version"] = "16" if source.release.version == "15" else "15"
+        elif change == "wrong-release":
+            other = "16" if source.release.version == "15" else "15"
+            evidence["crosswalk_version"] = f"wcvp{other}-wgsrpd2-cldr48.2.1-v1"
+        elif change == "forged":
+            evidence["crosswalk_version"] = f"wcvp{source.release.version}-wgsrpd2-cldr48.2.1-v1"
+            evidence["assertions"][0]["original"]["area_code_l3"] = "ALB"
         else:
             evidence["crosswalk_version"] = "another-crosswalk"
         old = NativeRangeProposal(identity_id=identity.id, evidence=evidence)
@@ -504,7 +651,7 @@ def test_dual_version_frozen_apply_and_explicit_reconfirmation(
         )
     fresh = propose(database, identity.id, v16)
     assert fresh.source.version == "16"
-    assert fresh.crosswalk_version == RELEASES["16"].crosswalk_version
+    assert fresh.crosswalk_version == "wcvp16-wgsrpd2-cldr48.2.1-v2"
     path16.unlink()
     result = apply(
         database, identity.id, fresh.id, ApplyWrite(selected_place_ids=[place(database, "PE").id])

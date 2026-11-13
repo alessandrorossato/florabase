@@ -20,7 +20,8 @@ No download, licensing or archive-discovery investigation was repeated.
 | Taxa / distribution rows | 1,441,152 / 1,986,879 | 1,448,984 / 1,995,338 |
 | README / names / distribution bytes | 17,827 / 298,218,467 / 141,066,449 | 18,112 / 300,826,661 / 141,657,561 |
 | Settings path | `FLORABASE_WCVP_SNAPSHOT_PATH` | `FLORABASE_WCVP_V16_SNAPSHOT_PATH` |
-| Crosswalk | `wcvp15-wgsrpd2-cldr48.2.1-v1` | `wcvp16-wgsrpd2-cldr48.2.1-v1` |
+| Historical crosswalk | `wcvp15-wgsrpd2-cldr48.2.1-v1` | `wcvp16-wgsrpd2-cldr48.2.1-v1` |
+| Current crosswalk | `wcvp15-wgsrpd2-cldr48.2.1-v2` | `wcvp16-wgsrpd2-cldr48.2.1-v2` |
 
 Both releases retain [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/), exact citation,
 Kew provider identity, actual archive retrieval time and complete coverage. The frozen release
@@ -32,9 +33,10 @@ See the [existing v15 source approval](native-range-enrichment-source-v15.md) an
 
 The assessment found 8,225 added IDs, 393 removed IDs, 87,460 changed shared records,
 4,299 status transitions and 10,929 accepted-ID changes. An unchanged ID does not authorize a
-cross-version identity relationship. The twelve equivalences remain exactly
-BOL→BO, BUL→BG, CBD→KH, COS→CR, HUN→HU, LAO→LA, OMA→OM, PAR→PY, PER→PE,
-THA→TH, URU→UY and VIE→VN. The literal mapping implementation is unchanged.
+cross-version identity relationship. WGSRPD-CROSSWALK-V2 adds nine pairs, retains eleven,
+and excludes COS from new proposals. The [geography contract](native-range-enrichment.md#geography-contract)
+documents the 20 pairs and [historical compatibility](native-range-enrichment.md#historical-crosswalk-compatibility).
+There is no index or seal change.
 
 ## Release selection and compatibility
 
@@ -45,7 +47,7 @@ THA→TH, URU→UY and VIE→VN. The literal mapping implementation is unchanged
 | Both | Independent bounded searches; selection does not mutate a confirmed link |
 | Neither / corrupt / wrong-version index | Startup and operator data remain usable; source review fails closed |
 | v15 link while browsing v16 | Retains v15 identity and version; new v16 proposal requires explicit reconfirmation |
-| Frozen v15 or v16 proposal, original index absent | Inspect and Apply use original immutable release/crosswalk evidence |
+| Frozen v15 or v16 proposal, original index absent | Inspect and Apply use original immutable release/crosswalk evidence. A COS-backed v1 CR selection conflicts. |
 | Deliberate v16 reconfirmation | Existing link UUID rotates; earlier unapplied proposals reject as stale |
 | Applied historical proposal after reconfirmation | Immutable application and full original evidence remain inspectable |
 | Removed ID / synonym / different accepted ID | No automatic migration or accepted-ID following; operator must choose an eligible exact record |

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.native_range_enrichment import service
-from florabase.native_range_enrichment.crosswalk import CROSSWALK_VERSION
+from florabase.native_range_enrichment.crosswalk import CROSSWALK_VERSIONS
 from florabase.native_range_enrichment.model import (
     NativeRangeApplication,
     NativeRangeProposal,
@@ -178,8 +178,10 @@ def test_link_response_marks_identity_edits_stale() -> None:
     assert service.link_response(linked, cast(BotanicalIdentity, record)).stale is True
 
 
+@pytest.mark.parametrize("unavailable", ["missing", "retired", "wrong-version"])
 def test_proposal_freezes_exact_assertions_and_mapped_current_diff(
     monkeypatch: pytest.MonkeyPatch,
+    unavailable: str,
 ) -> None:
     record = identity()
     linked = link_for(record)
@@ -235,6 +237,18 @@ def test_proposal_freezes_exact_assertions_and_mapped_current_diff(
             "location_doubtful": "0",
         },
     ]
+    rows.append(rows[0] | {"plant_locality_id": "a3", "area_code_l3": "ALB"})
+    if unavailable != "missing":
+        geography.append(
+            SimpleNamespace(
+                id=uuid7(),
+                source_name="unicode_cldr",
+                source_version="48.2.1" if unavailable == "retired" else "other",
+                source_code_type="iso_3166_1_alpha_2",
+                source_code="AL",
+                retired_at=datetime.now(UTC) if unavailable == "retired" else None,
+            )
+        )
     source = SimpleNamespace(
         metadata=metadata,
         taxon=lambda _external_id: taxon(),
@@ -252,13 +266,15 @@ def test_proposal_freezes_exact_assertions_and_mapped_current_diff(
     stored = database.proposal
     assert stored is not None
     evidence = ProposalEvidence.model_validate(stored.evidence)
-    assert evidence.crosswalk_version == CROSSWALK_VERSION
+    assert evidence.crosswalk_version == CROSSWALK_VERSIONS["15"][1]
     assert evidence.destination_version == 3
     assert evidence.current_ids == [existing]
     assert {choice.change for choice in evidence.choices} == {"ADD", "CURRENT-ONLY"}
     assert evidence.assertions[0].original == rows[0]
     assert evidence.assertions[1].status == "introduced"
     assert evidence.assertions[1].place_ids == []
+    assert evidence.assertions[2].mapping == "unresolved"
+    assert evidence.assertions[2].place_ids == []
 
     linked.identity_snapshot = {}
     with pytest.raises(service.EnrichmentConflictError):
@@ -276,7 +292,7 @@ def test_inspect_proposal_includes_immutable_application_outcome() -> None:
         source=metadata(),
         taxon=taxon(),
         retrieved_at=datetime.now(UTC),
-        crosswalk_version=CROSSWALK_VERSION,
+        crosswalk_version=CROSSWALK_VERSIONS["15"][1],
         choices=[],
         assertions=[
             SourceAssertion(
@@ -326,7 +342,7 @@ def test_apply_validates_selection_and_applies_additive_receipt(
         source=metadata(),
         taxon=taxon(),
         retrieved_at=datetime.now(UTC),
-        crosswalk_version=CROSSWALK_VERSION,
+        crosswalk_version=CROSSWALK_VERSIONS["15"][1],
         choices=[
             RangeChoice(
                 place_id=added,
@@ -334,16 +350,34 @@ def test_apply_validates_selection_and_applies_additive_receipt(
                 path="South America / Bolivia",
                 code="BO",
                 change="ADD",
+                assertions=["bol"],
             ),
             RangeChoice(
                 place_id=existing,
-                name="Italy",
-                path="Europe / Italy",
-                code="IT",
+                name="Peru",
+                path="South America / Peru",
+                code="PE",
                 change="KEEP",
+                assertions=["per"],
             ),
         ],
-        assertions=[],
+        assertions=[
+            SourceAssertion(
+                assertion_id=code.lower(),
+                original={
+                    "plant_name_id": "100",
+                    "area_code_l3": code,
+                    "introduced": "0",
+                    "extinct": "0",
+                    "location_doubtful": "0",
+                },
+                status="native",
+                mapping="equivalent",
+                note="Reviewed equivalence.",
+                place_ids=[place_id],
+            )
+            for code, place_id in [("BOL", added), ("PER", existing)]
+        ],
     )
     proposal = ProposalResponse(
         **evidence.model_dump(),
@@ -390,7 +424,7 @@ def test_apply_validates_selection_and_applies_additive_receipt(
             source_name="unicode_cldr",
             source_version="48.2.1",
             source_code_type="iso_3166_1_alpha_2",
-            source_code="IT",
+            source_code="PE",
             retired_at=None,
         )
     ]

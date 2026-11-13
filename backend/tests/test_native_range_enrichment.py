@@ -27,6 +27,36 @@ from florabase.native_range_enrichment.source import (
     WcvpVersion,
 )
 
+REVIEWED_V2 = {
+    "ALB": "AL",
+    "BLR": "BY",
+    "DEN": "DK",
+    "GER": "DE",
+    "ICE": "IS",
+    "POL": "PL",
+    "ROM": "RO",
+    "SWE": "SE",
+    "SWI": "CH",
+    "BOL": "BO",
+    "BUL": "BG",
+    "CBD": "KH",
+    "HUN": "HU",
+    "LAO": "LA",
+    "OMA": "OM",
+    "PAR": "PY",
+    "PER": "PE",
+    "THA": "TH",
+    "URU": "UY",
+    "VIE": "VN",
+}
+
+
+def test_reviewed_crosswalk_contains_exactly_twenty_literal_pairs() -> None:
+    assert EQUIVALENT == REVIEWED_V2
+    assert "Cocos Island" in classify(distribution("COS")).note
+    assert "Åland" in classify(distribution("FIN")).note
+    assert "Estonia, Latvia, Lithuania and Kaliningrad" in classify(distribution("BLT")).note
+
 
 def name(
     identifier: str = "100", status: str = "Accepted", accepted: str = "100"
@@ -91,10 +121,15 @@ def test_source_literal_prefix_duplicate_names_and_synonym_context(source: WcvpS
 
 @pytest.mark.parametrize(
     ("code", "expected"),
-    [(code, "equivalent") for code in EQUIVALENT]
+    [(code, "equivalent") for code in REVIEWED_V2]
     + [
         ("CZE", "unsupported_split"),
         ("BLT", "unsupported_split"),
+        ("FIN", "unsupported_split"),
+        ("COS", "partial"),
+        ("AUT", "unresolved"),
+        ("GRC", "unresolved"),
+        ("JAP", "unresolved"),
         ("ITA", "partial"),
         ("BZN", "partial"),
         ("UNKNOWN", "unresolved"),
