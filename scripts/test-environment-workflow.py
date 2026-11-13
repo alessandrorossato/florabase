@@ -782,15 +782,11 @@ class EnvironmentTests(unittest.TestCase):
 
         entrypoint = (ROOT / "frontend" / "dev-entrypoint.sh").read_text(encoding="utf-8")
         self.assertIn('if [ "${FLORABASE_QUALITY_OFFLINE:-0}" = "1" ]; then', entrypoint)
-        self.assertIn("Quality frontend dependencies are incomplete", entrypoint)
-        self.assertNotIn('path.join(root, ".package-map.json")', entrypoint)
-        code_lines = "\n".join(
-            line for line in entrypoint.splitlines() if not line.lstrip().startswith("#")
-        )
-        self.assertEqual(code_lines.count("JSON.parse"), 1)
-        self.assertIn('JSON.parse(fs.readFileSync("/app/package.json", "utf8"))', code_lines)
-        self.assertIn("parseModulesYaml", entrypoint)
-        self.assertIn(".modules.yaml", entrypoint)
+        self.assertIn("cmp -s /app/pnpm-lock.yaml /app/node_modules/.pnpm/lock.yaml", entrypoint)
+        self.assertIn("Quality frontend dependencies are missing or out of sync", entrypoint)
+        self.assertNotIn("JSON.parse", entrypoint)
+        self.assertNotIn(".package-map.json", entrypoint)
+        self.assertNotIn(".modules.yaml", entrypoint)
         self.assertIn("exit 1", entrypoint)
         self.assertIn("export CI=true\npnpm install --frozen-lockfile --prefer-offline", entrypoint)
 
