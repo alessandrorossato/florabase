@@ -772,10 +772,18 @@ test.each([
     await user.clear(screen.getByLabelText("Year"));
     await openFormSection(user, "Essentials");
     await user.type(screen.getByLabelText("Year"), "2024");
+    // Month and day are typed: the field no longer fills them with 1.
+    for (const part of ["Month", "Day"] as const)
+      if (part.toLowerCase() in expected) {
+        await openFormSection(user, "Essentials");
+        await user.type(screen.getByLabelText(part), "1");
+      }
     await openFormSection(user, "Notes");
     await user.click(screen.getByRole("button", { name: "Record Sowing" }));
     await screen.findByText("Sowing was recorded.");
-    expect(submitted).toMatchObject({ sowing_date: expected });
+    expect(submitted).toEqual(
+      expect.objectContaining({ sowing_date: expected }),
+    );
   },
 );
 
@@ -1569,4 +1577,35 @@ test("Sowing Details focuses its title and browser Back restores the opened row"
       ),
     ).toHaveFocus();
   });
+});
+
+test("an incomplete Sowing date is refused and never posted", async () => {
+  const posts: unknown[] = [];
+  mockApi(
+    sowingHandler([], (path, init) => {
+      if (path === "/api/v1/sowings" && init?.method === "POST") {
+        posts.push(body(init));
+        return json(sowing({ id: "never" }), 201);
+      }
+      return undefined;
+    }),
+  );
+  const user = await openSowings();
+  await user.click(await screen.findByRole("button", { name: "New sowing" }));
+  await openFormSection(user, "Essentials");
+  await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
+  await openFormSection(user, "Essentials");
+  await user.selectOptions(
+    screen.getByLabelText("Sowing date precision"),
+    "month",
+  );
+  await openFormSection(user, "Essentials");
+  await user.type(screen.getByLabelText("Year"), "2024");
+  await openFormSection(user, "Notes");
+  await user.click(screen.getByRole("button", { name: "Record Sowing" }));
+  expect(
+    (await screen.findAllByText(/Sowing date is incomplete/)).length,
+  ).toBeGreaterThan(0);
+  expect(screen.getByLabelText("Month")).toHaveValue(null);
+  expect(posts).toHaveLength(0);
 });

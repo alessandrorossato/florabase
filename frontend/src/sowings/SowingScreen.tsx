@@ -82,6 +82,10 @@ import { PhotosSection } from "../photos/PhotosSection";
 import { PropagationPath } from "../propagation/PropagationPath";
 import { listSeedLots, type SeedLotResponse } from "../seed-lots/api";
 import {
+  invalidDateControls,
+  invalidDateErrorField,
+} from "../seed-lots/dateControls";
+import {
   createSowing,
   getSowing,
   getSowingPropagationSummary,
@@ -1246,7 +1250,12 @@ export function SowingScreen({
   async function submit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
     if (pending) return;
-    const errors = validate();
+    const errors = [
+      ...validate(),
+      ...invalidDateControls(event.currentTarget).map(
+        (control) => control.validationMessage,
+      ),
+    ];
     if (errors.length) {
       setSave({ status: "error", messages: errors });
       return;
@@ -1390,6 +1399,7 @@ export function SowingScreen({
             disabled={pending}
             error={save.status === "error" ? save : undefined}
             errorFields={[
+              invalidDateErrorField,
               { match: /seedlot|seed lot/i, selector: "#sowing-seed-lot" },
               {
                 match: /quantity|seed count/i,

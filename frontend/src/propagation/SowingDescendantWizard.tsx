@@ -23,6 +23,10 @@ import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { Breadcrumbs } from "../components/CollectionUI";
+import {
+  invalidDateControls,
+  invalidDateErrorField,
+} from "../seed-lots/dateControls";
 import { FieldHelp } from "../components/ContextualHelp";
 import {
   listBotanicalIdentities,
@@ -213,6 +217,11 @@ export function SowingDescendantWizard({
       if (!quantityValue || !Number.isInteger(value) || value <= 0)
         errors.push("Plant group quantity must be a positive whole number.");
     }
+    errors.push(
+      ...invalidDateControls(event.currentTarget).map(
+        (control) => control.validationMessage,
+      ),
+    );
     if (errors.length) {
       setMessages(errors);
       return;
@@ -350,6 +359,7 @@ export function SowingDescendantWizard({
           disabled={pending}
           error={sectionError}
           errorFields={[
+            invalidDateErrorField,
             { match: /identity/i, selector: "#descendant-identity" },
             {
               match: /quantity|whole number/i,

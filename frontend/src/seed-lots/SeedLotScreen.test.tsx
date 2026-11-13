@@ -898,11 +898,37 @@ test("full entry maps count, approximate g/mg quantity, Other source, references
     screen.getByLabelText("Year", { selector: "#harvest-year" }),
     "2023",
   );
+  // Month and day are typed: the field no longer fills an unknown part with 1.
+  await openSection(user, "Seed details");
+  await user.type(
+    screen.getByLabelText("Month", { selector: "#harvest-month" }),
+    "1",
+  );
   await openSection(user, "Seed details");
   await user.selectOptions(
     screen.getByLabelText("Precision", { selector: "#viability-precision" }),
     "day",
   );
+  await openSection(user, "Seed details");
+  await user.click(screen.getByRole("button", { name: "Add seed lot" }));
+  expect(
+    (await screen.findAllByText(/Expected viability until is incomplete/))
+      .length,
+  ).toBeGreaterThan(0);
+  expect(payloads).toHaveLength(0);
+  for (const [part, text] of [
+    ["year", "2027"],
+    ["month", "3"],
+    ["day", "31"],
+  ] as const) {
+    await openSection(user, "Seed details");
+    await user.type(
+      screen.getByLabelText(part[0].toUpperCase() + part.slice(1), {
+        selector: `#viability-${part}`,
+      }),
+      text,
+    );
+  }
   await openSection(user, "Seed details");
   await user.type(
     screen.getByLabelText("Notes", { selector: "textarea" }),
@@ -938,6 +964,12 @@ test("full entry maps count, approximate g/mg quantity, Other source, references
     material_provenance_place_id: place.id,
     acquisition_date: { precision: "year", year: 2024 },
     harvest_date: { precision: "month", year: 2023, month: 1 },
+    expected_viability_until: {
+      precision: "day",
+      year: 2027,
+      month: 3,
+      day: 31,
+    },
   });
 });
 

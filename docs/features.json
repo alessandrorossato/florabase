@@ -2729,6 +2729,26 @@
       ],
       "priority": "P1",
       "status": "implemented"
+    },
+    {
+      "id": "UX-DATE-001",
+      "category": "ux",
+      "description": "Partial dates never invent a year, month or day, and Journal entries ask explicitly whether the occurrence was today, another date or unknown",
+      "acceptance_criteria": [
+        "The shared partial-date field keeps typed parts on a precision change, drops parts the precision no longer needs and never fills a missing part; inputs start empty",
+        "An incomplete draft stays in component state, never reaches onChange or a payload, marks its first missing part invalid with a clear message and blocks saving in every consumer form; unknown remains null where the domain allows it",
+        "Journal entries offer an accessible Today / Another date / Date unknown radio group; Today shows and records the device-local calendar day; the initial choice is a prop and defaults to no selection with saving blocked until chosen",
+        "Height measurements keep requiring a date of any precision, with Date unknown unavailable and its reason programmatically associated; the phenology approximate-date rule is unchanged",
+        "Stored full, year-month, year-only and unknown dates open unchanged and are not rewritten unless edited; stored shapes and API payloads are unchanged",
+        "Focused tests cover precision changes, local-day boundaries on both sides of UTC midnight, required measurement dates, historical edits and incomplete drafts in the Journal and consumer forms"
+      ],
+      "dependencies": [
+        "EVENT-002",
+        "MEASUREMENT-001",
+        "PHENOLOGY-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
     }
   ]
 }

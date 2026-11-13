@@ -630,3 +630,13 @@ body:has(.activity-page dialog[open]) {
     padding-block: 0.125rem;
   }
 }
+
+/* Occurrence date choice: three radios that wrap, each a full-height target. */
+.occurrence-date-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-4);
+}
+.occurrence-date-choices .checkbox-label {
+  min-height: var(--control-height);
+}

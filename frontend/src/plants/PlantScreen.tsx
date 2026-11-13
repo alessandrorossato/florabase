@@ -101,6 +101,10 @@ import {
   type ProvenanceSiteResponse,
 } from "../provenance-sites/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
+import {
+  invalidDateControls,
+  invalidDateErrorField,
+} from "../seed-lots/dateControls";
 import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import { listSowings, type SowingResponse } from "../sowings/api";
 import { listSuppliers, type SupplierResponse } from "../suppliers/api";
@@ -1807,7 +1811,12 @@ export function PlantScreen({
   async function submit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
     if (pending || !formKind) return;
-    const errors = validate();
+    const errors = [
+      ...validate(),
+      ...invalidDateControls(event.currentTarget).map(
+        (control) => control.validationMessage,
+      ),
+    ];
     if (errors.length) {
       setSave({ status: "error", messages: errors });
       return;
@@ -2134,6 +2143,7 @@ export function PlantScreen({
             disabled={pending}
             error={save.status === "error" ? save : undefined}
             errorFields={[
+              invalidDateErrorField,
               { match: /supplier/i, selector: "#plant-supplier" },
               { match: /location/i, selector: "#plant-location" },
               {

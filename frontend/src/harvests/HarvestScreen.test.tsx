@@ -215,6 +215,29 @@ describe("Harvest directory and detail", () => {
   });
 });
 describe("Atomic Harvest form", () => {
+  it("never submits an incomplete occurrence date", async () => {
+    const user = userEvent.setup();
+    wrap(
+      <HarvestForm sourceId="plant-1" onClose={vi.fn()} onSaved={vi.fn()} />,
+    );
+    await screen.findByRole("combobox", { name: "Harvest source" });
+    await user.selectOptions(
+      screen.getByLabelText("Quantity type 1"),
+      "item_count",
+    );
+    await user.type(screen.getByLabelText("Quantity 1"), "12");
+    await user.selectOptions(
+      screen.getByLabelText("Occurrence date precision"),
+      "month",
+    );
+    await user.type(screen.getByLabelText("Year"), "2026");
+    await user.click(
+      screen.getByRole("button", { name: /Record Harvest|Save harvest/ }),
+    );
+    expect(screen.getByLabelText("Month")).toBeInvalid();
+    expect(screen.getByLabelText("Month")).toHaveValue(null);
+    expect(api.saveHarvest).not.toHaveBeenCalled();
+  });
   it("submits preselected inactive Plant with partial date and exact count", async () => {
     const user = userEvent.setup();
     const onSaved = vi.fn();

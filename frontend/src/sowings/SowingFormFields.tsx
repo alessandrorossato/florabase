@@ -4,6 +4,7 @@ import type { FormPanel } from "../components/FormSections";
 import { FieldHelp } from "../components/ContextualHelp";
 import { locationsForScope, type LocationResponse } from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
+import { invalidDateErrorField } from "../seed-lots/dateControls";
 import type { PartialDate } from "./api";
 
 type QuantityKind = "unknown" | "seed_count" | "weight";
@@ -24,6 +25,7 @@ export interface SowingFieldsState {
   notes: string;
 }
 export const sowingErrorFields = [
+  invalidDateErrorField,
   { match: /quantity|seed count/i, selector: "#sowing-quantity-value" },
   { match: /maximum|temperature max/i, selector: "#temperature-max" },
   { match: /minimum|temperature/i, selector: "#temperature-min" },

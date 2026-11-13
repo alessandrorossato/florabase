@@ -3,6 +3,7 @@ import { FieldLabel } from "../components/FieldLabel";
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
   type SyntheticEvent,
@@ -23,7 +24,8 @@ import {
 import "./activity.css";
 import { FieldHelp } from "../components/ContextualHelp";
 import { locationsForScope, type LocationResponse } from "../locations/api";
-import { PartialDateField } from "../seed-lots/PartialDateField";
+import { invalidDateControls } from "../seed-lots/dateControls";
+import { OccurrenceDateChoice, type DateChoice } from "./OccurrenceDateChoice";
 import { PhotosSection } from "../photos/PhotosSection";
 import { EventTargetPhoto } from "./EventTargetPhoto";
 import { HeightHistory } from "./HeightHistory";
@@ -186,15 +188,19 @@ export function EventJournal({
   targetLabel,
   locations,
   onTargetRefresh,
+  newEntryDateChoice = "unset",
 }: {
   targetKind: EventTargetKind;
   targetId: string;
   targetLabel: string;
   locations: LocationResponse[];
   onTargetRefresh: () => Promise<void>;
+  /** Date choice a new entry opens with; "unset" makes the user choose (decision D1). */
+  newEntryDateChoice?: DateChoice;
 }) {
   const auth = useAuth();
   const journal = useJournalReader();
+  const entryForm = useRef<HTMLFormElement>(null);
   const [timeline, setTimeline] = useState<TimelineState>({
     status: "loading",
   });
@@ -264,7 +270,12 @@ export function EventJournal({
   function dismissEditor() {
     if (pending || !editor) return;
     const initial = editor === "create" ? blankForm() : formFrom(editor);
-    if (JSON.stringify(form) === JSON.stringify(initial)) setEditor(null);
+    // A date choice or a half-typed date is unsaved input even while the value is still null.
+    const dateInput = entryForm.current?.querySelector(
+      `${editor === "create" ? '[data-date-control="choice"]:checked, ' : ""}[data-date-control]:not([data-date-control="choice"]):invalid`,
+    );
+    if (JSON.stringify(form) === JSON.stringify(initial) && !dateInput)
+      setEditor(null);
     else setConfirmDiscard(true);
   }
 
@@ -316,6 +327,13 @@ export function EventJournal({
         message:
           "Enter the estimated date before marking it approximate, or clear Approximate date.",
       });
+      return;
+    }
+    // Null also stands for "no choice yet" and "date still incomplete": neither is unknown.
+    const dateControl = invalidDateControls(event.currentTarget).at(0);
+    if (dateControl) {
+      dateControl.focus();
+      setMutation({ status: "error", message: dateControl.validationMessage });
       return;
     }
     const measuring = form.kind === "measurement";
@@ -811,6 +829,7 @@ export function EventJournal({
         >
           <form
             className="event-form"
+            ref={entryForm}
             onSubmit={(event) => void submit(event)}
             noValidate
           >
@@ -922,20 +941,24 @@ export function EventJournal({
                 </FieldHelp>
               </div>
             )}
-            <PartialDateField
+            <OccurrenceDateChoice
               id={`event-date-${targetId}`}
-              label="Occurrence date"
               value={form.occurredOn}
               disabled={pending}
+              // A new entry starts with no date choice (D1); a stored entry keeps its own.
+              initialChoice={
+                editor === "create" ? newEntryDateChoice : "unknown"
+              }
+              unknownUnavailable={
+                form.kind === "measurement"
+                  ? "A height needs a date: Date unknown is not available. Year or month precision is fine when the day is not known."
+                  : undefined
+              }
               onChange={(value) => {
                 setForm((current) => ({ ...current, occurredOn: value }));
+                setMutation({ status: "idle" });
               }}
             />
-            <p className="field-help">
-              {form.kind === "measurement"
-                ? "When was this measured? A date is required; year or month precision is fine when the day is not known."
-                : "When did this happen? Keep the date unknown or use year/month precision when needed. Recording time does not establish an occurrence date."}
-            </p>
             {stagedKind(form.kind) && form.phenophase && (
               <label className="checkbox-label">
                 <input

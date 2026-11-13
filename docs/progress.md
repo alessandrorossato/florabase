@@ -8670,3 +8670,25 @@ Status remains implemented pending canonical verification.
   WCVP source module with BOTANICAL-MATCH-001 was conflict-free at review time.
 - Canonical verification is recorded by the worktree's FULL receipt. Operator delivery and
   any retrospective collection review are separate steps.
+
+### UX-DATE-001 — safe partial dates and the Journal date choice, 13 November 2026
+
+- `PartialDateField` no longer invents a year, month or day. A precision change keeps typed
+  parts, drops parts it no longer needs and leaves new ones empty. An incomplete draft stays in
+  the field, reports null to the form and marks its first missing part invalid; native forms
+  block on it and `noValidate` forms ask `invalidDateControls`. Stored shapes and payloads are
+  unchanged.
+- Journal entries use `OccurrenceDateChoice`: Today (device-local `localDay()`), Another date
+  or Date unknown. Height keeps requiring a date and shows why Date unknown is unavailable.
+  D1 is unresolved: a new entry starts with no choice and Save is refused until one is made
+  (`newEntryDateChoice` prop). Unknown stays the initial state in every other form.
+- Deliberate test updates: Sowing and SeedLot precision tests typed only a year and relied on
+  the old `month: 1` / `day: 1` filling; they now type each part. The Journal tests choose a date
+  first, and the height test asserts the new choice message and the disabled Date unknown.
+- Frontend format, lint, typecheck and all 123 Vitest files passed in Quality; the Journal,
+  Plant, Order, Harvest, Sowing and SeedLot suites passed again after QA fixes. Independent QA
+  (detached checkout) returned PASS_WITH_RISKS; the discard prompt now counts a chosen or
+  half-typed date, and the TZ test restore was fixed. Rendering was checked with a throwaway
+  harness at 1440, 1024, 390 and 720 px (200 %), light and dark.
+- Unresolved: D1; a page form reset while a half-typed date is mounted keeps the draft (submit
+  stays blocked); browser-native validation bubbles were only checked in jsdom and Chromium.

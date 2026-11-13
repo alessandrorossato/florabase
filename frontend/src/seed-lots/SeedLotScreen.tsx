@@ -123,6 +123,7 @@ import {
   type SupplierResponse,
 } from "../suppliers/api";
 import { PartialDateField } from "./PartialDateField";
+import { invalidDateControls, invalidDateErrorField } from "./dateControls";
 import { ReferencePicker } from "./ReferencePicker";
 import {
   createSeedLot,
@@ -1206,6 +1207,11 @@ export function SeedLotScreen({
       !Number.isInteger(quantity)
     )
       errors.push("Seed count must be a whole number.");
+    errors.push(
+      ...invalidDateControls(event.currentTarget).map(
+        (control) => control.validationMessage,
+      ),
+    );
     if (errors.length) {
       setSave({ status: "error", messages: errors });
       return;
@@ -1525,6 +1531,7 @@ export function SeedLotScreen({
           disabled={pending}
           error={save.status === "error" ? save : undefined}
           errorFields={[
+            invalidDateErrorField,
             { match: /order/i, selector: "#seed-order" },
             {
               match: /location|storage/i,

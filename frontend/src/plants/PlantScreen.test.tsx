@@ -1241,6 +1241,13 @@ test("active group extraction is focused, updates exact quantity, opens the Plan
   await user.type(screen.getByLabelText("Year"), "2026");
   await user.clear(screen.getByLabelText("Month"));
   await user.type(screen.getByLabelText("Month"), "9");
+  await openFormSection(user, "Lifecycle & notes");
+  await user.click(screen.getByRole("button", { name: "Extract plant" }));
+  expect(
+    (await screen.findAllByText(/Collection-entry date is incomplete/)).length,
+  ).toBeGreaterThan(0);
+  expect(extractionPayload).toBeUndefined();
+  await openFormSection(user, "Origin");
   await user.clear(screen.getByLabelText("Day"));
   await user.type(screen.getByLabelText("Day"), "1");
   await openFormSection(user, "Lifecycle & notes");
@@ -2002,6 +2009,17 @@ test("Event creation validates movement, explains side effects and authoritative
     screen.getByLabelText("Notes", { selector: "textarea" }),
     "New leaf.",
   );
+  // No date choice is preselected (D1): saving waits for one.
+  await user.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: "Add entry",
+    }),
+  );
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Choose when this happened",
+  );
+  expect(screen.getByRole("radio", { name: /^Today/ })).toHaveFocus();
+  await user.click(screen.getByRole("radio", { name: "Date unknown" }));
   await user.click(
     within(screen.getByRole("dialog")).getByRole("button", {
       name: "Add entry",
@@ -2029,6 +2047,7 @@ test("Event creation validates movement, explains side effects and authoritative
     screen.getByLabelText("Destination Location"),
     locationId,
   );
+  await user.click(screen.getByRole("radio", { name: "Another date" }));
   await user.selectOptions(screen.getByLabelText("Precision"), "month");
   await user.clear(screen.getByLabelText("Year"));
   await user.type(screen.getByLabelText("Year"), "2026");
@@ -2050,6 +2069,7 @@ test("Event creation validates movement, explains side effects and authoritative
     ).toHaveTextContent(kind);
   }
   await user.selectOptions(screen.getByLabelText("Entry type"), "death");
+  await user.click(screen.getByRole("radio", { name: "Date unknown" }));
   await user.click(
     within(screen.getByRole("dialog")).getByRole("button", {
       name: "Add entry",
@@ -2210,6 +2230,7 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
   await mutationUser.click(
     await screen.findByRole("button", { name: "Add the first entry" }),
   );
+  await mutationUser.click(screen.getByRole("radio", { name: "Date unknown" }));
   await mutationUser.click(
     within(screen.getByRole("dialog")).getByRole("button", {
       name: "Add entry",
@@ -2647,6 +2668,20 @@ test("Journal editor dismisses pristine forms, protects changed notes and restor
   await user.keyboard("{Escape}");
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(add).toHaveFocus();
+  // A date choice, or a half-typed date that is still null, is unsaved input too.
+  await user.click(add);
+  await user.click(screen.getByRole("radio", { name: "Another date" }));
+  await user.type(screen.getByLabelText("Year"), "2026");
+  await user.keyboard("{Escape}");
+  await user.click(
+    within(
+      screen.getByRole("dialog", { name: "Discard unsaved Journal changes?" }),
+    ).getByRole("button", { name: "Continue editing" }),
+  );
+  expect(screen.getByLabelText("Year")).toHaveValue(2026);
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  await user.click(screen.getByRole("button", { name: "Discard changes" }));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   await user.click(add);
   await user.type(
     screen.getByLabelText("Notes", { selector: "textarea" }),
@@ -3436,13 +3471,24 @@ test("height measurements are recorded, corrected and plotted without inventing 
   const dialog = screen.getByRole("dialog");
   const submit = within(dialog).getByRole("button", { name: "Add entry" });
   await user.type(screen.getByLabelText(/^Value/), "0.3");
+  // A height needs a date: Date unknown is unavailable, with its reason associated.
+  const unknown = screen.getByRole("radio", { name: "Date unknown" });
+  expect(unknown).toBeDisabled();
+  expect(unknown).toHaveAccessibleDescription(/A height needs a date/);
   await user.click(submit);
   expect(screen.getByRole("alert")).toHaveTextContent(
-    "Enter when this height was measured",
+    "Choose when this happened: Today or Another date.",
   );
+  await user.click(screen.getByRole("radio", { name: "Another date" }));
   await user.selectOptions(screen.getByLabelText("Precision"), "month");
   await user.clear(screen.getByLabelText("Year"));
   await user.type(screen.getByLabelText("Year"), "2026");
+  await user.click(submit);
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Occurrence date is incomplete: enter a valid month (1–12)",
+  );
+  expect(screen.getByLabelText("Month")).toHaveFocus();
+  expect(writes).toHaveLength(0);
   await user.clear(screen.getByLabelText("Month"));
   await user.type(screen.getByLabelText("Month"), "6");
   await user.clear(screen.getByLabelText(/^Value/));
@@ -3573,6 +3619,7 @@ test("phenology is recorded stage first, shown once in the Journal and compared 
   // Only a recorded date can be approximate.
   expect(within(dialog).getByLabelText(/Approximate date/)).toBeDisabled();
   expect(writes).toHaveLength(0);
+  await user.click(screen.getByRole("radio", { name: "Another date" }));
   await user.selectOptions(screen.getByLabelText("Precision"), "month");
   await user.clear(screen.getByLabelText("Year"));
   await user.type(screen.getByLabelText("Year"), "2026");
