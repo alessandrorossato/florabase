@@ -1,3 +1,10 @@
+## 2026-11-13 — FABLE-CHECK-PLANT-KIND (UX-014): Synchronize Plant and Plant group creation kind with route changes
+
+- Reproduced UX-014: switching between `#/plants?action=create&kind=plant` and `#/plants?action=create&kind=group` while `PlantScreen` remained mounted (via `+` menu, Command Palette, `<a href>` links, `hashchange`, or browser Back/Forward) left `contextualCreationStarted` latched, keeping the prior `creationKind` and submitting to the wrong endpoint.
+- Fixed `frontend/src/plants/PlantScreen.tsx` to track `creationRouteKey` (`initialCreationKind:initialIdentityId`), synchronize `creationKind` and reset the draft cleanly (preserving `initialIdentityId` when present in the target route), guard dirty creation drafts against `Cancel`, `hashchange`, and non-task `popstate`, and avoid double-prompting on `isRecordTaskNavigation` transitions.
+- Updated `frontend/src/App.tsx` to reset `formChanged` across creation-kind/identity/record route transitions and guard `.app-content` collection links when a form has unsaved changes.
+- Added regression tests in `frontend/src/plants/PlantScreen.test.tsx` covering `+` menu switching at 390px viewport, 422 validation failure and successful saves, direct `hashchange`, browser Back/Forward, `Cancel`, and unsaved-draft protection; independent read-only QA passed.
+
 ## 2026-11-13 — BOTANICAL-MATCH-1A: Read-only botanical candidate discovery and classification foundation
 
 - Implemented the read-only local matching engine under `backend/src/florabase/botanical_matching/`
@@ -8663,3 +8670,132 @@ Status remains implemented pending canonical verification.
   WCVP source module with BOTANICAL-MATCH-001 was conflict-free at review time.
 - Canonical verification is recorded by the worktree's FULL receipt. Operator delivery and
   any retrospective collection review are separate steps.
+
+### UX-DATE-001 — safe partial dates and the Journal date choice, 13 November 2026
+
+- `PartialDateField` no longer invents a year, month or day. A precision change keeps typed
+  parts, drops parts it no longer needs and leaves new ones empty. An incomplete draft stays in
+  the field, reports null to the form and marks its first missing part invalid; native forms
+  block on it and `noValidate` forms ask `invalidDateControls`. Stored shapes and payloads are
+  unchanged.
+- Journal entries use `OccurrenceDateChoice`: Today (device-local `localDay()`), Another date
+  or Date unknown. Height keeps requiring a date and shows why Date unknown is unavailable.
+  D1 is unresolved: a new entry starts with no choice and Save is refused until one is made
+  (`newEntryDateChoice` prop). Unknown stays the initial state in every other form.
+- Deliberate test updates: Sowing and SeedLot precision tests typed only a year and relied on
+  the old `month: 1` / `day: 1` filling; they now type each part. The Journal tests choose a date
+  first, and the height test asserts the new choice message and the disabled Date unknown.
+- Frontend format, lint, typecheck and all 123 Vitest files passed in Quality; the Journal,
+  Plant, Order, Harvest, Sowing and SeedLot suites passed again after QA fixes. Independent QA
+  (detached checkout) returned PASS_WITH_RISKS; the discard prompt now counts a chosen or
+  half-typed date, and the TZ test restore was fixed. Rendering was checked with a throwaway
+  harness at 1440, 1024, 390 and 720 px (200 %), light and dark.
+- Reset follow-up: switching direct edit URLs between records kept the editor mounted, so a
+  half-typed date showed on the next record, and edit guards compared only form state, so such a
+  draft was discarded without a prompt. Sowing, Seed lot and Plant forms are now keyed by the
+  record shown and their guards ask `hasDateDraft`. Regression tests fail without the fix. The
+  nested date legend in the Journal dialog is now a field label, not a second dialog heading.
+- Second round: all 123 Vitest files (1,345 tests), format, lint and typecheck passed; independent
+  QA (static; Docker address pools were exhausted) returned PASS_WITH_RISKS and its two coverage
+  gaps (Journal edit-mode guard, Seed lot guard) now have tests. A real-browser pass on this
+  worktree's seeded UAT instance (15183) covered the Journal choices, precision switching, local
+  Today, unknown, refused Height, the discard prompt, saving year-only, year-month, day and unknown
+  dates and reopening each unchanged, plus incomplete-date refusal in Plant, Seed lot, Sowing,
+  Order, Harvest and Cuttings forms.
+- Not run under the UX closeout policy: canonical `make feature-verify` (the plan selects FULL
+  because `PartialDateField` is a high-risk path). Integration with `fix/fable-plant-kind` needs
+  its creation key and guards to honour date drafts. Unresolved: D1.
+
+### FABLE-FIX-CUTTINGS — directory layout repair, 13 November 2026
+
+- Replaced Cuttings' raw lifecycle text and generic row assumptions with the shared record
+  composition, single-line lifecycle status chip, accessible preview control, and named details
+  action. Added Cuttings-scoped header and presentation rules so page tools stack in the directory
+  flow; list/gallery, search, filters, Saved Views, pagination and navigation state remain owned by
+  the existing Cuttings page.
+- Added focused regressions for long labels, both record types and presentations, lifecycle text,
+  preview keyboard activation, close/focus return, and advancing/returning pagination. Prettier,
+  ESLint, TypeScript and the focused Cuttings Vitest file passed (10 tests).
+- The guarded per-worktree comprehensive UAT instance was allocated at port 15180 after the active
+  FULL gate released the shared capacity lock. It uses this worktree's own project, database,
+  media and resources; the seeded manifest contains 3,181 records at schema `20261110_0047`.
+  Desktop 1440×900, tablet 1024×844 and mobile 390×844 layouts were visually checked in light and
+  dark themes. At those sizes, document width equaled viewport width; first list records began at
+  y≈235, y≈283 and y≈347 respectively. Status chips stayed on one line; 390px names wrapped by
+  words. Preview open/close returned focus; search, lifecycle filtering and Saved Views open/save
+  behavior worked. The temporary Saved View created for this check remains in this isolated UAT.
+- A single-record gallery expanded to an oversized square under the shared `auto-fit` grid. Added a
+  Cuttings-scoped 24rem card cap; the 1440px gallery visual now measures 366×366px and the 390px
+  visual measures 322×322px. A 720×450 effective-width check (the CSS viewport corresponding to a
+  1440×900 display at 200%) had no horizontal page overflow. The in-app browser did not expose a
+  functioning native zoom control, so actual 200% zoom remains unverified. Browser screenshots
+  were reviewed during the session but could not be persisted as local image files.
+- Independent read-only QA found no confirmed implementation defects. Persisted after-screenshot
+  files and actual browser 200% zoom evidence remain outstanding. Under the operator's temporary UX
+  closeout policy, canonical verification is deferred to the designated integrated worktree; this
+  implementation has no canonical receipt. Docker network pool exhaustion prevented its prior
+  isolated FULL attempt at migration-cycle. No DEV, Golden, NAS, production or shared Feature Review
+  resources were used.
+
+### UX-TODAY-001 — work-first Today (Variant A, Operational), 13 November 2026
+
+- Today now reads in one order on screen and in the DOM: summary, Next work, Recent activity,
+  Record, Collection snapshot, To review, photos. This deliberately reverses the verified
+  DASHBOARD-001 photo-first layout, following audit finding UX-003; see the
+  [layout reversal](dashboard-001-handoff.md#layout-reversal--ux-today-001).
+- `GET /api/v1/dashboard` adds `overdue_items`, `due_today_items` and `next_seven_days_items`
+  (5, 5 and 3 items, `due_on, id`), consistent with the existing counts. `upcoming` is unchanged.
+  No migration. Completion stays in Schedule; rows link to the Schedule item.
+- Focused checks: disposable PostgreSQL `test_dashboard.py` (8 passed, including the new 30/2/5
+  scenario and API contract), backend Ruff, format, strict mypy and collection-view unit tests,
+  `api-check` with no drift, frontend lint, Prettier, typecheck and Vitest for
+  `src/collection`, `src/events`, `UX001` and `App`.
+- Independent QA (separate read-only checkout) found no blockers. Fixed: phone icon-only rule
+  also hid the Saved views dialog's Close label (now scoped to the toolbar triggers); badge
+  rendered only for planned rows; photo-line wording; design README pointer. Version skew with
+  an older backend shows the Today error state rather than partial data. Phone icon-only labels
+  are visually hidden text, not zero-sized, so they remain accessible names.
+- Rendering (production build, synthetic 30/2/5 fixture, loopback only): 1440, 1024 and 390
+  wide, light and dark, and 720×422 for 200 % zoom. No horizontal scroll at any width; first work
+  row ends at y = 572 of 844 at 390; DOM order matches visual order; no placeholder tiles with or
+  without photos; Saved views dialog Close keeps its label on phones.
+- Status IMPLEMENTED_UNVERIFIED: under the operator's UX closeout batch policy the canonical
+  gate runs once on the integrated HEAD, not in this worktree. No receipt exists here.
+
+### UX closeout batch — integrated candidate, 13 November 2026
+
+- Consolidated the Plant kind fix, both UX-DATE-001 commits, FABLE-FIX-CUTTINGS, and
+  UX-TODAY-001 in five traceable cherry-picks on verified main at `fd9f4c9`. Reconciled the
+  overlapping Plant test additions and feature/progress entries without dropping either side.
+- Plant creation and edit now share the relevant discard policy with the application shell.
+  Partial dates count as drafts; changing the creation kind, identity, or edited record resets
+  the date control. Equivalent hashes retain the draft, confirmed departures prompt once, and
+  declining native Chromium navigation leaves the live form intact. The fallback preserves
+  app-created parent entries; older browsers without the Navigation API can still restore the
+  current URL on other hash departures.
+- Focused evidence: frontend Prettier, ESLint, TypeScript, and 453 tests across 17 files;
+  after the native navigation fix, scoped Prettier and ESLint, TypeScript, and all 78 Plant
+  tests passed again. Backend Ruff, strict mypy, and three collection view unit tests passed.
+  The dashboard PostgreSQL suite passed all eight tests, including the 30/2/5 fixture, with
+  verified disposable cleanup. Generated API drift, the 156-entry feature graph, and Git
+  whitespace checks passed. Independent QA reproduced the navigation defects and confirmed
+  the corrections, including a separate Chromium navigation event check.
+- Browser QA used this worktree's own fresh UAT Preview on port 15174. Today passed at
+  1440 and 390 pixels in both themes, with 5/2/3 rows for the 30/2/5 fixture and a text-only
+  fallback when no photo was usable. Cuttings list and gallery, both record types, search,
+  status filtering, Saved Views, keyboard preview focus and native Chromium 200% zoom were
+  exercised. Native zoom exposed a zero-height results pane in short viewports. The Cuttings
+  directory now scrolls in document flow at that height; both record types and status chips
+  passed browser hit testing in both themes without horizontal overflow. Plant hash switching
+  and Back/Forward preserved or cleared incomplete dates as
+  appropriate. A year-only Journal entry was saved through the UI and reopened with the same
+  value; the API confirmed neither month nor day was stored.
+- Pending operator visual acceptance and one fresh canonical FULL. Docker allocated and
+  retired an ownership-labelled bridge. An unrelated unattached disposable integration
+  network from the missing Lineage worktree was found and left for exact operator cleanup.
+  No source-branch worktrees, primary DEV data, or Golden data were changed.
+
+- The operator approved the visual evidence. The first FULL stopped at the impact inventory
+  check because the new OccurrenceDateChoice test was missing from the events scope. The
+  follow-up registers the test without changing product source. Lineage bridge cleanup is
+  deferred and the batch UAT Preview remains available.

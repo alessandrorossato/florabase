@@ -1241,6 +1241,13 @@ test("active group extraction is focused, updates exact quantity, opens the Plan
   await user.type(screen.getByLabelText("Year"), "2026");
   await user.clear(screen.getByLabelText("Month"));
   await user.type(screen.getByLabelText("Month"), "9");
+  await openFormSection(user, "Lifecycle & notes");
+  await user.click(screen.getByRole("button", { name: "Extract plant" }));
+  expect(
+    (await screen.findAllByText(/Collection-entry date is incomplete/)).length,
+  ).toBeGreaterThan(0);
+  expect(extractionPayload).toBeUndefined();
+  await openFormSection(user, "Origin");
   await user.clear(screen.getByLabelText("Day"));
   await user.type(screen.getByLabelText("Day"), "1");
   await openFormSection(user, "Lifecycle & notes");
@@ -2002,6 +2009,17 @@ test("Event creation validates movement, explains side effects and authoritative
     screen.getByLabelText("Notes", { selector: "textarea" }),
     "New leaf.",
   );
+  // No date choice is preselected (D1): saving waits for one.
+  await user.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: "Add entry",
+    }),
+  );
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Choose when this happened",
+  );
+  expect(screen.getByRole("radio", { name: /^Today/ })).toHaveFocus();
+  await user.click(screen.getByRole("radio", { name: "Date unknown" }));
   await user.click(
     within(screen.getByRole("dialog")).getByRole("button", {
       name: "Add entry",
@@ -2029,6 +2047,7 @@ test("Event creation validates movement, explains side effects and authoritative
     screen.getByLabelText("Destination Location"),
     locationId,
   );
+  await user.click(screen.getByRole("radio", { name: "Another date" }));
   await user.selectOptions(screen.getByLabelText("Precision"), "month");
   await user.clear(screen.getByLabelText("Year"));
   await user.type(screen.getByLabelText("Year"), "2026");
@@ -2050,6 +2069,7 @@ test("Event creation validates movement, explains side effects and authoritative
     ).toHaveTextContent(kind);
   }
   await user.selectOptions(screen.getByLabelText("Entry type"), "death");
+  await user.click(screen.getByRole("radio", { name: "Date unknown" }));
   await user.click(
     within(screen.getByRole("dialog")).getByRole("button", {
       name: "Add entry",
@@ -2210,6 +2230,7 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
   await mutationUser.click(
     await screen.findByRole("button", { name: "Add the first entry" }),
   );
+  await mutationUser.click(screen.getByRole("radio", { name: "Date unknown" }));
   await mutationUser.click(
     within(screen.getByRole("dialog")).getByRole("button", {
       name: "Add entry",
@@ -2647,6 +2668,20 @@ test("Journal editor dismisses pristine forms, protects changed notes and restor
   await user.keyboard("{Escape}");
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(add).toHaveFocus();
+  // A date choice, or a half-typed date that is still null, is unsaved input too.
+  await user.click(add);
+  await user.click(screen.getByRole("radio", { name: "Another date" }));
+  await user.type(screen.getByLabelText("Year"), "2026");
+  await user.keyboard("{Escape}");
+  await user.click(
+    within(
+      screen.getByRole("dialog", { name: "Discard unsaved Journal changes?" }),
+    ).getByRole("button", { name: "Continue editing" }),
+  );
+  expect(screen.getByLabelText("Year")).toHaveValue(2026);
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  await user.click(screen.getByRole("button", { name: "Discard changes" }));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   await user.click(add);
   await user.type(
     screen.getByLabelText("Notes", { selector: "textarea" }),
@@ -3436,13 +3471,24 @@ test("height measurements are recorded, corrected and plotted without inventing 
   const dialog = screen.getByRole("dialog");
   const submit = within(dialog).getByRole("button", { name: "Add entry" });
   await user.type(screen.getByLabelText(/^Value/), "0.3");
+  // A height needs a date: Date unknown is unavailable, with its reason associated.
+  const unknown = screen.getByRole("radio", { name: "Date unknown" });
+  expect(unknown).toBeDisabled();
+  expect(unknown).toHaveAccessibleDescription(/A height needs a date/);
   await user.click(submit);
   expect(screen.getByRole("alert")).toHaveTextContent(
-    "Enter when this height was measured",
+    "Choose when this happened: Today or Another date.",
   );
+  await user.click(screen.getByRole("radio", { name: "Another date" }));
   await user.selectOptions(screen.getByLabelText("Precision"), "month");
   await user.clear(screen.getByLabelText("Year"));
   await user.type(screen.getByLabelText("Year"), "2026");
+  await user.click(submit);
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Occurrence date is incomplete: enter a valid month (1–12)",
+  );
+  expect(screen.getByLabelText("Month")).toHaveFocus();
+  expect(writes).toHaveLength(0);
   await user.clear(screen.getByLabelText("Month"));
   await user.type(screen.getByLabelText("Month"), "6");
   await user.clear(screen.getByLabelText(/^Value/));
@@ -3573,6 +3619,7 @@ test("phenology is recorded stage first, shown once in the Journal and compared 
   // Only a recorded date can be approximate.
   expect(within(dialog).getByLabelText(/Approximate date/)).toBeDisabled();
   expect(writes).toHaveLength(0);
+  await user.click(screen.getByRole("radio", { name: "Another date" }));
   await user.selectOptions(screen.getByLabelText("Precision"), "month");
   await user.clear(screen.getByLabelText("Year"));
   await user.type(screen.getByLabelText("Year"), "2026");
@@ -3616,4 +3663,470 @@ test("phenology is recorded stage first, shown once in the Journal and compared 
     "id",
     `journal-entry-${eventId.slice(0, -2)}81`,
   );
+});
+
+test("switching between New plant and New plant group via + menu updates form kind, focus, and endpoint", async () => {
+  const createdPlants: unknown[] = [];
+  const createdGroups: unknown[] = [];
+  let failNextGroup = true;
+  mockApi(
+    plantHandler([], [], (path, init) => {
+      if (path === "/api/v1/plants" && init?.method === "POST") {
+        createdPlants.push(
+          JSON.parse(
+            typeof init.body === "string" ? init.body : "{}",
+          ) as unknown,
+        );
+        return json(plant({ label: "Saved Plant" }), 201);
+      }
+      if (path === "/api/v1/plant-groups" && init?.method === "POST") {
+        if (failNextGroup) {
+          failNextGroup = false;
+          return json(
+            {
+              detail: [
+                { loc: ["body", "label"], msg: "Backend validation error" },
+              ],
+            },
+            422,
+          );
+        }
+        createdGroups.push(
+          JSON.parse(
+            typeof init.body === "string" ? init.body : "{}",
+          ) as unknown,
+        );
+        return json(group({ label: "Saved Group" }), 201);
+      }
+      return undefined;
+    }),
+  );
+
+  setViewportMatches(true);
+  Object.defineProperty(window, "innerWidth", {
+    configurable: true,
+    value: 390,
+  });
+  const user = userEvent.setup();
+  render(<App />);
+
+  await user.click(await screen.findByRole("button", { name: "New record" }));
+  await user.click(screen.getByRole("link", { name: "New plant" }));
+  const plantHeading = await screen.findByRole("heading", {
+    name: "Record Plant",
+  });
+  expect(plantHeading).toHaveFocus();
+  expect(screen.queryByLabelText("Quantity kind")).not.toBeInTheDocument();
+
+  // Switch to New plant group from the + menu while the form is open.
+  await user.click(screen.getByRole("button", { name: "New record" }));
+  await user.click(screen.getByRole("link", { name: "New plant group" }));
+  const groupHeading = await screen.findByRole("heading", {
+    name: "Record Plant group",
+  });
+  expect(window.location.hash).toBe("#/plants?action=create&kind=group");
+  expect(groupHeading).toHaveFocus();
+  expect(screen.getByLabelText("Quantity kind")).toBeInTheDocument();
+
+  // Failed save preserves group form and does not hit /api/v1/plants.
+  await chooseReference(
+    user,
+    "Botanical identity",
+    identities[0].scientific_name,
+  );
+  await user.type(screen.getByLabelText("Label"), "Bench group");
+  await user.click(screen.getByRole("button", { name: "Record Plant group" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Check label and try again.",
+  );
+  expect(createdPlants).toHaveLength(0);
+
+  // Successful save hits /api/v1/plant-groups.
+  await user.click(screen.getByRole("button", { name: "Record Plant group" }));
+  expect(
+    await screen.findByText("Plant group was added to the collection."),
+  ).toBeInTheDocument();
+  expect(createdGroups).toHaveLength(1);
+  expect(createdPlants).toHaveLength(0);
+
+  // Switch from New plant group back to New plant via + menu.
+  await user.click(screen.getByRole("button", { name: "New record" }));
+  await user.click(screen.getByRole("link", { name: "New plant group" }));
+  await screen.findByRole("heading", { name: "Record Plant group" });
+  await user.click(screen.getByRole("button", { name: "New record" }));
+  await user.click(screen.getByRole("link", { name: "New plant" }));
+  expect(
+    await screen.findByRole("heading", { name: "Record Plant" }),
+  ).toHaveFocus();
+  expect(screen.queryByLabelText("Quantity kind")).not.toBeInTheDocument();
+
+  await chooseReference(
+    user,
+    "Botanical identity",
+    identities[0].scientific_name,
+  );
+  await user.type(screen.getByLabelText("Label"), "Single specimen");
+  await user.click(screen.getByRole("button", { name: "Record Plant" }));
+  expect(
+    await screen.findByText("Plant was added to the collection."),
+  ).toBeInTheDocument();
+  expect(createdPlants).toHaveLength(1);
+});
+
+test("direct hashchange and Back/Forward keep creation kind synchronized and protect unsaved drafts", async () => {
+  const createdGroups: unknown[] = [];
+  mockApi(
+    plantHandler([], [], (path, init) => {
+      if (path === "/api/v1/plant-groups" && init?.method === "POST") {
+        createdGroups.push(
+          JSON.parse(
+            typeof init.body === "string" ? init.body : "{}",
+          ) as unknown,
+        );
+        return json(group({ label: "Direct Group" }), 201);
+      }
+      return undefined;
+    }),
+  );
+
+  window.history.replaceState(
+    null,
+    "",
+    `#/plants?action=create&identity=${identityId}&kind=plant`,
+  );
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  const user = userEvent.setup();
+  render(<App />);
+
+  await screen.findByRole("heading", { name: "Record Plant" });
+  expect(
+    screen.getByRole("combobox", { name: "Botanical identity" }),
+  ).toHaveValue(identities[0].scientific_name);
+
+  // Dirty draft is protected against direct hashchange when user cancels discard.
+  await user.type(screen.getByLabelText("Label"), "Draft plant label");
+  act(() => {
+    window.history.pushState(null, "", "#/plants?action=create&kind=group");
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+  });
+  expect(confirm).toHaveBeenCalledWith("Discard unsaved plant changes?");
+  expect(window.location.hash).toBe(
+    `#/plants?action=create&identity=${identityId}&kind=plant`,
+  );
+  expect(
+    screen.getByRole("heading", { name: "Record Plant" }),
+  ).toBeInTheDocument();
+  expect(screen.getByLabelText("Label")).toHaveValue("Draft plant label");
+
+  // Dirty Cancel button also protects the draft until confirmed.
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.getByLabelText("Label")).toHaveValue("Draft plant label");
+
+  // Confirming discard on hashchange switches to clean Plant group form without carrying over Plant draft.
+  confirm.mockReturnValue(true);
+  await navigateHistory("hashchange", () => {
+    window.history.pushState(
+      null,
+      "",
+      `#/plants?action=create&identity=${identityId}&kind=group`,
+    );
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+  });
+  await screen.findByRole("heading", { name: "Record Plant group" });
+  expect(screen.getByLabelText("Label")).toHaveValue("");
+  expect(
+    screen.getByRole("combobox", { name: "Botanical identity" }),
+  ).toHaveValue(identities[0].scientific_name);
+  expect(screen.getByLabelText("Quantity kind")).toBeInTheDocument();
+
+  // Browser Back returns to Plant creation; Forward returns to Plant group creation.
+  await navigateHistory("popstate", () => {
+    window.history.back();
+  });
+  await screen.findByRole("heading", { name: "Record Plant" });
+  expect(screen.queryByLabelText("Quantity kind")).not.toBeInTheDocument();
+
+  await navigateHistory("popstate", () => {
+    window.history.forward();
+  });
+  await screen.findByRole("heading", { name: "Record Plant group" });
+  expect(screen.getByLabelText("Quantity kind")).toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "Record Plant group" }));
+  expect(
+    await screen.findByText("Plant group was added to the collection."),
+  ).toBeInTheDocument();
+  expect(createdGroups).toHaveLength(1);
+});
+
+test("a half-typed entry date on an unknown-date Plant counts as an unsaved change", async () => {
+  mockApi(plantHandler([plant({ collection_entry_date: null })], [group()]));
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  const user = await openPlants();
+  setViewportMatches(false);
+  const trigger = screen.getByRole("button", { name: "Edit Avocado #1" });
+  await user.click(trigger);
+  const dialog = screen.getByRole("dialog", { name: "Edit Plant" });
+  await openFormSection(user, "Origin");
+  await user.selectOptions(
+    within(dialog).getByLabelText("Collection-entry date precision"),
+    "day",
+  );
+  await user.type(within(dialog).getByLabelText("Year"), "2024");
+  await user.keyboard("{Escape}");
+  expect(confirm).toHaveBeenCalledWith("Discard unsaved plant changes?");
+  expect(within(dialog).getByLabelText("Year")).toHaveValue(2024);
+  confirm.mockReturnValue(true);
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("dialog", { name: "Edit Plant" }),
+    ).not.toBeInTheDocument();
+  });
+  await user.click(trigger);
+  await openFormSection(user, "Origin");
+  expect(screen.getByLabelText("Collection-entry date precision")).toHaveValue(
+    "",
+  );
+  expect(screen.queryByLabelText("Year")).not.toBeInTheDocument();
+});
+
+test("a contextual Plant edit asks once before switching to group creation", async () => {
+  mockApi(plantHandler([plant({ collection_entry_date: null })], []));
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  const user = await openPlants();
+  setViewportMatches(false);
+  await user.click(screen.getByRole("button", { name: "Edit Avocado #1" }));
+  const dialog = screen.getByRole("dialog", { name: "Edit Plant" });
+  await openFormSection(user, "Origin");
+  await user.selectOptions(
+    within(dialog).getByLabelText("Collection-entry date precision"),
+    "day",
+  );
+  await user.type(within(dialog).getByLabelText("Year"), "2024");
+  async function openGroup() {
+    await user.click(screen.getByRole("button", { name: "New record" }));
+    await user.click(screen.getByRole("link", { name: "New plant group" }));
+  }
+  await openGroup();
+  expect(confirm).toHaveBeenCalledTimes(1);
+  expect(within(dialog).getByLabelText("Year")).toHaveValue(2024);
+
+  confirm.mockReturnValue(true);
+  await openGroup();
+  await screen.findByRole("heading", { name: "Record Plant group" });
+  expect(confirm).toHaveBeenCalledTimes(2);
+  expect(
+    screen.queryByRole("dialog", { name: "Edit Plant" }),
+  ).not.toBeInTheDocument();
+  await openFormSection(user, "Origin");
+  expect(screen.getByLabelText("Collection-entry date precision")).toHaveValue(
+    "",
+  );
+});
+
+test("switching direct Plant edit URLs replaces the previous record's date draft", async () => {
+  const secondId = `${plantId.slice(0, -1)}2`;
+  mockApi(
+    plantHandler(
+      [
+        plant({ collection_entry_date: null }),
+        plant({
+          id: secondId,
+          label: "Second plant",
+          collection_entry_date: { precision: "year", year: 2019 },
+        }),
+      ],
+      [],
+    ),
+  );
+  window.history.replaceState(null, "", `#/plants/${plantId}?tab=edit`);
+  const user = userEvent.setup();
+  render(<App />);
+  expect(await screen.findByLabelText("Label")).toHaveValue("Avocado #1");
+  await openFormSection(user, "Origin");
+  await user.selectOptions(
+    screen.getByLabelText("Collection-entry date precision"),
+    "month",
+  );
+  await user.type(screen.getByLabelText("Year"), "2024");
+
+  await navigateHistory("hashchange", () => {
+    window.location.hash = `#/plants/${secondId}?tab=edit`;
+  });
+  await waitFor(() => {
+    expect(screen.getByLabelText("Label")).toHaveValue("Second plant");
+  });
+  await openFormSection(user, "Origin");
+  expect(screen.getByLabelText("Collection-entry date precision")).toHaveValue(
+    "year",
+  );
+  expect(screen.getByLabelText("Year")).toHaveValue(2019);
+  expect(screen.queryByLabelText("Month")).not.toBeInTheDocument();
+});
+
+test("creation switches ask once about an incomplete date and reset it on confirmation", async () => {
+  mockApi(plantHandler([], []));
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  const plantUrl = `#/plants?action=create&kind=plant&identity=${identityId}`;
+  window.history.replaceState(null, "", plantUrl);
+  const user = userEvent.setup();
+  render(<App />);
+  await screen.findByRole("heading", { name: "Record Plant" });
+
+  async function enterDraft() {
+    await openFormSection(user, "Origin");
+    await user.selectOptions(
+      screen.getByLabelText("Collection-entry date precision"),
+      "month",
+    );
+    await user.type(screen.getByLabelText("Year"), "2024");
+  }
+
+  await enterDraft();
+  const equivalentUrl = `#/plants?kind=plant&identity=${identityId}&action=create`;
+  await navigateHistory("hashchange", () => {
+    window.history.pushState(null, "", equivalentUrl);
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+  });
+  expect(confirm).not.toHaveBeenCalled();
+  expect(screen.getByLabelText("Year")).toHaveValue(2024);
+  await user.click(screen.getByRole("button", { name: "New record" }));
+  await user.click(screen.getByRole("link", { name: "New plant group" }));
+  expect(confirm).toHaveBeenCalledTimes(1);
+  expect(window.location.hash).toBe(equivalentUrl);
+  expect(screen.getByLabelText("Year")).toHaveValue(2024);
+
+  confirm.mockReturnValue(true);
+  await user.click(screen.getByRole("button", { name: "New record" }));
+  await user.click(screen.getByRole("link", { name: "New plant group" }));
+  await screen.findByRole("heading", { name: "Record Plant group" });
+  expect(confirm).toHaveBeenCalledTimes(2);
+  expect(screen.getByLabelText("Quantity kind")).toBeInTheDocument();
+  await openFormSection(user, "Origin");
+  expect(screen.getByLabelText("Collection-entry date precision")).toHaveValue(
+    "",
+  );
+
+  // An identity-only change within the same creation kind also resets the date.
+  await user.selectOptions(
+    screen.getByLabelText("Collection-entry date precision"),
+    "month",
+  );
+  await user.type(screen.getByLabelText("Year"), "2025");
+  await navigateHistory("hashchange", () => {
+    window.history.pushState(
+      null,
+      "",
+      `#/plants?action=create&kind=group&identity=${identityId}`,
+    );
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+  });
+  expect(confirm).toHaveBeenCalledTimes(3);
+  expect(
+    screen.getByRole("combobox", { name: "Botanical identity" }),
+  ).toHaveValue(identities[0].scientific_name);
+  await openFormSection(user, "Origin");
+  expect(screen.getByLabelText("Collection-entry date precision")).toHaveValue(
+    "",
+  );
+  expect(screen.queryByLabelText("Year")).not.toBeInTheDocument();
+});
+
+test.each(["plant", "group"])(
+  "Cancel on a %s with an incomplete creation date asks once and returns to Plants",
+  async (kind) => {
+    mockApi(plantHandler([], []));
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole("button", { name: "New record" }));
+    await user.click(
+      screen.getByRole("link", {
+        name: kind === "plant" ? "New plant" : "New plant group",
+      }),
+    );
+    await screen.findByRole("heading", {
+      name: kind === "plant" ? "Record Plant" : "Record Plant group",
+    });
+    await openFormSection(user, "Origin");
+    await user.selectOptions(
+      screen.getByLabelText("Collection-entry date precision"),
+      "day",
+    );
+    await user.type(screen.getByLabelText("Year"), "2024");
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText("Year")).toHaveValue(2024);
+
+    confirm.mockReturnValue(true);
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() => {
+      expect(window.location.hash).toBe("#/plants");
+    });
+    expect(confirm).toHaveBeenCalledTimes(2);
+    expect(screen.queryByLabelText("Year")).not.toBeInTheDocument();
+  },
+);
+
+test("canceling browser Back from a partial date preserves the parent history entry", async () => {
+  mockApi(plantHandler([], []));
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  const user = userEvent.setup();
+  render(<App />);
+  await user.click(await screen.findByRole("button", { name: "New record" }));
+  await user.click(screen.getByRole("link", { name: "New plant" }));
+  await screen.findByRole("heading", { name: "Record Plant" });
+  await openFormSection(user, "Origin");
+  await user.selectOptions(
+    screen.getByLabelText("Collection-entry date precision"),
+    "month",
+  );
+  await user.type(screen.getByLabelText("Year"), "2024");
+  await navigateHistory("popstate", () => {
+    window.history.back();
+  });
+  expect(window.location.hash).toBe("#/plants?action=create&kind=plant");
+  expect(screen.getByLabelText("Year")).toHaveValue(2024);
+  expect(confirm).toHaveBeenCalledTimes(1);
+  confirm.mockReturnValue(true);
+  await navigateHistory("popstate", () => {
+    window.history.back();
+  });
+  expect(window.location.hash).toBe("#/plants");
+  expect(confirm).toHaveBeenCalledTimes(2);
+});
+
+test("editing a Journal entry with an unknown date treats a half-typed date as unsaved", async () => {
+  const events = [journalEvent("observation", { notes: "Undated note." })];
+  mockApi(
+    plantHandler([plant()], [], (path) =>
+      path === `/api/v1/plants/${plantId}/events` ? json(events) : undefined,
+    ),
+  );
+  const user = await openPlants();
+  await user.click(
+    await screen.findByRole("button", {
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
+  await assertDedicatedDetails();
+  await user.click(screen.getByRole("tab", { name: "Journal" }));
+  await screen.findByText("Undated note.");
+  await user.click(screen.getByRole("button", { name: "Edit" }));
+  // The stored unknown date opens as Date unknown; closing untouched asks nothing.
+  expect(screen.getByRole("radio", { name: "Date unknown" })).toBeChecked();
+  await user.keyboard("{Escape}");
+  expect(
+    screen.queryByRole("dialog", { name: "Discard unsaved Journal changes?" }),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Edit" }));
+  await user.click(screen.getByRole("radio", { name: "Another date" }));
+  await user.type(screen.getByLabelText("Year"), "2025");
+  await user.keyboard("{Escape}");
+  expect(
+    screen.getByRole("dialog", { name: "Discard unsaved Journal changes?" }),
+  ).toBeInTheDocument();
 });

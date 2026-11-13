@@ -162,6 +162,8 @@ prefers-reduced-motion. Long labels wrap, numbers never clip, content remains av
 
 Review at 1440×844, 1024×844 and 390×844. Dashboard uses four metrics on desktop, two at ≤64rem;
 attention/recent columns become one at ≤48rem. Supporting sections reflow to one at ≤64rem.
+UX-TODAY-001 supersedes that Today arrangement and every later photo-bench statement in this
+document: see [Today, work first](dashboard-001-handoff.md#layout-reversal--ux-today-001).
 Dashboard uses document scrolling and the available workspace width; no independently trapped
 content panels. Its sidebar remains sticky on desktop. The toolbar orders flexible Search,
 Filters, Saved views, Quick add and wraps on mobile. Quick add reuses OverflowMenu; SavedViews

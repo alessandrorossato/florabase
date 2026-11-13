@@ -898,11 +898,37 @@ test("full entry maps count, approximate g/mg quantity, Other source, references
     screen.getByLabelText("Year", { selector: "#harvest-year" }),
     "2023",
   );
+  // Month and day are typed: the field no longer fills an unknown part with 1.
+  await openSection(user, "Seed details");
+  await user.type(
+    screen.getByLabelText("Month", { selector: "#harvest-month" }),
+    "1",
+  );
   await openSection(user, "Seed details");
   await user.selectOptions(
     screen.getByLabelText("Precision", { selector: "#viability-precision" }),
     "day",
   );
+  await openSection(user, "Seed details");
+  await user.click(screen.getByRole("button", { name: "Add seed lot" }));
+  expect(
+    (await screen.findAllByText(/Expected viability until is incomplete/))
+      .length,
+  ).toBeGreaterThan(0);
+  expect(payloads).toHaveLength(0);
+  for (const [part, text] of [
+    ["year", "2027"],
+    ["month", "3"],
+    ["day", "31"],
+  ] as const) {
+    await openSection(user, "Seed details");
+    await user.type(
+      screen.getByLabelText(part[0].toUpperCase() + part.slice(1), {
+        selector: `#viability-${part}`,
+      }),
+      text,
+    );
+  }
   await openSection(user, "Seed details");
   await user.type(
     screen.getByLabelText("Notes", { selector: "textarea" }),
@@ -938,6 +964,12 @@ test("full entry maps count, approximate g/mg quantity, Other source, references
     material_provenance_place_id: place.id,
     acquisition_date: { precision: "year", year: 2024 },
     harvest_date: { precision: "month", year: 2023, month: 1 },
+    expected_viability_until: {
+      precision: "day",
+      year: 2027,
+      month: 3,
+      day: 31,
+    },
   });
 });
 
@@ -2823,3 +2855,40 @@ test.each(["row", "action"])(
     });
   },
 );
+
+test("a half-typed acquisition date on an unknown-date lot counts as an unsaved change", async () => {
+  mockApi(directoryHandler([lot({ acquisition_date: null })]));
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  const user = await openSeeds();
+  await user.click(
+    await screen.findByRole("button", { name: /Clitoria ternatea/ }),
+  );
+  await assertDedicatedDetails();
+  await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
+  await openSection(user, "Acquisition");
+  const precision = () =>
+    screen.getByLabelText("Precision", { selector: "#acquisition-precision" });
+  expect(precision()).toHaveValue("");
+  await user.selectOptions(precision(), "month");
+  await openSection(user, "Acquisition");
+  await user.type(
+    screen.getByLabelText("Year", { selector: "#acquisition-year" }),
+    "2024",
+  );
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(confirm).toHaveBeenCalledWith("Discard unsaved seed lot changes?");
+  expect(
+    screen.getByLabelText("Year", { selector: "#acquisition-year" }),
+  ).toHaveValue(2024);
+  confirm.mockReturnValue(true);
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  await user.click(
+    await screen.findByRole("button", { name: "Edit seed lot" }),
+  );
+  await openSection(user, "Acquisition");
+  // The stored unknown date reopens as unknown, not as the discarded fragment.
+  expect(precision()).toHaveValue("");
+  expect(
+    screen.queryByLabelText("Year", { selector: "#acquisition-year" }),
+  ).not.toBeInTheDocument();
+});

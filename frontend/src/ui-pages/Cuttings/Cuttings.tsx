@@ -6,6 +6,8 @@ import {
   DirectoryPage,
   DirectoryRecords,
   DirectoryRow,
+  DirectoryRecordContent,
+  DirectoryTrigger,
   DirectoryViewSwitcher,
 } from "../../components/DirectoryPage";
 import {
@@ -14,9 +16,12 @@ import {
   DirectoryTools,
 } from "../../components/DirectoryTools";
 import { PageHeader } from "../../components/ReferenceUI";
+import { Icon } from "../../components/Icon";
+import { ActionLink } from "../../components/Action";
 import {
   EmptyState,
   ErrorState,
+  LifecycleStatus,
   LoadingState,
 } from "../../components/WorkspaceUI";
 import { useDirectoryPresentation } from "../../components/directoryPresentation";
@@ -28,6 +33,7 @@ import { SavedViews } from "../../saved-views/SavedViews";
 import { defaults } from "../../saved-views/state";
 import { useDirectoryView } from "../../saved-views/useDirectoryView";
 import { CuttingForm } from "./CuttingForm";
+import "./cuttings-directory.css";
 import { AttemptPage, LotPage } from "./CuttingDetails";
 import {
   attempts,
@@ -188,10 +194,10 @@ function CuttingsDirectory({
     (name) =>
       surface === "lots" || name === "lifecycle" || name === "location_id",
   );
-  const Row = view === "list" ? DirectoryRow : DirectoryCard;
   return (
     <DirectoryPage
       titleId="cuttings-title"
+      className="cuttings-directory"
       header={
         <PageHeader
           titleId="cuttings-title"
@@ -288,7 +294,7 @@ function CuttingsDirectory({
       content={
         <>
           <div
-            className="actions"
+            className="cuttings-directory__surfaces"
             role="group"
             aria-label="Cuttings record type"
           >
@@ -329,24 +335,65 @@ function CuttingsDirectory({
                   surface === "lots" ? "Material lots" : "Rooting attempts"
                 }
               >
-                {rows.map((item) => (
-                  <Row
-                    key={item.id}
-                    label={label(item)}
-                    name={label(item)}
-                    href={`#/cuttings/${surface}/${item.id}`}
-                    metadata={detail(item)}
-                    selected={preview === item.id}
-                    status={
-                      <span className="record-state">{item.lifecycle}</span>
-                    }
-                    previewRef={preview === item.id ? trigger : undefined}
-                    onPreview={(element) => {
-                      trigger.current = element;
-                      setPreview(item.id);
-                    }}
-                  />
-                ))}
+                {rows.map((item) =>
+                  view === "list" ? (
+                    <DirectoryRow key={item.id} selected={preview === item.id}>
+                      <DirectoryTrigger
+                        ref={preview === item.id ? trigger : undefined}
+                        aria-label={`Quick preview ${label(item)}`}
+                        aria-pressed={preview === item.id}
+                        onClick={(event) => {
+                          trigger.current = event.currentTarget;
+                          setPreview(item.id);
+                        }}
+                      >
+                        <DirectoryRecordContent
+                          visual={<Icon name="cutting" />}
+                          name={label(item)}
+                          secondary={detail(item)}
+                          status={<LifecycleStatus state={item.lifecycle} />}
+                        />
+                      </DirectoryTrigger>
+                      <div className="ui-directory-record-actions">
+                        <ActionLink
+                          href={`#/cuttings/${surface}/${item.id}`}
+                          aria-label={`Open details: ${label(item)}`}
+                          icon="overview"
+                        >
+                          Details
+                        </ActionLink>
+                      </div>
+                    </DirectoryRow>
+                  ) : (
+                    <DirectoryCard key={item.id} selected={preview === item.id}>
+                      <DirectoryTrigger
+                        ref={preview === item.id ? trigger : undefined}
+                        aria-label={`Quick preview ${label(item)}`}
+                        aria-pressed={preview === item.id}
+                        onClick={(event) => {
+                          trigger.current = event.currentTarget;
+                          setPreview(item.id);
+                        }}
+                      >
+                        <DirectoryRecordContent
+                          visual={<Icon name="cutting" />}
+                          name={label(item)}
+                          secondary={detail(item)}
+                          status={<LifecycleStatus state={item.lifecycle} />}
+                        />
+                      </DirectoryTrigger>
+                      <div className="ui-directory-record-actions">
+                        <ActionLink
+                          href={`#/cuttings/${surface}/${item.id}`}
+                          aria-label={`Open details: ${label(item)}`}
+                          icon="overview"
+                        >
+                          Details
+                        </ActionLink>
+                      </div>
+                    </DirectoryCard>
+                  ),
+                )}
               </DirectoryRecords>
             ))}
         </>

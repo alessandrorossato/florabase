@@ -82,6 +82,11 @@ import { PhotosSection } from "../photos/PhotosSection";
 import { PropagationPath } from "../propagation/PropagationPath";
 import { listSeedLots, type SeedLotResponse } from "../seed-lots/api";
 import {
+  hasDateDraft,
+  invalidDateControls,
+  invalidDateErrorField,
+} from "../seed-lots/dateControls";
+import {
   createSowing,
   getSowing,
   getSowingPropagationSummary,
@@ -871,7 +876,8 @@ export function SowingScreen({
     routeIsEdit: initialTab === "edit",
     canDismiss: () =>
       save.status !== "saving" &&
-      (JSON.stringify(form) === editBaseline.current ||
+      ((JSON.stringify(form) === editBaseline.current &&
+        !hasDateDraft(formElement.current)) ||
         window.confirm("Discard unsaved sowing changes?")),
     onDismiss: () => {
       setEditing(false);
@@ -900,6 +906,7 @@ export function SowingScreen({
     };
   }, [initialId, selectedId, edit.modal]);
   const [form, setForm] = useState<FormState>(blankForm);
+  const formElement = useRef<HTMLFormElement>(null);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const feedback = useRef<HTMLDivElement>(null);
   const detailHeading = useRef<HTMLHeadingElement>(null);
@@ -1246,7 +1253,12 @@ export function SowingScreen({
   async function submit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
     if (pending) return;
-    const errors = validate();
+    const errors = [
+      ...validate(),
+      ...invalidDateControls(event.currentTarget).map(
+        (control) => control.validationMessage,
+      ),
+    ];
     if (errors.length) {
       setSave({ status: "error", messages: errors });
       return;
@@ -1343,6 +1355,7 @@ export function SowingScreen({
     >
       {
         <form
+          ref={formElement}
           className="seed-form sowing-form collection-form"
           onClickCapture={(event) => {
             if (!selected || !(event.target instanceof Element)) return;
@@ -1386,10 +1399,12 @@ export function SowingScreen({
             }
           />
           <FormSections
+            key={selectedId ?? "new"}
             mode={selected ? "edit" : "page"}
             disabled={pending}
             error={save.status === "error" ? save : undefined}
             errorFields={[
+              invalidDateErrorField,
               { match: /seedlot|seed lot/i, selector: "#sowing-seed-lot" },
               {
                 match: /quantity|seed count/i,

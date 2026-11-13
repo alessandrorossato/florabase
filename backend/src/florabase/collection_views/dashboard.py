@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 
 from florabase.attachments.model import Attachment, AttachmentState
@@ -28,6 +28,9 @@ from florabase.schedule.service import responses as schedule_responses
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import Sowing
 from florabase.taxonomy.model import WfoLink
+
+WINDOW_LIMIT = 5
+NEXT_SEVEN_DAYS_LIMIT = 3
 
 
 def photographs(database: Session) -> list[DashboardPhoto]:
@@ -184,13 +187,29 @@ def overview(database: Session, today: date) -> DashboardOverview:
             ),
         ).where(ScheduledActivity.status == "planned")
     ).one()
-    upcoming = list(
-        database.scalars(
-            select(ScheduledActivity)
-            .where(ScheduledActivity.status == "planned")
-            .order_by(ScheduledActivity.due_on, ScheduledActivity.id)
-            .limit(5)
+    planned = (
+        select(ScheduledActivity)
+        .where(ScheduledActivity.status == "planned")
+        .order_by(ScheduledActivity.due_on, ScheduledActivity.id)
+    )
+    upcoming = list(database.scalars(planned.limit(5)))
+    # Same today, status and window boundaries as the counts above; each list is bounded.
+    windows = [
+        list(database.scalars(planned.where(condition).limit(limit)))
+        for condition, limit in (
+            (ScheduledActivity.due_on < today, WINDOW_LIMIT),
+            (ScheduledActivity.due_on == today, WINDOW_LIMIT),
+            (
+                and_(ScheduledActivity.due_on > today, ScheduledActivity.due_on <= week_end),
+                NEXT_SEVEN_DAYS_LIMIT,
+            ),
         )
+    ]
+    # One enrichment pass over the distinct activities keeps target lookups independent of lists.
+    distinct = {item.id: item for item in (*upcoming, *windows[0], *windows[1], *windows[2])}
+    by_id = {item.id: item for item in schedule_responses(database, list(distinct.values()), today)}
+    overdue_items, due_today_items, next_seven_days_items = (
+        [by_id[item.id] for item in window] for window in windows
     )
     return DashboardOverview(
         today=today,
@@ -204,6 +223,9 @@ def overview(database: Session, today: date) -> DashboardOverview:
         overdue=schedule[0],
         due_today=schedule[1],
         next_seven_days=schedule[2],
-        upcoming=schedule_responses(database, upcoming, today),
+        upcoming=[by_id[item.id] for item in upcoming],
+        overdue_items=overdue_items,
+        due_today_items=due_today_items,
+        next_seven_days_items=next_seven_days_items,
         recent_activity=list_history(database, limit=6).items,
     )

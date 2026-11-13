@@ -12,6 +12,8 @@ import { DashboardOverview } from "./DashboardScreen";
 import { emptyOverview, journalFixture } from "./dashboardFixtures";
 import type { DashboardResponse } from "./api";
 import { ApiError } from "../auth/api";
+import { recordWorkflows } from "../events/recordWorkflows";
+import type { Activity } from "../schedule/api";
 import { localDay } from "../schedule/state";
 
 const expired = vi.hoisted(() => vi.fn());
@@ -89,6 +91,14 @@ test("Journal, History, partial dates, reversal and planned work remain distingu
     "01900000-0000-7000-8000-000000000101",
     "Observed growth",
   );
+  const plan = {
+    id: "plan",
+    title: "Inspect leaves",
+    due_on: "2026-10-10",
+    status: "planned",
+    overdue: true,
+    target: null,
+  };
   get.mockResolvedValue({
     ...empty,
     overview: {
@@ -110,15 +120,8 @@ test("Journal, History, partial dates, reversal and planned work remain distingu
           date_basis: "recorded",
         },
       ],
-      upcoming: [
-        {
-          id: "plan",
-          title: "Inspect leaves",
-          due_on: "2026-10-10",
-          overdue: true,
-          target: null,
-        },
-      ],
+      upcoming: [plan],
+      overdue_items: [plan],
     },
   });
   render(<DashboardOverview />);
@@ -159,7 +162,7 @@ function storedPhoto(index: number) {
   } satisfies NonNullable<DashboardResponse["photos"]>[number];
 }
 
-test("authoritative KPI units and eight distinct protected photographs retain Plant destinations and attribution", async () => {
+test("authoritative KPI units and at most four distinct protected photographs retain Plant destinations and attribution", async () => {
   const photos = Array.from({ length: 8 }, (_, index) => storedPhoto(index));
   get.mockResolvedValue({
     ...empty,
@@ -186,11 +189,11 @@ test("authoritative KPI units and eight distinct protected photographs retain Pl
   );
   const grid = screen.getByRole("list", { name: "Selected individual Plants" });
   const images = within(grid).getAllByRole("img");
-  expect(images).toHaveLength(8);
+  expect(images).toHaveLength(4);
   expect(new Set(images.map((image) => image.getAttribute("src"))).size).toBe(
-    8,
+    4,
   );
-  for (const photo of photos) {
+  for (const photo of photos.slice(0, 4)) {
     expect(
       within(grid).getByRole("link", { name: photo.title }),
     ).toHaveAttribute("href", `#/plants/${photo.id}`);
@@ -200,10 +203,11 @@ test("authoritative KPI units and eight distinct protected photographs retain Pl
   }
   await userEvent.click(screen.getByText("Image attribution"));
   expect(screen.getByText(/Creator 0/)).toBeVisible();
-  expect(screen.getAllByRole("link", { name: "CC BY 4.0" })).toHaveLength(8);
+  expect(screen.getAllByRole("link", { name: "CC BY 4.0" })).toHaveLength(4);
+  expect(screen.queryByText(/Creator 4/)).not.toBeInTheDocument();
 });
 
-test("fewer images are not duplicated and unavailable images retain a useful destination without remote loading", async () => {
+test("fewer images are not duplicated, and unavailable images are never drawn as placeholders or loaded remotely", async () => {
   const photo = storedPhoto(1);
   get.mockResolvedValue({
     ...empty,
@@ -223,14 +227,26 @@ test("fewer images are not duplicated and unavailable images retain a useful des
   const image = await screen.findByRole("img", { name: photo.title });
   expect(screen.getAllByRole("img")).toHaveLength(1);
   expect(image).toHaveAttribute("src", photo.image.thumbnail_url);
-  expect(screen.getAllByText("No photograph").length).toBeGreaterThan(0);
+  expect(
+    within(
+      screen.getByRole("list", { name: "Selected individual Plants" }),
+    ).getAllByRole("listitem"),
+  ).toHaveLength(1);
+  expect(screen.queryByText("No photograph")).not.toBeInTheDocument();
   fireEvent.error(image);
   expect(screen.queryByRole("img")).not.toBeInTheDocument();
-  expect(screen.getByRole("link", { name: photo.title })).toHaveAttribute(
-    "href",
-    `#/plants/${photo.id}`,
-  );
-  expect(screen.getAllByText("No photograph")).toHaveLength(4);
+  expect(
+    screen.queryByRole("list", { name: "Selected individual Plants" }),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByText("No photograph")).not.toBeInTheDocument();
+  expect(
+    screen.getByText(
+      /None of the sampled Plants has a photo that can be shown yet/,
+    ),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Add photos in Plants" }),
+  ).toHaveAttribute("href", "#/plants");
 });
 
 test("Plant visit sample stays stable through rerenders, and broken primary falls back to a labelled identity reference", async () => {
@@ -261,7 +277,10 @@ test("Plant visit sample stays stable through rerenders, and broken primary fall
   expect(screen.getByText("Identity reference", { exact: true })).toBeVisible();
   fireEvent.error(screen.getByRole("img", { name: plant.title }));
   expect(screen.queryByRole("img")).toBeNull();
-  expect(screen.getByRole("link", { name: plant.title })).toBeVisible();
+  expect(screen.queryByRole("link", { name: plant.title })).toBeNull();
+  expect(
+    screen.getByRole("link", { name: "Add photos in Plants" }),
+  ).toBeVisible();
 });
 
 test("Today composes its summary only from returned counts and states every source", async () => {
@@ -293,13 +312,9 @@ test("Today composes its summary only from returned counts and states every sour
       "Recorded in the Journal and derived History, latest first",
     ),
   ).toBeInTheDocument();
-  const records = screen.getByRole("region", { name: "Data quality" });
-  const disclosure = within(records)
-    .getByText("Data quality")
-    .closest("details");
-  expect(disclosure).not.toHaveAttribute("open");
-  await userEvent.click(within(records).getByText("Data quality"));
-  expect(disclosure).toHaveAttribute("open");
+  // Always visible (UX-TODAY-001): the former Data quality disclosure is gone.
+  const records = screen.getByRole("region", { name: "To review" });
+  expect(records.querySelector("details")).toBeNull();
   expect(records).toHaveTextContent(
     "Derived counts of current records. Prompts to review, not tasks or conclusions.",
   );
@@ -328,4 +343,170 @@ test("an empty Schedule says so instead of manufacturing work", async () => {
       "Nothing is overdue or due today in the Schedule. You hold 0 active Plants, 0 Plant groups, 0 seed lots and 0 active sowings.",
     ),
   ).toBeInTheDocument();
+});
+
+function activity(id: string, due_on: string, extra: Partial<Activity> = {}) {
+  return {
+    id,
+    activity_kind: "inspect",
+    title: `Work ${id}`,
+    due_on,
+    target: null,
+    notes: null,
+    status: "planned",
+    version: 1,
+    overdue: due_on < emptyOverview.today,
+    linked_event_id: null,
+    created_at: "2026-09-01T00:00:00Z",
+    updated_at: "2026-09-01T00:00:00Z",
+    completed_at: null,
+    cancelled_at: null,
+    ...extra,
+  } satisfies Activity;
+}
+
+test("sections follow the work-first order in the DOM, which is also the visual order", async () => {
+  get.mockResolvedValue({ ...empty, photos: [storedPhoto(1)] });
+  const { container } = render(<DashboardOverview />);
+  await screen.findByRole("heading", { name: "Next work" });
+  expect(
+    screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent),
+  ).toEqual([
+    "Next work",
+    "Recent activity",
+    "Record",
+    "Collection snapshot",
+    "To review",
+    "Plants in your collection",
+  ]);
+  expect(container.querySelector(".today")?.firstElementChild).toHaveClass(
+    "today-lede",
+  );
+});
+
+test("planned work is grouped by window with calendar-day ages, caps and links to the full list", async () => {
+  const target = {
+    kind: "plant",
+    id: "p1",
+    label: "Bench lemon",
+    lifecycle: "active",
+    scientific_name: "Citrus limon",
+    cultivar_name: null,
+  } as const;
+  get.mockResolvedValue({
+    ...empty,
+    overview: {
+      ...emptyOverview,
+      overdue: 30,
+      due_today: 2,
+      next_seven_days: 1,
+      upcoming: [activity("old", "2026-10-01")],
+      overdue_items: [
+        activity("old", "2026-10-01", { target }),
+        activity("yesterday", "2026-10-10"),
+      ],
+      due_today_items: [
+        activity("now-1", "2026-10-11"),
+        activity("now-2", "2026-10-11"),
+      ],
+      next_seven_days_items: [activity("soon", "2026-10-14")],
+    },
+  });
+  render(<DashboardOverview />);
+  const overdue = await screen.findByRole("region", {
+    name: "Overdue 2 earliest of 30",
+  });
+  const rows = within(overdue).getAllByRole("listitem");
+  expect(rows).toHaveLength(2);
+  expect(rows[0]).toHaveTextContent("10 days overdue");
+  expect(rows[1]).toHaveTextContent("1 day overdue");
+  expect(within(rows[0]).getByText("2026-10-01")).toHaveAttribute(
+    "datetime",
+    "2026-10-01",
+  );
+  expect(
+    within(rows[0]).getByRole("link", { name: "Work old" }),
+  ).toHaveAttribute("href", "#/schedule/old");
+  expect(
+    within(rows[0]).getByRole("link", { name: "Bench lemon" }),
+  ).toHaveAttribute("href", "#/plants/p1");
+  expect(rows[0]).toHaveTextContent("Bench lemon · Plant · Citrus limon");
+  expect(rows[1]).toHaveTextContent("Collection-wide · not tied to a record");
+  expect(
+    within(overdue).getByRole("link", {
+      name: "Overdue: all 30 in Schedule",
+    }),
+  ).toHaveAttribute("href", "#/schedule?window=overdue");
+  const today = screen.getByRole("region", { name: "Due today 2" });
+  const due = within(today).getAllByRole("listitem");
+  expect(due).toHaveLength(2);
+  for (const row of due) expect(row).toHaveTextContent("Due today");
+  expect(within(today).queryByRole("link", { name: /all/ })).toBeNull();
+  const next = screen.getByRole("region", { name: "Next 7 days 1" });
+  expect(within(next).getByRole("listitem")).toHaveTextContent("In 3 days");
+  expect(within(next).queryByText("Work old")).toBeNull();
+});
+
+test("planned work beyond the three windows is acknowledged, not shown as an empty Schedule", async () => {
+  get.mockResolvedValue({
+    ...empty,
+    overview: { ...emptyOverview, upcoming: [activity("far", "2026-12-01")] },
+  });
+  render(<DashboardOverview />);
+  expect(
+    await screen.findByText(/Later planned work is in Schedule/),
+  ).toBeInTheDocument();
+  expect(screen.queryByText("Work far")).toBeNull();
+});
+
+test("no usable image means one line and no photo strip; one image means a one-item strip", async () => {
+  get.mockResolvedValue({
+    ...empty,
+    photos: [{ ...storedPhoto(1), image: null }],
+  });
+  const first = render(<DashboardOverview />);
+  expect(
+    await screen.findByText(
+      /None of the sampled Plants has a photo that can be shown yet/,
+    ),
+  ).toBeInTheDocument();
+  expect(screen.queryByRole("img")).toBeNull();
+  expect(
+    screen.queryByRole("heading", { name: "Plants in your collection" }),
+  ).toBeNull();
+  first.unmount();
+  get.mockResolvedValue({
+    ...empty,
+    photos: [{ ...storedPhoto(1), image: null }, storedPhoto(2)],
+  });
+  render(<DashboardOverview />);
+  expect(await screen.findAllByRole("img")).toHaveLength(1);
+  expect(
+    within(
+      screen.getByRole("list", { name: "Selected individual Plants" }),
+    ).getAllByRole("listitem"),
+  ).toHaveLength(1);
+  expect(screen.queryByText(/photo that can be shown yet/)).toBeNull();
+});
+
+test("Record reuses the launcher's workflow links and adds Journal and Schedule entry points", async () => {
+  get.mockResolvedValue(empty);
+  render(<DashboardOverview />);
+  const record = within(
+    await screen.findByRole("navigation", { name: "Record choices" }),
+  );
+  for (const { label, href } of recordWorkflows)
+    expect(record.getByRole("link", { name: label })).toHaveAttribute(
+      "href",
+      href,
+    );
+  expect(
+    record.getByRole("link", { name: "Add Journal entry" }),
+  ).toHaveAttribute("href", "#/events");
+  expect(
+    record.getByRole("link", { name: "Schedule activity" }),
+  ).toHaveAttribute("href", "#/schedule?action=create");
+  expect(
+    screen.getByRole("link", { name: "Botanical identities: 0" }),
+  ).toHaveAttribute("href", "#/species-distribution?scope=current");
 });

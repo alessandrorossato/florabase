@@ -217,3 +217,35 @@ exact-tree receipt are recorded in the verification section above.
 Full cross-application migration, page-specific legacy colors/spacing/editorial typography,
 unrelated interaction changes, new task-manager concepts, rates/spend/financial metrics,
 external enrichment and dependency maintenance. No schema/migration or DEV upgrade.
+
+## Layout reversal — UX-TODAY-001
+
+The operator approved "Today A — Operational" on 2026-11-12. It deliberately reverses the verified
+DASHBOARD-001 arrangement described above, following audit finding UX-003: the photo bench sat
+above the work queue (eight placeholder tiles when no primary photo exists), CSS `order` made the
+visual order differ from the DOM order, and the first work row began below the fold on phones.
+
+- **Order.** Summary sentence, Next work, Recent activity, Record, Collection snapshot, To review,
+  photos. The DOM order is the visual order at every width; `today.css` uses no `order`. From 75rem
+  the page has two columns (work and activity; a 21rem supporting column); below it, one column.
+- **Next work.** Rows are grouped by Schedule window instead of by record. `GET /api/v1/dashboard`
+  adds `overdue_items`, `due_today_items` (at most five each) and `next_seven_days_items` (at most
+  three), ordered `due_on, id`, with the same `today`, planned-status filter and window boundaries
+  as the `overdue`, `due_today` and `next_seven_days` counts. `upcoming` keeps its meaning: the
+  five earliest planned activities overall. A capped group says "N earliest of M" and links to that
+  window in Schedule. Each row shows its calendar-day age from the Schedule helper `activityAge`.
+- **Completion** stays in Schedule. `ActivityDialog` is reusable, but the transition, conflict
+  reload and error handling live inside `ScheduleScreen`; mounting it on Today would copy them.
+  Rows link to the Schedule item. Extracting that logic is a separate increment (handoff T3).
+- **Record** lists the shared `events/recordWorkflows` links, the Journal and Schedule creation.
+- **Collection snapshot** is a compact list of the four existing count links plus current botanical
+  identities, which links to Explore with the current scope.
+- **To review** replaces the collapsed Data quality disclosure with the same six derived counts,
+  always visible. Sowings, Seeds and Botanical identities have no directory filter matching any of
+  these counts, so the rows are plain text and the unfiltered directory links remain.
+- **Photos** come last. Only Plants with a loadable stored image appear, at most four. With none,
+  one line links to Plants. No placeholder tile is drawn.
+- **Phone.** The summary sentence and page description are hidden, and Filters and Saved views are
+  icon-only buttons beside the search field while Today is shown.
+
+Not included: the empty-collection start cards (handoff T4) and completion in place (T3).

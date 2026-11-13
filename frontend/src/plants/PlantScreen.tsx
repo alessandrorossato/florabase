@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -80,6 +81,8 @@ import {
 import { FieldHelp } from "../components/ContextualHelp";
 import {
   closeCollectionPage,
+  collectionPageParent,
+  isRecordTaskNavigation,
   openCollectionPage,
   setRecordRoute,
 } from "../components/recordNavigation";
@@ -100,6 +103,11 @@ import {
   type ProvenanceSiteResponse,
 } from "../provenance-sites/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
+import {
+  hasDateDraft,
+  invalidDateControls,
+  invalidDateErrorField,
+} from "../seed-lots/dateControls";
 import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import { listSowings, type SowingResponse } from "../sowings/api";
 import { listSuppliers, type SupplierResponse } from "../suppliers/api";
@@ -834,6 +842,39 @@ const plantPage = {
   description: "Your plants and growing groups.",
 };
 
+interface BrowserNavigation extends EventTarget {
+  currentEntry?: { index: number };
+}
+
+interface BrowserNavigateEvent extends Event {
+  destination: { url: string; sameDocument: boolean };
+  hashChange: boolean;
+  navigationType: string;
+}
+
+function browserNavigation(): BrowserNavigation | undefined {
+  return (window as Window & { navigation?: BrowserNavigation }).navigation;
+}
+
+function browserHistoryIndex(): number | undefined {
+  return browserNavigation()?.currentEntry?.index;
+}
+
+function plantCreationKey(hash: string): string | null {
+  const [path, query] = hash.split("?", 2);
+  const params = new URLSearchParams(query);
+  if (path !== "#/plants" || params.get("action") !== "create") return null;
+  const kind = params.get("kind");
+  return `${kind === "plant" || kind === "group" ? kind : ""}:${params.get("identity") ?? ""}`;
+}
+
+function currentCreationParent(): string | undefined {
+  const state = window.history.state as {
+    collectionPageParent?: string;
+  } | null;
+  return state?.collectionPageParent;
+}
+
 export function PlantScreen({
   initialId,
   initialKind = "plant",
@@ -843,6 +884,7 @@ export function PlantScreen({
   initialCreationKind,
   initialExtractionId,
   startCreating = false,
+  registerFormDeparture,
 }: {
   initialId?: string;
   initialKind?: RecordKind;
@@ -852,6 +894,7 @@ export function PlantScreen({
   initialCreationKind?: RecordKind;
   initialExtractionId?: string;
   startCreating?: boolean;
+  registerFormDeparture?: (guard: () => boolean) => () => void;
 } = {}) {
   const recordName = useRecordName();
 
@@ -911,6 +954,7 @@ export function PlantScreen({
   const [editing, setEditing] = useState(false);
   const [creationKind, setCreationKind] = useState<RecordKind | null>(null);
   const [form, setForm] = useState<FormState>(blankForm);
+  const formElement = useRef<HTMLFormElement>(null);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [extractionSource, setExtractionSource] =
     useState<PlantGroupResponse | null>(null);
@@ -942,12 +986,17 @@ export function PlantScreen({
   const editBaseline = useRef("");
   const editTrigger = useRef<HTMLButtonElement | null>(null);
   const directEditHandled = useRef(false);
+  const canDiscardEdit = useCallback(
+    () =>
+      save.status !== "saving" &&
+      ((JSON.stringify(form) === editBaseline.current &&
+        !hasDateDraft(formElement.current)) ||
+        window.confirm("Discard unsaved plant changes?")),
+    [form, save.status],
+  );
   const edit = useEditRoute({
     routeIsEdit: initialTab === "edit",
-    canDismiss: () =>
-      save.status !== "saving" &&
-      (JSON.stringify(form) === editBaseline.current ||
-        window.confirm("Discard unsaved plant changes?")),
+    canDismiss: canDiscardEdit,
     onDismiss: () => {
       setEditing(false);
       setSave((current) =>
@@ -960,7 +1009,26 @@ export function PlantScreen({
         );
     },
   });
-  const contextualCreationStarted = useRef(false);
+  const prepareEditDeparture = edit.prepareDeparture;
+  useEffect(() => {
+    if (!editing || !selectedKey || extractionSource) return;
+    return registerFormDeparture?.(prepareEditDeparture);
+  }, [
+    editing,
+    selectedKey,
+    extractionSource,
+    registerFormDeparture,
+    prepareEditDeparture,
+  ]);
+  const contextualCreationKey = useRef<string | null>(null);
+  const creationBaseline = useRef("");
+  const creationHash = useRef("");
+  const creationHistoryIndex = useRef<number | undefined>(undefined);
+  const creationParent = useRef<string | undefined>(undefined);
+  const creationRestoring = useRef(false);
+  const creationRouteKey = startCreating
+    ? `${initialCreationKind ?? ""}:${initialIdentityId ?? ""}`
+    : null;
   const {
     expanded: creationExpanded,
     triggerRef: creationTriggerRef,
@@ -979,7 +1047,12 @@ export function PlantScreen({
       closeCreation();
     }
     previousCreateRoute.current = startCreating;
-    if (!startCreating) contextualCreationStarted.current = false;
+    if (!startCreating) {
+      contextualCreationKey.current = null;
+      creationBaseline.current = "";
+      creationHash.current = "";
+      creationRestoring.current = false;
+    }
   }, [startCreating, creationExpanded, closeCreation]);
   useCollectionPageReturnFocus(
     Boolean(references) &&
@@ -1095,23 +1168,131 @@ export function PlantScreen({
     openCreation,
     closeCreation,
   ]);
+  const isCreationActive = editing && !selectedKey && !extractionSource;
+
+  const canDiscardCreation = useCallback(
+    () =>
+      save.status !== "saving" &&
+      ((JSON.stringify(form) === creationBaseline.current &&
+        !hasDateDraft(formElement.current)) ||
+        window.confirm("Discard unsaved plant changes?")),
+    [form, save.status],
+  );
+
   useEffect(() => {
-    if (!startCreating || !references || contextualCreationStarted.current)
+    if (!isCreationActive || !creationBaseline.current) return;
+    const unregister = registerFormDeparture?.(canDiscardCreation);
+    const navigation = browserNavigation();
+    const guardNativeNavigation = (event: Event) => {
+      const next = event as BrowserNavigateEvent;
+      if (
+        !creationBaseline.current ||
+        creationRestoring.current ||
+        !next.cancelable ||
+        !next.destination.sameDocument ||
+        (!next.hashChange && next.navigationType !== "traverse")
+      )
+        return;
+      const hash = new URL(next.destination.url).hash;
+      if (plantCreationKey(hash) === contextualCreationKey.current) return;
+      // A cancellation before traversal also prevents Chromium from
+      // restoring persisted form values into the still-mounted editor.
+      if (!canDiscardCreation()) event.preventDefault();
+      else creationBaseline.current = "";
+    };
+    const guardDeparture = (event: Event) => {
+      if (isRecordTaskNavigation(event)) return;
+      if (window.location.hash === creationHash.current) {
+        creationRestoring.current = false;
+        return;
+      }
+      if (creationRestoring.current) {
+        event.stopImmediatePropagation();
+        return;
+      }
+      if (
+        plantCreationKey(window.location.hash) === contextualCreationKey.current
+      ) {
+        creationHash.current = window.location.hash;
+        creationHistoryIndex.current = browserHistoryIndex();
+        return;
+      }
+      if (!creationBaseline.current) return;
+      if (canDiscardCreation()) {
+        // A traversal can dispatch both popstate and hashchange before React
+        // replaces this form. The second event needs no further approval.
+        creationBaseline.current = "";
+        return;
+      }
+      event.stopImmediatePropagation();
+      const currentIndex = browserHistoryIndex();
+      const sourceIndex = creationHistoryIndex.current;
+      if (
+        sourceIndex !== undefined &&
+        currentIndex !== undefined &&
+        sourceIndex !== currentIndex
+      ) {
+        creationRestoring.current = true;
+        window.history.go(sourceIndex - currentIndex);
+      } else if (
+        currentIndex === undefined &&
+        event.type === "popstate" &&
+        window.location.hash === creationParent.current &&
+        (window.history.state as { collectionReturnFocus?: string } | null)
+          ?.collectionReturnFocus === "create"
+      ) {
+        // Older browsers can identify the parent entry inserted by
+        // openCollectionPage even without the Navigation API's indices.
+        creationRestoring.current = true;
+        window.history.forward();
+      } else if (creationHash.current) {
+        window.history.replaceState(
+          window.history.state,
+          "",
+          creationHash.current,
+        );
+      }
+    };
+    navigation?.addEventListener("navigate", guardNativeNavigation);
+    window.addEventListener("popstate", guardDeparture, true);
+    window.addEventListener("hashchange", guardDeparture, true);
+    return () => {
+      unregister?.();
+      navigation?.removeEventListener("navigate", guardNativeNavigation);
+      window.removeEventListener("popstate", guardDeparture, true);
+      window.removeEventListener("hashchange", guardDeparture, true);
+    };
+  }, [isCreationActive, canDiscardCreation, registerFormDeparture]);
+
+  useEffect(() => {
+    if (
+      !startCreating ||
+      !references ||
+      !creationRouteKey ||
+      contextualCreationKey.current === creationRouteKey
+    )
       return;
-    contextualCreationStarted.current = true;
+    contextualCreationKey.current = creationRouteKey;
+    creationHash.current = window.location.hash;
+    creationHistoryIndex.current = browserHistoryIndex();
+    creationParent.current = currentCreationParent();
+    creationRestoring.current = false;
+    const nextForm: FormState = {
+      ...blankForm(),
+      botanicalIdentityId: initialIdentityId ?? "",
+    };
+    creationBaseline.current = JSON.stringify(nextForm);
     setExtractionSource(null);
     setSelectedKey(null);
     setDetail({ status: "idle" });
     setCreationKind(initialCreationKind ?? null);
     setEditing(true);
     setMobileDetail(true);
-    setForm({
-      ...blankForm(),
-      botanicalIdentityId: initialIdentityId ?? "",
-    });
+    setForm(nextForm);
     setSave({ status: "idle" });
     openCreation();
   }, [
+    creationRouteKey,
     initialCreationKind,
     initialIdentityId,
     openCreation,
@@ -1440,22 +1621,39 @@ export function PlantScreen({
   );
 
   function startCreate() {
+    const nextForm = blankForm();
+    contextualCreationKey.current = ":";
+    creationHash.current = "#/plants?action=create";
+    creationBaseline.current = JSON.stringify(nextForm);
+    creationRestoring.current = false;
     openCollectionPage("#/plants?action=create");
+    creationHistoryIndex.current = browserHistoryIndex();
+    creationParent.current = currentCreationParent();
     setExtractionSource(null);
     setSelectedKey(null);
     setDetail({ status: "idle" });
     setCreationKind(null);
     setEditing(true);
     setMobileDetail(true);
-    setForm(blankForm());
+    setForm(nextForm);
     setSave({ status: "idle" });
     openCreation();
   }
 
   function chooseCreationKind(kind: RecordKind) {
-    setRecordRoute(`#/plants?action=create&kind=${kind}`, true);
+    const nextHash = `#/plants?action=create&kind=${kind}${initialIdentityId ? `&identity=${encodeURIComponent(initialIdentityId)}` : ""}`;
+    const nextForm: FormState = {
+      ...blankForm(),
+      botanicalIdentityId: initialIdentityId ?? "",
+    };
+    contextualCreationKey.current = `${kind}:${initialIdentityId ?? ""}`;
+    creationHash.current = nextHash;
+    creationBaseline.current = JSON.stringify(nextForm);
+    creationRestoring.current = false;
+    setRecordRoute(nextHash, true, window.history.state);
+    creationHistoryIndex.current = browserHistoryIndex();
     setCreationKind(kind);
-    setForm(blankForm());
+    setForm(nextForm);
     setSave({ status: "idle" });
   }
 
@@ -1483,6 +1681,14 @@ export function PlantScreen({
       edit.close();
       return;
     }
+    if (
+      !selected &&
+      !extractionSource &&
+      creationBaseline.current !== "" &&
+      !canDiscardCreation()
+    )
+      return;
+    creationBaseline.current = "";
     const wasExtraction = extractionSource !== null;
     setEditing(false);
     setExtractionSource(null);
@@ -1727,7 +1933,12 @@ export function PlantScreen({
   async function submit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
     if (pending || !formKind) return;
-    const errors = validate();
+    const errors = [
+      ...validate(),
+      ...invalidDateControls(event.currentTarget).map(
+        (control) => control.validationMessage,
+      ),
+    ];
     if (errors.length) {
       setSave({ status: "error", messages: errors });
       return;
@@ -1958,6 +2169,7 @@ export function PlantScreen({
         </div>
       ) : formKind ? (
         <form
+          ref={formElement}
           className="seed-form plant-form collection-form"
           onClickCapture={(event) => {
             if (!selected || !(event.target instanceof Element)) return;
@@ -1967,6 +2179,8 @@ export function PlantScreen({
               link &&
               link.target !== "_blank" &&
               link.hash !== window.location.hash &&
+              // Collection task links are approved once by the App handler.
+              !(registerFormDeparture && collectionPageParent(link.hash)) &&
               !edit.prepareDeparture()
             )
               event.preventDefault();
@@ -2050,10 +2264,16 @@ export function PlantScreen({
               : "Multiple individuals of one botanical identity managed together. Keep an uncertain count approximate or unknown."}
           </p>
           <FormSections
+            key={
+              selectedKey ??
+              extractionSource?.id ??
+              `new:${creationRouteKey ?? formKind}`
+            }
             mode={selected && !extractionSource ? "edit" : "page"}
             disabled={pending}
             error={save.status === "error" ? save : undefined}
             errorFields={[
+              invalidDateErrorField,
               { match: /supplier/i, selector: "#plant-supplier" },
               { match: /location/i, selector: "#plant-location" },
               {

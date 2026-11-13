@@ -72,7 +72,7 @@ export function useEditRoute({
       setModal(true);
       setRecordRoute(hash);
     },
-    prepareDeparture() {
+    prepareDeparture: () => {
       if (!canDismiss()) return false;
       approved.current = true;
       return true;

@@ -22,6 +22,7 @@ import {
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
+import { invalidDateControls } from "../seed-lots/dateControls";
 import { Breadcrumbs } from "../components/CollectionUI";
 import { listLocations, type LocationResponse } from "../locations/api";
 import {
@@ -212,9 +213,15 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
     return errors;
   }
 
-  function continueToUsage() {
+  function continueToUsage(details: HTMLFormElement | null) {
     setValidationField(undefined);
-    const errors = validateDetails();
+    // Checked here: step 2 unmounts the date field, and its incomplete draft reads as unknown.
+    const errors = [
+      ...validateDetails(),
+      ...(details ? invalidDateControls(details) : []).map(
+        (control) => control.validationMessage,
+      ),
+    ];
     if (errors.length) {
       setValidationField(errors[0]);
       setMessages(errors);
@@ -230,7 +237,7 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
     event.preventDefault();
     if (pending) return;
     if (stage === 1) {
-      continueToUsage();
+      continueToUsage(event.currentTarget);
       return;
     }
     const errors: string[] = [];
@@ -418,7 +425,12 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
                 ),
               })}
               submit={
-                <button type="button" onClick={continueToUsage}>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    continueToUsage(event.currentTarget.form);
+                  }}
+                >
                   Review seed usage
                 </button>
               }

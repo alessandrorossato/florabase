@@ -511,6 +511,9 @@ change. Every record reads existing endpoints.
 | Saved Views stay usable with many views | The panel and mobile sheets show the first five, then a "Show all N saved views" button (`aria-expanded`, `aria-controls`) that expands in place and collapses with "Show fewer". The arbitrary eight-item cap is removed, so every compatible view is reachable from the panel as well as the palette. Tested with 12 views. |
 | Mobile directory header density | **Carried as a required item before final visual acceptance.** Not addressed in M4, which is about record detail. It is listed under Outstanding below so it cannot drop out of the plan. |
 
+UX-TODAY-001 supersedes the Data quality row on Today: the six counts are an always-visible
+**To review** panel ([layout reversal](../../dashboard-001-handoff.md#layout-reversal--ux-today-001)).
+
 ### Record identity header (all ten record types)
 
 `CollectionUI.DetailHeader` and `detail-page.css` own the header for Plants, Plant groups, Seed

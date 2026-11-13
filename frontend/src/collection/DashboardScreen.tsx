@@ -14,7 +14,15 @@ import {
 import { historyHref } from "../history/api";
 import { historyDateLabel, historyOrigin } from "../history/presentation";
 import { SavedViews } from "../saved-views/SavedViews";
-import { localDay, targetLabels } from "../schedule/state";
+import { recordWorkflows } from "../events/recordWorkflows";
+import type { Activity } from "../schedule/api";
+import { ScheduleTargetLabel } from "../schedule/ScheduleTargetLabel";
+import {
+  activityAge,
+  localDay,
+  targetHref,
+  targetLabels,
+} from "../schedule/state";
 import { getDashboard, type DashboardResponse } from "./api";
 import { DashboardPhotos } from "./DashboardPhotos";
 import { useDashboardSearch } from "./DashboardSearch";
@@ -33,6 +41,9 @@ function isDashboardResponse(value: unknown): value is DashboardResponse {
     candidate.counts !== undefined &&
     candidate.overview !== undefined &&
     Array.isArray(candidate.overview.upcoming) &&
+    Array.isArray(candidate.overview.overdue_items) &&
+    Array.isArray(candidate.overview.due_today_items) &&
+    Array.isArray(candidate.overview.next_seven_days_items) &&
     Array.isArray(candidate.overview.recent_activity)
   );
 }
@@ -52,44 +63,10 @@ function plural(count: number, one: string, many: string) {
   return `${String(count)} ${count === 1 ? one : many}`;
 }
 
-type Upcoming = DashboardResponse["overview"]["upcoming"][number];
-const targetRoutes: Record<string, string> = {
-  plant: "plants",
-  plant_group: "plant-groups",
-  seed_lot: "seeds",
-  sowing: "sowings",
-  location: "locations",
-  botanical_identity: "identities",
-};
-
-/** Planned items grouped by their target record, in the order the Schedule returned them. */
-function workGroups(items: Upcoming[]) {
-  const groups: {
-    key: string;
-    label: string;
-    detail: string;
-    href: string | null;
-    items: Upcoming[];
-  }[] = [];
-  for (const item of items) {
-    const target = item.target;
-    const key = target ? `${target.kind}:${target.id}` : "collection";
-    let group = groups.find((candidate) => candidate.key === key);
-    if (!group) {
-      group = {
-        key,
-        label: target ? target.label : "Collection-wide",
-        detail: target
-          ? `${targetLabels[target.kind]}${target.lifecycle && target.lifecycle !== "active" ? ` · ${target.lifecycle}` : ""}`
-          : "Not tied to a record",
-        href: target ? `#/${targetRoutes[target.kind]}/${target.id}` : null,
-        items: [],
-      };
-      groups.push(group);
-    }
-    group.items.push(item);
-  }
-  return groups;
+/** Calendar-day distance from the dashboard's own day, capitalised for a row badge. */
+function relativeAge(item: Activity, today: string) {
+  const age = activityAge(item, today) ?? "";
+  return age.charAt(0).toUpperCase() + age.slice(1);
 }
 
 /** One sentence composed only from returned counts; nothing is inferred. */
@@ -164,53 +141,34 @@ export function DashboardOverview() {
       </ErrorState>
     );
   const { counts, overview: data } = state.value;
+  const windows = [
+    {
+      key: "overdue",
+      label: "Overdue",
+      total: data.overdue,
+      items: data.overdue_items,
+    },
+    {
+      key: "today",
+      label: "Due today",
+      total: data.due_today,
+      items: data.due_today_items,
+    },
+    {
+      key: "next_seven_days",
+      label: "Next 7 days",
+      total: data.next_seven_days,
+      items: data.next_seven_days_items,
+    },
+  ];
   const coverage = (value: number) =>
     `${String(value)} of ${String(data.current_identities)}`;
+  // DOM order is the visual order at every width (UX-003): work, activity, then support.
   return (
     <div className="today">
       <p className="today-lede">{summary(state.value)}</p>
 
-      <section
-        className="today-holdings"
-        aria-labelledby="collection-snapshot-title"
-      >
-        <h3 id="collection-snapshot-title" className="today-label">
-          Collection snapshot
-        </h3>
-        <div className="today-metrics">
-          <Metric
-            label="Individual Plants"
-            value={counts.active_plants}
-            context="Active individual records"
-            href="#/plants?type=plant"
-          />
-          <Metric
-            label="Plant groups"
-            value={counts.active_plant_groups}
-            context="Active groups, not plant totals"
-            href="#/plants?type=group"
-          />
-          <Metric
-            label="Seed lots"
-            value={counts.active_seed_lots}
-            context="Active; quantity may be unknown"
-            href="#/seeds"
-          />
-          <Metric
-            label="Sowings"
-            value={counts.active_sowings}
-            context="Active propagation records"
-            href="#/sowings"
-          />
-        </div>
-        <p className="today-note">
-          <strong>{data.current_identities}</strong> botanical identities
-          represented in current material, including stored harvests.{" "}
-          <a href="#/species-distribution?scope=current">Explore collection</a>
-        </p>
-      </section>
-
-      <div className="today-grid">
+      <div className="today-main">
         <section
           className="today-panel today-work"
           aria-labelledby="attention-title"
@@ -221,79 +179,104 @@ export function DashboardOverview() {
           </header>
           <p className="today-provenance">Planned in Schedule</p>
           <div className="today-windows">
-            {(
-              [
-                ["Overdue", data.overdue, "overdue"],
-                ["Due today", data.due_today, "today"],
-                ["Next 7 days", data.next_seven_days, "next_seven_days"],
-              ] as const
-            ).map(([label, value, window]) => (
+            {windows.map(({ key, label, total }) => (
               <a
-                key={window}
-                aria-label={`${label}: ${String(value)}`}
-                href={`#/schedule?window=${window}`}
+                key={key}
+                aria-label={`${label}: ${String(total)}`}
+                href={`#/schedule?window=${key}`}
                 className={
-                  window === "overdue" && value > 0
-                    ? "has-attention"
-                    : undefined
+                  key === "overdue" && total > 0 ? "has-attention" : undefined
                 }
               >
-                <strong>{value}</strong>
+                <strong>{total}</strong>
                 <span>{label}</span>
               </a>
             ))}
           </div>
-          {data.upcoming.length ? (
-            // Grouped by record: each record is named once over its planned items.
-            <div className="today-work-groups">
-              {workGroups(data.upcoming).map((group) => (
-                <div key={group.key} className="today-work-group">
-                  <h4>
-                    {group.href ? (
-                      <a href={group.href}>{group.label}</a>
-                    ) : (
-                      group.label
-                    )}
-                    <span>{group.detail}</span>
-                  </h4>
-                  <ol className="today-work-list">
-                    {group.items.map((item) => {
-                      const state = item.overdue
-                        ? "Overdue"
-                        : item.due_on === data.today
-                          ? "Due today"
-                          : "Planned";
-                      return (
+          {windows.some(({ items }) => items.length) ? (
+            // Grouped by window, so overdue work never hides today's or the coming week's.
+            windows.map(
+              ({ key, label, total, items }) =>
+                items.length > 0 && (
+                  <section
+                    key={key}
+                    className="today-work-group"
+                    aria-labelledby={`today-work-${key}`}
+                  >
+                    <header>
+                      <h4 id={`today-work-${key}`}>
+                        {label}{" "}
+                        <span>
+                          {items.length < total
+                            ? `${String(items.length)} earliest of ${String(total)}`
+                            : total}
+                        </span>
+                      </h4>
+                      {items.length < total && (
+                        <a
+                          href={`#/schedule?window=${key}`}
+                          aria-label={`${label}: all ${String(total)} in Schedule`}
+                        >
+                          All {total} in Schedule
+                        </a>
+                      )}
+                    </header>
+                    <ol className="today-work-list">
+                      {items.map((item) => (
                         <li key={item.id}>
                           <time dateTime={item.due_on}>{item.due_on}</time>
-                          <a href={`#/schedule/${item.id}`}>{item.title}</a>
-                          <StatusBadge attention={state !== "Planned"}>
-                            {state}
-                          </StatusBadge>
+                          <div>
+                            <a href={`#/schedule/${item.id}`}>{item.title}</a>
+                            <p>
+                              {item.target ? (
+                                <>
+                                  <a href={targetHref(item.target)}>
+                                    <ScheduleTargetLabel target={item.target} />
+                                  </a>
+                                  {` · ${targetLabels[item.target.kind]}`}
+                                  {item.target.lifecycle &&
+                                    item.target.lifecycle !== "active" &&
+                                    ` · ${item.target.lifecycle}`}
+                                  {item.target.kind !== "botanical_identity" &&
+                                    item.target.scientific_name && (
+                                      <>
+                                        {" · "}
+                                        <i className="scientific-name">
+                                          {item.target.scientific_name}
+                                        </i>
+                                      </>
+                                    )}
+                                </>
+                              ) : (
+                                "Collection-wide · not tied to a record"
+                              )}
+                            </p>
+                          </div>
+                          {item.status === "planned" && (
+                            <StatusBadge attention={item.overdue}>
+                              {relativeAge(item, data.today)}
+                            </StatusBadge>
+                          )}
                         </li>
-                      );
-                    })}
-                  </ol>
-                </div>
-              ))}
-            </div>
+                      ))}
+                    </ol>
+                  </section>
+                ),
+            )
           ) : (
             <EmptyState>
-              No planned activities. Schedule work when your collection needs
-              it.
+              {data.upcoming.length
+                ? "Nothing is overdue, due today or due in the next 7 days. Later planned work is in Schedule."
+                : "No planned activities. Schedule work when your collection needs it."}
             </EmptyState>
           )}
           <p className="today-footnote">
             Overdue is derived from the due date; it does not mean the work
-            happened or did not. Next 7 days starts tomorrow. The list shows the
-            earliest planned items.
+            happened or did not. Next 7 days starts tomorrow. Each list shows
+            the earliest planned items.
           </p>
         </section>
 
-        <DashboardPhotos photos={state.value.photos ?? []} />
-      </div>
-
-      <div className="today-stack">
         <section
           className="today-panel today-recent"
           aria-labelledby="recent-activity-title"
@@ -344,16 +327,86 @@ export function DashboardOverview() {
         </section>
       </div>
 
-      <section className="today-quality" aria-labelledby="data-quality-title">
-        <details>
-          <summary>
-            <span id="data-quality-title" className="today-quality__title">
-              Data quality
-            </span>
-            <span className="today-quality__hint">
-              Derived counts of current records, for occasional review
-            </span>
-          </summary>
+      <div className="today-side">
+        <section
+          className="today-panel today-record"
+          aria-labelledby="record-title"
+        >
+          <header className="today-panel__header">
+            <h3 id="record-title">Record</h3>
+          </header>
+          <p className="today-provenance">Existing workflows</p>
+          <nav className="today-record__links" aria-label="Record choices">
+            <a className="button-link" href="#/events">
+              Add Journal entry
+            </a>
+            {recordWorkflows.map(({ label, href }) => (
+              <a
+                key={href}
+                className="button-link button--secondary"
+                href={href}
+              >
+                {label}
+              </a>
+            ))}
+            <a
+              className="button-link button--secondary"
+              href="#/schedule?action=create"
+            >
+              Schedule activity
+            </a>
+          </nav>
+        </section>
+
+        <section
+          className="today-panel today-holdings"
+          aria-labelledby="collection-snapshot-title"
+        >
+          <header className="today-panel__header">
+            <h3 id="collection-snapshot-title">Collection snapshot</h3>
+          </header>
+          <p className="today-provenance">Active records</p>
+          <div className="today-metrics">
+            <Metric
+              label="Individual Plants"
+              value={counts.active_plants}
+              context="Active individual records"
+              href="#/plants?type=plant"
+            />
+            <Metric
+              label="Plant groups"
+              value={counts.active_plant_groups}
+              context="Active groups, not plant totals"
+              href="#/plants?type=group"
+            />
+            <Metric
+              label="Seed lots"
+              value={counts.active_seed_lots}
+              context="Active; quantity may be unknown"
+              href="#/seeds"
+            />
+            <Metric
+              label="Sowings"
+              value={counts.active_sowings}
+              context="Active propagation records"
+              href="#/sowings"
+            />
+            <Metric
+              label="Botanical identities"
+              value={data.current_identities}
+              context="In current material, including stored harvests"
+              href="#/species-distribution?scope=current"
+            />
+          </div>
+        </section>
+
+        <section
+          className="today-panel today-quality"
+          aria-labelledby="data-quality-title"
+        >
+          <header className="today-panel__header">
+            <h3 id="data-quality-title">To review</h3>
+          </header>
           <p className="today-provenance">
             Derived counts of current records. Prompts to review, not tasks or
             conclusions.
@@ -389,8 +442,10 @@ export function DashboardOverview() {
             <a href="#/sowings">Sowings</a>, <a href="#/seeds">Seeds</a> or{" "}
             <a href="#/identities">Botanical identities</a>.
           </p>
-        </details>
-      </section>
+        </section>
+
+        <DashboardPhotos photos={state.value.photos ?? []} />
+      </div>
     </div>
   );
 }

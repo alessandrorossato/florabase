@@ -270,6 +270,7 @@
         "frontend/src/events/EventFeed.test.tsx",
         "frontend/src/events/EventTargetPhoto.test.tsx",
         "frontend/src/events/GlobalEventsScreen.test.tsx",
+        "frontend/src/events/OccurrenceDateChoice.test.tsx",
         "frontend/src/events/PhenologyHistory.test.tsx"
       ],
       "affects": ["history-regression", "schedule-regression", "activity"]

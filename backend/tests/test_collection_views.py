@@ -21,6 +21,9 @@ def empty_overview() -> DashboardOverview:
         due_today=0,
         next_seven_days=0,
         upcoming=[],
+        overdue_items=[],
+        due_today_items=[],
+        next_seven_days_items=[],
         recent_activity=[],
     )
 

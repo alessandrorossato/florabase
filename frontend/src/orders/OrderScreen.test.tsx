@@ -797,3 +797,60 @@ test("Order Details focuses its title and reconnects focus to the returning row"
     expect(screen.getByRole("button", { name: "REF-1" })).toHaveFocus();
   });
 });
+
+test("an incomplete Order date blocks saving and is never sent; a stored date saves unchanged", async () => {
+  const user = userEvent.setup();
+  mount();
+  await orderRow();
+  await user.click(screen.getByRole("button", { name: "New Order" }));
+  const dialog = screen.getByRole("dialog", { name: "New Order" });
+  await user.selectOptions(
+    within(dialog).getByLabelText("Order date precision"),
+    "day",
+  );
+  await user.type(within(dialog).getByLabelText("Year"), "2026");
+  await user.click(
+    within(dialog).getByRole("button", { name: "Create Order" }),
+  );
+  expect(within(dialog).getByLabelText("Month")).toBeInvalid();
+  expect(saveOrder).not.toHaveBeenCalled();
+  await user.type(within(dialog).getByLabelText("Month"), "2");
+  await user.type(within(dialog).getByLabelText("Day"), "29");
+  await user.click(
+    within(dialog).getByRole("button", { name: "Create Order" }),
+  );
+  // 2026 is not a leap year: 29 February stays incomplete.
+  expect(saveOrder).not.toHaveBeenCalled();
+  await user.clear(within(dialog).getByLabelText("Day"));
+  await user.type(within(dialog).getByLabelText("Day"), "28");
+  await user.click(
+    within(dialog).getByRole("button", { name: "Create Order" }),
+  );
+  await waitFor(() => {
+    expect(saveOrder).toHaveBeenCalledWith(
+      undefined,
+      expect.objectContaining({
+        ordered_on: { precision: "day", year: 2026, month: 2, day: 28 },
+      }),
+      "csrf",
+    );
+  });
+});
+
+test("editing an Order without touching its month-precision date sends it unchanged", async () => {
+  const user = userEvent.setup();
+  mount(id);
+  await user.click(await screen.findByRole("button", { name: "Edit Order" }));
+  expect(screen.getByLabelText("Order date precision")).toHaveValue("month");
+  expect(screen.getByLabelText("Month")).toHaveValue(10);
+  await user.click(screen.getByRole("button", { name: "Save changes" }));
+  await waitFor(() => {
+    expect(saveOrder).toHaveBeenCalledWith(
+      id,
+      expect.objectContaining({
+        ordered_on: { precision: "month", year: 2026, month: 10 },
+      }),
+      "csrf",
+    );
+  });
+});

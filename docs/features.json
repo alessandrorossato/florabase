@@ -2714,6 +2714,23 @@
       "status": "implemented"
     },
     {
+      "id": "FABLE-FIX-CUTTINGS",
+      "category": "ui",
+      "description": "Repair the Cuttings directory layout and responsive record presentation identified by the Fable audit",
+      "acceptance_criteria": [
+        "Material lots and Rooting attempts use the shared directory structures with search, filters, Saved Views, pagination, Quick Preview, navigation and the existing saved-view keys preserved",
+        "At 1440×900 and 1024×844 the first populated record appears immediately after the necessary page controls, and at 390×844 the page has no horizontal overflow",
+        "Long botanical names, record labels, metadata and lifecycle labels wrap gracefully while status chips remain on one line in list and gallery views",
+        "Empty and populated directories, lifecycle filtering, search, pagination, preview close, keyboard focus return and 200% zoom work in light and dark themes for both record types",
+        "Before and after screenshots at 1440×900, 1024×844 and 390×844 use an isolated review database with synthetic records; independent read-only QA and the policy-selected canonical verification pass"
+      ],
+      "dependencies": [
+        "CUTTING-001"
+      ],
+      "priority": "P1",
+      "status": "in_progress"
+    },
+    {
       "id": "BOTANICAL-MATCH-1A",
       "category": "taxonomy",
       "description": "Deterministic read-only local candidate discovery and classification foundation for WFO 2026-06 and WCVP v16 without mutating canonical collection records",
@@ -2726,6 +2743,45 @@
       "dependencies": [
         "DEV-REFERENCES-001",
         "WCVP-DEFAULT-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
+      "id": "UX-DATE-001",
+      "category": "ux",
+      "description": "Partial dates never invent a year, month or day, and Journal entries ask explicitly whether the occurrence was today, another date or unknown",
+      "acceptance_criteria": [
+        "The shared partial-date field keeps typed parts on a precision change, drops parts the precision no longer needs and never fills a missing part; inputs start empty",
+        "An incomplete draft stays in component state, never reaches onChange or a payload, marks its first missing part invalid with a clear message and blocks saving in every consumer form; unknown remains null where the domain allows it",
+        "Journal entries offer an accessible Today / Another date / Date unknown radio group; Today shows and records the device-local calendar day; the initial choice is a prop and defaults to no selection with saving blocked until chosen",
+        "Height measurements keep requiring a date of any precision, with Date unknown unavailable and its reason programmatically associated; the phenology approximate-date rule is unchanged",
+        "Stored full, year-month, year-only and unknown dates open unchanged and are not rewritten unless edited; stored shapes and API payloads are unchanged",
+        "Focused tests cover precision changes, local-day boundaries on both sides of UTC midnight, required measurement dates, historical edits and incomplete drafts in the Journal and consumer forms"
+      ],
+      "dependencies": [
+        "EVENT-002",
+        "MEASUREMENT-001",
+        "PHENOLOGY-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
+      "id": "UX-TODAY-001",
+      "category": "ux",
+      "description": "Work-first Today (approved Variant A, Operational): planned work grouped by Schedule window ahead of supporting content, reversing the DASHBOARD-001 photo-first layout (audit finding UX-003)",
+      "acceptance_criteria": [
+        "DOM order equals visual order at every width: summary, Next work, Recent activity, Record, Collection snapshot, To review, photos; no CSS reordering",
+        "The dashboard response adds bounded overdue, due-today and next-seven-days lists that share the day, planned-status filter and window boundaries of the existing counts; the upcoming field and its meaning are unchanged",
+        "Each window shows its rows with a calendar-day relative age, states when it is capped and links to the full list in Schedule",
+        "Today renders no placeholder image: one line with a link to Plants when no sampled Plant has a loadable image, otherwise only Plants with an image",
+        "Search, Filters, Saved views, Schedule, Journal, History and count links, and loading, error and retry states are preserved",
+        "The first work row is visible without scrolling at 390 by 844"
+      ],
+      "dependencies": [
+        "DASHBOARD-001",
+        "SCHEDULE-UX-001"
       ],
       "priority": "P1",
       "status": "implemented"

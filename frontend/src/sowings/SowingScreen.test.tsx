@@ -772,10 +772,18 @@ test.each([
     await user.clear(screen.getByLabelText("Year"));
     await openFormSection(user, "Essentials");
     await user.type(screen.getByLabelText("Year"), "2024");
+    // Month and day are typed: the field no longer fills them with 1.
+    for (const part of ["Month", "Day"] as const)
+      if (part.toLowerCase() in expected) {
+        await openFormSection(user, "Essentials");
+        await user.type(screen.getByLabelText(part), "1");
+      }
     await openFormSection(user, "Notes");
     await user.click(screen.getByRole("button", { name: "Record Sowing" }));
     await screen.findByText("Sowing was recorded.");
-    expect(submitted).toMatchObject({ sowing_date: expected });
+    expect(submitted).toEqual(
+      expect.objectContaining({ sowing_date: expected }),
+    );
   },
 );
 
@@ -1569,4 +1577,121 @@ test("Sowing Details focuses its title and browser Back restores the opened row"
       ),
     ).toHaveFocus();
   });
+});
+
+test("an incomplete Sowing date is refused and never posted", async () => {
+  const posts: unknown[] = [];
+  mockApi(
+    sowingHandler([], (path, init) => {
+      if (path === "/api/v1/sowings" && init?.method === "POST") {
+        posts.push(body(init));
+        return json(sowing({ id: "never" }), 201);
+      }
+      return undefined;
+    }),
+  );
+  const user = await openSowings();
+  await user.click(await screen.findByRole("button", { name: "New sowing" }));
+  await openFormSection(user, "Essentials");
+  await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
+  await openFormSection(user, "Essentials");
+  await user.selectOptions(
+    screen.getByLabelText("Sowing date precision"),
+    "month",
+  );
+  await openFormSection(user, "Essentials");
+  await user.type(screen.getByLabelText("Year"), "2024");
+  await openFormSection(user, "Notes");
+  await user.click(screen.getByRole("button", { name: "Record Sowing" }));
+  expect(
+    (await screen.findAllByText(/Sowing date is incomplete/)).length,
+  ).toBeGreaterThan(0);
+  expect(screen.getByLabelText("Month")).toHaveValue(null);
+  expect(posts).toHaveLength(0);
+});
+
+test("switching direct edit records clears a half-typed date and shows each stored date", async () => {
+  vi.spyOn(window, "confirm").mockReturnValue(true);
+  const first = sowing({ label: "First record", sowing_date: null });
+  const second = sowing({
+    id: "second-record",
+    label: "Second record",
+    sowing_date: null,
+  });
+  const third = sowing({
+    id: "third-record",
+    label: "Third record",
+    sowing_date: { precision: "year", year: 2019 },
+  });
+  mockApi(sowingHandler([first, second, third]));
+  window.history.replaceState(null, "", `#/sowings/${sowingId}?tab=edit`);
+  const user = userEvent.setup();
+  render(<App />);
+  expect(await screen.findByLabelText("Sowing label")).toHaveValue(
+    "First record",
+  );
+  await openFormSection(user, "Essentials");
+  await user.selectOptions(
+    screen.getByLabelText("Sowing date precision"),
+    "month",
+  );
+  await user.type(screen.getByLabelText("Year"), "2024");
+  act(() => {
+    window.location.hash = "/sowings/second-record?tab=edit";
+  });
+  await waitFor(() => {
+    expect(screen.getByLabelText("Sowing label")).toHaveValue("Second record");
+  });
+  // The other record's unknown date opens as unknown, not as the fragment typed before.
+  expect(screen.getByLabelText("Sowing date precision")).toHaveValue("");
+  expect(screen.queryByLabelText("Year")).not.toBeInTheDocument();
+  act(() => {
+    window.location.hash = "/sowings/third-record?tab=edit";
+  });
+  await waitFor(() => {
+    expect(screen.getByLabelText("Sowing label")).toHaveValue("Third record");
+  });
+  expect(screen.getByLabelText("Sowing date precision")).toHaveValue("year");
+  expect(screen.getByLabelText("Year")).toHaveValue(2019);
+  expect(screen.queryByLabelText("Month")).not.toBeInTheDocument();
+});
+
+test("a half-typed date on an unknown-date Sowing counts as an unsaved change", async () => {
+  mockApi(sowingHandler([sowing({ sowing_date: null })]));
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  const user = await openSowings();
+  setViewportMatches(false);
+  const trigger = screen.getByRole("button", { name: "Edit Tray A" });
+  await user.click(trigger);
+  const dialog = screen.getByRole("dialog", { name: "Edit Sowing" });
+  // Untouched: closes without asking.
+  await user.keyboard("{Escape}");
+  expect(confirm).not.toHaveBeenCalled();
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("dialog", { name: "Edit Sowing" }),
+    ).not.toBeInTheDocument();
+  });
+  await user.click(trigger);
+  const reopened = screen.getByRole("dialog", { name: "Edit Sowing" });
+  expect(reopened).not.toBe(dialog);
+  await user.selectOptions(
+    within(reopened).getByLabelText("Sowing date precision"),
+    "month",
+  );
+  await user.type(within(reopened).getByLabelText("Year"), "2024");
+  await user.keyboard("{Escape}");
+  expect(confirm).toHaveBeenCalledWith("Discard unsaved sowing changes?");
+  expect(within(reopened).getByLabelText("Year")).toHaveValue(2024);
+  confirm.mockReturnValue(true);
+  await user.click(within(reopened).getByRole("button", { name: "Cancel" }));
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("dialog", { name: "Edit Sowing" }),
+    ).not.toBeInTheDocument();
+  });
+  // Reopening shows the stored unknown date, not the discarded fragment.
+  await user.click(trigger);
+  expect(screen.getByLabelText("Sowing date precision")).toHaveValue("");
+  expect(screen.queryByLabelText("Year")).not.toBeInTheDocument();
 });

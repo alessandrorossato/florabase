@@ -3766,14 +3766,20 @@ export interface components {
             current_identities: number;
             /** Due Today */
             due_today: number;
+            /** Due Today Items */
+            due_today_items: components["schemas"]["ScheduleResponse"][];
             /** Identities With Profile */
             identities_with_profile: number;
             /** Identities With Wfo */
             identities_with_wfo: number;
             /** Next Seven Days */
             next_seven_days: number;
+            /** Next Seven Days Items */
+            next_seven_days_items: components["schemas"]["ScheduleResponse"][];
             /** Overdue */
             overdue: number;
+            /** Overdue Items */
+            overdue_items: components["schemas"]["ScheduleResponse"][];
             /** Purchase Packets Without Order */
             purchase_packets_without_order: number;
             /** Recent Activity */
