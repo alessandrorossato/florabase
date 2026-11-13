@@ -200,6 +200,22 @@
       "status": "planned"
     },
     {
+      "id": "RELEASE-SCOPE-001",
+      "category": "documentation",
+      "description": "Record the operator-approved v1.0.0 release scope as the authoritative contract and reconcile the feature graph against it",
+      "acceptance_criteria": [
+        "docs/release/scope-v1.md states the eight approved decisions, the supported installation and compatibility contract, objective release gates without invented thresholds, PRE-1.0 work, explicit exclusions and a scope-change procedure",
+        "Every feature entry present at 947d77f is reconciled in docs/release/feature-reconciliation-v1.md with its status, a proposed release target, citations to existing evidence and its remaining gap",
+        "Status changes are limited to entries whose new status the repository demonstrates; no entry is promoted to verified because its code is present or a broad CI run passed",
+        "docs/product-roadmap.md points to the scope contract and keeps the post-1.0 themes, the previous roadmap text stays accessible, and no script or checker is modified"
+      ],
+      "dependencies": [
+        "DOCS-001"
+      ],
+      "priority": "P0",
+      "status": "implemented"
+    },
+    {
       "id": "PERF-001",
       "category": "performance",
       "description": "Measure and optimize Florabase resource efficiency for self-hosted deployment",
@@ -789,7 +805,7 @@
         "UX-006"
       ],
       "priority": "P2",
-      "status": "implemented"
+      "status": "verified"
     },
     {
       "id": "ATTACHMENT-005",
@@ -2497,7 +2513,7 @@
         "UI-DESIGN-001"
       ],
       "priority": "P2",
-      "status": "in_progress"
+      "status": "implemented"
     },
     {
       "id": "VERIFICATION-FAST-001",
@@ -2728,7 +2744,7 @@
         "CUTTING-001"
       ],
       "priority": "P1",
-      "status": "in_progress"
+      "status": "implemented"
     },
     {
       "id": "BOTANICAL-MATCH-1A",
