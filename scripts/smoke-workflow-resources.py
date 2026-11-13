@@ -293,6 +293,75 @@ def quality_network_smoke(root: Path) -> None:
             )
 
         frontend_image = f"{quality.project}-frontend-development"
+        no_pkgmap = subprocess.run(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--network",
+                "none",
+                "-e",
+                "FLORABASE_QUALITY_OFFLINE=1",
+                "--entrypoint",
+                "sh",
+                frontend_image,
+                "-c",
+                "rm -f /app/node_modules/.package-map.json "
+                "&& /usr/local/bin/florabase-dev-entrypoint pnpm exec eslint --version",
+            ],
+            text=True,
+            capture_output=True,
+        )
+        require(
+            no_pkgmap.returncode == 0,
+            f"Quality offline mode rejected valid dependencies without .package-map.json: {no_pkgmap.stderr!r}",
+        )
+
+        yaml_modules = subprocess.run(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--network",
+                "none",
+                "-u",
+                "0:0",
+                "-e",
+                "FLORABASE_QUALITY_OFFLINE=1",
+                "--entrypoint",
+                "sh",
+                frontend_image,
+                "-c",
+                "rm -f /app/node_modules/.package-map.json && node - <<'YAML'\n"
+                'const fs = require("fs");\n'
+                'const m = JSON.parse(fs.readFileSync("/app/node_modules/.modules.yaml", "utf8"));\n'
+                "const lines = [\n"
+                '  "hoistPattern:",\n'
+                '  ...(m.hoistPattern || []).map((x) => "  - " + JSON.stringify(x)),\n'
+                '  "included:",\n'
+                '  "  dependencies: " + m.included.dependencies,\n'
+                '  "  devDependencies: " + m.included.devDependencies,\n'
+                '  "  optionalDependencies: " + m.included.optionalDependencies,\n'
+                '  "layoutVersion: " + m.layoutVersion,\n'
+                '  "nodeLinker: " + m.nodeLinker,\n'
+                '  "packageManager: " + m.packageManager,\n'
+                '  "pendingBuilds: []",\n'
+                '  "skipped:",\n'
+                '  ...(m.skipped || []).map((x) => "  - " + JSON.stringify(x)),\n'
+                '  "virtualStoreDir: " + m.virtualStoreDir,\n'
+                "];\n"
+                'fs.writeFileSync("/app/node_modules/.modules.yaml", lines.join("\\n") + "\\n");\n'
+                "YAML\n"
+                "/usr/local/bin/florabase-dev-entrypoint pnpm exec eslint --version",
+            ],
+            text=True,
+            capture_output=True,
+        )
+        require(
+            yaml_modules.returncode == 0,
+            f"Quality offline mode rejected valid YAML .modules.yaml: {yaml_modules.stderr!r}",
+        )
+
         incomplete_quality = subprocess.run(
             [
                 "docker",
@@ -307,8 +376,8 @@ def quality_network_smoke(root: Path) -> None:
                 frontend_image,
                 "-c",
                 "rm -rf /app/node_modules/react "
-                "&& ls -d /app/node_modules/.bin /app/node_modules/.pnpm/lock.yaml >/dev/null "
-                "&& /app/dev-entrypoint.sh echo SHOULD_NOT_RUN",
+                "&& ls -d /app/node_modules/.bin /app/node_modules/.pnpm/lock.yaml /app/node_modules/.modules.yaml >/dev/null "
+                "&& /usr/local/bin/florabase-dev-entrypoint echo SHOULD_NOT_RUN",
             ],
             text=True,
             capture_output=True,
@@ -325,6 +394,49 @@ def quality_network_smoke(root: Path) -> None:
             "Quality frontend dependencies are incomplete" in incomplete_quality.stderr,
             f"unexpected Quality offline failure output: {incomplete_quality.stderr!r}",
         )
+
+        for bad_name, bad_setup in (
+            ("corrupt-modules-yaml", 'printf "<<<corrupt>>>\\n" > /app/node_modules/.modules.yaml'),
+            (
+                "mismatch-package-manager",
+                'sed "s/pnpm@11.19.0/pnpm@9.0.0/" /app/node_modules/.modules.yaml > /tmp/m && cp /tmp/m /app/node_modules/.modules.yaml',
+            ),
+            (
+                "nonempty-pending-builds",
+                'printf "layoutVersion: 5\\npackageManager: pnpm@11.19.0\\nvirtualStoreDir: .pnpm\\npendingBuilds:\\n  - esbuild@0.27.7\\nincluded:\\n  dependencies: true\\n  devDependencies: true\\n" > /app/node_modules/.modules.yaml',
+            ),
+            ("lockfile-mismatch", 'printf "# drift\\n" >> /app/node_modules/.pnpm/lock.yaml'),
+        ):
+            corrupt_quality = subprocess.run(
+                [
+                    "docker",
+                    "run",
+                    "--rm",
+                    "--network",
+                    "none",
+                    "-e",
+                    "FLORABASE_QUALITY_OFFLINE=1",
+                    "--entrypoint",
+                    "sh",
+                    frontend_image,
+                    "-c",
+                    bad_setup + " && /usr/local/bin/florabase-dev-entrypoint echo SHOULD_NOT_RUN",
+                ],
+                text=True,
+                capture_output=True,
+            )
+            require(
+                corrupt_quality.returncode != 0,
+                f"Quality offline mode accepted invalid metadata ({bad_name})",
+            )
+            require(
+                "SHOULD_NOT_RUN" not in corrupt_quality.stdout,
+                f"Quality offline mode ran payload with invalid metadata ({bad_name})",
+            )
+            require(
+                "Quality frontend dependencies are incomplete" in corrupt_quality.stderr,
+                f"unexpected error output for {bad_name}: {corrupt_quality.stderr!r}",
+            )
 
         for case_name, setup in (
             ("valid", ""),
@@ -346,7 +458,7 @@ def quality_network_smoke(root: Path) -> None:
                     frontend_image,
                     "-c",
                     setup
-                    + r'mkdir -p /tmp/bin && printf "#!/bin/sh\necho SPY_PNPM CI=\$CI ARGS=\$*\n" > /tmp/bin/pnpm && chmod +x /tmp/bin/pnpm && PATH="/tmp/bin:$PATH" /app/dev-entrypoint.sh echo CMD_OK',
+                    + r'mkdir -p /tmp/bin && printf "#!/bin/sh\necho SPY_PNPM CI=\$CI ARGS=\$*\n" > /tmp/bin/pnpm && chmod +x /tmp/bin/pnpm && PATH="/tmp/bin:$PATH" /usr/local/bin/florabase-dev-entrypoint echo CMD_OK',
                 ],
                 text=True,
                 capture_output=True,
