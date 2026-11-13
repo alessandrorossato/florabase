@@ -60,7 +60,9 @@ def fail(error: Exception) -> NoReturn:
         else 404
     )
     code = (
-        "wcvp_source_unavailable"
+        "native_range_mapping_withdrawn"
+        if isinstance(error, service.WithdrawnRangeMappingError)
+        else "wcvp_source_unavailable"
         if status == 503
         else "native_range_proposal_stale"
         if status == 409

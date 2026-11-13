@@ -91,6 +91,13 @@ def test_error_translation_and_identity_lookup() -> None:
             api.fail(error)
         assert caught.value.status_code == expected
         assert cast(dict[str, str], caught.value.detail)["message"] == str(error)
+    with pytest.raises(HTTPException) as withdrawn:
+        api.fail(service.WithdrawnRangeMappingError("Deselect Costa Rica."))
+    assert withdrawn.value.status_code == 409
+    assert cast(dict[str, str], withdrawn.value.detail) == {
+        "code": "native_range_mapping_withdrawn",
+        "message": "Deselect Costa Rica.",
+    }
     identity_record = object()
     assert api.identity(as_session(Database(identity_record)), uuid7()) is identity_record
     with pytest.raises(HTTPException) as missing:

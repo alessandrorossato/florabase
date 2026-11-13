@@ -25,6 +25,24 @@ function eligible(taxon: WcvpTaxon) {
   );
 }
 
+function isWithdrawnMapping(error: ApiError) {
+  const { body } = error;
+  if (
+    error.status !== 409 ||
+    !body ||
+    typeof body !== "object" ||
+    !("detail" in body)
+  )
+    return false;
+  const { detail } = body;
+  return (
+    !!detail &&
+    typeof detail === "object" &&
+    "code" in detail &&
+    detail.code === "native_range_mapping_withdrawn"
+  );
+}
+
 export function NativeRangeEnrichmentPanel({
   identityId,
   onApplied,
@@ -109,6 +127,10 @@ export function NativeRangeEnrichmentPanel({
     } catch (err: unknown) {
       if (operation.current !== current) return;
       if (err instanceof ApiError && err.status === 401) auth.sessionExpired();
+      else if (err instanceof ApiError && isWithdrawnMapping(err))
+        setError(
+          "The historical Costa Rica mapping excludes Cocos Island. Deselect Costa Rica and retry, or retrieve a new proposal.",
+        );
       else
         setError(
           err instanceof ApiError && err.status === 409

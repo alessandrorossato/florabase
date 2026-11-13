@@ -43,7 +43,6 @@ class Release:
     checksum: str
     citation: str
     member_sizes: tuple[int, int, int]
-    crosswalk_version: str
     license: str = LICENSE
 
 
@@ -55,7 +54,6 @@ RELEASES = MappingProxyType(
             ARCHIVE_SHA256,
             CITATION,
             (17_827, 298_218_467, 141_066_449),
-            "wcvp15-wgsrpd2-cldr48.2.1-v1",
         ),
         "16": Release(
             "16",
@@ -65,7 +63,6 @@ RELEASES = MappingProxyType(
             "Facilitated by the Royal Botanic Gardens, Kew. [WWW document] "
             "URL https://doi.org/10.34885/egs6-cp24 [accessed 04 Jun 2026].",
             (18_112, 300_826_661, 141_657_561),
-            "wcvp16-wgsrpd2-cldr48.2.1-v1",
         ),
     }
 )

@@ -8619,3 +8619,20 @@ Status remains implemented pending canonical verification.
   the final gate for the exact candidate tree.
 - WCVP v15 remains the product default. The original Golden links and ledger are preserved.
   See the [operator activation and follow-up handoffs](dev-references.md).
+
+### WGSRPD-CROSSWALK-V2 — reviewed native-range mappings, 13 November 2026
+
+- New proposals on pinned WCVP v15 and v16 use the respective v2 crosswalk. Added nine exact
+  mappings and retained eleven. COS is partial, FIN includes separately seeded Åland, and BLT
+  remains a split with Kaliningrad explicitly named.
+- Frozen v1 proposals and applications retain their original evidence. Valid frozen selections
+  can still apply. A submitted COS-backed Costa Rica choice rejects the entire selection and
+  allows retry without that choice. The [read-only assessment](native-range-enrichment.md#read-only-review-of-historical-cos-additions)
+  identifies historical COS additions for optional operator review.
+- Focused Ruff, mypy, Prettier, ESLint and TypeScript passed. Passed 79 backend unit tests,
+  47 disposable PostgreSQL integration tests and 9 frontend tests. Independent detached QA
+  passed. Read-only pinned-index qualification reproduced +24,150 eligible v15 and +24,241
+  eligible v16 source assertions net. A scratch three-way merge of the concurrently edited
+  WCVP source module with BOTANICAL-MATCH-001 was conflict-free at review time.
+- Canonical verification is recorded by the worktree's FULL receipt. Operator delivery and
+  any retrospective collection review are separate steps.
