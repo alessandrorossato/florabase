@@ -8705,3 +8705,34 @@ Status remains implemented pending canonical verification.
 - Not run under the UX closeout policy: canonical `make feature-verify` (the plan selects FULL
   because `PartialDateField` is a high-risk path). Integration with `fix/fable-plant-kind` needs
   its creation key and guards to honour date drafts. Unresolved: D1.
+
+### FABLE-FIX-CUTTINGS — directory layout repair, 13 November 2026
+
+- Replaced Cuttings' raw lifecycle text and generic row assumptions with the shared record
+  composition, single-line lifecycle status chip, accessible preview control, and named details
+  action. Added Cuttings-scoped header and presentation rules so page tools stack in the directory
+  flow; list/gallery, search, filters, Saved Views, pagination and navigation state remain owned by
+  the existing Cuttings page.
+- Added focused regressions for long labels, both record types and presentations, lifecycle text,
+  preview keyboard activation, close/focus return, and advancing/returning pagination. Prettier,
+  ESLint, TypeScript and the focused Cuttings Vitest file passed (10 tests).
+- The guarded per-worktree comprehensive UAT instance was allocated at port 15180 after the active
+  FULL gate released the shared capacity lock. It uses this worktree's own project, database,
+  media and resources; the seeded manifest contains 3,181 records at schema `20261110_0047`.
+  Desktop 1440×900, tablet 1024×844 and mobile 390×844 layouts were visually checked in light and
+  dark themes. At those sizes, document width equaled viewport width; first list records began at
+  y≈235, y≈283 and y≈347 respectively. Status chips stayed on one line; 390px names wrapped by
+  words. Preview open/close returned focus; search, lifecycle filtering and Saved Views open/save
+  behavior worked. The temporary Saved View created for this check remains in this isolated UAT.
+- A single-record gallery expanded to an oversized square under the shared `auto-fit` grid. Added a
+  Cuttings-scoped 24rem card cap; the 1440px gallery visual now measures 366×366px and the 390px
+  visual measures 322×322px. A 720×450 effective-width check (the CSS viewport corresponding to a
+  1440×900 display at 200%) had no horizontal page overflow. The in-app browser did not expose a
+  functioning native zoom control, so actual 200% zoom remains unverified. Browser screenshots
+  were reviewed during the session but could not be persisted as local image files.
+- Independent read-only QA found no confirmed implementation defects. Persisted after-screenshot
+  files and actual browser 200% zoom evidence remain outstanding. Under the operator's temporary UX
+  closeout policy, canonical verification is deferred to the designated integrated worktree; this
+  implementation has no canonical receipt. Docker network pool exhaustion prevented its prior
+  isolated FULL attempt at migration-cycle. No DEV, Golden, NAS, production or shared Feature Review
+  resources were used.

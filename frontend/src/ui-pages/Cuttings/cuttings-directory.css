@@ -1,0 +1,90 @@
+/* Cuttings uses the shared directory components without a full workspace grid.
+   Keep its header controls stacked as a compact directory toolbar. */
+.app-content .cuttings-directory .page-header--with-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+.app-content
+  .cuttings-directory
+  .page-header--with-tools
+  > :is(.page-identity, .page-tools) {
+  flex: none;
+  width: 100%;
+  min-width: 0;
+}
+.app-content .cuttings-directory .page-header .page-tools,
+.app-content .cuttings-directory .directory-tools {
+  min-width: 0;
+}
+.app-content .cuttings-directory .cuttings-directory__surfaces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-end: var(--space-3);
+}
+.app-content
+  .cuttings-directory
+  .cuttings-directory__surfaces
+  [aria-pressed="true"] {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--primary-subtle);
+}
+.app-content .cuttings-directory .ui-record-content {
+  grid-template-columns: 3rem minmax(0, 1fr) minmax(0, auto);
+}
+.app-content .cuttings-directory .ui-record-visual {
+  color: var(--text-muted);
+}
+.app-content .cuttings-directory .ui-record-visual svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.app-content .cuttings-directory .ui-record-secondary {
+  overflow-wrap: anywhere;
+}
+.app-content .cuttings-directory .ui-status-chip {
+  white-space: nowrap;
+}
+.app-content .cuttings-directory .ui-directory-record-actions {
+  flex: none;
+}
+.app-content .cuttings-directory .ui-directory-card .ui-record-content {
+  grid-template-columns: minmax(0, 1fr);
+}
+.app-content .cuttings-directory .ui-directory-card .ui-record-visual {
+  width: auto;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  margin: var(--space-2) var(--space-2) 0;
+}
+.app-content
+  .cuttings-directory
+  .ui-directory-records--gallery
+  > .ui-directory-card {
+  width: 100%;
+  max-inline-size: 24rem;
+}
+.app-content .cuttings-directory .ui-directory-card .ui-record-visual svg {
+  width: 2rem;
+  height: 2rem;
+}
+@media (max-width: 48rem) {
+  .app-content .cuttings-directory .ui-record-content {
+    grid-template-columns: 3rem minmax(0, 1fr);
+    align-items: start;
+  }
+  .app-content .cuttings-directory .ui-record-title {
+    align-items: start;
+  }
+  .app-content .cuttings-directory .ui-record-secondary {
+    grid-column: 2;
+  }
+  .app-content .cuttings-directory .ui-directory-record-actions {
+    max-width: none;
+    margin-inline-start: auto;
+    padding-block-start: 0;
+  }
+}

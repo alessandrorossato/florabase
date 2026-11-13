@@ -250,6 +250,100 @@ test("cuttings session expiry returns to the sign-in flow", async () => {
   });
 });
 
+test("cuttings directory keeps statuses, long labels, views, and preview usable", async () => {
+  const longName =
+    "Salvia rosmarinus 'Tuscan Blue' mother plant cutting batch from the east greenhouse bench";
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((path: string) => {
+      if (path.startsWith("/api/v1/vegetative-lots?"))
+        return Promise.resolve(
+          json([{ ...lot, label: longName, lifecycle: "exhausted" }]),
+        );
+      if (path.startsWith("/api/v1/propagation-attempts?"))
+        return Promise.resolve(
+          json([
+            {
+              ...attempt,
+              label: "Long label rooting trial in coarse perlite and pumice",
+              lifecycle: "active",
+            },
+          ]),
+        );
+      return Promise.resolve(json([]));
+    }),
+  );
+  show();
+  const user = userEvent.setup();
+  const lotPreview = await screen.findByRole("button", {
+    name: `Quick preview ${longName}`,
+  });
+  expect(screen.getByText("Exhausted")).toHaveClass("ui-status-chip");
+  expect(
+    screen.getByRole("link", { name: `Open details: ${longName}` }),
+  ).toBeVisible();
+  lotPreview.focus();
+  await user.keyboard("{Enter}");
+  expect(screen.getByRole("button", { name: "Close preview" })).toHaveFocus();
+  await user.click(screen.getByRole("button", { name: "Close preview" }));
+  expect(lotPreview).toHaveFocus();
+
+  await user.click(screen.getByRole("button", { name: "Gallery" }));
+  expect(screen.getByRole("list", { name: "Material lots" })).toHaveClass(
+    "ui-directory-records--gallery",
+  );
+  await user.click(screen.getByRole("button", { name: "Rooting attempts" }));
+  expect(
+    await screen.findByRole("button", {
+      name: "Quick preview Long label rooting trial in coarse perlite and pumice",
+    }),
+  ).toBeVisible();
+  expect(screen.getByText("Active")).toHaveClass("ui-status-chip");
+});
+
+test("cuttings directory pagination advances and returns to the prior page", async () => {
+  const firstPage = Array.from({ length: 50 }, (_, index) => ({
+    ...lot,
+    id: `lot-${String(index)}`,
+    label: `Cuttings batch ${String(index)}`,
+    lifecycle: "active",
+  }));
+  const secondPage = [{ ...lot, id: "lot-50", label: "Cuttings batch 50" }];
+  const fetch = vi.fn((path: string) => {
+    if (path.startsWith("/api/v1/vegetative-lots?")) {
+      const offset = new URL(path, window.location.origin).searchParams.get(
+        "offset",
+      );
+      return Promise.resolve(json(offset === "50" ? secondPage : firstPage));
+    }
+    return Promise.resolve(json([]));
+  });
+  vi.stubGlobal("fetch", fetch);
+  show();
+  const user = userEvent.setup();
+  expect(
+    await screen.findByRole("button", {
+      name: "Quick preview Cuttings batch 0",
+    }),
+  ).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Next page" }));
+  expect(
+    await screen.findByRole("button", {
+      name: "Quick preview Cuttings batch 50",
+    }),
+  ).toBeVisible();
+  expect(fetch).toHaveBeenCalledWith(
+    expect.stringContaining("offset=50"),
+    expect.any(Object),
+  );
+  await user.click(screen.getByRole("button", { name: "Previous page" }));
+  expect(
+    await screen.findByRole("button", {
+      name: "Quick preview Cuttings batch 0",
+    }),
+  ).toBeVisible();
+});
+
 test("lot details save corrections with the version of the displayed lot", async () => {
   const fetch = vi.fn((path: string, options?: RequestInit) => {
     if (path === "/api/v1/vegetative-lots/lot") {

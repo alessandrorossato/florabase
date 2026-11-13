@@ -2714,6 +2714,23 @@
       "status": "implemented"
     },
     {
+      "id": "FABLE-FIX-CUTTINGS",
+      "category": "ui",
+      "description": "Repair the Cuttings directory layout and responsive record presentation identified by the Fable audit",
+      "acceptance_criteria": [
+        "Material lots and Rooting attempts use the shared directory structures with search, filters, Saved Views, pagination, Quick Preview, navigation and the existing saved-view keys preserved",
+        "At 1440×900 and 1024×844 the first populated record appears immediately after the necessary page controls, and at 390×844 the page has no horizontal overflow",
+        "Long botanical names, record labels, metadata and lifecycle labels wrap gracefully while status chips remain on one line in list and gallery views",
+        "Empty and populated directories, lifecycle filtering, search, pagination, preview close, keyboard focus return and 200% zoom work in light and dark themes for both record types",
+        "Before and after screenshots at 1440×900, 1024×844 and 390×844 use an isolated review database with synthetic records; independent read-only QA and the policy-selected canonical verification pass"
+      ],
+      "dependencies": [
+        "CUTTING-001"
+      ],
+      "priority": "P1",
+      "status": "in_progress"
+    },
+    {
       "id": "BOTANICAL-MATCH-1A",
       "category": "taxonomy",
       "description": "Deterministic read-only local candidate discovery and classification foundation for WFO 2026-06 and WCVP v16 without mutating canonical collection records",
