@@ -1,0 +1,13 @@
+# Opt-in overlay for Quality commands that genuinely require outbound networking
+# (dependency lockfile updates and remote reference archive downloads).
+# Using Docker's shared built-in bridge network avoids creating per-worktree
+# user-defined bridge subnets while keeping ports unpublished.
+services:
+  backend:
+    network_mode: bridge
+    networks: !reset []
+    ports: !reset []
+  frontend:
+    network_mode: bridge
+    networks: !reset []
+    ports: !reset []

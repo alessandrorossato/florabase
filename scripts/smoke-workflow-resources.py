@@ -4,8 +4,11 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
+import shutil
 import subprocess
+import sys
 import tempfile
 from contextlib import ExitStack
 from pathlib import Path
@@ -166,6 +169,136 @@ def finish_fixture(root: Path, owner: Owner) -> None:
         require(git("rev-parse", "HEAD", cwd=primary) == merge, "fixture primary fast-forwarded")
 
 
+def quality_network_smoke(root: Path) -> None:
+    """Verify a fresh isolated worktree runs network-free Quality checks without adding networks."""
+    seed = root / "seed"
+    remote = root / "remote.git"
+    primary = root / "primary"
+    linked = root / "linked-quality"
+
+    def git(*args: str, cwd: Path | None = None) -> str:
+        return subprocess.run(
+            ["git", *args], cwd=cwd, check=True, text=True, capture_output=True
+        ).stdout.strip()
+
+    seed.mkdir(parents=True)
+    for name in (
+        "compose.yaml",
+        "compose.dev.yaml",
+        "compose.quality.yaml",
+        "compose.quality-network.yaml",
+        ".env.example",
+    ):
+        shutil.copy2(ROOT / name, seed / name)
+    shutil.copytree(ROOT / "scripts", seed / "scripts")
+    shutil.copytree(
+        ROOT / "backend",
+        seed / "backend",
+        ignore=shutil.ignore_patterns(
+            ".venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"
+        ),
+    )
+    shutil.copytree(
+        ROOT / "frontend",
+        seed / "frontend",
+        ignore=shutil.ignore_patterns(
+            "node_modules", "dist", ".pnpm-store", "coverage", "*.tsbuildinfo"
+        ),
+    )
+    git("init", "--bare", "--initial-branch=main", str(remote))
+    git("init", "--initial-branch=main", str(seed))
+    git("config", "user.name", "Smoke", cwd=seed)
+    git("config", "user.email", "smoke@localhost", cwd=seed)
+    git("add", ".", cwd=seed)
+    git("commit", "-m", "seed", cwd=seed)
+    git("remote", "add", "origin", str(remote), cwd=seed)
+    git("push", "origin", "main", cwd=seed)
+    git("clone", str(remote), str(primary))
+    git("config", "user.name", "Smoke", cwd=primary)
+    git("config", "user.email", "smoke@localhost", cwd=primary)
+    git("worktree", "add", "-b", "fix/smoke-quality-net", str(linked), cwd=primary)
+    metadata = Path(git("rev-parse", "--absolute-git-dir", cwd=linked))
+    quality = Owner.quality(linked, metadata)
+    with Disposable(quality):
+        networks_before = set(docker("network", "ls", "-q", "--no-trunc").splitlines())
+        env_helper = [sys.executable, str(linked / "scripts" / "workflow_environment.py")]
+        backend_output = subprocess.run(
+            [
+                *env_helper,
+                "quality",
+                "compose",
+                "--",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "backend",
+                "python",
+                "-c",
+                "import os; print(','.join(sorted(os.listdir('/sys/class/net'))))",
+            ],
+            cwd=linked,
+            check=True,
+            text=True,
+            capture_output=True,
+        ).stdout.strip()
+        backend_ifaces = backend_output.splitlines()[-1] if backend_output else ""
+        require(backend_ifaces == "lo", f"expected only loopback interface, got {backend_output!r}")
+        subprocess.run(
+            [
+                *env_helper,
+                "quality",
+                "compose",
+                "--",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "frontend",
+                "pnpm",
+                "exec",
+                "eslint",
+                "--version",
+            ],
+            cwd=linked,
+            check=True,
+        )
+        net_config = json.loads(
+            subprocess.run(
+                [
+                    *env_helper,
+                    "--quality-network",
+                    "quality",
+                    "compose",
+                    "--",
+                    "config",
+                    "--format",
+                    "json",
+                ],
+                cwd=linked,
+                check=True,
+                text=True,
+                capture_output=True,
+            ).stdout
+        )
+        for service in ("backend", "frontend"):
+            require(
+                net_config["services"][service].get("network_mode") == "bridge",
+                f"--quality-network did not select bridge for {service}",
+            )
+            require(
+                not net_config["services"][service].get("ports"),
+                f"--quality-network published ports for {service}",
+            )
+        networks_after = set(docker("network", "ls", "-q", "--no-trunc").splitlines())
+        require(
+            networks_after == networks_before,
+            f"Quality runs created unexpected networks: {networks_after - networks_before}",
+        )
+        require(not Resources(quality).inventory()["networks"], "Quality inventory has networks")
+    require(not any(Resources(quality).inventory().values()), "quality smoke fixture residual")
+
+
 def main() -> None:
     before = real_operator_signature()
     with tempfile.TemporaryDirectory(prefix="florabase-resource-smoke-") as temporary:
@@ -236,6 +369,7 @@ def main() -> None:
             )
         for _, owner in [("target", target), *protected]:
             require(not any(Resources(owner).inventory().values()), "smoke fixture residual")
+    quality_network_smoke(root / "quality-net")
     require(real_operator_signature() == before, "real operator projects changed")
     print(
         "WORKFLOW_RESOURCE_SMOKE_PASSED: all synthetic containers/networks/volumes retired; real DEV/Review/UAT/Stable/Prod resource identities unchanged"

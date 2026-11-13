@@ -7,14 +7,23 @@ x-owner: &owner
 services:
   db:
     labels: *owner
+    network_mode: none
+    networks: !reset []
+    ports: !reset []
   backend:
     labels: *owner
+    network_mode: none
+    networks: !reset []
+    ports: !reset []
     build:
       labels:
         <<: *owner
         com.docker.compose.project: ${COMPOSE_PROJECT_NAME:?Quality project required}
   frontend:
     labels: *owner
+    network_mode: none
+    networks: !reset []
+    ports: !reset []
     environment:
       # Keep the full jsdom suite stable on small linked-worktree hosts.
       VITEST_MAX_WORKERS: "1"
@@ -24,13 +33,13 @@ services:
         com.docker.compose.project: ${COMPOSE_PROJECT_NAME:?Quality project required}
   dev-state-init:
     labels: *owner
+    network_mode: none
+    networks: !reset []
     build:
       labels:
         <<: *owner
         com.docker.compose.project: ${COMPOSE_PROJECT_NAME:?Quality project required}
-networks:
-  internal:
-    labels: *owner
+networks: !reset {}
 volumes:
   postgres_data:
     labels: *owner

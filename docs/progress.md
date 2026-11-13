@@ -1,3 +1,11 @@
+## 2026-11-13 — WF-01: Eliminate idle Quality Docker networks
+
+- Eliminated per-worktree Docker bridge network allocation (`florabase-quality-<hash>_internal`) during ordinary Quality runs by setting `network_mode: none`, `networks: !reset []`, and `ports: !reset []` (plus top-level `networks: !reset {}`) in `compose.quality.yaml`.
+- Added opt-in `compose.quality-network.yaml` and `scripts/workflow_environment.py --quality-network` (restricted to `quality compose`) so only `make dependency-update` and `make dev-references-setup` attach `backend` and `frontend` to Docker's shared default `bridge` network without allocating per-worktree bridge subnets or publishing host ports.
+- Updated `frontend/dev-entrypoint.sh` to skip `pnpm install --frozen-lockfile --prefer-offline` when `/app/node_modules/.bin` and matching `/app/node_modules/.pnpm/lock.yaml` are already present, and scoped `CI=true` strictly to `pnpm install` so `pnpm 11` does not run `runDepsStatusCheck` / `Recreating /app/node_modules` against the registry on offline Quality script invocations.
+- Documented Quality network isolation and the host `default-address-pools` prerequisite in `docs/development.md` and `docs/development-workflow.md`; added regression coverage in `scripts/test-environment-workflow.py` and real Docker fresh-worktree network/cleanup smoke in `scripts/smoke-workflow-resources.py`.
+- Focused checks passed cleanly: `make lint format-check typecheck`, `make test`, `make api-check`, `make workflow-check`, `make test-environment-workflow test-workflow-resources`, and `make smoke-workflow-resources`, with `make quality-status` and `docker network ls` confirming zero new networks created or retained (`docs/features.json` left untouched per coordinated task boundary).
+
 ## 2026-11-13 — FABLE-CHECK-PLANT-KIND (UX-014): Synchronize Plant and Plant group creation kind with route changes
 
 - Reproduced UX-014: switching between `#/plants?action=create&kind=plant` and `#/plants?action=create&kind=group` while `PlantScreen` remained mounted (via `+` menu, Command Palette, `<a href>` links, `hashchange`, or browser Back/Forward) left `contextualCreationStarted` latched, keeping the prior `creationKind` and submitting to the wrong endpoint.

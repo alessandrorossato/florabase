@@ -69,8 +69,20 @@ Disposable integration/migration/build/smoke resources retire automatically on s
 caught interruption, with exact positive ownership and residual verification. Quality remains
 reusable; `make quality-status`, `make quality-clean` and `make workflow-resources` expose its exact
 worktree lifecycle. Proven `feature-finish` retires only the finishing worktree's Quality project.
-Persistent environments retain their existing guarded semantics. Shared BuildKit cache and ambiguous
-images remain explicitly reported; no shared-daemon global prune is automated.
+Quality services default to `network_mode: none` (`compose.quality.yaml`) so ordinary lint, format,
+typecheck, API-check, workflow-check, unit-test and local reference status/verify runs do not
+allocate per-worktree Docker bridge networks; only `make dependency-update` and
+`make dev-references-setup` opt into `compose.quality-network.yaml` (via
+`workflow_environment.py --quality-network`), attaching to Docker's shared default `bridge` without
+creating project bridge subnets. Persistent environments retain their existing guarded semantics.
+Shared BuildKit cache and ambiguous images remain explicitly reported; no shared-daemon global
+prune is automated.
+
+On hosts running multiple concurrent Florabase environments (DEV, Feature Review, UAT Preview,
+Stable Preview, integration tests or additional Compose stacks), configure Docker's daemon
+`default-address-pools` manually (for example adding a private RFC 1918 base block with `/24`
+subnets in `/etc/docker/daemon.json`) if the default `172.17`–`172.31` bridge subnet pool fills up.
+Repository scripts never modify host daemon configuration.
 
 ## Optional host tools
 

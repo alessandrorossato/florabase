@@ -707,6 +707,56 @@ class EnvironmentTests(unittest.TestCase):
         self.assertEqual(commands[2], ("run", "--rm", "-T", "--no-deps", "dev-state-init"))
         self.assertEqual(commands[3], ("run", "--rm", "--no-deps", "frontend", "pnpm", "lint"))
 
+    def test_quality_network_mode_defaults_none_and_opt_in_bridge(self) -> None:
+        quality = Environment(self.repo, "quality")
+        default_command = quality.command("config")
+        self.assertIn(str(self.feature / "compose.quality.yaml"), default_command)
+        self.assertNotIn(str(self.feature / "compose.quality-network.yaml"), default_command)
+
+        networked = Environment(self.repo, "quality", quality_network=True)
+        net_command = networked.command("config")
+        self.assertIn(str(self.feature / "compose.quality.yaml"), net_command)
+        self.assertIn(str(self.feature / "compose.quality-network.yaml"), net_command)
+
+        with self.assertRaisesRegex(WorkflowError, "--quality-network"):
+            Environment(self.repo, "dev", quality_network=True)
+
+        for argv in (
+            ["workflow", "--quality-network", "review", "compose", "--", "config"],
+            ["workflow", "--quality-network", "quality", "status"],
+        ):
+            with (
+                patch("workflow_environment.Repository", return_value=self.repo),
+                patch("sys.argv", argv),
+                contextlib.redirect_stderr(io.StringIO()),
+            ):
+                self.assertEqual(main(), 1)
+
+        quality_overlay = (ROOT / "compose.quality.yaml").read_text(encoding="utf-8")
+        for service in ("db:", "backend:", "frontend:", "dev-state-init:"):
+            self.assertIn(service, quality_overlay)
+        self.assertEqual(quality_overlay.count("network_mode: none"), 4)
+        self.assertEqual(quality_overlay.count("networks: !reset []"), 4)
+        self.assertEqual(quality_overlay.count("ports: !reset []"), 3)
+        self.assertIn("networks: !reset {}", quality_overlay)
+
+        network_overlay = (ROOT / "compose.quality-network.yaml").read_text(encoding="utf-8")
+        self.assertEqual(network_overlay.count("network_mode: bridge"), 2)
+        self.assertEqual(network_overlay.count("networks: !reset []"), 2)
+        self.assertEqual(network_overlay.count("ports: !reset []"), 2)
+
+        makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
+        self.assertIn(
+            "DEV_NET_COMPOSE := python3 ./scripts/workflow_environment.py --quality-network quality compose --",
+            makefile,
+        )
+        net_targets = [
+            line.split()[0]
+            for line in makefile.splitlines()
+            if "$(DEV_NET_COMPOSE)" in line and not line.startswith("DEV_NET_COMPOSE")
+        ]
+        self.assertEqual(len(net_targets), 4)
+
     def test_review_remove_requires_exact_scope_confirmation_before_commands(self) -> None:
         review = Environment(self.repo, "review")
         with patch.object(review, "compose") as compose:
