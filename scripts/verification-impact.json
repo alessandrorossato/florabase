@@ -409,11 +409,15 @@
     },
     "taxonomy": {
       "backend": [
+        "backend/tests/test_botanical_matching_classifier.py",
+        "backend/tests/test_botanical_matching_normalizer.py",
+        "backend/tests/test_botanical_matching_sources.py",
         "backend/tests/test_taxonomy.py",
         "backend/tests/test_taxonomy_api.py",
         "backend/tests/test_taxonomy_service.py"
       ],
       "integration": [
+        "backend/tests/integration/test_botanical_matching_readonly.py",
         "backend/tests/integration/test_taxonomy.py",
         "backend/tests/integration/test_taxonomy_migration.py"
       ],
@@ -1518,6 +1522,36 @@
       "path": "frontend/src/species-distribution/SpeciesDistributionScreen.test.tsx",
       "scope": "explore",
       "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/botanical_matching/",
+      "scope": "taxonomy",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/scripts/botanical_match_qualify.py",
+      "scope": "taxonomy",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_botanical_matching_classifier.py",
+      "scope": "taxonomy",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_botanical_matching_normalizer.py",
+      "scope": "taxonomy",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_botanical_matching_sources.py",
+      "scope": "taxonomy",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_botanical_matching_readonly.py",
+      "scope": "taxonomy",
+      "layer": "backend"
     },
     {
       "prefix": "backend/src/florabase/taxonomy/",

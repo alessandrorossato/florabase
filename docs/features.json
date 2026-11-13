@@ -2712,6 +2712,23 @@
       ],
       "priority": "P2",
       "status": "implemented"
+    },
+    {
+      "id": "BOTANICAL-MATCH-1A",
+      "category": "taxonomy",
+      "description": "Deterministic read-only local candidate discovery and classification foundation for WFO 2026-06 and WCVP v16 without mutating canonical collection records",
+      "acceptance_criteria": [
+        "WfoSource and WcvpSource expose bounded, single-connection batched exact-name and indexed prefix lookups while preserving existing SQLite schemas, integrity checks, and WCVP v15 historical support",
+        "Pure normalization and classification helpers handle whitespace, inline/separate cultivars, advisory inline authorship, infraspecific rank markers, hybrids, homonyms, synonyms, unplaced names, existing link posture (including synthetic Golden isolation), and cross-source/version disagreements with explicit reason codes and confidence tiers",
+        "Read-only collection discovery queries active non-tombstoned BotanicalIdentity, SeedLot/Plant representation, and WfoLink/WcvpLink/ExternalTaxonLink rows in O(1) bounded SELECTs without mutating records or issuing remote HTTP requests",
+        "Focused unit tests, disposable PostgreSQL read-only integration tests, read-only qualification CLI against official WFO 2026-06 and WCVP v16 indexes, independent QA review, and canonical verification pass"
+      ],
+      "dependencies": [
+        "DEV-REFERENCES-001",
+        "WCVP-DEFAULT-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
     }
   ]
 }
