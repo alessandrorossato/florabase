@@ -358,7 +358,13 @@ function ApplicationShell() {
 
   useEffect(() => {
     formChanged.current = false;
-  }, [route.section]);
+  }, [
+    route.section,
+    route.recordId,
+    route.action,
+    route.creationKind,
+    route.identityId,
+  ]);
 
   /** Guarded in-app navigation to any existing hash route (shell, palette, menus). */
   function navigateTo(target: string) {
@@ -450,6 +456,16 @@ function ApplicationShell() {
           )
             return;
           event.preventDefault();
+          if (
+            link.hash !== window.location.hash &&
+            formChanged.current &&
+            document.querySelector(".app-content form:not([role='search'])") &&
+            !window.confirm(
+              "Discard unsaved form changes and return to the workspace?",
+            )
+          )
+            return;
+          formChanged.current = false;
           openCollectionPage(link.hash);
         }}
         onChangeCapture={(event) => {

@@ -3617,3 +3617,197 @@ test("phenology is recorded stage first, shown once in the Journal and compared 
     `journal-entry-${eventId.slice(0, -2)}81`,
   );
 });
+
+test("switching between New plant and New plant group via + menu updates form kind, focus, and endpoint", async () => {
+  const createdPlants: unknown[] = [];
+  const createdGroups: unknown[] = [];
+  let failNextGroup = true;
+  mockApi(
+    plantHandler([], [], (path, init) => {
+      if (path === "/api/v1/plants" && init?.method === "POST") {
+        createdPlants.push(
+          JSON.parse(
+            typeof init.body === "string" ? init.body : "{}",
+          ) as unknown,
+        );
+        return json(plant({ label: "Saved Plant" }), 201);
+      }
+      if (path === "/api/v1/plant-groups" && init?.method === "POST") {
+        if (failNextGroup) {
+          failNextGroup = false;
+          return json(
+            {
+              detail: [
+                { loc: ["body", "label"], msg: "Backend validation error" },
+              ],
+            },
+            422,
+          );
+        }
+        createdGroups.push(
+          JSON.parse(
+            typeof init.body === "string" ? init.body : "{}",
+          ) as unknown,
+        );
+        return json(group({ label: "Saved Group" }), 201);
+      }
+      return undefined;
+    }),
+  );
+
+  setViewportMatches(true);
+  Object.defineProperty(window, "innerWidth", {
+    configurable: true,
+    value: 390,
+  });
+  const user = userEvent.setup();
+  render(<App />);
+
+  await user.click(await screen.findByRole("button", { name: "New record" }));
+  await user.click(screen.getByRole("link", { name: "New plant" }));
+  const plantHeading = await screen.findByRole("heading", {
+    name: "Record Plant",
+  });
+  expect(plantHeading).toHaveFocus();
+  expect(screen.queryByLabelText("Quantity kind")).not.toBeInTheDocument();
+
+  // Switch to New plant group from the + menu while the form is open.
+  await user.click(screen.getByRole("button", { name: "New record" }));
+  await user.click(screen.getByRole("link", { name: "New plant group" }));
+  const groupHeading = await screen.findByRole("heading", {
+    name: "Record Plant group",
+  });
+  expect(window.location.hash).toBe("#/plants?action=create&kind=group");
+  expect(groupHeading).toHaveFocus();
+  expect(screen.getByLabelText("Quantity kind")).toBeInTheDocument();
+
+  // Failed save preserves group form and does not hit /api/v1/plants.
+  await chooseReference(
+    user,
+    "Botanical identity",
+    identities[0].scientific_name,
+  );
+  await user.type(screen.getByLabelText("Label"), "Bench group");
+  await user.click(screen.getByRole("button", { name: "Record Plant group" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Check label and try again.",
+  );
+  expect(createdPlants).toHaveLength(0);
+
+  // Successful save hits /api/v1/plant-groups.
+  await user.click(screen.getByRole("button", { name: "Record Plant group" }));
+  expect(
+    await screen.findByText("Plant group was added to the collection."),
+  ).toBeInTheDocument();
+  expect(createdGroups).toHaveLength(1);
+  expect(createdPlants).toHaveLength(0);
+
+  // Switch from New plant group back to New plant via + menu.
+  await user.click(screen.getByRole("button", { name: "New record" }));
+  await user.click(screen.getByRole("link", { name: "New plant group" }));
+  await screen.findByRole("heading", { name: "Record Plant group" });
+  await user.click(screen.getByRole("button", { name: "New record" }));
+  await user.click(screen.getByRole("link", { name: "New plant" }));
+  expect(
+    await screen.findByRole("heading", { name: "Record Plant" }),
+  ).toHaveFocus();
+  expect(screen.queryByLabelText("Quantity kind")).not.toBeInTheDocument();
+
+  await chooseReference(
+    user,
+    "Botanical identity",
+    identities[0].scientific_name,
+  );
+  await user.type(screen.getByLabelText("Label"), "Single specimen");
+  await user.click(screen.getByRole("button", { name: "Record Plant" }));
+  expect(
+    await screen.findByText("Plant was added to the collection."),
+  ).toBeInTheDocument();
+  expect(createdPlants).toHaveLength(1);
+});
+
+test("direct hashchange and Back/Forward keep creation kind synchronized and protect unsaved drafts", async () => {
+  const createdGroups: unknown[] = [];
+  mockApi(
+    plantHandler([], [], (path, init) => {
+      if (path === "/api/v1/plant-groups" && init?.method === "POST") {
+        createdGroups.push(
+          JSON.parse(
+            typeof init.body === "string" ? init.body : "{}",
+          ) as unknown,
+        );
+        return json(group({ label: "Direct Group" }), 201);
+      }
+      return undefined;
+    }),
+  );
+
+  window.history.replaceState(
+    null,
+    "",
+    `#/plants?action=create&identity=${identityId}&kind=plant`,
+  );
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  const user = userEvent.setup();
+  render(<App />);
+
+  await screen.findByRole("heading", { name: "Record Plant" });
+  expect(
+    screen.getByRole("combobox", { name: "Botanical identity" }),
+  ).toHaveValue(identities[0].scientific_name);
+
+  // Dirty draft is protected against direct hashchange when user cancels discard.
+  await user.type(screen.getByLabelText("Label"), "Draft plant label");
+  act(() => {
+    window.history.pushState(null, "", "#/plants?action=create&kind=group");
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+  });
+  expect(confirm).toHaveBeenCalledWith("Discard unsaved plant changes?");
+  expect(window.location.hash).toBe(
+    `#/plants?action=create&identity=${identityId}&kind=plant`,
+  );
+  expect(
+    screen.getByRole("heading", { name: "Record Plant" }),
+  ).toBeInTheDocument();
+  expect(screen.getByLabelText("Label")).toHaveValue("Draft plant label");
+
+  // Dirty Cancel button also protects the draft until confirmed.
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.getByLabelText("Label")).toHaveValue("Draft plant label");
+
+  // Confirming discard on hashchange switches to clean Plant group form without carrying over Plant draft.
+  confirm.mockReturnValue(true);
+  await navigateHistory("hashchange", () => {
+    window.history.pushState(
+      null,
+      "",
+      `#/plants?action=create&identity=${identityId}&kind=group`,
+    );
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+  });
+  await screen.findByRole("heading", { name: "Record Plant group" });
+  expect(screen.getByLabelText("Label")).toHaveValue("");
+  expect(
+    screen.getByRole("combobox", { name: "Botanical identity" }),
+  ).toHaveValue(identities[0].scientific_name);
+  expect(screen.getByLabelText("Quantity kind")).toBeInTheDocument();
+
+  // Browser Back returns to Plant creation; Forward returns to Plant group creation.
+  await navigateHistory("popstate", () => {
+    window.history.back();
+  });
+  await screen.findByRole("heading", { name: "Record Plant" });
+  expect(screen.queryByLabelText("Quantity kind")).not.toBeInTheDocument();
+
+  await navigateHistory("popstate", () => {
+    window.history.forward();
+  });
+  await screen.findByRole("heading", { name: "Record Plant group" });
+  expect(screen.getByLabelText("Quantity kind")).toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "Record Plant group" }));
+  expect(
+    await screen.findByText("Plant group was added to the collection."),
+  ).toBeInTheDocument();
+  expect(createdGroups).toHaveLength(1);
+});

@@ -80,6 +80,7 @@ import {
 import { FieldHelp } from "../components/ContextualHelp";
 import {
   closeCollectionPage,
+  isRecordTaskNavigation,
   openCollectionPage,
   setRecordRoute,
 } from "../components/recordNavigation";
@@ -960,7 +961,13 @@ export function PlantScreen({
         );
     },
   });
-  const contextualCreationStarted = useRef(false);
+  const contextualCreationKey = useRef<string | null>(null);
+  const creationBaseline = useRef("");
+  const creationHash = useRef("");
+  const creationRestoring = useRef(false);
+  const creationRouteKey = startCreating
+    ? `${initialCreationKind ?? ""}:${initialIdentityId ?? ""}`
+    : null;
   const {
     expanded: creationExpanded,
     triggerRef: creationTriggerRef,
@@ -979,7 +986,12 @@ export function PlantScreen({
       closeCreation();
     }
     previousCreateRoute.current = startCreating;
-    if (!startCreating) contextualCreationStarted.current = false;
+    if (!startCreating) {
+      contextualCreationKey.current = null;
+      creationBaseline.current = "";
+      creationHash.current = "";
+      creationRestoring.current = false;
+    }
   }, [startCreating, creationExpanded, closeCreation]);
   useCollectionPageReturnFocus(
     Boolean(references) &&
@@ -1095,23 +1107,69 @@ export function PlantScreen({
     openCreation,
     closeCreation,
   ]);
+  const isCreationActive = editing && !selectedKey && !extractionSource;
+
   useEffect(() => {
-    if (!startCreating || !references || contextualCreationStarted.current)
+    if (!isCreationActive) return;
+    const guardDeparture = (event: Event) => {
+      if (isRecordTaskNavigation(event)) return;
+      if (
+        creationBaseline.current === "" ||
+        JSON.stringify(form) === creationBaseline.current
+      )
+        return;
+      if (window.location.hash === creationHash.current) {
+        creationRestoring.current = false;
+        return;
+      }
+      if (creationRestoring.current) {
+        event.stopImmediatePropagation();
+        return;
+      }
+      if (window.confirm("Discard unsaved plant changes?")) return;
+      event.stopImmediatePropagation();
+      if (event.type === "popstate") {
+        creationRestoring.current = true;
+        window.history.forward();
+      } else if (creationHash.current) {
+        window.history.replaceState(null, "", creationHash.current);
+      }
+    };
+    window.addEventListener("popstate", guardDeparture, true);
+    window.addEventListener("hashchange", guardDeparture, true);
+    return () => {
+      window.removeEventListener("popstate", guardDeparture, true);
+      window.removeEventListener("hashchange", guardDeparture, true);
+    };
+  }, [isCreationActive, form]);
+
+  useEffect(() => {
+    if (
+      !startCreating ||
+      !references ||
+      !creationRouteKey ||
+      contextualCreationKey.current === creationRouteKey
+    )
       return;
-    contextualCreationStarted.current = true;
+    contextualCreationKey.current = creationRouteKey;
+    creationHash.current = window.location.hash;
+    creationRestoring.current = false;
+    const nextForm: FormState = {
+      ...blankForm(),
+      botanicalIdentityId: initialIdentityId ?? "",
+    };
+    creationBaseline.current = JSON.stringify(nextForm);
     setExtractionSource(null);
     setSelectedKey(null);
     setDetail({ status: "idle" });
     setCreationKind(initialCreationKind ?? null);
     setEditing(true);
     setMobileDetail(true);
-    setForm({
-      ...blankForm(),
-      botanicalIdentityId: initialIdentityId ?? "",
-    });
+    setForm(nextForm);
     setSave({ status: "idle" });
     openCreation();
   }, [
+    creationRouteKey,
     initialCreationKind,
     initialIdentityId,
     openCreation,
@@ -1440,6 +1498,11 @@ export function PlantScreen({
   );
 
   function startCreate() {
+    const nextForm = blankForm();
+    contextualCreationKey.current = ":";
+    creationHash.current = "#/plants?action=create";
+    creationBaseline.current = JSON.stringify(nextForm);
+    creationRestoring.current = false;
     openCollectionPage("#/plants?action=create");
     setExtractionSource(null);
     setSelectedKey(null);
@@ -1447,15 +1510,24 @@ export function PlantScreen({
     setCreationKind(null);
     setEditing(true);
     setMobileDetail(true);
-    setForm(blankForm());
+    setForm(nextForm);
     setSave({ status: "idle" });
     openCreation();
   }
 
   function chooseCreationKind(kind: RecordKind) {
-    setRecordRoute(`#/plants?action=create&kind=${kind}`, true);
+    const nextHash = `#/plants?action=create&kind=${kind}${initialIdentityId ? `&identity=${encodeURIComponent(initialIdentityId)}` : ""}`;
+    const nextForm: FormState = {
+      ...blankForm(),
+      botanicalIdentityId: initialIdentityId ?? "",
+    };
+    contextualCreationKey.current = `${kind}:${initialIdentityId ?? ""}`;
+    creationHash.current = nextHash;
+    creationBaseline.current = JSON.stringify(nextForm);
+    creationRestoring.current = false;
+    setRecordRoute(nextHash, true);
     setCreationKind(kind);
-    setForm(blankForm());
+    setForm(nextForm);
     setSave({ status: "idle" });
   }
 
@@ -1483,6 +1555,14 @@ export function PlantScreen({
       edit.close();
       return;
     }
+    if (
+      !selected &&
+      !extractionSource &&
+      creationBaseline.current !== "" &&
+      JSON.stringify(form) !== creationBaseline.current &&
+      !window.confirm("Discard unsaved plant changes?")
+    )
+      return;
     const wasExtraction = extractionSource !== null;
     setEditing(false);
     setExtractionSource(null);

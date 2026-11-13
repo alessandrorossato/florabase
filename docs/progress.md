@@ -1,3 +1,10 @@
+## 2026-11-13 — FABLE-CHECK-PLANT-KIND (UX-014): Synchronize Plant and Plant group creation kind with route changes
+
+- Reproduced UX-014: switching between `#/plants?action=create&kind=plant` and `#/plants?action=create&kind=group` while `PlantScreen` remained mounted (via `+` menu, Command Palette, `<a href>` links, `hashchange`, or browser Back/Forward) left `contextualCreationStarted` latched, keeping the prior `creationKind` and submitting to the wrong endpoint.
+- Fixed `frontend/src/plants/PlantScreen.tsx` to track `creationRouteKey` (`initialCreationKind:initialIdentityId`), synchronize `creationKind` and reset the draft cleanly (preserving `initialIdentityId` when present in the target route), guard dirty creation drafts against `Cancel`, `hashchange`, and non-task `popstate`, and avoid double-prompting on `isRecordTaskNavigation` transitions.
+- Updated `frontend/src/App.tsx` to reset `formChanged` across creation-kind/identity/record route transitions and guard `.app-content` collection links when a form has unsaved changes.
+- Added regression tests in `frontend/src/plants/PlantScreen.test.tsx` covering `+` menu switching at 390px viewport, 422 validation failure and successful saves, direct `hashchange`, browser Back/Forward, `Cancel`, and unsaved-draft protection; independent read-only QA passed.
+
 ## 2026-11-13 — BOTANICAL-MATCH-1A: Read-only botanical candidate discovery and classification foundation
 
 - Implemented the read-only local matching engine under `backend/src/florabase/botanical_matching/`
