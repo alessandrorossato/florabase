@@ -24,7 +24,7 @@ import {
 import "./activity.css";
 import { FieldHelp } from "../components/ContextualHelp";
 import { locationsForScope, type LocationResponse } from "../locations/api";
-import { invalidDateControls } from "../seed-lots/dateControls";
+import { hasDateDraft, invalidDateControls } from "../seed-lots/dateControls";
 import { OccurrenceDateChoice, type DateChoice } from "./OccurrenceDateChoice";
 import { PhotosSection } from "../photos/PhotosSection";
 import { EventTargetPhoto } from "./EventTargetPhoto";
@@ -271,9 +271,12 @@ export function EventJournal({
     if (pending || !editor) return;
     const initial = editor === "create" ? blankForm() : formFrom(editor);
     // A date choice or a half-typed date is unsaved input even while the value is still null.
-    const dateInput = entryForm.current?.querySelector(
-      `${editor === "create" ? '[data-date-control="choice"]:checked, ' : ""}[data-date-control]:not([data-date-control="choice"]):invalid`,
-    );
+    const dateInput =
+      hasDateDraft(entryForm.current) ||
+      (editor === "create" &&
+        entryForm.current?.querySelector(
+          '[data-date-control="choice"]:checked',
+        ));
     if (JSON.stringify(form) === JSON.stringify(initial) && !dateInput)
       setEditor(null);
     else setConfirmDiscard(true);

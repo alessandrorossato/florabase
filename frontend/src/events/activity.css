@@ -640,3 +640,7 @@ body:has(.activity-page dialog[open]) {
 .occurrence-date-choices .checkbox-label {
   min-height: var(--control-height);
 }
+/* The date parts sit under "Another date": a field label, not a second dialog heading. */
+.occurrence-date-choice .partial-date legend {
+  font: var(--type-strong);
+}

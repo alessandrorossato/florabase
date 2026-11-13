@@ -102,6 +102,7 @@ import {
 } from "../provenance-sites/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
 import {
+  hasDateDraft,
   invalidDateControls,
   invalidDateErrorField,
 } from "../seed-lots/dateControls";
@@ -916,6 +917,7 @@ export function PlantScreen({
   const [editing, setEditing] = useState(false);
   const [creationKind, setCreationKind] = useState<RecordKind | null>(null);
   const [form, setForm] = useState<FormState>(blankForm);
+  const formElement = useRef<HTMLFormElement>(null);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [extractionSource, setExtractionSource] =
     useState<PlantGroupResponse | null>(null);
@@ -951,7 +953,8 @@ export function PlantScreen({
     routeIsEdit: initialTab === "edit",
     canDismiss: () =>
       save.status !== "saving" &&
-      (JSON.stringify(form) === editBaseline.current ||
+      ((JSON.stringify(form) === editBaseline.current &&
+        !hasDateDraft(formElement.current)) ||
         window.confirm("Discard unsaved plant changes?")),
     onDismiss: () => {
       setEditing(false);
@@ -2047,6 +2050,7 @@ export function PlantScreen({
         </div>
       ) : formKind ? (
         <form
+          ref={formElement}
           className="seed-form plant-form collection-form"
           onClickCapture={(event) => {
             if (!selected || !(event.target instanceof Element)) return;
@@ -2139,6 +2143,7 @@ export function PlantScreen({
               : "Multiple individuals of one botanical identity managed together. Keep an uncertain count approximate or unknown."}
           </p>
           <FormSections
+            key={selectedKey ?? extractionSource?.id ?? "new"}
             mode={selected && !extractionSource ? "edit" : "page"}
             disabled={pending}
             error={save.status === "error" ? save : undefined}

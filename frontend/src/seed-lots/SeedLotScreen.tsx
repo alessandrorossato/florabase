@@ -123,7 +123,11 @@ import {
   type SupplierResponse,
 } from "../suppliers/api";
 import { PartialDateField } from "./PartialDateField";
-import { invalidDateControls, invalidDateErrorField } from "./dateControls";
+import {
+  hasDateDraft,
+  invalidDateControls,
+  invalidDateErrorField,
+} from "./dateControls";
 import { ReferencePicker } from "./ReferencePicker";
 import {
   createSeedLot,
@@ -776,6 +780,7 @@ export function SeedLotScreen({
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<FormState>(blankForm);
+  const formElement = useRef<HTMLFormElement>(null);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [context, setContext] = useState<{
     kind: ContextKind;
@@ -810,7 +815,8 @@ export function SeedLotScreen({
       )
         return false;
       return (
-        JSON.stringify(form) === editBaseline.current ||
+        (JSON.stringify(form) === editBaseline.current &&
+          !hasDateDraft(formElement.current)) ||
         window.confirm("Discard unsaved seed lot changes?")
       );
     },
@@ -1463,6 +1469,7 @@ export function SeedLotScreen({
       }}
     >
       <form
+        ref={formElement}
         className="seed-form collection-form"
         onClickCapture={(event) => {
           if (!selected || !(event.target instanceof Element)) return;
@@ -1527,6 +1534,7 @@ export function SeedLotScreen({
           </div>
         )}
         <FormSections
+          key={selectedId ?? "new"}
           mode={selected ? "edit" : "page"}
           disabled={pending}
           error={save.status === "error" ? save : undefined}

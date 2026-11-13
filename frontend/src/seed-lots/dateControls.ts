@@ -17,3 +17,16 @@ export const invalidDateErrorField = {
   match: /is incomplete: enter a valid/,
   selector: "input[data-date-control]:invalid",
 };
+
+/**
+ * True while a date field holds typed input that is not yet a value. The form state still
+ * reads null there, so dirty checks that compare form state must also ask this.
+ */
+export function hasDateDraft(form: HTMLFormElement | null): boolean {
+  return Boolean(
+    form &&
+    invalidDateControls(form).some(
+      (control) => control.dataset.dateControl !== "choice",
+    ),
+  );
+}

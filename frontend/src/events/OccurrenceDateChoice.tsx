@@ -79,7 +79,7 @@ export function OccurrenceDateChoice({
     </label>
   );
   return (
-    <fieldset className="partial-date partial-date--stacked">
+    <fieldset className="partial-date partial-date--stacked occurrence-date-choice">
       <FieldLabel as="legend" required>
         When did it happen?
       </FieldLabel>

@@ -8690,5 +8690,18 @@ Status remains implemented pending canonical verification.
   (detached checkout) returned PASS_WITH_RISKS; the discard prompt now counts a chosen or
   half-typed date, and the TZ test restore was fixed. Rendering was checked with a throwaway
   harness at 1440, 1024, 390 and 720 px (200 %), light and dark.
-- Unresolved: D1; a page form reset while a half-typed date is mounted keeps the draft (submit
-  stays blocked); browser-native validation bubbles were only checked in jsdom and Chromium.
+- Reset follow-up: switching direct edit URLs between records kept the editor mounted, so a
+  half-typed date showed on the next record, and edit guards compared only form state, so such a
+  draft was discarded without a prompt. Sowing, Seed lot and Plant forms are now keyed by the
+  record shown and their guards ask `hasDateDraft`. Regression tests fail without the fix. The
+  nested date legend in the Journal dialog is now a field label, not a second dialog heading.
+- Second round: all 123 Vitest files (1,345 tests), format, lint and typecheck passed; independent
+  QA (static; Docker address pools were exhausted) returned PASS_WITH_RISKS and its two coverage
+  gaps (Journal edit-mode guard, Seed lot guard) now have tests. A real-browser pass on this
+  worktree's seeded UAT instance (15183) covered the Journal choices, precision switching, local
+  Today, unknown, refused Height, the discard prompt, saving year-only, year-month, day and unknown
+  dates and reopening each unchanged, plus incomplete-date refusal in Plant, Seed lot, Sowing,
+  Order, Harvest and Cuttings forms.
+- Not run under the UX closeout policy: canonical `make feature-verify` (the plan selects FULL
+  because `PartialDateField` is a high-risk path). Integration with `fix/fable-plant-kind` needs
+  its creation key and guards to honour date drafts. Unresolved: D1.

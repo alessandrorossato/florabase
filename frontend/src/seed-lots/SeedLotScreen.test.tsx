@@ -2855,3 +2855,40 @@ test.each(["row", "action"])(
     });
   },
 );
+
+test("a half-typed acquisition date on an unknown-date lot counts as an unsaved change", async () => {
+  mockApi(directoryHandler([lot({ acquisition_date: null })]));
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  const user = await openSeeds();
+  await user.click(
+    await screen.findByRole("button", { name: /Clitoria ternatea/ }),
+  );
+  await assertDedicatedDetails();
+  await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
+  await openSection(user, "Acquisition");
+  const precision = () =>
+    screen.getByLabelText("Precision", { selector: "#acquisition-precision" });
+  expect(precision()).toHaveValue("");
+  await user.selectOptions(precision(), "month");
+  await openSection(user, "Acquisition");
+  await user.type(
+    screen.getByLabelText("Year", { selector: "#acquisition-year" }),
+    "2024",
+  );
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(confirm).toHaveBeenCalledWith("Discard unsaved seed lot changes?");
+  expect(
+    screen.getByLabelText("Year", { selector: "#acquisition-year" }),
+  ).toHaveValue(2024);
+  confirm.mockReturnValue(true);
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  await user.click(
+    await screen.findByRole("button", { name: "Edit seed lot" }),
+  );
+  await openSection(user, "Acquisition");
+  // The stored unknown date reopens as unknown, not as the discarded fragment.
+  expect(precision()).toHaveValue("");
+  expect(
+    screen.queryByLabelText("Year", { selector: "#acquisition-year" }),
+  ).not.toBeInTheDocument();
+});

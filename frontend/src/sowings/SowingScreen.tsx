@@ -82,6 +82,7 @@ import { PhotosSection } from "../photos/PhotosSection";
 import { PropagationPath } from "../propagation/PropagationPath";
 import { listSeedLots, type SeedLotResponse } from "../seed-lots/api";
 import {
+  hasDateDraft,
   invalidDateControls,
   invalidDateErrorField,
 } from "../seed-lots/dateControls";
@@ -875,7 +876,8 @@ export function SowingScreen({
     routeIsEdit: initialTab === "edit",
     canDismiss: () =>
       save.status !== "saving" &&
-      (JSON.stringify(form) === editBaseline.current ||
+      ((JSON.stringify(form) === editBaseline.current &&
+        !hasDateDraft(formElement.current)) ||
         window.confirm("Discard unsaved sowing changes?")),
     onDismiss: () => {
       setEditing(false);
@@ -904,6 +906,7 @@ export function SowingScreen({
     };
   }, [initialId, selectedId, edit.modal]);
   const [form, setForm] = useState<FormState>(blankForm);
+  const formElement = useRef<HTMLFormElement>(null);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const feedback = useRef<HTMLDivElement>(null);
   const detailHeading = useRef<HTMLHeadingElement>(null);
@@ -1352,6 +1355,7 @@ export function SowingScreen({
     >
       {
         <form
+          ref={formElement}
           className="seed-form sowing-form collection-form"
           onClickCapture={(event) => {
             if (!selected || !(event.target instanceof Element)) return;
@@ -1395,6 +1399,7 @@ export function SowingScreen({
             }
           />
           <FormSections
+            key={selectedId ?? "new"}
             mode={selected ? "edit" : "page"}
             disabled={pending}
             error={save.status === "error" ? save : undefined}

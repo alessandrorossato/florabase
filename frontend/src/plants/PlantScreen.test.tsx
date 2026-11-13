@@ -3858,3 +3858,68 @@ test("direct hashchange and Back/Forward keep creation kind synchronized and pro
   ).toBeInTheDocument();
   expect(createdGroups).toHaveLength(1);
 });
+
+test("a half-typed entry date on an unknown-date Plant counts as an unsaved change", async () => {
+  mockApi(plantHandler([plant({ collection_entry_date: null })], [group()]));
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  const user = await openPlants();
+  setViewportMatches(false);
+  const trigger = screen.getByRole("button", { name: "Edit Avocado #1" });
+  await user.click(trigger);
+  const dialog = screen.getByRole("dialog", { name: "Edit Plant" });
+  await openFormSection(user, "Origin");
+  await user.selectOptions(
+    within(dialog).getByLabelText("Collection-entry date precision"),
+    "day",
+  );
+  await user.type(within(dialog).getByLabelText("Year"), "2024");
+  await user.keyboard("{Escape}");
+  expect(confirm).toHaveBeenCalledWith("Discard unsaved plant changes?");
+  expect(within(dialog).getByLabelText("Year")).toHaveValue(2024);
+  confirm.mockReturnValue(true);
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("dialog", { name: "Edit Plant" }),
+    ).not.toBeInTheDocument();
+  });
+  await user.click(trigger);
+  await openFormSection(user, "Origin");
+  expect(screen.getByLabelText("Collection-entry date precision")).toHaveValue(
+    "",
+  );
+  expect(screen.queryByLabelText("Year")).not.toBeInTheDocument();
+});
+
+test("editing a Journal entry with an unknown date treats a half-typed date as unsaved", async () => {
+  const events = [journalEvent("observation", { notes: "Undated note." })];
+  mockApi(
+    plantHandler([plant()], [], (path) =>
+      path === `/api/v1/plants/${plantId}/events` ? json(events) : undefined,
+    ),
+  );
+  const user = await openPlants();
+  await user.click(
+    await screen.findByRole("button", {
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
+  await assertDedicatedDetails();
+  await user.click(screen.getByRole("tab", { name: "Journal" }));
+  await screen.findByText("Undated note.");
+  await user.click(screen.getByRole("button", { name: "Edit" }));
+  // The stored unknown date opens as Date unknown; closing untouched asks nothing.
+  expect(screen.getByRole("radio", { name: "Date unknown" })).toBeChecked();
+  await user.keyboard("{Escape}");
+  expect(
+    screen.queryByRole("dialog", { name: "Discard unsaved Journal changes?" }),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Edit" }));
+  await user.click(screen.getByRole("radio", { name: "Another date" }));
+  await user.type(screen.getByLabelText("Year"), "2025");
+  await user.keyboard("{Escape}");
+  expect(
+    screen.getByRole("dialog", { name: "Discard unsaved Journal changes?" }),
+  ).toBeInTheDocument();
+});
