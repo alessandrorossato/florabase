@@ -1,3 +1,25 @@
+## 2026-11-13 — BOTANICAL-MATCH-1A: Read-only botanical candidate discovery and classification foundation
+
+- Implemented the read-only local matching engine under `backend/src/florabase/botanical_matching/`
+  (`schemas.py`, `normalizer.py`, `classifier.py`, `discovery.py`) without database migrations,
+  canonical identity/profile/range mutations, link persistence, bulk apply, or remote GBIF calls.
+- Added bounded single-connection batched exact-name and indexed prefix lookups
+  (`exact_matches_with_context`, `exact_matches`, `prefix_candidates`) on `WfoSource` and
+  `WcvpSource` while preserving existing SQLite `SCHEMA` checks, `.sha256` seal validation,
+  existing source APIs, and historical WCVP v15 support.
+- Enforced conservative matching policies: advisory authorship, cultivar anchor review requirements,
+  explicit homonym/synonym/fuzzy review gates, preservation of non-synthetic verified/manual links,
+  separation of synthetic Golden links (`synthetic_evidence_present`), and cross-source / WCVP v15-vs-v16
+  / local GBIF conflict detection.
+- Added optional read-only qualification CLI (`backend/scripts/botanical_match_qualify.py`) with
+  PostgreSQL `SET TRANSACTION READ ONLY` enforcement and verified it read-only against official
+  WFO `2026-06` and WCVP `v16` indexes over the 115 Golden COMPREHENSIVE identities (`62` `ready_exact`,
+  `45` `needs_review`, `2` `conflict`, `6` `unmatched`).
+- Added unit tests (`test_botanical_matching_normalizer.py`, `test_botanical_matching_sources.py`,
+  `test_botanical_matching_classifier.py`), disposable PostgreSQL integration tests
+  (`tests/integration/test_botanical_matching_readonly.py`), `docs/botanical-matching.md`, and
+  `BOTANICAL-MATCH-1A` (`implemented`) in `docs/features.json`.
+
 ## 2026-11-12 — WCVP-DEFAULT-001: Make WCVP v16 the primary default
 
 - Switched the primary default WCVP release from `15` to `16` across backend
