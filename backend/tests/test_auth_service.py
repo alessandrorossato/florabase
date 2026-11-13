@@ -105,7 +105,7 @@ def test_authenticate_unknown_failure_and_success_paths() -> None:
     hasher = MagicMock()
     hasher.verify_and_update.return_value = (False, None)
     database.scalars.side_effect = [
-        scalar_result(one=state),
+        scalar_result(one_or_none=state),
         scalar_result(one_or_none=None),
     ]
 
@@ -123,7 +123,7 @@ def test_authenticate_unknown_failure_and_success_paths() -> None:
     state = throttle(now)
     hasher.verify_and_update.return_value = (True, "upgraded")
     database.scalars.side_effect = [
-        scalar_result(one=state),
+        scalar_result(one_or_none=state),
         scalar_result(one_or_none=owner),
         scalar_result(all=[]),
     ]

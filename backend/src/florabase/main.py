@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from florabase import __version__
 from florabase.api.router import api_router
 from florabase.attachments.storage import AttachmentStorage
+from florabase.auth.http_safety import AuthSafetyMiddleware
 from florabase.core.config import get_settings
 from florabase.core.logging import configure_logging
 
@@ -26,6 +27,7 @@ def create_app() -> FastAPI:
         version=__version__,
         lifespan=lifespan,
     )
+    application.add_middleware(AuthSafetyMiddleware)
     if settings.cors_origins:
         application.add_middleware(
             CORSMiddleware,

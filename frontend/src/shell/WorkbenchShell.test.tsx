@@ -102,6 +102,7 @@ test("the navigation model lists every former destination and Settings tool exac
       "geography",
       "suppliers",
       "orders",
+      "account",
       "settings",
       "labels",
       "import-export",

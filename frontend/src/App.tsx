@@ -8,6 +8,7 @@ import {
   lazy,
   Suspense,
   useCallback,
+  useContext,
   useEffect,
   useRef,
   useState,
@@ -15,7 +16,7 @@ import {
 
 import type { components } from "./api/schema";
 import { AuthProvider } from "./auth/AuthProvider";
-import { useAuth } from "./auth/context";
+import { PasswordChangeContext, useAuth } from "./auth/context";
 import { LoginForm } from "./auth/LoginForm";
 import { WorkspaceBoundary } from "./components/WorkspaceBoundary";
 import { loadWorkspaceChunk } from "./components/workspaceChunk";
@@ -104,6 +105,13 @@ const LocationScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./locations/LocationScreen");
     return { default: module.LocationScreen };
+  }),
+);
+
+const AccountScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./settings/AccountScreen");
+    return { default: module.AccountScreen };
   }),
 );
 
@@ -312,6 +320,7 @@ function currentRoute(): Route {
     "import-export",
     "labels",
     "settings",
+    "account",
     "media",
   ];
   return {
@@ -341,16 +350,19 @@ function WorkspaceLoading() {
 function ApplicationShell() {
   const auth = useAuth();
   const state = auth.state;
+  const passwordChange = useContext(PasswordChangeContext);
   const [health, setHealth] = useState<HealthState>({ status: "loading" });
   const [route, setRoute] = useState<Route>(currentRoute);
   const [navigationReset, setNavigationReset] = useState(0);
   const formChanged = useRef(false);
-  const plantFormDeparture = useRef<(() => boolean) | null>(null);
-  const registerPlantFormDeparture = useCallback((guard: () => boolean) => {
-    plantFormDeparture.current = guard;
+  const formDeparture = useRef<(() => boolean) | null>(null);
+  const clearFormChanged = useCallback(() => {
+    formChanged.current = false;
+  }, []);
+  const registerFormDeparture = useCallback((guard: () => boolean) => {
+    formDeparture.current = guard;
     return () => {
-      if (plantFormDeparture.current === guard)
-        plantFormDeparture.current = null;
+      if (formDeparture.current === guard) formDeparture.current = null;
     };
   }, []);
 
@@ -384,7 +396,7 @@ function ApplicationShell() {
   function canNavigate(target: string) {
     if (target === window.location.hash) return true;
     return (
-      plantFormDeparture.current?.() ??
+      formDeparture.current?.() ??
       (!formChanged.current ||
         !document.querySelector(".app-content form:not([role='search'])") ||
         window.confirm(
@@ -395,7 +407,7 @@ function ApplicationShell() {
 
   /** Guarded in-app navigation to any existing hash route (shell, palette, menus). */
   function navigateTo(target: string) {
-    if (target === window.location.hash && plantFormDeparture.current) return;
+    if (target === window.location.hash && formDeparture.current) return;
     if (!canNavigate(target)) return;
     formChanged.current = false;
     // Creation and source tasks insert their parent page, exactly like content links,
@@ -449,7 +461,10 @@ function ApplicationShell() {
       hash={window.location.hash || "#/dashboard"}
       signedInAs={signedInAs}
       signingOut={state.status === "logging-out"}
+      signOutDisabled={passwordChange?.pending}
       onSignOut={() => {
+        if (route.section === "account" && formDeparture.current?.() === false)
+          return;
         void auth.logOut();
       }}
       onNavigate={navigateTo}
@@ -473,11 +488,15 @@ function ApplicationShell() {
             !link ||
             link.target === "_blank" ||
             link.origin !== window.location.origin ||
-            !collectionPageParent(link.hash)
+            (!collectionPageParent(link.hash) && route.section !== "account")
           )
             return;
           event.preventDefault();
-          if (link.hash === window.location.hash && plantFormDeparture.current)
+          if (route.section === "account" && !collectionPageParent(link.hash)) {
+            navigateTo(link.hash);
+            return;
+          }
+          if (link.hash === window.location.hash && formDeparture.current)
             return;
           if (!canNavigate(link.hash)) return;
           formChanged.current = false;
@@ -586,7 +605,7 @@ function ApplicationShell() {
                     route.action === "extract" ? route.sourceId : undefined
                   }
                   initialCreationKind={route.creationKind}
-                  registerFormDeparture={registerPlantFormDeparture}
+                  registerFormDeparture={registerFormDeparture}
                 />
               ) : route.section === "schedule" ? (
                 <ScheduleScreen />
@@ -610,6 +629,11 @@ function ApplicationShell() {
                 />
               ) : route.section === "import-export" ? (
                 <ImportExportScreen />
+              ) : route.section === "account" ? (
+                <AccountScreen
+                  registerFormDeparture={registerFormDeparture}
+                  clearFormChanged={clearFormChanged}
+                />
               ) : route.section === "settings" ? (
                 <SettingsScreen />
               ) : route.section === "labels" ? (

@@ -207,6 +207,7 @@ export function WorkbenchShell({
   hash,
   signedInAs,
   signingOut,
+  signOutDisabled = false,
   onSignOut,
   onNavigate,
   children,
@@ -215,6 +216,7 @@ export function WorkbenchShell({
   hash: string;
   signedInAs: string;
   signingOut: boolean;
+  signOutDisabled?: boolean;
   onSignOut: () => void;
   onNavigate: (href: string) => void;
   children: ReactNode;
@@ -602,7 +604,7 @@ export function WorkbenchShell({
             <button
               type="button"
               className="button--secondary wb-sign-out"
-              disabled={signingOut}
+              disabled={signingOut || signOutDisabled}
               onClick={onSignOut}
             >
               {signingOut ? "Signing out…" : "Sign out"}
@@ -722,7 +724,7 @@ export function WorkbenchShell({
             <button
               type="button"
               className="button--secondary wb-sign-out"
-              disabled={signingOut}
+              disabled={signingOut || signOutDisabled}
               onClick={onSignOut}
             >
               {signingOut ? "Signing out…" : "Sign out"}

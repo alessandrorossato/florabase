@@ -121,6 +121,10 @@ The password is prompted without echo. Automation may use `--password-stdin` wit
 that writes one line to standard input. Never put the password in a command argument, Compose file,
 image layer, or source-controlled environment file.
 
+For an existing source-build installation, the [owner recovery procedure](portable-installation.md#recover-a-forgotten-owner-password)
+also applies. Select the installed source deployment with `prod` in place of `dc`, and run
+`prod run --rm --no-deps backend python -m florabase.auth.reset_password '<login-name>'`.
+
 Check the internal published endpoint and container state:
 
 ```bash

@@ -20,5 +20,6 @@ export const navigationIcons = {
   orders: "parcel",
   labels: "tag",
   "import-export": "exchange",
+  account: "gear",
   settings: "gear",
 } as const satisfies Record<string, IconName>;

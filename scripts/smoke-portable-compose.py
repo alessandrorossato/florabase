@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import secrets
 import shutil
@@ -11,6 +12,7 @@ import signal
 import subprocess
 import tempfile
 from contextlib import ExitStack, suppress
+from http.cookies import SimpleCookie
 from pathlib import Path
 
 from smoke_beta_runtime_client import Client, png
@@ -158,9 +160,12 @@ class Stack:
     def up(self, *services: str) -> None:
         self.compose("up", "-d", "--wait", "--wait-timeout", "90", *services)
 
-    def login(self, password: str) -> Client:
+    def client(self) -> Client:
         port = self.compose("port", "frontend", "8080").decode().strip().rsplit(":", 1)[1]
-        client = Client(f"http://127.0.0.1:{port}", ORIGIN)
+        return Client(f"http://127.0.0.1:{port}", ORIGIN)
+
+    def login(self, password: str) -> Client:
+        client = self.client()
         client.request("/api/v1/ready")
         client.login(OWNER, password)
         return client
@@ -176,6 +181,66 @@ class Stack:
             result = run(["docker", kind, "ls", "--quiet", "--filter", label, *options])
             if result.returncode or result.stdout:
                 raise RuntimeError(f"{self.project}: could not confirm zero {kind} resources")
+
+
+def exercise_credentials(stack: Stack, password: str) -> str:
+    first = stack.login(password)
+    other = stack.login(password)
+    changed_password = secrets.token_hex(24)
+    reset_password = secrets.token_hex(24)
+    path = "/api/v1/auth/password"
+    payload = json.dumps({"current_password": password, "new_password": changed_password})
+    data, headers = first.request(path, "POST", payload.encode(), "application/json")
+    replacement = json.loads(data)["csrf_token"]
+    cookies: SimpleCookie[str] = SimpleCookie()
+    cookies.load(headers["Set-Cookie"])
+    bearer = cookies["__Host-florabase-session"]
+    old_cookie = first.cookie
+    first.cookie = bearer.key + "=" + bearer.value
+    first.csrf = replacement
+    first.request("/api/v1/auth/session")
+    other.request("/api/v1/auth/session", expected=401)
+    old_csrf = other.csrf
+
+    # A rejected query is still observed by both access loggers.
+    query_canary = "auth-query-" + secrets.token_hex(12)
+    first.request(path + "?check=" + query_canary, "POST", b"{}", "application/json", 400)
+    first.json("/api/v1/auth/login", "POST", {"login_name": OWNER, "password": password}, 401)
+    stack.login(changed_password)
+    logs = stack.compose("logs", "--no-color", "frontend", "backend").decode()
+    assert logs.count(path) >= 4
+    for secret in (
+        query_canary,
+        password,
+        changed_password,
+        old_csrf,
+        replacement,
+        old_cookie,
+        bearer.value,
+    ):
+        assert secret not in logs
+
+    stack.compose("stop", "frontend", "backend")
+    result = stack.backend(
+        "python",
+        "-m",
+        "florabase.auth.reset_password",
+        OWNER,
+        "--password-json-stdin",
+        data=json.dumps(reset_password).encode(),
+    )
+    assert b"reset committed" in result
+    assert reset_password.encode() not in result
+    stack.up()
+    restarted = stack.client()
+    restarted.cookie = first.cookie
+    restarted.request("/api/v1/auth/session", expected=401)
+    restarted.json(
+        "/api/v1/auth/login", "POST", {"login_name": OWNER, "password": changed_password}, 401
+    )
+    stack.login(reset_password)
+    print("Portable credential change and offline reset passed", flush=True)
+    return reset_password
 
 
 def smoke(source: Stack, restore: Stack) -> None:
@@ -204,6 +269,7 @@ def smoke(source: Stack, restore: Stack) -> None:
     source.up()
     for service, uid in (("db", b"70"), ("backend", b"10001"), ("frontend", b"101")):
         assert source.compose("exec", "-T", service, "id", "-u").strip() == uid
+    password = exercise_credentials(source, password)
     original = png(19, 37, 59)
     client = source.login(password)
     asset = client.upload(original, "portable-smoke")
