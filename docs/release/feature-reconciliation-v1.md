@@ -14,6 +14,8 @@ commit; files are under `docs/`; `#NNN` are pull requests on `main`.
   asked for it. One entry met this. Two more are named as candidates and left unchanged.
 - `in_progress` → `implemented` needs the delivering commit on `main`. Two entries met this.
 - No entry was demoted. Verified entries with later contrary evidence are flagged, not changed.
+- Status and release target are separate. A target never changes a status, and a status never
+  implies a target.
 - The release target is **proposed** here and is not stored in `features.json`; see the
   [schema follow-up](release-target-schema-followup.md).
 - Evidence that exists only as a worktree-local verification receipt is not in the repository
@@ -35,12 +37,12 @@ which is outside the 156 reconciled here.
 | Proposed release target | Entries | Meaning |
 | --- | --- | --- |
 | 1.0 baseline | 78 | Verified and part of the delivered 1.0 baseline. |
-| PRE-1.0 certify | 38 | On `main` and in scope; its acceptance criteria must be evidenced on the release candidate. |
+| PRE-1.0 certify | 38 | On `main` and in scope; not certified. Each is certified against its own criteria as described under "Certification of delivered features" in the scope. |
 | PRE-1.0 release work | 6 | Distribution and acceptance work that the release gates consume. |
 | best-effort (not certified) | 3 | Controller bundle; kept, not certified (approved decision 3). |
 | tooling (not a release deliverable) | 13 | Development workflow or test data; its status does not gate the release. |
 | historical record | 3 | Audit or design record with no product deliverable; close without certification. |
-| internal foundation | 1 | Delivered foundation with no user-facing surface. |
+| internal foundation (exempt) | 1 | Delivered code with no user-facing surface. Exempt from user-facing completion certification; regression and security verification still apply. |
 | POST-1.0 | 14 | Outside the 1.0 contract. |
 
 ## Status changes made in this increment
@@ -63,7 +65,8 @@ operator can close them with a one-line acceptance record.
 
 - **TAXONOMY-001** — Two concurrency findings recorded open (progress 138, 408). Status not changed here; needs a fix or a written accepted-risk record before the RC.
 - **DASHBOARD-001** — Its photo-first layout was deliberately reversed by UX-TODAY-001 (progress 8740); the verified evidence describes the earlier layout.
-- Eleven verified entries depend on entries that are not verified; each is marked in the matrix.
+- 12 verified entries depend on entries that are not verified: PERF-001, ATTACHMENT-004, HARVEST-002, SEARCH-002, HISTORY-001, DASHBOARD-001, SUPPLIER-003, IA-FREEZE-001, MAPS-ORIGINS-001, TAXONOMY-VISUAL-001, SCHEDULE-UX-001, UI-DESIGN-001.
+  Each is marked in the matrix. The count is computed from the feature graph after the status changes above.
   Dependency satisfaction was never a verification rule, so no status changes, but the release
   certification should close the dependencies first.
 
@@ -81,7 +84,7 @@ operator can close them with a one-line acceptance record.
 | CI-HYGIENE-001 | `implemented` | tooling (not a release deliverable) | progress.md:8131 | Canonical evidence is said to live in the worktree receipt, which is not in the repository. |
 | AGENT-WORKFLOW-001 | `implemented` | tooling (not a release deliverable) | progress.md:7332 · `agent-workflow-001-handoff.md` | Log: "pending re-review, then a new canonical FULL"; status stays `implemented`. |
 | PREVIEW-001 | `verified` | 1.0 baseline | progress.md:2013, 2089, 2140, 4634 · `preview-001-handoff.md` |  |
-| RELEASE-001 | `planned` | PRE-1.0 release work | progress.md mentions only (9) | Written for 0.1.0; superseded in substance by `scope-v1.md` gates. Keep the ID, re-scope when the schema follow-up lands. |
+| RELEASE-001 | `planned` | PRE-1.0 release work | progress.md mentions only (9) | Legacy reference: written for a 0.1.0 release; text left unchanged. Superseded for 1.0 by the `scope-v1.md` gates; re-scope or close with the release-target schema. |
 | PERF-001 | `verified` | 1.0 baseline | progress.md:3275 | Depends on unverified: UX-006. |
 | SECURITY-001 | `verified` | 1.0 baseline | progress.md mentions only (1) |  |
 | SECURITY-002 | `verified` | 1.0 baseline | progress.md mentions only (1) |  |
@@ -117,7 +120,7 @@ operator can close them with a one-line acceptance record.
 | EVENT-002 | `verified` | 1.0 baseline | progress.md:4418 |  |
 | ATTACHMENT-002 | `verified` | 1.0 baseline | progress.md:3846 |  |
 | ATTACHMENT-003 | `implemented` | PRE-1.0 certify | progress.md:3809 | Log records the canonical gate's coverage; no independent QA or operator acceptance record. |
-| ATTACHMENT-004 | `implemented` → **`verified`** | 1.0 baseline | progress.md:3382, 3420 · `attachment-004-review.md` | PROMOTED. Canonical gate passed, independent QA fixed a race with a regression, operator manual review passed (progress 3382-3432); each of the four criteria maps to recorded checks. |
+| ATTACHMENT-004 | `implemented` → **`verified`** | 1.0 baseline | progress.md:3382, 3420 · `attachment-004-review.md` | PROMOTED. Canonical gate passed, independent QA fixed a race with a regression, operator manual review passed (progress 3382-3432); each of the four criteria maps to recorded checks. Depends on unverified: ATTACHMENT-003, UX-006. |
 | ATTACHMENT-005 | `implemented` | PRE-1.0 certify | progress.md:2789, 2811 | Log: "awaiting operator visual acceptance". |
 | HARVEST-001 | `implemented` | PRE-1.0 certify | progress.md:2756 | Log: "remains `implemented` pending operator acceptance". HARVEST-002/003 (verified) depend on it. |
 | HARVEST-002 | `verified` | 1.0 baseline | progress.md:2288, 2340, 2366, 2402 | Depends on unverified: HARVEST-001, LOCATION-003. |
@@ -201,12 +204,12 @@ operator can close them with a one-line acceptance record.
 | UI-POLISH-001 | `implemented` | PRE-1.0 certify | progress.md:7352, 7376 · `ui-polish-001-review.md` | "independently reviewed does not mean canonically verified, delivered or merged". |
 | TEST-DATA-001 | `in_progress` | tooling (not a release deliverable) | progress.md:7393, 7407, 7424 · `test-data-001-design.md` · af2372c#139 | Stays `in_progress`: criterion 5 names a STRESS profile that is not generated (`test-data-001-design.md:204`). |
 | BETA-FOUNDATION-001 | `implemented` | historical record | progress.md:441, 470 · `beta-foundation-001.md`; `beta-foundation-001-qa-corrections.md` | Beta acceptance contract and audit. Its gates are absorbed by `scope-v1.md`; retained as history. |
-| BETA-IMAGE-001 | `in_progress` | PRE-1.0 release work | progress.md:7439, 7492, 7501 · `beta-image-001-qa-corrections.md`; `beta-image-001.md` | Images published through beta.5; criteria written for beta.1. Feeds gate G-DIST. |
+| BETA-IMAGE-001 | `in_progress` | PRE-1.0 release work | progress.md:7439, 7492, 7501 · `beta-image-001-qa-corrections.md`; `beta-image-001.md` | Legacy reference: a genuine beta.1 milestone; text left unchanged. Images are published through beta.5; its pipeline feeds G-DIST. |
 | beta-postgres-repro-001 | `in_progress` | PRE-1.0 release work | progress.md:412 | Hosted reproduction pending at the feature record. Feeds G-DIST. |
 | BETA-SECURITY-001 | `in_progress` | PRE-1.0 release work | progress.md:7508, 7533, 7579 · `beta-security-001-lookup-correction.md`; `beta-security-001.md` | PostgreSQL scan findings and approvals recorded as open at the feature record. Feeds G-SEC. |
 | BETA-RUNTIME-001 | `in_progress` | best-effort (not certified) | progress.md:7546, 7555, 7568, 7579 · `beta-runtime-001-qa-handoff.md`; `beta-runtime-001.md` | Controller runtime. Decision 3: advanced/best-effort, not a certified path. Real-host acceptance pending. |
 | BETA-DATA-001 | `in_progress` | PRE-1.0 release work | progress.md:8276, 8304 · `beta-data-001.md`; `beta-data-001-templates.md` · 7665df3#159 | Real source inventory, published bundle and Synology acceptance outstanding. Feeds G-SOAK. |
-| BETA-ACCEPTANCE-001 | `planned` | PRE-1.0 release work | no progress.md record | Becomes the RC soak (decision 8: 14 days, extendable). |
+| BETA-ACCEPTANCE-001 | `planned` | PRE-1.0 release work | no progress.md record | Legacy reference: beta admission for v0.1.0-beta.1 with a proposed seven-day soak; text left unchanged. It does not satisfy or shorten G-SOAK (14 days on a release candidate, decision 8). |
 | WORKFLOW-RETIRE-AUTH-001 | `implemented` | tooling (not a release deliverable) | progress.md:229 | Delivered in #167; QA findings resolved; no canonical receipt recorded. |
 | TEST-DATA-002 | `implemented` | tooling (not a release deliverable) | progress.md:7461, 7477 · `test-data-002-design.md` · 1e44c3f#141 | "Delta QA pending" at the feature record; Golden DEV runs on this profile. |
 | UI-DESIGN-001 | `verified` | 1.0 baseline | progress.md:7587, 7594 · d94f275#145 | Depends on unverified: UI-POLISH-001, RELEASE-VISUAL-AUDIT-001. |
@@ -218,12 +221,12 @@ operator can close them with a one-line acceptance record.
 | MULTIBRANCH-UAT-001 | `implemented` | tooling (not a release deliverable) | progress.md:8199, 8223 · `multibranch-uat-001-handoff.md` · 6f17913#162 | Promotion candidate: FULL passed in 933 s, smoke and delta QA passed (progress 8199-8222). "Unresolved: operator UAT". |
 | DEV-GOLDEN-001 | `implemented` | tooling (not a release deliverable) | progress.md:8615 | Delivered in #172; receipt-only evidence. Golden DEV contract is preserved by `scope-v1.md`. |
 | DEV-REFERENCES-001 | `implemented` | tooling (not a release deliverable) | progress.md:8637 | Delivered in #173; receipt-only evidence. |
-| GOLDEN-REFERENCE-001 | `planned` | POST-1.0 | progress.md mentions only (1) | Planned tooling; not required for 1.0. |
+| GOLDEN-REFERENCE-001 | `planned` | POST-1.0 | progress.md mentions only (1) | Explicitly excluded from v1.0 in `scope-v1.md`. No work recorded. |
 | PORTABLE-COMPOSE-001 | `implemented` | PRE-1.0 certify | progress.md:8240, 8265 | The official 1.0 installation (decision 3). beta.6 publication and a real HTTPS host remain pending; certified by G-INSTALL, G-UPGRADE, G-RESTORE. |
 | MEASUREMENT-001 | `implemented` | PRE-1.0 certify | progress.md:266, 8343, 8393, 8403 · 5fbcfd5#163 | Delivered in #163; "stays `implemented` until the operator approves the domain decisions". |
 | PHENOLOGY-001 | `implemented` | PRE-1.0 certify | progress.md:143 · `phenology-001-handoff.md` | Delivered in #167; canonical FULL deferred to the consolidated tree. |
 | VERIFICATION-EVIDENCE-001 | `implemented` | tooling (not a release deliverable) | progress.md:8515 · `verification-evidence-001-handoff.md` | Delivered in #167; two policy decisions recorded as pending. |
 | FABLE-FIX-CUTTINGS | `in_progress` → **`implemented`** | PRE-1.0 certify | progress.md:8709 | CORRECTED from `in_progress`: delivered on main in `947d77f` (#177, cherry-pick of `e325040`); batch browser QA recorded (progress 8765-8801). Not `verified`: persisted before/after screenshots (criterion 5) are outstanding. |
-| BOTANICAL-MATCH-1A | `implemented` | internal foundation | progress.md:8 | Read-only foundation with no route or UI; later slices are post-1.0. Nothing user-facing to certify. |
-| UX-DATE-001 | `implemented` | PRE-1.0 certify | progress.md:8674 | Delivered in #177; decision D1 unresolved (see `scope-v1.md`). |
+| BOTANICAL-MATCH-1A | `implemented` | internal foundation (exempt) | progress.md:8 | No route or UI. Exempt from user-facing completion certification; its unit and PostgreSQL tests stay in the canonical gate. Later slices are post-1.0. |
+| UX-DATE-001 | `implemented` | PRE-1.0 certify | progress.md:8674 | Delivered in #177 with nothing preselected. Decision D1 is now approved (Today preselected); the change is task FN-05 in the functional batch, so the entry cannot be certified before FN-05 lands. |
 | UX-TODAY-001 | `implemented` | PRE-1.0 certify | progress.md:8740 | Delivered in #177; log status IMPLEMENTED_UNVERIFIED. |

@@ -17,6 +17,8 @@ Documentation-only increment on `docs/release-scope-v1`, base
   Harvest paragraph.
 - [release-target-schema-followup.md](release-target-schema-followup.md): specification for the
   later `release_target` schema and checker change. No script was modified.
+- [acceptance-v1.md](acceptance-v1.md) and [page-inventory-v1.md](page-inventory-v1.md), added by
+  the corrective commit described below.
 
 ## Status changes and their evidence
 
@@ -61,15 +63,8 @@ candidates and left as they were.
 
 ### DOC-03 — stale statements still present
 
-| File | Statement | Fact at the baseline |
-| --- | --- | --- |
-| `docs/architecture.md` "Deliberately deferred" | Supplier media, saved views, bulk operations, PWA installability and taxonomy reconciliation are backlog | All are on `main` |
-| `docs/architecture.md` "Implemented domain modules" | Omits Orders, Schedule, Saved Views, Taxonomy, Explore, Cuttings, Measurements, Import/Export | All have routers in `api/router.py` |
-| `docs/development.md` | "Version 2 receipts"; "Codex-managed feature worktree"; "`quality` runs `make check`" | Receipts are version 3; the workflow is provider-neutral; the job runs `scripts/ci-verify.py quality` |
-| `docs/security.md` table | "nginx provides the separate source-address limit" | The bundled `nginx.conf` has no rate limit; the operator's proxy owns it |
-| `docs/beta-foundation-001.md`, BETA-* entries | Written for `v0.1.0-beta.1` | Tags reach beta.5; sources say beta.6 |
-| `features.json` RELEASE-001 | "first distributable Florabase 0.1.0 release"; "application version 0.1.0" | Superseded by decision 1; re-scope with the schema follow-up |
-| `features.json` UI-REDESIGN-EXPLORATION-001 description | "experimental only" | Delivered as the production shell |
+The closed list of statements, with the fact for each, is in the
+[task acceptance criteria](acceptance-v1.md#doc-03-statement-list).
 
 ### DOC-04 — end-user guide
 
@@ -85,20 +80,44 @@ DEV.
   versioning page is still wanted.
 - `SECURITY.md` publishes no private reporting address and no supported-versions statement.
 
+## QA remediation after `c7440bf`
+
+The independent review of `c7440bf` returned `SCOPE_QA_FAIL`. The corrective commit on top of it:
+
+- Restores the scope classification: mandatory blockers, required workflow enablers, optional
+  improvements, POST-1.0 deferrals and non-deliverable classes. WF-08 is deferred. ENG-02, FN-02,
+  FN-04 and DOC-06 are optional.
+- Adds [acceptance-v1.md](acceptance-v1.md) with measurable, repository-accessible criteria for
+  every task, and [page-inventory-v1.md](page-inventory-v1.md) as the frozen input of G-UX.
+- Rewrites the gates so that no mandatory gate requires an optional task; each conditional
+  clause states what applies on deferral.
+- Makes internal foundation an explicit class with a certification policy (BOTANICAL-MATCH-1A).
+- Recomputes the verified-on-unverified dependency count from the graph: 12, including
+  ATTACHMENT-004 on ATTACHMENT-003 and UX-006.
+- Tracks the legacy beta references of RELEASE-001, BETA-IMAGE-001 and BETA-ACCEPTANCE-001
+  without rewriting them, names `v0.1.0-beta.5` as the current upgrade baseline, excludes
+  GOLDEN-REFERENCE-001 explicitly, and states that the beta's seven-day soak proposal does not
+  affect the 14-day release-candidate soak.
+- Records the operator's D1 decision (Today preselected) as mandatory task FN-05 for the
+  functional batch. No interface code was changed.
+
+The full text of the review report was not available in the repository or the review folders
+when this was written; the corrections follow the findings as relayed by the orchestrator.
+
 ## Outstanding questions for the operator
 
-1. **UX-DATE-001 D1.** Keep (a) nothing selected, or switch to (b) Today preselected? The
-   alternatives and their source are in `scope-v1.md`.
+1. **Optional class of ENG-03, ENG-04, ENG-06 and FN-07.** The operator ruled on ENG-02, FN-02,
+   FN-04 and DOC-06. These four are classed optional on the audit's recommendation; confirm.
 2. **Promotion candidates.** Record operator acceptance for GERMINATION-001 (visual review) and
    MULTIBRANCH-UAT-001 (operator UAT), or leave them for the release certification?
-3. **TAXONOMY-001.** Fix the two concurrency findings, or record them as accepted risk? It stays
-   `verified` meanwhile.
+3. **ENG-05.** Which branch: the two-session regression, or a documented risk disposition?
+   TAXONOMY-001 stays `verified` meanwhile.
 4. **DASHBOARD-001.** Its verified layout was reversed by UX-TODAY-001. Re-verify under
    UX-TODAY-001, or annotate the entry?
 5. **UI-SYSTEM-001.** Close at the delivered state, or keep open?
 6. **Historical records.** May RELEASE-VISUAL-AUDIT-001, ACTIVITY-CONCEPT-001 and
    BETA-FOUNDATION-001 be closed without certification, as the matrix proposes?
-7. **Certification method.** 38 entries are "PRE-1.0 certify". Certify each against its own
-   criteria on the release candidate, or accept the G-CORE and G-UX records as their evidence
-   where the criteria overlap?
-8. **Care kinds.** Which identifier carries the watering and feeding kinds (decision 5)?
+7. **Care kinds.** Which identifier carries the watering and feeding kinds (decision 5)?
+8. **Machine-readable scope.** The workflow planning review suggests a small
+   `docs/release/scope-v1.json` membership list instead of a per-entry field. Decide before the
+   schema follow-up is implemented.

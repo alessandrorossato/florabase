@@ -50,7 +50,21 @@ if they are delivered together with other workflow changes.
 - A `baseline` entry that is not `verified` fails the checker.
 - The populated graph passes, and its targets equal the reconciliation matrix.
 
-## Open point
+## Constraints from the scope
+
+- Status and release target stay separate fields. No rule derives one from the other except the
+  two consistency rules above, and no transition step promotes a status.
+- `internal` is the internal-foundation class of the scope: exempt from user-facing completion
+  certification, never exempt from the existing checks.
+- The class of each task (mandatory, workflow enabler, optional, deferred) lives in the scope,
+  not in the feature graph.
+
+## Open points
+
+A workflow planning review proposes a small versioned membership list, for example
+`docs/release/scope-v1.json`, as the single machine authority instead of a per-entry field, with
+targets `1.0` and `post-1.0` required for non-terminal entries. The operator chooses between that
+and the per-entry field specified here before implementation.
 
 Whether the watering and feeding kinds (scope decision 5) get their own entry before this lands
 or with it. They are not EVENT-003, which is a broader post-1.0 entry.

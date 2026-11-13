@@ -17,7 +17,13 @@
   [`release/release-target-schema-followup.md`](release/release-target-schema-followup.md).
 - Checks: `scripts/check-features.py` (157 entries), `make verification-plan` (documentation
   plan), relative-link check of the changed files, `git diff --check`.
-- Unresolved: independent review of the frozen commit; UX-DATE-001 D1; the questions in the
+- QA remediation after `c7440bf` (`SCOPE_QA_FAIL`): the scope now separates mandatory blockers,
+  workflow enablers, optional improvements and deferrals (WF-08 deferred); every task has
+  measurable criteria in [`release/acceptance-v1.md`](release/acceptance-v1.md); G-UX evaluates a
+  versioned [`release/page-inventory-v1.md`](release/page-inventory-v1.md); 12 verified entries
+  depend on unverified ones (recomputed). The operator approved UX-DATE-001 D1 as Today
+  preselected; it is task FN-05 for the functional batch and no interface code changed here.
+- Unresolved: second independent review; the questions in the
   [handoff](release/scope-v1-handoff.md). CUTTING-001 and `docs/cuttings.md` were not touched
   because another writer holds uncommitted Cuttings work.
 
