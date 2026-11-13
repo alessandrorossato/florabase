@@ -4,7 +4,14 @@ import {
   openCollectionPage,
 } from "./components/recordNavigation";
 import { RecordPresentationProvider } from "./components/RecordPresentationProvider";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import type { components } from "./api/schema";
 import { AuthProvider } from "./auth/AuthProvider";
@@ -338,6 +345,14 @@ function ApplicationShell() {
   const [route, setRoute] = useState<Route>(currentRoute);
   const [navigationReset, setNavigationReset] = useState(0);
   const formChanged = useRef(false);
+  const plantFormDeparture = useRef<(() => boolean) | null>(null);
+  const registerPlantFormDeparture = useCallback((guard: () => boolean) => {
+    plantFormDeparture.current = guard;
+    return () => {
+      if (plantFormDeparture.current === guard)
+        plantFormDeparture.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     const update = (event: Event) => {
@@ -366,16 +381,22 @@ function ApplicationShell() {
     route.identityId,
   ]);
 
+  function canNavigate(target: string) {
+    if (target === window.location.hash) return true;
+    return (
+      plantFormDeparture.current?.() ??
+      (!formChanged.current ||
+        !document.querySelector(".app-content form:not([role='search'])") ||
+        window.confirm(
+          "Discard unsaved form changes and return to the workspace?",
+        ))
+    );
+  }
+
   /** Guarded in-app navigation to any existing hash route (shell, palette, menus). */
   function navigateTo(target: string) {
-    if (
-      formChanged.current &&
-      document.querySelector(".app-content form:not([role='search'])") &&
-      !window.confirm(
-        "Discard unsaved form changes and return to the workspace?",
-      )
-    )
-      return;
+    if (target === window.location.hash && plantFormDeparture.current) return;
+    if (!canNavigate(target)) return;
     formChanged.current = false;
     // Creation and source tasks insert their parent page, exactly like content links,
     // so Back returns to the directory or source record wherever the task started.
@@ -456,15 +477,9 @@ function ApplicationShell() {
           )
             return;
           event.preventDefault();
-          if (
-            link.hash !== window.location.hash &&
-            formChanged.current &&
-            document.querySelector(".app-content form:not([role='search'])") &&
-            !window.confirm(
-              "Discard unsaved form changes and return to the workspace?",
-            )
-          )
+          if (link.hash === window.location.hash && plantFormDeparture.current)
             return;
+          if (!canNavigate(link.hash)) return;
           formChanged.current = false;
           openCollectionPage(link.hash);
         }}
@@ -571,6 +586,7 @@ function ApplicationShell() {
                     route.action === "extract" ? route.sourceId : undefined
                   }
                   initialCreationKind={route.creationKind}
+                  registerFormDeparture={registerPlantFormDeparture}
                 />
               ) : route.section === "schedule" ? (
                 <ScheduleScreen />

@@ -119,6 +119,14 @@ test.each([false, true])(
     await user.selectOptions(screen.getByLabelText("Precision"), "year");
     await user.clear(screen.getByRole("spinbutton", { name: "Year" }));
     await user.type(screen.getByRole("spinbutton", { name: "Year" }), "2025");
+    await user.selectOptions(screen.getByLabelText("Precision"), "month");
+    await user.click(screen.getByRole("button", { name: "Save cuttings" }));
+    expect(fetch).not.toHaveBeenCalledWith(
+      "/api/v1/propagation-attempts/fast-create",
+      expect.anything(),
+    );
+    expect(screen.getByRole("spinbutton", { name: "Month" })).toBeInvalid();
+    await user.selectOptions(screen.getByLabelText("Precision"), "year");
     if (override) {
       await user.click(
         screen.getByRole("checkbox", {

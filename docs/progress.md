@@ -8761,3 +8761,33 @@ Status remains implemented pending canonical verification.
   without photos; Saved views dialog Close keeps its label on phones.
 - Status IMPLEMENTED_UNVERIFIED: under the operator's UX closeout batch policy the canonical
   gate runs once on the integrated HEAD, not in this worktree. No receipt exists here.
+
+### UX closeout batch — integrated candidate, 13 November 2026
+
+- Consolidated the Plant kind fix, both UX-DATE-001 commits, FABLE-FIX-CUTTINGS, and
+  UX-TODAY-001 in five traceable cherry-picks on verified main at `fd9f4c9`. Reconciled the
+  overlapping Plant test additions and feature/progress entries without dropping either side.
+- Plant creation and edit now share the relevant discard policy with the application shell.
+  Partial dates count as drafts; changing the creation kind, identity, or edited record resets
+  the date control. Equivalent hashes retain the draft, confirmed departures prompt once, and
+  declining native Chromium navigation leaves the live form intact. The fallback preserves
+  app-created parent entries; older browsers without the Navigation API can still restore the
+  current URL on other hash departures.
+- Focused evidence: frontend Prettier, ESLint, TypeScript, and 453 tests across 17 files;
+  after the native navigation fix, scoped Prettier and ESLint, TypeScript, and all 78 Plant
+  tests passed again. Backend Ruff, strict mypy, and three collection view unit tests passed.
+  The dashboard PostgreSQL suite passed all eight tests, including the 30/2/5 fixture, with
+  verified disposable cleanup. Generated API drift, the 156-entry feature graph, and Git
+  whitespace checks passed. Independent QA reproduced the navigation defects and confirmed
+  the corrections, including a separate Chromium navigation event check.
+- Browser QA used this worktree's own fresh UAT Preview on port 15174. Today passed at
+  1440 and 390 pixels in both themes, with 5/2/3 rows for the 30/2/5 fixture and a text-only
+  fallback when no photo was usable. Cuttings list and gallery, both record types, search,
+  status filtering, Saved Views, keyboard preview focus and native Chromium 200% zoom were
+  exercised. Plant hash switching and Back/Forward preserved or cleared incomplete dates as
+  appropriate. A year-only Journal entry was saved through the UI and reopened with the same
+  value; the API confirmed neither month nor day was stored.
+- Pending operator visual acceptance and one fresh canonical FULL. Docker allocated and
+  retired an ownership-labelled bridge. An unrelated unattached disposable integration
+  network from the missing Lineage worktree was found and left for exact operator cleanup.
+  No source-branch worktrees, primary DEV data, or Golden data were changed.
