@@ -27,6 +27,7 @@ services:
     environment:
       # Keep the full jsdom suite stable on small linked-worktree hosts.
       VITEST_MAX_WORKERS: "1"
+      FLORABASE_QUALITY_OFFLINE: "1"
     build:
       labels:
         <<: *owner

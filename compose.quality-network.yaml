@@ -11,3 +11,5 @@ services:
     network_mode: bridge
     networks: !reset []
     ports: !reset []
+    environment:
+      FLORABASE_QUALITY_OFFLINE: "0"

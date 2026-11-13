@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -290,6 +291,169 @@ def quality_network_smoke(root: Path) -> None:
                 not net_config["services"][service].get("ports"),
                 f"--quality-network published ports for {service}",
             )
+
+        frontend_image = f"{quality.project}-frontend-development"
+        incomplete_quality = subprocess.run(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--network",
+                "none",
+                "-e",
+                "FLORABASE_QUALITY_OFFLINE=1",
+                "--entrypoint",
+                "sh",
+                frontend_image,
+                "-c",
+                "rm -rf /app/node_modules/react "
+                "&& ls -d /app/node_modules/.bin /app/node_modules/.pnpm/lock.yaml >/dev/null "
+                "&& /app/dev-entrypoint.sh echo SHOULD_NOT_RUN",
+            ],
+            text=True,
+            capture_output=True,
+        )
+        require(
+            incomplete_quality.returncode != 0,
+            "Quality offline mode allowed incomplete frontend dependencies",
+        )
+        require(
+            "SHOULD_NOT_RUN" not in incomplete_quality.stdout,
+            "Quality offline mode executed command despite incomplete dependencies",
+        )
+        require(
+            "Quality frontend dependencies are incomplete" in incomplete_quality.stderr,
+            f"unexpected Quality offline failure output: {incomplete_quality.stderr!r}",
+        )
+
+        for case_name, setup in (
+            ("valid", ""),
+            (
+                "incomplete",
+                "rm -rf /app/node_modules/react "
+                "&& ls -d /app/node_modules/.bin /app/node_modules/.pnpm/lock.yaml >/dev/null && ",
+            ),
+        ):
+            persistent = subprocess.run(
+                [
+                    "docker",
+                    "run",
+                    "--rm",
+                    "--network",
+                    "none",
+                    "--entrypoint",
+                    "sh",
+                    frontend_image,
+                    "-c",
+                    setup
+                    + r'mkdir -p /tmp/bin && printf "#!/bin/sh\necho SPY_PNPM CI=\$CI ARGS=\$*\n" > /tmp/bin/pnpm && chmod +x /tmp/bin/pnpm && PATH="/tmp/bin:$PATH" /app/dev-entrypoint.sh echo CMD_OK',
+                ],
+                text=True,
+                capture_output=True,
+            )
+            require(
+                persistent.returncode == 0,
+                f"persistent frontend {case_name} runtime failed: {persistent.stderr!r}",
+            )
+            require(
+                "SPY_PNPM CI=true ARGS=install --frozen-lockfile --prefer-offline"
+                in persistent.stdout,
+                f"persistent frontend {case_name} runtime did not invoke offline-preferred pnpm install: {persistent.stdout!r}",
+            )
+            require(
+                "CMD_OK" in persistent.stdout,
+                f"persistent frontend {case_name} runtime did not exec target command: {persistent.stdout!r}",
+            )
+
+        failing = subprocess.run(
+            [
+                *env_helper,
+                "quality",
+                "compose",
+                "--",
+                "run",
+                "--no-deps",
+                "-T",
+                "backend",
+                "python",
+                "-c",
+                "import sys; print('QUALITY_FAIL_MARKER'); sys.exit(17)",
+            ],
+            cwd=linked,
+            text=True,
+            capture_output=True,
+        )
+        require(failing.returncode != 0, "expected non-zero exit code for failing Quality command")
+        require(
+            "QUALITY_FAIL_MARKER" in failing.stdout,
+            f"failing Quality command did not run target payload: {failing.stdout!r}",
+        )
+        require(
+            bool(Resources(quality).inventory()["containers"]),
+            "expected stopped failing container before cleanup",
+        )
+        require(
+            not Resources(quality).inventory()["networks"],
+            "failing Quality command allocated unexpected network",
+        )
+        Resources(quality).clean()
+        require(
+            not any(Resources(quality).inventory().values()),
+            "failing Quality command left residual resources after clean",
+        )
+
+        proc = subprocess.Popen(
+            [
+                *env_helper,
+                "quality",
+                "compose",
+                "--",
+                "run",
+                "--no-deps",
+                "-T",
+                "backend",
+                "python",
+                "-u",
+                "-c",
+                "import time; print('STARTED', flush=True); time.sleep(30)",
+            ],
+            cwd=linked,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            start_new_session=True,
+        )
+        try:
+            require(proc.stdout is not None, "interrupted process missing stdout pipe")
+            assert proc.stdout is not None
+            started = False
+            for line in iter(proc.stdout.readline, ""):
+                if line.strip() == "STARTED":
+                    started = True
+                    break
+            require(started, "interrupted Quality command did not emit STARTED before EOF")
+            os.killpg(proc.pid, signal.SIGTERM)
+            exit_code = proc.wait(timeout=15)
+            require(exit_code != 0, f"expected non-zero exit after SIGTERM, got {exit_code}")
+        finally:
+            if proc.poll() is None:
+                os.killpg(proc.pid, signal.SIGKILL)
+                proc.wait(timeout=5)
+            if proc.stdout is not None:
+                proc.stdout.close()
+            if proc.stderr is not None:
+                proc.stderr.close()
+
+        require(
+            not Resources(quality).inventory()["networks"],
+            "interrupted Quality command allocated unexpected network",
+        )
+        Resources(quality).clean()
+        require(
+            not any(Resources(quality).inventory().values()),
+            "interrupted Quality command left residual resources after clean",
+        )
+
         networks_after = set(docker("network", "ls", "-q", "--no-trunc").splitlines())
         require(
             networks_after == networks_before,
@@ -361,6 +525,11 @@ def main() -> None:
                 {owner.project: signature(Resources(owner)) for _, owner in protected} == survivors,
                 "finish preserves other Quality and persistent simulations",
             )
+            quality_network_smoke(root / "quality-net")
+            require(
+                {owner.project: signature(Resources(owner)) for _, owner in protected} == survivors,
+                "Quality network/failure/interruption smoke preserved other Quality and persistent simulations",
+            )
             print(
                 "TARGET_CLEANUP_SMOKE_PASSED: exact target removed; 9 protected/non-target fixtures survived; stale network/volume cleaned; repeated cleanup safe"
             )
@@ -369,7 +538,6 @@ def main() -> None:
             )
         for _, owner in [("target", target), *protected]:
             require(not any(Resources(owner).inventory().values()), "smoke fixture residual")
-    quality_network_smoke(root / "quality-net")
     require(real_operator_signature() == before, "real operator projects changed")
     print(
         "WORKFLOW_RESOURCE_SMOKE_PASSED: all synthetic containers/networks/volumes retired; real DEV/Review/UAT/Stable/Prod resource identities unchanged"

@@ -757,6 +757,37 @@ class EnvironmentTests(unittest.TestCase):
         ]
         self.assertEqual(len(net_targets), 4)
 
+    def test_quality_offline_frontend_overlay_and_entrypoint_scoping(self) -> None:
+        quality_overlay = (ROOT / "compose.quality.yaml").read_text(encoding="utf-8")
+        network_overlay = (ROOT / "compose.quality-network.yaml").read_text(encoding="utf-8")
+        self.assertIn('FLORABASE_QUALITY_OFFLINE: "1"', quality_overlay)
+        self.assertIn('FLORABASE_QUALITY_OFFLINE: "0"', network_overlay)
+
+        for name in (
+            "compose.yaml",
+            "compose.dev.yaml",
+            "compose.review.yaml",
+            "compose.uat.yaml",
+            "compose.sourcing.yaml",
+            "compose.preview.yaml",
+            "compose.integration.yaml",
+        ):
+            content = (ROOT / name).read_text(encoding="utf-8")
+            self.assertNotIn("FLORABASE_QUALITY_OFFLINE", content, msg=name)
+            self.assertNotIn("compose.quality", content, msg=name)
+
+        for role in ("prod", "dev", "review", "uat", "sourcing"):
+            with self.assertRaisesRegex(WorkflowError, "--quality-network", msg=role):
+                Environment(self.repo, role, quality_network=True)
+
+        entrypoint = (ROOT / "frontend" / "dev-entrypoint.sh").read_text(encoding="utf-8")
+        self.assertIn('if [ "${FLORABASE_QUALITY_OFFLINE:-0}" = "1" ]; then', entrypoint)
+        self.assertIn("Quality frontend dependencies are incomplete", entrypoint)
+        self.assertIn(".package-map.json", entrypoint)
+        self.assertIn(".modules.yaml", entrypoint)
+        self.assertIn("exit 1", entrypoint)
+        self.assertIn("export CI=true\npnpm install --frozen-lockfile --prefer-offline", entrypoint)
+
     def test_review_remove_requires_exact_scope_confirmation_before_commands(self) -> None:
         review = Environment(self.repo, "review")
         with patch.object(review, "compose") as compose:
