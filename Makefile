@@ -166,9 +166,9 @@ preview-remove: ## Stop preview and safely remove its clean worktree, preserving
 	@python3 ./scripts/preview.py --path "$(PREVIEW_PATH)" remove
 
 dependency-update: ## Refresh lockfiles after reviewing direct pins
-	$(DEV_NET_COMPOSE) run --rm --no-deps backend pip-compile --generate-hashes --strip-extras --output-file requirements.lock pyproject.toml
-	$(DEV_NET_COMPOSE) run --rm --no-deps backend pip-compile --strip-extras --extra dev --output-file requirements-dev.lock pyproject.toml
-	$(DEV_NET_COMPOSE) run --rm --no-deps frontend pnpm install --lockfile-only
+	$(DEV_NET_COMPOSE) run --rm --no-deps -v "$(CURDIR)/backend:/work" -w /work backend pip-compile --generate-hashes --strip-extras --output-file requirements.lock pyproject.toml
+	$(DEV_NET_COMPOSE) run --rm --no-deps -v "$(CURDIR)/backend:/work" -w /work backend pip-compile --strip-extras --extra dev --output-file requirements-dev.lock pyproject.toml
+	$(DEV_NET_COMPOSE) run --rm --no-deps frontend-lockfile pnpm install --lockfile-only --store-dir=/tmp/florabase-pnpm-store
 
 feature-init: export BRANCH := $(BRANCH)
 feature-init: ## Validate/attach feature context in an existing agent-provided or manual worktree

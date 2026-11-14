@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import contextlib
 import copy
 import io
@@ -12,13 +13,14 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from workflow_environment import (
     Environment,
     Repository,
     WorkflowError,
     code_heads,
+    dispatch,
     main,
     migration_graph,
     preserve_media,
@@ -741,13 +743,19 @@ class EnvironmentTests(unittest.TestCase):
         self.assertIn("networks: !reset {}", quality_overlay)
 
         network_overlay = (ROOT / "compose.quality-network.yaml").read_text(encoding="utf-8")
-        self.assertEqual(network_overlay.count("network_mode: bridge"), 2)
-        self.assertEqual(network_overlay.count("networks: !reset []"), 2)
-        self.assertEqual(network_overlay.count("ports: !reset []"), 2)
+        self.assertIn("frontend-lockfile:", network_overlay)
+        self.assertIn("target: toolchain", network_overlay)
+        self.assertEqual(network_overlay.count("network_mode: bridge"), 3)
+        self.assertEqual(network_overlay.count("networks: !reset []"), 3)
+        self.assertEqual(network_overlay.count("ports: !reset []"), 3)
 
         makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
         self.assertIn(
             "DEV_NET_COMPOSE := python3 ./scripts/workflow_environment.py --quality-network quality compose --",
+            makefile,
+        )
+        self.assertIn(
+            "$(DEV_NET_COMPOSE) run --rm --no-deps frontend-lockfile pnpm install --lockfile-only --store-dir=/tmp/florabase-pnpm-store",
             makefile,
         )
         net_targets = [
@@ -756,6 +764,68 @@ class EnvironmentTests(unittest.TestCase):
             if "$(DEV_NET_COMPOSE)" in line and not line.startswith("DEV_NET_COMPOSE")
         ]
         self.assertEqual(len(net_targets), 4)
+
+    def test_quality_frontend_lockfile_dispatch_skips_dev_state_init(self) -> None:
+        quality = Environment(self.repo, "quality", quality_network=True)
+        with (
+            patch.object(quality, "prepare_initializer") as prepare_init,
+            patch.object(quality, "compose") as compose_call,
+        ):
+            dispatch(
+                quality,
+                argparse.Namespace(
+                    action="compose",
+                    args=[
+                        "--",
+                        "run",
+                        "--rm",
+                        "--no-deps",
+                        "frontend-lockfile",
+                        "pnpm",
+                        "install",
+                        "--lockfile-only",
+                        "--store-dir=/tmp/florabase-pnpm-store",
+                    ],
+                ),
+            )
+            prepare_init.assert_not_called()
+            self.assertEqual(
+                compose_call.call_args_list,
+                [
+                    call("build", "frontend-lockfile"),
+                    call(
+                        "run",
+                        "--rm",
+                        "--no-deps",
+                        "frontend-lockfile",
+                        "pnpm",
+                        "install",
+                        "--lockfile-only",
+                        "--store-dir=/tmp/florabase-pnpm-store",
+                    ),
+                ],
+            )
+
+        offline = Environment(self.repo, "quality")
+        with (
+            patch.object(offline, "prepare_initializer") as prepare_init,
+            patch.object(offline, "compose") as compose_call,
+        ):
+            dispatch(
+                offline,
+                argparse.Namespace(
+                    action="compose",
+                    args=["--", "run", "--rm", "--no-deps", "frontend", "pnpm", "lint"],
+                ),
+            )
+            prepare_init.assert_called_once_with()
+            self.assertEqual(
+                compose_call.call_args_list,
+                [
+                    call("run", "--rm", "-T", "--no-deps", "dev-state-init"),
+                    call("run", "--rm", "--no-deps", "frontend", "pnpm", "lint"),
+                ],
+            )
 
     def test_quality_offline_frontend_overlay_and_entrypoint_scoping(self) -> None:
         quality_overlay = (ROOT / "compose.quality.yaml").read_text(encoding="utf-8")
@@ -796,7 +866,12 @@ class EnvironmentTests(unittest.TestCase):
         self.assertNotIn(".package-map.json", entrypoint)
         self.assertNotIn(".modules.yaml", entrypoint)
         self.assertIn("exit 1", entrypoint)
-        self.assertIn("export CI=true\npnpm install --frozen-lockfile --prefer-offline", entrypoint)
+        self.assertIn("export npm_config_verify_deps_before_run=false", entrypoint)
+        self.assertIn("export pnpm_config_verify_deps_before_run=false", entrypoint)
+        self.assertIn(
+            "rm -f /app/node_modules/.florabase-pnpm-lock.sha256\nexport CI=true\npnpm install --frozen-lockfile --prefer-offline",
+            entrypoint,
+        )
 
     def test_review_remove_requires_exact_scope_confirmation_before_commands(self) -> None:
         review = Environment(self.repo, "review")

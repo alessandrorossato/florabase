@@ -11,6 +11,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import time
 from contextlib import ExitStack
 from pathlib import Path
 from typing import Any
@@ -184,6 +185,7 @@ def quality_network_smoke(root: Path) -> None:
 
     seed.mkdir(parents=True)
     for name in (
+        "Makefile",
         "compose.yaml",
         "compose.dev.yaml",
         "compose.quality.yaml",
@@ -284,7 +286,7 @@ def quality_network_smoke(root: Path) -> None:
                 capture_output=True,
             ).stdout
         )
-        for service in ("backend", "frontend"):
+        for service in ("backend", "frontend", "frontend-lockfile"):
             require(
                 net_config["services"][service].get("network_mode") == "bridge",
                 f"--quality-network did not select bridge for {service}",
@@ -293,6 +295,205 @@ def quality_network_smoke(root: Path) -> None:
                 not net_config["services"][service].get("ports"),
                 f"--quality-network published ports for {service}",
             )
+        require(
+            not net_config["services"]["frontend-lockfile"].get("volumes")
+            or all(
+                v.get("target") != "/app/node_modules"
+                for v in net_config["services"]["frontend-lockfile"]["volumes"]
+            ),
+            "frontend-lockfile unexpectedly mounts node_modules volume",
+        )
+
+        # Unreachable registry env must not trigger network retries during offline Quality commands.
+        no_registry_hook = subprocess.run(
+            [
+                *env_helper,
+                "quality",
+                "compose",
+                "--",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "-e",
+                "npm_config_registry=http://127.0.0.1:9",
+                "frontend",
+                "pnpm",
+                "exec",
+                "eslint",
+                "src/main.tsx",
+            ],
+            cwd=linked,
+            text=True,
+            capture_output=True,
+            timeout=30,
+        )
+        require(
+            no_registry_hook.returncode == 0,
+            f"offline Quality attempted registry lookup or failed: {no_registry_hook.stderr!r}",
+        )
+
+        # Mixed lifecycle: completed networked frontend install clears provenance until make quality-clean.
+        subprocess.run(
+            [
+                *env_helper,
+                "--quality-network",
+                "quality",
+                "compose",
+                "--",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "frontend",
+                "pnpm",
+                "install",
+                "--frozen-lockfile",
+                "--prefer-offline",
+            ],
+            cwd=linked,
+            check=True,
+        )
+        started_at = time.monotonic()
+        after_network = subprocess.run(
+            [
+                *env_helper,
+                "quality",
+                "compose",
+                "--",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "frontend",
+                "pnpm",
+                "exec",
+                "eslint",
+                "src/main.tsx",
+            ],
+            cwd=linked,
+            text=True,
+            capture_output=True,
+            timeout=15,
+        )
+        require(
+            after_network.returncode != 0
+            and "make quality-clean" in after_network.stderr
+            and (time.monotonic() - started_at) < 10.0,
+            f"offline Quality failed to reject mixed networked volume quickly: rc={after_network.returncode}, stderr={after_network.stderr!r}",
+        )
+        subprocess.run(["make", "quality-clean"], cwd=linked, check=True)
+        require(not any(Resources(quality).inventory().values()), "make quality-clean left state")
+        subprocess.run(
+            [
+                *env_helper,
+                "quality",
+                "compose",
+                "--",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "frontend",
+                "pnpm",
+                "exec",
+                "eslint",
+                "src/main.tsx",
+            ],
+            cwd=linked,
+            check=True,
+        )
+
+        # Mixed lifecycle: interrupted networked frontend install clears provenance without hanging later offline runs.
+        interrupted_net = subprocess.Popen(
+            [
+                *env_helper,
+                "--quality-network",
+                "quality",
+                "compose",
+                "--",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "frontend",
+                "sh",
+                "-c",
+                "echo INSTALLING_NET; exec pnpm install --frozen-lockfile --force",
+            ],
+            cwd=linked,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            start_new_session=True,
+        )
+        try:
+            require(interrupted_net.stdout is not None, "missing stdout for networked install")
+            assert interrupted_net.stdout is not None
+            saw_install = False
+            for line in iter(interrupted_net.stdout.readline, ""):
+                if line.strip() == "INSTALLING_NET":
+                    saw_install = True
+                    break
+            require(saw_install, "networked install did not start")
+            time.sleep(0.5)
+            os.killpg(interrupted_net.pid, signal.SIGTERM)
+            interrupted_net.wait(timeout=15)
+        finally:
+            if interrupted_net.poll() is None:
+                os.killpg(interrupted_net.pid, signal.SIGKILL)
+                interrupted_net.wait(timeout=5)
+            if interrupted_net.stdout is not None:
+                interrupted_net.stdout.close()
+            if interrupted_net.stderr is not None:
+                interrupted_net.stderr.close()
+        started_at = time.monotonic()
+        after_interrupt = subprocess.run(
+            [
+                *env_helper,
+                "quality",
+                "compose",
+                "--",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "frontend",
+                "pnpm",
+                "lint",
+            ],
+            cwd=linked,
+            text=True,
+            capture_output=True,
+            timeout=15,
+        )
+        require(
+            after_interrupt.returncode != 0
+            and "make quality-clean" in after_interrupt.stderr
+            and (time.monotonic() - started_at) < 10.0,
+            f"offline Quality after interrupted networked install failed unexpectedly: rc={after_interrupt.returncode}, stderr={after_interrupt.stderr!r}",
+        )
+        subprocess.run(["make", "quality-clean"], cwd=linked, check=True)
+        require(not any(Resources(quality).inventory().values()), "make quality-clean left state")
+        subprocess.run(
+            [
+                *env_helper,
+                "quality",
+                "compose",
+                "--",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "frontend",
+                "pnpm",
+                "exec",
+                "eslint",
+                "src/main.tsx",
+            ],
+            cwd=linked,
+            check=True,
+        )
 
         marker_check = subprocess.run(
             [
@@ -633,6 +834,92 @@ def quality_network_smoke(root: Path) -> None:
         require(
             not any(Resources(quality).inventory().values()),
             "interrupted Quality command left residual resources after clean",
+        )
+
+        # Dependency-update bootstrap regression: package.json changed while pnpm-lock.yaml is still old.
+        shutil.rmtree(linked / "frontend" / ".pnpm-store", ignore_errors=True)
+        pkg_path = linked / "frontend" / "package.json"
+        pkg_data = json.loads(pkg_path.read_text(encoding="utf-8"))
+        pkg_data["devDependencies"]["picocolors"] = "1.1.1"
+        pkg_path.write_text(json.dumps(pkg_data, indent=2) + "\n", encoding="utf-8")
+
+        stale_build = subprocess.run(
+            [*env_helper, "quality", "compose", "--", "build", "frontend"],
+            cwd=linked,
+            text=True,
+            capture_output=True,
+        )
+        require(
+            stale_build.returncode != 0,
+            "expected frozen frontend build to fail when package.json diverges from pnpm-lock.yaml",
+        )
+        frontend_entries_before = sorted(p.name for p in (linked / "frontend").iterdir())
+        require(
+            ".pnpm-store" not in frontend_entries_before,
+            "unexpected .pnpm-store before make dependency-update",
+        )
+        dep_update = subprocess.run(
+            ["make", "dependency-update"],
+            cwd=linked,
+            text=True,
+            capture_output=True,
+        )
+        require(
+            dep_update.returncode == 0,
+            f"make dependency-update failed after package.json change: {dep_update.stderr!r}\n{dep_update.stdout!r}",
+        )
+        updated_lock = (linked / "frontend" / "pnpm-lock.yaml").read_text(encoding="utf-8")
+        require(
+            "picocolors:" in updated_lock, "updated pnpm-lock.yaml missing added picocolors pin"
+        )
+        require(
+            sorted(p.name for p in (linked / "frontend").iterdir()) == frontend_entries_before,
+            "make dependency-update altered directory entries inside frontend worktree",
+        )
+        require(
+            not (linked / "frontend" / ".pnpm-store").exists()
+            and (
+                not (linked / "frontend" / "node_modules").exists()
+                or not any((linked / "frontend" / "node_modules").iterdir())
+            ),
+            "make dependency-update populated node_modules or .pnpm-store inside frontend worktree",
+        )
+        require(
+            (linked / "frontend" / "pnpm-lock.yaml").stat().st_uid == os.getuid(),
+            "updated pnpm-lock.yaml ownership did not match invoking host user",
+        )
+        untracked = [
+            line
+            for line in git("status", "--short", cwd=linked).splitlines()
+            if line.startswith("??")
+        ]
+        require(not untracked, f"make dependency-update created untracked files: {untracked}")
+        subprocess.run(["make", "quality-clean"], cwd=linked, check=True)
+        for frontend_cmd in (
+            ["pnpm", "lint"],
+            ["pnpm", "typecheck"],
+            ["pnpm", "exec", "vitest", "run", "--configLoader", "runner", "src/UX001.test.tsx"],
+        ):
+            subprocess.run(
+                [
+                    *env_helper,
+                    "quality",
+                    "compose",
+                    "--",
+                    "run",
+                    "--rm",
+                    "--no-deps",
+                    "-T",
+                    "frontend",
+                    *frontend_cmd,
+                ],
+                cwd=linked,
+                check=True,
+            )
+        Resources(quality).clean()
+        require(
+            not any(Resources(quality).inventory().values()),
+            "dependency-update follow-up Quality checks left residual resources after clean",
         )
 
         networks_after = set(docker("network", "ls", "-q", "--no-trunc").splitlines())

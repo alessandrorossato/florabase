@@ -1190,9 +1190,12 @@ def dispatch(env: Environment, args: argparse.Namespace) -> None:
                 "restart",
             }:
                 env.require_durable_legacy_media()
-        if env.role == "quality" and command[:1] == ["run"] and "frontend" in command:
-            env.prepare_initializer()
-            env.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")
+        if env.role == "quality" and command[:1] == ["run"]:
+            if "frontend-lockfile" in command:
+                env.compose("build", "frontend-lockfile")
+            elif "frontend" in command:
+                env.prepare_initializer()
+                env.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")
         env.compose(*command)
     elif args.action == "status":
         env.status()

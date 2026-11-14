@@ -1,10 +1,18 @@
 # syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
-FROM node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df AS dependencies
+FROM node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df AS toolchain
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
 ENV COREPACK_HOME=/usr/local/share/corepack
-RUN corepack enable
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+ENV HOME=/tmp/florabase-frontend-home
 WORKDIR /app
+COPY package.json ./
+RUN corepack enable \
+    && pnpm --version \
+    && rm -f /app/package.json \
+    && chmod -R a+rX /usr/local/share/corepack
+
+FROM toolchain AS dependencies
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 RUN pnpm install --frozen-lockfile \
     && sha256sum /app/pnpm-lock.yaml | cut -d' ' -f1 > /app/node_modules/.florabase-pnpm-lock.sha256

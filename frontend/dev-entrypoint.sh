@@ -16,8 +16,14 @@ if [ "${FLORABASE_QUALITY_OFFLINE:-0}" = "1" ]; then
     echo "florabase-dev-entrypoint: Quality frontend dependency marker is missing or out of sync with pnpm-lock.yaml; run 'make quality-clean' to safely reinitialize only this worktree's Quality state" >&2
     exit 1
   fi
+  # Prevent pnpm 11's verify-deps-before-run hook from triggering network installs offline.
+  export npm_config_verify_deps_before_run=false
+  export pnpm_config_verify_deps_before_run=false
   exec "$@"
 fi
+# Any non-offline invocation mutates/re-installs node_modules outside the image build contract;
+# drop the image provenance marker first so mixed or interrupted sessions never masquerade as offline-clean.
+rm -f /app/node_modules/.florabase-pnpm-lock.sha256
 export CI=true
 pnpm install --frozen-lockfile --prefer-offline
 exec "$@"

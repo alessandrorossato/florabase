@@ -72,17 +72,23 @@ worktree lifecycle. Proven `feature-finish` retires only the finishing worktree'
 Quality services default to `network_mode: none` (`compose.quality.yaml`) so ordinary lint, format,
 typecheck, API-check, workflow-check, unit-test and local reference status/verify runs do not
 allocate per-worktree Docker bridge networks; only `make dependency-update` and
-`make dev-references-setup` opt into `compose.quality-network.yaml` (via
+`make dependency-update` and `make dev-references-setup` opt into `compose.quality-network.yaml` (via
 `workflow_environment.py --quality-network`), attaching to Docker's shared default `bridge` without
-creating project bridge subnets; `compose.quality.yaml` also sets `FLORABASE_QUALITY_OFFLINE: "1"` (cleared to `"0"` under
-`--quality-network`) so offline Quality runs validate Florabase's own lockfile provenance marker
-(`/app/node_modules/.florabase-pnpm-lock.sha256`, written when `frontend/Dockerfile` installs pinned
-dependencies and initialized into the Quality `frontend_node_modules` volume via `dev-state-init`)
-against `/app/pnpm-lock.yaml` without depending on pnpm internal files, and execute requested tools
-directly without network calls (relying on the executed tools themselves to fail on missing or
-damaged package files), while persistent environments keep automatic `pnpm install` recovery. If
-the marker is missing or stale after a lockfile change, run `make quality-clean` to safely
-reinitialize only this worktree's Quality state. Persistent environments retain their existing guarded semantics.
+creating project bridge subnets. `make dependency-update` refreshes `frontend/pnpm-lock.yaml` via the
+isolated `frontend-lockfile` service (`toolchain` stage, bind-mounted `./frontend` without a
+`node_modules` volume, temporary store in `/tmp`), so lockfile updates still work cleanly when
+`package.json` changes before rebuilding frozen images. `compose.quality.yaml` also sets
+`FLORABASE_QUALITY_OFFLINE: "1"` (cleared to `"0"` under `--quality-network`, with any non-offline
+`frontend` entrypoint invocation removing the image provenance marker) so offline Quality runs validate
+Florabase's own lockfile provenance marker (`/app/node_modules/.florabase-pnpm-lock.sha256`, written
+when `frontend/Dockerfile` installs pinned dependencies and initialized into the Quality
+`frontend_node_modules` volume via `dev-state-init`) against `/app/pnpm-lock.yaml` without depending on
+pnpm internal files, disable pnpm's `verify-deps-before-run` network hook offline, and execute requested
+tools directly without network calls (relying on the executed tools themselves to fail on missing or
+damaged package files), while persistent environments keep automatic `pnpm install` recovery. If the
+marker is missing or invalidated (for example after a lockfile change or a `--quality-network`
+`frontend` install), run `make quality-clean` to safely reinitialize only this worktree's Quality state.
+Persistent environments retain their existing guarded semantics.
 Shared BuildKit cache and ambiguous images remain explicitly reported; no shared-daemon global
 prune is automated.
 

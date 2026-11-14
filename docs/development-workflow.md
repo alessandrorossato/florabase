@@ -809,7 +809,11 @@ make quality-clean        # Explicit destructive retirement of ONLY this worktre
 Quality remains reusable during feature work; individual test/lint/type commands do not retire it.
 Quality services run under `compose.quality.yaml` with `network_mode: none` (and no project
 networks), while `make dependency-update` and `make dev-references-setup` opt into Docker's shared
-`bridge` network via `--quality-network` (`compose.quality-network.yaml`). Ordinary Quality runs
+`bridge` network via `--quality-network` (`compose.quality-network.yaml`). `make dependency-update`
+refreshes `frontend/pnpm-lock.yaml` through the dedicated `frontend-lockfile` (`toolchain`) service
+without building or mounting `frontend_node_modules`; any non-offline `frontend` run clears its
+Quality offline provenance marker so subsequent offline Quality refuses mixed state until
+`make quality-clean` restores a clean volume. Ordinary Quality runs
 therefore allocate zero Docker bridge subnets. Its project derives from the exact Git metadata path. New resources carry workflow lifecycle, owner
 metadata and source labels as well as Compose project identity. Legacy Quality containers require
 exact source/role; legacy networks and the three known volume keys require exact deterministic
