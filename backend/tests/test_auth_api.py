@@ -8,7 +8,16 @@ from fastapi import HTTPException, Response
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from florabase.auth.api import LoginRequest, LoginResponse, get_session, login, logout, recover_csrf
+from florabase.auth.api import (
+    ChangePasswordRequest,
+    LoginRequest,
+    LoginResponse,
+    change_owner_password,
+    get_session,
+    login,
+    logout,
+    recover_csrf,
+)
 from florabase.auth.dependencies import (
     AuthenticatedActor,
     require_authenticated_actor,
@@ -21,8 +30,11 @@ from florabase.auth.model import AuthSession, User
 from florabase.auth.security import token_digest
 from florabase.auth.service import (
     InvalidCredentialsError,
+    InvalidNewPasswordError,
     LoginThrottledError,
     NewSession,
+    PasswordUnchangedError,
+    SessionCsrfError,
 )
 from florabase.core.config import CookieMode, Environment, Settings
 
@@ -325,3 +337,74 @@ def test_uvicorn_access_filter_omits_auth_query_before_formatting() -> None:
         assert AuthAccessFilter().filter(record)
         assert "query-canary" not in record.getMessage()
         assert path in record.getMessage()
+
+
+@pytest.mark.parametrize(
+    ("failure", "status", "detail"),
+    [
+        (InvalidCredentialsError, 401, "Authentication required"),
+        (SessionCsrfError, 403, "Request forbidden"),
+        (InvalidNewPasswordError, 422, "invalid_new_password"),
+        (PasswordUnchangedError, 422, "password_unchanged"),
+        (None, 403, "Request forbidden"),
+    ],
+)
+def test_password_rejection_never_stages_replacement_cookie(
+    failure: type[Exception] | None,
+    status: int,
+    detail: str,
+) -> None:
+    response = Response()
+    with (
+        patch("florabase.auth.api.change_password", side_effect=failure) as change,
+        pytest.raises(HTTPException) as rejected,
+    ):
+        change_owner_password(
+            ChangePasswordRequest(
+                current_password="synthetic current", new_password="synthetic new"
+            ),
+            response,
+            actor(owner=failure is not None),
+            MagicMock(),
+            settings(),
+            "csrf-token",
+        )
+    assert rejected.value.status_code == status
+    body = rejected.value.detail
+    assert (body["code"] if isinstance(body, dict) else body) == detail
+    assert "set-cookie" not in response.headers
+    if failure is None:
+        change.assert_not_called()
+
+
+@pytest.mark.parametrize("operation", ["recovery", "logout", "logout_csrf"])
+def test_session_mutations_reject_invalidated_lock_results(operation: str) -> None:
+    response = Response()
+    failure = SessionCsrfError if operation == "logout_csrf" else InvalidCredentialsError
+    with patch("florabase.auth.api.lock_presenting_session", side_effect=failure):
+        if operation == "recovery":
+            with pytest.raises(HTTPException) as rejected:
+                recover_csrf(request(), response, actor(), settings(), MagicMock())
+        else:
+            with pytest.raises(HTTPException) as rejected:
+                logout(response, actor(), MagicMock(), settings(), "stale-token")
+    assert rejected.value.status_code == (403 if operation == "logout_csrf" else 401)
+    assert "set-cookie" not in response.headers
+
+
+def test_malformed_login_validation_does_not_reflect_credentials() -> None:
+    from fastapi.testclient import TestClient
+
+    from florabase.main import create_app
+
+    client = TestClient(create_app(), base_url="https://florabase.example")
+    with patch("florabase.auth.api.authenticate") as authenticate:
+        response = client.post(
+            "/api/v1/auth/login",
+            json={"login_name": "owner", "password": {"value": "synthetic-secret-canary"}},
+        )
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Check the login name and password."}
+    assert response.headers["cache-control"] == "no-store"
+    assert "synthetic-secret-canary" not in response.text
+    authenticate.assert_not_called()
