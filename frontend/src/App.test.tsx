@@ -766,8 +766,14 @@ test("logout sends in-memory CSRF and clears authenticated UI", async () => {
 });
 
 test("an already-expired logout safely clears local authenticated state", async () => {
+  let restored = false;
   mockFetch((path) => {
-    if (path.endsWith("/session")) return jsonResponse(session);
+    if (path.endsWith("/session")) {
+      if (restored)
+        return jsonResponse({ detail: "Authentication required" }, 401);
+      restored = true;
+      return jsonResponse(session);
+    }
     if (path.endsWith("/csrf"))
       return jsonResponse({ csrf_token: "fresh-csrf" });
     if (path.endsWith("/logout"))

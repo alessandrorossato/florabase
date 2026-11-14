@@ -52,6 +52,19 @@ ASCII and must contain 3–64 letters, digits, dots, underscores, or hyphens. Pa
 12–1024 characters. Bootstrap takes a PostgreSQL transaction-scoped advisory lock and refuses to
 run once any user exists, including during concurrent attempts.
 
+## Owner credential management
+
+In **Settings → Account**, enter the current password and a new password of 12–1,024
+characters. The password, revocation of all old sessions, and issuance of the initiating
+browser's replacement session commit together. Other browsers must sign in again. Tabs that
+share the cookie may need to reload for a fresh CSRF token. If sign-out overlaps a password
+change in another tab, use **Sign out** after that tab reports completion.
+
+The password-change backoff bucket is separate from the public login bucket. The host-only
+[portable recovery command](portable-installation.md#recover-a-forgotten-owner-password)
+bypasses both, clears both on success and revokes every session. It requires local deployment
+administration and a healthy, writable database at the installed revision.
+
 ## Authentication implementation
 
 The implementation deliberately stays within the small boundaries accepted by ADR 0005:
@@ -64,7 +77,7 @@ The implementation deliberately stays within the small boundaries accepted by AD
 | Cookie handling                                       | Starlette `Response.set_cookie` and `delete_cookie`, with minimal Florabase policy selecting the production or loopback-development attributes.                                                                                            |
 | Session persistence, expiry, rotation, and revocation | Alembic constraints/indexes, SQLAlchemy transactions, and PostgreSQL queries; Florabase code owns the required session policy and request dependency only.                                                                                 |
 | CSRF and origin validation                            | FastAPI dependencies and Starlette request headers plus Python constant-time comparison. A small session-bound synchronizer-token check is required because the accepted design is application-specific; do not create generic middleware. |
-| Login throttling                                      | An expiring PostgreSQL row created with `ON CONFLICT` and serialized with `SELECT ... FOR UPDATE`; nginx provides the separate source-address limit.                                                                                       |
+| Login throttling                                      | An expiring PostgreSQL row created with `ON CONFLICT` and serialized with `SELECT ... FOR UPDATE`; the operator's HTTPS proxy provides any separate source-address limit.                                                                                       |
 | Bootstrap owner                                       | Python `getpass`/standard input, one SQLAlchemy transaction, and PostgreSQL constraints/locking. No HTTP bootstrap endpoint or custom CLI framework is needed.                                                                             |
 
 The selected Argon2id parameters are 65,536 KiB memory, 3 iterations, and parallelism 1. Five

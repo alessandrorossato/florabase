@@ -36,6 +36,26 @@ def current_heads(connection: Connection) -> tuple[str, ...]:
     return MigrationContext.configure(connection).get_current_heads()
 
 
+def image_schema(config: Config | None = None) -> tuple[Config, ScriptDirectory, str]:
+    if config is None:
+        config = Config("/app/alembic.ini")
+        config.set_main_option("script_location", "/app/alembic")
+    scripts = ScriptDirectory.from_config(config)
+    heads = scripts.get_heads()
+    if len(heads) != 1:
+        raise SchemaError(f"expected a single Alembic head in the image, found {heads}")
+    return config, scripts, heads[0]
+
+
+def require_image_head(connection: Connection, head: str) -> None:
+    current = current_heads(connection)
+    if current != (head,):
+        raise SchemaError(
+            f"database revision {current or 'empty'} differs from image head {head}; "
+            "use the documented initialization, upgrade or recovery procedure"
+        )
+
+
 def maintain(config: Config, scripts: ScriptDirectory, head: str, previous: str | None) -> None:
     with get_readiness_engine().begin() as connection:
         connection.execute(text("SET LOCAL statement_timeout = 0"))
@@ -67,21 +87,10 @@ def main() -> int:
     upgrade.add_argument("previous_head")
     args = parser.parse_args()
     try:
-        config = Config("/app/alembic.ini")
-        config.set_main_option("script_location", "/app/alembic")
-        scripts = ScriptDirectory.from_config(config)
-        heads = scripts.get_heads()
-        if len(heads) != 1:
-            raise SchemaError(f"expected a single Alembic head in the image, found {heads}")
-        head = heads[0]
+        config, scripts, head = image_schema()
         if args.action == "serve":
             with get_readiness_engine().connect() as connection:
-                current = current_heads(connection)
-            if current != (head,):
-                raise SchemaError(
-                    f"database revision {current or 'empty'} differs from image head {head}; "
-                    "use the documented initialization, upgrade or recovery procedure"
-                )
+                require_image_head(connection, head)
         else:
             previous = args.previous_head if args.action == "upgrade" else None
             maintain(config, scripts, head, previous)

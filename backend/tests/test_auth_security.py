@@ -36,3 +36,12 @@ def test_argon2id_and_random_token_primitives() -> None:
     assert first != second
     assert len(token_digest(first)) == TOKEN_BYTES
     assert token_digest(first) != token_digest(second)
+
+
+def test_password_policy_preserves_unicode_and_rejects_surrogates() -> None:
+    value = "  🪴 Botanical passphrase  "
+    assert validate_password(value) == value
+    for size in (12, 1024):
+        assert validate_password("ü" * size) == "ü" * size
+    with pytest.raises(ValueError, match="valid Unicode"):
+        validate_password("length is valid " + chr(0xD800))

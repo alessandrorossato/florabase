@@ -5,9 +5,10 @@ botanical reference information separate from the material and plants in a colle
 preserving explicit provenance through real collection workflows.
 
 Florabase is under active pre-release development. The current application is usable for one local
-owner, but no stable public release has been published yet. The
-[canonical product/release roadmap](docs/product-roadmap.md) defines v0.1.0 as the first public
-self-hosted release, subsequent 0.x increments and the v1.0.0 stable-contract milestone.
+owner, but no stable public release has been published yet. The private beta series
+(`v0.1.0-beta.N`) leads to release candidates and then v1.0.0, the first public stable release.
+The [v1.0.0 release scope](docs/release/scope-v1.md) defines what that release contains, its
+gates and its exclusions.
 
 ## What works today
 
@@ -29,12 +30,17 @@ self-hosted release, subsequent 0.x increments and the v1.0.0 stable-contract mi
   and order, explicit primary selection, protected thumbnails, retained unlinked assets and guarded deletion.
 - Collection-photo galleries and optional BotanicalIdentity covers; layered contextual form help
 - Local owner authentication with server-side sessions and CSRF protection
+- Structured Harvests of material collected from a Plant or Plant group, with stored material and
+  explicit conversion to new seed lots; see the [Harvest guide](docs/harvests.md)
+- A material ancestry explorer, accepted-name correction with retained name history and synonyms,
+  Plant height measurements and phenology observations in the Journal
+- Cuttings (vegetative propagation); delivered and still being finished and certified for v1.0.0
+- Installation as a web app ([PWA](docs/pwa.md)); installation on physical phones is not yet verified
 
-First-class material lineage navigation, accepted-name reconciliation/name history, measurements,
-phenology, vegetative propagation and mobile quick capture are planned after v0.1.0. PWA
-installability remains deferred. The [product roadmap](docs/product-roadmap.md) separates delivered
-capabilities, pre-v0.1 product work, release gates and the path to v1.0.0; the detailed
-[feature backlog](docs/features.json) retains each increment's implementation/verification status.
+Each increment's implementation and verification status is in the
+[feature backlog](docs/features.json) and its
+[reconciliation against the release scope](docs/release/feature-reconciliation-v1.md). Mobile quick
+capture and the other themes after v1.0.0 are in the [product roadmap](docs/product-roadmap.md).
 
 ## Screenshots
 
@@ -63,13 +69,14 @@ Repository development requires Docker Engine with Docker Compose **2.24.4 or ne
 Python 3 and `curl`. The development overlay uses Compose's `!override` tag. Host Node.js is optional.
 [Docker Compose merge rules](https://docs.docker.com/reference/compose-file/merge/)
 
-For self-hosting, choose one installation path:
+For self-hosting, [install with portable Docker Compose](docs/portable-installation.md) from
+verified release assets on linux/amd64. This is the official installation; its Compose stack
+supports the 2.20 baseline. It requires an operator-managed HTTPS reverse proxy and the exact
+public HTTPS origin.
 
-- [Install with portable Docker Compose](docs/portable-installation.md) from verified release assets on linux/amd64.
-  Its separate Compose stack supports the 2.20 baseline.
-- [Build from a source checkout](docs/deployment.md) using the repository's production Compose stack.
-
-Both paths require an operator-managed HTTPS reverse proxy and the exact public HTTPS origin.
+[Building from a source checkout](docs/deployment.md) is for development. The
+[controller bundle](docs/installation.md) is an advanced, best-effort alternative and is not a
+separately certified installation path.
 
 ## Quick start for development
 
@@ -113,9 +120,10 @@ configuration and secrets still need a separate protected backup.
 
 ## Project information
 
-- [Portable Docker Compose](docs/portable-installation.md)
-- [Advanced controller-based installation and recovery](docs/installation.md)
-- [Deployment and upgrades](docs/deployment.md)
+- [v1.0.0 release scope](docs/release/scope-v1.md)
+- [Portable Docker Compose installation](docs/portable-installation.md)
+- [Advanced controller-based installation and recovery](docs/installation.md) (best-effort)
+- [Source-build deployment and upgrades](docs/deployment.md) (development)
 - [Development guide](docs/development.md)
 - [Domain model](docs/domain-model.md)
 - [Architecture](docs/architecture.md)
@@ -133,8 +141,3 @@ GNU Affero General Public License v3.0 or later.
 SPDX-License-Identifier: AGPL-3.0-or-later
 
 See [LICENSE](LICENSE) for the full license text.
-
-Structured Harvests record material collected from a Plant or Plant group, with multiple material
-lines, honest count/weight precision, partial dates and shared media. Use **Collection → Harvests**
-or **Record harvest** on a source detail. Harvest records collection history; seed inventory and
-source lifecycle remain explicit separate workflows. See [Harvest guide](docs/harvests.md).

@@ -22,7 +22,7 @@ The initial product does not require federation, native clients, third-party API
 - Passwords use Argon2id through a maintained library. Each encoded hash contains its unique salt, algorithm, version, and cost parameters. At implementation time, parameters are benchmarked on the supported container and may exceed, but must not fall below, the then-current OWASP floor (currently 19 MiB memory, 2 iterations, parallelism 1). A successful login transparently rehashes an older or weaker encoding.
 - Passwords are never encrypted or logged. A pepper is deferred because secure distribution and rotation are not yet justified; adding one later requires a recovery and rotation design.
 - The first owner is created by an explicit one-shot backend CLI command run by the operator. It reads the password interactively or from standard input, never from a command-line argument, image layer, Compose file, or unauthenticated HTTP setup endpoint. Creation is transactional and fails once any user exists. Concurrent attempts are constrained so only one initial owner can be created.
-- Later account creation, invitations, recovery, email verification, password reset, MFA, and roles beyond owner are deferred.
+- ENG-01 adds owner password change and a deployment-host-only reset. Later account creation, invitations, email verification, MFA and roles beyond owner are deferred.
 
 ### Browser session
 

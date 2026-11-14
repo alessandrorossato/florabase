@@ -6,6 +6,45 @@
 - Documented Quality network isolation, Florabase lockfile provenance, and the host `default-address-pools` prerequisite in `docs/development.md` and `docs/development-workflow.md`; added overlay/entrypoint/scoping regressions in `scripts/test-environment-workflow.py` and real Docker fresh-worktree provenance/offline/persistent/failure/interruption cleanup smoke in `scripts/smoke-workflow-resources.py`.
 - Focused checks passed cleanly on the provenance fix (`make test-environment-workflow test-workflow-resources test-beta-runtime`, `make workflow-check`, `make lint format-check typecheck api-check test`, `make smoke-workflow-resources`), with before/after Docker inventories and `docker network ls` confirming zero new containers/networks/volumes created or retained (`docs/features.json` left untouched per coordinated task boundary).
 
+## 2026-11-13 — ENG-01 owner credential management implemented
+
+- Added Settings → Account password change with current-password verification, independent
+  backoff, transactionally revoked old sessions, and a replacement browser cookie and CSRF token.
+- Added standalone portable Compose recovery with non-echoing confirmation and protected
+  JSON stdin. No database migration or beta-controller change.
+- Focused verification and remaining acceptance evidence are recorded in
+  [ENG-01 focused verification](release/evidence/eng-01.md). Independent QA and canonical
+  security verification remain pending.
+
+## 2026-11-13 — RELEASE-SCOPE-001: approved v1.0.0 release scope and feature reconciliation
+
+- Documentation only, on `docs/release-scope-v1` from `947d77f`, writer `claude-scope-v1`.
+  [`release/scope-v1.md`](release/scope-v1.md) records the eight operator-approved decisions, the
+  release gates, the work required before v1.0.0, the exclusions and the scope-change procedure.
+  Performance thresholds are deliberately absent until measured.
+- [`release/feature-reconciliation-v1.md`](release/feature-reconciliation-v1.md) reconciles all
+  156 baseline entries with evidence and a proposed release target. Three statuses changed on
+  repository evidence: ATTACHMENT-004 to `verified`; FABLE-FIX-CUTTINGS and
+  UI-REDESIGN-EXPLORATION-001 from `in_progress` to `implemented`. Totals move from 77/52/11/16 to
+  78/53/9/16 (verified/implemented/in progress/planned). No entry was promoted for code presence
+  or a broad CI pass.
+- `product-roadmap.md` now points to the scope and keeps the post-1.0 themes; the previous text is
+  preserved in `release/history/product-roadmap-2026-11-11.md`. `README.md` states the release
+  line, the official portable Compose installation and the delivered capabilities.
+- No script changed. The `release_target` schema and checker rules are specified in
+  [`release/release-target-schema-followup.md`](release/release-target-schema-followup.md).
+- Checks: `scripts/check-features.py` (157 entries), `make verification-plan` (documentation
+  plan), relative-link check of the changed files, `git diff --check`.
+- QA remediation after `c7440bf` (`SCOPE_QA_FAIL`): the scope now separates mandatory blockers,
+  workflow enablers, optional improvements and deferrals (WF-08 deferred); every task has
+  measurable criteria in [`release/acceptance-v1.md`](release/acceptance-v1.md); G-UX evaluates a
+  versioned [`release/page-inventory-v1.md`](release/page-inventory-v1.md); 12 verified entries
+  depend on unverified ones (recomputed). The operator approved UX-DATE-001 D1 as Today
+  preselected; it is task FN-05 for the functional batch and no interface code changed here.
+- Unresolved: second independent review; the questions in the
+  [handoff](release/scope-v1-handoff.md). CUTTING-001 and `docs/cuttings.md` were not touched
+  because another writer holds uncommitted Cuttings work.
+
 ## 2026-11-13 — FABLE-CHECK-PLANT-KIND (UX-014): Synchronize Plant and Plant group creation kind with route changes
 
 - Reproduced UX-014: switching between `#/plants?action=create&kind=plant` and `#/plants?action=create&kind=group` while `PlantScreen` remained mounted (via `+` menu, Command Palette, `<a href>` links, `hashchange`, or browser Back/Forward) left `contextualCreationStarted` latched, keeping the prior `creationKind` and submitting to the wrong endpoint.

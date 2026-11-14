@@ -40,10 +40,18 @@ def normalize_login_name(login_name: str) -> str:
     return normalized
 
 
+def require_utf8(value: str) -> str:
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError:
+        raise ValueError("Input must contain valid Unicode") from None
+    return value
+
+
 def validate_password(password: str) -> str:
     if len(password) < 12 or len(password) > 1_024:
         raise ValueError("Password must be between 12 and 1024 characters")
-    return password
+    return require_utf8(password)
 
 
 def new_token() -> str:

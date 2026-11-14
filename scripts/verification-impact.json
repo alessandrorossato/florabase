@@ -625,11 +625,12 @@
     "security-regression": {
       "backend": [
         "backend/tests/test_auth_api.py",
+        "backend/tests/test_auth_reset.py",
         "backend/tests/test_auth_security.py",
         "backend/tests/test_auth_service.py"
       ],
       "integration": ["backend/tests/integration/test_authentication.py"],
-      "frontend": [],
+      "frontend": ["frontend/src/settings/AccountScreen.test.tsx"],
       "affects": []
     },
     "collection-views": {
@@ -1975,7 +1976,17 @@
       "layer": "frontend"
     },
     {
+      "path": "frontend/src/settings/AccountScreen.test.tsx",
+      "scope": "security-regression",
+      "layer": "frontend"
+    },
+    {
       "path": "backend/tests/test_auth_api.py",
+      "scope": "security-regression",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_auth_reset.py",
       "scope": "security-regression",
       "layer": "backend"
     },

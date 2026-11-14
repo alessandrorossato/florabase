@@ -20,6 +20,7 @@ export type Section =
   | "geography"
   | "import-export"
   | "labels"
+  | "account"
   | "settings"
   | "media";
 
@@ -179,6 +180,7 @@ export const workspaces: Workspace[] = [
     icon: "gear",
     summary: "Theme, printed labels and data transfer.",
     destinations: [
+      destination("account", "Account"),
       destination("settings", "Theme"),
       destination("labels", "Labels"),
       destination("import-export", "Import / Export"),
