@@ -1,3 +1,13 @@
+## 2026-11-13 — ENG-01 owner credential management implemented
+
+- Added Settings → Account password change with current-password verification, independent
+  backoff, transactionally revoked old sessions, and a replacement browser cookie and CSRF token.
+- Added standalone portable Compose recovery with non-echoing confirmation and protected
+  JSON stdin. No database migration or beta-controller change.
+- Focused verification and remaining acceptance evidence are recorded in
+  [ENG-01 focused verification](release/evidence/eng-01.md). Independent QA and canonical
+  security verification remain pending.
+
 ## 2026-11-13 — RELEASE-SCOPE-001: approved v1.0.0 release scope and feature reconciliation
 
 - Documentation only, on `docs/release-scope-v1` from `947d77f`, writer `claude-scope-v1`.

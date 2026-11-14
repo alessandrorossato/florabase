@@ -104,6 +104,31 @@ manager, or run `dc up -d --wait`. Sign in at the HTTPS origin. Check `dc ps` an
 `dc logs db backend` if services are unhealthy. An unknown, older or newer Alembic revision
 prevents API startup. Existing installations use the upgrade or restore procedure.
 
+## Recover a forgotten owner password
+
+Use a trusted, unrecorded terminal on the deployment host. From the verified portable release
+directory, confirm that `dc` selects the deployed project and that its existing PostgreSQL is
+healthy. Pause automatic redeploys and resolve any interrupted upgrade or restore. Leave that DB
+running and stop the two application services:
+
+```bash
+dc stop frontend backend
+dc run --rm --no-deps backend python -m florabase.auth.reset_password '<login-name>'
+```
+
+Check the target shown in the prompt and enter the new password twice. The command requires the
+installed image's Alembic revision and one enabled matching owner. It commits the new password,
+revokes all sessions and clears both login and password-change backoff together. It never starts
+the app or migrates the database. After confirmed success, run `dc up -d --wait` and sign in at the
+configured HTTPS address. If the command reports an unconfirmed outcome, verify the credential
+before reopening access, or reset again with a fresh password. If you restore an older backup,
+run the reset before exposing the app because the backup can contain old credentials and sessions.
+
+Automation can use `-T` on the Compose run and `--password-json-stdin` on the module. Feed exactly
+one UTF-8 JSON string from a protected pipe (maximum 16 KiB). Keep the password out of command
+arguments, environment variables, files and terminal recordings. At the HTTPS proxy, omit query
+strings, request headers and request bodies from auth logs, including diagnostic logs.
+
 ## Paired backup
 
 Use a fresh private backup directory on a different path from the two binds. Take the database and

@@ -69,3 +69,17 @@ export async function logout(csrfToken: string): Promise<void> {
     headers: { "X-CSRF-Token": csrfToken },
   });
 }
+
+export type ChangePasswordRequest =
+  components["schemas"]["ChangePasswordRequest"];
+
+export function changePassword(
+  payload: ChangePasswordRequest,
+  csrfToken: string,
+): Promise<LoginResponse> {
+  return requestJson("/api/v1/auth/password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
+    body: JSON.stringify(payload),
+  });
+}

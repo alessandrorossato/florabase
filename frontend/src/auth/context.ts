@@ -1,6 +1,10 @@
 import { createContext, useContext } from "react";
 
-import type { LoginRequest, SessionResponse } from "./api";
+import type {
+  ChangePasswordRequest,
+  LoginRequest,
+  SessionResponse,
+} from "./api";
 
 export type AuthState =
   | { status: "restoring" }
@@ -37,3 +41,8 @@ export function useAuth(): AuthContextValue {
     throw new Error("useAuth must be used within AuthProvider");
   return context;
 }
+
+export const PasswordChangeContext = createContext<{
+  pending: boolean;
+  submit(payload: ChangePasswordRequest): Promise<boolean>;
+} | null>(null);

@@ -269,6 +269,22 @@
       "status": "verified"
     },
     {
+      "id": "ENG-01",
+      "category": "security",
+      "description": "Manage the single owner's password in Account settings and recover it offline",
+      "acceptance_criteria": [
+        "Authenticated owner supplies the current password and valid Origin and CSRF before rotating the password and revoking all prior sessions",
+        "New credentials and a replacement browser session are committed atomically without exposing secrets outside the existing session-cookie and CSRF response contracts",
+        "Standalone portable Compose recovery resets the existing owner and revokes all sessions while the web services are stopped",
+        "Deterministic PostgreSQL tests exercise throttle isolation, credential and session concurrency, and commit failure behavior"
+      ],
+      "dependencies": [
+        "SECURITY-002"
+      ],
+      "priority": "P0",
+      "status": "implemented"
+    },
+    {
       "id": "DOMAIN-001",
       "category": "domain",
       "description": "Define the first BotanicalIdentity aggregate contract",

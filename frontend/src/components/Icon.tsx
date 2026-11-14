@@ -1,6 +1,12 @@
 import type { ReactNode, SVGProps } from "react";
 
 const shapes = {
+  person: (
+    <>
+      <circle cx="12" cy="7" r="4" />
+      <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
+    </>
+  ),
   eye: (
     <>
       <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z" />

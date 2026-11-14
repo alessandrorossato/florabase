@@ -31,11 +31,14 @@ def session_cookie_name(settings: Settings) -> str:
 
 
 def require_origin(request: Request, settings: Settings) -> None:
-    origin = request.headers.get("origin")
+    origins = request.headers.getlist("origin")
+    expected = settings.canonical_origin
     if (
-        origin is None
-        or settings.canonical_origin is None
-        or not secrets.compare_digest(origin, settings.canonical_origin)
+        len(origins) != 1
+        or not origins[0].isascii()
+        or expected is None
+        or not expected.isascii()
+        or not secrets.compare_digest(origins[0], expected)
     ):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Request forbidden")
 
