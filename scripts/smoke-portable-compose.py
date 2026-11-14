@@ -192,7 +192,7 @@ def exercise_credentials(stack: Stack, password: str) -> str:
     payload = json.dumps({"current_password": password, "new_password": changed_password})
     data, headers = first.request(path, "POST", payload.encode(), "application/json")
     replacement = json.loads(data)["csrf_token"]
-    cookies: SimpleCookie[str] = SimpleCookie()
+    cookies: SimpleCookie = SimpleCookie()
     cookies.load(headers["Set-Cookie"])
     bearer = cookies["__Host-florabase-session"]
     old_cookie = first.cookie
