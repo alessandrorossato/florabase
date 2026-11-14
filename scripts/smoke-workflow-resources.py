@@ -294,6 +294,69 @@ def quality_network_smoke(root: Path) -> None:
                 f"--quality-network published ports for {service}",
             )
 
+        marker_check = subprocess.run(
+            [
+                *env_helper,
+                "quality",
+                "compose",
+                "--",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "frontend",
+                "sh",
+                "-ec",
+                'test -s /app/node_modules/.florabase-pnpm-lock.sha256 && test "$(cat /app/node_modules/.florabase-pnpm-lock.sha256)" = "$(sha256sum /app/pnpm-lock.yaml | cut -d" " -f1)" && cat /app/node_modules/.florabase-pnpm-lock.sha256',
+            ],
+            cwd=linked,
+            check=True,
+            text=True,
+            capture_output=True,
+        )
+        require(
+            bool(marker_check.stdout.strip()),
+            "initialized Quality volume missing Florabase lockfile provenance marker",
+        )
+        changed_lock = root / "changed-pnpm-lock.yaml"
+        changed_lock.write_text(
+            (linked / "frontend/pnpm-lock.yaml").read_text(encoding="utf-8")
+            + "\n# lockfile drift\n",
+            encoding="utf-8",
+        )
+        stale_volume = subprocess.run(
+            [
+                *env_helper,
+                "quality",
+                "compose",
+                "--",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "-v",
+                f"{changed_lock}:/app/pnpm-lock.yaml:ro",
+                "frontend",
+                "echo",
+                "SHOULD_NOT_RUN",
+            ],
+            cwd=linked,
+            text=True,
+            capture_output=True,
+        )
+        require(
+            stale_volume.returncode != 0, "stale Quality volume accepted changed source lockfile"
+        )
+        require(
+            "SHOULD_NOT_RUN" not in stale_volume.stdout, "stale Quality volume ran target command"
+        )
+        require(
+            "Quality frontend dependency marker is missing or out of sync with pnpm-lock.yaml"
+            in stale_volume.stderr
+            and "make quality-clean" in stale_volume.stderr,
+            f"unexpected stale Quality volume error: {stale_volume.stderr!r}",
+        )
+
         frontend_image = f"{quality.project}-frontend-development"
         retained_orphans = subprocess.run(
             [
@@ -309,14 +372,18 @@ def quality_network_smoke(root: Path) -> None:
                 frontend_image,
                 "-c",
                 "mkdir -p /app/node_modules/.pnpm/orphan@1.0.0/node_modules/orphan "
-                "&& /usr/local/bin/florabase-dev-entrypoint pnpm exec eslint src/main.tsx",
+                "&& before=$(stat -c '%Y:%s' /app/node_modules/.florabase-pnpm-lock.sha256) "
+                "&& rm -f /app/node_modules/.pnpm/lock.yaml "
+                "&& /usr/local/bin/florabase-dev-entrypoint pnpm exec eslint src/main.tsx "
+                "&& after=$(stat -c '%Y:%s' /app/node_modules/.florabase-pnpm-lock.sha256) "
+                '&& test "$before" = "$after"',
             ],
             text=True,
             capture_output=True,
         )
         require(
             retained_orphans.returncode == 0,
-            f"Quality offline mode rejected valid state with orphan directory: {retained_orphans.stderr!r}",
+            f"Quality offline mode rejected valid state with orphan/no-internal-lockfile or mutated marker: {retained_orphans.stderr!r}",
         )
 
         missing_dep = subprocess.run(
@@ -364,9 +431,19 @@ def quality_network_smoke(root: Path) -> None:
             "missing implementation file inside eslint still passed",
         )
 
-        for mismatch_name, mismatch_setup in (
-            ("lockfile-drift", 'printf "# drift\\n" >> /app/node_modules/.pnpm/lock.yaml'),
-            ("missing-installed-lockfile", "rm -f /app/node_modules/.pnpm/lock.yaml"),
+        for mismatch_name, extra_args, mismatch_setup in (
+            (
+                "changed-source-lockfile",
+                ["-v", f"{changed_lock}:/app/pnpm-lock.yaml:ro"],
+                "true",
+            ),
+            (
+                "mismatched-marker",
+                [],
+                'printf "0000000000000000000000000000000000000000000000000000000000000000\\n" '
+                "> /app/node_modules/.florabase-pnpm-lock.sha256",
+            ),
+            ("missing-marker", [], "rm -f /app/node_modules/.florabase-pnpm-lock.sha256"),
         ):
             mismatch = subprocess.run(
                 [
@@ -377,6 +454,7 @@ def quality_network_smoke(root: Path) -> None:
                     "none",
                     "-e",
                     "FLORABASE_QUALITY_OFFLINE=1",
+                    *extra_args,
                     "--entrypoint",
                     "sh",
                     frontend_image,
@@ -396,8 +474,9 @@ def quality_network_smoke(root: Path) -> None:
                 f"Quality offline mode ran command despite mismatch ({mismatch_name})",
             )
             require(
-                "Quality frontend dependencies are missing or out of sync with pnpm-lock.yaml"
-                in mismatch.stderr,
+                "Quality frontend dependency marker is missing or out of sync with pnpm-lock.yaml"
+                in mismatch.stderr
+                and "make quality-clean" in mismatch.stderr,
                 f"unexpected mismatch error output ({mismatch_name}): {mismatch.stderr!r}",
             )
 

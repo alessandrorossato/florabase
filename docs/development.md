@@ -74,11 +74,15 @@ typecheck, API-check, workflow-check, unit-test and local reference status/verif
 allocate per-worktree Docker bridge networks; only `make dependency-update` and
 `make dev-references-setup` opt into `compose.quality-network.yaml` (via
 `workflow_environment.py --quality-network`), attaching to Docker's shared default `bridge` without
-creating project bridge subnets; `compose.quality.yaml` also sets `FLORABASE_QUALITY_OFFLINE: "1"`
-(cleared to `"0"` under `--quality-network`) so offline Quality runs verify lockfile parity
-(`/app/pnpm-lock.yaml` matches `/app/node_modules/.pnpm/lock.yaml`) and execute requested tools
+creating project bridge subnets; `compose.quality.yaml` also sets `FLORABASE_QUALITY_OFFLINE: "1"` (cleared to `"0"` under
+`--quality-network`) so offline Quality runs validate Florabase's own lockfile provenance marker
+(`/app/node_modules/.florabase-pnpm-lock.sha256`, written when `frontend/Dockerfile` installs pinned
+dependencies and initialized into the Quality `frontend_node_modules` volume via `dev-state-init`)
+against `/app/pnpm-lock.yaml` without depending on pnpm internal files, and execute requested tools
 directly without network calls (relying on the executed tools themselves to fail on missing or
-damaged package files), while persistent environments keep automatic `pnpm install` recovery. Persistent environments retain their existing guarded semantics.
+damaged package files), while persistent environments keep automatic `pnpm install` recovery. If
+the marker is missing or stale after a lockfile change, run `make quality-clean` to safely
+reinitialize only this worktree's Quality state. Persistent environments retain their existing guarded semantics.
 Shared BuildKit cache and ambiguous images remain explicitly reported; no shared-daemon global
 prune is automated.
 

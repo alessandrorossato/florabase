@@ -781,9 +781,17 @@ class EnvironmentTests(unittest.TestCase):
                 Environment(self.repo, role, quality_network=True)
 
         entrypoint = (ROOT / "frontend" / "dev-entrypoint.sh").read_text(encoding="utf-8")
+        dockerfile = (ROOT / "frontend" / "Dockerfile").read_text(encoding="utf-8")
+        self.assertIn(".florabase-pnpm-lock.sha256", dockerfile)
         self.assertIn('if [ "${FLORABASE_QUALITY_OFFLINE:-0}" = "1" ]; then', entrypoint)
-        self.assertIn("cmp -s /app/pnpm-lock.yaml /app/node_modules/.pnpm/lock.yaml", entrypoint)
-        self.assertIn("Quality frontend dependencies are missing or out of sync", entrypoint)
+        self.assertIn("lock_marker=/app/node_modules/.florabase-pnpm-lock.sha256", entrypoint)
+        self.assertIn("sha256sum /app/pnpm-lock.yaml", entrypoint)
+        self.assertIn("make quality-clean", entrypoint)
+        self.assertIn(
+            "Quality frontend dependency marker is missing or out of sync with pnpm-lock.yaml",
+            entrypoint,
+        )
+        self.assertNotIn(".pnpm/lock.yaml", entrypoint)
         self.assertNotIn("JSON.parse", entrypoint)
         self.assertNotIn(".package-map.json", entrypoint)
         self.assertNotIn(".modules.yaml", entrypoint)

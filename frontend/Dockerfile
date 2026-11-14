@@ -6,7 +6,8 @@ ENV COREPACK_HOME=/usr/local/share/corepack
 RUN corepack enable
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile \
+    && sha256sum /app/pnpm-lock.yaml | cut -d' ' -f1 > /app/node_modules/.florabase-pnpm-lock.sha256
 
 FROM dependencies AS build
 COPY . .
