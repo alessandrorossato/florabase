@@ -1,3 +1,27 @@
+## 2026-11-15 — DOC-02: operator decision recorded, release targets in a scope manifest
+
+- Documentation only, on `docs/doc-02-scope-decision` from `8557669`, writer
+  `claude-doc-02-decision`. The operator approved option B: release targets live in a versioned
+  manifest `docs/release/scope-v1.json` with all eight reconciliation classes, and feature
+  status stays only in `features.json`.
+- [`release/scope-v1.md`](release/scope-v1.md) gains the scope-change record and names the
+  manifest; [`release/release-target-schema-followup.md`](release/release-target-schema-followup.md)
+  is rewritten as the manifest specification: format, eight checker rules (missing, unknown and
+  duplicate identifiers, class validity, the two status consistency rules, the
+  release-candidate rule), the three-step transition and the adoption procedure for open
+  branches. `acceptance-v1.md` and `feature-reconciliation-v1.md` follow the wording, and the
+  dated `scope-v1-handoff.md` gains two resolution notes. The specification marks the file
+  format and exact rule set as its own proposal, to be confirmed in the step 2 review.
+- No classification, status, script or manifest changed. RELEASE-SCOPE-001 and ENG-01 are in
+  `features.json` and not in the reconciliation matrix; their classes need operator approval
+  when the manifest is populated.
+- Checks: `scripts/check-features.py`, relative links and anchors of the changed files,
+  `git diff --check`, `make verification-plan` (documentation plan).
+- Independent QA failed the first draft: the dated handoff still listed the choice as open,
+  and the specification presented its own format and rule details as operator decisions. Both
+  were corrected with eight further findings and the delta review passed.
+- Unresolved: steps 1 to 3 of the transition.
+
 ## 2026-11-13 — ENG-01 owner credential management implemented
 
 - Added Settings → Account password change with current-password verification, independent
