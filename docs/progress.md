@@ -1,3 +1,26 @@
+## 2026-11-15 — DOC-05: changelog, versioning policy and security reporting drafted
+
+- On `docs/doc-05-changelog-versioning-security` from `8557669`, writer `claude-doc-05`.
+- `CHANGELOG.md` (new): Unreleased since `v0.1.0-beta.5`, and one entry per tag beta.1 to beta.5
+  as the operator decided. Only beta.5 has a published GitHub Release (`gh release list`); the
+  entries for beta.1 to beta.4 say they are tagged without one.
+- `docs/versioning.md` (new): the release line beta, `1.0.0-rc.N`, `1.0.0`; the three 1.x
+  contracts and the explicit non-promises, taken from `release/scope-v1.md`; the latest stable
+  1.x as the supported version once it exists.
+- `SECURITY.md`: supported versions, and GitHub Private Vulnerability Reporting as the intended
+  private channel with what to do while it is not active. `README.md` links the two new pages.
+- DOC-05 is registered as `in_progress`: GitHub reports private vulnerability reporting as
+  disabled for the repository, so criterion 3 is not met until the operator enables it, and the
+  release entry of the changelog is written when the release is cut.
+- Checks: `scripts/check-features.py`, relative links and anchors, `git diff --check`,
+  `make verification-plan` (FULL: root `CHANGELOG.md` and `SECURITY.md` are unclassified paths).
+- Independent QA failed the first draft on two statements in `versioning.md` (tooling
+  enforcement claimed beyond the beta series; a non-promise for release candidates that the
+  scope does not state); both were corrected with five smaller findings and the delta review
+  passed.
+- Unresolved: the canonical FULL gate; operator activation of the reporting
+  channel; version terminology to be confirmed against REL-01's tooling.
+
 ## 2026-11-13 — ENG-01 owner credential management implemented
 
 - Added Settings → Account password change with current-password verification, independent

@@ -130,6 +130,8 @@ configuration and secrets still need a separate protected backup.
 - [Security architecture](docs/security.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
+- [Changelog](CHANGELOG.md)
+- [Versioning and compatibility](docs/versioning.md)
 - [Product roadmap](docs/product-roadmap.md)
 - [Engineering progress](docs/progress.md)
 

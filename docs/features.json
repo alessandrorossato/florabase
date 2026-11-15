@@ -2817,6 +2817,21 @@
       ],
       "priority": "P1",
       "status": "implemented"
+    },
+    {
+      "id": "DOC-05",
+      "category": "documentation",
+      "description": "Publish a changelog, a versioning policy and a vulnerability reporting channel",
+      "acceptance_criteria": [
+        "CHANGELOG.md exists with an entry for the release",
+        "A versioning page states the release line and the supported contracts",
+        "SECURITY.md names a private reporting channel and the supported versions"
+      ],
+      "dependencies": [
+        "RELEASE-SCOPE-001"
+      ],
+      "priority": "P0",
+      "status": "in_progress"
     }
   ]
 }
