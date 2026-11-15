@@ -2,7 +2,28 @@
 set -eu
 # Compose initializes volume ownership before the non-root application starts.
 # CI makes pnpm's lockfile-driven replacement safe without an interactive terminal.
-export CI=true
 mkdir -p "$HOME"
+if [ "${FLORABASE_QUALITY_OFFLINE:-0}" = "1" ]; then
+  # Offline Quality validates Florabase's own lockfile provenance marker
+  # (written at image build time when dependencies were installed), rather than
+  # pnpm's internal lockfile/metadata; requested tools verify package presence.
+  lock_marker=/app/node_modules/.florabase-pnpm-lock.sha256
+  if [ ! -r /app/pnpm-lock.yaml ] \
+    || [ ! -s /app/pnpm-lock.yaml ] \
+    || [ ! -r "$lock_marker" ] \
+    || [ ! -s "$lock_marker" ] \
+    || [ "$(cat "$lock_marker")" != "$(sha256sum /app/pnpm-lock.yaml | cut -d' ' -f1)" ]; then
+    echo "florabase-dev-entrypoint: Quality frontend dependency marker is missing or out of sync with pnpm-lock.yaml; run 'make quality-clean' to safely reinitialize only this worktree's Quality state" >&2
+    exit 1
+  fi
+  # Prevent pnpm 11's verify-deps-before-run hook from triggering network installs offline.
+  export npm_config_verify_deps_before_run=false
+  export pnpm_config_verify_deps_before_run=false
+  exec "$@"
+fi
+# Any non-offline invocation mutates/re-installs node_modules outside the image build contract;
+# drop the image provenance marker first so mixed or interrupted sessions never masquerade as offline-clean.
+rm -f /app/node_modules/.florabase-pnpm-lock.sha256
+export CI=true
 pnpm install --frozen-lockfile --prefer-offline
 exec "$@"
