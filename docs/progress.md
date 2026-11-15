@@ -1,3 +1,32 @@
+## 2026-11-15 — DOC-01: portable Compose guide completed as the official installation guide
+
+- Documentation only, on `docs/doc-01-portable-install-guide` from `8557669`, writer
+  `claude-doc-01`. [`portable-installation.md`](portable-installation.md) gains Prerequisites, a
+  heading for asset verification, a reverse-proxy example and Troubleshooting (wrong origin,
+  schema revision mismatch, unhealthy container, bind-mount permissions, lost password). No
+  existing command changed.
+- The proxy example carries `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` and a
+  `Content-Security-Policy`, because `frontend/nginx.conf` sends none (ENG-02 is not delivered).
+  The policy was derived from what the frontend loads and was not exercised in a browser; the
+  guide says so and tells the operator to start in report-only mode.
+- Troubleshooting messages were read from `florabase.db.release_schema`,
+  `florabase.core.config`, `florabase.auth.dependencies`, `florabase.attachments.storage`,
+  `frontend/src/auth/AuthProvider.tsx`, `frontend/nginx.conf` and
+  `scripts/smoke-portable-compose.py`. No case was reproduced on a host.
+- Independent QA passed with seven should-fix findings, all applied: what the operator actually
+  sees for each troubleshooting case, how to tell the causes apart, and `Referrer-Policy`
+  `strict-origin-when-cross-origin` so map tile requests keep a referrer. The delta review then
+  failed one sentence added with those fixes (a wrong media owner does not leave the stack
+  healthy: `attachments/storage.py` refuses it at application startup); it is corrected.
+- `deployment.md` (development only) and `installation.md` (advanced, best-effort) state their
+  status in their first paragraph.
+- DOC-01 is registered as `implemented`. Checks: `scripts/check-features.py`, relative links and
+  anchors of the changed files, `git diff --check`, `make verification-plan` (documentation plan).
+- Unresolved: no published release contains `portable-compose.yaml`, so the guide cannot yet be
+  followed end to end; G-INSTALL, G-UPGRADE, G-RESTORE and the G-DIAG reproductions (REL-02) are
+  not run and nothing here asserts them. The attestation command names `beta-images.yml` and
+  must follow REL-01 if the release-candidate channel uses another workflow.
+
 ## 2026-11-13 — ENG-01 owner credential management implemented
 
 - Added Settings → Account password change with current-password verification, independent

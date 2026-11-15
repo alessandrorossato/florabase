@@ -1,5 +1,7 @@
 # Advanced controller-based installation and recovery
 
+**Status: advanced, best-effort.** The controller bundle is kept but is not a certified
+installation path; the official installation is [portable Docker Compose](portable-installation.md).
 This guide is for people who want to **run** Florabase on their own server from the published
 container images. You do not need the source code, Node.js, a Python development environment or a
 compiler. To build and deploy from a checkout, see [source-build deployment](deployment.md). For
