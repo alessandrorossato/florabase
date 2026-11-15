@@ -877,14 +877,13 @@ class GitError(AssertionError):
 
 def git_in(repo: Path, *args: str) -> str:
     try:
-        result = subprocess.run(
-            ["git", "-C", str(repo), *args], capture_output=True, text=True, errors="replace"
-        )
+        result = subprocess.run(["git", "-C", str(repo), *args], capture_output=True)
     except OSError as error:
         raise GitError(f"git {args[0]}: {error}") from error
     if result.returncode:
-        raise GitError(f"git {' '.join(args[:3])} failed: {result.stderr.strip()[:300]}")
-    return result.stdout
+        detail = result.stderr.decode("utf-8", errors="replace").strip()[:300]
+        raise GitError(f"git {' '.join(args[:3])} failed: {detail}")
+    return result.stdout.decode("utf-8", errors="replace")
 
 
 def disclosure_base(repo: Path) -> str:
@@ -914,7 +913,9 @@ def added_lines(repo: Path, scope: str, *diff: str) -> list[tuple[str, str, int,
     found: list[tuple[str, str, int, str]] = []
     path: str | None = None
     number = 0
-    for line in output.splitlines():
+    # Git separates patch records with LF. Forced text diffs can contain other
+    # line separators inside the payload of a record.
+    for line in output.split("\n"):
         if line.startswith("+++ "):
             path = None if line == "+++ /dev/null" else line[len("+++ b/") :]
         elif line.startswith("@@"):
@@ -1017,6 +1018,18 @@ class Disclosure(unittest.TestCase):
 
     def test_no_infrastructure_or_secret_disclosure(self) -> None:
         self.assertEqual(disclosure_findings(ROOT, disclosure_base(ROOT)), [])
+
+    def test_staged_binary_payload_keeps_git_record_boundaries(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = scratch_repository(Path(temporary))
+            (repo / "asset.bin").write_bytes(
+                b"\x00\r@@ asset\v@@ metadata " + SYNTHETIC["email address"].encode("ascii") + b"\n"
+            )
+            git_in(repo, "add", "asset.bin")
+            self.assertEqual(
+                disclosure_findings(repo, disclosure_base(repo)),
+                ["staged asset.bin:1: email address"],
+            )
 
     def test_scope_is_the_whole_feature_diff(self) -> None:
         """Every change since the fork point, with its provenance; nothing from before it."""

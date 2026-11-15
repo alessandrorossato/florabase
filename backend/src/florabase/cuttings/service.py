@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from florabase.botanical_identities.model import BotanicalIdentity
+from florabase.botanical_identities.service import get_active_botanical_identity
 from florabase.cuttings.model import (
     CuttingRecord,
     PropagationAttempt,
@@ -173,10 +174,12 @@ def _lot_values(
     for model, reference, kind in references:
         if reference is None:
             continue
-        record = database.get(model, reference)
-        if record is None or (
-            isinstance(record, BotanicalIdentity) and record.merged_into_id is not None
-        ):
+        record = (
+            get_active_botanical_identity(database, reference)
+            if model is BotanicalIdentity
+            else database.get(model, reference)
+        )
+        if record is None:
             raise PropagationNotFoundError(
                 f"{kind}_not_found", f"{kind.replace('_', ' ').capitalize()} not found"
             )

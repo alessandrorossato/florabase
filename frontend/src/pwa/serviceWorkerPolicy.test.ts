@@ -18,14 +18,14 @@ const PRECACHE = [
   "/offline.css",
   "/offline.js",
   "/manifest.webmanifest",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/icons/icon-maskable-192.png",
-  "/icons/icon-maskable-512.png",
-  "/icons/apple-touch-icon.png",
-  "/icons/icon.svg",
-  "/favicon.ico",
-  "/favicon.svg",
+  "/icons/florabase-192.png",
+  "/icons/florabase-512.png",
+  "/icons/florabase-maskable-192.png",
+  "/icons/florabase-maskable-512.png",
+  "/icons/florabase-apple-touch-icon.png",
+  "/icons/favicon-16x16.png",
+  "/icons/favicon-32x32.png",
+  "/favicon.ico?v=brand-01",
 ];
 
 interface FakeRequest {
@@ -181,11 +181,11 @@ describe("service worker lifecycle", () => {
 
   it("removes previous Florabase caches and claims clients without navigating them", async () => {
     const worker = loadWorker(online);
-    worker.store.set("florabase-shell-v0", new Map([["/old", new Response()]]));
+    worker.store.set("florabase-shell-v1", new Map([["/old", new Response()]]));
     await worker.lifecycle("install");
     await worker.lifecycle("activate");
 
-    expect([...worker.store.keys()]).toEqual(["florabase-shell-v1"]);
+    expect([...worker.store.keys()]).toEqual(["florabase-shell-v2"]);
     expect(worker.self.clients.claim).toHaveBeenCalledOnce();
     // Only claim() exists on the fake clients object: any matchAll()/navigate()/reload attempt
     // would throw, and the source must not contain one either.
@@ -303,13 +303,13 @@ describe("public shell assets", () => {
       Promise.resolve(new Response("new icon", { status: 200 })),
     );
 
-    const fresh = await worker.dispatchFetch("/icons/icon-192.png");
+    const fresh = await worker.dispatchFetch("/icons/florabase-192.png");
     expect(await fresh?.text()).toBe("new icon");
     await Promise.resolve();
     await Promise.resolve();
 
     worker.setNetwork(offline);
-    const cached = await worker.dispatchFetch("/icons/icon-192.png");
+    const cached = await worker.dispatchFetch("/icons/florabase-192.png");
     expect(await cached?.text()).toBe("new icon");
   });
 
@@ -348,7 +348,7 @@ describe("public shell assets", () => {
 
   it("returns a network error for an uncached shell asset while offline", async () => {
     const worker = loadWorker(offline);
-    const response = await worker.dispatchFetch("/icons/icon-512.png");
+    const response = await worker.dispatchFetch("/icons/florabase-512.png");
     expect(response?.type).toBe("error");
   });
 
@@ -360,7 +360,7 @@ describe("public shell assets", () => {
       ["/", "navigate", "GET"],
       ["/?record=plant", "navigate", "GET"],
       ["/assets/index-CHHWvZAu.js", "cors", "GET"],
-      ["/icons/icon-512.png", "no-cors", "GET"],
+      ["/icons/florabase-512.png", "no-cors", "GET"],
       ["/manifest.webmanifest", "cors", "GET"],
       ["/api/v1/plants", "cors", "POST"],
     ]) {
