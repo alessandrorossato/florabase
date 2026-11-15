@@ -2514,7 +2514,7 @@
     {
       "id": "UI-REDESIGN-EXPLORATION-001",
       "category": "ux",
-      "description": "Experimental Florabase Next frontend (Workbench direction, Field Ledger tokens) on feat/ui-redesign-exploration-001, compared side by side with main using real screenshots from isolated synthetic environments; experimental only, never merged without operator review and approval",
+      "description": "Florabase Next frontend (Workbench direction, Field Ledger tokens), developed as an exploration on feat/ui-redesign-exploration-001 and compared side by side with main using real screenshots from isolated synthetic environments; delivered to main as the production shell in fec0398 (#147)",
       "acceptance_criteria": [
         "A fresh authenticated baseline of main is captured from an isolated synthetic environment with the existing fixture owner, recording source SHA, environment, dataset, viewports and image hashes, without personal credentials",
         "The alternative frontend uses only existing backend APIs, schema, authentication and authorization, preserves every existing hash route and deep link, and covers all current product areas, not only showcase screens",
@@ -2816,6 +2816,52 @@
         "SCHEDULE-UX-001"
       ],
       "priority": "P1",
+      "status": "implemented"
+    },
+    {
+      "id": "BRAND-01",
+      "category": "frontend",
+      "description": "Integrate the approved Florabase logo and application icons",
+      "acceptance_criteria": [
+        "The README shows the approved wordmark and preserves its release status and documentation",
+        "Today and the Workbench use the approved mark, preserving existing information hierarchy, keyboard navigation and responsive layout across light and dark themes",
+        "Favicon, standard and maskable PWA icons, Apple touch icon and the offline fallback use the approved artwork, with valid sizes and offline precache paths"
+      ],
+      "dependencies": [
+        "PWA-001",
+        "DASHBOARD-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "DOC-03",
+      "category": "documentation",
+      "description": "Correct the closed list of stale documentation statements named by the v1.0.0 release scope",
+      "acceptance_criteria": [
+        "Each statement in the DOC-03 list of docs/release/acceptance-v1.md is corrected against the code, workflows and published releases",
+        "A re-check against the release-candidate commit finds none of the listed statements and is recorded with that commit"
+      ],
+      "dependencies": [
+        "RELEASE-SCOPE-001"
+      ],
+      "priority": "P0",
+      "status": "implemented"
+    },
+    {
+      "id": "DOC-01",
+      "category": "documentation",
+      "description": "Make the portable Compose guide the one official installation guide and label the source-build and controller guides",
+      "acceptance_criteria": [
+        "docs/portable-installation.md contains prerequisites, asset verification, configuration, first install, a reverse-proxy example including the headers the application does not send itself, upgrade, paired backup, isolated restore, and troubleshooting for a wrong origin, a schema revision mismatch, an unhealthy container, bind-mount permissions and a lost password",
+        "docs/deployment.md and docs/installation.md each state their status (development; best-effort) in their first paragraph",
+        "The G-INSTALL, G-UPGRADE and G-RESTORE records state that no instruction outside the guide was used"
+      ],
+      "dependencies": [
+        "PORTABLE-COMPOSE-001",
+        "RELEASE-SCOPE-001"
+      ],
+      "priority": "P0",
       "status": "implemented"
     },
     {

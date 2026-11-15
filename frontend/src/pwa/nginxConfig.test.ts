@@ -32,7 +32,6 @@ describe("Nginx PWA Configuration", () => {
   it("serves /icons/ and favicons with 1-day public caching", () => {
     expect(nginxContent).toContain("location /icons/ {");
     expect(nginxContent).toContain("location = /favicon.ico {");
-    expect(nginxContent).toContain("location = /favicon.svg {");
     expect(nginxContent).toContain(
       'add_header Cache-Control "public, max-age=86400";',
     );

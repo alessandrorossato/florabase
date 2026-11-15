@@ -202,8 +202,17 @@ body:has(.workspace--dashboard dialog[open]) {
 /* Proposal B: one factual strip, media overview and planned work, with expandable history. */
 
 .app-content .workspace--dashboard .page-header h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   font: var(--type-h1);
   margin: 0 0 var(--space-1);
+}
+.workspace--dashboard #dashboard-title::before {
+  content: "";
+  flex: 0 0 1.75rem;
+  block-size: 1.75rem;
+  background: url("/icons/florabase-192.png") center / contain no-repeat;
 }
 .app-content .workspace--dashboard .page-header :is(.eyebrow, p) {
   font: var(--type-label);

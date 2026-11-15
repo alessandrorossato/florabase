@@ -10,6 +10,7 @@ from sqlalchemy.sql import Select
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
+from florabase.botanical_identities.service import get_active_botanical_identity
 from florabase.collection_photos.primary import primary_summaries
 from florabase.cuttings.model import VegetativeLot
 from florabase.events.model import Event, EventKind
@@ -138,10 +139,12 @@ def _require_references(database: Session, payload: PlantCommonWrite) -> None:
     )
     for model, item_id, code, message in references:
         if item_id is not None:
-            record = database.get(model, item_id)
-            if record is None or (
-                isinstance(record, BotanicalIdentity) and record.merged_into_id is not None
-            ):
+            record = (
+                get_active_botanical_identity(database, item_id)
+                if model is BotanicalIdentity
+                else database.get(model, item_id)
+            )
+            if record is None:
                 raise PlantReferenceNotFoundError(code, message)
     try:
         require_location_for_scope(database, payload.location_id, LocationUsageScope.PLANTS)
@@ -302,11 +305,8 @@ def extract_plant(
         if "location_id" in payload.model_fields_set
         else plant_group.location_id
     )
-    identity_record = database.get(BotanicalIdentity, identity_id)
-    if identity_record is None or (
-        isinstance(identity_record, BotanicalIdentity)
-        and identity_record.merged_into_id is not None
-    ):
+    identity_record = get_active_botanical_identity(database, identity_id)
+    if identity_record is None:
         raise PlantReferenceNotFoundError(
             "botanical_identity_not_found", "Botanical identity not found"
         )

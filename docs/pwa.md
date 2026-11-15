@@ -29,6 +29,10 @@ The app opens at `/`, the same entry point as the browser. Existing record links
 (for example `/#/plants/...`) keep working, and a sign-in is requested whenever the server session
 is missing or expired. Signing out ends the server session exactly as in the browser.
 
+The manifest serves the approved Florabase artwork as 192px and 512px PNGs. The maskable
+variants center the same artwork on an opaque background with padding inside the central safe
+circle. iOS uses the 180px Apple touch icon, and browser tabs use 16px and 32px PNGs or the ICO.
+
 ## What runs on the device
 
 Florabase registers one service worker, `/sw.js`, with scope `/`. Chromium-based browsers require a

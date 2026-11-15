@@ -34,6 +34,12 @@ Changes on `main` since `v0.1.0-beta.5`. They ship in the next prerelease. The s
 - WCVP v16 is the default source for native-range enrichment; v15 stays available (#174).
 - The reviewed WGSRPD crosswalk covers more regions (#175).
 - Backend and frontend dependency updates (#169, #171).
+- New Florabase logo, favicon and web-app icons (#186).
+
+### Fixed
+
+- Merging duplicate botanical identities while another change is being saved can no longer
+  leave a record pointing at the merged identity (#185).
 
 ### Upgrade notes
 
