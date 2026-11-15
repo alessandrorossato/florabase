@@ -1,7 +1,9 @@
 # Install Florabase with portable Docker Compose
 
-The v0.1.0-beta.6 release is the first to include `portable-compose.yaml`. Download it and
-`release-manifest.json` from the release once it is published. The Compose file pins three
+No published release includes `portable-compose.yaml` yet: the last published prerelease,
+`v0.1.0-beta.5`, ships the controller bundle and no `portable-compose.yaml`. Download
+`portable-compose.yaml` and `release-manifest.json` from the first later release that lists both
+assets. The Compose file pins three
 linux/amd64 images by digest and runs PostgreSQL, the API, and the frontend. Docker Compose 2.20+ on Engine 24+ is the baseline.
 Use a Compose manager that supports Compose environment interpolation, long-form bind mounts,
 health dependencies, and host-IP port bindings. Use Docker CLI access on the same host and

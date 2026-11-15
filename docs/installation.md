@@ -5,9 +5,10 @@ container images. You do not need the source code, Node.js, a Python development
 compiler. To build and deploy from a checkout, see [source-build deployment](deployment.md). For
 local development, see the [development guide](development.md).
 
-> **Beta status.** This guide names the assets for the private, single-owner
-> `v0.1.0-beta.6` prerelease. For a three-service deployment, see the
-> [portable Compose guide](portable-installation.md). Proceed only when its GitHub Release and verified assets are
+> **Beta status.** This guide is maintained on `main` and may be newer than the
+> last published prerelease, `v0.1.0-beta.5`. For a published release, follow this guide as it
+> stands at that release's tag. For a three-service deployment, see the
+> [portable Compose guide](portable-installation.md). Proceed only when the release's GitHub Release and verified assets are
 > available. Keep a tested backup before every upgrade.
 
 ## What you install
@@ -65,7 +66,7 @@ attestations. Sign in as the user running `gh`; a private release needs authenti
 GitHub access and GHCR pull access are separate.
 
 Get the approved full source commit from the trusted release record and confirm it is the commit
-the release tag points to. Set `authorized_commit` below before running the block.
+the release tag points to. Set `tag` and `authorized_commit` below before running the block.
 Use the release record to establish the commit independently of the downloaded manifest.
 
 Run the following as one Bash block. It creates a private directory under the working directory.
@@ -76,7 +77,7 @@ admin directory. Any download, attestation or digest failure stops the block.
 (
   set -e
   umask 077
-  tag=v0.1.0-beta.6
+  tag='<published-release-tag>'   # for example v0.1.0-beta.5
   authorized_commit='<approved-40-character-commit>'
   [[ "$authorized_commit" =~ ^[0-9a-f]{40}$ ]]
   repo=alessandrorossato/florabase

@@ -1,12 +1,12 @@
 # Development
 
-The [development workflow](development-workflow.md) is canonical for DEV, existing Codex worktrees,
+The [development workflow](development-workflow.md) is canonical for DEV, agent-provided worktrees,
 Feature Review, Stable Preview, integration/CI, production, review order and verification receipts.
 
 Use Docker Compose 2.24.4 or newer for repository overlays. For a new primary checkout, follow
 [the development quick start](../README.md#quick-start-for-development) to configure, start,
 migrate and bootstrap DEV. DEV always selects the primary checkout. Use `make feature-init`
-and `make uat-preview-up`, then explicit `make uat-preview-seed`, inside a Codex-managed feature
+and `make uat-preview-up`, then explicit `make uat-preview-seed`, inside a feature
 worktree to inspect dirty source with synthetic UAT-only `preview / preview` at
 `http://localhost:15174`. `feature-review-*` remains the engineering/manual-owner alternative on
 that same port; stop it from its owning worktree first. Stable `origin/main` remains independently available through `make preview`
@@ -51,7 +51,9 @@ removes its tmpfs-backed database even on failure.
 Run production image builds when Dockerfiles, dependencies, build configuration, or release-facing
 code changes. Run migration and integration checks for schema or persistence changes.
 
-GitHub runs three stable checks for pull requests into `main`: `quality` runs `make check`,
+GitHub runs three stable checks for pull requests into `main`: `quality` runs
+`scripts/ci-verify.py quality` (the feature graph, the workflow suites its impact plan selects and
+`make check`; a docs-only plan runs only the graph and whitespace checks),
 `integration` exercises the same disposable PostgreSQL suite as `make test-integration`, and `build`
 builds both complete production images. `make ci` remains exhaustive. The canonical local
 `make feature-verify` computes an explicit affected/full plan automatically; `make verify-full`
@@ -62,7 +64,7 @@ workflow, foundational, dependency and migration changes escalate full. Remote p
 both builds remain exhaustive. Docs-only PRs run graph/whitespace checks in every required job;
 affected product PRs omit workflow helpers. Main stays exhaustive. See
 [CI-004 evidence and recovery](ci-004-verification-efficiency-handoff.md).
-Version 2 receipts prove both the exact source tree and selected completed checks; focused iteration
+Version 3 receipts prove both the exact source tree and selected completed checks; focused iteration
 never writes delivery evidence. See [the canonical contract](development-workflow.md#review-profiles-and-verification-timing).
 
 Disposable integration/migration/build/smoke resources retire automatically on success/failure and
@@ -126,7 +128,7 @@ before production upgrades; this development helper is not a production deployme
 ## Git and backlog workflow
 
 Read `AGENTS.md`, `docs/progress.md`, and `docs/features.json`. Choose a scoped increment and use
-`make feature-init` in an existing Codex worktree or `make feature-start BRANCH=feat/example` for
+`make feature-init` in a worktree provided by an agent tool or `make feature-start BRANCH=feat/example` for
 manual development. Follow the [canonical review profiles and verification timing](development-workflow.md#review-profiles-and-verification-timing).
 Update tests/documentation and review the final tree before the canonical `make feature-verify`.
 Commit only when authorized; the operator runs protected delivery separately.
@@ -134,6 +136,6 @@ Commit only when authorized; the operator runs protected delivery separately.
 `make feature-deliver` checks the exact reviewed tree, authenticated GitHub CLI, repository identity,
 current-SHA protected checks and exact PR identity. It pushes normally, reuses/creates one PR and waits
 for protected squash auto-merge. Reruns can recognize a proven completed delivery without another push.
-After merge, `make feature-finish` updates clean primary `main` and retains a Codex feature worktree
+After merge, `make feature-finish` updates clean primary `main` and retains the linked feature worktree
 as detached; it refuses staged/dirty primary state. If delivery reports a migration, run
 `make dev-upgrade` only after finish. See [CONTRIBUTING.md](../CONTRIBUTING.md).
