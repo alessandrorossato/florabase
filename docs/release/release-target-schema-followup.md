@@ -28,7 +28,8 @@ confirmed in the step 2 review.
 
 Enforcing the manifest needs a change to `scripts/check-features.py`, and every path under
 `scripts/` selects the full canonical gate. The checker also had no test of its own, so a
-schema change made without one could weaken it; step 1 adds that test.
+schema change made without one could weaken it; step 1 added that test
+(`scripts/test-check-features.py`, #181).
 
 ## Current behaviour to keep
 
@@ -95,6 +96,7 @@ regenerated for the candidate.
 
 1. Add an offline test for the checker covering its existing rules, with fixtures for each
    failure. This lands first and on its own, so that the existing behaviour is pinned.
+   Delivered in #181.
 2. Add the manifest with complete membership taken from the reconciliation matrix, and rules
    1–7 with a failing fixture for each. The checker must pass on the populated manifest.
 3. Add rule 8 and wire `--release-candidate` into the release rehearsal, coordinated with REL-01,
@@ -124,9 +126,9 @@ local canonical gate detects this only after the branch merges `main`. This is d
   prepared are listed in its handoff with a proposed class, for the operator to approve.
 - The operator approved these classes on 2026-11-15: ENG-01 is `certify`, because it is an
   implemented, user-facing feature on `main` whose certification must verify its acceptance
-  criteria and recorded evidence, including the applicable G-CORE check; RELEASE-SCOPE-001 is
-  `release-work`. DOC-01, DOC-03 and DOC-05, which the scope names and which are not yet in
-  `features.json`, take `release-work` when they are added. No status changes with them, and
+  criteria and recorded evidence, including the applicable G-CORE check; RELEASE-SCOPE-001,
+  DOC-01, DOC-03 and DOC-05 are `release-work`. A task that is not yet in `features.json`
+  takes its class when it is added. No status changes with them, and
   the class does not promote ENG-01 to `verified`; it reaches `verified` only through its
   certification.
 

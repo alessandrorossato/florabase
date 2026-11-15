@@ -15,14 +15,15 @@
 - No status, script or manifest changed, and no existing classification changed. The operator
   then approved classes: ENG-01 is `certify` and RELEASE-SCOPE-001 is `release-work` (both in
   `features.json`, not in the reconciliation matrix); DOC-01, DOC-03 and DOC-05 are
-  `release-work`, applied when each enters `features.json` (none is in it on this branch).
+  `release-work`, each from when it is in `features.json`. After the merge of `main` at
+  `3c52789`, DOC-03 is in it; DOC-01 and DOC-05 are not yet.
   `scope-v1.md` and the specification record this.
 - Checks: `scripts/check-features.py`, relative links and anchors of the changed files,
   `git diff --check`, `make verification-plan` (documentation plan).
 - Independent QA failed the first draft: the dated handoff still listed the choice as open,
   and the specification presented its own format and rule details as operator decisions. Both
   were corrected with eight further findings and the delta review passed.
-- Unresolved: steps 1 to 3 of the transition.
+- Unresolved: steps 2 and 3 of the transition; step 1 landed in #181.
 ## 2026-11-15 — DOC-03: stale documentation statements corrected
 
 - Documentation only, on `docs/doc-03-stale-statements` from `8557669`, writer `claude-doc-03`.
