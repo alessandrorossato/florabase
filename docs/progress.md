@@ -1,10 +1,10 @@
 ## 2026-11-15 — DOC-02 step 2: release-scope manifest and checker rules
 
 - Added [`docs/release/scope-v1.json`](release/scope-v1.json), the v1.0.0 release-scope manifest:
-  one class for each of the 160 identifiers in `features.json`. 156 classes are the proposed
-  targets of the [reconciliation matrix](release/feature-reconciliation-v1.md); ENG-01 (`certify`)
-  and RELEASE-SCOPE-001, DOC-01 and DOC-03 (`release-work`) are the operator's classes of
-  2026-11-15. No status in `features.json` changed.
+  one class for each of the 161 identifiers in `features.json`. 156 classes are the proposed
+  targets of the [reconciliation matrix](release/feature-reconciliation-v1.md); ENG-01 and
+  BRAND-01 (`certify`) and RELEASE-SCOPE-001, DOC-01 and DOC-03 (`release-work`) are the
+  operator's classes of 2026-11-15; BRAND-01 has its own scope-change record. No status in `features.json` changed.
 - `scripts/check-features.py` now requires the manifest and fails on: an unreadable manifest or
   a repeated key; a version, release or class list other than the specified ones; an identifier
   without a class; a class for an unknown identifier; an unsupported class; a `baseline` entry
@@ -19,7 +19,7 @@
   CUTTING-001, UI-SYSTEM-001, BETA-IMAGE-001, beta-postgres-repro-001, BETA-SECURITY-001,
   BETA-DATA-001 and BETA-ACCEPTANCE-001.
 - Adoption: a branch that adds, removes or renames an identifier must update the manifest
-  after merging `main` (`AGENTS.md`). Known at preparation: BRAND-01 (#186) and DOC-05.
+  after merging `main` (`AGENTS.md`). Known at preparation: DOC-05.
 - Checks: `python3 scripts/test-check-features.py`, `test-feature-workflow.py`,
   `test-verification-impact.py`, `test-stage-evidence.py`, `test-agent-workflow.py`,
   `scripts/check-features.py`, `git diff --check`. Canonical verification is recorded with the
@@ -9005,3 +9005,26 @@ Status remains implemented pending canonical verification.
   check because the new OccurrenceDateChoice test was missing from the events scope. The
   follow-up registers the test without changing product source. Lineage bridge cleanup is
   deferred and the batch UAT Preview remains available.
+
+### BRAND-01 — approved Florabase logo, 15 November 2026
+
+- Added the approved wordmark to the README and icon marks to the Workbench, Today and offline
+  fallback. The Workbench reuses the standard 512px PWA PNG and Today/offline reuse the 192px PNG.
+  No About surface exists. The README insertion also applies cleanly over the local DOC-05 README.
+- Updated the favicon, iOS touch icon and PWA icons. Seven files match the approved archive
+  manifest hashes. Both opaque maskable PNGs place all artwork within the central safe circle.
+  New icon URLs avoid reusing legacy HTTP-cache entries during the shell cache v1 to v2 upgrade.
+- Scoped Prettier and ESLint, TypeScript/Vite production build, 216 focused frontend tests, the
+  161-entry feature graph and Git whitespace checks passed. Chromium showed both themes at
+  1440, 1024 and 390px with no horizontal overflow. The named Workbench link remained keyboard
+  operable at all three widths. Chromium decoded every icon link, confirmed the public precache
+  and rendered the updated offline page. A Chromium profile with the one-day legacy HTTP cache
+  primed upgraded to v2 and precached all eight new icon URLs with the expected bytes. Browser
+  review used the production frontend build with synthetic API responses because the four branch
+  UAT slots were allocated.
+- The operator accepted the responsive light/dark layout. Independent QA found the legacy URL
+  cache issue and passed the corrected candidate, including a direct worker lifecycle check.
+- The first FULL attempt on the updated main stopped in the release disclosure scanner. The
+  scanner now preserves Git's LF patch record boundaries when scanning binary content, with a
+  regression test for control bytes in a staged asset. The 63-test host beta runtime suite passed.
+  Policy selected FULL for canonical verification. The worktree receipt records its outcome.

@@ -80,11 +80,13 @@ record is `record`; internal foundation (exempt) is `internal`; POST-1.0 is `pos
    blocked while the certification work is open.
 
 A manifest that cannot be read, or that breaks any of rules 1 to 7, fails the checker; nothing
-is skipped when the manifest is absent. `classes` must list the eight tokens in the order above.
+is skipped when the manifest is absent. `classes` must list the eight tokens in the order
+above; requiring that order is a choice of the step 2 implementation, not an operator decision.
+Top-level keys other than the four are ignored.
 
 Rules 6 and 7 are the inconsistent status and class combinations this specification defines;
-the operator confirms the set by accepting step 2. No rule changes a status, and no rule derives a class
-from a status or a status from a class other than those two.
+the operator confirms the set by accepting step 2. No rule changes a status, and no rule
+derives a class from a status or a status from a class other than those two.
 
 An entry classed `post-1.0` that reaches `verified` needs a scope-change record
 re-classing it (for example to `baseline`), proposed in the same change and approved by the
@@ -132,7 +134,8 @@ local canonical gate detects this only after the branch merges `main`. This is d
 - The operator approved these classes on 2026-11-15: ENG-01 is `certify`, because it is an
   implemented, user-facing feature on `main` whose certification must verify its acceptance
   criteria and recorded evidence, including the applicable G-CORE check; RELEASE-SCOPE-001,
-  DOC-01, DOC-03 and DOC-05 are `release-work`. A task that is not yet in `features.json`
+  DOC-01, DOC-03 and DOC-05 are `release-work`; BRAND-01, which the scope did not name, is
+  `certify`. A task that is not yet in `features.json`
   takes its class when it is added. No status changes with them, and
   the class does not promote ENG-01 to `verified`; it reaches `verified` only through its
   certification.
@@ -159,5 +162,6 @@ local canonical gate detects this only after the branch merges `main`. This is d
 
 ## Open point
 
-Whether the watering and feeding kinds (scope decision 5) get their own entry before step 2
-lands or with it. They are not EVENT-003, which is a broader post-1.0 entry.
+The watering and feeding kinds (scope decision 5) have no entry of their own, and step 2 does
+not add one. If FN-03 is delivered, its branch adds the identifier and its manifest line under
+the adoption rules above. They are not EVENT-003, which is a broader post-1.0 entry.

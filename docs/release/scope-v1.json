@@ -161,6 +161,7 @@
     "BOTANICAL-MATCH-1A": "internal",
     "UX-DATE-001": "certify",
     "UX-TODAY-001": "certify",
+    "BRAND-01": "certify",
     "DOC-03": "release-work",
     "DOC-01": "release-work"
   }

@@ -314,11 +314,14 @@ class CheckFeaturesTest(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_status_and_class_must_agree(self) -> None:
-        document = graph(feature("A", status="planned"))
-        self.assert_fails(
-            check(document, manifest=scope(document, A="baseline")),
-            "A is baseline but not verified",
-        )
+        for status in ("planned", "in_progress", "implemented"):
+            document = graph(feature("A", status=status))
+            document["allowed_statuses"] = [status, "verified"]
+            with self.subTest(status=status):
+                self.assert_fails(
+                    check(document, manifest=scope(document, A="baseline")),
+                    "A is baseline but not verified",
+                )
         document = graph(feature("A", status="verified"))
         self.assert_fails(
             check(document, manifest=scope(document, A="post-1.0")),
