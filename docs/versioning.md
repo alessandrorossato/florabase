@@ -38,8 +38,8 @@ From 1.0.0 onward, within the 1.x series:
 - **The HTTP API.** `/api/v1` is the application's own boundary between its frontend and
   backend. It may change in any release, and outside clients are not supported.
 - **In-place downgrades.** The documented installation procedures never migrate a database
-  backwards. Returning to an earlier release means restoring the paired backup taken before the upgrade, with the earlier
-  release's images, into fresh paths.
+  backwards. Returning to an earlier release means restoring the paired backup taken before
+  the upgrade, with the earlier release's images, into fresh paths.
 - **Other installations.** Only the portable Docker Compose installation on linux/amd64 is
   certified. Building from source is for development, and the controller bundle is best-effort.
 - **Betas.** They carry none of the promises above. The upgrade path that v1.0.0 certifies
