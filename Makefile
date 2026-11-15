@@ -224,9 +224,10 @@ quality-clean: ## Retire exactly this worktree's Quality resources, preserving o
 workflow-resources: ## Report Florabase workflow resource identities and retained cache policy
 	@python3 ./scripts/workflow_resources.py report
 
-test-verification-impact: ## Test complete-tree impact selection, receipt and stage evidence offline
+test-verification-impact: ## Test impact selection, receipt, stage evidence and the feature-graph checker offline
 	@python3 ./scripts/test-verification-impact.py
 	@python3 ./scripts/test-stage-evidence.py
+	@python3 ./scripts/test-check-features.py
 
 test-workflow-resources: ## Test exact ownership, failure cleanup and lifecycle safety offline
 	@python3 ./scripts/test-workflow-resources.py

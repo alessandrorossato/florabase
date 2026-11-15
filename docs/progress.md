@@ -1,3 +1,28 @@
+## 2026-11-15 — DOC-02 step 1: feature-graph checker pinned by regression tests
+
+- On `ci/doc-02-checker-regression` from `8557669`, writer `claude-doc-02`. The operator approved
+  option B for release targets (a versioned `docs/release/scope-v1.json` manifest); this is the
+  first of the three steps in
+  [`release/release-target-schema-followup.md`](release/release-target-schema-followup.md) and
+  changes no checker behaviour.
+- `scripts/test-check-features.py` runs the real `scripts/check-features.py` against fixture
+  graphs and pins each listed rule (exact message, except the file-read prefix): unreadable or
+  malformed file, top-level shape, object and id shape, duplicate ids, each required key, unknown
+  status, dependency and acceptance-criteria shape, missing dependency, cycles, ignored unknown
+  keys, and the repository graph passing. It also pins what is accepted or refused without a
+  rule today: a non-object top level and a missing `features` key are refused; an empty
+  `allowed_statuses` and untyped acceptance criteria are accepted.
+- Registered in the existing offline `make test-verification-impact` target, so CI and the FULL
+  gate run it. No impact-map change. `scripts/check-features.py` and `docs/features.json` are
+  unchanged.
+- Checks: `python3 scripts/test-check-features.py` (15 tests), `git diff --check`,
+  `make verification-plan` (FULL: `Makefile`, `scripts/`).
+- Independent QA ran 24 single-rule mutants of the checker; its findings (substring
+  assertions, a hash-order dependent case, an ignored-key fixture) were fixed and the delta
+  review passed.
+- Unresolved: the canonical FULL gate. The new test file is not in the
+  `workflow-check` Ruff list, matching `check-features.py` itself.
+
 ## 2026-11-13 — ENG-01 owner credential management implemented
 
 - Added Settings → Account password change with current-password verification, independent
