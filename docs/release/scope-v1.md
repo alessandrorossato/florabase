@@ -208,7 +208,9 @@ No step depends on an optional task.
 ## Certification of delivered features
 
 Thirty-eight entries are on `main`, in scope and not `verified` ("PRE-1.0 certify" in the
-reconciliation). None of them is certified by this scope. The strategy is:
+reconciliation). ENG-01 and BRAND-01 were delivered after the reconciliation and are classed
+`certify` by scope-change records, so the manifest has forty. None of them is certified by this
+scope. The strategy is:
 
 1. **One entry at a time.** Each entry is certified against its own acceptance criteria. There
    is no blanket promotion.

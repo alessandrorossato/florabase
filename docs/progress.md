@@ -4,7 +4,8 @@
   one class for each of the 161 identifiers in `features.json`. 156 classes are the proposed
   targets of the [reconciliation matrix](release/feature-reconciliation-v1.md); ENG-01 and
   BRAND-01 (`certify`) and RELEASE-SCOPE-001, DOC-01 and DOC-03 (`release-work`) are the
-  operator's classes of 2026-11-15; BRAND-01 has its own scope-change record. No status in `features.json` changed.
+  operator's classes of 2026-11-15; BRAND-01 has its own scope-change record. No status in
+  `features.json` changed.
 - `scripts/check-features.py` now requires the manifest and fails on: an unreadable manifest or
   a repeated key; a version, release or class list other than the specified ones; an identifier
   without a class; a class for an unknown identifier; an unsupported class; a `baseline` entry
