@@ -12,7 +12,7 @@ primary checkout off `main`.
 | Sourcing Preview | Current Sourcing worktree, including dirty/untracked files  | baseline + DEV + Review + `compose.sourcing.yaml` | `florabase-sourcing-preview`         | `http://localhost:15175`   | Persistent isolated synthetic DB/media/dependencies           |
 | UAT instance     | Its owning linked feature worktree (one instance each)      | UAT Preview files + `compose.uat-instance.yaml` | `florabase-uat-branch-<branch>`      | `http://localhost:15180`–`15183` | Persistent isolated golden SMOKE/COMPREHENSIVE DB/media       |
 | Stable Preview   | Clean detached checkout of fetched `origin/main` by default | baseline + `compose.preview.yaml`            | `florabase-preview`                      | `http://localhost:15173`   | Persistent isolated DB/media, immutable frontend dependencies |
-| Quality checks   | Current feature worktree                                    | baseline + DEV                               | `florabase-quality-<metadata-path-hash>` | None started               | Isolated dependency/media volumes, no live DB required        |
+| Quality checks   | Current feature worktree                                    | baseline + DEV + `compose.quality.yaml`      | `florabase-quality-<metadata-path-hash>` | None started               | Isolated volumes, no live DB, `network_mode: none` (`bridge` only via `--quality-network`) |
 | Integration / CI | Current source / CI checkout                                | `compose.integration.yaml`                   | `florabase-integration-<random-run-id>`  | None                       | Disposable PostgreSQL tmpfs and test state                    |
 | Production       | Selected deployable source/artifact                         | `compose.yaml`                               | `florabase-prod`                         | Proxy port 8080 by default | Persistent DB/media                                           |
 
@@ -807,7 +807,14 @@ make quality-clean        # Explicit destructive retirement of ONLY this worktre
 ```
 
 Quality remains reusable during feature work; individual test/lint/type commands do not retire it.
-Its project derives from the exact Git metadata path. New resources carry workflow lifecycle, owner
+Quality services run under `compose.quality.yaml` with `network_mode: none` (and no project
+networks), while `make dependency-update` and `make dev-references-setup` opt into Docker's shared
+`bridge` network via `--quality-network` (`compose.quality-network.yaml`). `make dependency-update`
+refreshes `frontend/pnpm-lock.yaml` through the dedicated `frontend-lockfile` (`toolchain`) service
+without building or mounting `frontend_node_modules`; any non-offline `frontend` run clears its
+Quality offline provenance marker so subsequent offline Quality refuses mixed state until
+`make quality-clean` restores a clean volume. Ordinary Quality runs
+therefore allocate zero Docker bridge subnets. Its project derives from the exact Git metadata path. New resources carry workflow lifecycle, owner
 metadata and source labels as well as Compose project identity. Legacy Quality containers require
 exact source/role; legacy networks and the three known volume keys require exact deterministic
 project/Compose metadata. Unknown ownership refuses before mutation. Another worktree's resources

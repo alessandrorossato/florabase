@@ -3,6 +3,7 @@ SHELL := /bin/bash
 
 COMPOSE := python3 ./scripts/workflow_environment.py prod compose --
 DEV_COMPOSE := python3 ./scripts/workflow_environment.py quality compose --
+DEV_NET_COMPOSE := python3 ./scripts/workflow_environment.py --quality-network quality compose --
 BACKUP_DIR ?= backups
 REF ?= origin/main
 PREVIEW_PATH ?=
@@ -41,7 +42,7 @@ dev-references-status: ## Show local reference cache paths and artifact presence
 dev-references-setup: export WCVP_ARCHIVE := $(WCVP_ARCHIVE)
 dev-references-setup: export WCVP_RETRIEVED_AT := $(WCVP_RETRIEVED_AT)
 dev-references-setup: ## Reuse sealed WFO and explicitly provision the pinned official WCVP v16
-	$(DEV_COMPOSE) run --rm --no-deps -T -e WCVP_ARCHIVE -e WCVP_RETRIEVED_AT backend python scripts/dev_references.py setup
+	$(DEV_NET_COMPOSE) run --rm --no-deps -T -e WCVP_ARCHIVE -e WCVP_RETRIEVED_AT backend python scripts/dev_references.py setup
 
 dev-references-verify: ## Check installed reference seals, releases, SQLite integrity and searches
 	$(DEV_COMPOSE) run --rm --no-deps -T backend python scripts/dev_references.py verify
@@ -165,9 +166,9 @@ preview-remove: ## Stop preview and safely remove its clean worktree, preserving
 	@python3 ./scripts/preview.py --path "$(PREVIEW_PATH)" remove
 
 dependency-update: ## Refresh lockfiles after reviewing direct pins
-	$(DEV_COMPOSE) run --rm --no-deps backend pip-compile --generate-hashes --strip-extras --output-file requirements.lock pyproject.toml
-	$(DEV_COMPOSE) run --rm --no-deps backend pip-compile --strip-extras --extra dev --output-file requirements-dev.lock pyproject.toml
-	$(DEV_COMPOSE) run --rm --no-deps frontend pnpm install --lockfile-only
+	$(DEV_NET_COMPOSE) run --rm --no-deps -v "$(CURDIR)/backend:/work" -w /work backend pip-compile --generate-hashes --strip-extras --output-file requirements.lock pyproject.toml
+	$(DEV_NET_COMPOSE) run --rm --no-deps -v "$(CURDIR)/backend:/work" -w /work backend pip-compile --strip-extras --extra dev --output-file requirements-dev.lock pyproject.toml
+	$(DEV_NET_COMPOSE) run --rm --no-deps frontend-lockfile pnpm install --lockfile-only --store-dir=/tmp/florabase-pnpm-store
 
 feature-init: export BRANCH := $(BRANCH)
 feature-init: ## Validate/attach feature context in an existing agent-provided or manual worktree

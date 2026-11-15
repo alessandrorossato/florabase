@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import contextlib
 import copy
 import io
@@ -12,13 +13,14 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from workflow_environment import (
     Environment,
     Repository,
     WorkflowError,
     code_heads,
+    dispatch,
     main,
     migration_graph,
     preserve_media,
@@ -706,6 +708,170 @@ class EnvironmentTests(unittest.TestCase):
         self.assertEqual(quality_call.kwargs, {"env": quality.environment()})
         self.assertEqual(commands[2], ("run", "--rm", "-T", "--no-deps", "dev-state-init"))
         self.assertEqual(commands[3], ("run", "--rm", "--no-deps", "frontend", "pnpm", "lint"))
+
+    def test_quality_network_mode_defaults_none_and_opt_in_bridge(self) -> None:
+        quality = Environment(self.repo, "quality")
+        default_command = quality.command("config")
+        self.assertIn(str(self.feature / "compose.quality.yaml"), default_command)
+        self.assertNotIn(str(self.feature / "compose.quality-network.yaml"), default_command)
+
+        networked = Environment(self.repo, "quality", quality_network=True)
+        net_command = networked.command("config")
+        self.assertIn(str(self.feature / "compose.quality.yaml"), net_command)
+        self.assertIn(str(self.feature / "compose.quality-network.yaml"), net_command)
+
+        with self.assertRaisesRegex(WorkflowError, "--quality-network"):
+            Environment(self.repo, "dev", quality_network=True)
+
+        for argv in (
+            ["workflow", "--quality-network", "review", "compose", "--", "config"],
+            ["workflow", "--quality-network", "quality", "status"],
+        ):
+            with (
+                patch("workflow_environment.Repository", return_value=self.repo),
+                patch("sys.argv", argv),
+                contextlib.redirect_stderr(io.StringIO()),
+            ):
+                self.assertEqual(main(), 1)
+
+        quality_overlay = (ROOT / "compose.quality.yaml").read_text(encoding="utf-8")
+        for service in ("db:", "backend:", "frontend:", "dev-state-init:"):
+            self.assertIn(service, quality_overlay)
+        self.assertEqual(quality_overlay.count("network_mode: none"), 4)
+        self.assertEqual(quality_overlay.count("networks: !reset []"), 4)
+        self.assertEqual(quality_overlay.count("ports: !reset []"), 3)
+        self.assertIn("networks: !reset {}", quality_overlay)
+
+        network_overlay = (ROOT / "compose.quality-network.yaml").read_text(encoding="utf-8")
+        self.assertIn("frontend-lockfile:", network_overlay)
+        self.assertIn("target: toolchain", network_overlay)
+        self.assertEqual(network_overlay.count("network_mode: bridge"), 3)
+        self.assertEqual(network_overlay.count("networks: !reset []"), 3)
+        self.assertEqual(network_overlay.count("ports: !reset []"), 3)
+
+        makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
+        self.assertIn(
+            "DEV_NET_COMPOSE := python3 ./scripts/workflow_environment.py --quality-network quality compose --",
+            makefile,
+        )
+        self.assertIn(
+            "$(DEV_NET_COMPOSE) run --rm --no-deps frontend-lockfile pnpm install --lockfile-only --store-dir=/tmp/florabase-pnpm-store",
+            makefile,
+        )
+        net_targets = [
+            line.split()[0]
+            for line in makefile.splitlines()
+            if "$(DEV_NET_COMPOSE)" in line and not line.startswith("DEV_NET_COMPOSE")
+        ]
+        self.assertEqual(len(net_targets), 4)
+
+    def test_quality_frontend_lockfile_dispatch_skips_dev_state_init(self) -> None:
+        quality = Environment(self.repo, "quality", quality_network=True)
+        with (
+            patch.object(quality, "prepare_initializer") as prepare_init,
+            patch.object(quality, "compose") as compose_call,
+        ):
+            dispatch(
+                quality,
+                argparse.Namespace(
+                    action="compose",
+                    args=[
+                        "--",
+                        "run",
+                        "--rm",
+                        "--no-deps",
+                        "frontend-lockfile",
+                        "pnpm",
+                        "install",
+                        "--lockfile-only",
+                        "--store-dir=/tmp/florabase-pnpm-store",
+                    ],
+                ),
+            )
+            prepare_init.assert_not_called()
+            self.assertEqual(
+                compose_call.call_args_list,
+                [
+                    call("build", "frontend-lockfile"),
+                    call(
+                        "run",
+                        "--rm",
+                        "--no-deps",
+                        "frontend-lockfile",
+                        "pnpm",
+                        "install",
+                        "--lockfile-only",
+                        "--store-dir=/tmp/florabase-pnpm-store",
+                    ),
+                ],
+            )
+
+        offline = Environment(self.repo, "quality")
+        with (
+            patch.object(offline, "prepare_initializer") as prepare_init,
+            patch.object(offline, "compose") as compose_call,
+        ):
+            dispatch(
+                offline,
+                argparse.Namespace(
+                    action="compose",
+                    args=["--", "run", "--rm", "--no-deps", "frontend", "pnpm", "lint"],
+                ),
+            )
+            prepare_init.assert_called_once_with()
+            self.assertEqual(
+                compose_call.call_args_list,
+                [
+                    call("run", "--rm", "-T", "--no-deps", "dev-state-init"),
+                    call("run", "--rm", "--no-deps", "frontend", "pnpm", "lint"),
+                ],
+            )
+
+    def test_quality_offline_frontend_overlay_and_entrypoint_scoping(self) -> None:
+        quality_overlay = (ROOT / "compose.quality.yaml").read_text(encoding="utf-8")
+        network_overlay = (ROOT / "compose.quality-network.yaml").read_text(encoding="utf-8")
+        self.assertIn('FLORABASE_QUALITY_OFFLINE: "1"', quality_overlay)
+        self.assertIn('FLORABASE_QUALITY_OFFLINE: "0"', network_overlay)
+
+        for name in (
+            "compose.yaml",
+            "compose.dev.yaml",
+            "compose.review.yaml",
+            "compose.uat.yaml",
+            "compose.sourcing.yaml",
+            "compose.preview.yaml",
+            "compose.integration.yaml",
+        ):
+            content = (ROOT / name).read_text(encoding="utf-8")
+            self.assertNotIn("FLORABASE_QUALITY_OFFLINE", content, msg=name)
+            self.assertNotIn("compose.quality", content, msg=name)
+
+        for role in ("prod", "dev", "review", "uat", "sourcing"):
+            with self.assertRaisesRegex(WorkflowError, "--quality-network", msg=role):
+                Environment(self.repo, role, quality_network=True)
+
+        entrypoint = (ROOT / "frontend" / "dev-entrypoint.sh").read_text(encoding="utf-8")
+        dockerfile = (ROOT / "frontend" / "Dockerfile").read_text(encoding="utf-8")
+        self.assertIn(".florabase-pnpm-lock.sha256", dockerfile)
+        self.assertIn('if [ "${FLORABASE_QUALITY_OFFLINE:-0}" = "1" ]; then', entrypoint)
+        self.assertIn("lock_marker=/app/node_modules/.florabase-pnpm-lock.sha256", entrypoint)
+        self.assertIn("sha256sum /app/pnpm-lock.yaml", entrypoint)
+        self.assertIn("make quality-clean", entrypoint)
+        self.assertIn(
+            "Quality frontend dependency marker is missing or out of sync with pnpm-lock.yaml",
+            entrypoint,
+        )
+        self.assertNotIn(".pnpm/lock.yaml", entrypoint)
+        self.assertNotIn("JSON.parse", entrypoint)
+        self.assertNotIn(".package-map.json", entrypoint)
+        self.assertNotIn(".modules.yaml", entrypoint)
+        self.assertIn("exit 1", entrypoint)
+        self.assertIn("export npm_config_verify_deps_before_run=false", entrypoint)
+        self.assertIn("export pnpm_config_verify_deps_before_run=false", entrypoint)
+        self.assertIn(
+            "rm -f /app/node_modules/.florabase-pnpm-lock.sha256\nexport CI=true\npnpm install --frozen-lockfile --prefer-offline",
+            entrypoint,
+        )
 
     def test_review_remove_requires_exact_scope_confirmation_before_commands(self) -> None:
         review = Environment(self.repo, "review")
