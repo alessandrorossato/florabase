@@ -9,6 +9,7 @@ from sqlalchemy.sql import Select
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
+from florabase.botanical_identities.service import get_active_botanical_identity
 from florabase.collection_photos.primary import primary_summaries
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.service import display_path as geographic_display_path
@@ -84,8 +85,8 @@ def _require_references(
     Plant | None,
     PlantGroup | None,
 ]:
-    botanical_identity = database.get(BotanicalIdentity, payload.botanical_identity_id)
-    if botanical_identity is None or botanical_identity.merged_into_id is not None:
+    botanical_identity = get_active_botanical_identity(database, payload.botanical_identity_id)
+    if botanical_identity is None:
         raise SeedLotReferenceNotFoundError(
             "botanical_identity_not_found", "Botanical identity not found"
         )

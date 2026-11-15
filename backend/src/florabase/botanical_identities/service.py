@@ -2,7 +2,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Literal, cast
 from uuid import UUID
 
-from sqlalchemy import case, delete, func, or_, select
+from sqlalchemy import case, delete, func, or_, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -77,7 +77,11 @@ class BotanicalIdentityCoverReferencedError(Exception):
 
 
 def find_duplicate(
-    database: Session, scientific_name: str, cultivar_name: str | None
+    database: Session,
+    scientific_name: str,
+    cultivar_name: str | None,
+    *,
+    for_share: bool = False,
 ) -> BotanicalIdentity | None:
     statement = select(BotanicalIdentity).where(
         BotanicalIdentity.merged_into_id.is_(None),
@@ -89,6 +93,8 @@ def find_duplicate(
         statement = statement.where(
             func.lower(BotanicalIdentity.cultivar_name) == cultivar_name.lower()
         )
+    if for_share:
+        statement = statement.with_for_update(read=True)
     return database.scalars(statement).one_or_none()
 
 
@@ -98,26 +104,66 @@ def _constraint_name(error: IntegrityError) -> str | None:
     return constraint_name if isinstance(constraint_name, str) else None
 
 
+def _uses_postgresql(database: Session) -> bool:
+    try:
+        bind = database.get_bind()
+    except Exception:
+        return False
+    return getattr(getattr(bind, "dialect", None), "name", None) == "postgresql"
+
+
+def lock_identity_writes(database: Session) -> None:
+    """Serialize BotanicalIdentity name mutations and merges before row locks."""
+    if _uses_postgresql(database):
+        database.execute(text("SELECT pg_advisory_xact_lock(1179406162, 2)"))
+
+
+def get_active_botanical_identity(database: Session, identity_id: UUID) -> BotanicalIdentity | None:
+    """Lock an active BotanicalIdentity for share and bypass stale session cache."""
+    if _uses_postgresql(database):
+        identity = database.get(
+            BotanicalIdentity,
+            identity_id,
+            populate_existing=True,
+            with_for_update={"read": True},
+        )
+    else:
+        identity = database.get(BotanicalIdentity, identity_id)
+    if identity is None or (
+        isinstance(identity, BotanicalIdentity) and identity.merged_into_id is not None
+    ):
+        return None
+    return identity
+
+
 def create_botanical_identity(
     database: Session, payload: BotanicalIdentityCreate
 ) -> BotanicalIdentity:
-    existing = find_duplicate(database, payload.scientific_name, payload.cultivar_name)
-    if existing is not None:
-        raise BotanicalIdentityConflictError(existing.id)
+    lock_identity_writes(database)
+    for attempt in range(3):
+        existing = find_duplicate(
+            database, payload.scientific_name, payload.cultivar_name, for_share=True
+        )
+        if existing is not None:
+            raise BotanicalIdentityConflictError(existing.id)
 
-    botanical_identity = BotanicalIdentity(**payload.model_dump())
-    try:
-        with database.begin_nested():
-            database.add(botanical_identity)
-            database.flush()
-    except IntegrityError as error:
-        if _constraint_name(error) != UNIQUE_IDENTITY_CONSTRAINT:
-            raise
-        existing = find_duplicate(database, payload.scientific_name, payload.cultivar_name)
-        raise BotanicalIdentityConflictError(
-            existing.id if existing is not None else None
-        ) from error
-    return botanical_identity
+        botanical_identity = BotanicalIdentity(**payload.model_dump())
+        try:
+            with database.begin_nested():
+                database.add(botanical_identity)
+                database.flush()
+            return botanical_identity
+        except IntegrityError as error:
+            if _constraint_name(error) != UNIQUE_IDENTITY_CONSTRAINT:
+                raise
+            existing = find_duplicate(
+                database, payload.scientific_name, payload.cultivar_name, for_share=True
+            )
+            if existing is not None:
+                raise BotanicalIdentityConflictError(existing.id) from error
+            if attempt == 2:
+                raise BotanicalIdentityConflictError(None) from error
+    raise BotanicalIdentityConflictError(None)  # pragma: no cover
 
 
 def remove_matching_operator_synonyms(
@@ -147,57 +193,79 @@ def update_botanical_identity(
     botanical_identity: BotanicalIdentity,
     payload: BotanicalIdentityUpdate,
 ) -> BotanicalIdentity:
-    if botanical_identity.merged_into_id is not None:
-        raise BotanicalIdentityMergedError(botanical_identity.merged_into_id)
-    existing = find_duplicate(database, payload.scientific_name, payload.cultivar_name)
-    if existing is not None and existing.id != botanical_identity.id:
-        raise BotanicalIdentityConflictError(existing.id)
-    name_changed = (
-        botanical_identity.scientific_name != payload.scientific_name
-        or botanical_identity.cultivar_name != payload.cultivar_name
-    )
-    if name_changed:
-        from florabase.botanical_identities.reconciliation import record_superseded_identity_name
+    lock_identity_writes(database)
+    for attempt in range(3):
+        locked = database.scalar(
+            select(BotanicalIdentity)
+            .where(BotanicalIdentity.id == botanical_identity.id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        target = locked if locked is not None else botanical_identity
+        if target.merged_into_id is not None:
+            raise BotanicalIdentityMergedError(target.merged_into_id)
+        existing = find_duplicate(
+            database, payload.scientific_name, payload.cultivar_name, for_share=True
+        )
+        if existing is not None and existing.id != target.id:
+            raise BotanicalIdentityConflictError(existing.id)
+        name_changed = (
+            target.scientific_name != payload.scientific_name
+            or target.cultivar_name != payload.cultivar_name
+        )
+        previous_state = {field: getattr(target, field) for field in payload.model_dump()}
+        try:
+            with database.begin_nested():
+                if name_changed:
+                    from florabase.botanical_identities.reconciliation import (
+                        record_superseded_identity_name,
+                    )
 
-        record_superseded_identity_name(
-            database,
-            botanical_identity,
-            now=datetime.now(UTC),
-            source_provider="operator",
-        )
-    for field, value in payload.model_dump().items():
-        setattr(botanical_identity, field, value)
-    if name_changed:
-        remove_matching_operator_synonyms(
-            database,
-            botanical_identity.id,
-            payload.scientific_name,
-            payload.cultivar_name,
-        )
-    try:
-        with database.begin_nested():
-            database.flush()
-    except IntegrityError as error:
-        if _constraint_name(error) != UNIQUE_IDENTITY_CONSTRAINT:
-            raise
-        existing = find_duplicate(database, payload.scientific_name, payload.cultivar_name)
-        raise BotanicalIdentityConflictError(
-            existing.id if existing is not None else None
-        ) from error
-    return botanical_identity
+                    record_superseded_identity_name(
+                        database,
+                        target,
+                        now=datetime.now(UTC),
+                        source_provider="operator",
+                    )
+                for field, value in payload.model_dump().items():
+                    setattr(target, field, value)
+                if name_changed:
+                    remove_matching_operator_synonyms(
+                        database,
+                        target.id,
+                        payload.scientific_name,
+                        payload.cultivar_name,
+                    )
+                database.flush()
+            return target
+        except IntegrityError as error:
+            if _constraint_name(error) != UNIQUE_IDENTITY_CONSTRAINT:
+                raise
+            for field, value in previous_state.items():
+                setattr(target, field, value)
+            existing = find_duplicate(
+                database, payload.scientific_name, payload.cultivar_name, for_share=True
+            )
+            if existing is not None and existing.id != target.id:
+                raise BotanicalIdentityConflictError(existing.id) from error
+            if attempt == 2:
+                raise BotanicalIdentityConflictError(None) from error
+    raise BotanicalIdentityConflictError(None)  # pragma: no cover
 
 
 def delete_botanical_identity(database: Session, botanical_identity: BotanicalIdentity) -> None:
+    lock_identity_writes(database)
     identity_id = botanical_identity.id
     from florabase.collection_photos.model import BotanicalIdentityCoverImage
     from florabase.native_range_enrichment.model import NativeRangeApplication
 
-    # Serialize deletion with proposal Apply before checking retained references.
+    # Serialize deletion with proposal Apply and duplicate merges before checking references.
     if (
         database.scalar(
-            select(BotanicalIdentity.id)
+            select(BotanicalIdentity)
             .where(BotanicalIdentity.id == identity_id)
             .with_for_update()
+            .execution_options(populate_existing=True)
         )
         is None
     ):
