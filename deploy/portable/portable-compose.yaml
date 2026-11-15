@@ -2,6 +2,7 @@
 services:
   db:
     image: "@POSTGRESQL@"
+    platform: linux/amd64
     # Start the server directly. A missing cluster fails even after a restart or a path change.
     entrypoint: ["postgres"]
     command: ["-c", "listen_addresses=*"]
@@ -32,6 +33,7 @@ services:
 
   backend:
     image: "@BACKEND@"
+    platform: linux/amd64
     user: "10001:10001"
     environment:
       FLORABASE_ENVIRONMENT: production
@@ -60,6 +62,7 @@ services:
 
   frontend:
     image: "@FRONTEND@"
+    platform: linux/amd64
     depends_on:
       backend:
         condition: service_healthy

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise protected beta image stages against an owned local OCI registry only."""
+"""Exercise protected release stages against an owned local OCI registry only."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from beta_release import inputs
+from beta_release import inputs, require_release_scope
 
 _publisher_spec = importlib.util.spec_from_file_location(
     "publisher", Path(__file__).with_name("publish-beta-images.py")
@@ -111,6 +111,7 @@ def main() -> None:
         ):
             raise ValueError("--hosted requires the repository's GitHub-hosted rehearsal")
         locked = inputs(root, publication=True)
+        require_release_scope(root, locked["version"])
         candidate = release_candidate(root, args.base, locked["version"])
         print(f"RELEASE CANDIDATE: {'yes' if candidate else 'no (published base version)'}")
         observation = verify_ghcr_read_only(locked, candidate)

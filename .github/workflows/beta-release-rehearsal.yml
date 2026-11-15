@@ -1,4 +1,4 @@
-name: Non-publishing beta release rehearsal
+name: Non-publishing Florabase release rehearsal
 
 on:
   pull_request:

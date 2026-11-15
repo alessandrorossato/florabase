@@ -208,7 +208,12 @@ def validate_manifest(manifest: Json, *, test_candidate: bool = False) -> None:
     distribution = "test-candidate" if test_candidate else "registry-candidate"
     need(manifest.get("distribution") == distribution, "distribution must be " + distribution)
     need(
-        bool(re.fullmatch(r"0\.1\.0-beta\.[1-9][0-9]*", str(manifest.get("version", "")))),
+        bool(
+            re.fullmatch(
+                r"0\.1\.0-beta\.[1-9][0-9]*|1\.0\.0(?:-rc\.[1-9][0-9]*)?",
+                str(manifest.get("version", "")),
+            )
+        ),
         "invalid version",
     )
     source = manifest.get("source")

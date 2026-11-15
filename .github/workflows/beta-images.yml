@@ -1,4 +1,4 @@
-name: Protected beta images
+name: Protected Florabase release
 
 on:
   workflow_dispatch:
@@ -72,7 +72,7 @@ jobs:
           test "$SELECTED_SHA" = "$GITHUB_SHA"
           python3 scripts/beta_release.py check --publication
           python3 scripts/beta-release-checks.py --identity-only
-      - name: Build, scan and smoke immutable candidates; promote only the tested pair
+      - name: Build, scan and smoke immutable candidates; promote only the tested images
         id: pair
         env:
           GH_TOKEN: ${{ github.token }}

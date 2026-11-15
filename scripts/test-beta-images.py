@@ -115,7 +115,6 @@ def ctl_bundle_names() -> tuple[str, ...]:
 
 class ReleaseTests(unittest.TestCase):
     def test_current_candidate_inputs_and_platform_policy(self) -> None:
-        self.assertEqual(inputs(ROOT)["version"], "0.1.0-beta.6")
         self.assertEqual(
             inputs(ROOT)["buildkit"],
             "moby/buildkit:v0.34.2@sha256:c5f8862f52499773af85bc07695b2379ef08e8002352b0df2c4864c91d78dabe",
@@ -127,6 +126,76 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(committed["deployment_acceptance"]["status"], "pending")
         self.assertNotIn("host", committed)
         self.assertNotIn("operator", committed)
+
+    def test_release_channels_match_manifest_compose_and_draft_command(self) -> None:
+        for version, prerelease in (
+            ("0.1.0-beta.42", True),
+            ("1.0.0-rc.1", True),
+            ("1.0.0", False),
+        ):
+            with self.subTest(version=version):
+                value = candidate()
+                value["version"] = value["build_inputs"]["version"] = version
+                with patch(
+                    "beta_release.read",
+                    side_effect=lambda path, locked=value["build_inputs"]: (
+                        locked if path.name == "inputs.json" else read(path)
+                    ),
+                ):
+                    validate_manifest(value)
+                refs = {name: image["reference"] for name, image in value["images"].items()}
+                refs["postgresql"] = value["postgresql"]["reference"]
+                compose = beta_release.render_portable_compose(ROOT, version, refs)
+                self.assertTrue(compose.startswith(f"# Florabase {version}, linux/amd64."))
+                self.assertCountEqual(
+                    re.findall(r'^    image: "(.*)"$', compose, re.M), refs.values()
+                )
+                self.assertEqual(compose.count("platform: linux/amd64"), 3)
+                names = (
+                    *beta_release.INSTALL_BUNDLE,
+                    beta_release.PORTABLE_COMPOSE,
+                    "RELEASE.md",
+                    "release-manifest.json",
+                    beta_release.POSTGRES_SBOM,
+                    f"florabase-{version}-source.tar.gz",
+                )
+                inventory = {name: (42, "sha256:" + "a" * 64) for name in names}
+                request = release_finalization_inputs(value, value["source"]["revision"], inventory)
+                self.assertEqual(request["tag"], f"v{version}")
+                self.assertIs(request["prerelease"], prerelease)
+                command = publisher.release_create_command(request, Path("/tmp/assets"))
+                self.assertEqual("--prerelease" in command, prerelease)
+                self.assertIn("--draft", command)
+                self.assertIn("--verify-tag", command)
+        for version in ("0.1.0", "1.0.0-rc.0", "1.0.0-rc.01", "1.0.0-beta.1", "latest"):
+            with self.subTest(version=version), self.assertRaises(ValueError):
+                value = candidate()
+                value["version"] = value["build_inputs"]["version"] = version
+                validate_manifest(value)
+
+    def test_v1_scope_requires_supported_flag_and_propagates_checker_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            scripts = root / "scripts"
+            scripts.mkdir()
+            checker = scripts / "check-features.py"
+            beta_release.require_release_scope(root, "0.1.0-beta.6")
+            checker.write_text("print('feature graph valid')\n")
+            with self.assertRaisesRegex(ValueError, "DOC-02 checker"):
+                beta_release.require_release_scope(root, "1.0.0-rc.1")
+            checker.write_text(
+                "import sys\n"
+                "if sys.argv[1:] == ['--help']:\n"
+                "    print('--release-candidate')\n"
+                "else:\n"
+                "    assert sys.argv[1:] == ['--release-candidate']\n"
+                "    sys.exit(3)\n"
+            )
+            with self.assertRaises(subprocess.CalledProcessError) as error:
+                beta_release.require_release_scope(root, "1.0.0-rc.1")
+            self.assertEqual(error.exception.returncode, 3)
+            checker.write_text(checker.read_text().replace("sys.exit(3)", "sys.exit(0)"))
+            beta_release.require_release_scope(root, "1.0.0")
 
     def test_postgres_oci_evidence_hash_checks_index_manifest_and_config(self) -> None:
         config = json.dumps({"created": "2025-11-06T00:00:00Z"}, separators=(",", ":")).encode()
@@ -266,7 +335,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(result["tag"], "v" + value["version"])
         self.assertEqual(result["target_commitish"], sha)
         self.assertTrue(result["draft"])
-        self.assertTrue(result["prerelease"])
+        self.assertEqual(result["prerelease"], "-" in value["version"])
         self.assertTrue(result["verify_tag"])
         self.assertFalse(result["release_api_called"])
         self.assertEqual(result["release_notes_sha256"], assets["RELEASE.md"][1])
@@ -916,22 +985,31 @@ class ReleaseTests(unittest.TestCase):
             beta_release.locate_draft_release(repo, tag, sha)
 
     def test_protected_git_tag_checks_the_exact_annotated_commit(self) -> None:
-        repo, tag, sha, annotation = publisher.REPOSITORY, "v0.1.0-beta.4", "c" * 40, "e" * 40
-        reference = {"ref": f"refs/tags/{tag}", "object": {"type": "tag", "sha": annotation}}
+        repo, sha, annotation = publisher.REPOSITORY, "c" * 40, "e" * 40
         annotated = {"sha": annotation, "object": {"type": "commit", "sha": sha}}
-        for target in (annotated, {**annotated, "object": {"type": "commit", "sha": "b" * 40}}):
+        wrong = {**annotated, "object": {"type": "commit", "sha": "b" * 40}}
+        for tag in ("v0.1.0-beta.4", "v1.0.0-rc.1", "v1.0.0"):
+            reference = {"ref": f"refs/tags/{tag}", "object": {"type": "tag", "sha": annotation}}
             with (
-                self.subTest(target=target),
+                self.subTest(tag=tag),
                 patch(
-                    "beta_release.run", side_effect=[json.dumps(reference), json.dumps(target)]
+                    "beta_release.run",
+                    side_effect=[
+                        json.dumps(reference),
+                        json.dumps(annotated),
+                        json.dumps(reference),
+                        json.dumps(wrong),
+                    ],
                 ) as api,
             ):
-                if target == annotated:
+                beta_release.require_remote_release_tag(repo, tag, sha)
+                self.assertTrue(api.call_args_list[0].args[-1].endswith(f"/git/ref/tags/{tag}"))
+                self.assertTrue(api.call_args.args[-1].endswith(f"/git/tags/{annotation}"))
+                with self.assertRaisesRegex(ValueError, "approved source SHA"):
                     beta_release.require_remote_release_tag(repo, tag, sha)
-                    self.assertTrue(api.call_args.args[-1].endswith(f"/git/tags/{annotation}"))
-                else:
-                    with self.assertRaisesRegex(ValueError, "approved source SHA"):
-                        beta_release.require_remote_release_tag(repo, tag, sha)
+        with patch("beta_release.run") as api, self.assertRaisesRegex(ValueError, "tag identity"):
+            beta_release.require_remote_release_tag(repo, "v0.1.0", sha)
+        api.assert_not_called()
 
     def test_workflow_wires_protected_draft_finalization_and_attestation_assets(
         self,
@@ -1871,6 +1949,7 @@ class SharedPublicationTests(unittest.TestCase):
             valid_draft: dict[str, Any] = {
                 "id": 42,
                 "draft": True,
+                "prerelease": request["prerelease"],
                 "assets": [
                     {"name": name, "size": size, "digest": digest}
                     for name, (size, digest) in inventory.items()
@@ -1899,6 +1978,10 @@ class SharedPublicationTests(unittest.TestCase):
                             self.assertEqual(
                                 mutation.call_args.args[0][:4],
                                 ["gh", "api", "--method", "PATCH"],
+                            )
+                            self.assertIn(
+                                "prerelease=" + json.dumps(request["prerelease"]),
+                                mutation.call_args.args[0],
                             )
                         else:
                             with self.assertRaisesRegex(ValueError, "digest/size"):
