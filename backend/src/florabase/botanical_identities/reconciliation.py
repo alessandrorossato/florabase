@@ -32,6 +32,7 @@ from florabase.botanical_identities.service import (
     UNIQUE_IDENTITY_CONSTRAINT,
     _constraint_name,
     find_duplicate,
+    lock_identity_writes,
     remove_matching_operator_synonyms,
 )
 from florabase.botanical_profiles.model import (
@@ -1004,6 +1005,7 @@ def correct_accepted_name(
     wcvp_v15_source: WcvpSource | None = None,
     wcvp_v16_source: WcvpSource | None = None,
 ) -> IdentityReconciliationResponse:
+    lock_identity_writes(database)
     identity = database.scalar(
         select(BotanicalIdentity)
         .where(BotanicalIdentity.id == identity_id)
@@ -1041,7 +1043,9 @@ def correct_accepted_name(
             ),
         )
 
-    existing = find_duplicate(database, payload.scientific_name, payload.cultivar_name)
+    existing = find_duplicate(
+        database, payload.scientific_name, payload.cultivar_name, for_share=True
+    )
     if existing is not None and existing.id != identity.id:
         raise ReconciliationConflictError(
             code="duplicate_botanical_identity",
@@ -1126,114 +1130,151 @@ def correct_accepted_name(
     previous_scientific_name = identity.scientific_name
     previous_cultivar_name = identity.cultivar_name
     previous_common_name = identity.common_name
+    previous_updated_at = identity.updated_at
 
-    superseded_entry = record_superseded_identity_name(
-        database,
-        identity,
-        now=now,
-        source_provider=payload.source_provider,
-        source_version=(
-            matched_suggestion.source_version
-            if matched_suggestion is not None
-            else payload.source_version
-        ),
-        source_taxon_id=(
-            matched_suggestion.matched_taxon_id
-            if matched_suggestion is not None
-            else payload.matched_taxon_id
-        ),
-        accepted_source_taxon_id=(
-            matched_suggestion.accepted_taxon_id
-            if matched_suggestion is not None
-            else payload.accepted_taxon_id
-        ),
-        authorship=(
-            matched_suggestion.matched_authorship if matched_suggestion is not None else None
-        ),
-    )
+    for attempt in range(3):
+        if attempt > 0:
+            existing = find_duplicate(
+                database, payload.scientific_name, payload.cultivar_name, for_share=True
+            )
+            if existing is not None and existing.id != identity.id:
+                raise ReconciliationConflictError(
+                    code="duplicate_botanical_identity",
+                    message=(
+                        "Another active botanical identity already uses this accepted name and "
+                        "cultivar. In-place correction never merges duplicate identities; review "
+                        "and confirm duplicate-identity reconciliation instead."
+                    ),
+                    existing_id=existing.id,
+                )
 
-    identity.scientific_name = payload.scientific_name
-    identity.cultivar_name = payload.cultivar_name
-    identity.common_name = payload.common_name
-    identity.updated_at = max(now, identity.updated_at + timedelta(microseconds=1))
+        try:
+            with database.begin_nested():
+                superseded_entry = record_superseded_identity_name(
+                    database,
+                    identity,
+                    now=now,
+                    source_provider=payload.source_provider,
+                    source_version=(
+                        matched_suggestion.source_version
+                        if matched_suggestion is not None
+                        else payload.source_version
+                    ),
+                    source_taxon_id=(
+                        matched_suggestion.matched_taxon_id
+                        if matched_suggestion is not None
+                        else payload.matched_taxon_id
+                    ),
+                    accepted_source_taxon_id=(
+                        matched_suggestion.accepted_taxon_id
+                        if matched_suggestion is not None
+                        else payload.accepted_taxon_id
+                    ),
+                    authorship=(
+                        matched_suggestion.matched_authorship
+                        if matched_suggestion is not None
+                        else None
+                    ),
+                )
 
-    # Clean up any operator_synonym that matches the newly applied accepted name
-    remove_matching_operator_synonyms(
-        database, identity.id, payload.scientific_name, payload.cultivar_name
-    )
+                identity.scientific_name = payload.scientific_name
+                identity.cultivar_name = payload.cultivar_name
+                identity.common_name = payload.common_name
+                identity.updated_at = max(now, previous_updated_at + timedelta(microseconds=1))
 
-    reconciliation = BotanicalIdentityReconciliation(
-        identity_id=identity.id,
-        duplicate_identity_id=None,
-        actor_user_id=actor_user_id,
-        kind="accepted_name_correction",
-        previous_scientific_name=previous_scientific_name,
-        previous_cultivar_name=previous_cultivar_name,
-        previous_common_name=previous_common_name,
-        applied_scientific_name=identity.scientific_name,
-        applied_cultivar_name=identity.cultivar_name,
-        applied_common_name=identity.common_name,
-        source_provider=payload.source_provider,
-        evidence={
-            "format_version": "1",
-            "superseded_name_id": str(superseded_entry.id),
-            "source_provider": payload.source_provider,
-            "source_version": (
-                matched_suggestion.source_version
-                if matched_suggestion is not None
-                else payload.source_version
-            ),
-            "source_checksum": (
-                matched_suggestion.source_checksum
-                if matched_suggestion is not None
-                else payload.source_checksum
-            ),
-            "link_version": (
-                str(matched_suggestion.link_version)
-                if matched_suggestion is not None and matched_suggestion.link_version is not None
-                else str(payload.link_version)
-                if payload.link_version is not None
-                else None
-            ),
-            "matched_taxon_id": (
-                matched_suggestion.matched_taxon_id
-                if matched_suggestion is not None
-                else payload.matched_taxon_id
-            ),
-            "accepted_taxon_id": (
-                matched_suggestion.accepted_taxon_id
-                if matched_suggestion is not None
-                else payload.accepted_taxon_id
-            ),
-            "accepted_authorship": (
-                matched_suggestion.accepted_authorship
-                if matched_suggestion is not None
-                else payload.accepted_authorship
-            ),
-            "acknowledge_conflict": payload.acknowledge_conflict,
-            "conflicts_present": [
-                conflict.model_dump(mode="json") for conflict in inspection.conflicts
-            ],
-            "notes": payload.notes,
-        },
-        created_at=now,
-    )
-    try:
-        with database.begin_nested():
-            database.add(reconciliation)
-            database.flush()
-    except IntegrityError as error:
-        if _constraint_name(error) == UNIQUE_IDENTITY_CONSTRAINT:
-            colliding = find_duplicate(database, payload.scientific_name, payload.cultivar_name)
-            raise ReconciliationConflictError(
-                code="duplicate_botanical_identity",
-                message=(
-                    "Another active botanical identity already uses this accepted name and "
-                    "cultivar."
-                ),
-                existing_id=colliding.id if colliding is not None else None,
-            ) from error
-        raise
+                # Clean up any operator_synonym that matches the newly applied accepted name
+                remove_matching_operator_synonyms(
+                    database, identity.id, payload.scientific_name, payload.cultivar_name
+                )
+
+                reconciliation = BotanicalIdentityReconciliation(
+                    identity_id=identity.id,
+                    duplicate_identity_id=None,
+                    actor_user_id=actor_user_id,
+                    kind="accepted_name_correction",
+                    previous_scientific_name=previous_scientific_name,
+                    previous_cultivar_name=previous_cultivar_name,
+                    previous_common_name=previous_common_name,
+                    applied_scientific_name=identity.scientific_name,
+                    applied_cultivar_name=identity.cultivar_name,
+                    applied_common_name=identity.common_name,
+                    source_provider=payload.source_provider,
+                    evidence={
+                        "format_version": "1",
+                        "superseded_name_id": str(superseded_entry.id),
+                        "source_provider": payload.source_provider,
+                        "source_version": (
+                            matched_suggestion.source_version
+                            if matched_suggestion is not None
+                            else payload.source_version
+                        ),
+                        "source_checksum": (
+                            matched_suggestion.source_checksum
+                            if matched_suggestion is not None
+                            else payload.source_checksum
+                        ),
+                        "link_version": (
+                            str(matched_suggestion.link_version)
+                            if matched_suggestion is not None
+                            and matched_suggestion.link_version is not None
+                            else str(payload.link_version)
+                            if payload.link_version is not None
+                            else None
+                        ),
+                        "matched_taxon_id": (
+                            matched_suggestion.matched_taxon_id
+                            if matched_suggestion is not None
+                            else payload.matched_taxon_id
+                        ),
+                        "accepted_taxon_id": (
+                            matched_suggestion.accepted_taxon_id
+                            if matched_suggestion is not None
+                            else payload.accepted_taxon_id
+                        ),
+                        "accepted_authorship": (
+                            matched_suggestion.accepted_authorship
+                            if matched_suggestion is not None
+                            else payload.accepted_authorship
+                        ),
+                        "acknowledge_conflict": payload.acknowledge_conflict,
+                        "conflicts_present": [
+                            conflict.model_dump(mode="json") for conflict in inspection.conflicts
+                        ],
+                        "notes": payload.notes,
+                    },
+                    created_at=now,
+                )
+                database.add(reconciliation)
+                database.flush()
+            break
+        except IntegrityError as error:
+            if _constraint_name(error) != UNIQUE_IDENTITY_CONSTRAINT:
+                raise
+            identity.scientific_name = previous_scientific_name
+            identity.cultivar_name = previous_cultivar_name
+            identity.common_name = previous_common_name
+            identity.updated_at = previous_updated_at
+            colliding = find_duplicate(
+                database, payload.scientific_name, payload.cultivar_name, for_share=True
+            )
+            if colliding is not None and colliding.id != identity.id:
+                raise ReconciliationConflictError(
+                    code="duplicate_botanical_identity",
+                    message=(
+                        "Another active botanical identity already uses this accepted name and "
+                        "cultivar."
+                    ),
+                    existing_id=colliding.id,
+                ) from error
+            if attempt == 2:
+                raise ReconciliationConflictError(
+                    code="duplicate_botanical_identity",
+                    message=(
+                        "Another active botanical identity already uses this accepted name and "
+                        "cultivar."
+                    ),
+                    existing_id=None,
+                ) from error
 
     return inspect_reconciliation(
         database,
@@ -1264,6 +1305,7 @@ def merge_duplicate_identity(
     # A cutting write may derive its identity from its mother. Serialize before either
     # identity or collection row is locked so the merge cannot leave a new lot on a tombstone.
     lock_lineage_writes(database)
+    lock_identity_writes(database)
     for lock_id in sorted((duplicate_identity_id, survivor_identity_id)):
         database.scalar(
             select(BotanicalIdentity)

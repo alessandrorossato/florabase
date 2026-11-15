@@ -69,7 +69,8 @@
       "integration": [
         "backend/tests/integration/test_botanical_identities.py",
         "backend/tests/integration/test_botanical_identity_api.py",
-        "backend/tests/integration/test_botanical_identity_migration.py"
+        "backend/tests/integration/test_botanical_identity_migration.py",
+        "backend/tests/integration/test_taxonomy_concurrency.py"
       ],
       "frontend": [
         "frontend/src/botanical-identities/BotanicalIdentitySynonymsScreen.test.tsx",
@@ -812,6 +813,11 @@
     },
     {
       "path": "backend/tests/integration/test_botanical_identity_migration.py",
+      "scope": "identity",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_taxonomy_concurrency.py",
       "scope": "identity",
       "layer": "backend"
     },

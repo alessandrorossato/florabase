@@ -16,6 +16,7 @@ from florabase.events.service import (
     EventReferenceNotFoundError,
     create_event,
 )
+from florabase.lineage.service import lock_lineage_writes
 from florabase.locations.model import Location
 from florabase.plants.model import Plant, PlantGroup
 from florabase.schedule.model import TARGETS, ScheduledActivity
@@ -122,9 +123,11 @@ def require_target(
     model = MODELS[target.kind]
     statement = select(model).where(model.id == target.id).execution_options(populate_existing=True)
     if lock:
-        statement = statement.with_for_update()
+        statement = statement.with_for_update(read=(model is BotanicalIdentity))
     record = database.scalar(statement)
-    if record is None:
+    if record is None or (
+        isinstance(record, BotanicalIdentity) and record.merged_into_id is not None
+    ):
         raise ScheduleError(
             "schedule_target_missing", "The selected collection record no longer exists", 404
         )
@@ -208,6 +211,8 @@ def _assign(database: Session, activity: ScheduledActivity, payload: ScheduleWri
 
 
 def create(database: Session, payload: ScheduleWrite) -> ScheduledActivity:
+    if payload.target is not None:
+        lock_lineage_writes(database)
     activity = ScheduledActivity()
     _assign(database, activity, payload)
     database.add(activity)
@@ -228,6 +233,7 @@ def _changed(activity: ScheduledActivity) -> None:
 
 
 def update(database: Session, identifier: UUID, payload: ScheduleUpdate) -> ScheduledActivity:
+    lock_lineage_writes(database)
     activity = require_activity(database, identifier, lock=True)
     _planned(activity, payload.expected_version)
     _assign(database, activity, payload)

@@ -1,3 +1,34 @@
+## 2026-11-15 — ENG-05: TAXONOMY-001 PostgreSQL concurrency safety
+
+- Reproduced and resolved both open `TAXONOMY-001` concurrency findings without changing schema
+  revision `20261110_0047` or reviewed golden baselines:
+  1. **Duplicate-identity merge concurrent with holding/schedule writes:** `get_active_botanical_identity`
+     now reloads `BotanicalIdentity` on PostgreSQL sessions with `populate_existing=True` and a
+     row-level `FOR SHARE` lock across Plant, PlantGroup, SeedLot, and VegetativeLot reference
+     checks (eliminating stale session-cache writes of retired duplicate IDs after a concurrent
+     merge commits), and `schedule.create` / `schedule.update` acquire `lock_lineage_writes` plus
+     `FOR SHARE` target locking while rejecting retired identities (preventing lock-order
+     inversion deadlocks and retired schedule targets).
+  2. **Identity creation/editing concurrent with an uncommitted merge:** `lock_identity_writes`
+     (`pg_advisory_xact_lock(1179406162, 2)`, ordered after `lock_lineage_writes` in
+     `merge_duplicate_identity`) and `find_duplicate(..., for_share=True)` eliminate lock-order
+     deadlocks and re-evaluate `merged_into_id IS NULL` in PostgreSQL `READ COMMITTED` after an
+     uncommitted merge commits or rolls back. `create_botanical_identity`,
+     `update_botanical_identity`, and `correct_accepted_name` wrap writes and synonym cleanup inside
+     `begin_nested()` savepoints with bounded retry and in-memory state restoration on unique-index
+     races; `delete_botanical_identity` locks under `lock_identity_writes` with
+     `populate_existing=True`.
+- Added two-session PostgreSQL integration regressions in
+  [`test_taxonomy_concurrency.py`](../backend/tests/integration/test_taxonomy_concurrency.py)
+  (including stale-projection `update_plant`, blocking/commit/rollback `create_plant`, concurrent
+  `schedule.update`, commit/rollback `create_botanical_identity` and `correct_accepted_name`,
+  `update_botanical_identity`, ordered merge-vs-rename deadlock regression, concurrent name-swap
+  updates, and savepoint rollback of operator synonyms on unique violation, asserting zero persisted
+  records reference a retired identity).
+- Independent QA caught lock-order deadlocks and outer-transaction synonym cleanup in
+  `update_botanical_identity` and `correct_accepted_name`, which are fixed here before re-running
+  delta QA and canonical FULL `make feature-verify` on the frozen tree.
+
 ## 2026-11-15 — DOC-01: portable Compose guide completed as the official installation guide
 
 - Documentation only, on `docs/doc-01-portable-install-guide` from `8557669`, writer
