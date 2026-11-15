@@ -387,10 +387,19 @@ def file_digest(path: Path) -> bytes:
 
 
 class Environment:
-    def __init__(self, repository: Repository, role: str) -> None:
+    def __init__(
+        self,
+        repository: Repository,
+        role: str,
+        *,
+        quality_network: bool = False,
+    ) -> None:
+        if quality_network and role != "quality":
+            raise WorkflowError("--quality-network applies only to the quality role")
         self.repository = repository
         self.workflow_overlay: Path | None = None
         self.role = role
+        self.quality_network = quality_network
         self.source = repository.primary if role == "dev" else repository.source
         self.repo = Repository(self.source)
         suffix = hashlib.sha256(str(repository.metadata).encode()).hexdigest()[:12]
@@ -454,6 +463,8 @@ class Environment:
             files.append("compose.sourcing.yaml")
         if self.role == "quality":
             files.append("compose.quality.yaml")
+            if self.quality_network:
+                files.append("compose.quality-network.yaml")
         if self.role == "uat":
             files.append("compose.uat.yaml")
         return [
@@ -1179,9 +1190,12 @@ def dispatch(env: Environment, args: argparse.Namespace) -> None:
                 "restart",
             }:
                 env.require_durable_legacy_media()
-        if env.role == "quality" and command[:1] == ["run"] and "frontend" in command:
-            env.prepare_initializer()
-            env.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")
+        if env.role == "quality" and command[:1] == ["run"]:
+            if "frontend-lockfile" in command:
+                env.compose("build", "frontend-lockfile")
+            elif "frontend" in command:
+                env.prepare_initializer()
+                env.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")
         env.compose(*command)
     elif args.action == "status":
         env.status()
@@ -1210,11 +1224,18 @@ def dispatch(env: Environment, args: argparse.Namespace) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--quality-network",
+        action="store_true",
+        help="Use Docker bridge networking for network-dependent `quality compose` commands",
+    )
     parser.add_argument("role", choices=["dev", "review", "sourcing", "quality", "prod", "init"])
     parser.add_argument("action", nargs="?", default="status")
     parser.add_argument("args", nargs=argparse.REMAINDER)
     args = parser.parse_args()
     try:
+        if args.quality_network and (args.role != "quality" or args.action != "compose"):
+            raise WorkflowError("--quality-network is supported only with `quality compose`")
         repo = Repository(Path.cwd())
         if args.role == "init":
             repo.initialize(os.environ.get("BRANCH", ""))
@@ -1223,7 +1244,7 @@ def main() -> int:
         mutating = args.action == "compose" and compose_is_mutating(
             args.role, compose_arguments(args.args)
         )
-        env = Environment(repo, args.role)
+        env = Environment(repo, args.role, quality_network=args.quality_network)
         if args.role in {"review", "sourcing"} and (args.action in REVIEW_LIFECYCLE or mutating):
             if args.action != "stop":
                 # A separate process keeps exceptions and the writer contract in one implementation.
