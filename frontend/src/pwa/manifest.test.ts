@@ -7,6 +7,13 @@ describe("Web App Manifest & PWA Metadata", () => {
   const manifestPath = path.join(publicDir, "manifest.webmanifest");
   const indexPath = path.resolve(__dirname, "../../index.html");
 
+  function expectPngSize(src: string, size: number) {
+    const png = fs.readFileSync(path.join(publicDir, src));
+    expect(png.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+    expect(png.readUInt32BE(16)).toBe(size);
+    expect(png.readUInt32BE(20)).toBe(size);
+  }
+
   it("manifest.webmanifest exists and contains valid JSON", () => {
     expect(fs.existsSync(manifestPath)).toBe(true);
     const content = fs.readFileSync(manifestPath, "utf-8");
@@ -28,44 +35,27 @@ describe("Web App Manifest & PWA Metadata", () => {
       icons: { src: string; sizes: string; type: string; purpose?: string }[];
     };
 
-    const icon192 = parsed.icons.find(
-      (icon) => icon.sizes === "192x192" && icon.purpose === "any",
-    );
-    expect(icon192).toBeDefined();
-    if (icon192 === undefined) throw new Error("192x192 icon missing");
-    expect(fs.existsSync(path.join(publicDir, icon192.src))).toBe(true);
-
-    const icon512 = parsed.icons.find(
-      (icon) => icon.sizes === "512x512" && icon.purpose === "any",
-    );
-    expect(icon512).toBeDefined();
-    if (icon512 === undefined) throw new Error("512x512 icon missing");
-    expect(fs.existsSync(path.join(publicDir, icon512.src))).toBe(true);
-
-    const maskable192 = parsed.icons.find(
-      (icon) => icon.sizes === "192x192" && icon.purpose === "maskable",
-    );
-    expect(maskable192).toBeDefined();
-    if (maskable192 === undefined)
-      throw new Error("192x192 maskable icon missing");
-    expect(fs.existsSync(path.join(publicDir, maskable192.src))).toBe(true);
-
-    const maskable512 = parsed.icons.find(
-      (icon) => icon.sizes === "512x512" && icon.purpose === "maskable",
-    );
-    expect(maskable512).toBeDefined();
-    if (maskable512 === undefined)
-      throw new Error("512x512 maskable icon missing");
-    expect(fs.existsSync(path.join(publicDir, maskable512.src))).toBe(true);
+    expect(parsed.icons).toHaveLength(4);
+    for (const purpose of ["any", "maskable"]) {
+      for (const size of [192, 512]) {
+        const dimensions = `${String(size)}x${String(size)}`;
+        const icon = parsed.icons.find(
+          (candidate) =>
+            candidate.sizes === dimensions && candidate.purpose === purpose,
+        );
+        expect(icon).toBeDefined();
+        if (!icon) throw new Error(`Missing ${dimensions} ${purpose} icon`);
+        expect(icon.type).toBe("image/png");
+        expectPngSize(icon.src, size);
+      }
+    }
   });
 
   it("all required mobile and favicon assets exist on disk", () => {
-    expect(
-      fs.existsSync(path.join(publicDir, "icons/apple-touch-icon.png")),
-    ).toBe(true);
-    expect(fs.existsSync(path.join(publicDir, "icons/icon.svg"))).toBe(true);
+    expectPngSize("icons/florabase-apple-touch-icon.png", 180);
+    expectPngSize("icons/favicon-16x16.png", 16);
+    expectPngSize("icons/favicon-32x32.png", 32);
     expect(fs.existsSync(path.join(publicDir, "favicon.ico"))).toBe(true);
-    expect(fs.existsSync(path.join(publicDir, "favicon.svg"))).toBe(true);
     expect(fs.existsSync(path.join(publicDir, "offline.html"))).toBe(true);
     expect(fs.existsSync(path.join(publicDir, "offline.css"))).toBe(true);
     expect(fs.existsSync(path.join(publicDir, "offline.js"))).toBe(true);
@@ -82,14 +72,16 @@ describe("Web App Manifest & PWA Metadata", () => {
     // Theme color
     expect(html).toMatch(/<meta[^>]*name="theme-color"[^>]*content="#153a2c"/);
 
-    // Favicon and vector icon links
-    expect(html).toMatch(/<link[^>]*rel="icon"[^>]*href="\/favicon\.svg"/);
     expect(html).toMatch(
-      /<link[\s\S]*?rel="icon"[\s\S]*?sizes="192x192"[\s\S]*?href="\/icons\/icon-192\.png"/,
+      /<link[^>]*rel="icon"[^>]*href="\/favicon\.ico\?v=brand-01"/,
     );
-    expect(html).toMatch(
-      /<link[\s\S]*?rel="alternate icon"[\s\S]*?href="\/favicon\.ico"/,
-    );
+    for (const size of ["16x16", "32x32"]) {
+      expect(html).toMatch(
+        new RegExp(
+          `<link[^>]*rel="icon"[^>]*sizes="${size}"[^>]*href="/icons/favicon-${size}\\.png"`,
+        ),
+      );
+    }
 
     // iOS Add to Home Screen support
     expect(html).toMatch(
@@ -102,7 +94,7 @@ describe("Web App Manifest & PWA Metadata", () => {
       /<meta[^>]*name="apple-mobile-web-app-title"[^>]*content="Florabase"/,
     );
     expect(html).toMatch(
-      /<link[\s\S]*?rel="apple-touch-icon"[\s\S]*?sizes="180x180"[\s\S]*?href="\/icons\/apple-touch-icon\.png"/,
+      /<link[\s\S]*?rel="apple-touch-icon"[\s\S]*?sizes="180x180"[\s\S]*?href="\/icons\/florabase-apple-touch-icon\.png"/,
     );
   });
 });
