@@ -21,8 +21,9 @@ is relative to one release, and `features.json` is edited by every feature branc
 The operator decided the manifest path, the eight classes, where status lives, the three steps
 and their order, the rejection of missing, unknown and duplicate identifiers and of
 inconsistent status and class combinations, and that adoption by open branches is deliberate.
-The file format and the exact rule set below are this specification's proposal. Step 2
-implements them as written; the operator confirms them by accepting step 2.
+The file format and the rule set below were this specification's proposal. The operator
+approved them on 2026-11-15 as step 2 implements them, including the fixed order of `classes`,
+ignoring top-level keys other than the four required ones, and delivering rule 8 with step 2.
 
 ## Why it is separate from the scope documents
 
@@ -81,11 +82,10 @@ record is `record`; internal foundation (exempt) is `internal`; POST-1.0 is `pos
 
 A manifest that cannot be read, or that breaks any of rules 1 to 7, fails the checker; nothing
 is skipped when the manifest is absent. `classes` must list the eight tokens in the order
-above; requiring that order is a choice of the step 2 implementation, not an operator decision.
-Top-level keys other than the four are ignored.
+above. Top-level keys other than the four are ignored; the four are required and validated.
 
 Rules 6 and 7 are the inconsistent status and class combinations this specification defines;
-the operator confirms the set by accepting step 2. No rule changes a status, and no rule
+the operator approved the set on 2026-11-15. No rule changes a status, and no rule
 derives a class from a status or a status from a class other than those two.
 
 An entry classed `post-1.0` that reaches `verified` needs a scope-change record
@@ -104,8 +104,10 @@ regenerated for the candidate.
    Delivered in #181.
 2. Add the manifest with complete membership taken from the reconciliation matrix, and rules
    1–7 with a failing fixture for each. The checker must pass on the populated manifest.
-   On the operator's instruction of 2026-11-15, step 2 also adds rule 8 to the checker, with
-   fixtures: `scripts/check-features.py --release-candidate` exists, and nothing calls it yet.
+   With the operator's approval of 2026-11-15, step 2 also adds rule 8 to the checker, with
+   fixtures. This intentionally changes the original split, which put rule 8 in step 3. The
+   flag `scripts/check-features.py --release-candidate` is opt-in: no gate, CI job or release
+   tool passes it, so ordinary verification is unchanged.
 3. Wire `--release-candidate` into the release rehearsal, coordinated with REL-01, which owns
    the release tooling.
 
