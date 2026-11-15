@@ -121,8 +121,14 @@ local canonical gate detects this only after the branch merges `main`. This is d
   operator approves for it, and work that is not in the scope is `post-1.0`
   ([Changing this scope](scope-v1.md#changing-this-scope), rule 4).
 - Identifiers that are in `features.json` and not in the reconciliation matrix when step 2 is
-  prepared are listed in its handoff with a proposed class, for the operator to approve. At
-  this decision those are RELEASE-SCOPE-001 and ENG-01.
+  prepared are listed in its handoff with a proposed class, for the operator to approve.
+- The operator approved these classes on 2026-11-15: ENG-01 is `certify`, because it is an
+  implemented, user-facing feature on `main` whose certification must verify its acceptance
+  criteria and recorded evidence, including the applicable G-CORE check; RELEASE-SCOPE-001 is
+  `release-work`. DOC-01, DOC-03 and DOC-05, which the scope names and which are not yet in
+  `features.json`, take `release-work` when they are added. No status changes with them, and
+  the class does not promote ENG-01 to `verified`; it reaches `verified` only through its
+  certification.
 
 ## Acceptance
 

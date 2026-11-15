@@ -279,6 +279,7 @@ functional batch, with these requirements:
 | 2026-11-13 | BOTANICAL-MATCH-1A | Classed internal foundation | No user-facing surface; regression and security verification retained | Operator |
 | 2026-11-13 | FN-05 / UX-DATE-001 D1 | Decided: Today preselected for new Journal entries; implementation assigned to the functional batch | Operator decision | Operator |
 | 2026-11-15 | DOC-02 | Decided: release targets are stored in the versioned manifest `docs/release/scope-v1.json` with the eight reconciliation classes; feature status stays only in `features.json`. No classification changes | Operator decision DOC-02 option B; closes the open point of the schema follow-up | Operator |
+| 2026-11-15 | ENG-01, RELEASE-SCOPE-001, DOC-01, DOC-03, DOC-05 | Classes for the manifest: ENG-01 is `certify`; RELEASE-SCOPE-001 is `release-work`; DOC-01, DOC-03 and DOC-05 take `release-work` when they enter `features.json`. No status changes | ENG-01 is an implemented, user-facing feature on `main` whose certification must verify its criteria and evidence, including the applicable G-CORE check | Operator |
 
 ## History
 

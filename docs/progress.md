@@ -12,9 +12,11 @@
   branches. `acceptance-v1.md` and `feature-reconciliation-v1.md` follow the wording, and the
   dated `scope-v1-handoff.md` gains two resolution notes. The specification marks the file
   format and exact rule set as its own proposal, to be confirmed in the step 2 review.
-- No classification, status, script or manifest changed. RELEASE-SCOPE-001 and ENG-01 are in
-  `features.json` and not in the reconciliation matrix; their classes need operator approval
-  when the manifest is populated.
+- No status, script or manifest changed, and no existing classification changed. The operator
+  then approved classes: ENG-01 is `certify` and RELEASE-SCOPE-001 is `release-work` (both in
+  `features.json`, not in the reconciliation matrix); DOC-01, DOC-03 and DOC-05 are
+  `release-work`, applied when each enters `features.json` (none is in it on this branch).
+  `scope-v1.md` and the specification record this.
 - Checks: `scripts/check-features.py`, relative links and anchors of the changed files,
   `git diff --check`, `make verification-plan` (documentation plan).
 - Independent QA failed the first draft: the dated handoff still listed the choice as open,
