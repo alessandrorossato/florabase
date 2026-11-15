@@ -8978,3 +8978,26 @@ Status remains implemented pending canonical verification.
   check because the new OccurrenceDateChoice test was missing from the events scope. The
   follow-up registers the test without changing product source. Lineage bridge cleanup is
   deferred and the batch UAT Preview remains available.
+
+### BRAND-01 — approved Florabase logo, 15 November 2026
+
+- Added the approved wordmark to the README and icon marks to the Workbench, Today and offline
+  fallback. The Workbench reuses the standard 512px PWA PNG and Today/offline reuse the 192px PNG.
+  No About surface exists. The README insertion also applies cleanly over the local DOC-05 README.
+- Updated the favicon, iOS touch icon and PWA icons. Seven files match the approved archive
+  manifest hashes. Both opaque maskable PNGs place all artwork within the central safe circle.
+  New icon URLs avoid reusing legacy HTTP-cache entries during the shell cache v1 to v2 upgrade.
+- Scoped Prettier and ESLint, TypeScript/Vite production build, 216 focused frontend tests, the
+  161-entry feature graph and Git whitespace checks passed. Chromium showed both themes at
+  1440, 1024 and 390px with no horizontal overflow. The named Workbench link remained keyboard
+  operable at all three widths. Chromium decoded every icon link, confirmed the public precache
+  and rendered the updated offline page. A Chromium profile with the one-day legacy HTTP cache
+  primed upgraded to v2 and precached all eight new icon URLs with the expected bytes. Browser
+  review used the production frontend build with synthetic API responses because the four branch
+  UAT slots were allocated.
+- The operator accepted the responsive light/dark layout. Independent QA found the legacy URL
+  cache issue and passed the corrected candidate, including a direct worker lifecycle check.
+- The first FULL attempt on the updated main stopped in the release disclosure scanner. The
+  scanner now preserves Git's LF patch record boundaries when scanning binary content, with a
+  regression test for control bytes in a staged asset. The 63-test host beta runtime suite passed.
+  Policy selected FULL for canonical verification. The worktree receipt records its outcome.
