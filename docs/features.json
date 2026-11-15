@@ -2831,6 +2831,22 @@
       ],
       "priority": "P0",
       "status": "implemented"
+    },
+    {
+      "id": "DOC-01",
+      "category": "documentation",
+      "description": "Make the portable Compose guide the one official installation guide and label the source-build and controller guides",
+      "acceptance_criteria": [
+        "docs/portable-installation.md contains prerequisites, asset verification, configuration, first install, a reverse-proxy example including the headers the application does not send itself, upgrade, paired backup, isolated restore, and troubleshooting for a wrong origin, a schema revision mismatch, an unhealthy container, bind-mount permissions and a lost password",
+        "docs/deployment.md and docs/installation.md each state their status (development; best-effort) in their first paragraph",
+        "The G-INSTALL, G-UPGRADE and G-RESTORE records state that no instruction outside the guide was used"
+      ],
+      "dependencies": [
+        "PORTABLE-COMPOSE-001",
+        "RELEASE-SCOPE-001"
+      ],
+      "priority": "P0",
+      "status": "implemented"
     }
   ]
 }
