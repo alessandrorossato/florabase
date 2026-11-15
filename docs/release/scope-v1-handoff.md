@@ -35,6 +35,7 @@ candidates and left as they were.
 
 - **`release_target` in `features.json`.** Deferred to the schema follow-up; the targets are
   proposed in the reconciliation matrix only.
+  *Superseded 2026-11-15: targets go to `docs/release/scope-v1.json`.*
 - **CUTTING-001 status and `docs/cuttings.md`.** An active writer (`codex-cutting-31a6`, branch
   `feat/cutting-001-implementation`) holds uncommitted changes to `docs/cuttings.md`,
   `docs/progress.md` and lineage code. CUTTING-001 was left `in_progress` and no Cuttings
@@ -121,3 +122,6 @@ when this was written; the corrections follow the findings as relayed by the orc
 8. **Machine-readable scope.** The workflow planning review suggests a small
    `docs/release/scope-v1.json` membership list instead of a per-entry field. Decide before the
    schema follow-up is implemented.
+   *Resolved 2026-11-15: option B approved; see the
+   [scope-change record](scope-v1.md#scope-change-record) and the
+   [manifest specification](release-target-schema-followup.md).*

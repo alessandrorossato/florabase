@@ -1,3 +1,29 @@
+## 2026-11-15 — DOC-02: operator decision recorded, release targets in a scope manifest
+
+- Documentation only, on `docs/doc-02-scope-decision` from `8557669`, writer
+  `claude-doc-02-decision`. The operator approved option B: release targets live in a versioned
+  manifest `docs/release/scope-v1.json` with all eight reconciliation classes, and feature
+  status stays only in `features.json`.
+- [`release/scope-v1.md`](release/scope-v1.md) gains the scope-change record and names the
+  manifest; [`release/release-target-schema-followup.md`](release/release-target-schema-followup.md)
+  is rewritten as the manifest specification: format, eight checker rules (missing, unknown and
+  duplicate identifiers, class validity, the two status consistency rules, the
+  release-candidate rule), the three-step transition and the adoption procedure for open
+  branches. `acceptance-v1.md` and `feature-reconciliation-v1.md` follow the wording, and the
+  dated `scope-v1-handoff.md` gains two resolution notes. The specification marks the file
+  format and exact rule set as its own proposal, to be confirmed in the step 2 review.
+- No status, script or manifest changed, and no existing classification changed. The operator
+  then approved classes: ENG-01 is `certify` and RELEASE-SCOPE-001 is `release-work` (both in
+  `features.json`, not in the reconciliation matrix); DOC-01, DOC-03 and DOC-05 are
+  `release-work`, each from when it is in `features.json`. After the merge of `main` at
+  `3c52789`, DOC-03 is in it; DOC-01 and DOC-05 are not yet.
+  `scope-v1.md` and the specification record this.
+- Checks: `scripts/check-features.py`, relative links and anchors of the changed files,
+  `git diff --check`, `make verification-plan` (documentation plan).
+- Independent QA failed the first draft: the dated handoff still listed the choice as open,
+  and the specification presented its own format and rule details as operator decisions. Both
+  were corrected with eight further findings and the delta review passed.
+- Unresolved: steps 2 and 3 of the transition; step 1 landed in #181.
 ## 2026-11-15 — DOC-03: stale documentation statements corrected
 
 - Documentation only, on `docs/doc-03-stale-statements` from `8557669`, writer `claude-doc-03`.

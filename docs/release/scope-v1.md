@@ -14,7 +14,8 @@ work is implemented or verified. Three linked pages are part of this contract:
 
 A feature's status and its release target are separate. Status stays in
 [`features.json`](../features.json) and changes only on evidence; the release target says how an
-entry relates to this release.
+entry relates to this release and is stored in the release-scope manifest
+`docs/release/scope-v1.json` once DOC-02 delivers it (scope-change record, 2026-11-15).
 
 ## Operator-approved decisions
 
@@ -86,7 +87,7 @@ v1.0.0 is not released until each of these is accepted.
 | FN-05 | Preselect Today for new Journal entries (UX-DATE-001 decision D1, approved) |
 | FN-06 | Verify the empty-database first run and fix what it shows |
 | DOC-01 | One official installation guide for portable Compose; source-build and controller guides labelled per decision 3 |
-| DOC-02 | Feature reconciliation and the release-target schema ([follow-up](release-target-schema-followup.md)) |
+| DOC-02 | Feature reconciliation and the release-scope manifest ([specification](release-target-schema-followup.md)) |
 | DOC-03 | Correct the listed stale statements |
 | DOC-04 | An end-user guide, proven by an unassisted trial |
 | DOC-05 | Changelog, versioning policy and a vulnerability reporting channel |
@@ -277,6 +278,8 @@ functional batch, with these requirements:
 | 2026-11-13 | WF-08 | Deferred to POST-1.0 | Exact-main CI evidence and release safeguards do not justify removing duplicate jobs yet | Operator |
 | 2026-11-13 | BOTANICAL-MATCH-1A | Classed internal foundation | No user-facing surface; regression and security verification retained | Operator |
 | 2026-11-13 | FN-05 / UX-DATE-001 D1 | Decided: Today preselected for new Journal entries; implementation assigned to the functional batch | Operator decision | Operator |
+| 2026-11-15 | DOC-02 | Decided: release targets are stored in the versioned manifest `docs/release/scope-v1.json` with the eight reconciliation classes; feature status stays only in `features.json`. No classification changes | Operator decision DOC-02 option B; closes the open point of the schema follow-up | Operator |
+| 2026-11-15 | ENG-01, RELEASE-SCOPE-001, DOC-01, DOC-03, DOC-05 | Classes for the manifest: ENG-01 is `certify`; RELEASE-SCOPE-001, DOC-01, DOC-03 and DOC-05 are `release-work`, each from when it is in `features.json`. No status changes | ENG-01 is an implemented, user-facing feature on `main` whose certification must verify its criteria and evidence, including the applicable G-CORE check | Operator |
 
 ## History
 

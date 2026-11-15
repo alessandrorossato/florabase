@@ -16,8 +16,9 @@ commit; files are under `docs/`; `#NNN` are pull requests on `main`.
 - No entry was demoted. Verified entries with later contrary evidence are flagged, not changed.
 - Status and release target are separate. A target never changes a status, and a status never
   implies a target.
-- The release target is **proposed** here and is not stored in `features.json`; see the
-  [schema follow-up](release-target-schema-followup.md).
+- The release target is **proposed** here and is not stored in `features.json`; it will be stored
+  in the release-scope manifest specified in the
+  [manifest specification](release-target-schema-followup.md).
 - Evidence that exists only as a worktree-local verification receipt is not in the repository
   and could not be inspected. Such entries are stated as recorded, not confirmed.
 
