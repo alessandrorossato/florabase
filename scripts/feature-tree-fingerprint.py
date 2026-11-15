@@ -12,6 +12,7 @@ import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 sys.dont_write_bytecode = True
 
@@ -142,19 +143,36 @@ def main() -> None:
         receipt_path.unlink(missing_ok=True)
         return
 
+    def validate_plan_for_base(plan: dict[str, Any], *, mismatch_message: str) -> None:
+        from verification_impact import TIER_ORDER, make_plan, plan_tier
+
+        if not isinstance(plan, dict):
+            raise ValueError("verification plan must be a JSON object")
+        required_plan = make_plan(args.base)
+        actual_tier = plan_tier(plan)
+        required_tier = plan_tier(required_plan)
+        if TIER_ORDER[actual_tier] < TIER_ORDER[required_tier]:
+            fail(
+                f"verification receipt tier {actual_tier!r} is below required tier "
+                f"{required_tier!r}; rerun make feature-verify"
+            )
+        full = "operator requested full verification" in plan["escalation_reasons"]
+        expected_plan = make_plan(args.base, force_full=True) if full else required_plan
+        if plan != expected_plan:
+            fail(mismatch_message)
+
     if args.command == "write":
         from verification_gate import (
             migration_result,
             reused_stages,
             validate_execution,
         )
-        from verification_impact import make_plan
 
         execution = json.loads(args.execution.read_text())
         plan = execution["plan"]
-        full = "operator requested full verification" in plan["escalation_reasons"]
-        if plan != make_plan(args.base, force_full=full):
-            fail("execution plan differs from the current impact policy")
+        validate_plan_for_base(
+            plan, mismatch_message="execution plan differs from the current impact policy"
+        )
         validate_execution(plan, execution["completed"])
         stage_evidence = {
             "mode": execution.get("evidence_mode"),
@@ -207,12 +225,12 @@ def main() -> None:
             reused_stages,
             validate_execution,
         )
-        from verification_impact import make_plan
 
         plan = receipt["verification"]
-        full = "operator requested full verification" in plan["escalation_reasons"]
-        if plan != make_plan(args.base, force_full=full):
-            fail("impact mapping or selected plan differs; rerun make feature-verify")
+        validate_plan_for_base(
+            plan,
+            mismatch_message="impact mapping or selected plan differs; rerun make feature-verify",
+        )
         validate_execution(plan, receipt["completed"], reuse_allowed=receipt["version"] == 3)
         reused = reused_stages(receipt["completed"])
         if receipt["version"] == 3 and (

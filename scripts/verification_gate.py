@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from disposable_workflow import MIGRATION_REPORT, expected_migration_evidence
-from verification_impact import describe, make_plan
+from verification_impact import describe, make_plan, plan_tier
 from workflow_resources import ResourceError, machine_lock, verification_lock
 
 # Workflow suites that need the Quality Docker project; the others are offline host suites.
@@ -28,10 +28,19 @@ REUSABLE_STAGES = frozenset({"quality", "integration"})
 
 
 def checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
+    tier = plan_tier(plan)
     if plan["migration"] not in {"skip", "affected-cycle", "full-cycle"} or (
-        plan["mode"] == "full" and plan["migration"] != "full-cycle"
+        tier == "full" and plan["migration"] != "full-cycle"
     ):
         raise ValueError("invalid migration decision")
+    if tier == "product" and (
+        plan["backend"] != ["ALL"]
+        or plan["integration"] != ["ALL"]
+        or plan["frontend"] != ["ALL"]
+        or set(plan["builds"]) != {"backend", "frontend"}
+        or bool(plan["workflow"])
+    ):
+        raise ValueError("invalid product-tier verification plan")
     checks: list[dict[str, Any]] = []
 
     def add(name: str, command: list[str]) -> None:
@@ -52,7 +61,7 @@ def checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
         add(suite, ["make", suite])
     for suite in [s for s in plan["workflow"] if s in DOCKER_WORKFLOW]:
         add(suite, ["make", suite])
-    if plan["mode"] == "full":
+    if plan["mode"] in {"product", "full"}:
         add("quality", ["make", "check"])
     else:
         for stage in plan["static"]:
@@ -113,7 +122,7 @@ def checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
         add(
             "integration",
             ["make", "test-integration"]
-            if plan["mode"] == "full"
+            if plan["mode"] in {"product", "full"}
             else ["./scripts/test-integration.sh", *plan["integration"]],
         )
     return checks
@@ -347,10 +356,10 @@ def execute_locked(plan: dict[str, Any], path: Path, evidence: str = "off") -> N
             stdout=subprocess.PIPE,
         ).stdout.strip()
     )
-    # FULL competes for shared CPU, BuildKit and Docker address pools across every checkout.
+    # Product-wide and FULL runs compete for shared CPU, BuildKit and Docker address pools.
     full_lock = (
         machine_lock("verification-full", "canonical FULL verification")
-        if plan["mode"] == "full"
+        if plan["mode"] in {"product", "full"}
         else contextlib.nullcontext()
     )
     with verification_lock(metadata), full_lock:

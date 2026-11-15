@@ -18,7 +18,15 @@ from pathlib import Path
 from unittest.mock import patch
 
 from verification_gate import checks_for, execute, run_checks, validate_execution
-from verification_impact import MAP_PATH, changed_paths, load_map, make_plan, plan_paths
+from verification_impact import (
+    MAP_PATH,
+    WORKFLOW,
+    changed_paths,
+    load_map,
+    make_plan,
+    plan_paths,
+    plan_tier,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 CI_SPEC = importlib.util.spec_from_file_location("ci_verification", ROOT / "scripts/ci-verify.py")
@@ -112,32 +120,130 @@ class SelectionTests(unittest.TestCase):
         # Independent build contexts: frontend regressions run but unchanged assets need no build.
         self.assertEqual(plan["builds"], ["backend"])
 
-    def test_full_escalation_matrix(self) -> None:
-        for path in [
+    def test_product_tier_matrix_and_no_product_check_loss(self) -> None:
+        product_paths = [
             "frontend/src/components/TaskDialog.tsx",
             "frontend/src/components/actions/OverflowMenu.tsx",
+            "frontend/src/auth/AuthContext.tsx",
+            "frontend/src/App.tsx",
+            "frontend/src/main.tsx",
+            "frontend/src/pwa/register.ts",
+            "frontend/src/styles.css",
             "frontend/src/styles/tokens.css",
             "frontend/src/styles/normalization.css",
             "frontend/src/maps/MapWorkspace.tsx",
+            "frontend/src/appearance/AppearanceProvider.tsx",
             "frontend/src/native-ranges/geometry.ts",
             "frontend/src/provenance-map/ProvenanceMap.tsx",
+            "frontend/src/occurrence-map/OccurrenceMap.tsx",
+            "frontend/src/species-distribution/DistributionMap.tsx",
+            "frontend/src/test/setup.ts",
             "frontend/src/seed-lots/ReferencePicker.tsx",
             "frontend/src/seed-lots/PartialDateField.tsx",
             "frontend/src/seed-lots/partial-date.css",
-            "backend/src/florabase/db/session.py",
+            "backend/src/florabase/application_settings/service.py",
             "backend/src/florabase/auth/security.py",
+            "backend/src/florabase/core/config.py",
+            "backend/src/florabase/cuttings/service.py",
+            "backend/src/florabase/db/session.py",
+            "backend/src/florabase/api/router.py",
+            "backend/src/florabase/main.py",
+        ]
+        full_reference = checks_for(self.plan("scripts/feature-verify.sh"))
+        full_product_checks = [
+            c
+            for c in full_reference
+            if c["id"] != "migration-cycle" and c["id"] not in set(WORKFLOW)
+        ]
+        for path in product_paths:
+            with self.subTest(path=path):
+                plan = self.plan(path)
+                self.assertEqual(plan_tier(plan), "product")
+                self.assertEqual(plan["tier"], "product")
+                self.assertEqual(plan["mode"], "product")
+                self.assertFalse(plan["docs_only"])
+                self.assertEqual(plan["backend"], ["ALL"])
+                self.assertEqual(plan["integration"], ["ALL"])
+                self.assertEqual(plan["frontend"], ["ALL"])
+                self.assertEqual(plan["builds"], ["backend", "frontend"])
+                self.assertEqual(plan["workflow"], [])
+                self.assertEqual(plan["migration"], "skip")
+                self.assertEqual(plan["escalation_reasons"], [])
+                self.assertEqual(plan["product_reasons"], [f"shared product path: {path}"])
+                self.assertEqual(checks_for(plan), full_product_checks)
+
+    def test_full_escalation_matrix(self) -> None:
+        for path in [
             "backend/alembic/versions/new.py",
+            "backend/alembic.ini",
             "scripts/feature-verify.sh",
+            "Makefile",
+            "compose.yaml",
+            "compose.dev.yaml",
+            ".github/workflows/ci.yml",
+            "backend/Dockerfile",
+            "frontend/Dockerfile",
             "frontend/pnpm-lock.yaml",
             "backend/requirements.lock",
+            "backend/pyproject.toml",
+            "backend/src/florabase/__init__.py",
+            "deploy/custom.conf",
+            "postgres/init.sql",
+            "release/manifest.json",
+            "AGENTS.md",
             "unknown.config",
             "backend/src/florabase/newcapability/service.py",
+            "frontend/src/newcapability/Screen.tsx",
             str(MAP_PATH.relative_to(ROOT)),
         ]:
             with self.subTest(path=path):
-                self.assertEqual(self.plan(path)["mode"], "full")
+                plan = self.plan(path)
+                self.assertEqual(plan_tier(plan), "full")
+                self.assertEqual(plan["mode"], "full")
+                self.assertEqual(plan["workflow"], WORKFLOW)
+                self.assertEqual(plan["migration"], "full-cycle")
         self.assertEqual(self.plan("backend/alembic/versions/new.py")["migration"], "full-cycle")
         self.assertEqual(self.plan("scripts/verify-migration-cycle.sh")["migration"], "full-cycle")
+
+    def test_tier_precedence_and_fail_closed_validation(self) -> None:
+        mixed_product = self.plan(
+            "docs/architecture.md",
+            "frontend/src/taxonomy/TaxonomyScreen.tsx",
+            "frontend/src/components/TaskDialog.tsx",
+        )
+        self.assertEqual(plan_tier(mixed_product), "product")
+        self.assertEqual(mixed_product["workflow"], [])
+
+        product_generated = self.plan("backend/src/florabase/auth/api.py", "backend/openapi.json")
+        self.assertEqual(plan_tier(product_generated), "product")
+
+        for infra_path in (
+            "scripts/feature-verify.sh",
+            "compose.yaml",
+            "frontend/pnpm-lock.yaml",
+            "unknown/new_file.txt",
+        ):
+            with self.subTest(infra_path=infra_path):
+                escalated = self.plan("frontend/src/components/TaskDialog.tsx", infra_path)
+                self.assertEqual(plan_tier(escalated), "full")
+                self.assertEqual(escalated["workflow"], WORKFLOW)
+                self.assertEqual(escalated["migration"], "full-cycle")
+
+        forced = plan_paths(["frontend/src/components/TaskDialog.tsx"], "base", force_full=True)
+        self.assertEqual(plan_tier(forced), "full")
+
+        product_plan = self.plan("frontend/src/components/TaskDialog.tsx")
+        for invalid in (
+            {**product_plan, "backend": []},
+            {**product_plan, "integration": ["backend/tests/integration/test_taxonomy.py"]},
+            {**product_plan, "frontend": []},
+            {**product_plan, "builds": ["frontend"]},
+            {**product_plan, "workflow": ["test-verification-impact"]},
+            {**product_plan, "docs_only": True},
+            {**product_plan, "tier": "affected"},
+        ):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                checks_for(invalid)
 
     def test_migration_decision_matrix_and_execution(self) -> None:
         for paths, forced, decision in (
@@ -272,13 +378,18 @@ class SelectionTests(unittest.TestCase):
         for path in sorted((ROOT / "backend/src/florabase").rglob("*.py")):
             relative = str(path.relative_to(ROOT))
             self.assertTrue(
-                any(relative.startswith(p) for p in data["full_prefixes"])
+                any(
+                    relative.startswith(p)
+                    for p in (*data["full_prefixes"], *data["product_prefixes"])
+                )
                 or any(
                     relative.startswith(r.get("prefix", "\0")) or r.get("path") == relative
                     for r in data["rules"]
                 ),
                 relative,
             )
+        self.assertIn("backend/src/florabase/__init__.py", data["full_prefixes"])
+        self.assertNotIn("backend/src/florabase/__init__.py", data["product_prefixes"])
 
     def test_classified_frontend_test_inventory_cannot_silently_drift(self) -> None:
         data = load_map()
@@ -826,6 +937,106 @@ class InventoryTests(unittest.TestCase):
             self.assertEqual(
                 subprocess.run(command, cwd=fixture.work, capture_output=True).returncode, 0
             )
+        finally:
+            fixture.tearDown()
+
+    def test_delivery_rejects_receipts_below_recomputed_tier(self) -> None:
+        spec = __import__("importlib.util", fromlist=["spec_from_file_location"])
+        module_spec = spec.spec_from_file_location(
+            "feature_tests", ROOT / "scripts/test-feature-workflow.py"
+        )
+        assert module_spec and module_spec.loader
+        module = spec.module_from_spec(module_spec)
+        module_spec.loader.exec_module(module)
+        fixture = module.VerifyHelperTests()
+        fixture.setUp()
+        try:
+            fixture.establish_helper_baseline()
+
+            def run_git(*args: str) -> str:
+                return subprocess.run(
+                    ["git", "-C", str(fixture.work), *args],
+                    check=True,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                ).stdout.strip()
+
+            def digest_tree() -> str:
+                return subprocess.run(
+                    ["python3", "scripts/feature-tree-fingerprint.py", "digest"],
+                    cwd=fixture.work,
+                    check=True,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                ).stdout.strip()
+
+            # Verify a docs-only change first to get a genuine docs-tier receipt.
+            note = fixture.work / "docs/wf02-note.md"
+            note.write_text("# WF-02\n", encoding="utf-8")
+            run_git("add", "docs/wf02-note.md")
+            run_git("commit", "-m", "Add doc note")
+            result = fixture.verify()
+            self.assertEqual(result.returncode, 0, result.stderr)
+            receipt_path = fixture.work / ".git/info/florabase-feature-verification.json"
+            docs_receipt = json.loads(receipt_path.read_text())
+            self.assertEqual(docs_receipt["verification"]["tier"], "docs")
+            base = run_git("rev-parse", "origin/main")
+
+            # Change a shared component (requiring product tier) without re-verifying;
+            # keep working_tree_digest matching to isolate tier enforcement from digest drift.
+            shared = fixture.work / "frontend/src/components/TierCheckFixture.tsx"
+            shared.parent.mkdir(parents=True, exist_ok=True)
+            shared.write_text("export const TierCheckFixture = () => null;\n", encoding="utf-8")
+            run_git("add", "frontend/src/components/TierCheckFixture.tsx")
+            run_git("commit", "-m", "Add shared component")
+            receipt_path.write_text(
+                json.dumps({**docs_receipt, "working_tree_digest": digest_tree()})
+            )
+            verify_cmd = [
+                "python3",
+                "scripts/feature-tree-fingerprint.py",
+                "verify",
+                "--branch",
+                "ci/ci-002",
+                "--base",
+                base,
+            ]
+            rejected = subprocess.run(verify_cmd, cwd=fixture.work, text=True, capture_output=True)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("below required tier", rejected.stderr)
+            self.assertIn("'docs'", rejected.stderr)
+            self.assertIn("'product'", rejected.stderr)
+
+            # Higher --full receipt passes delivery verification on a product-tier change.
+            full_override = fixture.verify(full=True)
+            self.assertEqual(full_override.returncode, 0, full_override.stderr)
+            self.assertEqual(
+                subprocess.run(verify_cmd, cwd=fixture.work, capture_output=True).returncode, 0
+            )
+
+            # Verify at product tier -> passes verify, then escalate via unknown path
+            # -> receipt at product tier is rejected as below required full tier.
+            product_result = fixture.verify()
+            self.assertEqual(product_result.returncode, 0, product_result.stderr)
+            product_receipt = json.loads(receipt_path.read_text())
+            self.assertEqual(product_receipt["verification"]["tier"], "product")
+            self.assertEqual(product_receipt["verification"]["workflow"], [])
+            self.assertEqual(product_receipt["migration"]["result"], "skipped_by_impact")
+
+            infra = fixture.work / "unknown.infra"
+            infra.write_text("x\n", encoding="utf-8")
+            run_git("add", "unknown.infra")
+            run_git("commit", "-m", "Add unknown infra path")
+            receipt_path.write_text(
+                json.dumps({**product_receipt, "working_tree_digest": digest_tree()})
+            )
+            rejected_full = subprocess.run(
+                verify_cmd, cwd=fixture.work, text=True, capture_output=True
+            )
+            self.assertNotEqual(rejected_full.returncode, 0)
+            self.assertIn("below required tier", rejected_full.stderr)
+            self.assertIn("'product'", rejected_full.stderr)
+            self.assertIn("'full'", rejected_full.stderr)
         finally:
             fixture.tearDown()
 
