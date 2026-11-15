@@ -15,7 +15,7 @@ work is implemented or verified. Three linked pages are part of this contract:
 A feature's status and its release target are separate. Status stays in
 [`features.json`](../features.json) and changes only on evidence; the release target says how an
 entry relates to this release and is stored in the release-scope manifest
-`docs/release/scope-v1.json` once DOC-02 delivers it (scope-change record, 2026-11-15).
+[`scope-v1.json`](scope-v1.json) (scope-change record, 2026-11-15).
 
 ## Operator-approved decisions
 
@@ -280,6 +280,7 @@ functional batch, with these requirements:
 | 2026-11-13 | FN-05 / UX-DATE-001 D1 | Decided: Today preselected for new Journal entries; implementation assigned to the functional batch | Operator decision | Operator |
 | 2026-11-15 | DOC-02 | Decided: release targets are stored in the versioned manifest `docs/release/scope-v1.json` with the eight reconciliation classes; feature status stays only in `features.json`. No classification changes | Operator decision DOC-02 option B; closes the open point of the schema follow-up | Operator |
 | 2026-11-15 | ENG-01, RELEASE-SCOPE-001, DOC-01, DOC-03, DOC-05 | Classes for the manifest: ENG-01 is `certify`; RELEASE-SCOPE-001, DOC-01, DOC-03 and DOC-05 are `release-work`, each from when it is in `features.json`. No status changes | ENG-01 is an implemented, user-facing feature on `main` whose certification must verify its criteria and evidence, including the applicable G-CORE check | Operator |
+| 2026-11-15 | DOC-02 | Sequencing: the checker's release-candidate rule (`--release-candidate`) is delivered with the manifest in step 2; wiring it into the release rehearsal stays step 3 with REL-01. No classification changes | Operator instruction for DOC-02 step 2 | Operator |
 
 ## History
 

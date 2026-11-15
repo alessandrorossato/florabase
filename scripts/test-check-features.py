@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Pin the feature-graph checker's rules before its schema changes (DOC-02 step 1).
+"""Pin the feature-graph checker's rules, including the release-scope manifest (DOC-02).
 
-The real scripts/check-features.py runs as a subprocess against fixture graphs, so the test
-covers its exit status and message, not its internals.
+The real scripts/check-features.py runs as a subprocess against fixture graphs and manifests,
+so the test covers its exit status and message, not its internals.
 """
 
 from __future__ import annotations
@@ -27,6 +27,17 @@ REQUIRED = (
     "priority",
     "status",
 )
+CLASSES = [
+    "baseline",
+    "certify",
+    "release-work",
+    "best-effort",
+    "tooling",
+    "record",
+    "internal",
+    "post-1.0",
+]
+MANIFEST = "docs/release/scope-v1.json"
 
 
 def feature(feature_id: str, **changes: Any) -> dict[str, Any]:
@@ -47,9 +58,28 @@ def graph(*features: Any) -> dict[str, Any]:
     return {"allowed_statuses": ["planned", "verified"], "features": list(features)}
 
 
+def scope(document: Any, **membership: str) -> dict[str, Any]:
+    """A manifest that is consistent with the graph, with the given classes replaced."""
+    classes: dict[str, str] = {}
+    features = document.get("features") if isinstance(document, dict) else None
+    for entry in features if isinstance(features, list) else []:
+        if isinstance(entry, dict) and isinstance(entry.get("id"), str):
+            verified = entry.get("status") == "verified"
+            classes[entry["id"]] = "baseline" if verified else "post-1.0"
+    classes.update(membership)
+    return {"version": 1, "release": "1.0.0", "classes": list(CLASSES), "membership": classes}
+
+
 def check(
-    document: Any | None, *, raw: str | None = None, hash_seed: str | None = None
+    document: Any | None,
+    *,
+    raw: str | None = None,
+    hash_seed: str | None = None,
+    manifest: Any | None = None,
+    raw_manifest: str | None = None,
+    arguments: tuple[str, ...] = (),
 ) -> subprocess.CompletedProcess[str]:
+    """Run the checker; unless one is given, the manifest matches the graph."""
     env = dict(os.environ)
     if hash_seed is not None:
         env["PYTHONHASHSEED"] = hash_seed
@@ -59,8 +89,16 @@ def check(
             docs.mkdir()
             text = raw if raw is not None else json.dumps(document)
             (docs / "features.json").write_text(text, encoding="utf-8")
+            if raw_manifest is None and manifest is None:
+                manifest = scope(document)
+            if raw_manifest != "":
+                (docs / "release").mkdir()
+                (Path(directory) / MANIFEST).write_text(
+                    raw_manifest if raw_manifest is not None else json.dumps(manifest),
+                    encoding="utf-8",
+                )
         return subprocess.run(
-            [sys.executable, str(CHECKER)],
+            [sys.executable, str(CHECKER), *arguments],
             cwd=directory,
             env=env,
             capture_output=True,
@@ -187,7 +225,148 @@ class CheckFeaturesTest(unittest.TestCase):
 
     def test_repository_graph_passes(self) -> None:
         document = json.loads((ROOT / "docs" / "features.json").read_text(encoding="utf-8"))
-        self.assertEqual(check(document).returncode, 0)
+        result = check(document, raw_manifest=(ROOT / MANIFEST).read_text(encoding="utf-8"))
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_manifest_missing_or_malformed_fails(self) -> None:
+        # An empty raw manifest means no file is written.
+        document = graph(feature("A"))
+        for raw in ("", "{not json"):
+            with self.subTest(raw=raw):
+                self.assert_fails(
+                    check(document, raw_manifest=raw), f"cannot read {MANIFEST}: ", prefix=True
+                )
+        for raw in ("[]", "null"):
+            with self.subTest(raw=raw):
+                self.assert_fails(
+                    check(document, raw_manifest=raw), "scope manifest must be an object"
+                )
+
+    def test_manifest_header(self) -> None:
+        document = graph(feature("A"))
+        expected = {
+            "version": "scope manifest version must be 1",
+            "release": "scope manifest release must be 1.0.0",
+            "classes": f"scope manifest classes must be exactly {', '.join(CLASSES)}",
+            "membership": "scope manifest membership must be an object",
+        }
+        bad_values: dict[str, tuple[Any, ...]] = {
+            "version": (2, "1", True, 1.0),
+            "release": ("1.0.1", 1),
+            "classes": (CLASSES[:-1], [*CLASSES, "extra"], CLASSES[::-1], "baseline"),
+            "membership": (["A"], "A"),
+        }
+        for key, message in expected.items():
+            manifest = scope(document)
+            del manifest[key]
+            with self.subTest(key=key, value="absent"):
+                self.assert_fails(check(document, manifest=manifest), message)
+            for value in bad_values[key]:
+                manifest[key] = value
+                with self.subTest(key=key, value=value):
+                    self.assert_fails(check(document, manifest=manifest), message)
+
+    def test_every_feature_needs_a_class(self) -> None:
+        document = graph(feature("A"), feature("C"), feature("B"))
+        manifest = scope(document)
+        del manifest["membership"]["C"]
+        self.assert_fails(check(document, manifest=manifest), "scope manifest is missing C")
+        manifest["membership"] = {}
+        self.assert_fails(check(document, manifest=manifest), "scope manifest is missing A, B, C")
+
+    def test_unknown_identifier_fails(self) -> None:
+        document = graph(feature("A"))
+        self.assert_fails(
+            check(document, manifest=scope(document, Z="post-1.0", B="tooling")),
+            "scope manifest names unknown feature B, Z",
+        )
+
+    def test_repeated_key_fails(self) -> None:
+        document = graph(feature("A"))
+        header = '"version": 1, "release": "1.0.0", "classes": ' + json.dumps(CLASSES)
+        repeated = (
+            '{%s, "membership": {"A": "post-1.0", "A": "post-1.0"}}' % header,
+            '{%s, "membership": {"A": "tooling"}, "membership": {"A": "post-1.0"}}' % header,
+        )
+        for raw, key in zip(repeated, ("A", "membership")):
+            with self.subTest(key=key):
+                self.assert_fails(
+                    check(document, raw_manifest=raw),
+                    f"cannot read {MANIFEST}: duplicate key {key}",
+                )
+
+    def test_class_must_be_supported(self) -> None:
+        document = graph(feature("A"))
+        for bad in ("1.0", "Baseline", "", None, ["tooling"]):
+            with self.subTest(release_class=bad):
+                manifest = scope(document)
+                manifest["membership"]["A"] = bad
+                self.assert_fails(
+                    check(document, manifest=manifest), "A has an unsupported release class"
+                )
+
+    def test_every_class_is_accepted(self) -> None:
+        for release_class in CLASSES:
+            status = "planned" if release_class == "post-1.0" else "verified"
+            document = graph(feature("A", status=status))
+            with self.subTest(release_class=release_class):
+                result = check(document, manifest=scope(document, A=release_class))
+                self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_status_and_class_must_agree(self) -> None:
+        document = graph(feature("A", status="planned"))
+        self.assert_fails(
+            check(document, manifest=scope(document, A="baseline")),
+            "A is baseline but not verified",
+        )
+        document = graph(feature("A", status="verified"))
+        self.assert_fails(
+            check(document, manifest=scope(document, A="post-1.0")),
+            "A is post-1.0 but verified",
+        )
+
+    def test_release_candidate_readiness(self) -> None:
+        document = graph(
+            feature("A"),
+            feature("B", status="in_progress"),
+            feature("C", status="implemented"),
+            feature("D", status="verified"),
+            feature("E"),
+        )
+        document["allowed_statuses"] = ["planned", "in_progress", "implemented", "verified"]
+        manifest = scope(
+            document, A="certify", B="release-work", C="certify", D="certify", E="tooling"
+        )
+        # Without the flag the open entries are reported and the check passes.
+        result = check(document, manifest=manifest)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            result.stdout,
+            "feature graph: 5 features valid\n"
+            "feature graph: not ready for a release candidate: A, B\n",
+        )
+        self.assert_fails(
+            check(document, manifest=manifest, arguments=("--release-candidate",)),
+            "release candidate blocked by A, B",
+        )
+        ready = scope(document, A="tooling", B="tooling", C="certify", D="certify", E="tooling")
+        result = check(document, manifest=ready, arguments=("--release-candidate",))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "feature graph: 5 features valid\n")
+
+    def test_graph_rules_run_before_the_manifest(self) -> None:
+        self.assert_fails(
+            check(graph(feature("A", status="done")), raw_manifest=""),
+            "A has an unsupported status",
+        )
+
+    def test_unknown_arguments_fail(self) -> None:
+        for arguments in (("--rc",), ("--release-candidate", "--release-candidate")):
+            with self.subTest(arguments=arguments):
+                self.assert_fails(
+                    check(graph(feature("A")), arguments=arguments),
+                    "usage: check-features.py [--release-candidate]",
+                )
 
 
 if __name__ == "__main__":
