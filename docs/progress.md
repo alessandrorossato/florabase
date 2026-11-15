@@ -1,3 +1,26 @@
+## 2026-11-15 — DOC-03: stale documentation statements corrected
+
+- Documentation only, on `docs/doc-03-stale-statements` from `8557669`, writer `claude-doc-03`.
+  Each row of the closed list in [`release/acceptance-v1.md`](release/acceptance-v1.md) was
+  checked against the tree:
+  - `architecture.md`, "Deliberately deferred": Supplier media, saved views, bulk operations, PWA
+    installability and accepted-name reconciliation are now stated as delivered.
+  - `architecture.md`, "Implemented domain modules": names Orders, Schedule, Saved Views, bulk
+    operations, Taxonomy, Explore, Cuttings and Import/Export with their routers. Accepted-name
+    correction is on the BotanicalIdentity router and Measurements are Events; the text says so.
+  - `development.md`: receipts are version 3; worktree wording is provider-neutral; `quality`
+    runs `scripts/ci-verify.py quality`.
+  - `security.md`, login-throttling row: already corrected by ENG-01 (#179); `frontend/nginx.conf`
+    has no rate limit. No change.
+  - `portable-installation.md`, `installation.md`: no longer name `v0.1.0-beta.6` as a release.
+    The last published prerelease is `v0.1.0-beta.5`, whose assets do not include
+    `portable-compose.yaml` (`gh release view v0.1.0-beta.5`).
+  - `features.json`, UI-REDESIGN-EXPLORATION-001: the description states delivery as the
+    production shell in `fec0398` (#147). Status unchanged.
+- DOC-03 is registered as `implemented`. Checks: `scripts/check-features.py`, relative links of
+  the changed files, `git diff --check`, `make verification-plan` (documentation plan).
+- Unresolved: the re-check against the release-candidate commit (acceptance criterion 2), which
+  can only run once a candidate exists.
 ## 2026-11-15 — DOC-02 step 1: feature-graph checker pinned by regression tests
 
 - On `ci/doc-02-checker-regression` from `8557669`, writer `claude-doc-02`. The operator approved
