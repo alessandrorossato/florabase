@@ -216,6 +216,8 @@ def candidate(project: str) -> dict[str, Any]:
 
 
 def main() -> int:
+    # Read-only source proofs must not refresh another worktree's index.
+    os.environ["GIT_OPTIONAL_LOCKS"] = "0"
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project")
     parser.add_argument("--confirm")

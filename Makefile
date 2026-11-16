@@ -424,7 +424,7 @@ test-uat-preview: ## Test UAT workflow identity, retirement, reset and fixture i
 smoke-uat-preview: ## Prove UAT seed/auth/reset/persistence/ownership transition on disposable Compose state
 	@python3 ./scripts/smoke-uat-preview.py
 
-.PHONY: verify-affected verify-full verification-plan verify-build quality-status quality-clean workflow-resources test-verification-impact test-workflow-resources smoke-workflow-resources smoke-migration-cycle
+.PHONY: verify-affected verify-full verification-plan verify-build quality-status quality-clean workflow-resources workflow-cleanup-report test-verification-impact test-workflow-resources smoke-workflow-resources smoke-workflow-cleanup smoke-migration-cycle
 
 .PHONY: sourcing-preview-up sourcing-preview-status sourcing-preview-seed sourcing-preview-bootstrap-owner sourcing-preview-stop sourcing-preview-remove sourcing-preview-compose
 
