@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/alessandrorossato/florabase/release/manifest.schema.json",
-  "title": "Florabase beta image release manifest v2",
+  "title": "Florabase image release manifest v2",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -13,7 +13,7 @@
     },
     "version": {
       "type": "string",
-      "pattern": "^0\\.1\\.0-beta\\.[1-9][0-9]*$"
+      "pattern": "^(?:0\\.1\\.0-beta\\.[1-9][0-9]*|1\\.0\\.0(?:-rc\\.[1-9][0-9]*)?)$"
     },
     "source": {
       "type": "object",

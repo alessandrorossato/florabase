@@ -1,3 +1,23 @@
+## 2026-11-16 — REL-01: connect DOC-02 release-candidate validation
+
+- Reconciled `feat/rel-01` with `origin/main` at `02519b99098305786f03ba5fba4af8eeb4bdead7`
+  after DOC-02 Step 2 (#190), preserving the prior REL-01 commit and RC rehearsal evidence.
+- The existing hosted rehearsal calls `scripts/check-features.py --release-candidate` for
+  v1.0.0 RC and stable versions. The existing protected publication preflight does the same,
+  including its identity-only run. Beta retains its established checker path. Unsupported or
+  absent checker flags fail closed before remote image reads or release actions.
+- Updated the REL-01 runbook to reflect the shipped DOC-02 checker contract. At this baseline the
+  candidate check correctly blocks on eight open certify/release-work entries. The non-hosted
+  local image rehearsal remains available while certification is open.
+- Focused checks: `make test-beta-images` (60 release tests and 4 lock tests),
+  `python3 scripts/test-beta-runtime.py -q` (63 controller tests),
+  ordinary feature graph check passed, release-candidate check reported the eight documented
+  blockers, and `git diff --check`.
+- Independent delta QA found no defects. The fresh canonical FULL gate passed all 17 stages with
+  no reused evidence; its final receipt and commit SHA are recorded at delivery. The test gate
+  built local verification images and ran disposable PostgreSQL integration resources. No
+  production image, tag, or release was published during this reconciliation.
+
 ## 2026-11-15 — DOC-02 step 2: release-scope manifest and checker rules
 
 - Added [`docs/release/scope-v1.json`](release/scope-v1.json), the v1.0.0 release-scope manifest:

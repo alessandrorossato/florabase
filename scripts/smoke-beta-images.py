@@ -213,12 +213,18 @@ def smoke(
             current = compose("run", "--rm", "--no-deps", "-T", "backend", "alembic", "current")
             if current != code_head:
                 raise ValueError("database revision is not release head")
+            release_version = manifest["version"]
+            package_version = release_version.replace("-beta.", "b").replace("-rc.", "rc")
             runtime_check = (
-                "import importlib.util; import florabase; from importlib.metadata import version; assert florabase.__version__ == "
-                + repr(manifest["version"])
-                + "; assert all(importlib.util.find_spec(p) is None for p in ('pytest', 'ruff', 'mypy', 'pip'))"
+                "import importlib.util; import florabase; from importlib.metadata import version; "
+                "assert all(importlib.util.find_spec(p) is None for p in ('pytest', 'ruff', 'mypy', 'pip')); "
+                "print(florabase.__version__); print(version('florabase-backend'))"
             )
-            compose("run", "--rm", "--no-deps", "-T", "backend", "python", "-c", runtime_check)
+            installed = compose(
+                "run", "--rm", "--no-deps", "-T", "backend", "python", "-c", runtime_check
+            ).splitlines()
+            if installed != [release_version, package_version]:
+                raise ValueError("backend module or installed package version differs from release")
             # Repeat an explicit upgrade: already-current databases must remain compatible.
             compose("run", "--rm", "--no-deps", "-T", "backend", "alembic", "upgrade", "head")
             compose("up", "--detach", "--wait", "--wait-timeout", "120", "backend", "frontend")
@@ -314,6 +320,12 @@ def smoke(
                 "source": manifest["source"]["url"],
             }:
                 raise AssertionError("frontend release surface")
+            print(
+                f"VERSION CONSISTENCY: backend={installed[0]} "
+                f"backend-wheel={installed[1]} frontend-package-and-release.json={metadata['version']} "
+                f"backend-and-frontend-oci-labels={release_version}",
+                flush=True,
+            )
             boundary = "florabase-image-smoke"
             upload = (
                 f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="smoke.png"\r\nContent-Type: image/png\r\n\r\n'.encode()

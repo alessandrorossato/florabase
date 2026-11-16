@@ -9,7 +9,13 @@ import os
 from pathlib import Path
 from typing import Any
 
-from beta_release import SHA, inputs, require_remote_release_tag, run
+from beta_release import (
+    SHA,
+    inputs,
+    require_release_scope,
+    require_remote_release_tag,
+    run,
+)
 
 
 def approved_ci_jobs(
@@ -105,6 +111,7 @@ def main() -> None:
     if run("git", "rev-parse", f"refs/tags/{tag}^{{commit}}") != sha:
         raise ValueError("protected version tag does not select this commit")
     require_remote_release_tag(repo, tag, sha)
+    require_release_scope(Path.cwd(), locked["version"])
     if not args.identity_only:
         require_cli_policy()
         require_workflow(
