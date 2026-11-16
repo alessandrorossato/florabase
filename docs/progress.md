@@ -9036,3 +9036,16 @@ Status remains implemented pending canonical verification.
   scanner now preserves Git's LF patch record boundaries when scanning binary content, with a
   regression test for control bytes in a staged asset. The 63-test host beta runtime suite passed.
   Policy selected FULL for canonical verification. The worktree receipt records its outcome.
+
+### FN-06 — empty-database first run, 16 November 2026
+
+- Verified owner sign-in, all v1 inventory destinations and subdestinations plus Account, and the
+  first Botanical Identity, Seed Lot and Plant in an owner-only PostgreSQL Review smoke project
+  migrated through `20261110_0047`. Chromium checked 1440, 1024 and 390px; first records were
+  created at 390px and read back from the API.
+- Plants and Plant groups now link to Botanical identities when creation requires a first identity.
+  Baseline Vitest passed 279 tests, the candidate Plants run passed 78, and scoped Prettier, ESLint,
+  frontend typecheck, feature graph and whitespace checks passed.
+- Independent QA reviewed coverage and the fix. The
+  [run record](release/evidence/fn-06.md) contains the page matrix and two first-run wording and
+  navigation findings for operator disposition. Canonical verification is pending integration.
