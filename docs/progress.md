@@ -16,16 +16,18 @@
   confirmed in its cited file. `progress.md` is cited by section heading, not line number.
 - Centered the existing logo at the top of `README.md` and removed the redundant heading. The
   asset is unchanged.
+- Reconciled with `main` `836bf80` after Batch 02 (#192). R01 now cites the delivered FN-05
+  implementation and tests, and DOC-05 is `implemented` from Batch 02. The release-candidate
+  blocker list is back to the eight earlier entries.
 - Registered CERT-01 to CERT-04 in `features.json` and the manifest with class `tooling`, on the
   operator's approval of 2026-11-16, recorded in the scope-change table. CERT-01 is this source
   (`implemented`). CERT-02 to CERT-04 are `planned`, and each team source moves only its own
   entry to `implemented`. The release-candidate blocker list is unchanged.
-- No status, release class or checker changed. No gate record exists yet; the maps and
-  restatements are not certification.
-- Checks: `scripts/check-features.py` (166 valid), `git diff --check`, and an offline relative
-  link check. No new broken link; the 10 existing ones are corrected in Batch 02.
+- No existing status or release class changed, and the checker is unchanged. No gate record
+  exists yet; the maps and restatements are not certification.
+- Checks: `scripts/check-features.py` (167 valid), `git diff --check`, and an offline relative
+  link check.
 - Unresolved:
-  - Re-check R01 and the maps once Batch 02 (FN-05) merges.
   - Operator rulings on R12–R15 and R17–R23.
   - BRAND-01 approved-artwork record, and MEDIA-VISUAL-001's operator direction approval, which
     is recorded only in prose.

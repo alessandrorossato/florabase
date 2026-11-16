@@ -1,10 +1,10 @@
 # v1.0.0 acceptance-criterion restatements
 
 Version 1. This page is part of the [v1.0.0 release scope](scope-v1.md). It was prepared against
-`main` `554d74de88a278e2b9a392de9d105d3d62c35f91`, with Batch 02 (FN-05) still open; it is
-re-checked against `main` when it is integrated. The approach was approved by the operator on
-2026-11-16: one versioned record of the acceptance criteria superseded by later operator-approved
-product decisions.
+`main` `554d74de88a278e2b9a392de9d105d3d62c35f91` and re-checked against `main`
+`836bf80305a19fdd7f49845b8bc00ae423553a93` after Batch 02 (#192) merged. The approach was
+approved by the operator on 2026-11-16: one versioned record of the acceptance criteria
+superseded by later operator-approved product decisions.
 
 ## Rules
 
@@ -29,7 +29,7 @@ product decisions.
 | Ref | Decision | Evidence |
 | --- | --- | --- |
 | D1 | A new Journal entry opens with Today selected. | `scope-v1.md` §"UX-DATE-001 decision D1"; scope-change row 2026-11-13 (operator). |
-| DP | Directory contract of 2026-11-01: Quick Preview and idle inspector columns removed from eight directories and both hierarchy explorers; direct bordered Details/Edit; creation-only overflow. | `progress.md` §"2026-11-01 — Final directory interaction contract correction (operator UAT pending)" ("explicitly confirmed replacement"); `docs/design/ui-system-v1/consolidation/final-interaction-correction/README.md:11` ("operator-confirmed contract"); `progress.md` §"UI System v1 Wave 3 closure disposition — 1 November 2026" Wave 3 closure disposition ("Operator reports the six Gate B UAT checks complete"); delivered in #134 (`e5e6b4f`, auto-merge enabled by the operator, 2026-11-01). |
+| DP | Directory contract of 2026-11-01: Quick Preview and idle inspector columns removed from eight directories and both hierarchy explorers; direct bordered Details/Edit; creation-only overflow. | `progress.md` §"2026-11-01 — Final directory interaction contract correction (operator UAT pending)" ("explicitly confirmed replacement"); `docs/design/ui-system-v1/consolidation/final-interaction-correction/README.md:11` ("operator-confirmed contract"); `progress.md` §"UI System v1 Wave 3 closure disposition — 1 November 2026" ("Operator reports the six Gate B UAT checks complete"); delivered in #134 (`e5e6b4f`, auto-merge enabled by the operator, 2026-11-01). |
 | DT | Today A — Operational approved; reverses the photo-first DASHBOARD-001 layout. | `docs/dashboard-001-handoff.md:223` ("The operator approved 'Today A — Operational' on 2026-11-12"); `progress.md` §"UX-TODAY-001 — work-first Today (Variant A, Operational), 13 November 2026"; delivered in #177. |
 | DL | Later backlog features delivered and `verified`: ATTACHMENT-004, MAPS-FOUNDATION-001, MAPS-ORIGINS-001, SCHEDULE-001, DASHBOARD-001, SUPPLIER-003. | `features.json` entries and their verification records. Several entries were added in their own delivering PRs (for example MAPS-FOUNDATION-001 #116, SCHEDULE-001 #83, SUPPLIER-003 #70). **No separate written ruling found**, so rows resting only on DL are proposed. |
 | DW | WCVP v16 default (WCVP-DEFAULT-001, #174 `b94757e`) and WGSRPD crosswalk v2 (WGSRPD-CROSSWALK-V2, #175 `51f7884`). | Both PRs merged by the operator on 2026-11-13 (#175 by auto-merge the operator enabled). Each backlog entry was added in its own delivering PR. **No separate written ruling found.** |
@@ -47,19 +47,28 @@ Each row: original requirement → intent → decision → replacement wording �
   group; Today shows and records the device-local calendar day. A new Journal entry opens with
   Today selected (D1) and can be saved without another date action. A stored entry opens with
   its stored choice and precision."
-- Implementation: **not on `main`** (`EventJournal.tsx:191` default `"unset"`). Batch 02 FN-05
-  `a470811`, with its record at `docs/release/evidence/fn-05.md`, changes two things:
-  - The Journal consumer `EventJournal` now defaults `newEntryDateChoice` to `"today"` and passes
-    it explicitly as `initialChoice` for a new entry (`"unknown"` when editing).
-  - The shared `OccurrenceDateChoice` component's own default `initialChoice` also changes from
-    `"unset"` to `"today"`, with `"unset"` still supported as an explicit prop.
+- Implementation: delivered by FN-05 (source `a470811`) in Batch 02, #192, merge commit `836bf80`.
+  The record is at `docs/release/evidence/fn-05.md`. It made two changes:
+  - The Journal consumer `EventJournal` defaults `newEntryDateChoice` to `"today"`
+    (`EventJournal.tsx:194`). It passes the choice explicitly as `initialChoice` for a new entry,
+    and `"unknown"` when editing (`EventJournal.tsx:967`).
+  - The shared `OccurrenceDateChoice` component's own default `initialChoice` is also `"today"`
+    (`OccurrenceDateChoice.tsx:30`). `"unset"` remains available as an explicit prop and is
+    tested: `OccurrenceDateChoice.test.tsx` "when initialChoice is unset, nothing is preselected
+    and an unanswered choice is invalid".
 
-  D1 governs the Journal behaviour only. The component default change is not required by D1, but
-  is harmless today because `EventJournal` is the component's only consumer and it passes the
-  choice explicitly. A future consumer would silently inherit Today; Batch 02 QA should confirm
-  that this is intended.
-- Verification: FN-05 merged; its regression tests in the canonical gate; G-CORE step 5 on the
-  candidate.
+  D1 governs the Journal behaviour only. The component default change is not required by D1. It
+  is harmless on `main` because `EventJournal` is the component's only consumer and passes the
+  choice explicitly. A future consumer would silently inherit Today; that is noted, not a defect.
+- Journal tests on `main` (`frontend/src/events/OccurrenceDateChoice.test.tsx`):
+  - "EventJournal preselects Today for new entries and saves Today, Another date and Date
+    unknown as chosen";
+  - "EventJournal preserves stored full, year-month, year-only and unknown dates on untouched
+    save";
+  - "EventJournal keeps stored and drafted dates stable across kind switches, cancel/restore,
+    record navigation, and height validation".
+- Verification: these tests in the canonical gate on the candidate commit, and G-CORE step 5 on
+  the candidate.
 
 **R02 — COLLECTION-VISUAL-002 #1.** Original: Harvest directory "…and a privacy-safe desktop
 Quick Preview". Intent: inspect a harvest without leaving the list, without leaking source photos.
@@ -370,7 +379,7 @@ missing**.
 
 | Criterion | Requirement previously marked missing | Result |
 | --- | --- | --- |
-| UI-REDESIGN-EXPLORATION-001 #2 | Route preservation recorded only as a README claim | **Partly met.** `WorkbenchShell.test.tsx:82` asserts every former destination once; `:151` every creation route; legacy URLs are tested per area (`GeographyWorkspace.test.tsx:165`, `:238`; `ProvenanceMapScreen.test.tsx:343`; `SowingScreen.test.tsx:1354`; `PlantScreen.test.tsx:2849`). Record routes are not enumerated by one test. |
+| UI-REDESIGN-EXPLORATION-001 #2 | Route preservation recorded only as a README claim | **Partly met.** `WorkbenchShell.test.tsx:82` asserts every former destination once; `:151` every creation route; legacy URLs are tested per area (`GeographyWorkspace.test.tsx:165`, `:238`; `ProvenanceMapScreen.test.tsx:343`; `SowingScreen.test.tsx:1354`; `PlantScreen.test.tsx:2840`). Record routes are not enumerated by one test. |
 | UI-REDESIGN-EXPLORATION-001 #4 | Touch targets of at least 44 px only from capture probes | **Partly met.** `styles.test.ts:188` asserts the coarse-pointer and narrow-width token switch; `tokens.css:65` sets 2.75rem (44 px); `styles.test.ts:148` keeps the six themes byte-identical. Rendered sizes still need G-UX; Botanical keeps 40 px controls at touch widths (`progress.md` §"UI-REDESIGN-EXPLORATION-001 — M2 Workbench shell and navigation, 4 November 2026"). |
 | UI-REDESIGN-EXPLORATION-001 #5 | Manual screen reader, zoom and touch passes | **Still missing.** Not testable by unit tests; G-UX and the DOC-04 trial cover part of it. |
 | UI-REDESIGN-EXPLORATION-001 #6, #7, #8 | Screenshots, migration plan, approval | **Still missing** (U04). |
@@ -382,7 +391,7 @@ missing**.
 
 | Row | Feature and criterion | Change accepted | Criterion fulfilled |
 | --- | --- | --- | --- |
-| R01 | UX-DATE-001 #3 | Yes (D1) | No: FN-05 not merged; G-CORE step 5 |
+| R01 | UX-DATE-001 #3 | Yes (D1) | No: FN-05 delivered in #192; candidate gate and G-CORE step 5 remain |
 | R02–R11, R25 | Preview and inspector clauses (DP) | Yes (DP) | No: G-UX entries |
 | R12, R13, R15 | Increment boundaries (DL) | Proposed | No: per-criterion mapping |
 | R14 | UX-006 #3 | Proposed | No: G-UX |
