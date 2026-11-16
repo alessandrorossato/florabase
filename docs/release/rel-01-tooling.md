@@ -28,10 +28,10 @@ independent version and pinned index and platform digests.
 
 DOC-02 owns `scripts/check-features.py` and the release-scope data. REL-01 calls
 `scripts/check-features.py --release-candidate` for v1 hosted rehearsal and protected publication.
-The checker must advertise the flag in `--help` and exit nonzero for an unacceptable candidate.
-The base checker ignores unknown arguments, so a successful exit from that checker alone is
-insufficient. Beta follows its existing path. Artifact-only local rehearsal can run while release
-scope certification is still open.
+The release tooling first confirms that the checker advertises this flag, then requires it to pass.
+The checker rejects unsupported arguments and exits nonzero while any `certify` or
+`release-work` feature remains `planned` or `in_progress`. Beta follows its existing path.
+Artifact-only local rehearsal can run while release-scope certification is still open.
 
 An operator cutting a release needs the candidate on protected `main`, exact-SHA successful
 `quality`, `integration`, `build`, `release-migration` and hosted `rehearse` jobs, the approved
