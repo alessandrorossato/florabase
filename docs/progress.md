@@ -1,3 +1,9 @@
+## 2026-11-16 — Batch 01 synthetic PR identity correction
+
+- Reproduced the inherited runner branch mismatch. The synthetic docs event now declares its
+  own branch in both the event and the environment, with explicit mismatch coverage.
+- A second fast-forward correction preserves the first published provenance head of PR #191.
+
 ## 2026-11-16 — Batch 01 Quality correction for PR #191
 
 - Reproduced the nested local receipt test failure under `GITHUB_ACTIONS=true`. The disposable

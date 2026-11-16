@@ -659,15 +659,37 @@ class RemoteHistoryTests(unittest.TestCase):
             git("merge", "--no-ff", "docs/example", "-m", "synthetic PR merge")
             merge = git("rev-parse", "HEAD")
             event_path = root / ".git/event.json"
-            event = {"pull_request": {"base": {"sha": base}, "head": {"sha": head}}}
+            event = {
+                "pull_request": {
+                    "base": {"sha": base},
+                    "head": {"sha": head, "ref": "docs/example"},
+                }
+            }
             event_path.write_text(json.dumps(event))
             environment = {
                 "GITHUB_EVENT_NAME": "pull_request",
+                "GITHUB_HEAD_REF": "docs/example",
                 "GITHUB_EVENT_PATH": str(event_path),
                 "GITHUB_SHA": merge,
             }
+            outer = patch.dict(os.environ, {"GITHUB_HEAD_REF": "ci/wf-04-batch-01"})
+            outer.start()
+            self.addCleanup(outer.stop)
             os.chdir(root)
             try:
+                with (
+                    patch.dict(os.environ, {**environment, "GITHUB_HEAD_REF": "ci/wf-04-batch-01"}),
+                    self.assertRaisesRegex(ValueError, "cannot prove exact batch PR parents"),
+                ):
+                    CI.ci_plan()
+                mismatched = subprocess.run(
+                    ["python3", "scripts/ci-verify.py", "quality"],
+                    env={**os.environ, **environment, "GITHUB_HEAD_REF": "ci/wf-04-batch-01"},
+                    text=True,
+                    capture_output=True,
+                )
+                self.assertNotEqual(mismatched.returncode, 0)
+                self.assertIn("cannot prove exact batch PR parents", mismatched.stderr)
                 shallow = root / ".git/shallow-fixture"
                 subprocess.run(
                     ["git", "clone", "--depth", "2", root.as_uri(), str(shallow)],

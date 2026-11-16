@@ -33,15 +33,15 @@ SPEC.loader.exec_module(feature_deliver)
 
 class BatchDeliveryTests(unittest.TestCase):
     def test_correction_reuses_exact_existing_pr_and_original_provenance(self) -> None:
-        prior, corrected = "1" * 40, "2" * 40
+        original, prior, corrected = "1" * 40, "2" * 40, "3" * 40
         branch = "ci/batch-fixture"
         delivery = feature_deliver.Delivery(feature_deliver.Commands())
         delivery.batch = {
             "branch": branch, "base": "a" * 40, "bootstrap_commits": [],
             "sources": [{"id": "FN-01", "branch": "feat/first", "tip": prior, "commits": [prior]}],
-            "correction": {"supersedes": prior},
+            "correction": {"supersedes": prior, "provenance_head": original},
         }
-        title, body = delivery.title_and_body(branch, prior, False)
+        title, body = delivery.title_and_body(branch, original, False)
         value = {
             "number": 191, "node_id": "node", "state": "open", "title": title, "body": body,
             "auto_merge": {"merge_method": "squash"},

@@ -307,8 +307,11 @@ def load_manifest(repo: Repository, branch: str, head: str) -> dict[str, Any]:
         )
         original = load_manifest(repo, branch, prior)
         require(
-            "correction" not in original,
-            "a batch correction must extend the original manifest commit",
+            correction.get("provenance_head", prior)
+            == original.get("correction", {}).get(
+                "provenance_head", original.get("correction", {}).get("supersedes", prior)
+            ),
+            "batch correction changes the original PR provenance head",
         )
         require(
             {key: field for key, field in value.items() if key != "correction"}

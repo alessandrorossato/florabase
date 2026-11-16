@@ -269,7 +269,9 @@ class Delivery:
             fail("cannot read the existing batch PR", blocked=True)
         pr = self.pr_from(current)
         self.validate_pr_target(pr, branch)
-        title, body = self.title_and_body(branch, prior, migration)
+        title, body = self.title_and_body(
+            branch, self.batch["correction"].get("provenance_head", prior), migration
+        )
         if (pr.number != number or pr.head_sha not in (prior, head)
                 or pr.auto_merge_method not in (None, "squash")
                 or current.get("title") != title or current.get("body") != body):

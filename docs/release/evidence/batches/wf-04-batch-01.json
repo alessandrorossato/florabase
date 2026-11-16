@@ -7,14 +7,15 @@
   "branch": "ci/wf-04-batch-01",
   "correction": {
     "paths": [
-      "docs/development-workflow.md",
       "docs/progress.md",
       "scripts/feature-deliver.py",
       "scripts/feature_batch.py",
-      "scripts/test-feature-workflow.py"
+      "scripts/test-feature-workflow.py",
+      "scripts/test-verification-impact.py"
     ],
-    "reason": "Recover PR #191 by isolating the simulated local gate from GitHub Actions and allowing a provenance-preserving fast-forward.",
-    "supersedes": "52bd06fad34feb8cc1d5a52383160739ef1ecb8b"
+    "provenance_head": "52bd06fad34feb8cc1d5a52383160739ef1ecb8b",
+    "reason": "Isolate synthetic docs PR metadata from the outer batch runner and preserve PR provenance across the second fast-forward.",
+    "supersedes": "022418bf08a1cfd0114e2d52146589caee28d937"
   },
   "reconciliation": {
     "docs/progress.md": "Record the batch and bootstrap checks while retaining all source milestones.",
