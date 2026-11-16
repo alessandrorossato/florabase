@@ -827,6 +827,27 @@ make workflow-resources   # Known Florabase environments, legacy/unknown resourc
 make quality-clean        # Explicit destructive retirement of ONLY this worktree's Quality state
 ```
 
+To inspect and retire finished-work leftovers one project at a time:
+
+```bash
+make workflow-cleanup-report
+python3 scripts/workflow_cleanup.py --project <exact-project> --confirm <reported-token>
+```
+
+The first command is read-only for Docker resources. It reports unproved resources without an
+available action. Confirmation is operator-only and binds the exact project, eligible action and
+inventory identity; re-run the report if anything changes. It removes positively owned Quality
+and disposable resources or stops an eligible UAT instance while retaining its volumes. Protected
+persistent projects are never targets. Missing sources are considered only on the default local
+Docker socket, with no explicit Docker host/context; registered missing worktrees and surviving
+Quality metadata refuse. Existing sources require a clean, unclaimed worktree with validated finish
+proof. Ambiguous and legacy resources remain report-only. For a disposable run, a durable marker
+is written only after its body completes normally; a crash, interruption or failed body has no such
+proof and requires the exact recovery procedure printed by the run. This intentionally does not
+infer that an unlocked crashed run has finished. The marker and project locks coordinate supported
+local helpers; direct Docker, Git and non-cooperating processes can still race the checks. Stop
+external writers before confirmation. No global Docker prune or cache removal is performed.
+
 Quality remains reusable during feature work; individual test/lint/type commands do not retire it.
 Quality services run under `compose.quality.yaml` with `network_mode: none` (and no project
 networks), while `make dependency-update` and `make dev-references-setup` opt into Docker's shared

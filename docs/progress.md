@@ -9185,6 +9185,15 @@ Status remains implemented pending canonical verification.
   follow-up registers the test without changing product source. Lineage bridge cleanup is
   deferred and the batch UAT Preview remains available.
 
+## 2026-11-16 — WF-06 finished-resource cleanup
+
+- Added report and exact-inventory confirmation for positively owned disposable and Quality
+  resources and volume-preserving UAT stops; protected environments and uncertain ownership refuse.
+  Normal completion is recorded before retirement; interrupted or unproved runs remain report-only.
+- Independent infrastructure QA and synthetic Docker smoke passed on the source commit. The
+  [WF-06 evidence](release/evidence/wf-06.md) records commands, fixture boundaries and limitations.
+  Canonical FULL and operator delivery remain pending.
+
 ### BRAND-01 — approved Florabase logo, 15 November 2026
 
 - Added the approved wordmark to the README and icon marks to the Workbench, Today and offline

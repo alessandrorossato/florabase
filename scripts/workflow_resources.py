@@ -91,13 +91,15 @@ class FileLock(AbstractContextManager["FileLock"]):
             self.handle = None
 
 
+def lock_root() -> Path:
+    configured = os.environ.get("FLORABASE_LOCK_DIR")
+    home = Path(pwd.getpwuid(os.getuid()).pw_dir)
+    return Path(configured) if configured else home / ".local/state/florabase/locks"
+
+
 def machine_lock(name: str, purpose: str) -> FileLock:
     """Coordinate every checkout and clone of this user; Git metadata would miss separate clones."""
-    configured = os.environ.get("FLORABASE_LOCK_DIR")
-    # The account's home, not $HOME/XDG: sandboxed tool launches must still share one lock.
-    home = Path(pwd.getpwuid(os.getuid()).pw_dir)
-    root = Path(configured) if configured else home / ".local/state/florabase/locks"
-    return FileLock(root / f"{name}.lock", purpose)
+    return FileLock(lock_root() / f"{name}.lock", purpose)
 
 
 def verification_lock(metadata: Path) -> FileLock:
@@ -119,7 +121,12 @@ class Owner:
 
     @classmethod
     def disposable(cls, role: str, source: Path) -> Owner:
-        if role not in {"integration", "feature-migration", "verification-build", "workflow-smoke"}:
+        if role not in {
+            "integration",
+            "feature-migration",
+            "verification-build",
+            "workflow-smoke",
+        }:
             raise ResourceError("unsupported disposable lifecycle")
         identity = uuid.uuid4().hex
         return cls(f"florabase-{role}-{identity[:12]}", role, str(source.resolve()), identity)
@@ -161,6 +168,27 @@ class Owner:
             raise ResourceError("persistent/unknown environments cannot use automatic retirement")
         if not Path(self.source).is_absolute():
             raise ResourceError("source must be absolute")
+
+
+def inventory_identity(
+    inventory: dict[str, list[dict[str, Any]]],
+) -> dict[str, list[str]]:
+    return {
+        kind: sorted(
+            json.dumps(
+                {
+                    "id": item.get("Id", item.get("Name")),
+                    "name": item.get("Name"),
+                    "labels": Resources.labels(item, kind),
+                    "tags": item.get("RepoTags"),
+                    "created": item.get("CreatedAt") if kind == "volumes" else None,
+                },
+                sort_keys=True,
+            )
+            for item in items
+        )
+        for kind, items in inventory.items()
+    }
 
 
 class Resources:
@@ -275,8 +303,10 @@ class Resources:
                             f"foreign container uses {kind} {item['Name']}; cleanup refused before mutation"
                         )
 
-    def clean(self) -> dict[str, int]:
+    def clean(self, expected: dict[str, list[dict[str, Any]]] | None = None) -> dict[str, int]:
         inventory = self.inventory()
+        if expected is not None and inventory_identity(inventory) != inventory_identity(expected):
+            raise ResourceError("inventory changed; report again")
         self.preflight(inventory)
         counts: dict[str, int] = {}
         for kind, remove in (
@@ -292,6 +322,10 @@ class Resources:
                 if current is None:
                     continue
                 self.prove(current, kind)
+                if expected is not None and inventory_identity(
+                    {kind: [current]}
+                ) != inventory_identity({kind: [item]}):
+                    raise ResourceError("resource changed; cleanup stopped")
                 if kind in {"volumes", "networks"} and self.users(
                     "volume" if kind == "volumes" else "network", str(current["Name"])
                 ):
@@ -306,6 +340,10 @@ class Resources:
             identifier = str(item["Id"])
             current = json.loads(self.command("image", "inspect", identifier))[0]
             self.prove(current, "images")
+            if expected is not None and inventory_identity(
+                {"images": [current]}
+            ) != inventory_identity({"images": [item]}):
+                raise ResourceError("image changed; cleanup stopped")
             tags = current.get("RepoTags") or []
             if (
                 len(tags) > 1
@@ -336,12 +374,29 @@ class Disposable(AbstractContextManager["Disposable"]):
         self.quiescence_failed = False
         self.resources = Resources(owner, command)
         self.handlers: dict[signal.Signals, Any] = {}
+        self.lock = (
+            machine_lock(owner.project, f"{owner.project} disposable lifecycle")
+            if owner.role != "quality"
+            else None
+        )
+
+    def marker(self) -> Path:
+        return lock_root() / f"{self.owner.project}.ended.json"
 
     def __enter__(self) -> Disposable:
-        if any(self.resources.inventory().values()):
-            raise ResourceError(
-                f"new run already has resources: {self.owner.project}; refusing adoption"
-            )
+        if self.lock:
+            self.lock.__enter__()
+        try:
+            if self.marker().exists() or self.marker().is_symlink():
+                raise ResourceError("existing disposable completion record; refusing adoption")
+            if any(self.resources.inventory().values()):
+                raise ResourceError(
+                    f"new run already has resources: {self.owner.project}; refusing adoption"
+                )
+        except BaseException:
+            if self.lock:
+                self.lock.__exit__()
+            raise
         for number in (signal.SIGINT, signal.SIGTERM):
             self.handlers[number] = signal.signal(number, self.interrupt)
         print(
@@ -351,7 +406,11 @@ class Disposable(AbstractContextManager["Disposable"]):
         return self
 
     def run(
-        self, command: list[str], *, stdin: str | None = None, env: dict[str, str] | None = None
+        self,
+        command: list[str],
+        *,
+        stdin: str | None = None,
+        env: dict[str, str] | None = None,
     ) -> str:
         """Quiesce the complete Compose process group before resource cleanup."""
         process = subprocess.Popen(
@@ -404,10 +463,33 @@ class Disposable(AbstractContextManager["Disposable"]):
                 raise ResourceError(
                     "cleanup requires manual recovery after owned subprocess shutdown failure"
                 )
+            # Only a normally completed body can attest synchronous creator shutdown. A crash,
+            # interruption or failed creator is intentionally not evidence of a finished run.
+            marked = not exception or exception[0] is None
+            if marked and self.owner.role != "quality":
+                path = self.marker()
+                temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+                try:
+                    with temporary.open("x", encoding="utf-8") as stream:
+                        json.dump(self.owner.labels(), stream, sort_keys=True)
+                        stream.flush()
+                        os.fsync(stream.fileno())
+                    os.replace(temporary, path)
+                    directory = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
+                    try:
+                        os.fsync(directory)
+                    finally:
+                        os.close(directory)
+                finally:
+                    temporary.unlink(missing_ok=True)
             self.resources.clean()
+            if marked and self.owner.role != "quality":
+                self.marker().unlink(missing_ok=True)
         finally:
             for number, handler in self.handlers.items():
                 signal.signal(number, handler)
+            if self.lock:
+                self.lock.__exit__()
 
 
 def report() -> dict[str, Any]:
@@ -509,7 +591,8 @@ def report() -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "action", choices=["report", "quality-status", "quality-clean", "cleanup-disposable"]
+        "action",
+        choices=["report", "quality-status", "quality-clean", "cleanup-disposable"],
     )
     parser.add_argument("--project")
     parser.add_argument("--role")
@@ -525,7 +608,8 @@ def main() -> int:
         elif args.action.startswith("quality-"):
             owner = Owner.quality(repo.source, repo.metadata)
             if args.action == "quality-clean":
-                Resources(owner).clean()
+                with machine_lock(owner.project, f"{owner.project} lifecycle"):
+                    Resources(owner).clean()
             else:
                 inv = Resources(owner).inventory()
                 print(
@@ -554,9 +638,17 @@ def main() -> int:
                 raise ResourceError(
                     "recovery requires exact --project, --role and --owner from the failed run"
                 )
-            Resources(
-                Owner(args.project, args.role, args.source or str(repo.source), args.owner)
-            ).clean()
+            owner = Owner(args.project, args.role, args.source or str(repo.source), args.owner)
+            owner.validate()
+            with machine_lock(owner.project, f"{owner.project} disposable lifecycle"):
+                Resources(owner).clean()
+                marker = lock_root() / f"{owner.project}.ended.json"
+                if not marker.is_symlink():
+                    try:
+                        if json.loads(marker.read_text(encoding="utf-8")) == owner.labels():
+                            marker.unlink()
+                    except FileNotFoundError:
+                        pass
     except ResourceError as error:
         print(f"RESOURCE_CLEANUP_FAILED: {error}", file=sys.stderr)
         return 1
