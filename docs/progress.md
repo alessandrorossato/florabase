@@ -9163,3 +9163,14 @@ Status remains implemented pending canonical verification.
 - Independent QA reviewed coverage and the fix. The
   [run record](release/evidence/fn-06.md) contains the page matrix and two first-run wording and
   navigation findings for operator disposition. Canonical verification is pending integration.
+
+## 2026-11-16 — WF-06 finished-resource cleanup (in progress)
+
+- Drafted report and exact-inventory confirmation for positively owned disposable and Quality
+  resources and volume-preserving UAT stops; protected environments and uncertain ownership refuse.
+  Normal completion is recorded before retirement; interrupted or unproved runs remain report-only.
+- Focused offline tests: `python3 scripts/test-workflow-resources.py` (21) and
+  `python3 scripts/test-workflow-cleanup.py` (6), and
+  `python3 scripts/test-environment-workflow.py` (39); Ruff, format and strict mypy passed.
+  Preliminary independent synthetic Docker smoke passed on a draft; exact-commit QA, smoke and
+  canonical FULL remain pending.
