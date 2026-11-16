@@ -493,18 +493,28 @@ def mark_finished(repo: Repository, branch: str, sha: str, merge: str) -> None:
     state = AgentState(repo)
     with FileLock(state.lock, "writer state update"), verification_lock(repo.metadata):
         require_no_pending_handoff(repo)
-        info_dir = repo.metadata / "info"
-        if info_dir.is_symlink():
-            raise WorkflowError(f"refusing symlinked metadata directory {info_dir}")
-        finished_path = info_dir / "florabase-finished.json"
-        if finished_path.is_symlink():
-            raise WorkflowError(f"refusing symlinked finish proof {finished_path}")
-        info_dir.mkdir(parents=True, exist_ok=True)
-        proof = {"branch": branch, "sha": sha, "merge": merge, "finished_at": now()}
-        temporary = finished_path.with_name(f"{finished_path.name}.{uuid.uuid4().hex}")
-        temporary.write_text(json.dumps(proof, sort_keys=True) + "\n", encoding="utf-8")
-        os.replace(temporary, finished_path)
-        state.path.unlink(missing_ok=True)
+        write_finished_proof(repo, branch, sha, merge)
+
+
+def write_finished_proof(
+    repo: Repository, branch: str, sha: str, merge: str, *, batch_pr: int | None = None
+) -> None:
+    """Record already-validated finish evidence while the caller holds both worktree locks."""
+    info_dir = repo.metadata / "info"
+    if info_dir.is_symlink():
+        raise WorkflowError(f"refusing symlinked metadata directory {info_dir}")
+    finished_path = info_dir / "florabase-finished.json"
+    if finished_path.is_symlink():
+        raise WorkflowError(f"refusing symlinked finish proof {finished_path}")
+    info_dir.mkdir(parents=True, exist_ok=True)
+    proof: dict[str, Any] = {"branch": branch, "sha": sha, "merge": merge, "finished_at": now()}
+    if batch_pr is not None:
+        proof.update(version=2, batch_pr=batch_pr)
+    temporary = finished_path.with_name(f"{finished_path.name}.{uuid.uuid4().hex}")
+    temporary.write_text(json.dumps(proof, sort_keys=True) + "\n", encoding="utf-8")
+    os.replace(temporary, finished_path)
+    if batch_pr is None:
+        AgentState(repo).path.unlink(missing_ok=True)
 
 
 def undisposable_ignored(target: Repository) -> list[str]:
@@ -753,6 +763,12 @@ def require_clean_finished_proof(target: Repository, path: Path) -> None:
         raise WorkflowError(
             f"{path} finish merge {merge} is not verified on origin/main"
         ) from error
+    if "version" in proof or "batch_pr" in proof:
+        from feature_batch import validate_finished_source
+
+        if proof.get("version") != 2 or type(proof.get("batch_pr")) is not int:
+            raise WorkflowError(f"{path} has damaged batch finish proof")
+        validate_finished_source(target, proof["batch_pr"], branch, sha, merge)
 
 
 def retire(repo: Repository, identifier: str, confirmation: str) -> None:

@@ -875,6 +875,57 @@ feature worktree at its reviewed SHA, records its proof for retirement and delet
 merged feature branch. `make feature-retire` or the agent tool that created it removes the worktree. A dirty/staged primary or unexpected primary branch receives an actionable
 refusal with feature source retained. Single-checkout manual finish still switches to updated `main`.
 
+## Batch integration (WF-04)
+
+Use a dedicated `ci/batch-<id>` worktree (or `ci/wf-04-batch-01` for the bootstrap) with one
+claimed writer. Source writers can continue their independent focused QA. Select only source
+tips whose owners have frozen them for integration and whose independent evidence names the
+tested revision. A clean worktree alone is insufficient. Keep each owner's original receipt
+and QA. Ready sources enter the reviewed batch without separate canonical runs.
+
+```bash
+make feature-batch-plan
+make feature-batch-plan REQUEST=/path/to/request.json > /path/to/plan.json
+make feature-batch-prepare PLAN=/path/to/plan.json AGENT_ID=<integration-writer>
+```
+
+A request is a JSON object with `branch`, `base`, and `sources`. Each source specifies
+`id`, `branch`, full `tip`, `reviewer` and `evidence` (committed Markdown paths at its tip).
+List sources in the intended merge order. The planner checks the pinned base, exact clean
+tips, writer claims, gates and evidence paths. The writer compares the regenerated plan again
+before and after preparation. The manifest under `docs/release/evidence/batches/` records
+the source commits and the original tips remain ancestors of the integration head.
+
+Preparation refuses conflicts outside an additive `docs/progress.md` merge. When a source
+has a conflict, fix or review it deliberately before starting a new candidate. Record any
+post-merge documentation reconciliations as a path-to-reason mapping in the manifest's
+`reconciliation` object. Stage those files and the manifest together and commit them as the
+single commit following the final source merge. A reviewer in a detached checkout verifies
+this exact commit, the merge replay, and the evidence. Give the writer a JSON review containing
+`reviewer`, `head`, `base`, `tree`, `result` (equal to `pass`) and `evidence`.
+
+```bash
+make feature-batch-review REVIEW=/path/to/exact-review.json AGENT_ID=<integration-writer>
+env -u REUSE FRESH=1 make verify-full AGENT_ID=<integration-writer>
+```
+
+For a batch, the operator runs `make feature-deliver AGENT_ID=operator` from the integration
+worktree. Delivery revalidates the source tips, no-reuse FULL receipt, exact commit approval,
+and strict up-to-date GitHub Actions checks. The protected jobs verify the platform merge tree
+against the manifest's pinned base and exact head. After protected squash, delivery confirms
+the squash parent and tree and archives proof and a private local ref under shared Git
+metadata. A changed base or tree requires a new reviewed candidate and a fresh receipt.
+
+After the operator authorizes finish, run the usual `make feature-finish` from the integration
+branch for that branch's own merged PR. This fast-forwards clean primary `main` and installs
+the new batch command on the first delivery. Then run
+`make feature-batch-finish PR=<number> AGENT_ID=operator` from clean primary `main`.
+It verifies the PR again and processes only its listed source tips;
+`SOURCE=feat/example` limits finish to one. Moved tips, missing proof and protected resources
+refuse, and the output identifies any unfinished source. Managed source worktrees can then use
+the existing exact `feature-retire` confirmations. Provider-managed worktrees remain with
+their provider and any Preview owner remains subject to its existing lifecycle rules.
+
 ## Troubleshooting and acceptance evidence
 
 - `DB CURRENT IS AHEAD OF OR INCOMPATIBLE WITH CODE`: use the checkout containing that revision or
