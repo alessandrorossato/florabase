@@ -1,6 +1,6 @@
-# Florabase
-
-<img src="docs/assets/florabase-logo.png" width="240" height="240" alt="Florabase logo">
+<p align="center">
+  <img src="docs/assets/florabase-logo.png" alt="Florabase" width="300">
+</p>
 
 Florabase is a self-hosted web application for managing a personal botanical collection. It keeps
 botanical reference information separate from the material and plants in a collection, while
