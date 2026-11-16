@@ -22,7 +22,8 @@
   `SowingScreen.test.tsx`, `PlantScreen.test.tsx` — 130 tests passed), `make format-check`,
   `make lint`, `make typecheck`, `make verification-plan`, `python3 scripts/check-features.py`,
   `python3 scripts/check-doc-links.py`, `python3 scripts/test-beta-runtime.py Disclosure -q`, and
-  `git diff --check`.
+  `git diff --check`. Independent QA (`hydrogen-qa-cert02`) passed with zero defects and verified
+  scratch-copy mutation failures for all eight new and extended tests (`PASS` at `cf5abaa`).
 - Unresolved: WF-04 Batch 03 integration and batch canonical FULL verification.
 
 ## 2026-11-16 — WF-04 Batch 02 prepared

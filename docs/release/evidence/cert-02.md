@@ -36,5 +36,12 @@ Run from the `ci/cert-02-frontend-regressions` worktree and its isolated Quality
 
 ## Independent review
 
-Independent read-only QA reviewer: `hydrogen-qa-cert02` (from an isolated detached checkout).
-Verdict and reviewed commit SHA recorded upon completion of independent QA.
+Independent read-only QA reviewer: `hydrogen-qa-cert02` (from an isolated scratch export, separate
+from the writer).
+
+| Reviewed commit | Verdict | Notes |
+| --- | --- | --- |
+| `cf5abaa2c0d5d9d1a82beb9caf63b7debda5576f` | PASS | Zero defects; all eight new and extended regression tests passed on the unmodified archive export and failed under targeted production mutations (A1 Sowing/Plant/Journal help descriptions, A2 `config.ts` trimming/fallback and `ProvenanceMap.tsx` `tileLayer` arguments, A3 `BotanicalIdentityScreen.tsx` History event ordering and `useDirectoryView.ts` `identity_id` navigation sync). |
+
+The commit that records this verdict updates only `docs/release/evidence/cert-02.md` and
+`docs/progress.md`; its delta QA verdict is provided with the frozen source tip.
