@@ -24,6 +24,22 @@
   with zero defects (`QA_PASS`).
 - Unresolved: G-CORE step 5 on the release-candidate images and batch integration under WF-04.
 
+## 2026-11-16 — FN-06 follow-up: Journal empty-state contextual navigation
+
+- On `feat/fn-06-journal-navigation` from `554d74de88a278e2b9a392de9d105d3d62c35f91` (writer
+  `hydrogen-fn-06-journal-nav`).
+- Implemented the approved non-blocking UX follow-up from [`docs/release/evidence/fn-06.md`](release/evidence/fn-06.md):
+  when the global Journal (`#/events`) has no entries and explains that a Plant or Plant group is
+  required, `GlobalEventsScreen` (`frontend/src/events/GlobalEventsScreen.tsx`) now provides
+  contextual navigation links to `Plant` (`#/plants`) and `Plant group` (`#/plants?type=group`),
+  matching the application's collection routing (`frontend/src/shell/navigation.ts`).
+- Added regression coverage in `frontend/src/events/GlobalEventsScreen.test.tsx` (11 tests) and
+  updated [`docs/release/evidence/fn-06.md`](release/evidence/fn-06.md).
+- Focused checks: Vitest (`GlobalEventsScreen.test.tsx`), `pnpm format:check`, `pnpm lint`,
+  `pnpm typecheck`, `python3 scripts/check-features.py` and `git diff --check`. Independent QA
+  (`argon-qa`) passed with zero defects (`QA_PASS`).
+- Unresolved: batch integration under WF-04.
+
 ## 2026-11-16 — Batch 01 synthetic PR identity correction
 
 - Reproduced the inherited runner branch mismatch. The synthetic docs event now declares its
