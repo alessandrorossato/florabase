@@ -1,3 +1,18 @@
+## 2026-11-16 — DOC-05 release documentation audit
+
+- Added a clearly planned, unpublished v1.0.0 changelog entry; release-cut content and
+  candidate acceptance remain pending. Clarified the distinction between a tag and publication.
+- Compared the release line and publication terminology against REL-01 tooling and its runbook;
+  the supported contracts and private reporting channel remain documented. See [REL-01 evidence](release/evidence/rel-01.md) and [Batch 01 evidence](release/evidence/wf-04-batch-01.md),
+  which records private reporting enabled.
+- Independent delta QA passed: graph, expected candidate refusal and whitespace reviewed.
+- Marked DOC-05 implemented, not verified: release acceptance must review the final candidate.
+- Checks: `python3 scripts/check-features.py` passed (162 entries);
+  `python3 scripts/check-features.py --release-candidate` correctly reported eight open blockers;
+  `git diff --check` passed. Independent baseline at `554d74d`:
+  `FLORABASE_RELEASE_OFFLINE=1 python3 scripts/release-tools.py scripts/test-beta-images.py`
+  passed 60 tests.
+
 ## 2026-11-16 — Batch 01 synthetic PR identity correction
 
 - Reproduced the inherited runner branch mismatch. The synthetic docs event now declares its
