@@ -50,6 +50,8 @@ def checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
     # Docker suites. feature-verify.sh compares the frozen working tree, index and HEAD after the
     # last stage, so checking whitespace early covers exactly the tree every later stage verified.
     add("feature-graph", ["python3", "./scripts/check-features.py"])
+    add("doc-links", ["python3", "./scripts/check-doc-links.py"])
+    add("test-doc-links", ["python3", "./scripts/test-doc-links.py"])
     add("whitespace", ["git", "diff", "--check", plan["base"]])
     add("staged-whitespace", ["git", "diff", "--cached", "--check"])
     add(

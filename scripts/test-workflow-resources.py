@@ -83,6 +83,11 @@ class FakeDocker:
 
 class ResourceTests(unittest.TestCase):
     def setUp(self) -> None:
+        self.locks = tempfile.TemporaryDirectory()
+        self.addCleanup(self.locks.cleanup)
+        env = patch.dict(os.environ, {"FLORABASE_LOCK_DIR": self.locks.name})
+        env.start()
+        self.addCleanup(env.stop)
         self.owner = Owner.disposable("integration", ROOT)
         self.other = Owner.disposable("integration", ROOT)
         self.fake = FakeDocker()
@@ -91,6 +96,31 @@ class ResourceTests(unittest.TestCase):
         owner = owner or self.owner
         for kind in self.fake.objects:
             self.fake.add(owner, kind, owner.project + "-" + kind)
+
+    def test_expected_inventory_change_refuses_before_removal(self) -> None:
+        self.populate()
+        resources = Resources(self.owner, self.fake)
+        expected = resources.inventory()
+        self.fake.add(self.owner, "volumes", "late-volume")
+        with self.assertRaisesRegex(ResourceError, "inventory changed"):
+            resources.clean(expected=expected)
+        self.assertFalse(self.fake.removed)
+
+    def test_completion_marker_only_for_normal_body_with_failed_cleanup(self) -> None:
+        lifetime = Disposable(self.owner, self.fake)
+        with self.assertRaises(ResourceError):
+            with lifetime:
+                self.populate()
+                self.fake.fail_remove = True
+        self.assertEqual(json.loads(lifetime.marker().read_text()), self.owner.labels())
+        self.assertFalse(self.fake.removed)
+        self.fake.fail_remove = False
+        Resources(self.owner, self.fake).clean()
+        lifetime.marker().unlink()
+        with self.assertRaisesRegex(RuntimeError, "body failed"):
+            with Disposable(self.other, self.fake):
+                raise RuntimeError("body failed")
+        self.assertFalse(Disposable(self.other, self.fake).marker().exists())
 
     def test_shutdown_timeout_refuses_cleanup_and_allows_exact_recovery(self) -> None:
         with self.assertRaises(ResourceError):

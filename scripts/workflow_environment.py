@@ -1253,6 +1253,9 @@ def main() -> int:
             # Owner labels only exist after creation; serialize so two sources cannot both pass.
             with machine_lock(env.project, f"{env.project} lifecycle"):
                 dispatch(env, args)
+        elif args.role == "quality" and mutating:
+            with machine_lock(env.project, f"{env.project} lifecycle"):
+                dispatch(env, args)
         elif args.role == "dev" and (args.action in {"up", "stop", "upgrade"} or mutating):
             # DEV has no feature writer; it belongs to the operator and takes only the lock.
             with machine_lock(env.project, f"{env.project} lifecycle"):

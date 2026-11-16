@@ -11,6 +11,12 @@ function dayValue(day: string): PartialDate {
   return { precision: "day", year, month, day: date };
 }
 
+const sameDate = (a: PartialDate | null, b: PartialDate | null) =>
+  a?.precision === b?.precision &&
+  a?.year === b?.year &&
+  (a?.month ?? null) === (b?.month ?? null) &&
+  (a?.day ?? null) === (b?.day ?? null);
+
 /**
  * Explicit occurrence date: Today, Another date or Date unknown. `onChange` receives a
  * complete PartialDate or null; while nothing is chosen (or Another date is incomplete)
@@ -21,14 +27,14 @@ export function OccurrenceDateChoice({
   value,
   onChange,
   disabled,
-  initialChoice = "unset",
+  initialChoice = "today",
   unknownUnavailable,
 }: {
   id: string;
   value: PartialDate | null;
   onChange: (value: PartialDate | null) => void;
   disabled: boolean;
-  /** Choice for a new entry (design decision D1). A stored date always opens as Another date. */
+  /** Choice for a new entry (design decision D1: Today preselected). A stored date always opens as Another date. */
   initialChoice?: DateChoice;
   /** Why this entry needs a date; when set, Date unknown cannot be chosen. */
   unknownUnavailable?: string;
@@ -36,7 +42,9 @@ export function OccurrenceDateChoice({
   // Read once: the day shown is the day recorded, even if the dialog stays open past midnight.
   const [today] = useState(() => localDay());
   const [chosen, setChosen] = useState<DateChoice>(() =>
-    value ? "other" : initialChoice,
+    value && (initialChoice !== "today" || !sameDate(value, dayValue(today)))
+      ? "other"
+      : initialChoice,
   );
   const choice = chosen === "unknown" && unknownUnavailable ? "unset" : chosen;
   const first = useRef<HTMLInputElement>(null);
@@ -67,6 +75,7 @@ export function OccurrenceDateChoice({
         ref={extra?.ref}
         type="radio"
         name={`${id}-choice`}
+        value={name}
         data-date-control="choice"
         aria-describedby={extra?.reason ? reasonId : undefined}
         checked={choice === name}

@@ -61,7 +61,14 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(plan["migration"], "skip")
         self.assertEqual(
             [c["id"] for c in checks_for(plan)],
-            ["feature-graph", "whitespace", "staged-whitespace", "untracked-whitespace"],
+            [
+                "feature-graph",
+                "doc-links",
+                "test-doc-links",
+                "whitespace",
+                "staged-whitespace",
+                "untracked-whitespace",
+            ],
         )
 
     def test_executable_and_unclassified_documentation_paths_escalate(self) -> None:
@@ -466,7 +473,11 @@ class SelectionTests(unittest.TestCase):
                         jobs["build"][0]["command"],
                         ["make", "verify-build", "SERVICES=backend frontend"],
                     )
-                    helpers = [c for c in jobs["quality"] if c["id"].startswith("test-")]
+                    helpers = [
+                        c
+                        for c in jobs["quality"]
+                        if c["id"].startswith("test-") and c["id"] != "test-doc-links"
+                    ]
                     self.assertEqual(bool(helpers), plan["mode"] == "full")
         with self.assertRaises(ValueError):
             CI.ci_checks_for(self.plan("docs/example.md"), "unknown")
@@ -480,6 +491,8 @@ class SelectionTests(unittest.TestCase):
             order,
             [
                 "feature-graph",
+                "doc-links",
+                "test-doc-links",
                 "whitespace",
                 "staged-whitespace",
                 "untracked-whitespace",
@@ -506,8 +519,15 @@ class SelectionTests(unittest.TestCase):
             with self.subTest(paths=paths):
                 ids = [c["id"] for c in checks_for(self.plan(*paths))]
                 self.assertEqual(
-                    ids[:4],
-                    ["feature-graph", "whitespace", "staged-whitespace", "untracked-whitespace"],
+                    ids[:6],
+                    [
+                        "feature-graph",
+                        "doc-links",
+                        "test-doc-links",
+                        "whitespace",
+                        "staged-whitespace",
+                        "untracked-whitespace",
+                    ],
                 )
                 self.assertEqual(len(ids), len(set(ids)))
         affected = checks_for(self.plan("backend/src/florabase/schedule/service.py"))
@@ -640,6 +660,8 @@ class RemoteHistoryTests(unittest.TestCase):
                 "check-features.py",
             ):
                 shutil.copy(ROOT / "scripts" / name, root / "scripts" / name)
+            for name in ("check-doc-links.py", "test-doc-links.py"):
+                (root / "scripts" / name).write_text("# simulated link check\n")
             shutil.copy(ROOT / "docs/features.json", root / "docs/features.json")
             (root / "docs/release").mkdir()
             shutil.copy(ROOT / "docs/release/scope-v1.json", root / "docs/release/scope-v1.json")

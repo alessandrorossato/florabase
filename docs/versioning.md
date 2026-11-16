@@ -21,8 +21,9 @@ publication also require the release-scope checker to pass. Python package metad
 the PEP 440 normalised form (for example `1.0.0rc1`). The source text and every other surface
 use `1.0.0-rc.1`.
 
-A version that exists in the source but has no tag and no GitHub Release is not a release.
-[CHANGELOG.md](../CHANGELOG.md) records which versions were published.
+Beta and release-candidate publications are GitHub prereleases; stable publication uses the
+protected release workflow. A tag alone does not establish that a GitHub Release was published.
+[CHANGELOG.md](../CHANGELOG.md) distinguishes planned, tagged and published versions.
 
 ## What 1.x promises
 
