@@ -30,7 +30,7 @@ counts only for the rows that cite it.
 | 4 | Sowing, germination observation, plant and plant group, extraction and a supported reversal | | | | GERMINATION-001; LINEAGE-003 |
 | 5 | Journal entry: a new entry opens with Today selected; one entry each with Today, Another date and Date unknown; photo upload; primary photo | | | | FN-05; UX-DATE-001 #3 (R01); ATTACHMENT-003; ATTACHMENT-005 |
 | 6 | Bulk move; label print preview and QR lookup | | | | LOCATION-002; UI-REDESIGN-EXPLORATION-001 #3 (QR lookup) |
-| 7 | Schedule an activity, complete it, and see Today reflect it | | | | UX-TODAY-001; UX-006 #3 (R14) |
+| 7 | Schedule an activity, complete it, and see Today reflect it | | | | UX-TODAY-001; UX-006 #3 (R14, proposed) |
 | 8 | Harvest, stored material and a new seed lot; the lineage view shows the chain | | | | HARVEST-001; LINEAGE-003 |
 | 9 | Search, filters and a Saved View; CSV export and import preview | | | | SEARCH-001; IMPORT-001; CONTROLS-001 #4 |
 | 10 | Session expiry during an edit and a server stop during a save: an error is shown and nothing is lost | | | | — |

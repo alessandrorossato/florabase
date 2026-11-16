@@ -29,9 +29,9 @@ product decisions.
 | Ref | Decision | Evidence |
 | --- | --- | --- |
 | D1 | A new Journal entry opens with Today selected. | `scope-v1.md` §"UX-DATE-001 decision D1"; scope-change row 2026-11-13 (operator). |
-| DP | Directory contract of 2026-11-01: Quick Preview and idle inspector columns removed from eight directories and both hierarchy explorers; direct bordered Details/Edit; creation-only overflow. | `progress.md:7535-7540` ("explicitly confirmed replacement"); `docs/design/ui-system-v1/consolidation/final-interaction-correction/README.md:11` ("operator-confirmed contract"); `progress.md:7650` Wave 3 closure disposition ("Operator reports the six Gate B UAT checks complete"); delivered in #134 (`e5e6b4f`, auto-merge enabled by the operator, 2026-11-01). |
-| DT | Today A — Operational approved; reverses the photo-first DASHBOARD-001 layout. | `docs/dashboard-001-handoff.md:223` ("The operator approved 'Today A — Operational' on 2026-11-12"); `progress.md:9068`; delivered in #177. |
-| DL | Later backlog features delivered and `verified`: ATTACHMENT-004, MAPS-FOUNDATION-001, MAPS-ORIGINS-001, SCHEDULE-001, DASHBOARD-001, SUPPLIER-003. | `features.json` entries and their verification records. |
+| DP | Directory contract of 2026-11-01: Quick Preview and idle inspector columns removed from eight directories and both hierarchy explorers; direct bordered Details/Edit; creation-only overflow. | `progress.md` §"2026-11-01 — Final directory interaction contract correction (operator UAT pending)" ("explicitly confirmed replacement"); `docs/design/ui-system-v1/consolidation/final-interaction-correction/README.md:11` ("operator-confirmed contract"); `progress.md` §"UI System v1 Wave 3 closure disposition — 1 November 2026" Wave 3 closure disposition ("Operator reports the six Gate B UAT checks complete"); delivered in #134 (`e5e6b4f`, auto-merge enabled by the operator, 2026-11-01). |
+| DT | Today A — Operational approved; reverses the photo-first DASHBOARD-001 layout. | `docs/dashboard-001-handoff.md:223` ("The operator approved 'Today A — Operational' on 2026-11-12"); `progress.md` §"UX-TODAY-001 — work-first Today (Variant A, Operational), 13 November 2026"; delivered in #177. |
+| DL | Later backlog features delivered and `verified`: ATTACHMENT-004, MAPS-FOUNDATION-001, MAPS-ORIGINS-001, SCHEDULE-001, DASHBOARD-001, SUPPLIER-003. | `features.json` entries and their verification records. Several entries were added in their own delivering PRs (for example MAPS-FOUNDATION-001 #116, SCHEDULE-001 #83, SUPPLIER-003 #70). **No separate written ruling found**, so rows resting only on DL are proposed. |
 | DW | WCVP v16 default (WCVP-DEFAULT-001, #174 `b94757e`) and WGSRPD crosswalk v2 (WGSRPD-CROSSWALK-V2, #175 `51f7884`). | Both PRs merged by the operator on 2026-11-13 (#175 by auto-merge the operator enabled). Each backlog entry was added in its own delivering PR. **No separate written ruling found.** |
 
 ## Confirmed supersessions
@@ -104,29 +104,6 @@ read-first detail (DP)" for Supplier, Location and Geography. Verification: G-UX
 **R11 — CONTROLS-001 #3, "previews" only.** Remove "previews" from the audited surfaces (DP).
 The Workbench navigation and Settings part is R21.
 
-**R12 — ATTACHMENT-003 #4.** Original: identity covers have "no … thumbnails, derivatives, …
-BotanicalIdentity gallery". Intent: the boundary of that increment, not a permanent prohibition.
-Decision: DL (ATTACHMENT-004) and ATTACHMENT-005. Replacement: "Identity covers support safe
-replacement and removal. Thumbnails, derivatives and the identity media gallery are governed by
-ATTACHMENT-004 and ATTACHMENT-005; no version history, automatic discovery, provider search,
-albums or EXIF inspection." Evidence: `test_identity_covers.py` replacement and removal tests.
-Verification: none beyond the mapping.
-
-**R13 — GEOGRAPHY-003 #3.** "…map-ready internal provenance data without maps, geocoding, or
-external services" becomes "…map-ready internal provenance data, without geocoding; maps are
-governed by MAPS-FOUNDATION-001 and MAPS-ORIGINS-001 (DL)". Verification: none beyond the mapping.
-
-**R14 — UX-006 #3.** The clause "without inventing reminders, care rules, primary record photos"
-stays. Add: "Explicit scheduled activities (SCHEDULE-001), explicit primary photos
-(ATTACHMENT-004) and the Today layout (DT) are not invented content." The intent was "no
-fabricated data", and the later features are explicit, operator-entered data. Verification: G-UX
-Today and Journal.
-
-**R15 — ATTACHMENT-005 #2.** "primary selection remains explicit and limited to SeedLot, Plant
-and PlantGroup" becomes "…explicit, for SeedLot, Plant and PlantGroup and for the targets later
-features add: Harvest (HARVEST-001 #4) and Supplier (SUPPLIER-003, DL)". Evidence:
-`test_primary_photo_api.py`, `test_shared_media.py`.
-
 **R16 — UI-SYSTEM-001 #3, Dashboard clause.** "a prominent factual Dashboard strip" becomes
 "the Today page of DT". Verification: G-UX Today entry; UX-TODAY-001 #6 (first work row visible
 at 390×844).
@@ -186,6 +163,38 @@ at 390×844).
 
 ## Proposed changes awaiting approval
 
+### Rows resting only on later delivered features
+
+R12–R15 were first marked confirmed. Independent review on 2026-11-16 found that their only trace is
+later delivered backlog features (DL), whose entries were added in their own delivering PRs. That
+is the same kind of trace as DW, so these rows are proposed until the operator rules. R12 also
+relies on ATTACHMENT-005, and R15 on HARVEST-001, both still `implemented`.
+
+**R12 — ATTACHMENT-003 #4.** Original: identity covers have "no … thumbnails, derivatives, …
+BotanicalIdentity gallery". Intent: the boundary of that increment, not a permanent prohibition.
+Decision: DL (ATTACHMENT-004) and ATTACHMENT-005. Replacement: "Identity covers support safe
+replacement and removal. Thumbnails, derivatives and the identity media gallery are governed by
+ATTACHMENT-004 and ATTACHMENT-005; no version history, automatic discovery, provider search,
+albums or EXIF inspection." Evidence: `test_identity_covers.py` replacement and removal tests.
+Verification: none beyond the mapping.
+
+**R13 — GEOGRAPHY-003 #3.** "…map-ready internal provenance data without maps, geocoding, or
+external services" becomes "…map-ready internal provenance data, without geocoding; maps are
+governed by MAPS-FOUNDATION-001 and MAPS-ORIGINS-001 (DL)". Verification: none beyond the mapping.
+
+**R14 — UX-006 #3.** The clause "without inventing reminders, care rules, primary record photos"
+stays. Add: "Explicit scheduled activities (SCHEDULE-001), explicit primary photos
+(ATTACHMENT-004) and the Today layout (DT) are not invented content." The intent was "no
+fabricated data", and the later features are explicit, operator-entered data. Verification: G-UX
+Today and Journal.
+
+**R15 — ATTACHMENT-005 #2.** "primary selection remains explicit and limited to SeedLot, Plant
+and PlantGroup" becomes "…explicit, for SeedLot, Plant and PlantGroup and for the targets later
+features add: Harvest (HARVEST-001 #4) and Supplier (SUPPLIER-003, DL)". Evidence:
+`test_primary_photo_api.py`, `test_shared_media.py`.
+
+### Other proposed rows
+
 Each row gives the delivered change, its exact references, the original requirement that stays
 in force until a ruling, the operator's recommended disposition of 2026-11-16 (a recommendation,
 not an approval), and the wording that the ruling would adopt.
@@ -230,9 +239,9 @@ not an approval), and the wording that the ruling would adopt.
   direct primary, source and identity context".
 - Delivered change: Harvest and Stored material no longer substitute a physical source-record
   photo.
-  - PR #134, merge commit `e5e6b4f`, 2026-11-01. It is recorded in `progress.md:7593-7600`, a
+  - PR #134, merge commit `e5e6b4f`, 2026-11-01. It is recorded in `progress.md` §"2026-11-01 — Botanical cover fallback and final Details evidence, Part B (UAT pending)", a
     section headed "UAT pending".
-  - Covered generally by the Wave 3 closure (`progress.md:7650`); no ruling on this specific
+  - Covered generally by the Wave 3 closure (`progress.md` §"UI System v1 Wave 3 closure disposition — 1 November 2026"); no ruling on this specific
     change was found.
   - Test: `HarvestScreen.test.tsx` "Harvest directory never substitutes source-record photos…".
 - Recommended disposition: keep media attribution truthful, and keep fallback context distinct
@@ -249,7 +258,7 @@ not an approval), and the wording that the ruling would adopt.
   leading selection accent distinct from hover, focus and bulk checkboxes; all five valid
   operations use a consistent accessible shared action-menu grammar".
 - Delivered change:
-  - The stripe was removed: "Selected fill loses the inset stripe" (`progress.md:7515`, PR #134
+  - The stripe was removed: "Selected fill loses the inset stripe" (`progress.md` §"2026-11-01 — Shared directory interaction cleanup (operator review pending)", PR #134
     `e5e6b4f`). That cleanup section was "operator review pending".
   - The action grammar was replaced by decision DP.
 - Recommended disposition: accept the selection fill only with adequate accessibility evidence.
@@ -306,18 +315,18 @@ these is discarded.
 
 | ID | Source | Item | State on `main` | Proposed disposition |
 | --- | --- | --- | --- | --- |
-| CV2-01 | handoff:33, :206-212; `progress.md:1489-1491` | Operator visual acceptance of the Harvest and Location directories and details was never recorded | Open. The October captures predate the Wave 3 details pages, decision DP and the Workbench shell (#147) | G-UX on the candidate |
-| CV2-02 | handoff:33, :181-184; `progress.md:1459-1460` | Live native dirty-confirmation prompt and the keyboard, Back and Save steps after it were never certified; component tests only | Open. `window.confirm` is still used at `HarvestForm.tsx:122` and `LocationScreen.tsx:544`, `:734` | Manual check in G-UX, or an operator ruling that component tests suffice |
-| CV2-03 | handoff:172, :209-210; `progress.md:1484-1485` | True browser zoom was never exercised; viewport proxies only | Open | G-UX at 200 % zoom |
+| CV2-01 | handoff:33, :206-212; `progress.md` §"2026-10-17 — COLLECTION-VISUAL-002 implementation and visual-review handoff" | Operator visual acceptance of the Harvest and Location directories and details was never recorded | Open. The October captures predate the Wave 3 details pages, decision DP and the Workbench shell (#147) | G-UX on the candidate |
+| CV2-02 | handoff:33, :181-184; `progress.md` §"2026-10-17 — COLLECTION-VISUAL-002 second visual refinement" | Live native dirty-confirmation prompt and the keyboard, Back and Save steps after it were never certified; component tests only | Open. `window.confirm` is still used at `HarvestForm.tsx:122` and `LocationScreen.tsx:544`, `:734` | Manual check in G-UX, or an operator ruling that component tests suffice |
+| CV2-03 | handoff:172, :209-210; `progress.md` §"2026-10-17 — COLLECTION-VISUAL-002 implementation and visual-review handoff" | True browser zoom was never exercised; viewport proxies only | Open | G-UX at 200 % zoom |
 | CV2-04 | handoff:72-74, :80-81 | Harvest Details does not fit one viewport (criterion 3 says "one-page") | Open as a recorded limit; current geometry unmeasured since the shared detail pages replaced the layout | G-UX measurement, then an operator ruling if it still scrolls |
-| CV2-05 | handoff:210-211 | Possible stale dirty draft in an old Review tab | Superseded: that Review was removed on 2026-10-19 (`progress.md:6118`) | Closed |
+| CV2-05 | handoff:210-211 | Possible stale dirty draft in an old Review tab | Superseded: that Review was removed on 2026-10-19 (`progress.md` §"2026-10-19 — MAPS-FOUNDATION-001 authenticated operator review") | Closed |
 | CV2-06 | handoff:148-165 | Directory filters deferred because the APIs lacked them (Seeds, Sowings, Plants) | Partly fixed: identity filter added in `5778da7` (#121). Location, Supplier/Source/Order, source Seed lot/germination and origin filters remain absent | Operator records the remainder as out of scope, or new work |
-| CV2-07 | `progress.md:1489-1491`; handoff:31 | Independent review and canonical verification outstanding at handoff | Partly resolved: only the PR #113 body states a local canonical pass; no committed review or record. handoff:31 still says "Candidate remains unstaged and uncommitted" | Covered by the candidate gate; correct handoff:31 as a historical note |
+| CV2-07 | `progress.md` §"2026-10-17 — COLLECTION-VISUAL-002 implementation and visual-review handoff"; handoff:31 | Independent review and canonical verification outstanding at handoff | Partly resolved: only the PR #113 body states a local canonical pass; no committed review or record. handoff:31 still says "Candidate remains unstaged and uncommitted" | Covered by the candidate gate; correct handoff:31 as a historical note |
 | CV2-08 | `docs/review/collection-visual-002/second-pass/README.md` | Seed-conversion captures predate the final fieldset border change | Undetermined | G-UX (conversion dialog) |
 
 Criteria 1 and 4 of COLLECTION-VISUAL-002 are already restated by R02 and R03, which follow
-decision DP. The reconciliation's `progress.md` line references for this entry (1099, 1116, 1135)
-are stale; the sections are now at 1427, 1444 and 1463.
+decision DP. The reconciliation's `progress.md` line references for this entry (1099, 1116, 1135) are stale;
+this page cites `progress.md` by section heading, because line numbers move as entries are added.
 
 ## Unresolved gaps (not restated)
 
@@ -327,7 +336,7 @@ History of this row:
   showed every sampled photo.
 - PR #177 (`947d77f`) limited the display to four.
 - No decision on the count was recorded until 2026-11-16.
-- The Wave 1 eight-photo review evidence stays as history (`progress.md:921-930`;
+- The Wave 1 eight-photo review evidence stays as history (`progress.md` §"2026-10-27 — UI-SYSTEM-001 Gate B review candidate, Proposal B refined";
   `docs/design/ui-system-v1/wave1/dashboard-geometry.json`).
 
 **U02 — UI-SYSTEM-001 #9, clauses other than Preview.** Open evidence, unchanged.
@@ -345,7 +354,7 @@ History of this row:
   2026-11-06T18:40:28Z) integrated the shell. Integration is not proof of formal adoption.
 - Against adoption at the time:
   - The last record before the merge cites a "FULL NO-GO" review and "Canonical FULL not run"
-    (`progress.md:8175-8189`).
+    (`progress.md` §"UI-REDESIGN-EXPLORATION-001 — M8 final responsive QA remediation, 6 November 2026").
   - `docs/design/florabase-next/README.md:3` says "Not approved for adoption or merge".
 - Requirements that stay open until evidenced or explicitly dispositioned:
   - #6: no screenshot under `docs/design/florabase-next/` (0 image files tracked), and one UAT
@@ -362,7 +371,7 @@ missing**.
 | Criterion | Requirement previously marked missing | Result |
 | --- | --- | --- |
 | UI-REDESIGN-EXPLORATION-001 #2 | Route preservation recorded only as a README claim | **Partly met.** `WorkbenchShell.test.tsx:82` asserts every former destination once; `:151` every creation route; legacy URLs are tested per area (`GeographyWorkspace.test.tsx:165`, `:238`; `ProvenanceMapScreen.test.tsx:343`; `SowingScreen.test.tsx:1354`; `PlantScreen.test.tsx:2849`). Record routes are not enumerated by one test. |
-| UI-REDESIGN-EXPLORATION-001 #4 | Touch targets of at least 44 px only from capture probes | **Partly met.** `styles.test.ts:188` asserts the coarse-pointer and narrow-width token switch; `tokens.css:65` sets 2.75rem (44 px); `styles.test.ts:148` keeps the six themes byte-identical. Rendered sizes still need G-UX; Botanical keeps 40 px controls at touch widths (`progress.md:7960`). |
+| UI-REDESIGN-EXPLORATION-001 #4 | Touch targets of at least 44 px only from capture probes | **Partly met.** `styles.test.ts:188` asserts the coarse-pointer and narrow-width token switch; `tokens.css:65` sets 2.75rem (44 px); `styles.test.ts:148` keeps the six themes byte-identical. Rendered sizes still need G-UX; Botanical keeps 40 px controls at touch widths (`progress.md` §"UI-REDESIGN-EXPLORATION-001 — M2 Workbench shell and navigation, 4 November 2026"). |
 | UI-REDESIGN-EXPLORATION-001 #5 | Manual screen reader, zoom and touch passes | **Still missing.** Not testable by unit tests; G-UX and the DOC-04 trial cover part of it. |
 | UI-REDESIGN-EXPLORATION-001 #6, #7, #8 | Screenshots, migration plan, approval | **Still missing** (U04). |
 | UI-SYSTEM-001 #3 | Distinct labelled navigation icons | **Met by tests**, apart from the Dashboard clause (R16). |
@@ -375,8 +384,8 @@ missing**.
 | --- | --- | --- | --- |
 | R01 | UX-DATE-001 #3 | Yes (D1) | No: FN-05 not merged; G-CORE step 5 |
 | R02–R11, R25 | Preview and inspector clauses (DP) | Yes (DP) | No: G-UX entries |
-| R12, R13, R15 | Increment boundaries (DL) | Yes (DL) | No: per-criterion mapping |
-| R14 | UX-006 #3 | Yes (DL, DT) | No: G-UX |
+| R12, R13, R15 | Increment boundaries (DL) | Proposed | No: per-criterion mapping |
+| R14 | UX-006 #3 | Proposed | No: G-UX |
 | R16 | UI-SYSTEM-001 #3, Dashboard clause | Yes (DT) | No: G-UX Today |
 | R17, R18 | WCVP-VERSION-001 #1, #4 | Proposed | No |
 | R19 | HARVEST-001 #4 | Proposed | No: owner-labelling not evidenced |

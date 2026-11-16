@@ -38,13 +38,13 @@ cell counts only for the rows that cite it.
 
 | Entry | Route | S | K | D | C | Z | Empty | Supplies certification rows |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Today | `#/dashboard` | | | | | | | UX-TODAY-001; UI-SYSTEM-001 #3 (R16), #4 (R24: four photos, Plant links, labelled fallback, layout); UX-006 #3 (R14); THEMES-001 |
-| Seeds and seed lot | `#/seeds`, `#/seeds/<id>` | | | | | | | UX-003; UI-SYSTEM-001; CONTROLS-001 |
-| Sowings and germination tab | `#/sowings`, `#/sowings/<id>` | | | | | | | GERMINATION-001; UX-003 |
+| Today | `#/dashboard` | | | | | | | UX-TODAY-001; UI-SYSTEM-001 #3 (R16), #4 (R24: four photos, Plant links, labelled fallback, layout); UX-006 #3 (R14, proposed); THEMES-001; BRAND-01 #2 (mark in the shell) |
+| Seeds and seed lot | `#/seeds`, `#/seeds/<id>` | | | | | | | UX-003; UI-SYSTEM-001; CONTROLS-001; UI-POLISH-001 #4 |
+| Sowings and germination tab | `#/sowings`, `#/sowings/<id>` | | | | | | | GERMINATION-001; UX-003; UI-POLISH-001 #4 |
 | Cuttings, lot and attempt | `#/cuttings`, `#/cuttings/lots/<id>`, `#/cuttings/attempts/<id>` | | | | | | | CUTTING-001 (writer's handoff); FABLE-FIX-CUTTINGS |
-| Plants, Plant groups and Plant detail | `#/plants`, `#/plants/<id>`, `#/plant-groups/<id>` | | | | | | | UX-003; MEASUREMENT-001 (height table and chart, both themes); PHENOLOGY-001 |
-| Harvests and Stored material | `#/harvests`, `?tab=stored-material`, `#/harvests/<id>` | | | | | | | HARVEST-001 #5 (R10); COLLECTION-VISUAL-002 #1 (R02), #8 (R23 if confirmed) |
-| Locations | `#/locations`, `#/locations/<id>` | | | | | | | LOCATION-002 #3; LOCATION-003 #3; COLLECTION-VISUAL-002 #4 (R03); UX-005 (R09) |
+| Plants, Plant groups and Plant detail | `#/plants`, `#/plants?type=group`, `#/plants/<id>`, `#/plant-groups/<id>` | | | | | | | UX-003; MEASUREMENT-001 (height table and chart, both themes); PHENOLOGY-001; UI-POLISH-001 #4 |
+| Harvests and Stored material | `#/harvests`, `?tab=stored-material`, `#/harvests/<id>` | | | | | | | HARVEST-001 #5 (R10), #4 (image fallback caption names its owner; R19 if confirmed); COLLECTION-VISUAL-002 #1 (R02), #8 (R23 if confirmed); UI-POLISH-001 #4 |
+| Locations | `#/locations`, `#/locations/<id>` | | | | | | | LOCATION-002 #3; LOCATION-003 #3 (R25); COLLECTION-VISUAL-002 #4 (R03); UX-005 (R09) |
 | Journal | `#/events` | | | | | | | UX-006; UX-DATE-001 |
 | History | `#/history` | | | | | | | UX-006; UI-SYSTEM-WAVE2-001 |
 | Schedule and Calendar | `#/schedule`, `?view=calendar` | | | | | | | UI-SYSTEM-WAVE2-001 |
@@ -52,10 +52,10 @@ cell counts only for the rows that cite it.
 | Taxonomy | `#/taxonomy` | | | | | | | TAXONOMY-002 |
 | Media and media asset | `#/media`, `#/media/<id>` | | | | | | | ATTACHMENT-005 #4; MEDIA-VISUAL-001 |
 | Geography and sub-views | `#/geography`, `#/map`, `#/species-distribution`, `#/native-ranges`, `#/geography/<id>` | | | | | | | GEOGRAPHY-003; GEOGRAPHY-VISUAL-001 #1 (R04), #4 (no persistent tab strip); MAP-001 #6; UX-005 (R09) |
-| Suppliers and supplier | `#/suppliers`, `#/suppliers/<id>` | | | | | | | UX-005 (R09); UI-SYSTEM-WAVE2-001 #3 (R06) |
-| Orders and order | `#/orders`, `#/orders/<id>` | | | | | | | UI-SYSTEM-WAVE2-001 #3 (R06) |
+| Suppliers and supplier | `#/suppliers`, `#/suppliers/<id>` | | | | | | | UX-005 (R09); UI-SYSTEM-WAVE2-001 #3 (R06); UI-POLISH-001 #4 |
+| Orders and order | `#/orders`, `#/orders/<id>` | | | | | | | UI-SYSTEM-WAVE2-001 #3 (R06); UI-POLISH-001 #4 |
 | Settings: Theme | `#/settings` | | | | | | | THEMES-001 |
-| Settings: Labels | `#/labels` | | | | | | | — |
+| Settings: Labels and the label composer | `#/labels`, `#/labels?kind=<kind>&record=<id>` | | | | | | | — |
 | Settings: Import / Export | `#/import-export` | | | | | | | IMPORT-001 |
 | Settings: Account (inventory version 2) | Account destination | | | | | | | ENG-01 |
 | Material ancestry | `#/lineage/<kind>/<id>` | | | | | | | LINEAGE-003 |
