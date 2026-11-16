@@ -10,6 +10,7 @@
     "CI-002": "baseline",
     "CI-003": "baseline",
     "CI-004": "tooling",
+    "CI-005": "tooling",
     "CI-HYGIENE-001": "tooling",
     "AGENT-WORKFLOW-001": "tooling",
     "PREVIEW-001": "baseline",
