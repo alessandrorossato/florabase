@@ -1,3 +1,30 @@
+## 2026-11-16 — CERT-02: Frontend certification regressions (UX-002, MAP-001, BOTANICAL-IDENTITIES-VISUAL-001)
+
+- On `ci/cert-02-frontend-regressions` from `836bf80305a19fdd7f49845b8bc00ae423553a93` (writer
+  `carbon-cert02`).
+- Implemented the focused frontend certification regressions specified for Team A without
+  modifying production code or `docs/release/scope-v1.json` (shared `docs/features.json` status
+  reconciliation deferred to WF-04 Batch 03 integration):
+  - `UX-002` (#1 and #3 negative check): added `layered help explains ambiguous Sowing fields
+    without adding chrome to Notes` in `frontend/src/sowings/SowingScreen.test.tsx` and `layered
+    help explains Plant location, supplier and provenance` plus `Journal phenology stage explains
+    recorded-only evidence` in `frontend/src/plants/PlantScreen.test.tsx`.
+  - `MAP-001` (#3): added `frontend/src/provenance-map/config.test.ts` (`runtime config tile URL
+    and attribution are used when set, trimmed, and fall back when blank`) and `configured tile
+    URL and attribution reach Leaflet` in `frontend/src/provenance-map/ProvenanceMap.test.tsx`.
+  - `BOTANICAL-IDENTITIES-VISUAL-001` (#8 and #5): added
+    `frontend/src/botanical-identities/IdentityHistory.test.tsx` (`identity History lists linked
+    recorded events once, newest first, with Harvest links, precision and documented gaps`) and
+    extended the Sowings and Plants identity-scope directory filter tests with browser Back and
+    Forward verification.
+- Recorded certification evidence in [`docs/release/evidence/cert-02.md`](release/evidence/cert-02.md).
+- Focused checks: Vitest (`config.test.ts`, `ProvenanceMap.test.tsx`, `IdentityHistory.test.tsx`,
+  `SowingScreen.test.tsx`, `PlantScreen.test.tsx` — 130 tests passed), `make format-check`,
+  `make lint`, `make typecheck`, `make verification-plan`, `python3 scripts/check-features.py`,
+  `python3 scripts/check-doc-links.py`, `python3 scripts/test-beta-runtime.py Disclosure -q`, and
+  `git diff --check`.
+- Unresolved: WF-04 Batch 03 integration and batch canonical FULL verification.
+
 ## 2026-11-16 — WF-04 Batch 02 prepared
 
 - Registered `CI-005` (`implemented`, `tooling`) in `docs/features.json` and

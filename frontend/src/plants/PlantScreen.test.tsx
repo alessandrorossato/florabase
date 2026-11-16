@@ -715,6 +715,33 @@ test("minimal group creation keeps quantity unknown", async () => {
   });
 });
 
+test("layered help explains Plant location, supplier and provenance", async () => {
+  mockApi(plantHandler([], []));
+  const user = await openPlants();
+  await user.click(
+    await screen.findByRole("button", { name: "New plant or group" }),
+  );
+  await user.click(
+    screen.getByRole("button", { name: /Plant.*One individually/s }),
+  );
+
+  await openFormSection(user, "Essentials");
+  expect(screen.getByLabelText("Current location")).toHaveAccessibleDescription(
+    /record movements in Journal/i,
+  );
+  await openFormSection(user, "Origin");
+  expect(screen.getByLabelText("Supplier")).toHaveAccessibleDescription(
+    /does not establish biological origin/i,
+  );
+  expect(
+    screen.getByLabelText("Material provenance"),
+  ).toHaveAccessibleDescription(/originated or was collected/i);
+  await openFormSection(user, "Lifecycle & notes");
+  expect(
+    screen.getByLabelText("Notes", { selector: "textarea" }),
+  ).not.toHaveAttribute("aria-describedby");
+});
+
 test("direct origin, references, partial date, Location, lifecycle, notes, and stale Other detail map coherently", async () => {
   const payloads: Record<string, unknown>[] = [];
   let plants: unknown[] = [];
@@ -3177,11 +3204,9 @@ test("identity scope composes with the Plants ownership model and separate group
     },
   });
   mockApi(plantHandler([own, other], [ownGroup]));
-  window.history.replaceState(
-    null,
-    "",
-    `#/plants?identity_id=${identityId}&lifecycle=all&type=group`,
-  );
+  const initialHash = `#/plants?identity_id=${identityId}&lifecycle=all&type=group`;
+  const scopedAllHash = `#/plants?identity_id=${identityId}&lifecycle=all`;
+  window.history.replaceState(null, "", initialHash);
   const user = userEvent.setup();
   render(<App />);
   expect(
@@ -3218,6 +3243,42 @@ test("identity scope composes with the Plants ownership model and separate group
       name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Other plant/,
     }),
   ).toBeVisible();
+  await browserBack();
+  await waitFor(() => {
+    expect(document.querySelector(".ui-directory-records")).toBeInTheDocument();
+  });
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("button", {
+        name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Other plant/,
+      }),
+    ).toBeNull();
+  });
+  expect(window.location.hash).toBe(scopedAllHash);
+  expect(
+    screen.getByRole("button", { name: "Remove botanical identity filter" }),
+  ).toHaveTextContent(own.botanical_identity.display_label);
+  await browserForward();
+  expect(
+    await screen.findByRole("button", {
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Other plant/,
+    }),
+  ).toBeVisible();
+  expect(window.location.hash).not.toContain("identity_id=");
+  await browserBack();
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("button", {
+        name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Other plant/,
+      }),
+    ).toBeNull();
+  });
+  expect(
+    await screen.findByRole("button", {
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Scoped plant/,
+    }),
+  ).toBeVisible();
+  expect(window.location.hash).toBe(scopedAllHash);
 });
 
 test("Plants Gallery/List keeps group scope, search, Details history and bulk choices", async () => {
@@ -3664,6 +3725,28 @@ test("phenology is recorded stage first, shown once in the Journal and compared 
     "id",
     `journal-entry-${eventId.slice(0, -2)}81`,
   );
+});
+
+test("Journal phenology stage explains recorded-only evidence", async () => {
+  mockApi(plantHandler([plant()], []));
+  const user = await openPlants();
+  await user.click(
+    await screen.findByRole("button", {
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
+  await assertDedicatedDetails();
+  await user.click(screen.getByRole("tab", { name: "Journal" }));
+  await user.click(
+    await screen.findByRole("button", { name: "Record phenology" }),
+  );
+  const dialog = screen.getByRole("dialog");
+  expect(
+    within(dialog).getByLabelText(/Phenological stage/),
+  ).toHaveAccessibleDescription(/never infers a stage you did not record/i);
+  expect(
+    within(dialog).getByLabelText("Notes", { selector: "textarea" }),
+  ).not.toHaveAttribute("aria-describedby");
 });
 
 test("switching between New plant and New plant group via + menu updates form kind, focus, and endpoint", async () => {
