@@ -150,7 +150,7 @@ runtime files are outside the delivered implementation; no environment/workflow 
 ## Verification and visual evidence
 
 Final check totals and browser evidence are recorded in
-[the review evidence index](review/geography-visual-001/README.md). Captures use the requested
+[the review evidence index](README.md). Captures use the requested
 1440×844, 1024×844 and 390×844 viewports with Botanical Light/Dark, Herbarium Light and Mineral Dark.
 Authenticated fixture evidence is distinguished from explicitly injected empty/error/large-data
 renderer checks. Viewport resizing is not browser zoom or physical-device evidence.

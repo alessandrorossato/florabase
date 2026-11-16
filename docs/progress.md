@@ -9229,3 +9229,16 @@ Status remains implemented pending canonical verification.
 - Independent QA reviewed coverage and the fix. The
   [run record](release/evidence/fn-06.md) contains the page matrix and two first-run wording and
   navigation findings for operator disposition. Canonical verification is pending integration.
+
+## 2026-11-16 — G-DOCS offline link checks
+
+- Added an offline check for tracked and nonignored untracked Markdown, including relative targets,
+  Markdown heading fragments and reference definitions. Corrected seven stale links; three historical
+  screenshot paths are identified as external artifacts rather than repository links.
+- The checker handles inline links with one level of balanced parentheses or angle destinations,
+  full and collapsed reference links, ATX headings and same-line inline or fenced code. It does not
+  parse arbitrary HTML, shortcut references, multiline inline code or the full CommonMark grammar.
+- Checks: `python3 scripts/test-doc-links.py`, `python3 scripts/check-doc-links.py`,
+  `python3 scripts/test-verification-impact.py` (37 tests), and
+  `python3 scripts/test-feature-workflow.py` (54 tests).
+  Independent QA and release acceptance remain pending; no canonical gate has run.
