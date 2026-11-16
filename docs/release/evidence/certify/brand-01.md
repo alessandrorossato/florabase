@@ -1,0 +1,14 @@
+# BRAND-01 — certification evidence map
+
+Draft for Batch 03. Base `main` `554d74de88a278e2b9a392de9d105d3d62c35f91`. This record maps
+committed evidence to each acceptance criterion. It does not certify the entry and does not
+change its status (`implemented`); certification is a separate reviewed step.
+
+| # | Criterion (exact text from features.json) | Committed evidence | Applies to the candidate because | State |
+| --- | --- | --- | --- | --- |
+| 1 | The README shows the approved wordmark and preserves its release status and documentation | `README.md` line 3 `<img src="docs/assets/florabase-logo.png" …>`; `git show 78f331b -- README.md` adds only those two lines. No committed record identifies `docs/assets/florabase-logo.png` (sha256 `ae8854c0…94fe`) as the approved artwork | README logo lines unchanged since #186 (554d74d added two unrelated lines) | Gap: no committed record that the artwork is the approved one |
+| 2 | Today and the Workbench use the approved mark, preserving existing information hierarchy, keyboard navigation and responsive layout across light and dark themes | Code only: `frontend/src/shell/WorkbenchShell.tsx:432` (`/icons/florabase-512.png` inside the Today link), `frontend/src/collection/dashboard.css:215` (`/icons/florabase-192.png`). No test asserts the mark; no committed capture or operator acceptance record | Today and the Workbench shell are in the frozen page inventory, so G-UX covers width, keyboard, focus and themes on the candidate | Pending G-UX; Gap: approved-artwork record |
+| 3 | Favicon, standard and maskable PWA icons, Apple touch icon and the offline fallback use the approved artwork, with valid sizes and offline precache paths | `frontend/src/pwa/manifest.test.ts` "manifest includes required icons with standard and maskable purposes", "all required mobile and favicon assets exist on disk", "index.html references manifest, icons and iOS mobile meta tags"; `frontend/src/pwa/serviceWorkerPolicy.test.ts` "precaches exactly the public shell assets and activates without waiting", "refreshes icons from the network before using the cache" | Tests run in the canonical frontend suite and cover sizes and precache paths. Offline icon is static source (`frontend/public/offline.html:14`), not asserted by a test | Gap: no committed record that the files are the approved artwork |
+
+Restatements: none.
+Not counted: `docs/progress.md` "BRAND-01 — approved Florabase logo, 15 November 2026" ("Seven files match the approved archive manifest hashes", Chromium checks at 1440/1024/390, "The operator accepted the responsive light/dark layout", independent QA pass, FULL in the worktree receipt): prose, not an operator acceptance record. PR #186 body ("Local canonical verification completed"). The approved archive manifest is not in the repository.

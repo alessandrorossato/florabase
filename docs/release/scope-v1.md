@@ -228,6 +228,13 @@ scope. The strategy is:
 Entries with an active writer, Cuttings in particular, are certified by that writer's own
 handoff and are not edited from outside it.
 
+A criterion that later operator-approved work made untrue as written is certified against the
+wording in the [acceptance-criterion restatements](restatements-v1.md). Only a confirmed row
+applies. A proposed row leaves the original wording in force until a scope-change record
+confirms it. The per-entry mappings are under
+[`evidence/certify/`](evidence/certify/README.md), and the gate records use the
+[G-UX](evidence/g-ux-template.md) and [G-CORE](evidence/g-core-template.md) templates.
+
 ## Legacy version references
 
 These entries and documents were written for the beta or for a 0.1.0 release. Their text is
@@ -284,6 +291,7 @@ functional batch, with these requirements:
 | 2026-11-15 | ENG-01, RELEASE-SCOPE-001, DOC-01, DOC-03, DOC-05 | Classes for the manifest: ENG-01 is `certify`; RELEASE-SCOPE-001, DOC-01, DOC-03 and DOC-05 are `release-work`, each from when it is in `features.json`. No status changes | ENG-01 is an implemented, user-facing feature on `main` whose certification must verify its criteria and evidence, including the applicable G-CORE check | Operator |
 | 2026-11-15 | DOC-02 | Sequencing: the checker's release-candidate rule (`--release-candidate`) is delivered with the manifest in step 2; wiring it into the release rehearsal stays step 3 with REL-01. No classification changes | Operator approval, on condition that the flag is opt-in, leaves ordinary verification unchanged and is not wired into release tooling | Operator |
 | 2026-11-15 | BRAND-01 | Added to the scope with class `certify`. No status change | Delivered in #186 without a scope record; user-facing artwork that ships in 1.0 and is certified against its own criteria | Operator |
+| 2026-11-16 | UI-SYSTEM-001 | Restatement R24 of criterion 4 ([restatements](restatements-v1.md#confirmed-supersessions)): Today shows up to four distinct randomly selected Plant records, with truthful image attribution and responsive layout. The eight-photo grid is not restored. No status change; the other criteria are not waived, and selection, Plant links, image fallback and responsive presentation are still to be verified on the candidate | Consistent with the approved Today A — Operational design (2026-11-12), delivered in #177 | Operator |
 
 ## History
 

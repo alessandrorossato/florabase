@@ -1,0 +1,14 @@
+# IMPORT-001 — certification evidence map
+
+Draft for Batch 03. Base `main` `554d74de88a278e2b9a392de9d105d3d62c35f91`. This record maps
+committed evidence to each acceptance criterion. It does not certify the entry and does not
+change its status (`implemented`); certification is a separate reviewed step.
+
+| # | Criterion (exact text from features.json) | Committed evidence | Applies to the candidate because | State |
+| --- | --- | --- | --- | --- |
+| 1 | A documented initial CSV format provides downloadable examples or templates and explains columns, optionality, date precision, identifiers, and representative records | `docs/import-export.md` §CSV conventions and bounds, per-type sections, §Downloadable examples; `backend/tests/test_import_export.py` `test_csv_bounds_and_exact_templates`, `test_examples_and_guides_share_import_headers`, `test_partial_dates_and_quantity_certainty`; `backend/tests/test_import_export_api.py` `test_format_template_example_and_export_routes_are_exposed`; `backend/tests/integration/test_import_export_api.py` `test_downloadable_examples_reconcile_in_documented_order` | Tests run in the canonical backend unit and integration suites; the document describes the current templates the tests pin | Mapped |
+| 2 | Import validates before mutation and provides a preview or dry run with valid rows, invalid rows, unresolved or ambiguous references, records requiring creation, and clear row-level errors without silent guessing | `test_import_export.py` `test_preview_reports_ambiguous_unresolved_and_retired_references`, `test_header_whitespace_and_case_are_normalized_without_guessing`; integration `test_preview_auth_csrf_exact_payload_and_create`, `test_invalid_file_is_atomic_and_supplier_names_are_ambiguous`, `test_apply_rolls_back_if_service_fails_mid_batch`, `test_ambiguous_supplier_reference_requires_exact_candidate_choice`; `frontend/src/import-export/ImportExportScreen.test.tsx` "navigates, validates row issues, retries and explicitly confirms the reviewed file" | Tests run in the canonical backend and frontend suites | Mapped |
+| 3 | Supported core collection records have a simple human-oriented CSV export, with structured JSON added only where useful and explicitly distinguished from backup, restore, and full-fidelity collection transfer | `test_import_export.py` `test_export_supports_every_record_type`, `test_export_csv_is_stable_and_protects_authored_text`; integration `test_export_formula_safety_unicode_and_determinism`; `docs/import-export.md` opening section ("CSV IMPORT != BACKUP/RESTORE …"). No JSON export exists, which the criterion permits | Tests run in the canonical suites; document describes current behaviour | Mapped |
+
+Restatements: none.
+Not counted: canonical pass and independent review described only in `docs/progress.md` IMPORT-001 entries (prose); operator UAT on real collection data (reconciliation log item, not a criterion; belongs to the G-CORE import step if required).

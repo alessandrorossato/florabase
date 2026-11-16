@@ -1,3 +1,28 @@
+## 2026-11-16 — Batch 03 certification sources (documentation candidate)
+
+- Added `docs/release/restatements-v1.md`, version 1, prepared against `main` `554d74d`:
+  - 18 confirmed restatements (R01–R16, R24, R25) traced to recorded operator decisions: D1, the
+    2026-11-01 directory contract, Today A, later verified features, and the R24 decision.
+  - 7 proposed restatements (R17–R23) that stay unapproved. Their original wording remains in
+    force.
+  - 3 open gaps (U02–U04). U04 (the #147 adoption) and R21 stay unresolved; U01 resolved into
+    R24.
+  - The COLLECTION-VISUAL-002 open items (CV2-01 to CV2-08).
+- Recorded the operator's R24 decision of 2026-11-16 in the `scope-v1.md` scope-change table:
+  UI-SYSTEM-001 #4 becomes up to four Today photos. No status changes, no criterion waived.
+- Added 13 certification evidence maps under `docs/release/evidence/certify/` with an index, and
+  the G-UX and G-CORE record templates with per-feature traceability. Every cited Python test
+  name was confirmed by grep.
+- No status, release class or checker changed. No gate record exists yet; the maps and
+  restatements are not certification.
+- Checks: `scripts/check-features.py` (162 valid), `git diff --check`, and an offline relative
+  link check. No new broken link; the 10 existing ones are corrected in Batch 02.
+- Unresolved:
+  - Re-check R01 and the maps once Batch 02 (FN-05) merges.
+  - Independent review of the maps.
+  - BRAND-01 approved-artwork record.
+  - Committed QA records for WCVP-DEFAULT-001 and WGSRPD-CROSSWALK-V2.
+
 ## 2026-11-16 — Batch 01 synthetic PR identity correction
 
 - Reproduced the inherited runner branch mismatch. The synthetic docs event now declares its
