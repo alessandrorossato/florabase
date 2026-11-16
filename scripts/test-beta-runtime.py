@@ -109,10 +109,13 @@ def environment(**values: str) -> Iterator[None]:
 
 class ManifestRules(unittest.TestCase):
     def test_valid_manifest(self) -> None:
-        ctl.validate_manifest(manifest())
+        for version in ("0.1.0-beta.1", "1.0.0-rc.1", "1.0.0"):
+            with self.subTest(version=version):
+                ctl.validate_manifest(dict(manifest(), version=version))
 
     def test_rejections(self) -> None:
         cases: dict[str, Callable[[dict[str, Any]], object]] = {
+            "intermediate stable version": lambda m: m.update(version="0.1.0"),
             "dirty": lambda m: m["source"].update(dirty=True),
             "distribution": lambda m: m.update(distribution="local-candidate"),
             "tag reference": lambda m: m["images"]["backend"].update(

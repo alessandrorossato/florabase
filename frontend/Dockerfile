@@ -22,7 +22,8 @@ COPY . .
 ARG VERSION=0.1.0-beta.6
 ARG REVISION=unknown
 ARG SOURCE=https://github.com/alessandrorossato/florabase
-RUN pnpm build && node build-notices.mjs > dist/THIRD_PARTY_NOTICES.txt && node -e 'require("fs").writeFileSync("dist/release.json", JSON.stringify({version: process.env.VERSION, revision: process.env.REVISION, source: process.env.SOURCE}))'
+RUN pnpm build && node build-notices.mjs > dist/THIRD_PARTY_NOTICES.txt \
+    && node -e 'const {version} = require("./package.json"); if (version !== process.env.VERSION) throw new Error("frontend package version mismatch"); require("fs").writeFileSync("dist/release.json", JSON.stringify({version, revision: process.env.REVISION, source: process.env.SOURCE}))'
 
 FROM nginxinc/nginx-unprivileged:stable-alpine-slim@sha256:5d8bb9437d74a600ec5dbf90c035451c724dc33eac8d3a71078f6f8612c345f6 AS runtime
 COPY --from=build /app/dist /usr/share/nginx/html

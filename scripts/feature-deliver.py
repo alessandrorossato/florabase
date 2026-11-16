@@ -10,8 +10,11 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
+import feature_batch
+from workflow_environment import Repository, WorkflowError
 
 REPOSITORY = "alessandrorossato/florabase"
 REQUIRED_CHECKS = ("quality", "integration", "build")
@@ -50,6 +53,7 @@ class PullRequest:
     base_ref: str = ""
     head_repo: str = ""
     merged: bool = False
+    auto_merge_method: str | None = None
 
 
 @dataclass(frozen=True)
@@ -104,6 +108,8 @@ class Delivery:
         self.pr_head_timeout_seconds = int(
             os.environ.get("FEATURE_DELIVER_PR_HEAD_TIMEOUT_SECONDS", str(DEFAULT_PR_HEAD_TIMEOUT_SECONDS))
         )
+        self.batch: dict[str, Any] | None = None
+        self.batch_evidence: dict[str, Any] | None = None
 
     def git(self, *args: str, capture: bool = False) -> str:
         return self.commands.run("git", *args, capture=capture)
@@ -160,6 +166,7 @@ class Delivery:
             base_ref=str(base.get("ref", "")),
             head_repo=str(head_repo.get("full_name", "")),
             merged=value.get("merged") is True,
+            auto_merge_method=(value.get("auto_merge") or {}).get("merge_method"),
         )
 
     def require(self, condition: bool, message: str) -> None:
@@ -176,6 +183,13 @@ class Delivery:
         self.require(not self.git("status", "--porcelain", capture=True), "working tree is not clean")
         self.commands.run("python3", "./scripts/feature_worktree.py", "require-operator")
         self.git("rev-parse", "--verify", "HEAD^{commit}")
+        expected_head = os.environ.get("EXPECTED_HEAD")
+        if expected_head:
+            self.require(
+                bool(re.fullmatch(r"[0-9a-f]{40}", expected_head))
+                and self.git("rev-parse", "HEAD", capture=True) == expected_head,
+                "HEAD differs from the expected handoff SHA",
+            )
         origin = self.git("remote", "get-url", "origin", capture=True)
         self.require(
             self.normalize_origin(origin) == f"https://github.com/{REPOSITORY}",
@@ -219,9 +233,14 @@ class Delivery:
     def push(self, branch: str, delivery_sha: str) -> None:
         current = self.git("rev-parse", "HEAD", capture=True)
         self.require(current == delivery_sha, "HEAD changed before push; rerun feature-deliver")
-        self.git("push", "--set-upstream", "origin", branch)
+        if self.batch:
+            self.git("push", "origin", f"{delivery_sha}:refs/heads/{branch}")
+        else:
+            self.git("push", "--set-upstream", "origin", branch)
 
     def title_and_body(self, branch: str, delivery_sha: str, migration: bool) -> tuple[str, str]:
+        if self.batch:
+            return feature_batch.title_body(self.batch, delivery_sha, migration)
         subject = self.git("log", "-1", "--format=%s", delivery_sha, capture=True)
         feature = branch.rsplit("/", 1)[-1].upper()
         title = f"{feature}: {subject}" if re.fullmatch(r"[A-Z]+-\d+", feature) else subject
@@ -234,6 +253,30 @@ class Delivery:
             ]
         )
         return title, body
+
+    def require_batch_protection(self) -> None:
+        rules = self.api(f"repos/{REPOSITORY}/rules/branches/main?per_page=100")
+        for identifier in sorted(feature_batch.strict_protection(rules)):
+            feature_batch.validate_ruleset(
+                identifier, self.api(f"repos/{REPOSITORY}/rulesets/{identifier}")
+            )
+
+    def correction_pr(self, number: int, branch: str, head: str, migration: bool) -> PullRequest:
+        assert self.batch is not None
+        prior = self.batch["correction"]["supersedes"]
+        current = self.api(f"repos/{REPOSITORY}/pulls/{number}")
+        if not isinstance(current, dict):
+            fail("cannot read the existing batch PR", blocked=True)
+        pr = self.pr_from(current)
+        self.validate_pr_target(pr, branch)
+        title, body = self.title_and_body(
+            branch, self.batch["correction"].get("provenance_head", prior), migration
+        )
+        if (pr.number != number or pr.head_sha not in (prior, head)
+                or pr.auto_merge_method not in (None, "squash")
+                or current.get("title") != title or current.get("body") != body):
+            fail("existing PR does not match the batch correction and original provenance", blocked=True)
+        return pr
 
     def validate_pr_target(self, pr: PullRequest, branch: str, delivery_sha: str | None = None) -> None:
         if pr.head_ref != branch or pr.base_ref != "main" or pr.head_repo != REPOSITORY:
@@ -272,6 +315,9 @@ class Delivery:
                 )
             self.sleep(self.pr_head_poll_seconds)
             current = self.current_pr(pr.number)
+            if self.batch and "correction" in self.batch and current.merged:
+                self.validate_pr_target(current, branch, delivery_sha)
+                return current
             self.validate_open_pr_target(current, branch)
             if current.head_sha == delivery_sha:
                 return current
@@ -302,6 +348,13 @@ class Delivery:
         if matching:
             pr = matching[0]
             self.validate_open_pr_target(pr, branch)
+            if self.batch:
+                title, body = self.title_and_body(branch, delivery_sha, migration)
+                if matching[0].head_sha != delivery_sha:
+                    fail("existing batch PR does not point to the exact reviewed head", blocked=True)
+                existing = next(value for value in pulls if value.get("number") == pr.number)
+                if existing.get("title") != title or existing.get("body") != body:
+                    fail("existing batch PR title or provenance body differs", blocked=True)
             return pr
         title, body = self.title_and_body(branch, delivery_sha, migration)
         created = self.api(
@@ -474,6 +527,11 @@ class Delivery:
         self.git("fetch", "origin", "main")
         self.git("merge-base", "--is-ancestor", pr.merge_sha, "origin/main")
         self.confirm_deleted_branch(branch)
+        if self.batch:
+            assert self.batch_evidence is not None
+            feature_batch.record_delivery(
+                Repository(Path.cwd()), pr.number, branch, delivery_sha, pr.merge_sha, self.batch_evidence
+            )
         print("DELIVERY_COMPLETE")
         print(f"PR: #{pr.number}")
         print(f"Feature SHA: {delivery_sha}")
@@ -487,10 +545,31 @@ class Delivery:
 
     def execute(self) -> None:
         preflight = self.preflight()
+        if feature_batch.BATCH.fullmatch(preflight.branch):
+            repo = Repository(Path.cwd())
+            self.batch = feature_batch.load_manifest(repo, preflight.branch, preflight.delivery_sha)
+            self.batch_evidence = feature_batch.finalized_receipt(
+                repo, preflight.branch, preflight.delivery_sha, self.batch["base"]
+            )
         migration = self.migration_detected(preflight.base_sha, preflight.delivery_sha)
         main_is_ancestor = self.is_ancestor("origin/main", preflight.delivery_sha)
 
-        completed = self.completed_pr_for_delivery(preflight.branch, preflight.delivery_sha)
+        correction_number = os.environ.get("EXPECTED_PR", "")
+        existing = None
+        if self.batch and "correction" in self.batch:
+            self.require(bool(re.fullmatch(r"[1-9][0-9]*", correction_number)),
+                         "a batch correction requires EXPECTED_PR for its existing PR")
+            existing = self.correction_pr(
+                int(correction_number), preflight.branch, preflight.delivery_sha, migration
+            )
+            completed = existing if existing.merged else None
+            if completed:
+                self.validate_pr_target(completed, preflight.branch, preflight.delivery_sha)
+            else:
+                self.validate_open_pr_target(existing, preflight.branch)
+        else:
+            self.require(not correction_number, "EXPECTED_PR is only supported for a batch correction")
+            completed = self.completed_pr_for_delivery(preflight.branch, preflight.delivery_sha)
         if completed:
             self.wait_for_checks(completed, preflight.branch, preflight.delivery_sha)
             self.complete_delivery(
@@ -507,10 +586,41 @@ class Delivery:
                 blocked=True,
             )
 
+        if self.batch:
+            self.require(
+                self.git("rev-parse", "origin/main", capture=True) == self.batch["base"],
+                "main has changed since the batch was verified",
+            )
+            for item in feature_batch.sources_from(self.batch):
+                frozen = {key: value for key, value in item.items() if key not in {"merge", "resolutions"}}
+                if frozen != feature_batch.snapshot(repo, self.batch["base"], item):
+                    fail(f"source identity changed: {item['branch']}", blocked=True)
+            self.require_batch_protection()
+            self.title_and_body(preflight.branch, preflight.delivery_sha, migration)
         self.push(preflight.branch, preflight.delivery_sha)
-        pr = self.find_or_create_pr(preflight.branch, preflight.delivery_sha, migration)
+        pr = existing or self.find_or_create_pr(preflight.branch, preflight.delivery_sha, migration)
         pr = self.wait_for_pr_head(pr, preflight.branch, preflight.delivery_sha)
-        self.enable_auto_merge(pr, preflight.delivery_sha)
+        if existing:
+            pr = self.correction_pr(pr.number, preflight.branch, preflight.delivery_sha, migration)
+            self.validate_pr_target(pr, preflight.branch, preflight.delivery_sha)
+            if not pr.merged:
+                self.validate_open_pr_target(pr, preflight.branch)
+        if self.batch:
+            if not pr.merged:
+                self.git("fetch", "origin", "main")
+                self.require(
+                    self.git("rev-parse", "origin/main", capture=True) == self.batch["base"],
+                    "main has changed since the batch was verified",
+                )
+                self.require_batch_protection()
+            if not existing:
+                current = self.api(f"repos/{REPOSITORY}/pulls/{pr.number}")
+                title, body = self.title_and_body(preflight.branch, preflight.delivery_sha, migration)
+                if not isinstance(current, dict) or current.get("title") != title or current.get("body") != body:
+                    fail("batch PR title or provenance body changed", blocked=True)
+                self.validate_pr_target(self.pr_from(current), preflight.branch, preflight.delivery_sha)
+        if not existing or (not pr.merged and not pr.auto_merge_method):
+            self.enable_auto_merge(pr, preflight.delivery_sha)
         self.wait_for_checks(pr, preflight.branch, preflight.delivery_sha)
         merged = self.wait_for_merge(pr, preflight.branch, preflight.delivery_sha)
         self.complete_delivery(
@@ -524,7 +634,7 @@ class Delivery:
 def main() -> None:
     try:
         Delivery(Commands()).execute()
-    except DeliveryError as error:
+    except (DeliveryError, WorkflowError, OSError, KeyError, TypeError, ValueError) as error:
         print(f"feature-deliver: {error}", file=sys.stderr)
         raise SystemExit(1)
 

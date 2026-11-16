@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build paired beta candidates and validate immutable release evidence (no deployment)."""
+"""Build paired release candidates and validate immutable release evidence (no deployment)."""
 
 from __future__ import annotations
 
@@ -12,8 +12,10 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
+import tomllib
 import urllib.request
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -25,6 +27,7 @@ from workflow_resources import Disposable, Owner
 
 DIGEST = re.compile(r"sha256:[a-f0-9]{64}")
 SHA = re.compile(r"[a-f0-9]{40}")
+RELEASE_VERSION = re.compile(r"0\.1\.0-beta\.[1-9][0-9]*|1\.0\.0(?:-rc\.[1-9][0-9]*)?")
 SOURCE = "https://github.com/alessandrorossato/florabase"
 POSTGRES_REPOSITORY = "ghcr.io/alessandrorossato/florabase-postgres"
 UPSTREAM_POSTGRES = "docker.io/library/postgres"
@@ -47,6 +50,17 @@ def read(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"expected an object: {path}")
     return value
+
+
+def require_release_scope(root: Path, version: str) -> None:
+    """Require the DOC-02 checker for every protected v1 release."""
+    if not version.startswith("1.0.0"):
+        return
+    checker = [sys.executable, str(root / "scripts/check-features.py")]
+    help_text = subprocess.check_output([*checker, "--help"], cwd=root, text=True)
+    if "--release-candidate" not in help_text:
+        raise ValueError("v1 release requires the DOC-02 checker with --release-candidate support")
+    subprocess.run([*checker, "--release-candidate"], cwd=root, check=True)
 
 
 def _structured_evidence(deployment: dict[str, Any]) -> bool:
@@ -88,16 +102,25 @@ def check_platform(policy: dict[str, Any]) -> None:
 def inputs(root: Path, publication: bool = False) -> dict[str, Any]:
     value = read(root / "release/inputs.json")
     version = value["version"]
-    if not re.fullmatch(r"0\.1\.0-beta\.[1-9][0-9]*", version):
-        raise ValueError("invalid beta version")
+    if not isinstance(version, str) or not RELEASE_VERSION.fullmatch(version):
+        raise ValueError("invalid release version")
     if value["platforms"] != ["linux/amd64"]:
         raise ValueError("only the native amd64 candidate is supported by this workflow")
     if read(root / "frontend/package.json")["version"] != version:
         raise ValueError("frontend version mismatch")
-    if f'__version__ = "{version}"' not in (root / "backend/src/florabase/__init__.py").read_text():
+    if re.findall(
+        r'^__version__ = "([^"]+)"$', (root / "backend/src/florabase/__init__.py").read_text(), re.M
+    ) != [version]:
         raise ValueError("API version mismatch")
-    if f'version = "{version}"' not in (root / "backend/pyproject.toml").read_text():
+    if (
+        tomllib.loads((root / "backend/pyproject.toml").read_text())["project"]["version"]
+        != version
+    ):
         raise ValueError("backend package version mismatch")
+    for area, stages in (("backend", 1), ("frontend", 2)):
+        defaults = re.findall(r"^ARG VERSION=(.*)$", (root / area / "Dockerfile").read_text(), re.M)
+        if defaults != [version] * stages:
+            raise ValueError(f"{area} Dockerfile version mismatch")
     for area in ("backend", "frontend", "postgres"):
         if (root / area / "LICENSE").read_bytes() != (root / "LICENSE").read_bytes():
             raise ValueError("image license must match repository license")
@@ -628,7 +651,7 @@ def validate_manifest(
     if (
         value["schema_version"] != 2
         or value["platforms"] != ["linux/amd64"]
-        or not re.fullmatch(r"0\.1\.0-beta\.[1-9][0-9]*", value["version"])
+        or not RELEASE_VERSION.fullmatch(value["version"])
         or not SHA.fullmatch(value["source"]["revision"])
         or value["source"]["url"] != SOURCE
         or not re.fullmatch(r"[A-Za-z0-9_]+", value["alembic_head"])
@@ -998,7 +1021,8 @@ def require_remote_release_tag(repo: str, tag: str, sha: str) -> None:
     """Resolve the live protected tag. Release target_commitish is unused for existing tags."""
     if (
         repo != SOURCE.removeprefix("https://github.com/")
-        or not re.fullmatch(r"v0\.1\.0-beta\.[1-9][0-9]*", tag)
+        or not tag.startswith("v")
+        or not RELEASE_VERSION.fullmatch(tag[1:])
         or not SHA.fullmatch(sha)
     ):
         raise ValueError("invalid protected release tag identity")
@@ -1096,6 +1120,8 @@ def release_asset_inventory(output: Path) -> dict[str, tuple[int, str]]:
 
 def render_portable_compose(root: Path, version: str, refs: dict[str, str]) -> str:
     """Render the same immutable stack for rehearsal and protected publication."""
+    if not RELEASE_VERSION.fullmatch(version):
+        raise ValueError("invalid portable Compose release version")
     if set(refs) != {"backend", "frontend", "postgresql"} or not all(
         re.fullmatch(r"[a-z0-9.:/-]+@sha256:[a-f0-9]{64}", ref) for ref in refs.values()
     ):
@@ -1140,8 +1166,9 @@ def prepare_release_assets(
     )
     for name in INSTALL_BUNDLE:
         shutil.copyfile(root / "deploy/beta" / name, output / name)
+    channel = "prerelease" if "-" in version else "stable release"
     (output / "RELEASE.md").write_text(
-        f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair and PostgreSQL passed native amd64 registry-pull smoke and the pinned Trivy gate (HIGH/CRITICAL vulnerabilities and secrets); that gate is a single scanner, and findings it does not report are recorded in docs/security/beta-distribution-001/postgresql-image.md at this source revision. PostgreSQL is the Florabase-built {pg['version']} image ({pg['reference']}): derived from the official {pg['upstream']['reference']} with pinned Alpine package updates. The gosu executable remains in an upstream layer and is absent from the container filesystem. A PostgreSQL digest change requires separate database maintenance. Install with the attested {PORTABLE_COMPOSE} as described in docs/portable-installation.md at this source revision. The advanced controller bundle remains available as described in docs/installation.md. This is a prerelease: no stable or latest tag is published. Never overwrite this release or delete its image identities.\n"
+        f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair and PostgreSQL passed native amd64 registry-pull smoke and the pinned Trivy gate (HIGH/CRITICAL vulnerabilities and secrets); that gate is a single scanner, and findings it does not report are recorded in docs/security/beta-distribution-001/postgresql-image.md at this source revision. PostgreSQL is the Florabase-built {pg['version']} image ({pg['reference']}): derived from the official {pg['upstream']['reference']} with pinned Alpine package updates. The gosu executable remains in an upstream layer and is absent from the container filesystem. A PostgreSQL digest change requires separate database maintenance. Install with the attested {PORTABLE_COMPOSE} as described in docs/portable-installation.md at this source revision. The advanced controller bundle remains available as described in docs/installation.md. This is a {channel}. Application images use the exact version tag. Never overwrite this release or delete its image identities.\n"
     )
     return release_asset_inventory(output)
 
@@ -1208,7 +1235,7 @@ def release_finalization_inputs(
     version = manifest.get("version")
     if (
         not isinstance(version, str)
-        or not re.fullmatch(r"0\.1\.0-beta\.[1-9][0-9]*", version)
+        or not RELEASE_VERSION.fullmatch(version)
         or manifest.get("source", {}).get("revision") != source_sha
         or not SHA.fullmatch(source_sha)
         or manifest.get("source", {}).get("dirty") is not False
@@ -1233,7 +1260,7 @@ def release_finalization_inputs(
         "target_commitish": source_sha,
         "title": "Florabase v" + version,
         "draft": True,
-        "prerelease": True,
+        "prerelease": "-" in version,
         "verify_tag": True,
         "release_notes_sha256": assets["RELEASE.md"][1],
         "assets": {

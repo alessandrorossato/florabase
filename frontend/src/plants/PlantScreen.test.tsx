@@ -501,6 +501,10 @@ test("Plants navigation exposes loading, empty, missing-identity, and failure st
   expect(
     screen.getByText(/Botanical identity is required/),
   ).toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Open Botanical identities" }),
+  ).toHaveAttribute("href", "#/identities");
+  expect(screen.queryByText(/Use New plant or group/)).not.toBeInTheDocument();
 
   cleanup();
   vi.restoreAllMocks();
@@ -599,6 +603,8 @@ test("one New disclosure chooses type and supports BotanicalIdentity-only Plant 
     name: "New plant or group",
   });
   expect(trigger).toHaveAttribute("aria-expanded", "false");
+  expect(trigger).toBeEnabled();
+  expect(screen.getByText(/Use New plant or group/)).toBeVisible();
   await user.click(trigger);
   expect(
     screen.queryByRole("button", { name: "New plant or group" }),

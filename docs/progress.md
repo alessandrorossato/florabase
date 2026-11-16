@@ -1,3 +1,117 @@
+## 2026-11-16 — Batch 01 synthetic PR identity correction
+
+- Reproduced the inherited runner branch mismatch. The synthetic docs event now declares its
+  own branch in both the event and the environment, with explicit mismatch coverage.
+- A second fast-forward correction preserves the first published provenance head of PR #191.
+
+## 2026-11-16 — Batch 01 Quality correction for PR #191
+
+- Reproduced the nested local receipt test failure under `GITHUB_ACTIONS=true`. The disposable
+  fixture now drops the outer runner flag. Tests exercise the successful local path and the
+  real gate's refusal to reuse or record evidence under the remote flag.
+- The correction extends the verified batch by fast-forward. The manifest retains its source
+  provenance and records the correction. Operator delivery pins the existing PR number.
+- Focused verification uses `GITHUB_ACTIONS=true make test-feature-workflow`. The corrected
+  integration commit requires independent QA and a fresh FULL receipt.
+
+## 2026-11-16 — WF-04 Batch 01 prepared
+
+- Added batch planning, exact source merges, pinned-tree protected delivery and batch-aware
+  finish and retirement proof. Independent bootstrap QA passed all seven focused regressions.
+  The real batch smoke and the resource isolation smoke passed on disposable fixtures.
+- Integrated REL-01, DOC-05, WF-03 and FN-06 from the four frozen tips. Resolved the progress
+  conflicts additively and reconciled versioning and release evidence. The operator accepted
+  the two FN-06 observations with follow-up dispositions recorded in its evidence.
+- DOC-05 retains its release-work status and needs the v1 changelog entry at release cut. The
+  release-candidate checker continues to enforce all open scope blockers. See the
+  [WF-04 evidence](release/evidence/wf-04-batch-01.md) for the bootstrap and its checks.
+
+## 2026-11-16 — REL-01: connect DOC-02 release-candidate validation
+
+- Reconciled `feat/rel-01` with `origin/main` at `02519b99098305786f03ba5fba4af8eeb4bdead7`
+  after DOC-02 Step 2 (#190), preserving the prior REL-01 commit and RC rehearsal evidence.
+- The existing hosted rehearsal calls `scripts/check-features.py --release-candidate` for
+  v1.0.0 RC and stable versions. The existing protected publication preflight does the same,
+  including its identity-only run. Beta retains its established checker path. Unsupported or
+  absent checker flags fail closed before remote image reads or release actions.
+- Updated the REL-01 runbook to reflect the shipped DOC-02 checker contract. At this baseline the
+  candidate check correctly blocks on eight open certify/release-work entries. The non-hosted
+  local image rehearsal remains available while certification is open.
+- Focused checks: `make test-beta-images` (60 release tests and 4 lock tests),
+  `python3 scripts/test-beta-runtime.py -q` (63 controller tests),
+  ordinary feature graph check passed, release-candidate check reported the eight documented
+  blockers, and `git diff --check`.
+- Independent delta QA found no defects. The fresh canonical FULL gate passed all 17 stages with
+  no reused evidence; its final receipt and commit SHA are recorded at delivery. The test gate
+  built local verification images and ran disposable PostgreSQL integration resources. No
+  production image, tag, or release was published during this reconciliation.
+
+## 2026-11-15 — DOC-05: changelog, versioning policy and security reporting drafted
+
+- On `docs/doc-05-changelog-versioning-security` from `8557669`, writer `claude-doc-05`.
+- `CHANGELOG.md` (new): Unreleased since `v0.1.0-beta.5`, and one entry per tag beta.1 to beta.5
+  as the operator decided. Only beta.5 has a published GitHub Release (`gh release list`); the
+  entries for beta.1 to beta.4 say they are tagged without one.
+- `docs/versioning.md` (new): the release line beta, `1.0.0-rc.N`, `1.0.0`; the three 1.x
+  contracts and the explicit non-promises, taken from `release/scope-v1.md`; the latest stable
+  1.x as the supported version once it exists.
+- `SECURITY.md`: supported versions, and GitHub Private Vulnerability Reporting as the intended
+  private channel with what to do while it is not active. `README.md` links the two new pages.
+- DOC-05 is registered as `in_progress`: GitHub reports private vulnerability reporting as
+  disabled for the repository, so criterion 3 is not met until the operator enables it, and the
+  release entry of the changelog is written when the release is cut.
+- Checks: `scripts/check-features.py`, relative links and anchors, `git diff --check`,
+  `make verification-plan` (FULL: root `CHANGELOG.md` and `SECURITY.md` are unclassified paths).
+- Independent QA failed the first draft on two statements in `versioning.md` (tooling
+  enforcement claimed beyond the beta series; a non-promise for release candidates that the
+  scope does not state); both were corrected with five smaller findings and the delta review
+  passed.
+- Reconciled with `main` at `78f331b`: Unreleased gained the identity-merge fix (#185) and the
+  new artwork (#186); these two lines await delta QA with the final reconciliation after REL-01.
+- Reconciled with `main` at `02519b9`: DOC-05 is in the release-scope manifest as
+  `release-work`, the class the operator approved. GitHub now reports private vulnerability
+  reporting as enabled for the repository (`gh api .../private-vulnerability-reporting`,
+  2026-11-16). WF-02 (#187) and DOC-02 (#190) change development tooling only and have no
+  changelog line.
+- Unresolved: the canonical FULL gate; version terminology to be confirmed against REL-01's
+  tooling.
+
+## 2026-11-16 — WF-03: Directory-based test ownership and pre-gate inventory check
+
+- Added directory-based test ownership (`backend_dirs`, `integration_dirs`, `frontend_dirs`) plus
+  `product_tests` and `full_tests` in [`scripts/verification-impact.json`](../scripts/verification-impact.json)
+  (and registered all previously unmapped backend unit, PostgreSQL integration, and frontend tests,
+  while adding `frontend/src/geography/` to `geography` and shared UI directories `shell/`,
+  `timeline/`, `settings/`, `ui-lab/`, `ui-pages/`, and `focusModality.ts` to `product_prefixes`,
+  removing redundant per-file test `"path"` rules and owned-directory `"frontend"` file lists).
+- Updated [`scripts/verification_impact.py`](../scripts/verification_impact.py) (`load_map`,
+  `discover_tests_in_dir`, `discover_repo_tests`, `test_scopes_for`, `validate_test_inventory`,
+  `plan_paths`, `main`) and [`scripts/verification_gate.py`](../scripts/verification_gate.py):
+  - `load_map()` validates disjoint non-root `*_dirs` per layer, safe relative paths, and layer-matched
+    explicit suites.
+  - `plan_paths()` runs `validate_test_inventory()` before planning or gating (so `make verification-plan`,
+    `make feature-verify`, and `scripts/ci-verify.py` fail closed and name unowned tests before
+    starting Docker, including on docs-only diffs).
+  - `discover_tests_in_dir()` selects new tests placed in owned directories automatically without
+    editing `scripts/verification-impact.json`, skips only top-level `frontend/{dist,coverage,.pnpm-store}`
+    (so nested `frontend/src/coverage/` or `frontend/src/dist/` cannot escape), and rejects symlinked
+    test directories fail-closed.
+  - `plan_paths()` rejects deletions of any explicitly mapped test (`full_tests`, `product_tests`, or
+    `scope[layer]`) even in `product` or `full` mode.
+- Updated [`scripts/disposable_workflow.py`](../scripts/disposable_workflow.py) (`safe_suites`) so
+  directory-owned integration test paths under `backend/tests/integration/` (and `*_test.py`) are
+  accepted alongside flat `test_*.py` suites, and updated `EvidenceFixture` in
+  `scripts/test-stage-evidence.py`, `scripts/test-workflow-resources.py`, and
+  [`docs/development-workflow.md`](development-workflow.md).
+- Expanded `scripts/test-verification-impact.py` (`TestOwnershipInventoryTests` and
+  `test_test_ownership_inventory_cannot_silently_drift`) covering owned directory discovery,
+  unowned test refusal before Docker, symlinked files/directories, nested `coverage`/`dist`, moved
+  and deleted suites, and overlapping/invalid map rules. Independent QA (`research` subagent)
+  reported one P2 (symlinked test directories) and two P3s (nested `coverage`/`dist`; deleted
+  explicit scope suites in `product`/`full` mode), all fixed and verified with `QA_PASS`.
+- Unresolved: deferred final reconciliation with `origin/main` (after `REL-01` and `DOC-05`) and
+  canonical `make feature-verify` (FULL) on the frozen integration candidate.
+
 ## 2026-11-15 — DOC-02 step 2: release-scope manifest and checker rules
 
 - Added [`docs/release/scope-v1.json`](release/scope-v1.json), the v1.0.0 release-scope manifest:
@@ -9036,3 +9150,16 @@ Status remains implemented pending canonical verification.
   scanner now preserves Git's LF patch record boundaries when scanning binary content, with a
   regression test for control bytes in a staged asset. The 63-test host beta runtime suite passed.
   Policy selected FULL for canonical verification. The worktree receipt records its outcome.
+
+### FN-06 — empty-database first run, 16 November 2026
+
+- Verified owner sign-in, all v1 inventory destinations and subdestinations plus Account, and the
+  first Botanical Identity, Seed Lot and Plant in an owner-only PostgreSQL Review smoke project
+  migrated through `20261110_0047`. Chromium checked 1440, 1024 and 390px; first records were
+  created at 390px and read back from the API.
+- Plants and Plant groups now link to Botanical identities when creation requires a first identity.
+  Baseline Vitest passed 279 tests, the candidate Plants run passed 78, and scoped Prettier, ESLint,
+  frontend typecheck, feature graph and whitespace checks passed.
+- Independent QA reviewed coverage and the fix. The
+  [run record](release/evidence/fn-06.md) contains the page matrix and two first-run wording and
+  navigation findings for operator disposition. Canonical verification is pending integration.

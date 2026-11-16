@@ -26,20 +26,38 @@ def ci_plan() -> dict[str, Any]:
     if not re.fullmatch(r"[0-9a-f]{40}", sha) or actual[0] != sha:
         raise ValueError("checkout must match the exact platform GITHUB_SHA; refusing verification")
     # Only the platform's exact two-parent PR merge can select less than full.
+    batch_name = r"ci/(?:wf-04-)?batch-[a-z0-9][a-z0-9._-]*"
+    event_head = os.environ.get("GITHUB_HEAD_REF", "")
+    batch_branch = event_head if re.fullmatch(batch_name, event_head) else ""
     try:
         if os.environ.get("GITHUB_EVENT_NAME") != "pull_request":
             raise ValueError("main or unsupported event")
         event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
         base = event["pull_request"]["base"]["sha"]
         head = event["pull_request"]["head"]["sha"]
+        branch = event["pull_request"]["head"].get("ref", "")
+        if isinstance(branch, str) and re.fullmatch(batch_name, branch):
+            if event_head and branch != event_head:
+                batch_branch = branch
+                raise ValueError("batch branch differs from platform GITHUB_HEAD_REF")
+            batch_branch = branch
+        if batch_branch and branch != batch_branch:
+            raise ValueError("batch branch missing from GitHub event")
         if not all(isinstance(v, str) and re.fullmatch(r"[0-9a-f]{40}", v) for v in (base, head)):
             raise ValueError("invalid event revisions")
         if actual != [sha, base, head]:
             raise ValueError("checkout does not match event merge/base/head")
     except (KeyError, TypeError, ValueError, OSError, subprocess.CalledProcessError) as error:
+        if batch_branch:
+            raise ValueError("cannot prove exact batch PR parents") from error
         print(f"Remote impact: FULL fallback ({error})", flush=True)
         # No selection is possible here; avoid hashing the entire tree just to run everything.
         return plan_paths([], sha, force_full=True)
+    if batch_branch:
+        from feature_batch import validate_platform_tree
+        from workflow_environment import Repository
+
+        validate_platform_tree(Repository(Path.cwd()), batch_branch, base, head, sha)
     return make_plan(base)
 
 

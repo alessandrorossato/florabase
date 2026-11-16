@@ -16,6 +16,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import feature_batch
+from workflow_environment import Repository, WorkflowError
 
 # Fixtures exercise operator-only delivery even when an agent runs the enclosing canonical gate.
 os.environ.pop("AGENT_ID", None)
@@ -27,6 +29,70 @@ assert SPEC and SPEC.loader
 feature_deliver = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = feature_deliver
 SPEC.loader.exec_module(feature_deliver)
+
+
+class BatchDeliveryTests(unittest.TestCase):
+    def test_correction_reuses_exact_existing_pr_and_original_provenance(self) -> None:
+        original, prior, corrected = "1" * 40, "2" * 40, "3" * 40
+        branch = "ci/batch-fixture"
+        delivery = feature_deliver.Delivery(feature_deliver.Commands())
+        delivery.batch = {
+            "branch": branch, "base": "a" * 40, "bootstrap_commits": [],
+            "sources": [{"id": "FN-01", "branch": "feat/first", "tip": prior, "commits": [prior]}],
+            "correction": {"supersedes": prior, "provenance_head": original},
+        }
+        title, body = delivery.title_and_body(branch, original, False)
+        value = {
+            "number": 191, "node_id": "node", "state": "open", "title": title, "body": body,
+            "auto_merge": {"merge_method": "squash"},
+            "base": {"ref": "main"},
+            "head": {"ref": branch, "sha": prior, "repo": {"full_name": feature_batch.REPOSITORY}},
+        }
+        with patch.object(delivery, "api", return_value=value) as api:
+            pr = delivery.correction_pr(191, branch, corrected, False)
+            api.assert_called_once_with(f"repos/{feature_batch.REPOSITORY}/pulls/191")
+            self.assertEqual((pr.head_sha, pr.auto_merge_method), (prior, "squash"))
+        for invalid in ({**value, "body": "edited"}, {**value, "number": 192},
+                        {**value, "auto_merge": {"merge_method": "merge"}}):
+            with patch.object(delivery, "api", return_value=invalid):
+                with self.assertRaises(feature_deliver.DeliveryError):
+                    delivery.correction_pr(191, branch, corrected, False)
+
+    def test_title_and_body_enumerate_the_exact_sources_and_bootstrap(self) -> None:
+        first, second, third = "1" * 40, "2" * 40, "3" * 40
+        plan = {
+            "branch": "ci/batch-fixture", "base": "a" * 40, "bootstrap_commits": [first],
+            "sources": [
+                {"id": "FN-01", "branch": "feat/first", "tip": second, "commits": [second]},
+                {"id": "FN-02", "branch": "feat/second", "tip": third, "commits": [third]},
+            ],
+        }
+        title, body = feature_batch.title_body(plan, "b" * 40, False)
+        for feature, sha in [("WF-04", first), ("FN-01", second), ("FN-02", third)]:
+            self.assertIn(f"{feature} {sha[:12]}", title)
+            self.assertIn(feature, body)
+            self.assertIn(sha, body)
+
+    def test_delivery_requires_strict_github_actions_checks_and_protected_squash(self) -> None:
+        rules = [
+            {"ruleset_id": 1, "type": "pull_request", "parameters": {"allowed_merge_methods": ["squash"]}},
+            {"type": "required_status_checks", "parameters": {
+                "strict_required_status_checks_policy": True,
+                "required_status_checks": [
+                    {"context": name, "integration_id": 15368} for name in sorted(feature_batch.CHECKS)
+                ],
+            }, "ruleset_id": 1},
+        ]
+        feature_batch.strict_protection(rules)
+        with self.assertRaisesRegex(WorkflowError, "protected squash"):
+            feature_batch.strict_protection(rules[1:])
+        rules[1]["parameters"]["strict_required_status_checks_policy"] = False
+        with self.assertRaisesRegex(WorkflowError, "up-to-date"):
+            feature_batch.strict_protection(rules)
+        protected = {"id": 1, "target": "branch", "enforcement": "active", "bypass_actors": []}
+        feature_batch.validate_ruleset(1, protected)
+        with self.assertRaisesRegex(WorkflowError, "bypass"):
+            feature_batch.validate_ruleset(1, {**protected, "bypass_actors": [{"actor_id": 1}]})
 
 
 class VerifyHelperTests(unittest.TestCase):
@@ -102,7 +168,7 @@ class VerifyHelperTests(unittest.TestCase):
             "check-features.py",
             "verify-migration-cycle.sh",
             "verification_impact.py", "verification_gate.py", "verification-impact.json",
-            "disposable_workflow.py", "workflow_resources.py",
+            "disposable_workflow.py", "workflow_resources.py", "stage_evidence.py",
             "workflow_environment.py", "feature_worktree.py",
         ):
             shutil.copy2(ROOT / "scripts" / name, scripts / name)
@@ -149,7 +215,7 @@ class VerifyHelperTests(unittest.TestCase):
             **environment,
         }
         # Fixture gates choose their own writer and execution mode, independently of the caller.
-        for name in ("AGENT_ID", "REUSE", "FRESH"):
+        for name in ("AGENT_ID", "REUSE", "FRESH", "GITHUB_ACTIONS"):
             if name not in environment:
                 env.pop(name, None)
         return subprocess.run(
@@ -173,6 +239,79 @@ class VerifyHelperTests(unittest.TestCase):
 
     def receipt(self) -> dict:
         return json.loads((self.work / ".git/info/florabase-feature-verification.json").read_text())
+
+    def test_batch_exact_review_then_fresh_canonical_receipt(self) -> None:
+        self.establish_helper_baseline()
+        branch = "ci/batch-fixture"
+        repo = Repository(self.work)
+        repo.git("switch", "-c", branch)
+        (self.work / "frontend/pnpm-lock.yaml").write_text("lockfileVersion: '9.0'\n# batch\n")
+        repo.git("add", ".")
+        repo.git("commit", "-m", "freeze fixture")
+        head = repo.git("rev-parse", "HEAD")
+        base = repo.git("rev-parse", "origin/main")
+        args = (repo, branch, head, base)
+        with self.assertRaises(FileNotFoundError):
+            feature_batch.finalized_receipt(*args)
+        review = {
+            "head": head, "base": base, "tree": feature_batch.tree(repo, head),
+            "reviewer": "independent", "result": "pass", "evidence": "fixture review",
+            "recorded_at": "2000-01-01T00:00:00+00:00",
+        }
+        review_path = repo.metadata / feature_batch.REVIEW
+        feature_batch.write_json(review_path, review)
+        with patch.dict(os.environ, {"GITHUB_ACTIONS": "true"}):
+            result = self.verify(full=True, FRESH="1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(feature_batch.finalized_receipt(*args)["receipt"]["head"], head)
+
+        for mode in ("reuse", "fresh"):
+            execution = self.root / f"remote-{mode}.json"
+            remote = subprocess.run(
+                [sys.executable, "scripts/verification_gate.py", "--base", base,
+                 "--execution", str(execution), "--evidence", mode],
+                cwd=self.work, env={**os.environ, "GITHUB_ACTIONS": "true"},
+                capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(remote.returncode, 2, remote.stderr)
+            self.assertIn("remote CI never reads or writes local stage evidence", remote.stderr)
+            self.assertFalse(execution.exists())
+
+        receipt_file = repo.metadata / feature_batch.RECEIPT
+        original_receipt = self.receipt()
+        feature_batch.write_json(receipt_file, {
+            **original_receipt, "stage_evidence": {"mode": "reuse", "reused": ["quality"]},
+        })
+        with self.assertRaisesRegex(WorkflowError, "fresh v3 FULL"):
+            feature_batch.finalized_receipt(*args)
+        feature_batch.write_json(receipt_file, {**original_receipt, "head": base})
+        with self.assertRaisesRegex(WorkflowError, "fresh v3 FULL"):
+            feature_batch.finalized_receipt(*args)
+        feature_batch.write_json(receipt_file, original_receipt)
+        feature_batch.write_json(review_path, {**review, "head": base})
+        with self.assertRaisesRegex(WorkflowError, "independent approval"):
+            feature_batch.finalized_receipt(*args)
+        feature_batch.write_json(review_path, {**review, "recorded_at": "9999-01-01T00:00:00+00:00"})
+        with self.assertRaisesRegex(WorkflowError, "must follow"):
+            feature_batch.finalized_receipt(*args)
+
+    def test_batch_ci_refuses_missing_event_instead_of_falling_back(self) -> None:
+        head = Repository(self.work).git("rev-parse", "HEAD")
+        result = subprocess.run(
+            [sys.executable, str(ROOT / "scripts/ci-verify.py"), "quality"],
+            env={
+                **os.environ, "GITHUB_SHA": head, "GITHUB_EVENT_NAME": "pull_request",
+                "GITHUB_HEAD_REF": "ci/batch-fixture",
+                "GITHUB_EVENT_PATH": str(self.root / "missing.json"),
+            },
+            cwd=self.work,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("cannot prove exact batch PR parents", result.stderr)
+        self.assertNotIn("FULL fallback", result.stdout)
 
     def test_dependency_only_full_executes_exhaustive_stages_without_revision_diff(self) -> None:
         self.establish_helper_baseline()

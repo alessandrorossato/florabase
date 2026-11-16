@@ -233,7 +233,7 @@ class EvidenceFixture(FEATURE.VerifyHelperTests):
         )
         files = {
             "backend/src/app.py": "VALUE = 1\n",
-            "backend/tests/test_app.py": "def test_value():\n    assert True\n",
+            "backend/tests/taxonomy/test_app.py": "def test_value():\n    assert True\n",
             "backend/openapi.json": '{"openapi": "3.1.0"}\n',
             "backend/Dockerfile": (
                 "# syntax=docker/dockerfile:1.7@sha256:aaaa\n"
@@ -712,7 +712,9 @@ class InvalidationTests(EvidenceFixture):
             ("python source", self.edit("backend/src/app.py", "VALUE = 2\n"), both, both),
             (
                 "python test",
-                self.edit("backend/tests/test_app.py", "def test_value():\n    assert 1\n"),
+                self.edit(
+                    "backend/tests/taxonomy/test_app.py", "def test_value():\n    assert 1\n"
+                ),
                 both,
                 both,
             ),

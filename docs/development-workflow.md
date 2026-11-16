@@ -709,7 +709,13 @@ Preview the human plan with `make verification-plan`; use `make verification-pla
 for the same machine-readable decision. `REF=<exact-base>` selects a diagnostic base; canonical
 verification still fetches main and requires that exact base to be an ancestor. The versioned
 [scripts/verification-impact.json](../scripts/verification-impact.json) contains explicit source/test
-ownership, consumer regression boundaries and transitive relationships. Any unknown path escalates
+ownership (`backend_dirs`, `integration_dirs`, `frontend_dirs`, legacy flat test lists,
+`product_tests`, and `full_tests`), consumer regression boundaries and transitive relationships. A new
+test file placed in a directory owned by a scope (or under a `product_prefixes` / `full_prefixes`
+directory) is discovered and selected automatically with that scope without editing the map; any
+test file on disk under `backend/tests/` or `frontend/` that is owned by no scope or tier causes the
+pre-gate inventory check (`make verification-plan`, `make feature-verify`, and `scripts/ci-verify.py`)
+to exit non-zero and name the file before starting Docker. Any unknown non-test path escalates
 full. Editing the map or verification infrastructure also escalates full. Migration revisions
 conservatively escalate full. Every full plan requires the complete base → head → base → head cycle
 on disposable PostgreSQL; no changed-file shortcut may suppress it. Affected plans may skip migration
@@ -874,6 +880,64 @@ checkout on `main`, fast-forwards it through Git's normal index/worktree update,
 feature worktree at its reviewed SHA, records its proof for retirement and deletes only the proven
 merged feature branch. `make feature-retire` or the agent tool that created it removes the worktree. A dirty/staged primary or unexpected primary branch receives an actionable
 refusal with feature source retained. Single-checkout manual finish still switches to updated `main`.
+
+## Batch integration (WF-04)
+
+Use a dedicated `ci/batch-<id>` worktree (or `ci/wf-04-batch-01` for the bootstrap) with one
+claimed writer. Source writers can continue their independent focused QA. Select only source
+tips whose owners have frozen them for integration and whose independent evidence names the
+tested revision. A clean worktree alone is insufficient. Keep each owner's original receipt
+and QA. Ready sources enter the reviewed batch without separate canonical runs.
+
+```bash
+make feature-batch-plan
+make feature-batch-plan REQUEST=/path/to/request.json > /path/to/plan.json
+make feature-batch-prepare PLAN=/path/to/plan.json AGENT_ID=<integration-writer>
+```
+
+A request is a JSON object with `branch`, `base`, and `sources`. Each source specifies
+`id`, `branch`, full `tip`, `reviewer` and `evidence` (committed Markdown paths at its tip).
+List sources in the intended merge order. The planner checks the pinned base, exact clean
+tips, writer claims, gates and evidence paths. The writer compares the regenerated plan again
+before and after preparation. The manifest under `docs/release/evidence/batches/` records
+the source commits and the original tips remain ancestors of the integration head.
+
+Preparation refuses conflicts outside an additive `docs/progress.md` merge. When a source
+has a conflict, fix or review it deliberately before starting a new candidate. Record any
+post-merge documentation reconciliations as a path-to-reason mapping in the manifest's
+`reconciliation` object. Stage those files and the manifest together and commit them as the
+single commit following the final source merge. A reviewer in a detached checkout verifies
+this exact commit, the merge replay, and the evidence. Give the writer a JSON review containing
+`reviewer`, `head`, `base`, `tree`, `result` (equal to `pass`) and `evidence`.
+
+```bash
+make feature-batch-review REVIEW=/path/to/exact-review.json AGENT_ID=<integration-writer>
+env -u REUSE FRESH=1 make verify-full AGENT_ID=<integration-writer>
+```
+
+For a batch, the operator runs `make feature-deliver AGENT_ID=operator` from the integration
+worktree. Delivery revalidates the source tips, no-reuse FULL receipt, exact commit approval,
+and strict up-to-date GitHub Actions checks. The protected jobs verify the platform merge tree
+against the manifest's pinned base and exact head. After protected squash, delivery confirms
+the squash parent and tree and archives proof and a private local ref under shared Git
+metadata. A changed base or tree requires a new reviewed candidate and a fresh receipt.
+
+For a same-base correction to an open batch PR, add a single fast-forward commit. Its manifest
+`correction` records the direct parent in `supersedes`, the workflow and documentation
+`paths` changed, and the `reason`. Keep the original provenance. After exact-head QA and a
+fresh FULL, supply `EXPECTED_PR=<number>` and `EXPECTED_HEAD=<corrected-sha>` to
+`feature-deliver`. It verifies and reuses that PR, preserving the original title and body.
+
+
+After the operator authorizes finish, run the usual `make feature-finish` from the integration
+branch for that branch's own merged PR. This fast-forwards clean primary `main` and installs
+the new batch command on the first delivery. Then run
+`make feature-batch-finish PR=<number> AGENT_ID=operator` from clean primary `main`.
+It verifies the PR again and processes only its listed source tips;
+`SOURCE=feat/example` limits finish to one. Moved tips, missing proof and protected resources
+refuse, and the output identifies any unfinished source. Managed source worktrees can then use
+the existing exact `feature-retire` confirmations. Provider-managed worktrees remain with
+their provider and any Preview owner remains subject to its existing lifecycle rules.
 
 ## Troubleshooting and acceptance evidence
 

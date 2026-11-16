@@ -91,8 +91,9 @@ def safe_suites(paths: list[str], root: Path) -> list[str]:
         if (
             value.is_absolute()
             or ".." in value.parts
-            or not path.startswith("backend/tests/integration/test_")
+            or not path.startswith("backend/tests/integration/")
             or value.suffix != ".py"
+            or not (value.name.startswith("test_") or value.name.endswith("_test.py"))
             or not (root / value).is_file()
         ):
             raise ResourceError(f"integration selection must name existing test files: {path}")

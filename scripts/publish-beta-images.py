@@ -355,7 +355,7 @@ def release_create_command(request: dict[str, Any], assets: Path) -> list[str]:
         "--target",
         request["target_commitish"],
         "--draft",
-        "--prerelease",
+        *(["--prerelease"] if request["prerelease"] else []),
         "--title",
         request["title"],
         "--notes-file",
@@ -485,6 +485,7 @@ def run_pipeline(
             if read(manifest_path) != value:
                 raise ValueError("release manifest changed after the artifact smoke")
             request = release_finalization_inputs(value, sha, inventory)
+            print(f"RELEASE IDENTITY: {version} -> {request['tag']} (linux/amd64)", flush=True)
             attestation = release_attestation_inputs(
                 value,
                 refs,
@@ -598,6 +599,8 @@ def finalize_release(output: Path) -> None:
         require_remote_release_tag(REPOSITORY, request["tag"], sha)
         subprocess.run(release_create_command(request, assets), check=True)
         draft = locate_draft_release(REPOSITORY, request["tag"], sha)
+        if draft.get("prerelease") is not request["prerelease"]:
+            raise ValueError("draft release channel differs from the validated request")
         validate_release_assets(draft, assets, inventory)
         subprocess.run(
             [
@@ -609,7 +612,7 @@ def finalize_release(output: Path) -> None:
                 "-F",
                 "draft=false",
                 "-F",
-                "prerelease=true",
+                "prerelease=" + json.dumps(request["prerelease"]),
             ],
             check=True,
         )

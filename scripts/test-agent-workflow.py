@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any, cast
 from unittest.mock import Mock, patch
 
+import feature_batch
 import feature_worktree
 import sourcing_preview
 import workflow_environment
@@ -36,7 +37,7 @@ from workflow_environment import (
     Environment,
     Repository,
 )
-from workflow_resources import ResourceError, machine_lock
+from workflow_resources import ResourceError, machine_lock, verification_lock
 
 ROOT = Path(__file__).resolve().parent.parent
 HELPER = ROOT / "scripts/feature_worktree.py"
@@ -175,6 +176,200 @@ class AgentWorkflowTests(unittest.TestCase):
 
     def context(self, cwd: Path) -> dict[str, Any]:
         return cast(dict[str, Any], json.loads(self.ok(cwd, "context", "--json")))
+
+    def batch_command(
+        self, cwd: Path, *args: str, **values: str
+    ) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, str(ROOT / "scripts/feature_batch.py"), *args],
+            cwd=cwd,
+            env=self.env(**values),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    def batch_fixture(self) -> tuple[Path, list[Path], str, str, dict[str, Any]]:
+        sources = []
+        request = []
+        (self.primary / "docs").mkdir()
+        (self.primary / "docs/progress.md").write_text("Original progress\n")
+        self.git(self.primary, "add", ".")
+        self.git(self.primary, "commit", "-m", "seed progress")
+        self.git(self.primary, "push", "origin", "main")
+        base = self.git(self.primary, "rev-parse", "HEAD")
+        for number in (1, 2):
+            branch = f"feat/example-{number}"
+            source = self.create(branch)
+            self.ok(source, "claim", AGENT_ID=f"writer-{number}")
+            evidence = f"docs/example-{number}.md"
+            (source / evidence).write_text(f"Source {number} reviewed\n")
+            (source / "docs/progress.md").write_text(f"Source {number}\nOriginal progress\n")
+            self.git(source, "add", ".")
+            self.git(source, "commit", "-m", f"feature {number}")
+            request.append(
+                {
+                    "branch": branch,
+                    "id": f"FN-0{number}",
+                    "reviewer": "independent",
+                    "evidence": [evidence],
+                    "tip": self.git(source, "rev-parse", "HEAD"),
+                }
+            )
+            sources.append(source)
+        batch = self.create("ci/batch-fixture")
+        self.ok(batch, "claim", AGENT_ID="integrator")
+        (batch / "bootstrap.txt").write_text("Bootstrap workflow\n")
+        self.git(batch, "add", ".")
+        self.git(batch, "commit", "-m", "workflow bootstrap")
+        request_path = self.root / "request.json"
+        request_path.write_text(
+            json.dumps({"branch": "ci/batch-fixture", "base": base, "sources": request})
+        )
+        plan = self.batch_command(batch, "plan", str(request_path))
+        self.assertEqual(plan.returncode, 0, plan.stderr)
+        plan_path = self.root / "plan.json"
+        plan_path.write_text(plan.stdout)
+        prepared = self.batch_command(batch, "prepare", str(plan_path), AGENT_ID="integrator")
+        self.assertEqual(prepared.returncode, 0, prepared.stderr)
+        self.git(batch, "add", ".")
+        self.git(batch, "commit", "-m", "batch manifest")
+        head = self.git(batch, "rev-parse", "HEAD")
+        manifest = feature_batch.load_manifest(Repository(batch), "ci/batch-fixture", head)
+        return batch, sources, base, head, manifest
+
+    def squash_fixture(self, head: str, base: str, *, wrong_tree: bool = False) -> str:
+        self.git(self.primary, "merge", "--squash", head)
+        if wrong_tree:
+            self.git(self.primary, "restore", "--staged", "--worktree", "docs/example-2.md")
+        self.git(self.primary, "commit", "-m", "protected squash fixture")
+        merged = self.git(self.primary, "rev-parse", "HEAD")
+        self.git(self.primary, "push", "origin", "main")
+        self.assertEqual(self.git(self.primary, "rev-parse", "HEAD^"), base)
+        return merged
+
+    def batch_archive(self, head: str, base: str, merge: str) -> dict[str, Any]:
+        self.write_tool(
+            "gh",
+            "printf '%s\\n' \"$MOCK_BATCH_PR\"\n",
+        )
+        receipt = {
+            "version": 3,
+            "branch": "ci/batch-fixture",
+            "base": base,
+            "head": head,
+            "verification": {"mode": "full"},
+            "stage_evidence": {"mode": "fresh", "reused": []},
+        }
+        evidence = {
+            "receipt": receipt,
+            "receipt_sha256": hashlib.sha256(
+                (json.dumps(receipt, sort_keys=True) + "\n").encode()
+            ).hexdigest(),
+            "review": {
+                "head": head,
+                "tree": self.git(self.primary, "rev-parse", f"{head}^{{tree}}"),
+                "result": "pass",
+            },
+        }
+        with patch.dict(os.environ, {"AGENT_ID": "operator"}):
+            feature_batch.record_delivery(
+                Repository(self.primary), 42, "ci/batch-fixture", head, merge, evidence
+            )
+        return {
+            "number": 42,
+            "state": "closed",
+            "merged": True,
+            "merge_commit_sha": merge,
+            "head": {
+                "ref": "ci/batch-fixture",
+                "sha": head,
+                "repo": {"full_name": feature_batch.REPOSITORY},
+            },
+            "base": {"ref": "main", "repo": {"full_name": feature_batch.REPOSITORY}},
+        }
+
+    def test_batch_finishes_and_retires_both_exact_squashed_sources(self) -> None:
+        batch, sources, base, head, manifest = self.batch_fixture()
+        self.assertEqual(
+            (batch / "docs/progress.md").read_text(), "Source 1\nSource 2\nOriginal progress\n"
+        )
+        merge = self.squash_fixture(head, base)
+        feature_batch.validate_platform_tree(
+            Repository(self.primary), "ci/batch-fixture", base, head, merge
+        )
+        pr = self.batch_archive(head, base, merge)
+        for item in manifest["sources"]:
+            self.git(self.primary, "merge-base", "--is-ancestor", item["tip"], head)
+        if os.environ.get("FLORABASE_BATCH_DOCKER_SMOKE") == "1":
+            (self.bin / "docker").unlink()
+        result = self.batch_command(self.primary, "finish", "42", MOCK_BATCH_PR=json.dumps(pr))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        resumed = self.batch_command(self.primary, "finish", "42", MOCK_BATCH_PR=json.dumps(pr))
+        self.assertEqual(resumed.returncode, 0, resumed.stderr)
+        for source in sources:
+            self.assertEqual(self.git(source, "branch", "--show-current"), "")
+            env = {"FEATURE": source.name, "CONFIRM_RETIRE": source.name}
+            self.ok(self.primary, "retire", **env)
+            self.assertFalse(source.exists())
+
+    def test_batch_refuses_wrong_pr_omitted_moved_busy_and_protected_sources(self) -> None:
+        _, sources, base, head, manifest = self.batch_fixture()
+        merge = self.squash_fixture(head, base)
+        pr = self.batch_archive(head, base, merge)
+        omitted = self.create("feat/omitted-3")
+        (omitted / "omitted.txt").write_text("omitted\n")
+        self.git(omitted, "add", ".")
+        self.git(omitted, "commit", "-m", "omitted source")
+        env = {"MOCK_BATCH_PR": json.dumps(pr)}
+        with verification_lock(Repository(sources[0]).metadata):
+            result = self.batch_command(
+                self.primary, "finish", "42", "--source", "feat/example-1", **env
+            )
+            self.assertIn("already running", result.stderr)
+            self.assertEqual(result.returncode, 1)
+        for expected, kwargs, arguments in [
+            (
+                "identity",
+                {"MOCK_BATCH_PR": json.dumps({**pr, "head": {**pr["head"], "sha": base}})},
+                [],
+            ),
+            ("omitted", env, ["--source", "feat/omitted-3"]),
+            ("operator actions", {**env, "AGENT_ID": "writer-1"}, []),
+            (
+                "Docker resources",
+                {**env, "MOCK_VOLUME_SOURCE": str(sources[0])},
+                ["--source", "feat/example-1"],
+            ),
+        ]:
+            with self.subTest(expected=expected):
+                result = self.batch_command(self.primary, "finish", "42", *arguments, **kwargs)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(expected, result.stderr)
+        self.assertEqual(self.git(omitted, "branch", "--show-current"), "feat/omitted-3")
+        self.git(sources[0], "commit", "--allow-empty", "-m", "source advanced")
+        result = self.batch_command(
+            self.primary, "finish", "42", "--source", "feat/example-1", **env
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("source tip", result.stderr)
+        self.assertNotEqual(
+            self.git(sources[0], "rev-parse", "HEAD"), manifest["sources"][0]["tip"]
+        )
+        self.assertEqual(self.git(sources[0], "branch", "--show-current"), "feat/example-1")
+
+    def test_batch_refuses_squash_tree_that_omits_a_source(self) -> None:
+        _, sources, base, head, _ = self.batch_fixture()
+        merge = self.squash_fixture(head, base, wrong_tree=True)
+        with self.assertRaisesRegex(
+            workflow_environment.WorkflowError, "platform batch merge differs"
+        ):
+            feature_batch.validate_platform_tree(
+                Repository(self.primary), "ci/batch-fixture", base, head, merge
+            )
+        with self.assertRaisesRegex(workflow_environment.WorkflowError, "squash commit differs"):
+            self.batch_archive(head, base, merge)
+        self.assertTrue(all(self.git(path, "branch", "--show-current") for path in sources))
 
     def advance_main(self) -> str:
         seed = self.root / "seed"

@@ -188,6 +188,7 @@ def main() -> None:
             "version": 3,
             "branch": args.branch,
             "base": args.base,
+            "head": git("rev-parse", "HEAD"),
             "working_tree_digest": digest(working_entries()),
             "verification": plan,
             "completed": execution["completed"],

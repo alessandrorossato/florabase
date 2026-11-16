@@ -2928,7 +2928,9 @@ export function PlantScreen({
               <div className="notice" role="status">
                 <p>
                   A Botanical identity is required before you can record a Plant
-                  or Plant group. Add one from Botanical identities first.
+                  or Plant group.{" "}
+                  <a href="#/identities">Open Botanical identities</a> to add
+                  one.
                 </p>
               </div>
             )}
@@ -2982,10 +2984,12 @@ export function PlantScreen({
                   {records.length === 0 ? (
                     <div className="profile-empty">
                       <h4>No Plants recorded yet</h4>
-                      <p>
-                        Use New plant or group to record the first Plant or
-                        Plant group.
-                      </p>
+                      {references.identities.length > 0 && (
+                        <p>
+                          Use New plant or group to record the first Plant or
+                          Plant group.
+                        </p>
+                      )}
                     </div>
                   ) : visible.length === 0 ? (
                     <p>No Plants match this search and filter view.</p>

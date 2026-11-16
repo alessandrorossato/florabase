@@ -22,6 +22,7 @@ from verification_impact import (
     MAP_PATH,
     WORKFLOW,
     changed_paths,
+    discover_repo_tests,
     load_map,
     make_plan,
     plan_paths,
@@ -391,14 +392,47 @@ class SelectionTests(unittest.TestCase):
         self.assertIn("backend/src/florabase/__init__.py", data["full_prefixes"])
         self.assertNotIn("backend/src/florabase/__init__.py", data["product_prefixes"])
 
-    def test_classified_frontend_test_inventory_cannot_silently_drift(self) -> None:
+    def test_test_ownership_inventory_cannot_silently_drift(self) -> None:
         data = load_map()
-        for rule in data["rules"]:
-            if rule["layer"] != "frontend" or "prefix" not in rule:
+        discovered = discover_repo_tests()
+        self.assertTrue(discovered["backend"])
+        self.assertTrue(discovered["integration"])
+        self.assertTrue(discovered["frontend"])
+        # Every declared frontend_dirs must exist, and every explicit mapped file must exist.
+        for entry in (*data["full_tests"], *data["product_tests"]):
+            self.assertTrue((ROOT / entry).is_file(), entry)
+        for name, scope in data["scopes"].items():
+            if "suite_scope" in scope:
                 continue
-            for path in Path(rule["prefix"]).rglob("*"):
-                if path.is_file() and ".test." in path.name:
-                    self.assertIn(str(path), data["scopes"][rule["scope"]]["frontend"])
+            for directory in scope["frontend_dirs"]:
+                self.assertTrue((ROOT / directory).is_dir(), f"{name}: {directory}")
+            for layer in ("backend", "integration", "frontend"):
+                for entry in scope[layer]:
+                    self.assertTrue((ROOT / entry).is_file(), f"{name}.{layer}: {entry}")
+        # Every scope with owned frontend_dirs selects every test file inside them.
+        for name, scope in data["scopes"].items():
+            if "suite_scope" in scope or not scope["frontend_dirs"]:
+                continue
+            rule = next(
+                (
+                    r
+                    for r in data["rules"]
+                    if r["scope"] == name and r["layer"] == "frontend" and "prefix" in r
+                ),
+                None,
+            )
+            if rule is None:
+                continue
+            if any(rule["prefix"].startswith(p) for p in data["product_prefixes"]):
+                continue
+            plan = self.plan(rule["prefix"] + "probe.ts")
+            if plan["mode"] == "affected":
+                for directory in scope["frontend_dirs"]:
+                    for test_file in (ROOT / directory).rglob("*"):
+                        if test_file.is_file() and (
+                            ".test." in test_file.name or ".spec." in test_file.name
+                        ):
+                            self.assertIn(str(test_file.relative_to(ROOT)), plan["frontend"])
 
     def test_remote_policy_matrix(self) -> None:
         for path in (
@@ -625,15 +659,37 @@ class RemoteHistoryTests(unittest.TestCase):
             git("merge", "--no-ff", "docs/example", "-m", "synthetic PR merge")
             merge = git("rev-parse", "HEAD")
             event_path = root / ".git/event.json"
-            event = {"pull_request": {"base": {"sha": base}, "head": {"sha": head}}}
+            event = {
+                "pull_request": {
+                    "base": {"sha": base},
+                    "head": {"sha": head, "ref": "docs/example"},
+                }
+            }
             event_path.write_text(json.dumps(event))
             environment = {
                 "GITHUB_EVENT_NAME": "pull_request",
+                "GITHUB_HEAD_REF": "docs/example",
                 "GITHUB_EVENT_PATH": str(event_path),
                 "GITHUB_SHA": merge,
             }
+            outer = patch.dict(os.environ, {"GITHUB_HEAD_REF": "ci/wf-04-batch-01"})
+            outer.start()
+            self.addCleanup(outer.stop)
             os.chdir(root)
             try:
+                with (
+                    patch.dict(os.environ, {**environment, "GITHUB_HEAD_REF": "ci/wf-04-batch-01"}),
+                    self.assertRaisesRegex(ValueError, "cannot prove exact batch PR parents"),
+                ):
+                    CI.ci_plan()
+                mismatched = subprocess.run(
+                    ["python3", "scripts/ci-verify.py", "quality"],
+                    env={**os.environ, **environment, "GITHUB_HEAD_REF": "ci/wf-04-batch-01"},
+                    text=True,
+                    capture_output=True,
+                )
+                self.assertNotEqual(mismatched.returncode, 0)
+                self.assertIn("cannot prove exact batch PR parents", mismatched.stderr)
                 shallow = root / ".git/shallow-fixture"
                 subprocess.run(
                     ["git", "clone", "--depth", "2", root.as_uri(), str(shallow)],
@@ -1041,6 +1097,452 @@ class InventoryTests(unittest.TestCase):
             self.assertIn("'full'", rejected_full.stderr)
         finally:
             fixture.tearDown()
+
+
+class TestOwnershipInventoryTests(unittest.TestCase):
+    def _create_fixture_repo(
+        self, root: Path, *, seed_explicit_scopes: tuple[str, ...] = ()
+    ) -> str:
+        def git(*args: str) -> str:
+            return subprocess.run(
+                ["git", "-C", str(root), *args], check=True, text=True, capture_output=True
+            ).stdout.strip()
+
+        (root / "scripts").mkdir(parents=True, exist_ok=True)
+        for name in (
+            "verification_impact.py",
+            "verification-impact.json",
+            "verification_gate.py",
+            "feature-tree-fingerprint.py",
+            "disposable_workflow.py",
+            "workflow_resources.py",
+        ):
+            shutil.copy2(ROOT / "scripts" / name, root / "scripts" / name)
+        data = json.loads((root / "scripts/verification-impact.json").read_text(encoding="utf-8"))
+        for scope_name in seed_explicit_scopes:
+            scope = data["scopes"][scope_name]
+            target = data["scopes"][scope.get("suite_scope", scope_name)]
+            for layer in ("backend", "integration", "frontend"):
+                for rel in target[layer]:
+                    file_path = root / rel
+                    file_path.parent.mkdir(parents=True, exist_ok=True)
+                    file_path.write_text("# fixture test\n", encoding="utf-8")
+            for directory in target["frontend_dirs"]:
+                dir_path = root / directory
+                dir_path.mkdir(parents=True, exist_ok=True)
+                (dir_path / "Existing.test.tsx").write_text("// fixture test\n", encoding="utf-8")
+        (root / ".gitignore").write_text("__pycache__/\n", encoding="utf-8")
+        (root / "docs").mkdir(exist_ok=True)
+        (root / "docs/README.md").write_text("# Fixture\n", encoding="utf-8")
+        git("init", "--initial-branch=main")
+        git("config", "user.name", "Test")
+        git("config", "user.email", "test@localhost")
+        git("add", ".")
+        git("commit", "-m", "base")
+        return git("rev-parse", "HEAD")
+
+    def test_new_test_in_owned_directory_is_selected_without_editing_impact_map(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            scopes = (
+                "taxonomy",
+                "botany",
+                "collection-views",
+                "explore",
+                "security-regression",
+                "orders",
+                "suppliers",
+                "seeds",
+            )
+            base = self._create_fixture_repo(root, seed_explicit_scopes=scopes)
+            map_before = (root / "scripts/verification-impact.json").read_text(encoding="utf-8")
+
+            cases = [
+                ("frontend/src/taxonomy/NewDirectoryOwned.test.tsx", "frontend", "frontend"),
+                ("backend/tests/taxonomy/test_new_directory_owned.py", "backend", "backend"),
+                (
+                    "backend/tests/integration/taxonomy/test_new_directory_owned.py",
+                    "integration",
+                    "backend",
+                ),
+            ]
+            for rel_path, suite_layer, expected_build in cases:
+                with self.subTest(rel_path=rel_path):
+                    file_path = root / rel_path
+                    file_path.parent.mkdir(parents=True, exist_ok=True)
+                    file_path.write_text("# new test\n", encoding="utf-8")
+                    result = subprocess.run(
+                        [
+                            sys.executable,
+                            "scripts/verification_impact.py",
+                            "--base",
+                            base,
+                            "--json",
+                        ],
+                        cwd=root,
+                        text=True,
+                        capture_output=True,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    plan = json.loads(result.stdout)
+                    self.assertEqual(plan["mode"], "affected")
+                    self.assertEqual(plan["changed_scopes"], ["taxonomy"])
+                    self.assertIn(rel_path, plan[suite_layer])
+                    self.assertEqual(plan["builds"], [expected_build])
+                    file_path.unlink()
+
+            # A test placed in an owned directory is also selected when source code in that scope
+            # changes (without the test file itself changing or editing verification-impact.json).
+            new_fe = root / "frontend/src/taxonomy/PersistentOwned.test.tsx"
+            new_be = root / "backend/tests/taxonomy/test_persistent_owned.py"
+            new_int = root / "backend/tests/integration/taxonomy/test_persistent_owned.py"
+            for item in (new_fe, new_be, new_int):
+                item.parent.mkdir(parents=True, exist_ok=True)
+                item.write_text("# persistent test\n", encoding="utf-8")
+            subprocess.run(["git", "-C", str(root), "add", "."], check=True)
+            subprocess.run(
+                ["git", "-C", str(root), "commit", "-m", "Add owned tests"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+            )
+            new_base = subprocess.run(
+                ["git", "-C", str(root), "rev-parse", "HEAD"],
+                check=True,
+                text=True,
+                capture_output=True,
+            ).stdout.strip()
+            src = root / "backend/src/florabase/taxonomy/service.py"
+            src.parent.mkdir(parents=True, exist_ok=True)
+            src.write_text("VALUE = 1\n", encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, "scripts/verification_impact.py", "--base", new_base, "--json"],
+                cwd=root,
+                text=True,
+                capture_output=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            plan = json.loads(result.stdout)
+            self.assertEqual(plan["mode"], "affected")
+            self.assertIn("frontend/src/taxonomy/PersistentOwned.test.tsx", plan["frontend"])
+            self.assertIn("backend/tests/taxonomy/test_persistent_owned.py", plan["backend"])
+            self.assertIn(
+                "backend/tests/integration/taxonomy/test_persistent_owned.py", plan["integration"]
+            )
+            self.assertEqual(
+                (root / "scripts/verification-impact.json").read_text(encoding="utf-8"), map_before
+            )
+
+            # A test added in a product-owned shared directory selects product tier without edits.
+            shared_test = root / "frontend/src/components/NewShared.test.tsx"
+            shared_test.parent.mkdir(parents=True, exist_ok=True)
+            shared_test.write_text("// shared\n", encoding="utf-8")
+            product_result = subprocess.run(
+                [sys.executable, "scripts/verification_impact.py", "--base", new_base, "--json"],
+                cwd=root,
+                text=True,
+                capture_output=True,
+            )
+            self.assertEqual(product_result.returncode, 0, product_result.stderr)
+            self.assertEqual(json.loads(product_result.stdout)["tier"], "product")
+
+    def test_unowned_test_file_fails_verification_plan_and_gate_before_docker(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            root.mkdir()
+            base = self._create_fixture_repo(root)
+            fake_bin = Path(temporary) / "bin"
+            fake_bin.mkdir()
+            docker_log = Path(temporary) / "docker.log"
+            for tool in ("docker", "make"):
+                script = fake_bin / tool
+                script.write_text(
+                    f"#!/bin/sh\necho {tool} >> {str(docker_log)!r}\nexit 99\n",
+                    encoding="utf-8",
+                )
+                script.chmod(0o755)
+            env = {
+                **os.environ,
+                "PATH": f"{fake_bin}:{os.environ['PATH']}",
+                "FLORABASE_LOCK_DIR": str(Path(temporary) / "locks"),
+            }
+
+            # Even a docs-only diff must fail closed before planning/gating if an unowned test
+            # file exists anywhere in the repository.
+            (root / "docs/README.md").write_text("# Docs edit\n", encoding="utf-8")
+
+            unowned_cases = [
+                "frontend/src/unowned_dir/Orphan.test.tsx",
+                "frontend/src/Orphan.spec.ts",
+                "frontend/OrphanRoot.test.ts",
+                "backend/tests/test_unregistered.py",
+                "backend/tests/unregistered_test.py",
+                "backend/tests/unowned_dir/test_orphan.py",
+                "backend/tests/integration/test_unregistered.py",
+                "backend/tests/integration/unowned_dir/test_orphan.py",
+            ]
+            for rel_path in unowned_cases:
+                with self.subTest(rel_path=rel_path):
+                    target = root / rel_path
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_text("# unowned\n", encoding="utf-8")
+
+                    plan_cmd = subprocess.run(
+                        [
+                            sys.executable,
+                            "scripts/verification_impact.py",
+                            "--base",
+                            base,
+                            "--json",
+                        ],
+                        cwd=root,
+                        env=env,
+                        text=True,
+                        capture_output=True,
+                    )
+                    self.assertNotEqual(plan_cmd.returncode, 0)
+                    self.assertIn(rel_path, plan_cmd.stderr)
+                    self.assertFalse(docker_log.exists())
+
+                    gate_cmd = subprocess.run(
+                        [
+                            sys.executable,
+                            "scripts/verification_gate.py",
+                            "--base",
+                            base,
+                            "--execution",
+                            str(Path(temporary) / "execution.json"),
+                        ],
+                        cwd=root,
+                        env=env,
+                        text=True,
+                        capture_output=True,
+                    )
+                    self.assertNotEqual(gate_cmd.returncode, 0)
+                    self.assertIn(rel_path, gate_cmd.stderr)
+                    self.assertFalse(docker_log.exists())
+
+                    target.unlink()
+
+            # A symlinked test file in an unowned location must also be rejected.
+            symlink_target = root / "frontend/src/unowned_link/Link.test.tsx"
+            symlink_target.parent.mkdir(parents=True, exist_ok=True)
+            symlink_target.symlink_to("../docs/README.md")
+            symlink_plan = subprocess.run(
+                [sys.executable, "scripts/verification_impact.py", "--base", base, "--json"],
+                cwd=root,
+                env=env,
+                text=True,
+                capture_output=True,
+            )
+            self.assertNotEqual(symlink_plan.returncode, 0)
+            self.assertIn("frontend/src/unowned_link/Link.test.tsx", symlink_plan.stderr)
+            symlink_target.unlink()
+
+            # Symlinked directories under frontend/ or backend/tests/ must fail closed rather
+            # than silently skipping nested tests.
+            external_dir = Path(temporary) / "external_tests"
+            external_dir.mkdir()
+            (external_dir / "Hidden.test.tsx").write_text("// hidden\n", encoding="utf-8")
+            for link_rel in (
+                "frontend/src/taxonomy/linked_sub",
+                "frontend/src/unowned_symlink_dir",
+                "backend/tests/linked_sub",
+            ):
+                with self.subTest(link_rel=link_rel):
+                    link_path = root / link_rel
+                    link_path.parent.mkdir(parents=True, exist_ok=True)
+                    link_path.symlink_to(external_dir, target_is_directory=True)
+                    dir_link_plan = subprocess.run(
+                        [
+                            sys.executable,
+                            "scripts/verification_impact.py",
+                            "--base",
+                            base,
+                            "--json",
+                        ],
+                        cwd=root,
+                        env=env,
+                        text=True,
+                        capture_output=True,
+                    )
+                    self.assertNotEqual(dir_link_plan.returncode, 0)
+                    self.assertIn(link_rel, dir_link_plan.stderr)
+                    self.assertFalse(docker_log.exists())
+                    link_path.unlink()
+
+            # Top-level frontend/dist and frontend/coverage are build outputs, but nested
+            # directories with those names under frontend/src/ are real source trees.
+            for ignored_rel in ("frontend/dist/Bundle.test.js", "frontend/coverage/Cov.test.js"):
+                ignored_path = root / ignored_rel
+                ignored_path.parent.mkdir(parents=True, exist_ok=True)
+                ignored_path.write_text("// build output\n", encoding="utf-8")
+            ok_plan = subprocess.run(
+                [sys.executable, "scripts/verification_impact.py", "--base", base, "--json"],
+                cwd=root,
+                env=env,
+                text=True,
+                capture_output=True,
+            )
+            self.assertEqual(ok_plan.returncode, 0, ok_plan.stderr)
+
+            for nested_rel in (
+                "frontend/src/coverage/Nested.test.tsx",
+                "frontend/src/dist/Nested.test.tsx",
+            ):
+                with self.subTest(nested_rel=nested_rel):
+                    nested_path = root / nested_rel
+                    nested_path.parent.mkdir(parents=True, exist_ok=True)
+                    nested_path.write_text("// nested\n", encoding="utf-8")
+                    nested_plan = subprocess.run(
+                        [
+                            sys.executable,
+                            "scripts/verification_impact.py",
+                            "--base",
+                            base,
+                            "--json",
+                        ],
+                        cwd=root,
+                        env=env,
+                        text=True,
+                        capture_output=True,
+                    )
+                    self.assertNotEqual(nested_plan.returncode, 0)
+                    self.assertIn(nested_rel, nested_plan.stderr)
+                    nested_path.unlink()
+
+    def test_moved_or_deleted_test_cannot_silently_escape_coverage(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            scopes = (
+                "taxonomy",
+                "botany",
+                "collection-views",
+                "explore",
+                "security-regression",
+                "orders",
+                "suppliers",
+                "seeds",
+            )
+            self._create_fixture_repo(root, seed_explicit_scopes=scopes)
+            moved_from = root / "frontend/src/taxonomy/MoveMe.test.tsx"
+            moved_from.write_text("// move me\n", encoding="utf-8")
+            subprocess.run(["git", "-C", str(root), "add", "."], check=True)
+            subprocess.run(
+                ["git", "-C", str(root), "commit", "-m", "Add MoveMe test"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+            )
+            base = subprocess.run(
+                ["git", "-C", str(root), "rev-parse", "HEAD"],
+                check=True,
+                text=True,
+                capture_output=True,
+            ).stdout.strip()
+
+            # Moving between two owned directories covers both old and new scopes.
+            moved_to = root / "frontend/src/orders/MoveMe.test.tsx"
+            subprocess.run(
+                ["git", "-C", str(root), "mv", str(moved_from), str(moved_to)],
+                check=True,
+            )
+            previous = Path.cwd()
+            os.chdir(root)
+            try:
+                plan = make_plan(base)
+                self.assertEqual(plan["mode"], "affected")
+                self.assertIn("taxonomy", plan["changed_scopes"])
+                self.assertIn("orders", plan["changed_scopes"])
+                self.assertIn("frontend/src/orders/MoveMe.test.tsx", plan["frontend"])
+
+                # Moving into an unowned directory fails closed.
+                unowned = root / "frontend/src/unowned/MoveMe.test.tsx"
+                unowned.parent.mkdir(parents=True, exist_ok=True)
+                subprocess.run(
+                    ["git", "-C", str(root), "mv", str(moved_to), str(unowned)],
+                    check=True,
+                )
+                with self.assertRaisesRegex(ValueError, r"frontend/src/unowned/MoveMe\.test\.tsx"):
+                    make_plan(base)
+                subprocess.run(
+                    ["git", "-C", str(root), "mv", str(unowned), str(moved_from)],
+                    check=True,
+                )
+
+                # Deleting an explicitly registered test without updating the map fails closed.
+                (root / "backend/tests/test_taxonomy.py").unlink()
+                with self.assertRaisesRegex(ValueError, "missing mapped suites"):
+                    make_plan(base)
+                subprocess.run(
+                    ["git", "-C", str(root), "checkout", "--", "backend/tests/test_taxonomy.py"],
+                    check=True,
+                )
+
+                # Deleting an explicit product_tests entry or a scope entry alongside a product
+                # change without updating the map fails closed.
+                with self.assertRaisesRegex(ValueError, "missing mapped suites"):
+                    plan_paths(["backend/tests/test_health.py"], base)
+                (root / "backend/tests/test_taxonomy.py").unlink()
+                with self.assertRaisesRegex(ValueError, "missing mapped suites"):
+                    plan_paths(
+                        ["backend/src/florabase/main.py", "backend/tests/test_taxonomy.py"], base
+                    )
+                subprocess.run(
+                    ["git", "-C", str(root), "checkout", "--", "backend/tests/test_taxonomy.py"],
+                    check=True,
+                )
+            finally:
+                os.chdir(previous)
+
+    def test_load_map_rejects_invalid_or_overlapping_test_ownership(self) -> None:
+        original = json.loads(MAP_PATH.read_text(encoding="utf-8"))
+        with tempfile.TemporaryDirectory() as temporary:
+            temp_map = Path(temporary) / "impact.json"
+            with patch("verification_impact.MAP_PATH", temp_map):
+                # Overlapping frontend_dirs between two scopes.
+                overlapping = json.loads(json.dumps(original))
+                overlapping["scopes"]["orders"]["frontend_dirs"] = ["frontend/src/taxonomy/"]
+                temp_map.write_text(json.dumps(overlapping), encoding="utf-8")
+                with self.assertRaisesRegex(
+                    ValueError, "overlapping frontend test directory ownership"
+                ):
+                    load_map()
+
+                # Nested overlapping backend_dirs.
+                nested = json.loads(json.dumps(original))
+                nested["scopes"]["orders"]["backend_dirs"] = ["backend/tests/taxonomy/sub/"]
+                temp_map.write_text(json.dumps(nested), encoding="utf-8")
+                with self.assertRaisesRegex(
+                    ValueError, "overlapping backend test directory ownership"
+                ):
+                    load_map()
+
+                # Root directory cannot be owned by a single scope.
+                for scope_key, root_dir in (
+                    ("backend_dirs", "backend/tests/"),
+                    ("integration_dirs", "backend/tests/integration/"),
+                    ("frontend_dirs", "frontend/src/"),
+                ):
+                    bad_root = json.loads(json.dumps(original))
+                    bad_root["scopes"]["taxonomy"][scope_key] = [root_dir]
+                    temp_map.write_text(json.dumps(bad_root), encoding="utf-8")
+                    with self.assertRaises(ValueError):
+                        load_map()
+
+                # Layer mismatch in explicit suite or directory list.
+                mismatch = json.loads(json.dumps(original))
+                mismatch["scopes"]["taxonomy"]["backend"].append(
+                    "backend/tests/integration/test_taxonomy.py"
+                )
+                temp_map.write_text(json.dumps(mismatch), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "invalid backend suites"):
+                    load_map()
+
+                # Non-test file in product_tests.
+                bad_product = json.loads(json.dumps(original))
+                bad_product["product_tests"].append("backend/src/florabase/main.py")
+                temp_map.write_text(json.dumps(bad_product), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "invalid product_tests"):
+                    load_map()
 
 
 if __name__ == "__main__":
