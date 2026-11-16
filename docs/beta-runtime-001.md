@@ -100,7 +100,7 @@ Run everything as root on the host (`sudo -i` on DSM). Replace the example paths
    Python ≥ 3.8, linux/amd64 and memory/PID cgroups are mandatory. Capacity thresholds (2 GiB
    available memory, 20 GiB free) are screening budgets. The raw `preflight.json` describes your host
    (kernel, capacity, filesystem, uptime): keep it on the host. Only the sanitized fields required by the
-   [image runbook](beta-image-001.md#platform-screening-and-publication-prerequisite) belong in Git.
+   [image runbook](beta-image-001.md#platform-policy-and-publication-prerequisite) belong in Git.
 2. **Authorize the release.** Obtain `release-manifest.json` and its SHA-256 from the authorized
    release record. Verify its attestation exactly as in the
    [manifest consumption](beta-image-001.md#manifest-contract-and-consumption) section. The
