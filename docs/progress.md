@@ -18,6 +18,36 @@
   built local verification images and ran disposable PostgreSQL integration resources. No
   production image, tag, or release was published during this reconciliation.
 
+## 2026-11-15 — DOC-05: changelog, versioning policy and security reporting drafted
+
+- On `docs/doc-05-changelog-versioning-security` from `8557669`, writer `claude-doc-05`.
+- `CHANGELOG.md` (new): Unreleased since `v0.1.0-beta.5`, and one entry per tag beta.1 to beta.5
+  as the operator decided. Only beta.5 has a published GitHub Release (`gh release list`); the
+  entries for beta.1 to beta.4 say they are tagged without one.
+- `docs/versioning.md` (new): the release line beta, `1.0.0-rc.N`, `1.0.0`; the three 1.x
+  contracts and the explicit non-promises, taken from `release/scope-v1.md`; the latest stable
+  1.x as the supported version once it exists.
+- `SECURITY.md`: supported versions, and GitHub Private Vulnerability Reporting as the intended
+  private channel with what to do while it is not active. `README.md` links the two new pages.
+- DOC-05 is registered as `in_progress`: GitHub reports private vulnerability reporting as
+  disabled for the repository, so criterion 3 is not met until the operator enables it, and the
+  release entry of the changelog is written when the release is cut.
+- Checks: `scripts/check-features.py`, relative links and anchors, `git diff --check`,
+  `make verification-plan` (FULL: root `CHANGELOG.md` and `SECURITY.md` are unclassified paths).
+- Independent QA failed the first draft on two statements in `versioning.md` (tooling
+  enforcement claimed beyond the beta series; a non-promise for release candidates that the
+  scope does not state); both were corrected with five smaller findings and the delta review
+  passed.
+- Reconciled with `main` at `78f331b`: Unreleased gained the identity-merge fix (#185) and the
+  new artwork (#186); these two lines await delta QA with the final reconciliation after REL-01.
+- Reconciled with `main` at `02519b9`: DOC-05 is in the release-scope manifest as
+  `release-work`, the class the operator approved. GitHub now reports private vulnerability
+  reporting as enabled for the repository (`gh api .../private-vulnerability-reporting`,
+  2026-11-16). WF-02 (#187) and DOC-02 (#190) change development tooling only and have no
+  changelog line.
+- Unresolved: the canonical FULL gate; version terminology to be confirmed against REL-01's
+  tooling.
+
 ## 2026-11-15 — DOC-02 step 2: release-scope manifest and checker rules
 
 - Added [`docs/release/scope-v1.json`](release/scope-v1.json), the v1.0.0 release-scope manifest:
