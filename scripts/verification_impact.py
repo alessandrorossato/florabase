@@ -25,6 +25,29 @@ WORKFLOW = [
     "test-workflow-resources",
     "workflow-check",
 ]
+TIER_ORDER: dict[str, int] = {"docs": 0, "affected": 1, "product": 2, "full": 3}
+
+
+def plan_tier(plan: dict[str, Any]) -> str:
+    mode = plan.get("mode")
+    docs_only = plan.get("docs_only")
+    expected: str | None = None
+    if mode == "full" and docs_only is False:
+        expected = "full"
+    elif mode == "product" and docs_only is False:
+        expected = "product"
+    elif mode == "affected" and isinstance(docs_only, bool):
+        expected = "docs" if docs_only else "affected"
+    if expected is None:
+        raise ValueError(
+            f"invalid verification plan tier state: mode={mode!r}, docs_only={docs_only!r}"
+        )
+    declared = plan.get("tier")
+    if declared is not None and declared != expected:
+        raise ValueError(
+            f"mismatched verification plan tier: declared={declared!r}, expected={expected!r}"
+        )
+    return expected
 
 
 def fingerprint_module() -> Any:
@@ -88,6 +111,14 @@ def load_map() -> dict[str, Any]:
     data = cast(dict[str, Any], json.loads(MAP_PATH.read_text()))
     if data["version"] != 1 or not data["scopes"] or not data["rules"]:
         raise ValueError("unsupported or empty impact map")
+    for prefix_key in ("full_prefixes", "product_prefixes"):
+        prefixes = data.get(prefix_key)
+        if (
+            not isinstance(prefixes, list)
+            or not prefixes
+            or any(not isinstance(prefix, str) or not prefix for prefix in prefixes)
+        ):
+            raise ValueError(f"invalid {prefix_key}")
     suffixes = data["documentation_suffixes"]
     if (
         not isinstance(suffixes, list)
@@ -126,13 +157,21 @@ def plan_paths(
 ) -> dict[str, Any]:
     data = load_map()
     reasons: list[str] = []
+    product_reasons: list[str] = []
     direct: set[str] = set()
     layers: set[str] = set()
     generated = False
+    product = False
     docs_only = True
     for path in sorted(set(paths)):
         if any(path.startswith(prefix) for prefix in data["full_prefixes"]):
             reasons.append(f"high-risk path: {path}")
+            docs_only = False
+            continue
+        if any(path.startswith(prefix) for prefix in data["product_prefixes"]):
+            product = True
+            product_reasons.append(f"shared product path: {path}")
+            layers.update(("backend", "frontend"))
             docs_only = False
             continue
         if path in data["generated_paths"]:
@@ -163,7 +202,7 @@ def plan_paths(
         for rule in matches:
             direct.add(rule["scope"])
             layers.add(rule["layer"])
-    if generated and not direct.difference({"documentation"}):
+    if generated and not product and not direct.difference({"documentation"}):
         reasons.append("generated contract without classified owning production scope")
     if force_full:
         reasons.append("operator requested full verification")
@@ -175,12 +214,13 @@ def plan_paths(
                 affected.add(target)
                 pending.append(target)
     full = bool(reasons)
+    product_wide = not full and product
     suites: dict[str, list[str]] = {}
     for layer in ("backend", "integration", "frontend"):
         required = layer == "frontend" or "backend" in layers
         suites[layer] = (
             ["ALL"]
-            if full
+            if full or product_wide
             else sorted(
                 {
                     p
@@ -193,7 +233,7 @@ def plan_paths(
         )
         # A newly added test in a classified feature module must run too. This selects exact
         # changed test paths; it neither learns dependencies nor mutates the versioned policy.
-        if not full and layer == "frontend":
+        if not full and not product_wide and layer == "frontend":
             changed_tests = {
                 path
                 for path in paths
@@ -202,14 +242,17 @@ def plan_paths(
             }
             suites[layer] = sorted(set(suites[layer]) | changed_tests)
         # A missing mapped suite is a policy error, never permission to skip it.
-        if not full:
+        if not full and not product_wide:
             missing = [path for path in suites[layer] if not Path(path).is_file()]
             if missing:
                 raise ValueError(f"missing mapped suites: {missing}")
-    mode = "full" if full else "affected"
+    mode = "full" if full else "product" if product_wide else "affected"
+    is_docs_only = docs_only and not full and not product_wide
+    tier = "full" if full else "product" if product_wide else "docs" if is_docs_only else "affected"
     return {
         "version": 1,
         "base": base,
+        "tier": tier,
         "mode": mode,
         "impact_map_version": data["version"],
         "impact_map_digest": hashlib.sha256(MAP_PATH.read_bytes()).hexdigest(),
@@ -219,17 +262,18 @@ def plan_paths(
             affected | ({"documentation"} if "documentation" in direct else set())
         ),
         "escalation_reasons": sorted(reasons),
-        "docs_only": docs_only and not full,
+        "product_reasons": sorted(product_reasons),
+        "docs_only": is_docs_only,
         **suites,
         "workflow": WORKFLOW if full else [],
-        "static": ["feature-graph", "whitespace"] + (STATIC if full or not docs_only else []),
+        "static": ["feature-graph", "whitespace"] + (STATIC if full or not is_docs_only else []),
         "migration": "full-cycle"
         if full
         else "affected-cycle"
         if any(p.startswith("backend/alembic/") for p in paths)
         else "skip",
         "builds": ["backend", "frontend"]
-        if full or layers == {"backend", "frontend"}
+        if full or product_wide or layers == {"backend", "frontend"}
         else ["backend"]
         if "backend" in layers
         else ["frontend"]
@@ -258,10 +302,12 @@ def make_plan(base: str, *, force_full: bool = False) -> dict[str, Any]:
 def describe(plan: dict[str, Any]) -> str:
     lines = [
         f"Verification base: {plan['base']}",
+        f"Tier: {plan_tier(plan)}",
         f"Mode: {plan['mode']}",
         f"Changed scopes: {', '.join(plan['changed_scopes']) or 'none'}",
         f"Affected scopes: {', '.join(plan['affected_scopes']) or 'none'}",
     ]
+    lines += [f"Product reason: {reason}" for reason in plan.get("product_reasons", [])]
     lines += [f"FULL reason: {reason}" for reason in plan["escalation_reasons"]]
     for key in ("backend", "integration", "frontend", "workflow", "static", "builds"):
         values = plan[key]
