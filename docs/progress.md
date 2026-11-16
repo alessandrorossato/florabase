@@ -1,3 +1,15 @@
+## 2026-11-16 — WF-04 Batch 01 prepared
+
+- Added batch planning, exact source merges, pinned-tree protected delivery and batch-aware
+  finish and retirement proof. Independent bootstrap QA passed all seven focused regressions.
+  The real batch smoke and the resource isolation smoke passed on disposable fixtures.
+- Integrated REL-01, DOC-05, WF-03 and FN-06 from the four frozen tips. Resolved the progress
+  conflicts additively and reconciled versioning and release evidence. The operator accepted
+  the two FN-06 observations with follow-up dispositions recorded in its evidence.
+- DOC-05 retains its release-work status and needs the v1 changelog entry at release cut. The
+  release-candidate checker continues to enforce all open scope blockers. See the
+  [WF-04 evidence](release/evidence/wf-04-batch-01.md) for the bootstrap and its checks.
+
 ## 2026-11-16 — REL-01: connect DOC-02 release-candidate validation
 
 - Reconciled `feat/rel-01` with `origin/main` at `02519b99098305786f03ba5fba4af8eeb4bdead7`

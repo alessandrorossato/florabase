@@ -15,10 +15,11 @@ disagree, the scope applies.
 There is no public 0.1 stable release between the beta series and the release candidates. `N`
 starts at 1 and increases by one. A tag is the version prefixed with `v`. Every version surface
 of one release (package versions, image labels, `/release.json`, the release manifest and the
-tag) carries the same version. The current release tooling checks this for the beta series;
-extending it to release candidates and v1.0.0 is release task REL-01. Python package metadata
-shows the PEP 440 normalised form (for example `1.0.0rc1`); the source text and every other
-surface use `1.0.0-rc.1`.
+tag) carries the same version. The [release tooling](release/rel-01-tooling.md) checks this
+for beta, release candidates and stable releases. Hosted v1 rehearsal and protected v1
+publication also require the release-scope checker to pass. Python package metadata shows
+the PEP 440 normalised form (for example `1.0.0rc1`). The source text and every other surface
+use `1.0.0-rc.1`.
 
 A version that exists in the source but has no tag and no GitHub Release is not a release.
 [CHANGELOG.md](../CHANGELOG.md) records which versions were published.

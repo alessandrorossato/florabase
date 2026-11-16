@@ -1,0 +1,99 @@
+{
+  "base": "02519b99098305786f03ba5fba4af8eeb4bdead7",
+  "bootstrap": "2645665eece2498186b9d7bd417f48e4e2f28bfe",
+  "bootstrap_commits": [
+    "2645665eece2498186b9d7bd417f48e4e2f28bfe"
+  ],
+  "branch": "ci/wf-04-batch-01",
+  "reconciliation": {
+    "docs/progress.md": "Record the batch and bootstrap checks while retaining all source milestones.",
+    "docs/release/evidence/fn-06.md": "Record the two operator-approved defect dispositions against the tested product commit.",
+    "docs/release/evidence/rel-01.md": "Record the landed DOC-02 checker integration and the continuing release blockers.",
+    "docs/release/evidence/wf-04-batch-01.md": "Record disposable bootstrap and source acceptance evidence.",
+    "docs/versioning.md": "Reconcile DOC-05 release terminology with REL-01 and the release-scope gate."
+  },
+  "sources": [
+    {
+      "base": "02519b99098305786f03ba5fba4af8eeb4bdead7",
+      "branch": "feat/rel-01",
+      "claim": "7184dc9a6c4a",
+      "commits": [
+        "9edf5b7dba4cb9e358460b5e826716b4e43089a2",
+        "94479234495b06cf3fcd9a5e7b2eb2c84cad97fc",
+        "4ad82498a17a76aeb8da6e72e2fda0396d24cd95"
+      ],
+      "evidence": [
+        "docs/release/evidence/rel-01.md"
+      ],
+      "id": "REL-01",
+      "merge": "955134754d9e550dd5db4e8f434f5a06c7989510",
+      "resolutions": [],
+      "reviewer": "source-qa",
+      "tip": "4ad82498a17a76aeb8da6e72e2fda0396d24cd95",
+      "writer": "codex-rel01"
+    },
+    {
+      "base": "02519b99098305786f03ba5fba4af8eeb4bdead7",
+      "branch": "docs/doc-05-changelog-versioning-security",
+      "claim": "88fffbf9eddb",
+      "commits": [
+        "e64a3d4bb0a370be8c8a1b01566ddf359260d676",
+        "c192d140bb49469fe5758a665f29d65345045c58",
+        "621f6552fa5502817b72e8ed1ac8a2d5b3a474f3",
+        "a45a9f3443fdc88f8825e42f8c55e88a3f973215",
+        "224ccde2e4143203aebe0967c3c90dd88c9e5344"
+      ],
+      "evidence": [
+        "docs/progress.md",
+        "docs/versioning.md"
+      ],
+      "id": "DOC-05",
+      "merge": "85828d74358299ce94adf6ea6eced733734ce4e4",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "source-qa",
+      "tip": "224ccde2e4143203aebe0967c3c90dd88c9e5344",
+      "writer": "claude-doc-05"
+    },
+    {
+      "base": "02519b99098305786f03ba5fba4af8eeb4bdead7",
+      "branch": "ci/wf-03",
+      "claim": "0177dcd1313f",
+      "commits": [
+        "0abbf65f4a514bc2cb380cb0baff7a47859abd0c"
+      ],
+      "evidence": [
+        "docs/progress.md",
+        "docs/development-workflow.md"
+      ],
+      "id": "WF-03",
+      "merge": "754bdc6f237de77cd26c64c88fe1e697c2f9d1a4",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "source-qa",
+      "tip": "0abbf65f4a514bc2cb380cb0baff7a47859abd0c",
+      "writer": "antigravity"
+    },
+    {
+      "base": "02519b99098305786f03ba5fba4af8eeb4bdead7",
+      "branch": "feat/fn-06",
+      "claim": "1d1f1153ccf2",
+      "commits": [
+        "5d7e7309193b8aab33c156de9d2ba305fefe969b",
+        "fbb1df013a2fbec5a8df4b5de3e56fd860849712"
+      ],
+      "evidence": [
+        "docs/release/evidence/fn-06.md"
+      ],
+      "id": "FN-06",
+      "merge": "0e0dd04adc84c0d88181efbe2b66b3285c346da1",
+      "resolutions": [],
+      "reviewer": "source-qa",
+      "tip": "fbb1df013a2fbec5a8df4b5de3e56fd860849712",
+      "writer": "codex-fn06-e9f6"
+    }
+  ],
+  "version": 1
+}

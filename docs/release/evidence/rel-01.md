@@ -54,6 +54,9 @@ release tests, 4 tool-lock tests and 62 controller tests. QA separately confirme
 rehearsal and protected publication refuse both v1 channels with the current beta-era feature
 checker. Beta was exercised on the tooling branch by the same release, lock and controller suites.
 
-The real-host gates, operator release approval and the DOC-02 checker integration remain tracked
-under the [v1.0.0 release scope](../scope-v1.md). See the [REL-01 runbook](../rel-01-tooling.md) for
-the release preparation procedure.
+The follow-up at `4ad82498a17a76aeb8da6e72e2fda0396d24cd95` connects the DOC-02
+release-candidate checker to hosted v1 rehearsals and protected v1 publication. Independent
+Batch 01 QA confirmed that the combined candidate still refuses release while the required
+scope work is open. The real-host gates and operator release approval remain tracked under
+the [v1.0.0 release scope](../scope-v1.md). See the [REL-01 runbook](../rel-01-tooling.md) for
+release preparation.
