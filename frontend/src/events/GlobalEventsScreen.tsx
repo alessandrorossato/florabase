@@ -132,8 +132,10 @@ export function GlobalEventsScreen() {
               {notebookEvents(state.events).length === 0 ? (
                 <div className="empty-state">
                   <p>
-                    No Journal entries yet. Choose a Plant or Plant group to
-                    record an observation, note or action.
+                    No Journal entries yet. Choose a{" "}
+                    <a href="#/plants">Plant</a> or{" "}
+                    <a href="#/plants?type=group">Plant group</a> to record an
+                    observation, note or action.
                   </p>
                 </div>
               ) : visible.length === 0 ? (

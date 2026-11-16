@@ -5,6 +5,16 @@ Notable changes to Florabase, newest first. Versions follow the
 [docs/progress.md](docs/progress.md); this file lists what an operator of an installation needs
 to know.
 
+## v1.0.0 — planned
+
+Not yet released or published. The final release entry and upgrade notes will be confirmed
+against the accepted release candidate when v1.0.0 is cut.
+
+- The planned distribution is portable Docker Compose for linux/amd64; see the
+  [release scope](docs/release/scope-v1.md) and [installation guide](docs/portable-installation.md).
+- Upgrade from beta requires a paired backup and the documented upgrade or isolated restore.
+  The supported origins remain subject to the G-MIGRATE and G-UPGRADE acceptance gates.
+
 ## Unreleased
 
 Changes on `main` since `v0.1.0-beta.5`. They ship in the next prerelease. The source is versioned

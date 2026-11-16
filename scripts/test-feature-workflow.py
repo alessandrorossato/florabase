@@ -172,6 +172,8 @@ class VerifyHelperTests(unittest.TestCase):
             "workflow_environment.py", "feature_worktree.py",
         ):
             shutil.copy2(ROOT / "scripts" / name, scripts / name)
+        for name in ("check-doc-links.py", "test-doc-links.py"):
+            (scripts / name).write_text("# simulated link check\n")
         self.bin = self.root / "bin"
         self.bin.mkdir()
         (self.bin / "make").write_text(
@@ -475,7 +477,7 @@ class VerifyHelperTests(unittest.TestCase):
         self.addCleanup(os.close, child)
         result = self.verify(stdin=child)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("Stage order: feature-graph -> whitespace", result.stdout)
+        self.assertIn("Stage order: feature-graph -> doc-links -> test-doc-links -> whitespace", result.stdout)
         self.assertIn("Stage summary", result.stdout)
         self.assertNotIn("interactive-stdin", self.log.read_text())
         journal = json.loads(

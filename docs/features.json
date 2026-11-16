@@ -129,6 +129,22 @@
       "status": "implemented"
     },
     {
+      "id": "CI-005",
+      "category": "infrastructure",
+      "description": "Offline documentation link validation",
+      "acceptance_criteria": [
+        "An offline checker validates relative targets, Markdown heading fragments and reference definitions across tracked and non-ignored untracked repository Markdown without network requests",
+        "Local verification and remote CI quality run the documentation link checker and its offline regression suite across docs-only, affected, product and full plans",
+        "Stale relative links in repository Markdown are corrected and focused parser regressions cover inline links, reference definitions, code exclusions, heading slug collisions and path escapes"
+      ],
+      "dependencies": [
+        "CI-004",
+        "DOCS-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "CI-HYGIENE-001",
       "category": "infrastructure",
       "description": "Require full verification for executable and unclassified files under docs/",
@@ -2877,7 +2893,7 @@
         "RELEASE-SCOPE-001"
       ],
       "priority": "P0",
-      "status": "in_progress"
+      "status": "implemented"
     },
     {
       "id": "CERT-01",

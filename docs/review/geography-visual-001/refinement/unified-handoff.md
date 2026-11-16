@@ -172,8 +172,8 @@ runtime files are outside the delivered implementation; no environment/workflow 
 ## Verification and visual evidence
 
 Current verification, screenshots and interaction evidence are indexed in
-[the unified-navigation review gallery](review/geography-visual-001/refinement/README.md).
-The [initial handoff](review/geography-visual-001/initial-handoff.md) and original gallery are retained
+[the unified-navigation review gallery](../refinement/README.md).
+The [initial handoff](../initial-handoff.md) and original gallery are retained
 as historical evidence; their old grouped navigation/sidebar descriptions are superseded here.
 The refinement matrix checks seven presentations at **1440×844, 1024×844 and 390×844** across Botanical,
 Herbarium and Mineral, each Light/Dark: **126 checks, 57 curated screenshots**. Every view has one

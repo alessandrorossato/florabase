@@ -8,7 +8,8 @@ preserving explicit provenance through real collection workflows.
 
 Florabase is under active pre-release development. The current application is usable for one local
 owner, but no stable public release has been published yet. The private beta series
-(`v0.1.0-beta.N`) leads to release candidates and then v1.0.0, the first public stable release.
+(`v0.1.0-beta.N`) leads to release candidates (`v1.0.0-rc.N`) and then v1.0.0, the first
+public stable release.
 The [v1.0.0 release scope](docs/release/scope-v1.md) defines what that release contains, its
 gates and its exclusions.
 

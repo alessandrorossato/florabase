@@ -386,3 +386,19 @@ test("entry categories are a live union with one counted dimension and preserved
   await user.click(within(drawer).getByRole("button", { name: "Done" }));
   expect(screen.getByRole("button", { name: "Filters" })).toHaveFocus();
 });
+
+test("empty Journal explains the Plant or Plant group prerequisite with contextual navigation links", async () => {
+  vi.mocked(listGlobalEvents).mockResolvedValue([]);
+  mount();
+  const empty = await screen.findByText(/No Journal entries yet/);
+  expect(empty).toHaveTextContent(
+    "No Journal entries yet. Choose a Plant or Plant group to record an observation, note or action.",
+  );
+  expect(within(empty).getByRole("link", { name: "Plant" })).toHaveAttribute(
+    "href",
+    "#/plants",
+  );
+  expect(
+    within(empty).getByRole("link", { name: "Plant group" }),
+  ).toHaveAttribute("href", "#/plants?type=group");
+});

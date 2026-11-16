@@ -353,8 +353,10 @@ def load_manifest(repo: Repository, branch: str, head: str) -> dict[str, Any]:
     followups = value.get("reconciliation")
     if not isinstance(followups, dict) or not all(
         isinstance(name, str)
-        and name.startswith("docs/")
-        and name.endswith(".md")
+        and (
+            (name.startswith("docs/") and name.endswith(".md"))
+            or (name.startswith("scripts/") and name.endswith(".py"))
+        )
         and ".." not in Path(name).parts
         and isinstance(reason, str)
         and reason.strip()

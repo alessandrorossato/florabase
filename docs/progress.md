@@ -31,6 +31,80 @@
     is recorded only in prose.
   - Committed QA records for WCVP-DEFAULT-001 and WGSRPD-CROSSWALK-V2.
 
+## 2026-11-16 — WF-04 Batch 02 prepared
+
+- Registered `CI-005` (`implemented`, `tooling`) in `docs/features.json` and
+  `docs/release/scope-v1.json` for offline documentation link validation (`docs/g-docs-links`),
+  preserving the eight open `certify` and `release-work` release-candidate blockers.
+- Integrated FN-05, FN-06, DOC-05, WF-06 and CI-005 from the five frozen source tips on
+  `ci/batch-02` based on `554d74de88a278e2b9a392de9d105d3d62c35f91`, resolving `docs/progress.md`
+  additively and preserving exact source ancestry and provenance in
+  [batch-02.json](release/evidence/batches/batch-02.json) and
+  [WF-04 Batch 02 evidence](release/evidence/wf-04-batch-02.md).
+- Sanitized host-home paths in `docs/release/evidence/fn-05.md` and `docs/search-002-handoff.md`
+  and the synthetic git email in `scripts/test-workflow-cleanup.py` so the `test-beta-runtime`
+  disclosure scanner passes cleanly.
+- DOC-05 moves from `in_progress` to `implemented` (and remains unverified until release-cut
+  candidate acceptance). Independent combined QA, GitHub Actions CI preflight and a fresh
+  no-reuse canonical FULL gate complete acceptance before operator delivery.
+
+## 2026-11-16 — FN-05: Preselect Today for new Journal entries (UX-DATE-001 D1)
+
+- On `feat/fn-05-journal-today` from `554d74de88a278e2b9a392de9d105d3d62c35f91` (writer
+  `hydrogen-fn-05`).
+- Completed operator-approved decision D1 (`docs/release/acceptance-v1.md` FN-05) without
+  rebuilding `PartialDateField` or `OccurrenceDateChoice`:
+  - `OccurrenceDateChoice` (`frontend/src/events/OccurrenceDateChoice.tsx`) and `EventJournal`
+    (`frontend/src/events/EventJournal.tsx`) now default `initialChoice` and `newEntryDateChoice`
+    to `"today"` (keeping `"unset"` available via prop).
+  - `blankForm(newEntryDateChoice)` initializes `occurredOn` synchronously to the device-local
+    calendar day when `"today"` is preselected, and `dismissEditor` compares against the captured
+    initial form state and initial radio choice so closing an untouched new entry dismisses
+    cleanly while changing the radio choice or typing a partial date triggers the discard prompt.
+  - Stored full, year-month, year-only and unknown dates continue to open unchanged and save
+    untouched; height measurements still disable `Date unknown` with its programmatic description
+    and require a date of any precision.
+- Expanded focused frontend regressions in `frontend/src/events/OccurrenceDateChoice.test.tsx` (14
+  tests covering criteria 1–5 end-to-end in `OccurrenceDateChoice` and `EventJournal`) and updated
+  the three D1 assertions in `frontend/src/plants/PlantScreen.test.tsx` (78 tests). Recorded
+  acceptance mapping in [`docs/release/evidence/fn-05.md`](release/evidence/fn-05.md).
+- Focused checks: Vitest (`OccurrenceDateChoice.test.tsx`, `PlantScreen.test.tsx`,
+  `PartialDateField.test.tsx`), `pnpm format:check`, `pnpm lint`, `pnpm typecheck`,
+  `python3 scripts/check-features.py` and `git diff --check`. Independent QA (`argon-qa`) passed
+  with zero defects (`QA_PASS`).
+- Unresolved: G-CORE step 5 on the release-candidate images and batch integration under WF-04.
+
+## 2026-11-16 — FN-06 follow-up: Journal empty-state contextual navigation
+
+- On `feat/fn-06-journal-navigation` from `554d74de88a278e2b9a392de9d105d3d62c35f91` (writer
+  `hydrogen-fn-06-journal-nav`).
+- Implemented the approved non-blocking UX follow-up from [`docs/release/evidence/fn-06.md`](release/evidence/fn-06.md):
+  when the global Journal (`#/events`) has no entries and explains that a Plant or Plant group is
+  required, `GlobalEventsScreen` (`frontend/src/events/GlobalEventsScreen.tsx`) now provides
+  contextual navigation links to `Plant` (`#/plants`) and `Plant group` (`#/plants?type=group`),
+  matching the application's collection routing (`frontend/src/shell/navigation.ts`).
+- Added regression coverage in `frontend/src/events/GlobalEventsScreen.test.tsx` (11 tests) and
+  updated [`docs/release/evidence/fn-06.md`](release/evidence/fn-06.md).
+- Focused checks: Vitest (`GlobalEventsScreen.test.tsx`), `pnpm format:check`, `pnpm lint`,
+  `pnpm typecheck`, `python3 scripts/check-features.py` and `git diff --check`. Independent QA
+  (`argon-qa`) passed with zero defects (`QA_PASS`).
+- Unresolved: batch integration under WF-04.
+
+## 2026-11-16 — DOC-05 release documentation audit
+
+- Added a clearly planned, unpublished v1.0.0 changelog entry; release-cut content and
+  candidate acceptance remain pending. Clarified the distinction between a tag and publication.
+- Compared the release line and publication terminology against REL-01 tooling and its runbook;
+  the supported contracts and private reporting channel remain documented. See [REL-01 evidence](release/evidence/rel-01.md) and [Batch 01 evidence](release/evidence/wf-04-batch-01.md),
+  which records private reporting enabled.
+- Independent delta QA passed: graph, expected candidate refusal and whitespace reviewed.
+- Marked DOC-05 implemented, not verified: release acceptance must review the final candidate.
+- Checks: `python3 scripts/check-features.py` passed (162 entries);
+  `python3 scripts/check-features.py --release-candidate` correctly reported eight open blockers;
+  `git diff --check` passed. Independent baseline at `554d74d`:
+  `FLORABASE_RELEASE_OFFLINE=1 python3 scripts/release-tools.py scripts/test-beta-images.py`
+  passed 60 tests.
+
 ## 2026-11-16 — Batch 01 synthetic PR identity correction
 
 - Reproduced the inherited runner branch mismatch. The synthetic docs event now declares its
@@ -9161,6 +9235,15 @@ Status remains implemented pending canonical verification.
   follow-up registers the test without changing product source. Lineage bridge cleanup is
   deferred and the batch UAT Preview remains available.
 
+## 2026-11-16 — WF-06 finished-resource cleanup
+
+- Added report and exact-inventory confirmation for positively owned disposable and Quality
+  resources and volume-preserving UAT stops; protected environments and uncertain ownership refuse.
+  Normal completion is recorded before retirement; interrupted or unproved runs remain report-only.
+- Independent infrastructure QA and synthetic Docker smoke passed on the source commit. The
+  [WF-06 evidence](release/evidence/wf-06.md) records commands, fixture boundaries and limitations.
+  Canonical FULL and operator delivery remain pending.
+
 ### BRAND-01 — approved Florabase logo, 15 November 2026
 
 - Added the approved wordmark to the README and icon marks to the Workbench, Today and offline
@@ -9196,3 +9279,16 @@ Status remains implemented pending canonical verification.
 - Independent QA reviewed coverage and the fix. The
   [run record](release/evidence/fn-06.md) contains the page matrix and two first-run wording and
   navigation findings for operator disposition. Canonical verification is pending integration.
+
+## 2026-11-16 — G-DOCS offline link checks
+
+- Added an offline check for tracked and nonignored untracked Markdown, including relative targets,
+  Markdown heading fragments and reference definitions. Corrected seven stale links; three historical
+  screenshot paths are identified as external artifacts rather than repository links.
+- The checker handles inline links with one level of balanced parentheses or angle destinations,
+  full and collapsed reference links, ATX headings and same-line inline or fenced code. It does not
+  parse arbitrary HTML, shortcut references, multiline inline code or the full CommonMark grammar.
+- Checks: `python3 scripts/test-doc-links.py`, `python3 scripts/check-doc-links.py`,
+  `python3 scripts/test-verification-impact.py` (37 tests), and
+  `python3 scripts/test-feature-workflow.py` (54 tests).
+  Independent QA and release acceptance remain pending; no canonical gate has run.

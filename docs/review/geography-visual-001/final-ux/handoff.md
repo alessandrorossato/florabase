@@ -171,8 +171,8 @@ runtime files are outside the delivered implementation; no environment/workflow 
 ## Verification and visual evidence
 
 Current verification, screenshots and interaction evidence are indexed in
-[the final UX review gallery](review/geography-visual-001/final-ux/README.md).
-The [initial handoff](review/geography-visual-001/initial-handoff.md), [unified-navigation handoff](review/geography-visual-001/refinement/unified-handoff.md) and both earlier galleries are retained
+[the final UX review gallery](../final-ux/README.md).
+The [initial handoff](../initial-handoff.md), [unified-navigation handoff](../refinement/unified-handoff.md) and both earlier galleries are retained
 as historical evidence; their old grouped navigation/sidebar descriptions are superseded here.
 Final UX evidence covers the requested viewports and all three palettes in Light/Dark, the compact
 Overview, shared breadcrumbs, expanded Places hierarchy/preview, New local place dialog, mapped and

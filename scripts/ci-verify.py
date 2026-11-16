@@ -69,6 +69,8 @@ def ci_checks_for(plan: dict[str, Any], job: str) -> list[dict[str, Any]]:
     if job == "quality":
         return [
             {"id": "feature-graph", "command": ["python3", "./scripts/check-features.py"]},
+            {"id": "doc-links", "command": ["python3", "./scripts/check-doc-links.py"]},
+            {"id": "test-doc-links", "command": ["python3", "./scripts/test-doc-links.py"]},
             *[{"id": suite, "command": ["make", suite]} for suite in plan["workflow"]],
             {"id": "quality", "command": ["make", "check"]},
         ]
