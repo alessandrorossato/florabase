@@ -2015,17 +2015,8 @@ test("Event creation validates movement, explains side effects and authoritative
     screen.getByLabelText("Notes", { selector: "textarea" }),
     "New leaf.",
   );
-  // No date choice is preselected (D1): saving waits for one.
-  await user.click(
-    within(screen.getByRole("dialog")).getByRole("button", {
-      name: "Add entry",
-    }),
-  );
-  expect(screen.getByRole("alert")).toHaveTextContent(
-    "Choose when this happened",
-  );
-  expect(screen.getByRole("radio", { name: /^Today/ })).toHaveFocus();
-  await user.click(screen.getByRole("radio", { name: "Date unknown" }));
+  // Today is preselected (D1): saving works immediately with the device-local calendar day.
+  expect(screen.getByRole("radio", { name: /^Today/ })).toBeChecked();
   await user.click(
     within(screen.getByRole("dialog")).getByRole("button", {
       name: "Add entry",
@@ -3481,11 +3472,13 @@ test("height measurements are recorded, corrected and plotted without inventing 
   const unknown = screen.getByRole("radio", { name: "Date unknown" });
   expect(unknown).toBeDisabled();
   expect(unknown).toHaveAccessibleDescription(/A height needs a date/);
+  // Today is preselected (D1), while Another date requires a complete date of any precision.
+  expect(screen.getByRole("radio", { name: /^Today/ })).toBeChecked();
+  await user.click(screen.getByRole("radio", { name: "Another date" }));
   await user.click(submit);
   expect(screen.getByRole("alert")).toHaveTextContent(
-    "Choose when this happened: Today or Another date.",
+    "Occurrence date is incomplete: enter a valid year (1–9999)",
   );
-  await user.click(screen.getByRole("radio", { name: "Another date" }));
   await user.selectOptions(screen.getByLabelText("Precision"), "month");
   await user.clear(screen.getByLabelText("Year"));
   await user.type(screen.getByLabelText("Year"), "2026");
@@ -3622,7 +3615,9 @@ test("phenology is recorded stage first, shown once in the Journal and compared 
     within(dialog).getByLabelText(/Phenological stage/),
     "fruit_ripening",
   );
-  // Only a recorded date can be approximate.
+  // Today is preselected (D1); Date unknown disables Approximate date because only a recorded date can be approximate.
+  expect(within(dialog).getByLabelText(/Approximate date/)).toBeEnabled();
+  await user.click(screen.getByRole("radio", { name: "Date unknown" }));
   expect(within(dialog).getByLabelText(/Approximate date/)).toBeDisabled();
   expect(writes).toHaveLength(0);
   await user.click(screen.getByRole("radio", { name: "Another date" }));
