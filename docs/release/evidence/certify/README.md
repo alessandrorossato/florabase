@@ -26,7 +26,7 @@ repository is listed as "Not counted" in each map.
 | --- | --- | --- | --- | --- |
 | [TAXONOMY-002](taxonomy-002.md) | `implemented` | 4/4 | — | — |
 | [PHENOLOGY-001](phenology-001.md) | `implemented` | 4/5 | G-UX #4 | — |
-| [UI-POLISH-001](ui-polish-001.md) | `implemented` | 4/5 | candidate gate #5 | — |
+| [UI-POLISH-001](ui-polish-001.md) | `implemented` | 3/5 | candidate gate #5; G-UX #4 (Plants and groups) | #4: no named Plant title-focus test located |
 | [WCVP-DEFAULT-001](wcvp-default-001.md) | `implemented` | 3/4 | candidate gate #4 | #4: no committed independent QA record |
 | [WGSRPD-CROSSWALK-V2](wgsrpd-crosswalk-v2.md) | `implemented` | 4/5 | candidate gate #5 | #5: no committed independent QA record |
 | [BRAND-01](brand-01.md) | `implemented` | 0/3 | G-UX #2 | #1–#3: no committed record that the artwork is the approved one; the archive manifest is not in the repository |
