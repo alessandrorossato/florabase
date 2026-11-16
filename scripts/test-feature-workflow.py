@@ -32,6 +32,32 @@ SPEC.loader.exec_module(feature_deliver)
 
 
 class BatchDeliveryTests(unittest.TestCase):
+    def test_correction_reuses_exact_existing_pr_and_original_provenance(self) -> None:
+        prior, corrected = "1" * 40, "2" * 40
+        branch = "ci/batch-fixture"
+        delivery = feature_deliver.Delivery(feature_deliver.Commands())
+        delivery.batch = {
+            "branch": branch, "base": "a" * 40, "bootstrap_commits": [],
+            "sources": [{"id": "FN-01", "branch": "feat/first", "tip": prior, "commits": [prior]}],
+            "correction": {"supersedes": prior},
+        }
+        title, body = delivery.title_and_body(branch, prior, False)
+        value = {
+            "number": 191, "node_id": "node", "state": "open", "title": title, "body": body,
+            "auto_merge": {"merge_method": "squash"},
+            "base": {"ref": "main"},
+            "head": {"ref": branch, "sha": prior, "repo": {"full_name": feature_batch.REPOSITORY}},
+        }
+        with patch.object(delivery, "api", return_value=value) as api:
+            pr = delivery.correction_pr(191, branch, corrected, False)
+            api.assert_called_once_with(f"repos/{feature_batch.REPOSITORY}/pulls/191")
+            self.assertEqual((pr.head_sha, pr.auto_merge_method), (prior, "squash"))
+        for invalid in ({**value, "body": "edited"}, {**value, "number": 192},
+                        {**value, "auto_merge": {"merge_method": "merge"}}):
+            with patch.object(delivery, "api", return_value=invalid):
+                with self.assertRaises(feature_deliver.DeliveryError):
+                    delivery.correction_pr(191, branch, corrected, False)
+
     def test_title_and_body_enumerate_the_exact_sources_and_bootstrap(self) -> None:
         first, second, third = "1" * 40, "2" * 40, "3" * 40
         plan = {
@@ -189,7 +215,7 @@ class VerifyHelperTests(unittest.TestCase):
             **environment,
         }
         # Fixture gates choose their own writer and execution mode, independently of the caller.
-        for name in ("AGENT_ID", "REUSE", "FRESH"):
+        for name in ("AGENT_ID", "REUSE", "FRESH", "GITHUB_ACTIONS"):
             if name not in environment:
                 env.pop(name, None)
         return subprocess.run(
@@ -234,9 +260,22 @@ class VerifyHelperTests(unittest.TestCase):
         }
         review_path = repo.metadata / feature_batch.REVIEW
         feature_batch.write_json(review_path, review)
-        result = self.verify(full=True, FRESH="1")
+        with patch.dict(os.environ, {"GITHUB_ACTIONS": "true"}):
+            result = self.verify(full=True, FRESH="1")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(feature_batch.finalized_receipt(*args)["receipt"]["head"], head)
+
+        for mode in ("reuse", "fresh"):
+            execution = self.root / f"remote-{mode}.json"
+            remote = subprocess.run(
+                [sys.executable, "scripts/verification_gate.py", "--base", base,
+                 "--execution", str(execution), "--evidence", mode],
+                cwd=self.work, env={**os.environ, "GITHUB_ACTIONS": "true"},
+                capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(remote.returncode, 2, remote.stderr)
+            self.assertIn("remote CI never reads or writes local stage evidence", remote.stderr)
+            self.assertFalse(execution.exists())
 
         receipt_file = repo.metadata / feature_batch.RECEIPT
         original_receipt = self.receipt()

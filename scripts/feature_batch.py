@@ -299,6 +299,32 @@ def load_manifest(repo: Repository, branch: str, head: str) -> dict[str, Any]:
         "unknown batch manifest version or branch",
     )
     base, bootstrap = oid(value.get("base")), oid(value.get("bootstrap"))
+    if "correction" in value:
+        correction = value["correction"]
+        prior = oid(correction["supersedes"])
+        require(
+            parents(repo, head) == [prior], "batch correction must directly extend its prior head"
+        )
+        original = load_manifest(repo, branch, prior)
+        require(
+            "correction" not in original,
+            "a batch correction must extend the original manifest commit",
+        )
+        require(
+            {key: field for key, field in value.items() if key != "correction"}
+            == {key: field for key, field in original.items() if key != "correction"},
+            "batch correction changes the original provenance",
+        )
+        changed = set(paths_between(repo, prior, head)) - {path}
+        require(
+            changed
+            and changed == set(correction["paths"])
+            and all(name.startswith(("scripts/", "docs/")) for name in changed)
+            and isinstance(correction.get("reason"), str)
+            and correction["reason"].strip(),
+            "batch correction must account for each changed workflow or documentation path",
+        )
+        return value
     bootstrap_commits = commits(repo, base, bootstrap)
     require(
         value.get("bootstrap_commits") == bootstrap_commits, "bootstrap commit inventory differs"

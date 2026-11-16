@@ -53,6 +53,7 @@ class PullRequest:
     base_ref: str = ""
     head_repo: str = ""
     merged: bool = False
+    auto_merge_method: str | None = None
 
 
 @dataclass(frozen=True)
@@ -165,6 +166,7 @@ class Delivery:
             base_ref=str(base.get("ref", "")),
             head_repo=str(head_repo.get("full_name", "")),
             merged=value.get("merged") is True,
+            auto_merge_method=(value.get("auto_merge") or {}).get("merge_method"),
         )
 
     def require(self, condition: bool, message: str) -> None:
@@ -259,6 +261,21 @@ class Delivery:
                 identifier, self.api(f"repos/{REPOSITORY}/rulesets/{identifier}")
             )
 
+    def correction_pr(self, number: int, branch: str, head: str, migration: bool) -> PullRequest:
+        assert self.batch is not None
+        prior = self.batch["correction"]["supersedes"]
+        current = self.api(f"repos/{REPOSITORY}/pulls/{number}")
+        if not isinstance(current, dict):
+            fail("cannot read the existing batch PR", blocked=True)
+        pr = self.pr_from(current)
+        self.validate_pr_target(pr, branch)
+        title, body = self.title_and_body(branch, prior, migration)
+        if (pr.number != number or pr.head_sha not in (prior, head)
+                or pr.auto_merge_method not in (None, "squash")
+                or current.get("title") != title or current.get("body") != body):
+            fail("existing PR does not match the batch correction and original provenance", blocked=True)
+        return pr
+
     def validate_pr_target(self, pr: PullRequest, branch: str, delivery_sha: str | None = None) -> None:
         if pr.head_ref != branch or pr.base_ref != "main" or pr.head_repo != REPOSITORY:
             fail(f"pull request #{pr.number} does not match {branch} from {REPOSITORY} into main", blocked=True)
@@ -296,6 +313,9 @@ class Delivery:
                 )
             self.sleep(self.pr_head_poll_seconds)
             current = self.current_pr(pr.number)
+            if self.batch and "correction" in self.batch and current.merged:
+                self.validate_pr_target(current, branch, delivery_sha)
+                return current
             self.validate_open_pr_target(current, branch)
             if current.head_sha == delivery_sha:
                 return current
@@ -532,7 +552,22 @@ class Delivery:
         migration = self.migration_detected(preflight.base_sha, preflight.delivery_sha)
         main_is_ancestor = self.is_ancestor("origin/main", preflight.delivery_sha)
 
-        completed = self.completed_pr_for_delivery(preflight.branch, preflight.delivery_sha)
+        correction_number = os.environ.get("EXPECTED_PR", "")
+        existing = None
+        if self.batch and "correction" in self.batch:
+            self.require(bool(re.fullmatch(r"[1-9][0-9]*", correction_number)),
+                         "a batch correction requires EXPECTED_PR for its existing PR")
+            existing = self.correction_pr(
+                int(correction_number), preflight.branch, preflight.delivery_sha, migration
+            )
+            completed = existing if existing.merged else None
+            if completed:
+                self.validate_pr_target(completed, preflight.branch, preflight.delivery_sha)
+            else:
+                self.validate_open_pr_target(existing, preflight.branch)
+        else:
+            self.require(not correction_number, "EXPECTED_PR is only supported for a batch correction")
+            completed = self.completed_pr_for_delivery(preflight.branch, preflight.delivery_sha)
         if completed:
             self.wait_for_checks(completed, preflight.branch, preflight.delivery_sha)
             self.complete_delivery(
@@ -561,21 +596,29 @@ class Delivery:
             self.require_batch_protection()
             self.title_and_body(preflight.branch, preflight.delivery_sha, migration)
         self.push(preflight.branch, preflight.delivery_sha)
-        pr = self.find_or_create_pr(preflight.branch, preflight.delivery_sha, migration)
+        pr = existing or self.find_or_create_pr(preflight.branch, preflight.delivery_sha, migration)
         pr = self.wait_for_pr_head(pr, preflight.branch, preflight.delivery_sha)
+        if existing:
+            pr = self.correction_pr(pr.number, preflight.branch, preflight.delivery_sha, migration)
+            self.validate_pr_target(pr, preflight.branch, preflight.delivery_sha)
+            if not pr.merged:
+                self.validate_open_pr_target(pr, preflight.branch)
         if self.batch:
-            self.git("fetch", "origin", "main")
-            self.require(
-                self.git("rev-parse", "origin/main", capture=True) == self.batch["base"],
-                "main has changed since the batch was verified",
-            )
-            self.require_batch_protection()
-            current = self.api(f"repos/{REPOSITORY}/pulls/{pr.number}")
-            title, body = self.title_and_body(preflight.branch, preflight.delivery_sha, migration)
-            if not isinstance(current, dict) or current.get("title") != title or current.get("body") != body:
-                fail("batch PR title or provenance body changed", blocked=True)
-            self.validate_pr_target(self.pr_from(current), preflight.branch, preflight.delivery_sha)
-        self.enable_auto_merge(pr, preflight.delivery_sha)
+            if not pr.merged:
+                self.git("fetch", "origin", "main")
+                self.require(
+                    self.git("rev-parse", "origin/main", capture=True) == self.batch["base"],
+                    "main has changed since the batch was verified",
+                )
+                self.require_batch_protection()
+            if not existing:
+                current = self.api(f"repos/{REPOSITORY}/pulls/{pr.number}")
+                title, body = self.title_and_body(preflight.branch, preflight.delivery_sha, migration)
+                if not isinstance(current, dict) or current.get("title") != title or current.get("body") != body:
+                    fail("batch PR title or provenance body changed", blocked=True)
+                self.validate_pr_target(self.pr_from(current), preflight.branch, preflight.delivery_sha)
+        if not existing or (not pr.merged and not pr.auto_merge_method):
+            self.enable_auto_merge(pr, preflight.delivery_sha)
         self.wait_for_checks(pr, preflight.branch, preflight.delivery_sha)
         merged = self.wait_for_merge(pr, preflight.branch, preflight.delivery_sha)
         self.complete_delivery(

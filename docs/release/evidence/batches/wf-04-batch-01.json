@@ -5,6 +5,17 @@
     "2645665eece2498186b9d7bd417f48e4e2f28bfe"
   ],
   "branch": "ci/wf-04-batch-01",
+  "correction": {
+    "paths": [
+      "docs/development-workflow.md",
+      "docs/progress.md",
+      "scripts/feature-deliver.py",
+      "scripts/feature_batch.py",
+      "scripts/test-feature-workflow.py"
+    ],
+    "reason": "Recover PR #191 by isolating the simulated local gate from GitHub Actions and allowing a provenance-preserving fast-forward.",
+    "supersedes": "52bd06fad34feb8cc1d5a52383160739ef1ecb8b"
+  },
   "reconciliation": {
     "docs/progress.md": "Record the batch and bootstrap checks while retaining all source milestones.",
     "docs/release/evidence/fn-06.md": "Record the two operator-approved defect dispositions against the tested product commit.",

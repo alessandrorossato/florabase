@@ -1,3 +1,13 @@
+## 2026-11-16 — Batch 01 Quality correction for PR #191
+
+- Reproduced the nested local receipt test failure under `GITHUB_ACTIONS=true`. The disposable
+  fixture now drops the outer runner flag. Tests exercise the successful local path and the
+  real gate's refusal to reuse or record evidence under the remote flag.
+- The correction extends the verified batch by fast-forward. The manifest retains its source
+  provenance and records the correction. Operator delivery pins the existing PR number.
+- Focused verification uses `GITHUB_ACTIONS=true make test-feature-workflow`. The corrected
+  integration commit requires independent QA and a fresh FULL receipt.
+
 ## 2026-11-16 — WF-04 Batch 01 prepared
 
 - Added batch planning, exact source merges, pinned-tree protected delivery and batch-aware

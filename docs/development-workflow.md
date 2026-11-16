@@ -922,6 +922,13 @@ against the manifest's pinned base and exact head. After protected squash, deliv
 the squash parent and tree and archives proof and a private local ref under shared Git
 metadata. A changed base or tree requires a new reviewed candidate and a fresh receipt.
 
+For a same-base correction to an open batch PR, add a single fast-forward commit. Its manifest
+`correction` records the direct parent in `supersedes`, the workflow and documentation
+`paths` changed, and the `reason`. Keep the original provenance. After exact-head QA and a
+fresh FULL, supply `EXPECTED_PR=<number>` and `EXPECTED_HEAD=<corrected-sha>` to
+`feature-deliver`. It verifies and reuses that PR, preserving the original title and body.
+
+
 After the operator authorizes finish, run the usual `make feature-finish` from the integration
 branch for that branch's own merged PR. This fast-forwards clean primary `main` and installs
 the new batch command on the first delivery. Then run
