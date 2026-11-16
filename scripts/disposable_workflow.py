@@ -161,6 +161,25 @@ def compose_invocation(
     return command, env
 
 
+def check_frontend_image(disposable: Disposable, root: Path, directory: Path) -> None:
+    owner = disposable.owner
+    image = f"{owner.project}-frontend"
+    labels = [
+        argument
+        for key, value in owner.labels().items()
+        for argument in ("--label", f"{key}={value}")
+    ]
+    container = disposable.run(
+        ["docker", "create", "--pull=never", "--network=none", *labels, image]
+    )
+    dist = directory / "frontend-dist"
+    dist.mkdir()
+    disposable.run(["docker", "cp", f"{container}:/usr/share/nginx/html/.", str(dist)])
+    subprocess.run(
+        [sys.executable, str(root / "scripts/check_ui_lab_build.py"), str(dist)], check=True
+    )
+
+
 def execute(
     role: str, *, base: str = "", suites: list[str] | None = None, builds: list[str] | None = None
 ) -> None:
@@ -172,7 +191,7 @@ def execute(
     with tempfile.TemporaryDirectory(prefix="florabase-disposable-config-") as temporary:
         command, env = compose_invocation(role, root, owner, selected, Path(temporary))
         try:
-            with Disposable(owner):
+            with Disposable(owner) as disposable:
                 if role == "verification-build":
                     action = ["build", *(builds or ["backend", "frontend"])]
                 elif role == "feature-migration":
@@ -206,6 +225,8 @@ def execute(
                     text=True,
                     stdout=subprocess.PIPE if evidence else None,
                 )
+                if role == "verification-build" and "frontend" in action[1:]:
+                    check_frontend_image(disposable, root, Path(temporary))
                 if evidence:
                     print(result.stdout, end="", flush=True)
                     reports = [
