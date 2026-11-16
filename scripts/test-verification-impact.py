@@ -607,6 +607,8 @@ class RemoteHistoryTests(unittest.TestCase):
             ):
                 shutil.copy(ROOT / "scripts" / name, root / "scripts" / name)
             shutil.copy(ROOT / "docs/features.json", root / "docs/features.json")
+            (root / "docs/release").mkdir()
+            shutil.copy(ROOT / "docs/release/scope-v1.json", root / "docs/release/scope-v1.json")
             (root / ".gitignore").write_text("__pycache__/\n")
             (root / "README.md").write_text("base\n")
             git("init", "--initial-branch=main")

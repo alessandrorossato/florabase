@@ -1,3 +1,31 @@
+## 2026-11-15 — DOC-02 step 2: release-scope manifest and checker rules
+
+- Added [`docs/release/scope-v1.json`](release/scope-v1.json), the v1.0.0 release-scope manifest:
+  one class for each of the 161 identifiers in `features.json`. 156 classes are the proposed
+  targets of the [reconciliation matrix](release/feature-reconciliation-v1.md); ENG-01 and
+  BRAND-01 (`certify`) and RELEASE-SCOPE-001, DOC-01 and DOC-03 (`release-work`) are the
+  operator's classes of 2026-11-15; BRAND-01 has its own scope-change record. No status in
+  `features.json` changed.
+- `scripts/check-features.py` now requires the manifest and fails on: an unreadable manifest or
+  a repeated key; a version, release or class list other than the specified ones; an identifier
+  without a class; a class for an unknown identifier; an unsupported class; a `baseline` entry
+  that is not `verified`; a `post-1.0` entry that is. `--release-candidate` fails while a
+  `certify` or `release-work` entry is `planned` or `in_progress`; without the flag those
+  entries are printed and the check passes. Nothing calls the flag yet (step 3, with REL-01).
+  The existing graph rules and their messages are unchanged and run first.
+- `scripts/test-check-features.py` has a failing fixture for each new rule (26 tests). The
+  fixture repositories of `test-feature-workflow.py` and `test-verification-impact.py` gained a
+  manifest, because they run the real checker.
+- On current `main` the report names eight entries that would block a candidate: RELEASE-001,
+  CUTTING-001, UI-SYSTEM-001, BETA-IMAGE-001, beta-postgres-repro-001, BETA-SECURITY-001,
+  BETA-DATA-001 and BETA-ACCEPTANCE-001.
+- Adoption: a branch that adds, removes or renames an identifier must update the manifest
+  after merging `main` (`AGENTS.md`). Known at preparation: DOC-05.
+- Checks: `python3 scripts/test-check-features.py`, `test-feature-workflow.py`,
+  `test-verification-impact.py`, `test-stage-evidence.py`, `test-agent-workflow.py`,
+  `scripts/check-features.py`, `git diff --check`. Canonical verification is recorded with the
+  delivery.
+
 ## 2026-11-15 — WF-02: Separate product-wide and full infrastructure verification tiers
 
 - Split `scripts/verification-impact.json` `full_prefixes` into `full_prefixes` (workflow/scripts, `.github/`, `compose`, `Makefile`, `AGENTS.md`, `deploy/`, `postgres/`, `release/`, Dockerfiles, Python/Node dependency & lockfiles, Alembic migrations, config dotfiles, and `backend/src/florabase/__init__.py` which `beta_release.py` and `test-beta-images.py` read for `__version__`) and `product_prefixes` (25 shared frontend UI/styles/maps/test and shared backend infrastructure prefixes).

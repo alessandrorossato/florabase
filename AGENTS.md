@@ -77,7 +77,10 @@ VERIFY → OPERATOR DELIVERY → FINISH.
 
 `docs/features.json` is the machine-readable source of truth. Preserve its schema and statuses:
 `planned`, `in_progress`, `implemented`, and `verified`. Verification requires evidence for every
-acceptance criterion, not merely satisfied dependencies.
+acceptance criterion, not merely satisfied dependencies. Every identifier also has exactly one
+release class in `docs/release/scope-v1.json`; a change that adds, removes or renames an identifier
+updates that file in the same change and names the proposed class in its handoff for the operator
+([specification](docs/release/release-target-schema-followup.md)).
 
 After meaningful work, update affected documentation and append or consolidate a concise
 `docs/progress.md` milestone with the exact checks and unresolved issues. Use the domain/UI/infrastructure review order from the canonical workflow. Infrastructure requires
