@@ -1,3 +1,29 @@
+## 2026-11-16 — FN-05: Preselect Today for new Journal entries (UX-DATE-001 D1)
+
+- On `feat/fn-05-journal-today` from `554d74de88a278e2b9a392de9d105d3d62c35f91` (writer
+  `hydrogen-fn-05`).
+- Completed operator-approved decision D1 (`docs/release/acceptance-v1.md` FN-05) without
+  rebuilding `PartialDateField` or `OccurrenceDateChoice`:
+  - `OccurrenceDateChoice` (`frontend/src/events/OccurrenceDateChoice.tsx`) and `EventJournal`
+    (`frontend/src/events/EventJournal.tsx`) now default `initialChoice` and `newEntryDateChoice`
+    to `"today"` (keeping `"unset"` available via prop).
+  - `blankForm(newEntryDateChoice)` initializes `occurredOn` synchronously to the device-local
+    calendar day when `"today"` is preselected, and `dismissEditor` compares against the captured
+    initial form state and initial radio choice so closing an untouched new entry dismisses
+    cleanly while changing the radio choice or typing a partial date triggers the discard prompt.
+  - Stored full, year-month, year-only and unknown dates continue to open unchanged and save
+    untouched; height measurements still disable `Date unknown` with its programmatic description
+    and require a date of any precision.
+- Expanded focused frontend regressions in `frontend/src/events/OccurrenceDateChoice.test.tsx` (14
+  tests covering criteria 1–5 end-to-end in `OccurrenceDateChoice` and `EventJournal`) and updated
+  the three D1 assertions in `frontend/src/plants/PlantScreen.test.tsx` (78 tests). Recorded
+  acceptance mapping in [`docs/release/evidence/fn-05.md`](release/evidence/fn-05.md).
+- Focused checks: Vitest (`OccurrenceDateChoice.test.tsx`, `PlantScreen.test.tsx`,
+  `PartialDateField.test.tsx`), `pnpm format:check`, `pnpm lint`, `pnpm typecheck`,
+  `python3 scripts/check-features.py` and `git diff --check`. Independent QA (`argon-qa`) passed
+  with zero defects (`QA_PASS`).
+- Unresolved: G-CORE step 5 on the release-candidate images and batch integration under WF-04.
+
 ## 2026-11-16 — Batch 01 synthetic PR identity correction
 
 - Reproduced the inherited runner branch mismatch. The synthetic docs event now declares its

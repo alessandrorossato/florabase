@@ -25,6 +25,7 @@ import "./activity.css";
 import { FieldHelp } from "../components/ContextualHelp";
 import { locationsForScope, type LocationResponse } from "../locations/api";
 import { hasDateDraft, invalidDateControls } from "../seed-lots/dateControls";
+import { localDay } from "../schedule/calendar";
 import { OccurrenceDateChoice, type DateChoice } from "./OccurrenceDateChoice";
 import { PhotosSection } from "../photos/PhotosSection";
 import { EventTargetPhoto } from "./EventTargetPhoto";
@@ -119,10 +120,12 @@ const lifecycleKinds = new Set<EventKind>([
   "discarded",
 ]);
 
-function blankForm(): EventFormState {
+function blankForm(dateChoice: DateChoice = "today"): EventFormState {
+  const [year, month, day] = localDay().split("-").map(Number);
   return {
     kind: "observation",
-    occurredOn: null,
+    occurredOn:
+      dateChoice === "today" ? { precision: "day", year, month, day } : null,
     notes: "",
     destinationLocationId: "",
     recipient: "",
@@ -188,14 +191,14 @@ export function EventJournal({
   targetLabel,
   locations,
   onTargetRefresh,
-  newEntryDateChoice = "unset",
+  newEntryDateChoice = "today",
 }: {
   targetKind: EventTargetKind;
   targetId: string;
   targetLabel: string;
   locations: LocationResponse[];
   onTargetRefresh: () => Promise<void>;
-  /** Date choice a new entry opens with; "unset" makes the user choose (decision D1). */
+  /** Date choice a new entry opens with; defaults to "today" (decision D1). */
   newEntryDateChoice?: DateChoice;
 }) {
   const auth = useAuth();
@@ -218,7 +221,10 @@ export function EventJournal({
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [deleting, setDeleting] = useState<EventResponse | null>(null);
   const [photoEvent, setPhotoEvent] = useState<EventResponse | null>(null);
-  const [form, setForm] = useState<EventFormState>(blankForm);
+  const [form, setForm] = useState<EventFormState>(() =>
+    blankForm(newEntryDateChoice),
+  );
+  const [initialForm, setInitialForm] = useState<EventFormState>(form);
   const [mutation, setMutation] = useState<MutationState>({ status: "idle" });
   const [notice, setNotice] = useState<JournalNotice | null>(null);
 
@@ -269,15 +275,20 @@ export function EventJournal({
 
   function dismissEditor() {
     if (pending || !editor) return;
-    const initial = editor === "create" ? blankForm() : formFrom(editor);
-    // A date choice or a half-typed date is unsaved input even while the value is still null.
+    // A date choice change or a half-typed date is unsaved input even while the value is still null.
+    const checkedChoice = entryForm.current?.querySelector<HTMLInputElement>(
+      '[data-date-control="choice"]:checked',
+    )?.value;
+    const initialChoice =
+      editor === "create"
+        ? newEntryDateChoice
+        : editor.occurred_on
+          ? "other"
+          : "unknown";
     const dateInput =
       hasDateDraft(entryForm.current) ||
-      (editor === "create" &&
-        entryForm.current?.querySelector(
-          '[data-date-control="choice"]:checked',
-        ));
-    if (JSON.stringify(form) === JSON.stringify(initial) && !dateInput)
+      (checkedChoice !== undefined && checkedChoice !== initialChoice);
+    if (JSON.stringify(form) === JSON.stringify(initialForm) && !dateInput)
       setEditor(null);
     else setConfirmDiscard(true);
   }
@@ -291,7 +302,9 @@ export function EventJournal({
 
   function openCreate(phenology = false) {
     setPhenologyEntry(phenology);
-    setForm(blankForm());
+    const next = blankForm(newEntryDateChoice);
+    setForm(next);
+    setInitialForm(next);
     setMutation({ status: "idle" });
     setNotice(null);
     setEditor("create");
@@ -299,7 +312,9 @@ export function EventJournal({
 
   function openEdit(event: EventResponse) {
     setPhenologyEntry(false);
-    setForm(formFrom(event));
+    const next = formFrom(event);
+    setForm(next);
+    setInitialForm(next);
     setMutation({ status: "idle" });
     setNotice(null);
     setEditor(event);
@@ -948,7 +963,7 @@ export function EventJournal({
               id={`event-date-${targetId}`}
               value={form.occurredOn}
               disabled={pending}
-              // A new entry starts with no date choice (D1); a stored entry keeps its own.
+              // A new entry preselects Today (decision D1); a stored entry keeps its own.
               initialChoice={
                 editor === "create" ? newEntryDateChoice : "unknown"
               }
