@@ -1,5 +1,7 @@
 # Source-build deployment and upgrades
 
+**Status: development only.** Building from source is not a supported installation; the official
+installation is [portable Docker Compose](portable-installation.md).
 This guide builds Florabase from a repository checkout. For the linux/amd64 beta distributed as
 digest-pinned container images, use the [image-only installation guide](installation.md) and
 [beta runtime runbook](beta-runtime-001.md). The two paths both use the `florabase-prod` Compose

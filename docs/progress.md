@@ -1,3 +1,146 @@
+## 2026-11-15 — DOC-02 step 2: release-scope manifest and checker rules
+
+- Added [`docs/release/scope-v1.json`](release/scope-v1.json), the v1.0.0 release-scope manifest:
+  one class for each of the 161 identifiers in `features.json`. 156 classes are the proposed
+  targets of the [reconciliation matrix](release/feature-reconciliation-v1.md); ENG-01 and
+  BRAND-01 (`certify`) and RELEASE-SCOPE-001, DOC-01 and DOC-03 (`release-work`) are the
+  operator's classes of 2026-11-15; BRAND-01 has its own scope-change record. No status in
+  `features.json` changed.
+- `scripts/check-features.py` now requires the manifest and fails on: an unreadable manifest or
+  a repeated key; a version, release or class list other than the specified ones; an identifier
+  without a class; a class for an unknown identifier; an unsupported class; a `baseline` entry
+  that is not `verified`; a `post-1.0` entry that is. `--release-candidate` fails while a
+  `certify` or `release-work` entry is `planned` or `in_progress`; without the flag those
+  entries are printed and the check passes. Nothing calls the flag yet (step 3, with REL-01).
+  The existing graph rules and their messages are unchanged and run first.
+- `scripts/test-check-features.py` has a failing fixture for each new rule (26 tests). The
+  fixture repositories of `test-feature-workflow.py` and `test-verification-impact.py` gained a
+  manifest, because they run the real checker.
+- On current `main` the report names eight entries that would block a candidate: RELEASE-001,
+  CUTTING-001, UI-SYSTEM-001, BETA-IMAGE-001, beta-postgres-repro-001, BETA-SECURITY-001,
+  BETA-DATA-001 and BETA-ACCEPTANCE-001.
+- Adoption: a branch that adds, removes or renames an identifier must update the manifest
+  after merging `main` (`AGENTS.md`). Known at preparation: DOC-05.
+- Checks: `python3 scripts/test-check-features.py`, `test-feature-workflow.py`,
+  `test-verification-impact.py`, `test-stage-evidence.py`, `test-agent-workflow.py`,
+  `scripts/check-features.py`, `git diff --check`. Canonical verification is recorded with the
+  delivery.
+
+## 2026-11-15 — WF-02: Separate product-wide and full infrastructure verification tiers
+
+- Split `scripts/verification-impact.json` `full_prefixes` into `full_prefixes` (workflow/scripts, `.github/`, `compose`, `Makefile`, `AGENTS.md`, `deploy/`, `postgres/`, `release/`, Dockerfiles, Python/Node dependency & lockfiles, Alembic migrations, config dotfiles, and `backend/src/florabase/__init__.py` which `beta_release.py` and `test-beta-images.py` read for `__version__`) and `product_prefixes` (25 shared frontend UI/styles/maps/test and shared backend infrastructure prefixes).
+- Updated `scripts/verification_impact.py` (`TIER_ORDER`, `plan_tier`, `load_map`, `plan_paths`, `describe`) and `scripts/verification_gate.py` (`checks_for`, `execute_locked`) to emit and execute the four-tier model (`docs`, `affected`, `product`, `full`): `product` runs exhaustive backend/frontend suites (`make check`), all static and API-drift checks, both `backend` and `frontend` production builds, and full `make test-integration` on disposable PostgreSQL while omitting unrelated workflow/release suites (`WORKFLOW`) and forced migration cycling; unknown, unclassified, or infrastructure paths continue to fail closed to `full`.
+- Updated `scripts/feature-tree-fingerprint.py` (`write` and `verify`) to recompute the required tier from `make_plan(args.base)` and reject receipts whose tier is lower than the recomputed required tier while still accepting valid higher-tier (`--full`) receipts.
+- Expanded `scripts/test-verification-impact.py` (`product` tier matrix, before/after check parity assertion against `full`, precedence and fail-closed `product` invariant checks, and end-to-end `docs` -> `product` and `product` -> `full` receipt rejection tests) and updated `docs/development-workflow.md`; reconciled cleanly with `origin/main` through `#186` (`78f331b`, preserving `DOC-02` step 1/`test-check-features.py`, `DOC-03`, `DOC-02` scope decision, `DOC-01`, `ENG-05` `test_taxonomy_concurrency.py` registration, and `BRAND-01` including the `test-beta-runtime.py` disclosure-parser fix).
+
+## 2026-11-15 — ENG-05: TAXONOMY-001 PostgreSQL concurrency safety
+
+- Reproduced and resolved both open `TAXONOMY-001` concurrency findings without changing schema
+  revision `20261110_0047` or reviewed golden baselines:
+  1. **Duplicate-identity merge concurrent with holding/schedule writes:** `get_active_botanical_identity`
+     now reloads `BotanicalIdentity` on PostgreSQL sessions with `populate_existing=True` and a
+     row-level `FOR SHARE` lock across Plant, PlantGroup, SeedLot, and VegetativeLot reference
+     checks (eliminating stale session-cache writes of retired duplicate IDs after a concurrent
+     merge commits), and `schedule.create` / `schedule.update` acquire `lock_lineage_writes` plus
+     `FOR SHARE` target locking while rejecting retired identities (preventing lock-order
+     inversion deadlocks and retired schedule targets).
+  2. **Identity creation/editing concurrent with an uncommitted merge:** `lock_identity_writes`
+     (`pg_advisory_xact_lock(1179406162, 2)`, ordered after `lock_lineage_writes` in
+     `merge_duplicate_identity`) and `find_duplicate(..., for_share=True)` eliminate lock-order
+     deadlocks and re-evaluate `merged_into_id IS NULL` in PostgreSQL `READ COMMITTED` after an
+     uncommitted merge commits or rolls back. `create_botanical_identity`,
+     `update_botanical_identity`, and `correct_accepted_name` wrap writes and synonym cleanup inside
+     `begin_nested()` savepoints with bounded retry and in-memory state restoration on unique-index
+     races; `delete_botanical_identity` locks under `lock_identity_writes` with
+     `populate_existing=True`.
+- Added two-session PostgreSQL integration regressions in
+  [`test_taxonomy_concurrency.py`](../backend/tests/integration/test_taxonomy_concurrency.py)
+  (including stale-projection `update_plant`, blocking/commit/rollback `create_plant`, concurrent
+  `schedule.update`, commit/rollback `create_botanical_identity` and `correct_accepted_name`,
+  `update_botanical_identity`, ordered merge-vs-rename deadlock regression, concurrent name-swap
+  updates, and savepoint rollback of operator synonyms on unique violation, asserting zero persisted
+  records reference a retired identity).
+- Independent QA caught lock-order deadlocks and outer-transaction synonym cleanup in
+  `update_botanical_identity` and `correct_accepted_name`, which are fixed here before re-running
+  delta QA and canonical FULL `make feature-verify` on the frozen tree.
+
+## 2026-11-15 — DOC-01: portable Compose guide completed as the official installation guide
+
+- Documentation only, on `docs/doc-01-portable-install-guide` from `8557669`, writer
+  `claude-doc-01`. [`portable-installation.md`](portable-installation.md) gains Prerequisites, a
+  heading for asset verification, a reverse-proxy example and Troubleshooting (wrong origin,
+  schema revision mismatch, unhealthy container, bind-mount permissions, lost password). No
+  existing command changed.
+- The proxy example carries `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` and a
+  `Content-Security-Policy`, because `frontend/nginx.conf` sends none (ENG-02 is not delivered).
+  The policy was derived from what the frontend loads and was not exercised in a browser; the
+  guide says so and tells the operator to start in report-only mode.
+- Troubleshooting messages were read from `florabase.db.release_schema`,
+  `florabase.core.config`, `florabase.auth.dependencies`, `florabase.attachments.storage`,
+  `frontend/src/auth/AuthProvider.tsx`, `frontend/nginx.conf` and
+  `scripts/smoke-portable-compose.py`. No case was reproduced on a host.
+- Independent QA passed with seven should-fix findings, all applied: what the operator actually
+  sees for each troubleshooting case, how to tell the causes apart, and `Referrer-Policy`
+  `strict-origin-when-cross-origin` so map tile requests keep a referrer. The delta review then
+  failed one sentence added with those fixes (a wrong media owner does not leave the stack
+  healthy: `attachments/storage.py` refuses it at application startup); it is corrected.
+- `deployment.md` (development only) and `installation.md` (advanced, best-effort) state their
+  status in their first paragraph.
+- DOC-01 is registered as `implemented`. Checks: `scripts/check-features.py`, relative links and
+  anchors of the changed files, `git diff --check`, `make verification-plan` (documentation plan).
+- Unresolved: no published release contains `portable-compose.yaml`, so the guide cannot yet be
+  followed end to end; G-INSTALL, G-UPGRADE, G-RESTORE and the G-DIAG reproductions (REL-02) are
+  not run and nothing here asserts them. The attestation command names `beta-images.yml` and
+  must follow REL-01 if the release-candidate channel uses another workflow.
+## 2026-11-15 — DOC-02: operator decision recorded, release targets in a scope manifest
+
+- Documentation only, on `docs/doc-02-scope-decision` from `8557669`, writer
+  `claude-doc-02-decision`. The operator approved option B: release targets live in a versioned
+  manifest `docs/release/scope-v1.json` with all eight reconciliation classes, and feature
+  status stays only in `features.json`.
+- [`release/scope-v1.md`](release/scope-v1.md) gains the scope-change record and names the
+  manifest; [`release/release-target-schema-followup.md`](release/release-target-schema-followup.md)
+  is rewritten as the manifest specification: format, eight checker rules (missing, unknown and
+  duplicate identifiers, class validity, the two status consistency rules, the
+  release-candidate rule), the three-step transition and the adoption procedure for open
+  branches. `acceptance-v1.md` and `feature-reconciliation-v1.md` follow the wording, and the
+  dated `scope-v1-handoff.md` gains two resolution notes. The specification marks the file
+  format and exact rule set as its own proposal, to be confirmed in the step 2 review.
+- No status, script or manifest changed, and no existing classification changed. The operator
+  then approved classes: ENG-01 is `certify` and RELEASE-SCOPE-001 is `release-work` (both in
+  `features.json`, not in the reconciliation matrix); DOC-01, DOC-03 and DOC-05 are
+  `release-work`, each from when it is in `features.json`. After the merge of `main` at
+  `3c52789`, DOC-03 is in it; DOC-01 and DOC-05 are not yet.
+  `scope-v1.md` and the specification record this.
+- Checks: `scripts/check-features.py`, relative links and anchors of the changed files,
+  `git diff --check`, `make verification-plan` (documentation plan).
+- Independent QA failed the first draft: the dated handoff still listed the choice as open,
+  and the specification presented its own format and rule details as operator decisions. Both
+  were corrected with eight further findings and the delta review passed.
+- Unresolved: steps 2 and 3 of the transition; step 1 landed in #181.
+## 2026-11-15 — DOC-03: stale documentation statements corrected
+
+- Documentation only, on `docs/doc-03-stale-statements` from `8557669`, writer `claude-doc-03`.
+  Each row of the closed list in [`release/acceptance-v1.md`](release/acceptance-v1.md) was
+  checked against the tree:
+  - `architecture.md`, "Deliberately deferred": Supplier media, saved views, bulk operations, PWA
+    installability and accepted-name reconciliation are now stated as delivered.
+  - `architecture.md`, "Implemented domain modules": names Orders, Schedule, Saved Views, bulk
+    operations, Taxonomy, Explore, Cuttings and Import/Export with their routers. Accepted-name
+    correction is on the BotanicalIdentity router and Measurements are Events; the text says so.
+  - `development.md`: receipts are version 3; worktree wording is provider-neutral; `quality`
+    runs `scripts/ci-verify.py quality`.
+  - `security.md`, login-throttling row: already corrected by ENG-01 (#179); `frontend/nginx.conf`
+    has no rate limit. No change.
+  - `portable-installation.md`, `installation.md`: no longer name `v0.1.0-beta.6` as a release.
+    The last published prerelease is `v0.1.0-beta.5`, whose assets do not include
+    `portable-compose.yaml` (`gh release view v0.1.0-beta.5`).
+  - `features.json`, UI-REDESIGN-EXPLORATION-001: the description states delivery as the
+    production shell in `fec0398` (#147). Status unchanged.
+- DOC-03 is registered as `implemented`. Checks: `scripts/check-features.py`, relative links of
+  the changed files, `git diff --check`, `make verification-plan` (documentation plan).
+- Unresolved: the re-check against the release-candidate commit (acceptance criterion 2), which
+  can only run once a candidate exists.
 ## 2026-11-15 — DOC-02 step 1: feature-graph checker pinned by regression tests
 
 - On `ci/doc-02-checker-regression` from `8557669`, writer `claude-doc-02`. The operator approved
@@ -8870,3 +9013,26 @@ Status remains implemented pending canonical verification.
   check because the new OccurrenceDateChoice test was missing from the events scope. The
   follow-up registers the test without changing product source. Lineage bridge cleanup is
   deferred and the batch UAT Preview remains available.
+
+### BRAND-01 — approved Florabase logo, 15 November 2026
+
+- Added the approved wordmark to the README and icon marks to the Workbench, Today and offline
+  fallback. The Workbench reuses the standard 512px PWA PNG and Today/offline reuse the 192px PNG.
+  No About surface exists. The README insertion also applies cleanly over the local DOC-05 README.
+- Updated the favicon, iOS touch icon and PWA icons. Seven files match the approved archive
+  manifest hashes. Both opaque maskable PNGs place all artwork within the central safe circle.
+  New icon URLs avoid reusing legacy HTTP-cache entries during the shell cache v1 to v2 upgrade.
+- Scoped Prettier and ESLint, TypeScript/Vite production build, 216 focused frontend tests, the
+  161-entry feature graph and Git whitespace checks passed. Chromium showed both themes at
+  1440, 1024 and 390px with no horizontal overflow. The named Workbench link remained keyboard
+  operable at all three widths. Chromium decoded every icon link, confirmed the public precache
+  and rendered the updated offline page. A Chromium profile with the one-day legacy HTTP cache
+  primed upgraded to v2 and precached all eight new icon URLs with the expected bytes. Browser
+  review used the production frontend build with synthetic API responses because the four branch
+  UAT slots were allocated.
+- The operator accepted the responsive light/dark layout. Independent QA found the legacy URL
+  cache issue and passed the corrected candidate, including a direct worker lifecycle check.
+- The first FULL attempt on the updated main stopped in the release disclosure scanner. The
+  scanner now preserves Git's LF patch record boundaries when scanning binary content, with a
+  regression test for control bytes in a staged asset. The 63-test host beta runtime suite passed.
+  Policy selected FULL for canonical verification. The worktree receipt records its outcome.

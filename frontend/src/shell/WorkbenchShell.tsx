@@ -427,9 +427,13 @@ export function WorkbenchShell({
                 follow(event, "#/dashboard");
               }}
             >
-              <span className="wb-brand__mark" aria-hidden="true">
-                F
-              </span>
+              <img
+                className="wb-brand__mark"
+                src="/icons/florabase-512.png"
+                alt=""
+                width={40}
+                height={40}
+              />
               <span className="wb-brand__name">Florabase</span>
             </a>
           </h1>

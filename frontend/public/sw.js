@@ -16,21 +16,21 @@
  * 7. Precaches strictly public, static application-shell assets (offline fallback, manifest, icons).
  */
 
-const CACHE_NAME = "florabase-shell-v1";
+const CACHE_NAME = "florabase-shell-v2";
 
 const PRECACHE_ASSETS = [
   "/offline.html",
   "/offline.css",
   "/offline.js",
   "/manifest.webmanifest",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/icons/icon-maskable-192.png",
-  "/icons/icon-maskable-512.png",
-  "/icons/apple-touch-icon.png",
-  "/icons/icon.svg",
-  "/favicon.ico",
-  "/favicon.svg",
+  "/icons/florabase-192.png",
+  "/icons/florabase-512.png",
+  "/icons/florabase-maskable-192.png",
+  "/icons/florabase-maskable-512.png",
+  "/icons/florabase-apple-touch-icon.png",
+  "/icons/favicon-16x16.png",
+  "/icons/favicon-32x32.png",
+  "/favicon.ico?v=brand-01",
 ];
 
 // Upstream-unavailable statuses typically produced by a reverse proxy during upgrades or outages.
@@ -130,8 +130,7 @@ self.addEventListener("fetch", (event) => {
     url.pathname === "/offline.html" ||
     url.pathname === "/offline.css" ||
     url.pathname === "/offline.js" ||
-    url.pathname === "/favicon.ico" ||
-    url.pathname === "/favicon.svg"
+    url.pathname === "/favicon.ico"
   ) {
     const networkWithCache = fetch(request).then((response) => {
       if (response && response.status === 200 && !response.redirected) {

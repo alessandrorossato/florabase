@@ -61,6 +61,26 @@ class VerifyHelperTests(unittest.TestCase):
                 }
             )
         )
+        (self.seed / "docs/release").mkdir()
+        (self.seed / "docs/release/scope-v1.json").write_text(
+            json.dumps(
+                {
+                    "version": 1,
+                    "release": "1.0.0",
+                    "classes": [
+                        "baseline",
+                        "certify",
+                        "release-work",
+                        "best-effort",
+                        "tooling",
+                        "record",
+                        "internal",
+                        "post-1.0",
+                    ],
+                    "membership": {"CI-002": "tooling"},
+                }
+            )
+        )
         # Real Alembic revisions use ordinary assignments; the migration-cycle
         # verifier must also accept annotated declarations used by some fixtures.
         (self.seed / "backend/alembic/versions/0001_base.py").write_text(

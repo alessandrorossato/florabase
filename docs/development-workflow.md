@@ -678,20 +678,32 @@ Independent review seeks objective correctness defects. It does not reopen opera
 choices without a correctness/accessibility reason. Visual acceptance does not redefine established
 domain contracts.
 
-Local verification has three layers:
+Local verification distinguishes four policy tiers (`docs`, `affected`, `product`, and `full`),
+grouped across developer iteration and canonical gating:
 
 - **Focused:** developer-selected existing test/check commands for iteration. These do not write a
   delivery receipt. Integration accepts explicit existing files, for example
   `./scripts/test-integration.sh backend/tests/integration/test_schedule.py`.
-- **Affected:** `make feature-verify` (or `make verify-affected`) derives the safe plan automatically
-  from the exact base and complete committed/index/dirty/untracked feature tree. It runs explicit
-  affected suites, global product static checks, selected independent production builds and required
-  migration cycling, then writes the exact completed-plan receipt. It can escalate to full.
-- **Full:** `make verify-full` explicitly forces the complete original application and workflow gate.
-  Full remains mandatory for infrastructure/security/foundational/dependency/unknown changes,
-  releases and operator-requested exhaustive checks. Every selected FULL stage executes exhaustively;
-  migration verification always performs the real PostgreSQL cycle even without a migration diff.
-  There is no force-narrow override.
+- **Canonical (`make feature-verify` / `make verify-affected`):** derives the safe tier automatically
+  from the exact base and complete committed/index/dirty/untracked feature tree, then writes the
+  exact completed-plan receipt:
+  - **`docs`:** docs-only static changes run `feature-graph` and the three whitespace checks with no
+    Docker/product suites or image builds.
+  - **`affected`:** module-scoped product changes run explicit affected suites, global product
+    static checks, selected independent production builds, and skip workflow suites and migration
+    cycling.
+  - **`product`:** shared product changes (`product_prefixes` such as `frontend/src/components/`,
+    `frontend/src/styles/`, `frontend/src/maps/`, shared `backend/src/florabase/` infrastructure
+    other than `__init__.py`, etc.) run the full product baseline (`make check` for all backend and
+    frontend unit/component tests and static/API-drift checks, both `backend` and `frontend`
+    production builds, and `make test-integration` on disposable PostgreSQL), while omitting
+    workflow/release suites and forced migration cycling.
+  - **`full` (`make verify-full`):** runs everything in `product` plus all nine workflow/release
+    suites (`WORKFLOW`) and the four-transition PostgreSQL migration cycle (`--force-cycle`). Full
+    remains mandatory for infrastructure/scripts/Makefile/Compose/CI/Dockerfile/lockfile/Alembic/release
+    changes, `backend/src/florabase/__init__.py`, unknown or unclassified paths (fail-closed),
+    releases, and operator-requested exhaustive checks. Every selected FULL stage executes
+    exhaustively; there is no force-narrow override.
 
 Preview the human plan with `make verification-plan`; use `make verification-plan FORMAT=json`
 for the same machine-readable decision. `REF=<exact-base>` selects a diagnostic base; canonical
@@ -752,14 +764,17 @@ Stage evidence is opt-in and local
   using `feature-tree-fingerprint.py verify`.
 
 Freeze source before the final gate. It invalidates old evidence at startup and rejects source edits
-while stages run. Receipts cover file content, modes and symlinks, exact base/branch, mode,
-impact-map version/digest, changed/affected scopes, escalation reasons, selected suites, completed
-commands, static checks, migration/build decisions and results, and a UTC completion timestamp.
+while stages run. Receipts cover file content, modes and symlinks, exact base/branch, tier/mode,
+impact-map version/digest, changed/affected scopes, product/escalation reasons, selected suites,
+completed commands, static checks, migration/build decisions and results, and a UTC completion
+timestamp.
 Migration evidence distinguishes the decision, cycle requirement, actual execution and result. Required
 cycles verify the database revision after all four transitions and record successful disposable cleanup;
 affected skips record `skipped_by_impact`. Older v2 receipts lacking this evidence are incompatible and
 require a new canonical gate.
-Delivery recomputes the policy and rejects incomplete, obsolete, mismatched or stale evidence. The
+Delivery recomputes the policy, rejects receipts below the recomputed required tier (such as `docs`,
+`affected`, or `product` when `full` is required, or `docs`/`affected` when `product` is required),
+and rejects incomplete, obsolete, mismatched or stale evidence. The
 normal same reviewed tree can be committed without a ceremonial rerun. Transient staged/committed
 changes masked by unstaged reverts are classified conservatively; freeze the index too when using
 such unusual combinations, since removing transient impact invalidates the stored plan.

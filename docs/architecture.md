@@ -124,6 +124,14 @@ on `locations.parent_id` and canonical `location_id` columns remain available; p
 and bounded integration query-count checks are recorded in
 [location-descendant-aggregation.md](location-descendant-aggregation.md).
 
+Later capabilities each have their own router in `backend/src/florabase/api/router.py` and their own
+contract: purchase [Orders](orders.md), [Schedule](schedule.md), [Saved Views](saved-views.md),
+[bulk operations](bulk-operations.md), the classification [Taxonomy tree](collection-taxonomy.md),
+[Explore native ranges](native-ranges-explore.md), [Cuttings](cuttings.md) and CSV
+[Import/Export](import-export.md). Accepted-name correction and synonyms
+([ADR 0007](decisions/0007-accepted-name-reconciliation.md)) are served by the BotanicalIdentity
+router. Plant height [Measurements](measurements.md) are Events and use the Events routers.
+
 See [domain-model.md](domain-model.md) for semantics and current limitations.
 
 ## Authentication and observability
@@ -139,9 +147,9 @@ proxy.
 
 ## Deliberately deferred
 
-Supplier media, saved search views and bulk operations, richer Event payloads,
-analytical dashboards, PWA installability, multi-user collaboration, automatic
-taxonomy reconciliation, provider-backed profile enrichment, and additional external integrations
+Supplier media, saved views, bulk operations, [PWA installability](pwa.md) and operator-reviewed
+accepted-name reconciliation are delivered. Richer Event payloads, analytical dashboards,
+multi-user collaboration, provider-backed profile enrichment, and additional external integrations
 remain backlog items. Their storage and service infrastructure will be designed only when a
 concrete feature requires it.
 
