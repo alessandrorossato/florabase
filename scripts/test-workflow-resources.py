@@ -10,6 +10,7 @@ import json
 import os
 import signal
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -374,6 +375,7 @@ class ResourceTests(unittest.TestCase):
             "../../data",
             "backend/tests/test_schedule.py",
             "backend/tests/integration/no.py",
+            "backend/tests/integration/conftest.py",
         ):
             with self.assertRaises(ResourceError):
                 safe_suites([path], ROOT)
@@ -381,6 +383,20 @@ class ResourceTests(unittest.TestCase):
             safe_suites(["backend/tests/integration/test_schedule.py"], ROOT),
             ["tests/integration/test_schedule.py"],
         )
+        with tempfile.TemporaryDirectory() as temporary:
+            temp_root = Path(temporary)
+            owned_dir = temp_root / "backend/tests/integration/taxonomy"
+            owned_dir.mkdir(parents=True)
+            owned_test = owned_dir / "test_probe.py"
+            owned_test.write_text("def test_ok():\n    pass\n", encoding="utf-8")
+            helper = owned_dir / "conftest.py"
+            helper.write_text("", encoding="utf-8")
+            self.assertEqual(
+                safe_suites(["backend/tests/integration/taxonomy/test_probe.py"], temp_root),
+                ["tests/integration/taxonomy/test_probe.py"],
+            )
+            with self.assertRaises(ResourceError):
+                safe_suites(["backend/tests/integration/taxonomy/conftest.py"], temp_root)
 
 
 if __name__ == "__main__":

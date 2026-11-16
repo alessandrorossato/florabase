@@ -7,12 +7,25 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import os
 import re
 import subprocess
+import sys
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, cast
 
 MAP_PATH = Path(__file__).with_name("verification-impact.json")
+BACKEND_TEST_ROOT = Path("backend/tests")
+BACKEND_INTEGRATION_ROOT = Path("backend/tests/integration")
+FRONTEND_ROOT = Path("frontend")
+BACKEND_SKIP_DIRS = frozenset(
+    {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".git"}
+)
+FRONTEND_RECURSIVE_SKIP_DIRS = frozenset({"node_modules", ".git"})
+FRONTEND_TOP_SKIP_DIRS = frozenset({".pnpm-store", "dist", "coverage"})
+FRONTEND_TEST_RE = re.compile(r".*\.(test|spec)\.[cm]?[jt]sx?$")
+TEST_LAYERS = ("backend", "integration", "frontend")
 STATIC = ["format-check", "lint", "typecheck", "api-check"]
 WORKFLOW = [
     "test-workflow-helpers",
@@ -107,6 +120,82 @@ def changed_path_modes(base: str) -> dict[str, set[str]]:
     return changed
 
 
+def is_backend_test_name(name: str) -> bool:
+    return name.endswith(".py") and (name.startswith("test_") or name.endswith("_test.py"))
+
+
+def is_frontend_test_name(name: str) -> bool:
+    return bool(FRONTEND_TEST_RE.fullmatch(name))
+
+
+def test_layer_for(path: str) -> str | None:
+    candidate = Path(path)
+    name = candidate.name
+    if path.startswith("backend/tests/integration/"):
+        return "integration" if is_backend_test_name(name) else None
+    if path.startswith("backend/tests/"):
+        return "backend" if is_backend_test_name(name) else None
+    if path.startswith("frontend/"):
+        parts = candidate.parts[1:]
+        if (parts and parts[0] in FRONTEND_TOP_SKIP_DIRS) or any(
+            part in FRONTEND_RECURSIVE_SKIP_DIRS for part in parts
+        ):
+            return None
+        return "frontend" if is_frontend_test_name(name) else None
+    return None
+
+
+def _is_safe_relative(value: object, *, directory: bool) -> bool:
+    if not isinstance(value, str) or not value or value.startswith("/"):
+        return False
+    if directory and not value.endswith("/"):
+        return False
+    if not directory and value.endswith("/"):
+        return False
+    return ".." not in Path(value).parts
+
+
+def discover_tests_in_dir(directory: Path, layer: str) -> list[str]:
+    if directory.is_symlink():
+        raise ValueError(f"symlinked test directory is not supported: {directory.as_posix()}")
+    if not directory.is_dir():
+        return []
+    matcher = is_frontend_test_name if layer == "frontend" else is_backend_test_name
+    found: list[str] = []
+    for dirpath, dirnames, filenames in os.walk(directory, followlinks=False):
+        current = Path(dirpath)
+        kept: list[str] = []
+        for name in sorted(dirnames):
+            if layer == "frontend":
+                if name in FRONTEND_RECURSIVE_SKIP_DIRS or (
+                    current == FRONTEND_ROOT and name in FRONTEND_TOP_SKIP_DIRS
+                ):
+                    continue
+            elif name in BACKEND_SKIP_DIRS or (
+                layer == "backend" and current == BACKEND_TEST_ROOT and name == "integration"
+            ):
+                continue
+            candidate = current / name
+            if candidate.is_symlink():
+                raise ValueError(
+                    f"symlinked test directory is not supported: {candidate.as_posix()}"
+                )
+            kept.append(name)
+        dirnames[:] = kept
+        for filename in sorted(filenames):
+            if matcher(filename):
+                found.append((current / filename).as_posix())
+    return found
+
+
+def discover_repo_tests() -> dict[str, list[str]]:
+    return {
+        "backend": discover_tests_in_dir(BACKEND_TEST_ROOT, "backend"),
+        "integration": discover_tests_in_dir(BACKEND_INTEGRATION_ROOT, "integration"),
+        "frontend": discover_tests_in_dir(FRONTEND_ROOT, "frontend"),
+    }
+
+
 def load_map() -> dict[str, Any]:
     data = cast(dict[str, Any], json.loads(MAP_PATH.read_text()))
     if data["version"] != 1 or not data["scopes"] or not data["rules"]:
@@ -119,6 +208,13 @@ def load_map() -> dict[str, Any]:
             or any(not isinstance(prefix, str) or not prefix for prefix in prefixes)
         ):
             raise ValueError(f"invalid {prefix_key}")
+    for test_key in ("full_tests", "product_tests"):
+        entries = data.get(test_key)
+        if not isinstance(entries, list) or any(
+            not _is_safe_relative(entry, directory=False) or test_layer_for(entry) is None
+            for entry in entries
+        ):
+            raise ValueError(f"invalid {test_key}")
     suffixes = data["documentation_suffixes"]
     if (
         not isinstance(suffixes, list)
@@ -129,6 +225,7 @@ def load_map() -> dict[str, Any]:
         )
     ):
         raise ValueError("invalid documentation suffixes")
+    owned_dirs: dict[str, list[str]] = {layer: [] for layer in TEST_LAYERS}
     for name, scope in data["scopes"].items():
         if any(item not in data["scopes"] for item in scope["affects"]):
             raise ValueError(f"unknown impact dependency in {name}")
@@ -139,13 +236,88 @@ def load_map() -> dict[str, Any]:
             ):
                 raise ValueError(f"invalid regression suite reference in {name}")
             continue
-        for layer in ("backend", "integration", "frontend"):
-            if not isinstance(scope[layer], list):
+        for layer in TEST_LAYERS:
+            suites = scope.get(layer)
+            if not isinstance(suites, list) or any(
+                not _is_safe_relative(entry, directory=False) or test_layer_for(entry) != layer
+                for entry in suites
+            ):
                 raise ValueError(f"invalid {layer} suites in {name}")
+            dirs_key = f"{layer}_dirs"
+            dirs = scope.get(dirs_key)
+            if not isinstance(dirs, list) or any(
+                not _is_safe_relative(entry, directory=True) for entry in dirs
+            ):
+                raise ValueError(f"invalid {dirs_key} in {name}")
+            for directory in dirs:
+                if layer == "backend" and (
+                    not directory.startswith("backend/tests/")
+                    or directory == "backend/tests/"
+                    or directory.startswith("backend/tests/integration/")
+                ):
+                    raise ValueError(f"invalid backend test directory in {name}: {directory}")
+                if layer == "integration" and (
+                    not directory.startswith("backend/tests/integration/")
+                    or directory == "backend/tests/integration/"
+                ):
+                    raise ValueError(f"invalid integration test directory in {name}: {directory}")
+                if layer == "frontend" and (
+                    not directory.startswith("frontend/src/") or directory == "frontend/src/"
+                ):
+                    raise ValueError(f"invalid frontend test directory in {name}: {directory}")
+                owned_dirs[layer].append(directory)
+    for layer, directories in owned_dirs.items():
+        ordered = sorted(directories)
+        for index in range(len(ordered) - 1):
+            if ordered[index + 1].startswith(ordered[index]):
+                raise ValueError(
+                    f"overlapping {layer} test directory ownership: "
+                    f"{ordered[index]} and {ordered[index + 1]}"
+                )
     for rule in data["rules"]:
         if rule["scope"] not in data["scopes"] or rule["layer"] not in {"backend", "frontend"}:
             raise ValueError("invalid impact rule")
     return data
+
+
+def test_scopes_for(path: str, data: dict[str, Any]) -> list[tuple[str, str]]:
+    layer = test_layer_for(path)
+    if layer is None:
+        return []
+    rule_layer = "backend" if layer in {"backend", "integration"} else "frontend"
+    matches: list[tuple[str, str]] = []
+    for name, scope in data["scopes"].items():
+        if "suite_scope" in scope:
+            continue
+        if path in scope[layer] or any(path.startswith(d) for d in scope[f"{layer}_dirs"]):
+            matches.append((name, rule_layer))
+    return matches
+
+
+def is_test_owned(path: str, data: dict[str, Any]) -> bool:
+    if any(path.startswith(prefix) for prefix in data["full_prefixes"]) or path in set(
+        data["full_tests"]
+    ):
+        return True
+    if any(path.startswith(prefix) for prefix in data["product_prefixes"]) or path in set(
+        data["product_tests"]
+    ):
+        return True
+    return bool(test_scopes_for(path, data))
+
+
+def validate_test_inventory(data: dict[str, Any], paths: Sequence[str] = ()) -> None:
+    discovered = discover_repo_tests()
+    candidates = {path for files in discovered.values() for path in files}
+    for path in paths:
+        if test_layer_for(path) is not None and Path(path).is_file():
+            candidates.add(path)
+    unowned = sorted(path for path in candidates if not is_test_owned(path, data))
+    if unowned:
+        raise ValueError(
+            "unowned test files (place in an owned scope directory or register in "
+            f"scripts/verification-impact.json): {', '.join(unowned)}"
+        )
 
 
 def plan_paths(
@@ -156,6 +328,9 @@ def plan_paths(
     non_static_paths: frozenset[str] = frozenset(),
 ) -> dict[str, Any]:
     data = load_map()
+    validate_test_inventory(data, paths)
+    full_tests = set(data["full_tests"])
+    product_tests = set(data["product_tests"])
     reasons: list[str] = []
     product_reasons: list[str] = []
     direct: set[str] = set()
@@ -164,11 +339,14 @@ def plan_paths(
     product = False
     docs_only = True
     for path in sorted(set(paths)):
-        if any(path.startswith(prefix) for prefix in data["full_prefixes"]):
+        if any(path.startswith(prefix) for prefix in data["full_prefixes"]) or path in full_tests:
             reasons.append(f"high-risk path: {path}")
             docs_only = False
             continue
-        if any(path.startswith(prefix) for prefix in data["product_prefixes"]):
+        if (
+            any(path.startswith(prefix) for prefix in data["product_prefixes"])
+            or path in product_tests
+        ):
             product = True
             product_reasons.append(f"shared product path: {path}")
             layers.update(("backend", "frontend"))
@@ -193,15 +371,16 @@ def plan_paths(
             continue
         docs_only = False
         matches = [
-            rule
+            (rule["scope"], rule["layer"])
             for rule in data["rules"]
             if rule.get("path") == path or ("prefix" in rule and path.startswith(rule["prefix"]))
         ]
+        matches.extend(test_scopes_for(path, data))
         if not matches:
             reasons.append(f"unclassified path: {path}")
-        for rule in matches:
-            direct.add(rule["scope"])
-            layers.add(rule["layer"])
+        for scope, rule_layer in matches:
+            direct.add(scope)
+            layers.add(rule_layer)
     if generated and not product and not direct.difference({"documentation"}):
         reasons.append("generated contract without classified owning production scope")
     if force_full:
@@ -216,36 +395,48 @@ def plan_paths(
     full = bool(reasons)
     product_wide = not full and product
     suites: dict[str, list[str]] = {}
-    for layer in ("backend", "integration", "frontend"):
+    for layer in TEST_LAYERS:
         required = layer == "frontend" or "backend" in layers
-        suites[layer] = (
-            ["ALL"]
-            if full or product_wide
-            else sorted(
-                {
-                    p
-                    for scope in affected
-                    for p in data["scopes"][data["scopes"][scope].get("suite_scope", scope)][layer]
-                }
-            )
-            if required
-            else []
-        )
-        # A newly added test in a classified feature module must run too. This selects exact
-        # changed test paths; it neither learns dependencies nor mutates the versioned policy.
-        if not full and not product_wide and layer == "frontend":
-            changed_tests = {
-                path
-                for path in paths
-                if re.fullmatch(r"frontend/src/.*\.(test|spec)\.[cm]?[jt]sx?", path)
-                and Path(path).is_file()
-            }
-            suites[layer] = sorted(set(suites[layer]) | changed_tests)
+        if full or product_wide:
+            suites[layer] = ["ALL"]
+        elif required:
+            selected: set[str] = set()
+            for scope in affected:
+                target = data["scopes"][data["scopes"][scope].get("suite_scope", scope)]
+                selected.update(target[layer])
+                for directory in target[f"{layer}_dirs"]:
+                    selected.update(discover_tests_in_dir(Path(directory), layer))
+                    selected.update(
+                        path
+                        for path in paths
+                        if test_layer_for(path) == layer
+                        and path.startswith(directory)
+                        and Path(path).is_file()
+                    )
+            suites[layer] = sorted(selected)
+        else:
+            suites[layer] = []
         # A missing mapped suite is a policy error, never permission to skip it.
         if not full and not product_wide:
             missing = [path for path in suites[layer] if not Path(path).is_file()]
             if missing:
                 raise ValueError(f"missing mapped suites: {missing}")
+    explicit_tests = (
+        full_tests
+        | product_tests
+        | {
+            p
+            for scope in data["scopes"].values()
+            if "suite_scope" not in scope
+            for layer in TEST_LAYERS
+            for p in scope[layer]
+        }
+    )
+    missing_explicit = [
+        path for path in sorted(set(paths) & explicit_tests) if not Path(path).is_file()
+    ]
+    if missing_explicit:
+        raise ValueError(f"missing mapped suites: {missing_explicit}")
     mode = "full" if full else "product" if product_wide else "affected"
     is_docs_only = docs_only and not full and not product_wide
     tier = "full" if full else "product" if product_wide else "docs" if is_docs_only else "affected"
@@ -333,7 +524,11 @@ def main() -> None:
     parser.add_argument("--full", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
-    plan = make_plan(args.base, force_full=args.full)
+    try:
+        plan = make_plan(args.base, force_full=args.full)
+    except ValueError as error:
+        print(f"verification impact: {error}", file=sys.stderr)
+        raise SystemExit(1) from error
     print(json.dumps(plan, sort_keys=True, indent=2) if args.json else describe(plan))
 
 
