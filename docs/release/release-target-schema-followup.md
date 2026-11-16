@@ -21,9 +21,10 @@ is relative to one release, and `features.json` is edited by every feature branc
 The operator decided the manifest path, the eight classes, where status lives, the three steps
 and their order, the rejection of missing, unknown and duplicate identifiers and of
 inconsistent status and class combinations, and that adoption by open branches is deliberate.
-The file format and the rule set below were this specification's proposal. The operator
-approved them on 2026-11-15 as step 2 implements them, including the fixed order of `classes`,
-ignoring top-level keys other than the four required ones, and delivering rule 8 with step 2.
+The file format and the rule set below are this specification's proposal, implemented by step
+2 as written. Of its details the operator explicitly approved, on 2026-11-15: the fixed order
+of `classes`; ignoring top-level keys other than the four required ones, with every required
+field and rule kept strict; and delivering rule 8 with step 2.
 
 ## Why it is separate from the scope documents
 
@@ -85,7 +86,7 @@ is skipped when the manifest is absent. `classes` must list the eight tokens in 
 above. Top-level keys other than the four are ignored; the four are required and validated.
 
 Rules 6 and 7 are the inconsistent status and class combinations this specification defines;
-the operator approved the set on 2026-11-15. No rule changes a status, and no rule
+they implement the operator's decision to reject inconsistent combinations. No rule changes a status, and no rule
 derives a class from a status or a status from a class other than those two.
 
 An entry classed `post-1.0` that reaches `verified` needs a scope-change record
