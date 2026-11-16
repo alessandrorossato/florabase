@@ -1,3 +1,11 @@
+## 2026-11-16 — CERT-03 Harvest regressions
+
+- Added PostgreSQL coverage of historical Harvest holdings and compact-row photo attribution
+  coverage. The Dashboard suite passed 9 tests, HarvestScreen passed 20 tests, and lint,
+  typing, scoped formatting and the affected verification plan passed.
+  See [CERT-03 evidence](release/evidence/cert-03.md) for the test boundaries.
+- Canonical verification and registry reconciliation are pending Batch 03 integration.
+
 ## 2026-11-16 — WF-04 Batch 02 prepared
 
 - Registered `CI-005` (`implemented`, `tooling`) in `docs/features.json` and
