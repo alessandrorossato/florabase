@@ -10,10 +10,10 @@ license = "AGPL-3.0-or-later"
 requires-python = ">=3.12,<3.15"
 dependencies = [
   "alembic==1.20.1",
-  "fastapi==0.162.0",
+  "fastapi==0.162.5",
   "httpx==0.28.1",
   "pillow==13.0.0",
-  "psycopg[binary]==3.3.8",
+  "psycopg[binary]==3.3.9",
   "pwdlib[argon2]==0.3.1",
   "pydantic-settings==2.16.2",
   "python-multipart==0.0.33",
@@ -27,7 +27,7 @@ dev = [
   "pip-tools==7.6.2",
   "pytest==9.2.0",
   "pytest-cov==7.1.0",
-  "ruff==0.17.4",
+  "ruff==0.17.5",
 ]
 
 [tool.setuptools.packages.find]
