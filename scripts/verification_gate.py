@@ -408,7 +408,7 @@ def main() -> None:
         parser.error("remote CI never reads or writes local stage evidence")
     try:
         execute_locked(make_plan(args.base, force_full=args.full), args.execution, args.evidence)
-    except ResourceError as error:
+    except (ResourceError, ValueError) as error:
         print(f"verification refused: {error}", file=sys.stderr)
         raise SystemExit(1) from error
 

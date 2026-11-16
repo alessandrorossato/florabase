@@ -709,7 +709,13 @@ Preview the human plan with `make verification-plan`; use `make verification-pla
 for the same machine-readable decision. `REF=<exact-base>` selects a diagnostic base; canonical
 verification still fetches main and requires that exact base to be an ancestor. The versioned
 [scripts/verification-impact.json](../scripts/verification-impact.json) contains explicit source/test
-ownership, consumer regression boundaries and transitive relationships. Any unknown path escalates
+ownership (`backend_dirs`, `integration_dirs`, `frontend_dirs`, legacy flat test lists,
+`product_tests`, and `full_tests`), consumer regression boundaries and transitive relationships. A new
+test file placed in a directory owned by a scope (or under a `product_prefixes` / `full_prefixes`
+directory) is discovered and selected automatically with that scope without editing the map; any
+test file on disk under `backend/tests/` or `frontend/` that is owned by no scope or tier causes the
+pre-gate inventory check (`make verification-plan`, `make feature-verify`, and `scripts/ci-verify.py`)
+to exit non-zero and name the file before starting Docker. Any unknown non-test path escalates
 full. Editing the map or verification infrastructure also escalates full. Migration revisions
 conservatively escalate full. Every full plan requires the complete base → head → base → head cycle
 on disposable PostgreSQL; no changed-file shortcut may suppress it. Affected plans may skip migration

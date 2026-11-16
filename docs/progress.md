@@ -48,6 +48,42 @@
 - Unresolved: the canonical FULL gate; version terminology to be confirmed against REL-01's
   tooling.
 
+## 2026-11-16 — WF-03: Directory-based test ownership and pre-gate inventory check
+
+- Added directory-based test ownership (`backend_dirs`, `integration_dirs`, `frontend_dirs`) plus
+  `product_tests` and `full_tests` in [`scripts/verification-impact.json`](../scripts/verification-impact.json)
+  (and registered all previously unmapped backend unit, PostgreSQL integration, and frontend tests,
+  while adding `frontend/src/geography/` to `geography` and shared UI directories `shell/`,
+  `timeline/`, `settings/`, `ui-lab/`, `ui-pages/`, and `focusModality.ts` to `product_prefixes`,
+  removing redundant per-file test `"path"` rules and owned-directory `"frontend"` file lists).
+- Updated [`scripts/verification_impact.py`](../scripts/verification_impact.py) (`load_map`,
+  `discover_tests_in_dir`, `discover_repo_tests`, `test_scopes_for`, `validate_test_inventory`,
+  `plan_paths`, `main`) and [`scripts/verification_gate.py`](../scripts/verification_gate.py):
+  - `load_map()` validates disjoint non-root `*_dirs` per layer, safe relative paths, and layer-matched
+    explicit suites.
+  - `plan_paths()` runs `validate_test_inventory()` before planning or gating (so `make verification-plan`,
+    `make feature-verify`, and `scripts/ci-verify.py` fail closed and name unowned tests before
+    starting Docker, including on docs-only diffs).
+  - `discover_tests_in_dir()` selects new tests placed in owned directories automatically without
+    editing `scripts/verification-impact.json`, skips only top-level `frontend/{dist,coverage,.pnpm-store}`
+    (so nested `frontend/src/coverage/` or `frontend/src/dist/` cannot escape), and rejects symlinked
+    test directories fail-closed.
+  - `plan_paths()` rejects deletions of any explicitly mapped test (`full_tests`, `product_tests`, or
+    `scope[layer]`) even in `product` or `full` mode.
+- Updated [`scripts/disposable_workflow.py`](../scripts/disposable_workflow.py) (`safe_suites`) so
+  directory-owned integration test paths under `backend/tests/integration/` (and `*_test.py`) are
+  accepted alongside flat `test_*.py` suites, and updated `EvidenceFixture` in
+  `scripts/test-stage-evidence.py`, `scripts/test-workflow-resources.py`, and
+  [`docs/development-workflow.md`](development-workflow.md).
+- Expanded `scripts/test-verification-impact.py` (`TestOwnershipInventoryTests` and
+  `test_test_ownership_inventory_cannot_silently_drift`) covering owned directory discovery,
+  unowned test refusal before Docker, symlinked files/directories, nested `coverage`/`dist`, moved
+  and deleted suites, and overlapping/invalid map rules. Independent QA (`research` subagent)
+  reported one P2 (symlinked test directories) and two P3s (nested `coverage`/`dist`; deleted
+  explicit scope suites in `product`/`full` mode), all fixed and verified with `QA_PASS`.
+- Unresolved: deferred final reconciliation with `origin/main` (after `REL-01` and `DOC-05`) and
+  canonical `make feature-verify` (FULL) on the frozen integration candidate.
+
 ## 2026-11-15 — DOC-02 step 2: release-scope manifest and checker rules
 
 - Added [`docs/release/scope-v1.json`](release/scope-v1.json), the v1.0.0 release-scope manifest:
