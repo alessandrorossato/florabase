@@ -1,8 +1,8 @@
 # Specification: release targets in a scope manifest (DOC-02)
 
 The operator approved, on 2026-11-15, storing release targets in a versioned manifest instead of
-a field on each feature entry. This page specifies that manifest and the checker rules. Nothing
-here is implemented by this page; each step below is its own increment.
+a field on each feature entry. This page specifies that manifest and the checker rules. Steps
+1 and 2 below are implemented; step 3 is not.
 
 ## Decision
 
@@ -21,8 +21,10 @@ is relative to one release, and `features.json` is edited by every feature branc
 The operator decided the manifest path, the eight classes, where status lives, the three steps
 and their order, the rejection of missing, unknown and duplicate identifiers and of
 inconsistent status and class combinations, and that adoption by open branches is deliberate.
-The file format and the exact rule set below are this specification's proposal and are
-confirmed in the step 2 review.
+The file format and the rule set below are this specification's proposal, implemented by step
+2 as written. Of its details the operator explicitly approved, on 2026-11-15: the fixed order
+of `classes`; ignoring top-level keys other than the four required ones, with every required
+field and rule kept strict; and delivering rule 8 with step 2.
 
 ## Why it is separate from the scope documents
 
@@ -42,7 +44,7 @@ a list of strings, and `acceptance_criteria` that is not a non-empty list. Every
 
 ## Manifest
 
-Proposed format, confirmed in the step 2 review:
+Format, as implemented in step 2:
 
 ```json
 {
@@ -79,9 +81,13 @@ record is `record`; internal foundation (exempt) is `internal`; POST-1.0 is `pos
    `in_progress`. Without the flag this rule only reports, so ordinary development is not
    blocked while the certification work is open.
 
+A manifest that cannot be read, or that breaks any of rules 1 to 7, fails the checker; nothing
+is skipped when the manifest is absent. `classes` must list the eight tokens in the order
+above. Top-level keys other than the four are ignored; the four are required and validated.
+
 Rules 6 and 7 are the inconsistent status and class combinations this specification defines;
-the operator confirms the set at step 2. No rule changes a status, and no rule derives a class
-from a status or a status from a class other than those two.
+they implement the operator's decision to reject inconsistent combinations. No rule changes a status, and no rule
+derives a class from a status or a status from a class other than those two.
 
 An entry classed `post-1.0` that reaches `verified` needs a scope-change record
 re-classing it (for example to `baseline`), proposed in the same change and approved by the
@@ -99,8 +105,12 @@ regenerated for the candidate.
    Delivered in #181.
 2. Add the manifest with complete membership taken from the reconciliation matrix, and rules
    1–7 with a failing fixture for each. The checker must pass on the populated manifest.
-3. Add rule 8 and wire `--release-candidate` into the release rehearsal, coordinated with REL-01,
-   which owns the release tooling.
+   With the operator's approval of 2026-11-15, step 2 also adds rule 8 to the checker, with
+   fixtures. This intentionally changes the original split, which put rule 8 in step 3. The
+   flag `scripts/check-features.py --release-candidate` is opt-in: no gate, CI job or release
+   tool passes it, so ordinary verification is unchanged.
+3. Wire `--release-candidate` into the release rehearsal, coordinated with REL-01, which owns
+   the release tooling.
 
 Each step selects the full gate because it touches `scripts/`.
 
@@ -127,7 +137,8 @@ local canonical gate detects this only after the branch merges `main`. This is d
 - The operator approved these classes on 2026-11-15: ENG-01 is `certify`, because it is an
   implemented, user-facing feature on `main` whose certification must verify its acceptance
   criteria and recorded evidence, including the applicable G-CORE check; RELEASE-SCOPE-001,
-  DOC-01, DOC-03 and DOC-05 are `release-work`. A task that is not yet in `features.json`
+  DOC-01, DOC-03 and DOC-05 are `release-work`; BRAND-01, which the scope did not name, is
+  `certify`. A task that is not yet in `features.json`
   takes its class when it is added. No status changes with them, and
   the class does not promote ENG-01 to `verified`; it reaches `verified` only through its
   certification.
@@ -138,6 +149,8 @@ local canonical gate detects this only after the branch merges `main`. This is d
 - Removing one identifier from `membership`, adding an unknown one, and repeating one each fail
   the checker.
 - A `baseline` entry that is not `verified`, and a `post-1.0` entry that is, each fail.
+- With `--release-candidate`, a `certify` or `release-work` entry that is `planned` or
+  `in_progress` fails; without the flag it is reported and the checker passes.
 - The populated manifest passes, and its classes equal the reconciliation matrix for every
   entry the matrix covers.
 
@@ -152,5 +165,6 @@ local canonical gate detects this only after the branch merges `main`. This is d
 
 ## Open point
 
-Whether the watering and feeding kinds (scope decision 5) get their own entry before step 2
-lands or with it. They are not EVENT-003, which is a broader post-1.0 entry.
+The watering and feeding kinds (scope decision 5) have no entry of their own, and step 2 does
+not add one. If FN-03 is delivered, its branch adds the identifier and its manifest line under
+the adoption rules above. They are not EVENT-003, which is a broader post-1.0 entry.

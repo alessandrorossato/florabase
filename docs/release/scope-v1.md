@@ -15,7 +15,7 @@ work is implemented or verified. Three linked pages are part of this contract:
 A feature's status and its release target are separate. Status stays in
 [`features.json`](../features.json) and changes only on evidence; the release target says how an
 entry relates to this release and is stored in the release-scope manifest
-`docs/release/scope-v1.json` once DOC-02 delivers it (scope-change record, 2026-11-15).
+[`scope-v1.json`](scope-v1.json) (scope-change record, 2026-11-15).
 
 ## Operator-approved decisions
 
@@ -208,7 +208,9 @@ No step depends on an optional task.
 ## Certification of delivered features
 
 Thirty-eight entries are on `main`, in scope and not `verified` ("PRE-1.0 certify" in the
-reconciliation). None of them is certified by this scope. The strategy is:
+reconciliation). ENG-01 and BRAND-01 were delivered after the reconciliation and are classed
+`certify` by scope-change records, so the manifest has forty. None of them is certified by this
+scope. The strategy is:
 
 1. **One entry at a time.** Each entry is certified against its own acceptance criteria. There
    is no blanket promotion.
@@ -280,6 +282,8 @@ functional batch, with these requirements:
 | 2026-11-13 | FN-05 / UX-DATE-001 D1 | Decided: Today preselected for new Journal entries; implementation assigned to the functional batch | Operator decision | Operator |
 | 2026-11-15 | DOC-02 | Decided: release targets are stored in the versioned manifest `docs/release/scope-v1.json` with the eight reconciliation classes; feature status stays only in `features.json`. No classification changes | Operator decision DOC-02 option B; closes the open point of the schema follow-up | Operator |
 | 2026-11-15 | ENG-01, RELEASE-SCOPE-001, DOC-01, DOC-03, DOC-05 | Classes for the manifest: ENG-01 is `certify`; RELEASE-SCOPE-001, DOC-01, DOC-03 and DOC-05 are `release-work`, each from when it is in `features.json`. No status changes | ENG-01 is an implemented, user-facing feature on `main` whose certification must verify its criteria and evidence, including the applicable G-CORE check | Operator |
+| 2026-11-15 | DOC-02 | Sequencing: the checker's release-candidate rule (`--release-candidate`) is delivered with the manifest in step 2; wiring it into the release rehearsal stays step 3 with REL-01. No classification changes | Operator approval, on condition that the flag is opt-in, leaves ordinary verification unchanged and is not wired into release tooling | Operator |
+| 2026-11-15 | BRAND-01 | Added to the scope with class `certify`. No status change | Delivered in #186 without a scope record; user-facing artwork that ships in 1.0 and is certified against its own criteria | Operator |
 
 ## History
 

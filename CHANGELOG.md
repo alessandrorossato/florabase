@@ -14,7 +14,7 @@ Changes on `main` since `v0.1.0-beta.5`. They ship in the next prerelease. The s
 
 - Portable Docker Compose distribution: a three-service `portable-compose.yaml` release asset with
   explicit schema initialization, upgrade, paired backup and isolated restore (#161). See the
-  [installation guide](docs/portable-installation.md).
+  [installation guide](docs/portable-installation.md), completed in #184.
 - Owner password change in Settings → Account, and an offline password reset command for the
   portable installation (#179).
 - Cuttings: vegetative material lots and rooting attempts. Delivered and still being finished
