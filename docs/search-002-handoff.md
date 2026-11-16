@@ -175,9 +175,9 @@ exercise Show more; large paging/deduplication remains proven by PostgreSQL test
 
 Screenshots are review artifacts outside the source tree:
 
-- 1440×844 results (`/home/alessandro/.codex/visualizations/2026/10/06/01a10ff8-adfb-79d2-8bd8-9c2e28e48b58/search-002-desktop.jpg`).
-- 1024×844 results (`/home/alessandro/.codex/visualizations/2026/10/06/01a10ff8-adfb-79d2-8bd8-9c2e28e48b58/search-002-intermediate.jpg`).
-- 390×844 results (`/home/alessandro/.codex/visualizations/2026/10/06/01a10ff8-adfb-79d2-8bd8-9c2e28e48b58/search-002-mobile.jpg`).
+- 1440×844 results (`search-002-desktop.jpg` external review capture).
+- 1024×844 results (`search-002-intermediate.jpg` external review capture).
+- 390×844 results (`search-002-mobile.jpg` external review capture).
 
 The browser viewport override was reset, and UAT is left running with a representative mixed search
 open. This is implementation browser evidence; operator visual acceptance has passed.

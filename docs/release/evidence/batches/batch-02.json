@@ -1,0 +1,115 @@
+{
+  "base": "554d74de88a278e2b9a392de9d105d3d62c35f91",
+  "bootstrap": "5a7f78ff4156a2d13ca605dfd6e1005a2e2459f7",
+  "bootstrap_commits": [
+    "5a7f78ff4156a2d13ca605dfd6e1005a2e2459f7"
+  ],
+  "branch": "ci/batch-02",
+  "reconciliation": {
+    "docs/progress.md": "Record WF-04 Batch 02 milestone and CI-005 registration alongside additive FN-05, FN-06, DOC-05, WF-06 and CI-005 entries.",
+    "docs/release/evidence/fn-05.md": "Remove host-home worktree path flagged by the test-beta-runtime disclosure scanner.",
+    "docs/release/evidence/wf-04-batch-02.md": "Add Batch 02 integration provenance, CI-005 registration, DOC-05 status check, and GitHub Actions CI preflight evidence.",
+    "docs/search-002-handoff.md": "Remove host-home screenshot paths introduced by DOC-05 flagged by the test-beta-runtime disclosure scanner.",
+    "scripts/test-workflow-cleanup.py": "Use fixture@localhost instead of a literal .invalid email flagged by the test-beta-runtime disclosure scanner."
+  },
+  "sources": [
+    {
+      "base": "554d74de88a278e2b9a392de9d105d3d62c35f91",
+      "branch": "feat/fn-05-journal-today",
+      "claim": "c2bf9ba1d667",
+      "commits": [
+        "a470811742e694c1df579b65ad13f586e73a5864"
+      ],
+      "evidence": [
+        "docs/release/evidence/fn-05.md",
+        "docs/progress.md"
+      ],
+      "id": "FN-05",
+      "merge": "1d43c07816b26d512def79384e44d4dba7c3af52",
+      "resolutions": [],
+      "reviewer": "argon-qa",
+      "tip": "a470811742e694c1df579b65ad13f586e73a5864",
+      "writer": "hydrogen-fn-05"
+    },
+    {
+      "base": "554d74de88a278e2b9a392de9d105d3d62c35f91",
+      "branch": "feat/fn-06-journal-navigation",
+      "claim": "0fd639072ec8",
+      "commits": [
+        "e6f85c9865d7e8eabe7a6876d7754f5905eb74aa"
+      ],
+      "evidence": [
+        "docs/release/evidence/fn-06.md",
+        "docs/progress.md"
+      ],
+      "id": "FN-06",
+      "merge": "bff73d388b9c72fdce65dba96c34fe4439be1f0b",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "argon-qa",
+      "tip": "e6f85c9865d7e8eabe7a6876d7754f5905eb74aa",
+      "writer": "hydrogen-fn-06-journal-nav"
+    },
+    {
+      "base": "554d74de88a278e2b9a392de9d105d3d62c35f91",
+      "branch": "docs/doc-05-audit",
+      "claim": "b97800ab0525",
+      "commits": [
+        "fad0e06232d8131ae5614be2cc146f6fb1f832d1"
+      ],
+      "evidence": [
+        "docs/versioning.md",
+        "docs/progress.md"
+      ],
+      "id": "DOC-05",
+      "merge": "a040c75bfb7221d5dd2c1d8579bedffc6dd9f827",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "source-qa",
+      "tip": "fad0e06232d8131ae5614be2cc146f6fb1f832d1",
+      "writer": "terra-doc05"
+    },
+    {
+      "base": "554d74de88a278e2b9a392de9d105d3d62c35f91",
+      "branch": "feat/wf-06",
+      "claim": "34c36d0bd8fc",
+      "commits": [
+        "e868ad9f1712e8105ea93c7026e9edb0e97edf5f",
+        "df53c71e6cc97bf072080d723c2d13f33257bc2a",
+        "e538874e61b5107d98cf9a27a1963ba2e8f43254"
+      ],
+      "evidence": [
+        "docs/release/evidence/wf-06.md",
+        "docs/progress.md"
+      ],
+      "id": "WF-06",
+      "merge": "e359907aa90066352af0d1b9717ba9fa665d3787",
+      "resolutions": [],
+      "reviewer": "source-qa",
+      "tip": "e538874e61b5107d98cf9a27a1963ba2e8f43254",
+      "writer": "terra-wf06"
+    },
+    {
+      "base": "554d74de88a278e2b9a392de9d105d3d62c35f91",
+      "branch": "docs/g-docs-links",
+      "claim": "f0989bfa75e3",
+      "commits": [
+        "0d6149ead8b77f4c90d1e7847da74ef93fdeb859",
+        "a97b870a19733609679af009a2f947e5e480cf7c"
+      ],
+      "evidence": [
+        "docs/release/evidence/g-docs-links.md",
+        "docs/progress.md"
+      ],
+      "id": "CI-005",
+      "merge": "3449dd02f2665406b60197f5e154990976f88051",
+      "resolutions": [],
+      "reviewer": "source-qa",
+      "tip": "a97b870a19733609679af009a2f947e5e480cf7c",
+      "writer": "terra-gdocs"
+    }
+  ],
+  "version": 1
+}

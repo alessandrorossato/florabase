@@ -1,3 +1,20 @@
+## 2026-11-16 — WF-04 Batch 02 prepared
+
+- Registered `CI-005` (`implemented`, `tooling`) in `docs/features.json` and
+  `docs/release/scope-v1.json` for offline documentation link validation (`docs/g-docs-links`),
+  preserving the eight open `certify` and `release-work` release-candidate blockers.
+- Integrated FN-05, FN-06, DOC-05, WF-06 and CI-005 from the five frozen source tips on
+  `ci/batch-02` based on `554d74de88a278e2b9a392de9d105d3d62c35f91`, resolving `docs/progress.md`
+  additively and preserving exact source ancestry and provenance in
+  [batch-02.json](release/evidence/batches/batch-02.json) and
+  [WF-04 Batch 02 evidence](release/evidence/wf-04-batch-02.md).
+- Sanitized host-home paths in `docs/release/evidence/fn-05.md` and `docs/search-002-handoff.md`
+  and the synthetic git email in `scripts/test-workflow-cleanup.py` so the `test-beta-runtime`
+  disclosure scanner passes cleanly.
+- DOC-05 moves from `in_progress` to `implemented` (and remains unverified until release-cut
+  candidate acceptance). Independent combined QA, GitHub Actions CI preflight and a fresh
+  no-reuse canonical FULL gate complete acceptance before operator delivery.
+
 ## 2026-11-16 — FN-05: Preselect Today for new Journal entries (UX-DATE-001 D1)
 
 - On `feat/fn-05-journal-today` from `554d74de88a278e2b9a392de9d105d3d62c35f91` (writer

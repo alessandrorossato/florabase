@@ -118,7 +118,7 @@ class CleanupTests(unittest.TestCase):
 
         git("init", "-b", "main")
         git("config", "user.name", "Fixture")
-        git("config", "user.email", "fixture@example.invalid")
+        git("config", "user.email", "fixture@localhost")
         (primary / "README").write_text("fixture\n")
         git("add", "README")
         git("commit", "-m", "fixture")
