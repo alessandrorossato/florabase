@@ -260,8 +260,8 @@ not an approval), and the wording that the ruling would adopt.
   image, and any fallback image is labelled with its actual owner."
 - Owner labelling is now evidenced. CERT-03 (#193) added `HarvestScreen.test.tsx` "Harvest
   fallback image is labelled with its actual owner". It checks the thumbnail, alt text and
-  reference label of an identity-cover fallback and of a record-owned primary photo, and that no
-  source Plant photo is shown.
+  reference label of an identity-cover fallback, the thumbnail and owner label of a record-owned
+  primary photo, and that no source Plant photo is shown.
 - Still needed: operator approval of the wording. Until then the original criterion is in force.
 - Scope: unchanged.
 
