@@ -227,7 +227,7 @@ class AgentWorkflowTests(unittest.TestCase):
             json.dumps(
                 {
                     "branch": "ci/batch-fixture",
-                    "summary": "Example sources for the fixture",
+                    "summary": "Example sources for the fixture, sized to fill the exact title limit",
                     "base": base,
                     "sources": request,
                 }
@@ -239,9 +239,17 @@ class AgentWorkflowTests(unittest.TestCase):
         unsummarized = {key: value for key, value in json.loads(plan.stdout).items()}
         del unsummarized["summary"]
         plan_path.write_text(json.dumps(unsummarized))
+        before = self.git(batch, "rev-parse", "HEAD")
         refused = self.batch_command(batch, "prepare", str(plan_path), AGENT_ID="integrator")
         self.assertNotEqual(refused.returncode, 0)
         self.assertIn("batch summary", refused.stderr)
+        self.assertEqual(self.git(batch, "status", "--porcelain"), "")
+        # One character over the 100-character title is refused before any merge or HEAD change.
+        plan_path.write_text(json.dumps({**json.loads(plan.stdout), "summary": "s" * 69}))
+        refused = self.batch_command(batch, "prepare", str(plan_path), AGENT_ID="integrator")
+        self.assertNotEqual(refused.returncode, 0)
+        self.assertIn("too long", refused.stderr)
+        self.assertEqual(self.git(batch, "rev-parse", "HEAD"), before)
         self.assertEqual(self.git(batch, "status", "--porcelain"), "")
         plan_path.write_text(plan.stdout)
         prepared = self.batch_command(batch, "prepare", str(plan_path), AGENT_ID="integrator")
@@ -311,6 +319,11 @@ class AgentWorkflowTests(unittest.TestCase):
         invalid = self.git(batch, "rev-parse", "HEAD")
         with self.assertRaisesRegex(workflow_environment.WorkflowError, "batch summary"):
             feature_batch.load_manifest(Repository(batch), "ci/batch-fixture", invalid)
+        path.write_text(json.dumps({**manifest, "summary": "s" * 69}))
+        self.git(batch, "commit", "--amend", "--no-edit", "--", str(path))
+        overlong = self.git(batch, "rev-parse", "HEAD")
+        with self.assertRaisesRegex(workflow_environment.WorkflowError, "too long"):
+            feature_batch.load_manifest(Repository(batch), "ci/batch-fixture", overlong)
         self.git(batch, "reset", "--hard", head)
         correction = {"supersedes": head, "paths": ["docs/fix.md"], "reason": "fix"}
         (batch / "docs/fix.md").write_text("fix\n")
@@ -330,9 +343,17 @@ class AgentWorkflowTests(unittest.TestCase):
         self.assertEqual(
             (batch / "docs/progress.md").read_text(), "Source 1\nSource 2\nOriginal progress\n"
         )
-        self.assertEqual(manifest["summary"], "Example sources for the fixture")
+        self.assertEqual(
+            manifest["summary"],
+            "Example sources for the fixture, sized to fill the exact title limit",
+        )
         title, _ = feature_batch.title_body(manifest, head, False)
-        self.assertEqual(title, "chore(release): Example sources for the fixture (batch fixture)")
+        self.assertEqual(
+            title,
+            "chore(release): Example sources for the fixture, sized to fill the exact title limit"
+            " (batch fixture)",
+        )
+        self.assertEqual(len(title), 100)
         merge = self.squash_fixture(head, base)
         feature_batch.validate_platform_tree(
             Repository(self.primary), "ci/batch-fixture", base, head, merge

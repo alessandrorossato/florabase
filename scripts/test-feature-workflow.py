@@ -125,6 +125,9 @@ class BatchDeliveryTests(unittest.TestCase):
                 feature_batch.title_body({**plan, "summary": invalid}, "b" * 40, False)
         limit = {**plan, "branch": "ci/batch-abc", "summary": "s" * 72}
         self.assertEqual(len(feature_batch.title_body(limit, "b" * 40, False)[0]), 100)
+        self.assertEqual(feature_batch.summary_title(limit), feature_batch.title_body(limit, "b" * 40, False)[0])
+        with self.assertRaisesRegex(WorkflowError, "too long"):
+            feature_batch.summary_title({**limit, "branch": "ci/batch-abcd"})
         with self.assertRaisesRegex(WorkflowError, "too long"):
             feature_batch.title_body({**limit, "branch": "ci/batch-abcd"}, "b" * 40, False)
         with self.assertRaisesRegex(WorkflowError, "too long"):

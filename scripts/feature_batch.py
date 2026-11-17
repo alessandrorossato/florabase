@@ -78,6 +78,15 @@ def batch_summary(value: dict[str, Any]) -> str:
     return str(text)
 
 
+def summary_title(value: dict[str, Any]) -> str:
+    """Return the validated summarized PR title of a batch plan or manifest (WF-07)."""
+    branch = str(value.get("branch"))
+    name = branch.removeprefix("ci/").removeprefix("wf-04-").removeprefix("batch-")
+    title = f"chore(release): {batch_summary(value)} (batch {name})"
+    require(len(title) <= 100, "batch PR title is too long; shorten the summary or split the batch")
+    return title
+
+
 def json_object(raw: str) -> dict[str, Any]:
     def unique(items: list[tuple[str, Any]]) -> dict[str, Any]:
         result: dict[str, Any] = {}
@@ -316,7 +325,7 @@ def load_manifest(repo: Repository, branch: str, head: str) -> dict[str, Any]:
         "unknown batch manifest version or branch",
     )
     if "summary" in value:
-        batch_summary(value)
+        summary_title(value)
     base, bootstrap = oid(value.get("base")), oid(value.get("bootstrap"))
     if "correction" in value:
         correction = value["correction"]
@@ -446,6 +455,7 @@ def prepare(repo: Repository, plan: dict[str, Any]) -> None:
     )
     branch, base = plan["branch"], oid(plan["base"])
     path = manifest_path(branch)
+    summary_title(plan)
     summary = batch_summary(plan)
     require(
         repo.git("branch", "--show-current") == branch and not status(repo.source),
@@ -533,13 +543,12 @@ def title_body(value: dict[str, Any], head: str, migration: bool) -> tuple[str, 
         title = "Batch " + ", ".join(
             f"{feature} {' '.join(sha[:12] for sha in shas)}" for feature, _, shas in entries
         )
+        require(
+            len(title) <= 256,
+            "batch provenance would exceed GitHub's PR title limit; split the batch",
+        )
     else:
-        name = value["branch"].removeprefix("ci/").removeprefix("wf-04-").removeprefix("batch-")
-        title = f"chore(release): {summary} (batch {name})"
-    require(
-        len(title) <= (256 if summary is None else 100),
-        "batch PR title is too long; shorten the summary or split the batch",
-    )
+        title = summary_title(value)
     body = "\n".join(
         ([f"Summary: {summary}", ""] if summary else [])
         + [
