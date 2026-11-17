@@ -9407,7 +9407,7 @@ Status remains implemented pending canonical verification.
 
 - Fixed five confirmed UX defects on branch `fix/rc-gux-functional-defects`:
   - `F-01`: Released single-screen height/overflow clamps in `@media (max-height: 30rem)` so
-    directories remain scrollable and unclipped at 200% zoom (`720×422`) across toolbars, filters,
+    directories remain scrollable at an emulated `720×422` CSS viewport across toolbars, filters,
     records, and pagination.
   - `F-02`: Integrated `ReferencePicker` with `registerControlLayer` (priority 3) and a focus-open
     guard so `Escape` and native `<dialog>` `cancel` dismiss only the picker before closing a
@@ -9422,7 +9422,7 @@ Status remains implemented pending canonical verification.
   `R21`.
 - Checks after final edit: `pnpm run format:check`, `pnpm run lint`, `pnpm run typecheck`, full
   `pnpm test` (126/126 files, 1378/1378 tests), and before/after Chromium verification at
-  `1440×844`, `1024×844`, `390×844`, and `720×422` (200% zoom) against a disposable stack cleaned
+  `1440×844`, `1024×844`, `390×844`, and emulated `720×422` (DPR 2) on a disposable stack cleaned
   after completion ([evidence](release/evidence/rc-gux-functional-defects.md)). Independent QA and
   release integration remain pending.
 
@@ -9434,3 +9434,16 @@ Status remains implemented pending canonical verification.
 - Disposable PostgreSQL passed 17 tests and scoped frontend Vitest passed 37. The
   [FN-01 source record](release/evidence/fn-01-source.md) captures five persisted outcome cases,
   both clonal establishment paths and the remaining candidate-image G-CORE evidence.
+
+## 2026-11-17 — WF-04 Batch 05 integrated
+
+- Prepared the reviewed UX F-01 through F-05 source, then FN-01 Cuttings, from pinned main
+  `ed5747c`. WF-04 retained both progress milestones in the sole additive conflict.
+- Combined checks passed: 245 focused frontend tests, 56 Cuttings/History/Schedule PostgreSQL
+  tests, authenticated Chromium smoke, API regeneration without drift, API check, lint, format,
+  typing, feature graph, documentation links and whitespace. The
+  [Batch 05 record](release/evidence/wf-04-batch-05.md) distinguishes CDP emulation from
+  separate native Chromium zoom QA and records the source provenance.
+- All eight RC blockers remain. CUTTING-001 acceptance and candidate-image G-CORE step 12,
+  UI-SYSTEM-001, formal G-UX, U04 and R21 remain open. F-06 is deferred. Independent combined
+  review and canonical FULL are pending.
