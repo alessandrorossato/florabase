@@ -1,0 +1,78 @@
+{
+  "base": "b088a94eef82418b033ae42391726cabe5f4f0c5",
+  "bootstrap": "b088a94eef82418b033ae42391726cabe5f4f0c5",
+  "bootstrap_commits": [],
+  "branch": "ci/batch-04",
+  "reconciliation": {
+    "docs/progress.md": "Record the batch preparation and pending operator acceptance of beta.5 supersession",
+    "docs/release/evidence/cert-05.md": "Record the exact #155 squash-tree relationship to #158",
+    "docs/release/evidence/wf-04-batch-04.md": "Record source and integration review provenance"
+  },
+  "sources": [
+    {
+      "base": "b088a94eef82418b033ae42391726cabe5f4f0c5",
+      "branch": "docs/cert-status-reconciliation",
+      "claim": "d7cfd6be313a",
+      "commits": [
+        "721b3456da85aa41075078b75b6ae182076a4a0e",
+        "543ac5159742efa024242ffe630e060e0d07e3e8"
+      ],
+      "evidence": [
+        "docs/progress.md",
+        "docs/release/restatements-v1.md"
+      ],
+      "id": "CERT-01",
+      "merge": "e177b69046c87120364f827fa60f61cf15384f00",
+      "resolutions": [],
+      "reviewer": "sol-qa-b04-cert01",
+      "tip": "543ac5159742efa024242ffe630e060e0d07e3e8",
+      "writer": "claude-doc-batch04"
+    },
+    {
+      "base": "b088a94eef82418b033ae42391726cabe5f4f0c5",
+      "branch": "ci/wf-07-batch-titles",
+      "claim": "fa225bc853d5",
+      "commits": [
+        "4b3bf8715af0f037be6f419da3c78606070bbd95",
+        "cb1fff95c307bbe2e9e9684ec77b7e178e842ec3",
+        "1a901c44a9ac864efe0d34a63444cb0d3e56ba5e",
+        "cc9e922a8e1ff813138becdaa1487eb5b729140c"
+      ],
+      "evidence": [
+        "docs/release/evidence/wf-07.md",
+        "docs/progress.md"
+      ],
+      "id": "WF-07",
+      "merge": "56563d747bdfa5f2e42d9f7c41f5d64df2c3c5f4",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "codex-b04-source-qa",
+      "tip": "cc9e922a8e1ff813138becdaa1487eb5b729140c",
+      "writer": "claude-wf07"
+    },
+    {
+      "base": "b088a94eef82418b033ae42391726cabe5f4f0c5",
+      "branch": "docs/cert-05-release-evidence",
+      "claim": "f30bfc413c28",
+      "commits": [
+        "5e0b06e0174d9654fdc92f9ac7676d78b777fb53",
+        "7db61c75004bba43ff03f4f4071524ab81401a87"
+      ],
+      "evidence": [
+        "docs/release/evidence/cert-05.md",
+        "docs/progress.md"
+      ],
+      "id": "CERT-05",
+      "merge": "f9614f1f099ededec1c82d0e5fb14af2329b20bd",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "hydrogen-qa-cert05",
+      "tip": "7db61c75004bba43ff03f4f4071524ab81401a87",
+      "writer": "sol-cert05"
+    }
+  ],
+  "summary": "certification, PR titles and RC evidence",
+  "version": 1
+}

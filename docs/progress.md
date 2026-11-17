@@ -1,3 +1,11 @@
+## 2026-11-17 — WF-04 Batch 04 prepared
+
+- Prepared CERT-01, WF-07 and CERT-05 in order from pinned main `b088a94`. The planner
+  reported zero blockers, and WF-04 resolved the two conflicts in `docs/progress.md` additively.
+- Recorded the reviewed source tips, approved PR summary and documentation reconciliation
+  in the [Batch 04 provenance record](release/evidence/wf-04-batch-04.md).
+- Independent combined QA and canonical FULL remain pending at preparation.
+
 ## 2026-11-17 — CERT-02 to CERT-04 implemented; R19 evidence
 
 - CERT-02, CERT-03 and CERT-04 move from `planned` to `implemented` in `docs/features.json`. Their
@@ -33,8 +41,8 @@
   beta-postgres-repro-001 against the repository and read-only GitHub metadata. Five of six
   BETA-IMAGE-001 criteria and six of seven beta-postgres-repro-001 criteria are met. Gaps:
   BETA-IMAGE-001 #6 (#142 has no committed final QA; remediated by #158) and
-  beta-postgres-repro-001 #7 (#155 FULL on `c12af84`, not its head `7e73762`). The beta.1 title
-  target is superseded by beta.5.
+  beta-postgres-repro-001 #7 (#155 FULL on `c12af84`, not its head `7e73762`). Beta.5 is the first published paired
+  release. The proposed supersession of the beta.1 title target awaits operator acceptance.
 - No status changes. Both entries stay `in_progress` pending the operator's rulings; the
   release-candidate blockers are the same eight.
 
