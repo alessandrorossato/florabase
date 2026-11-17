@@ -107,6 +107,7 @@ through the development workflow, and they are not release gates in themselves.
 | WF-03 | Own tests by directory and run the inventory check before the gate |
 | WF-04 | A documented batch integration profile with provenance and retirement |
 | WF-06 | A report-then-confirm command to retire resources of finished work |
+| WF-07 | Human-readable WF-04 batch PR titles from a reviewed manifest summary |
 
 ### 3. Optional PRE-1.0 improvements
 
@@ -293,6 +294,8 @@ functional batch, with these requirements:
 | 2026-11-15 | BRAND-01 | Added to the scope with class `certify`. No status change | Delivered in #186 without a scope record; user-facing artwork that ships in 1.0 and is certified against its own criteria | Operator |
 | 2026-11-16 | UI-SYSTEM-001 | Restatement R24 of criterion 4 ([restatements](restatements-v1.md#confirmed-supersessions)): Today shows up to four distinct randomly selected Plant records, with truthful image attribution and responsive layout. The eight-photo grid is not restored. No status change; the other criteria are not waived, and selection, Plant links, image fallback and responsive presentation are still to be verified on the candidate | Consistent with the approved Today A — Operational design (2026-11-12), delivered in #177 | Operator |
 | 2026-11-16 | CERT-01, CERT-02, CERT-03, CERT-04 | Registered with class `tooling` as the Batch 03 source identifiers: certification documentation (CERT-01), frontend certification regressions (CERT-02), Harvest certification regressions (CERT-03) and the scaffold verification gate (CERT-04). No new mandatory requirement, no reclassification of existing entries, no status change of any certification item | Each WF-04 source needs a feature identifier; these add evidence and checks and do not change the product | Operator |
+| 2026-11-17 | WF-07 | Registered as a required workflow enabler: human-readable WF-04 batch PR titles from a reviewed manifest summary. No `features.json` entry, like WF-01 to WF-06; delivered by source WF-07 in Batch 04. No status or class change | Batch PR titles listing commit hashes are unreadable for review; the change affects the workflow only | Operator |
+| 2026-11-17 | CERT-05 | Registered with class `tooling` as the Batch 04 source identifier for release-evidence reconciliation of BETA-IMAGE-001 and beta-postgres-repro-001. No status change of any other entry; supersessions and status moves it recommends need separate operator acceptance | Each WF-04 source needs a feature identifier; the record adds evidence and does not change the product | Operator |
 
 ## History
 
