@@ -303,6 +303,28 @@ class AgentWorkflowTests(unittest.TestCase):
             "base": {"ref": "main", "repo": {"full_name": feature_batch.REPOSITORY}},
         }
 
+    def test_batch_manifest_refuses_invalid_or_corrected_summary(self) -> None:
+        batch, _, _, head, manifest = self.batch_fixture()
+        path = batch / feature_batch.manifest_path("ci/batch-fixture")
+        path.write_text(json.dumps({**manifest, "summary": "Pins 1234567 here"}))
+        self.git(batch, "commit", "--amend", "--no-edit", "--", str(path))
+        invalid = self.git(batch, "rev-parse", "HEAD")
+        with self.assertRaisesRegex(workflow_environment.WorkflowError, "batch summary"):
+            feature_batch.load_manifest(Repository(batch), "ci/batch-fixture", invalid)
+        self.git(batch, "reset", "--hard", head)
+        correction = {"supersedes": head, "paths": ["docs/fix.md"], "reason": "fix"}
+        (batch / "docs/fix.md").write_text("fix\n")
+        path.write_text(
+            json.dumps({**manifest, "summary": "A different summary", "correction": correction})
+        )
+        self.git(batch, "add", ".")
+        self.git(batch, "commit", "-m", "correction")
+        corrected = self.git(batch, "rev-parse", "HEAD")
+        with self.assertRaisesRegex(
+            workflow_environment.WorkflowError, "changes the original provenance"
+        ):
+            feature_batch.load_manifest(Repository(batch), "ci/batch-fixture", corrected)
+
     def test_batch_finishes_and_retires_both_exact_squashed_sources(self) -> None:
         batch, sources, base, head, manifest = self.batch_fixture()
         self.assertEqual(

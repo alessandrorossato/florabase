@@ -112,9 +112,15 @@ class BatchDeliveryTests(unittest.TestCase):
         )
         for invalid in ("", "too short", " Padded summary text", "Two\nlines of summary",
                         "x" * 73, "Includes commit 1234567abc", "Uses `code` markup here",
-                        "chore(release): prefixed summary", 42):
+                        "chore(release): prefixed summary", "Feat: capitalised prefix",
+                        "feat : spaced prefix", "Pins " + "a" * 41 + " too", "Digest " + "f" * 64,
+                        "See ref_" + "1" * 40, 42):
             with self.assertRaisesRegex(WorkflowError, "batch summary"):
                 feature_batch.title_body({**plan, "summary": invalid}, "b" * 40, False)
+        limit = {**plan, "branch": "ci/batch-abc", "summary": "s" * 72}
+        self.assertEqual(len(feature_batch.title_body(limit, "b" * 40, False)[0]), 100)
+        with self.assertRaisesRegex(WorkflowError, "too long"):
+            feature_batch.title_body({**limit, "branch": "ci/batch-abcd"}, "b" * 40, False)
         with self.assertRaisesRegex(WorkflowError, "too long"):
             feature_batch.title_body(
                 {**plan, "branch": "ci/batch-" + "n" * 30, "summary": "s" * 72}, "b" * 40, False

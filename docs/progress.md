@@ -4,9 +4,9 @@
   it, and delivery titles the PR `chore(release): <summary> (batch <id>)`. The PR body and
   manifest keep the full provenance. Manifests without a summary keep their original title;
   the generator still reproduces #192 and #193 exactly.
-- Focused: feature workflow suite OK; agent workflow 74 OK, 3 skipped; Ruff and strict mypy
-  clean. Evidence is in `docs/release/evidence/wf-07.md`. Identifier registration and
-  independent QA are pending.
+- Focused: feature workflow 55 OK; agent workflow 75 OK, 3 skipped; Ruff and strict mypy clean.
+  Independent QA passed `4b3bf87` with four minor findings, which are fixed. Evidence is in
+  `docs/release/evidence/wf-07.md`. Identifier registration is pending.
 
 ## 2026-11-17 — WF-04 Batch 03 prepared
 
