@@ -69,6 +69,15 @@
   See [CERT-03 evidence](release/evidence/cert-03.md) for the test boundaries.
 - Canonical verification and registry reconciliation are pending Batch 03 integration.
 
+## 2026-11-16 — CERT-04 UI scaffold verification
+
+- Added the scaffolder test to FULL and remote quality checks and inspect the shipped asset
+  tree whenever verification builds the frontend. Offline workflow, impact and focused static
+  checks passed. The disposable production build passed, and a scratch build with a lab import
+  failed validation. Both runs verified resource cleanup.
+  See [CERT-04 evidence](release/evidence/cert-04.md).
+- Verification policy selects FULL for the combined Batch 03 candidate.
+
 ## 2026-11-16 — WF-04 Batch 02 prepared
 
 - Registered `CI-005` (`implemented`, `tooling`) in `docs/features.json` and

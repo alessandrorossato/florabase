@@ -105,7 +105,11 @@ does not claim those entry facts or implement a generic history service.
 `make ui-lab` uses the installed Vite and serves the separate `frontend/ui-lab/index.html`
 entry at `http://localhost:15284/ui-lab/`. That entry imports only in DEV. The default
 production build uses the original index and App routes, with no lab import, build
-input, fixture photographs or privileged review route. After a normal build run:
+input, fixture photographs or privileged review route. Every verification build that
+selects the frontend inspects the files shipped in the production image. The FULL
+and required CI quality gates run `make test-ui-page` for the scaffolder.
+
+To inspect a local production build, run:
 
 ```
 python3 scripts/check_ui_lab_build.py

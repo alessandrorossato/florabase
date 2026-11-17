@@ -124,7 +124,12 @@ api-check: ## Verify generated API artifacts are current
 
 check: format-check lint typecheck api-check test ## Run the main non-destructive verification suite (cheap static checks first)
 
-ci: test-verification-impact test-workflow-resources test-workflow-helpers test-agent-workflow test-feature-workflow test-preview-workflow test-environment-workflow test-uat-preview workflow-check check test-integration build ## Run the complete local equivalent of pull-request CI
+ci: test-verification-impact test-workflow-resources test-workflow-helpers test-agent-workflow test-feature-workflow test-preview-workflow test-environment-workflow test-uat-preview test-ui-page workflow-check check test-integration ## Run the complete local equivalent of pull-request CI
+	$(MAKE) verify-build SERVICES='backend frontend'
+
+.PHONY: test-ui-page
+test-ui-page: ## Exercise the repository UI page scaffolder
+	@python3 -m unittest discover -s scripts -p test_ui_page.py
 
 migrate: ## Apply all pending database migrations explicitly
 	$(COMPOSE) run --rm backend alembic upgrade head
