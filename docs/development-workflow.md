@@ -916,7 +916,12 @@ make feature-batch-plan REQUEST=/path/to/request.json > /path/to/plan.json
 make feature-batch-prepare PLAN=/path/to/plan.json AGENT_ID=<integration-writer>
 ```
 
-A request is a JSON object with `branch`, `base`, and `sources`. Each source specifies
+A request is a JSON object with `branch`, `summary`, `base`, and `sources`. The `summary` is
+one reviewed plain line of 10 to 72 characters, without commit IDs, backticks or a type
+prefix. Preparation refuses a plan without it and records it in the manifest, so it cannot
+change afterwards. Delivery titles the PR `chore(release): <summary> (batch <id>)`, and the PR
+body keeps every source ID, branch and commit. A manifest without a summary predates this
+rule and keeps its original title. Each source specifies
 `id`, `branch`, full `tip`, `reviewer` and `evidence` (committed Markdown paths at its tip).
 List sources in the intended merge order. The planner checks the pinned base, exact clean
 tips, writer claims, gates and evidence paths. The writer compares the regenerated plan again

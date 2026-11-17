@@ -38,10 +38,12 @@ class BatchDeliveryTests(unittest.TestCase):
         delivery = feature_deliver.Delivery(feature_deliver.Commands())
         delivery.batch = {
             "branch": branch, "base": "a" * 40, "bootstrap_commits": [],
+            "summary": "Fixture correction keeps its title",
             "sources": [{"id": "FN-01", "branch": "feat/first", "tip": prior, "commits": [prior]}],
             "correction": {"supersedes": prior, "provenance_head": original},
         }
         title, body = delivery.title_and_body(branch, original, False)
+        self.assertEqual(title, "chore(release): Fixture correction keeps its title (batch fixture)")
         value = {
             "number": 191, "node_id": "node", "state": "open", "title": title, "body": body,
             "auto_merge": {"merge_method": "squash"},
@@ -53,6 +55,7 @@ class BatchDeliveryTests(unittest.TestCase):
             api.assert_called_once_with(f"repos/{feature_batch.REPOSITORY}/pulls/191")
             self.assertEqual((pr.head_sha, pr.auto_merge_method), (prior, "squash"))
         for invalid in ({**value, "body": "edited"}, {**value, "number": 192},
+                        {**value, "title": "Batch FN-01 " + prior[:12]},
                         {**value, "auto_merge": {"merge_method": "merge"}}):
             with patch.object(delivery, "api", return_value=invalid):
                 with self.assertRaises(feature_deliver.DeliveryError):
@@ -72,6 +75,65 @@ class BatchDeliveryTests(unittest.TestCase):
             self.assertIn(f"{feature} {sha[:12]}", title)
             self.assertIn(feature, body)
             self.assertIn(sha, body)
+
+    def test_summary_gives_short_title_and_body_keeps_full_provenance(self) -> None:
+        first, second, third = "1" * 40, "2" * 40, "3" * 40
+        plan = {
+            "branch": "ci/batch-04", "base": "a" * 40, "bootstrap_commits": [first],
+            "summary": "Certification status and readable batch titles",
+            "sources": [
+                {"id": "CERT-01", "branch": "docs/first", "tip": second, "commits": [second]},
+                {"id": "WF-07", "branch": "ci/second", "tip": third, "commits": [third]},
+            ],
+        }
+        title, body = feature_batch.title_body(plan, "b" * 40, True)
+        self.assertEqual(
+            title, "chore(release): Certification status and readable batch titles (batch 04)"
+        )
+        self.assertEqual((title, body), feature_batch.title_body(plan, "b" * 40, True))
+        for allowed in ("Collect feedback on decaffeinated seed lots", "Defaced labels and 2026 notes",
+                        "certification, PR titles and RC evidence"):
+            self.assertIn(allowed, feature_batch.title_body({**plan, "summary": allowed}, "b" * 40,
+                                                            False)[0])
+        self.assertTrue(body.startswith("Summary: Certification status and readable batch titles\n"))
+        for text in ("WF-04", "CERT-01", "WF-07", "docs/first", "ci/second", first, second, third,
+                     "b" * 40, "a" * 40, "Migration detected: yes."):
+            self.assertIn(text, body)
+        legacy = {key: value for key, value in plan.items() if key != "summary"}
+        self.assertEqual(
+            feature_batch.title_body({**plan, "branch": "ci/wf-04-batch-01"}, "b" * 40, True)[0],
+            "chore(release): Certification status and readable batch titles (batch 01)",
+        )
+        self.assertEqual(
+            feature_batch.title_body(legacy, "b" * 40, True),
+            (
+                f"Batch WF-04 {first[:12]}, CERT-01 {second[:12]}, WF-07 {third[:12]}",
+                f"Batch head: `{'b' * 40}`\nPinned main: `{'a' * 40}`\n"
+                "Manifest: `docs/release/evidence/batches/batch-04.json`\n"
+                f"Migration detected: yes.\n\n- WF-04 (Workflow bootstrap): `{first}`\n"
+                f"- CERT-01 (docs/first): `{second}`\n- WF-07 (ci/second): `{third}`",
+            ),
+        )
+        for invalid in ("", "too short", " Padded summary text", "Two\nlines of summary",
+                        "x" * 73, "Includes commit 1234567abc", "Uses `code` markup here",
+                        "chore(release): prefixed summary", "Feat: capitalised prefix",
+                        "feat : spaced prefix", "Pins " + "a1" * 21 + " too", "Digest " + "f0" * 32,
+                        "See ref_" + "1" * 40, "Merge commit b088a94 into main",
+                        "Uppercase ABCDEF1 reference", "Digits 1234567 only here",
+                        "Tip feedbac0 glued", 42):
+            with self.assertRaisesRegex(WorkflowError, "batch summary"):
+                feature_batch.title_body({**plan, "summary": invalid}, "b" * 40, False)
+        limit = {**plan, "branch": "ci/batch-abc", "summary": "s" * 72}
+        self.assertEqual(len(feature_batch.title_body(limit, "b" * 40, False)[0]), 100)
+        self.assertEqual(feature_batch.summary_title(limit), feature_batch.title_body(limit, "b" * 40, False)[0])
+        with self.assertRaisesRegex(WorkflowError, "too long"):
+            feature_batch.summary_title({**limit, "branch": "ci/batch-abcd"})
+        with self.assertRaisesRegex(WorkflowError, "too long"):
+            feature_batch.title_body({**limit, "branch": "ci/batch-abcd"}, "b" * 40, False)
+        with self.assertRaisesRegex(WorkflowError, "too long"):
+            feature_batch.title_body(
+                {**plan, "branch": "ci/batch-" + "n" * 30, "summary": "s" * 72}, "b" * 40, False
+            )
 
     def test_delivery_requires_strict_github_actions_checks_and_protected_squash(self) -> None:
         rules = [

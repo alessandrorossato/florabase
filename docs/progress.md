@@ -11,6 +11,19 @@
 - Restatement R19 (HARVEST-001 #4) now cites the CERT-03 owner-labelling test. It stays proposed;
   the original criterion is in force until the operator approves the wording.
 
+## 2026-11-17 — WF-07 readable batch PR titles (source for Batch 04)
+
+- WF-04 batch requests carry a reviewed one-line `summary`. Preparation refuses a plan without
+  it, and delivery titles the PR `chore(release): <summary> (batch <id>)`. The PR body and
+  manifest keep the full provenance. Manifests without a summary keep their original title;
+  the generator still reproduces #192 and #193 exactly.
+- Focused: feature workflow 55 OK; agent workflow 75 OK, 3 skipped; Ruff and strict mypy clean.
+  Independent QA passed `4b3bf87`, `cb1fff9` and `1a901c4`. Cross-provider QA then failed
+  `1a901c4`, because a summary could pass preparation and still make a title over 100
+  characters. One function now validates the full title in `prepare`, `load_manifest` and
+  delivery. The operator approved WF-07 as a workflow enabler on 2026-11-17. Evidence is in
+  `docs/release/evidence/wf-07.md`.
+
 ## 2026-11-17 — WF-04 Batch 03 prepared
 
 - Integrated CERT-01 (`bea1b50`), CERT-02 (`c05d816`), CERT-03 (`8b61d6d`) and CERT-04 (`9011026`)
