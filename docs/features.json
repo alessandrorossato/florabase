@@ -2926,7 +2926,7 @@
         "BOTANICAL-IDENTITIES-VISUAL-001"
       ],
       "priority": "P1",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "CERT-03",
@@ -2940,7 +2940,7 @@
         "HARVEST-001"
       ],
       "priority": "P1",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "CERT-04",
@@ -2955,7 +2955,7 @@
         "UI-SYSTEM-001"
       ],
       "priority": "P1",
-      "status": "planned"
+      "status": "implemented"
     }
   ]
 }

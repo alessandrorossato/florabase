@@ -1,3 +1,16 @@
+## 2026-11-17 — CERT-02 to CERT-04 implemented; R19 evidence
+
+- CERT-02, CERT-03 and CERT-04 move from `planned` to `implemented` in `docs/features.json`. Their
+  tests were delivered by WF-04 Batch 03 (#193, `b088a94`). Protected batch delivery requires a
+  passing exact-head batch review and a fresh FULL receipt with no reused stages. Source evidence
+  and provenance: `docs/release/evidence/wf-04-batch-03.md`, `cert-02.md`, `cert-03.md` and
+  `cert-04.md`. The batch reconciliation could not change `docs/features.json`, so the status
+  follows here.
+- All three stay `tooling`. No other entry, release class or acceptance criterion changes; nothing
+  is `verified`, and the release-candidate blockers are unchanged.
+- Restatement R19 (HARVEST-001 #4) now cites the CERT-03 owner-labelling test. It stays proposed;
+  the original criterion is in force until the operator approves the wording.
+
 ## 2026-11-17 — WF-04 Batch 03 prepared
 
 - Integrated CERT-01 (`bea1b50`), CERT-02 (`c05d816`), CERT-03 (`8b61d6d`) and CERT-04 (`9011026`)
