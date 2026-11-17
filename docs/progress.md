@@ -1,3 +1,38 @@
+## 2026-11-16 — Batch 03 certification sources (documentation candidate)
+
+- Added `docs/release/restatements-v1.md`, version 1, prepared against `main` `554d74d`:
+  - 14 confirmed restatements (R01–R11, R16, R24, R25) traced to recorded operator decisions: D1,
+    the 2026-11-01 directory contract, Today A and the R24 decision.
+  - 11 proposed restatements (R12–R15, R17–R23) that stay unapproved; their original wording
+    remains in force. R12–R15 rest only on later delivered features, so independent review moved
+    them from confirmed to proposed.
+  - 3 open gaps (U02–U04). U04 (the #147 adoption) and R21 stay unresolved; U01 resolved into
+    R24.
+  - The COLLECTION-VISUAL-002 open items (CV2-01 to CV2-08).
+- Recorded the operator's R24 decision of 2026-11-16 in the `scope-v1.md` scope-change table:
+  UI-SYSTEM-001 #4 becomes up to four Today photos. No status changes, no criterion waived.
+- Added 13 certification evidence maps under `docs/release/evidence/certify/` with an index, and
+  the G-UX and G-CORE record templates with per-feature traceability. Every cited test name was
+  confirmed in its cited file. `progress.md` is cited by section heading, not line number.
+- Centered the existing logo at the top of `README.md` and removed the redundant heading. The
+  asset is unchanged.
+- Reconciled with `main` `836bf80` after Batch 02 (#192). R01 now cites the delivered FN-05
+  implementation and tests, and DOC-05 is `implemented` from Batch 02. The release-candidate
+  blocker list is back to the eight earlier entries.
+- Registered CERT-01 to CERT-04 in `features.json` and the manifest with class `tooling`, on the
+  operator's approval of 2026-11-16, recorded in the scope-change table. CERT-01 is this source
+  (`implemented`). CERT-02 to CERT-04 are `planned`, and each team source moves only its own
+  entry to `implemented`. The release-candidate blocker list is unchanged.
+- No existing status or release class changed, and the checker is unchanged. No gate record
+  exists yet; the maps and restatements are not certification.
+- Checks: `scripts/check-features.py` (167 valid), `git diff --check`, and an offline relative
+  link check.
+- Unresolved:
+  - Operator rulings on R12–R15 and R17–R23.
+  - BRAND-01 approved-artwork record, and MEDIA-VISUAL-001's operator direction approval, which
+    is recorded only in prose.
+  - Committed QA records for WCVP-DEFAULT-001 and WGSRPD-CROSSWALK-V2.
+
 ## 2026-11-16 — WF-04 Batch 02 prepared
 
 - Registered `CI-005` (`implemented`, `tooling`) in `docs/features.json` and
