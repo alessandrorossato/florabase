@@ -258,8 +258,11 @@ not an approval), and the wording that the ruling would adopt.
 - Wording on approval: "…safe visual fallback uses the record's own primary image, then the exact
   identity cover, then a placeholder; a source-record photo is never shown as the harvest's
   image, and any fallback image is labelled with its actual owner."
-- Still to verify: the "labelled with its actual owner" clause is not yet evidenced. It needs a
-  test or a G-UX check of the Harvest fallback caption.
+- Owner labelling is now evidenced. CERT-03 (#193) added `HarvestScreen.test.tsx` "Harvest
+  fallback image is labelled with its actual owner". It checks the thumbnail, alt text and
+  reference label of an identity-cover fallback, the thumbnail and owner label of a record-owned
+  primary photo, and that no source Plant photo is shown.
+- Still needed: operator approval of the wording. Until then the original criterion is in force.
 - Scope: unchanged.
 
 **R20 — BOTANICAL-IDENTITIES-VISUAL-001 #6.**
@@ -397,7 +400,7 @@ missing**.
 | R14 | UX-006 #3 | Proposed | No: G-UX |
 | R16 | UI-SYSTEM-001 #3, Dashboard clause | Yes (DT) | No: G-UX Today |
 | R17, R18 | WCVP-VERSION-001 #1, #4 | Proposed | No |
-| R19 | HARVEST-001 #4 | Proposed | No: owner-labelling not evidenced |
+| R19 | HARVEST-001 #4 | Proposed | No: awaiting approval; owner labelling tested (CERT-03, #193) |
 | R20 | BOTANICAL-IDENTITIES-VISUAL-001 #6 | Proposed, with an accessibility condition | No |
 | R21 | CONTROLS-001 #3, Workbench clause | Depends on U04 | No |
 | R22 | PORTABLE-COMPOSE-001 #1 | Proposed | No: RC not published |

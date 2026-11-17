@@ -61,6 +61,32 @@ def manifest_path(branch: str) -> str:
     return f"{DIRECTORY}/{branch.split('/', 1)[1]}.json"
 
 
+def batch_summary(value: dict[str, Any]) -> str:
+    """Return the reviewed one-line batch summary used for the PR title (WF-07)."""
+    text = value.get("summary")
+    require(
+        isinstance(text, str)
+        and 10 <= len(text) <= 72
+        and text == text.strip()
+        and text.isprintable()
+        and "`" not in text
+        # A commit-like hex run contains a digit; words such as "feedback" stay allowed.
+        and not re.search(r"(?<![0-9a-fA-F])(?=[a-fA-F]*[0-9])[0-9a-fA-F]{7,}(?![0-9a-fA-F])", text)
+        and not re.match(r"[a-z]+\s*(\([^)]*\))?\s*!?\s*:", text, re.IGNORECASE),
+        "batch summary must be one plain line of 10-72 characters without commit IDs or a type prefix",
+    )
+    return str(text)
+
+
+def summary_title(value: dict[str, Any]) -> str:
+    """Return the validated summarized PR title of a batch plan or manifest (WF-07)."""
+    branch = str(value.get("branch"))
+    name = branch.removeprefix("ci/").removeprefix("wf-04-").removeprefix("batch-")
+    title = f"chore(release): {batch_summary(value)} (batch {name})"
+    require(len(title) <= 100, "batch PR title is too long; shorten the summary or split the batch")
+    return title
+
+
 def json_object(raw: str) -> dict[str, Any]:
     def unique(items: list[tuple[str, Any]]) -> dict[str, Any]:
         result: dict[str, Any] = {}
@@ -298,6 +324,8 @@ def load_manifest(repo: Repository, branch: str, head: str) -> dict[str, Any]:
         and value.get("branch") == branch,
         "unknown batch manifest version or branch",
     )
+    if "summary" in value:
+        summary_title(value)
     base, bootstrap = oid(value.get("base")), oid(value.get("bootstrap"))
     if "correction" in value:
         correction = value["correction"]
@@ -427,6 +455,8 @@ def prepare(repo: Repository, plan: dict[str, Any]) -> None:
     )
     branch, base = plan["branch"], oid(plan["base"])
     path = manifest_path(branch)
+    summary_title(plan)
+    summary = batch_summary(plan)
     require(
         repo.git("branch", "--show-current") == branch and not status(repo.source),
         "prepare from the clean claimed batch worktree",
@@ -486,6 +516,7 @@ def prepare(repo: Repository, plan: dict[str, Any]) -> None:
             {
                 "version": 1,
                 "branch": branch,
+                "summary": summary,
                 "base": base,
                 "bootstrap": bootstrap,
                 "bootstrap_commits": commits(repo, base, bootstrap),
@@ -506,14 +537,21 @@ def title_body(value: dict[str, Any], head: str, migration: bool) -> tuple[str, 
         len(set(short)) == len(set(sha for _, _, shas in entries for sha in shas)),
         "source commit abbreviations collide",
     )
-    title = "Batch " + ", ".join(
-        f"{feature} {' '.join(sha[:12] for sha in shas)}" for feature, _, shas in entries
-    )
-    require(
-        len(title) <= 256, "batch provenance would exceed GitHub's PR title limit; split the batch"
-    )
+    # Manifests without a summary predate WF-07; their delivered PR titles must regenerate exactly.
+    summary = batch_summary(value) if "summary" in value else None
+    if summary is None:
+        title = "Batch " + ", ".join(
+            f"{feature} {' '.join(sha[:12] for sha in shas)}" for feature, _, shas in entries
+        )
+        require(
+            len(title) <= 256,
+            "batch provenance would exceed GitHub's PR title limit; split the batch",
+        )
+    else:
+        title = summary_title(value)
     body = "\n".join(
-        [
+        ([f"Summary: {summary}", ""] if summary else [])
+        + [
             f"Batch head: `{head}`",
             f"Pinned main: `{value['base']}`",
             f"Manifest: `{manifest_path(value['branch'])}`",

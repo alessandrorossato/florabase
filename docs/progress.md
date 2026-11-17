@@ -1,3 +1,51 @@
+## 2026-11-17 — WF-04 Batch 04 prepared
+
+- Prepared CERT-01, WF-07 and CERT-05 in order from pinned main `b088a94`. The planner
+  reported zero blockers, and WF-04 resolved the two conflicts in `docs/progress.md` additively.
+- Recorded the reviewed source tips, approved PR summary and documentation reconciliation
+  in the [Batch 04 provenance record](release/evidence/wf-04-batch-04.md).
+- Independent combined QA and canonical FULL remain pending at preparation.
+
+## 2026-11-17 — CERT-02 to CERT-04 implemented; R19 evidence
+
+- CERT-02, CERT-03 and CERT-04 move from `planned` to `implemented` in `docs/features.json`. Their
+  tests were delivered by WF-04 Batch 03 (#193, `b088a94`). Protected batch delivery requires a
+  passing exact-head batch review and a fresh FULL receipt with no reused stages. Source evidence
+  and provenance: `docs/release/evidence/wf-04-batch-03.md`, `cert-02.md`, `cert-03.md` and
+  `cert-04.md`. The batch reconciliation could not change `docs/features.json`, so the status
+  follows here.
+- All three stay `tooling`. No other entry, release class or acceptance criterion changes; nothing
+  is `verified`, and the release-candidate blockers are unchanged.
+- Restatement R19 (HARVEST-001 #4) now cites the CERT-03 owner-labelling test. It stays proposed;
+  the original criterion is in force until the operator approves the wording.
+
+## 2026-11-17 — WF-07 readable batch PR titles (source for Batch 04)
+
+- WF-04 batch requests carry a reviewed one-line `summary`. Preparation refuses a plan without
+  it, and delivery titles the PR `chore(release): <summary> (batch <id>)`. The PR body and
+  manifest keep the full provenance. Manifests without a summary keep their original title;
+  the generator still reproduces #192 and #193 exactly.
+- Focused: feature workflow 55 OK; agent workflow 75 OK, 3 skipped; Ruff and strict mypy clean.
+  Independent QA passed `4b3bf87`, `cb1fff9` and `1a901c4`. Cross-provider QA then failed
+  `1a901c4`, because a summary could pass preparation and still make a title over 100
+  characters. One function now validates the full title in `prepare`, `load_manifest` and
+  delivery. The operator approved WF-07 as a workflow enabler on 2026-11-17. Evidence is in
+  `docs/release/evidence/wf-07.md`.
+
+## 2026-11-17 — CERT-05 release evidence (Batch 04 source C)
+
+- Registered CERT-05 (`tooling`, `implemented`) in `docs/features.json` and
+  `docs/release/scope-v1.json`, and recorded CERT-05 and the WF-07 workflow enabler in
+  `docs/release/scope-v1.md`. WF-07 has no `features.json` entry.
+- `docs/release/evidence/cert-05.md` evaluates every criterion of BETA-IMAGE-001 and
+  beta-postgres-repro-001 against the repository and read-only GitHub metadata. Five of six
+  BETA-IMAGE-001 criteria and six of seven beta-postgres-repro-001 criteria are met. Gaps:
+  BETA-IMAGE-001 #6 (#142 has no committed final QA; remediated by #158) and
+  beta-postgres-repro-001 #7 (#155 FULL on `c12af84`, not its head `7e73762`). Beta.5 is the first published paired
+  release. The proposed supersession of the beta.1 title target awaits operator acceptance.
+- No status changes. Both entries stay `in_progress` pending the operator's rulings; the
+  release-candidate blockers are the same eight.
+
 ## 2026-11-17 — WF-04 Batch 03 prepared
 
 - Integrated CERT-01 (`bea1b50`), CERT-02 (`c05d816`), CERT-03 (`8b61d6d`) and CERT-04 (`9011026`)

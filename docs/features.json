@@ -2896,6 +2896,23 @@
       "status": "implemented"
     },
     {
+      "id": "CERT-05",
+      "category": "documentation",
+      "description": "Reconcile release evidence for delivered beta distribution entries",
+      "acceptance_criteria": [
+        "Each criterion of BETA-IMAGE-001 and beta-postgres-repro-001 cites committed or protected-run evidence, or is marked superseded or missing",
+        "Statuses change only for entries whose every criterion is met and whose supersessions are operator-confirmed; this source changes none",
+        "The release-candidate checker and its blocker list are unchanged"
+      ],
+      "dependencies": [
+        "BETA-IMAGE-001",
+        "beta-postgres-repro-001",
+        "RELEASE-SCOPE-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "CERT-01",
       "category": "documentation",
       "description": "Record the v1.0 certification sources: acceptance-criterion restatements, per-feature evidence maps, G-UX and G-CORE record templates and the README logo presentation",
@@ -2926,7 +2943,7 @@
         "BOTANICAL-IDENTITIES-VISUAL-001"
       ],
       "priority": "P1",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "CERT-03",
@@ -2940,7 +2957,7 @@
         "HARVEST-001"
       ],
       "priority": "P1",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "CERT-04",
@@ -2955,7 +2972,7 @@
         "UI-SYSTEM-001"
       ],
       "priority": "P1",
-      "status": "planned"
+      "status": "implemented"
     }
   ]
 }
