@@ -12,6 +12,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../auth/context";
 import { ApiError } from "../auth/api";
+import { RecordIdentities } from "../components/recordPresentation";
 import { HarvestScreen } from "./HarvestScreen";
 import { HarvestForm } from "./HarvestForm";
 import type { Harvest } from "./api";
@@ -668,6 +669,64 @@ it("Harvest deletion opens on Cancel and retains pending and failed confirmation
   expect(await within(dialog).findByRole("alert")).toBeVisible();
   await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
   expect(more).toHaveFocus();
+});
+
+it("Harvest fallback image is labelled with its actual owner", async () => {
+  const identity = {
+    ...harvest.source.botanical_identity,
+    scientific_name: "Coffea arabica",
+    cultivar_name: null,
+    common_name: "Coffee",
+    created_at: harvest.created_at,
+    updated_at: harvest.updated_at,
+    compact_cover_kind: "local" as const,
+  };
+  const withPrimaryPhoto: Harvest = {
+    ...harvest,
+    id: "harvest-2",
+    display_title: "Second collection",
+    primary_photo: {
+      kind: "local",
+      photo_id: "harvest-photo",
+      thumbnail_url: "/harvest.jpg",
+    },
+  };
+  vi.mocked(api.listHarvests).mockResolvedValue([harvest, withPrimaryPhoto]);
+  wrap(
+    <RecordIdentities.Provider value={new Map([[identity.id, identity]])}>
+      <HarvestScreen />
+    </RecordIdentities.Provider>,
+  );
+
+  const fallback = within(
+    await screen.findByRole("button", {
+      name: /^(?!Open details |Edit ).*Coffee — Fruit harvest/,
+    }),
+  );
+  expect(
+    fallback.getByText("Botanical identity cover · reference"),
+  ).toBeVisible();
+  expect(
+    fallback.getByRole("img", {
+      name: `Botanical identity cover for ${harvest.display_title}`,
+    }),
+  ).toHaveAttribute(
+    "src",
+    "/api/v1/botanical-identities/identity-1/cover-image/thumbnail",
+  );
+
+  const primary = within(
+    screen.getByRole("button", {
+      name: /^(?!Open details |Edit ).*Second collection/,
+    }),
+  );
+  expect(primary.getByText("Record primary photo")).toBeVisible();
+  expect(
+    primary.getByRole("img", { name: "Primary photo for Second collection" }),
+  ).toHaveAttribute("src", "/harvest.jpg");
+  expect(
+    screen.getAllByRole("img").map((image) => image.getAttribute("src")),
+  ).not.toContain("/source.jpg");
 });
 
 it("Harvest directory never substitutes source-record photos and navigates to the selected record", async () => {

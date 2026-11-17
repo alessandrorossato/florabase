@@ -15,8 +15,9 @@ import time
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+import disposable_workflow
 from verification_gate import checks_for, execute, run_checks, validate_execution
 from verification_impact import (
     MAP_PATH,
@@ -34,6 +35,90 @@ CI_SPEC = importlib.util.spec_from_file_location("ci_verification", ROOT / "scri
 assert CI_SPEC and CI_SPEC.loader
 CI = importlib.util.module_from_spec(CI_SPEC)
 CI_SPEC.loader.exec_module(CI)
+
+
+class ScaffoldGateTests(unittest.TestCase):
+    def test_scaffolder_suite_is_selected_in_full_and_remote_quality(self) -> None:
+        plan = plan_paths(["scripts/ui_page.py"], "base")
+        self.assertEqual(plan_tier(plan), "full")
+        check = {"id": "test-ui-page", "command": ["make", "test-ui-page"]}
+        self.assertIn(check, checks_for(plan))
+        self.assertIn(check, CI.ci_checks_for(plan, "quality"))
+
+    def test_scaffolder_target_executes_and_fails_on_a_validation_error(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            scripts = Path(temporary) / "scripts"
+            scripts.mkdir()
+            (scripts / "test_ui_page.py").write_text(
+                "import unittest\n"
+                "class ScaffoldFixture(unittest.TestCase):\n"
+                "    def test_validation(self):\n"
+                "        self.fail('scaffold validation sentinel')\n"
+            )
+            result = subprocess.run(
+                ["make", "-f", str(ROOT / "Makefile"), "test-ui-page"],
+                cwd=temporary,
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("AssertionError: scaffold validation sentinel", result.stderr)
+
+    def test_build_checks_frontend_artifact_and_propagates_validation_failure(self) -> None:
+        for builds, leak in ((["backend"], False), (["frontend"], False), (["frontend"], True)):
+            with self.subTest(builds=builds, leak=leak):
+                self.assert_build_validation(builds, leak)
+
+    def assert_build_validation(self, builds: list[str], leak: bool) -> None:
+        disposable = MagicMock()
+        copied_dist: Path | None = None
+
+        def docker(command: list[str]) -> str:
+            nonlocal copied_dist
+            if command[1] == "create":
+                self.assertEqual(command[-1], f"{disposable.owner.project}-frontend")
+                return "stopped-container"
+            self.assertEqual(
+                command[:3], ["docker", "cp", "stopped-container:/usr/share/nginx/html/."]
+            )
+            copied_dist = Path(command[-1])
+            (copied_dist / "index.html").write_text("<html></html>")
+            if leak:
+                (copied_dist / "app.js").write_text('console.log("lab-photo-overview")')
+            return ""
+
+        disposable.run.side_effect = docker
+        run = subprocess.run
+        with (
+            patch.object(disposable_workflow, "Disposable", return_value=disposable),
+            patch.object(disposable_workflow.Path, "cwd", return_value=ROOT),
+            patch.object(
+                disposable_workflow.subprocess,
+                "run",
+                side_effect=lambda command, **kwargs: (
+                    run(command, **kwargs, capture_output=True)
+                    if command[0] == sys.executable
+                    else subprocess.CompletedProcess(command, 0)
+                ),
+            ),
+            redirect_stdout(io.StringIO()),
+            redirect_stderr(io.StringIO()),
+        ):
+            disposable.__enter__.return_value = disposable
+            if leak:
+                with self.assertRaises(subprocess.CalledProcessError) as error:
+                    disposable_workflow.execute("verification-build", builds=builds)
+                self.assertIn(b"UI lab content in production build", error.exception.stderr)
+            else:
+                disposable_workflow.execute("verification-build", builds=builds)
+            disposable.__exit__.assert_called_once()
+        if "frontend" in builds:
+            self.assertEqual(disposable.run.call_count, 2)
+            self.assertIsNotNone(copied_dist)
+            assert copied_dist is not None
+            self.assertFalse(copied_dist.exists())
+        else:
+            disposable.run.assert_not_called()
 
 
 class SelectionTests(unittest.TestCase):
@@ -504,6 +589,7 @@ class SelectionTests(unittest.TestCase):
                 "test-uat-preview",
                 "test-verification-impact",
                 "test-workflow-resources",
+                "test-ui-page",
                 "workflow-check",
                 "quality",
                 "production-builds",

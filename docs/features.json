@@ -2894,6 +2894,68 @@
       ],
       "priority": "P0",
       "status": "implemented"
+    },
+    {
+      "id": "CERT-01",
+      "category": "documentation",
+      "description": "Record the v1.0 certification sources: acceptance-criterion restatements, per-feature evidence maps, G-UX and G-CORE record templates and the README logo presentation",
+      "acceptance_criteria": [
+        "A versioned restatement record separates criteria confirmed by a recorded operator decision from proposed and unresolved ones, preserves every original criterion, and records operator-approved restatements in the scope-change table",
+        "Each evidence map cites committed tests or records per acceptance criterion, marks gate-dependent and missing evidence, and changes no feature status",
+        "G-UX and G-CORE templates trace each page or step to the certification rows it supplies and state that a template is not evidence",
+        "The README presents the unchanged logo asset centered without a redundant heading"
+      ],
+      "dependencies": [
+        "RELEASE-SCOPE-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
+      "id": "CERT-02",
+      "category": "testing",
+      "description": "Add the missing frontend certification regressions for UX-002 help text, the MAP-001 configured tile URL and botanical identity History and filters",
+      "acceptance_criteria": [
+        "Sowing, Plant and Journal phenology forms assert their inline help descriptions and that Notes carries no help chrome",
+        "A configured runtime tile URL and attribution are used, trimmed, and fall back to the defaults when blank",
+        "The botanical identity History panel and the identity filters on Sowings and Plants, including browser Back and Forward, are covered by named tests"
+      ],
+      "dependencies": [
+        "UX-002",
+        "MAP-001",
+        "BOTANICAL-IDENTITIES-VISUAL-001"
+      ],
+      "priority": "P1",
+      "status": "planned"
+    },
+    {
+      "id": "CERT-03",
+      "category": "testing",
+      "description": "Add the missing Harvest certification regressions for current holdings and image attribution",
+      "acceptance_criteria": [
+        "A Harvest without stored material leaves Dashboard counts and current identities unchanged and records exactly one harvest Event",
+        "The Harvest directory labels an identity-cover fallback and a record-owned primary photo with their actual owner type and never shows a source-record photo"
+      ],
+      "dependencies": [
+        "HARVEST-001"
+      ],
+      "priority": "P1",
+      "status": "planned"
+    },
+    {
+      "id": "CERT-04",
+      "category": "infrastructure",
+      "description": "Run the UI page scaffold and UI lab production-exclusion checks in the verification gate",
+      "acceptance_criteria": [
+        "The page scaffold regression runs in the full local gate and the remote quality job",
+        "The UI lab production-exclusion check runs against the built frontend wherever the gate builds it, with exact cleanup of owned resources",
+        "Test inventory, ownership and remote CI rules are unchanged apart from the added checks"
+      ],
+      "dependencies": [
+        "UI-SYSTEM-001"
+      ],
+      "priority": "P1",
+      "status": "planned"
     }
   ]
 }

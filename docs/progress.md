@@ -1,3 +1,98 @@
+## 2026-11-17 — WF-04 Batch 03 prepared
+
+- Integrated CERT-01 (`bea1b50`), CERT-02 (`c05d816`), CERT-03 (`8b61d6d`) and CERT-04 (`9011026`)
+  on `ci/batch-03` from `main` `836bf80`, in that order. The planner reported no blockers, and
+  `docs/progress.md` was the only file merged by more than one source.
+- Reconciliation: no registry change. CERT-02, CERT-03 and CERT-04 stay `planned`, because WF-04
+  reconciliation accepts only `docs/*.md` and `scripts/*.py`; their status follows in a later
+  documentation increment. All four stay `tooling`, no certification item is promoted, and the
+  release-candidate blockers are unchanged.
+- Focused runs on the combined tree: six frontend files (150 tests), the dashboard integration
+  file (9 tests) and `make test-ui-page` (3 tests) passed. Provenance is in
+  `docs/release/evidence/wf-04-batch-03.md`.
+- Unresolved: CERT-02 to CERT-04 status follow-up; R19 in the restatements predates CERT-03's
+  attribution test.
+
+## 2026-11-16 — Batch 03 certification sources (documentation candidate)
+
+- Added `docs/release/restatements-v1.md`, version 1, prepared against `main` `554d74d`:
+  - 14 confirmed restatements (R01–R11, R16, R24, R25) traced to recorded operator decisions: D1,
+    the 2026-11-01 directory contract, Today A and the R24 decision.
+  - 11 proposed restatements (R12–R15, R17–R23) that stay unapproved; their original wording
+    remains in force. R12–R15 rest only on later delivered features, so independent review moved
+    them from confirmed to proposed.
+  - 3 open gaps (U02–U04). U04 (the #147 adoption) and R21 stay unresolved; U01 resolved into
+    R24.
+  - The COLLECTION-VISUAL-002 open items (CV2-01 to CV2-08).
+- Recorded the operator's R24 decision of 2026-11-16 in the `scope-v1.md` scope-change table:
+  UI-SYSTEM-001 #4 becomes up to four Today photos. No status changes, no criterion waived.
+- Added 13 certification evidence maps under `docs/release/evidence/certify/` with an index, and
+  the G-UX and G-CORE record templates with per-feature traceability. Every cited test name was
+  confirmed in its cited file. `progress.md` is cited by section heading, not line number.
+- Centered the existing logo at the top of `README.md` and removed the redundant heading. The
+  asset is unchanged.
+- Reconciled with `main` `836bf80` after Batch 02 (#192). R01 now cites the delivered FN-05
+  implementation and tests, and DOC-05 is `implemented` from Batch 02. The release-candidate
+  blocker list is back to the eight earlier entries.
+- Registered CERT-01 to CERT-04 in `features.json` and the manifest with class `tooling`, on the
+  operator's approval of 2026-11-16, recorded in the scope-change table. CERT-01 is this source
+  (`implemented`). CERT-02 to CERT-04 are `planned`, and each team source moves only its own
+  entry to `implemented`. The release-candidate blocker list is unchanged.
+- No existing status or release class changed, and the checker is unchanged. No gate record
+  exists yet; the maps and restatements are not certification.
+- Checks: `scripts/check-features.py` (167 valid), `git diff --check`, and an offline relative
+  link check.
+- Unresolved:
+  - Operator rulings on R12–R15 and R17–R23.
+  - BRAND-01 approved-artwork record, and MEDIA-VISUAL-001's operator direction approval, which
+    is recorded only in prose.
+  - Committed QA records for WCVP-DEFAULT-001 and WGSRPD-CROSSWALK-V2.
+
+## 2026-11-16 — CERT-02: Frontend certification regressions (UX-002, MAP-001, BOTANICAL-IDENTITIES-VISUAL-001)
+
+- On `ci/cert-02-frontend-regressions` from `836bf80305a19fdd7f49845b8bc00ae423553a93` (writer
+  `carbon-cert02`).
+- Implemented the focused frontend certification regressions specified for Team A without
+  modifying production code or `docs/release/scope-v1.json` (shared `docs/features.json` status
+  reconciliation deferred to WF-04 Batch 03 integration):
+  - `UX-002` (#1 and #3 negative check): added `layered help explains ambiguous Sowing fields
+    without adding chrome to Notes` in `frontend/src/sowings/SowingScreen.test.tsx` and `layered
+    help explains Plant location, supplier and provenance` plus `Journal phenology stage explains
+    recorded-only evidence` in `frontend/src/plants/PlantScreen.test.tsx`.
+  - `MAP-001` (#3): added `frontend/src/provenance-map/config.test.ts` (`runtime config tile URL
+    and attribution are used when set, trimmed, and fall back when blank`) and `configured tile
+    URL and attribution reach Leaflet` in `frontend/src/provenance-map/ProvenanceMap.test.tsx`.
+  - `BOTANICAL-IDENTITIES-VISUAL-001` (#8 and #5): added
+    `frontend/src/botanical-identities/IdentityHistory.test.tsx` (`identity History lists linked
+    recorded events once, newest first, with Harvest links, precision and documented gaps`) and
+    extended the Sowings and Plants identity-scope directory filter tests with browser Back and
+    Forward verification.
+- Recorded certification evidence in [`docs/release/evidence/cert-02.md`](release/evidence/cert-02.md).
+- Focused checks: Vitest (`config.test.ts`, `ProvenanceMap.test.tsx`, `IdentityHistory.test.tsx`,
+  `SowingScreen.test.tsx`, `PlantScreen.test.tsx` — 130 tests passed), `make format-check`,
+  `make lint`, `make typecheck`, `make verification-plan`, `python3 scripts/check-features.py`,
+  `python3 scripts/check-doc-links.py`, `python3 scripts/test-beta-runtime.py Disclosure -q`, and
+  `git diff --check`. Independent QA (`hydrogen-qa-cert02`) passed with zero defects and verified
+  scratch-copy mutation failures for all eight new and extended tests (`PASS` at `cf5abaa`).
+- Unresolved: WF-04 Batch 03 integration and batch canonical FULL verification.
+
+## 2026-11-16 — CERT-03 Harvest regressions
+
+- Added PostgreSQL coverage of historical Harvest holdings and compact-row photo attribution
+  coverage. The Dashboard suite passed 9 tests, HarvestScreen passed 20 tests, and lint,
+  typing, scoped formatting and the affected verification plan passed.
+  See [CERT-03 evidence](release/evidence/cert-03.md) for the test boundaries.
+- Canonical verification and registry reconciliation are pending Batch 03 integration.
+
+## 2026-11-16 — CERT-04 UI scaffold verification
+
+- Added the scaffolder test to FULL and remote quality checks and inspect the shipped asset
+  tree whenever verification builds the frontend. Offline workflow, impact and focused static
+  checks passed. The disposable production build passed, and a scratch build with a lab import
+  failed validation. Both runs verified resource cleanup.
+  See [CERT-04 evidence](release/evidence/cert-04.md).
+- Verification policy selects FULL for the combined Batch 03 candidate.
+
 ## 2026-11-16 — WF-04 Batch 02 prepared
 
 - Registered `CI-005` (`implemented`, `tooling`) in `docs/features.json` and

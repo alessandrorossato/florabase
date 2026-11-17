@@ -1,4 +1,4 @@
-import { browserBack } from "../test/history";
+import { browserBack, browserForward } from "../test/history";
 import { openFormSection } from "../test/formSections";
 import { createMediaQueryList } from "../test/mediaQuery";
 import { selectDirectoryFilter } from "../test/directoryFilters";
@@ -634,6 +634,29 @@ test("minimal creation requires only an understandable SeedLot choice", async ()
     germinated_count: null,
     lifecycle: "active",
   });
+});
+
+test("layered help explains ambiguous Sowing fields without adding chrome to Notes", async () => {
+  mockApi(sowingHandler([]));
+  const user = await openSowings();
+  await user.click(await screen.findByRole("button", { name: "New sowing" }));
+
+  expect(screen.getByLabelText("SeedLot")).toHaveAccessibleDescription(
+    /One source SeedLot; historical lots remain available/,
+  );
+  await openFormSection(user, "Material & location");
+  expect(
+    screen.getByRole("group", { name: /Quantity sown/ }),
+  ).toHaveAccessibleDescription(
+    /leave the quantity unknown rather than guessing/i,
+  );
+  expect(screen.getByLabelText("Current location")).toHaveAccessibleDescription(
+    /not where its biological material originated/i,
+  );
+  await openFormSection(user, "Notes");
+  expect(
+    screen.getByLabelText("Notes", { selector: "textarea" }),
+  ).not.toHaveAttribute("aria-describedby");
 });
 
 test("full creation preserves partial dates, quantity kinds, germination, location, and cultivation fields", async () => {
@@ -1463,11 +1486,8 @@ test("identity-scoped Sowings uses the actual SeedLot identity and retains text 
     },
   });
   mockApi(sowingHandler([own, other]));
-  window.history.replaceState(
-    null,
-    "",
-    `#/sowings?identity_id=${identityId}&lifecycle=all&q=Tray`,
-  );
+  const hash = `#/sowings?identity_id=${identityId}&lifecycle=all&q=Tray`;
+  window.history.replaceState(null, "", hash);
   const user = userEvent.setup();
   render(<App />);
   expect(
@@ -1489,6 +1509,38 @@ test("identity-scoped Sowings uses the actual SeedLot identity and retains text 
     }),
   ).toBeVisible();
   expect(window.location.hash).toContain("q=Tray");
+  await browserBack();
+  await waitFor(() => {
+    expect(document.querySelector(".ui-directory-records")).toBeInTheDocument();
+  });
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("button", {
+        name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Tray B/,
+      }),
+    ).toBeNull();
+  });
+  expect(window.location.hash).toBe(hash);
+  expect(
+    screen.getByRole("button", { name: "Remove botanical identity filter" }),
+  ).toHaveTextContent(identity.display_label);
+  await browserForward();
+  expect(
+    await screen.findByRole("button", {
+      name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Tray B/,
+    }),
+  ).toBeVisible();
+  expect(window.location.hash).not.toContain("identity_id=");
+  expect(window.location.hash).toContain("q=Tray");
+  await browserBack();
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("button", {
+        name: /^(?!Create or record for |Create or record for |Open details |Preview |Details |Edit ).*Tray B/,
+      }),
+    ).toBeNull();
+  });
+  expect(window.location.hash).toBe(hash);
 });
 
 test("Sowing Gallery Details and browser Back preserve search and presentation", async () => {

@@ -1,0 +1,101 @@
+{
+  "base": "836bf80305a19fdd7f49845b8bc00ae423553a93",
+  "bootstrap": "836bf80305a19fdd7f49845b8bc00ae423553a93",
+  "bootstrap_commits": [],
+  "branch": "ci/batch-03",
+  "reconciliation": {
+    "docs/progress.md": "Record the WF-04 Batch 03 integration alongside the additive CERT-01 to CERT-04 entries.",
+    "docs/release/evidence/wf-04-batch-03.md": "Add Batch 03 integration provenance, reconciliation and scope consistency evidence."
+  },
+  "sources": [
+    {
+      "base": "836bf80305a19fdd7f49845b8bc00ae423553a93",
+      "branch": "docs/batch-03-certification",
+      "claim": "dde05c475a6b",
+      "commits": [
+        "7140a2676a1abb110a1fe6d3dad16ffe796a9f41",
+        "1264c4ae5c5a92834eaec0ea1279b0b2ebecdea7",
+        "0ee193cbd2bcde36c5f9ffe9238b0921d35dad07",
+        "d46e71270b684554f6dcfbcd839cabe23ad343a0",
+        "72b39da535a8b7fccb3a082baf06c0752883d521",
+        "5b71bbd1fdae2662de55a4d43a9789e348a42dfa",
+        "3b7ebc23297bf93a87e6b7aec748279727eacd09",
+        "f65b1839daf33a3de12f4d9c970896cb8a411ea0",
+        "2688f46a779916723f9bc3eb1f0bce2b042c69f7",
+        "bea1b509b22359130ce9b763aa4c5b9c5c5bdb17"
+      ],
+      "evidence": [
+        "docs/release/evidence/cert-01.md",
+        "docs/progress.md"
+      ],
+      "id": "CERT-01",
+      "merge": "433f8a366d745fba175233e6a370ea8067b23dc1",
+      "resolutions": [],
+      "reviewer": "claude-qa-cert01",
+      "tip": "bea1b509b22359130ce9b763aa4c5b9c5c5bdb17",
+      "writer": "claude-doc-batch03"
+    },
+    {
+      "base": "836bf80305a19fdd7f49845b8bc00ae423553a93",
+      "branch": "ci/cert-02-frontend-regressions",
+      "claim": "e7c6728b730c",
+      "commits": [
+        "cf5abaa2c0d5d9d1a82beb9caf63b7debda5576f",
+        "c05d816aaa5372e7fb0d0998d3aa83c35814e8cb"
+      ],
+      "evidence": [
+        "docs/release/evidence/cert-02.md",
+        "docs/progress.md"
+      ],
+      "id": "CERT-02",
+      "merge": "42fae25d7b1b7e27a18822f8423dbdc1ef8080bf",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "hydrogen-qa-cert02",
+      "tip": "c05d816aaa5372e7fb0d0998d3aa83c35814e8cb",
+      "writer": "carbon-cert02"
+    },
+    {
+      "base": "836bf80305a19fdd7f49845b8bc00ae423553a93",
+      "branch": "ci/cert-03-harvest-regressions",
+      "claim": "044f9b9525d2",
+      "commits": [
+        "8b61d6d0b928787220c8bbd2dc554a24d1cc6df4"
+      ],
+      "evidence": [
+        "docs/release/evidence/cert-03.md",
+        "docs/progress.md"
+      ],
+      "id": "CERT-03",
+      "merge": "a15a44217c69895fe7c8a84530a7445cbb7598a1",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "terra-batch03-c121",
+      "tip": "8b61d6d0b928787220c8bbd2dc554a24d1cc6df4",
+      "writer": "sol-batch03-c121"
+    },
+    {
+      "base": "836bf80305a19fdd7f49845b8bc00ae423553a93",
+      "branch": "ci/cert-04-ui-scaffold-gate",
+      "claim": "b4578dc564b3",
+      "commits": [
+        "9011026733fef950820fb4580da7d41ac5a882a2"
+      ],
+      "evidence": [
+        "docs/release/evidence/cert-04.md",
+        "docs/progress.md"
+      ],
+      "id": "CERT-04",
+      "merge": "7d29246015be83bc7a93a8f482f4f0be22284b8d",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "terra-batch03-c121",
+      "tip": "9011026733fef950820fb4580da7d41ac5a882a2",
+      "writer": "sol-batch03-c121"
+    }
+  ],
+  "version": 1
+}

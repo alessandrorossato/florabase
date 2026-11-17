@@ -96,6 +96,9 @@ const site: MapPoint = {
   coordinate_accuracy_m: "25.500",
   usage: { total: 3 },
 };
+const defaultTileUrl = mapRuntimeConfig.tileUrl;
+const defaultAttribution = mapRuntimeConfig.attribution;
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -103,6 +106,8 @@ afterEach(() => {
   vi.unstubAllGlobals();
   mocks.markers.length = 0;
   mapRuntimeConfig.onlineConfigured = false;
+  mapRuntimeConfig.tileUrl = defaultTileUrl;
+  mapRuntimeConfig.attribution = defaultAttribution;
 });
 
 test("retains exact coordinates, accuracy circles, safe tooltip and Space/click selection", async () => {
@@ -256,6 +261,21 @@ test("configured online enhancement preserves Referer and latches failures witho
   await waitFor(() => {
     expect(mocks.map.attributionControl.addAttribution).toHaveBeenCalled();
   });
+});
+
+test("configured tile URL and attribution reach Leaflet", () => {
+  mapRuntimeConfig.onlineConfigured = true;
+  mapRuntimeConfig.tileUrl = "https://tiles.example.test/{z}/{x}/{y}.png";
+  mapRuntimeConfig.attribution = "&copy; Example Tiles";
+  render(<ProvenanceMap sites={[site]} selectedId={null} onSelect={vi.fn()} />);
+  fireEvent.click(screen.getByRole("checkbox", { name: "Online basemap" }));
+  expect(mocks.tileLayer).toHaveBeenCalledWith(
+    "https://tiles.example.test/{z}/{x}/{y}.png",
+    expect.objectContaining({
+      attribution: "&copy; Example Tiles",
+      referrerPolicy: "strict-origin-when-cross-origin",
+    }),
+  );
 });
 
 test("unknown and zero accuracy never invent a circle; coincident sites retain distinct markers", () => {

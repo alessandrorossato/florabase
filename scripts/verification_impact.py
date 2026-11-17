@@ -36,6 +36,7 @@ WORKFLOW = [
     "test-uat-preview",
     "test-verification-impact",
     "test-workflow-resources",
+    "test-ui-page",
     "workflow-check",
 ]
 TIER_ORDER: dict[str, int] = {"docs": 0, "affected": 1, "product": 2, "full": 3}
