@@ -70,7 +70,8 @@ def batch_summary(value: dict[str, Any]) -> str:
         and text == text.strip()
         and text.isprintable()
         and "`" not in text
-        and not re.search(r"(?<![0-9a-fA-F])[0-9a-fA-F]{7,}(?![0-9a-fA-F])", text)
+        # A commit-like hex run contains a digit; words such as "feedback" stay allowed.
+        and not re.search(r"(?<![0-9a-fA-F])(?=[a-fA-F]*[0-9])[0-9a-fA-F]{7,}(?![0-9a-fA-F])", text)
         and not re.match(r"[a-z]+\s*(\([^)]*\))?\s*!?\s*:", text, re.IGNORECASE),
         "batch summary must be one plain line of 10-72 characters without commit IDs or a type prefix",
     )

@@ -91,6 +91,10 @@ class BatchDeliveryTests(unittest.TestCase):
             title, "chore(release): Certification status and readable batch titles (batch 04)"
         )
         self.assertEqual((title, body), feature_batch.title_body(plan, "b" * 40, True))
+        for allowed in ("Collect feedback on decaffeinated seed lots", "Defaced labels and 2026 notes",
+                        "certification, PR titles and RC evidence"):
+            self.assertIn(allowed, feature_batch.title_body({**plan, "summary": allowed}, "b" * 40,
+                                                            False)[0])
         self.assertTrue(body.startswith("Summary: Certification status and readable batch titles\n"))
         for text in ("WF-04", "CERT-01", "WF-07", "docs/first", "ci/second", first, second, third,
                      "b" * 40, "a" * 40, "Migration detected: yes."):
@@ -113,8 +117,10 @@ class BatchDeliveryTests(unittest.TestCase):
         for invalid in ("", "too short", " Padded summary text", "Two\nlines of summary",
                         "x" * 73, "Includes commit 1234567abc", "Uses `code` markup here",
                         "chore(release): prefixed summary", "Feat: capitalised prefix",
-                        "feat : spaced prefix", "Pins " + "a" * 41 + " too", "Digest " + "f" * 64,
-                        "See ref_" + "1" * 40, 42):
+                        "feat : spaced prefix", "Pins " + "a1" * 21 + " too", "Digest " + "f0" * 32,
+                        "See ref_" + "1" * 40, "Merge commit b088a94 into main",
+                        "Uppercase ABCDEF1 reference", "Digits 1234567 only here",
+                        "Tip feedbac0 glued", 42):
             with self.assertRaisesRegex(WorkflowError, "batch summary"):
                 feature_batch.title_body({**plan, "summary": invalid}, "b" * 40, False)
         limit = {**plan, "branch": "ci/batch-abc", "summary": "s" * 72}
