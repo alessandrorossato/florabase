@@ -24,6 +24,20 @@
   delivery. The operator approved WF-07 as a workflow enabler on 2026-11-17. Evidence is in
   `docs/release/evidence/wf-07.md`.
 
+## 2026-11-17 — CERT-05 release evidence (Batch 04 source C)
+
+- Registered CERT-05 (`tooling`, `implemented`) in `docs/features.json` and
+  `docs/release/scope-v1.json`, and recorded CERT-05 and the WF-07 workflow enabler in
+  `docs/release/scope-v1.md`. WF-07 has no `features.json` entry.
+- `docs/release/evidence/cert-05.md` evaluates every criterion of BETA-IMAGE-001 and
+  beta-postgres-repro-001 against the repository and read-only GitHub metadata. Five of six
+  BETA-IMAGE-001 criteria and six of seven beta-postgres-repro-001 criteria are met. Gaps:
+  BETA-IMAGE-001 #6 (#142 has no committed final QA; remediated by #158) and
+  beta-postgres-repro-001 #7 (#155 FULL on `c12af84`, not its head `7e73762`). The beta.1 title
+  target is superseded by beta.5.
+- No status changes. Both entries stay `in_progress` pending the operator's rulings; the
+  release-candidate blockers are the same eight.
+
 ## 2026-11-17 — WF-04 Batch 03 prepared
 
 - Integrated CERT-01 (`bea1b50`), CERT-02 (`c05d816`), CERT-03 (`8b61d6d`) and CERT-04 (`9011026`)
