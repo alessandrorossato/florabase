@@ -221,43 +221,11 @@
   overflow: auto;
 }
 @media (max-width: 48rem) {
-  main:has(.ui-directory-page .ui-directory-records),
-  main:has(.harvest-directory) {
-    block-size: 100dvh;
-    min-block-size: 0;
-    overflow: hidden;
-  }
-  .application-shell:has(.ui-directory-records),
-  .application-shell:has(.harvest-directory) {
-    block-size: 100dvh;
-    min-block-size: 0;
-    grid-template-rows: auto minmax(0, 1fr);
-  }
-  .app-content:has(.ui-directory-records),
-  .app-content:has(.harvest-directory) {
-    display: flex;
-    flex-direction: column;
-    min-block-size: 0;
-    overflow: hidden;
-    padding-block-end: calc(5rem + env(safe-area-inset-bottom));
-  }
   .app-content .ui-directory-side-preview {
     max-block-size: 25dvh;
   }
   .app-content .ui-directory-side-preview .quick-preview-body > .record-visual {
     block-size: 4rem;
-  }
-}
-/* At extreme zoom/short landscape sizes, page flow is preferable to a zero-height list. */
-@media (max-height: 30rem) {
-  .app-content .ui-directory-page:has(.ui-directory-records),
-  .app-content .harvest-workspace:has(.harvest-directory) {
-    min-block-size: min-content;
-    overflow: visible;
-  }
-  .app-content:has(.ui-directory-records),
-  .app-content:has(.harvest-directory) {
-    overflow: auto;
   }
 }
 
@@ -425,23 +393,7 @@ main:has(.harvest-directory) {
     display: none;
   }
 }
-@media (max-height: 30rem) {
-  .app-content > .workspace:has(.ui-directory-records),
-  .app-content .collection-context-page:has(.ui-directory-records),
-  .app-content .ui-directory-page:has(.ui-directory-records),
-  .app-content .harvest-workspace:has(.harvest-directory) {
-    min-block-size: min-content;
-    overflow: visible;
-  }
-  .application-shell > .app-content:has(.ui-directory-records),
-  .application-shell > .app-content:has(.harvest-directory) {
-    overflow: auto;
-  }
-  .app-content :is(.ui-directory-records, .harvest-directory) {
-    min-block-size: max-content;
-    overflow: visible;
-  }
-}
+/* Scroll and layout overrides for mobile bottom-bar viewports and 200% zoom follow below. */
 @media (max-width: 48rem) {
   .ui-directory-page .ui-view-switcher .control-action {
     padding-inline: var(--space-1);
@@ -568,29 +520,76 @@ main:has(.harvest-directory) {
   flex: none;
   margin-block: 0 var(--space-2);
 }
-/* Narrow phones need page flow when toolbars, paging and Preview exceed the viewport. */
-@media (max-width: 25rem) {
-  .application-shell > .app-content:has(.ui-directory-records) {
-    overflow-y: auto;
+/* Mobile viewports with the fixed bottom bar and short viewports (including 1440x844 at
+   200% zoom -> 720x422 CSS px) must release the single-screen directory clamp so toolbar,
+   filters, Gallery cards, records and pagination remain reachable. */
+@media (max-width: 48rem), (max-height: 30rem) {
+  main:has(.ui-directory-page .ui-directory-records),
+  main:has(.ui-directory-records),
+  main:has(.harvest-directory),
+  .application-shell:has(.ui-directory-records),
+  .application-shell:has(.harvest-directory) {
+    block-size: auto;
+    min-block-size: 100dvh;
+    overflow: visible;
   }
-  .app-content > .workspace:has(.ui-directory-records),
-  .app-content .collection-context-page:has(.ui-directory-records),
-  .app-content .ui-directory-page:has(.ui-directory-records),
+  .application-shell > .app-content:has(.ui-directory-records),
+  .application-shell > .app-content:has(.harvest-directory) {
+    display: block;
+    block-size: auto;
+    min-block-size: 0;
+    overflow: visible;
+  }
+  .app-content
+    > .workspace:has(.ui-directory-records):not(:has(.is-detail-view)),
+  .app-content
+    .collection-context-page:has(.ui-directory-records):not(
+      :has(.is-detail-view)
+    ),
+  .app-content
+    .ui-directory-page:has(.ui-directory-records):not(:has(.is-detail-view)),
+  .app-content .harvest-workspace:has(.harvest-directory),
   .app-content
     .ui-directory-page:has(.ui-directory-records)
-    .ui-directory-frame,
-  .app-content .ui-directory-page:has(.ui-directory-records) .ui-directory-main,
+    :is(
+      .ui-directory-frame,
+      .ui-directory-main,
+      .seed-context-page,
+      .ui-directory-workspace:not(.is-detail-view),
+      .seed-master
+    ),
   .app-content
-    .ui-directory-page:has(.ui-directory-records)
-    .seed-context-page {
+    .harvest-workspace:has(.harvest-directory)
+    :is(
+      .ui-directory-workspace:not(.is-detail-view),
+      .harvest-directory-results
+    ) {
+    flex: none;
     block-size: auto;
     min-block-size: min-content;
+    max-block-size: none;
     overflow: visible;
-    flex: none;
   }
-  .app-content .ui-directory-records {
-    min-block-size: 16rem;
-    max-block-size: 50dvh;
+  .app-content :is(.ui-directory-records, .harvest-directory) {
+    min-block-size: 0;
+    max-block-size: none;
+    overflow: visible;
+  }
+}
+@media (max-width: 48rem) {
+  .application-shell > .app-content:has(.ui-directory-records),
+  .application-shell > .app-content:has(.harvest-directory) {
+    padding-block-end: calc(6rem + env(safe-area-inset-bottom));
+  }
+}
+@media (max-width: 48rem) and (max-height: 30rem) {
+  .application-shell:has(.ui-directory-records),
+  .application-shell:has(.harvest-directory) {
+    grid-template-rows: auto;
+  }
+  .application-shell > .app-content:has(.ui-directory-records),
+  .application-shell > .app-content:has(.harvest-directory) {
+    padding-block-end: var(--space-4);
   }
 }
 

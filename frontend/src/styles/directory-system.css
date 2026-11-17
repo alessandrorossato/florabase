@@ -393,7 +393,7 @@
     block-size: 100%;
   }
 }
-@media (max-width: 25rem), (max-height: 30rem) {
+@media (max-width: 48rem), (max-height: 30rem) {
   .app-content :has(.ui-directory-workspace):not(:has(.is-detail-view)),
   .app-content .ui-directory-workspace:not(.is-detail-view) {
     flex: none;
@@ -604,15 +604,18 @@
   .app-content
     .ui-directory-page
     .page-header--directory
+    .directory-filter-summary,
+  .app-content
+    :is(.ui-directory-page, .stored-material-directory, .harvest-workspace)
     .directory-filter-summary {
     display: flex;
-    flex: 1 1 0;
-    flex-wrap: nowrap;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
     min-width: 0;
+    max-block-size: none;
     margin: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-    white-space: nowrap;
+    overflow: visible;
+    white-space: normal;
   }
   .app-content .ui-directory-page .ui-directory-workspace {
     display: flex;

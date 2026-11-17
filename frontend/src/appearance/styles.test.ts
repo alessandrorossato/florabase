@@ -271,3 +271,50 @@ test("Field Ledger fonts are bundled same-origin with shipped OFL licences", () 
     /fonts\.(?:googleapis|gstatic)\.com|@import\s+url\(\s*["']?https?:/,
   );
 });
+
+test("directory CSS releases 200%-zoom and mobile scroll clamps while wrapping filter chips and aligning identity tabs", () => {
+  const workspaceCss = readFileSync(
+    "src/styles/directory-workspace.css",
+    "utf8",
+  );
+  const systemCss = readFileSync("src/styles/directory-system.css", "utf8");
+  const identityCss = readFileSync(
+    "src/botanical-identities/botanical-identities.css",
+    "utf8",
+  );
+
+  // F-01 & F-03: mobile and short zoomed viewports release directory container clamps cleanly
+  const responsiveReleaseMatch = workspaceCss.match(
+    /@media\s*\(max-width:\s*48rem\),\s*\(max-height:\s*30rem\)\s*\{[\s\S]*?\n\}/g,
+  );
+  expect(responsiveReleaseMatch).not.toBeNull();
+  const responsiveRule = (responsiveReleaseMatch ?? []).join("\n");
+  expect(responsiveRule).toContain("block-size: auto;");
+  expect(responsiveRule).toContain("max-block-size: none;");
+  expect(responsiveRule).toContain("overflow: visible;");
+  expect(responsiveRule).toContain(
+    ".ui-directory-workspace:not(.is-detail-view)",
+  );
+  expect(responsiveRule).toContain(".seed-master");
+  expect(responsiveRule).toContain(".harvest-directory-results");
+  expect(workspaceCss).toMatch(
+    /@media\s*\(max-width:\s*48rem\)\s*and\s*\(max-height:\s*30rem\)\s*\{[\s\S]*grid-template-rows:\s*auto;/,
+  );
+
+  // F-03: mobile bottom-bar viewports let directories flow without 50dvh clipping or overlap
+  expect(workspaceCss).not.toContain("max-block-size: 50dvh");
+  expect(workspaceCss).toMatch(
+    /@media\s*\(max-width:\s*48rem\)\s*\{[\s\S]*padding-block-end:\s*calc\(6rem \+ env\(safe-area-inset-bottom\)\);/,
+  );
+  expect(systemCss).toContain("@media (max-width: 48rem), (max-height: 30rem)");
+
+  // F-04: narrow-screen filter summary chips wrap onto a full-width row without horizontal clipping
+  expect(systemCss).toMatch(
+    /@media\s*\(max-width:\s*40rem\)\s*\{[\s\S]*\.directory-filter-summary[\s\S]*flex:\s*1 1 100%;[\s\S]*flex-wrap:\s*wrap;[\s\S]*max-block-size:\s*none;[\s\S]*overflow:\s*visible;/,
+  );
+
+  // F-05: botanical identity detail tabs reset negative horizontal margins on narrow viewports
+  expect(identityCss).toMatch(
+    /@media\s*\(max-width:\s*40rem\)\s*\{[\s\S]*\.identity-reference-page\s+\.identity-detail-tabs\s*\{[\s\S]*margin-inline:\s*0;[\s\S]*\.identity-reference-page\s+\.identity-detail-tabs\s+\.detail-tabs\s*\{[\s\S]*margin-inline:\s*0;[\s\S]*padding-inline:\s*0;/,
+  );
+});

@@ -13,6 +13,7 @@ import { FieldLabel } from "../components/FieldLabel";
 import { FieldHelp } from "../components/ContextualHelp";
 import { describedBy } from "../components/aria";
 import { BotanicalName } from "../components/ReferenceUI";
+import { registerControlLayer } from "../components/controlLayers";
 
 export interface ReferenceChoice {
   id: string;
@@ -62,6 +63,7 @@ export function ReferencePicker({
   const [activeIndex, setActiveIndex] = useState(0);
   const typing = useRef(false);
   const previousValue = useRef(value);
+  const suppressFocusOpen = useRef(false);
   // Keep the visible query aligned with controlled value changes. Typing emits an
   // empty value first, so only a real external clear should also clear the query;
   // a parent re-render that just rebuilds `choices` must preserve typed text.
@@ -159,11 +161,30 @@ export function ReferencePicker({
       panel.scrollTop += bounds.bottom - viewport.bottom;
   }, [open, activeIndex]);
 
+  function closeMenu(refocus = false) {
+    if (refocus && input.current && document.activeElement !== input.current) {
+      suppressFocusOpen.current = true;
+      input.current.focus();
+      suppressFocusOpen.current = false;
+    }
+    setOpen(false);
+  }
+
+  useEffect(() => {
+    if (!open || !menu.current) return;
+    return registerControlLayer({
+      element: menu.current,
+      priority: 3,
+      dismiss: () => {
+        closeMenu(true);
+      },
+    });
+  }, [open]);
+
   function choose(choice: ReferenceChoice) {
     onChange(choice.id);
     setQuery(choice.label);
-    input.current?.focus();
-    setOpen(false);
+    closeMenu(true);
   }
 
   function keyboard(event: KeyboardEvent<HTMLInputElement>) {
@@ -180,7 +201,7 @@ export function ReferencePicker({
     } else if (event.key === "Escape" && open) {
       event.preventDefault();
       event.stopPropagation();
-      setOpen(false);
+      closeMenu();
     }
   }
 
@@ -188,14 +209,13 @@ export function ReferencePicker({
     <div
       className="field reference-picker"
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+        if (!event.currentTarget.contains(event.relatedTarget)) closeMenu();
       }}
       onKeyDown={(event) => {
         if (event.key !== "Escape" || event.target === input.current) return;
         event.preventDefault();
         event.stopPropagation();
-        input.current?.focus();
-        setOpen(false);
+        closeMenu(true);
       }}
     >
       <FieldLabel htmlFor={inputId} required={required}>
@@ -227,6 +247,10 @@ export function ReferencePicker({
           aria-required={required || undefined}
           value={value && selected ? selected.label : query}
           onFocus={() => {
+            if (suppressFocusOpen.current) {
+              suppressFocusOpen.current = false;
+              return;
+            }
             if (openOnFocus) setOpen(true);
           }}
           onClick={() => {
