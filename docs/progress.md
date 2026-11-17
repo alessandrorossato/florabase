@@ -1,3 +1,13 @@
+## 2026-11-17 — WF-07 readable batch PR titles (source for Batch 04)
+
+- WF-04 batch requests carry a reviewed one-line `summary`. Preparation refuses a plan without
+  it, and delivery titles the PR `chore(release): <summary> (batch <id>)`. The PR body and
+  manifest keep the full provenance. Manifests without a summary keep their original title;
+  the generator still reproduces #192 and #193 exactly.
+- Focused: feature workflow suite OK; agent workflow 74 OK, 3 skipped; Ruff and strict mypy
+  clean. Evidence is in `docs/release/evidence/wf-07.md`. Identifier registration and
+  independent QA are pending.
+
 ## 2026-11-17 — WF-04 Batch 03 prepared
 
 - Integrated CERT-01 (`bea1b50`), CERT-02 (`c05d816`), CERT-03 (`8b61d6d`) and CERT-04 (`9011026`)

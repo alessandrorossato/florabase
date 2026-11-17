@@ -224,11 +224,25 @@ class AgentWorkflowTests(unittest.TestCase):
         self.git(batch, "commit", "-m", "workflow bootstrap")
         request_path = self.root / "request.json"
         request_path.write_text(
-            json.dumps({"branch": "ci/batch-fixture", "base": base, "sources": request})
+            json.dumps(
+                {
+                    "branch": "ci/batch-fixture",
+                    "summary": "Example sources for the fixture",
+                    "base": base,
+                    "sources": request,
+                }
+            )
         )
         plan = self.batch_command(batch, "plan", str(request_path))
         self.assertEqual(plan.returncode, 0, plan.stderr)
         plan_path = self.root / "plan.json"
+        unsummarized = {key: value for key, value in json.loads(plan.stdout).items()}
+        del unsummarized["summary"]
+        plan_path.write_text(json.dumps(unsummarized))
+        refused = self.batch_command(batch, "prepare", str(plan_path), AGENT_ID="integrator")
+        self.assertNotEqual(refused.returncode, 0)
+        self.assertIn("batch summary", refused.stderr)
+        self.assertEqual(self.git(batch, "status", "--porcelain"), "")
         plan_path.write_text(plan.stdout)
         prepared = self.batch_command(batch, "prepare", str(plan_path), AGENT_ID="integrator")
         self.assertEqual(prepared.returncode, 0, prepared.stderr)
@@ -294,6 +308,9 @@ class AgentWorkflowTests(unittest.TestCase):
         self.assertEqual(
             (batch / "docs/progress.md").read_text(), "Source 1\nSource 2\nOriginal progress\n"
         )
+        self.assertEqual(manifest["summary"], "Example sources for the fixture")
+        title, _ = feature_batch.title_body(manifest, head, False)
+        self.assertEqual(title, "chore(release): Example sources for the fixture (batch fixture)")
         merge = self.squash_fixture(head, base)
         feature_batch.validate_platform_tree(
             Repository(self.primary), "ci/batch-fixture", base, head, merge
