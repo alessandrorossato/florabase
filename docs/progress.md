@@ -1,3 +1,18 @@
+## 2026-11-17 — WF-04 Batch 03 prepared
+
+- Integrated CERT-01 (`bea1b50`), CERT-02 (`c05d816`), CERT-03 (`8b61d6d`) and CERT-04 (`9011026`)
+  on `ci/batch-03` from `main` `836bf80`, in that order. The planner reported no blockers, and
+  `docs/progress.md` was the only file merged by more than one source.
+- Reconciliation: no registry change. CERT-02, CERT-03 and CERT-04 stay `planned`, because WF-04
+  reconciliation accepts only `docs/*.md` and `scripts/*.py`; their status follows in a later
+  documentation increment. All four stay `tooling`, no certification item is promoted, and the
+  release-candidate blockers are unchanged.
+- Focused runs on the combined tree: six frontend files (150 tests), the dashboard integration
+  file (9 tests) and `make test-ui-page` (3 tests) passed. Provenance is in
+  `docs/release/evidence/wf-04-batch-03.md`.
+- Unresolved: CERT-02 to CERT-04 status follow-up; R19 in the restatements predates CERT-03's
+  attribution test.
+
 ## 2026-11-16 — Batch 03 certification sources (documentation candidate)
 
 - Added `docs/release/restatements-v1.md`, version 1, prepared against `main` `554d74d`:
