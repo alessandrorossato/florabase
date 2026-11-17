@@ -909,6 +909,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/rooting-observations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Journal Rooting Observations */
+        get: operations["listJournalRootingObservations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}": {
         parameters: {
             query?: never;
@@ -5004,6 +5021,41 @@ export interface components {
              * @enum {string}
              */
             state: "active" | "depleted";
+        };
+        /** JournalRootingObservation */
+        JournalRootingObservation: {
+            /** Attempt Label */
+            attempt_label: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Notes */
+            notes?: string | null;
+            observed_on?: components["schemas"]["PartialDate"] | null;
+            /**
+             * Propagation Attempt Id
+             * Format: uuid
+             */
+            propagation_attempt_id: string;
+            /** Rooted Count */
+            rooted_count?: number | null;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "callus" | "root_initials" | "rooted" | "loss" | "inspection";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         JsonValue: unknown;
         /**
@@ -11677,6 +11729,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EventResponse"][];
+                };
+            };
+        };
+    };
+    listJournalRootingObservations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalRootingObservation"][];
                 };
             };
         };

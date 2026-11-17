@@ -6,6 +6,16 @@ export type EventKind = components["schemas"]["EventKind"];
 export type EventResponse = components["schemas"]["EventResponse"];
 export type EventUpdate = components["schemas"]["EventUpdate"];
 
+export type JournalRootingObservation =
+  components["schemas"]["JournalRootingObservation"];
+
+export function listJournalRootingObservations(signal: AbortSignal) {
+  return requestJson<JournalRootingObservation[]>(
+    "/api/v1/events/rooting-observations",
+    { signal },
+  );
+}
+
 export type EventTargetKind = "plant" | "group";
 
 function targetPath(kind: EventTargetKind, id: string): string {

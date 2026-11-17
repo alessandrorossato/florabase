@@ -14,16 +14,25 @@ import { ActivityChoices } from "./ActivityFilters";
 import { selectionLabel } from "./filterSelection";
 import { EventFeed } from "./EventFeed";
 import {
+  listJournalRootingObservations,
+  type JournalRootingObservation,
+} from "./api";
+import {
   filteredEvents,
   notebookEvents,
   searchJournal,
+  rootingStageLabels,
   type EntryCategory,
   entryLabels,
 } from "./eventData";
 
 type State =
   | { status: "loading" }
-  | { status: "ready"; events: EventResponse[] }
+  | {
+      status: "ready";
+      events: EventResponse[];
+      rooting: JournalRootingObservation[];
+    }
   | { status: "error" };
 
 export function GlobalEventsScreen() {
@@ -38,9 +47,13 @@ export function GlobalEventsScreen() {
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
-    void listGlobalEvents(controller.signal)
-      .then((events) => {
-        if (!controller.signal.aborted) setState({ status: "ready", events });
+    void Promise.all([
+      listGlobalEvents(controller.signal),
+      listJournalRootingObservations(controller.signal),
+    ])
+      .then(([events, rooting]) => {
+        if (!controller.signal.aborted)
+          setState({ status: "ready", events, rooting });
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
@@ -63,6 +76,21 @@ export function GlobalEventsScreen() {
         : [],
     [filter, state, view.state.q],
   );
+
+  const visibleRooting =
+    state.status === "ready" &&
+    (!filter.length || filter.includes("observations"))
+      ? state.rooting.filter((entry) => {
+          const query = view.state.q.trim().toLowerCase();
+          return [
+            "Rooting observation",
+            rootingStageLabels[entry.stage],
+            entry.attempt_label ?? "Rooting attempt",
+            entry.notes,
+          ].some((value) => value?.toLowerCase().includes(query));
+        })
+      : [];
+  const visibleCount = visible.length + visibleRooting.length;
 
   return (
     <ActivityPage
@@ -128,8 +156,9 @@ export function GlobalEventsScreen() {
           )}
           {state.status === "ready" && (
             <>
-              <DirectoryResults count={visible.length} />
-              {notebookEvents(state.events).length === 0 ? (
+              <DirectoryResults count={visibleCount} />
+              {notebookEvents(state.events).length === 0 &&
+              state.rooting.length === 0 ? (
                 <div className="empty-state">
                   <p>
                     No Journal entries yet. Choose a{" "}
@@ -138,12 +167,17 @@ export function GlobalEventsScreen() {
                     observation, note or action.
                   </p>
                 </div>
-              ) : visible.length === 0 ? (
+              ) : visibleCount === 0 ? (
                 <p className="notice" role="status">
                   No Journal entries match this search or filter.
                 </p>
               ) : (
-                <EventFeed journal periods events={visible} />
+                <EventFeed
+                  journal
+                  periods
+                  events={visible}
+                  rootingObservations={visibleRooting}
+                />
               )}
             </>
           )}
