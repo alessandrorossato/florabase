@@ -319,6 +319,12 @@ def test_failed_attempt_history_explore_schedule_and_media(
     assert result["rooting_rate_percent"] == 0
     _write(browser, "POST", "/api/v1/schedule", work, 409)
     _write(browser, "POST", f"{url}/plants", {}, 409)
+    journal = _read(browser, "/api/v1/events/rooting-observations")
+    observation = next(entry for entry in journal if entry["propagation_attempt_id"] == attempt_id)
+    assert observation["rooted_count"] == 0
+    assert observation["observed_on"]["precision"] == "year"
+    searched = _read(browser, "/api/v1/history?q=Rooting%20observation")
+    assert observation["id"] in {item["source_id"] for item in searched["items"]}
     history = _read(browser, "/api/v1/history?year=2026")
     assert any(
         item["primary"]["id"] == attempt_id and item["source_kind"] == "rooting_observation"
@@ -633,3 +639,61 @@ def test_identity_merge_repoints_cuttings_and_keeps_receipt_snapshots(
     assert receipt["status"] == "blocked"
     assert "source_structural_state_changed" in {item["code"] for item in receipt["reasons"]}
     _write(browser, "POST", FAST, _payload(cutting_identity), 404)
+
+
+@pytest.mark.parametrize(
+    ("started", "rooted", "lifecycle"),
+    [
+        (4, 4, "completed"),
+        (4, 2, "completed"),
+        (4, 0, "failed"),
+        (4, None, "active"),
+        (None, None, "active"),
+    ],
+)
+def test_rooting_outcomes_persist_after_reload(
+    authenticated_browser: tuple[str, str],
+    cutting_identity: str,
+    started: int | None,
+    rooted: int | None,
+    lifecycle: str,
+) -> None:
+    browser = authenticated_browser
+    quantity = _count(started) if started is not None else None
+    payload = _payload(cutting_identity, initial_quantity=quantity)
+    payload["propagation_attempt"]["quantity"] = quantity
+    saved = _write(browser, "POST", FAST, payload)
+    lot = saved["vegetative_lot"]
+    attempt = saved["propagation_attempt"]
+    url = f"{ATTEMPTS}/{attempt['id']}"
+    _write(
+        browser,
+        "PUT",
+        url,
+        {
+            "expected_updated_at": attempt["updated_at"],
+            "lifecycle": lifecycle,
+            "quantity": quantity,
+            "rooted_count": rooted,
+            "started_on": attempt["started_on"],
+        },
+        200,
+    )
+    _write(
+        browser,
+        "POST",
+        f"{url}/observations",
+        {
+            "stage": "inspection",
+            "rooted_count": rooted,
+        },
+    )
+    assert _read(browser, f"{LOTS}/{lot['id']}")["initial_quantity"] == quantity
+    reloaded = _read(browser, url)
+    assert reloaded["quantity"] == quantity
+    assert reloaded["rooted_count"] == rooted
+    assert reloaded["lifecycle"] == lifecycle
+    notes = _read(browser, "/api/v1/events/rooting-observations")
+    observation = next(entry for entry in notes if entry["propagation_attempt_id"] == attempt["id"])
+    assert observation["rooted_count"] == rooted
+    assert observation["observed_on"] is None

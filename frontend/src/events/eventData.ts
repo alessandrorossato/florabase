@@ -162,3 +162,11 @@ export function searchJournal(
     ].some((value) => value?.toLocaleLowerCase().includes(query)),
   );
 }
+
+export const rootingStageLabels = {
+  callus: "Callus",
+  root_initials: "Root initials",
+  rooted: "Rooted",
+  loss: "Loss",
+  inspection: "Inspection",
+};

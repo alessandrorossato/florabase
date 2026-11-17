@@ -136,6 +136,10 @@ function CuttingsDirectory({
       continue;
     params.set(key, value);
   }
+  const hasFilters =
+    Boolean(sourceId) ||
+    q.trim().length > 0 ||
+    [...params.keys()].some((key) => key in filters);
   const [data, retry] = useCuttingData<(Lot | AttemptListItem)[]>(
     `${surface === "lots" ? lots : attempts}?${params}`,
   );
@@ -327,7 +331,13 @@ function CuttingsDirectory({
           )}
           {data.state === "ready" &&
             (rows.length === 0 ? (
-              <EmptyState>No cutting records match these filters.</EmptyState>
+              <EmptyState>
+                {hasFilters
+                  ? "No cutting records match these filters."
+                  : surface === "lots"
+                    ? "No material lots yet. Take or add cuttings to get started."
+                    : "No rooting attempts yet. Start one from a material lot."}
+              </EmptyState>
             ) : (
               <DirectoryRecords
                 view={view}

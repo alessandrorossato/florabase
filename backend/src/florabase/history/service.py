@@ -600,6 +600,7 @@ def history_statement(
             ),
             (rows.c.source_kind == "operation_receipt", "Sowing Propagation"),
             (rows.c.source_kind == "germination", "Germination"),
+            (rows.c.source_kind == "rooting_observation", "Rooting observation"),
             (rows.c.source_kind == "harvest", "Harvest"),
             (rows.c.source_kind.in_(["disposition", "conversion"]), "Stored material"),
             else_="Scheduled activity",

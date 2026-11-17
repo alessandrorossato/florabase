@@ -1356,6 +1356,7 @@
    unchanged; the selected tab keeps its underline and gains the selected fill. */
 @media (max-width: 40rem) {
   .identity-reference-page .identity-detail-tabs {
+    margin-inline: 0;
     overflow: visible;
     padding: 0;
     background: none;
@@ -1365,6 +1366,8 @@
   .identity-reference-page .identity-detail-tabs .detail-tabs {
     inline-size: 100%;
     box-sizing: border-box;
+    margin-inline: 0;
+    padding-inline: 0;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0;

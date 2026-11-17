@@ -1,0 +1,51 @@
+{
+  "base": "ed5747c20d181c93b5cf78dab1656a24c576ba9b",
+  "bootstrap": "ed5747c20d181c93b5cf78dab1656a24c576ba9b",
+  "bootstrap_commits": [],
+  "branch": "ci/batch-05",
+  "reconciliation": {
+    "docs/progress.md": "Record the combined focused checks and distinguish the original emulated viewport results from native zoom",
+    "docs/release/evidence/rc-gux-functional-defects.md": "Label the original CDP emulation and record Sol's separate native Chromium source QA",
+    "docs/release/evidence/wf-04-batch-05.md": "Record integration provenance, focused checks and remaining acceptance"
+  },
+  "sources": [
+    {
+      "base": "ed5747c20d181c93b5cf78dab1656a24c576ba9b",
+      "branch": "fix/rc-gux-functional-defects",
+      "claim": "aa28162f9d96",
+      "commits": [
+        "b3491620076afdf1aec44b67637365a1312e2182"
+      ],
+      "evidence": [
+        "docs/release/evidence/rc-gux-functional-defects.md"
+      ],
+      "id": "UI-SYSTEM-001",
+      "merge": "854c624ebe4da8f80100e00a14730eccc61da55a",
+      "resolutions": [],
+      "reviewer": "sol-codex-source-qa",
+      "tip": "b3491620076afdf1aec44b67637365a1312e2182",
+      "writer": "hydrogen-rc-gux-fixes"
+    },
+    {
+      "base": "ed5747c20d181c93b5cf78dab1656a24c576ba9b",
+      "branch": "feat/cutting-001-rc",
+      "claim": "942c7be8670e",
+      "commits": [
+        "418b38647024f906d4ab0b52233e32b193eae7cf"
+      ],
+      "evidence": [
+        "docs/release/evidence/fn-01-source.md"
+      ],
+      "id": "FN-01",
+      "merge": "76a76203f59da7d6e435e8d0dbfe257ac2e1c0f5",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "sol-codex-source-qa",
+      "tip": "418b38647024f906d4ab0b52233e32b193eae7cf",
+      "writer": "codex-cutting-rc-20261117"
+    }
+  ],
+  "summary": "Cuttings completion and UX fixes",
+  "version": 1
+}

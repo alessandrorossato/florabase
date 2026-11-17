@@ -2,6 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from florabase.auth.dependencies import (
@@ -10,6 +11,9 @@ from florabase.auth.dependencies import (
     require_csrf,
     require_owner,
 )
+from florabase.cuttings.model import PropagationAttempt, RootingObservation
+from florabase.cuttings.schemas import RootingObservationResponse
+from florabase.cuttings.service import observation_response
 from florabase.db.session import get_database_session
 from florabase.events.schemas import EventCreate, EventResponse, EventUpdate
 from florabase.events.service import (
@@ -139,6 +143,34 @@ def list_all_events_endpoint(
     database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> list[EventResponse]:
     return event_responses(database, list_all_events(database))
+
+
+class JournalRootingObservation(RootingObservationResponse):
+    attempt_label: str | None
+
+
+@events_router.get(
+    "/rooting-observations",
+    response_model=list[JournalRootingObservation],
+    operation_id="listJournalRootingObservations",
+)
+def list_journal_rooting_observations(
+    _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
+) -> list[JournalRootingObservation]:
+    rows = database.execute(
+        select(RootingObservation, PropagationAttempt.label)
+        .join(
+            PropagationAttempt, PropagationAttempt.id == RootingObservation.propagation_attempt_id
+        )
+        .order_by(RootingObservation.id.desc())
+    )
+    return [
+        JournalRootingObservation(
+            **observation_response(observation).model_dump(), attempt_label=label
+        )
+        for observation, label in rows
+    ]
 
 
 @events_router.get("/{event_id}", response_model=EventResponse, operation_id="getEvent")

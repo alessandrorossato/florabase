@@ -9,6 +9,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 
+import { TaskDialog } from "../components/TaskDialog";
 import { ReferencePicker } from "./ReferencePicker";
 
 afterEach(() => {
@@ -341,4 +342,46 @@ test("Escape dismisses an open picker before its enclosing task and option-butto
   expect(change).toHaveBeenCalledExactlyOnceWith("supplier");
   expect(control).toHaveFocus();
   expect(control).toHaveAttribute("aria-expanded", "false");
+});
+
+test("Escape and native cancel dismiss ReferencePicker before closing its parent TaskDialog", async () => {
+  const user = userEvent.setup();
+  const closeDialog = vi.fn();
+  render(
+    <TaskDialog title="Edit plant" onClose={closeDialog}>
+      <ReferencePicker
+        label="Botanical identity"
+        choices={[{ id: "id-1", label: "Aloe vera" }]}
+        value=""
+        onChange={() => undefined}
+      />
+    </TaskDialog>,
+  );
+
+  const control = screen.getByRole("combobox", { name: "Botanical identity" });
+  await user.click(control);
+  expect(control).toHaveAttribute("aria-expanded", "true");
+
+  // First Escape closes only the picker layer and keeps focus on the combobox.
+  await user.keyboard("{Escape}");
+  expect(control).toHaveAttribute("aria-expanded", "false");
+  expect(control).toHaveFocus();
+  expect(closeDialog).not.toHaveBeenCalled();
+
+  // Reopen and simulate native dialog cancel event while the picker is open.
+  await user.click(control);
+  expect(control).toHaveAttribute("aria-expanded", "true");
+  const dialog = document.querySelector("dialog");
+  expect(dialog).not.toBeNull();
+  const cancelEvent = new Event("cancel", { cancelable: true });
+  act(() => {
+    dialog?.dispatchEvent(cancelEvent);
+  });
+  expect(cancelEvent.defaultPrevented).toBe(true);
+  expect(control).toHaveAttribute("aria-expanded", "false");
+  expect(closeDialog).not.toHaveBeenCalled();
+
+  // Next Escape with the picker closed dismisses the parent TaskDialog.
+  await user.keyboard("{Escape}");
+  expect(closeDialog).toHaveBeenCalledTimes(1);
 });
