@@ -9402,3 +9402,12 @@ Status remains implemented pending canonical verification.
   `python3 scripts/test-verification-impact.py` (37 tests), and
   `python3 scripts/test-feature-workflow.py` (54 tests).
   Independent QA and release acceptance remain pending; no canonical gate has run.
+
+## 2026-11-17 — FN-01 Cuttings release-candidate source increment
+
+- Shared Journal reads rooting observations from the originating attempt and links back to it.
+  Observation authoring remains on the attempt. History search matches the displayed source kind,
+  and Cuttings distinguishes its first-use message from an empty filtered result.
+- Disposable PostgreSQL passed 17 tests and scoped frontend Vitest passed 37. The
+  [FN-01 source record](release/evidence/fn-01-source.md) captures five persisted outcome cases,
+  both clonal establishment paths and the remaining candidate-image G-CORE evidence.

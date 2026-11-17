@@ -395,3 +395,19 @@ test("lot details save corrections with the version of the displayed lot", async
     ).toHaveFocus();
   });
 });
+
+test.each([
+  ["#/cuttings", "No material lots yet. Take or add cuttings to get started."],
+  ["#/cuttings?q=basil", "No cutting records match these filters."],
+])(
+  "Cuttings distinguishes a new collection from empty search results (%s)",
+  async (hash, message) => {
+    window.history.replaceState(null, "", hash);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(json([]))),
+    );
+    show();
+    expect(await screen.findByText(message)).toBeVisible();
+  },
+);

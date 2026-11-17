@@ -5,6 +5,7 @@ import { EventTargetPhoto } from "./EventTargetPhoto";
 import { RecordVisual } from "../photos/RecordVisual";
 import { precisionGroups } from "../timeline/almanac";
 
+import type { JournalRootingObservation } from "./api";
 import type { EventResponse } from "../collection/api";
 import {
   eventLabels,
@@ -12,7 +13,12 @@ import {
   formatPartialDate,
   measurementText,
   phenophaseLabels,
+  rootingStageLabels,
 } from "./eventData";
+
+type JournalObservation = JournalRootingObservation & {
+  occurred_on: EventResponse["occurred_on"];
+};
 
 export function EventFeed({
   events,
@@ -22,8 +28,10 @@ export function EventFeed({
   identityContextId,
   expandNotes = false,
   periods = false,
+  rootingObservations = [],
 }: {
   events: EventResponse[];
+  rootingObservations?: JournalRootingObservation[];
   compact?: boolean;
   showTargetPhoto?: boolean;
   journal?: boolean;
@@ -37,8 +45,33 @@ export function EventFeed({
 }) {
   const recordName = useRecordName();
 
-  const items = (list: EventResponse[]) =>
+  const items = (list: (EventResponse | JournalObservation)[]) =>
     list.map((event) => {
+      if ("propagation_attempt_id" in event)
+        return (
+          <li key={`rooting:${event.id}`}>
+            <article>
+              <time className="journal-date">
+                {formatPartialDate(event.occurred_on)}
+              </time>
+              <div className="journal-content">
+                <div className="activity-row-heading">
+                  <StatusBadge>Rooting observation</StatusBadge>
+                  <h3>{rootingStageLabels[event.stage]}</h3>
+                </div>
+                {event.notes && <p className="preserve-lines">{event.notes}</p>}
+                <p>
+                  {event.rooted_count == null
+                    ? "Rooted count unrecorded"
+                    : `${String(event.rooted_count)} rooted`}
+                </p>
+                <a href={`#/cuttings/attempts/${event.propagation_attempt_id}`}>
+                  {event.attempt_label ?? "Rooting attempt"}
+                </a>
+              </div>
+            </article>
+          </li>
+        );
       const type = event.target.type === "plant" ? "Plant" : "Plant group";
       const name = recordName(
         event.target,
@@ -195,9 +228,28 @@ export function EventFeed({
 
   const className = `event-feed${compact ? " event-feed--compact" : ""}${journal ? " journal-feed" : ""}`;
   if (!periods) return <ol className={className}>{items(events)}</ol>;
+  const entries = rootingObservations.length
+    ? [
+        ...events,
+        ...rootingObservations.map((observation) => ({
+          ...observation,
+          occurred_on: observation.observed_on ?? null,
+        })),
+      ].sort((left, right) => {
+        const dateKey = (date: EventResponse["occurred_on"]) =>
+          date
+            ? date.year * 10000 + (date.month ?? 0) * 100 + (date.day ?? 0)
+            : 0;
+        return (
+          dateKey(right.occurred_on) - dateKey(left.occurred_on) ||
+          right.created_at.localeCompare(left.created_at) ||
+          right.id.localeCompare(left.id)
+        );
+      })
+    : events;
   return (
     <div className={`${className} journal-feed--periods`}>
-      {precisionGroups(events).map((group, index) => (
+      {precisionGroups(entries).map((group, index) => (
         <section
           key={`${group.heading}:${String(index)}`}
           className="journal-period"

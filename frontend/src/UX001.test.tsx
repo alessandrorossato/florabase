@@ -105,6 +105,7 @@ test("Dashboard is the default workspace with Workbench workspaces and mobile wo
         recent_events: [event],
       });
     if (path === "/api/v1/events") return json([event]);
+    if (path === "/api/v1/events/rooting-observations") return json([]);
     throw new Error(`Unexpected request: ${path}`);
   });
   const user = userEvent.setup();

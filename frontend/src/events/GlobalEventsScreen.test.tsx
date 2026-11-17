@@ -10,10 +10,12 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../auth/context";
 import { listGlobalEvents, type EventResponse } from "../collection/api";
 import * as saved from "../saved-views/api";
+import { listJournalRootingObservations } from "./api";
 import { GlobalEventsScreen } from "./GlobalEventsScreen";
 import * as schedule from "../schedule/api";
 import { filteredEvents } from "./eventData";
 
+vi.mock("./api", () => ({ listJournalRootingObservations: vi.fn() }));
 vi.mock("../collection/api", () => ({ listGlobalEvents: vi.fn() }));
 vi.mock("../schedule/api", () => ({ listTargets: vi.fn() }));
 vi.mock("../saved-views/api", () => ({ listSavedViews: vi.fn() }));
@@ -67,6 +69,7 @@ function mount() {
 }
 beforeEach(() => {
   window.history.replaceState(null, "", "#/events");
+  vi.mocked(listJournalRootingObservations).mockResolvedValue([]);
   vi.mocked(listGlobalEvents).mockResolvedValue([
     event,
     {
@@ -303,6 +306,7 @@ test.each([
 );
 
 test("operation-owned backing records stay out of the global notebook without removing explanatory notes", async () => {
+  vi.mocked(listJournalRootingObservations).mockResolvedValue([]);
   vi.mocked(listGlobalEvents).mockResolvedValue([
     {
       ...event,
@@ -330,6 +334,7 @@ test("operation-owned backing records stay out of the global notebook without re
 });
 
 test("unannotated movement facts remain in History while notebook context is retained", async () => {
+  vi.mocked(listJournalRootingObservations).mockResolvedValue([]);
   vi.mocked(listGlobalEvents).mockResolvedValue([
     { ...event, id: "bare-move", kind: "movement", notes: null },
     {
@@ -348,6 +353,7 @@ test("unannotated movement facts remain in History while notebook context is ret
 });
 
 test("entry categories are a live union with one counted dimension and preserved search", async () => {
+  vi.mocked(listJournalRootingObservations).mockResolvedValue([]);
   vi.mocked(listGlobalEvents).mockResolvedValue([
     event,
     { ...event, id: "repot", kind: "repotting" },
@@ -388,6 +394,7 @@ test("entry categories are a live union with one counted dimension and preserved
 });
 
 test("empty Journal explains the Plant or Plant group prerequisite with contextual navigation links", async () => {
+  vi.mocked(listJournalRootingObservations).mockResolvedValue([]);
   vi.mocked(listGlobalEvents).mockResolvedValue([]);
   mount();
   const empty = await screen.findByText(/No Journal entries yet/);
@@ -401,4 +408,34 @@ test("empty Journal explains the Plant or Plant group prerequisite with contextu
   expect(
     within(empty).getByRole("link", { name: "Plant group" }),
   ).toHaveAttribute("href", "#/plants?type=group");
+});
+
+test("Journal links read-only rooting observations to the attempt and distinguishes zero from unknown", async () => {
+  const observation = {
+    id: "zero",
+    propagation_attempt_id: "attempt",
+    attempt_label: "Bench trial",
+    stage: "inspection" as const,
+    observed_on: { precision: "month" as const, year: 2026, month: 10 },
+    created_at: event.created_at,
+    updated_at: event.updated_at,
+    notes: "Bench check",
+    rooted_count: 0,
+  };
+  vi.mocked(listJournalRootingObservations).mockResolvedValue([
+    observation,
+    { ...observation, id: "unknown", rooted_count: null },
+  ]);
+  mount();
+  expect(await screen.findByText("0 rooted")).toBeVisible();
+  expect(screen.getByText("Rooted count unrecorded")).toBeVisible();
+  const article = screen.getByText("0 rooted").closest("article");
+  if (!article) throw new Error("Missing rooting observation card");
+  const card = within(article);
+  expect(card.getByRole("link", { name: "Bench trial" })).toHaveAttribute(
+    "href",
+    "#/cuttings/attempts/attempt",
+  );
+  expect(card.getByText("Bench check")).toBeVisible();
+  expect(card.queryByRole("button")).not.toBeInTheDocument();
 });

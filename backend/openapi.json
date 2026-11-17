@@ -6610,6 +6610,98 @@
         "title": "InventoryWrite",
         "type": "object"
       },
+      "JournalRootingObservation": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attempt Label"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "observed_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "propagation_attempt_id": {
+            "format": "uuid",
+            "title": "Propagation Attempt Id",
+            "type": "string"
+          },
+          "rooted_count": {
+            "anyOf": [
+              {
+                "maximum": 2147483647.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rooted Count"
+          },
+          "stage": {
+            "enum": [
+              "callus",
+              "root_initials",
+              "rooted",
+              "loss",
+              "inspection"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "id",
+          "propagation_attempt_id",
+          "created_at",
+          "updated_at",
+          "attempt_label"
+        ],
+        "title": "JournalRootingObservation",
+        "type": "object"
+      },
       "JsonValue": {},
       "LengthUnit": {
         "enum": [
@@ -23986,6 +24078,31 @@
           }
         },
         "summary": "List All Events Endpoint",
+        "tags": [
+          "events"
+        ]
+      }
+    },
+    "/api/v1/events/rooting-observations": {
+      "get": {
+        "operationId": "listJournalRootingObservations",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/JournalRootingObservation"
+                  },
+                  "title": "Response Listjournalrootingobservations",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Journal Rooting Observations",
         "tags": [
           "events"
         ]
