@@ -22,6 +22,7 @@ from florabase.geographic_places.model import GeographicPlace
 from florabase.harvests.inventory_schemas import DispositionCreate
 from florabase.harvests.inventory_service import record_disposition
 from florabase.harvests.model import Harvest
+from florabase.harvests.service import write_harvest
 from florabase.orders.model import Order
 from florabase.plants.model import Plant, PlantGroup
 from florabase.schedule import service as schedule
@@ -32,6 +33,7 @@ from florabase.sowings.model import GerminationObservation, Sowing
 from florabase.taxonomy.model import WfoLink
 
 from .test_harvest_inventory import setup as inventory_fixture
+from .test_harvests import data as harvest_data
 from .test_search import _api_get
 from .test_supplier_api import authenticated_browser as authenticated_browser
 from .test_supplier_api import request
@@ -294,6 +296,33 @@ def test_dashboard_auth_and_calendar_validation(authenticated_browser: tuple[str
     assert status == 200
     assert isinstance(body["overview"], dict)
     assert body["overview"]["today"] == "2026-10-11"
+
+
+def test_harvest_without_stored_material_is_not_current_holding(
+    database_connection: Connection,
+) -> None:
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as db:
+        identity = BotanicalIdentity(scientific_name="Historical harvest species")
+        db.add(identity)
+        db.flush()
+        plant = Plant(
+            botanical_identity_id=identity.id, direct_origin_kind="unknown", lifecycle="dead"
+        )
+        db.add(plant)
+        db.flush()
+
+        before = dashboard(db, DAY)
+        harvest = write_harvest(db, harvest_data(plant, items=[{"material_kind": "seed"}]))
+        after = dashboard(db, DAY)
+
+        assert after.counts.model_dump(exclude={"events"}) == before.counts.model_dump(
+            exclude={"events"}
+        )
+        assert before.overview.current_identities == after.overview.current_identities == 0
+        assert after.counts.events == before.counts.events + 1
+        assert [event.id for event in after.recent_events if event.kind == "harvest"] == [
+            harvest.event_id
+        ]
 
 
 def test_stored_material_and_native_range_only_profile_are_current(
