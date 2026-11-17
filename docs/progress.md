@@ -9402,3 +9402,26 @@ Status remains implemented pending canonical verification.
   `python3 scripts/test-verification-impact.py` (37 tests), and
   `python3 scripts/test-feature-workflow.py` (54 tests).
   Independent QA and release acceptance remain pending; no canonical gate has run.
+
+## 2026-11-17 — RC UX defect remediation (`F-01` through `F-05`)
+
+- Fixed five confirmed UX defects on branch `fix/rc-gux-functional-defects`:
+  - `F-01`: Released single-screen height/overflow clamps in `@media (max-height: 30rem)` so
+    directories remain scrollable and unclipped at 200% zoom (`720×422`) across toolbars, filters,
+    records, and pagination.
+  - `F-02`: Integrated `ReferencePicker` with `registerControlLayer` (priority 3) and a focus-open
+    guard so `Escape` and native `<dialog>` `cancel` dismiss only the picker before closing a
+    parent `TaskDialog`.
+  - `F-03`: Removed the `50dvh` records cap and restored mobile bottom clearance in
+    `@media (max-width: 48rem)` so Gallery cards do not clip and pagination clears `.wb-bottombar`.
+  - `F-04`: Wrapped `.directory-filter-summary` onto a full-width row under `@media (max-width: 40rem)`
+    so filter chips and remove buttons remain accessible.
+  - `F-05`: Reset horizontal margins/padding on `.identity-detail-tabs` and `.detail-tabs` under
+    `@media (max-width: 40rem)` so tabs align with `.detail-tab-panel`.
+- Deferred `F-06` per operator approval; preserved `tokens.css`, `UI-SYSTEM-001` status, `U04`, and
+  `R21`.
+- Checks after final edit: `pnpm run format:check`, `pnpm run lint`, `pnpm run typecheck`, full
+  `pnpm test` (126/126 files, 1378/1378 tests), and before/after Chromium verification at
+  `1440×844`, `1024×844`, `390×844`, and `720×422` (200% zoom) against a disposable stack cleaned
+  after completion ([evidence](release/evidence/rc-gux-functional-defects.md)). Independent QA and
+  release integration remain pending.
