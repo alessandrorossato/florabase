@@ -9447,3 +9447,15 @@ Status remains implemented pending canonical verification.
 - All eight RC blockers remain. CUTTING-001 acceptance and candidate-image G-CORE step 12,
   UI-SYSTEM-001, formal G-UX, U04 and R21 remain open. F-06 is deferred. Independent combined
   review and canonical FULL are pending.
+
+## 2026-11-18 — Batch 06 security baseline
+
+- Verified PR #195's archived exact-head review and fresh FULL receipt, and all three finish
+  records. The [security baseline](release/evidence/batch-06-security-baseline.md) verifies raw
+  OCI descriptors and digest-bound Trivy reports from the exact-main hosted rehearsal. The scanned
+  beta.6 pair and pinned PostgreSQL .2 each had zero HIGH, CRITICAL and secret findings. A fresh
+  read-only GHCR manifest check found the .2 tag and digests and the beta.6 and RC.1 app tags absent.
+- `make test-beta-images` passed 60 release and four tool-lock tests using the pinned toolchain.
+  Offline links passed in 303 documents. The feature graph passed with 168 entries, and the RC
+  check still reports eight blockers. Independent source review, final RC scans, G-SEC and a
+  fresh Batch 06 FULL remain pending.
