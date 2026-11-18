@@ -318,3 +318,35 @@ test("directory CSS releases 200%-zoom and mobile scroll clamps while wrapping f
     /@media\s*\(max-width:\s*40rem\)\s*\{[\s\S]*\.identity-reference-page\s+\.identity-detail-tabs\s*\{[\s\S]*margin-inline:\s*0;[\s\S]*\.identity-reference-page\s+\.identity-detail-tabs\s+\.detail-tabs\s*\{[\s\S]*margin-inline:\s*0;[\s\S]*padding-inline:\s*0;/,
   );
 });
+
+test("mobile directory shells align rows to top and summaryless composed rows avoid action overlap", () => {
+  const workspaceCss = readFileSync(
+    "src/styles/directory-workspace.css",
+    "utf8",
+  );
+  const systemCss = readFileSync("src/styles/directory-system.css", "utf8");
+  const cuttingsCss = readFileSync(
+    "src/ui-pages/Cuttings/cuttings-directory.css",
+    "utf8",
+  );
+
+  // Short mobile directories must not stretch row 1 (.wb-sidebar) to fill 100dvh above search
+  expect(workspaceCss).toMatch(
+    /@media\s*\(max-width:\s*48rem\)\s*\{\s*\.application-shell:has\(\.ui-directory-records\),\s*\.application-shell:has\(\.harvest-directory\)\s*\{[\s\S]*grid-template-rows:\s*auto;[\s\S]*align-content:\s*start;/,
+  );
+
+  // Only composed rows that reserve trailing space in .ui-record-summary pull actions up
+  expect(systemCss).toContain(
+    "> .ui-directory-row--composed:has(.ui-record-summary)",
+  );
+  expect(systemCss).not.toMatch(
+    /> \.ui-directory-row--composed\s*\n\s*> \.ui-directory-record-actions/,
+  );
+
+  // Cuttings keeps .ui-record-secondary stacked in .ui-record-identity and zero action pull-up on mobile
+  const cuttingsMobileIndex = cuttingsCss.indexOf("@media (max-width: 48rem)");
+  expect(cuttingsMobileIndex).toBeGreaterThan(-1);
+  const cuttingsMobile = cuttingsCss.slice(cuttingsMobileIndex);
+  expect(cuttingsMobile).not.toContain("grid-column: 2;");
+  expect(cuttingsMobile).toContain("margin-block-start: 0;");
+});

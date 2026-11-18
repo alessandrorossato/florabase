@@ -323,6 +323,8 @@ main:has(.harvest-directory) {
   .application-shell:has(.harvest-directory) {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    align-content: start;
   }
 }
 @media (max-width: 48rem) {

@@ -286,6 +286,18 @@ test("cuttings directory keeps statuses, long labels, views, and preview usable"
   const lotPreview = await screen.findByRole("button", {
     name: `Quick preview ${longName}`,
   });
+  expect(
+    screen.getByRole("heading", { level: 2, name: "Cuttings" }),
+  ).toBeInTheDocument();
+  expect(
+    screen
+      .getByRole("heading", { level: 2, name: "Cuttings" })
+      .closest(".page-header"),
+  ).toHaveClass("page-header--directory");
+  expect(lotPreview.querySelector(".ui-record-summary")).toBeNull();
+  expect(
+    lotPreview.querySelector(".ui-record-identity > .ui-record-secondary"),
+  ).not.toBeNull();
   expect(screen.getByText("Exhausted")).toHaveClass("ui-status-chip");
   expect(
     screen.getByRole("link", { name: `Open details: ${longName}` }),
@@ -301,11 +313,14 @@ test("cuttings directory keeps statuses, long labels, views, and preview usable"
     "ui-directory-records--gallery",
   );
   await user.click(screen.getByRole("button", { name: "Rooting attempts" }));
+  const attemptPreview = await screen.findByRole("button", {
+    name: "Quick preview Long label rooting trial in coarse perlite and pumice",
+  });
+  expect(attemptPreview).toBeVisible();
+  expect(attemptPreview.querySelector(".ui-record-summary")).toBeNull();
   expect(
-    await screen.findByRole("button", {
-      name: "Quick preview Long label rooting trial in coarse perlite and pumice",
-    }),
-  ).toBeVisible();
+    attemptPreview.querySelector(".ui-record-identity > .ui-record-secondary"),
+  ).not.toBeNull();
   expect(screen.getByText("Active")).toHaveClass("ui-status-chip");
 });
 

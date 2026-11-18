@@ -145,6 +145,11 @@ test("directory exposes exact price, partial date, authoritative count and a hid
   const user = userEvent.setup();
   mount();
   const row = await orderRow();
+  expect(
+    screen
+      .getByRole("heading", { level: 2, name: "Orders" })
+      .closest(".page-header"),
+  ).toHaveClass("page-header--directory");
   expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
   expect(row.closest("li")).not.toHaveAttribute("data-selected");
   expect(screen.getByText("EUR 42.5000")).toBeVisible();

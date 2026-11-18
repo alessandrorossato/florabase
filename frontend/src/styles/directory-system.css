@@ -793,7 +793,7 @@
   }
   .app-content
     .ui-directory-records--list
-    > .ui-directory-row--composed
+    > .ui-directory-row--composed:has(.ui-record-summary)
     > .ui-directory-record-actions {
     width: auto;
     margin-block-start: calc(-1 * var(--control-height-touch, 2.75rem));
