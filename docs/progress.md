@@ -9459,3 +9459,10 @@ Status remains implemented pending canonical verification.
   Offline links passed in 303 documents. The feature graph passed with 168 entries, and the RC
   check still reports eight blockers. Independent source review, final RC scans, G-SEC and a
   fresh Batch 06 FULL remain pending.
+
+- The [Hydrogen scope approval](release/evidence/batch-06-remediation-scope.md) records the
+  disposable production route probe. Four built-in FastAPI routes returned unauthenticated 200
+  responses on the backend. Nginx returned the SPA index for those GETs. The probe enumerated
+  234 API operations, confirmed the three intended public operations, and left zero probe
+  containers, networks or tagged images. The two upstream CI pins and four source paths are
+  approved for independent implementation and review. Final-image G-SEC remains pending.
