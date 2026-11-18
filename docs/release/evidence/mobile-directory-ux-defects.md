@@ -102,9 +102,9 @@ Viewport and zoom coverage used headless Snap Chromium (`157.0.8103.38`):
   `1440×700`, `1024×844`, `390×844`, and native 200% zoom at `1440×844`, `1440×988`, `2048×1200`, and
   `2880×1800`).
 - Runtime errors during final browser verification: `consoleErrors: []`, `pageErrors: []`.
-- Artifact captures and JSON geometry reports (stored outside the claimed worktree):
-  - `/home/alessandro/.gemini/antigravity/brain/c05760e3-f1a8-437f-ab38-604f6939176e/scratch/ws_b/before/` (`report.json` and PNG screenshots)
-  - `/home/alessandro/.gemini/antigravity/brain/c05760e3-f1a8-437f-ab38-604f6939176e/scratch/ws_b/after/` (`report.json` and PNG screenshots)
+- External local QA artifact captures and JSON geometry reports (stored outside the claimed worktree; not committed repository files):
+  - `brain/c05760e3-f1a8-437f-ab38-604f6939176e/scratch/ws_b/before/` (`report.json` and PNG screenshots)
+  - `brain/c05760e3-f1a8-437f-ab38-604f6939176e/scratch/ws_b/after/` (`report.json` and PNG screenshots)
 
 ## Frontend checks
 
