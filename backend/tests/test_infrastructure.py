@@ -4,8 +4,10 @@ import json
 import logging
 import sys
 from collections.abc import Callable, Generator, Iterator, Sequence
+from pathlib import Path
 from typing import Annotated, cast
 from unittest.mock import MagicMock, patch
+from uuid import uuid7
 
 import pytest
 from fastapi import APIRouter, Depends, FastAPI
@@ -17,7 +19,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import NullPool
 from starlette.routing import BaseRoute
 
-from florabase.core.config import CookieMode, Environment, LogFormat, Settings
+from florabase.auth.dependencies import AuthenticatedActor, require_authenticated_actor
+from florabase.auth.model import AuthSession
+from florabase.auth.service import InvalidCredentialsError
+from florabase.core.config import CookieMode, Environment, LogFormat, Settings, get_settings
 from florabase.core.logging import JsonFormatter, configure_logging
 from florabase.db.session import (
     READINESS_CONNECT_TIMEOUT_SECONDS,
@@ -370,3 +375,157 @@ def test_app_applies_cors_and_lifespan_logging() -> None:
                 configure.assert_called_once()
 
     asyncio.run(enter_lifespan())
+
+
+DOCS_AND_SCHEMA_PATHS = ("/docs", "/redoc", "/docs/oauth2-redirect", "/openapi.json")
+
+
+def _production_settings(attachment_root: Path | None = None) -> Settings:
+    values: dict[str, object] = {
+        "environment": Environment.PRODUCTION,
+        "database_url": "postgresql+psycopg://test:test@db/test",
+        "canonical_origin": "https://florabase.example",
+        "cors_origins": [],
+        "cookie_mode": CookieMode.SECURE,
+    }
+    if attachment_root is not None:
+        values["attachment_storage_root"] = str(attachment_root)
+    return Settings.model_validate(values)
+
+
+def _requires_authentication(dependant: Dependant) -> bool:
+    for dependency in dependant.dependencies:
+        if dependency.call is require_authenticated_actor or _requires_authentication(dependency):
+            return True
+    return False
+
+
+def test_production_disables_docs_and_schema_routes(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("FLORABASE_ENVIRONMENT", "production")
+    monkeypatch.setenv("FLORABASE_DATABASE_URL", "postgresql+psycopg://test:test@db/test")
+    monkeypatch.setenv("FLORABASE_CANONICAL_ORIGIN", "https://florabase.example")
+    monkeypatch.setenv("FLORABASE_COOKIE_MODE", "secure")
+    monkeypatch.setenv("FLORABASE_CORS_ORIGINS", "[]")
+    monkeypatch.setenv("FLORABASE_ATTACHMENT_STORAGE_ROOT", str(tmp_path))
+    get_settings.cache_clear()
+    try:
+        production_app = create_app()
+    finally:
+        get_settings.cache_clear()
+
+    route_paths = {
+        getattr(context, "path", None) for context in iter_route_contexts(production_app.routes)
+    }
+    for path in DOCS_AND_SCHEMA_PATHS:
+        assert path not in route_paths
+
+    with TestClient(production_app) as client:
+        for path in DOCS_AND_SCHEMA_PATHS:
+            assert client.get(path).status_code == 404
+            assert client.head(path).status_code == 404
+
+
+def test_development_preserves_docs_and_schema_routes(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("FLORABASE_ENVIRONMENT", "development")
+    monkeypatch.setenv("FLORABASE_DATABASE_URL", "postgresql+psycopg://test:test@db/test")
+    monkeypatch.setenv("FLORABASE_CANONICAL_ORIGIN", "http://localhost:5173")
+    monkeypatch.setenv("FLORABASE_COOKIE_MODE", "loopback-development")
+    monkeypatch.setenv("FLORABASE_CORS_ORIGINS", '["http://localhost:5173"]')
+    monkeypatch.setenv("FLORABASE_ATTACHMENT_STORAGE_ROOT", str(tmp_path))
+    get_settings.cache_clear()
+    try:
+        development_app = create_app()
+    finally:
+        get_settings.cache_clear()
+
+    with TestClient(development_app) as client:
+        for path in DOCS_AND_SCHEMA_PATHS:
+            assert client.get(path).status_code == 200
+            assert client.head(path).status_code == 200
+        schema_response = client.get("/openapi.json")
+        assert schema_response.json()["openapi"].startswith("3.")
+        assert "/api/v1/health" in schema_response.json()["paths"]
+
+
+def test_offline_openapi_generation_works_in_production_and_matches_artifact() -> None:
+    with patch("florabase.main.get_settings", return_value=_production_settings()):
+        production_app = create_app()
+
+    schema = production_app.openapi()
+    assert schema == app.openapi()
+    committed = (Path(__file__).resolve().parents[1] / "openapi.json").read_text(encoding="utf-8")
+    assert json.dumps(schema, indent=2, sort_keys=True) + "\n" == committed
+
+
+def test_production_route_inventory_satisfies_gsec_allowlist() -> None:
+    with patch("florabase.main.get_settings", return_value=_production_settings()):
+        production_app = create_app()
+
+    contexts = list(iter_route_contexts(production_app.routes))
+    non_api_contexts = [context for context in contexts if not isinstance(context.route, APIRoute)]
+    assert non_api_contexts == []
+
+    unauthenticated: set[tuple[str, str]] = set()
+    for context in contexts:
+        assert isinstance(context.route, APIRoute)
+        assert isinstance(context.path, str)
+        if not _requires_authentication(context.dependant):
+            for method in context.methods or set():
+                unauthenticated.add((method, context.path))
+
+    assert unauthenticated == {
+        ("GET", "/api/v1/health"),
+        ("GET", "/api/v1/ready"),
+        ("POST", "/api/v1/auth/login"),
+    }
+
+
+def test_production_public_and_authenticated_api_routes_remain_intact(tmp_path: Path) -> None:
+    production_settings = _production_settings(tmp_path)
+    with patch("florabase.main.get_settings", return_value=production_settings):
+        production_app = create_app()
+
+    actor = AuthenticatedActor(
+        user_id=uuid7(),
+        login_name="owner",
+        display_name="Owner",
+        owner=True,
+        session=MagicMock(spec=AuthSession),
+    )
+
+    with (
+        patch("florabase.main.get_settings", return_value=production_settings),
+        patch("florabase.api.health.check_database"),
+        patch("florabase.auth.api.authenticate", side_effect=InvalidCredentialsError),
+        TestClient(production_app) as client,
+    ):
+        assert client.get("/api/v1/health").json() == {"status": "ok"}
+        assert client.get("/api/v1/ready").json() == {"status": "ok"}
+        assert client.get("/api/v1/auth/session").status_code == 401
+
+        production_app.dependency_overrides[get_database_session] = lambda: MagicMock(spec=Session)
+        production_app.dependency_overrides[get_settings] = lambda: production_settings
+        try:
+            login_response = client.post(
+                "/api/v1/auth/login",
+                json={"login_name": "owner", "password": "wrong-password-123"},
+                headers={"Origin": "https://florabase.example"},
+            )
+            assert login_response.status_code == 401
+
+            production_app.dependency_overrides[require_authenticated_actor] = lambda: actor
+            session_response = client.get("/api/v1/auth/session")
+            assert session_response.status_code == 200
+            assert session_response.json() == {
+                "user_id": str(actor.user_id),
+                "login_name": "owner",
+                "display_name": "Owner",
+                "owner": True,
+                "canonical_origin": "https://florabase.example",
+            }
+        finally:
+            production_app.dependency_overrides.clear()
