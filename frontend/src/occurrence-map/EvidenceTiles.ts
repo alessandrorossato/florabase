@@ -8,6 +8,7 @@ import {
 import {
   getProtectedAuthEpoch,
   isProtectedRequestAuthorized,
+  notifyProtectedUnauthorized,
   subscribeAuthInvalidation,
 } from "../auth/api";
 
@@ -31,6 +32,8 @@ interface Job {
 export class EvidenceTiles extends GridLayer {
   private jobs = new Map<HTMLElement, Job>();
   private unsubscribeAuth?: () => void;
+  private suspendedByAuth = false;
+  private attached = false;
   constructor(
     private url: (coords: Coords) => string,
     private report: (status: TileStatus) => void,
@@ -48,10 +51,21 @@ export class EvidenceTiles extends GridLayer {
       this.notify();
     });
     this.unsubscribeAuth = subscribeAuthInvalidation(() => {
-      if (!isProtectedRequestAuthorized()) this.cancel();
+      if (!isProtectedRequestAuthorized()) {
+        this.suspendedByAuth = true;
+        this.cancel();
+      } else if (this.suspendedByAuth) {
+        this.suspendedByAuth = false;
+        if (this.attached) this.redraw();
+      }
     });
   }
+  override onAdd(map: LeafletMap): this {
+    this.attached = true;
+    return super.onAdd(map);
+  }
   override onRemove(map: LeafletMap): this {
+    this.attached = false;
     this.unsubscribeAuth?.();
     this.unsubscribeAuth = undefined;
     this.cancel();
@@ -108,6 +122,7 @@ export class EvidenceTiles extends GridLayer {
       }
       if (response.status === 401) {
         job.state = "failed";
+        notifyProtectedUnauthorized(originatingEpoch);
         job.done(
           new Error("Occurrence tile authentication required"),
           job.image,

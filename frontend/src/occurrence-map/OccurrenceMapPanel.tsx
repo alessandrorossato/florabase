@@ -303,17 +303,13 @@ export function OccurrenceMapPanel({
         </div>
       ) : (
         <div className="map-canvas-card">
-          {authorized ? (
-            <Suspense fallback={<p role="status">Loading occurrence map…</p>}>
-              <OccurrenceDensityMap
-                identityId={identityId}
-                generation={evidence.generation}
-                localOnly={localOnly}
-              />
-            </Suspense>
-          ) : (
-            <p role="status">Occurrence map paused while signed out.</p>
-          )}
+          <Suspense fallback={<p role="status">Loading occurrence map…</p>}>
+            <OccurrenceDensityMap
+              identityId={identityId}
+              generation={evidence.generation}
+              localOnly={localOnly}
+            />
+          </Suspense>
           <div
             className="occurrence-density-legend"
             aria-label="Occurrence density legend"

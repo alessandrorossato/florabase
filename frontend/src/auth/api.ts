@@ -149,6 +149,18 @@ export function subscribeAuthInvalidation(listener: () => void): () => void {
   };
 }
 
+/**
+ * Centrally notifies the managed authentication gate of an HTTP 401 from
+ * a protected endpoint when the response belongs to the current unlocked epoch.
+ */
+export function notifyProtectedUnauthorized(originatingEpoch: number): boolean {
+  if (!gate.managed || gate.locked || gate.epoch !== originatingEpoch) {
+    return false;
+  }
+  gate.onUnauthorized?.(originatingEpoch);
+  return true;
+}
+
 async function fetchJson<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
@@ -220,8 +232,8 @@ export async function requestJson<T>(
         body = undefined;
       }
       if (staleForEpoch(originatingEpoch)) throw new StaleAuthEpochError();
-      if (response.status === 401 && managed) {
-        gate.onUnauthorized?.(originatingEpoch);
+      if (response.status === 401) {
+        notifyProtectedUnauthorized(originatingEpoch);
       }
       throw new ApiError(
         response.status,

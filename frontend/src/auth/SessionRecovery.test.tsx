@@ -930,3 +930,153 @@ test("domain editors beyond PlantScreen (BotanicalIdentityScreen) retain unsaved
     "Hass avocado draft",
   );
 });
+
+test("tile-only HTTP 401 without JSON 401 triggers reauth dialog, preserves active dirty editor, and supports same-user save and cross-user reset", async () => {
+  let currentPlant = makePlant();
+  let currentUser: "alice" | "bob" = "alice";
+  let csrfToken = "csrf-tile-1";
+  let tileUnauthorized = false;
+  const putCsrfHeaders: string[] = [];
+
+  mockSyncFetch((input, init) => {
+    const path = pathOf(input);
+    const method = methodOf(init);
+    if (path.endsWith("/auth/session"))
+      return json({
+        user_id: currentUser === "alice" ? "user-alice" : "user-bob",
+        login_name: currentUser,
+        display_name: currentUser === "alice" ? "Alice" : "Bob",
+        owner: true,
+      });
+    if (path.endsWith("/auth/csrf")) return json({ csrf_token: csrfToken });
+    if (path.endsWith("/health")) return json({ status: "ok" });
+    if (path === "/api/v1/auth/login" && method === "POST") {
+      const body = parseBody(init);
+      currentUser = body.login_name === "bob" ? "bob" : "alice";
+      csrfToken = currentUser === "bob" ? "csrf-bob" : "csrf-tile-2";
+      tileUnauthorized = false;
+      return json({
+        user_id: currentUser === "alice" ? "user-alice" : "user-bob",
+        login_name: currentUser,
+        display_name: currentUser === "alice" ? "Alice" : "Bob",
+        owner: true,
+        csrf_token: csrfToken,
+      });
+    }
+    if (path.includes("/occurrence-evidence/tiles/")) {
+      if (tileUnauthorized) {
+        return new Response(null, { status: 401 });
+      }
+      return new Response(null, { status: 204 });
+    }
+    if (path === "/api/v1/plants" && method === "GET")
+      return json([currentPlant]);
+    if (path === "/api/v1/plant-groups" && method === "GET") return json([]);
+    if (path === `/api/v1/plants/${plantId}` && method === "GET")
+      return json(currentPlant);
+    if (path === `/api/v1/plants/${plantId}` && method === "PUT") {
+      const headers = new Headers(init?.headers);
+      putCsrfHeaders.push(headers.get("X-CSRF-Token") ?? "");
+      const body = parseBody(init);
+      currentPlant = makePlant(body.label ?? currentPlant.label);
+      return json(currentPlant);
+    }
+    if (path.endsWith("/events")) return json([]);
+    if (path === "/api/v1/botanical-identities") return json([identity]);
+    if (path === "/api/v1/provenance-sites") return json([]);
+    if (path === "/api/v1/sowings") return json([]);
+    if (path === "/api/v1/suppliers") return json([supplier]);
+    if (path === "/api/v1/geographic-places") return json([place]);
+    if (path === "/api/v1/locations") return json([location]);
+    throw new Error(`Unhandled fetch: ${method} ${path}`);
+  });
+
+  window.history.replaceState(null, "", `#/plants/${plantId}`);
+  const user = userEvent.setup();
+  const { container } = render(<App />);
+
+  await openPlantEditDialog(user);
+  const editDialog = await screen.findByRole("dialog", { name: "Edit Plant" });
+  const labelInput = within(editDialog).getByLabelText("Label");
+  await user.clear(labelInput);
+  await user.type(labelInput, "Avocado tile recovery draft");
+
+  // Trigger a tile-only HTTP 401 via EvidenceTiles with zero JSON 401s.
+  tileUnauthorized = true;
+  const tiles = new EvidenceTiles(
+    (coords) =>
+      `/api/v1/botanical-identities/${identityId}/occurrence-evidence/tiles/${String(coords.z)}/${String(coords.x)}/${String(coords.y)}.png`,
+    vi.fn(),
+  );
+  tiles.createTile({ x: 0, y: 0, z: 2 } as never, vi.fn());
+
+  const reauthHeading = await screen.findByRole("heading", {
+    name: "Session expired — sign in again",
+  });
+  expect(reauthHeading).toBeInTheDocument();
+  const appShell = container.querySelector("main > .application-shell");
+  expect(appShell).toHaveAttribute("hidden");
+  expect(appShell).toHaveAttribute("inert");
+
+  // Same-user reauthentication keeps dirty editor intact and enables manual Save with new CSRF.
+  await user.type(
+    document.getElementById("reauth-password") as HTMLInputElement,
+    "alice-secret",
+  );
+  await user.click(screen.getByRole("button", { name: "Sign in" }));
+
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("heading", {
+        name: "Session expired — sign in again",
+      }),
+    ).not.toBeInTheDocument();
+  });
+  expect(within(editDialog).getByLabelText("Label")).toHaveValue(
+    "Avocado tile recovery draft",
+  );
+  await user.click(
+    within(editDialog).getByRole("button", { name: "Save changes" }),
+  );
+  await waitFor(() => {
+    expect(putCsrfHeaders).toEqual(["csrf-tile-2"]);
+  });
+
+  // Trigger another tile-only 401 while editing and recover as Bob (Scenario H).
+  await openPlantEditDialog(user);
+  const editDialog2 = await screen.findByRole("dialog", { name: "Edit Plant" });
+  const labelInput2 = within(editDialog2).getByLabelText("Label");
+  await user.clear(labelInput2);
+  await user.type(labelInput2, "Alice secret after tile 401");
+
+  tileUnauthorized = true;
+  tiles.createTile({ x: 1, y: 0, z: 2 } as never, vi.fn());
+  await screen.findByRole("heading", {
+    name: "Session expired — sign in again",
+  });
+
+  const loginInput = document.getElementById(
+    "reauth-login-name",
+  ) as HTMLInputElement;
+  await user.clear(loginInput);
+  await user.type(loginInput, "bob");
+  await user.type(
+    document.getElementById("reauth-password") as HTMLInputElement,
+    "bob-secret",
+  );
+  await user.click(screen.getByRole("button", { name: "Sign in" }));
+
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("heading", {
+        name: "Session expired — sign in again",
+      }),
+    ).not.toBeInTheDocument();
+  });
+  expect(
+    screen.queryByDisplayValue("Alice secret after tile 401"),
+  ).not.toBeInTheDocument();
+  expect(await screen.findByText(/Signed in as Bob/i)).toBeInTheDocument();
+
+  tiles.cancel();
+});

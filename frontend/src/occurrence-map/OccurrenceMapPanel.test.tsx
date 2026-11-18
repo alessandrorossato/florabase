@@ -199,7 +199,7 @@ test("no link makes no read; zero records and provider failure remain distinct",
   );
 });
 
-test("suspends live density map while reauthentication is required without re-fetching on unlock", async () => {
+test("keeps density map mounted cleanly while reauthentication is locked without issuing protected reads", async () => {
   const fetch = vi
     .spyOn(globalThis, "fetch")
     .mockResolvedValueOnce(json(saved()));
@@ -224,8 +224,8 @@ test("suspends live density map while reauthentication is required without re-fe
   } as unknown as typeof authStub.state;
   view.rerender(<OccurrenceMapPanel identityId={identityId} link={link} />);
   expect(
-    screen.queryByLabelText("Interactive GBIF occurrence-record density map"),
-  ).not.toBeInTheDocument();
+    screen.getByLabelText("Interactive GBIF occurrence-record density map"),
+  ).toBeInTheDocument();
   expect(fetch).toHaveBeenCalledTimes(1);
 
   authStub.state = { status: "authenticated", csrfToken: "csrf-2" };
