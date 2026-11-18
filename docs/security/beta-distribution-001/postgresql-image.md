@@ -16,9 +16,14 @@ installations require separately approved PostgreSQL maintenance with a paired b
 restore rehearsal before switching digests. The controller refuses that switch during an
 application upgrade.
 
+The 17 November exact-main hosted rehearsal reproduced both .2 pins in a disposable registry.
+Its retained Trivy report showed zero HIGH, CRITICAL and secret findings on those bytes, and its
+PostgreSQL CycloneDX SBOM includes all three updated Alpine packages. A read-only GHCR check on
+18 November found the .2 version tag and both pinned digests absent. Publication and maintenance
+each require operator authorization. See the [digest-bound evidence](../../release/evidence/batch-06-security-baseline.md).
+
 The sections below record the original .1 image and its historical verification. GHCR
-served .1 at its original digest during the 11 November 2026 read-only preflight. The .2
-image is a local candidate pending separate integration and publication authorization.
+served .1 at its original digest during the 11 November 2026 read-only preflight.
 
 ## What it is
 
