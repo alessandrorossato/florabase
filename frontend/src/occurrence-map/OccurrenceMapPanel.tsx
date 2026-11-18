@@ -1,6 +1,10 @@
 import { ActionButton } from "../components/Action";
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
-import { ApiError, activeCsrfToken } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import type { ExternalTaxonLinkResponse } from "../botanical-identities/api";
 import { MapWorkspace } from "../maps/MapWorkspace";
@@ -55,10 +59,12 @@ export function OccurrenceMapPanel({
         if (!controller.signal.aborted) {
           setEvidence(value);
           setChecking(false);
+          setError(null);
         }
       })
       .catch((failure: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
         if (failure instanceof ApiError && failure.status === 401)
           sessionExpired();
         else {
@@ -83,13 +89,15 @@ export function OccurrenceMapPanel({
           "GBIF refresh failed. Previously saved evidence is still available.",
         );
     } catch (failure) {
+      if (isExpectedAuthCancellation(failure)) return;
+      if (failure instanceof ApiError && failure.status === 401) {
+        sessionExpired();
+        return;
+      }
       setLocalOnly(true);
-      if (failure instanceof ApiError && failure.status === 401)
-        auth.sessionExpired();
-      else
-        setError(
-          "GBIF occurrence evidence is temporarily unavailable. Your Florabase botanical and collection data remain available.",
-        );
+      setError(
+        "GBIF occurrence evidence is temporarily unavailable. Your Florabase botanical and collection data remain available.",
+      );
     } finally {
       setPending(false);
     }
@@ -102,7 +110,12 @@ export function OccurrenceMapPanel({
       setEvidence(null);
       setLocalOnly(true);
       setError(null);
-    } catch {
+    } catch (failure) {
+      if (isExpectedAuthCancellation(failure)) return;
+      if (failure instanceof ApiError && failure.status === 401) {
+        sessionExpired();
+        return;
+      }
       setError(
         "Could not clear local evidence. The saved evidence remains available.",
       );

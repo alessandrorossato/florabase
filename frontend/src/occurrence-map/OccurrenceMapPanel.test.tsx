@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
+import { AuthRequestLockedError } from "../auth/api";
 
 import type { ExternalTaxonLinkResponse } from "../botanical-identities/api";
 import type { OccurrenceMapSummary } from "./api";
@@ -235,4 +236,14 @@ test("keeps density map mounted cleanly while reauthentication is locked without
       "Interactive GBIF occurrence-record density map",
     ),
   ).toBeVisible();
+});
+
+test("treats AuthRequestLockedError during evidence check as cancellation without showing false error", async () => {
+  vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(
+    new AuthRequestLockedError(),
+  );
+  authStub.state = { status: "authenticated", csrfToken: "csrf" };
+  render(<OccurrenceMapPanel identityId={identityId} link={link} />);
+  await Promise.resolve();
+  expect(screen.queryByRole("alert")).toBeNull();
 });

@@ -8,8 +8,16 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { ApiError } from "../auth/api";
-import { AuthContext, type AuthContextValue } from "../auth/context";
+import {
+  ApiError,
+  AuthRequestLockedError,
+  StaleAuthEpochError,
+} from "../auth/api";
+import {
+  AuthContext,
+  type AuthContextValue,
+  type AuthState,
+} from "../auth/context";
 import {
   getCachedOccurrenceEvidence,
   refreshOccurrenceEvidence,
@@ -558,4 +566,137 @@ test("backdrop dismisses without changing selection, while inner controls keep t
   expect(window.location.hash).toContain(id);
   expect(screen.getByRole("button", { name: "Choose species" })).toHaveFocus();
   expect(refreshOccurrenceEvidence).not.toHaveBeenCalled();
+});
+
+test("session expiry keeps loaded map and directory intact, ignores lock cancellation, and clears obsolete failedQuery on restore", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    `#/species-distribution?identity=${id}`,
+  );
+  vi.mocked(getCachedOccurrenceEvidence).mockResolvedValue({
+    summary,
+    generation: id,
+    stale: false,
+    persisted: true,
+    provider_error: null,
+  });
+
+  // 1. Trigger a genuine initial directory error first (failedQuery set), while SelectedIdentity loads map cleanly.
+  vi.mocked(listRepresentedIdentities).mockRejectedValueOnce(new Error("down"));
+  const sessionExpired = vi.fn();
+  const makeAuth = (state: AuthState): AuthContextValue => ({
+    ...auth,
+    state,
+    sessionExpired,
+  });
+  const authenticatedState = auth.state;
+  const lockedState: AuthState = {
+    status: "unauthenticated",
+    retainedIdentity: {
+      user_id: id,
+      login_name: "owner",
+      display_name: "Owner",
+    },
+    message: "Your session expired.",
+  };
+
+  const view = render(
+    <AuthContext.Provider value={makeAuth(authenticatedState)}>
+      <SpeciesDistributionScreen />
+    </AuthContext.Provider>,
+  );
+
+  expect(await screen.findByText("Shared density map")).toBeVisible();
+  expect(
+    await screen.findByText(/Could not load represented identities/),
+  ).toBeVisible();
+
+  // 2. Same-owner restoration refreshes cleanly AND clears obsolete failedQuery for the unchanged queryKey.
+  vi.mocked(listRepresentedIdentities).mockResolvedValue({
+    items: [identity, unlinked],
+    total: 2,
+    occurrence_ready: 1,
+    offset: 0,
+    limit: 50,
+  });
+  view.rerender(
+    <AuthContext.Provider value={makeAuth(lockedState)}>
+      <SpeciesDistributionScreen />
+    </AuthContext.Provider>,
+  );
+  view.rerender(
+    <AuthContext.Provider value={makeAuth(authenticatedState)}>
+      <SpeciesDistributionScreen />
+    </AuthContext.Provider>,
+  );
+  await waitFor(() => {
+    expect(
+      screen.getByRole("button", { name: "2 Represented identities" }),
+    ).toBeVisible();
+  });
+  expect(
+    screen.queryByText(/Could not load represented identities/),
+  ).toBeNull();
+  expect(screen.getByText("Shared density map")).toBeVisible();
+
+  // 3. Entering locked recovery suspends protected effects without unmounting the map or producing false errors.
+  const listCallsBeforeLock = vi.mocked(listRepresentedIdentities).mock.calls
+    .length;
+  const identityCallsBeforeLock = vi.mocked(getRepresentedIdentity).mock.calls
+    .length;
+
+  view.rerender(
+    <AuthContext.Provider value={makeAuth(lockedState)}>
+      <SpeciesDistributionScreen />
+    </AuthContext.Provider>,
+  );
+  await new Promise((r) => setTimeout(r, 200));
+
+  expect(vi.mocked(listRepresentedIdentities).mock.calls.length).toBe(
+    listCallsBeforeLock,
+  );
+  expect(vi.mocked(getRepresentedIdentity).mock.calls.length).toBe(
+    identityCallsBeforeLock,
+  );
+  expect(screen.getByText("Shared density map")).toBeVisible();
+  expect(screen.queryByRole("alert")).toBeNull();
+  expect(
+    screen.queryByText(/Could not load represented identities/),
+  ).toBeNull();
+  expect(screen.queryByText(/Could not load the selected identity/)).toBeNull();
+
+  // 4. Local AuthRequestLockedError / StaleAuthEpochError rejections never become false error alerts or failedQuery.
+  vi.mocked(listRepresentedIdentities).mockRejectedValueOnce(
+    new AuthRequestLockedError(),
+  );
+  vi.mocked(getRepresentedIdentity).mockRejectedValueOnce(
+    new StaleAuthEpochError(),
+  );
+  view.rerender(
+    <AuthContext.Provider value={makeAuth(authenticatedState)}>
+      <SpeciesDistributionScreen />
+    </AuthContext.Provider>,
+  );
+  await waitFor(() => {
+    expect(vi.mocked(getRepresentedIdentity).mock.calls.length).toBe(
+      identityCallsBeforeLock + 1,
+    );
+  });
+  await new Promise((r) => setTimeout(r, 200));
+  expect(screen.queryByRole("alert")).toBeNull();
+  expect(
+    screen.queryByText(/Could not load represented identities/),
+  ).toBeNull();
+  expect(screen.queryByText(/Could not load the selected identity/)).toBeNull();
+  expect(screen.getByText("Shared density map")).toBeVisible();
+
+  // 5. Genuine network error behavior remains intact when authenticated.
+  vi.mocked(listRepresentedIdentities).mockRejectedValueOnce(new Error("net"));
+  fireEvent.change(screen.getByLabelText("Search species"), {
+    target: { value: "salvia" },
+  });
+  expect(
+    await screen.findByText(/Could not load represented identities/),
+  ).toBeVisible();
 });

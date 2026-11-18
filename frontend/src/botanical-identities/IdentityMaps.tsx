@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { listBotanicalNativeRanges } from "../botanical-profiles/api";
 import { ExternalBotanicalDataPanel } from "./ExternalBotanicalDataPanel";
@@ -32,6 +32,8 @@ export function IdentityMaps({
   onEditRange: () => void;
 }) {
   const auth = useAuth();
+  const { sessionExpired } = auth;
+  const authorized = auth.state.status === "authenticated";
   const [open, setOpen] = useState<Evidence | null>(null);
   const inspectionHeading = useRef<HTMLHeadingElement>(null);
   const triggers = useRef<Partial<Record<Evidence, HTMLButtonElement>>>({});
@@ -55,6 +57,7 @@ export function IdentityMaps({
     cache: string;
   } | null>(null);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     void Promise.allSettled([
       listBotanicalNativeRanges(identity.id, controller.signal),
@@ -69,13 +72,26 @@ export function IdentityMaps({
       getCollectionProvenanceMap(controller.signal),
     ]).then(([range, source, origins]) => {
       if (controller.signal.aborted) return;
-      for (const result of [range, source, origins])
+      const results = [range, source, origins];
+      for (const result of results) {
         if (
           result.status === "rejected" &&
           result.reason instanceof ApiError &&
           result.reason.status === 401
+        ) {
+          sessionExpired();
+          return;
+        }
+      }
+      if (
+        results.some(
+          (result) =>
+            result.status === "rejected" &&
+            isExpectedAuthCancellation(result.reason),
         )
-          auth.sessionExpired();
+      ) {
+        return;
+      }
       setStatus({
         range:
           range.status === "fulfilled"
@@ -116,7 +132,7 @@ export function IdentityMaps({
     return () => {
       controller.abort();
     };
-  }, [identity.id, attempt, auth]);
+  }, [authorized, identity.id, attempt, sessionExpired]);
   const evidence = [
     {
       key: "native-range" as const,

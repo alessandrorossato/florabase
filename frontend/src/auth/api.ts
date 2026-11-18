@@ -75,10 +75,20 @@ export class StaleAuthEpochError extends Error {
   }
 }
 
+export function isExpectedAuthCancellation(error: unknown): boolean {
+  return (
+    error instanceof AuthRequestLockedError ||
+    error instanceof StaleAuthEpochError ||
+    (error instanceof DOMException && error.name === "AbortError")
+  );
+}
+
 interface AuthRequestGate {
   managed: boolean;
   locked: boolean;
   epoch: number;
+  workspaceGeneration: number;
+  ownerId: string | null;
   onUnauthorized?: (originatingEpoch: number) => void;
 }
 
@@ -86,10 +96,31 @@ const gate: AuthRequestGate = {
   managed: false,
   locked: false,
   epoch: 0,
+  workspaceGeneration: 0,
+  ownerId: null,
 };
 
 const inFlightProtectedControllers = new Map<AbortController, number>();
 const invalidationListeners = new Set<() => void>();
+const activeCapabilities = new Set<{ revoke: () => void }>();
+
+export interface ProtectedRequestCapability {
+  readonly workspaceGeneration: number;
+  readonly ownerId: string | null;
+  isAuthorized: () => boolean;
+  getEpoch: () => number;
+  isRevoked: () => boolean;
+  revoke: () => void;
+  notifyUnauthorized: (originatingEpoch: number) => boolean;
+  subscribeInvalidation: (listener: () => void) => () => void;
+}
+
+function revokeAllCapabilities(): void {
+  for (const capability of [...activeCapabilities]) {
+    capability.revoke();
+  }
+  activeCapabilities.clear();
+}
 
 function notifyInvalidation(): void {
   for (const [controller, controllerEpoch] of inFlightProtectedControllers) {
@@ -97,7 +128,7 @@ function notifyInvalidation(): void {
       controller.abort(new StaleAuthEpochError());
     }
   }
-  for (const listener of invalidationListeners) listener();
+  for (const listener of [...invalidationListeners]) listener();
 }
 
 export function attachAuthRequestGate(
@@ -107,28 +138,61 @@ export function attachAuthRequestGate(
   gate.managed = true;
   gate.locked = initialLocked;
   gate.epoch += 1;
+  gate.workspaceGeneration += 1;
+  gate.ownerId = null;
   gate.onUnauthorized = onUnauthorized;
+  revokeAllCapabilities();
   notifyInvalidation();
   return () => {
     gate.managed = false;
     gate.locked = false;
     gate.epoch += 1;
+    gate.workspaceGeneration += 1;
+    gate.ownerId = null;
     gate.onUnauthorized = undefined;
+    revokeAllCapabilities();
     notifyInvalidation();
   };
+}
+
+/**
+ * Synchronously invalidates the active owner's workspace generation and revokes
+ * every owner-bound request capability before any replacement owner session can unlock.
+ */
+export function invalidateProtectedWorkspace(): number {
+  gate.locked = true;
+  gate.epoch += 1;
+  gate.workspaceGeneration += 1;
+  gate.ownerId = null;
+  revokeAllCapabilities();
+  notifyInvalidation();
+  return gate.epoch;
 }
 
 export function syncAuthRequestGate({
   locked,
   advanceEpoch = false,
+  ownerId,
+  invalidateWorkspace = false,
 }: {
   locked: boolean;
   advanceEpoch?: boolean;
+  ownerId?: string | null;
+  invalidateWorkspace?: boolean;
 }): number {
-  const changed = locked !== gate.locked || advanceEpoch;
+  if (invalidateWorkspace) {
+    invalidateProtectedWorkspace();
+  }
+  const nextOwnerId = ownerId !== undefined ? ownerId : gate.ownerId;
+  const changed =
+    locked !== gate.locked ||
+    advanceEpoch ||
+    nextOwnerId !== gate.ownerId ||
+    invalidateWorkspace;
   gate.locked = locked;
-  if (advanceEpoch) gate.epoch += 1;
-  if (changed && (gate.locked || advanceEpoch)) {
+  gate.ownerId = nextOwnerId;
+  if (advanceEpoch && !invalidateWorkspace) gate.epoch += 1;
+  if (changed && (gate.locked || advanceEpoch || invalidateWorkspace)) {
     notifyInvalidation();
   }
   return gate.epoch;
@@ -142,10 +206,77 @@ export function getProtectedAuthEpoch(): number {
   return gate.epoch;
 }
 
+export function getProtectedWorkspaceGeneration(): number {
+  return gate.workspaceGeneration;
+}
+
 export function subscribeAuthInvalidation(listener: () => void): () => void {
   invalidationListeners.add(listener);
   return () => {
     invalidationListeners.delete(listener);
+  };
+}
+
+/**
+ * Acquires a fail-closed capability bound to the current owner and workspace generation.
+ * Same-owner session recovery preserves the binding across temporary locks; any workspace
+ * retirement (different-owner authentication, logout, discard) revokes it permanently.
+ */
+export function acquireProtectedRequestCapability(): ProtectedRequestCapability {
+  const managedAtAcquire = gate.managed;
+  const boundGeneration = gate.workspaceGeneration;
+  const boundOwnerId = gate.ownerId;
+  let revoked = managedAtAcquire && gate.locked && boundOwnerId === null;
+  const unsubs = new Set<() => void>();
+  const callbacks = new Set<() => void>();
+
+  const isAuthorized = (): boolean => {
+    if (revoked) return false;
+    if (!gate.managed) return !managedAtAcquire;
+    return (
+      !gate.locked &&
+      boundGeneration === gate.workspaceGeneration &&
+      boundOwnerId === gate.ownerId
+    );
+  };
+
+  const entry = {
+    revoke: () => {
+      if (revoked) return;
+      revoked = true;
+      activeCapabilities.delete(entry);
+      for (const unsub of [...unsubs]) unsub();
+      unsubs.clear();
+      for (const listener of [...callbacks]) listener();
+      callbacks.clear();
+    },
+  };
+  if (!revoked) {
+    activeCapabilities.add(entry);
+  }
+
+  return {
+    workspaceGeneration: boundGeneration,
+    ownerId: boundOwnerId,
+    isAuthorized,
+    getEpoch: () => (isAuthorized() ? gate.epoch : -1),
+    isRevoked: () => revoked,
+    revoke: entry.revoke,
+    notifyUnauthorized: (originatingEpoch: number) => {
+      if (!isAuthorized()) return false;
+      return notifyProtectedUnauthorized(originatingEpoch);
+    },
+    subscribeInvalidation: (listener: () => void) => {
+      if (revoked) return () => undefined;
+      callbacks.add(listener);
+      const unsub = subscribeAuthInvalidation(listener);
+      unsubs.add(unsub);
+      return () => {
+        callbacks.delete(listener);
+        unsubs.delete(unsub);
+        unsub();
+      };
+    },
   };
 }
 

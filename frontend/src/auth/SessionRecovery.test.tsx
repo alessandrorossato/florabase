@@ -1080,3 +1080,170 @@ test("tile-only HTTP 401 without JSON 401 triggers reauth dialog, preserves acti
 
   tiles.cancel();
 });
+
+test("F2 pre-commit race: different-owner reauthentication revokes former-owner attached EvidenceTiles before React teardown commits while same-owner recovery redraws", async () => {
+  vi.useFakeTimers();
+  let serverOwner: "alice" | "bob" = "alice";
+  let tileStatus = 204;
+  const tileFetches: { url: string; serverOwner: "alice" | "bob" }[] = [];
+
+  vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+    const url = pathOf(input);
+    const method = methodOf(init);
+    if (url.endsWith("/auth/session")) {
+      return Promise.resolve(
+        json({
+          user_id: serverOwner === "alice" ? "user-alice" : "user-bob",
+          login_name: serverOwner,
+          display_name: serverOwner === "alice" ? "Alice" : "Bob",
+          owner: true,
+        }),
+      );
+    }
+    if (url.endsWith("/auth/csrf")) {
+      return Promise.resolve(json({ csrf_token: `csrf-${serverOwner}` }));
+    }
+    if (url === "/api/v1/auth/login" && method === "POST") {
+      const body = parseBody(init);
+      serverOwner = body.login_name === "bob" ? "bob" : "alice";
+      tileStatus = 204;
+      return Promise.resolve(
+        json({
+          user_id: serverOwner === "alice" ? "user-alice" : "user-bob",
+          login_name: serverOwner,
+          display_name: serverOwner === "alice" ? "Alice" : "Bob",
+          owner: true,
+          csrf_token: `csrf-${serverOwner}-2`,
+        }),
+      );
+    }
+    if (url.includes("/occurrence-map/tiles/")) {
+      tileFetches.push({ url, serverOwner });
+      const status = url.includes("/retry503/") ? 503 : tileStatus;
+      return Promise.resolve(new Response(null, { status }));
+    }
+    throw new Error(`Unhandled fetch: ${method} ${url}`);
+  });
+
+  let api!: ReturnType<typeof useAuth>;
+  function Harness() {
+    api = useAuth();
+    return (
+      <div key={api.workspaceKey} data-owner-key={String(api.workspaceKey)}>
+        {api.state.status}
+      </div>
+    );
+  }
+
+  render(
+    <AuthProvider>
+      <Harness />
+    </AuthProvider>,
+  );
+
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+  expect(api.state.status).toBe("authenticated");
+
+  // 1. Alice attaches an EvidenceTiles layer with an active 503 retry timer, then hits tile 401.
+  const aliceLayer = new EvidenceTiles(
+    (c) =>
+      c.x === 9
+        ? `/api/v1/botanical-identities/${identityId}/occurrence-map/tiles/retry503/${String(c.z)}/${String(c.x)}/${String(c.y)}.png`
+        : `/api/v1/botanical-identities/${identityId}/occurrence-map/tiles/alice-layer/${String(c.z)}/${String(c.x)}/${String(c.y)}.png`,
+    vi.fn(),
+  );
+  (aliceLayer as unknown as { attached: boolean }).attached = true;
+  const aliceRedraw = vi.spyOn(aliceLayer, "redraw").mockImplementation(() => {
+    aliceLayer.createTile({ x: 0, y: 0, z: 4 } as never, vi.fn());
+    return aliceLayer;
+  });
+
+  aliceLayer.createTile({ x: 9, y: 0, z: 2 } as never, vi.fn());
+  await act(async () => {
+    await Promise.resolve();
+  });
+  tileStatus = 401;
+  aliceLayer.createTile({ x: 1, y: 0, z: 2 } as never, vi.fn());
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+  expect(api.state.status).toBe("unauthenticated");
+  const countAfterFirstLock = tileFetches.length;
+
+  // Same-owner reauthentication automatically redraws Alice's preserved layer.
+  await act(async () => {
+    await api.reauthenticate?.({ login_name: "alice", password: "pw" });
+  });
+  expect(api.workspaceKey).toBe(0);
+  expect(aliceRedraw).toHaveBeenCalledTimes(1);
+  expect(tileFetches.slice(countAfterFirstLock)).toEqual([
+    {
+      url: `/api/v1/botanical-identities/${identityId}/occurrence-map/tiles/alice-layer/4/0/0.png`,
+      serverOwner: "alice",
+    },
+  ]);
+
+  // 2. Expire Alice again with another queued 503 retry timer while aliceLayer stays attached (delayed teardown!).
+  aliceRedraw.mockClear();
+  aliceLayer.createTile({ x: 9, y: 0, z: 3 } as never, vi.fn());
+  await act(async () => {
+    await Promise.resolve();
+  });
+  tileStatus = 401;
+  aliceLayer.createTile({ x: 2, y: 0, z: 3 } as never, vi.fn());
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+  expect(api.state.status).toBe("unauthenticated");
+  const fetchesBeforeBobLogin = tileFetches.length;
+
+  // Switch owner to Bob WITHOUT unmounting/removing aliceLayer (simulating delayed teardown & pre-commit window).
+  await act(async () => {
+    await api.reauthenticate?.({ login_name: "bob", password: "pw" });
+  });
+  expect(api.state.status).toBe("authenticated");
+  expect(api.workspaceKey).toBe(1);
+  expect(aliceRedraw).not.toHaveBeenCalled();
+
+  // Even with delayed teardown, timers firing, or explicit redraw/retry/createTile calls on Alice's old layer:
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(10000);
+  });
+  aliceLayer.retryFailed();
+  aliceLayer.redraw();
+  aliceLayer.createTile({ x: 3, y: 0, z: 5 } as never, vi.fn());
+
+  // ZERO former-owner requests EVER hit the network with Bob's replacement session.
+  expect(tileFetches.slice(fetchesBeforeBobLogin)).toEqual([]);
+  expect(
+    tileFetches.some(
+      (entry) =>
+        entry.url.includes("alice-layer") && entry.serverOwner === "bob",
+    ),
+  ).toBe(false);
+
+  // Meanwhile Bob's newly mounted EvidenceTiles layer acquires Bob's session and loads normally.
+  const bobLayer = new EvidenceTiles(
+    (c) =>
+      `/api/v1/botanical-identities/${identityId}/occurrence-map/tiles/bob-layer/${String(c.z)}/${String(c.x)}/${String(c.y)}.png`,
+    vi.fn(),
+  );
+  bobLayer.createTile({ x: 0, y: 0, z: 1 } as never, vi.fn());
+  await act(async () => {
+    await Promise.resolve();
+  });
+  expect(tileFetches.slice(fetchesBeforeBobLogin)).toEqual([
+    {
+      url: `/api/v1/botanical-identities/${identityId}/occurrence-map/tiles/bob-layer/1/0/0.png`,
+      serverOwner: "bob",
+    },
+  ]);
+
+  aliceLayer.cancel();
+  bobLayer.cancel();
+});

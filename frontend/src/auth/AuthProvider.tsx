@@ -14,6 +14,8 @@ import {
   changePassword,
   type ChangePasswordRequest,
   getSession,
+  invalidateProtectedWorkspace,
+  isReauthenticationState,
   login as requestLogin,
   logout as requestLogout,
   recoverCsrf,
@@ -95,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authEpochRef.current = syncAuthRequestGate({
         locked: true,
         advanceEpoch: true,
+        ownerId: current.session.user_id,
       });
       commitState({
         status: "unauthenticated",
@@ -113,10 +116,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const cleanup = attachAuthRequestGate((originatingEpoch) => {
       expireAuthenticatedSession(originatingEpoch);
     }, true);
+    const current = stateRef.current;
+    const ownerId =
+      current.status === "authenticated" || current.status === "logout-failed"
+        ? current.session.user_id
+        : isReauthenticationState(current)
+          ? current.retainedIdentity.user_id
+          : null;
     authEpochRef.current = syncAuthRequestGate({
       locked:
-        stateRef.current.status !== "authenticated" &&
-        stateRef.current.status !== "logout-failed",
+        current.status !== "authenticated" &&
+        current.status !== "logout-failed",
+      ownerId,
     });
     return cleanup;
   }, [expireAuthenticatedSession]);
@@ -126,10 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const attempt = ++generation.current;
 
     async function restoreSession() {
-      authEpochRef.current = syncAuthRequestGate({
-        locked: true,
-        advanceEpoch: true,
-      });
+      authEpochRef.current = invalidateProtectedWorkspace();
       commitState({ status: "restoring" });
       try {
         const session = await getSession(controller.signal);
@@ -139,6 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authEpochRef.current = syncAuthRequestGate({
           locked: false,
           advanceEpoch: true,
+          ownerId: session.user_id,
         });
         commitState({
           status: "authenticated",
@@ -147,10 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       } catch (error: unknown) {
         if (controller.signal.aborted || attempt !== generation.current) return;
-        authEpochRef.current = syncAuthRequestGate({
-          locked: true,
-          advanceEpoch: true,
-        });
+        authEpochRef.current = invalidateProtectedWorkspace();
         if (error instanceof ApiError && error.status === 401) {
           commitState({ status: "unauthenticated" });
           return;
@@ -172,10 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (payload: LoginRequest) =>
       enqueueCookieOp(async () => {
         const attempt = ++generation.current;
-        authEpochRef.current = syncAuthRequestGate({
-          locked: true,
-          advanceEpoch: true,
-        });
+        authEpochRef.current = invalidateProtectedWorkspace();
         commitState({ status: "submitting-login" });
         let csrfToken: string;
         try {
@@ -194,11 +197,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const session = await getSession();
           if (attempt !== generation.current) return;
+          authEpochRef.current = invalidateProtectedWorkspace();
+          setWorkspaceKey((value) => value + 1);
           authEpochRef.current = syncAuthRequestGate({
             locked: false,
             advanceEpoch: true,
+            ownerId: session.user_id,
           });
-          setWorkspaceKey((value) => value + 1);
           commitState({
             status: "authenticated",
             session,
@@ -226,6 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authEpochRef.current = syncAuthRequestGate({
           locked: true,
           advanceEpoch: true,
+          ownerId: retainedIdentity.user_id,
         });
         commitState({
           status: "submitting-login",
@@ -250,12 +256,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const session = await getSession();
           if (attempt !== generation.current) return;
-          if (session.user_id !== retainedIdentity.user_id) {
+          const sameOwnerRecovery =
+            session.user_id === retainedIdentity.user_id;
+          if (!sameOwnerRecovery) {
+            // Retire previous owner workspace & revoke all old-owner capabilities
+            // synchronously before unlocking the gate for the replacement owner.
+            authEpochRef.current = invalidateProtectedWorkspace();
             setWorkspaceKey((value) => value + 1);
           }
           authEpochRef.current = syncAuthRequestGate({
             locked: false,
             advanceEpoch: true,
+            ownerId: session.user_id,
           });
           commitState({
             status: "authenticated",
@@ -286,10 +298,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return Promise.resolve();
         }
         generation.current += 1;
-        authEpochRef.current = syncAuthRequestGate({
-          locked: true,
-          advanceEpoch: true,
-        });
+        authEpochRef.current = invalidateProtectedWorkspace();
         setWorkspaceKey((value) => value + 1);
         commitState({ status: "unauthenticated" });
         return Promise.resolve();
@@ -314,6 +323,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authEpochRef.current = syncAuthRequestGate({
           locked: true,
           advanceEpoch: true,
+          ownerId: session.user_id,
         });
         commitState({ status: "logging-out", session, csrfToken });
         try {
@@ -333,6 +343,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } catch (probeError: unknown) {
               if (attempt !== generation.current) return;
               if (probeError instanceof ApiError && probeError.status === 401) {
+                authEpochRef.current = invalidateProtectedWorkspace();
                 setWorkspaceKey((value) => value + 1);
                 commitState({ status: "unauthenticated" });
                 return;
@@ -348,6 +359,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await requestLogout(csrfToken);
           }
           if (attempt === generation.current) {
+            authEpochRef.current = invalidateProtectedWorkspace();
             setWorkspaceKey((value) => value + 1);
             commitState({ status: "unauthenticated" });
           }
@@ -385,6 +397,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           authEpochRef.current = syncAuthRequestGate({
             locked: false,
             advanceEpoch: true,
+            ownerId: current.session.user_id,
           });
           commitState({ ...current, csrfToken: response.csrf_token });
           return true;
@@ -414,10 +427,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const retryRestoration = useCallback(() => {
     generation.current += 1;
-    authEpochRef.current = syncAuthRequestGate({
-      locked: true,
-      advanceEpoch: true,
-    });
+    authEpochRef.current = invalidateProtectedWorkspace();
     setRestorationAttempt((attempt) => attempt + 1);
   }, []);
 
@@ -428,6 +438,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authEpochRef.current = syncAuthRequestGate({
         locked: false,
         advanceEpoch: true,
+        ownerId: current.session.user_id,
       });
       commitState({
         status: "authenticated",

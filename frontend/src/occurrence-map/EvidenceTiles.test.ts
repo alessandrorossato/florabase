@@ -3,6 +3,7 @@ import type { Coords } from "leaflet";
 import {
   attachAuthRequestGate,
   getProtectedAuthEpoch,
+  invalidateProtectedWorkspace,
   syncAuthRequestGate,
 } from "../auth/api";
 import { EvidenceTiles } from "./EvidenceTiles";
@@ -198,5 +199,101 @@ test("stale-epoch tile 401 and aborted tile 401 never notify auth gate", async (
   expect(onUnauthorized).not.toHaveBeenCalled();
 
   layer.cancel();
+  detach();
+});
+
+test("owner-bound capability resumes same-owner attached layers on unlock but permanently blocks former-owner fetches on owner switch", async () => {
+  vi.useFakeTimers();
+  const onUnauthorized = vi.fn(() => {
+    syncAuthRequestGate({
+      locked: true,
+      advanceEpoch: true,
+      ownerId: "owner-alice",
+    });
+  });
+  const detach = attachAuthRequestGate(onUnauthorized, false);
+  syncAuthRequestGate({ locked: false, ownerId: "owner-alice" });
+
+  const requestedUrls: string[] = [];
+  vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    const url = typeof input === "string" ? input : (input as Request).url;
+    requestedUrls.push(url);
+    if (url.includes("/alice-503")) {
+      return Promise.resolve(new Response(null, { status: 503 }));
+    }
+    if (url.includes("/alice-401")) {
+      return Promise.resolve(new Response(null, { status: 401 }));
+    }
+    return Promise.resolve(new Response(null, { status: 204 }));
+  });
+
+  const aliceLayer = new EvidenceTiles(
+    (c) =>
+      `/alice-${c.x === 0 ? "503" : c.x === 1 ? "401" : "ok"}/${String(c.z)}`,
+    vi.fn(),
+  );
+  // Simulate attached Leaflet layer whose onRemove() has NOT run yet across owner switch.
+  (aliceLayer as unknown as { attached: boolean }).attached = true;
+  const aliceRedraw = vi.spyOn(aliceLayer, "redraw").mockImplementation(() => {
+    aliceLayer.createTile({ x: 2, y: 0, z: 2 } as Coords, vi.fn());
+    return aliceLayer;
+  });
+
+  // Queue a 503 retry timer then trigger a tile 401.
+  aliceLayer.createTile({ x: 0, y: 0, z: 1 } as Coords, vi.fn());
+  await vi.advanceTimersByTimeAsync(0);
+  aliceLayer.createTile({ x: 1, y: 0, z: 1 } as Coords, vi.fn());
+  await vi.advanceTimersByTimeAsync(0);
+  expect(onUnauthorized).toHaveBeenCalledTimes(1);
+
+  // Same-owner recovery unlocks Alice's workspace generation -> automatically redraws.
+  syncAuthRequestGate({
+    locked: false,
+    advanceEpoch: true,
+    ownerId: "owner-alice",
+  });
+  expect(aliceRedraw).toHaveBeenCalledTimes(1);
+  expect(requestedUrls).toEqual([
+    "/alice-503/1",
+    "/alice-401/1",
+    "/alice-ok/2",
+  ]);
+
+  // Expire Alice again cleanly while a 503 timer is pending.
+  aliceLayer.createTile({ x: 0, y: 0, z: 3 } as Coords, vi.fn());
+  await vi.advanceTimersByTimeAsync(0);
+  aliceLayer.createTile({ x: 1, y: 0, z: 3 } as Coords, vi.fn());
+  await vi.advanceTimersByTimeAsync(0);
+  const callsBeforeOwnerSwitch = requestedUrls.length;
+  aliceRedraw.mockClear();
+
+  // Different-owner authentication barrier fires BEFORE Alice's layer is unmounted, then unlocks Bob.
+  invalidateProtectedWorkspace();
+  syncAuthRequestGate({
+    locked: false,
+    advanceEpoch: true,
+    ownerId: "owner-bob",
+  });
+
+  // Even before React commits unmount or if timers/retryFailed/createTile fire on Alice's layer:
+  await vi.advanceTimersByTimeAsync(10000);
+  aliceLayer.retryFailed();
+  aliceLayer.createTile({ x: 2, y: 0, z: 4 } as Coords, vi.fn());
+  expect(aliceRedraw).not.toHaveBeenCalled();
+  expect(requestedUrls).toHaveLength(callsBeforeOwnerSwitch);
+
+  // Bob's newly mounted layer succeeds normally.
+  const bobLayer = new EvidenceTiles(
+    (c) => `/bob-ok/${String(c.z)}/${String(c.x)}/${String(c.y)}`,
+    vi.fn(),
+  );
+  bobLayer.createTile({ x: 0, y: 0, z: 1 } as Coords, vi.fn());
+  await vi.advanceTimersByTimeAsync(0);
+  expect(requestedUrls.slice(callsBeforeOwnerSwitch)).toEqual([
+    "/bob-ok/1/0/0",
+  ]);
+
+  aliceLayer.cancel();
+  bobLayer.cancel();
   detach();
 });

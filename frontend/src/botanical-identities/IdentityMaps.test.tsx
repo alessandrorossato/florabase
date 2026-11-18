@@ -7,13 +7,29 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
+import { ApiError, AuthRequestLockedError } from "../auth/api";
+import type { AuthState } from "../auth/context";
 import { IdentityMaps } from "./IdentityMaps";
 import { listBotanicalNativeRanges } from "../botanical-profiles/api";
 import { getExternalTaxonLink, type BotanicalIdentityResponse } from "./api";
 
 import { getCollectionProvenanceMap } from "../provenance-map/api";
 import { getCachedOccurrenceEvidence } from "../occurrence-map/api";
-const auth = { sessionExpired: vi.fn() };
+const authenticatedState: AuthState = {
+  status: "authenticated",
+  csrfToken: "csrf",
+  session: {
+    user_id: "owner",
+    login_name: "owner",
+    display_name: "Owner",
+    owner: true,
+    canonical_origin: "http://localhost:15174",
+  },
+};
+const auth: { state: AuthState; sessionExpired: ReturnType<typeof vi.fn> } = {
+  state: authenticatedState,
+  sessionExpired: vi.fn(),
+};
 vi.mock("../auth/context", () => ({ useAuth: () => auth }));
 vi.mock("../botanical-profiles/api", () => ({
   listBotanicalNativeRanges: vi.fn(),
@@ -40,6 +56,7 @@ const identity = {
 } as BotanicalIdentityResponse;
 afterEach(() => {
   cleanup();
+  auth.state = authenticatedState;
   vi.clearAllMocks();
 });
 test("Maps reads local availability but mounts only the explicitly selected evidence type", async () => {
@@ -163,4 +180,131 @@ test("summary uses only saved occurrence evidence and exact direct provenance me
     expect.any(AbortSignal),
   );
   expect(screen.queryByText(/view mounted/)).toBeNull();
+});
+
+test("session recovery suspends summary loads, preserves valid availability without false unavailability, and refreshes on restore", async () => {
+  vi.mocked(listBotanicalNativeRanges).mockResolvedValue([]);
+  vi.mocked(getExternalTaxonLink).mockResolvedValue({
+    provider_display_name: "GBIF",
+    scientific_name: "Salvia officinalis",
+    stale: false,
+  } as never);
+  vi.mocked(getCachedOccurrenceEvidence).mockResolvedValue({
+    stale: false,
+    summary: { eligible_mapped_records: 42 },
+  } as never);
+  vi.mocked(getCollectionProvenanceMap).mockResolvedValue({
+    sites: [],
+    coordinate_less_sites: 0,
+    total_provenance_sites: 0,
+  });
+
+  const view = render(
+    <IdentityMaps identity={identity} csrfToken="csrf" onEditRange={vi.fn()} />,
+  );
+
+  expect(
+    await screen.findByText("0 structured entries recorded"),
+  ).toBeVisible();
+  expect(
+    screen.getByText("42 eligible mapped observations · saved evidence"),
+  ).toBeVisible();
+
+  const callsBeforeLock = vi.mocked(listBotanicalNativeRanges).mock.calls
+    .length;
+
+  // Enter locked recovery state: effect must suspend without calling protected reads or clobbering valid summary.
+  auth.state = {
+    status: "unauthenticated",
+    retainedIdentity: {
+      user_id: "owner",
+      login_name: "owner",
+      display_name: "Owner",
+    },
+    message: "Your session expired.",
+  };
+  view.rerender(
+    <IdentityMaps identity={identity} csrfToken="" onEditRange={vi.fn()} />,
+  );
+  await Promise.resolve();
+  expect(vi.mocked(listBotanicalNativeRanges).mock.calls.length).toBe(
+    callsBeforeLock,
+  );
+  expect(screen.getByText("0 structured entries recorded")).toBeVisible();
+  expect(
+    screen.getByText("42 eligible mapped observations · saved evidence"),
+  ).toBeVisible();
+  expect(screen.queryByRole("alert")).toBeNull();
+
+  // Even if an active call rejects locally with AuthRequestLockedError or ApiError(401), valid summary stays preserved.
+  vi.mocked(listBotanicalNativeRanges).mockRejectedValueOnce(
+    new AuthRequestLockedError(),
+  );
+  auth.state = authenticatedState;
+  view.rerender(
+    <IdentityMaps
+      identity={identity}
+      csrfToken="csrf-2"
+      onEditRange={vi.fn()}
+    />,
+  );
+  await waitFor(() => {
+    expect(vi.mocked(listBotanicalNativeRanges).mock.calls.length).toBe(
+      callsBeforeLock + 1,
+    );
+  });
+  expect(screen.getByText("0 structured entries recorded")).toBeVisible();
+  expect(screen.queryByRole("alert")).toBeNull();
+
+  // Explicit 401 calls sessionExpired() without clobbering previously valid summary, then unlock refreshes to 1 entry.
+  vi.mocked(listBotanicalNativeRanges)
+    .mockRejectedValueOnce(new ApiError(401))
+    .mockResolvedValueOnce([{ id: "r1" }] as never);
+  auth.state = {
+    status: "unauthenticated",
+    retainedIdentity: {
+      user_id: "owner",
+      login_name: "owner",
+      display_name: "Owner",
+    },
+  };
+  view.rerender(
+    <IdentityMaps identity={identity} csrfToken="" onEditRange={vi.fn()} />,
+  );
+  auth.state = authenticatedState;
+  view.rerender(
+    <IdentityMaps
+      identity={identity}
+      csrfToken="csrf-3"
+      onEditRange={vi.fn()}
+    />,
+  );
+  await waitFor(() => {
+    expect(auth.sessionExpired).toHaveBeenCalledTimes(1);
+  });
+  expect(screen.getByText("0 structured entries recorded")).toBeVisible();
+  expect(screen.queryByRole("alert")).toBeNull();
+
+  // After reauth cycle completes cleanly, fresh data loads.
+  auth.state = {
+    status: "unauthenticated",
+    retainedIdentity: {
+      user_id: "owner",
+      login_name: "owner",
+      display_name: "Owner",
+    },
+  };
+  view.rerender(
+    <IdentityMaps identity={identity} csrfToken="" onEditRange={vi.fn()} />,
+  );
+  auth.state = authenticatedState;
+  view.rerender(
+    <IdentityMaps
+      identity={identity}
+      csrfToken="csrf-4"
+      onEditRange={vi.fn()}
+    />,
+  );
+  expect(await screen.findByText("1 structured entry recorded")).toBeVisible();
+  expect(screen.queryByRole("alert")).toBeNull();
 });

@@ -6,10 +6,8 @@ import {
   type Map as LeafletMap,
 } from "leaflet";
 import {
-  getProtectedAuthEpoch,
-  isProtectedRequestAuthorized,
-  notifyProtectedUnauthorized,
-  subscribeAuthInvalidation,
+  acquireProtectedRequestCapability,
+  type ProtectedRequestCapability,
 } from "../auth/api";
 
 export const EMPTY_TILE = Util.emptyImageUrl;
@@ -31,6 +29,7 @@ interface Job {
 /** Only explicit provider-enabled URLs may fill a cache miss; cache playback never falls back. */
 export class EvidenceTiles extends GridLayer {
   private jobs = new Map<HTMLElement, Job>();
+  private capability: ProtectedRequestCapability;
   private unsubscribeAuth?: () => void;
   private suspendedByAuth = false;
   private attached = false;
@@ -44,30 +43,44 @@ export class EvidenceTiles extends GridLayer {
       maxNativeZoom: 16,
       opacity: 0.82,
     });
+    this.capability = acquireProtectedRequestCapability();
+    this.suspendedByAuth =
+      !this.capability.isRevoked() && !this.capability.isAuthorized();
     this.on("tileunload", (event: { tile: HTMLElement }) => {
       const job = this.jobs.get(event.tile);
       if (job) this.dispose(job);
       this.jobs.delete(event.tile);
       this.notify();
     });
-    this.unsubscribeAuth = subscribeAuthInvalidation(() => {
-      if (!isProtectedRequestAuthorized()) {
+    this.unsubscribeAuth = this.capability.subscribeInvalidation(() => {
+      if (this.capability.isRevoked()) {
+        this.suspendedByAuth = false;
+        const unsub = this.unsubscribeAuth;
+        this.unsubscribeAuth = undefined;
+        unsub?.();
+        this.cancel();
+        return;
+      }
+      if (!this.capability.isAuthorized()) {
         this.suspendedByAuth = true;
         this.cancel();
-      } else if (this.suspendedByAuth) {
+        return;
+      }
+      if (this.suspendedByAuth) {
         this.suspendedByAuth = false;
         if (this.attached) this.redraw();
       }
     });
   }
   override onAdd(map: LeafletMap): this {
-    this.attached = true;
+    this.attached = !this.capability.isRevoked();
     return super.onAdd(map);
   }
   override onRemove(map: LeafletMap): this {
     this.attached = false;
     this.unsubscribeAuth?.();
     this.unsubscribeAuth = undefined;
+    this.capability.revoke();
     this.cancel();
     return super.onRemove(map);
   }
@@ -99,13 +112,20 @@ export class EvidenceTiles extends GridLayer {
     return job.controller.signal.aborted;
   }
   private async load(job: Job): Promise<void> {
-    if (!isProtectedRequestAuthorized() || this.cancelled(job)) {
+    if (!this.capability.isAuthorized() || this.cancelled(job)) {
       job.state = "failed";
-      job.done(new Error("Occurrence tile suspended"), job.image);
+      job.done(
+        new Error(
+          this.capability.isRevoked()
+            ? "Occurrence tile capability revoked"
+            : "Occurrence tile suspended",
+        ),
+        job.image,
+      );
       this.notify();
       return;
     }
-    const originatingEpoch = getProtectedAuthEpoch();
+    const originatingEpoch = this.capability.getEpoch();
     job.state = "pending";
     this.notify();
     try {
@@ -114,15 +134,15 @@ export class EvidenceTiles extends GridLayer {
         signal: job.controller.signal,
       });
       if (
-        job.controller.signal.aborted ||
-        !isProtectedRequestAuthorized() ||
-        originatingEpoch !== getProtectedAuthEpoch()
+        this.cancelled(job) ||
+        !this.capability.isAuthorized() ||
+        originatingEpoch !== this.capability.getEpoch()
       ) {
         return;
       }
       if (response.status === 401) {
         job.state = "failed";
-        notifyProtectedUnauthorized(originatingEpoch);
+        this.capability.notifyUnauthorized(originatingEpoch);
         job.done(
           new Error("Occurrence tile authentication required"),
           job.image,
@@ -140,8 +160,8 @@ export class EvidenceTiles extends GridLayer {
         if (
           [502, 503, 504].includes(response.status) &&
           job.attempts < 2 &&
-          isProtectedRequestAuthorized() &&
-          originatingEpoch === getProtectedAuthEpoch()
+          this.capability.isAuthorized() &&
+          originatingEpoch === this.capability.getEpoch()
         ) {
           const retryAfter = Number(response.headers.get("Retry-After"));
           const delay =
@@ -151,8 +171,9 @@ export class EvidenceTiles extends GridLayer {
           job.attempts++;
           job.timer = setTimeout(() => {
             if (
-              isProtectedRequestAuthorized() &&
-              originatingEpoch === getProtectedAuthEpoch()
+              !this.cancelled(job) &&
+              this.capability.isAuthorized() &&
+              originatingEpoch === this.capability.getEpoch()
             ) {
               void this.load(job);
             }
@@ -170,8 +191,8 @@ export class EvidenceTiles extends GridLayer {
       const blob = await response.blob();
       if (
         this.cancelled(job) ||
-        !isProtectedRequestAuthorized() ||
-        originatingEpoch !== getProtectedAuthEpoch()
+        !this.capability.isAuthorized() ||
+        originatingEpoch !== this.capability.getEpoch()
       ) {
         return;
       }
@@ -195,14 +216,15 @@ export class EvidenceTiles extends GridLayer {
       if (job.controller.signal.aborted) return;
       if (
         job.attempts < 2 &&
-        isProtectedRequestAuthorized() &&
-        originatingEpoch === getProtectedAuthEpoch()
+        this.capability.isAuthorized() &&
+        originatingEpoch === this.capability.getEpoch()
       ) {
         job.attempts++;
         job.timer = setTimeout(() => {
           if (
-            isProtectedRequestAuthorized() &&
-            originatingEpoch === getProtectedAuthEpoch()
+            !this.cancelled(job) &&
+            this.capability.isAuthorized() &&
+            originatingEpoch === this.capability.getEpoch()
           ) {
             void this.load(job);
           }
@@ -215,7 +237,7 @@ export class EvidenceTiles extends GridLayer {
     }
   }
   retryFailed(): void {
-    if (!isProtectedRequestAuthorized()) return;
+    if (!this.capability.isAuthorized()) return;
     for (const job of this.jobs.values())
       if (job.state === "failed" || job.state === "missing") {
         job.controller.abort();
@@ -236,5 +258,6 @@ export class EvidenceTiles extends GridLayer {
   cancel(): void {
     for (const job of this.jobs.values()) this.dispose(job);
     this.jobs.clear();
+    this.notify();
   }
 }
