@@ -1,6 +1,10 @@
 import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useRef, useState } from "react";
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isPresentationRetainedState,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   DEFAULT_WCVP_VERSION,
@@ -51,6 +55,7 @@ export function NativeRangeEnrichmentPanel({
   onApplied: () => void;
 }) {
   const auth = useAuth();
+  const { sessionExpired } = auth;
   const [open, setOpen] = useState(false);
   const [version, setVersion] = useState<WcvpVersion>(DEFAULT_WCVP_VERSION);
   const [source, setSource] = useState<SourceStatus | null>(null);
@@ -84,15 +89,14 @@ export function NativeRangeEnrichmentPanel({
       })
       .catch((err: unknown) => {
         if (!abort.signal.aborted) {
-          if (err instanceof ApiError && err.status === 401)
-            auth.sessionExpired();
+          if (err instanceof ApiError && err.status === 401) sessionExpired();
           else setError("Could not load the source. Retry source status.");
         }
       });
     return () => {
       abort.abort();
     };
-  }, [open, identityId, version, attempt, auth]);
+  }, [open, identityId, version, attempt, sessionExpired]);
   useEffect(() => {
     if (source?.available) search.current?.focus();
   }, [source?.available]);
@@ -107,16 +111,11 @@ export function NativeRangeEnrichmentPanel({
     [identityId],
   );
 
-  if (
-    auth.state.status !== "authenticated" &&
-    auth.state.status !== "logging-out" &&
-    auth.state.status !== "logout-failed"
-  )
-    return null;
-  const csrf = auth.state.csrfToken;
+  if (!isPresentationRetainedState(auth.state)) return null;
+  const csrf = activeCsrfToken(auth.state);
 
   async function run(action: () => Promise<void>) {
-    if (busy) return;
+    if (busy || !csrf) return;
     const current = ++operation.current;
     setBusy(true);
     setError("");

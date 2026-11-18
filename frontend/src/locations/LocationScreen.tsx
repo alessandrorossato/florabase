@@ -20,7 +20,11 @@ import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import "./hierarchy.css";
 
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isPresentationRetainedState,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   Breadcrumbs,
@@ -470,6 +474,7 @@ export function LocationScreen({
   startCreating = false,
 }: { initialId?: string; startCreating?: boolean } = {}) {
   const auth = useAuth();
+  const { sessionExpired } = auth;
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
   });
@@ -558,14 +563,13 @@ export function LocationScreen({
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setDirectory({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [auth, attempt]);
+  }, [sessionExpired, attempt]);
 
   useEffect(() => {
     if (save.status === "validation" || save.status === "error")
@@ -621,18 +625,14 @@ export function LocationScreen({
     }
   }
 
-  if (
-    auth.state.status !== "authenticated" &&
-    auth.state.status !== "logging-out" &&
-    auth.state.status !== "logout-failed"
-  )
-    return null;
-  const csrfToken = auth.state.csrfToken;
+  if (!isPresentationRetainedState(auth.state)) return null;
+  const csrfToken = activeCsrfToken(auth.state);
 
   async function apply(
     action: () => Promise<LocationResponse>,
     success: (location: LocationResponse) => string,
   ) {
+    if (!csrfToken) return;
     setSave({ status: "saving" });
     try {
       const location = await action();
@@ -642,9 +642,10 @@ export function LocationScreen({
       setEditing(false);
       setSave({ status: "success", message: success(location) });
     } catch (error: unknown) {
-      if (error instanceof ApiError && error.status === 401)
-        auth.sessionExpired();
-      else if (error instanceof ApiError && error.status === 422)
+      if (error instanceof ApiError && error.status === 401) {
+        setSave({ status: "idle" });
+        sessionExpired();
+      } else if (error instanceof ApiError && error.status === 422)
         setSave({
           status: "validation",
           messages: locationValidationMessages(error),
@@ -672,7 +673,7 @@ export function LocationScreen({
   }
 
   async function removeSelected() {
-    if (!selected || pending) return;
+    if (!selected || pending || !csrfToken) return;
     if (
       !window.confirm(`Delete ${selected.display_path}? This cannot be undone.`)
     )
@@ -689,9 +690,10 @@ export function LocationScreen({
         message: `${selected.display_path} was deleted.`,
       });
     } catch (error: unknown) {
-      if (error instanceof ApiError && error.status === 401)
-        auth.sessionExpired();
-      else if (error instanceof ApiError && error.status === 409)
+      if (error instanceof ApiError && error.status === 401) {
+        setSave({ status: "idle" });
+        sessionExpired();
+      } else if (error instanceof ApiError && error.status === 409)
         setSave({
           status: "error",
           message:

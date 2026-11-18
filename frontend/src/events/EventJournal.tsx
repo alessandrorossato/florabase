@@ -9,7 +9,11 @@ import {
   type SyntheticEvent,
 } from "react";
 
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isPresentationRetainedState,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { TaskDialog } from "../components/TaskDialog";
 import { StatusBadge } from "../components/WorkspaceUI";
@@ -202,6 +206,7 @@ export function EventJournal({
   newEntryDateChoice?: DateChoice;
 }) {
   const auth = useAuth();
+  const { sessionExpired } = auth;
   const journal = useJournalReader();
   const entryForm = useRef<HTMLFormElement>(null);
   const [timeline, setTimeline] = useState<TimelineState>({
@@ -239,14 +244,13 @@ export function EventJournal({
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setTimeline({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [attempt, auth, targetId, targetKind, journal]);
+  }, [attempt, sessionExpired, targetId, targetKind, journal]);
 
   const visible = useMemo(() => {
     if (timeline.status !== "ready") return [];
@@ -264,13 +268,8 @@ export function EventJournal({
     ]),
   );
 
-  if (
-    auth.state.status !== "authenticated" &&
-    auth.state.status !== "logging-out" &&
-    auth.state.status !== "logout-failed"
-  )
-    return null;
-  const csrfToken = auth.state.csrfToken;
+  if (!isPresentationRetainedState(auth.state)) return null;
+  const csrfToken = activeCsrfToken(auth.state);
   const pending = mutation.status === "pending";
 
   function dismissEditor() {
@@ -322,7 +321,7 @@ export function EventJournal({
 
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!editor || pending) return;
+    if (!editor || pending || !csrfToken) return;
     if (form.kind === "movement" && !form.destinationLocationId) {
       setMutation({
         status: "error",
@@ -438,7 +437,8 @@ export function EventJournal({
       );
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401) {
-        auth.sessionExpired();
+        setMutation({ status: "idle" });
+        sessionExpired();
         return;
       }
       setMutation({
@@ -452,7 +452,7 @@ export function EventJournal({
   }
 
   async function confirmDelete() {
-    if (!deleting || pending) return;
+    if (!deleting || pending || !csrfToken) return;
     setMutation({ status: "pending" });
     try {
       await deleteEvent(deleting.id, csrfToken);
@@ -486,7 +486,8 @@ export function EventJournal({
       );
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401) {
-        auth.sessionExpired();
+        setMutation({ status: "idle" });
+        sessionExpired();
         return;
       }
       setMutation({

@@ -63,7 +63,11 @@ import { RecordTimeline } from "../timeline/RecordTimeline";
 import { LineageStrip } from "../lineage/LineageStrip";
 import "./seed-refinement.css";
 
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isPresentationRetainedState,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   conflictExistingId,
@@ -374,6 +378,7 @@ function Detail({
 }) {
   const recordName = useRecordName();
   const auth = useAuth();
+  const { sessionExpired } = auth;
   const [transaction, setTransaction] = useState<OrderDetail | null>(null);
   useEffect(() => {
     if (!lot.order_id) return;
@@ -388,12 +393,12 @@ function Detail({
           error instanceof ApiError &&
           error.status === 401
         )
-          auth.sessionExpired();
+          sessionExpired();
       });
     return () => {
       controller.abort();
     };
-  }, [lot.order_id, lot.updated_at, auth]);
+  }, [lot.order_id, lot.updated_at, sessionExpired]);
   const linkedTransaction =
     transaction?.id === lot.order_id ? transaction : null;
   const summarySupplier = linkedTransaction?.supplier ?? lot.supplier;
@@ -738,6 +743,7 @@ export function SeedLotScreen({
   const recordName = useRecordName();
 
   const auth = useAuth();
+  const { sessionExpired } = auth;
   const presentation = useDirectoryPresentation("seed_lots");
   const DirectoryItem =
     presentation.view === "list" ? DirectoryRow : DirectoryCard;
@@ -955,14 +961,13 @@ export function SeedLotScreen({
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setInventory({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [auth, attempt]);
+  }, [sessionExpired, attempt]);
 
   useEffect(() => {
     if (save.status === "error") feedback.current?.focus();
@@ -1128,13 +1133,8 @@ export function SeedLotScreen({
       </section>
     );
   }
-  if (
-    auth.state.status !== "authenticated" &&
-    auth.state.status !== "logging-out" &&
-    auth.state.status !== "logout-failed"
-  )
-    return null;
-  const csrfToken = auth.state.csrfToken;
+  if (!isPresentationRetainedState(auth.state)) return null;
+  const csrfToken = activeCsrfToken(auth.state);
   const pending = save.status === "saving";
 
   function startCreate() {
@@ -1233,6 +1233,7 @@ export function SeedLotScreen({
       });
       return;
     }
+    if (!csrfToken) return;
     const wasCreating = !selected;
     setSave({ status: "saving" });
     try {
@@ -1271,9 +1272,10 @@ export function SeedLotScreen({
     } catch (error: unknown) {
       const orderError =
         error instanceof ApiError ? seedLotOrderError(error) : undefined;
-      if (error instanceof ApiError && error.status === 401)
-        auth.sessionExpired();
-      else if (error instanceof ApiError && error.status === 422) {
+      if (error instanceof ApiError && error.status === 401) {
+        setSave({ status: "idle" });
+        sessionExpired();
+      } else if (error instanceof ApiError && error.status === 422) {
         setSave({
           status: "error",
           messages: seedLotValidationMessages(error),
@@ -1302,7 +1304,7 @@ export function SeedLotScreen({
     event: SyntheticEvent<HTMLFormElement, SubmitEvent>,
   ) {
     event.preventDefault();
-    if (!context || contextSaving) return;
+    if (!context || contextSaving || !csrfToken) return;
     const data = new FormData(event.currentTarget);
     const value = (name: string) => {
       const item = data.get(name);

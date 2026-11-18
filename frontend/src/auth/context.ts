@@ -6,10 +6,23 @@ import type {
   SessionResponse,
 } from "./api";
 
+export interface RetainedOwnerIdentity {
+  user_id: string;
+  login_name: string;
+  display_name?: string | null;
+}
+
 export type AuthState =
   | { status: "restoring" }
-  | { status: "unauthenticated"; message?: string }
-  | { status: "submitting-login" }
+  | {
+      status: "unauthenticated";
+      message?: string;
+      retainedIdentity?: RetainedOwnerIdentity;
+    }
+  | {
+      status: "submitting-login";
+      retainedIdentity?: RetainedOwnerIdentity;
+    }
   | {
       status: "authenticated";
       session: SessionResponse;
@@ -26,7 +39,10 @@ export type AuthState =
 
 export interface AuthContextValue {
   state: AuthState;
+  workspaceKey?: number;
   logIn(payload: LoginRequest): Promise<void>;
+  reauthenticate?: (payload: LoginRequest) => Promise<void>;
+  discardRetainedSession?: () => Promise<void>;
   logOut(): Promise<void>;
   sessionExpired: () => void;
   retryRestoration(): void;

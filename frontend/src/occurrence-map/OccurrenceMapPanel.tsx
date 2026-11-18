@@ -1,6 +1,6 @@
 import { ActionButton } from "../components/Action";
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
-import { ApiError } from "../auth/api";
+import { ApiError, activeCsrfToken } from "../auth/api";
 import { useAuth } from "../auth/context";
 import type { ExternalTaxonLinkResponse } from "../botanical-identities/api";
 import { MapWorkspace } from "../maps/MapWorkspace";
@@ -37,20 +37,18 @@ export function OccurrenceMapPanel({
   identityLabel?: ReactNode;
 }) {
   const auth = useAuth();
+  const { sessionExpired } = auth;
+  const authorized = auth.state.status === "authenticated";
   const [evidence, setEvidence] = useState<OccurrenceEvidence | null>(null);
   const [checking, setChecking] = useState(Boolean(link));
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [localOnly, setLocalOnly] = useState(true);
-  const csrf =
-    auth.state.status === "authenticated" ||
-    auth.state.status === "logout-failed"
-      ? auth.state.csrfToken
-      : null;
+  const csrf = activeCsrfToken(auth.state) || null;
   const externalId = link?.external_id;
   const provider = link?.provider;
   useEffect(() => {
-    if (!externalId || provider !== "gbif") return;
+    if (!authorized || !externalId || provider !== "gbif") return;
     const controller = new AbortController();
     void getCachedOccurrenceEvidence(identityId, controller.signal)
       .then((value) => {
@@ -62,7 +60,7 @@ export function OccurrenceMapPanel({
       .catch((failure: unknown) => {
         if (controller.signal.aborted) return;
         if (failure instanceof ApiError && failure.status === 401)
-          auth.sessionExpired();
+          sessionExpired();
         else {
           setChecking(false);
           setError("Could not read local occurrence evidence.");
@@ -71,7 +69,7 @@ export function OccurrenceMapPanel({
     return () => {
       controller.abort();
     };
-  }, [identityId, externalId, provider, auth]);
+  }, [authorized, identityId, externalId, provider, sessionExpired]);
   async function load() {
     if (!csrf || pending) return;
     setPending(true);
@@ -305,13 +303,17 @@ export function OccurrenceMapPanel({
         </div>
       ) : (
         <div className="map-canvas-card">
-          <Suspense fallback={<p role="status">Loading occurrence map…</p>}>
-            <OccurrenceDensityMap
-              identityId={identityId}
-              generation={evidence.generation}
-              localOnly={localOnly}
-            />
-          </Suspense>
+          {authorized ? (
+            <Suspense fallback={<p role="status">Loading occurrence map…</p>}>
+              <OccurrenceDensityMap
+                identityId={identityId}
+                generation={evidence.generation}
+                localOnly={localOnly}
+              />
+            </Suspense>
+          ) : (
+            <p role="status">Occurrence map paused while signed out.</p>
+          )}
           <div
             className="occurrence-density-legend"
             aria-label="Occurrence density legend"

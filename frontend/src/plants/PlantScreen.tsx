@@ -60,7 +60,11 @@ import {
   PlantNotesField,
 } from "./PlantFormFields";
 
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isPresentationRetainedState,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   listBotanicalIdentities,
@@ -899,6 +903,7 @@ export function PlantScreen({
   const recordName = useRecordName();
 
   const auth = useAuth();
+  const { sessionExpired } = auth;
   const presentation = useDirectoryPresentation("plants");
   const DirectoryItem =
     presentation.view === "list" ? DirectoryRow : DirectoryCard;
@@ -1349,14 +1354,13 @@ export function PlantScreen({
       )
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setCollection({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [auth, attempt]);
+  }, [sessionExpired, attempt]);
 
   useEffect(() => {
     if (!selectedKey) return;
@@ -1380,14 +1384,13 @@ export function PlantScreen({
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setDetail({ status: "error", key: selectedKey });
       });
     return () => {
       controller.abort();
     };
-  }, [auth, detail, detailAttempt, selectedKey]);
+  }, [sessionExpired, detail, detailAttempt, selectedKey]);
 
   useEffect(() => {
     if (
@@ -1407,14 +1410,13 @@ export function PlantScreen({
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setReintegration({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [auth, detail, mobileDetail]);
+  }, [sessionExpired, detail, mobileDetail]);
 
   useEffect(() => {
     if (!transferTarget && transferTrigger.current) {
@@ -1600,13 +1602,8 @@ export function PlantScreen({
         </div>
       </section>
     );
-  if (
-    auth.state.status !== "authenticated" &&
-    auth.state.status !== "logging-out" &&
-    auth.state.status !== "logout-failed"
-  )
-    return null;
-  const csrfToken = auth.state.csrfToken;
+  if (!isPresentationRetainedState(auth.state)) return null;
+  const csrfToken = activeCsrfToken(auth.state);
   const pending = save.status === "saving";
 
   const formKind = extractionSource
@@ -1759,7 +1756,8 @@ export function PlantScreen({
 
   async function submitTransfer(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!transferTarget || transferState.status === "saving") return;
+    if (!transferTarget || transferState.status === "saving" || !csrfToken)
+      return;
     setTransferState({ status: "saving" });
     try {
       const payload = {
@@ -1806,7 +1804,8 @@ export function PlantScreen({
       });
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401) {
-        auth.sessionExpired();
+        setTransferState({ status: "idle" });
+        sessionExpired();
         return;
       }
       setTransferState({
@@ -1846,7 +1845,8 @@ export function PlantScreen({
     if (
       selected?.kind !== "plant" ||
       reintegration.status !== "ready" ||
-      reintegrationMutation.status === "saving"
+      reintegrationMutation.status === "saving" ||
+      !csrfToken
     )
       return;
     setReintegrationMutation({ status: "saving" });
@@ -1861,7 +1861,8 @@ export function PlantScreen({
       setReintegrationMutation({ status: "idle" });
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401) {
-        auth.sessionExpired();
+        setReintegrationMutation({ status: "idle" });
+        sessionExpired();
         return;
       }
       setReintegrationMutation({
@@ -1932,7 +1933,7 @@ export function PlantScreen({
 
   async function submit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
-    if (pending || !formKind) return;
+    if (pending || !formKind || !csrfToken) return;
     const errors = [
       ...validate(),
       ...invalidDateControls(event.currentTarget).map(
@@ -2060,9 +2061,10 @@ export function PlantScreen({
           wasCreating,
         );
     } catch (error: unknown) {
-      if (error instanceof ApiError && error.status === 401)
-        auth.sessionExpired();
-      else if (error instanceof ApiError && error.status === 422) {
+      if (error instanceof ApiError && error.status === 401) {
+        setSave({ status: "idle" });
+        sessionExpired();
+      } else if (error instanceof ApiError && error.status === 422) {
         setSave({
           status: "error",
           messages: plantValidationMessages(error),

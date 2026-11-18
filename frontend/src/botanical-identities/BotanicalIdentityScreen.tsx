@@ -38,7 +38,11 @@ import {
   type IdentitySection,
 } from "./identitySections";
 
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isPresentationRetainedState,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { BotanicalNativeRangeManager } from "../botanical-profiles/BotanicalNativeRangeManager";
 import { BotanicalProfilePanel } from "../botanical-profiles/BotanicalProfilePanel";
@@ -1179,6 +1183,7 @@ export function BotanicalIdentityScreen({
   startCreating = false,
 }: { initialId?: string; initialTab?: string; startCreating?: boolean } = {}) {
   const auth = useAuth();
+  const { sessionExpired } = auth;
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
   });
@@ -1273,14 +1278,13 @@ export function BotanicalIdentityScreen({
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setDirectory({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [auth, loadAttempt]);
+  }, [sessionExpired, loadAttempt]);
 
   useEffect(() => {
     if (["validation", "duplicate", "error"].includes(createState.status)) {
@@ -1318,7 +1322,7 @@ export function BotanicalIdentityScreen({
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         if (error instanceof ApiError && error.status === 401) {
-          auth.sessionExpired();
+          sessionExpired();
         } else if (error instanceof ApiError && error.status === 404) {
           setFallbackDetail({ id: initialId, status: "missing" });
         } else {
@@ -1328,7 +1332,7 @@ export function BotanicalIdentityScreen({
     return () => {
       controller.abort();
     };
-  }, [auth, directory, initialId, loadAttempt]);
+  }, [sessionExpired, directory, initialId, loadAttempt]);
 
   const filteredIdentities = useMemo(() => {
     if (directory.status !== "ready") return [];
@@ -1347,13 +1351,8 @@ export function BotanicalIdentityScreen({
   const pagination = useDirectoryPagination(filteredIdentities, filter);
   const { visible: pageIdentities } = pagination;
 
-  if (
-    auth.state.status !== "authenticated" &&
-    auth.state.status !== "logging-out" &&
-    auth.state.status !== "logout-failed"
-  )
-    return null;
-  const csrfToken = auth.state.csrfToken;
+  if (!isPresentationRetainedState(auth.state)) return null;
+  const csrfToken = activeCsrfToken(auth.state);
 
   async function refreshAndSelect(
     identity: BotanicalIdentityResponse,
@@ -1379,7 +1378,7 @@ export function BotanicalIdentityScreen({
     event: SyntheticEvent<HTMLFormElement, SubmitEvent>,
   ): Promise<void> {
     event.preventDefault();
-    if (pending) return;
+    if (pending || !csrfToken) return;
     const form = new FormData(event.currentTarget);
     const scientificName = form.get("scientific_name");
     const cultivarName = form.get("cultivar_name");
@@ -1406,9 +1405,10 @@ export function BotanicalIdentityScreen({
       closeCreation();
       window.location.hash = `/identities/${identity.id}`;
     } catch (error: unknown) {
-      if (error instanceof ApiError && error.status === 401)
-        auth.sessionExpired();
-      else if (error instanceof ApiError && error.status === 422) {
+      if (error instanceof ApiError && error.status === 401) {
+        setCreateState({ status: "idle" });
+        sessionExpired();
+      } else if (error instanceof ApiError && error.status === 422) {
         setCreateState({
           status: "validation",
           messages: validationMessages(error),

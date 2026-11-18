@@ -198,3 +198,41 @@ test("no link makes no read; zero records and provider failure remain distinct",
     "temporarily unavailable",
   );
 });
+
+test("suspends live density map while reauthentication is required without re-fetching on unlock", async () => {
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValueOnce(json(saved()));
+  authStub.state = { status: "authenticated", csrfToken: "csrf" };
+  const view = render(
+    <OccurrenceMapPanel identityId={identityId} link={link} />,
+  );
+  expect(
+    await screen.findByLabelText(
+      "Interactive GBIF occurrence-record density map",
+    ),
+  ).toBeVisible();
+  expect(fetch).toHaveBeenCalledTimes(1);
+
+  authStub.state = {
+    status: "unauthenticated",
+    retainedIdentity: {
+      user_id: "owner",
+      login_name: "alice",
+      display_name: "Alice",
+    },
+  } as unknown as typeof authStub.state;
+  view.rerender(<OccurrenceMapPanel identityId={identityId} link={link} />);
+  expect(
+    screen.queryByLabelText("Interactive GBIF occurrence-record density map"),
+  ).not.toBeInTheDocument();
+  expect(fetch).toHaveBeenCalledTimes(1);
+
+  authStub.state = { status: "authenticated", csrfToken: "csrf-2" };
+  view.rerender(<OccurrenceMapPanel identityId={identityId} link={link} />);
+  expect(
+    await screen.findByLabelText(
+      "Interactive GBIF occurrence-record density map",
+    ),
+  ).toBeVisible();
+});

@@ -22,7 +22,11 @@ import {
 } from "../components/DirectoryPage";
 import { useDirectoryPresentation } from "../components/directoryPresentation";
 
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isPresentationRetainedState,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   Breadcrumbs,
@@ -626,6 +630,7 @@ export function OrderScreen({
   startCreating?: boolean;
 } = {}) {
   const auth = useAuth();
+  const { sessionExpired } = auth;
   const presentation = useDirectoryPresentation("orders");
   const selectedTrigger = useRef<HTMLButtonElement | null>(null);
   const directoryList = useRef<HTMLUListElement | null>(null);
@@ -725,14 +730,13 @@ export function OrderScreen({
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setSuppliersError("Florabase could not load Suppliers.");
       });
     return () => {
       controller.abort();
     };
-  }, [auth, supplierAttempt]);
+  }, [sessionExpired, supplierAttempt]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -775,7 +779,7 @@ export function OrderScreen({
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         if (error instanceof ApiError && error.status === 401) {
-          auth.sessionExpired();
+          sessionExpired();
           return;
         }
         setStoredPageError("Florabase could not load Orders.");
@@ -786,7 +790,7 @@ export function OrderScreen({
       controller.abort();
     };
   }, [
-    auth,
+    sessionExpired,
     attempt,
     offset,
     pageSize,
@@ -808,7 +812,7 @@ export function OrderScreen({
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         if (error instanceof ApiError && error.status === 401) {
-          auth.sessionExpired();
+          sessionExpired();
           return;
         }
         setStoredDetailError(
@@ -822,7 +826,7 @@ export function OrderScreen({
     return () => {
       controller.abort();
     };
-  }, [auth, attempt, detailRequestKey, initialId, lotOffset]);
+  }, [sessionExpired, attempt, detailRequestKey, initialId, lotOffset]);
 
   useEffect(() => {
     if (startCreating === previousCreateRoute.current) return;
@@ -982,16 +986,11 @@ export function OrderScreen({
     fallbackId: "order-search",
   });
 
-  if (
-    auth.state.status !== "authenticated" &&
-    auth.state.status !== "logging-out" &&
-    auth.state.status !== "logout-failed"
-  )
-    return null;
-  const csrf = auth.state.csrfToken;
+  if (!isPresentationRetainedState(auth.state)) return null;
+  const csrf = activeCsrfToken(auth.state);
 
   async function save(payload: OrderCreate) {
-    if (savePending) return;
+    if (savePending || !csrf) return;
     const existing = target;
     setSavePending(true);
     setFormError("");
@@ -1022,7 +1021,7 @@ export function OrderScreen({
   }
 
   async function remove() {
-    if (!initialId || deletePending) return;
+    if (!initialId || deletePending || !csrf) return;
     setDeletePending(true);
     setDeleteError("");
     try {

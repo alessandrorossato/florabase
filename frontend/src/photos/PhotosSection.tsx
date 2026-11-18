@@ -12,7 +12,11 @@ import {
   type SyntheticEvent,
 } from "react";
 
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isPresentationRetainedState,
+} from "../auth/api";
 import { OverflowMenu } from "../components/ReferenceUI";
 import { saveLocalCopy } from "../media/api";
 import { ExternalCopyChoice } from "../media/ExternalCopyChoice";
@@ -252,6 +256,7 @@ export function PhotosSection({
   presentation?: "standard" | "compact";
 }) {
   const auth = useAuth();
+  const { sessionExpired } = auth;
   const headingId = useId();
   const fileInput = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<LoadState>({ status: "loading" });
@@ -287,21 +292,16 @@ export function PhotosSection({
       .catch((loadError: unknown) => {
         if (controller.signal.aborted) return;
         if (loadError instanceof ApiError && loadError.status === 401)
-          auth.sessionExpired();
+          sessionExpired();
         else setState({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [attempt, auth, target, targetId]);
+  }, [attempt, sessionExpired, target, targetId]);
 
-  if (
-    auth.state.status !== "authenticated" &&
-    auth.state.status !== "logging-out" &&
-    auth.state.status !== "logout-failed"
-  )
-    return null;
-  const csrfToken = auth.state.csrfToken;
+  if (!isPresentationRetainedState(auth.state)) return null;
+  const csrfToken = activeCsrfToken(auth.state);
 
   async function refresh(success: string, refreshPrimary = false) {
     const photos = await listPhotos(target, targetId);
@@ -315,7 +315,7 @@ export function PhotosSection({
   }
 
   async function choosePrimary(photo: CollectionPhoto | null) {
-    if (!supportsPrimary || pending) return;
+    if (!supportsPrimary || pending || !csrfToken) return;
     setPending(true);
     setError(null);
     try {
@@ -349,7 +349,7 @@ export function PhotosSection({
 
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!editor || pending) return;
+    if (!editor || pending || !csrfToken) return;
     const data = new FormData(event.currentTarget);
     const field = (name: string): string => {
       const value = data.get(name);
@@ -448,7 +448,7 @@ export function PhotosSection({
   }
 
   async function retryCopy() {
-    if (!failedCopy || pending) return;
+    if (!failedCopy || pending || !csrfToken) return;
     setPending(true);
     setError(null);
     let saved = false;
@@ -472,7 +472,7 @@ export function PhotosSection({
   }
 
   async function confirmRemove() {
-    if (!removing || pending) return;
+    if (!removing || pending || !csrfToken) return;
     setPending(true);
     setError(null);
     let removed = false;

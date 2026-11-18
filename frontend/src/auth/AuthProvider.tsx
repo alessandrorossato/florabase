@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -9,12 +10,14 @@ import {
 
 import {
   ApiError,
+  attachAuthRequestGate,
   changePassword,
   type ChangePasswordRequest,
   getSession,
   login as requestLogin,
   logout as requestLogout,
   recoverCsrf,
+  syncAuthRequestGate,
   type LoginRequest,
 } from "./api";
 import {
@@ -28,37 +31,131 @@ function serviceFailureMessage(): string {
   return "Florabase could not reach the authentication service. Please try again.";
 }
 
+function loginErrorMessage(error: unknown): string {
+  if (error instanceof ApiError && error.status === 401) {
+    return "The login name or password was not accepted.";
+  }
+  if (error instanceof ApiError && error.status === 429) {
+    const retry = error.retryAfter
+      ? ` Try again in ${error.retryAfter} seconds.`
+      : " Please wait before trying again.";
+    return `Too many login attempts.${retry}`;
+  }
+  if (error instanceof ApiError && error.status === 422) {
+    return "Check the login name and password, then try again.";
+  }
+  return serviceFailureMessage();
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: "restoring" });
+  const [workspaceKey, setWorkspaceKey] = useState(0);
   const [restorationAttempt, setRestorationAttempt] = useState(0);
 
+  const stateRef = useRef<AuthState>(state);
   const generation = useRef(0);
+  const authEpochRef = useRef(0);
   const changingPassword = useRef(false);
   const [passwordChangePending, setPasswordChangePending] = useState(false);
+  const cookieOpQueue = useRef<Promise<void>>(Promise.resolve());
+
+  const commitState = useCallback((next: AuthState) => {
+    stateRef.current = next;
+    setState(next);
+  }, []);
+
+  const enqueueCookieOp = useCallback(
+    <T,>(op: () => Promise<T>): Promise<T> => {
+      const nextRun = cookieOpQueue.current.then(op, op);
+      cookieOpQueue.current = nextRun.then(
+        () => undefined,
+        () => undefined,
+      );
+      return nextRun;
+    },
+    [],
+  );
+
+  const expireAuthenticatedSession = useCallback(
+    (expectedEpoch?: number) => {
+      if (
+        expectedEpoch !== undefined &&
+        expectedEpoch !== authEpochRef.current
+      ) {
+        return;
+      }
+      const current = stateRef.current;
+      if (
+        current.status !== "authenticated" &&
+        current.status !== "logout-failed"
+      ) {
+        return;
+      }
+      generation.current += 1;
+      authEpochRef.current = syncAuthRequestGate({
+        locked: true,
+        advanceEpoch: true,
+      });
+      commitState({
+        status: "unauthenticated",
+        retainedIdentity: {
+          user_id: current.session.user_id,
+          login_name: current.session.login_name,
+          display_name: current.session.display_name,
+        },
+        message: "Your session expired. Sign in again to continue.",
+      });
+    },
+    [commitState],
+  );
+
+  useLayoutEffect(() => {
+    const cleanup = attachAuthRequestGate((originatingEpoch) => {
+      expireAuthenticatedSession(originatingEpoch);
+    }, true);
+    authEpochRef.current = syncAuthRequestGate({
+      locked:
+        stateRef.current.status !== "authenticated" &&
+        stateRef.current.status !== "logout-failed",
+    });
+    return cleanup;
+  }, [expireAuthenticatedSession]);
 
   useEffect(() => {
     const controller = new AbortController();
     const attempt = ++generation.current;
 
     async function restoreSession() {
-      setState({ status: "restoring" });
+      authEpochRef.current = syncAuthRequestGate({
+        locked: true,
+        advanceEpoch: true,
+      });
+      commitState({ status: "restoring" });
       try {
         const session = await getSession(controller.signal);
         if (attempt !== generation.current) return;
         const csrf = await recoverCsrf(controller.signal);
         if (attempt !== generation.current || controller.signal.aborted) return;
-        setState({
+        authEpochRef.current = syncAuthRequestGate({
+          locked: false,
+          advanceEpoch: true,
+        });
+        commitState({
           status: "authenticated",
           session,
           csrfToken: csrf.csrf_token,
         });
       } catch (error: unknown) {
         if (controller.signal.aborted || attempt !== generation.current) return;
+        authEpochRef.current = syncAuthRequestGate({
+          locked: true,
+          advanceEpoch: true,
+        });
         if (error instanceof ApiError && error.status === 401) {
-          setState({ status: "unauthenticated" });
+          commitState({ status: "unauthenticated" });
           return;
         }
-        setState({
+        commitState({
           status: "recovery-failed",
           message: serviceFailureMessage(),
         });
@@ -69,150 +166,241 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       controller.abort();
     };
-  }, [restorationAttempt]);
+  }, [commitState, restorationAttempt]);
 
-  const logIn = useCallback(async (payload: LoginRequest) => {
-    const attempt = ++generation.current;
-    setState({ status: "submitting-login" });
-    let csrfToken: string;
-    try {
-      const csrf = await requestLogin(payload);
-      if (attempt !== generation.current) return;
-      csrfToken = csrf.csrf_token;
-    } catch (error: unknown) {
-      if (attempt !== generation.current) return;
-      if (error instanceof ApiError && error.status === 401) {
-        setState({
-          status: "unauthenticated",
-          message: "The login name or password was not accepted.",
+  const logIn = useCallback(
+    (payload: LoginRequest) =>
+      enqueueCookieOp(async () => {
+        const attempt = ++generation.current;
+        authEpochRef.current = syncAuthRequestGate({
+          locked: true,
+          advanceEpoch: true,
         });
-      } else if (error instanceof ApiError && error.status === 429) {
-        const retry = error.retryAfter
-          ? ` Try again in ${error.retryAfter} seconds.`
-          : " Please wait before trying again.";
-        setState({
-          status: "unauthenticated",
-          message: `Too many login attempts.${retry}`,
-        });
-      } else if (error instanceof ApiError && error.status === 422) {
-        setState({
-          status: "unauthenticated",
-          message: "Check the login name and password, then try again.",
-        });
-      } else {
-        setState({
-          status: "unauthenticated",
-          message: serviceFailureMessage(),
-        });
-      }
-      return;
-    }
-
-    try {
-      const session = await getSession();
-      if (attempt !== generation.current) return;
-      setState({
-        status: "authenticated",
-        session,
-        csrfToken,
-      });
-    } catch {
-      if (attempt !== generation.current) return;
-      setState({
-        status: "recovery-failed",
-        message: serviceFailureMessage(),
-      });
-    }
-  }, []);
-
-  const logOut = useCallback(async () => {
-    if (
-      changingPassword.current ||
-      (state.status !== "authenticated" && state.status !== "logout-failed")
-    )
-      return;
-    const attempt = ++generation.current;
-    const { session } = state;
-    let csrfToken = state.csrfToken;
-    setState({ status: "logging-out", session, csrfToken });
-    try {
-      try {
-        await requestLogout(csrfToken);
-      } catch (error: unknown) {
-        if (attempt !== generation.current) return;
-        if (
-          !(error instanceof ApiError) ||
-          (error.status !== 401 && error.status !== 403)
-        ) {
-          throw error;
-        }
-        let current;
+        commitState({ status: "submitting-login" });
+        let csrfToken: string;
         try {
-          current = await getSession();
-        } catch (probeError: unknown) {
+          const csrf = await requestLogin(payload);
           if (attempt !== generation.current) return;
-          if (probeError instanceof ApiError && probeError.status === 401) {
-            setState({ status: "unauthenticated" });
-            return;
+          csrfToken = csrf.csrf_token;
+        } catch (error: unknown) {
+          if (attempt !== generation.current) return;
+          commitState({
+            status: "unauthenticated",
+            message: loginErrorMessage(error),
+          });
+          return;
+        }
+
+        try {
+          const session = await getSession();
+          if (attempt !== generation.current) return;
+          authEpochRef.current = syncAuthRequestGate({
+            locked: false,
+            advanceEpoch: true,
+          });
+          setWorkspaceKey((value) => value + 1);
+          commitState({
+            status: "authenticated",
+            session,
+            csrfToken,
+          });
+        } catch {
+          if (attempt !== generation.current) return;
+          commitState({
+            status: "recovery-failed",
+            message: serviceFailureMessage(),
+          });
+        }
+      }),
+    [commitState, enqueueCookieOp],
+  );
+
+  const reauthenticate = useCallback(
+    (payload: LoginRequest) =>
+      enqueueCookieOp(async () => {
+        const current = stateRef.current;
+        if (current.status !== "unauthenticated" || !current.retainedIdentity)
+          return;
+        const { retainedIdentity } = current;
+        const attempt = ++generation.current;
+        authEpochRef.current = syncAuthRequestGate({
+          locked: true,
+          advanceEpoch: true,
+        });
+        commitState({
+          status: "submitting-login",
+          retainedIdentity,
+        });
+
+        let csrfToken: string;
+        try {
+          const csrf = await requestLogin(payload);
+          if (attempt !== generation.current) return;
+          csrfToken = csrf.csrf_token;
+        } catch (error: unknown) {
+          if (attempt !== generation.current) return;
+          commitState({
+            status: "unauthenticated",
+            retainedIdentity,
+            message: loginErrorMessage(error),
+          });
+          return;
+        }
+
+        try {
+          const session = await getSession();
+          if (attempt !== generation.current) return;
+          if (session.user_id !== retainedIdentity.user_id) {
+            setWorkspaceKey((value) => value + 1);
           }
-          throw probeError;
+          authEpochRef.current = syncAuthRequestGate({
+            locked: false,
+            advanceEpoch: true,
+          });
+          commitState({
+            status: "authenticated",
+            session,
+            csrfToken,
+          });
+        } catch {
+          if (attempt !== generation.current) return;
+          commitState({
+            status: "unauthenticated",
+            retainedIdentity,
+            message: serviceFailureMessage(),
+          });
         }
-        if (attempt !== generation.current) return;
-        if (!current.owner || current.user_id !== session.user_id) {
-          throw error;
+      }),
+    [commitState, enqueueCookieOp],
+  );
+
+  const discardRetainedSession = useCallback(
+    () =>
+      enqueueCookieOp(() => {
+        const current = stateRef.current;
+        if (
+          (current.status !== "unauthenticated" &&
+            current.status !== "submitting-login") ||
+          !current.retainedIdentity
+        ) {
+          return Promise.resolve();
         }
-        csrfToken = (await recoverCsrf()).csrf_token;
-        if (attempt !== generation.current) return;
-        await requestLogout(csrfToken);
-      }
-      if (attempt === generation.current)
-        setState({ status: "unauthenticated" });
-    } catch {
-      if (attempt !== generation.current) return;
-      setState({
-        status: "logout-failed",
-        message:
-          "Logout could not be confirmed. Your server session may still be active.",
-        session,
-        csrfToken,
-      });
-    }
-  }, [state]);
+        generation.current += 1;
+        authEpochRef.current = syncAuthRequestGate({
+          locked: true,
+          advanceEpoch: true,
+        });
+        setWorkspaceKey((value) => value + 1);
+        commitState({ status: "unauthenticated" });
+        return Promise.resolve();
+      }),
+    [commitState, enqueueCookieOp],
+  );
+
+  const logOut = useCallback(
+    () =>
+      enqueueCookieOp(async () => {
+        const current = stateRef.current;
+        if (
+          changingPassword.current ||
+          (current.status !== "authenticated" &&
+            current.status !== "logout-failed")
+        ) {
+          return;
+        }
+        const attempt = ++generation.current;
+        const { session } = current;
+        let csrfToken = current.csrfToken;
+        authEpochRef.current = syncAuthRequestGate({
+          locked: true,
+          advanceEpoch: true,
+        });
+        commitState({ status: "logging-out", session, csrfToken });
+        try {
+          try {
+            await requestLogout(csrfToken);
+          } catch (error: unknown) {
+            if (attempt !== generation.current) return;
+            if (
+              !(error instanceof ApiError) ||
+              (error.status !== 401 && error.status !== 403)
+            ) {
+              throw error;
+            }
+            let live;
+            try {
+              live = await getSession();
+            } catch (probeError: unknown) {
+              if (attempt !== generation.current) return;
+              if (probeError instanceof ApiError && probeError.status === 401) {
+                setWorkspaceKey((value) => value + 1);
+                commitState({ status: "unauthenticated" });
+                return;
+              }
+              throw probeError;
+            }
+            if (attempt !== generation.current) return;
+            if (!live.owner || live.user_id !== session.user_id) {
+              throw error;
+            }
+            csrfToken = (await recoverCsrf()).csrf_token;
+            if (attempt !== generation.current) return;
+            await requestLogout(csrfToken);
+          }
+          if (attempt === generation.current) {
+            setWorkspaceKey((value) => value + 1);
+            commitState({ status: "unauthenticated" });
+          }
+        } catch {
+          if (attempt !== generation.current) return;
+          commitState({
+            status: "logout-failed",
+            message:
+              "Logout could not be confirmed. Your server session may still be active.",
+            session,
+            csrfToken,
+          });
+        }
+      }),
+    [commitState, enqueueCookieOp],
+  );
 
   const submitPassword = useCallback(
-    async (payload: ChangePasswordRequest) => {
-      if (
-        state.status !== "authenticated" ||
-        !state.session.owner ||
-        changingPassword.current
-      ) {
-        return false;
-      }
-      const attempt = ++generation.current;
-      changingPassword.current = true;
-      setPasswordChangePending(true);
-      try {
-        const response = await changePassword(payload, state.csrfToken);
-        if (attempt !== generation.current) return false;
-        setState({ ...state, csrfToken: response.csrf_token });
-        return true;
-      } catch (error: unknown) {
-        if (attempt !== generation.current) return false;
-        if (error instanceof ApiError && error.status === 401) {
-          ++generation.current;
-          setState({
-            status: "unauthenticated",
-            message: "Your session expired. Sign in again to continue.",
-          });
+    (payload: ChangePasswordRequest) =>
+      enqueueCookieOp(async () => {
+        const current = stateRef.current;
+        if (
+          current.status !== "authenticated" ||
+          !current.session.owner ||
+          changingPassword.current
+        ) {
           return false;
         }
-        throw error;
-      } finally {
-        changingPassword.current = false;
-        setPasswordChangePending(false);
-      }
-    },
-    [state],
+        const attempt = ++generation.current;
+        changingPassword.current = true;
+        setPasswordChangePending(true);
+        try {
+          const response = await changePassword(payload, current.csrfToken);
+          if (attempt !== generation.current) return false;
+          authEpochRef.current = syncAuthRequestGate({
+            locked: false,
+            advanceEpoch: true,
+          });
+          commitState({ ...current, csrfToken: response.csrf_token });
+          return true;
+        } catch (error: unknown) {
+          if (attempt !== generation.current) return false;
+          if (error instanceof ApiError && error.status === 401) {
+            expireAuthenticatedSession();
+            return false;
+          }
+          throw error;
+        } finally {
+          changingPassword.current = false;
+          setPasswordChangePending(false);
+        }
+      }),
+    [commitState, enqueueCookieOp, expireAuthenticatedSession],
   );
 
   const passwordChange = useMemo(
@@ -220,34 +408,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [passwordChangePending, submitPassword],
   );
 
+  const sessionExpired = useCallback(() => {
+    expireAuthenticatedSession();
+  }, [expireAuthenticatedSession]);
+
+  const retryRestoration = useCallback(() => {
+    generation.current += 1;
+    authEpochRef.current = syncAuthRequestGate({
+      locked: true,
+      advanceEpoch: true,
+    });
+    setRestorationAttempt((attempt) => attempt + 1);
+  }, []);
+
+  const cancelLogout = useCallback(() => {
+    const current = stateRef.current;
+    if (current.status === "logout-failed") {
+      generation.current += 1;
+      authEpochRef.current = syncAuthRequestGate({
+        locked: false,
+        advanceEpoch: true,
+      });
+      commitState({
+        status: "authenticated",
+        session: current.session,
+        csrfToken: current.csrfToken,
+      });
+    }
+  }, [commitState]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       state,
+      workspaceKey,
+      logIn,
+      reauthenticate,
+      discardRetainedSession,
+      logOut,
+      sessionExpired,
+      retryRestoration,
+      cancelLogout,
+    }),
+    [
+      cancelLogout,
+      discardRetainedSession,
       logIn,
       logOut,
-      sessionExpired: () => {
-        ++generation.current;
-        setState({
-          status: "unauthenticated",
-          message: "Your session expired. Sign in again to continue.",
-        });
-      },
-      retryRestoration: () => {
-        ++generation.current;
-        setRestorationAttempt((attempt) => attempt + 1);
-      },
-      cancelLogout: () => {
-        if (state.status === "logout-failed") {
-          ++generation.current;
-          setState({
-            status: "authenticated",
-            session: state.session,
-            csrfToken: state.csrfToken,
-          });
-        }
-      },
-    }),
-    [logIn, logOut, state],
+      reauthenticate,
+      retryRestoration,
+      sessionExpired,
+      state,
+      workspaceKey,
+    ],
   );
 
   return (

@@ -1,4 +1,15 @@
-import { GridLayer, Util, type Coords, type DoneCallback } from "leaflet";
+import {
+  GridLayer,
+  Util,
+  type Coords,
+  type DoneCallback,
+  type Map as LeafletMap,
+} from "leaflet";
+import {
+  getProtectedAuthEpoch,
+  isProtectedRequestAuthorized,
+  subscribeAuthInvalidation,
+} from "../auth/api";
 
 export const EMPTY_TILE = Util.emptyImageUrl;
 export interface TileStatus {
@@ -19,6 +30,7 @@ interface Job {
 /** Only explicit provider-enabled URLs may fill a cache miss; cache playback never falls back. */
 export class EvidenceTiles extends GridLayer {
   private jobs = new Map<HTMLElement, Job>();
+  private unsubscribeAuth?: () => void;
   constructor(
     private url: (coords: Coords) => string,
     private report: (status: TileStatus) => void,
@@ -35,6 +47,15 @@ export class EvidenceTiles extends GridLayer {
       this.jobs.delete(event.tile);
       this.notify();
     });
+    this.unsubscribeAuth = subscribeAuthInvalidation(() => {
+      if (!isProtectedRequestAuthorized()) this.cancel();
+    });
+  }
+  override onRemove(map: LeafletMap): this {
+    this.unsubscribeAuth?.();
+    this.unsubscribeAuth = undefined;
+    this.cancel();
+    return super.onRemove(map);
   }
   private notify() {
     const jobs = [...this.jobs.values()];
@@ -64,6 +85,13 @@ export class EvidenceTiles extends GridLayer {
     return job.controller.signal.aborted;
   }
   private async load(job: Job): Promise<void> {
+    if (!isProtectedRequestAuthorized() || this.cancelled(job)) {
+      job.state = "failed";
+      job.done(new Error("Occurrence tile suspended"), job.image);
+      this.notify();
+      return;
+    }
+    const originatingEpoch = getProtectedAuthEpoch();
     job.state = "pending";
     this.notify();
     try {
@@ -71,7 +99,22 @@ export class EvidenceTiles extends GridLayer {
         credentials: "same-origin",
         signal: job.controller.signal,
       });
-      if (job.controller.signal.aborted) return;
+      if (
+        job.controller.signal.aborted ||
+        !isProtectedRequestAuthorized() ||
+        originatingEpoch !== getProtectedAuthEpoch()
+      ) {
+        return;
+      }
+      if (response.status === 401) {
+        job.state = "failed";
+        job.done(
+          new Error("Occurrence tile authentication required"),
+          job.image,
+        );
+        this.notify();
+        return;
+      }
       if (response.status === 204) {
         job.state = "ready";
         job.done(undefined, job.image);
@@ -79,7 +122,12 @@ export class EvidenceTiles extends GridLayer {
         return;
       }
       if (!response.ok) {
-        if ([502, 503, 504].includes(response.status) && job.attempts < 2) {
+        if (
+          [502, 503, 504].includes(response.status) &&
+          job.attempts < 2 &&
+          isProtectedRequestAuthorized() &&
+          originatingEpoch === getProtectedAuthEpoch()
+        ) {
           const retryAfter = Number(response.headers.get("Retry-After"));
           const delay =
             Number.isFinite(retryAfter) && retryAfter > 0
@@ -87,7 +135,12 @@ export class EvidenceTiles extends GridLayer {
               : [500, 1500][job.attempts];
           job.attempts++;
           job.timer = setTimeout(() => {
-            void this.load(job);
+            if (
+              isProtectedRequestAuthorized() &&
+              originatingEpoch === getProtectedAuthEpoch()
+            ) {
+              void this.load(job);
+            }
           }, delay);
           return;
         }
@@ -100,7 +153,13 @@ export class EvidenceTiles extends GridLayer {
         return;
       }
       const blob = await response.blob();
-      if (this.cancelled(job)) return;
+      if (
+        this.cancelled(job) ||
+        !isProtectedRequestAuthorized() ||
+        originatingEpoch !== getProtectedAuthEpoch()
+      ) {
+        return;
+      }
       job.objectUrl = URL.createObjectURL(blob);
       job.image.onload = () => {
         if (!job.controller.signal.aborted) {
@@ -119,10 +178,19 @@ export class EvidenceTiles extends GridLayer {
       job.image.src = job.objectUrl;
     } catch {
       if (job.controller.signal.aborted) return;
-      if (job.attempts < 2) {
+      if (
+        job.attempts < 2 &&
+        isProtectedRequestAuthorized() &&
+        originatingEpoch === getProtectedAuthEpoch()
+      ) {
         job.attempts++;
         job.timer = setTimeout(() => {
-          void this.load(job);
+          if (
+            isProtectedRequestAuthorized() &&
+            originatingEpoch === getProtectedAuthEpoch()
+          ) {
+            void this.load(job);
+          }
         }, job.attempts * 1000);
       } else {
         job.state = "failed";
@@ -132,6 +200,7 @@ export class EvidenceTiles extends GridLayer {
     }
   }
   retryFailed(): void {
+    if (!isProtectedRequestAuthorized()) return;
     for (const job of this.jobs.values())
       if (job.state === "failed" || job.state === "missing") {
         job.controller.abort();

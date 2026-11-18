@@ -56,7 +56,11 @@ import { LineageStrip } from "../lineage/LineageStrip";
 import { ancestryHref } from "../lineage/useRecordedLineage";
 import { sowingFormPanels } from "./SowingFormFields";
 
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isPresentationRetainedState,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   Breadcrumbs,
@@ -843,6 +847,7 @@ export function SowingScreen({
   const DirectoryItem =
     presentation.view === "gallery" ? DirectoryCard : DirectoryRow;
   const auth = useAuth();
+  const { sessionExpired } = auth;
   const [collection, setCollection] = useState<CollectionState>({
     status: "loading",
   });
@@ -966,14 +971,13 @@ export function SowingScreen({
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setCollection({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [auth, attempt]);
+  }, [sessionExpired, attempt]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -984,14 +988,13 @@ export function SowingScreen({
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setDetail({ status: "error", id: selectedId });
       });
     return () => {
       controller.abort();
     };
-  }, [auth, detailAttempt, selectedId]);
+  }, [sessionExpired, detailAttempt, selectedId]);
 
   useEffect(() => {
     if (save.status === "error") feedback.current?.focus();
@@ -1136,13 +1139,8 @@ export function SowingScreen({
       </section>
     );
   }
-  if (
-    auth.state.status !== "authenticated" &&
-    auth.state.status !== "logging-out" &&
-    auth.state.status !== "logout-failed"
-  )
-    return null;
-  const csrfToken = auth.state.csrfToken;
+  if (!isPresentationRetainedState(auth.state)) return null;
+  const csrfToken = activeCsrfToken(auth.state);
   const pending = save.status === "saving";
 
   function startCreate() {
@@ -1263,6 +1261,7 @@ export function SowingScreen({
       setSave({ status: "error", messages: errors });
       return;
     }
+    if (!csrfToken) return;
     const wasCreating = !selected;
     setSave({ status: "saving" });
     try {
@@ -1302,9 +1301,10 @@ export function SowingScreen({
           : "Sowing changes were saved.",
       });
     } catch (error: unknown) {
-      if (error instanceof ApiError && error.status === 401)
-        auth.sessionExpired();
-      else if (error instanceof ApiError && error.status === 422) {
+      if (error instanceof ApiError && error.status === 401) {
+        setSave({ status: "idle" });
+        sessionExpired();
+      } else if (error instanceof ApiError && error.status === 422) {
         setSave({
           status: "error",
           messages: sowingValidationMessages(error),
