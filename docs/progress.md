@@ -9447,3 +9447,34 @@ Status remains implemented pending canonical verification.
 - All eight RC blockers remain. CUTTING-001 acceptance and candidate-image G-CORE step 12,
   UI-SYSTEM-001, formal G-UX, U04 and R21 remain open. F-06 is deferred. Independent combined
   review and canonical FULL are pending.
+
+## 2026-11-18 — Batch 06 security baseline
+
+- Verified PR #195's archived exact-head review and fresh FULL receipt, and all three finish
+  records. The [security baseline](release/evidence/batch-06-security-baseline.md) verifies raw
+  OCI descriptors and digest-bound Trivy reports from the exact-main hosted rehearsal. The scanned
+  beta.6 pair and pinned PostgreSQL .2 each had zero HIGH, CRITICAL and secret findings. A fresh
+  read-only GHCR manifest check found the .2 tag and digests and the beta.6 and RC.1 app tags absent.
+- `make test-beta-images` passed 60 release and four tool-lock tests using the pinned toolchain.
+  Offline links passed in 303 documents. The feature graph passed with 168 entries, and the RC
+  check still reports eight blockers. Independent source review, final RC scans, G-SEC and a
+  fresh Batch 06 FULL remain pending.
+
+- The [Hydrogen scope approval](release/evidence/batch-06-remediation-scope.md) records the
+  disposable production route probe. Four built-in FastAPI routes returned unauthenticated 200
+  responses on the backend. Nginx returned the SPA index for those GETs. The probe enumerated
+  234 API operations, confirmed the three intended public operations, and left zero probe
+  containers, networks or tagged images. The two upstream CI pins and four source paths are
+  approved for independent implementation and review. Final-image G-SEC remains pending.
+
+### WF-04 Batch 06 integrated
+
+- Merged Hydrogen's security source at `800b432` and Sol's evidence source at
+  `579aa5c` in that order from `c555baa`. Both source reviews passed, and both
+  merges were clean. The [combined record](release/evidence/wf-04-batch-06.md)
+  retains source identities and records the Grype database and image provenance.
+- Focused verification passed 54 backend tests, both offline API drift checks,
+  61 release tests, four release tool-lock tests, 55 feature workflow tests,
+  offline documentation links and the feature graph. Production local
+  artifact-only smoke and disposable cleanup passed. All eight RC blockers
+  remain. Independent combined QA and canonical FULL are pending.

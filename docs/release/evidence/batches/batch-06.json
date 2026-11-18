@@ -1,0 +1,51 @@
+{
+  "base": "c555baabe916e3fea1ef2c8f834c747ced5aa926",
+  "bootstrap": "c555baabe916e3fea1ef2c8f834c747ced5aa926",
+  "bootstrap_commits": [],
+  "branch": "ci/batch-06",
+  "reconciliation": {
+    "docs/progress.md": "Record exact integrated checks, source provenance and remaining release gates",
+    "docs/release/evidence/wf-04-batch-06.md": "Record combined provenance, focused verification and digest-bound Grype report dates and identities"
+  },
+  "sources": [
+    {
+      "base": "c555baabe916e3fea1ef2c8f834c747ced5aa926",
+      "branch": "fix/batch-06-security-remediation",
+      "claim": "ceef322df8ea",
+      "commits": [
+        "347bc9b8c4d6f5cba4d0b7f78c7daba38d97d807",
+        "800b43292493219103676c5a074385187ac6f401"
+      ],
+      "evidence": [
+        "docs/release/evidence/batch-06-hydrogen-security-remediation.md"
+      ],
+      "id": "BETA-SECURITY-001",
+      "merge": "7d5a014d7e09b4bd2218e8351c4220932840698c",
+      "resolutions": [],
+      "reviewer": "sol-batch06-source-qa",
+      "tip": "800b43292493219103676c5a074385187ac6f401",
+      "writer": "hydrogen-batch06-security-remediation"
+    },
+    {
+      "base": "c555baabe916e3fea1ef2c8f834c747ced5aa926",
+      "branch": "docs/batch-06-security-evidence",
+      "claim": "695d681f93a2",
+      "commits": [
+        "0b33854edbf244355751f283116de37152a81996",
+        "579aa5c559062d2c9d1639153afdec4aaf8b181a"
+      ],
+      "evidence": [
+        "docs/release/evidence/batch-06-security-baseline.md",
+        "docs/release/evidence/batch-06-remediation-scope.md"
+      ],
+      "id": "CERT-05",
+      "merge": "56b32df5abb50a82f0a608564470ec0f632e1ed4",
+      "resolutions": [],
+      "reviewer": "gemini-4-hydrogen-antigravity-9f693eb5-de39-47ea-bb0f-121a9655b5c4",
+      "tip": "579aa5c559062d2c9d1639153afdec4aaf8b181a",
+      "writer": "sol-batch06-security-evidence"
+    }
+  ],
+  "summary": "Security remediation and evidence",
+  "version": 1
+}
