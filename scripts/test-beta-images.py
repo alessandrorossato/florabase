@@ -1409,6 +1409,27 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn("needs: verify", workflow)
         self.assertIn("--verify-tag", (ROOT / "scripts/publish-beta-images.py").read_text())
 
+    def test_trusted_ci_workflow_pins_actions_to_full_commit_shas(self) -> None:
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text()
+        uses = re.findall(r"^\s*(?:-\s+)?uses:\s*([^\s#]+)", workflow, re.M)
+        self.assertEqual(len(uses), 8)
+        for reference in uses:
+            with self.subTest(reference=reference):
+                self.assertRegex(
+                    reference,
+                    r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+@[0-9a-f]{40}$",
+                )
+        self.assertEqual(
+            uses.count("actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803"),
+            4,
+        )
+        self.assertEqual(
+            uses.count("actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9"),
+            4,
+        )
+        for job_name in ("quality", "integration", "build", "release-migration"):
+            self.assertIn(f"name: {job_name}", workflow)
+
 
 INDEX_TYPE = "application/vnd.oci.image.index.v1+json"
 
