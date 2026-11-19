@@ -101,7 +101,11 @@ projections, original media and the canonical digest, then run
 | Health wait after cutover or recovery | 16.5–16.7 seconds |
 
 Startup timings come from a workstation smoke with cached image layers. The health wait excludes
-snapshot preparation and restore. The canonical digest is `a6141fc43cf46012007f342b0ba71b005f31141ae34c85f4cdb79bb30a9da88b`.
+snapshot preparation and restore. The canonical digest is `5f59cc7ff3829517a5957c9b0972957d17c6eb2825fc023ba0be455ae047dfd0`.
+The 19 November 2026 pin refresh accounts for PR #175 (`51f7884`). It records the v2 WGSRPD
+crosswalk label in three WCVP proposal rows and the frozen proposal evidence in two application
+rows. Those two tables and the canonical digest account for the full pin delta.
+
 The isolated digest covers 34 files, including two expected thumbnails. Verification rebuilds
 those derivatives in scratch from the restored originals. The added scenarios traverse a cutting
 back through a multi-generation seed lineage, retain failed and completed rooting attempts,
