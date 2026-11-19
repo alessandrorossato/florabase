@@ -9491,3 +9491,17 @@ Status remains implemented pending canonical verification.
   Ruff lint and format, strict mypy, the backend OpenAPI drift check, feature graph, documentation
   links, disclosure and whitespace checks passed. Independent security review, canonical FULL,
   formal ENG-03 acceptance and G-SEC certification remain pending.
+
+### ENG-03 bounded correction after independent QA HOLD
+
+- Checked registration order before sorting the route inventory. Earlier parameterized routes,
+  catch-alls and mounts now fail the check when they can shadow later operations. Preserved the
+  production static-before-parameterized pairs and restored the production `APIRoute` invariant.
+- Default backend pytest discovery found all 27 inventory regressions. The focused selection
+  passed 72 tests with three skips. Normal and optimized Python agreed on the production inventory
+  of 234 operations and exactly three public endpoints. Both editions rejected the extra-public
+  and shadowed-allowlist controls with exit `1` and `2`, respectively.
+- Ruff lint and format, strict mypy, backend OpenAPI drift, feature graph, documentation links,
+  disclosure and whitespace checks passed. The [review recipe](release/evidence/eng-03-source.md#independent-reproduction-without-docker)
+  uses the locked backend dependencies in a local virtual environment. The `best-effort` proposal,
+  focused independent approval, canonical FULL, formal acceptance and G-SEC remain pending.

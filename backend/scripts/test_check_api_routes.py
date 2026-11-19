@@ -10,6 +10,7 @@ import pytest
 from check_api_routes import Access, InventoryError, Operation, inventory, run_check
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.testclient import TestClient
+from starlette.convertors import CONVERTOR_TYPES, StringConvertor
 from starlette.responses import Response
 from starlette.staticfiles import StaticFiles
 
@@ -188,6 +189,149 @@ def test_inventory_fails_closed_for_opaque_mount_and_overrides(
     output = capsys.readouterr()
     assert output.out == ""
     assert "dependency overrides at /" in output.err
+
+
+def first_handler() -> str:
+    return "first"
+
+
+def second_handler() -> str:
+    return "second"
+
+
+def shadowed_allowlist_app() -> FastAPI:
+    router = APIRouter(prefix="/api/v1")
+    router.get("/{name}")(first_handler)
+    app = FastAPI(openapi_url=None)
+    app.include_router(router)
+    app.get("/api/v1/health")(second_handler)
+    return app
+
+
+def test_earlier_included_parameter_route_shadows_public_static_operation() -> None:
+    app = shadowed_allowlist_app()
+    assert TestClient(app).get("/api/v1/health").json() == "first"
+    with pytest.raises(InventoryError, match=r"GET /api/v1/health.*earlier /api/v1/\{name\}"):
+        inventory(app)
+
+
+@pytest.mark.parametrize("flags", [[], ["-O"]], ids=["normal", "optimized"])
+def test_shadowed_allowlist_exits_incomplete(flags: list[str]) -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            *flags,
+            "-c",
+            "from test_check_api_routes import run_check, shadowed_allowlist_app; "
+            "raise SystemExit(run_check(shadowed_allowlist_app, output_format='json'))",
+        ],
+        cwd=Path(__file__).resolve().parent,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 2, result.stdout + result.stderr
+    report = json.loads(result.stdout)
+    assert report["status"] == "error"
+    assert "GET /api/v1/health" in report["error"]
+    assert "operations" not in report
+
+
+def test_public_parameter_route_overlaps_protected_operation() -> None:
+    app = FastAPI(openapi_url=None)
+    app.get("/items/{name}")(first_handler)
+    app.get("/items/{item_id:int}", dependencies=[Depends(require_authenticated_actor)])(
+        second_handler
+    )
+    assert TestClient(app).get("/items/42").json() == "first"
+    with pytest.raises(InventoryError, match="may be shadowed"):
+        inventory(app)
+
+
+@pytest.mark.parametrize(
+    ("static_path", "template_path"),
+    [
+        ("/events/rooting-observations", "/events/{event_id}"),
+        ("/provenance-sites/map", "/provenance-sites/{site_id}"),
+    ],
+)
+def test_earlier_static_route_reserves_url(static_path: str, template_path: str) -> None:
+    app = FastAPI(openapi_url=None)
+    app.get(static_path)(first_handler)
+    app.get(template_path)(second_handler)
+    assert TestClient(app).get(static_path).json() == "first"
+    assert len(inventory(app)) == 2
+
+
+def test_partial_method_match_does_not_shadow_later_route() -> None:
+    app = FastAPI(openapi_url=None)
+    app.post("/items/{name}")(first_handler)
+    app.get("/items/static")(second_handler)
+    client = TestClient(app)
+    assert client.get("/items/static").json() == "second"
+    assert client.post("/items/static").json() == "first"
+    assert len(inventory(app)) == 2
+
+
+def test_locked_integer_and_uuid_converters_overlap() -> None:
+    app = FastAPI(openapi_url=None)
+    app.get("/items/{item_id:int}")(first_handler)
+    app.get("/items/{item_id:uuid}")(second_handler)
+    client = TestClient(app)
+    assert client.get("/items/" + "1" * 32).json() == "first"
+    assert client.get("/items/" + str(uuid7())).json() == "second"
+    with pytest.raises(InventoryError, match="may be shadowed"):
+        inventory(app)
+
+
+def test_converter_excludes_literal_in_another_template() -> None:
+    app = FastAPI(openapi_url=None)
+    app.get("/items/{item_id:int}/{part}")(first_handler)
+    app.get("/items/latest/{part}")(second_handler)
+    client = TestClient(app)
+    assert client.get("/items/42/detail").json() == "first"
+    assert client.get("/items/latest/detail").json() == "second"
+    assert len(inventory(app)) == 2
+
+
+def test_catch_all_shadows_deeper_route_but_keeps_disjoint_prefix() -> None:
+    app = FastAPI(openapi_url=None)
+    app.get("/items/{rest:path}")(first_handler)
+    app.get("/other/{name}/detail")(second_handler)
+    assert len(inventory(app)) == 2
+    app.get("/items/{name}/detail")(second_handler)
+    assert TestClient(app).get("/items/example/detail").json() == "first"
+    with pytest.raises(InventoryError, match="may be shadowed"):
+        inventory(app)
+
+
+def test_mount_owns_prefix_even_when_child_returns_404() -> None:
+    app = FastAPI(openapi_url=None)
+    app.mount("/api/v1", FastAPI(openapi_url=None))
+    app.get("/api/v1/health")(second_handler)
+    assert TestClient(app).get("/api/v1/health").status_code == 404
+    with pytest.raises(InventoryError, match=r"earlier /api/v1/\{path:path\}"):
+        inventory(app)
+
+
+def test_earlier_parent_route_shadows_mounted_operation() -> None:
+    app = FastAPI(openapi_url=None)
+    app.get("/api/{rest:path}")(first_handler)
+    child = FastAPI(openapi_url=None)
+    child.get("/health")(second_handler)
+    app.mount("/api/v1", child)
+    assert TestClient(app).get("/api/v1/health").json() == "first"
+    with pytest.raises(InventoryError, match=r"GET /api/v1/health.*earlier /api/\{rest:path\}"):
+        inventory(app)
+
+
+def test_unreviewed_converter_refuses_inventory(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(CONVERTOR_TYPES, "custom", StringConvertor())
+    app = FastAPI(openapi_url=None)
+    app.get("/items/{name:custom}")(first_handler)
+    assert TestClient(app).get("/items/example").json() == "first"
+    with pytest.raises(InventoryError, match="unsupported path converter"):
+        inventory(app)
 
 
 def test_initialization_failure_suppresses_exception_values(

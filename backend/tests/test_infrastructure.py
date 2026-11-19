@@ -457,6 +457,15 @@ def test_offline_openapi_generation_works_in_production_and_matches_artifact() -
 
 
 def test_production_route_inventory_satisfies_gsec_allowlist() -> None:
+    with patch("florabase.main.get_settings", return_value=_production_settings()):
+        production_app = create_app()
+    non_api_contexts = [
+        context
+        for context in iter_route_contexts(production_app.routes)
+        if not isinstance(context.route, APIRoute)
+    ]
+    assert non_api_contexts == []
+
     result = subprocess.run(
         [sys.executable, "scripts/check_api_routes.py", "--format", "json"],
         cwd=Path(__file__).resolve().parents[1],

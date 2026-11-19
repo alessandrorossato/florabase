@@ -12,7 +12,14 @@ from enum import StrEnum
 from fastapi import FastAPI
 from fastapi.dependencies.models import Dependant
 from fastapi.routing import APIRoute, iter_route_contexts
-from starlette.routing import PARAM_REGEX, Mount, Route
+from starlette.convertors import (
+    FloatConvertor,
+    IntegerConvertor,
+    PathConvertor,
+    StringConvertor,
+    UUIDConvertor,
+)
+from starlette.routing import PARAM_REGEX, Mount, Route, compile_path
 
 from florabase.auth.dependencies import require_authenticated_actor, require_owner
 from florabase.core.config import Environment, get_settings
@@ -44,6 +51,60 @@ class Operation:
     declared_access: Access
 
 
+@dataclass(frozen=True)
+class RoutePattern:
+    path: str
+    methods: set[str] | None  # Mounts claim the matching prefix for every method.
+    regex: re.Pattern[str]
+
+
+def route_pattern(path: str, methods: set[str] | None) -> RoutePattern:
+    regex, _, converters = compile_path(path)
+    builtins = {
+        "str": StringConvertor,
+        "int": IntegerConvertor,
+        "float": FloatConvertor,
+        "uuid": UUIDConvertor,
+        "path": PathConvertor,
+    }
+    for name, kind in PARAM_REGEX.findall(path):
+        converter = converters[name]
+        if type(converter) is not builtins.get(kind.removeprefix(":") or "str") or (
+            converter.regex != type(converter).regex
+        ):
+            raise InventoryError(f"unsupported path converter at {path}")
+    return RoutePattern(path, methods, regex)
+
+
+def shadows(earlier: RoutePattern, later: RoutePattern) -> bool:
+    if (
+        earlier.methods is not None
+        and later.methods is not None
+        and earlier.methods.isdisjoint(later.methods)
+    ):
+        return False
+    if not PARAM_REGEX.search(later.path):
+        return earlier.regex.match(later.path) is not None
+    if not PARAM_REGEX.search(earlier.path):
+        # An exact match registered first reserves one URL from a later broader template.
+        return False
+
+    earlier_parts = earlier.path.split("/")
+    later_parts = later.path.split("/")
+    for left, right in zip(earlier_parts, later_parts, strict=False):
+        if any(
+            match[2] == ":path" for part in (left, right) for match in PARAM_REGEX.finditer(part)
+        ):
+            return True
+        if not PARAM_REGEX.search(left) and not compile_path("/" + right)[0].fullmatch("/" + left):
+            return False
+        if not PARAM_REGEX.search(right) and not compile_path("/" + left)[0].fullmatch("/" + right):
+            return False
+        # For two variable segments keep looking for a disjoint literal or segment count.
+        # Even Starlette's int and UUID patterns overlap on 32 decimal digits.
+    return len(earlier_parts) == len(later_parts)
+
+
 def dependencies(dependant: Dependant) -> Iterator[Dependant]:
     for child in dependant.dependencies:
         yield child
@@ -64,13 +125,17 @@ def declared_access(dependant: Dependant) -> Access:
 
 
 def operations(
-    application: FastAPI, prefix: str = "", ancestors: tuple[FastAPI, ...] = ()
+    application: FastAPI,
+    prefix: str = "",
+    ancestors: tuple[FastAPI, ...] = (),
+    inherited_patterns: tuple[RoutePattern, ...] = (),
 ) -> Iterator[Operation]:
     if any(application is ancestor for ancestor in ancestors):
         raise InventoryError(f"recursive mount at {prefix or '/'}")
     if application.dependency_overrides:
         raise InventoryError(f"dependency overrides at {prefix or '/'}")
 
+    prior_patterns = list(inherited_patterns)
     for context in iter_route_contexts(application.routes):
         route = context.route
         if context.path is None:
@@ -81,7 +146,10 @@ def operations(
         if isinstance(route, Mount):
             if not isinstance(route.app, FastAPI):
                 raise InventoryError(f"opaque mount at {path or '/'}")
-            yield from operations(route.app, path, (*ancestors, application))
+            mount_pattern = route_pattern(path + "/{path:path}", None)
+            yield from operations(route.app, path, (*ancestors, application), tuple(prior_patterns))
+            # A Mount returns FULL at its prefix even if the child will return 404 or 405.
+            prior_patterns.append(mount_pattern)
             continue
         if isinstance(route, APIRoute):
             provider = context.dependency_overrides_provider
@@ -99,6 +167,15 @@ def operations(
         methods = context.methods
         if not path.startswith("/") or not methods:
             raise InventoryError(f"missing path or HTTP methods at {path or '/'}")
+        pattern = route_pattern(path, methods)
+        for prior in prior_patterns:
+            if shadows(prior, pattern):
+                shared_methods = methods if prior.methods is None else methods & prior.methods
+                raise InventoryError(
+                    f"duplicate or ambiguous operation: {', '.join(sorted(shared_methods))} {path} "
+                    f"may be shadowed by earlier {prior.path}"
+                )
+        prior_patterns.append(pattern)
         for method in sorted(methods):
             if not re.fullmatch(r"[!#$%&'*+.^_`|~0-9A-Z-]+", method):
                 raise InventoryError(f"invalid HTTP method at {path}")
@@ -106,19 +183,7 @@ def operations(
 
 
 def inventory(application: FastAPI) -> list[Operation]:
-    by_template: dict[tuple[str, str], Operation] = {}
-    for operation in operations(application):
-        # Parameter names do not affect matching. Conservatively flag matching shapes even
-        # when their converters differ. Preserve the actual templates and trailing slashes.
-        key = (operation.method, PARAM_REGEX.sub("{}", operation.path))
-        if key in by_template:
-            prior = by_template[key]
-            raise InventoryError(
-                f"duplicate or ambiguous operation: {operation.method} "
-                f"{prior.path} and {operation.path}"
-            )
-        by_template[key] = operation
-    return sorted(by_template.values())
+    return sorted(operations(application))
 
 
 def production_application() -> FastAPI:

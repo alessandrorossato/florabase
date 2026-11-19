@@ -35,7 +35,7 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers --cov=florabase --cov-report=term-missing --cov-fail-under=90"
-testpaths = ["tests"]
+testpaths = ["tests", "scripts/test_check_api_routes.py"]
 markers = [
   "integration: requires the disposable PostgreSQL integration environment",
 ]
