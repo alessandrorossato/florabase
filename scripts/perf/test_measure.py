@@ -334,6 +334,26 @@ class IsolationTests(unittest.TestCase):
         self.assertTrue(any("already running" in err for err in report["errors"]))
         self.assertEqual(report["evaluation"]["harness_status"], "incomplete")
 
+    def test_sample_succeeds_while_lifecycle_lock_held(self) -> None:
+        stats_line = json.dumps({"Name": "florabase-perf-backend-1"})
+        with measure._perf_lock():
+            with (
+                patch.object(measure, "compose") as compose_mock,
+                patch.object(
+                    measure.subprocess,
+                    "check_output",
+                    side_effect=[
+                        f"{stats_line}\n",
+                        '{"total": 5, "idle": 5}',
+                        '{"count": 1, "last_seen_at": "2026-11-19T00:00:00Z", "idle_expires_at": "2026-11-20T00:00:00Z"}',
+                    ],
+                ),
+            ):
+                result = measure.sample()
+        compose_mock.assert_not_called()
+        self.assertEqual(result["connections"]["total"], 5)
+        self.assertEqual(result["sessions"]["count"], 1)
+
     def test_golden_dataset_target_guards_remain_unmodified(self) -> None:
         source = (ROOT / "scripts/golden_dataset.py").read_text(encoding="utf-8")
         self.assertIn("COPY_NAME = re.compile", source)

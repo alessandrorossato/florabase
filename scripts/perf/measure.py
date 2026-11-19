@@ -332,6 +332,26 @@ def _collect_process_counts() -> dict[str, Any]:
     return counts
 
 
+def _sample_sql(query: str) -> str:
+    """Read-only SQL query for sample telemetry without taking the compose lifecycle lock."""
+    return subprocess.check_output(
+        [
+            "docker",
+            "exec",
+            f"{PROJECT}-db-1",
+            "psql",
+            "-U",
+            DB_USER,
+            "-d",
+            DB_NAME,
+            "-qAt",
+            "-c",
+            query,
+        ],
+        text=True,
+    ).strip()
+
+
 def sample() -> dict[str, Any]:
     return {
         "at": round(time.time(), 1),
@@ -353,14 +373,14 @@ def sample() -> dict[str, Any]:
             ).splitlines()
         ],
         "connections": json.loads(
-            sql(
+            _sample_sql(
                 "SELECT json_build_object('total', count(*), 'idle', "
                 "count(*) FILTER (WHERE state='idle')) FROM pg_stat_activity "
                 f"WHERE datname='{DB_NAME}' AND pid<>pg_backend_pid()"
             )
         ),
         "sessions": json.loads(
-            sql(
+            _sample_sql(
                 "SELECT json_build_object('count',count(*),'last_seen_at',"
                 "max(last_seen_at),'idle_expires_at',max(idle_expires_at)) "
                 "FROM auth_sessions WHERE revoked_at IS NULL"
