@@ -870,12 +870,14 @@ def _valid_checkpoint(checkpoint: Any) -> bool:
         return False
     intervals = timers.get("intervals")
     timeouts = timers.get("timeouts")
+    docs = checkpoint.get("Documents")
     heap = checkpoint.get("JSHeapUsedSize")
     nodes = checkpoint.get("Nodes")
     listeners = checkpoint.get("JSEventListeners")
     return (
         checkpoint.get("maps") == 0
-        and checkpoint.get("Documents") == 1
+        and _is_nonneg_int(docs)
+        and 1 <= docs <= 2
         and _is_finite_number(heap)
         and float(heap) > 0
         and _is_nonneg_int(nodes)
@@ -1301,6 +1303,14 @@ def evaluate_report(report: dict[str, Any], *, pin_mode: str | None = None) -> d
     interval_counts = [
         int((c.get("timers") or {}).get("intervals", -1)) for c in cycles if isinstance(c, dict)
     ]
+    document_counts = [
+        c.get("Documents") for c in [*cycles, final_checkpoint] if isinstance(c, dict)
+    ]
+    documents_constant = (
+        len(document_counts) == expected_cycles + 2
+        and all(_is_nonneg_int(d) and 1 <= d <= 2 for d in document_counts)
+        and len(set(document_counts)) == 1
+    )
     timers_constant = len(interval_counts) == expected_cycles + 1 and len(set(interval_counts)) == 1
     cycle_requests_valid = len(cycle_requests) == expected_cycles and all(
         _is_nonneg_int(r) and r > 0 for r in cycle_requests
@@ -1315,6 +1325,7 @@ def evaluate_report(report: dict[str, Any], *, pin_mode: str | None = None) -> d
         and len(cycles) == expected_cycles + 1
         and not invalid_checkpoints
         and final_ok
+        and documents_constant
         and timers_constant
         and requests_stable,
         category="application",
@@ -1322,13 +1333,14 @@ def evaluate_report(report: dict[str, Any], *, pin_mode: str | None = None) -> d
             "cycle_count": len(cycle_requests),
             "cycle_requests": cycle_requests,
             "interval_counts": interval_counts,
+            "document_counts": document_counts,
             "invalid_checkpoints": invalid_checkpoints,
             "final_checkpoint_valid": final_ok,
         },
         threshold={
             "cycles": expected_cycles,
             "maps_on_today": 0,
-            "documents_on_today": 1,
+            "documents_on_today": "1..2 and constant across cycles and final",
             "intervals_on_today": "<= 2 and constant across cycles (Today day check + release watcher)",
             "timeouts_on_today": 0,
             "cycles_2_to_6_request_spread_max": 4,

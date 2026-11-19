@@ -630,6 +630,22 @@ class ReportEvaluationTests(unittest.TestCase):
         )
         self.assertTrue(any("browser_workload_complete" in item for item in evaluation["failures"]))
 
+    def test_rejects_document_count_growth_and_accepts_constant_two_documents(self) -> None:
+        report = _valid_report()
+        for cp in [*report["browser"]["cycles"], report["browser"]["final"]]:
+            cp["Documents"] = 2
+        self.assertEqual(comprehensive.evaluate_report(report)["invariant_status"], "passed")
+
+        report["browser"]["cycles"][4]["Documents"] = 3
+        leaked_eval = comprehensive.evaluate_report(report)
+        self.assertEqual(leaked_eval["application_status"], "failed")
+        self.assertTrue(
+            any(
+                "browser_six_cycles_stability" in item
+                for item in leaked_eval["application_failures"]
+            )
+        )
+
     def test_distinguishes_application_failure_from_valid_harness(self) -> None:
         report = _valid_report()
         report["browser"]["idleRequests"] = [{"path": "/api/v1/dashboard", "method": "GET"}]
