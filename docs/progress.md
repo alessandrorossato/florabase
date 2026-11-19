@@ -9488,3 +9488,15 @@ Status remains implemented pending canonical verification.
 - Independent security review and canonical FULL are pending. The integrated candidate must
   exercise Batch 07 protected media and downloads, repeat the browser matrix and close formal
   ENG-02 acceptance and G-SEC.
+
+### ENG-02 bounded corrections after independent QA
+
+- The portable security-header and cache checks now fail explicitly under normal and optimized
+  Python. Six regressions passed in each of three execution modes. A disposable HTTP probe
+  confirmed one bundled `nosniff` value after correction, the original direct-backend response,
+  and preserved cache and response metadata for thumbnails, attachments and CSV exports.
+- Corrected the external-image privacy and fetch description. The
+  [source evidence](release/evidence/eng-02-source.md#bounded-corrections-after-independent-qa)
+  retains the historical browser identity and records the focused probe, ownership and cleanup.
+  Ruff, strict mypy, links, feature graph, disclosure and diff checks passed. SOL's focused
+  review, integrated verification, ENG-02 acceptance and G-SEC remain pending.

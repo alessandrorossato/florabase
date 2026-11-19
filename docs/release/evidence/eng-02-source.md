@@ -6,6 +6,10 @@ Standalone source at the verified base `fdc75e83fa8818cab791ed82cbba65f4f97db7ae
 the [release acceptance table](../acceptance-v1.md#optional-pre-10-improvements). The base feature graph and
 machine-readable release manifest have no ENG-02 row.
 
+The initial browser campaign and production results below apply to source
+`b31048dd332e8ac6e21753b11f21a5fcac765a8c`, tree `dad6eb225dc905edb5981fb83bc5f41299d0ec0e`.
+The focused corrective checks are recorded separately at the end.
+
 1. **A bundled nginx response for `/` has nosniff, a referrer policy, a frame restriction and
    CSP.** The 19-response portable smoke check passed. It checks one copy of each header with
    its exact value on the root, SPA fallback, static cache locations, liveness, readiness and
@@ -91,3 +95,30 @@ machine-readable release manifest have no ENG-02 row.
   combined candidate in both appearances with the frozen inventory, configured external
   resources and a supported deployment proxy. Independent security review, canonical FULL,
   formal ENG-02 acceptance and G-SEC remain pending.
+
+## Bounded corrections after independent QA
+
+- The portable header and cache checks now raise an explicit failure on a missing, duplicate or
+  incorrect field. All six focused regressions passed with normal Python, `python3 -O` and
+  `PYTHONOPTIMIZE=1`. An independent empty-header control was accepted by the historical code
+  in both optimized modes and rejected by the corrected code in all three modes. Earlier smoke
+  assertions for service identity, schema checks, credentials and logs, and persistence and
+  restore also disappear under optimization. Those earlier assertions were outside this change.
+- The [security baseline](../../security.md) now distinguishes metadata, browser Preview once,
+  owner-requested guarded Save/Refresh, acknowledged botanical covers and online tile opt-in.
+- The pinned nginx 1.30.6 passed `nginx -t`. A production-runtime HTTP probe compared the
+  historical and corrected nginx configurations against the same live backend. The authenticated
+  thumbnail (200 and 304), attachment original (200) and CSV export (200) each carried two
+  `nosniff` fields through historical nginx, one directly from the backend, and one through
+  corrected nginx. The correction hides only the upstream copy of that field at the bundle
+  boundary. Cache-Control, ETag, Vary, Content-Type and Content-Disposition matched where present.
+  An anonymous thumbnail still returned 401 with the bundled headers. The 19-response matrix
+  passed and the new authenticated thumbnail check rejected the historical configuration.
+- The corrected nginx configuration had SHA-256
+  `1881401e79e1ee80b4d288d05a1e58bb7af5d5c9c4bdee1ecd4d3281fda133fc`. The probe built the
+  frontend image `sha256:bea0db2a20b29c7942c001d7a0ce7378e9bc6a1ebeea6b706c1e2a5dc4284a9b`
+  and backend image `sha256:f874b28b35bfdabb08edc84294ad413d701aca08b30ec6eab08d3c72e162b803`.
+  The disposable project `florabase-workflow-smoke-8347f042ff16` retired four containers, a
+  network and both image tags. Its database used tmpfs. No owned resources remain.
+- The historical browser campaign remains evidence for its recorded source. SOL's focused
+  review and the combined candidate checks above remain pending.

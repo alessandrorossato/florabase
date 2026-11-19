@@ -14,14 +14,23 @@
   server-owned keys beneath a backend-only persistent trusted root. The production proxy permits
   32 MiB requests for multipart overhead; SVG and other active or unsupported content is rejected.
   Metadata and content retrieval require the owner session and use private, no-store responses.
-- External collection images persist only validated HTTPS image/source URLs and attribution. The
-  backend never fetches them; the UI shows the remote host and privacy disclosure before an explicit
-  load, sets `referrerPolicy="no-referrer"` on the image element, and never auto-retries failures.
-- An external BotanicalIdentity cover additionally requires an explicit privacy acknowledgement
-  before it can become current. That saved opt-in permits automatic display on the identity detail
-  page; the browser still sends no referrer, the URL carries no Florabase record or session data,
-  failures are not retried automatically, and the backend never downloads, proxies, or validates by
-  contacting the remote host.
+- An external media reference stores validated HTTPS image and source URLs with attribution.
+  Metadata writes, reads and migrations make no request to the image host. **Preview once**
+  separately authorizes the browser to load a remote image in Media detail, Quick Preview or
+  Photos. The UI discloses the remote host and the browser sends no referrer. The preview stores
+  no snapshot and has no automatic retry.
+- The owner can explicitly **Save local copy** or **Refresh local copy** through authenticated,
+  CSRF-protected endpoints. The guarded backend fetch validates every destination and redirect,
+  rejects non-public addresses, pins the connection to a validated address, verifies the hostname
+  for HTTPS and bounds response size, time and image decoding. It sends no user credentials or
+  cookies. The resulting protected local copy is served through Florabase without contacting the
+  remote host. A failed refresh preserves the previous copy.
+  [Media-library fetch safety](media-library.md#fetch-safety-and-snapshot-concurrency)
+- Saving an external BotanicalIdentity cover requires a separate privacy acknowledgement. For a
+  cover without a saved local copy, that acknowledgement permits later automatic browser display
+  on the identity detail page. The browser sends no referrer, and Florabase adds no record or
+  session data to the image URL. Failed image loads have no automatic retry. Media previews and
+  online map tiles have their own controls.
 - Collection origins uses local geography by default. Optional configured online tiles require an
   explicit visitor action and disclose IP, map tile area and app origin under the provider policy.
   Cross-origin Referer contains only the origin; no record path/query/hash. A tile error removes the

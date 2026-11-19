@@ -12,6 +12,7 @@ import signal
 import subprocess
 import tempfile
 from contextlib import ExitStack, suppress
+from http.client import HTTPMessage
 from http.cookies import SimpleCookie
 from pathlib import Path
 
@@ -243,7 +244,16 @@ def exercise_credentials(stack: Stack, password: str) -> str:
     return reset_password
 
 
-def exercise_bundled_headers(client: Client) -> None:
+def require_response_header(
+    path: str, headers: HTTPMessage, name: str, expected: str | None
+) -> None:
+    values = headers.get_all(name, [])
+    expected_values = [] if expected is None else [expected]
+    if values != expected_values:
+        raise RuntimeError(f"GET {path}: expected {name} {expected_values!r}, got {values!r}")
+
+
+def require_bundled_headers(path: str, headers: HTTPMessage) -> None:
     security_headers = {
         "X-Content-Type-Options": "nosniff",
         "Referrer-Policy": "strict-origin-when-cross-origin",
@@ -255,6 +265,11 @@ def exercise_bundled_headers(client: Client) -> None:
             "form-action 'self'; frame-ancestors 'none'"
         ),
     }
+    for name, value in security_headers.items():
+        require_response_header(path, headers, name, value)
+
+
+def exercise_bundled_headers(client: Client) -> None:
     for path, status, cache in (
         ("/", 200, "no-cache"),
         ("/spa-fallback-probe", 200, "no-cache"),
@@ -277,11 +292,19 @@ def exercise_bundled_headers(client: Client) -> None:
         ("/api/v1/auth/session", 401, None),
     ):
         _, headers = client.request(path, expected=status)
-        for name, value in security_headers.items():
-            assert headers.get_all(name) == [value], (path, name, headers.get_all(name))
+        require_bundled_headers(path, headers)
         if not path.startswith("/api/"):
-            assert headers.get_all("Cache-Control", []) == ([cache] if cache else []), path
+            require_response_header(path, headers, "Cache-Control", cache)
     print("Bundled security headers and static cache policy passed", flush=True)
+
+
+def exercise_authenticated_thumbnail(client: Client, path: str) -> None:
+    _, headers = client.request(path)
+    require_bundled_headers(path, headers)
+    require_response_header(
+        path, headers, "Cache-Control", "private, max-age=86400, must-revalidate"
+    )
+    print("Authenticated thumbnail security headers and private cache policy passed", flush=True)
 
 
 def smoke(source: Stack, restore: Stack) -> None:
@@ -315,6 +338,7 @@ def smoke(source: Stack, restore: Stack) -> None:
     original = png(19, 37, 59)
     client = source.login(password)
     asset = client.upload(original, "portable-smoke")
+    exercise_authenticated_thumbnail(client, asset["thumbnail_url"])
     path = asset["content_url"]
 
     # Real service restarts preserve both state roots and never run Alembic.
