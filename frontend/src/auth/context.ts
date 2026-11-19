@@ -3,6 +3,7 @@ import { createContext, useContext } from "react";
 import type {
   ChangePasswordRequest,
   LoginRequest,
+  ProtectedRequestCapability,
   SessionResponse,
 } from "./api";
 
@@ -39,6 +40,7 @@ export type AuthState =
 
 export interface AuthContextValue {
   state: AuthState;
+  capability: ProtectedRequestCapability;
   workspaceKey?: number;
   logIn(payload: LoginRequest): Promise<void>;
   reauthenticate?: (payload: LoginRequest) => Promise<void>;
@@ -50,6 +52,10 @@ export interface AuthContextValue {
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function useOptionalAuth(): AuthContextValue | null {
+  return useContext(AuthContext);
+}
 
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);

@@ -1,12 +1,25 @@
+import type { ReactElement } from "react";
 import { cleanup, render, screen, within } from "@testing-library/react";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { AuthContext, type AuthContextValue } from "../auth/context";
 import { requestJson } from "../auth/api";
 import type { components } from "../api/schema";
+import { acquireTestAuth } from "../test/auth";
 import { LineagePanel } from "./LineagePanel";
 
-vi.mock("../auth/api", () => ({ requestJson: vi.fn() }));
+vi.mock("../auth/api", async (original) => ({
+  ...(await original<typeof import("../auth/api")>()),
+  requestJson: vi.fn(),
+}));
 const request = vi.mocked(requestJson);
+let auth: AuthContextValue;
+function renderWithAuth(ui: ReactElement) {
+  return render(<AuthContext.Provider value={auth}>{ui}</AuthContext.Provider>);
+}
+beforeEach(async () => {
+  auth = (await acquireTestAuth()).auth;
+});
 type Response = components["schemas"]["LineageResponse"];
 const identity = {
   id: "same-identity",
@@ -51,7 +64,7 @@ afterEach(() => {
 
 test("recorded ancestry keeps reversed ancestors explicit and correctly linked", async () => {
   request.mockResolvedValue(extracted);
-  render(<LineagePanel kind="plants" id="extracted" />);
+  renderWithAuth(<LineagePanel kind="plants" id="extracted" />);
   const path = await screen.findByRole("list", {
     name: "Recorded upstream path",
   });
@@ -88,16 +101,24 @@ test("navigation cannot show or restore a previous record's lineage during loadi
           resolveNew = resolve;
         }),
     );
-  const view = render(<LineagePanel kind="plants" id="extracted" />);
+  const view = renderWithAuth(<LineagePanel kind="plants" id="extracted" />);
   await screen.findByRole("link", { name: /Original group/ });
-  view.rerender(<LineagePanel kind="plants" id="pending-old" />);
+  view.rerender(
+    <AuthContext.Provider value={auth}>
+      <LineagePanel kind="plants" id="pending-old" />
+    </AuthContext.Provider>,
+  );
   expect(screen.getByRole("status")).toHaveTextContent(
     "Loading recorded lineage",
   );
   expect(
     screen.queryByRole("link", { name: /Original group/ }),
   ).not.toBeInTheDocument();
-  view.rerender(<LineagePanel kind="plants" id="independent" />);
+  view.rerender(
+    <AuthContext.Provider value={auth}>
+      <LineagePanel kind="plants" id="independent" />
+    </AuthContext.Provider>,
+  );
   resolveNew({
     ...extracted,
     subject: { ...extracted.subject, id: "independent" },
@@ -119,7 +140,7 @@ test.each([false, true])(
       subject: { ...extracted.subject, kind: "seed_lot", id: "material" },
       ancestors: producer ? [extracted.ancestors[0]] : [],
     });
-    render(<LineagePanel kind="seed-lots" id="material" />);
+    renderWithAuth(<LineagePanel kind="seed-lots" id="material" />);
     if (producer) {
       expect(
         await screen.findByRole("link", { name: /Original group/ }),
@@ -146,7 +167,7 @@ test.each(["plant", "plant_group"] as const)(
       subject: { ...extracted.subject, kind, label: "Current record" },
       ancestors: [extracted.ancestors[1], extracted.ancestors[2]],
     });
-    render(
+    renderWithAuth(
       <LineagePanel
         kind={kind === "plant" ? "plants" : "plant-groups"}
         id="extracted"

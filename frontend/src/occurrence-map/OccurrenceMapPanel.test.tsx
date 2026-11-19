@@ -1,7 +1,10 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render as rtlRender, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import type { ReactElement } from "react";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { AuthRequestLockedError } from "../auth/api";
+import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 
 import type { ExternalTaxonLinkResponse } from "../botanical-identities/api";
 import type { OccurrenceMapSummary } from "./api";
@@ -75,11 +78,23 @@ function json(body: unknown, status = 200) {
   });
 }
 
-const authStub = vi.hoisted(() => ({
-  state: { status: "authenticated", csrfToken: "csrf" },
-  sessionExpired: vi.fn(),
-}));
-vi.mock("../auth/context", () => ({ useAuth: () => authStub }));
+let auth: AuthContextValue;
+beforeEach(async () => {
+  auth = (await acquireTestAuth({ csrfToken: "csrf" })).auth;
+});
+function render(ui: ReactElement, value: AuthContextValue = auth) {
+  const result = rtlRender(
+    <AuthContext.Provider value={value}>{ui}</AuthContext.Provider>,
+  );
+  return {
+    ...result,
+    rerender: (next: ReactElement, nextValue: AuthContextValue = auth) => {
+      result.rerender(
+        <AuthContext.Provider value={nextValue}>{next}</AuthContext.Provider>,
+      );
+    },
+  };
+}
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
@@ -204,7 +219,6 @@ test("keeps density map mounted cleanly while reauthentication is locked without
   const fetch = vi
     .spyOn(globalThis, "fetch")
     .mockResolvedValueOnce(json(saved()));
-  authStub.state = { status: "authenticated", csrfToken: "csrf" };
   const view = render(
     <OccurrenceMapPanel identityId={identityId} link={link} />,
   );
@@ -215,22 +229,40 @@ test("keeps density map mounted cleanly while reauthentication is locked without
   ).toBeVisible();
   expect(fetch).toHaveBeenCalledTimes(1);
 
-  authStub.state = {
-    status: "unauthenticated",
-    retainedIdentity: {
-      user_id: "owner",
-      login_name: "alice",
-      display_name: "Alice",
-    },
-  } as unknown as typeof authStub.state;
-  view.rerender(<OccurrenceMapPanel identityId={identityId} link={link} />);
+  const lockedAuth: AuthContextValue = {
+    ...auth,
+    state: {
+      status: "unauthenticated",
+      retainedIdentity: {
+        user_id: "owner",
+        login_name: "alice",
+        display_name: "Alice",
+      },
+    } as unknown as AuthContextValue["state"],
+  };
+  view.rerender(
+    <OccurrenceMapPanel identityId={identityId} link={link} />,
+    lockedAuth,
+  );
   expect(
     screen.getByLabelText("Interactive GBIF occurrence-record density map"),
   ).toBeInTheDocument();
   expect(fetch).toHaveBeenCalledTimes(1);
 
-  authStub.state = { status: "authenticated", csrfToken: "csrf-2" };
-  view.rerender(<OccurrenceMapPanel identityId={identityId} link={link} />);
+  const unlockedAuth: AuthContextValue = {
+    ...auth,
+    state: {
+      ...(auth.state as Extract<
+        AuthContextValue["state"],
+        { status: "authenticated" }
+      >),
+      csrfToken: "csrf-2",
+    },
+  };
+  view.rerender(
+    <OccurrenceMapPanel identityId={identityId} link={link} />,
+    unlockedAuth,
+  );
   expect(
     await screen.findByLabelText(
       "Interactive GBIF occurrence-record density map",
@@ -242,8 +274,47 @@ test("treats AuthRequestLockedError during evidence check as cancellation withou
   vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(
     new AuthRequestLockedError(),
   );
-  authStub.state = { status: "authenticated", csrfToken: "csrf" };
   render(<OccurrenceMapPanel identityId={identityId} link={link} />);
   await Promise.resolve();
   expect(screen.queryByRole("alert")).toBeNull();
+});
+
+test("logout-failed retains mounted occurrence density map and suspends protected reads until restored", async () => {
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValueOnce(json(saved()));
+  const view = render(
+    <OccurrenceMapPanel identityId={identityId} link={link} />,
+  );
+  expect(
+    await screen.findByLabelText(
+      "Interactive GBIF occurrence-record density map",
+    ),
+  ).toBeVisible();
+  expect(fetch).toHaveBeenCalledTimes(1);
+
+  const logoutFailedAuth: AuthContextValue = {
+    ...auth,
+    state: {
+      status: "logout-failed",
+      session: {
+        user_id: "owner",
+        login_name: "alice",
+        display_name: "Alice",
+        owner: true,
+        canonical_origin: "http://localhost:15174",
+      },
+      csrfToken: "stale-csrf",
+      message: "Sign out failed.",
+    },
+  };
+  view.rerender(
+    <OccurrenceMapPanel identityId={identityId} link={link} />,
+    logoutFailedAuth,
+  );
+  await Promise.resolve();
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(
+    screen.getByLabelText("Interactive GBIF occurrence-record density map"),
+  ).toBeVisible();
 });

@@ -21,6 +21,7 @@ import { useDirectoryView } from "../saved-views/useDirectoryView";
 import {
   ApiError,
   activeCsrfToken,
+  isExpectedAuthCancellation,
   isPresentationRetainedState,
 } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -240,7 +241,9 @@ export function GeographyScreen({
   startCreating?: boolean;
 }) {
   const auth = useAuth();
-  const { sessionExpired } = auth;
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
   });
@@ -315,8 +318,9 @@ export function GeographyScreen({
   const pending = save.status === "saving";
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void listGeographicPlaces(controller.signal)
+    void listGeographicPlaces(capability, controller.signal)
       .then((places) => {
         setDirectory({ status: "ready", places });
         if (!initialExpansionApplied.current) {
@@ -343,14 +347,15 @@ export function GeographyScreen({
         }
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setDirectory({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [sessionExpired, attempt, initialPlaceId]);
+  }, [authorized, capability, sessionExpired, attempt, initialPlaceId]);
 
   useEffect(() => {
     if (save.status === "error") feedback.current?.focus();
@@ -382,7 +387,7 @@ export function GeographyScreen({
     setSave({ status: "saving" });
     try {
       const place = await action();
-      const refreshed = await listGeographicPlaces();
+      const refreshed = await listGeographicPlaces(capability);
       setDirectory({ status: "ready", places: refreshed });
       setExpanded((current) => {
         const next = new Set(current);
@@ -481,6 +486,7 @@ export function GeographyScreen({
             place_type: createType,
           },
           csrfToken,
+          capability,
         ),
       (place) => {
         setCreateName("");
@@ -507,6 +513,7 @@ export function GeographyScreen({
               "city_town" | "locality" | "other_named_area",
           },
           csrfToken,
+          capability,
         ),
       (place) => `${place.display_path} was updated.`,
     );
@@ -839,6 +846,7 @@ export function GeographyScreen({
                                         selected.id,
                                         !selected.retired_at,
                                         csrfToken,
+                                        capability,
                                       ),
                                     (place) =>
                                       place.retired_at
@@ -861,10 +869,11 @@ export function GeographyScreen({
                                   void deleteGeographicPlace(
                                     selected.id,
                                     csrfToken,
+                                    capability,
                                   )
                                     .then(async () => {
                                       const refreshed =
-                                        await listGeographicPlaces();
+                                        await listGeographicPlaces(capability);
                                       setDirectory({
                                         status: "ready",
                                         places: refreshed,

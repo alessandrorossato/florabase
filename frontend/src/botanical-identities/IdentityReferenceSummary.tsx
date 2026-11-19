@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   getBotanicalProfile,
@@ -10,6 +10,9 @@ import { getExternalTaxonLink } from "./api";
 /** Local reference reads only; visiting the identity never requests provider data. */
 export function IdentityReferenceSummary({ id }: { id: string }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [attempt, setAttempt] = useState(0);
   const [summary, setSummary] = useState<{
     description: string;
@@ -18,11 +21,12 @@ export function IdentityReferenceSummary({ id }: { id: string }) {
     failed: boolean;
   } | null>(null);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     void Promise.allSettled([
-      getBotanicalProfile(id, controller.signal),
-      listBotanicalNativeRanges(id, controller.signal),
-      getExternalTaxonLink(id, controller.signal),
+      getBotanicalProfile(id, capability, controller.signal),
+      listBotanicalNativeRanges(id, capability, controller.signal),
+      getExternalTaxonLink(id, capability, controller.signal),
     ]).then(([profile, ranges, source]) => {
       if (controller.signal.aborted) return;
       const unavailable = (result: PromiseSettledResult<unknown>) =>
@@ -33,8 +37,19 @@ export function IdentityReferenceSummary({ id }: { id: string }) {
           result.status === "rejected" &&
           result.reason instanceof ApiError &&
           result.reason.status === 401
+        ) {
+          sessionExpired();
+          return;
+        }
+      if (
+        [profile, ranges, source].some(
+          (result) =>
+            result.status === "rejected" &&
+            isExpectedAuthCancellation(result.reason),
         )
-          auth.sessionExpired();
+      ) {
+        return;
+      }
       setSummary({
         description:
           profile.status === "fulfilled"
@@ -59,7 +74,7 @@ export function IdentityReferenceSummary({ id }: { id: string }) {
     return () => {
       controller.abort();
     };
-  }, [id, attempt, auth]);
+  }, [authorized, capability, id, attempt, sessionExpired]);
   return (
     <section className="identity-hub-section" aria-label="Botanical summary">
       <h3>Botanical summary</h3>

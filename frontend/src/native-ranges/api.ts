@@ -1,5 +1,5 @@
 import type { components } from "../api/schema";
-import { requestJson } from "../auth/api";
+import { requestJson, type ProtectedRequestCapability } from "../auth/api";
 import type { RecordCategory } from "../saved-views/state";
 import type { Scope } from "../species-distribution/api";
 
@@ -31,18 +31,22 @@ function params(filters: Filters, offset: number) {
 export function listNativeIdentities(
   filters: Filters,
   offset: number,
+  capability: ProtectedRequestCapability,
   signal: AbortSignal,
 ): Promise<RangePage> {
   return requestJson(`${endpoint}/identities?${params(filters, offset)}`, {
+    capability,
     signal,
   });
 }
 export function getNativeOverview(
   filters: Filters,
   offset: number,
+  capability: ProtectedRequestCapability,
   signal: AbortSignal,
 ): Promise<Overview> {
   return requestJson(`${endpoint}/overview?${params(filters, offset)}`, {
+    capability,
     signal,
   });
 }
@@ -50,23 +54,25 @@ export function getNativeSelection(
   id: string,
   filters: Filters,
   offset: number,
+  capability: ProtectedRequestCapability,
   signal: AbortSignal,
 ): Promise<SelectedRanges> {
   return requestJson(
     `${endpoint}/identities/${encodeURIComponent(id)}?${params(filters, offset)}`,
-    { signal },
+    { capability, signal },
   );
 }
 
 export function getNativeComparison(
   ids: string[],
   filters: Filters,
+  capability: ProtectedRequestCapability,
   signal: AbortSignal,
 ): Promise<Selection> {
   const query = params(filters, 0);
   query.delete("offset");
   for (const id of ids) query.append("identity", id);
-  return requestJson(`${endpoint}/selection?${query}`, { signal });
+  return requestJson(`${endpoint}/selection?${query}`, { capability, signal });
 }
 
 export type TerritoryIdentityPage =
@@ -77,6 +83,7 @@ export function listTerritoryIdentities(
   match: "any" | "all",
   ids: string[] | undefined,
   offset: number,
+  capability: ProtectedRequestCapability,
   signal: AbortSignal,
 ): Promise<TerritoryIdentityPage> {
   const query = params(filters, offset);
@@ -87,5 +94,8 @@ export function listTerritoryIdentities(
     query.append("identity", id);
   });
   query.set("match", match);
-  return requestJson(`${endpoint}/territories/identities?${query}`, { signal });
+  return requestJson(`${endpoint}/territories/identities?${query}`, {
+    capability,
+    signal,
+  });
 }

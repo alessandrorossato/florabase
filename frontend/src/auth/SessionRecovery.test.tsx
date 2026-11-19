@@ -8,19 +8,28 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { StrictMode } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 
 import { App } from "../App";
+import { RecordPresentationProvider } from "../components/RecordPresentationProvider";
 import { EvidenceTiles } from "../occurrence-map/EvidenceTiles";
+import { PlantScreen } from "../plants/PlantScreen";
 import { openFormSection } from "../test/formSections";
 import {
   AuthRequestLockedError,
   StaleAuthEpochError,
+  acquireWorkspaceCapability,
   attachAuthRequestGate,
+  downloadProtectedFile,
   getProtectedAuthEpoch,
   isProtectedRequestAuthorized,
+  isReauthenticationState,
+  openProtectedTab,
   requestJson,
+  requestProtectedBlob,
   syncAuthRequestGate,
+  type ProtectedRequestCapability,
 } from "./api";
 import { AuthProvider } from "./AuthProvider";
 import { useAuth } from "./context";
@@ -298,9 +307,7 @@ test("reauthentication preserves EditWorkspace Plant draft, traps Escape/Tab, un
 
   // Protected request gate refuses requests synchronously while locked without touching fetch.
   const callsBeforeLockCheck = fetchSpy.mock.calls.length;
-  await expect(requestJson("/api/v1/plants")).rejects.toBeInstanceOf(
-    AuthRequestLockedError,
-  );
+  expect(isProtectedRequestAuthorized()).toBe(false);
   expect(fetchSpy.mock.calls.length).toBe(callsBeforeLockCheck);
 
   // Escape and Tab cannot close #reauth-dialog or underlying EditWorkspace.
@@ -624,12 +631,20 @@ test("backend outage (Scenario F: 503 then network recovery) keeps session authe
 
 test("Scenarios A & B: requestJson fences stale Epoch-1 200 responses and delayed Epoch-1 401 errors after Epoch-2 login", async () => {
   const onUnauthorized = vi.fn();
-  const epoch1Gate = syncAuthRequestGate({ locked: false, advanceEpoch: true });
+  const gate = attachAuthRequestGate(onUnauthorized);
+  const epoch1Gate = syncAuthRequestGate({
+    providerId: gate.providerId,
+    locked: false,
+    advanceEpoch: true,
+    ownerId: "owner-1",
+  });
+  const { capability: epoch1Capability } = acquireWorkspaceCapability(
+    gate.providerId,
+  );
   const epoch1Response = deferred<Response>();
   const epoch1Delayed401 = deferred<Response>();
   const epoch1BodyJson = deferred<unknown>();
 
-  const detach = attachAuthRequestGate(onUnauthorized, false);
   const initialEpoch = getProtectedAuthEpoch();
 
   const fetchMock = vi.spyOn(globalThis, "fetch");
@@ -644,14 +659,30 @@ test("Scenarios A & B: requestJson fences stale Epoch-1 200 responses and delaye
     } as unknown as Response),
   );
 
-  const p200 = requestJson("/api/v1/plants");
-  const p401 = requestJson("/api/v1/sowings");
-  const pBody = requestJson("/api/v1/orders");
+  const p200 = requestJson("/api/v1/plants", { capability: epoch1Capability });
+  const p401 = requestJson("/api/v1/sowings", { capability: epoch1Capability });
+  const pBody = requestJson("/api/v1/orders", { capability: epoch1Capability });
 
-  // Transition to locked and then new authenticated Epoch-2 (simulating session expiry + re-login).
-  syncAuthRequestGate({ locked: true, advanceEpoch: true });
+  // Locking gate refuses same-owner capability synchronously without touching fetch.
+  syncAuthRequestGate({
+    providerId: gate.providerId,
+    locked: true,
+    advanceEpoch: true,
+    ownerId: "owner-1",
+  });
   expect(isProtectedRequestAuthorized()).toBe(false);
-  const nextEpoch = syncAuthRequestGate({ locked: false, advanceEpoch: true });
+  const callsBeforeLockedCheck = fetchMock.mock.calls.length;
+  await expect(
+    requestJson("/api/v1/plants", { capability: epoch1Capability }),
+  ).rejects.toBeInstanceOf(AuthRequestLockedError);
+  expect(fetchMock.mock.calls.length).toBe(callsBeforeLockedCheck);
+
+  const nextEpoch = syncAuthRequestGate({
+    providerId: gate.providerId,
+    locked: false,
+    advanceEpoch: true,
+    ownerId: "owner-1",
+  });
   expect(nextEpoch).toBeGreaterThan(initialEpoch);
   expect(epoch1Gate).toBeLessThan(nextEpoch);
 
@@ -664,7 +695,7 @@ test("Scenarios A & B: requestJson fences stale Epoch-1 200 responses and delaye
   await expect(pBody).rejects.toBeInstanceOf(StaleAuthEpochError);
   expect(onUnauthorized).not.toHaveBeenCalled();
 
-  detach();
+  gate.detach();
 });
 
 test("Scenario C: concurrent cookie-changing auth operations serialize without interleaving", async () => {
@@ -754,7 +785,13 @@ test("Scenario C: concurrent cookie-changing auth operations serialize without i
 
 test("Scenario G: EvidenceTiles aborts in-flight tile requests and cancels pending retry timers on auth lock", async () => {
   vi.useFakeTimers();
-  const detach = attachAuthRequestGate(vi.fn(), false);
+  const gate = attachAuthRequestGate(vi.fn());
+  syncAuthRequestGate({
+    providerId: gate.providerId,
+    locked: false,
+    ownerId: "owner-1",
+  });
+  const { capability } = acquireWorkspaceCapability(gate.providerId);
 
   const signals: AbortSignal[] = [];
   let fetchCount = 0;
@@ -774,6 +811,7 @@ test("Scenario G: EvidenceTiles aborts in-flight tile requests and cancels pendi
     (coords) =>
       `/api/v1/tiles/${String(coords.z)}/${String(coords.x)}/${String(coords.y)}.png`,
     report,
+    capability,
   );
   const done1 = vi.fn();
   const done2 = vi.fn();
@@ -794,7 +832,12 @@ test("Scenario G: EvidenceTiles aborts in-flight tile requests and cancels pendi
   expect(signals[1]?.aborted).toBe(false);
 
   // Locking auth gate aborts in-flight tile requests and clears retry timers.
-  syncAuthRequestGate({ locked: true, advanceEpoch: true });
+  syncAuthRequestGate({
+    providerId: gate.providerId,
+    locked: true,
+    advanceEpoch: true,
+    ownerId: "owner-1",
+  });
   expect(signals[1]?.aborted).toBe(true);
 
   act(() => {
@@ -809,7 +852,7 @@ test("Scenario G: EvidenceTiles aborts in-flight tile requests and cancels pendi
   expect(fetchCount).toBe(2);
   expect(done3).toHaveBeenCalledTimes(1);
 
-  detach();
+  gate.detach();
 });
 
 test("domain editors beyond PlantScreen (BotanicalIdentityScreen) retain unsaved draft across 401 recovery", async () => {
@@ -993,7 +1036,68 @@ test("tile-only HTTP 401 without JSON 401 triggers reauth dialog, preserves acti
 
   window.history.replaceState(null, "", `#/plants/${plantId}`);
   const user = userEvent.setup();
-  const { container } = render(<App />);
+  let liveCapability!: ProtectedRequestCapability;
+
+  function TileRecoveryHost() {
+    const auth = useAuth();
+    liveCapability = auth.capability;
+    if (auth.state.status === "restoring") return null;
+    const locked = isReauthenticationState(auth.state);
+    return (
+      <main>
+        <div
+          className="application-shell"
+          hidden={locked || undefined}
+          inert={locked || undefined}
+        >
+          {auth.state.status === "authenticated" && (
+            <p>Signed in as {auth.state.session.display_name}</p>
+          )}
+          <RecordPresentationProvider
+            key={auth.workspaceKey ?? 0}
+            fetchIdentities={false}
+          >
+            <PlantScreen initialId={plantId} />
+          </RecordPresentationProvider>
+        </div>
+        {locked && (
+          <dialog open aria-label="Session expired — sign in again">
+            <h3>Session expired — sign in again</h3>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                const data = new FormData(event.currentTarget);
+                const loginName = data.get("login_name");
+                const password = data.get("password");
+                void auth.reauthenticate?.({
+                  login_name: typeof loginName === "string" ? loginName : "",
+                  password: typeof password === "string" ? password : "",
+                });
+              }}
+            >
+              <input
+                id="reauth-login-name"
+                name="login_name"
+                defaultValue={
+                  isReauthenticationState(auth.state)
+                    ? auth.state.retainedIdentity.login_name
+                    : ""
+                }
+              />
+              <input id="reauth-password" name="password" type="password" />
+              <button type="submit">Sign in</button>
+            </form>
+          </dialog>
+        )}
+      </main>
+    );
+  }
+
+  const { container } = render(
+    <AuthProvider>
+      <TileRecoveryHost />
+    </AuthProvider>,
+  );
 
   await openPlantEditDialog(user);
   const editDialog = await screen.findByRole("dialog", { name: "Edit Plant" });
@@ -1007,6 +1111,7 @@ test("tile-only HTTP 401 without JSON 401 triggers reauth dialog, preserves acti
     (coords) =>
       `/api/v1/botanical-identities/${identityId}/occurrence-evidence/tiles/${String(coords.z)}/${String(coords.x)}/${String(coords.y)}.png`,
     vi.fn(),
+    liveCapability,
   );
   tiles.createTile({ x: 0, y: 0, z: 2 } as never, vi.fn());
 
@@ -1154,6 +1259,7 @@ test("F2 pre-commit race: different-owner reauthentication revokes former-owner 
         ? `/api/v1/botanical-identities/${identityId}/occurrence-map/tiles/retry503/${String(c.z)}/${String(c.x)}/${String(c.y)}.png`
         : `/api/v1/botanical-identities/${identityId}/occurrence-map/tiles/alice-layer/${String(c.z)}/${String(c.x)}/${String(c.y)}.png`,
     vi.fn(),
+    api.capability,
   );
   (aliceLayer as unknown as { attached: boolean }).attached = true;
   const aliceRedraw = vi.spyOn(aliceLayer, "redraw").mockImplementation(() => {
@@ -1232,6 +1338,7 @@ test("F2 pre-commit race: different-owner reauthentication revokes former-owner 
     (c) =>
       `/api/v1/botanical-identities/${identityId}/occurrence-map/tiles/bob-layer/${String(c.z)}/${String(c.x)}/${String(c.y)}.png`,
     vi.fn(),
+    api.capability,
   );
   bobLayer.createTile({ x: 0, y: 0, z: 1 } as never, vi.fn());
   await act(async () => {
@@ -1246,4 +1353,344 @@ test("F2 pre-commit race: different-owner reauthentication revokes former-owner 
 
   aliceLayer.cancel();
   bobLayer.cancel();
+});
+
+test("forged, missing, wrong-generation, and revoked capabilities fail closed before fetch across JSON, blob, download, tab, and tiles", async () => {
+  const fetchSpy = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    );
+  const openSpy = vi.spyOn(window, "open");
+  const { providerId, detach } = attachAuthRequestGate(vi.fn(), false);
+  syncAuthRequestGate({ providerId, locked: false, ownerId: "owner-a" });
+
+  const handleValid = acquireWorkspaceCapability(providerId);
+  const handleWrongGen = acquireWorkspaceCapability(providerId);
+  const forged = {
+    isAuthorized: () => true,
+    subscribeInvalidation: () => () => undefined,
+  } as unknown as ProtectedRequestCapability;
+  const wrongProvider = acquireWorkspaceCapability(providerId + 999);
+
+  // Explicit revoke + workspace generation bump + switch to active owner-b
+  handleValid.revoke();
+  syncAuthRequestGate({
+    providerId,
+    locked: false,
+    ownerId: "owner-b",
+    invalidateWorkspace: true,
+  });
+
+  const tileLayerRevoked = new EvidenceTiles(
+    () => "/api/v1/botanical-identities/1/occurrence-map/tiles/a/1/0/0.png",
+    vi.fn(),
+    handleValid.capability,
+  );
+  const tileLayerForged = new EvidenceTiles(
+    () => "/api/v1/botanical-identities/1/occurrence-map/tiles/b/1/0/0.png",
+    vi.fn(),
+    forged,
+  );
+
+  for (const bad of [
+    undefined as unknown as ProtectedRequestCapability,
+    forged,
+    handleValid.capability,
+    handleWrongGen.capability,
+    wrongProvider.capability,
+  ]) {
+    await expect(
+      requestJson("/api/v1/plants", { capability: bad }),
+    ).rejects.toThrow();
+    await expect(
+      requestProtectedBlob("/api/v1/media-assets/a/thumbnail", {
+        capability: bad,
+      }),
+    ).rejects.toThrow();
+    await expect(
+      downloadProtectedFile({
+        path: "/api/v1/exports/plants.csv",
+        capability: bad,
+        fallbackFilename: "plants.csv",
+      }),
+    ).rejects.toThrow();
+    await expect(
+      openProtectedTab({
+        path: "/api/v1/attachments/a/content",
+        capability: bad,
+      }),
+    ).rejects.toThrow();
+  }
+
+  tileLayerRevoked.createTile({ x: 0, y: 0, z: 1 } as never, vi.fn());
+  tileLayerForged.createTile({ x: 0, y: 0, z: 1 } as never, vi.fn());
+  await Promise.resolve();
+
+  // Not a single forged/missing/revoked/wrong-generation call may reach fetch() or window.open().
+  expect(fetchSpy).not.toHaveBeenCalled();
+  expect(openSpy).not.toHaveBeenCalled();
+  tileLayerRevoked.cancel();
+  tileLayerForged.cancel();
+  detach();
+});
+
+test("A -> B -> A permanent revocation keeps Alice's prior capability unusable and rejects delayed Epoch-1 bodies across owner switches", async () => {
+  let owner = "alice";
+  let resolveSlowBody: ((value: Response) => void) | undefined;
+  const fetchSpy = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+    const url =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+    if (url.endsWith("/auth/session")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            user_id: owner,
+            login_name: owner,
+            display_name: owner,
+            owner: true,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+    }
+    if (url.endsWith("/auth/csrf")) {
+      return Promise.resolve(
+        new Response(JSON.stringify({ csrf_token: `${owner}-csrf` }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    }
+    if (url.endsWith("/auth/login")) {
+      const body =
+        typeof init?.body === "string"
+          ? (JSON.parse(init.body) as { login_name: string })
+          : { login_name: "alice" };
+      owner = body.login_name;
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            user_id: owner,
+            login_name: owner,
+            display_name: owner,
+            owner: true,
+            csrf_token: `${owner}-csrf`,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+    }
+    if (url === "/api/v1/slow-epoch-1") {
+      return new Promise<Response>((resolve) => {
+        resolveSlowBody = resolve;
+      });
+    }
+    if (url.endsWith("/health")) {
+      return Promise.resolve(
+        new Response(JSON.stringify({ status: "ok" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    }
+    return Promise.resolve(
+      new Response(JSON.stringify({ owner }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+  });
+  vi.stubGlobal("fetch", fetchSpy);
+
+  let api!: ReturnType<typeof useAuth>;
+  function Harness() {
+    api = useAuth();
+    return null;
+  }
+  render(
+    <AuthProvider>
+      <Harness />
+    </AuthProvider>,
+  );
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+  expect(api.state.status).toBe("authenticated");
+  const aliceCap1 = api.capability;
+  const aliceRevocations: number[] = [];
+  const unsubPre = aliceCap1.subscribeInvalidation(() => {
+    aliceRevocations.push(getProtectedAuthEpoch());
+  });
+
+  // Start a slow request under Alice's cap1 before expiry.
+  const slowEpoch1Promise = requestJson("/api/v1/slow-epoch-1", {
+    capability: aliceCap1,
+  });
+
+  // Trigger lock -> dispatch count during lock must stay 0.
+  act(() => {
+    api.sessionExpired();
+  });
+  expect(api.state.status).toBe("unauthenticated");
+  const callsWhileLocked = fetchSpy.mock.calls.length;
+  await expect(
+    requestJson("/api/v1/plants", { capability: aliceCap1 }),
+  ).rejects.toThrow();
+  expect(fetchSpy.mock.calls.length).toBe(callsWhileLocked);
+
+  // Switch A -> B (Bob). Synchronous pre-commit invalidation must fire and revoke aliceCap1 forever.
+  await act(async () => {
+    await api.reauthenticate?.({ login_name: "bob", password: "pw" });
+  });
+  expect(aliceCap1.isAuthorized()).toBe(false);
+  expect(aliceRevocations.length).toBeGreaterThanOrEqual(1);
+
+  // Switch B -> A (Alice logs back in as a fresh workspace).
+  act(() => {
+    api.sessionExpired();
+  });
+  await act(async () => {
+    await api.reauthenticate?.({ login_name: "alice", password: "pw" });
+  });
+  const aliceCap2 = api.capability;
+  expect(aliceCap2).not.toBe(aliceCap1);
+  expect(aliceCap2.isAuthorized()).toBe(true);
+  // Alice's original capability remains PERMANENTLY revoked even though owner === "alice" again.
+  expect(aliceCap1.isAuthorized()).toBe(false);
+
+  const dispatchesBeforeOldCap = fetchSpy.mock.calls.length;
+  await expect(
+    requestJson("/api/v1/plants", { capability: aliceCap1 }),
+  ).rejects.toThrow();
+  await expect(
+    requestProtectedBlob("/api/v1/media-assets/a/thumbnail", {
+      capability: aliceCap1,
+    }),
+  ).rejects.toThrow();
+  expect(fetchSpy.mock.calls.length).toBe(dispatchesBeforeOldCap);
+
+  // Delayed Epoch-1 response arriving after A -> B -> A must reject as stale and never surface stale data.
+  resolveSlowBody?.(
+    new Response(JSON.stringify({ stale: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
+  await expect(slowEpoch1Promise).rejects.toThrow();
+
+  // Fresh Alice cap2 dispatches cleanly.
+  const freshResult = await requestJson<{ owner: string }>("/api/v1/plants", {
+    capability: aliceCap2,
+  });
+  expect(freshResult.owner).toBe("alice");
+  expect(fetchSpy.mock.calls.length).toBe(dispatchesBeforeOldCap + 1);
+
+  // Post-teardown subscription on already-revoked cap1 remains unauthorized and safe to unsubscribe.
+  const postListener = vi.fn();
+  const unsubPost = aliceCap1.subscribeInvalidation(postListener);
+  expect(aliceCap1.isAuthorized()).toBe(false);
+  unsubPre();
+  unsubPost();
+});
+
+test("StrictMode + provider unmount with pending session restore prevents old capability handoff into replacement provider", async () => {
+  let resolveSession!: (res: Response) => void;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: RequestInfo | URL) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url;
+      if (url.endsWith("/auth/session")) {
+        return new Promise<Response>((resolve) => {
+          resolveSession = resolve;
+        });
+      }
+      if (url.endsWith("/auth/csrf")) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ csrf_token: "csrf-new" }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      }
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    }),
+  );
+
+  let capFromFirst: ProtectedRequestCapability | undefined;
+  function Probe() {
+    const auth = useAuth();
+    capFromFirst = auth.capability;
+    return <span>{auth.state.status}</span>;
+  }
+
+  const first = render(
+    <StrictMode>
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>
+    </StrictMode>,
+  );
+  const firstCap = capFromFirst;
+  first.unmount();
+  // Resolve the still-pending cookie/session response after StrictMode unmount.
+  resolveSession(
+    new Response(
+      JSON.stringify({
+        user_id: "alice",
+        login_name: "alice",
+        display_name: "Alice",
+        owner: true,
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    ),
+  );
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+  expect(firstCap?.isAuthorized()).toBe(false);
+
+  // Mount replacement AuthProvider; old capability must NEVER regain authorization or dispatch fetch.
+  const second = render(
+    <AuthProvider>
+      <Probe />
+    </AuthProvider>,
+  );
+  resolveSession(
+    new Response(
+      JSON.stringify({
+        user_id: "alice",
+        login_name: "alice",
+        display_name: "Alice",
+        owner: true,
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    ),
+  );
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+  expect(capFromFirst?.isAuthorized()).toBe(true);
+  expect(firstCap?.isAuthorized()).toBe(false);
+  if (!firstCap) {
+    throw new Error("Expected firstCap to be captured");
+  }
+  await expect(
+    requestJson("/api/v1/plants", {
+      capability: firstCap,
+    }),
+  ).rejects.toThrow();
+  second.unmount();
 });

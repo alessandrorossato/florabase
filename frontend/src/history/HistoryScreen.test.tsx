@@ -10,6 +10,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../auth/context";
 import { ApiError } from "../auth/api";
+import { acquireTestAuth } from "../test/auth";
 import * as api from "./api";
 import * as saved from "../saved-views/api";
 import { HistoryScreen } from "./HistoryScreen";
@@ -34,24 +35,7 @@ vi.mock("../saved-views/api", () => ({
 const id = "01900000-0000-7000-8000-000000000001";
 const other = "01900000-0000-7000-8000-000000000002";
 const sessionExpired = vi.fn();
-const auth: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    session: {
-      user_id: id,
-      login_name: "owner",
-      display_name: null,
-      owner: true,
-      canonical_origin: "http://localhost",
-    },
-    csrfToken: "csrf",
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired,
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
 function entry(overrides: Partial<api.HistoryEntry> = {}): api.HistoryEntry {
   return {
     key: `event:${id}`,
@@ -83,7 +67,12 @@ function mount() {
     </AuthContext.Provider>,
   );
 }
-beforeEach(() => {
+beforeEach(async () => {
+  const acquired = await acquireTestAuth({
+    session: { user_id: id },
+    csrfToken: "csrf",
+  });
+  auth = { ...acquired.auth, sessionExpired };
   window.history.replaceState(null, "", "/#/history");
   vi.mocked(api.getHistory).mockResolvedValue(response());
   vi.mocked(saved.listSavedViews).mockResolvedValue([]);
@@ -211,6 +200,7 @@ test("drawer categories, subject, timeline year and back/forward state reset pag
     expect(api.getHistory).toHaveBeenLastCalledWith(
       expect.anything(),
       50,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -222,6 +212,7 @@ test("drawer categories, subject, timeline year and back/forward state reset pag
     expect(api.getHistory).toHaveBeenLastCalledWith(
       expect.objectContaining({ category: ["harvest"] }),
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -334,6 +325,7 @@ test("History Saved View saves filters, reopens canonical URL and resets identic
         state: { category: ["material"] },
       }),
       "csrf",
+      auth.capability,
     );
   });
   await user.click(
@@ -353,6 +345,7 @@ test("History Saved View saves filters, reopens canonical URL and resets identic
   expect(api.getHistory).toHaveBeenLastCalledWith(
     expect.objectContaining({ category: ["material"] }),
     0,
+    auth.capability,
     expect.any(AbortSignal),
   );
 });
@@ -445,6 +438,7 @@ test("History search is URL-addressable and filter reset preserves it", async ()
     expect(api.getHistory).toHaveBeenLastCalledWith(
       expect.objectContaining({ q: "basil" }),
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -561,6 +555,7 @@ test("fact type chips and the Filters drawer share one category selection and UR
     expect(api.getHistory).toHaveBeenLastCalledWith(
       expect.objectContaining({ category: ["harvest"] }),
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });

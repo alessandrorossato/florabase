@@ -6,7 +6,9 @@ import {
   type Map as LeafletMap,
 } from "leaflet";
 import {
-  acquireProtectedRequestCapability,
+  ApiError,
+  isExpectedAuthCancellation,
+  requestProtectedBlob,
   type ProtectedRequestCapability,
 } from "../auth/api";
 
@@ -29,13 +31,14 @@ interface Job {
 /** Only explicit provider-enabled URLs may fill a cache miss; cache playback never falls back. */
 export class EvidenceTiles extends GridLayer {
   private jobs = new Map<HTMLElement, Job>();
-  private capability: ProtectedRequestCapability;
   private unsubscribeAuth?: () => void;
   private suspendedByAuth = false;
   private attached = false;
+  private removed = false;
   constructor(
     private url: (coords: Coords) => string,
     private report: (status: TileStatus) => void,
+    private capability: ProtectedRequestCapability,
   ) {
     super({
       attribution:
@@ -43,9 +46,7 @@ export class EvidenceTiles extends GridLayer {
       maxNativeZoom: 16,
       opacity: 0.82,
     });
-    this.capability = acquireProtectedRequestCapability();
-    this.suspendedByAuth =
-      !this.capability.isRevoked() && !this.capability.isAuthorized();
+    this.suspendedByAuth = !this.capability.isAuthorized();
     this.on("tileunload", (event: { tile: HTMLElement }) => {
       const job = this.jobs.get(event.tile);
       if (job) this.dispose(job);
@@ -53,17 +54,10 @@ export class EvidenceTiles extends GridLayer {
       this.notify();
     });
     this.unsubscribeAuth = this.capability.subscribeInvalidation(() => {
-      if (this.capability.isRevoked()) {
-        this.suspendedByAuth = false;
-        const unsub = this.unsubscribeAuth;
-        this.unsubscribeAuth = undefined;
-        unsub?.();
-        this.cancel();
-        return;
-      }
+      if (this.removed) return;
       if (!this.capability.isAuthorized()) {
         this.suspendedByAuth = true;
-        this.cancel();
+        this.cancel(true);
         return;
       }
       if (this.suspendedByAuth) {
@@ -73,14 +67,15 @@ export class EvidenceTiles extends GridLayer {
     });
   }
   override onAdd(map: LeafletMap): this {
-    this.attached = !this.capability.isRevoked();
+    this.removed = false;
+    this.attached = true;
     return super.onAdd(map);
   }
   override onRemove(map: LeafletMap): this {
+    this.removed = true;
     this.attached = false;
     this.unsubscribeAuth?.();
     this.unsubscribeAuth = undefined;
-    this.capability.revoke();
     this.cancel();
     return super.onRemove(map);
   }
@@ -114,89 +109,27 @@ export class EvidenceTiles extends GridLayer {
   private async load(job: Job): Promise<void> {
     if (!this.capability.isAuthorized() || this.cancelled(job)) {
       job.state = "failed";
-      job.done(
-        new Error(
-          this.capability.isRevoked()
-            ? "Occurrence tile capability revoked"
-            : "Occurrence tile suspended",
-        ),
-        job.image,
-      );
+      job.done(new Error("Occurrence tile suspended"), job.image);
       this.notify();
       return;
     }
-    const originatingEpoch = this.capability.getEpoch();
     job.state = "pending";
     this.notify();
     try {
-      const response = await fetch(this.url(job.coords), {
-        credentials: "same-origin",
+      const result = await requestProtectedBlob(this.url(job.coords), {
+        capability: this.capability,
         signal: job.controller.signal,
       });
-      if (
-        this.cancelled(job) ||
-        !this.capability.isAuthorized() ||
-        originatingEpoch !== this.capability.getEpoch()
-      ) {
+      if (this.cancelled(job) || !this.capability.isAuthorized()) {
         return;
       }
-      if (response.status === 401) {
-        job.state = "failed";
-        this.capability.notifyUnauthorized(originatingEpoch);
-        job.done(
-          new Error("Occurrence tile authentication required"),
-          job.image,
-        );
-        this.notify();
-        return;
-      }
-      if (response.status === 204) {
+      if (result.status === 204) {
         job.state = "ready";
         job.done(undefined, job.image);
         this.notify();
         return;
       }
-      if (!response.ok) {
-        if (
-          [502, 503, 504].includes(response.status) &&
-          job.attempts < 2 &&
-          this.capability.isAuthorized() &&
-          originatingEpoch === this.capability.getEpoch()
-        ) {
-          const retryAfter = Number(response.headers.get("Retry-After"));
-          const delay =
-            Number.isFinite(retryAfter) && retryAfter > 0
-              ? Math.min(retryAfter * 1000, 10000)
-              : [500, 1500][job.attempts];
-          job.attempts++;
-          job.timer = setTimeout(() => {
-            if (
-              !this.cancelled(job) &&
-              this.capability.isAuthorized() &&
-              originatingEpoch === this.capability.getEpoch()
-            ) {
-              void this.load(job);
-            }
-          }, delay);
-          return;
-        }
-        job.state = [404, 409].includes(response.status) ? "missing" : "failed";
-        job.done(
-          new Error(`Occurrence tile HTTP ${String(response.status)}`),
-          job.image,
-        );
-        this.notify();
-        return;
-      }
-      const blob = await response.blob();
-      if (
-        this.cancelled(job) ||
-        !this.capability.isAuthorized() ||
-        originatingEpoch !== this.capability.getEpoch()
-      ) {
-        return;
-      }
-      job.objectUrl = URL.createObjectURL(blob);
+      job.objectUrl = URL.createObjectURL(result.blob);
       job.image.onload = () => {
         if (!job.controller.signal.aborted) {
           job.state = "ready";
@@ -212,20 +145,59 @@ export class EvidenceTiles extends GridLayer {
         }
       };
       job.image.src = job.objectUrl;
-    } catch {
+    } catch (error: unknown) {
       if (job.controller.signal.aborted) return;
-      if (
-        job.attempts < 2 &&
-        this.capability.isAuthorized() &&
-        originatingEpoch === this.capability.getEpoch()
-      ) {
+      if (isExpectedAuthCancellation(error)) {
+        job.state = "failed";
+        job.done(
+          error instanceof Error
+            ? error
+            : new Error("Occurrence tile suspended"),
+          job.image,
+        );
+        this.notify();
+        return;
+      }
+      if (error instanceof ApiError) {
+        if (error.status === 401) {
+          job.state = "failed";
+          job.done(
+            new Error("Occurrence tile authentication required"),
+            job.image,
+          );
+          this.notify();
+          return;
+        }
+        if (
+          [502, 503, 504].includes(error.status) &&
+          job.attempts < 2 &&
+          this.capability.isAuthorized()
+        ) {
+          const retryAfter = Number(error.retryAfter);
+          const delay =
+            Number.isFinite(retryAfter) && retryAfter > 0
+              ? Math.min(retryAfter * 1000, 10000)
+              : [500, 1500][job.attempts];
+          job.attempts++;
+          job.timer = setTimeout(() => {
+            if (!this.cancelled(job) && this.capability.isAuthorized()) {
+              void this.load(job);
+            }
+          }, delay);
+          return;
+        }
+        job.state = [404, 409].includes(error.status) ? "missing" : "failed";
+        job.done(
+          new Error(`Occurrence tile HTTP ${String(error.status)}`),
+          job.image,
+        );
+        this.notify();
+        return;
+      }
+      if (job.attempts < 2 && this.capability.isAuthorized()) {
         job.attempts++;
         job.timer = setTimeout(() => {
-          if (
-            !this.cancelled(job) &&
-            this.capability.isAuthorized() &&
-            originatingEpoch === this.capability.getEpoch()
-          ) {
+          if (!this.cancelled(job) && this.capability.isAuthorized()) {
             void this.load(job);
           }
         }, job.attempts * 1000);
@@ -255,8 +227,14 @@ export class EvidenceTiles extends GridLayer {
     job.image.onload = null;
     job.image.onerror = null;
   }
-  cancel(): void {
-    for (const job of this.jobs.values()) this.dispose(job);
+  cancel(notifyPending = false): void {
+    for (const job of this.jobs.values()) {
+      const wasPending = job.state === "pending";
+      this.dispose(job);
+      if (notifyPending && wasPending) {
+        job.done(new Error("Occurrence tile suspended"), job.image);
+      }
+    }
     this.jobs.clear();
     this.notify();
   }

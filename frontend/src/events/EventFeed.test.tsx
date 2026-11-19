@@ -1,8 +1,30 @@
+import type { ReactElement } from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { AuthContext, type AuthContextValue } from "../auth/context";
 import type { EventResponse } from "../collection/api";
+import { acquireTestAuth } from "../test/auth";
 import { EventFeed } from "./EventFeed";
-afterEach(cleanup);
+let auth: AuthContextValue;
+function renderFeed(ui: ReactElement) {
+  return render(<AuthContext.Provider value={auth}>{ui}</AuthContext.Provider>);
+}
+function mockImageFetch() {
+  return vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(() =>
+      Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      ),
+    );
+}
+beforeEach(async () => {
+  auth = (await acquireTestAuth()).auth;
+});
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 const event: EventResponse = {
   id: "event",
@@ -25,8 +47,9 @@ const event: EventResponse = {
   created_at: "2026-09-30T00:00:00Z",
   updated_at: "2026-09-30T00:00:00Z",
 };
-test("compact Events use the exact target primary thumbnail and retain the target link", () => {
-  render(
+test("compact Events use the exact target primary thumbnail and retain the target link", async () => {
+  const fetch = mockImageFetch();
+  renderFeed(
     <EventFeed
       compact
       showTargetPhoto
@@ -45,12 +68,13 @@ test("compact Events use the exact target primary thumbnail and retain the targe
       ]}
     />,
   );
-  const image = screen.getByRole("img", {
+  const image = await screen.findByRole("img", {
     name: "Primary photo for Glasshouse plant",
   });
-  expect(image).toHaveAttribute(
-    "src",
+  expect(image.getAttribute("src")).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenCalledWith(
     "/api/v1/collection-photos/local/photo/thumbnail",
+    expect.objectContaining({ credentials: "same-origin" }),
   );
   expect(
     screen.getByRole("link", { name: "Glasshouse plant" }),
@@ -112,8 +136,9 @@ test("other compact Event feeds keep their existing image-free presentation", ()
   expect(screen.queryByRole("img")).not.toBeInTheDocument();
 });
 
-test("the full Events list uses the same exact-target thumbnail treatment for groups", () => {
-  render(
+test("the full Events list uses the same exact-target thumbnail treatment for groups", async () => {
+  const fetch = mockImageFetch();
+  renderFeed(
     <EventFeed
       showTargetPhoto
       events={[
@@ -133,16 +158,22 @@ test("the full Events list uses the same exact-target thumbnail treatment for gr
       ]}
     />,
   );
-  expect(
-    screen.getByRole("img", { name: "Primary photo for Glasshouse plant" }),
-  ).toHaveAttribute("src", "/group-thumb");
+  const img = await screen.findByRole("img", {
+    name: "Primary photo for Glasshouse plant",
+  });
+  expect(img.getAttribute("src")).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenCalledWith(
+    "/group-thumb",
+    expect.objectContaining({ credentials: "same-origin" }),
+  );
   expect(
     screen.getByRole("link", { name: "Glasshouse plant" }),
   ).toHaveAttribute("href", "#/plant-groups/plant?tab=events");
 });
 
-test("structured Harvest links to details and prefers Harvest imagery without duplicate Event media", () => {
-  render(
+test("structured Harvest links to details and prefers Harvest imagery without duplicate Event media", async () => {
+  const fetch = mockImageFetch();
+  renderFeed(
     <EventFeed
       showTargetPhoto
       events={[
@@ -171,9 +202,19 @@ test("structured Harvest links to details and prefers Harvest imagery without du
   expect(
     screen.getByRole("link", { name: /Structured harvest/ }),
   ).toHaveAttribute("href", "#/harvests/harvest-1");
-  expect(screen.getByRole("img")).toHaveAttribute("src", "/harvest-primary");
-  fireEvent.error(screen.getByRole("img"));
-  expect(screen.getByRole("img")).toHaveAttribute("src", "/source-primary");
+  const primaryImg = await screen.findByRole("img");
+  expect(primaryImg.getAttribute("src")).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenLastCalledWith(
+    "/harvest-primary",
+    expect.objectContaining({ credentials: "same-origin" }),
+  );
+  fireEvent.error(primaryImg);
+  const fallbackImg = await screen.findByRole("img");
+  expect(fallbackImg.getAttribute("src")).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenLastCalledWith(
+    "/source-primary",
+    expect.objectContaining({ credentials: "same-origin" }),
+  );
 });
 
 test("identity timeline keeps month precision and full long notes without repeating its identity", () => {

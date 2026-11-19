@@ -1,5 +1,7 @@
 import { ActionButton } from "../components/Action";
 import { useEffect, useState, type ReactNode } from "react";
+import { isExpectedAuthCancellation } from "../auth/api";
+import { useAuth } from "../auth/context";
 import { OrderTransaction } from "./PurchaseContext";
 import { getOrder, listOrders, orderDate, orderTitle, type Order } from "./api";
 
@@ -23,6 +25,10 @@ export function OrderPicker({
   retainedKnowledge?: ReactNode;
   reviewAction?: ReactNode;
 }) {
+  const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [allSuppliers, setAllSuppliers] = useState(false);
   const supplierFilter = allSuppliers ? "" : supplierId;
   const [query, setQuery] = useState("");
@@ -37,8 +43,9 @@ export function OrderPicker({
   const requestKey = `${query}:${supplierFilter}:${String(offset)}:${String(attempt)}`;
   const loading = loadedKey !== requestKey;
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    listOrders(query, supplierFilter, offset, controller.signal)
+    listOrders(query, supplierFilter, offset, capability, controller.signal)
       .then((page) => {
         if (controller.signal.aborted) return;
         setItems(page.items);
@@ -46,8 +53,16 @@ export function OrderPicker({
         setLoadedKey(requestKey);
         setError(false);
       })
-      .catch(() => {
-        if (!controller.signal.aborted) {
+      .catch((failure: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
+        if (
+          failure instanceof Error &&
+          "status" in failure &&
+          failure.status === 401
+        )
+          sessionExpired();
+        else {
           setError(true);
           setLoadedKey(requestKey);
         }
@@ -55,19 +70,36 @@ export function OrderPicker({
     return () => {
       controller.abort();
     };
-  }, [query, supplierFilter, offset, attempt, requestKey]);
+  }, [
+    query,
+    supplierFilter,
+    offset,
+    attempt,
+    requestKey,
+    authorized,
+    capability,
+    sessionExpired,
+  ]);
   useEffect(() => {
-    if (!value) return;
+    if (!value || !authorized) return;
     const controller = new AbortController();
-    getOrder(value, 0, controller.signal)
+    getOrder(value, 0, capability, controller.signal)
       .then((order) => {
         if (!controller.signal.aborted) {
           setSelected(order);
           setContextError("");
         }
       })
-      .catch(() => {
-        if (!controller.signal.aborted) {
+      .catch((failure: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
+        if (
+          failure instanceof Error &&
+          "status" in failure &&
+          failure.status === 401
+        )
+          sessionExpired();
+        else {
           setSelected(null);
           setContextError(value);
         }
@@ -75,7 +107,7 @@ export function OrderPicker({
     return () => {
       controller.abort();
     };
-  }, [value, refreshKey, attempt]);
+  }, [value, refreshKey, attempt, authorized, capability, sessionExpired]);
   const currentItems = loading ? [] : items;
   const choices =
     selected?.id === value &&

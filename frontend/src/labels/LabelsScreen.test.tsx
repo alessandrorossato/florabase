@@ -13,6 +13,7 @@ import { StrictMode } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { App } from "../App";
 import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { LabelSheet } from "./LabelSheet";
 import { LabelsScreen } from "./LabelsScreen";
 import {
@@ -80,14 +81,7 @@ const inventory = {
   source: { id: harvestId, label: "Plant A", botanical_identity: identity },
 };
 const sessionExpired = vi.fn();
-const auth: AuthContextValue = {
-  state: { status: "unauthenticated" },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired,
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
 function response(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -132,7 +126,17 @@ function composer(props: { initialKind?: string; initialId?: string } = {}) {
     </StrictMode>,
   );
 }
-beforeEach(() => {
+beforeEach(async () => {
+  const acquired = await acquireTestAuth({
+    session: {
+      user_id: id,
+      display_name: "Owner",
+      canonical_origin: canonicalOrigin,
+    },
+    csrfToken: "labels-csrf",
+  });
+  auth = { ...acquired.auth, sessionExpired };
+  authenticated = auth;
   Object.defineProperty(document, "fonts", {
     configurable: true,
     value: { ready: Promise.resolve() },
@@ -158,7 +162,11 @@ test.each(labelKinds)(
   "%s maps existing fields and keeps exact stable source",
   async (kind) => {
     const fetch = mockRecords();
-    const [record] = await listLabelRecords(kind, new AbortController().signal);
+    const [record] = await listLabelRecords(
+      kind,
+      auth.capability,
+      new AbortController().signal,
+    );
     expect(record).toMatchObject({
       kind,
       id,
@@ -208,6 +216,7 @@ test("partial dates, unknown quantity and real zero remain distinct", async () =
   );
   const [record] = await listLabelRecords(
     "seed-lot",
+    auth.capability,
     new AbortController().signal,
   );
   expect(record.metadata).toEqual(["Acquired: 2026"]);
@@ -227,8 +236,13 @@ test("unknown and depleted Stored material use current inventory state, not harv
       ),
     );
   expect(
-    (await listLabelRecords("stored-material", new AbortController().signal))[0]
-      .metadata[0],
+    (
+      await listLabelRecords(
+        "stored-material",
+        auth.capability,
+        new AbortController().signal,
+      )
+    )[0].metadata[0],
   ).toBe("Seeds · Unknown quantity");
   fetch.mockImplementation((path) =>
     Promise.resolve(
@@ -240,8 +254,13 @@ test("unknown and depleted Stored material use current inventory state, not harv
     ),
   );
   expect(
-    (await listLabelRecords("stored-material", new AbortController().signal))[0]
-      .metadata[0],
+    (
+      await listLabelRecords(
+        "stored-material",
+        auth.capability,
+        new AbortController().signal,
+      )
+    )[0].metadata[0],
   ).toBe("Seeds · Depleted · no material held");
 });
 
@@ -674,20 +693,7 @@ test("dense QR blocks the smaller preset and a larger size restores safe printin
   expect(screen.getByRole("button", { name: "Print" })).toBeEnabled();
 });
 
-const authenticated: AuthContextValue = {
-  ...auth,
-  state: {
-    status: "authenticated",
-    csrfToken: "labels-csrf",
-    session: {
-      user_id: id,
-      login_name: "owner",
-      display_name: "Owner",
-      owner: true,
-      canonical_origin: canonicalOrigin,
-    },
-  },
-};
+let authenticated: AuthContextValue;
 function authenticatedComposer() {
   return render(
     <AuthContext.Provider value={authenticated}>

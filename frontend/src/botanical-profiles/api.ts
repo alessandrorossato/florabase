@@ -1,5 +1,5 @@
 import type { components } from "../api/schema";
-import { requestJson } from "../auth/api";
+import { requestJson, type ProtectedRequestCapability } from "../auth/api";
 
 export type BotanicalProfilePut = components["schemas"]["BotanicalProfilePut"];
 export type BotanicalProfileResponse =
@@ -13,17 +13,20 @@ function profilePath(botanicalIdentityId: string): string {
 
 export function getBotanicalProfile(
   botanicalIdentityId: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<BotanicalProfileResponse> {
-  return requestJson(profilePath(botanicalIdentityId), { signal });
+  return requestJson(profilePath(botanicalIdentityId), { capability, signal });
 }
 
 export function putBotanicalProfile(
   botanicalIdentityId: string,
   payload: BotanicalProfilePut,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<BotanicalProfileResponse | undefined> {
   return requestJson(profilePath(botanicalIdentityId), {
+    capability,
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -39,17 +42,23 @@ function nativeRangesPath(botanicalIdentityId: string): string {
 
 export function listBotanicalNativeRanges(
   botanicalIdentityId: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<BotanicalNativeRangeResponse[]> {
-  return requestJson(nativeRangesPath(botanicalIdentityId), { signal });
+  return requestJson(nativeRangesPath(botanicalIdentityId), {
+    capability,
+    signal,
+  });
 }
 
 export function addBotanicalNativeRange(
   botanicalIdentityId: string,
   geographicPlaceId: string,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<BotanicalNativeRangeResponse> {
   return requestJson(nativeRangesPath(botanicalIdentityId), {
+    capability,
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -63,10 +72,12 @@ export function removeBotanicalNativeRange(
   botanicalIdentityId: string,
   geographicPlaceId: string,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<void> {
   return requestJson(
     `${nativeRangesPath(botanicalIdentityId)}/${encodeURIComponent(geographicPlaceId)}`,
     {
+      capability,
       method: "DELETE",
       headers: { "X-CSRF-Token": csrfToken },
     },

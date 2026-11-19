@@ -42,6 +42,7 @@ import "./supplier-refinement.css";
 import {
   ApiError,
   activeCsrfToken,
+  isExpectedAuthCancellation,
   isPresentationRetainedState,
 } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -335,6 +336,7 @@ function SupplierDetail({
     success: (value: SupplierResponse) => string,
   ) => void;
 }) {
+  const { capability } = useAuth();
   const tabOf = (value?: string) =>
     value && ["overview", "photos", "material"].includes(value)
       ? value
@@ -419,6 +421,7 @@ function SupplierDetail({
                       supplier.id,
                       !supplier.retired_at,
                       csrfToken,
+                      capability,
                     ),
                   (value) =>
                     value.retired_at
@@ -695,7 +698,9 @@ export function SupplierScreen({
   startCreating = false,
 }: { initialId?: string; initialTab?: string; startCreating?: boolean } = {}) {
   const auth = useAuth();
-  const { sessionExpired } = auth;
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const presentation = useDirectoryPresentation("suppliers");
   const selectedTrigger = useRef<HTMLButtonElement | null>(null);
   const directoryList = useRef<HTMLUListElement | null>(null);
@@ -808,37 +813,40 @@ export function SupplierScreen({
   }, [startCreating, creationExpanded, closeCreation]);
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void listSuppliers(controller.signal)
+    void listSuppliers(capability, controller.signal)
       .then((suppliers) => {
         setDirectory({ status: "ready", suppliers });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setDirectory({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [sessionExpired, attempt]);
+  }, [authorized, capability, sessionExpired, attempt]);
 
   useEffect(() => {
-    if (!initialId) return;
+    if (!initialId || !authorized) return;
     const controller = new AbortController();
-    void getSupplier(initialId, controller.signal)
+    void getSupplier(initialId, capability, controller.signal)
       .then((supplier) => {
         setDetail({ status: "ready", supplier });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setDetail({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [sessionExpired, detailRefresh, initialId]);
+  }, [authorized, capability, sessionExpired, detailRefresh, initialId]);
 
   useEffect(() => {
     if (save.status === "error") feedback.current?.focus();
@@ -999,7 +1007,7 @@ export function SupplierScreen({
     setSave({ status: "saving" });
     try {
       const supplier = await action();
-      const refreshed = await listSuppliers();
+      const refreshed = await listSuppliers(capability);
       setDirectory({ status: "ready", suppliers: refreshed });
       setSelectedId(supplier.id);
       setDetail((current) =>
@@ -1013,7 +1021,9 @@ export function SupplierScreen({
       if (initialId === supplier.id) setDetailRefresh((value) => value + 1);
       setSave({ status: "success", message: success(supplier) });
     } catch (error: unknown) {
-      if (error instanceof ApiError && error.status === 401) {
+      if (isExpectedAuthCancellation(error)) {
+        setSave({ status: "idle" });
+      } else if (error instanceof ApiError && error.status === 401) {
         setSave({ status: "idle" });
         sessionExpired();
       } else if (error instanceof ApiError && error.status === 422)
@@ -1081,9 +1091,9 @@ export function SupplierScreen({
       try {
         const payload: SupplierUpdate = supplierPayloadFrom(values);
         const supplier = target
-          ? await updateSupplier(target.id, payload, csrfToken)
-          : await createSupplier(payload, csrfToken);
-        const refreshed = await listSuppliers();
+          ? await updateSupplier(target.id, payload, csrfToken, capability)
+          : await createSupplier(payload, csrfToken, capability);
+        const refreshed = await listSuppliers(capability);
         setDirectory({ status: "ready", suppliers: refreshed });
         setSelectedId(supplier.id);
         if (wasCreating) {
@@ -1113,7 +1123,9 @@ export function SupplierScreen({
         if (!wasCreating && initialId === supplier.id)
           setDetailRefresh((value) => value + 1);
       } catch (error: unknown) {
-        if (error instanceof ApiError && error.status === 401) {
+        if (isExpectedAuthCancellation(error)) {
+          setSave({ status: "idle" });
+        } else if (error instanceof ApiError && error.status === 401) {
           setSave({ status: "idle" });
           auth.sessionExpired();
         } else if (error instanceof ApiError && error.status === 422)

@@ -63,6 +63,7 @@ import {
 import {
   ApiError,
   activeCsrfToken,
+  isExpectedAuthCancellation,
   isPresentationRetainedState,
 } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -903,7 +904,9 @@ export function PlantScreen({
   const recordName = useRecordName();
 
   const auth = useAuth();
-  const { sessionExpired } = auth;
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const presentation = useDirectoryPresentation("plants");
   const DirectoryItem =
     presentation.view === "list" ? DirectoryRow : DirectoryCard;
@@ -1310,16 +1313,17 @@ export function PlantScreen({
   }, [editing, extractionSource, creationKind, edit.modal]);
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     Promise.all([
-      listPlants(controller.signal),
-      listPlantGroups(controller.signal),
-      listBotanicalIdentities(controller.signal),
-      listSowings(controller.signal),
-      listSuppliers(controller.signal),
-      listGeographicPlaces(controller.signal),
-      listLocations(controller.signal),
-      listProvenanceSites(controller.signal),
+      listPlants(capability, controller.signal),
+      listPlantGroups(capability, controller.signal),
+      listBotanicalIdentities(capability, controller.signal),
+      listSowings(capability, controller.signal),
+      listSuppliers(capability, controller.signal),
+      listGeographicPlaces(capability, controller.signal),
+      listLocations(capability, controller.signal),
+      listProvenanceSites(capability, controller.signal),
     ])
       .then(
         ([
@@ -1353,25 +1357,26 @@ export function PlantScreen({
         },
       )
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setCollection({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [sessionExpired, attempt]);
+  }, [authorized, capability, sessionExpired, attempt]);
 
   useEffect(() => {
-    if (!selectedKey) return;
+    if (!selectedKey || !authorized) return;
     if (detail.status === "ready" && recordKey(detail.record) === selectedKey)
       return;
     const [kind, id] = selectedKey.split(":", 2) as [RecordKind, string];
     const controller = new AbortController();
     const request =
       kind === "plant"
-        ? getPlant(id, controller.signal)
-        : getPlantGroup(id, controller.signal);
+        ? getPlant(id, capability, controller.signal)
+        : getPlantGroup(id, capability, controller.signal);
     void request
       .then((value) => {
         const record = { kind, value } as PlantRecord;
@@ -1383,17 +1388,26 @@ export function PlantScreen({
         setDetail({ status: "ready", record });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setDetail({ status: "error", key: selectedKey });
       });
     return () => {
       controller.abort();
     };
-  }, [sessionExpired, detail, detailAttempt, selectedKey]);
+  }, [
+    authorized,
+    capability,
+    sessionExpired,
+    detail,
+    detailAttempt,
+    selectedKey,
+  ]);
 
   useEffect(() => {
     if (
+      !authorized ||
       !mobileDetail ||
       detail.status !== "ready" ||
       detail.record.kind !== "plant" ||
@@ -1403,20 +1417,22 @@ export function PlantScreen({
     const controller = new AbortController();
     void getPlantReintegrationEligibility(
       detail.record.value.id,
+      capability,
       controller.signal,
     )
       .then((eligibility) => {
         setReintegration({ status: "ready", eligibility });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setReintegration({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [sessionExpired, detail, mobileDetail]);
+  }, [authorized, capability, sessionExpired, detail, mobileDetail]);
 
   useEffect(() => {
     if (!transferTarget && transferTrigger.current) {
@@ -1771,6 +1787,7 @@ export function PlantScreen({
           transferTarget.value.id,
           payload,
           csrfToken,
+          capability,
         );
         authoritative = { kind: "plant", value: result.plant };
       } else {
@@ -1778,12 +1795,13 @@ export function PlantScreen({
           transferTarget.value.id,
           payload,
           csrfToken,
+          capability,
         );
         authoritative = { kind: "group", value: result.plant_group };
       }
       const [plants, groups] = await Promise.all([
-        listPlants(),
-        listPlantGroups(),
+        listPlants(capability),
+        listPlantGroups(capability),
       ]);
       setCollection({
         status: "ready",
@@ -1803,6 +1821,10 @@ export function PlantScreen({
             : "The entire Plant group was transferred and remains available in history.",
       });
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) {
+        setTransferState({ status: "idle" });
+        return;
+      }
       if (error instanceof ApiError && error.status === 401) {
         setTransferState({ status: "idle" });
         sessionExpired();
@@ -1820,8 +1842,8 @@ export function PlantScreen({
 
   async function applyReintegrationResult(result: PlantReintegrationResponse) {
     const [plants, groups] = await Promise.all([
-      listPlants(),
-      listPlantGroups(),
+      listPlants(capability),
+      listPlantGroups(capability),
     ]);
     const authoritative: PlantRecord = { kind: "plant", value: result.plant };
     setCollection({
@@ -1855,11 +1877,16 @@ export function PlantScreen({
         selected.value.id,
         reintegration.eligibility.status === "confirmation_required",
         csrfToken,
+        capability,
       );
       await applyReintegrationResult(result);
       setReintegrationOpen(false);
       setReintegrationMutation({ status: "idle" });
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) {
+        setReintegrationMutation({ status: "idle" });
+        return;
+      }
       if (error instanceof ApiError && error.status === 401) {
         setReintegrationMutation({ status: "idle" });
         sessionExpired();
@@ -1881,9 +1908,11 @@ export function PlantScreen({
 
   async function refreshEventTarget(kind: RecordKind, id: string) {
     const [target, plants, groups] = await Promise.all([
-      kind === "plant" ? getPlant(id) : getPlantGroup(id),
-      listPlants(),
-      listPlantGroups(),
+      kind === "plant"
+        ? getPlant(id, capability)
+        : getPlantGroup(id, capability),
+      listPlants(capability),
+      listPlantGroups(capability),
     ]);
     const authoritative = {
       kind,
@@ -1959,6 +1988,7 @@ export function PlantScreen({
             notes: form.notes || null,
           },
           csrfToken,
+          capability,
         );
         authoritative = { kind: "plant", value: result.plant };
         setCollection((current) => ({
@@ -2015,8 +2045,9 @@ export function PlantScreen({
                   }
                 : plantPayload(form),
               csrfToken,
+              capability,
             )
-          : await createPlant(plantPayload(form), csrfToken);
+          : await createPlant(plantPayload(form), csrfToken, capability);
         authoritative = { kind: "plant", value };
       } else {
         const value = selected
@@ -2026,13 +2057,14 @@ export function PlantScreen({
                 ? { ...groupPayload(form), direct_origin_kind: null }
                 : groupPayload(form),
               csrfToken,
+              capability,
             )
-          : await createPlantGroup(groupPayload(form), csrfToken);
+          : await createPlantGroup(groupPayload(form), csrfToken, capability);
         authoritative = { kind: "group", value };
       }
       const [plants, groups] = await Promise.all([
-        listPlants(),
-        listPlantGroups(),
+        listPlants(capability),
+        listPlantGroups(capability),
       ]);
       setCollection({
         status: "ready",
@@ -2061,7 +2093,9 @@ export function PlantScreen({
           wasCreating,
         );
     } catch (error: unknown) {
-      if (error instanceof ApiError && error.status === 401) {
+      if (isExpectedAuthCancellation(error)) {
+        setSave({ status: "idle" });
+      } else if (error instanceof ApiError && error.status === 401) {
         setSave({ status: "idle" });
         sessionExpired();
       } else if (error instanceof ApiError && error.status === 422) {
@@ -2076,7 +2110,10 @@ export function PlantScreen({
         error.status === 409
       ) {
         try {
-          const refreshed = await getPlantGroup(extractionSource.id);
+          const refreshed = await getPlantGroup(
+            extractionSource.id,
+            capability,
+          );
           setExtractionSource(refreshed);
           setCollection((current) => ({
             status: "ready",

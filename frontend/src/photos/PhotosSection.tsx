@@ -15,6 +15,7 @@ import {
 import {
   ApiError,
   activeCsrfToken,
+  isExpectedAuthCancellation,
   isPresentationRetainedState,
 } from "../auth/api";
 import { OverflowMenu } from "../components/ReferenceUI";
@@ -22,6 +23,7 @@ import { saveLocalCopy } from "../media/api";
 import { ExternalCopyChoice } from "../media/ExternalCopyChoice";
 import { MediaPicker } from "../media/MediaPicker";
 import { useAuth } from "../auth/context";
+import { useProtectedImage } from "./useProtectedImage";
 import {
   clearPrimaryPhoto,
   createExternalImage,
@@ -122,6 +124,62 @@ function messageFor(error: unknown): string {
   return "Florabase could not save this photo. Check the connection and try again.";
 }
 
+function ProtectedSectionImage({
+  rawUrl,
+  alt,
+  className,
+  onLoad,
+  onBroken,
+  wrapper = false,
+  detailsHref,
+}: {
+  rawUrl: string;
+  alt: string;
+  className?: string;
+  onLoad?: () => void;
+  onBroken: () => void;
+  wrapper?: boolean;
+  detailsHref?: string;
+}) {
+  const [mediaTarget, media] = useProtectedImage({
+    rawUrl,
+    onError: () => {
+      onBroken();
+    },
+  });
+  const imageNode = media.src ? (
+    <img
+      alt={alt}
+      className={className}
+      decoding="async"
+      loading="lazy"
+      referrerPolicy={media.referrerPolicy}
+      src={media.src}
+      onLoad={onLoad}
+      onError={onBroken}
+    />
+  ) : null;
+  if (detailsHref) {
+    return (
+      <a
+        ref={mediaTarget}
+        href={detailsHref}
+        aria-label={`Open media details for ${alt}`}
+        className="gallery-image-link"
+      >
+        {imageNode}
+        <span className="gallery-open-label" aria-hidden="true">
+          Open
+        </span>
+      </a>
+    );
+  }
+  if (wrapper) {
+    return <div ref={mediaTarget}>{imageNode}</div>;
+  }
+  return <span ref={mediaTarget}>{imageNode}</span>;
+}
+
 function ExternalPreview({
   photo,
   alt,
@@ -138,33 +196,17 @@ function ExternalPreview({
   );
   if (photo.thumbnail_url && state === "error")
     return <p role="status">The saved local image is unavailable.</p>;
-  const ImageLink = detailsHref ? "a" : Fragment;
-  const imageLinkProps = detailsHref
-    ? {
-        href: detailsHref,
-        "aria-label": `Open media details for ${alt}`,
-        className: "gallery-image-link",
-      }
-    : {};
   if (photo.thumbnail_url)
     return (
-      <ImageLink {...imageLinkProps}>
-        <img
-          alt={alt}
-          className="collection-photo-image"
-          decoding="async"
-          loading="lazy"
-          src={photo.thumbnail_url}
-          onError={() => {
-            setState("error");
-          }}
-        />
-        {detailsHref && (
-          <span className="gallery-open-label" aria-hidden="true">
-            Open
-          </span>
-        )}
-      </ImageLink>
+      <ProtectedSectionImage
+        rawUrl={photo.thumbnail_url}
+        alt={alt}
+        className="collection-photo-image"
+        detailsHref={detailsHref}
+        onBroken={() => {
+          setState("error");
+        }}
+      />
     );
   if (state === "hidden")
     return (
@@ -215,27 +257,18 @@ function ExternalPreview({
           Loading external image…
         </p>
       )}
-      <ImageLink {...imageLinkProps}>
-        <img
-          alt={alt}
-          className="collection-photo-image"
-          decoding="async"
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          src={photo.image_url}
-          onLoad={() => {
-            setState("loaded");
-          }}
-          onError={() => {
-            setState("error");
-          }}
-        />
-        {detailsHref && (
-          <span className="gallery-open-label" aria-hidden="true">
-            Open
-          </span>
-        )}
-      </ImageLink>
+      <ProtectedSectionImage
+        rawUrl={photo.image_url}
+        alt={alt}
+        className="collection-photo-image"
+        detailsHref={detailsHref}
+        onLoad={() => {
+          setState("loaded");
+        }}
+        onBroken={() => {
+          setState("error");
+        }}
+      />
     </div>
   );
 }
@@ -256,7 +289,9 @@ export function PhotosSection({
   presentation?: "standard" | "compact";
 }) {
   const auth = useAuth();
-  const { sessionExpired } = auth;
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const headingId = useId();
   const fileInput = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<LoadState>({ status: "loading" });
@@ -284,13 +319,15 @@ export function PhotosSection({
     target === "propagation_attempt";
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void listPhotos(target, targetId, controller.signal)
+    void listPhotos(target, targetId, capability, controller.signal)
       .then((photos) => {
         setState({ status: "ready", photos });
       })
       .catch((loadError: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(loadError))
+          return;
         if (loadError instanceof ApiError && loadError.status === 401)
           sessionExpired();
         else setState({ status: "error" });
@@ -298,16 +335,16 @@ export function PhotosSection({
     return () => {
       controller.abort();
     };
-  }, [attempt, sessionExpired, target, targetId]);
+  }, [attempt, authorized, capability, sessionExpired, target, targetId]);
 
   if (!isPresentationRetainedState(auth.state)) return null;
   const csrfToken = activeCsrfToken(auth.state);
 
   async function refresh(success: string, refreshPrimary = false) {
-    const photos = await listPhotos(target, targetId);
+    const photos = await listPhotos(target, targetId, capability);
     setState({ status: "ready", photos });
     if (supportsPrimary && refreshPrimary) {
-      const primary = await getPrimaryPhoto(target, targetId);
+      const primary = await getPrimaryPhoto(target, targetId, capability);
       setPrimaryOverride(primary);
       onPrimaryChanged?.(primary);
     }
@@ -325,8 +362,10 @@ export function PhotosSection({
             targetId,
             { kind: photo.kind, photo_id: photo.id },
             csrfToken,
+            capability,
           )
-        : (await clearPrimaryPhoto(target, targetId, csrfToken), null);
+        : (await clearPrimaryPhoto(target, targetId, csrfToken, capability),
+          null);
       setPrimaryOverride(next);
       onPrimaryChanged?.(next);
       setNotice(
@@ -335,6 +374,7 @@ export function PhotosSection({
           : "Primary designation was removed. The photo remains in Photos.",
       );
     } catch (primaryError: unknown) {
+      if (isExpectedAuthCancellation(primaryError)) return;
       if (primaryError instanceof ApiError && primaryError.status === 401) {
         auth.sessionExpired();
         return;
@@ -373,6 +413,7 @@ export function PhotosSection({
           caption,
           attribution,
           csrfToken,
+          capability,
         );
       } else if (editor === "external") {
         const reference = await createExternalImage(
@@ -385,10 +426,15 @@ export function PhotosSection({
             caption: caption || null,
           },
           csrfToken,
+          capability,
         );
         if (data.get("save_local_copy") === "on" && reference.media_asset_id) {
           try {
-            await saveLocalCopy(reference.media_asset_id, csrfToken);
+            await saveLocalCopy(
+              reference.media_asset_id,
+              csrfToken,
+              capability,
+            );
           } catch (failure) {
             setFailedCopy(reference.media_asset_id);
             setEditor(null);
@@ -407,6 +453,7 @@ export function PhotosSection({
             display_order: Number(field("display_order")),
           },
           csrfToken,
+          capability,
         );
       } else {
         await updateExternalImage(
@@ -419,6 +466,7 @@ export function PhotosSection({
             display_order: Number(field("display_order")),
           },
           csrfToken,
+          capability,
         );
       }
       setEditor(null);
@@ -453,11 +501,12 @@ export function PhotosSection({
     setError(null);
     let saved = false;
     try {
-      await saveLocalCopy(failedCopy, csrfToken);
+      await saveLocalCopy(failedCopy, csrfToken, capability);
       saved = true;
       setFailedCopy(null);
       await refresh("Local copy saved.", true);
     } catch (failure) {
+      if (isExpectedAuthCancellation(failure)) return;
       if (failure instanceof ApiError && failure.status === 401)
         auth.sessionExpired();
       else
@@ -477,7 +526,7 @@ export function PhotosSection({
     setError(null);
     let removed = false;
     try {
-      await removePhoto(removing.kind, removing.id, csrfToken);
+      await removePhoto(removing.kind, removing.id, csrfToken, capability);
       removed = true;
       if (
         currentPrimary?.kind === removing.kind &&
@@ -492,6 +541,7 @@ export function PhotosSection({
         true,
       );
     } catch (removeError: unknown) {
+      if (isExpectedAuthCancellation(removeError)) return;
       if (removeError instanceof ApiError && removeError.status === 401) {
         auth.sessionExpired();
         return;
@@ -509,12 +559,12 @@ export function PhotosSection({
       );
       if (supportsPrimary) {
         try {
-          const primary = await getPrimaryPhoto(target, targetId);
+          const primary = await getPrimaryPhoto(target, targetId, capability);
           setPrimaryOverride(primary);
           onPrimaryChanged?.(primary);
           setState({
             status: "ready",
-            photos: await listPhotos(target, targetId),
+            photos: await listPhotos(target, targetId, capability),
           });
         } catch {
           // The removal error remains visible; retry refreshes the authoritative state.
@@ -657,37 +707,25 @@ export function PhotosSection({
                         The uploaded image content is unavailable.
                       </div>
                     ) : presentation === "compact" && photo.media_asset_id ? (
-                      <a
-                        href={`#/media/${photo.media_asset_id}`}
-                        className="gallery-image-link"
-                        aria-label={`Open media details for ${alt}`}
-                      >
-                        <img
-                          alt={alt}
-                          className="collection-photo-image"
-                          decoding="async"
-                          loading="lazy"
-                          src={`/api/v1/media-assets/${photo.media_asset_id}/thumbnail`}
-                          onError={() => {
-                            setBrokenLocal((ids) => new Set(ids).add(photo.id));
-                          }}
-                        />
-                        <span className="gallery-open-label" aria-hidden="true">
-                          Open
-                        </span>
-                      </a>
-                    ) : (
-                      <img
+                      <ProtectedSectionImage
+                        rawUrl={`/api/v1/media-assets/${photo.media_asset_id}/thumbnail`}
                         alt={alt}
                         className="collection-photo-image"
-                        decoding="async"
-                        loading="lazy"
-                        src={
+                        detailsHref={`#/media/${photo.media_asset_id}`}
+                        onBroken={() => {
+                          setBrokenLocal((ids) => new Set(ids).add(photo.id));
+                        }}
+                      />
+                    ) : (
+                      <ProtectedSectionImage
+                        rawUrl={
                           photo.media_asset_id
                             ? `/api/v1/media-assets/${photo.media_asset_id}/thumbnail`
                             : `/api/v1/collection-photos/local/${photo.id}/thumbnail`
                         }
-                        onError={() => {
+                        alt={alt}
+                        className="collection-photo-image"
+                        onBroken={() => {
                           setBrokenLocal((ids) => new Set(ids).add(photo.id));
                         }}
                       />

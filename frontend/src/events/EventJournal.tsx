@@ -206,7 +206,7 @@ export function EventJournal({
   newEntryDateChoice?: DateChoice;
 }) {
   const auth = useAuth();
-  const { sessionExpired } = auth;
+  const { capability, sessionExpired } = auth;
   const journal = useJournalReader();
   const entryForm = useRef<HTMLFormElement>(null);
   const [timeline, setTimeline] = useState<TimelineState>({
@@ -401,8 +401,9 @@ export function EventJournal({
     setMutation({ status: "pending" });
     try {
       const creating = editor === "create";
-      if (creating) await createEvent(targetKind, targetId, payload, csrfToken);
-      else await updateEvent(editor.id, payload, csrfToken);
+      if (creating)
+        await createEvent(targetKind, targetId, payload, csrfToken, capability);
+      else await updateEvent(editor.id, payload, csrfToken, capability);
       setEditor(null);
       setMutation({ status: "idle" });
       let historyRefreshFailed = false;
@@ -455,7 +456,7 @@ export function EventJournal({
     if (!deleting || pending || !csrfToken) return;
     setMutation({ status: "pending" });
     try {
-      await deleteEvent(deleting.id, csrfToken);
+      await deleteEvent(deleting.id, csrfToken, capability);
       setDeleting(null);
       setMutation({ status: "idle" });
       let historyRefreshFailed = false;

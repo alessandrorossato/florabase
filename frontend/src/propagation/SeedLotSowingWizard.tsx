@@ -20,7 +20,11 @@ import {
   type SyntheticEvent,
 } from "react";
 
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { invalidDateControls } from "../seed-lots/dateControls";
 import { Breadcrumbs } from "../components/CollectionUI";
@@ -98,6 +102,9 @@ function quantityText(lot: SeedLotResponse): string {
 
 export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const recordName = useRecordName();
 
   const [data, setData] = useState<
@@ -119,10 +126,11 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
   const feedback = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     void Promise.all([
-      listSeedLots(controller.signal),
-      listLocations(controller.signal),
+      listSeedLots(capability, controller.signal),
+      listLocations(capability, controller.signal),
     ])
       .then(([lots, locations]) => {
         const lot = lots.find(({ id }) => id === seedLotId);
@@ -130,13 +138,16 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
         setData({ status: "ready", lot, locations });
         setForm(initialForm(lot));
       })
-      .catch(() => {
-        if (!controller.signal.aborted) setData({ status: "error" });
+      .catch((error: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
+        else setData({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [seedLotId]);
+  }, [seedLotId, authorized, capability, sessionExpired]);
 
   const preview = useMemo(() => {
     if (data.status !== "ready" || !data.lot.quantity) return null;
@@ -283,6 +294,8 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
                     }
                   : null,
             };
+    const csrfToken = activeCsrfToken(auth.state);
+    if (!csrfToken) return;
     setPending(true);
     setMessages([]);
     setValidationField(undefined);
@@ -307,14 +320,15 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
           },
           source_adjustment,
         },
-        auth.state.status === "authenticated" ||
-          auth.state.status === "logging-out" ||
-          auth.state.status === "logout-failed"
-          ? auth.state.csrfToken
-          : "",
+        csrfToken,
+        capability,
       );
       setRecordRoute(`#/sowings/${result.sowing.id}`, true);
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) {
+        setPending(false);
+        return;
+      }
       if (error instanceof ApiError && error.status === 422) {
         setValidationField(firstValidationField(error));
         const field = firstValidationField(error);

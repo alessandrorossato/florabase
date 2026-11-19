@@ -1,14 +1,18 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { AuthContext, type AuthContextValue } from "../auth/context";
 import type { BotanicalIdentityCollectionResponse } from "../collection/api";
 import { getIdentityCollection } from "../collection/api";
+import { acquireTestAuth } from "../test/auth";
 import { IdentityCollectionHub } from "./IdentityCollectionHub";
 import { identityDirectory } from "./identityNavigation";
 
-const auth = { sessionExpired: vi.fn() };
-vi.mock("../auth/context", () => ({ useAuth: () => auth }));
+let auth: AuthContextValue;
 vi.mock("../collection/api", () => ({ getIdentityCollection: vi.fn() }));
+beforeEach(async () => {
+  auth = (await acquireTestAuth()).auth;
+});
 afterEach(() => {
   cleanup();
   vi.resetAllMocks();
@@ -36,7 +40,11 @@ function fixture(total = 0) {
   } as unknown as BotanicalIdentityCollectionResponse;
 }
 test("one Collection page bounds a large collection and links all original owners and exact directories", () => {
-  render(<IdentityCollectionHub value={fixture(40)} />);
+  render(
+    <AuthContext.Provider value={auth}>
+      <IdentityCollectionHub value={fixture(40)} />
+    </AuthContext.Provider>,
+  );
   const lots = screen.getByRole("region", { name: "Seed lots" });
   expect(within(lots).getByRole("heading")).toHaveTextContent("40 recorded");
   expect(within(lots).getAllByRole("listitem")).toHaveLength(4);
@@ -70,7 +78,11 @@ test("one Collection page bounds a large collection and links all original owner
 });
 test("Add group uses the existing task and keeps the identity hub as return context", async () => {
   window.history.replaceState(null, "", `#/identities/${id}?tab=collection`);
-  render(<IdentityCollectionHub value={fixture()} />);
+  render(
+    <AuthContext.Provider value={auth}>
+      <IdentityCollectionHub value={fixture()} />
+    </AuthContext.Provider>,
+  );
   const user = userEvent.setup();
   await user.click(screen.getByRole("link", { name: "Add plant group" }));
   expect(window.location.hash).toBe(

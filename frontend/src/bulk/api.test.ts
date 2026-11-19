@@ -1,9 +1,11 @@
 import { afterEach, expect, test, vi } from "vitest";
+import { acquireTestAuth } from "../test/auth";
 import { applyLocation, previewLocation, type BulkPreview } from "./api";
 afterEach(() => {
   vi.restoreAllMocks();
 });
 test("bulk requests send only exact typed references and validated preview preconditions", async () => {
+  const { capability } = await acquireTestAuth();
   const fetch = vi
     .spyOn(globalThis, "fetch")
     .mockImplementation(() =>
@@ -18,6 +20,7 @@ test("bulk requests send only exact typed references and validated preview preco
     ],
     "location",
     "csrf",
+    capability,
   );
   expect(fetch.mock.calls[0][0]).toBe("/api/v1/bulk/location/preview");
   const request = fetch.mock.calls[0][1];
@@ -50,7 +53,7 @@ test("bulk requests send only exact typed references and validated preview preco
       },
     ],
   } as BulkPreview;
-  await applyLocation(preview, "csrf");
+  await applyLocation(preview, "csrf", capability);
   expect(fetch.mock.calls[1][0]).toBe("/api/v1/bulk/location/apply");
   expect(requestBody(fetch.mock.calls[1][1])).toEqual({
     target_location_id: "location",

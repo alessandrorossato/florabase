@@ -35,7 +35,8 @@ import {
   paletteLabels,
   type Palette,
 } from "../../appearance/theme";
-import { ApiError } from "../../auth/api";
+import { activeCsrfToken, ApiError } from "../../auth/api";
+import { useAuth } from "../../auth/context";
 import { fixtureToday, type FixtureSchedule } from "./fixtures";
 import {
   agendaGroups,
@@ -52,6 +53,10 @@ import "./prototype.css";
 
 type Dialog = Parameters<typeof ActivityDialog>[0]["dialog"];
 export function ScheduleUxPrototype({ fixture }: { fixture: FixtureSchedule }) {
+  const auth = useAuth();
+  const capability = auth.capability;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [route, setRoute] = useState(readPrototype);
   const { state, ux, selected } = route;
   const [offset, setOffset] = useState(0);
@@ -102,13 +107,14 @@ export function ScheduleUxPrototype({ fixture }: { fixture: FixtureSchedule }) {
     };
   }, []);
   useEffect(() => {
+    if (!authorized) return;
     const c = new AbortController();
     void (
       ux === "month"
-        ? listCalendar(state, c.signal)
+        ? listCalendar(state, capability, c.signal)
         : ux === "week"
-          ? loadWeek(state, c.signal)
-          : listSchedule(state, offset, 50, c.signal)
+          ? loadWeek(state, c.signal, capability)
+          : listSchedule(state, offset, 50, capability, c.signal)
     )
       .then((value) => {
         if (!c.signal.aborted) setResult({ key, page: value, error: false });
@@ -119,11 +125,12 @@ export function ScheduleUxPrototype({ fixture }: { fixture: FixtureSchedule }) {
     return () => {
       c.abort();
     };
-  }, [key, offset, state, ux]);
+  }, [authorized, capability, key, offset, state, ux]);
   useEffect(() => {
+    if (!authorized) return;
     const c = new AbortController();
     if (selected)
-      void getActivity(selected, c.signal)
+      void getActivity(selected, capability, c.signal)
         .then((item) => {
           if (!c.signal.aborted) setInspection(item);
         })
@@ -133,7 +140,7 @@ export function ScheduleUxPrototype({ fixture }: { fixture: FixtureSchedule }) {
     return () => {
       c.abort();
     };
-  }, [selected, attempt]);
+  }, [authorized, capability, selected, attempt]);
   useEffect(() => {
     if (inspection && !mobile) inspector.current?.focus();
   }, [inspection, mobile]);
@@ -199,7 +206,7 @@ export function ScheduleUxPrototype({ fixture }: { fixture: FixtureSchedule }) {
     if (!dialog?.item) return;
     setBusy(true);
     try {
-      const item = await getActivity(dialog.item.id);
+      const item = await getActivity(dialog.item.id, capability);
       setDialog({
         ...dialog,
         item,
@@ -890,7 +897,8 @@ export function ScheduleUxPrototype({ fixture }: { fixture: FixtureSchedule }) {
                   writeActivity(
                     dialog.item?.id ?? null,
                     payload,
-                    "fixture-only",
+                    activeCsrfToken(auth.state),
+                    capability,
                   ),
                 );
               }}
@@ -901,7 +909,8 @@ export function ScheduleUxPrototype({ fixture }: { fixture: FixtureSchedule }) {
                     transitionActivity(
                       item,
                       dialog.action === "cancel" ? "cancel" : "complete",
-                      "fixture-only",
+                      activeCsrfToken(auth.state),
+                      capability,
                       event,
                     ),
                   );

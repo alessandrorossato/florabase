@@ -1,32 +1,36 @@
 import { useEffect, useState } from "react";
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { getMedia, type MediaDetail } from "../media/api";
 
 /** Read the actual cover asset's rights, never infer them from the identity name. */
 export function IdentityCoverMetadata({ id }: { id: string }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<{
     asset?: MediaDetail;
     failed?: boolean;
   } | null>(null);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void getMedia(id, controller.signal)
+    void getMedia(id, capability, controller.signal)
       .then((asset) => {
         if (!controller.signal.aborted) setResult({ asset });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setResult({ failed: true });
       });
     return () => {
       controller.abort();
     };
-  }, [id, attempt, auth]);
+  }, [authorized, capability, id, attempt, sessionExpired]);
   if (result?.failed)
     return (
       <div role="alert">

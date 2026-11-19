@@ -41,8 +41,9 @@ export function OccurrenceMapPanel({
   identityLabel?: ReactNode;
 }) {
   const auth = useAuth();
-  const { sessionExpired } = auth;
-  const authorized = auth.state.status === "authenticated";
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [evidence, setEvidence] = useState<OccurrenceEvidence | null>(null);
   const [checking, setChecking] = useState(Boolean(link));
   const [pending, setPending] = useState(false);
@@ -54,7 +55,7 @@ export function OccurrenceMapPanel({
   useEffect(() => {
     if (!authorized || !externalId || provider !== "gbif") return;
     const controller = new AbortController();
-    void getCachedOccurrenceEvidence(identityId, controller.signal)
+    void getCachedOccurrenceEvidence(identityId, capability, controller.signal)
       .then((value) => {
         if (!controller.signal.aborted) {
           setEvidence(value);
@@ -75,13 +76,24 @@ export function OccurrenceMapPanel({
     return () => {
       controller.abort();
     };
-  }, [authorized, identityId, externalId, provider, sessionExpired]);
+  }, [
+    authorized,
+    capability,
+    identityId,
+    externalId,
+    provider,
+    sessionExpired,
+  ]);
   async function load() {
     if (!csrf || pending) return;
     setPending(true);
     setError(null);
     try {
-      const value = await refreshOccurrenceEvidence(identityId, csrf);
+      const value = await refreshOccurrenceEvidence(
+        identityId,
+        csrf,
+        capability,
+      );
       setEvidence(value);
       setLocalOnly(Boolean(value.provider_error));
       if (value.provider_error)
@@ -106,7 +118,7 @@ export function OccurrenceMapPanel({
     if (!csrf || pending) return;
     setPending(true);
     try {
-      await clearOccurrenceEvidence(identityId, csrf);
+      await clearOccurrenceEvidence(identityId, csrf, capability);
       setEvidence(null);
       setLocalOnly(true);
       setError(null);
@@ -321,6 +333,7 @@ export function OccurrenceMapPanel({
               identityId={identityId}
               generation={evidence.generation}
               localOnly={localOnly}
+              capability={capability}
             />
           </Suspense>
           <div

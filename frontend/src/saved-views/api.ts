@@ -1,12 +1,17 @@
 import type { components } from "../api/schema";
-import { requestJson } from "../auth/api";
+import {
+  requestJson,
+  type ProtectedRequestCapability,
+  type ProtectedRequestInit,
+} from "../auth/api";
 import type { Surface } from "./state";
 
 export type SavedView = components["schemas"]["SavedViewResponse"];
 export type SavedViewCreate = components["schemas"]["SavedViewCreate"];
 export type SavedViewUpdate = components["schemas"]["SavedViewUpdate"];
 export function listSavedViews(
-  surface?: Surface,
+  surface: Surface | undefined,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
   offset = 0,
 ): Promise<SavedView[]> {
@@ -14,15 +19,18 @@ export function listSavedViews(
   if (surface) params.set("surface", surface);
   if (offset) params.set("offset", String(offset));
   return requestJson(`/api/v1/saved-views${params.size ? `?${params}` : ""}`, {
+    capability,
     signal,
   });
 }
 function mutation(
   method: string,
   token: string,
+  capability: ProtectedRequestCapability,
   value?: SavedViewCreate | SavedViewUpdate,
-): RequestInit {
+): ProtectedRequestInit {
   return {
+    capability,
     method,
     headers: {
       "X-CSRF-Token": token,
@@ -34,22 +42,31 @@ function mutation(
 export function createSavedView(
   value: SavedViewCreate,
   token: string,
+  capability: ProtectedRequestCapability,
 ): Promise<SavedView> {
-  return requestJson("/api/v1/saved-views", mutation("POST", token, value));
+  return requestJson(
+    "/api/v1/saved-views",
+    mutation("POST", token, capability, value),
+  );
 }
 export function updateSavedView(
   id: string,
   value: SavedViewUpdate,
   token: string,
+  capability: ProtectedRequestCapability,
 ): Promise<SavedView> {
   return requestJson(
     `/api/v1/saved-views/${encodeURIComponent(id)}`,
-    mutation("PATCH", token, value),
+    mutation("PATCH", token, capability, value),
   );
 }
-export function deleteSavedView(id: string, token: string): Promise<void> {
+export function deleteSavedView(
+  id: string,
+  token: string,
+  capability: ProtectedRequestCapability,
+): Promise<void> {
   return requestJson(
     `/api/v1/saved-views/${encodeURIComponent(id)}`,
-    mutation("DELETE", token),
+    mutation("DELETE", token, capability),
   );
 }

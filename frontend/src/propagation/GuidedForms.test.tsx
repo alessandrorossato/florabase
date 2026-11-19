@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { openFormSection } from "../test/formSections";
 import {
   cleanup,
@@ -7,17 +8,20 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { AuthContext, type AuthContextValue } from "../auth/context";
 import { RecordIdentities } from "../components/recordPresentation";
+import { acquireTestAuth } from "../test/auth";
 import { SeedLotSowingWizard } from "./SeedLotSowingWizard";
 import { SowingDescendantWizard } from "./SowingDescendantWizard";
 
-vi.mock("../auth/context", () => ({
-  useAuth: () => ({
-    state: { status: "authenticated", csrfToken: "csrf" },
-    sessionExpired: vi.fn(),
-  }),
-}));
+let auth: AuthContextValue;
+function renderWithAuth(ui: ReactElement) {
+  return render(<AuthContext.Provider value={auth}>{ui}</AuthContext.Provider>);
+}
+beforeEach(async () => {
+  auth = (await acquireTestAuth({ csrfToken: "csrf" })).auth;
+});
 const identity = {
   id: "identity",
   scientific_name: "Abelmoschus esculentus",
@@ -108,7 +112,7 @@ afterEach(() => {
   window.location.hash = "";
 });
 function seedWizard() {
-  render(
+  renderWithAuth(
     <RecordIdentities.Provider value={new Map([[identity.id, identity]])}>
       <SeedLotSowingWizard seedLotId="lot" />
     </RecordIdentities.Provider>,
@@ -220,7 +224,7 @@ test("guided sowing keeps unknown quantity and explicit no-adjustment semantics"
 for (const kind of ["plant", "group"] as const)
   test(`guided ${kind} reuses field groups, resolves path names and retains values before atomic creation`, async () => {
     const { user, posts } = setup();
-    render(
+    renderWithAuth(
       <RecordIdentities.Provider value={new Map([[identity.id, identity]])}>
         <SowingDescendantWizard sowingId="sowing" kind={kind} />
       </RecordIdentities.Provider>,
@@ -308,7 +312,7 @@ for (const kind of ["plant", "group"] as const)
 
 test("guided Sowing state presents four compact named choices and only the selected consequence", async () => {
   const { user, posts } = setup();
-  render(<SowingDescendantWizard sowingId="sowing" kind="plant" />);
+  renderWithAuth(<SowingDescendantWizard sowingId="sowing" kind="plant" />);
   await screen.findByRole("heading", { name: "Create Plant" });
   const group = screen.getByRole("group", {
     name: "Resulting Sowing lifecycle",

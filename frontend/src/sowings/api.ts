@@ -1,5 +1,9 @@
 import type { components } from "../api/schema";
-import { ApiError, requestJson } from "../auth/api";
+import {
+  ApiError,
+  requestJson,
+  type ProtectedRequestCapability,
+} from "../auth/api";
 
 export type SowingCreate = components["schemas"]["SowingCreate"];
 export type SowingUpdate = components["schemas"]["SowingUpdate"];
@@ -24,22 +28,31 @@ export type SowingPlantGroupTransitionCreate =
 export type SowingPlantGroupTransitionResponse =
   components["schemas"]["SowingPlantGroupTransitionResponse"];
 
-export function listSowings(signal?: AbortSignal): Promise<SowingResponse[]> {
-  return requestJson("/api/v1/sowings", { signal });
+export function listSowings(
+  capability: ProtectedRequestCapability,
+  signal?: AbortSignal,
+): Promise<SowingResponse[]> {
+  return requestJson("/api/v1/sowings", { capability, signal });
 }
 
 export function getSowing(
   id: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<SowingResponse> {
-  return requestJson(`/api/v1/sowings/${encodeURIComponent(id)}`, { signal });
+  return requestJson(`/api/v1/sowings/${encodeURIComponent(id)}`, {
+    capability,
+    signal,
+  });
 }
 
 export function createSowing(
   payload: SowingCreate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<SowingResponse> {
   return requestJson("/api/v1/sowings", {
+    capability,
     method: "POST",
     headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
     body: JSON.stringify(payload),
@@ -50,8 +63,10 @@ export function updateSowing(
   id: string,
   payload: SowingUpdate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<SowingResponse> {
   return requestJson(`/api/v1/sowings/${encodeURIComponent(id)}`, {
+    capability,
     method: "PUT",
     headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
     body: JSON.stringify(payload),
@@ -60,19 +75,22 @@ export function updateSowing(
 
 export function getSowingPropagationSummary(
   id: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<SowingPropagationSummary> {
   return requestJson(
     `/api/v1/sowings/${encodeURIComponent(id)}/propagation-summary`,
-    { signal },
+    { capability, signal },
   );
 }
 
 export function getSowingGermination(
   id: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<SowingGerminationDetail> {
   return requestJson(`/api/v1/sowings/${encodeURIComponent(id)}/germination`, {
+    capability,
     signal,
   });
 }
@@ -81,12 +99,14 @@ export function saveGerminationObservation(
   sowingId: string,
   payload: GerminationObservationWrite,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
   observationId?: string,
 ): Promise<SowingGerminationDetail> {
   const path = `/api/v1/sowings/${encodeURIComponent(sowingId)}/germination-observations`;
   return requestJson(
     observationId ? `${path}/${encodeURIComponent(observationId)}` : path,
     {
+      capability,
       method: observationId ? "PUT" : "POST",
       headers: {
         "Content-Type": "application/json",
@@ -101,10 +121,12 @@ export function deleteGerminationObservation(
   sowingId: string,
   observationId: string,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<SowingGerminationDetail> {
   return requestJson(
     `/api/v1/sowings/${encodeURIComponent(sowingId)}/germination-observations/${encodeURIComponent(observationId)}`,
     {
+      capability,
       method: "DELETE",
       headers: { "X-CSRF-Token": csrfToken },
     },
@@ -115,8 +137,10 @@ export function createPlantFromSowing(
   id: string,
   payload: SowingPlantTransitionCreate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<SowingPlantTransitionResponse> {
   return requestJson(`/api/v1/sowings/${encodeURIComponent(id)}/create-plant`, {
+    capability,
     method: "POST",
     headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
     body: JSON.stringify(payload),
@@ -127,10 +151,12 @@ export function createPlantGroupFromSowing(
   id: string,
   payload: SowingPlantGroupTransitionCreate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<SowingPlantGroupTransitionResponse> {
   return requestJson(
     `/api/v1/sowings/${encodeURIComponent(id)}/create-plant-group`,
     {
+      capability,
       method: "POST",
       headers: {
         "Content-Type": "application/json",

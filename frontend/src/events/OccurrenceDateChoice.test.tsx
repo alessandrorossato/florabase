@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import * as eventsApi from "./api";
 import type { EventCreate, EventResponse, EventUpdate } from "./api";
 import { EventJournal } from "./EventJournal";
@@ -10,24 +11,10 @@ import { OccurrenceDateChoice, type DateChoice } from "./OccurrenceDateChoice";
 import { invalidDateControls } from "../seed-lots/dateControls";
 import type { PartialDate } from "../seed-lots/api";
 
-const auth: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    csrfToken: "csrf",
-    session: {
-      user_id: "owner",
-      login_name: "owner",
-      display_name: null,
-      owner: true,
-      canonical_origin: "http://localhost",
-    },
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired: vi.fn(),
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
+beforeEach(async () => {
+  auth = (await acquireTestAuth({ csrfToken: "csrf" })).auth;
+});
 
 function storedEvent(
   id: string,

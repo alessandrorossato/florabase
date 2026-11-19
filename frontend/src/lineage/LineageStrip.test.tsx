@@ -1,12 +1,26 @@
+import type { ReactElement } from "react";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { AuthContext, type AuthContextValue } from "../auth/context";
 import { requestJson } from "../auth/api";
 import type { components } from "../api/schema";
+import { acquireTestAuth } from "../test/auth";
 import { LineageStrip } from "./LineageStrip";
 
-vi.mock("../auth/api", () => ({ requestJson: vi.fn() }));
+let auth: AuthContextValue;
+function renderWithAuth(ui: ReactElement) {
+  return render(<AuthContext.Provider value={auth}>{ui}</AuthContext.Provider>);
+}
+beforeEach(async () => {
+  auth = (await acquireTestAuth()).auth;
+});
+
+vi.mock("../auth/api", async (original) => ({
+  ...(await original<typeof import("../auth/api")>()),
+  requestJson: vi.fn(),
+}));
 const request = vi.mocked(requestJson);
 type Response = components["schemas"]["LineageResponse"];
 const identity = { id: "identity", display_label: "Ocimum basilicum" };
@@ -41,7 +55,7 @@ test("shows only the recorded upstream path, oldest first, ending at this record
   const onFull = vi.fn((event: { preventDefault: () => void }) => {
     event.preventDefault();
   });
-  render(
+  renderWithAuth(
     <LineageStrip
       kind="plants"
       id="mother"
@@ -89,7 +103,7 @@ test("a Sowing reads its recorded Seed lot's path and includes that Seed lot", a
     },
     ancestors: [],
   } satisfies Response);
-  render(
+  renderWithAuth(
     <LineageStrip
       kind="seed-lots"
       id="packet"
@@ -108,7 +122,9 @@ test("a Sowing reads its recorded Seed lot's path and includes that Seed lot", a
 
 test("no recorded source says so instead of implying one from a shared identity", async () => {
   request.mockResolvedValue({ ...plantPath, ancestors: [] });
-  render(<LineageStrip kind="plants" id="mother" current="This Plant" />);
+  renderWithAuth(
+    <LineageStrip kind="plants" id="mother" current="This Plant" />,
+  );
   expect(await screen.findByText("No recorded source material.")).toBeVisible();
   expect(screen.queryByRole("list")).toBeNull();
 });
@@ -116,7 +132,9 @@ test("no recorded source says so instead of implying one from a shared identity"
 test("a failed load is stated and can be retried", async () => {
   request.mockRejectedValueOnce(new Error("offline"));
   request.mockResolvedValueOnce(plantPath);
-  render(<LineageStrip kind="plants" id="mother" current="This Plant" />);
+  renderWithAuth(
+    <LineageStrip kind="plants" id="mother" current="This Plant" />,
+  );
   expect(screen.getByText("Loading recorded lineage…")).toBeVisible();
   await userEvent.click(
     await screen.findByRole("button", { name: "Retry lineage" }),

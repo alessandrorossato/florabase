@@ -1,9 +1,15 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useState } from "react";
+import { useState, type ReactElement } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { getOrder, listOrders, type OrderDetail } from "./api";
 import { OrderPicker } from "./OrderPicker";
+let auth: AuthContextValue;
+function wrapAuth(ui: ReactElement) {
+  return <AuthContext.Provider value={auth}>{ui}</AuthContext.Provider>;
+}
 vi.mock("./api", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./api")>()),
   getOrder: vi.fn(),
@@ -35,7 +41,8 @@ function Editor() {
     </>
   );
 }
-beforeEach(() => {
+beforeEach(async () => {
+  auth = (await acquireTestAuth()).auth;
   vi.mocked(getOrder).mockResolvedValue(order);
   vi.mocked(listOrders).mockResolvedValue({
     items: [],
@@ -50,7 +57,7 @@ afterEach(() => {
 });
 test("existing Order outside the page stays selectable through search, unlink and relink", async () => {
   const user = userEvent.setup();
-  render(<Editor />);
+  render(wrapAuth(<Editor />));
   await screen.findByRole("option", { name: /PO-OLD/ });
   await user.type(
     screen.getByRole("searchbox", { name: "Find an Order" }),
@@ -61,6 +68,7 @@ test("existing Order outside the page stays selectable through search, unlink an
       "missing",
       "",
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -88,7 +96,7 @@ test("existing Order outside the page stays selectable through search, unlink an
 });
 test("failed Order choices can be retried and large directories are paged", async () => {
   vi.mocked(listOrders).mockRejectedValueOnce(new Error("offline"));
-  render(<Editor />);
+  render(wrapAuth(<Editor />));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "Could not load Orders",
   );
@@ -109,6 +117,7 @@ test("failed Order choices can be retried and large directories are paged", asyn
       "",
       "",
       50,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -116,18 +125,21 @@ test("failed Order choices can be retried and large directories are paged", asyn
 
 test("known Supplier filters Orders first with a deliberate all-Suppliers escape", async () => {
   render(
-    <OrderPicker
-      value=""
-      onChange={vi.fn()}
-      disabled={false}
-      supplierId="supplier-a"
-    />,
+    wrapAuth(
+      <OrderPicker
+        value=""
+        onChange={vi.fn()}
+        disabled={false}
+        supplierId="supplier-a"
+      />,
+    ),
   );
   await waitFor(() => {
     expect(listOrders).toHaveBeenLastCalledWith(
       "",
       "supplier-a",
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -137,6 +149,7 @@ test("known Supplier filters Orders first with a deliberate all-Suppliers escape
       "",
       "",
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -145,12 +158,14 @@ test("known Supplier filters Orders first with a deliberate all-Suppliers escape
 test("confirmed Order version refreshes transaction context and failed context can be retried", async () => {
   vi.mocked(getOrder).mockRejectedValueOnce(new Error("offline"));
   const view = render(
-    <OrderPicker
-      value={order.id}
-      onChange={vi.fn()}
-      disabled={false}
-      refreshKey="old"
-    />,
+    wrapAuth(
+      <OrderPicker
+        value={order.id}
+        onChange={vi.fn()}
+        disabled={false}
+        refreshKey="old"
+      />,
+    ),
   );
   await userEvent.click(
     await screen.findByRole("button", {
@@ -164,12 +179,14 @@ test("confirmed Order version refreshes transaction context and failed context c
     currency: "EUR",
   });
   view.rerender(
-    <OrderPicker
-      value={order.id}
-      onChange={vi.fn()}
-      disabled={false}
-      refreshKey="new"
-    />,
+    wrapAuth(
+      <OrderPicker
+        value={order.id}
+        onChange={vi.fn()}
+        disabled={false}
+        refreshKey="new"
+      />,
+    ),
   );
   expect(await screen.findByText("EUR 12.340000000000000001")).toBeVisible();
 });

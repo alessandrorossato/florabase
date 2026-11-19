@@ -69,15 +69,16 @@ function SelectedIdentity({
   onClear: () => void;
 }) {
   const auth = useAuth();
-  const { sessionExpired } = auth;
-  const authorized = auth.state.status === "authenticated";
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [identity, setIdentity] = useState<RepresentedIdentity | null>(null);
   const [error, setError] = useState<"missing" | "error" | null>(null);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     if (!authorized) return;
     const controller = new AbortController();
-    void getRepresentedIdentity(id, scope, controller.signal)
+    void getRepresentedIdentity(id, scope, capability, controller.signal)
       .then((value) => {
         if (!controller.signal.aborted) {
           setIdentity(value);
@@ -99,7 +100,7 @@ function SelectedIdentity({
     return () => {
       controller.abort();
     };
-  }, [authorized, id, scope, attempt, sessionExpired]);
+  }, [authorized, capability, id, scope, attempt, sessionExpired]);
   if (error)
     return (
       <div role="alert" className="notice notice--error">
@@ -214,8 +215,9 @@ function SelectedIdentity({
 
 export function SpeciesDistributionScreen() {
   const auth = useAuth();
-  const { sessionExpired } = auth;
-  const authorized = auth.state.status === "authenticated";
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [chooserOpen, setChooserOpen] = useState(false);
   const [preview, setPreview] = useState<RepresentedIdentity | null>(null);
   const chooserTrigger = useRef<HTMLButtonElement>(null);
@@ -240,7 +242,13 @@ export function SpeciesDistributionScreen() {
     if (!authorized) return;
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
-      void listRepresentedIdentities(q, scope, offset, controller.signal)
+      void listRepresentedIdentities(
+        q,
+        scope,
+        offset,
+        capability,
+        controller.signal,
+      )
         .then((value) => {
           if (!controller.signal.aborted) {
             setResult({ key: queryKey, page: value });
@@ -259,7 +267,7 @@ export function SpeciesDistributionScreen() {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [authorized, q, scope, offset, queryKey, sessionExpired]);
+  }, [authorized, capability, q, scope, offset, queryKey, sessionExpired]);
   function choose(event: MouseEvent<HTMLButtonElement>) {
     chooserTrigger.current = event.currentTarget;
     setChooserOpen(true);

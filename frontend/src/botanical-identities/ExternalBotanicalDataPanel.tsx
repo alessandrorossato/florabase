@@ -1,7 +1,8 @@
 import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useState, type SyntheticEvent } from "react";
 
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
+import { useAuth } from "../auth/context";
 import { InfoDisclosure } from "../components/ContextualHelp";
 import { OverflowMenu } from "../components/ReferenceUI";
 import { OccurrenceMapPanel } from "../occurrence-map/OccurrenceMapPanel";
@@ -53,6 +54,10 @@ export function ExternalBotanicalDataPanel({
   csrfToken: string;
   view?: "all" | "source" | "occurrences";
 }) {
+  const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [link, setLink] = useState<ExternalTaxonLinkResponse | null>(null);
   const [loadingLink, setLoadingLink] = useState(true);
   const [query, setQuery] = useState(scientificName);
@@ -63,12 +68,21 @@ export function ExternalBotanicalDataPanel({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void getExternalTaxonLink(identityId, controller.signal)
+    void getExternalTaxonLink(identityId, capability, controller.signal)
       .then(setLink)
-      .catch(() => {
-        if (!controller.signal.aborted)
-          setError("Florabase could not load the external taxon link.");
+      .catch((requestError: unknown) => {
+        if (
+          controller.signal.aborted ||
+          isExpectedAuthCancellation(requestError)
+        )
+          return;
+        if (requestError instanceof ApiError && requestError.status === 401) {
+          sessionExpired();
+          return;
+        }
+        setError("Florabase could not load the external taxon link.");
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoadingLink(false);
@@ -76,15 +90,20 @@ export function ExternalBotanicalDataPanel({
     return () => {
       controller.abort();
     };
-  }, [identityId]);
+  }, [authorized, capability, identityId, sessionExpired]);
 
   async function runSearch(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setSearching(true);
     setError(null);
     try {
-      setSearch(await searchExternalTaxa(identityId, query));
+      setSearch(await searchExternalTaxa(identityId, query, capability));
     } catch (requestError: unknown) {
+      if (isExpectedAuthCancellation(requestError)) return;
+      if (requestError instanceof ApiError && requestError.status === 401) {
+        sessionExpired();
+        return;
+      }
       setSearch(null);
       setError(providerError(requestError));
     } finally {
@@ -102,11 +121,17 @@ export function ExternalBotanicalDataPanel({
           externalId,
           scientificName,
           csrfToken,
+          capability,
         ),
       );
       setChanging(false);
       setSearch(null);
     } catch (requestError: unknown) {
+      if (isExpectedAuthCancellation(requestError)) return;
+      if (requestError instanceof ApiError && requestError.status === 401) {
+        sessionExpired();
+        return;
+      }
       setError(providerError(requestError));
     } finally {
       setBusyId(null);
@@ -117,8 +142,15 @@ export function ExternalBotanicalDataPanel({
     setBusyId("refresh");
     setError(null);
     try {
-      setLink(await refreshExternalTaxonLink(identityId, csrfToken));
+      setLink(
+        await refreshExternalTaxonLink(identityId, csrfToken, capability),
+      );
     } catch (requestError: unknown) {
+      if (isExpectedAuthCancellation(requestError)) return;
+      if (requestError instanceof ApiError && requestError.status === 401) {
+        sessionExpired();
+        return;
+      }
       setError(providerError(requestError));
     } finally {
       setBusyId(null);
@@ -129,10 +161,15 @@ export function ExternalBotanicalDataPanel({
     setBusyId("unlink");
     setError(null);
     try {
-      await unlinkExternalTaxon(identityId, csrfToken);
+      await unlinkExternalTaxon(identityId, csrfToken, capability);
       setLink(null);
       setChanging(false);
     } catch (requestError: unknown) {
+      if (isExpectedAuthCancellation(requestError)) return;
+      if (requestError instanceof ApiError && requestError.status === 401) {
+        sessionExpired();
+        return;
+      }
       setError(providerError(requestError));
     } finally {
       setBusyId(null);

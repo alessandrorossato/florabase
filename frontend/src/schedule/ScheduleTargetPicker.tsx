@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ReferencePicker } from "../seed-lots/ReferencePicker";
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { listTargets, type Target, type TargetPage } from "./api";
 import type { TargetKind } from "./state";
@@ -18,6 +18,9 @@ export function ScheduleTargetPicker({
   allowInactive?: boolean;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [remembered, setRemembered] = useState<Target | null>(selected);
   const [q, setQ] = useState("");
   const [offset, setOffset] = useState(0);
@@ -32,20 +35,21 @@ export function ScheduleTargetPicker({
   const page = current?.page;
   const error = current?.error ?? false;
   useEffect(() => {
+    if (!authorized) return;
     const c = new AbortController();
-    void listTargets(kind, q, offset, c.signal)
+    void listTargets(kind, q, offset, capability, c.signal)
       .then((p) => {
         if (!c.signal.aborted) setResult({ key, page: p, error: false });
       })
       .catch((e: unknown) => {
-        if (c.signal.aborted) return;
-        if (e instanceof ApiError && e.status === 401) auth.sessionExpired();
+        if (c.signal.aborted || isExpectedAuthCancellation(e)) return;
+        if (e instanceof ApiError && e.status === 401) sessionExpired();
         else setResult({ key, page: null, error: true });
       });
     return () => {
       c.abort();
     };
-  }, [kind, q, offset, key, auth]);
+  }, [kind, q, offset, key, authorized, capability, sessionExpired]);
   const choices = page?.items ?? [];
   const retained =
     remembered?.id === value

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 import {
   ApiError,
   activeCsrfToken,
+  isExpectedAuthCancellation,
   isPresentationRetainedState,
 } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -82,7 +83,9 @@ export function BotanicalProfilePanel({
   onEditStateChange?: (dirty: boolean, pending: boolean) => void;
 }) {
   const auth = useAuth();
-  const { sessionExpired } = auth;
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [loadState, setLoadState] = useState<LoadState>({ status: "loading" });
   const [saveState, setSaveState] = useState<SaveState>({ status: "idle" });
   const [values, setValues] = useState<ProfileValues>(emptyValues);
@@ -92,14 +95,16 @@ export function BotanicalProfilePanel({
   const editTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void getBotanicalProfile(identityId, controller.signal)
+    void getBotanicalProfile(identityId, capability, controller.signal)
       .then((profile) => {
         setValues(valuesFromProfile(profile));
         setLoadState({ status: "ready", profile });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) {
           sessionExpired();
         } else if (error instanceof ApiError && isProfileNotFound(error)) {
@@ -116,7 +121,7 @@ export function BotanicalProfilePanel({
     return () => {
       controller.abort();
     };
-  }, [sessionExpired, identityId, loadAttempt]);
+  }, [authorized, capability, sessionExpired, identityId, loadAttempt]);
 
   useEffect(() => {
     if (saveState.status === "error") feedbackRef.current?.focus();
@@ -143,7 +148,12 @@ export function BotanicalProfilePanel({
     setSaveState({ status: "saving" });
     const payload: BotanicalProfilePut = { ...values };
     try {
-      const profile = await putBotanicalProfile(identityId, payload, csrfToken);
+      const profile = await putBotanicalProfile(
+        identityId,
+        payload,
+        csrfToken,
+        capability,
+      );
       if (profile === undefined) {
         setValues(emptyValues);
         setLoadState({ status: "ready", profile: null });

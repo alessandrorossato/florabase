@@ -110,18 +110,12 @@ test("navigates, validates row issues, retries and explicitly confirms the revie
   await user.selectOptions(screen.getByLabelText("Record type"), "seed-lots");
   expect(
     within(screen.getByRole("complementary", { name: "Export CSV" })).getByRole(
-      "link",
+      "button",
       { name: "Download Seed lots CSV" },
     ),
   ).toBeVisible();
-  expect(screen.getByRole("link", { name: "Blank template" })).toHaveAttribute(
-    "href",
-    "/api/v1/imports/templates/seed-lots.csv",
-  );
-  expect(screen.getByRole("link", { name: "Example CSV" })).toHaveAttribute(
-    "href",
-    "/api/v1/imports/examples/seed-lots.csv",
-  );
+  expect(screen.getByRole("button", { name: "Blank template" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Example CSV" })).toBeVisible();
   const file = new File(["identity_ref\nPhaseolus vulgaris\n"], "lots.csv", {
     type: "text/csv",
   });
@@ -385,4 +379,105 @@ test("guides a human Supplier import and requires a reviewed update choice", asy
     decisions: Record<string, Record<string, string>>;
   };
   expect(body.decisions).toEqual({ "2": { record: "update-token" } });
+});
+
+test("protected CSV downloads preserve BOM/CRLF bytes, filename*, enforce single active download, and abort on session expiry", async () => {
+  const user = userEvent.setup();
+  const bomCrlfBytes = new Uint8Array([
+    0xef,
+    0xbb,
+    0xbf,
+    ...new TextEncoder().encode("scientific_name,notes\r\nAloe vera,note\r\n"),
+  ]);
+  let downloadSignal: AbortSignal | undefined;
+  let resolveTemplate: ((res: Response) => void) | undefined;
+  const capturedBlobs: Blob[] = [];
+  const createUrlSpy = vi
+    .spyOn(URL, "createObjectURL")
+    .mockImplementation((obj) => {
+      if (obj instanceof Blob) capturedBlobs.push(obj);
+      return "blob:csv-download";
+    });
+  const downloadedNames: string[] = [];
+  const anchorClickSpy = vi
+    .spyOn(HTMLAnchorElement.prototype, "click")
+    .mockImplementation(function (this: HTMLAnchorElement) {
+      downloadedNames.push(this.download);
+    });
+
+  vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+    const path =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+    if (path.endsWith("/auth/session"))
+      return Promise.resolve(
+        jsonResponse({
+          user_id: "01900000-0000-7000-8000-000000000001",
+          login_name: "owner",
+          display_name: "Owner",
+          owner: true,
+        }),
+      );
+    if (path.endsWith("/auth/csrf"))
+      return Promise.resolve(jsonResponse({ csrf_token: "csrf-value" }));
+    if (path.endsWith("/health"))
+      return Promise.resolve(jsonResponse({ status: "ok" }));
+    if (path.endsWith("/exports/botanical-identities.csv")) {
+      return Promise.resolve(
+        new Response(bomCrlfBytes, {
+          status: 200,
+          headers: {
+            "Content-Type": "text/csv; charset=utf-8",
+            "Content-Disposition":
+              "attachment; filename=\"fallback.csv\"; filename*=UTF-8''botanical%20identities%20export.csv",
+          },
+        }),
+      );
+    }
+    if (path.endsWith("/imports/templates/botanical-identities.csv")) {
+      downloadSignal = init?.signal ?? undefined;
+      return new Promise<Response>((resolve) => {
+        resolveTemplate = resolve;
+      });
+    }
+    if (path.endsWith("/auth/logout")) {
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    return Promise.resolve(jsonResponse([]));
+  });
+
+  render(<App />);
+  await openSection(user, "Import / Export");
+  const exportBtn = await screen.findByRole("button", {
+    name: "Download Botanical identities CSV",
+  });
+  await user.click(exportBtn);
+  await waitFor(() => {
+    expect(anchorClickSpy).toHaveBeenCalledTimes(1);
+  });
+  expect(createUrlSpy).toHaveBeenCalledTimes(1);
+  expect(downloadedNames).toEqual(["botanical identities export.csv"]);
+  const bytes = new Uint8Array(await capturedBlobs[0].arrayBuffer());
+  expect(Array.from(bytes.slice(0, 3))).toEqual([0xef, 0xbb, 0xbf]);
+  expect(new TextDecoder().decode(bytes.slice(3))).toBe(
+    "scientific_name,notes\r\nAloe vera,note\r\n",
+  );
+
+  // Trigger a pending template download -> concurrent download controls stay disabled until completion/abort.
+  const templateBtn = screen.getByRole("button", { name: "Blank template" });
+  const exampleBtn = screen.getByRole("button", { name: "Example CSV" });
+  await user.click(templateBtn);
+  expect(exportBtn).toBeDisabled();
+  expect(exampleBtn).toBeDisabled();
+  expect(downloadSignal?.aborted).toBe(false);
+
+  // Sign out / session invalidation aborts the in-flight download signal cleanly.
+  await user.click(screen.getByRole("button", { name: "Sign out" }));
+  await waitFor(() => {
+    expect(downloadSignal?.aborted).toBe(true);
+  });
+  resolveTemplate?.(new Response("", { status: 200 }));
 });

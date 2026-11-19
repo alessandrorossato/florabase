@@ -1,5 +1,5 @@
 import type { components } from "../api/schema";
-import { requestJson } from "../auth/api";
+import { requestJson, type ProtectedRequestCapability } from "../auth/api";
 import type { SeedLotCreate, SeedLotResponse } from "../seed-lots/api";
 export type AcquisitionContext = components["schemas"]["AcquisitionContext"];
 export type PurchasePreview = components["schemas"]["PurchasePreview"];
@@ -11,10 +11,12 @@ export type PurchaseSeedPage = components["schemas"]["PurchaseSeedPage"];
 function post<T>(
   path: string,
   payload: unknown,
+  capability: ProtectedRequestCapability,
   csrf?: string,
   signal?: AbortSignal,
 ): Promise<T> {
   return requestJson(path, {
+    capability,
     method: "POST",
     signal,
     headers: {
@@ -27,11 +29,13 @@ function post<T>(
 export function previewPurchase(
   orderId: string,
   payload: PurchasePreviewInput,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<PurchasePreview> {
   return post(
     `/api/v1/orders/${encodeURIComponent(orderId)}/purchase-context/preview`,
     payload,
+    capability,
     undefined,
     signal,
   );
@@ -40,11 +44,13 @@ export function applyPurchase(
   orderId: string,
   payload: PurchaseApply,
   csrf: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<PurchaseResolution> {
   return post(
     `/api/v1/orders/${encodeURIComponent(orderId)}/purchase-context/apply`,
     payload,
+    capability,
     csrf,
     signal,
   );
@@ -54,10 +60,12 @@ export function createPurchaseLot(
   seedLot: SeedLotCreate,
   confirmation: PurchaseApply,
   csrf: string,
+  capability: ProtectedRequestCapability,
 ): Promise<SeedLotResponse> {
   return post(
     `/api/v1/orders/${encodeURIComponent(orderId)}/seed-lots`,
     { seed_lot: seedLot, confirmation },
+    capability,
     csrf,
   );
 }
@@ -65,10 +73,11 @@ export function purchaseChoices(
   orderId: string,
   q: string,
   offset: number,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<PurchaseSeedPage> {
   return requestJson(
     `/api/v1/orders/${encodeURIComponent(orderId)}/seed-lot-choices?${new URLSearchParams({ q, offset: String(offset) })}`,
-    { signal },
+    { capability, signal },
   );
 }

@@ -5,7 +5,7 @@ import {
   type RefObject,
   type SyntheticEvent,
 } from "react";
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { FieldLabel } from "../components/FieldLabel";
 import { BotanicalName } from "../components/ReferenceUI";
@@ -347,6 +347,9 @@ export function IdentityReconciliationPanel({
   onIdentityUpdated: (updated: BotanicalIdentityResponse) => Promise<void>;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<
     | { status: "loading" }
@@ -393,17 +396,23 @@ export function IdentityReconciliationPanel({
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void getBotanicalIdentityReconciliation(identity.id, controller.signal)
+    void getBotanicalIdentityReconciliation(
+      identity.id,
+      capability,
+      controller.signal,
+    )
       .then((data) => {
         if (!controller.signal.aborted) {
           setState({ status: "ready", data });
         }
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) {
-          auth.sessionExpired();
+          sessionExpired();
           return;
         }
         setState((previous) => {
@@ -423,7 +432,14 @@ export function IdentityReconciliationPanel({
     return () => {
       controller.abort();
     };
-  }, [identity.id, identity.updated_at, attempt, auth]);
+  }, [
+    identity.id,
+    identity.updated_at,
+    attempt,
+    authorized,
+    capability,
+    sessionExpired,
+  ]);
 
   useEffect(() => {
     if (addSynonymOpen || editingSynonymId) {
@@ -539,10 +555,12 @@ export function IdentityReconciliationPanel({
           source_citation: synonymForm.source_citation.trim() || null,
         },
         csrfToken,
+        capability,
       );
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) return;
       if (error instanceof ApiError && error.status === 401) {
-        auth.sessionExpired();
+        sessionExpired();
         return;
       }
       setSynonymError(
@@ -596,10 +614,12 @@ export function IdentityReconciliationPanel({
           source_citation: synonymForm.source_citation.trim() || null,
         },
         csrfToken,
+        capability,
       );
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) return;
       if (error instanceof ApiError && error.status === 401) {
-        auth.sessionExpired();
+        sessionExpired();
         return;
       }
       setSynonymError(
@@ -633,10 +653,16 @@ export function IdentityReconciliationPanel({
     setSynonymError(null);
     setNotice(null);
     try {
-      await deleteBotanicalIdentitySynonym(identity.id, item.id, csrfToken);
+      await deleteBotanicalIdentitySynonym(
+        identity.id,
+        item.id,
+        csrfToken,
+        capability,
+      );
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) return;
       if (error instanceof ApiError && error.status === 401) {
-        auth.sessionExpired();
+        sessionExpired();
         return;
       }
       setMutationError(
@@ -690,6 +716,7 @@ export function IdentityReconciliationPanel({
           notes: correctionNotes.trim() || null,
         },
         csrfToken,
+        capability,
       );
       setSelectedSuggestion(null);
       setCorrectionNotes("");
@@ -701,8 +728,9 @@ export function IdentityReconciliationPanel({
         `Accepted name corrected to ${updated.identity.display_label}. Historical name provenance is preserved.`,
       );
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) return;
       if (error instanceof ApiError && error.status === 401) {
-        auth.sessionExpired();
+        sessionExpired();
         return;
       }
       setMutationError(
@@ -737,6 +765,7 @@ export function IdentityReconciliationPanel({
           notes: correctionNotes.trim() || null,
         },
         csrfToken,
+        capability,
       );
       setManualOpen(false);
       setCorrectionNotes("");
@@ -748,8 +777,9 @@ export function IdentityReconciliationPanel({
         `Accepted name corrected to ${updated.identity.display_label}. Historical name provenance is preserved.`,
       );
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) return;
       if (error instanceof ApiError && error.status === 401) {
-        auth.sessionExpired();
+        sessionExpired();
         return;
       }
       setMutationError(
@@ -782,6 +812,7 @@ export function IdentityReconciliationPanel({
           notes: mergeNotes.trim() || null,
         },
         csrfToken,
+        capability,
       );
       setMergeTarget(null);
       setKeepSurvivorProfile(false);
@@ -790,8 +821,9 @@ export function IdentityReconciliationPanel({
       await onIdentityUpdated(updated.identity);
       window.location.hash = `#/identities/${updated.identity.id}?tab=taxonomy`;
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) return;
       if (error instanceof ApiError && error.status === 401) {
-        auth.sessionExpired();
+        sessionExpired();
         return;
       }
       setMutationError(

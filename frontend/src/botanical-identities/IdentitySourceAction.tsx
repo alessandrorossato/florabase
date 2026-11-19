@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, type MouseEvent } from "react";
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   getIdentityCollection,
@@ -27,6 +27,9 @@ export function IdentitySourceAction({
   triggerLabel?: string;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(dialogOnly);
   const [attempt, setAttempt] = useState(0);
@@ -36,22 +39,22 @@ export function IdentitySourceAction({
   >({ status: "loading" });
   const title = kind === "sowing" ? "Start sowing" : "Record harvest";
   useEffect(() => {
-    if (!open) return;
+    if (!authorized || !open) return;
     const controller = new AbortController();
-    void getIdentityCollection(identityId, controller.signal)
+    void getIdentityCollection(identityId, capability, controller.signal)
       .then((value) => {
         if (!controller.signal.aborted) setLoad({ status: "ready", value });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setLoad({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [auth, identityId, open, attempt]);
+  }, [authorized, capability, identityId, open, attempt, sessionExpired]);
   const choices =
     load.status !== "ready"
       ? []

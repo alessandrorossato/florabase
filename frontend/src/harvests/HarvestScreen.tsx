@@ -1,5 +1,9 @@
 import { useContext, useEffect, useId, useRef, useState } from "react";
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { ActionButton } from "../components/Action";
 import {
@@ -131,6 +135,9 @@ export function HarvestScreen({
   const creating = startCreating;
   const storedMode = !initialId && initialTab === "stored-material";
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const recordIdentities = useContext(RecordIdentities);
   const headingId = useId();
   const directoryList = useRef<HTMLUListElement>(null);
@@ -167,11 +174,11 @@ export function HarvestScreen({
 
   const [identities, setIdentities] = useState<ReferenceChoice[]>([]);
   useEffect(() => {
-    if (storedMode) return;
+    if (storedMode || !authorized) return;
     const controller = new AbortController();
     const request = initialId
-      ? getHarvest(initialId, controller.signal)
-      : listHarvests(controller.signal, identity);
+      ? getHarvest(initialId, capability, controller.signal)
+      : listHarvests(capability, controller.signal, identity);
     void request
       .then((result) => {
         if (controller.signal.aborted) return;
@@ -185,15 +192,24 @@ export function HarvestScreen({
         } else setDetail(result);
       })
       .catch((failure: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
         if (failure instanceof ApiError && failure.status === 401)
-          auth.sessionExpired();
+          sessionExpired();
         else setError("Could not load Harvests. Please retry.");
       });
     return () => {
       controller.abort();
     };
-  }, [initialId, storedMode, attempt, identity, auth]);
+  }, [
+    initialId,
+    storedMode,
+    attempt,
+    identity,
+    authorized,
+    capability,
+    sessionExpired,
+  ]);
   const filtered = records?.filter(
     (record) =>
       (!identity || record.source.botanical_identity.id === identity) &&
@@ -311,18 +327,17 @@ export function HarvestScreen({
       </section>
     );
   async function remove() {
-    if (!detail || pending) return;
+    const csrfToken = activeCsrfToken(auth.state);
+    if (!detail || pending || !csrfToken) return;
     setPending(true);
     setError(null);
     try {
-      await deleteHarvest(
-        detail.id,
-        auth.state.status === "authenticated" ? auth.state.csrfToken : "",
-      );
+      await deleteHarvest(detail.id, csrfToken, capability);
       window.location.assign("#/harvests");
     } catch (failure: unknown) {
+      if (isExpectedAuthCancellation(failure)) return;
       if (failure instanceof ApiError && failure.status === 401)
-        auth.sessionExpired();
+        sessionExpired();
       else
         setError(
           failure instanceof ApiError && failure.status === 409

@@ -23,6 +23,7 @@ import "./hierarchy.css";
 import {
   ApiError,
   activeCsrfToken,
+  isExpectedAuthCancellation,
   isPresentationRetainedState,
 } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -474,7 +475,9 @@ export function LocationScreen({
   startCreating = false,
 }: { initialId?: string; startCreating?: boolean } = {}) {
   const auth = useAuth();
-  const { sessionExpired } = auth;
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
   });
@@ -556,20 +559,22 @@ export function LocationScreen({
   }
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void listLocations(controller.signal)
+    void listLocations(capability, controller.signal)
       .then((locations) => {
         setDirectory({ status: "ready", locations });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setDirectory({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [sessionExpired, attempt]);
+  }, [authorized, capability, sessionExpired, attempt]);
 
   useEffect(() => {
     if (save.status === "validation" || save.status === "error")
@@ -636,13 +641,15 @@ export function LocationScreen({
     setSave({ status: "saving" });
     try {
       const location = await action();
-      const refreshed = await listLocations();
+      const refreshed = await listLocations(capability);
       setDirectory({ status: "ready", locations: refreshed });
       setSelectedId(location.id);
       setEditing(false);
       setSave({ status: "success", message: success(location) });
     } catch (error: unknown) {
-      if (error instanceof ApiError && error.status === 401) {
+      if (isExpectedAuthCancellation(error)) {
+        setSave({ status: "idle" });
+      } else if (error instanceof ApiError && error.status === 401) {
         setSave({ status: "idle" });
         sessionExpired();
       } else if (error instanceof ApiError && error.status === 422)
@@ -680,8 +687,8 @@ export function LocationScreen({
       return;
     setSave({ status: "saving" });
     try {
-      await deleteLocation(selected.id, csrfToken);
-      const refreshed = await listLocations();
+      await deleteLocation(selected.id, csrfToken, capability);
+      const refreshed = await listLocations(capability);
       setDirectory({ status: "ready", locations: refreshed });
       setSelectedId(null);
       setEditing(false);
@@ -690,7 +697,9 @@ export function LocationScreen({
         message: `${selected.display_path} was deleted.`,
       });
     } catch (error: unknown) {
-      if (error instanceof ApiError && error.status === 401) {
+      if (isExpectedAuthCancellation(error)) {
+        setSave({ status: "idle" });
+      } else if (error instanceof ApiError && error.status === 401) {
         setSave({ status: "idle" });
         sessionExpired();
       } else if (error instanceof ApiError && error.status === 409)
@@ -713,7 +722,7 @@ export function LocationScreen({
     if (pending) return;
     const form = event.currentTarget;
     void apply(
-      () => createLocation(payloadFrom(form), csrfToken),
+      () => createLocation(payloadFrom(form), csrfToken, capability),
       (location) => {
         setCreateNameValue("");
         setCreateParentId("");
@@ -750,7 +759,7 @@ export function LocationScreen({
     }
     const payload: LocationUpdate = payloadFrom(event.currentTarget);
     void apply(
-      () => updateLocation(selected.id, payload, csrfToken),
+      () => updateLocation(selected.id, payload, csrfToken, capability),
       (location) => `${location.display_path} was updated.`,
     );
   }
@@ -1070,6 +1079,7 @@ export function LocationScreen({
                                   selected.id,
                                   !selected.retired_at,
                                   csrfToken,
+                                  capability,
                                 ),
                               (location) =>
                                 location.retired_at

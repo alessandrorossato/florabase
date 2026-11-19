@@ -20,7 +20,11 @@ import {
 } from "../components/recordPresentation";
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { Breadcrumbs } from "../components/CollectionUI";
 import {
@@ -61,6 +65,9 @@ export function SowingDescendantWizard({
   kind: Kind;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const recordName = useRecordName();
   const [data, setData] = useState<
     | { status: "loading" }
@@ -110,11 +117,12 @@ export function SowingDescendantWizard({
   );
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     void Promise.all([
-      getSowing(sowingId, controller.signal),
-      listBotanicalIdentities(controller.signal),
-      listLocations(controller.signal),
+      getSowing(sowingId, capability, controller.signal),
+      listBotanicalIdentities(capability, controller.signal),
+      listLocations(capability, controller.signal),
     ])
       .then(([sowing, identities, locations]) => {
         setData({ status: "ready", sowing, identities, locations });
@@ -124,13 +132,16 @@ export function SowingDescendantWizard({
           locationId: sowing.location_id ?? "",
         }));
       })
-      .catch(() => {
-        if (!controller.signal.aborted) setData({ status: "error" });
+      .catch((error: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
+        else setData({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [sowingId]);
+  }, [sowingId, authorized, capability, sessionExpired]);
 
   if (data.status === "loading")
     return (
@@ -234,12 +245,8 @@ export function SowingDescendantWizard({
       lifecycle: "active" as const,
       notes: notes || null,
     };
-    const csrfToken =
-      auth.state.status === "authenticated" ||
-      auth.state.status === "logging-out" ||
-      auth.state.status === "logout-failed"
-        ? auth.state.csrfToken
-        : "";
+    const csrfToken = activeCsrfToken(auth.state);
+    if (!csrfToken) return;
     setPending(true);
     setMessages([]);
     setValidationField(undefined);
@@ -249,6 +256,7 @@ export function SowingDescendantWizard({
           sowing.id,
           { plant: common, resulting_sowing_lifecycle: resultingLifecycle },
           csrfToken,
+          capability,
         );
         setRecordRoute(`#/plants/${result.plant.id}`, true);
       } else {
@@ -268,10 +276,15 @@ export function SowingDescendantWizard({
             resulting_sowing_lifecycle: resultingLifecycle,
           },
           csrfToken,
+          capability,
         );
         setRecordRoute(`#/plant-groups/${result.plant_group.id}`, true);
       }
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) {
+        setPending(false);
+        return;
+      }
       if (error instanceof ApiError && error.status === 422) {
         setValidationField(firstValidationField(error));
       }

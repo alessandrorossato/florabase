@@ -60,8 +60,10 @@ export class ApiError extends Error {
 }
 
 export class AuthRequestLockedError extends Error {
-  constructor() {
-    super("Protected API request blocked while authentication is locked");
+  constructor(
+    message = "Protected API request blocked while authentication is locked",
+  ) {
+    super(message);
     this.name = "AuthRequestLockedError";
   }
 }
@@ -75,6 +77,15 @@ export class StaleAuthEpochError extends Error {
   }
 }
 
+export class ProtectedTabBlockedError extends Error {
+  constructor() {
+    super(
+      "Pop-up blocked by browser. Allow pop-ups for Florabase to open this file.",
+    );
+    this.name = "ProtectedTabBlockedError";
+  }
+}
+
 export function isExpectedAuthCancellation(error: unknown): boolean {
   return (
     error instanceof AuthRequestLockedError ||
@@ -83,59 +94,150 @@ export function isExpectedAuthCancellation(error: unknown): boolean {
   );
 }
 
+declare const capabilityBrand: unique symbol;
+
+/**
+ * Opaque handle authorizing protected requests for a single owner workspace.
+ * Never exposes internal generation/epoch mutators or public revocation methods.
+ */
+export interface ProtectedRequestCapability {
+  readonly [capabilityBrand]: true;
+  isAuthorized: () => boolean;
+  subscribeInvalidation: (listener: () => void) => () => void;
+}
+
+export interface ManagedWorkspaceCapabilityHandle {
+  readonly capability: ProtectedRequestCapability;
+  revoke: () => void;
+}
+
+export interface ProtectedRequestInit extends RequestInit {
+  capability: ProtectedRequestCapability;
+}
+
+export interface ProtectedBlobResult {
+  status: number;
+  blob: Blob;
+  contentType: string | null;
+  contentDisposition: string | null;
+}
+
+export type ClassifiedResourceUrl =
+  | { kind: "protected-api"; url: string }
+  | { kind: "public-local"; url: string }
+  | { kind: "local-blob"; url: string }
+  | { kind: "external-https"; url: string }
+  | { kind: "invalid" };
+
+interface CapabilityRecord {
+  readonly providerId: number;
+  readonly workspaceGeneration: number;
+  readonly ownerId: string;
+  revoked: boolean;
+  revoke: () => void;
+}
+
 interface AuthRequestGate {
-  managed: boolean;
+  activeProviderId: number;
+  nextProviderId: number;
   locked: boolean;
   epoch: number;
   workspaceGeneration: number;
   ownerId: string | null;
-  onUnauthorized?: (originatingEpoch: number) => void;
+  onUnauthorized?: (originatingEpoch: number, providerId: number) => void;
 }
 
 const gate: AuthRequestGate = {
-  managed: false,
-  locked: false,
+  activeProviderId: 0,
+  nextProviderId: 0,
+  locked: true,
   epoch: 0,
-  workspaceGeneration: 0,
+  workspaceGeneration: 1,
   ownerId: null,
 };
 
-const inFlightProtectedControllers = new Map<AbortController, number>();
+const inFlightProtectedControllers = new Map<
+  AbortController,
+  { providerId: number; epoch: number }
+>();
 const invalidationListeners = new Set<() => void>();
-const activeCapabilities = new Set<{ revoke: () => void }>();
+const capabilityRecords = new WeakMap<
+  ProtectedRequestCapability,
+  CapabilityRecord
+>();
+const activeCapabilityRecords = new Set<CapabilityRecord>();
 
-export interface ProtectedRequestCapability {
-  readonly workspaceGeneration: number;
-  readonly ownerId: string | null;
-  isAuthorized: () => boolean;
-  getEpoch: () => number;
-  isRevoked: () => boolean;
-  revoke: () => void;
-  notifyUnauthorized: (originatingEpoch: number) => boolean;
-  subscribeInvalidation: (listener: () => void) => () => void;
+let cookieOpQueue: Promise<void> = Promise.resolve();
+let pendingCookieOpsCount = 0;
+
+/**
+ * Serializes cookie-mutating authentication operations across provider remounts
+ * so replacement providers observe settled browser cookie state before restoring.
+ */
+export function enqueueAuthCookieOperation<T>(
+  op: () => Promise<T>,
+): Promise<T> {
+  pendingCookieOpsCount += 1;
+  const nextRun = cookieOpQueue.then(op, op);
+  cookieOpQueue = nextRun.then(
+    () => {
+      pendingCookieOpsCount -= 1;
+    },
+    () => {
+      pendingCookieOpsCount -= 1;
+    },
+  );
+  return nextRun;
 }
 
-function revokeAllCapabilities(): void {
-  for (const capability of [...activeCapabilities]) {
-    capability.revoke();
+export function waitForSettledAuthCookieOperations():
+  Promise<void> | undefined {
+  if (pendingCookieOpsCount === 0) return undefined;
+  return cookieOpQueue;
+}
+
+export function getActiveAuthProviderId(): number {
+  return gate.activeProviderId;
+}
+
+function revokeAllCapabilities(providerId?: number): void {
+  for (const record of [...activeCapabilityRecords]) {
+    if (providerId === undefined || record.providerId === providerId) {
+      record.revoke();
+    }
   }
-  activeCapabilities.clear();
+  if (providerId === undefined) {
+    activeCapabilityRecords.clear();
+  }
 }
 
 function notifyInvalidation(): void {
-  for (const [controller, controllerEpoch] of inFlightProtectedControllers) {
-    if (gate.locked || controllerEpoch !== gate.epoch) {
+  for (const [controller, info] of inFlightProtectedControllers) {
+    if (
+      gate.locked ||
+      info.providerId !== gate.activeProviderId ||
+      info.epoch !== gate.epoch
+    ) {
       controller.abort(new StaleAuthEpochError());
     }
   }
   for (const listener of [...invalidationListeners]) listener();
 }
 
+export function revokedAuthCapability(): ProtectedRequestCapability {
+  const capability = Object.freeze({
+    isAuthorized: () => false,
+    subscribeInvalidation: () => () => undefined,
+  }) as unknown as ProtectedRequestCapability;
+  return capability;
+}
+
 export function attachAuthRequestGate(
-  onUnauthorized: (originatingEpoch: number) => void,
+  onUnauthorized: (originatingEpoch: number, providerId: number) => void,
   initialLocked = true,
-): () => void {
-  gate.managed = true;
+): { providerId: number; detach: () => void } {
+  const providerId = ++gate.nextProviderId;
+  gate.activeProviderId = providerId;
   gate.locked = initialLocked;
   gate.epoch += 1;
   gate.workspaceGeneration += 1;
@@ -143,15 +245,22 @@ export function attachAuthRequestGate(
   gate.onUnauthorized = onUnauthorized;
   revokeAllCapabilities();
   notifyInvalidation();
-  return () => {
-    gate.managed = false;
-    gate.locked = false;
-    gate.epoch += 1;
-    gate.workspaceGeneration += 1;
-    gate.ownerId = null;
-    gate.onUnauthorized = undefined;
-    revokeAllCapabilities();
-    notifyInvalidation();
+  return {
+    providerId,
+    detach: () => {
+      if (gate.activeProviderId !== providerId) {
+        revokeAllCapabilities(providerId);
+        return;
+      }
+      gate.activeProviderId = 0;
+      gate.locked = true;
+      gate.epoch += 1;
+      gate.workspaceGeneration += 1;
+      gate.ownerId = null;
+      gate.onUnauthorized = undefined;
+      revokeAllCapabilities();
+      notifyInvalidation();
+    },
   };
 }
 
@@ -159,7 +268,11 @@ export function attachAuthRequestGate(
  * Synchronously invalidates the active owner's workspace generation and revokes
  * every owner-bound request capability before any replacement owner session can unlock.
  */
-export function invalidateProtectedWorkspace(): number {
+export function invalidateProtectedWorkspace(providerId: number): number {
+  if (providerId !== gate.activeProviderId) {
+    revokeAllCapabilities(providerId);
+    return -1;
+  }
   gate.locked = true;
   gate.epoch += 1;
   gate.workspaceGeneration += 1;
@@ -170,18 +283,23 @@ export function invalidateProtectedWorkspace(): number {
 }
 
 export function syncAuthRequestGate({
+  providerId,
   locked,
   advanceEpoch = false,
   ownerId,
   invalidateWorkspace = false,
 }: {
+  providerId: number;
   locked: boolean;
   advanceEpoch?: boolean;
   ownerId?: string | null;
   invalidateWorkspace?: boolean;
 }): number {
+  if (providerId !== gate.activeProviderId) {
+    return -1;
+  }
   if (invalidateWorkspace) {
-    invalidateProtectedWorkspace();
+    invalidateProtectedWorkspace(providerId);
   }
   const nextOwnerId = ownerId !== undefined ? ownerId : gate.ownerId;
   const changed =
@@ -199,7 +317,7 @@ export function syncAuthRequestGate({
 }
 
 export function isProtectedRequestAuthorized(): boolean {
-  return !gate.managed || !gate.locked;
+  return gate.activeProviderId !== 0 && !gate.locked && gate.ownerId !== null;
 }
 
 export function getProtectedAuthEpoch(): number {
@@ -218,56 +336,58 @@ export function subscribeAuthInvalidation(listener: () => void): () => void {
 }
 
 /**
- * Acquires a fail-closed capability bound to the current owner and workspace generation.
- * Same-owner session recovery preserves the binding across temporary locks; any workspace
- * retirement (different-owner authentication, logout, discard) revokes it permanently.
+ * Issues a module-tracked workspace capability for an active authenticated provider.
+ * Same-owner reauthentication keeps the binding alive across temporary locks; workspace
+ * retirement or provider teardown revokes it permanently.
  */
-export function acquireProtectedRequestCapability(): ProtectedRequestCapability {
-  const managedAtAcquire = gate.managed;
+export function acquireWorkspaceCapability(
+  providerId: number,
+): ManagedWorkspaceCapabilityHandle {
+  if (
+    providerId === 0 ||
+    providerId !== gate.activeProviderId ||
+    gate.ownerId === null
+  ) {
+    return { capability: revokedAuthCapability(), revoke: () => undefined };
+  }
+
+  const boundProviderId = providerId;
   const boundGeneration = gate.workspaceGeneration;
   const boundOwnerId = gate.ownerId;
-  let revoked = managedAtAcquire && gate.locked && boundOwnerId === null;
   const unsubs = new Set<() => void>();
   const callbacks = new Set<() => void>();
 
-  const isAuthorized = (): boolean => {
-    if (revoked) return false;
-    if (!gate.managed) return !managedAtAcquire;
-    return (
-      !gate.locked &&
-      boundGeneration === gate.workspaceGeneration &&
-      boundOwnerId === gate.ownerId
-    );
-  };
-
-  const entry = {
+  const record: CapabilityRecord = {
+    providerId: boundProviderId,
+    workspaceGeneration: boundGeneration,
+    ownerId: boundOwnerId,
+    revoked: false,
     revoke: () => {
-      if (revoked) return;
-      revoked = true;
-      activeCapabilities.delete(entry);
+      if (record.revoked) return;
+      record.revoked = true;
+      activeCapabilityRecords.delete(record);
       for (const unsub of [...unsubs]) unsub();
       unsubs.clear();
       for (const listener of [...callbacks]) listener();
       callbacks.clear();
     },
   };
-  if (!revoked) {
-    activeCapabilities.add(entry);
-  }
+  activeCapabilityRecords.add(record);
 
-  return {
-    workspaceGeneration: boundGeneration,
-    ownerId: boundOwnerId,
+  const isAuthorized = (): boolean => {
+    if (record.revoked) return false;
+    return (
+      !gate.locked &&
+      gate.activeProviderId === boundProviderId &&
+      gate.workspaceGeneration === boundGeneration &&
+      gate.ownerId === boundOwnerId
+    );
+  };
+
+  const capability = Object.freeze({
     isAuthorized,
-    getEpoch: () => (isAuthorized() ? gate.epoch : -1),
-    isRevoked: () => revoked,
-    revoke: entry.revoke,
-    notifyUnauthorized: (originatingEpoch: number) => {
-      if (!isAuthorized()) return false;
-      return notifyProtectedUnauthorized(originatingEpoch);
-    },
     subscribeInvalidation: (listener: () => void) => {
-      if (revoked) return () => undefined;
+      if (record.revoked) return () => undefined;
       callbacks.add(listener);
       const unsub = subscribeAuthInvalidation(listener);
       unsubs.add(unsub);
@@ -277,19 +397,120 @@ export function acquireProtectedRequestCapability(): ProtectedRequestCapability 
         unsub();
       };
     },
+  }) as unknown as ProtectedRequestCapability;
+
+  capabilityRecords.set(capability, record);
+  return { capability, revoke: record.revoke };
+}
+
+function validateCapability(capability: ProtectedRequestCapability): {
+  record: CapabilityRecord;
+  originatingEpoch: number;
+  originatingProviderId: number;
+  originatingWorkspace: number;
+  originatingOwner: string;
+} {
+  const record = capabilityRecords.get(capability);
+  if (!record) {
+    throw new AuthRequestLockedError(
+      "Protected API request requires a valid active capability",
+    );
+  }
+  if (
+    record.revoked ||
+    record.providerId !== gate.activeProviderId ||
+    record.workspaceGeneration !== gate.workspaceGeneration ||
+    record.ownerId !== gate.ownerId
+  ) {
+    throw new StaleAuthEpochError();
+  }
+  if (gate.locked) {
+    throw new AuthRequestLockedError();
+  }
+  return {
+    record,
+    originatingEpoch: gate.epoch,
+    originatingProviderId: gate.activeProviderId,
+    originatingWorkspace: gate.workspaceGeneration,
+    originatingOwner: gate.ownerId,
   };
 }
 
 /**
- * Centrally notifies the managed authentication gate of an HTTP 401 from
- * a protected endpoint when the response belongs to the current unlocked epoch.
+ * Classifies resource URLs before any raw `<img src>` or `<a href>` emission.
+ * All same-origin URLs other than explicit public assets (`/api/v1/health`, `/icons/*`)
+ * fail closed as `protected-api` and must be loaded with an active capability.
  */
-export function notifyProtectedUnauthorized(originatingEpoch: number): boolean {
-  if (!gate.managed || gate.locked || gate.epoch !== originatingEpoch) {
-    return false;
+export function classifyResourceUrl(
+  rawUrl: string | null | undefined,
+): ClassifiedResourceUrl {
+  const trimmed = rawUrl?.trim() ?? "";
+  if (!trimmed) return { kind: "invalid" };
+  const originBase =
+    typeof window !== "undefined" && window.location.origin
+      ? window.location.origin
+      : "http://localhost";
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed, originBase);
+  } catch {
+    return { kind: "invalid" };
   }
-  gate.onUnauthorized?.(originatingEpoch);
-  return true;
+  if (parsed.protocol === "blob:") {
+    return { kind: "local-blob", url: parsed.href };
+  }
+  if (parsed.origin === originBase) {
+    const sameOriginUrl = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    if (
+      parsed.pathname === "/api/v1/health" ||
+      parsed.pathname === "/icons" ||
+      parsed.pathname.startsWith("/icons/")
+    ) {
+      return { kind: "public-local", url: sameOriginUrl };
+    }
+    return { kind: "protected-api", url: sameOriginUrl };
+  }
+  if (parsed.protocol === "https:") {
+    return { kind: "external-https", url: parsed.href };
+  }
+  return { kind: "invalid" };
+}
+
+export function parseContentDispositionFilename(
+  header: string | null,
+  fallback: string,
+): string {
+  const sanitize = (candidate: string): string => {
+    let cleaned = "";
+    for (const ch of candidate.trim()) {
+      const code = ch.charCodeAt(0);
+      if (code < 0x20 || code === 0x7f || ch === "/" || ch === "\\") {
+        cleaned += "_";
+      } else {
+        cleaned += ch;
+      }
+    }
+    cleaned = cleaned.replace(/^\.+/, "").trim();
+    if (!cleaned || cleaned === "." || cleaned === "..") return fallback;
+    return cleaned;
+  };
+  if (!header) return sanitize(fallback);
+
+  const extMatch = /filename\*\s*=\s*(?:[^']*)'(?:[^']*)'([^;\r\n]+)/i.exec(
+    header,
+  );
+  if (extMatch?.[1]) {
+    try {
+      return sanitize(decodeURIComponent(extMatch[1].trim()));
+    } catch {
+      // Fall through to quoted or plain filename parameter.
+    }
+  }
+  const quotedMatch = /filename\s*=\s*"([^"\r\n]+)"/i.exec(header);
+  if (quotedMatch?.[1]) return sanitize(quotedMatch[1]);
+  const plainMatch = /filename\s*=\s*([^;\r\n]+)/i.exec(header);
+  if (plainMatch?.[1]) return sanitize(plainMatch[1]);
+  return sanitize(fallback);
 }
 
 async function fetchJson<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -317,44 +538,60 @@ async function fetchJson<T>(path: string, init: RequestInit = {}): Promise<T> {
   return (await response.json()) as T;
 }
 
-function staleForEpoch(originatingEpoch: number): boolean {
-  return gate.managed && (gate.locked || gate.epoch !== originatingEpoch);
-}
-
-export async function requestJson<T>(
+async function executeProtectedFetch<T>(
   path: string,
-  init: RequestInit = {},
+  init: ProtectedRequestInit,
+  defaultAccept: string,
+  parseSuccess: (response: Response) => Promise<T>,
 ): Promise<T> {
-  const managed = gate.managed;
-  if (managed && gate.locked) throw new AuthRequestLockedError();
+  const { capability, ...requestInit } = init;
+  const {
+    record,
+    originatingEpoch,
+    originatingProviderId,
+    originatingWorkspace,
+    originatingOwner,
+  } = validateCapability(capability);
 
-  const originatingEpoch = gate.epoch;
-  const externalSignal = init.signal;
-  const epochController = managed ? new AbortController() : undefined;
+  const isCurrentContext = (): boolean =>
+    !record.revoked &&
+    !gate.locked &&
+    gate.activeProviderId === originatingProviderId &&
+    gate.epoch === originatingEpoch &&
+    gate.workspaceGeneration === originatingWorkspace &&
+    gate.ownerId === originatingOwner;
+
+  const externalSignal = requestInit.signal;
+  const epochController = new AbortController();
   const onExternalAbort = () => {
-    epochController?.abort(externalSignal?.reason);
+    epochController.abort(externalSignal?.reason);
   };
-  if (epochController) {
-    if (externalSignal) {
-      if (externalSignal.aborted) epochController.abort(externalSignal.reason);
-      else
-        externalSignal.addEventListener("abort", onExternalAbort, {
-          once: true,
-        });
+  if (externalSignal) {
+    if (externalSignal.aborted) epochController.abort(externalSignal.reason);
+    else {
+      externalSignal.addEventListener("abort", onExternalAbort, { once: true });
     }
-    inFlightProtectedControllers.set(epochController, originatingEpoch);
   }
+  inFlightProtectedControllers.set(epochController, {
+    providerId: originatingProviderId,
+    epoch: originatingEpoch,
+  });
 
   try {
-    const headers = new Headers(init.headers);
-    headers.set("Accept", "application/json");
+    const headers = new Headers(requestInit.headers);
+    if (!headers.has("Accept")) {
+      headers.set("Accept", defaultAccept);
+    }
     const response = await fetch(path, {
-      ...init,
+      ...requestInit,
       credentials: "same-origin",
       headers,
-      signal: epochController ? epochController.signal : externalSignal,
+      signal: epochController.signal,
     });
-    if (staleForEpoch(originatingEpoch)) throw new StaleAuthEpochError();
+    if (externalSignal?.aborted) {
+      throw new DOMException("The operation was aborted.", "AbortError");
+    }
+    if (!isCurrentContext()) throw new StaleAuthEpochError();
     if (!response.ok) {
       let body: unknown;
       try {
@@ -362,9 +599,9 @@ export async function requestJson<T>(
       } catch {
         body = undefined;
       }
-      if (staleForEpoch(originatingEpoch)) throw new StaleAuthEpochError();
+      if (!isCurrentContext()) throw new StaleAuthEpochError();
       if (response.status === 401) {
-        notifyProtectedUnauthorized(originatingEpoch);
+        gate.onUnauthorized?.(originatingEpoch, originatingProviderId);
       }
       throw new ApiError(
         response.status,
@@ -372,16 +609,11 @@ export async function requestJson<T>(
         body,
       );
     }
-    if (response.status === 204) {
-      if (staleForEpoch(originatingEpoch)) throw new StaleAuthEpochError();
-      return undefined as T;
-    }
-    const data = (await response.json()) as T;
-    if (staleForEpoch(originatingEpoch)) throw new StaleAuthEpochError();
-    return data;
+    const parsed = await parseSuccess(response);
+    if (!isCurrentContext()) throw new StaleAuthEpochError();
+    return parsed;
   } catch (error: unknown) {
     if (
-      epochController &&
       !externalSignal?.aborted &&
       epochController.signal.aborted &&
       !(error instanceof ApiError) &&
@@ -391,10 +623,163 @@ export async function requestJson<T>(
     }
     throw error;
   } finally {
-    if (epochController) {
-      inFlightProtectedControllers.delete(epochController);
-      externalSignal?.removeEventListener("abort", onExternalAbort);
+    inFlightProtectedControllers.delete(epochController);
+    externalSignal?.removeEventListener("abort", onExternalAbort);
+  }
+}
+
+export function requestJson<T>(
+  path: string,
+  init: ProtectedRequestInit,
+): Promise<T> {
+  return executeProtectedFetch<T>(
+    path,
+    init,
+    "application/json",
+    async (response) => {
+      if (response.status === 204) return undefined as T;
+      return (await response.json()) as T;
+    },
+  );
+}
+
+export function requestProtectedBlob(
+  path: string,
+  init: ProtectedRequestInit,
+): Promise<ProtectedBlobResult> {
+  return executeProtectedFetch<ProtectedBlobResult>(
+    path,
+    init,
+    "*/*",
+    async (response) => ({
+      status: response.status,
+      blob: response.status === 204 ? new Blob([]) : await response.blob(),
+      contentType: response.headers.get("Content-Type"),
+      contentDisposition: response.headers.get("Content-Disposition"),
+    }),
+  );
+}
+
+export async function downloadProtectedFile({
+  path,
+  capability,
+  fallbackFilename,
+  accept,
+  signal,
+}: {
+  path: string;
+  capability: ProtectedRequestCapability;
+  fallbackFilename: string;
+  accept?: string;
+  signal?: AbortSignal;
+}): Promise<string> {
+  const { blob, contentDisposition } = await requestProtectedBlob(path, {
+    capability,
+    signal,
+    headers: accept ? { Accept: accept } : undefined,
+  });
+  validateCapability(capability);
+
+  const filename = parseContentDispositionFilename(
+    contentDisposition,
+    fallbackFilename,
+  );
+  const objectUrl = URL.createObjectURL(blob);
+  let cleaned = false;
+  let timerId: number | undefined;
+  let unsub: () => void = () => undefined;
+
+  const revokeObject = () => {
+    if (cleaned) return;
+    cleaned = true;
+    unsub();
+    if (timerId !== undefined) window.clearTimeout(timerId);
+    URL.revokeObjectURL(objectUrl);
+  };
+
+  unsub = capability.subscribeInvalidation(() => {
+    if (!capabilityRecords.get(capability) || !capability.isAuthorized()) {
+      revokeObject();
     }
+  });
+
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = filename;
+  link.style.display = "none";
+  document.body.append(link);
+  try {
+    link.click();
+  } finally {
+    link.remove();
+    timerId = window.setTimeout(revokeObject, 1000);
+  }
+  return filename;
+}
+
+export async function openProtectedTab({
+  path,
+  capability,
+  accept,
+}: {
+  path: string;
+  capability: ProtectedRequestCapability;
+  accept?: string;
+}): Promise<void> {
+  validateCapability(capability);
+  // Open synchronously on user click without "noopener" feature token so we keep
+  // a handle to close the popup on cancellation/failure; sever opener right away.
+  const popup = window.open("", "_blank");
+  if (!popup) {
+    throw new ProtectedTabBlockedError();
+  }
+  try {
+    popup.opener = null;
+  } catch {
+    // Ignore read-only opener implementations.
+  }
+
+  let objectUrl: string | null = null;
+  let unsub: () => void = () => undefined;
+  let timerId: number | undefined;
+
+  const cleanupUrl = () => {
+    unsub();
+    if (timerId !== undefined) window.clearTimeout(timerId);
+    if (objectUrl !== null) {
+      URL.revokeObjectURL(objectUrl);
+      objectUrl = null;
+    }
+  };
+
+  const closePopupIfOpen = () => {
+    try {
+      if (!popup.closed) popup.close();
+    } catch {
+      // Ignore cross-origin / detached close errors.
+    }
+  };
+
+  unsub = capability.subscribeInvalidation(() => {
+    if (!capability.isAuthorized()) {
+      closePopupIfOpen();
+      cleanupUrl();
+    }
+  });
+
+  try {
+    const { blob } = await requestProtectedBlob(path, {
+      capability,
+      headers: accept ? { Accept: accept } : undefined,
+    });
+    validateCapability(capability);
+    objectUrl = URL.createObjectURL(blob);
+    popup.location.replace(objectUrl);
+    timerId = window.setTimeout(cleanupUrl, 60_000);
+  } catch (error) {
+    closePopupIfOpen();
+    cleanupUrl();
+    throw error;
   }
 }
 

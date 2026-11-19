@@ -1,6 +1,6 @@
 import { identityOriginSites } from "./identityGeography";
 import { useEffect, useState } from "react";
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   getCollectionProvenanceMap,
@@ -17,6 +17,9 @@ export function IdentityOrigins({
   initialSites?: ProvenanceMapSite[];
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<{
     sites?: ProvenanceMapSite[];
@@ -25,22 +28,22 @@ export function IdentityOrigins({
   const [selected, setSelected] = useState<string | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    if (initialSites) return;
-    void getCollectionProvenanceMap(controller.signal)
+    if (initialSites || !authorized) return;
+    void getCollectionProvenanceMap(capability, controller.signal)
       .then((value) => {
         if (!controller.signal.aborted)
           setResult({ sites: identityOriginSites(value.sites, id) });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setResult({ failed: true });
       });
     return () => {
       controller.abort();
     };
-  }, [id, initialSites, attempt, auth]);
+  }, [authorized, capability, id, initialSites, attempt, sessionExpired]);
   if (result?.failed)
     return (
       <div role="alert">

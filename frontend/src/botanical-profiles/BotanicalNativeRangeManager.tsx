@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ApiError,
   activeCsrfToken,
+  isExpectedAuthCancellation,
   isPresentationRetainedState,
 } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -39,7 +40,9 @@ export function BotanicalNativeRangeManager({
   onEditStateChange?: (dirty: boolean, pending: boolean) => void;
 }) {
   const auth = useAuth();
-  const { sessionExpired } = auth;
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [load, setLoad] = useState<LoadState>({ status: "loading" });
   const [mutation, setMutation] = useState<MutationState>({ status: "idle" });
   const [selectedPlaceId, setSelectedPlaceId] = useState("");
@@ -53,23 +56,25 @@ export function BotanicalNativeRangeManager({
   const doneButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     void Promise.all([
-      listBotanicalNativeRanges(identityId, controller.signal),
-      listGeographicPlaces(controller.signal),
+      listBotanicalNativeRanges(identityId, capability, controller.signal),
+      listGeographicPlaces(capability, controller.signal),
     ])
       .then(([ranges, places]) => {
         setLoad({ status: "ready", ranges, places });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setLoad({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [sessionExpired, identityId, attempt]);
+  }, [authorized, capability, sessionExpired, identityId, attempt]);
 
   useEffect(() => {
     if (mutation.status === "error") feedbackRef.current?.focus();
@@ -103,6 +108,7 @@ export function BotanicalNativeRangeManager({
         identityId,
         selectedPlaceId,
         csrfToken,
+        capability,
       );
       setFocusPlaceId(added.geographic_place_id);
       setLoad({
@@ -152,6 +158,7 @@ export function BotanicalNativeRangeManager({
         identityId,
         range.geographic_place_id,
         csrfToken,
+        capability,
       );
       setLoad({
         ...load,

@@ -2,7 +2,11 @@ import { ActionButton } from "../components/Action";
 import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { PageHeader } from "../components/ReferenceUI";
 import {
@@ -56,6 +60,9 @@ export function LabelsScreen({
   openQrDestination?: boolean;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [presetId, setPresetId] = useState<LabelPresetId>("medium");
   const [configuration, setConfiguration] = useState<{
     status: "loading" | "error" | "ready";
@@ -110,8 +117,9 @@ export function LabelsScreen({
     configuration.baseUrl !== null &&
     !denseQr;
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void getApplicationSettings(controller.signal)
+    void getApplicationSettings(capability, controller.signal)
       .then((settings) => {
         if (controller.signal.aborted) return;
         setPresetId(settings.default_label_preset);
@@ -122,18 +130,20 @@ export function LabelsScreen({
         });
       })
       .catch((failure: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
         if (failure instanceof ApiError && failure.status === 401)
-          auth.sessionExpired();
+          sessionExpired();
         else setConfiguration({ status: "error", baseUrl: null });
       });
     return () => {
       controller.abort();
     };
-  }, [auth, settingsRetry]);
+  }, [authorized, capability, sessionExpired, settingsRetry]);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void listLabelRecords(kind, controller.signal)
+    void listLabelRecords(kind, capability, controller.signal)
       .then((loaded) => {
         if (controller.signal.aborted) return;
         setRecords({ status: "ready", records: loaded });
@@ -153,15 +163,24 @@ export function LabelsScreen({
         }
       })
       .catch((failure: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
         if (failure instanceof ApiError && failure.status === 401)
-          auth.sessionExpired();
+          sessionExpired();
         else setRecords({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [kind, retry, initialKind, initialId, auth]);
+  }, [
+    authorized,
+    capability,
+    kind,
+    retry,
+    initialKind,
+    initialId,
+    sessionExpired,
+  ]);
   function addRecord() {
     if (records.status !== "ready") return;
     const record = records.records.find(({ id }) => id === selectedId);
@@ -185,23 +204,26 @@ export function LabelsScreen({
     );
   }
   async function setAsDefault() {
-    if (!("csrfToken" in auth.state)) return;
+    const token = activeCsrfToken(auth.state);
+    if (!token) return;
     setSavingDefault(true);
     setDefaultError("");
     setDefaultMessage("");
     try {
       // Preserve the latest configured origin when saving this preference.
-      const latest = await getApplicationSettings();
+      const latest = await getApplicationSettings(capability);
       const saved = await saveApplicationSettings(
         { ...latest, default_label_preset: presetId },
-        auth.state.csrfToken,
+        token,
+        capability,
       );
       setDefaultPreset(saved.default_label_preset);
       setConfiguration({ status: "ready", baseUrl: saved.public_qr_base_url });
       setDefaultMessage("Default label size saved.");
     } catch (failure) {
+      if (isExpectedAuthCancellation(failure)) return;
       if (failure instanceof ApiError && failure.status === 401)
-        auth.sessionExpired();
+        sessionExpired();
       else
         setDefaultError(
           "Could not save the default label size. Your batch is unchanged. Try again.",

@@ -2,7 +2,8 @@ import { IdentityCoverMetadata } from "../botanical-identities/IdentityCoverMeta
 import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
+import { useAuth } from "../auth/context";
 import { FormActions, FormSection } from "../components/ReferenceUI";
 import { InfoDisclosure } from "../components/ContextualHelp";
 import {
@@ -13,6 +14,7 @@ import {
   type BotanicalIdentityCover as Cover,
 } from "../botanical-identities/api";
 import { PhotoDialog } from "./PhotosSection";
+import { useProtectedImage } from "./useProtectedImage";
 
 type CoverState =
   | { status: "loading" }
@@ -55,6 +57,10 @@ export function BotanicalIdentityCover({
   identityLabel: string;
   csrfToken: string;
 }) {
+  const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const fileInput = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<CoverState>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
@@ -86,21 +92,42 @@ export function BotanicalIdentityCover({
   }
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void getBotanicalIdentityCover(identityId, controller.signal)
+    void getBotanicalIdentityCover(identityId, capability, controller.signal)
       .then((cover) => {
         setState({ status: "ready", cover });
         setBroken(false);
       })
-      .catch(() => {
-        if (!controller.signal.aborted) setState({ status: "error" });
+      .catch((loadFailure: unknown) => {
+        if (
+          controller.signal.aborted ||
+          isExpectedAuthCancellation(loadFailure)
+        )
+          return;
+        if (loadFailure instanceof ApiError && loadFailure.status === 401) {
+          sessionExpired();
+          return;
+        }
+        setState({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [attempt, identityId]);
+  }, [attempt, authorized, capability, identityId, sessionExpired]);
 
   const cover = state.status === "ready" ? state.cover : null;
+  const rawCoverUrl =
+    cover && !(cover.kind === "local" && cover.deletion_pending)
+      ? (cover.content_url ??
+        (cover.kind === "external" ? cover.image_url : null))
+      : null;
+  const [mediaTarget, media] = useProtectedImage({
+    rawUrl: rawCoverUrl,
+    onError: () => {
+      setBroken(true);
+    },
+  });
 
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -120,6 +147,7 @@ export function BotanicalIdentityCover({
           identityId,
           file,
           csrfToken,
+          capability,
         );
       } else {
         if (form.get("privacy_acknowledged") !== "on") {
@@ -141,6 +169,7 @@ export function BotanicalIdentityCover({
             privacy_acknowledged: true,
           },
           csrfToken,
+          capability,
         );
       }
       setState({ status: "ready", cover: saved });
@@ -149,6 +178,11 @@ export function BotanicalIdentityCover({
       setCoverDirty(false);
       setNotice("Cover image was saved.");
     } catch (saveFailure: unknown) {
+      if (isExpectedAuthCancellation(saveFailure)) return;
+      if (saveFailure instanceof ApiError && saveFailure.status === 401) {
+        sessionExpired();
+        return;
+      }
       setError(saveError(saveFailure));
       if (saveFailure instanceof ApiError && saveFailure.status >= 409) {
         setAttempt((value) => value + 1);
@@ -163,7 +197,7 @@ export function BotanicalIdentityCover({
     setPending(true);
     setError(null);
     try {
-      await deleteBotanicalIdentityCover(identityId, csrfToken);
+      await deleteBotanicalIdentityCover(identityId, csrfToken, capability);
       setState({ status: "ready", cover: null });
       setConfirmRemove(false);
       setBroken(false);
@@ -283,35 +317,30 @@ export function BotanicalIdentityCover({
       )}
       {state.status === "ready" && cover && (
         <div className="identity-cover__content">
-          <div className="identity-cover__image-frame">
+          <div ref={mediaTarget} className="identity-cover__image-frame">
             {cover.kind === "local" && cover.deletion_pending ? (
               <div className="notice notice--error">
                 Local media deletion is pending. Its protected content is not
                 displayed. Remove or replace this cover reference; asset cleanup
                 is a separate action in Media.
               </div>
-            ) : broken ? (
+            ) : broken || media.failed ? (
               <div className="notice notice--error" role="alert">
                 The {cover.kind === "local" ? "uploaded" : "external"} cover
                 image is unavailable.
               </div>
-            ) : (
+            ) : media.src ? (
               <img
                 alt={`Representative image for ${identityLabel}`}
                 decoding="async"
                 loading="lazy"
-                referrerPolicy={
-                  cover.kind === "external" ? "no-referrer" : undefined
-                }
-                src={
-                  cover.content_url ??
-                  (cover.kind === "external" ? cover.image_url : "")
-                }
+                referrerPolicy={media.referrerPolicy}
+                src={media.src}
                 onError={() => {
                   setBroken(true);
                 }}
               />
-            )}
+            ) : null}
           </div>
           <div className="identity-cover__metadata">
             {cover.kind === "local" && <strong>Locally managed cover</strong>}

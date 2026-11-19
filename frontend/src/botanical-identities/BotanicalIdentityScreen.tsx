@@ -41,6 +41,7 @@ import {
 import {
   ApiError,
   activeCsrfToken,
+  isExpectedAuthCancellation,
   isPresentationRetainedState,
 } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -123,6 +124,9 @@ function IdentityDetails({
   onSaved: (identity: BotanicalIdentityResponse) => Promise<void>;
   onDeleted: () => Promise<void>;
 }) {
+  const { state: detailAuthState, capability, sessionExpired } = useAuth();
+  const authorized =
+    detailAuthState.status === "authenticated" && capability.isAuthorized();
   type IdentityTab = IdentitySection;
   const [tab, setTab] = useState<IdentityTab>(() =>
     identitySection(initialTab),
@@ -248,24 +252,38 @@ function IdentityDetails({
 
   useEffect(() => {
     if (
+      !authorized ||
       !["overview", "media", "history"].includes(tab) ||
       loadedCollectionIdentity.current === identity.id
     )
       return;
     const controller = new AbortController();
     setCollection({ status: "loading" });
-    void getIdentityCollection(identity.id, controller.signal)
+    void getIdentityCollection(identity.id, capability, controller.signal)
       .then((value) => {
         loadedCollectionIdentity.current = identity.id;
         setCollection({ status: "ready", value });
       })
-      .catch(() => {
-        if (!controller.signal.aborted) setCollection({ status: "error" });
+      .catch((error: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) {
+          sessionExpired();
+          return;
+        }
+        setCollection({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [identity.id, tab, collectionAttempt]);
+  }, [
+    authorized,
+    capability,
+    identity.id,
+    tab,
+    collectionAttempt,
+    sessionExpired,
+  ]);
 
   async function saveEdit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -282,6 +300,7 @@ function IdentityDetails({
           common_name: editForm.common_name || null,
         },
         csrfToken,
+        capability,
       );
       await onSaved(updated);
       setEditForm({
@@ -291,6 +310,11 @@ function IdentityDetails({
       });
       setSavedMessage("Botanical identity saved.");
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) return;
+      if (error instanceof ApiError && error.status === 401) {
+        sessionExpired();
+        return;
+      }
       if (error instanceof ApiError && error.status === 422)
         setEditErrors(validationMessages(error));
       setMutationError(
@@ -309,7 +333,7 @@ function IdentityDetails({
     setDeleting(true);
     setMutationError(null);
     try {
-      await deleteBotanicalIdentity(identity.id, csrfToken);
+      await deleteBotanicalIdentity(identity.id, csrfToken, capability);
       await onDeleted();
     } catch (error: unknown) {
       setMutationError(
@@ -1183,7 +1207,9 @@ export function BotanicalIdentityScreen({
   startCreating = false,
 }: { initialId?: string; initialTab?: string; startCreating?: boolean } = {}) {
   const auth = useAuth();
-  const { sessionExpired } = auth;
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
   });
@@ -1264,8 +1290,9 @@ export function BotanicalIdentityScreen({
   };
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void listBotanicalIdentities(controller.signal)
+    void listBotanicalIdentities(capability, controller.signal)
       .then((value: unknown) => {
         if (!Array.isArray(value))
           throw new Error("Invalid identity directory response");
@@ -1277,14 +1304,15 @@ export function BotanicalIdentityScreen({
         );
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setDirectory({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [sessionExpired, loadAttempt]);
+  }, [authorized, capability, sessionExpired, loadAttempt]);
 
   useEffect(() => {
     if (["validation", "duplicate", "error"].includes(createState.status)) {
@@ -1306,6 +1334,7 @@ export function BotanicalIdentityScreen({
 
   useEffect(() => {
     if (
+      !authorized ||
       !initialId ||
       directory.status !== "ready" ||
       directory.identities.some(({ id }) => id === initialId)
@@ -1313,14 +1342,15 @@ export function BotanicalIdentityScreen({
       return;
     }
     const controller = new AbortController();
-    void getBotanicalIdentity(initialId, controller.signal)
+    void getBotanicalIdentity(initialId, capability, controller.signal)
       .then((identity) => {
         if (!controller.signal.aborted) {
           setFallbackDetail({ id: initialId, status: "ready", identity });
         }
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) {
           sessionExpired();
         } else if (error instanceof ApiError && error.status === 404) {
@@ -1332,7 +1362,14 @@ export function BotanicalIdentityScreen({
     return () => {
       controller.abort();
     };
-  }, [sessionExpired, directory, initialId, loadAttempt]);
+  }, [
+    authorized,
+    capability,
+    sessionExpired,
+    directory,
+    initialId,
+    loadAttempt,
+  ]);
 
   const filteredIdentities = useMemo(() => {
     if (directory.status !== "ready") return [];
@@ -1357,7 +1394,7 @@ export function BotanicalIdentityScreen({
   async function refreshAndSelect(
     identity: BotanicalIdentityResponse,
   ): Promise<void> {
-    const identities = await listBotanicalIdentities();
+    const identities = await listBotanicalIdentities(capability);
     setDirectory({
       status: "ready",
       identities: identities.some(({ id }) => id === identity.id)
@@ -1368,7 +1405,7 @@ export function BotanicalIdentityScreen({
   }
 
   async function removeSelected(): Promise<void> {
-    const identities = await listBotanicalIdentities();
+    const identities = await listBotanicalIdentities(capability);
     setDirectory({ status: "ready", identities });
     setSelected(null);
     window.location.hash = "/identities";
@@ -1394,7 +1431,11 @@ export function BotanicalIdentityScreen({
     };
     setCreateState({ status: "submitting" });
     try {
-      const identity = await createBotanicalIdentity(payload, csrfToken);
+      const identity = await createBotanicalIdentity(
+        payload,
+        csrfToken,
+        capability,
+      );
       formRef.current?.reset();
       await refreshAndSelect(identity);
       setFilter("");
@@ -1405,6 +1446,10 @@ export function BotanicalIdentityScreen({
       closeCreation();
       window.location.hash = `/identities/${identity.id}`;
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) {
+        setCreateState({ status: "idle" });
+        return;
+      }
       if (error instanceof ApiError && error.status === 401) {
         setCreateState({ status: "idle" });
         sessionExpired();
@@ -1450,7 +1495,7 @@ export function BotanicalIdentityScreen({
     }
     setCreateState({ status: "loading-existing", existingId });
     try {
-      const identity = await getBotanicalIdentity(existingId);
+      const identity = await getBotanicalIdentity(existingId, capability);
       await refreshAndSelect(identity);
       setFilter("");
       setCreateState({ status: "idle" });

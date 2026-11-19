@@ -18,6 +18,7 @@ import {
   type AuthContextValue,
   type AuthState,
 } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import {
   getCachedOccurrenceEvidence,
   refreshOccurrenceEvidence,
@@ -50,24 +51,7 @@ vi.mock("../occurrence-map/OccurrenceDensityMap", () => ({
 }));
 const id = "01900000-0000-7000-8000-000000000911";
 const otherId = "01900000-0000-7000-8000-000000000912";
-const auth: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    csrfToken: "csrf",
-    session: {
-      user_id: id,
-      login_name: "owner",
-      display_name: "Owner",
-      owner: true,
-      canonical_origin: "http://localhost:15174",
-    },
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired: vi.fn(),
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
 const identity: RepresentedIdentity = {
   id,
   scientific_name: "Ocimum basilicum",
@@ -123,8 +107,18 @@ function show() {
     </AuthContext.Provider>,
   );
 }
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  auth = (
+    await acquireTestAuth({
+      session: {
+        user_id: id,
+        display_name: "Owner",
+        canonical_origin: "http://localhost:15174",
+      },
+      csrfToken: "csrf",
+    })
+  ).auth;
   window.history.replaceState(null, "", "#/species-distribution");
   vi.mocked(listRepresentedIdentities).mockResolvedValue({
     items: [identity, unlinked],
@@ -187,6 +181,7 @@ test("local open, scope/search/select are provider-free; explicit Load reuses MA
       "ocimum",
       "living",
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -208,7 +203,11 @@ test("local open, scope/search/select are provider-free; explicit Load reuses MA
   ).toHaveAttribute("href", `#/identities/${id}?tab=reference`);
   await user.click(load);
   expect(await screen.findByText("Shared density map")).toBeVisible();
-  expect(refreshOccurrenceEvidence).toHaveBeenCalledExactlyOnceWith(id, "csrf");
+  expect(refreshOccurrenceEvidence).toHaveBeenCalledExactlyOnceWith(
+    id,
+    "csrf",
+    auth.capability,
+  );
   expect(screen.getByLabelText("Occurrence density legend")).toBeVisible();
   await user.click(screen.getByText("Data details", { selector: "summary" }));
   expect(screen.getByText(/Attribution: GBIF.org/)).toBeVisible();
@@ -369,6 +368,7 @@ test("Saved View create/open restores selection and cached evidence without anot
       "",
       "living",
       50,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -394,6 +394,7 @@ test("Saved View create/open restores selection and cached evidence without anot
         state: { scope: "living", identity: id },
       },
       "csrf",
+      auth.capability,
     );
   });
   vi.mocked(getCachedOccurrenceEvidence).mockResolvedValue({
@@ -415,6 +416,7 @@ test("Saved View create/open restores selection and cached evidence without anot
       "",
       "living",
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });

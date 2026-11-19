@@ -1,11 +1,12 @@
 import type { ReferenceChoice } from "../seed-lots/ReferencePicker";
 import type { components } from "../api/schema";
-import { requestJson } from "../auth/api";
+import { requestJson, type ProtectedRequestCapability } from "../auth/api";
 export type Harvest = components["schemas"]["HarvestResponse"];
 export type HarvestWrite = components["schemas"]["HarvestWrite"];
 export type HarvestItem = components["schemas"]["HarvestItemWrite"];
 export type MaterialKind = components["schemas"]["MaterialKind"];
 export function listHarvests(
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
   botanicalIdentityId?: string,
 ): Promise<Harvest[]> {
@@ -13,28 +14,43 @@ export function listHarvests(
   if (botanicalIdentityId)
     query.set("botanical_identity_id", botanicalIdentityId);
   return requestJson(`/api/v1/harvests${query.size ? `?${query}` : ""}`, {
+    capability,
     signal,
   });
 }
-export function getHarvest(id: string, signal?: AbortSignal): Promise<Harvest> {
-  return requestJson(`/api/v1/harvests/${encodeURIComponent(id)}`, { signal });
+export function getHarvest(
+  id: string,
+  capability: ProtectedRequestCapability,
+  signal?: AbortSignal,
+): Promise<Harvest> {
+  return requestJson(`/api/v1/harvests/${encodeURIComponent(id)}`, {
+    capability,
+    signal,
+  });
 }
 export function saveHarvest(
   id: string | null,
   payload: HarvestWrite,
   token: string,
+  capability: ProtectedRequestCapability,
 ): Promise<Harvest> {
   return requestJson(
     `/api/v1/harvests${id ? `/${encodeURIComponent(id)}` : ""}`,
     {
+      capability,
       method: id ? "PUT" : "POST",
       headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
       body: JSON.stringify(payload),
     },
   );
 }
-export function deleteHarvest(id: string, token: string): Promise<void> {
+export function deleteHarvest(
+  id: string,
+  token: string,
+  capability: ProtectedRequestCapability,
+): Promise<void> {
   return requestJson(`/api/v1/harvests/${encodeURIComponent(id)}`, {
+    capability,
     method: "DELETE",
     headers: { "X-CSRF-Token": token },
   });

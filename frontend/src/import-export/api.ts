@@ -1,4 +1,4 @@
-import { requestJson } from "../auth/api";
+import { requestJson, type ProtectedRequestCapability } from "../auth/api";
 
 export const recordTypes = [
   { id: "botanical-identities", label: "Botanical identities" },
@@ -66,15 +66,18 @@ export interface ImportResult {
 
 export function getFieldGuide(
   kind: RecordType,
+  capability: ProtectedRequestCapability,
 ): Promise<{ fields: FieldGuideItem[] }> {
-  return requestJson(`/api/v1/imports/formats/${kind}`);
+  return requestJson(`/api/v1/imports/formats/${kind}`, { capability });
 }
 
 export function previewImport(
   kind: RecordType,
   file: File,
+  capability: ProtectedRequestCapability,
 ): Promise<ImportPreview> {
   return requestJson(`/api/v1/imports/${kind}/preview`, {
+    capability,
     method: "POST",
     headers: { "Content-Type": "text/csv" },
     body: file,
@@ -104,9 +107,11 @@ export async function applyImport(
   confirmationToken: string,
   csrfToken: string,
   decisions: Record<string, Record<string, string> | undefined>,
+  capability: ProtectedRequestCapability,
 ): Promise<ImportResult> {
   const csv_base64 = await encodeFile(file);
   return requestJson(`/api/v1/imports/${kind}/apply`, {
+    capability,
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   ApiError,
   activeCsrfToken,
+  isExpectedAuthCancellation,
   isPresentationRetainedState,
 } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -55,7 +56,9 @@ export function NativeRangeEnrichmentPanel({
   onApplied: () => void;
 }) {
   const auth = useAuth();
-  const { sessionExpired } = auth;
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [open, setOpen] = useState(false);
   const [version, setVersion] = useState<WcvpVersion>(DEFAULT_WCVP_VERSION);
   const [source, setSource] = useState<SourceStatus | null>(null);
@@ -76,11 +79,11 @@ export function NativeRangeEnrichmentPanel({
   const operation = useRef(0);
   const controller = useRef<AbortController | null>(null);
   useEffect(() => {
-    if (!open) return;
+    if (!authorized || !open) return;
     const abort = new AbortController();
     void Promise.all([
-      getRangeSource(identityId, abort.signal, version),
-      listRangeProposals(identityId, abort.signal),
+      getRangeSource(identityId, capability, abort.signal, version),
+      listRangeProposals(identityId, capability, abort.signal),
     ])
       .then(([status, previous]) => {
         if (abort.signal.aborted) return;
@@ -88,15 +91,22 @@ export function NativeRangeEnrichmentPanel({
         setHistory(previous);
       })
       .catch((err: unknown) => {
-        if (!abort.signal.aborted) {
-          if (err instanceof ApiError && err.status === 401) sessionExpired();
-          else setError("Could not load the source. Retry source status.");
-        }
+        if (abort.signal.aborted || isExpectedAuthCancellation(err)) return;
+        if (err instanceof ApiError && err.status === 401) sessionExpired();
+        else setError("Could not load the source. Retry source status.");
       });
     return () => {
       abort.abort();
     };
-  }, [open, identityId, version, attempt, sessionExpired]);
+  }, [
+    authorized,
+    capability,
+    open,
+    identityId,
+    version,
+    attempt,
+    sessionExpired,
+  ]);
   useEffect(() => {
     if (source?.available) search.current?.focus();
   }, [source?.available]);
@@ -295,6 +305,7 @@ export function NativeRangeEnrichmentPanel({
                     const results = await searchWcvpTaxa(
                       identityId,
                       query,
+                      capability,
                       abort.signal,
                       version,
                     );
@@ -392,6 +403,7 @@ export function NativeRangeEnrichmentPanel({
                           candidate,
                           source.source.checksum,
                           csrf,
+                          capability,
                           version,
                         );
                         setSource({ ...source, link });
@@ -419,6 +431,7 @@ export function NativeRangeEnrichmentPanel({
                         const next = await createRangeProposal(
                           identityId,
                           csrf,
+                          capability,
                           version,
                         );
                         setProposal(next);
@@ -427,7 +440,9 @@ export function NativeRangeEnrichmentPanel({
                             .filter((c) => c.change === "ADD")
                             .map((c) => c.place_id),
                         );
-                        setHistory(await listRangeProposals(identityId));
+                        setHistory(
+                          await listRangeProposals(identityId, capability),
+                        );
                       });
                     }}
                   >
@@ -603,6 +618,7 @@ export function NativeRangeEnrichmentPanel({
                               proposal.id,
                               selected,
                               csrf,
+                              capability,
                             );
                             setProposal({
                               ...proposal,
@@ -614,7 +630,12 @@ export function NativeRangeEnrichmentPanel({
                             );
                             onApplied();
                             try {
-                              setHistory(await listRangeProposals(identityId));
+                              setHistory(
+                                await listRangeProposals(
+                                  identityId,
+                                  capability,
+                                ),
+                              );
                             } catch (err: unknown) {
                               if (err instanceof ApiError && err.status === 401)
                                 auth.sessionExpired();

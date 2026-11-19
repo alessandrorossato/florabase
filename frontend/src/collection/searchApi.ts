@@ -1,5 +1,5 @@
 import type { components } from "../api/schema";
-import { requestJson } from "../auth/api";
+import { requestJson, type ProtectedRequestCapability } from "../auth/api";
 
 export type SearchKind = components["schemas"]["SearchKind"];
 export type SearchResponse = components["schemas"]["SearchResponse"];
@@ -99,11 +99,13 @@ export function searchHash(state: SearchState): string {
 export function getSearch(
   state: SearchState,
   offset: number,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<SearchResponse> {
   const params = searchParams(state);
   params.set("offset", String(offset));
   return requestJson<SearchResponse>(`/api/v1/search?${params.toString()}`, {
+    capability,
     signal,
   });
 }

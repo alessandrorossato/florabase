@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import type { PrimaryPhoto } from "./api";
+import { useProtectedImage } from "./useProtectedImage";
 
 export function PrimaryPhotoVisual({
   photo,
@@ -14,9 +15,19 @@ export function PrimaryPhotoVisual({
   fallback?: "label" | "omit" | "neutral";
 }) {
   const [brokenPhotoId, setBrokenPhotoId] = useState<string | null>(null);
-  const broken = brokenPhotoId === photo?.photo_id;
+  const [mediaTarget, media] = useProtectedImage({
+    rawUrl: photo?.thumbnail_url ?? null,
+    onError: () => {
+      if (photo) setBrokenPhotoId(photo.photo_id);
+    },
+  });
+  const broken = brokenPhotoId === photo?.photo_id || media.failed;
   const neutral = (
-    <span className="primary-photo-placeholder" aria-hidden="true" />
+    <span
+      ref={mediaTarget}
+      className="primary-photo-placeholder"
+      aria-hidden="true"
+    />
   );
   if (!photo) return fallback === "neutral" ? neutral : null;
   if (photo.kind === "external" && !photo.thumbnail_url)
@@ -31,13 +42,24 @@ export function PrimaryPhotoVisual({
     ) : fallback === "omit" ? null : (
       <span className="primary-photo-fallback">Primary photo unavailable</span>
     );
+  if (!media.src) {
+    return (
+      <span
+        ref={mediaTarget}
+        className="primary-photo-placeholder"
+        aria-hidden="true"
+      />
+    );
+  }
   return (
     <img
+      ref={mediaTarget}
       className={`primary-photo-thumb${compact ? " primary-photo-thumb--compact" : ""}`}
-      src={photo.thumbnail_url}
+      src={media.src}
       alt={`Primary photo for ${label}`}
       loading="lazy"
       decoding="async"
+      referrerPolicy={media.referrerPolicy}
       onError={() => {
         setBrokenPhotoId(photo.photo_id);
       }}

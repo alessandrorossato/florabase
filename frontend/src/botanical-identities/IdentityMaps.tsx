@@ -32,8 +32,9 @@ export function IdentityMaps({
   onEditRange: () => void;
 }) {
   const auth = useAuth();
-  const { sessionExpired } = auth;
-  const authorized = auth.state.status === "authenticated";
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [open, setOpen] = useState<Evidence | null>(null);
   const inspectionHeading = useRef<HTMLHeadingElement>(null);
   const triggers = useRef<Partial<Record<Evidence, HTMLButtonElement>>>({});
@@ -60,16 +61,20 @@ export function IdentityMaps({
     if (!authorized) return;
     const controller = new AbortController();
     void Promise.allSettled([
-      listBotanicalNativeRanges(identity.id, controller.signal),
-      getExternalTaxonLink(identity.id, controller.signal).then(
+      listBotanicalNativeRanges(identity.id, capability, controller.signal),
+      getExternalTaxonLink(identity.id, capability, controller.signal).then(
         async (link) => ({
           link,
           cache: link
-            ? await getCachedOccurrenceEvidence(identity.id, controller.signal)
+            ? await getCachedOccurrenceEvidence(
+                identity.id,
+                capability,
+                controller.signal,
+              )
             : null,
         }),
       ),
-      getCollectionProvenanceMap(controller.signal),
+      getCollectionProvenanceMap(capability, controller.signal),
     ]).then(([range, source, origins]) => {
       if (controller.signal.aborted) return;
       const results = [range, source, origins];
@@ -132,7 +137,7 @@ export function IdentityMaps({
     return () => {
       controller.abort();
     };
-  }, [authorized, identity.id, attempt, sessionExpired]);
+  }, [authorized, capability, identity.id, attempt, sessionExpired]);
   const evidence = [
     {
       key: "native-range" as const,
