@@ -92,7 +92,6 @@ class PerfInvocation:
     def metadata(self) -> dict[str, Any]:
         return {
             "owner_id": self.owner_id,
-            "source": self.source,
             "source_head": self.source_head,
             "images": list(self.image_tags),
         }

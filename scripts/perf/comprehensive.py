@@ -1503,6 +1503,15 @@ def summarize_report(
     full_artifact: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Produce a compact machine-readable summary with full external artifact provenance."""
+    env_raw = report.get("environment")
+    compact_env: Any = env_raw
+    if isinstance(env_raw, dict):
+        compact_env = dict(env_raw)
+        if isinstance(env_raw.get("invocation"), dict):
+            compact_env["invocation"] = {
+                k: v for k, v in env_raw["invocation"].items() if k != "source"
+            }
+
     summary: dict[str, Any] = {
         "schema_version": report.get("schema_version", 2),
         "summary_format": "perf-001-comprehensive-summary-v1",
@@ -1510,7 +1519,7 @@ def summarize_report(
         "pin_mode": report.get("pin_mode"),
         "warmup_s": report.get("warmup_s"),
         "errors": list(report.get("errors") or []),
-        "environment": report.get("environment"),
+        "environment": compact_env,
         "transfer": report.get("transfer"),
         "chunk_recovery": report.get("chunk_recovery"),
         "cleanup": report.get("cleanup"),

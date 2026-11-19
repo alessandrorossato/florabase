@@ -730,7 +730,14 @@ class ReportEvaluationTests(unittest.TestCase):
         )
 
     def test_summarize_report_compacts_raw_data_and_stays_evaluable(self) -> None:
+        fake_home = str(Path.home())
         full_report = _valid_report()
+        full_report["environment"]["invocation"] = {
+            "owner_id": "owner-1",
+            "source": f"{fake_home}/worktree",
+            "source_head": "abc",
+            "images": ["florabase-perf-backend:owner-1", "florabase-perf-frontend:owner-1"],
+        }
         full_report["profile_summary"] = "large profile" * 100
         full_report["query_plans"] = {"seeds": [{"plan": {}}], "recent_events": [], "geography": []}
         summary = comprehensive.summarize_report(
@@ -743,6 +750,11 @@ class ReportEvaluationTests(unittest.TestCase):
         )
         self.assertNotIn("statements", summary["api"])
         self.assertNotIn("query_plans", summary)
+        self.assertNotIn("source", summary["environment"]["invocation"])
+        self.assertNotIn(fake_home, json.dumps(summary))
+        self.assertNotIn(
+            fake_home, json.dumps(measure.PerfInvocation(source=f"{fake_home}/repo").metadata())
+        )
         self.assertTrue(summary["api"]["statements_externalized"])
         self.assertEqual(summary["evaluation"]["invariant_status"], "passed")
         self.assertEqual(summary["evaluation"]["harness_status"], "passed")
