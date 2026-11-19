@@ -2,6 +2,8 @@ import asyncio
 import contextlib
 import json
 import logging
+import os
+import subprocess
 import sys
 from collections.abc import Callable, Generator, Iterator, Sequence
 from pathlib import Path
@@ -393,13 +395,6 @@ def _production_settings(attachment_root: Path | None = None) -> Settings:
     return Settings.model_validate(values)
 
 
-def _requires_authentication(dependant: Dependant) -> bool:
-    for dependency in dependant.dependencies:
-        if dependency.call is require_authenticated_actor or _requires_authentication(dependency):
-            return True
-    return False
-
-
 def test_production_disables_docs_and_schema_routes(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -462,26 +457,22 @@ def test_offline_openapi_generation_works_in_production_and_matches_artifact() -
 
 
 def test_production_route_inventory_satisfies_gsec_allowlist() -> None:
-    with patch("florabase.main.get_settings", return_value=_production_settings()):
-        production_app = create_app()
-
-    contexts = list(iter_route_contexts(production_app.routes))
-    non_api_contexts = [context for context in contexts if not isinstance(context.route, APIRoute)]
-    assert non_api_contexts == []
-
-    unauthenticated: set[tuple[str, str]] = set()
-    for context in contexts:
-        assert isinstance(context.route, APIRoute)
-        assert isinstance(context.path, str)
-        if not _requires_authentication(context.dependant):
-            for method in context.methods or set():
-                unauthenticated.add((method, context.path))
-
-    assert unauthenticated == {
-        ("GET", "/api/v1/health"),
-        ("GET", "/api/v1/ready"),
-        ("POST", "/api/v1/auth/login"),
-    }
+    result = subprocess.run(
+        [sys.executable, "scripts/check_api_routes.py", "--format", "json"],
+        cwd=Path(__file__).resolve().parents[1],
+        env=os.environ
+        | {
+            "FLORABASE_ENVIRONMENT": "production",
+            "FLORABASE_DATABASE_URL": "postgresql+psycopg://test:test@db/test",
+            "FLORABASE_CANONICAL_ORIGIN": "https://florabase.example",
+            "FLORABASE_COOKIE_MODE": "secure",
+            "FLORABASE_CORS_ORIGINS": "[]",
+        },
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_production_public_and_authenticated_api_routes_remain_intact(tmp_path: Path) -> None:

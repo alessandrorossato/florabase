@@ -20,6 +20,7 @@
     "SECURITY-001": "baseline",
     "SECURITY-002": "baseline",
     "ENG-01": "certify",
+    "ENG-03": "best-effort",
     "DOMAIN-001": "baseline",
     "DATABASE-001": "baseline",
     "BACKEND-001": "baseline",

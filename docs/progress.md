@@ -9478,3 +9478,16 @@ Status remains implemented pending canonical verification.
   offline documentation links and the feature graph. Production local
   artifact-only smoke and disposable cleanup passed. All eight RC blockers
   remain. Independent combined QA and canonical FULL are pending.
+
+## 2026-11-19 — ENG-03 route inventory source
+
+- Extended the Batch 06 route allowlist regression into a standalone
+  [production inventory checker](release/evidence/eng-03-source.md) with text and JSON output and
+  explicit policy and inventory failures. Registered ENG-03 as `implemented` with proposed
+  `best-effort` membership for a future batch.
+- The production table has 234 operations, with 231 declaring authentication and exactly the
+  three reviewed public operations. Normal and optimized Python reports matched byte for byte.
+  The synthetic unreviewed route exited `1` in both modes. The focused pytest run passed 59 tests.
+  Ruff lint and format, strict mypy, the backend OpenAPI drift check, feature graph, documentation
+  links, disclosure and whitespace checks passed. Independent security review, canonical FULL,
+  formal ENG-03 acceptance and G-SEC certification remain pending.
