@@ -97,29 +97,37 @@ class PerfInvocation:
         }
 
 
+def _compose_env_and_fds() -> tuple[dict[str, str], tuple[int, ...]]:
+    """Return Compose env and synchronous-only lock fd inheritance.
+
+    Only synchronous COMPOSE subprocesses receive _ACTIVE_LOCK_FD while the parent
+    holds _perf_lock(); compose.sh validates the descriptor and closes it before exec
+    so Docker Compose never passes the lock fd to background grandchildren.
+    """
+    env = dict(os.environ)
+    if _ACTIVE_LOCK_FD is None:
+        return env, ()
+    env["FLORABASE_PERF_LOCK_FD"] = str(_ACTIVE_LOCK_FD)
+    return env, (_ACTIVE_LOCK_FD,)
+
+
 def compose(*args: str, input: str | None = None) -> str:
+    """Run synchronous compose.sh command under active override and synchronous lock inheritance."""
     cmd = [str(COMPOSE)]
     if _ACTIVE_OVERRIDE_FILE is not None:
         cmd.extend(["--file", str(_ACTIVE_OVERRIDE_FILE)])
     cmd.extend(args)
-    env = dict(os.environ)
-    pass_fds: tuple[int, ...] = ()
-    if _ACTIVE_LOCK_FD is not None:
-        env["FLORABASE_PERF_LOCK_FD"] = str(_ACTIVE_LOCK_FD)
-        pass_fds = (_ACTIVE_LOCK_FD,)
+    env, pass_fds = _compose_env_and_fds()
     return subprocess.check_output(cmd, input=input, text=True, env=env, pass_fds=pass_fds)
 
 
 def compose_bytes(*args: str, data: bytes) -> bytes:
+    """Run synchronous compose.sh command with binary stdin and synchronous lock inheritance."""
     cmd = [str(COMPOSE)]
     if _ACTIVE_OVERRIDE_FILE is not None:
         cmd.extend(["--file", str(_ACTIVE_OVERRIDE_FILE)])
     cmd.extend(args)
-    env = dict(os.environ)
-    pass_fds: tuple[int, ...] = ()
-    if _ACTIVE_LOCK_FD is not None:
-        env["FLORABASE_PERF_LOCK_FD"] = str(_ACTIVE_LOCK_FD)
-        pass_fds = (_ACTIVE_LOCK_FD,)
+    env, pass_fds = _compose_env_and_fds()
     return subprocess.check_output(cmd, input=data, env=env, pass_fds=pass_fds)
 
 
@@ -1093,10 +1101,10 @@ def _stop_owned(
 
 
 def stop(env_file: Path | None = None, *, owner_id: str | None = None) -> dict[str, Any]:
-    resolved_owner = owner_id or _resolve_owner_id(env_file)
     with _perf_lock() as lock:
         lock_fd = lock.handle.fileno() if getattr(lock, "handle", None) is not None else None
         with _ActiveOverrideContext(None, lock_fd=lock_fd):
+            resolved_owner = owner_id or _resolve_owner_id(env_file)
             return _stop_owned(owner_id=resolved_owner)
 
 

@@ -31,7 +31,11 @@
     [comprehensive-rehearsal.json](performance/comprehensive-rehearsal.json) and [PERF-001.md](performance/PERF-001.md)
     with raw profiles/plans kept externally (`sha256:
     368d7d96536366b7ee5978e8aff97db7ac75742642e6e0ca3c4a7e43a507b8d9`).
-- Checks: `scripts/perf/test_measure.py` (34 OK), `ruff check`, `ruff format --check`,
+  - Final lock correction hardened `scripts/perf/compose.sh` inherited-fd validation (format,
+    regular-file device/inode identity against `workflow_resources.lock_root()`, non-blocking
+    `flock`, non-truncating `>>`, close-before-`exec` so descendants never inherit parent lock
+    fds) and corrected the `${XDG_STATE_HOME:-$HOME/.local/state}` fallback in `PERF-001.md`.
+- Checks: `scripts/perf/test_measure.py` (38 OK), `ruff check`, `ruff format --check`,
   `mypy --strict`, Prettier on `.mjs`, `bash -n scripts/perf/compose.sh`,
   `node --check`, `scripts/check-features.py`, `scripts/check-doc-links.py`,
   `scripts/test-beta-runtime.py Disclosure -q`, and `git diff --check`.

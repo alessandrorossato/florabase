@@ -418,8 +418,15 @@ guard in `scripts/golden_dataset.py`:
    per-table counts, and scenario target UUIDs before any measured stage runs.
 5. Cleanup requires matching invocation ownership (`io.florabase.workflow.owner`) before calling
    `compose down` or removing invocation-owned `:owner_id` image tags; foreign projects and shared
-   `:latest` tags are refused without destructive action. `scripts/perf/compose.sh` enforces the same
-   kernel `flock` lock unless invoked by a parent lock holder.
+   `:latest` tags are refused without destructive action.
+6. `scripts/perf/compose.sh` resolves the canonical lock path via `workflow_resources.lock_root()`
+   (`FLORABASE_LOCK_DIR` or account passwd home rather than `$HOME`), opens non-truncating (`>>`)
+   when uninherited so active holder diagnostics are preserved, and—when called synchronously by
+   `measure.py` with `FLORABASE_PERF_LOCK_FD` via `pass_fds`—validates descriptor format (`>= 3`),
+   regular-file device/inode identity against the canonical lock file, and active non-blocking
+   `flock(LOCK_EX | LOCK_NB)` before closing the child descriptor prior to `exec docker compose` so
+   parent lock ownership stays intact and Docker Compose cannot leak the lock fd to background
+   descendants.
 
 **Strict pin mode vs. explicit preliminary mode:**
 
@@ -518,6 +525,15 @@ Executed on `feat/perf-001-comprehensive-harness` at clean commit `6175a03` (bas
     while `Makefile` `workflow-check` / `test-workflow-helpers` enumerate top-level `scripts/*.py`
     explicitly; wiring `scripts/perf/test_measure.py` and `scripts/perf/` lint/mypy/Prettier into
     `Makefile` is left as a separate workflow follow-up so shared CI/Makefile contracts are unchanged here.
+- **Disclosed residuals (deferred beyond Batch 07 harness scope):**
+  - Standalone `measure.py stop` resolves `owner_id` from `--env` or the machine-global
+    `florabase-perf.invocation.json` state file without requiring caller source matching (cooperative
+    protocol residual).
+  - Strict rejection reports reuse the generic `evaluate_report` classifier (`application_status =
+    "failed"`, `failure_classification = "both"`) even though measured application stages did not run;
+    distinguishing a dedicated `not_measured` / `fixture_rejected` class is left as a future cleanup.
+  - `--pin-mode allow-modified-baseline` relies on `golden_dataset.py` domain validation and records
+    every table difference explicitly rather than whitelisting specific tables in Python.
 - **G-PERF thresholds:** `operator_g_perf_thresholds.status = "unset_until_g_perf"` per
   [scope-v1.md](../release/scope-v1.md) Decision 7.
 
@@ -525,13 +541,13 @@ Executed on `feat/perf-001-comprehensive-harness` at clean commit `6175a03` (bas
 # Reproducible COMPREHENSIVE harness run (requires external Playwright + Chromium)
 # Strict mode (fail-closed default; rejects modified baseline before measurement):
 python3 scripts/perf/measure.py run \
-  --out "$XDG_STATE_HOME/florabase/perf-evidence/strict-run.json"
+  --out "${XDG_STATE_HOME:-$HOME/.local/state}/florabase/perf-evidence/strict-run.json"
 
 # Explicit preliminary rehearsal with compact summary output:
 PERF_PLAYWRIGHT=/path/to/node_modules/playwright \
 PLAYWRIGHT_BROWSERS_PATH=/path/to/installed/browsers \
 python3 scripts/perf/measure.py run \
   --pin-mode allow-modified-baseline \
-  --out "$XDG_STATE_HOME/florabase/perf-evidence/rehearsal-full.json" \
+  --out "${XDG_STATE_HOME:-$HOME/.local/state}/florabase/perf-evidence/rehearsal-full.json" \
   --summary-out docs/performance/comprehensive-rehearsal.json
 ```

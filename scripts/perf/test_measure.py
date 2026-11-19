@@ -6,6 +6,8 @@ import importlib.util
 import json
 import os
 import signal
+import stat
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -1048,6 +1050,197 @@ class LifecycleAndCleanupTests(unittest.TestCase):
         self.assertTrue(
             any("retire-copy" in argv and "golden_perf" in argv for argv in retire_calls)
         )
+
+
+class ShellLockTests(unittest.TestCase):
+    """Real shell-level tests of scripts/perf/compose.sh locking against a mocked docker binary."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory(prefix="florabase-shell-lock-")
+        self.tmp_dir = Path(self._tmp.name)
+        self.lock_dir = self.tmp_dir / "locks"
+        self.lock_dir.mkdir(parents=True)
+        self.lock_file = self.lock_dir / "florabase-perf.lock"
+        self.bin_dir = self.tmp_dir / "bin"
+        self.bin_dir.mkdir()
+        self.docker_log = self.tmp_dir / "docker.log"
+        fake_docker = self.bin_dir / "docker"
+        fake_docker.write_text(
+            "#!/usr/bin/env bash\n"
+            f'log_file="{self.docker_log}"\n'
+            'fd_state="unset"\n'
+            'if [ "${FLORABASE_PERF_LOCK_FD+set}" = "set" ]; then\n'
+            '  if [ -e "/proc/$$/fd/${FLORABASE_PERF_LOCK_FD}" ]; then fd_state="open"; else fd_state="closed"; fi\n'
+            "fi\n"
+            'printf "%s|%s\\n" "$fd_state" "$*" >> "$log_file"\n'
+            'echo "MOCK_DOCKER:$fd_state:$*"\n',
+            encoding="utf-8",
+        )
+        fake_docker.chmod(fake_docker.stat().st_mode | stat.S_IXUSR)
+        self.compose_path = ROOT / "scripts/perf/compose.sh"
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def _run_compose(
+        self,
+        *args: str,
+        extra_env: dict[str, str | None] | None = None,
+        pass_fds: tuple[int, ...] = (),
+    ) -> subprocess.CompletedProcess[str]:
+        env = dict(os.environ)
+        env["PATH"] = f"{self.bin_dir}:{env.get('PATH', '')}"
+        env["FLORABASE_LOCK_DIR"] = str(self.lock_dir)
+        env.pop("FLORABASE_PERF_LOCK_FD", None)
+        if extra_env:
+            for key, value in extra_env.items():
+                if value is None:
+                    env.pop(key, None)
+                else:
+                    env[key] = value
+        return subprocess.run(
+            [str(self.compose_path), *args],
+            cwd=ROOT,
+            env=env,
+            pass_fds=pass_fds,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    def _contender_can_flock(self) -> bool:
+        probe = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                (
+                    "import fcntl, sys\n"
+                    "with open(sys.argv[1], 'a+', encoding='utf-8') as h:\n"
+                    "    try:\n"
+                    "        fcntl.flock(h.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)\n"
+                    "    except BlockingIOError:\n"
+                    "        sys.exit(1)\n"
+                    "sys.exit(0)\n"
+                ),
+                str(self.lock_file),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        return probe.returncode == 0
+
+    def test_refuses_no_fd_while_held_and_preserves_holder_diagnostics(self) -> None:
+        with patch.dict(os.environ, {"FLORABASE_LOCK_DIR": str(self.lock_dir)}):
+            with measure._perf_lock():
+                before = self.lock_file.read_text(encoding="utf-8")
+                self.assertIn("florabase-perf benchmark lifecycle", before)
+                result = self._run_compose("ps")
+                after = self.lock_file.read_text(encoding="utf-8")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(self.docker_log.exists())
+        self.assertEqual(before, after)
+
+    def test_refuses_stdin_dev_null_unrelated_unlocked_invalid_and_closed_fds(self) -> None:
+        unrelated = self.tmp_dir / "other.lock"
+        unrelated.write_text("other", encoding="utf-8")
+        with patch.dict(os.environ, {"FLORABASE_LOCK_DIR": str(self.lock_dir)}):
+            with measure._perf_lock():
+                holder_before = self.lock_file.read_text(encoding="utf-8")
+                devnull_fd = os.open("/dev/null", os.O_RDWR)
+                unrelated_fd = os.open(unrelated, os.O_RDWR)
+                unlocked_same_fd = os.open(self.lock_file, os.O_RDWR | os.O_APPEND)
+                try:
+                    cases: list[tuple[str, str, tuple[int, ...]]] = [
+                        ("stdin", "0", ()),
+                        ("dev_null", str(devnull_fd), (devnull_fd,)),
+                        ("unrelated_file", str(unrelated_fd), (unrelated_fd,)),
+                        ("unlocked_same_file", str(unlocked_same_fd), (unlocked_same_fd,)),
+                        ("empty_string", "", ()),
+                        ("negative", "-1", ()),
+                        ("non_numeric", "abc", ()),
+                        ("closed_fd", "99", ()),
+                    ]
+                    for label, raw_fd, fds in cases:
+                        with self.subTest(case=label):
+                            res = self._run_compose(
+                                "ps",
+                                extra_env={"FLORABASE_PERF_LOCK_FD": raw_fd},
+                                pass_fds=fds,
+                            )
+                            self.assertNotEqual(res.returncode, 0, res.stderr)
+                            self.assertFalse(
+                                self.docker_log.exists(),
+                                f"docker was unexpectedly invoked for {label}",
+                            )
+                    self.assertEqual(self.lock_file.read_text(encoding="utf-8"), holder_before)
+                finally:
+                    for fd in (devnull_fd, unrelated_fd, unlocked_same_fd):
+                        os.close(fd)
+
+    def test_accepts_python_held_pass_fds_closes_before_docker_and_parent_retains_lock(
+        self,
+    ) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "FLORABASE_LOCK_DIR": str(self.lock_dir),
+                "PATH": f"{self.bin_dir}:{os.environ.get('PATH', '')}",
+            },
+        ):
+            with measure._perf_lock() as lock:
+                assert lock.handle is not None
+                lock_fd = lock.handle.fileno()
+                with measure._ActiveOverrideContext(None, lock_fd=lock_fd):
+                    env, fds = measure._compose_env_and_fds()
+                    self.assertEqual(fds, (lock_fd,))
+                    out = measure.compose("ps")
+                    # Parent STILL owns the lock after synchronous child compose.sh finished.
+                    self.assertFalse(self._contender_can_flock())
+                    # Non-compose subprocess env helper outside lock context does not inherit.
+                    with measure._ActiveOverrideContext(None, lock_fd=None):
+                        pass
+                # Parent still holds lock even after _ActiveOverrideContext exits.
+                self.assertFalse(self._contender_can_flock())
+            # Released once _perf_lock exits.
+            self.assertTrue(self._contender_can_flock())
+        self.assertIn(
+            "MOCK_DOCKER:closed:compose --env-file /dev/null --project-name florabase-perf", out
+        )
+        self.assertEqual(len(self.docker_log.read_text(encoding="utf-8").splitlines()), 1)
+        self.assertEqual(env["FLORABASE_PERF_LOCK_FD"], str(lock_fd))
+
+    def test_normal_uncontended_operation_and_different_home_resolution(self) -> None:
+        # Uncontended run with mismatched $HOME still uses FLORABASE_LOCK_DIR cleanly.
+        res = self._run_compose(
+            "version",
+            extra_env={"HOME": str(self.tmp_dir / "different-home")},
+        )
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertIn("MOCK_DOCKER:unset:compose", res.stdout)
+        self.assertTrue(self._contender_can_flock())
+
+        # Decoy lock under fake $HOME with FLORABASE_LOCK_DIR unset must NOT be accepted,
+        # and must not touch the real shared passwd-home lock file.
+        decoy_home = self.tmp_dir / "decoy-home"
+        decoy_lock = decoy_home / ".local/state/florabase/locks/florabase-perf.lock"
+        decoy_lock.parent.mkdir(parents=True)
+        decoy_lock.write_text("decoy", encoding="utf-8")
+        decoy_fd = os.open(decoy_lock, os.O_RDWR)
+        try:
+            refused = self._run_compose(
+                "ps",
+                extra_env={
+                    "HOME": str(decoy_home),
+                    "FLORABASE_LOCK_DIR": None,
+                    "FLORABASE_PERF_LOCK_FD": str(decoy_fd),
+                },
+                pass_fds=(decoy_fd,),
+            )
+        finally:
+            os.close(decoy_fd)
+        self.assertNotEqual(refused.returncode, 0)
+        self.assertEqual(len(self.docker_log.read_text(encoding="utf-8").splitlines()), 1)
 
 
 if __name__ == "__main__":
