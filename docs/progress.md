@@ -1,3 +1,27 @@
+## 2026-11-19 — PERF-001 Golden COMPREHENSIVE performance harness (Batch 07 Workstream D)
+
+- On `feat/perf-001-comprehensive-harness` from `fdc75e8` (writer `hydrogen-b-perf-harness`).
+- Updated `scripts/perf/` (`comprehensive.py`, `measure.py`, `browser.mjs`,
+  `verify-chunk-recovery.mjs`, `test_measure.py`) to provision the canonical `comprehensive` Golden
+  Dataset through the unmodified disposable TEST-copy route (`compose.integration.yaml` +
+  `golden_dataset.py --copy golden_perf --profile comprehensive`), export via `pg_dump` and
+  `scripts/attachment_artifacts.py archive`, restore into `florabase-perf`, and validate live
+  schema (`20261110_0047`), table counts, media, and scenario targets before measurement.
+- Expanded API (48 read endpoints + write trace), browser (39 routes across Today, Workbench,
+  Cuttings, Harvests, Orders, History, Schedule, Taxonomy, Media, Geography, Maps, Labels, and
+  Lineage), 6-cycle, 120s idle, and lazy-chunk recovery coverage; preserved `PERF-001` `verified`
+  status, `golden_dataset.py` target guards, and Decision 7 (`operator_g_perf_thresholds` unset
+  until RC G-PERF).
+- Preliminary source rehearsal at `c2d5a1f` recorded in
+  [comprehensive-rehearsal.json](performance/comprehensive-rehearsal.json) and
+  [PERF-001.md](performance/PERF-001.md): `harness_status = "passed"`,
+  `invariant_status = "passed"`, `rc_g_perf_certification = false`, and transparent pin-drift
+  report (`invariant-valid-baseline-modified` on `native_range_proposals` and
+  `native_range_applications` relative to the pre-#174/#175 pin).
+- Checks: `scripts/perf/test_measure.py` (23 OK), `ruff check`, `ruff format --check`,
+  `mypy --strict`, Prettier on `.mjs`, `scripts/check-features.py`, `scripts/check-doc-links.py`,
+  `scripts/test-beta-runtime.py Disclosure -q`, and `git diff --check`.
+
 ## 2026-11-17 — WF-04 Batch 04 prepared
 
 - Prepared CERT-01, WF-07 and CERT-05 in order from pinned main `b088a94`. The planner

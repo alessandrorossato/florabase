@@ -390,3 +390,71 @@ The environment/dataset/protocol sections cover handoff items 1–3; immutable b
 comparison cover 4–8; frontend/maps, repeated navigation/idle and footprint cover 9–11; this section
 covers migration/files/tests/checks (12–16); remaining costs/resource expectations/release sanity
 cover 17–19. Large raw profiles/plans, browser/cache artifacts and fixture binaries stay in `/tmp`.
+
+## Golden COMPREHENSIVE harness (Batch 07)
+
+The harness in `scripts/perf/` (`comprehensive.py`, `measure.py`, `browser.mjs`,
+`verify-chunk-recovery.mjs`, `test_measure.py`) now provisions the canonical synthetic
+`comprehensive` Golden Dataset (`florabase-golden` v1, seed `20261102`, anchor `2026-09-15`,
+volume `420`) through the repository's supported disposable TEST-copy route without modifying or
+bypassing any target guard in `scripts/golden_dataset.py`:
+
+1. `scripts/perf/comprehensive.py` spins up a disposable `compose.integration.yaml` project
+   (`FLORABASE_ENVIRONMENT=test`, `FLORABASE_DATABASE_DISPOSABLE=true`, no `FLORABASE_WORKFLOW_MODE`)
+   via `Owner.disposable("integration", ROOT)` and `Disposable`.
+2. Inside the `tests` container, `golden_dataset.py` executes `create-copy --copy golden_perf`,
+   `generate --copy golden_perf --profile comprehensive`, `verify-baseline`, `digest`, and
+   `validate`.
+3. `pg_dump` and `scripts/attachment_artifacts.py archive` export the synthetic database dump and
+   originals tar stream before `retire-copy --copy golden_perf` and `Disposable` retire all
+   temporary integration resources.
+4. `scripts/perf/measure.py start` restores the dump into `florabase-perf` (`florabase_perf`),
+   enables `pg_stat_statements`, starts `backend` and `frontend`, restores and verifies all 32
+   attachments inside `backend` via `scripts/attachment_artifacts.py restore` and `verify`, and
+   validates live schema revision (`20261110_0047`), live per-table counts, and scenario target
+   UUIDs before any measurement runs.
+
+**Tmpfs disclosure:** `compose.perf.yaml` mounts both PostgreSQL (`/var/lib/postgresql`) and
+attachment storage (`/var/lib/florabase/attachments`) on `tmpfs`. Disk persistence and fsync
+latency are excluded; tmpfs measurements must not be compared silently against persistent-storage
+runs.
+
+**Preliminary source rehearsal (NOT formal RC G-PERF certification):**
+
+Executed on `feat/perf-001-comprehensive-harness` at checkpoint `c2d5a1f` (based on `origin/main`
+`fdc75e8`) and retained in [comprehensive-rehearsal.json](comprehensive-rehearsal.json):
+
+- **Distinction of stages:** This run covers (1) harness implementation, (2) automated unit checks
+  (23/23 in `scripts/perf/test_measure.py`), and (3) preliminary source rehearsal. Independent QA
+  (stage 4) and formal immutable RC-image G-PERF certification (stage 5, `docs/release/scope-v1.md`)
+  remain separate and `rc_g_perf_certification` is `false`.
+- **Fixture identity & pin status:** `domain_records = 3,995`, `counted_rows = 4,004`,
+  `canonical_geographic_places = 287` (`4,291` total rows), `attachments = 32` verified originals,
+  `media_assets = 37`, `schema_revision = 20261110_0047`, `plan_sha256` matching `scenarios.json`.
+  `golden_dataset.py verify-baseline` reported `invariant-valid-baseline-modified` (`domain_problems = []`)
+  because `native_range_proposals` (3 rows) and `native_range_applications` (2 rows) differ in
+  content hash (`canonical_sha256 = 5f59cc7ff3829517a5957c9b0972957d17c6eb2825fc023ba0be455ae047dfd0`
+  vs pinned `a6141fc43cf46012007f342b0ba71b005f31141ae34c85f4cdb79bb30a9da88b`) following upstream
+  enrichment changes after PR #172.
+- **API & transfer:** All 48 read endpoints (including Today, Cuttings, Harvests, Stored material,
+  Orders, History, Schedule, Explore/Taxonomy, Media, Saved views, Search, and media/attachment
+  endpoints) plus protected create/edit/delete (`53.4 ms`) completed. Largest raw JS chunk was
+  `106,478` bytes (under Vite's `500,000`-byte advisory); static gzip + `Vary: Accept-Encoding` and
+  uncompressed `no-store` `/runtime-config.js`, `/healthz`, and `/api/v1/events` passed.
+- **Browser, 6 cycles, 120s idle, chunk recovery & cleanup:** 39 representative routes, 6 cycles
+  (`cycleRequests = [38, 38, 38, 38, 38, 38]`, `Nodes = 759`, `JSEventListeners = 484`,
+  `intervals = 2` constant across all checkpoints for Today's 30s local-day check + 15m release
+  watcher, `timeouts = 0`, `maps = 0` on Today), `122 s` idle with `0` browser requests and `1`
+  unchanged session state across 13 samples, stale-chunk recovery (`200 text/html` fallback,
+  `Sign out` shell retained, `0` page errors, `1` document), and `0` remaining `florabase-perf`
+  containers/networks/volumes after `stop`.
+- **G-PERF thresholds:** `operator_g_perf_thresholds.status = "unset_until_g_perf"` per
+  [scope-v1.md](../release/scope-v1.md) Decision 7.
+
+```bash
+# Reproducible COMPREHENSIVE harness run (requires external Playwright + Chromium)
+scripts/perf/compose.sh build
+PERF_PLAYWRIGHT=/tmp/florabase-perf-playwright/node_modules/playwright \
+PLAYWRIGHT_BROWSERS_PATH=/tmp/florabase-perf-browser \
+python3 scripts/perf/measure.py run --out /tmp/perf-comprehensive-rehearsal.json
+```
