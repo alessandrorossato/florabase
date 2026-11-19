@@ -35,7 +35,19 @@ authorization dependency.
 
 [ADR 0005](decisions/0005-authentication-and-sessions.md) defines the accepted boundary: FastAPI owns local accounts and opaque PostgreSQL-backed sessions; the browser receives a secure, HTTP-only, same-site cookie; state-changing requests require a session-bound CSRF token; and reverse-proxy headers never assert identity. The first release permits one owner but uses real user and session records so later multi-user authorization remains possible. JWTs, proxy authentication, OAuth/OIDC, Redis, and external identity providers are deliberately outside the initial design.
 
-The internet-facing proxy is responsible for TLS, HSTS after validation, request/body limits, appropriate CSP and other security headers, replacing untrusted forwarded headers, and source-address rate limiting. Dependency updates are proposed by Dependabot; each update still requires tests and release-note review.
+The bundled production nginx sends `X-Content-Type-Options: nosniff`,
+`Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY` and an enforcing
+Content Security Policy. The policy restricts scripts, stylesheets, fonts, application requests
+and service workers to the same origin. It permits HTTPS images for explicitly selected external
+photos and online basemaps, and permits data and blob URLs only as image sources. Florabase's
+existing opt-in controls govern when the browser contacts image and tile providers. The
+`style-src-attr` exception permits style attributes in browser-generated original-image documents,
+including blob originals. Inline `<style>` elements and inline scripts remain blocked.
+
+The internet-facing proxy is responsible for TLS, HSTS after validation, request/body limits,
+replacing untrusted forwarded headers, and source-address rate limiting. Preserve the bundled
+headers through that proxy. Dependency updates are proposed by Dependabot; each update still
+requires tests and release-note review.
 
 ## Local owner bootstrap
 

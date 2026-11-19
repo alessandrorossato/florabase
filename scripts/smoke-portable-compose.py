@@ -243,6 +243,47 @@ def exercise_credentials(stack: Stack, password: str) -> str:
     return reset_password
 
 
+def exercise_bundled_headers(client: Client) -> None:
+    security_headers = {
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "X-Frame-Options": "DENY",
+        "Content-Security-Policy": (
+            "default-src 'none'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; "
+            "img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self'; "
+            "manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; "
+            "form-action 'self'; frame-ancestors 'none'"
+        ),
+    }
+    for path, status, cache in (
+        ("/", 200, "no-cache"),
+        ("/spa-fallback-probe", 200, "no-cache"),
+        ("/index.html", 200, "no-cache"),
+        ("/appearance.js", 200, "no-cache"),
+        ("/runtime-config.js", 200, "no-store"),
+        ("/release.json", 200, "no-store"),
+        ("/sw.js", 200, "no-cache, no-store, must-revalidate"),
+        ("/manifest.webmanifest", 200, "no-cache"),
+        ("/offline.html", 200, "no-cache"),
+        ("/offline.css", 200, "no-cache"),
+        ("/offline.js", 200, "no-cache"),
+        ("/icons/florabase-192.png", 200, "public, max-age=86400"),
+        ("/favicon.ico", 200, "public, max-age=86400"),
+        ("/icons/missing-eng02-icon.png", 404, None),
+        ("/healthz", 200, None),
+        ("/api/v1/ready", 200, None),
+        ("/api/v1/media-assets", 401, None),
+        ("/api/v1/missing-eng02-route", 404, None),
+        ("/api/v1/auth/session", 401, None),
+    ):
+        _, headers = client.request(path, expected=status)
+        for name, value in security_headers.items():
+            assert headers.get_all(name) == [value], (path, name, headers.get_all(name))
+        if not path.startswith("/api/"):
+            assert headers.get_all("Cache-Control", []) == ([cache] if cache else []), path
+    print("Bundled security headers and static cache policy passed", flush=True)
+
+
 def smoke(source: Stack, restore: Stack) -> None:
     assert set(source.compose("config", "--services").split()) == {b"db", b"backend", b"frontend"}
     source.compose("run", "--rm", "--no-deps", "-T", "db", failure="Run initdb")
@@ -269,6 +310,7 @@ def smoke(source: Stack, restore: Stack) -> None:
     source.up()
     for service, uid in (("db", b"70"), ("backend", b"10001"), ("frontend", b"101")):
         assert source.compose("exec", "-T", service, "id", "-u").strip() == uid
+    exercise_bundled_headers(source.client())
     password = exercise_credentials(source, password)
     original = png(19, 37, 59)
     client = source.login(password)

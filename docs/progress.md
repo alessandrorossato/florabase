@@ -9478,3 +9478,13 @@ Status remains implemented pending canonical verification.
   offline documentation links and the feature graph. Production local
   artifact-only smoke and disposable cleanup passed. All eight RC blockers
   remain. Independent combined QA and canonical FULL are pending.
+
+## 2026-11-19 — ENG-02 bundled security headers standalone source
+
+- Bundled nginx enforces nosniff, a referrer policy, frame denial and CSP through static,
+  proxied and error paths. The [source evidence](release/evidence/eng-02-source.md) records the
+  19-response smoke check, production builds and nginx syntax, 65 PWA tests, 51 offline
+  runtime/controller tests, static checks and the two-theme Chromium results.
+- Independent security review and canonical FULL are pending. The integrated candidate must
+  exercise Batch 07 protected media and downloads, repeat the browser matrix and close formal
+  ENG-02 acceptance and G-SEC.

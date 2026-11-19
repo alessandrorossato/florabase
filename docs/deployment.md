@@ -79,9 +79,10 @@ and accuracy circles. Local geography, records and inspector do not require an e
 
 The frontend image includes `/usr/share/nginx/html/runtime-config.js`. An operator may replace or
 bind-mount it, setting `mapOnlineEnabled: true`, `mapTileUrl` and `mapAttribution` only after verifying
-that the selected provider permits this deployment. The visitor must then explicitly enable Online
-basemap. The shipped flag is false. Preserve the provider's attribution; the canonical public OSM
-endpoint is `https://tile.openstreetmap.org/{z}/{x}/{y}.png` and its
+that the selected provider permits this deployment. Use a same-origin or HTTPS tile URL. The
+visitor must then explicitly enable Online basemap. The shipped flag is false. Preserve the
+provider's attribution. The canonical public OSM endpoint is
+`https://tile.openstreetmap.org/{z}/{x}/{y}.png` and its
 [tile usage policy](https://operations.osmfoundation.org/policies/tiles/) applies. No bulk acquisition,
 prefetch, host rotation, custom User-Agent, proxy impersonation or cache bypass is implemented.
 
@@ -143,9 +144,10 @@ public HTTPS origin.
 ## HTTPS reverse proxy
 
 Terminate TLS at an operator-managed proxy and forward to the frontend published port. The proxy
-owns certificate renewal, HSTS after validation, request/body limits, relevant security headers,
-replacement of untrusted forwarding headers, and source-address login rate limiting. Florabase does
-not infer its security origin or user identity from forwarded headers.
+owns certificate renewal, HSTS after validation, request/body limits, replacement of untrusted
+forwarding headers, and source-address login rate limiting. Pass the bundled security headers
+through to the browser as in the [portable proxy example](portable-installation.md#reverse-proxy-example).
+Florabase does not infer its security origin or user identity from forwarded headers.
 
 ## Persistence
 
