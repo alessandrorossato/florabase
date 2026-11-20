@@ -5,7 +5,9 @@ in the [feature registry](../../features.json). The entry remains `implemented` 
 The worktree was initialized at `origin/main` `fdc75e83fa8818cab791ed82cbba65f4f97db7ae`, claimed
 as `terra-portable-smoke-hardening` (`75417096b4f5`), and fast-forwarded to the approved ENG-02
 parent `48cc11ead7a6438e6c14015889d2653c4e450349` (tree
-`909477f467a5a7ccd236367de64c288c8187972a`). The correction is a direct child of that commit.
+`909477f467a5a7ccd236367de64c288c8187972a`). The original hardening commit
+`ca73d2d141b6fb74ba45582c64b8559c76817905` (tree `c6ae8e3c750ba004c5ad2ced9a456392c68a12b5`)
+is a direct child of that commit and is the parent of the HTTP follow-up.
 
 ## Release path
 
@@ -46,7 +48,7 @@ successfully. The restored attachment count, digest verification and authenticat
 provide separate evidence. A required subprocess failure always propagates. An expected refusal
 requires a failing application exit and the expected diagnostic marker.
 
-## Focused controls
+## Original focused controls
 
 `PortableSmokeEvidence` and the inherited `PortableSmokeHeaders` run via `make test-beta-images`,
 which is a dependency of `workflow-check` in the canonical FULL plan. That target runs the focused
@@ -63,12 +65,13 @@ runtime tests on host Python plus 51 controller tests on Python 3.8.20. Ruff 0.1
 strict mypy 2.4.1, the 168-entry feature graph, documentation links, disclosure and diff checks ran
 without FULL. The graph still reports the eight pre-existing release candidate blockers.
 
-## Disposable runtime
+## Historical disposable runtime
 
-On 2026-11-20 the publisher's `run_portable_smoke` launched the smoke under `PYTHONOPTIMIZE=1`
-while holding the shared verification capacity lock. The disposable build used the repository's
-runtime Dockerfiles. The harness substituted its own local image tags into the rendered portable
-asset and inspected their IDs. Registry digest and published-candidate acceptance remain pending.
+On 2026-11-20, before `ca73d2d` was committed, the publisher's `run_portable_smoke` launched the
+original hardening worktree's executable code under `PYTHONOPTIMIZE=1` while holding the shared
+verification capacity lock. The disposable build used the repository's runtime Dockerfiles. The
+harness substituted its own local image tags into the rendered portable asset and inspected their
+IDs. Registry digest and published-candidate acceptance remain pending.
 
 - The wrong-head control initialized its fresh database, failed the exact Alembic head check,
   exited `1`, and emitted no portable success marker. It retired both
@@ -80,7 +83,34 @@ asset and inspected their IDs. Registry digest and published-candidate acceptanc
 - Exact-project inventory confirmed zero containers, networks, volumes or images for all four
   projects. `florabase-verification-build-16b7265889b0` removed its three owned images and retained
   shared BuildKit cache. An earlier development run passed the same positive and negative paths
-  under separate project prefixes. The project identities above refer to the final runtime code.
+  under separate project prefixes. The identities above belong to the original, pre-commit smoke.
+
+## HTTP client correction after independent QA
+
+SOL accepted the operational checks, publisher contract, optimization-resistant validation and
+cleanup behavior, and held the source on two HTTP client findings. The follow-up counts session
+cookie definitions before parsing a single field. It rejects duplicates in separate or combined
+fields, missing or malformed security attributes, and host-prefix domain attributes. It leaves
+unrelated cookies alone and installs the session token and CSRF value only after validation.
+
+HTTP protocol exceptions while opening or reading a response now produce a short diagnostic with
+exception chaining suppressed. Deterministic fixtures exercised a malformed status line, a truncated
+body, and a body-read exception containing a synthetic marker. All failed subprocesses exited
+non-zero and their captured tracebacks omitted the marker. Expected HTTP errors still return their
+body and headers, using status access compatible with Python 3.8.
+The same fixtures reproduced both findings against the uncorrected parent.
+
+All 16 focused tests passed with Python 3.14.4 in normal mode, with `-O`, and with
+`PYTHONOPTIMIZE=1`. The existing optimized launcher discovered the new tests in both child runs.
+`make test-beta-images` passed 78 release and four tool-lock tests. `make test-beta-runtime`
+passed 63 host tests and 51 pinned Python 3.8.20 controller tests. The three new shared-client
+regressions also passed directly on that Python 3.8.20 image. Ruff, strict mypy, disclosure,
+documentation links and diff hygiene passed.
+
+The historical runtime above predates the HTTP correction. SOL's focused confirmation is pending.
+Independent Docker verification of the corrected client on the integrated candidate must still
+exercise session issuance and the full portable smoke on the digest-bound assets. Canonical FULL,
+formal acceptance and G-SEC remain pending.
 
 ## Review and integration
 

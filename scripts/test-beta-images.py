@@ -299,6 +299,126 @@ class PortableSmokeEvidence(unittest.TestCase):
             (client.cookie, client.csrf), ("__Host-florabase-session=session-token", "csrf-token")
         )
 
+    def test_session_cookie_definitions_are_unambiguous(self) -> None:
+        client = Client("http://127.0.0.1:8080", self.smoke.ORIGIN)
+        cookie = "__Host-florabase-session"
+        attributes = "; Secure; HttpOnly; Path=/; SameSite=Strict"
+        issued = f"{cookie}=issued-fixture{attributes}"
+        insecure = f"{cookie}=unvalidated-fixture; Path=/"
+        good = HTTPMessage()
+        good.add_header("Set-Cookie", 'preferences="__Host-florabase-session=unrelated;theme=dark"')
+        good.add_header("Set-Cookie", issued + "; Max-Age=43200")
+        good.add_header("Set-Cookie", "view=compact; Path=/")
+        client.accept_session(b'{"csrf_token":"accepted-csrf"}', good, "login")
+        self.assertEqual(
+            (client.cookie, client.csrf), (f"{cookie}=issued-fixture", "accepted-csrf")
+        )
+
+        duplicate = f"{cookie}=unvalidated-fixture{attributes}"
+        for fields in (
+            (issued, insecure),
+            (insecure, issued),
+            (issued, duplicate),
+            (issued, issued),
+            (issued + "; " + insecure,),
+            (issued + ", " + duplicate,),
+            (issued + " " + duplicate,),
+            (issued, cookie + "; Secure"),
+        ):
+            with (
+                self.subTest(fields=fields),
+                self.assertRaisesRegex(RuntimeError, "duplicate session cookie"),
+            ):
+                headers = HTTPMessage()
+                for definition in fields:
+                    headers.add_header("Set-Cookie", definition)
+                client.accept_session(b'{"csrf_token":"unvalidated-csrf"}', headers, "login")
+
+        for damaged in (
+            issued.replace("; Secure", ""),
+            issued.replace("; HttpOnly", ""),
+            issued.replace("; Path=/", ""),
+            issued.replace("; SameSite=Strict", ""),
+            issued.replace("; Secure", "; Secure=1"),
+            issued.replace("; HttpOnly", "; HttpOnly=true"),
+            issued.replace("Path=/", "Path=/other"),
+            issued.replace("SameSite=Strict", "SameSite=Lax"),
+            issued.replace("issued-fixture", ""),
+            issued + "; Domain=",
+            issued + "; $Domain=fixture.invalid",
+            issued + "; SameSite=Strict",
+        ):
+            with (
+                self.subTest(damaged=damaged),
+                self.assertRaisesRegex(RuntimeError, "secure session cookie"),
+            ):
+                headers = HTTPMessage()
+                headers.add_header("Set-Cookie", damaged)
+                client.accept_session(b'{"csrf_token":"unvalidated-csrf"}', headers, "login")
+
+        response = urllib.response.addinfourl(io.BytesIO(b"ok"), HTTPMessage(), client.base, 200)
+        with patch.object(client.opener, "open", return_value=response) as transport:
+            client.request("/session", "POST")
+        request = transport.call_args.args[0]
+        self.assertEqual(request.get_header("Cookie"), f"{cookie}=issued-fixture")
+        self.assertEqual(request.get_header("X-csrf-token"), "accepted-csrf")
+
+    def test_protocol_failures_exit_with_sanitized_tracebacks(self) -> None:
+        child = textwrap.dedent("""\
+            import io
+            import sys
+            from http.client import HTTPException, HTTPResponse
+            from unittest.mock import Mock, patch
+
+            from smoke_beta_runtime_client import Client
+
+            case, marker = sys.argv[1:]
+            wire = (
+                (marker + "\\r\\n\\r\\n").encode() if case == "status" else
+                b"HTTP/1.1 200 OK\\r\\nContent-Length: 256\\r\\n\\r\\n" + marker.encode()
+            )
+            sock = Mock()
+            sock.makefile.return_value = io.BytesIO(wire)
+            def open_response(*args, **kwargs):
+                response = HTTPResponse(sock)
+                response.begin()
+                if case == "read":
+                    response.read = Mock(side_effect=HTTPException(marker))
+                return response
+
+            client = Client("http://127.0.0.1:8080", "https://fixture.invalid")
+            with patch.object(client.opener, "open", side_effect=open_response):
+                client.request("/status?check=" + marker)
+            print("unexpected success")
+            """)
+        marker = "synthetic-protocol-secret-marker"
+        for case in ("status", "truncated", "read"):
+            with self.subTest(case=case):
+                result = subprocess.run(
+                    [sys.executable, *(["-O"] * sys.flags.optimize), "-c", child, case, marker],
+                    cwd=ROOT / "scripts",
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
+                    check=False,
+                )
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(result.stdout, "")
+                self.assertIn("Traceback (most recent call last)", result.stderr)
+                self.assertIn("RuntimeError: GET /status: invalid HTTP response", result.stderr)
+                self.assertNotIn(marker, result.stderr)
+                self.assertNotIn("During handling of the above exception", result.stderr)
+
+    def test_expected_http_success_and_error_return_body_and_headers(self) -> None:
+        client = Client("http://127.0.0.1:8080", self.smoke.ORIGIN)
+        headers = HTTPMessage()
+        body = b'{"fixture":"body"}'
+        response = urllib.response.addinfourl(io.BytesIO(body), headers, client.base, 200)
+        refused = urllib.error.HTTPError(client.base, 401, "fixture", headers, io.BytesIO(body))
+        with patch.object(client.opener, "open", side_effect=[response, refused]):
+            self.assertEqual(client.request("/ready"), (body, headers))
+            self.assertEqual(client.request("/session", expected=401), (body, headers))
+
     def test_password_change_and_reset_require_complete_secret_free_evidence(self) -> None:
         initial_password = "original-password-fixture"
         changed_password = "changed-password-fixture"

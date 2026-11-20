@@ -17,9 +17,13 @@ import sys
 import urllib.error
 import urllib.request
 import zlib
-from http.client import HTTPMessage
+from http.client import HTTPException, HTTPMessage
 from http.cookies import CookieError, SimpleCookie
 from typing import Any
+
+SESSION_COOKIE = "__Host-florabase-session"
+QUOTED_COOKIE_VALUE = re.compile(r'"(?:[^"\\]|\\.)*"')
+SESSION_COOKIE_NAME = re.compile(rf"(?:^|[\s;,]){SESSION_COOKIE}(?=[\s=;,]|$)")
 
 
 def png(red: int, green: int, blue: int) -> bytes:
@@ -83,18 +87,21 @@ class Client:
         if content_type:
             headers["Content-Type"] = content_type
         request = urllib.request.Request(self.base + path, body, headers, method=method)
+        operation = f"{method} {path.partition('?')[0]}"
         try:
-            response = self.opener.open(request, timeout=30)
-        except urllib.error.HTTPError as error:
-            response = error
+            try:
+                response = self.opener.open(request, timeout=30)
+            except urllib.error.HTTPError as error:
+                response = error
+            with response:
+                status = response.getcode()
+                if status != expected:
+                    raise RuntimeError(f"{operation}: expected {expected}, got {status}")
+                return response.read(), response.headers
+        except HTTPException:
+            raise RuntimeError(f"{operation}: invalid HTTP response") from None
         except (OSError, ValueError):
-            raise RuntimeError(f"{method} {path.partition('?')[0]}: request failed") from None
-        with response:
-            if response.status != expected:
-                raise RuntimeError(
-                    f"{method} {path.partition('?')[0]}: expected {expected}, got {response.status}"
-                )
-            return response.read(), response.headers
+            raise RuntimeError(f"{operation}: request failed") from None
 
     def json(self, path: str, method: str = "GET", payload: Any = None, expected: int = 200) -> Any:
         body = None if payload is None else json.dumps(payload).encode()
@@ -116,18 +123,45 @@ class Client:
         csrf = response_object(data, operation).get("csrf_token")
         if not isinstance(csrf, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", csrf):
             raise RuntimeError(f"{operation}: missing or invalid CSRF token")
+        session_field = None
+        for field in headers.get_all("Set-Cookie", []):
+            # SimpleCookie collapses repeated names, even within one header. Ignore names
+            # inside quoted values and detect ambiguity before loading the session field.
+            unquoted = QUOTED_COOKIE_VALUE.sub('""', field)
+            definitions = SESSION_COOKIE_NAME.findall(unquoted)
+            if not definitions:
+                continue
+            if session_field is not None or len(definitions) != 1:
+                raise RuntimeError(f"{operation}: duplicate session cookie definitions")
+            session_field = (field, unquoted)
+        if session_field is None:
+            raise RuntimeError(f"{operation}: missing or invalid secure session cookie")
+        field, unquoted = session_field
+        name, *attributes = unquoted.split(";")
+        attribute_names = [attribute.partition("=")[0].strip().lower() for attribute in attributes]
+        if (
+            name.partition("=")[0].strip() != SESSION_COOKIE
+            or "domain" in attribute_names
+            or any(key.startswith("$") for key in attribute_names)
+            or any(
+                attribute_names.count(key) != 1
+                for key in ("secure", "httponly", "path", "samesite")
+            )
+        ):
+            raise RuntimeError(f"{operation}: missing or invalid secure session cookie")
+
         jar: SimpleCookie = SimpleCookie()
         try:
-            for value in headers.get_all("Set-Cookie", []):
-                jar.load(value)
+            jar.load(field)
         except CookieError:
             raise RuntimeError(f"{operation}: invalid session cookie") from None
-        morsel = jar.get("__Host-florabase-session")
+        morsel = jar.get(SESSION_COOKIE)
         if (
-            morsel is None
+            len(jar) != 1
+            or morsel is None
             or not re.fullmatch(r"[A-Za-z0-9_-]+", morsel.value)
-            or not morsel["secure"]
-            or not morsel["httponly"]
+            or morsel["secure"] is not True
+            or morsel["httponly"] is not True
             or morsel["samesite"].lower() != "strict"
             or morsel["path"] != "/"
             or morsel["domain"]

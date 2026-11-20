@@ -9514,3 +9514,16 @@ Status remains implemented pending canonical verification.
   provenance, checks and limitations.
 - Independent review, integration after Batch 07, canonical FULL, exact-candidate rehearsal,
   formal acceptance and G-SEC remain pending.
+
+### PORTABLE-COMPOSE-001 HTTP client correction after independent QA
+
+- Corrected SOL's two HTTP findings. Session issuance rejects ambiguous or malformed cookie
+  definitions before installing credentials. HTTP protocol failures at open and body read exit
+  non-zero with sanitized tracebacks. Expected HTTP errors remain supported on Python 3.8.
+- All 16 focused tests passed under normal Python, `-O` and `PYTHONOPTIMIZE=1`. The release target
+  passed 78 tests and four tool-lock tests. The controller target passed 63 host and 51 Python
+  3.8 tests. Three new client tests passed directly on Python 3.8. Ruff, strict mypy, disclosure,
+  links and diff checks passed.
+- The previous Docker evidence is historical. SOL's focused confirmation, independent Docker
+  verification of the corrected client on the integrated candidate and canonical FULL remain
+  pending. [Source evidence](release/evidence/portable-smoke-fail-closed.md#http-client-correction-after-independent-qa).
