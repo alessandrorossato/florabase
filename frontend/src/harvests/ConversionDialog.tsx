@@ -1,5 +1,9 @@
 import { useEffect, useId, useRef, useState, type SyntheticEvent } from "react";
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { EditWorkspace } from "../components/EditWorkspace";
 import { FormSections } from "../components/FormSections";
@@ -41,6 +45,9 @@ export function ConversionDialog({
   onSaved: (conversion: Conversion) => void;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const id = useId();
   const alert = useRef<HTMLParagraphElement>(null);
   const [harvest, setHarvest] = useState(initialHarvest);
@@ -90,13 +97,14 @@ export function ConversionDialog({
     onClose();
   }
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     void Promise.all([
-      listBotanicalIdentities(controller.signal),
-      listLocations(controller.signal),
+      listBotanicalIdentities(capability, controller.signal),
+      listLocations(capability, controller.signal),
       initialHarvest
         ? Promise.resolve(initialHarvest)
-        : getHarvest(inventory.harvest_id, controller.signal),
+        : getHarvest(inventory.harvest_id, capability, controller.signal),
     ])
       .then(([identities, locations, currentHarvest]) => {
         if (controller.signal.aborted) return;
@@ -108,16 +116,23 @@ export function ConversionDialog({
         setLoadingError(false);
       })
       .catch((failure: unknown) => {
-        if (!controller.signal.aborted) {
-          if (failure instanceof ApiError && failure.status === 401)
-            auth.sessionExpired();
-          else setLoadingError(true);
-        }
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
+        if (failure instanceof ApiError && failure.status === 401)
+          sessionExpired();
+        else setLoadingError(true);
       });
     return () => {
       controller.abort();
     };
-  }, [inventory.harvest_id, initialHarvest, attempt, auth]);
+  }, [
+    authorized,
+    capability,
+    inventory.harvest_id,
+    initialHarvest,
+    attempt,
+    sessionExpired,
+  ]);
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
@@ -147,12 +162,14 @@ export function ConversionDialog({
           resulting_quantity: mode === "partial" ? remainder : null,
           expected_viability_until: viability,
         },
-        auth.state.status === "authenticated" ? auth.state.csrfToken : "",
+        activeCsrfToken(auth.state),
+        capability,
       );
       onSaved(result);
     } catch (failure: unknown) {
+      if (isExpectedAuthCancellation(failure)) return;
       if (failure instanceof ApiError && failure.status === 401)
-        auth.sessionExpired();
+        sessionExpired();
       else {
         setError(
           failure instanceof Error && !(failure instanceof ApiError)

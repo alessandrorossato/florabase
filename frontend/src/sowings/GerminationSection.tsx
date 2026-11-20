@@ -4,7 +4,11 @@ import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 import { clearEntryRequest, hasEntryRequest } from "../events/entryRequest";
 
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { FieldHelp } from "../components/ContextualHelp";
 import {
@@ -60,6 +64,9 @@ function errorMessage(error: unknown): string {
 
 export function GerminationSection({ sowingId }: { sowingId: string }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [detail, setDetail] = useState<SowingGerminationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -85,15 +92,16 @@ export function GerminationSection({ sowingId }: { sowingId: string }) {
   const returnFocus = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void getSowingGermination(sowingId, controller.signal)
+    void getSowingGermination(sowingId, capability, controller.signal)
       .then((value) => {
         setDetail(value);
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setLoadError(true);
       })
       .finally(() => {
@@ -102,7 +110,7 @@ export function GerminationSection({ sowingId }: { sowingId: string }) {
     return () => {
       controller.abort();
     };
-  }, [auth, retry, sowingId]);
+  }, [authorized, capability, sessionExpired, retry, sowingId]);
 
   useEffect(() => {
     if (!editor) return;
@@ -134,21 +142,23 @@ export function GerminationSection({ sowingId }: { sowingId: string }) {
       setFeedback("Enter an exact date and a non-negative whole number.");
       return;
     }
-    if (auth.state.status !== "authenticated") return;
+    const csrfToken = activeCsrfToken(auth.state);
+    if (!csrfToken) return;
     setSaving(true);
     setFeedback("");
     try {
       const value = await saveGerminationObservation(
         sowingId,
         { observed_on: date, newly_germinated_count: Number(count) },
-        auth.state.csrfToken,
+        csrfToken,
+        capability,
         editor.kind === "edit" ? editor.observation.id : undefined,
       );
       setDetail(value);
       close();
     } catch (error: unknown) {
-      if (error instanceof ApiError && error.status === 401)
-        auth.sessionExpired();
+      if (isExpectedAuthCancellation(error)) return;
+      if (error instanceof ApiError && error.status === 401) sessionExpired();
       else setFeedback(errorMessage(error));
     } finally {
       setSaving(false);
@@ -156,25 +166,22 @@ export function GerminationSection({ sowingId }: { sowingId: string }) {
   }
 
   async function remove() {
-    if (
-      editor?.kind !== "delete" ||
-      saving ||
-      auth.state.status !== "authenticated"
-    )
-      return;
+    const csrfToken = activeCsrfToken(auth.state);
+    if (editor?.kind !== "delete" || saving || !csrfToken) return;
     setSaving(true);
     setFeedback("");
     try {
       const value = await deleteGerminationObservation(
         sowingId,
         editor.observation.id,
-        auth.state.csrfToken,
+        csrfToken,
+        capability,
       );
       setDetail(value);
       close();
     } catch (error: unknown) {
-      if (error instanceof ApiError && error.status === 401)
-        auth.sessionExpired();
+      if (isExpectedAuthCancellation(error)) return;
+      if (error instanceof ApiError && error.status === 401) sessionExpired();
       else setFeedback(errorMessage(error));
     } finally {
       setSaving(false);

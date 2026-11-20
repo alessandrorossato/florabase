@@ -1,7 +1,12 @@
 import { ActionButton } from "../components/Action";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isExpectedAuthCancellation,
+  isPresentationRetainedState,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { FieldHelp, InfoDisclosure } from "../components/ContextualHelp";
 import { NativeRangeEnrichmentPanel } from "./NativeRangeEnrichmentPanel";
@@ -35,6 +40,9 @@ export function BotanicalNativeRangeManager({
   onEditStateChange?: (dirty: boolean, pending: boolean) => void;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [load, setLoad] = useState<LoadState>({ status: "loading" });
   const [mutation, setMutation] = useState<MutationState>({ status: "idle" });
   const [selectedPlaceId, setSelectedPlaceId] = useState("");
@@ -48,24 +56,25 @@ export function BotanicalNativeRangeManager({
   const doneButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     void Promise.all([
-      listBotanicalNativeRanges(identityId, controller.signal),
-      listGeographicPlaces(controller.signal),
+      listBotanicalNativeRanges(identityId, capability, controller.signal),
+      listGeographicPlaces(capability, controller.signal),
     ])
       .then(([ranges, places]) => {
         setLoad({ status: "ready", ranges, places });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setLoad({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [auth, identityId, attempt]);
+  }, [authorized, capability, sessionExpired, identityId, attempt]);
 
   useEffect(() => {
     if (mutation.status === "error") feedbackRef.current?.focus();
@@ -86,23 +95,20 @@ export function BotanicalNativeRangeManager({
     onEditStateChange?.(Boolean(selectedPlaceId), mutation.status === "saving");
   }, [selectedPlaceId, mutation.status, onEditStateChange]);
 
-  if (
-    auth.state.status !== "authenticated" &&
-    auth.state.status !== "logging-out" &&
-    auth.state.status !== "logout-failed"
-  )
-    return null;
-  const csrfToken = auth.state.csrfToken;
+  if (!isPresentationRetainedState(auth.state)) return null;
+  const csrfToken = activeCsrfToken(auth.state);
   const pending = mutation.status === "saving";
 
   async function addRange() {
-    if (!selectedPlaceId || pending || load.status !== "ready") return;
+    if (!selectedPlaceId || pending || load.status !== "ready" || !csrfToken)
+      return;
     setMutation({ status: "saving" });
     try {
       const added = await addBotanicalNativeRange(
         identityId,
         selectedPlaceId,
         csrfToken,
+        capability,
       );
       setFocusPlaceId(added.geographic_place_id);
       setLoad({
@@ -121,9 +127,10 @@ export function BotanicalNativeRangeManager({
         message: `${added.geographic_place_path} was added to the native range.`,
       });
     } catch (error: unknown) {
-      if (error instanceof ApiError && error.status === 401)
-        auth.sessionExpired();
-      else if (error instanceof ApiError && error.status === 409)
+      if (error instanceof ApiError && error.status === 401) {
+        setMutation({ status: "idle" });
+        sessionExpired();
+      } else if (error instanceof ApiError && error.status === 409)
         setMutation({
           status: "error",
           message: "That geographic place is already in this native range.",
@@ -151,6 +158,7 @@ export function BotanicalNativeRangeManager({
         identityId,
         range.geographic_place_id,
         csrfToken,
+        capability,
       );
       setLoad({
         ...load,

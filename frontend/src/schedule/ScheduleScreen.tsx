@@ -1,7 +1,11 @@
 import { FieldLabel } from "../components/FieldLabel";
 import { ScheduleTargetLabel } from "./ScheduleTargetLabel";
 import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { FormActions } from "../components/ReferenceUI";
 import { ActivityPage } from "../components/ActivityPage";
@@ -507,6 +511,10 @@ function EmptyScheduleList({
   state: ScheduleState;
   onExpire: () => void;
 }) {
+  const auth = useAuth();
+  const { capability } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const filterHash = scheduleHash(state);
   const narrowed = Boolean(
     state.window !== "all" ||
@@ -520,26 +528,22 @@ function EmptyScheduleList({
     total: number;
   } | null>(null);
   useEffect(() => {
-    if (!narrowed) return;
+    if (!narrowed || !authorized) return;
     const c = new AbortController();
     const status = readScheduleState(filterHash).status;
-    void listSchedule({ ...defaultState, status }, 0, 1, c.signal)
+    void listSchedule({ ...defaultState, status }, 0, 1, capability, c.signal)
       .then((page) => {
         if (!c.signal.aborted)
           setBaseline({ hash: filterHash, total: page.total });
       })
       .catch((error: unknown) => {
-        if (
-          !c.signal.aborted &&
-          error instanceof ApiError &&
-          error.status === 401
-        )
-          onExpire();
+        if (c.signal.aborted || isExpectedAuthCancellation(error)) return;
+        if (error instanceof ApiError && error.status === 401) onExpire();
       });
     return () => {
       c.abort();
     };
-  }, [filterHash, narrowed, onExpire]);
+  }, [filterHash, narrowed, onExpire, authorized, capability]);
   const total = baseline?.hash === filterHash ? baseline.total : null;
   const filtered = narrowed && total !== 0;
   return (
@@ -559,6 +563,9 @@ function EmptyScheduleList({
 
 export function ScheduleScreen() {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [state, setState] = useState(readScheduleState);
   const [offset, setOffset] = useState(0);
   const [result, setResult] = useState<{
@@ -572,13 +579,12 @@ export function ScheduleScreen() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [day, setDay] = useState(localDay);
-  const csrf =
-    auth.state.status === "authenticated" ? auth.state.csrfToken : "";
+  const csrf = activeCsrfToken(auth.state);
   const owner =
     auth.state.status === "authenticated" && auth.state.session.owner;
   const expire = useCallback(() => {
-    auth.sessionExpired();
-  }, [auth]);
+    sessionExpired();
+  }, [sessionExpired]);
   const queryHash = scheduleHash({
     ...state,
     date: state.view === "calendar" ? "" : state.date,
@@ -597,15 +603,17 @@ export function ScheduleScreen() {
     };
   }, []);
   useEffect(() => {
+    if (!authorized) return;
     const c = new AbortController();
     const queryState = readScheduleState(queryHash);
     void (
       queryState.view === "calendar"
-        ? listCalendar(queryState, c.signal)
+        ? listCalendar(queryState, capability, c.signal)
         : listSchedule(
             queryState,
             offset,
             50,
+            capability,
             c.signal,
             queryState.date || undefined,
           )
@@ -617,14 +625,14 @@ export function ScheduleScreen() {
         else setResult({ key, page: value, error: false });
       })
       .catch((e: unknown) => {
-        if (c.signal.aborted) return;
+        if (c.signal.aborted || isExpectedAuthCancellation(e)) return;
         if (e instanceof ApiError && e.status === 401) expire();
         else setResult({ key, page: null, error: true });
       });
     return () => {
       c.abort();
     };
-  }, [queryHash, offset, key, expire]);
+  }, [queryHash, offset, key, expire, authorized, capability]);
   const route = useCallback(() => {
     setState((previous) => {
       const next = readScheduleState();
@@ -637,14 +645,19 @@ export function ScheduleScreen() {
     setError("");
     setDialog(null);
     const c = new AbortController();
+    if (!authorized) {
+      return () => {
+        c.abort();
+      };
+    }
     if (id) {
-      void getActivity(id, c.signal)
+      void getActivity(id, capability, c.signal)
         .then((item) => {
           if (!c.signal.aborted)
             setDialog({ action: "inspect", item, target: item.target });
         })
         .catch((e: unknown) => {
-          if (c.signal.aborted) return;
+          if (c.signal.aborted || isExpectedAuthCancellation(e)) return;
           if (e instanceof ApiError && e.status === 401) expire();
           else
             setNotice(
@@ -654,13 +667,18 @@ export function ScheduleScreen() {
     } else if (p.get("action") === "create") {
       const parsed = readScheduleState();
       if (parsed.target_kind.length === 1 && parsed.target_id)
-        void getTarget(parsed.target_kind[0], parsed.target_id, c.signal)
+        void getTarget(
+          parsed.target_kind[0],
+          parsed.target_id,
+          capability,
+          c.signal,
+        )
           .then((target) => {
             if (!c.signal.aborted)
               setDialog({ action: "create", item: null, target });
           })
           .catch((e: unknown) => {
-            if (c.signal.aborted) return;
+            if (c.signal.aborted || isExpectedAuthCancellation(e)) return;
             if (e instanceof ApiError && e.status === 401) expire();
             else
               setNotice(
@@ -672,7 +690,7 @@ export function ScheduleScreen() {
     return () => {
       c.abort();
     };
-  }, [expire]);
+  }, [authorized, capability, expire]);
   useEffect(() => {
     let disposed = false;
     let clean: (() => void) | undefined;
@@ -715,6 +733,7 @@ export function ScheduleScreen() {
       setOffset(0);
       setAttempt((a) => a + 1);
     } catch (e) {
+      if (isExpectedAuthCancellation(e)) return;
       if (e instanceof ApiError && e.status === 401) expire();
       else setError(message(e));
     } finally {
@@ -729,7 +748,7 @@ export function ScheduleScreen() {
     if (!dialog?.item) return;
     setBusy(true);
     try {
-      const item = await getActivity(dialog.item.id);
+      const item = await getActivity(dialog.item.id, capability);
       setDialog({
         ...dialog,
         item,
@@ -739,6 +758,7 @@ export function ScheduleScreen() {
       setError("");
       setAttempt((a) => a + 1);
     } catch (e) {
+      if (isExpectedAuthCancellation(e)) return;
       if (e instanceof ApiError && e.status === 401) expire();
       else setError("Could not reload the current activity. Try again.");
     } finally {
@@ -1071,18 +1091,25 @@ export function ScheduleScreen() {
                 void reload();
               }}
               onSave={(payload) => {
+                if (!csrf) return;
                 void save(() =>
-                  writeActivity(dialog.item?.id ?? null, payload, csrf),
+                  writeActivity(
+                    dialog.item?.id ?? null,
+                    payload,
+                    csrf,
+                    capability,
+                  ),
                 );
               }}
               onTransition={(event) => {
-                if (dialog.item) {
+                if (dialog.item && csrf) {
                   const item = dialog.item;
                   void save(() =>
                     transitionActivity(
                       item,
                       dialog.action === "cancel" ? "cancel" : "complete",
                       csrf,
+                      capability,
                       event,
                     ),
                   );

@@ -1,11 +1,50 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { useProtectedImage } from "../photos/useProtectedImage";
 import type { DashboardResponse } from "./api";
 
 type Photo = NonNullable<DashboardResponse["photos"]>[number];
 
+function DashboardPlateFrame({
+  rawUrl,
+  alt,
+  sourceLabel,
+  onBroken,
+}: {
+  rawUrl: string;
+  alt: string;
+  sourceLabel: string;
+  onBroken: (url: string) => void;
+}) {
+  const [mediaTarget, media] = useProtectedImage({
+    rawUrl,
+    lazy: false,
+    onError: onBroken,
+  });
+  return (
+    <span ref={mediaTarget} className="today-plate__frame">
+      {media.src && (
+        <img
+          src={media.src}
+          alt={alt}
+          loading="eager"
+          decoding="async"
+          referrerPolicy={media.referrerPolicy}
+          onError={() => {
+            onBroken(rawUrl);
+          }}
+        />
+      )}
+      <span className="today-plate__source">{sourceLabel}</span>
+    </span>
+  );
+}
+
 /** Today never draws an empty tile: a Plant appears only while one of its images loads. */
 export function DashboardPhotos({ photos }: { photos: Photo[] }) {
   const [broken, setBroken] = useState<ReadonlySet<string>>(new Set());
+  const markBroken = useCallback((url: string) => {
+    setBroken((current) => new Set([...current, url]));
+  }, []);
   const shown = photos
     .flatMap((photo) => {
       // Only protected local thumbnails; a remote URL is never loaded.
@@ -42,24 +81,16 @@ export function DashboardPhotos({ photos }: { photos: Photo[] }) {
         {shown.map(({ photo, image }) => (
           <li key={photo.id}>
             <a href={`#/plants/${photo.id}`} aria-label={photo.title}>
-              <span className="today-plate__frame">
-                <img
-                  src={image.thumbnail_url}
-                  alt={photo.title}
-                  loading="eager"
-                  decoding="async"
-                  onError={() => {
-                    setBroken(
-                      (current) => new Set([...current, image.thumbnail_url]),
-                    );
-                  }}
-                />
-                <span className="today-plate__source">
-                  {image === photo.reference_image
+              <DashboardPlateFrame
+                rawUrl={image.thumbnail_url}
+                alt={photo.title}
+                sourceLabel={
+                  image === photo.reference_image
                     ? "Identity reference"
-                    : "Plant primary photo"}
-                </span>
-              </span>
+                    : "Plant primary photo"
+                }
+                onBroken={markBroken}
+              />
               <span className="today-plate__title" title={photo.title}>
                 {photo.title}
               </span>

@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { PhotoDialog } from "../photos/PhotosSection";
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   getMedia,
@@ -24,6 +28,9 @@ export function MediaQuickPreview({
   onSaved: () => void;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [detail, setDetail] = useState<MediaDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -33,21 +40,23 @@ export function MediaQuickPreview({
   const saveInFlight = useRef(false);
   const saveStatus = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void getMedia(asset.id, controller.signal)
+    void getMedia(asset.id, capability, controller.signal)
       .then((value) => {
         if (!controller.signal.aborted) setDetail(value);
       })
       .catch((failure: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
         if (failure instanceof ApiError && failure.status === 401)
-          auth.sessionExpired();
+          sessionExpired();
         else setError(mediaError(failure));
       });
     return () => {
       controller.abort();
     };
-  }, [asset.id, attempt, auth]);
+  }, [asset.id, attempt, authorized, capability, sessionExpired]);
   useEffect(() => {
     if (savedLocally) saveStatus.current?.focus();
   }, [savedLocally]);
@@ -57,15 +66,15 @@ export function MediaQuickPreview({
     setSaving(true);
     setSaveError(null);
     try {
-      const token =
-        auth.state.status === "authenticated" ? auth.state.csrfToken : "";
-      const saved = await saveLocalCopy(detail.id, token);
+      const token = activeCsrfToken(auth.state);
+      const saved = await saveLocalCopy(detail.id, token, capability);
       setDetail((current) => (current ? { ...current, ...saved } : current));
       setSavedLocally(true);
       onSaved();
     } catch (failure) {
+      if (isExpectedAuthCancellation(failure)) return;
       if (failure instanceof ApiError && failure.status === 401)
-        auth.sessionExpired();
+        sessionExpired();
       else setSaveError(mediaError(failure));
     } finally {
       saveInFlight.current = false;

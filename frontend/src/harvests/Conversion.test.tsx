@@ -9,6 +9,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../auth/context";
 import { ApiError } from "../auth/api";
+import { acquireTestAuth } from "../test/auth";
 import { ConversionDialog } from "./ConversionDialog";
 import { ConversionHistory } from "./ConversionHistory";
 import {
@@ -56,24 +57,7 @@ vi.mock("../locations/api", async (original) => ({
     ]),
   ),
 }));
-const auth: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    csrfToken: "token",
-    session: {
-      user_id: "owner",
-      login_name: "owner",
-      display_name: null,
-      owner: true,
-      canonical_origin: "http://localhost",
-    },
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired: vi.fn(),
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
 const source: Harvest["source"] = {
   id: "plant",
   type: "plant",
@@ -157,7 +141,8 @@ function wrap(child: React.ReactNode) {
     <AuthContext.Provider value={auth}>{child}</AuthContext.Provider>,
   );
 }
-beforeEach(() => {
+beforeEach(async () => {
+  auth = (await acquireTestAuth({ csrfToken: "token" })).auth;
   vi.mocked(inventoryApi.inventoryList).mockResolvedValue([inventory]);
   vi.mocked(conversionApi.convertSeeds).mockResolvedValue(conversion);
   vi.mocked(conversionApi.listConversions).mockResolvedValue([conversion]);
@@ -279,6 +264,7 @@ it("shows producer, date, identity and Location context and creates an exact par
       },
     }),
     "token",
+    auth.capability,
   );
 });
 it("use all exact stock preserves exact target and depletes the source", async () => {
@@ -339,6 +325,7 @@ it("allows explicit identity and target Location choices for a Plant group", asy
         location_id: "drawer",
       }),
       "token",
+      auth.capability,
     );
   });
 });

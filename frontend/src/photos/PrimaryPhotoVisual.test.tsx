@@ -1,30 +1,55 @@
+import type { ReactElement } from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { PrimaryPhotoVisual } from "./PrimaryPhotoVisual";
 
-afterEach(cleanup);
+let auth: AuthContextValue;
+function renderVisual(ui: ReactElement) {
+  return render(<AuthContext.Provider value={auth}>{ui}</AuthContext.Provider>);
+}
+function mockImageFetch() {
+  return vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValue(
+      new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+    );
+}
+beforeEach(async () => {
+  auth = (await acquireTestAuth()).auth;
+});
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
-test("local primary uses only its fixed protected thumbnail and falls back on failure", () => {
+test("local primary uses only its fixed protected thumbnail and falls back on failure", async () => {
   const url = "/api/v1/collection-photos/local/photo-1/thumbnail";
-  render(
+  const fetch = mockImageFetch();
+  renderVisual(
     <PrimaryPhotoVisual
       photo={{ kind: "local", photo_id: "photo-1", thumbnail_url: url }}
       label="Seed lot A"
       compact
     />,
   );
-  const image = screen.getByRole("img", {
+  const image = await screen.findByRole("img", {
     name: "Primary photo for Seed lot A",
   });
-  expect(image).toHaveAttribute("src", url);
+  expect(image.getAttribute("src")).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenCalledWith(
+    url,
+    expect.objectContaining({ credentials: "same-origin" }),
+  );
   expect(image).toHaveAttribute("loading", "lazy");
   fireEvent.error(image);
   expect(screen.getByText("Primary photo unavailable")).toBeVisible();
 });
 
 test("external primary remains a neutral indicator with no remote request", () => {
-  render(
+  renderVisual(
     <PrimaryPhotoVisual
       photo={{ kind: "external", photo_id: "photo-2", thumbnail_url: null }}
       label="Plant B"
@@ -35,7 +60,7 @@ test("external primary remains a neutral indicator with no remote request", () =
 });
 
 test("no primary has no image or inferred fallback", () => {
-  const { container } = render(
+  const { container } = renderVisual(
     <PrimaryPhotoVisual photo={null} label="Group C" />,
   );
   expect(container).toBeEmptyDOMElement();
@@ -47,7 +72,7 @@ test.each([
 ])(
   "neutral directory slot never loads an absent or external image",
   (photo) => {
-    const { container } = render(
+    const { container } = renderVisual(
       <PrimaryPhotoVisual
         photo={photo}
         label="Record"
@@ -61,8 +86,9 @@ test.each([
   },
 );
 
-test("failed local directory thumbnail keeps its neutral slot", () => {
-  const { container } = render(
+test("failed local directory thumbnail keeps its neutral slot", async () => {
+  mockImageFetch();
+  const { container } = renderVisual(
     <PrimaryPhotoVisual
       photo={{
         kind: "local",
@@ -74,13 +100,14 @@ test("failed local directory thumbnail keeps its neutral slot", () => {
       fallback="neutral"
     />,
   );
-  fireEvent.error(screen.getByRole("img"));
+  fireEvent.error(await screen.findByRole("img"));
   expect(screen.queryByRole("img")).not.toBeInTheDocument();
   expect(container.querySelector("[aria-hidden=true]")).toBeInTheDocument();
 });
 
-test("saved external primary uses its protected snapshot for activity visuals", () => {
-  render(
+test("saved external primary uses its protected snapshot for activity visuals", async () => {
+  const fetch = mockImageFetch();
+  renderVisual(
     <PrimaryPhotoVisual
       label="Plant"
       photo={{
@@ -90,8 +117,10 @@ test("saved external primary uses its protected snapshot for activity visuals", 
       }}
     />,
   );
-  expect(screen.getByRole("img")).toHaveAttribute(
-    "src",
+  const img = await screen.findByRole("img");
+  expect(img.getAttribute("src")).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenCalledWith(
     "/api/v1/media-assets/external/thumbnail?v=1",
+    expect.objectContaining({ credentials: "same-origin" }),
   );
 });

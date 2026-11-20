@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { StatusBadge } from "../components/WorkspaceUI";
 import { ActivityPage } from "../components/ActivityPage";
@@ -29,6 +29,9 @@ import {
 
 export function HistoryScreen() {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [filters, setFilters] = useState(readHistoryState);
   const [offset, setOffset] = useState(0);
   const [attempt, setAttempt] = useState(0);
@@ -69,23 +72,25 @@ export function HistoryScreen() {
     };
   }, [reset]);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void getHistory(filters, offset, controller.signal)
+    void getHistory(filters, offset, capability, controller.signal)
       .then((response) => {
         if (!controller.signal.aborted) {
           setResult({ filters, offset, attempt, data: response, error: false });
         }
       })
       .catch((failure: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
         if (failure instanceof ApiError && failure.status === 401)
-          auth.sessionExpired();
+          sessionExpired();
         else setResult({ filters, offset, attempt, data: null, error: true });
       });
     return () => {
       controller.abort();
     };
-  }, [filters, offset, attempt, auth]);
+  }, [authorized, capability, filters, offset, attempt, sessionExpired]);
   function update(next: HistoryState, typing = false) {
     const hash = historyHash(next);
     if (window.location.hash !== hash) {

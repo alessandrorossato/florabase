@@ -3,7 +3,7 @@ import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { useEffect, useMemo, useState } from "react";
 
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { ActivityPage } from "../components/ActivityPage";
 import "./activity.css";
@@ -37,6 +37,9 @@ type State =
 
 export function GlobalEventsScreen() {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [state, setState] = useState<State>({ status: "loading" });
   const view = useDirectoryView("events");
   const filter = view.state.category;
@@ -46,25 +49,26 @@ export function GlobalEventsScreen() {
 
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     void Promise.all([
-      listGlobalEvents(controller.signal),
-      listJournalRootingObservations(controller.signal),
+      listGlobalEvents(capability, controller.signal),
+      listJournalRootingObservations(capability, controller.signal),
     ])
       .then(([events, rooting]) => {
         if (!controller.signal.aborted)
           setState({ status: "ready", events, rooting });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setState({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [attempt, auth]);
+  }, [attempt, authorized, capability, sessionExpired]);
 
   const visible = useMemo(
     () =>

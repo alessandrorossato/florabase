@@ -5,19 +5,33 @@ import {
 } from "./components/recordNavigation";
 import { RecordPresentationProvider } from "./components/RecordPresentationProvider";
 import {
+  Fragment,
   lazy,
   Suspense,
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
+  type RefObject,
+  type SyntheticEvent,
 } from "react";
 
 import type { components } from "./api/schema";
+import {
+  isPresentationRetainedState,
+  isReauthenticationState,
+} from "./auth/api";
 import { AuthProvider } from "./auth/AuthProvider";
-import { PasswordChangeContext, useAuth } from "./auth/context";
+import {
+  PasswordChangeContext,
+  type RetainedOwnerIdentity,
+  useAuth,
+} from "./auth/context";
 import { LoginForm } from "./auth/LoginForm";
+import { FieldLabel } from "./components/FieldLabel";
+import { TaskDialog } from "./components/TaskDialog";
 import { WorkspaceBoundary } from "./components/WorkspaceBoundary";
 import { loadWorkspaceChunk } from "./components/workspaceChunk";
 import { isFreshDirectoryNavigation } from "./components/recordNavigation";
@@ -347,7 +361,13 @@ function WorkspaceLoading() {
   );
 }
 
-function ApplicationShell() {
+function ApplicationShell({
+  appContentRef,
+  onWorkspaceFocus,
+}: {
+  appContentRef: RefObject<HTMLElement | null>;
+  onWorkspaceFocus: (target: HTMLElement) => void;
+}) {
   const auth = useAuth();
   const state = auth.state;
   const passwordChange = useContext(PasswordChangeContext);
@@ -446,14 +466,13 @@ function ApplicationShell() {
     };
   }, []);
 
-  if (
-    state.status !== "authenticated" &&
-    state.status !== "logging-out" &&
-    state.status !== "logout-failed"
-  ) {
+  if (!isPresentationRetainedState(state)) {
     return null;
   }
-  const signedInAs = state.session.display_name ?? state.session.login_name;
+  const ownerIdentity = isReauthenticationState(state)
+    ? state.retainedIdentity
+    : state.session;
+  const signedInAs = ownerIdentity.display_name ?? ownerIdentity.login_name;
 
   return (
     <WorkbenchShell
@@ -470,8 +489,14 @@ function ApplicationShell() {
       onNavigate={navigateTo}
     >
       <section
+        ref={appContentRef}
         aria-label="Workspace content"
         className="app-content"
+        onFocusCapture={(event) => {
+          if (event.target instanceof HTMLElement) {
+            onWorkspaceFocus(event.target);
+          }
+        }}
         onClick={(event) => {
           if (
             event.defaultPrevented ||
@@ -694,9 +719,168 @@ function ApplicationShell() {
   );
 }
 
+function ReauthenticationDialog({
+  retainedIdentity,
+  submitting,
+  message,
+  returnFocusTo,
+  fallbackFocusTo,
+}: {
+  retainedIdentity: RetainedOwnerIdentity;
+  submitting: boolean;
+  message?: string;
+  returnFocusTo: RefObject<HTMLElement | null>;
+  fallbackFocusTo: RefObject<HTMLElement | null>;
+}) {
+  const auth = useAuth();
+  const [password, setPassword] = useState("");
+  const submittedOnce = useRef(false);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+
+  useLayoutEffect(() => {
+    const fallbackEl = fallbackFocusTo.current;
+    const returnTarget = returnFocusTo.current;
+    const shell =
+      fallbackEl?.closest<HTMLElement>(".application-shell") ?? null;
+    if (!shell) return;
+    shell.hidden = true;
+    shell.inert = true;
+    shell.setAttribute("inert", "");
+    shell.setAttribute("aria-hidden", "true");
+    return () => {
+      shell.hidden = false;
+      shell.inert = false;
+      shell.removeAttribute("inert");
+      shell.removeAttribute("aria-hidden");
+      if (fallbackEl && !returnTarget?.isConnected && fallbackEl.tabIndex < 0) {
+        fallbackEl.tabIndex = -1;
+      }
+    };
+  }, [fallbackFocusTo, returnFocusTo]);
+
+  useEffect(() => {
+    if (message && submittedOnce.current) errorRef.current?.focus();
+  }, [message]);
+
+  async function submit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const loginNameValue = form.get("login_name");
+    const loginName = typeof loginNameValue === "string" ? loginNameValue : "";
+    const submittedPassword = password;
+    submittedOnce.current = true;
+    setPassword("");
+    await auth.reauthenticate?.({
+      login_name: loginName,
+      password: submittedPassword,
+    });
+  }
+
+  return (
+    <TaskDialog
+      id="reauth-dialog"
+      title="Session expired — sign in again"
+      onClose={() => {
+        // Explicit reauthentication or discard is required; Escape must not dismiss or discard.
+      }}
+      dismissOnBackdrop={false}
+      returnFocusTo={returnFocusTo}
+      fallbackFocusTo={fallbackFocusTo}
+      modal
+    >
+      <div className="dialog-body">
+        <p className="eyebrow">Reauthentication required</p>
+        <h3>Session expired — sign in again</h3>
+        <p className="intro">
+          Signed in previously as{" "}
+          <strong>
+            {retainedIdentity.display_name ?? retainedIdentity.login_name}
+          </strong>
+          . Your unsaved edits stay preserved while you sign in again or discard
+          them.
+        </p>
+        <form
+          key={retainedIdentity.user_id}
+          aria-busy={submitting}
+          onSubmit={(event) => {
+            void submit(event);
+          }}
+        >
+          <div className="field">
+            <FieldLabel required htmlFor="reauth-login-name">
+              Login name
+            </FieldLabel>
+            <input
+              id="reauth-login-name"
+              name="login_name"
+              defaultValue={retainedIdentity.login_name}
+              autoComplete="username"
+              required
+              disabled={submitting}
+            />
+          </div>
+          <div className="field">
+            <FieldLabel required htmlFor="reauth-password">
+              Password
+            </FieldLabel>
+            <input
+              id="reauth-password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              disabled={submitting}
+              value={password}
+              onChange={(event) => {
+                setPassword(event.currentTarget.value);
+              }}
+            />
+          </div>
+          {message && (
+            <p
+              className="notice notice--error"
+              role="alert"
+              ref={errorRef}
+              tabIndex={-1}
+            >
+              {message}
+            </p>
+          )}
+          <div className="actions">
+            <button type="submit" disabled={submitting}>
+              {submitting ? "Signing in…" : "Sign in"}
+            </button>
+            <button
+              type="button"
+              className="button--secondary"
+              disabled={submitting}
+              onClick={() => {
+                void auth.discardRetainedSession?.();
+              }}
+            >
+              Discard unsaved changes and sign out
+            </button>
+          </div>
+        </form>
+      </div>
+    </TaskDialog>
+  );
+}
+
 function AuthenticatedApplication() {
   const auth = useAuth();
   const state = auth.state;
+  const lastWorkspaceFocus = useRef<HTMLElement | null>(null);
+  const workspaceFallbackFocus = useRef<HTMLElement | null>(null);
+  const reauthRequired = isReauthenticationState(state);
+  const recordWorkspaceFocus = useCallback(
+    (target: HTMLElement) => {
+      if (!reauthRequired && !target.closest("#reauth-dialog")) {
+        lastWorkspaceFocus.current = target;
+      }
+    },
+    [reauthRequired],
+  );
 
   if (state.status === "restoring") {
     return (
@@ -731,8 +915,9 @@ function AuthenticatedApplication() {
   }
 
   if (
-    state.status === "unauthenticated" ||
-    state.status === "submitting-login"
+    (state.status === "unauthenticated" ||
+      state.status === "submitting-login") &&
+    !reauthRequired
   ) {
     return (
       <section aria-labelledby="page-title" className="card">
@@ -744,7 +929,27 @@ function AuthenticatedApplication() {
     );
   }
 
-  return <ApplicationShell />;
+  return (
+    <>
+      <Fragment key={auth.workspaceKey ?? 0}>
+        <ApplicationShell
+          appContentRef={workspaceFallbackFocus}
+          onWorkspaceFocus={recordWorkspaceFocus}
+        />
+      </Fragment>
+      {isReauthenticationState(state) && (
+        <ReauthenticationDialog
+          retainedIdentity={state.retainedIdentity}
+          submitting={state.status === "submitting-login"}
+          message={
+            state.status === "unauthenticated" ? state.message : undefined
+          }
+          returnFocusTo={lastWorkspaceFocus}
+          fallbackFocusTo={workspaceFallbackFocus}
+        />
+      )}
+    </>
+  );
 }
 
 export function App() {

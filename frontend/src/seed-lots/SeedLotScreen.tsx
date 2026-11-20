@@ -63,7 +63,12 @@ import { RecordTimeline } from "../timeline/RecordTimeline";
 import { LineageStrip } from "../lineage/LineageStrip";
 import "./seed-refinement.css";
 
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isExpectedAuthCancellation,
+  isPresentationRetainedState,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   conflictExistingId,
@@ -307,24 +312,32 @@ function ContextDialog({
 }
 
 function RelatedSowings({ seedLotId }: { seedLotId: string }) {
+  const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const recordName = useRecordName();
 
   const [sowings, setSowings] = useState<SowingResponse[] | null>(null);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void listSowings(controller.signal)
+    void listSowings(capability, controller.signal)
       .then((items) => {
         setSowings(
           items.filter(({ seed_lot_id }) => seed_lot_id === seedLotId),
         );
       })
-      .catch(() => {
-        if (!controller.signal.aborted) setSowings([]);
+      .catch((error: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
+        else setSowings([]);
       });
     return () => {
       controller.abort();
     };
-  }, [seedLotId]);
+  }, [seedLotId, authorized, capability, sessionExpired]);
   if (sowings === null) return <p role="status">Loading Sowings…</p>;
   if (!sowings.length)
     return <DetailEmptyState>No sowings yet.</DetailEmptyState>;
@@ -374,26 +387,26 @@ function Detail({
 }) {
   const recordName = useRecordName();
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [transaction, setTransaction] = useState<OrderDetail | null>(null);
   useEffect(() => {
-    if (!lot.order_id) return;
+    if (!lot.order_id || !authorized) return;
     const controller = new AbortController();
-    getOrder(lot.order_id, 0, controller.signal)
+    getOrder(lot.order_id, 0, capability, controller.signal)
       .then((order) => {
         if (!controller.signal.aborted) setTransaction(order);
       })
       .catch((error: unknown) => {
-        if (
-          !controller.signal.aborted &&
-          error instanceof ApiError &&
-          error.status === 401
-        )
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
       });
     return () => {
       controller.abort();
     };
-  }, [lot.order_id, lot.updated_at, auth]);
+  }, [lot.order_id, lot.updated_at, authorized, capability, sessionExpired]);
   const linkedTransaction =
     transaction?.id === lot.order_id ? transaction : null;
   const summarySupplier = linkedTransaction?.supplier ?? lot.supplier;
@@ -738,6 +751,9 @@ export function SeedLotScreen({
   const recordName = useRecordName();
 
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const presentation = useDirectoryPresentation("seed_lots");
   const DirectoryItem =
     presentation.view === "list" ? DirectoryRow : DirectoryCard;
@@ -796,8 +812,7 @@ export function SeedLotScreen({
     useState<PurchaseApply | null>(null);
   const [creationPurchaseContext, setCreationPurchaseContext] =
     useState<AcquisitionContext | null>(null);
-  const creationCsrf =
-    "csrfToken" in auth.state ? auth.state.csrfToken : undefined;
+  const creationCsrf = activeCsrfToken(auth.state);
   const [orderContext, setOrderContext] = useState<OrderDetail | null>(null);
   const [orderContextError, setOrderContextError] = useState(false);
   const editBaseline = useRef("");
@@ -844,13 +859,15 @@ export function SeedLotScreen({
   }, [initialId, edit.modal]);
 
   useEffect(() => {
-    if (!initialOrderId || !startCreating || !creationCsrf) return;
+    if (!initialOrderId || !startCreating || !creationCsrf || !authorized)
+      return;
     const controller = new AbortController();
-    getOrder(initialOrderId, 0, controller.signal)
+    getOrder(initialOrderId, 0, capability, controller.signal)
       .then(async (order) => {
         const review = await previewPurchase(
           initialOrderId,
           {},
+          capability,
           controller.signal,
         );
         if (controller.signal.aborted) return;
@@ -863,6 +880,7 @@ export function SeedLotScreen({
             use_order_date: false,
           },
           creationCsrf,
+          capability,
           controller.signal,
         );
         // applyPurchase carries the same AbortSignal through the draft-only request.
@@ -872,13 +890,24 @@ export function SeedLotScreen({
         setPurchaseConfirmation(result.confirmation);
         setOrderContextError(false);
       })
-      .catch(() => {
-        if (!controller.signal.aborted) setOrderContextError(true);
+      .catch((error: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
+        else setOrderContextError(true);
       });
     return () => {
       controller.abort();
     };
-  }, [initialOrderId, startCreating, attempt, creationCsrf]);
+  }, [
+    initialOrderId,
+    startCreating,
+    attempt,
+    creationCsrf,
+    authorized,
+    capability,
+    sessionExpired,
+  ]);
   const {
     expanded: creationExpanded,
     triggerRef: creationTriggerRef,
@@ -937,14 +966,15 @@ export function SeedLotScreen({
   ]);
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     Promise.all([
-      listSeedLots(controller.signal),
-      listBotanicalIdentities(controller.signal),
-      listSuppliers(controller.signal),
-      listLocations(controller.signal),
-      listGeographicPlaces(controller.signal),
-      listProvenanceSites(controller.signal),
+      listSeedLots(capability, controller.signal),
+      listBotanicalIdentities(capability, controller.signal),
+      listSuppliers(capability, controller.signal),
+      listLocations(capability, controller.signal),
+      listGeographicPlaces(capability, controller.signal),
+      listProvenanceSites(capability, controller.signal),
     ])
       .then(([lots, identities, suppliers, locations, places, sites]) => {
         setInventory({ status: "ready", lots });
@@ -954,15 +984,15 @@ export function SeedLotScreen({
         );
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setInventory({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [auth, attempt]);
+  }, [authorized, capability, sessionExpired, attempt]);
 
   useEffect(() => {
     if (save.status === "error") feedback.current?.focus();
@@ -1128,13 +1158,8 @@ export function SeedLotScreen({
       </section>
     );
   }
-  if (
-    auth.state.status !== "authenticated" &&
-    auth.state.status !== "logging-out" &&
-    auth.state.status !== "logout-failed"
-  )
-    return null;
-  const csrfToken = auth.state.csrfToken;
+  if (!isPresentationRetainedState(auth.state)) return null;
+  const csrfToken = activeCsrfToken(auth.state);
   const pending = save.status === "saving";
 
   function startCreate() {
@@ -1186,7 +1211,7 @@ export function SeedLotScreen({
           : [...current.lots, authoritative],
       };
     });
-    const refreshed = await listSeedLots();
+    const refreshed = await listSeedLots(capability);
     setInventory({ status: "ready", lots: refreshed });
     setSelectedId(authoritative.id);
   }
@@ -1233,6 +1258,7 @@ export function SeedLotScreen({
       });
       return;
     }
+    if (!csrfToken) return;
     const wasCreating = !selected;
     setSave({ status: "saving" });
     try {
@@ -1242,15 +1268,16 @@ export function SeedLotScreen({
         payload.producer_plant_group_id = selected.producer_plant_group_id;
       }
       const lot = selected
-        ? await updateSeedLot(selected.id, payload, csrfToken)
+        ? await updateSeedLot(selected.id, payload, csrfToken, capability)
         : form.orderId && purchaseConfirmation
           ? await createPurchaseLot(
               form.orderId,
               payload,
               purchaseConfirmation,
               csrfToken,
+              capability,
             )
-          : await createSeedLot(payload, csrfToken);
+          : await createSeedLot(payload, csrfToken, capability);
       await refreshLots(lot);
       if (edit.modal) edit.close(true);
       else {
@@ -1269,11 +1296,16 @@ export function SeedLotScreen({
       if (!edit.modal)
         window.setTimeout(() => detailHeading.current?.focus(), 0);
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) {
+        setSave({ status: "idle" });
+        return;
+      }
       const orderError =
         error instanceof ApiError ? seedLotOrderError(error) : undefined;
-      if (error instanceof ApiError && error.status === 401)
-        auth.sessionExpired();
-      else if (error instanceof ApiError && error.status === 422) {
+      if (error instanceof ApiError && error.status === 401) {
+        setSave({ status: "idle" });
+        sessionExpired();
+      } else if (error instanceof ApiError && error.status === 422) {
         setSave({
           status: "error",
           messages: seedLotValidationMessages(error),
@@ -1302,7 +1334,7 @@ export function SeedLotScreen({
     event: SyntheticEvent<HTMLFormElement, SubmitEvent>,
   ) {
     event.preventDefault();
-    if (!context || contextSaving) return;
+    if (!context || contextSaving || !csrfToken) return;
     const data = new FormData(event.currentTarget);
     const value = (name: string) => {
       const item = data.get(name);
@@ -1319,8 +1351,9 @@ export function SeedLotScreen({
             common_name: value("common_name") || null,
           },
           csrfToken,
+          capability,
         );
-        const identities = await listBotanicalIdentities();
+        const identities = await listBotanicalIdentities(capability);
         setReferences((current) => current && { ...current, identities });
         setForm((current) => ({
           ...current,
@@ -1339,16 +1372,18 @@ export function SeedLotScreen({
               | "other",
           },
           csrfToken,
+          capability,
         );
-        const suppliers = await listSuppliers();
+        const suppliers = await listSuppliers(capability);
         setReferences((current) => current && { ...current, suppliers });
         setForm((current) => ({ ...current, supplierId: supplier.id }));
       } else if (context.kind === "location") {
         const location = await createLocation(
           { name: value("name"), parent_id: value("parent_id") || null },
           csrfToken,
+          capability,
         );
-        const locations = await listLocations();
+        const locations = await listLocations(capability);
         setReferences((current) => current && { ...current, locations });
         setForm((current) => ({ ...current, locationId: location.id }));
       } else {
@@ -1359,8 +1394,9 @@ export function SeedLotScreen({
             place_type: "other_named_area",
           },
           csrfToken,
+          capability,
         );
-        const places = await listGeographicPlaces();
+        const places = await listGeographicPlaces(capability);
         setReferences((current) => current && { ...current, places });
         setForm((current) => ({
           ...current,
@@ -1369,6 +1405,7 @@ export function SeedLotScreen({
       }
       closeContext();
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) return;
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();
       else if (
@@ -1379,7 +1416,7 @@ export function SeedLotScreen({
         const id = conflictExistingId(error);
         if (id) {
           try {
-            const identity = await getBotanicalIdentity(id);
+            const identity = await getBotanicalIdentity(id, capability);
             setReferences(
               (current) =>
                 current && {
@@ -2366,11 +2403,12 @@ export function SeedLotScreen({
                             selected.botanical_identity_id,
                           )}
                           onConversionChanged={() => {
-                            void listSeedLots()
+                            void listSeedLots(capability)
                               .then((lots) => {
                                 setInventory({ status: "ready", lots });
                               })
                               .catch((failure: unknown) => {
+                                if (isExpectedAuthCancellation(failure)) return;
                                 if (
                                   failure instanceof ApiError &&
                                   failure.status === 401

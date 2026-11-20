@@ -3,7 +3,11 @@ import { useEffect, useState, type SyntheticEvent } from "react";
 import { PhotoDialog } from "../photos/PhotosSection";
 import { DirectorySearch } from "../components/ReferenceUI";
 import { useAuth } from "../auth/context";
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import type { PhotoTarget } from "../photos/api";
 import { linkMedia, listMedia, type MediaAsset, type MediaPage } from "./api";
 import { MediaPreview } from "./MediaPreview";
@@ -23,6 +27,9 @@ export function MediaPicker({
   onLinked: () => void;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [query, setQuery] = useState("");
   const [offset, setOffset] = useState(0);
   const [page, setPage] = useState<MediaPage | null>(null);
@@ -31,24 +38,24 @@ export function MediaPicker({
   const [pending, setPending] = useState(false);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void listMedia({ query, offset }, controller.signal)
+    void listMedia({ query, offset }, capability, controller.signal)
       .then((value) => {
         if (!controller.signal.aborted) setPage(value);
       })
       .catch((failure: unknown) => {
-        if (!controller.signal.aborted) {
-          if (failure instanceof ApiError && failure.status === 401)
-            auth.sessionExpired();
-          else setError(mediaError(failure));
-        }
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
+        if (failure instanceof ApiError && failure.status === 401)
+          sessionExpired();
+        else setError(mediaError(failure));
       });
     return () => {
       controller.abort();
     };
-  }, [query, offset, attempt, auth]);
-  const token =
-    auth.state.status === "authenticated" ? auth.state.csrfToken : "";
+  }, [authorized, capability, query, offset, attempt, sessionExpired]);
+  const token = activeCsrfToken(auth.state);
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selected || pending) return;
@@ -65,11 +72,13 @@ export function MediaPicker({
           display_order: Number(form.get("display_order")),
         },
         token,
+        capability,
       );
       onLinked();
     } catch (failure) {
+      if (isExpectedAuthCancellation(failure)) return;
       if (failure instanceof ApiError && failure.status === 401)
-        auth.sessionExpired();
+        sessionExpired();
       else setError(mediaError(failure));
     } finally {
       setPending(false);

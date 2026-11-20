@@ -211,6 +211,19 @@ export class FixtureSchedule {
       "http://fixture.invalid",
     );
     const path = url.pathname;
+    const method = (init?.method ?? "GET").toUpperCase();
+    if (path === "/api/v1/auth/session" && method === "GET") {
+      return json({
+        user_id: fixtureId(999),
+        login_name: "synthetic",
+        display_name: "Synthetic operator",
+        owner: true,
+        canonical_origin: "http://fixture.invalid",
+      });
+    }
+    if (path === "/api/v1/auth/csrf" && method === "POST") {
+      return json({ csrf_token: "fixture-only" });
+    }
     // Fail closed: no real network request, including unknown APIs.
     if (!path.startsWith("/api/v1/schedule"))
       return failure(
@@ -232,7 +245,6 @@ export class FixtureSchedule {
       const matches = choices.filter((t) => t.label.toLowerCase().includes(q));
       return json({ items: matches, total: matches.length });
     }
-    const method = init?.method ?? "GET";
     const item = this.items.find((row) => row.id === parts[0]);
     if (method === "GET") {
       if (parts[0])
@@ -390,30 +402,3 @@ export class FixtureSchedule {
     return json(item);
   };
 }
-
-// Provides only context required by the existing picker. No login/session restoration runs.
-export const fixtureAuth: import("../../auth/context").AuthContextValue = {
-  state: {
-    status: "authenticated",
-    session: {
-      user_id: fixtureId(999),
-      login_name: "synthetic",
-      display_name: "Synthetic operator",
-      owner: true,
-      canonical_origin: "http://fixture.invalid",
-    },
-    csrfToken: "fixture-only",
-  },
-  logIn: () => Promise.reject(new Error("No authentication in this prototype")),
-  logOut: () =>
-    Promise.reject(new Error("No authentication in this prototype")),
-  sessionExpired: () => {
-    throw new Error("No live session in this prototype");
-  },
-  retryRestoration: () => {
-    throw new Error("No live session in this prototype");
-  },
-  cancelLogout: () => {
-    throw new Error("No live session in this prototype");
-  },
-};

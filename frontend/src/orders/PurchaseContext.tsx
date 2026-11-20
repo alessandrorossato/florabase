@@ -1,6 +1,8 @@
 import { ActionButton } from "../components/Action";
 import "./orders.css";
 import { useEffect, useState } from "react";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
+import { useAuth } from "../auth/context";
 import { TaskDialog } from "../components/TaskDialog";
 import {
   orderDate,
@@ -76,6 +78,10 @@ export function PurchaseContextDialog({
   onApplied: (result: PurchaseResolution) => void;
   onCancel: () => void;
 }) {
+  const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [review, setReview] = useState<PurchasePreview | null>(null);
   const [useSupplier, setUseSupplier] = useState(false);
   const [useDate, setUseDate] = useState(false);
@@ -89,10 +95,12 @@ export function PurchaseContextDialog({
     expected_seed_lot_updated_at: expectedSeedVersion,
   });
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     previewPurchase(
       orderId,
       attempt && seedLotId ? { seed_lot_id: seedLotId } : initial,
+      capability,
       controller.signal,
     )
       .then((result) => {
@@ -103,14 +111,25 @@ export function PurchaseContextDialog({
         setError("");
       })
       .catch((error: unknown) => {
-        if (!controller.signal.aborted) setError(orderError(error));
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
+        else setError(orderError(error));
       });
     return () => {
       controller.abort();
     };
-  }, [orderId, seedLotId, attempt, initial]);
+  }, [
+    orderId,
+    seedLotId,
+    attempt,
+    initial,
+    authorized,
+    capability,
+    sessionExpired,
+  ]);
   async function apply() {
-    if (!review || pending) return;
+    if (!review || pending || !csrf) return;
     setPending(true);
     setError("");
     try {
@@ -125,10 +144,13 @@ export function PurchaseContextDialog({
           use_order_date: useDate,
         },
         csrf,
+        capability,
       );
       onApplied(result);
     } catch (error: unknown) {
-      setError(orderError(error));
+      if (isExpectedAuthCancellation(error)) return;
+      if (error instanceof ApiError && error.status === 401) sessionExpired();
+      else setError(orderError(error));
     } finally {
       setPending(false);
     }
@@ -306,6 +328,10 @@ export function LinkExistingSeedLot({
   onApplied: () => void;
   onCancel: () => void;
 }) {
+  const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [q, setQ] = useState("");
   const [offset, setOffset] = useState(0);
   const [page, setPage] = useState<PurchaseSeedPage | null>(null);
@@ -316,8 +342,9 @@ export function LinkExistingSeedLot({
   const [seedLabel, setSeedLabel] = useState("");
   const key = `${q}:${String(offset)}:${String(attempt)}`;
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    purchaseChoices(orderId, q, offset, controller.signal)
+    purchaseChoices(orderId, q, offset, capability, controller.signal)
       .then((result) => {
         if (!controller.signal.aborted) {
           setPage(result);
@@ -326,7 +353,10 @@ export function LinkExistingSeedLot({
         }
       })
       .catch((error: unknown) => {
-        if (!controller.signal.aborted) {
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
+        else {
           setError(orderError(error));
           setLoaded(key);
         }
@@ -334,7 +364,16 @@ export function LinkExistingSeedLot({
     return () => {
       controller.abort();
     };
-  }, [orderId, q, offset, attempt, key]);
+  }, [
+    orderId,
+    q,
+    offset,
+    attempt,
+    key,
+    authorized,
+    capability,
+    sessionExpired,
+  ]);
   if (seedId)
     return (
       <PurchaseContextDialog

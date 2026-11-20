@@ -6,7 +6,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
 import { useBulkSelection } from "../bulk/useBulkSelection";
@@ -56,14 +60,17 @@ import {
 
 function History({ inventory }: { inventory: Inventory }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<Disposition[] | null>(null);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    if (!open) return;
+    if (!authorized || !open) return;
     const controller = new AbortController();
-    void dispositionHistory(inventory.id, controller.signal)
+    void dispositionHistory(inventory.id, capability, controller.signal)
       .then((data) => {
         if (!controller.signal.aborted) {
           setRows(data);
@@ -71,16 +78,24 @@ function History({ inventory }: { inventory: Inventory }) {
         }
       })
       .catch((failure: unknown) => {
-        if (!controller.signal.aborted) {
-          if (failure instanceof ApiError && failure.status === 401)
-            auth.sessionExpired();
-          else setError(true);
-        }
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
+        if (failure instanceof ApiError && failure.status === 401)
+          sessionExpired();
+        else setError(true);
       });
     return () => {
       controller.abort();
     };
-  }, [open, inventory.id, inventory.updated_at, attempt, auth]);
+  }, [
+    authorized,
+    capability,
+    open,
+    inventory.id,
+    inventory.updated_at,
+    attempt,
+    sessionExpired,
+  ]);
   return (
     <div className="inventory-history">
       <button
@@ -137,6 +152,9 @@ function History({ inventory }: { inventory: Inventory }) {
 export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
   const operationReturn = useRef<HTMLElement | null>(null);
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [rows, setRows] = useState<Inventory[] | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -152,8 +170,9 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
   const [pending, setPending] = useState(false);
   const handledInventoryEdit = useRef<string | null>(null);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void inventoryList(controller.signal, harvest.id)
+    void inventoryList(capability, controller.signal, harvest.id)
       .then((data) => {
         if (!controller.signal.aborted) {
           setRows(data);
@@ -161,19 +180,26 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
         }
       })
       .catch((failure: unknown) => {
-        if (!controller.signal.aborted) {
-          if (failure instanceof ApiError && failure.status === 401)
-            auth.sessionExpired();
-          else
-            setError(
-              "Could not load stored material. Retry before managing inventory.",
-            );
-        }
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
+        if (failure instanceof ApiError && failure.status === 401)
+          sessionExpired();
+        else
+          setError(
+            "Could not load stored material. Retry before managing inventory.",
+          );
       });
     return () => {
       controller.abort();
     };
-  }, [harvest.id, harvest.updated_at, attempt, auth]);
+  }, [
+    authorized,
+    capability,
+    harvest.id,
+    harvest.updated_at,
+    attempt,
+    sessionExpired,
+  ]);
   useEffect(() => {
     if (!rows) return;
     const focusInventory = () => {
@@ -215,7 +241,8 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
     try {
       await removeInventory(
         removing.id,
-        auth.state.status === "authenticated" ? auth.state.csrfToken : "",
+        activeCsrfToken(auth.state),
+        capability,
       );
       setRemoving(null);
       setNotice(
@@ -223,8 +250,9 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
       );
       setAttempt((v) => v + 1);
     } catch (failure: unknown) {
+      if (isExpectedAuthCancellation(failure)) return;
       if (failure instanceof ApiError && failure.status === 401)
-        auth.sessionExpired();
+        sessionExpired();
       else setError(inventoryError(failure));
     } finally {
       setPending(false);
@@ -486,6 +514,9 @@ export function StoredMaterialDirectory({
 }: { actions?: ReactNode } = {}) {
   const recordIdentities = useContext(RecordIdentities);
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [converting, setConverting] = useState<Inventory | null>(null);
   const [created, setCreated] = useState<Conversion | null>(null);
   const id = useId();
@@ -523,8 +554,9 @@ export function StoredMaterialDirectory({
   ]);
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void inventoryList(controller.signal)
+    void inventoryList(capability, controller.signal)
       .then((data) => {
         if (!controller.signal.aborted) {
           setRows(data);
@@ -532,16 +564,16 @@ export function StoredMaterialDirectory({
         }
       })
       .catch((failure: unknown) => {
-        if (!controller.signal.aborted) {
-          if (failure instanceof ApiError && failure.status === 401)
-            auth.sessionExpired();
-          else setError(true);
-        }
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
+        if (failure instanceof ApiError && failure.status === 401)
+          sessionExpired();
+        else setError(true);
       });
     return () => {
       controller.abort();
     };
-  }, [attempt, auth]);
+  }, [authorized, capability, attempt, sessionExpired]);
   const filtered = rows?.filter(
     (row) =>
       (!identity || row.source.botanical_identity.id === identity) &&

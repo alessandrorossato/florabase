@@ -1,16 +1,17 @@
 import type { components } from "../api/schema";
-import { requestJson } from "../auth/api";
+import { requestJson, type ProtectedRequestCapability } from "../auth/api";
 
 export type OccurrenceMapSummary =
   components["schemas"]["OccurrenceMapSummary"];
 
 export function getOccurrenceMapSummary(
   identityId: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<OccurrenceMapSummary> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(identityId)}/occurrence-map/summary`,
-    { signal },
+    { capability, signal },
   );
 }
 
@@ -21,28 +22,31 @@ export function occurrenceTileUrl(identityId: string): string {
 export type OccurrenceEvidence = components["schemas"]["OccurrenceEvidence"];
 export function getCachedOccurrenceEvidence(
   identityId: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<OccurrenceEvidence> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(identityId)}/occurrence-map/cache`,
-    { signal },
+    { capability, signal },
   );
 }
 export function refreshOccurrenceEvidence(
   identityId: string,
   csrf: string,
+  capability: ProtectedRequestCapability,
 ): Promise<OccurrenceEvidence> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(identityId)}/occurrence-map/cache`,
-    { method: "POST", headers: { "X-CSRF-Token": csrf } },
+    { capability, method: "POST", headers: { "X-CSRF-Token": csrf } },
   );
 }
 export function clearOccurrenceEvidence(
   identityId: string,
   csrf: string,
+  capability: ProtectedRequestCapability,
 ): Promise<void> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(identityId)}/occurrence-map/cache`,
-    { method: "DELETE", headers: { "X-CSRF-Token": csrf } },
+    { capability, method: "DELETE", headers: { "X-CSRF-Token": csrf } },
   );
 }

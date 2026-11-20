@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { getNativeSelection, type SelectedRanges } from "../native-ranges/api";
 import { loadGeometry } from "../native-ranges/geometry";
@@ -12,6 +12,9 @@ import "../native-ranges/native-ranges.css";
 
 export function IdentityNativeRange({ id }: { id: string }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<{
     data?: SelectedRanges;
@@ -23,26 +26,35 @@ export function IdentityNativeRange({ id }: { id: string }) {
   });
   useEffect(() => {
     const controller = new AbortController();
-    void getNativeSelection(
-      id,
-      { q: "", scope: "all", withRange: false, record: [...recordCategories] },
-      0,
-      controller.signal,
-    )
-      .then((data) => {
-        if (!controller.signal.aborted) setResult({ data });
-      })
-      .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
-        else
-          setResult(
-            error instanceof ApiError && error.status === 404
-              ? { missing: true }
-              : { failed: true },
-          );
-      });
+    if (authorized) {
+      void getNativeSelection(
+        id,
+        {
+          q: "",
+          scope: "all",
+          withRange: false,
+          record: [...recordCategories],
+        },
+        0,
+        capability,
+        controller.signal,
+      )
+        .then((data) => {
+          if (!controller.signal.aborted) setResult({ data });
+        })
+        .catch((error: unknown) => {
+          if (controller.signal.aborted || isExpectedAuthCancellation(error))
+            return;
+          if (error instanceof ApiError && error.status === 401)
+            sessionExpired();
+          else
+            setResult(
+              error instanceof ApiError && error.status === 404
+                ? { missing: true }
+                : { failed: true },
+            );
+        });
+    }
     void loadGeometry()
       .then((data) => {
         if (!controller.signal.aborted) setGeometry({ status: "ready", data });
@@ -53,7 +65,7 @@ export function IdentityNativeRange({ id }: { id: string }) {
     return () => {
       controller.abort();
     };
-  }, [id, attempt, auth]);
+  }, [authorized, capability, id, attempt, sessionExpired]);
   function retry() {
     setResult(null);
     setGeometry({ status: "loading" });

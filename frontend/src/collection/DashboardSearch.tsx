@@ -3,7 +3,7 @@ import { ActionButton } from "../components/Action";
 import { saveSearchState } from "../saved-views/state";
 import { useEffect, useRef, useState } from "react";
 
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { TaskDialog } from "../components/TaskDialog";
 import { listBotanicalIdentities } from "../botanical-identities/api";
@@ -89,6 +89,9 @@ function mergeResults(
 
 export function useDashboardSearch() {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [state, setState] = useState<SearchState>(readSearchState);
   const [response, setResponse] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState(activeSearch(readSearchState()));
@@ -129,20 +132,21 @@ export function useDashboardSearch() {
   }, []);
 
   useEffect(() => {
-    if (!active) return;
+    if (!authorized || !active) return;
     const controller = new AbortController();
     const timer = window.setTimeout(
       () => {
-        void getSearch(state, offset, controller.signal)
+        void getSearch(state, offset, capability, controller.signal)
           .then((next) => {
             if (controller.signal.aborted) return;
             setResponse((current) => mergeResults(current, next));
             setLoading(false);
           })
           .catch((reason: unknown) => {
-            if (controller.signal.aborted) return;
+            if (controller.signal.aborted || isExpectedAuthCancellation(reason))
+              return;
             if (reason instanceof ApiError && reason.status === 401)
-              auth.sessionExpired();
+              sessionExpired();
             else {
               setError(true);
               setLoading(false);
@@ -155,18 +159,22 @@ export function useDashboardSearch() {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [state, offset, attempt, active, auth]);
+  }, [authorized, capability, state, offset, attempt, active, sessionExpired]);
 
   useEffect(() => {
-    if ((!filtersOpen && !hasReferenceFilter) || references.status !== "idle")
+    if (
+      !authorized ||
+      (!filtersOpen && !hasReferenceFilter) ||
+      references.status !== "idle"
+    )
       return;
     const controller = new AbortController();
     void Promise.all([
-      listBotanicalIdentities(controller.signal),
-      listLocations(controller.signal),
-      listSuppliers(controller.signal),
-      listGeographicPlaces(controller.signal),
-      listProvenanceSites(controller.signal),
+      listBotanicalIdentities(capability, controller.signal),
+      listLocations(capability, controller.signal),
+      listSuppliers(capability, controller.signal),
+      listGeographicPlaces(capability, controller.signal),
+      listProvenanceSites(capability, controller.signal),
     ])
       .then(([identities, locations, suppliers, places, sites]) => {
         if (controller.signal.aborted) return;
@@ -194,20 +202,23 @@ export function useDashboardSearch() {
         });
       })
       .catch((reason: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(reason))
+          return;
         if (reason instanceof ApiError && reason.status === 401)
-          auth.sessionExpired();
+          sessionExpired();
         else setReferences({ status: "error" });
       });
     return () => {
       controller.abort();
     };
   }, [
+    authorized,
+    capability,
     filtersOpen,
     hasReferenceFilter,
     references.status,
     referenceAttempt,
-    auth,
+    sessionExpired,
   ]);
 
   function apply(next: SearchState, typing = false) {

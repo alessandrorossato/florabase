@@ -11,6 +11,7 @@ import { useState, type ReactNode } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { ApiError } from "../auth/api";
 import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
 import { setRecordRoute } from "../components/recordNavigation";
 import { SavedViews } from "./SavedViews";
@@ -18,24 +19,12 @@ import * as api from "./api";
 import { useDirectoryView } from "./useDirectoryView";
 
 const id = "01900000-0000-7000-8000-000000000001";
-const auth: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    session: {
-      user_id: id,
-      login_name: "owner",
-      display_name: null,
-      owner: true,
-      canonical_origin: "http://localhost",
-    },
-    csrfToken: "csrf",
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired: vi.fn(),
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
+beforeEach(async () => {
+  auth = (
+    await acquireTestAuth({ session: { user_id: id }, csrfToken: "csrf" })
+  ).auth;
+});
 function view(overrides: Partial<api.SavedView> = {}): api.SavedView {
   return {
     id,
@@ -145,6 +134,7 @@ test("default directory has compact access and only meaningful state allows Save
       state: { q: "basil" },
     },
     "csrf",
+    auth.capability,
   );
   expect(
     await screen.findByRole("button", { name: "Open Basil view" }),
@@ -237,6 +227,7 @@ test("manual edits never auto-save; explicit rename and update preserve view ide
       id,
       { name: "Fresh mint" },
       "csrf",
+      auth.capability,
     );
   });
   await user.click(
@@ -254,6 +245,7 @@ test("manual edits never auto-save; explicit rename and update preserve view ide
       id,
       { state_version: 1, state: { q: "mint" } },
       "csrf",
+      auth.capability,
     );
   });
 });
@@ -283,7 +275,7 @@ test("delete asks confirmation, removes only the shortcut, and permits future-st
     within(dialog).getByRole("button", { name: "Delete Saved View" }),
   );
   expect(await screen.findByText(/No Saved Views yet/)).toBeVisible();
-  expect(api.deleteSavedView).toHaveBeenCalledWith(id, "csrf");
+  expect(api.deleteSavedView).toHaveBeenCalledWith(id, "csrf", auth.capability);
   expect(
     screen.queryByRole("button", { name: "Open Basil view" }),
   ).not.toBeInTheDocument();
@@ -308,6 +300,7 @@ test("Dashboard access lists multiple surfaces and opens another ordinary route"
   const panel = await screen.findByRole("region", { name: "All Saved Views" });
   expect(api.listSavedViews).toHaveBeenCalledWith(
     undefined,
+    auth.capability,
     expect.any(AbortSignal),
     0,
   );
@@ -368,12 +361,14 @@ test("bounded pages append on request and a failed page retries without skipping
   expect(api.listSavedViews).toHaveBeenNthCalledWith(
     2,
     "seed_lots",
+    auth.capability,
     expect.any(AbortSignal),
     100,
   );
   expect(api.listSavedViews).toHaveBeenNthCalledWith(
     3,
     "seed_lots",
+    auth.capability,
     expect.any(AbortSignal),
     100,
   );
@@ -439,4 +434,39 @@ test("toolbar presentation preserves all-surface routing and restores focus on d
   );
   expect(window.location.hash).toBe("#/seeds?q=basil&lifecycle=history");
   expect(screen.queryByRole("dialog", { name: "Saved views" })).toBeNull();
+});
+
+test("logout-failed blocks SavedViews CSRF mutations and suspends background reads", async () => {
+  const user = userEvent.setup();
+  vi.mocked(api.listSavedViews).mockResolvedValue([view()]);
+  const createSpy = vi.spyOn(api, "createSavedView");
+  const updateSpy = vi.spyOn(api, "updateSavedView");
+  const deleteSpy = vi.spyOn(api, "deleteSavedView");
+  const logoutFailedAuth: AuthContextValue = {
+    ...auth,
+    state: {
+      status: "logout-failed",
+      session: {
+        user_id: id,
+        login_name: "owner",
+        display_name: "Owner",
+        owner: true,
+        canonical_origin: "http://localhost:15174",
+      },
+      csrfToken: "stale-logout-csrf",
+      message: "Sign out failed.",
+    },
+  };
+  render(
+    <AuthContext.Provider value={logoutFailedAuth}>
+      <SavedViews surface="seed_lots" state={{ q: "basil" }} />
+    </AuthContext.Provider>,
+  );
+  const toggle = screen.getByRole("button", { name: "Saved views" });
+  await user.click(toggle);
+  // While status is logout-failed, authorized is false -> Save view stays disabled and listSavedViews is not dispatched.
+  expect(api.listSavedViews).not.toHaveBeenCalled();
+  expect(createSpy).not.toHaveBeenCalled();
+  expect(updateSpy).not.toHaveBeenCalled();
+  expect(deleteSpy).not.toHaveBeenCalled();
 });

@@ -1,3 +1,5 @@
+import { AuthContext } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { useDirectoryPagination } from "./useDirectoryPagination";
 import { DirectoryResults } from "./DirectoryResults";
 import { LifecycleStatus, StatusBadge } from "./WorkspaceUI";
@@ -244,29 +246,37 @@ test("gallery has an honest missing image and preserves scientific/cultivar form
   expect(link.querySelector("i")?.textContent).not.toContain("Tricolor");
 });
 
-test("domain photo fallback is retained inside the shared card", () => {
-  render(
-    <DirectoryRecords label="Photos" view="gallery">
-      <DirectoryCard
-        label="Aloe"
-        name="Aloe"
-        href="#/plants/one"
-        metadata="Location unknown"
-        onPreview={() => undefined}
-        visual={
-          <PrimaryPhotoVisual
-            label="Aloe"
-            photo={{
-              photo_id: "one",
-              kind: "local",
-              thumbnail_url: "/api/v1/collection-photos/one/thumbnail",
-            }}
-          />
-        }
-      />
-    </DirectoryRecords>,
+test("domain photo fallback is retained inside the shared card", async () => {
+  const { auth } = await acquireTestAuth();
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
   );
-  fireEvent.error(screen.getByRole("img", { name: "Primary photo for Aloe" }));
+  render(
+    <AuthContext.Provider value={auth}>
+      <DirectoryRecords label="Photos" view="gallery">
+        <DirectoryCard
+          label="Aloe"
+          name="Aloe"
+          href="#/plants/one"
+          metadata="Location unknown"
+          onPreview={() => undefined}
+          visual={
+            <PrimaryPhotoVisual
+              label="Aloe"
+              photo={{
+                photo_id: "one",
+                kind: "local",
+                thumbnail_url: "/api/v1/collection-photos/one/thumbnail",
+              }}
+            />
+          }
+        />
+      </DirectoryRecords>
+    </AuthContext.Provider>,
+  );
+  fireEvent.error(
+    await screen.findByRole("img", { name: "Primary photo for Aloe" }),
+  );
   expect(screen.getByText("Primary photo unavailable")).toBeInTheDocument();
   expect(screen.queryByRole("img")).not.toBeInTheDocument();
 });

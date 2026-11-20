@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { OriginRecords } from "../provenance-map/OriginInspector";
 import "../provenance-map/origins.css";
@@ -16,13 +16,16 @@ export function SiteSourceRecords({
   hasCoordinates: boolean;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [records, setRecords] = useState<ProvenanceMapRecord[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    if (!hasCoordinates) return;
+    if (!authorized || !hasCoordinates) return;
     const controller = new AbortController();
-    void getCollectionProvenanceMap(controller.signal)
+    void getCollectionProvenanceMap(capability, controller.signal)
       .then((data) => {
         if (!controller.signal.aborted)
           setRecords(
@@ -30,15 +33,15 @@ export function SiteSourceRecords({
           );
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setFailed(true);
       });
     return () => {
       controller.abort();
     };
-  }, [siteId, hasCoordinates, auth, attempt]);
+  }, [authorized, capability, siteId, hasCoordinates, sessionExpired, attempt]);
   return (
     <section className="record-section" aria-label="Linked source records">
       <h4>Linked source records</h4>

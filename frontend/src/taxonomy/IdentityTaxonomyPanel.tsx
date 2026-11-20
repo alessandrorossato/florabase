@@ -1,6 +1,10 @@
 import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useState } from "react";
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   getBotanicalIdentity,
@@ -32,7 +36,10 @@ export function IdentityTaxonomyPanel({
   onIdentityRefreshed?: (identity: BotanicalIdentityResponse) => void;
 }) {
   const auth = useAuth();
-  const csrfToken = "csrfToken" in auth.state ? auth.state.csrfToken : null;
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
+  const csrfToken = activeCsrfToken(auth.state);
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<{
     key: string;
@@ -56,42 +63,45 @@ export function IdentityTaxonomyPanel({
   const identityVersion = reviewedIdentity?.updated_at ?? updatedAt;
   const key = `${identityId}:${identityVersion}:${String(attempt)}`;
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void getIdentityTaxonomy(identityId, controller.signal)
+    void getIdentityTaxonomy(identityId, capability, controller.signal)
       .then((data) => {
         if (!controller.signal.aborted) setResult({ key, data });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setResult({ key, failed: true });
       });
     return () => {
       controller.abort();
     };
-  }, [identityId, key, auth]);
+  }, [authorized, capability, identityId, key, sessionExpired]);
   useEffect(() => {
-    if (!submitted) return;
+    if (!authorized || !submitted) return;
     const controller = new AbortController();
-    void searchCandidates(identityId, submitted.query, controller.signal)
+    void searchCandidates(
+      identityId,
+      submitted.query,
+      capability,
+      controller.signal,
+    )
       .then((data) => {
         if (!controller.signal.aborted) setCandidates(data);
       })
       .catch((error: unknown) => {
-        if (!controller.signal.aborted) {
-          if (error instanceof ApiError && error.status === 401)
-            auth.sessionExpired();
-          else
-            setError(
-              "Could not search the local taxonomy source. Retry search.",
-            );
-        }
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
+        else
+          setError("Could not search the local taxonomy source. Retry search.");
       });
     return () => {
       controller.abort();
     };
-  }, [identityId, submitted, auth]);
+  }, [authorized, capability, identityId, submitted, sessionExpired]);
   const current = result?.key === key ? result : null;
   const data = current?.data;
   const link = data?.link;
@@ -109,7 +119,8 @@ export function IdentityTaxonomyPanel({
     setError(null);
     setNotice(null);
     try {
-      if (remove && link) await unlink(identityId, link.version, csrfToken);
+      if (remove && link)
+        await unlink(identityId, link.version, csrfToken, capability);
       else if (candidate && data.source)
         await confirmLink(
           identityId,
@@ -120,6 +131,7 @@ export function IdentityTaxonomyPanel({
             identity_updated_at: identityVersion,
           },
           csrfToken,
+          capability,
         );
       setCandidate(null);
       setCandidates(null);
@@ -132,8 +144,8 @@ export function IdentityTaxonomyPanel({
           : "Taxonomy link confirmed. Botanical identity names are unchanged.",
       );
     } catch (error: unknown) {
-      if (error instanceof ApiError && error.status === 401)
-        auth.sessionExpired();
+      if (isExpectedAuthCancellation(error)) return;
+      if (error instanceof ApiError && error.status === 401) sessionExpired();
       else {
         if (error instanceof ApiError && error.status === 409)
           setConflict(true);
@@ -151,7 +163,7 @@ export function IdentityTaxonomyPanel({
     if (busy) return;
     setBusy(true);
     try {
-      const identity = await getBotanicalIdentity(identityId);
+      const identity = await getBotanicalIdentity(identityId, capability);
       setRefreshed({ original: updatedAt, identity });
       onIdentityRefreshed?.(identity);
       setQuery(identity.scientific_name);

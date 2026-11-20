@@ -2,7 +2,12 @@ import { ActionButton } from "../components/Action";
 import { firstValidationField } from "../components/formValidation";
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isExpectedAuthCancellation,
+  isPresentationRetainedState,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { FormSections } from "../components/FormSections";
 import { BotanicalNativeRangeManager } from "./BotanicalNativeRangeManager";
@@ -78,6 +83,9 @@ export function BotanicalProfilePanel({
   onEditStateChange?: (dirty: boolean, pending: boolean) => void;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [loadState, setLoadState] = useState<LoadState>({ status: "loading" });
   const [saveState, setSaveState] = useState<SaveState>({ status: "idle" });
   const [values, setValues] = useState<ProfileValues>(emptyValues);
@@ -87,16 +95,18 @@ export function BotanicalProfilePanel({
   const editTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void getBotanicalProfile(identityId, controller.signal)
+    void getBotanicalProfile(identityId, capability, controller.signal)
       .then((profile) => {
         setValues(valuesFromProfile(profile));
         setLoadState({ status: "ready", profile });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) {
-          auth.sessionExpired();
+          sessionExpired();
         } else if (error instanceof ApiError && isProfileNotFound(error)) {
           setValues(emptyValues);
           setLoadState({ status: "ready", profile: null });
@@ -111,7 +121,7 @@ export function BotanicalProfilePanel({
     return () => {
       controller.abort();
     };
-  }, [auth, identityId, loadAttempt]);
+  }, [authorized, capability, sessionExpired, identityId, loadAttempt]);
 
   useEffect(() => {
     if (saveState.status === "error") feedbackRef.current?.focus();
@@ -127,22 +137,23 @@ export function BotanicalProfilePanel({
     );
   }, [editing, loadState, values, saveState.status, onEditStateChange]);
 
-  if (
-    auth.state.status !== "authenticated" &&
-    auth.state.status !== "logging-out" &&
-    auth.state.status !== "logout-failed"
-  ) {
+  if (!isPresentationRetainedState(auth.state)) {
     return null;
   }
-  const csrfToken = auth.state.csrfToken;
+  const csrfToken = activeCsrfToken(auth.state);
 
   async function save(event: SyntheticEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
-    if (saveState.status === "saving") return;
+    if (saveState.status === "saving" || !csrfToken) return;
     setSaveState({ status: "saving" });
     const payload: BotanicalProfilePut = { ...values };
     try {
-      const profile = await putBotanicalProfile(identityId, payload, csrfToken);
+      const profile = await putBotanicalProfile(
+        identityId,
+        payload,
+        csrfToken,
+        capability,
+      );
       if (profile === undefined) {
         setValues(emptyValues);
         setLoadState({ status: "ready", profile: null });
@@ -161,7 +172,8 @@ export function BotanicalProfilePanel({
       });
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401) {
-        auth.sessionExpired();
+        setSaveState({ status: "idle" });
+        sessionExpired();
       } else if (error instanceof ApiError && error.status === 422) {
         setSaveState({
           status: "error",

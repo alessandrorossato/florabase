@@ -12,6 +12,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../auth/context";
 import { ApiError } from "../auth/api";
+import { acquireTestAuth } from "../test/auth";
 import { RecordIdentities } from "../components/recordPresentation";
 import { HarvestScreen } from "./HarvestScreen";
 import { HarvestForm } from "./HarvestForm";
@@ -80,24 +81,7 @@ vi.mock("../photos/PhotosSection", () => ({
     </section>
   ),
 }));
-const auth: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    csrfToken: "token",
-    session: {
-      user_id: "owner-id",
-      login_name: "owner",
-      display_name: null,
-      owner: true,
-      canonical_origin: "http://localhost",
-    },
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired: vi.fn(),
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
 const harvest: Harvest = {
   id: "harvest-1",
   plant_id: "plant-1",
@@ -145,8 +129,20 @@ function wrap(children: React.ReactNode) {
 }
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
 });
-beforeEach(() => {
+beforeEach(async () => {
+  auth = (
+    await acquireTestAuth({
+      session: { user_id: "owner-id" },
+      csrfToken: "token",
+    })
+  ).auth;
+  vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+    Promise.resolve(
+      new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+    ),
+  );
   window.history.replaceState(null, "", "#/harvests");
   vi.clearAllMocks();
   vi.mocked(api.listHarvests).mockResolvedValue([harvest]);
@@ -191,7 +187,12 @@ describe("Harvest directory and detail", () => {
     await user.click(
       screen.getByRole("button", { name: "Set primary test image" }),
     );
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/safe-harvest.jpg");
+    const updatedImage = await screen.findByRole("img");
+    expect(updatedImage.getAttribute("src")).toMatch(/^blob:/);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "/safe-harvest.jpg",
+      expect.objectContaining({ credentials: "same-origin" }),
+    );
     await user.click(
       screen.getByRole("button", { name: "More harvest actions" }),
     );
@@ -283,6 +284,7 @@ describe("Atomic Harvest form", () => {
           ],
         }),
         "token",
+        auth.capability,
       );
     });
     expect(onSaved).toHaveBeenCalledWith(harvest);
@@ -340,6 +342,7 @@ describe("Atomic Harvest form", () => {
           ],
         }),
         "token",
+        auth.capability,
       );
     });
     await user.click(
@@ -397,6 +400,7 @@ describe("Atomic Harvest form", () => {
         items: [expect.objectContaining({ id: "item-1" })],
       }),
       "token",
+      auth.capability,
     );
   });
   it("requires a selected source rather than accepting typed search text", async () => {
@@ -430,12 +434,13 @@ it("filters exact source identity across Plants and groups and composes search/m
     },
   };
   const rows = [harvest, group, other];
-  vi.mocked(api.listHarvests).mockImplementation((_signal, identity) =>
-    Promise.resolve(
-      rows.filter(
-        (row) => !identity || row.source.botanical_identity.id === identity,
+  vi.mocked(api.listHarvests).mockImplementation(
+    (_capability, _signal, identity) =>
+      Promise.resolve(
+        rows.filter(
+          (row) => !identity || row.source.botanical_identity.id === identity,
+        ),
       ),
-    ),
   );
   const user = userEvent.setup();
   wrap(<HarvestScreen />);
@@ -450,6 +455,7 @@ it("filters exact source identity across Plants and groups and composes search/m
   await user.click(screen.getByRole("button", { name: "Done" }));
   await waitFor(() => {
     expect(api.listHarvests).toHaveBeenLastCalledWith(
+      auth.capability,
       expect.any(AbortSignal),
       "identity-1",
     );
@@ -626,6 +632,7 @@ it("saves contextual corrections and restores focus to the retained detail actio
       items: [expect.objectContaining({ id: "item-1" })],
     }),
     "token",
+    auth.capability,
   );
   expect(
     screen.queryByRole("dialog", { name: "Edit harvest" }),
@@ -707,12 +714,15 @@ it("Harvest fallback image is labelled with its actual owner", async () => {
     fallback.getByText("Botanical identity cover · reference"),
   ).toBeVisible();
   expect(
-    fallback.getByRole("img", {
-      name: `Botanical identity cover for ${harvest.display_title}`,
-    }),
-  ).toHaveAttribute(
-    "src",
+    (
+      await fallback.findByRole("img", {
+        name: `Botanical identity cover for ${harvest.display_title}`,
+      })
+    ).getAttribute("src"),
+  ).toMatch(/^blob:/);
+  expect(globalThis.fetch).toHaveBeenCalledWith(
     "/api/v1/botanical-identities/identity-1/cover-image/thumbnail",
+    expect.objectContaining({ credentials: "same-origin" }),
   );
 
   const primary = within(
@@ -720,12 +730,28 @@ it("Harvest fallback image is labelled with its actual owner", async () => {
       name: /^(?!Open details |Edit ).*Second collection/,
     }),
   );
+  expect(
+    (
+      await primary.findByRole("img", {
+        name: "Primary photo for Second collection",
+      })
+    ).getAttribute("src"),
+  ).toMatch(/^blob:/);
   expect(primary.getByText("Record primary photo")).toBeVisible();
+  expect(globalThis.fetch).toHaveBeenCalledWith(
+    "/harvest.jpg",
+    expect.objectContaining({ credentials: "same-origin" }),
+  );
   expect(
-    primary.getByRole("img", { name: "Primary photo for Second collection" }),
-  ).toHaveAttribute("src", "/harvest.jpg");
-  expect(
-    screen.getAllByRole("img").map((image) => image.getAttribute("src")),
+    vi
+      .mocked(globalThis.fetch)
+      .mock.calls.map(([input]) =>
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url,
+      ),
   ).not.toContain("/source.jpg");
 });
 
@@ -751,9 +777,12 @@ it("Harvest directory never substitutes source-record photos and navigates to th
   const next = screen.getByRole("button", {
     name: /^(?!Open details |Edit ).*Second collection/,
   });
-  expect(within(next).getByRole("img")).toHaveAttribute(
-    "src",
+  expect((await within(next).findByRole("img")).getAttribute("src")).toMatch(
+    /^blob:/,
+  );
+  expect(globalThis.fetch).toHaveBeenCalledWith(
     second.primary_photo.thumbnail_url,
+    expect.objectContaining({ credentials: "same-origin" }),
   );
   await user.click(next);
   expect(window.location.hash).toBe("#/harvests/harvest-2");

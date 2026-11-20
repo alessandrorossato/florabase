@@ -8,6 +8,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { listGlobalEvents, type EventResponse } from "../collection/api";
 import * as saved from "../saved-views/api";
 import { listJournalRootingObservations } from "./api";
@@ -19,24 +20,7 @@ vi.mock("./api", () => ({ listJournalRootingObservations: vi.fn() }));
 vi.mock("../collection/api", () => ({ listGlobalEvents: vi.fn() }));
 vi.mock("../schedule/api", () => ({ listTargets: vi.fn() }));
 vi.mock("../saved-views/api", () => ({ listSavedViews: vi.fn() }));
-const auth: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    csrfToken: "csrf",
-    session: {
-      user_id: "owner",
-      login_name: "owner",
-      display_name: null,
-      owner: true,
-      canonical_origin: "http://localhost",
-    },
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired: vi.fn(),
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
 const event: EventResponse = {
   id: "event",
   kind: "observation",
@@ -67,7 +51,8 @@ function mount() {
     </AuthContext.Provider>,
   );
 }
-beforeEach(() => {
+beforeEach(async () => {
+  auth = (await acquireTestAuth({ csrfToken: "csrf" })).auth;
   window.history.replaceState(null, "", "#/events");
   vi.mocked(listJournalRootingObservations).mockResolvedValue([]);
   vi.mocked(listGlobalEvents).mockResolvedValue([

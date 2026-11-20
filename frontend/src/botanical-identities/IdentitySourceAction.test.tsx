@@ -1,10 +1,4 @@
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 import {
@@ -12,11 +6,9 @@ import {
   type BotanicalIdentityCollectionResponse,
 } from "../collection/api";
 import { OverflowMenu } from "../components/ReferenceUI";
+import { renderWithTestAuth } from "../test/auth";
 import { IdentitySourceAction } from "./IdentitySourceAction";
 
-const expired = vi.hoisted(() => vi.fn());
-const auth = { sessionExpired: expired };
-vi.mock("../auth/context", () => ({ useAuth: () => auth }));
 vi.mock("../collection/api", () => ({ getIdentityCollection: vi.fn() }));
 afterEach(() => {
   cleanup();
@@ -57,7 +49,9 @@ test("sowing source selection is explicit, limited to active lots and preserves 
     }),
   );
   const user = userEvent.setup();
-  render(<IdentitySourceAction identityId="identity-a" kind="sowing" />);
+  await renderWithTestAuth(
+    <IdentitySourceAction identityId="identity-a" kind="sowing" />,
+  );
   expect(getIdentityCollection).not.toHaveBeenCalled();
   await user.click(screen.getByRole("button", { name: "Start sowing" }));
   expect(await screen.findByRole("link", { name: "Packet 1" })).toHaveAttribute(
@@ -79,7 +73,9 @@ test("one eligible lot still shows its source before launch and returns to the i
     collection({ lots: ["active"] }),
   );
   const user = userEvent.setup();
-  render(<IdentitySourceAction identityId="identity-a" kind="sowing" />);
+  await renderWithTestAuth(
+    <IdentitySourceAction identityId="identity-a" kind="sowing" />,
+  );
   await user.click(screen.getByRole("button", { name: "Start sowing" }));
   await user.click(await screen.findByRole("link", { name: "Packet 1" }));
   expect(window.location.hash).toBe("#/sowings?action=start&seedLot=lot-0");
@@ -93,7 +89,9 @@ test("no active seed material explains the prerequisite and offers identity-pref
     collection({ lots: ["exhausted"] }),
   );
   const user = userEvent.setup();
-  render(<IdentitySourceAction identityId="identity-a" kind="sowing" />);
+  await renderWithTestAuth(
+    <IdentitySourceAction identityId="identity-a" kind="sowing" />,
+  );
   await user.click(screen.getByRole("button", { name: "Start sowing" }));
   expect(await screen.findByText(/No active seed lots/)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Create seed lot" })).toHaveAttribute(
@@ -106,7 +104,9 @@ test("harvest offers actual Plants and groups including historical/inactive sour
     collection({ plants: ["active", "dead"], groups: ["inactive"] }),
   );
   const user = userEvent.setup();
-  render(<IdentitySourceAction identityId="identity-a" kind="harvest" />);
+  await renderWithTestAuth(
+    <IdentitySourceAction identityId="identity-a" kind="harvest" />,
+  );
   await user.click(screen.getByRole("button", { name: "Record harvest" }));
   expect(await screen.findByRole("link", { name: "Plant 1" })).toHaveAttribute(
     "href",
@@ -121,7 +121,9 @@ test("harvest offers actual Plants and groups including historical/inactive sour
 test("no harvest source explains the prerequisite and offers both existing creation flows", async () => {
   vi.mocked(getIdentityCollection).mockResolvedValue(collection());
   const user = userEvent.setup();
-  render(<IdentitySourceAction identityId="identity-a" kind="harvest" />);
+  await renderWithTestAuth(
+    <IdentitySourceAction identityId="identity-a" kind="harvest" />,
+  );
   await user.click(screen.getByRole("button", { name: "Record harvest" }));
   expect(
     await screen.findByText(/No Plants or Plant groups/),
@@ -144,14 +146,16 @@ test("source errors have retry and cancellation aborts an outstanding request", 
     .mockRejectedValueOnce(new Error("offline"))
     .mockResolvedValueOnce(collection());
   const user = userEvent.setup();
-  render(<IdentitySourceAction identityId="identity-a" kind="harvest" />);
+  await renderWithTestAuth(
+    <IdentitySourceAction identityId="identity-a" kind="harvest" />,
+  );
   await user.click(screen.getByRole("button", { name: "Record harvest" }));
   await user.click(
     await screen.findByRole("button", { name: "Retry sources" }),
   );
   await screen.findByText(/No Plants or Plant groups/);
   expect(getIdentityCollection).toHaveBeenCalledTimes(2);
-  const signal = vi.mocked(getIdentityCollection).mock.calls[1][1];
+  const signal = vi.mocked(getIdentityCollection).mock.calls[1][2];
   fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
   await waitFor(() => {
     expect(signal?.aborted).toBe(true);
@@ -161,7 +165,7 @@ test("source errors have retry and cancellation aborts an outstanding request", 
 test("directory source dialog owns Escape and restores its menu action before menu dismissal", async () => {
   vi.mocked(getIdentityCollection).mockResolvedValue(collection());
   const user = userEvent.setup();
-  render(
+  await renderWithTestAuth(
     <OverflowMenu
       ariaLabel="More actions for identity"
       keepMounted

@@ -1,5 +1,5 @@
 import type { components } from "../api/schema";
-import { requestJson } from "../auth/api";
+import { requestJson, type ProtectedRequestCapability } from "../auth/api";
 import { historyParams, type HistoryState } from "./state";
 export type HistoryEntry = components["schemas"]["HistoryEntry"];
 export type HistoryResponse = components["schemas"]["HistoryResponse"];
@@ -7,11 +7,12 @@ export type HistoryReference = components["schemas"]["HistoryReference"];
 export function getHistory(
   state: HistoryState,
   offset: number,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<HistoryResponse> {
   const params = historyParams(state);
   params.set("offset", String(offset));
-  return requestJson(`/api/v1/history?${params}`, { signal });
+  return requestJson(`/api/v1/history?${params}`, { capability, signal });
 }
 export function historyHref(
   ref: HistoryReference,

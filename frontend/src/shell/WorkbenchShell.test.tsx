@@ -8,11 +8,17 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { WorkbenchShell } from "./WorkbenchShell";
 import { allDestinations, workspaces } from "./navigation";
 
+let auth: AuthContextValue;
+beforeEach(async () => {
+  auth = (await acquireTestAuth()).auth;
+});
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
@@ -62,19 +68,21 @@ function renderShell(
   const onNavigate = vi.fn();
   const onSignOut = vi.fn();
   const view = render(
-    <WorkbenchShell
-      section="dashboard"
-      hash="#/dashboard"
-      signedInAs="Test Owner"
-      signingOut={false}
-      onSignOut={onSignOut}
-      onNavigate={onNavigate}
-      {...overrides}
-    >
-      <section aria-label="Workspace content" className="app-content">
-        <button type="button">Page action</button>
-      </section>
-    </WorkbenchShell>,
+    <AuthContext.Provider value={auth}>
+      <WorkbenchShell
+        section="dashboard"
+        hash="#/dashboard"
+        signedInAs="Test Owner"
+        signingOut={false}
+        onSignOut={onSignOut}
+        onNavigate={onNavigate}
+        {...overrides}
+      >
+        <section aria-label="Workspace content" className="app-content">
+          <button type="button">Page action</button>
+        </section>
+      </WorkbenchShell>
+    </AuthContext.Provider>,
   );
   return { ...view, onNavigate, onSignOut };
 }
@@ -259,20 +267,22 @@ test("palette search failure keeps sections and actions usable", async () => {
 test("slash does not open the palette while typing in a field", async () => {
   const user = userEvent.setup();
   render(
-    <WorkbenchShell
-      section="dashboard"
-      hash="#/dashboard"
-      signedInAs="Test Owner"
-      signingOut={false}
-      onSignOut={vi.fn()}
-      onNavigate={vi.fn()}
-    >
-      <section aria-label="Workspace content">
-        <label>
-          Notes <input />
-        </label>
-      </section>
-    </WorkbenchShell>,
+    <AuthContext.Provider value={auth}>
+      <WorkbenchShell
+        section="dashboard"
+        hash="#/dashboard"
+        signedInAs="Test Owner"
+        signingOut={false}
+        onSignOut={vi.fn()}
+        onNavigate={vi.fn()}
+      >
+        <section aria-label="Workspace content">
+          <label>
+            Notes <input />
+          </label>
+        </section>
+      </WorkbenchShell>
+    </AuthContext.Provider>,
   );
   await user.click(screen.getByLabelText("Notes"));
   await user.keyboard("a/b");
@@ -419,23 +429,29 @@ test("Recent lists previously opened sections, not records or the current page",
   };
   const content = <section aria-label="Workspace content" />;
   const { rerender } = render(
-    <WorkbenchShell section="seeds" hash="#/seeds" {...props}>
-      {content}
-    </WorkbenchShell>,
+    <AuthContext.Provider value={auth}>
+      <WorkbenchShell section="seeds" hash="#/seeds" {...props}>
+        {content}
+      </WorkbenchShell>
+    </AuthContext.Provider>,
   );
   rerender(
-    <WorkbenchShell
-      section="plants"
-      hash="#/plants/0190d2a8-0000-7000-8000-000000000001"
-      {...props}
-    >
-      {content}
-    </WorkbenchShell>,
+    <AuthContext.Provider value={auth}>
+      <WorkbenchShell
+        section="plants"
+        hash="#/plants/0190d2a8-0000-7000-8000-000000000001"
+        {...props}
+      >
+        {content}
+      </WorkbenchShell>
+    </AuthContext.Provider>,
   );
   rerender(
-    <WorkbenchShell section="orders" hash="#/orders" {...props}>
-      {content}
-    </WorkbenchShell>,
+    <AuthContext.Provider value={auth}>
+      <WorkbenchShell section="orders" hash="#/orders" {...props}>
+        {content}
+      </WorkbenchShell>
+    </AuthContext.Provider>,
   );
   const recent = screen.getByRole("navigation", { name: "Recent" });
   expect(
@@ -558,19 +574,23 @@ test("record pages start with the panel collapsed; the rail opens it there witho
     onNavigate: vi.fn(),
   };
   rerender(
-    <WorkbenchShell
-      section="plants"
-      hash="#/plants/0190d2a8-0000-7000-8000-000000000003"
-      {...props}
-    >
-      <section aria-label="Workspace content" className="app-content" />
-    </WorkbenchShell>,
+    <AuthContext.Provider value={auth}>
+      <WorkbenchShell
+        section="plants"
+        hash="#/plants/0190d2a8-0000-7000-8000-000000000003"
+        {...props}
+      >
+        <section aria-label="Workspace content" className="app-content" />
+      </WorkbenchShell>
+    </AuthContext.Provider>,
   );
   expect(shell).toHaveClass("wb-shell--collapsed");
   rerender(
-    <WorkbenchShell section="plants" hash="#/plants" {...props}>
-      <section aria-label="Workspace content" className="app-content" />
-    </WorkbenchShell>,
+    <AuthContext.Provider value={auth}>
+      <WorkbenchShell section="plants" hash="#/plants" {...props}>
+        <section aria-label="Workspace content" className="app-content" />
+      </WorkbenchShell>
+    </AuthContext.Provider>,
   );
   expect(shell).not.toHaveClass("wb-shell--collapsed");
 });

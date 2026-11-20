@@ -1,14 +1,15 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { AuthContext, type AuthContextValue } from "../auth/context";
 import {
   IdentityRecordMedia,
   type IdentityMediaRecord,
 } from "./IdentityRecordMedia";
 import { listPhotos } from "../photos/api";
 import { getMedia } from "../media/api";
-vi.mock("../auth/context", () => ({ useAuth: () => auth }));
-const auth = { sessionExpired: vi.fn() };
+import { acquireTestAuth } from "../test/auth";
+let auth: AuthContextValue;
 vi.mock("../photos/api", () => ({ listPhotos: vi.fn() }));
 vi.mock("../media/api", () => ({ getMedia: vi.fn() }));
 const records: IdentityMediaRecord[] = [
@@ -32,23 +33,33 @@ const asset = {
   thumbnail_url: "/thumbnail",
   deletion_pending: false,
 } as never;
+beforeEach(async () => {
+  auth = (await acquireTestAuth()).auth;
+});
 afterEach(() => {
   cleanup();
   vi.resetAllMocks();
+  vi.restoreAllMocks();
 });
 test("real linked images retain captions, actual asset rights and source ownership", async () => {
   vi.mocked(listPhotos).mockResolvedValue([
     { id: "photo", media_asset_id: "asset", caption: "Young leaves" },
   ] as never);
   vi.mocked(getMedia).mockResolvedValue(asset);
-  render(<IdentityRecordMedia records={records} />);
-  expect(await screen.findByRole("img", { name: "Leaves" })).toHaveAttribute(
-    "src",
-    "/thumbnail",
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
   );
+  render(
+    <AuthContext.Provider value={auth}>
+      <IdentityRecordMedia records={records} />
+    </AuthContext.Provider>,
+  );
+  const img = await screen.findByRole("img", { name: "Leaves" });
+  expect(img.getAttribute("src")).toMatch(/^blob:/);
   expect(listPhotos).toHaveBeenCalledWith(
     "plant",
     "plant",
+    auth.capability,
     expect.any(AbortSignal),
   );
   expect(screen.getByRole("link", { name: "Mother plant" })).toHaveAttribute(
@@ -67,7 +78,11 @@ test("real linked images retain captions, actual asset rights and source ownersh
 test("external references do not contact their image host and errors remain retryable", async () => {
   const user = userEvent.setup();
   vi.mocked(listPhotos).mockRejectedValueOnce(new Error("offline"));
-  render(<IdentityRecordMedia records={records} />);
+  render(
+    <AuthContext.Provider value={auth}>
+      <IdentityRecordMedia records={records} />
+    </AuthContext.Provider>,
+  );
   expect(await screen.findByRole("alert")).toHaveTextContent("could not load");
   vi.mocked(listPhotos).mockResolvedValue([
     { id: "photo", media_asset_id: "asset", caption: null },
@@ -91,7 +106,11 @@ test("empty and bounded record batches do not invent images or load the whole co
     ...records[0],
     id: String(n),
   }));
-  render(<IdentityRecordMedia records={many} />);
+  render(
+    <AuthContext.Provider value={auth}>
+      <IdentityRecordMedia records={many} />
+    </AuthContext.Provider>,
+  );
   expect(await screen.findByText(/No images are attached/)).toBeVisible();
   expect(listPhotos).toHaveBeenCalledTimes(6);
   expect(getMedia).not.toHaveBeenCalled();
@@ -104,6 +123,7 @@ test("empty and bounded record batches do not invent images or load the whole co
     expect(listPhotos).toHaveBeenCalledWith(
       "plant",
       "7",
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -114,7 +134,11 @@ test("older photos with no asset reference remain source-record evidence rather 
   vi.mocked(listPhotos).mockResolvedValue([
     { id: "older-photo", media_asset_id: null },
   ] as never);
-  render(<IdentityRecordMedia records={records} />);
+  render(
+    <AuthContext.Provider value={auth}>
+      <IdentityRecordMedia records={records} />
+    </AuthContext.Provider>,
+  );
   expect(await screen.findByText(/Some older photo entries/)).toBeVisible();
   expect(screen.queryByText(/No images are attached/)).toBeNull();
   expect(getMedia).not.toHaveBeenCalled();

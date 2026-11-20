@@ -262,6 +262,15 @@ function mockApi(handler: Handler, identityRecords = identities) {
     if (path === "/api/v1/provenance-sites") return Promise.resolve(json([]));
     if (path === "/api/v1/botanical-identities")
       return Promise.resolve(json(identityRecords));
+    if (
+      (path === "/protected-target-thumbnail" ||
+        path === "/api/v1/attachments/photo/thumbnail") &&
+      (!init?.method || init.method === "GET")
+    ) {
+      return Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      );
+    }
     const response = handler(path, init);
     if (!response)
       throw new Error(`Unhandled request: ${path} ${init?.method ?? "GET"}`);
@@ -1894,8 +1903,16 @@ test("Plant Journal entries preserves API order, every label and partial-date pr
   expect(items[0].querySelector(".event-card")).toBeInTheDocument();
   expect(timeline).toHaveClass("event-timeline");
   expect(
-    within(timeline).getByRole("img", { name: "Primary photo for Avocado #1" }),
-  ).toHaveAttribute("src", "/protected-target-thumbnail");
+    (
+      await within(timeline).findByRole("img", {
+        name: "Primary photo for Avocado #1",
+      })
+    ).getAttribute("src"),
+  ).toMatch(/^blob:/);
+  expect(globalThis.fetch).toHaveBeenCalledWith(
+    "/protected-target-thumbnail",
+    expect.objectContaining({ credentials: "same-origin" }),
+  );
   expect(within(timeline).getAllByRole("img")).toHaveLength(1);
   expect(
     within(timeline).queryByText("External primary photo"),
@@ -2542,10 +2559,16 @@ test.each(["local", "external"] as const)(
     ).not.toBeInTheDocument();
     if (kind === "local") {
       expect(
-        within(preview).getByRole("img", {
-          name: "Primary photo for Avocado #1",
-        }),
-      ).toHaveAttribute("src", photo.thumbnail_url);
+        (
+          await within(preview).findByRole("img", {
+            name: "Primary photo for Avocado #1",
+          })
+        ).getAttribute("src"),
+      ).toMatch(/^blob:/);
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        photo.thumbnail_url,
+        expect.objectContaining({ credentials: "same-origin" }),
+      );
     } else {
       expect(
         within(preview).queryByText("External primary photo"),

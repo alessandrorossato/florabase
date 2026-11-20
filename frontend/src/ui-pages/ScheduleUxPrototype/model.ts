@@ -1,4 +1,4 @@
-import { requestJson } from "../../auth/api";
+import { requestJson, type ProtectedRequestCapability } from "../../auth/api";
 import { calendarDate } from "../../schedule/calendar";
 import {
   localDay,
@@ -69,6 +69,7 @@ export function agendaGroups(items: Activity[], selected: string) {
 export async function loadWeek(
   state: ScheduleState,
   signal: AbortSignal,
+  capability: ProtectedRequestCapability,
 ): Promise<SchedulePage> {
   const days = weekDays(state.date || fixtureToday);
   const params = scheduleParams(state);
@@ -81,6 +82,7 @@ export async function loadWeek(
   for (let offset = 0; offset <= 100000; offset += 100) {
     params.set("offset", String(offset));
     const page = await requestJson<SchedulePage>(`/api/v1/schedule?${params}`, {
+      capability,
       signal,
     });
     first ??= page;

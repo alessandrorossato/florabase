@@ -7,7 +7,11 @@ import {
   type RefObject,
   type SyntheticEvent,
 } from "react";
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { TaskDialog } from "../components/TaskDialog";
 import {
@@ -160,6 +164,9 @@ export function InventoryDialog({
   onSaved: () => void;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const id = useId();
   const alert = useRef<HTMLParagraphElement>(null);
   const [quantity, setQuantity] = useState<Quantity | null>(
@@ -213,9 +220,9 @@ export function InventoryDialog({
       ? "Edit stored material"
       : "Track stored material";
   useEffect(() => {
-    if (disposition) return;
+    if (!authorized || disposition) return;
     const controller = new AbortController();
-    void listLocations(controller.signal)
+    void listLocations(capability, controller.signal)
       .then((rows) => {
         if (!controller.signal.aborted) {
           setLocations(locationsForScope(rows, "harvest_inventory"));
@@ -223,23 +230,22 @@ export function InventoryDialog({
         }
       })
       .catch((failure: unknown) => {
-        if (!controller.signal.aborted) {
-          if (failure instanceof ApiError && failure.status === 401)
-            auth.sessionExpired();
-          else setLocationsError(true);
-        }
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
+        if (failure instanceof ApiError && failure.status === 401)
+          sessionExpired();
+        else setLocationsError(true);
       });
     return () => {
       controller.abort();
     };
-  }, [disposition, attempt, auth]);
+  }, [authorized, capability, disposition, attempt, sessionExpired]);
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
     setPending(true);
     setError(null);
-    const token =
-      auth.state.status === "authenticated" ? auth.state.csrfToken : "";
+    const token = activeCsrfToken(auth.state);
     try {
       if (disposition && inventory)
         await recordDisposition(
@@ -253,6 +259,7 @@ export function InventoryDialog({
             notes: notes.trim() || null,
           },
           token,
+          capability,
         );
       else
         await saveInventory(
@@ -264,11 +271,13 @@ export function InventoryDialog({
             location_id: location || null,
           },
           token,
+          capability,
         );
       onSaved();
     } catch (failure: unknown) {
+      if (isExpectedAuthCancellation(failure)) return;
       if (failure instanceof ApiError && failure.status === 401)
-        auth.sessionExpired();
+        sessionExpired();
       else {
         setError(inventoryError(failure));
         requestAnimationFrame(() => alert.current?.focus());

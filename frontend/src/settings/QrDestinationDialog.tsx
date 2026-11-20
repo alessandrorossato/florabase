@@ -1,5 +1,9 @@
 import { useState, type SyntheticEvent } from "react";
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { TaskDialog } from "../components/TaskDialog";
 import {
@@ -34,14 +38,16 @@ export function QrDestinationDialog({
   }
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!("csrfToken" in auth.state)) return;
+    const token = activeCsrfToken(auth.state);
+    if (!token) return;
     setSaving(true);
     setError("");
     try {
-      const settings = await savePublicQrBaseUrl(draft, auth.state.csrfToken);
+      const settings = await savePublicQrBaseUrl(draft, token, auth.capability);
       onSaved(settings);
       onClose();
     } catch (failure) {
+      if (isExpectedAuthCancellation(failure)) return;
       if (failure instanceof ApiError && failure.status === 401)
         auth.sessionExpired();
       else

@@ -11,6 +11,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../auth/context";
 import { ApiError } from "../auth/api";
+import { acquireTestAuth } from "../test/auth";
 import { openDirectoryRoute } from "../components/recordNavigation";
 import { listLocations, type LocationResponse } from "../locations/api";
 import { BulkCheckbox, BulkSelect, BulkToolbar } from "./BulkLocation";
@@ -19,24 +20,10 @@ import { useBulkSelection, type BulkChoice } from "./useBulkSelection";
 
 vi.mock("../locations/api", () => ({ listLocations: vi.fn() }));
 vi.mock("./api", () => ({ applyLocation: vi.fn(), previewLocation: vi.fn() }));
-const auth: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    csrfToken: "csrf",
-    session: {
-      user_id: "owner",
-      login_name: "owner",
-      display_name: null,
-      owner: true,
-      canonical_origin: "http://localhost",
-    },
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired: vi.fn(),
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
+beforeEach(async () => {
+  auth = (await acquireTestAuth({ csrfToken: "csrf" })).auth;
+});
 const choices: BulkChoice[] = [
   { kind: "plant", id: "plant", label: "Plant · Basil", eligible: true },
   {
@@ -225,6 +212,7 @@ test("typed mixed references survive preview, explicit apply clears selection an
     ],
     "target",
     "csrf",
+    auth.capability,
     expect.any(AbortSignal),
   );
   expect(
@@ -243,7 +231,7 @@ test("typed mixed references survive preview, explicit apply clears selection an
       unchanged_count: 1,
     });
   });
-  expect(applyLocation).toHaveBeenCalledWith(preview, "csrf");
+  expect(applyLocation).toHaveBeenCalledWith(preview, "csrf", auth.capability);
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   expect(screen.getByText("1 moved · 1 already there.")).toBeVisible();
@@ -419,6 +407,7 @@ test("target changes invalidate a successful preview and require a new server pr
     expect.any(Array),
     "second",
     "csrf",
+    auth.capability,
     expect.any(AbortSignal),
   );
 });
