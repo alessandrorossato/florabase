@@ -79,11 +79,14 @@
   .app-content .cuttings-directory .ui-record-title {
     align-items: start;
   }
-  .app-content .cuttings-directory .ui-record-secondary {
-    grid-column: 2;
-  }
-  .app-content .cuttings-directory .ui-directory-record-actions {
+  .app-content
+    .cuttings-directory
+    .ui-directory-records--list
+    > .ui-directory-row--composed
+    > .ui-directory-record-actions {
+    width: auto;
     max-width: none;
+    margin-block-start: 0;
     margin-inline-start: auto;
     padding-block-start: 0;
   }
