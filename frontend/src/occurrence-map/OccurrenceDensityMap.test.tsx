@@ -50,6 +50,7 @@ vi.mock("./EvidenceTiles", () => ({
     cancel = mocks.cancel;
   },
 }));
+import { acquireTestAuth } from "../test/auth";
 import { OccurrenceDensityMap } from "./OccurrenceDensityMap";
 afterEach(() => {
   cleanup();
@@ -57,8 +58,13 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 test("cache playback has no online basemap, refresh changes only the overlay", async () => {
+  const { capability } = await acquireTestAuth();
   const view = render(
-    <OccurrenceDensityMap identityId="identity" generation="one" />,
+    <OccurrenceDensityMap
+      identityId="identity"
+      generation="one"
+      capability={capability}
+    />,
   );
   await waitFor(() => {
     expect(mocks.map.attributionControl.addAttribution).toHaveBeenCalled();
@@ -76,6 +82,7 @@ test("cache playback has no online basemap, refresh changes only the overlay", a
       identityId="identity"
       generation="two"
       localOnly={false}
+      capability={capability}
     />,
   );
   expect(mocks.createMap).toHaveBeenCalledTimes(1);
@@ -83,7 +90,14 @@ test("cache playback has no online basemap, refresh changes only the overlay", a
   expect(mocks.overlayRemove).toHaveBeenCalledTimes(1);
 });
 test("configured basemap is explicitly enabled with independent recoverable errors", async () => {
-  render(<OccurrenceDensityMap identityId="identity" generation="one" />);
+  const { capability } = await acquireTestAuth();
+  render(
+    <OccurrenceDensityMap
+      identityId="identity"
+      generation="one"
+      capability={capability}
+    />,
+  );
   fireEvent.click(screen.getByRole("checkbox", { name: /Online basemap/ }));
   expect(mocks.tileLayer).toHaveBeenCalledTimes(1);
   const callback = mocks.layer.on.mock.calls.find(
@@ -107,7 +121,8 @@ test("configured basemap is explicitly enabled with independent recoverable erro
     screen.queryByText(/Online basemap tiles are incomplete/),
   ).not.toBeInTheDocument();
 });
-test("revealed panes resize the existing map and disconnect on unmount", () => {
+test("revealed panes resize the existing map and disconnect on unmount", async () => {
+  const { capability } = await acquireTestAuth();
   let callback: (() => void) | undefined;
   const disconnect = vi.fn();
   vi.stubGlobal(
@@ -120,7 +135,9 @@ test("revealed panes resize the existing map and disconnect on unmount", () => {
       disconnect = disconnect;
     },
   );
-  const view = render(<OccurrenceDensityMap identityId="identity" />);
+  const view = render(
+    <OccurrenceDensityMap identityId="identity" capability={capability} />,
+  );
   const canvas = screen.getByRole("region");
   callback?.();
   expect(mocks.map.invalidateSize).not.toHaveBeenCalled();
@@ -135,7 +152,14 @@ test("revealed panes resize the existing map and disconnect on unmount", () => {
 });
 
 test("theme changes keep the map, cached evidence, generation and provider layers intact", async () => {
-  render(<OccurrenceDensityMap identityId="identity" generation="one" />);
+  const { capability } = await acquireTestAuth();
+  render(
+    <OccurrenceDensityMap
+      identityId="identity"
+      generation="one"
+      capability={capability}
+    />,
+  );
   await waitFor(() => {
     expect(mocks.map.attributionControl.addAttribution).toHaveBeenCalled();
   });

@@ -14,7 +14,13 @@ import {
   type SyntheticEvent,
 } from "react";
 import { useAuth } from "../auth/context";
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+  openProtectedTab,
+  ProtectedTabBlockedError,
+} from "../auth/api";
 import {
   Breadcrumbs,
   DetailHeader,
@@ -147,6 +153,9 @@ function Metadata({ asset }: { asset: MediaAsset }) {
 
 export function MediaScreen({ initialId }: { initialId?: string }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const headingId = useId();
   const hash = useSyncExternalStore(
     subscribeMediaRoute,
@@ -198,6 +207,8 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
   );
   const [editingLink, setEditingLink] = useState<MediaLink | null>(null);
   const [pending, setPending] = useState(false);
+  const [openingOriginal, setOpeningOriginal] = useState(false);
+  const [originalError, setOriginalError] = useState<string | null>(null);
   const validId =
     !initialId ||
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -211,10 +222,10 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
     ? requestError
     : "This media link has an invalid ID. Return to Media to choose an asset.";
   useEffect(() => {
-    if (!validId) return;
+    if (!validId || !authorized) return;
     const controller = new AbortController();
     if (initialId) {
-      void getMedia(initialId, controller.signal)
+      void getMedia(initialId, capability, controller.signal)
         .then((value) => {
           if (!controller.signal.aborted) setDetail(value);
         })
@@ -224,6 +235,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
     } else {
       void listMedia(
         { query, kind, association, target, offset },
+        capability,
         controller.signal,
       )
         .then((value) => {
@@ -253,8 +265,9 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
       controller.abort();
     };
     function failureHandler(failure: unknown) {
+      if (isExpectedAuthCancellation(failure)) return;
       if (failure instanceof ApiError && failure.status === 401)
-        auth.sessionExpired();
+        sessionExpired();
       else if (failure instanceof ApiError && failure.status === 404)
         setError(
           "This media asset was deleted or could not be found. Return to Media to choose another asset.",
@@ -262,6 +275,8 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
       else setError(mediaError(failure));
     }
   }, [
+    authorized,
+    capability,
     initialId,
     validId,
     query,
@@ -271,7 +286,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
     offset,
     attempt,
     pageKey,
-    auth,
+    sessionExpired,
   ]);
   useEffect(() => {
     if (initialId) {
@@ -297,19 +312,42 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
     function clearRouteOverlays() {
       setSelected(null);
       setError(null);
+      setOriginalError(null);
     }
     return subscribeMediaRoute(clearRouteOverlays);
   }, []);
-  const token =
-    auth.state.status === "authenticated" ? auth.state.csrfToken : "";
+  const token = activeCsrfToken(auth.state);
   function refresh(message: string) {
     setError(null);
+    setOriginalError(null);
     setNotice(message);
     setAttempt((value) => value + 1);
+  }
+  async function handleOpenOriginal(url: string) {
+    if (openingOriginal || !authorized) return;
+    setOpeningOriginal(true);
+    setOriginalError(null);
+    try {
+      await openProtectedTab({ path: url, capability });
+    } catch (caught: unknown) {
+      if (isExpectedAuthCancellation(caught)) return;
+      if (caught instanceof ApiError && caught.status === 401) {
+        sessionExpired();
+        return;
+      }
+      if (caught instanceof ProtectedTabBlockedError) {
+        setOriginalError(caught.message);
+        return;
+      }
+      setOriginalError("Could not open the original image. Try again.");
+    } finally {
+      setOpeningOriginal(false);
+    }
   }
   function changeFilters() {
     setPage(null);
     setSelected(null);
+    setOriginalError(null);
     const params = new URLSearchParams(window.location.hash.split("?", 2)[1]);
     params.delete("offset");
     window.history.replaceState(
@@ -329,8 +367,9 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
       setEditingLink(null);
       refresh(message);
     } catch (failure) {
+      if (isExpectedAuthCancellation(failure)) return;
       if (failure instanceof ApiError && failure.status === 401)
-        auth.sessionExpired();
+        sessionExpired();
       else setError(mediaError(failure));
     } finally {
       setPending(false);
@@ -354,6 +393,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
           display_order: Number(form.get("display_order")),
         },
         token,
+        capability,
       );
     }, "Record link details saved.");
   }
@@ -607,9 +647,27 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                   Captions and display order belong to each record link.
                 </p>
                 {detail.content_url && !detail.deletion_pending && (
-                  <a href={detail.content_url} target="_blank" rel="noreferrer">
-                    Open original image
-                  </a>
+                  <div className="actions">
+                    <button
+                      type="button"
+                      className="button--secondary"
+                      disabled={openingOriginal || !authorized}
+                      onClick={() => {
+                        if (detail.content_url) {
+                          void handleOpenOriginal(detail.content_url);
+                        }
+                      }}
+                    >
+                      {openingOriginal
+                        ? "Opening original…"
+                        : "Open original image"}
+                    </button>
+                  </div>
+                )}
+                {originalError && (
+                  <p className="notice notice--error" role="alert">
+                    {originalError}
+                  </p>
                 )}
               </section>
             </div>
@@ -632,7 +690,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                             detail.content_url
                               ? refreshLocalCopy
                               : saveLocalCopy
-                          )(detail.id, token);
+                          )(detail.id, token, capability);
                         },
                         detail.content_url
                           ? "Local copy refreshed."
@@ -733,6 +791,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                                       type,
                                       link.target_id,
                                       token,
+                                      capability,
                                     );
                                   else
                                     await setPrimaryPhoto(
@@ -740,6 +799,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                                       link.target_id,
                                       { kind: detail.kind, photo_id: link.id },
                                       token,
+                                      capability,
                                     );
                                 },
                                 link.is_primary
@@ -1053,18 +1113,18 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
               onClick={() => {
                 if (removing === "asset")
                   void action(async () => {
-                    await deleteMedia(detail.id, token);
+                    await deleteMedia(detail.id, token, capability);
                     navigateMedia(directoryHash, detail.id);
                     setDetail(null);
                     setPage(null);
                   }, "Media asset deleted.");
                 else if (removing === "copy")
                   void action(async () => {
-                    await removeLocalCopy(detail.id, token);
+                    await removeLocalCopy(detail.id, token, capability);
                   }, "Local copy removed. External reference and links retained.");
                 else
                   void action(async () => {
-                    await unlinkMedia(removing.id, token);
+                    await unlinkMedia(removing.id, token, capability);
                   }, "Record link removed. Media retained in the library.");
               }}
             >

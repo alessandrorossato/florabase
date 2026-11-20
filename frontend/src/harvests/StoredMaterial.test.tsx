@@ -9,6 +9,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../auth/context";
 import { ApiError } from "../auth/api";
+import { acquireTestAuth } from "../test/auth";
 import {
   StoredMaterialDirectory,
   StoredMaterialSection,
@@ -38,24 +39,7 @@ vi.mock("../locations/api", async (original) => ({
     ]),
   ),
 }));
-const auth: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    csrfToken: "token",
-    session: {
-      user_id: "owner",
-      login_name: "owner",
-      display_name: null,
-      owner: true,
-      canonical_origin: "http://localhost",
-    },
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired: vi.fn(),
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
 const item: Harvest["items"][number] = {
   display_order: 0,
   description: null,
@@ -110,7 +94,8 @@ function wrap(child: React.ReactNode) {
     <AuthContext.Provider value={auth}>{child}</AuthContext.Provider>,
   );
 }
-beforeEach(() => {
+beforeEach(async () => {
+  auth = (await acquireTestAuth({ csrfToken: "token" })).auth;
   window.history.replaceState(null, "", "#/harvests?tab=stored-material");
   vi.mocked(api.inventoryList).mockResolvedValue([]);
   vi.mocked(api.saveInventory).mockResolvedValue(inventory);
@@ -194,6 +179,7 @@ it("confirms a smaller current amount with explicit Location selection", async (
       location_id: "storage",
     },
     "token",
+    auth.capability,
   );
   expect(saved).toHaveBeenCalled();
 });
@@ -226,6 +212,7 @@ it.each(api.dispositionKinds)(
         resulting_quantity: null,
       }),
       "token",
+      auth.capability,
     );
   },
 );
@@ -267,6 +254,7 @@ it("requires confirmed approximate remainder and preserves weight units", async 
       },
     }),
     "token",
+    auth.capability,
   );
 });
 it("unknown partial stock stays unknown and use-all is explicit", async () => {
@@ -299,6 +287,7 @@ it("unknown partial stock stays unknown and use-all is explicit", async () => {
       resulting_quantity: null,
     }),
     "token",
+    auth.capability,
   );
 });
 it("retains disposition history, blocks removal and permits current correction", async () => {
@@ -356,6 +345,7 @@ it("retains disposition history, blocks removal and permits current correction",
     "inventory",
     expect.objectContaining({ state: "active", quantity: null }),
     "token",
+    auth.capability,
   );
 });
 it("removes never-used tracking only after explicit confirmation", async () => {
@@ -373,7 +363,11 @@ it("removes never-used tracking only after explicit confirmation", async () => {
   await userEvent.click(
     within(dialog).getByRole("button", { name: "Remove tracking" }),
   );
-  expect(api.removeInventory).toHaveBeenCalledWith("inventory", "token");
+  expect(api.removeInventory).toHaveBeenCalledWith(
+    "inventory",
+    "token",
+    auth.capability,
+  );
 });
 it("directory defaults to active and retained depleted state remains reachable", async () => {
   vi.mocked(api.inventoryList).mockResolvedValue([

@@ -56,7 +56,12 @@ import { LineageStrip } from "../lineage/LineageStrip";
 import { ancestryHref } from "../lineage/useRecordedLineage";
 import { sowingFormPanels } from "./SowingFormFields";
 
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isExpectedAuthCancellation,
+  isPresentationRetainedState,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   Breadcrumbs,
@@ -318,6 +323,10 @@ function Detail({
   reversalAction?: ReactNode;
 }) {
   const recordName = useRecordName();
+  const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
 
   const [summary, setSummary] = useState<
     | { status: "loading" }
@@ -325,20 +334,24 @@ function Detail({
     | { status: "error" }
   >({ status: "loading" });
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void getSowingPropagationSummary(sowing.id, controller.signal)
+    void getSowingPropagationSummary(sowing.id, capability, controller.signal)
       .then((value) => {
         if (!Array.isArray(value.plants) || !Array.isArray(value.plant_groups))
           throw new Error("Invalid propagation summary");
         setSummary({ status: "ready", value });
       })
-      .catch(() => {
-        if (!controller.signal.aborted) setSummary({ status: "error" });
+      .catch((error: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
+        else setSummary({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [sowing.id, sowing.updated_at]);
+  }, [sowing.id, sowing.updated_at, authorized, capability, sessionExpired]);
   const tabOf = (value?: string) =>
     value === "propagation"
       ? "lineage"
@@ -843,6 +856,9 @@ export function SowingScreen({
   const DirectoryItem =
     presentation.view === "gallery" ? DirectoryCard : DirectoryRow;
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [collection, setCollection] = useState<CollectionState>({
     status: "loading",
   });
@@ -951,11 +967,12 @@ export function SowingScreen({
   }, [openCreation, references, startCreating]);
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     Promise.all([
-      listSowings(controller.signal),
-      listSeedLots(controller.signal),
-      listLocations(controller.signal),
+      listSowings(capability, controller.signal),
+      listSeedLots(capability, controller.signal),
+      listLocations(capability, controller.signal),
     ])
       .then(([sowings, seedLots, locations]) => {
         setCollection({ status: "ready", sowings });
@@ -965,33 +982,33 @@ export function SowingScreen({
         );
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setCollection({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [auth, attempt]);
+  }, [authorized, capability, sessionExpired, attempt]);
 
   useEffect(() => {
-    if (!selectedId) return;
+    if (!selectedId || !authorized) return;
     const controller = new AbortController();
-    void getSowing(selectedId, controller.signal)
+    void getSowing(selectedId, capability, controller.signal)
       .then((sowing) => {
         setDetail({ status: "ready", sowing });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setDetail({ status: "error", id: selectedId });
       });
     return () => {
       controller.abort();
     };
-  }, [auth, detailAttempt, selectedId]);
+  }, [authorized, capability, sessionExpired, detailAttempt, selectedId]);
 
   useEffect(() => {
     if (save.status === "error") feedback.current?.focus();
@@ -1136,13 +1153,8 @@ export function SowingScreen({
       </section>
     );
   }
-  if (
-    auth.state.status !== "authenticated" &&
-    auth.state.status !== "logging-out" &&
-    auth.state.status !== "logout-failed"
-  )
-    return null;
-  const csrfToken = auth.state.csrfToken;
+  if (!isPresentationRetainedState(auth.state)) return null;
+  const csrfToken = activeCsrfToken(auth.state);
   const pending = save.status === "saving";
 
   function startCreate() {
@@ -1263,13 +1275,14 @@ export function SowingScreen({
       setSave({ status: "error", messages: errors });
       return;
     }
+    if (!csrfToken) return;
     const wasCreating = !selected;
     setSave({ status: "saving" });
     try {
       const payload = payloadFrom(form);
       const authoritative = selected
-        ? await updateSowing(selected.id, payload, csrfToken)
-        : await createSowing(payload, csrfToken);
+        ? await updateSowing(selected.id, payload, csrfToken, capability)
+        : await createSowing(payload, csrfToken, capability);
       setCollection((current) => {
         if (current.status !== "ready") return current;
         const exists = current.sowings.some(
@@ -1284,7 +1297,7 @@ export function SowingScreen({
             : [...current.sowings, authoritative],
         };
       });
-      const refreshed = await listSowings();
+      const refreshed = await listSowings(capability);
       setCollection({ status: "ready", sowings: refreshed });
       setSelectedId(authoritative.id);
       setDetail({ status: "ready", sowing: authoritative });
@@ -1302,9 +1315,12 @@ export function SowingScreen({
           : "Sowing changes were saved.",
       });
     } catch (error: unknown) {
-      if (error instanceof ApiError && error.status === 401)
-        auth.sessionExpired();
-      else if (error instanceof ApiError && error.status === 422) {
+      if (isExpectedAuthCancellation(error)) {
+        setSave({ status: "idle" });
+      } else if (error instanceof ApiError && error.status === 401) {
+        setSave({ status: "idle" });
+        sessionExpired();
+      } else if (error instanceof ApiError && error.status === 422) {
         setSave({
           status: "error",
           messages: sowingValidationMessages(error),

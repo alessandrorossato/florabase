@@ -18,7 +18,12 @@ import { GeographyHeader } from "../geography/GeographyHeader";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isExpectedAuthCancellation,
+  isPresentationRetainedState,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   Breadcrumbs,
@@ -236,6 +241,9 @@ export function GeographyScreen({
   startCreating?: boolean;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
   });
@@ -310,8 +318,9 @@ export function GeographyScreen({
   const pending = save.status === "saving";
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void listGeographicPlaces(controller.signal)
+    void listGeographicPlaces(capability, controller.signal)
       .then((places) => {
         setDirectory({ status: "ready", places });
         if (!initialExpansionApplied.current) {
@@ -338,15 +347,15 @@ export function GeographyScreen({
         }
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setDirectory({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [auth, attempt, initialPlaceId]);
+  }, [authorized, capability, sessionExpired, attempt, initialPlaceId]);
 
   useEffect(() => {
     if (save.status === "error") feedback.current?.focus();
@@ -367,22 +376,18 @@ export function GeographyScreen({
       )
     : places;
 
-  if (
-    auth.state.status !== "authenticated" &&
-    auth.state.status !== "logging-out" &&
-    auth.state.status !== "logout-failed"
-  )
-    return null;
-  const csrfToken = auth.state.csrfToken;
+  if (!isPresentationRetainedState(auth.state)) return null;
+  const csrfToken = activeCsrfToken(auth.state);
 
   async function apply(
     action: () => Promise<GeographicPlaceResponse>,
     message: (place: GeographicPlaceResponse) => string,
   ) {
+    if (!csrfToken) return;
     setSave({ status: "saving" });
     try {
       const place = await action();
-      const refreshed = await listGeographicPlaces();
+      const refreshed = await listGeographicPlaces(capability);
       setDirectory({ status: "ready", places: refreshed });
       setExpanded((current) => {
         const next = new Set(current);
@@ -398,9 +403,10 @@ export function GeographyScreen({
       setEditing(false);
       setSave({ status: "success", message: message(place) });
     } catch (error: unknown) {
-      if (error instanceof ApiError && error.status === 401)
-        auth.sessionExpired();
-      else if (error instanceof ApiError && error.status === 422)
+      if (error instanceof ApiError && error.status === 401) {
+        setSave({ status: "idle" });
+        sessionExpired();
+      } else if (error instanceof ApiError && error.status === 422)
         setSave({
           status: "error",
           message: geographyValidationMessages(error).join(" "),
@@ -480,6 +486,7 @@ export function GeographyScreen({
             place_type: createType,
           },
           csrfToken,
+          capability,
         ),
       (place) => {
         setCreateName("");
@@ -506,6 +513,7 @@ export function GeographyScreen({
               "city_town" | "locality" | "other_named_area",
           },
           csrfToken,
+          capability,
         ),
       (place) => `${place.display_path} was updated.`,
     );
@@ -838,6 +846,7 @@ export function GeographyScreen({
                                         selected.id,
                                         !selected.retired_at,
                                         csrfToken,
+                                        capability,
                                       ),
                                     (place) =>
                                       place.retired_at
@@ -855,14 +864,16 @@ export function GeographyScreen({
                                 type="button"
                                 disabled={pending}
                                 onClick={() => {
+                                  if (!csrfToken) return;
                                   setSave({ status: "saving" });
                                   void deleteGeographicPlace(
                                     selected.id,
                                     csrfToken,
+                                    capability,
                                   )
                                     .then(async () => {
                                       const refreshed =
-                                        await listGeographicPlaces();
+                                        await listGeographicPlaces(capability);
                                       setDirectory({
                                         status: "ready",
                                         places: refreshed,
@@ -879,7 +890,8 @@ export function GeographyScreen({
                                         error instanceof ApiError &&
                                         error.status === 401
                                       ) {
-                                        auth.sessionExpired();
+                                        setSave({ status: "idle" });
+                                        sessionExpired();
                                         return;
                                       }
                                       setSave({

@@ -3,7 +3,11 @@ import { useRef, useState, type SyntheticEvent } from "react";
 import { ExternalCopyChoice } from "./ExternalCopyChoice";
 import { PhotoDialog } from "../photos/PhotosSection";
 import { useAuth } from "../auth/context";
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { formText, mediaError } from "./helpers";
 import {
   createExternalMedia,
@@ -23,6 +27,7 @@ export function MediaEditor({
   onSaved: (asset: MediaAsset) => void;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
   const fileInput = useRef<HTMLInputElement>(null);
   const [kind, setKind] = useState<"local" | "external">(
     asset?.kind ?? "local",
@@ -32,8 +37,7 @@ export function MediaEditor({
     null,
   );
   const [error, setError] = useState<string | null>(null);
-  const token =
-    auth.state.status === "authenticated" ? auth.state.csrfToken : "";
+  const token = activeCsrfToken(auth.state);
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
@@ -49,7 +53,8 @@ export function MediaEditor({
         licence_url: text("licence_url") || null,
       };
       let result: MediaAsset;
-      if (asset) result = await updateMedia(asset.id, metadata, token);
+      if (asset)
+        result = await updateMedia(asset.id, metadata, token, capability);
       else if (kind === "external") {
         result = await createExternalMedia(
           {
@@ -59,10 +64,11 @@ export function MediaEditor({
             source_url: text("source_url"),
           },
           token,
+          capability,
         );
         if (form.get("save_local_copy") === "on") {
           setCreatedReference(result);
-          result = await saveLocalCopy(result.id, token);
+          result = await saveLocalCopy(result.id, token, capability);
         }
       } else {
         const file = fileInput.current?.files?.[0];
@@ -75,12 +81,14 @@ export function MediaEditor({
           text("title"),
           text("attribution"),
           token,
+          capability,
         );
       }
       onSaved(result);
     } catch (failure) {
+      if (isExpectedAuthCancellation(failure)) return;
       if (failure instanceof ApiError && failure.status === 401)
-        auth.sessionExpired();
+        sessionExpired();
       else setError(mediaError(failure));
     } finally {
       setPending(false);
@@ -104,11 +112,12 @@ export function MediaEditor({
             disabled={pending}
             onClick={() => {
               setPending(true);
-              void saveLocalCopy(createdReference.id, token)
+              void saveLocalCopy(createdReference.id, token, capability)
                 .then(onSaved)
                 .catch((failure: unknown) => {
+                  if (isExpectedAuthCancellation(failure)) return;
                   if (failure instanceof ApiError && failure.status === 401)
-                    auth.sessionExpired();
+                    sessionExpired();
                   else setError(mediaError(failure));
                 })
                 .finally(() => {

@@ -8,10 +8,10 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { AuthContext } from "../../auth/context";
+import { AuthProvider } from "../../auth/AuthProvider";
+import { acquireTestAuth } from "../../test/auth";
 import {
   FixtureSchedule,
-  fixtureAuth,
   fixtureId,
   fixtureTargets,
   fixtureToday,
@@ -36,9 +36,9 @@ afterEach(() => {
 });
 function mount() {
   return render(
-    <AuthContext.Provider value={fixtureAuth}>
+    <AuthProvider>
       <ScheduleUxPrototype fixture={fixture} />
-    </AuthContext.Provider>,
+    </AuthProvider>,
   );
 }
 async function inspect(title = "Repot nursery aloe") {
@@ -290,9 +290,10 @@ test("load failure offers retry and empty search has no fabricated activities", 
 });
 
 test("week loads only the inclusive period through the existing list contract across a month boundary", async () => {
+  const { capability } = await acquireTestAuth();
   const { loadWeek } = await import("./model");
   const state = readScheduleState("#/schedule?month=2026-11&date=2026-11-01");
-  const page = await loadWeek(state, new AbortController().signal);
+  const page = await loadWeek(state, new AbortController().signal, capability);
   expect(page.total).toBe(9);
   expect(
     page.items.every(

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { components } from "../api/schema";
-import { requestJson } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation, requestJson } from "../auth/api";
+import { useAuth } from "../auth/context";
 
 export type LineageResponse = components["schemas"]["LineageResponse"];
 export type LineageNode = LineageResponse["subject"];
@@ -97,28 +98,39 @@ export function useRecordedLineage(
   kind: LineageEndpoint,
   id: string,
 ): [RecordedLineage, () => void] {
+  const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const key = `${kind}:${id}`;
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<
     { key: string; attempt: number } & RecordedLineage
   >({ status: "loading", key, attempt });
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     void requestJson<LineageResponse>(`/api/v1/${kind}/${id}/lineage`, {
+      capability,
       signal: controller.signal,
     })
       .then((value) => {
         if (!controller.signal.aborted)
           setState({ status: "ready", key, attempt, value });
       })
-      .catch(() => {
-        if (!controller.signal.aborted)
-          setState({ status: "error", key, attempt });
+      .catch((error: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) {
+          sessionExpired();
+          return;
+        }
+        setState({ status: "error", key, attempt });
       });
     return () => {
       controller.abort();
     };
-  }, [id, kind, key, attempt]);
+  }, [attempt, authorized, capability, id, key, kind, sessionExpired]);
   const retry = useCallback(() => {
     setAttempt((value) => value + 1);
   }, []);

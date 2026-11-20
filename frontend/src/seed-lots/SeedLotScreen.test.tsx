@@ -2773,6 +2773,13 @@ test.each(["directory", "details"])(
         requested.push(`${init?.method ?? "GET"} ${path}`);
         if (path === "/api/v1/botanical-identities")
           return json([{ ...identity, compact_cover_kind: "local" }]);
+        if (
+          path ===
+          `/api/v1/botanical-identities/${identity.id}/cover-image/thumbnail`
+        )
+          return new Response(new Blob(["img"], { type: "image/png" }), {
+            status: 200,
+          });
         return undefined;
       }),
     );
@@ -2780,9 +2787,9 @@ test.each(["directory", "details"])(
     const cover = await screen.findByRole("img", {
       name: "Botanical identity cover for Blue packet",
     });
-    expect(cover).toHaveAttribute(
-      "src",
-      `/api/v1/botanical-identities/${identity.id}/cover-image/thumbnail`,
+    expect(cover.getAttribute("src")).toMatch(/^blob:/);
+    expect(requested).toContain(
+      `GET /api/v1/botanical-identities/${identity.id}/cover-image/thumbnail`,
     );
     expect(
       requested.filter((x) => x === "GET /api/v1/botanical-identities"),

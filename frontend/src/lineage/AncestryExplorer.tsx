@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import type { components } from "../api/schema";
-import { ApiError, requestJson } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation, requestJson } from "../auth/api";
+import { useAuth } from "../auth/context";
 import { InfoDisclosure } from "../components/ContextualHelp";
 import { DetailEmptyState } from "../components/DetailEmptyState";
 import { PageHeader } from "../components/ReferenceUI";
@@ -177,6 +178,7 @@ function Descendants({
   initial: AncestryChildren;
   generation: number;
 }) {
+  const { capability, sessionExpired } = useAuth();
   const [items, setItems] = useState(initial.items);
   const [total, setTotal] = useState(initial.total);
   const [more, setMore] = useState<"idle" | "loading" | "error">("idle");
@@ -191,6 +193,7 @@ function Descendants({
     try {
       const page = await requestJson<AncestryChildren>(
         childrenPath(parent, items.length),
+        { capability },
       );
       // Offset pages can overlap if records were added meanwhile; keep each record once.
       const seen = new Set(
@@ -203,7 +206,16 @@ function Descendants({
       setItems((current) => [...current, ...added]);
       setTotal(page.total);
       setMore("idle");
-    } catch {
+    } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) {
+        setMore("idle");
+        return;
+      }
+      if (error instanceof ApiError && error.status === 401) {
+        sessionExpired();
+        setMore("idle");
+        return;
+      }
       setMore("error");
     }
   }
@@ -260,26 +272,37 @@ function DescendantItem({
   generation: number;
   linkRef: (element: HTMLAnchorElement | null) => void;
 }) {
+  const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [open, setOpen] = useState(false);
   const [load, setLoad] = useState<Load>({ status: "idle" });
   const panelId = useId();
   const count = node.descendant_count;
   useEffect(() => {
-    if (!open || load.status !== "loading") return;
+    if (!authorized || !open || load.status !== "loading") return;
     const controller = new AbortController();
     requestJson<AncestryChildren>(childrenPath(node, 0), {
+      capability,
       signal: controller.signal,
     })
       .then((value) => {
         if (!controller.signal.aborted) setLoad({ status: "ready", value });
       })
-      .catch(() => {
-        if (!controller.signal.aborted) setLoad({ status: "error" });
+      .catch((error: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) {
+          sessionExpired();
+          return;
+        }
+        setLoad({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [open, load.status, node]);
+  }, [authorized, capability, open, load.status, node, sessionExpired]);
   return (
     <li>
       <Verb from={parentKind} to={node.record.kind} />
@@ -356,21 +379,31 @@ export function AncestryExplorer({
   kind: AncestryKind;
   id: string;
 }) {
+  const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const titleId = useId();
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<State>({ status: "loading" });
   useEffect(() => {
+    if (!authorized) return;
     // App keys this page by record, so a new focus always mounts in its loading state.
     const controller = new AbortController();
     requestJson<AncestryResponse>(
       `/api/v1/lineage/${kind}/${id}?limit=${String(PAGE)}`,
-      { signal: controller.signal },
+      { capability, signal: controller.signal },
     )
       .then((value) => {
         if (!controller.signal.aborted) setState({ status: "ready", value });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) {
+          sessionExpired();
+          return;
+        }
         setState({
           status:
             error instanceof ApiError && [404, 422].includes(error.status)
@@ -381,7 +414,7 @@ export function AncestryExplorer({
     return () => {
       controller.abort();
     };
-  }, [kind, id, attempt]);
+  }, [authorized, capability, kind, id, attempt, sessionExpired]);
   const retry = useCallback(() => {
     setState({ status: "loading" });
     setAttempt((value) => value + 1);

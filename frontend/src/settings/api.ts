@@ -1,17 +1,20 @@
 import type { components } from "../api/schema";
-import { requestJson } from "../auth/api";
+import { requestJson, type ProtectedRequestCapability } from "../auth/api";
 export type ApplicationSettings =
   components["schemas"]["ApplicationSettingsValue"];
 export function getApplicationSettings(
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<ApplicationSettings> {
-  return requestJson("/api/v1/application-settings", { signal });
+  return requestJson("/api/v1/application-settings", { capability, signal });
 }
 export function saveApplicationSettings(
   value: ApplicationSettings,
   token: string,
+  capability: ProtectedRequestCapability,
 ): Promise<ApplicationSettings> {
   return requestJson("/api/v1/application-settings", {
+    capability,
     method: "PUT",
     headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
     body: JSON.stringify(value),
@@ -22,11 +25,13 @@ export function saveApplicationSettings(
 export async function savePublicQrBaseUrl(
   value: string,
   token: string,
+  capability: ProtectedRequestCapability,
 ): Promise<ApplicationSettings> {
-  const latest = await getApplicationSettings();
+  const latest = await getApplicationSettings(capability);
   return saveApplicationSettings(
     { ...latest, public_qr_base_url: value.trim() || null },
     token,
+    capability,
   );
 }
 export const publicQrValidationMessage =

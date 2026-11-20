@@ -1,5 +1,9 @@
 import type { components } from "../api/schema";
-import { requestJson } from "../auth/api";
+import {
+  requestJson,
+  type ProtectedRequestCapability,
+  type ProtectedRequestInit,
+} from "../auth/api";
 import { monthDays } from "./calendar";
 import {
   localDay,
@@ -17,6 +21,7 @@ export function listSchedule(
   state: ScheduleState,
   offset = 0,
   limit = 50,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
   dueDay?: string,
 ): Promise<SchedulePage> {
@@ -28,27 +33,30 @@ export function listSchedule(
   p.set("today", localDay());
   p.set("offset", String(offset));
   p.set("limit", String(limit));
-  return requestJson<SchedulePage>(`/api/v1/schedule?${p}`, { signal }).then(
-    (page) => {
-      if (!Array.isArray(page.items) || typeof page.total !== "number")
-        throw new Error("Invalid Schedule response");
-      return page;
-    },
-  );
+  return requestJson<SchedulePage>(`/api/v1/schedule?${p}`, {
+    capability,
+    signal,
+  }).then((page) => {
+    if (!Array.isArray(page.items) || typeof page.total !== "number")
+      throw new Error("Invalid Schedule response");
+    return page;
+  });
 }
 export function getActivity(
   id: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<Activity> {
   return requestJson(
     `/api/v1/schedule/${encodeURIComponent(id)}?today=${localDay()}`,
-    { signal },
+    { capability, signal },
   );
 }
 
 /** Only the visible month, through the existing capped and ordered list API. */
 export async function listCalendar(
   state: ScheduleState,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<SchedulePage> {
   const days = monthDays(state.month);
@@ -63,6 +71,7 @@ export async function listCalendar(
   for (let offset = 0; offset <= 100000; offset += 100) {
     p.set("offset", String(offset));
     const page = await requestJson<SchedulePage>(`/api/v1/schedule?${p}`, {
+      capability,
       signal,
     });
     if (
@@ -86,36 +95,43 @@ export async function listCalendar(
 export function getTarget(
   kind: TargetKind,
   id: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<Target> {
   return requestJson(
     `/api/v1/schedule/targets/${kind}/${encodeURIComponent(id)}`,
-    { signal },
+    { capability, signal },
   );
 }
 export function listTargets(
   kind: TargetKind,
   q: string,
   offset: number,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<TargetPage> {
   const p = new URLSearchParams({ q, offset: String(offset), limit: "50" });
-  return requestJson(`/api/v1/schedule/targets/${kind}?${p}`, { signal });
+  return requestJson(`/api/v1/schedule/targets/${kind}?${p}`, {
+    capability,
+    signal,
+  });
 }
 export function writeActivity(
   id: string | null,
   payload: ScheduleWrite | components["schemas"]["ScheduleUpdate"],
   csrf: string,
+  capability: ProtectedRequestCapability,
 ): Promise<Activity> {
   return requestJson(
     `/api/v1/schedule${id ? `/${encodeURIComponent(id)}` : ""}?today=${localDay()}`,
-    mutation(id ? "PUT" : "POST", payload, csrf),
+    mutation(id ? "PUT" : "POST", payload, csrf, capability),
   );
 }
 export function transitionActivity(
   item: Activity,
   action: "complete" | "cancel",
   csrf: string,
+  capability: ProtectedRequestCapability,
   event: ScheduleEvent | null = null,
 ): Promise<Activity> {
   return requestJson(
@@ -127,11 +143,18 @@ export function transitionActivity(
         ...(action === "complete" ? { event } : {}),
       },
       csrf,
+      capability,
     ),
   );
 }
-function mutation(method: string, payload: unknown, csrf: string): RequestInit {
+function mutation(
+  method: string,
+  payload: unknown,
+  csrf: string,
+  capability: ProtectedRequestCapability,
+): ProtectedRequestInit {
   return {
+    capability,
     method,
     headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf },
     body: JSON.stringify(payload),

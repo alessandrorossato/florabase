@@ -1,5 +1,9 @@
 import type { components } from "../api/schema";
-import { requestJson } from "../auth/api";
+import {
+  requestJson,
+  type ProtectedRequestCapability,
+  type ProtectedRequestInit,
+} from "../auth/api";
 import type { PhotoTarget } from "../photos/api";
 
 export type MediaAsset = components["schemas"]["AssetResponse"];
@@ -21,6 +25,7 @@ export interface MediaFilters {
 
 export function listMedia(
   filters: MediaFilters = {},
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<MediaPage> {
   const params = new URLSearchParams({ limit: "24" });
@@ -34,18 +39,26 @@ export function listMedia(
     const value = filters[key];
     if (value !== undefined && value !== "") params.set(key, String(value));
   }
-  return requestJson(`/api/v1/media-assets?${params}`, { signal });
+  return requestJson(`/api/v1/media-assets?${params}`, { capability, signal });
 }
 export function getMedia(
   id: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<MediaDetail> {
   return requestJson(`/api/v1/media-assets/${encodeURIComponent(id)}`, {
+    capability,
     signal,
   });
 }
-function mutation(method: string, token: string, value?: unknown): RequestInit {
+function mutation(
+  method: string,
+  token: string,
+  capability: ProtectedRequestCapability,
+  value?: unknown,
+): ProtectedRequestInit {
   return {
+    capability,
     method,
     headers: {
       "X-CSRF-Token": token,
@@ -59,12 +72,14 @@ export function uploadMedia(
   title: string,
   attribution: string,
   token: string,
+  capability: ProtectedRequestCapability,
 ): Promise<MediaAsset> {
   const body = new FormData();
   body.set("file", file);
   if (title.trim()) body.set("title", title);
   if (attribution.trim()) body.set("attribution", attribution);
   return requestJson("/api/v1/media-assets/local", {
+    capability,
     method: "POST",
     headers: { "X-CSRF-Token": token },
     body,
@@ -73,26 +88,32 @@ export function uploadMedia(
 export function createExternalMedia(
   value: ExternalWrite,
   token: string,
+  capability: ProtectedRequestCapability,
 ): Promise<MediaAsset> {
   return requestJson(
     "/api/v1/media-assets/external",
-    mutation("POST", token, value),
+    mutation("POST", token, capability, value),
   );
 }
 export function updateMedia(
   id: string,
   value: AssetWrite,
   token: string,
+  capability: ProtectedRequestCapability,
 ): Promise<MediaAsset> {
   return requestJson(
     `/api/v1/media-assets/${encodeURIComponent(id)}`,
-    mutation("PATCH", token, value),
+    mutation("PATCH", token, capability, value),
   );
 }
-export function deleteMedia(id: string, token: string): Promise<void> {
+export function deleteMedia(
+  id: string,
+  token: string,
+  capability: ProtectedRequestCapability,
+): Promise<void> {
   return requestJson(
     `/api/v1/media-assets/${encodeURIComponent(id)}`,
-    mutation("DELETE", token),
+    mutation("DELETE", token, capability),
   );
 }
 export function linkMedia(
@@ -101,61 +122,74 @@ export function linkMedia(
   mediaId: string,
   value: LinkWrite,
   token: string,
+  capability: ProtectedRequestCapability,
 ): Promise<MediaLink> {
   return requestJson(
     `/api/v1/collection-records/${target}/${encodeURIComponent(id)}/media-links`,
-    mutation("POST", token, { ...value, media_asset_id: mediaId }),
+    mutation("POST", token, capability, { ...value, media_asset_id: mediaId }),
   );
 }
-export function unlinkMedia(id: string, token: string): Promise<void> {
+export function unlinkMedia(
+  id: string,
+  token: string,
+  capability: ProtectedRequestCapability,
+): Promise<void> {
   return requestJson(
     `/api/v1/media-links/${encodeURIComponent(id)}`,
-    mutation("DELETE", token),
+    mutation("DELETE", token, capability),
   );
 }
 export function editMediaLink(
   id: string,
   value: LinkWrite,
   token: string,
+  capability: ProtectedRequestCapability,
 ): Promise<MediaLink> {
   return requestJson(
     `/api/v1/media-links/${encodeURIComponent(id)}`,
-    mutation("PATCH", token, value),
+    mutation("PATCH", token, capability, value),
   );
 }
 export function listTargets(
   target: PhotoTarget,
   query: string,
   offset = 0,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<TargetPage> {
   return requestJson(
     `/api/v1/media-targets/${target}?${new URLSearchParams({ query, offset: String(offset), limit: "20" })}`,
-    { signal },
+    { capability, signal },
   );
 }
 
-export function saveLocalCopy(id: string, token: string): Promise<MediaAsset> {
+export function saveLocalCopy(
+  id: string,
+  token: string,
+  capability: ProtectedRequestCapability,
+): Promise<MediaAsset> {
   return requestJson(
     `/api/v1/media-assets/${encodeURIComponent(id)}/save-local-copy`,
-    mutation("POST", token),
+    mutation("POST", token, capability),
   );
 }
 export function refreshLocalCopy(
   id: string,
   token: string,
+  capability: ProtectedRequestCapability,
 ): Promise<MediaAsset> {
   return requestJson(
     `/api/v1/media-assets/${encodeURIComponent(id)}/refresh-local-copy`,
-    mutation("POST", token),
+    mutation("POST", token, capability),
   );
 }
 export function removeLocalCopy(
   id: string,
   token: string,
+  capability: ProtectedRequestCapability,
 ): Promise<MediaAsset> {
   return requestJson(
     `/api/v1/media-assets/${encodeURIComponent(id)}/local-copy`,
-    mutation("DELETE", token),
+    mutation("DELETE", token, capability),
   );
 }

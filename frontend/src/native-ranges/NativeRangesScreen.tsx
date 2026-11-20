@@ -6,7 +6,11 @@ import {
 } from "../components/DirectoryTools";
 import { TaskDialog } from "../components/TaskDialog";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  isExpectedAuthCancellation,
+  type ProtectedRequestCapability,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { BotanicalName, DirectorySearch } from "../components/ReferenceUI";
 import { SavedViews } from "../saved-views/SavedViews";
@@ -45,8 +49,16 @@ const scopes = [
   { value: "historical", label: "Historical" },
 ] as const;
 
-function useLocalRead<T>(read: (signal: AbortSignal) => Promise<T>) {
+function useLocalRead<T>(
+  read: (
+    signal: AbortSignal,
+    capability: ProtectedRequestCapability,
+  ) => Promise<T>,
+) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<{
     read: typeof read;
@@ -55,16 +67,18 @@ function useLocalRead<T>(read: (signal: AbortSignal) => Promise<T>) {
     error?: "missing" | "failed";
   } | null>(null);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
-      void read(controller.signal)
+      void read(controller.signal, capability)
         .then((data) => {
           if (!controller.signal.aborted) setResult({ read, attempt, data });
         })
         .catch((error: unknown) => {
-          if (controller.signal.aborted) return;
+          if (controller.signal.aborted || isExpectedAuthCancellation(error))
+            return;
           if (error instanceof ApiError && error.status === 401)
-            auth.sessionExpired();
+            sessionExpired();
           else
             setResult({
               read,
@@ -80,7 +94,7 @@ function useLocalRead<T>(read: (signal: AbortSignal) => Promise<T>) {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [read, attempt, auth]);
+  }, [authorized, capability, read, attempt, sessionExpired]);
   const current =
     result?.read === read && result.attempt === attempt ? result : null;
   return {
@@ -179,7 +193,8 @@ function IdentityBrowser({
 }) {
   const [offset, setOffset] = useState(0);
   const read = useCallback(
-    (signal: AbortSignal) => listNativeIdentities(filters, offset, signal),
+    (signal: AbortSignal, capability: ProtectedRequestCapability) =>
+      listNativeIdentities(filters, offset, capability, signal),
     [filters, offset],
   );
   const query = useLocalRead(read);
@@ -391,10 +406,13 @@ function RecordedEvidence({
 }) {
   const [offset, setOffset] = useState(0);
   const read = useCallback(
-    (signal: AbortSignal): Promise<Overview | SelectedRanges> =>
+    (
+      signal: AbortSignal,
+      capability: ProtectedRequestCapability,
+    ): Promise<Overview | SelectedRanges> =>
       id
-        ? getNativeSelection(id, filters, offset, signal)
-        : getNativeOverview(filters, offset, signal),
+        ? getNativeSelection(id, filters, offset, capability, signal)
+        : getNativeOverview(filters, offset, capability, signal),
     [id, filters, offset],
   );
   const query = useLocalRead<Overview | SelectedRanges>(read);
@@ -438,7 +456,8 @@ function OverviewPanel({
   const coverage = useRef<HTMLDivElement>(null);
   const places = useRef<HTMLButtonElement>(null);
   const read = useCallback(
-    (signal: AbortSignal) => getNativeOverview(filters, 0, signal),
+    (signal: AbortSignal, capability: ProtectedRequestCapability) =>
+      getNativeOverview(filters, 0, capability, signal),
     [filters],
   );
   const query = useLocalRead(read);
@@ -567,7 +586,8 @@ function SelectedPanel({
   evidenceOnly?: boolean;
 }) {
   const read = useCallback(
-    (signal: AbortSignal) => getNativeSelection(id, filters, 0, signal),
+    (signal: AbortSignal, capability: ProtectedRequestCapability) =>
+      getNativeSelection(id, filters, 0, capability, signal),
     [id, filters],
   );
   const query = useLocalRead(read);
@@ -676,7 +696,8 @@ function ComparisonPanel({
   colors?: Record<string, string>;
 }) {
   const read = useCallback(
-    (signal: AbortSignal) => getNativeComparison(ids, filters, signal),
+    (signal: AbortSignal, capability: ProtectedRequestCapability) =>
+      getNativeComparison(ids, filters, capability, signal),
     [ids, filters],
   );
   const query = useLocalRead(read);

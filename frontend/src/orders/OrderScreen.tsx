@@ -22,7 +22,12 @@ import {
 } from "../components/DirectoryPage";
 import { useDirectoryPresentation } from "../components/directoryPresentation";
 
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isExpectedAuthCancellation,
+  isPresentationRetainedState,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   Breadcrumbs,
@@ -626,6 +631,9 @@ export function OrderScreen({
   startCreating?: boolean;
 } = {}) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const presentation = useDirectoryPresentation("orders");
   const selectedTrigger = useRef<HTMLButtonElement | null>(null);
   const directoryList = useRef<HTMLUListElement | null>(null);
@@ -716,31 +724,34 @@ export function OrderScreen({
   });
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void listSuppliers(controller.signal)
+    void listSuppliers(capability, controller.signal)
       .then((items) => {
         if (controller.signal.aborted) return;
         setSuppliers(items);
         setSuppliersError("");
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setSuppliersError("Florabase could not load Suppliers.");
       });
     return () => {
       controller.abort();
     };
-  }, [auth, supplierAttempt]);
+  }, [authorized, capability, sessionExpired, supplierAttempt]);
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     const limit = pageSize === "all" ? 100 : Number(pageSize);
     void listOrders(
       view.state.q,
       view.state.supplier_id,
       offset,
+      capability,
       controller.signal,
       limit,
     )
@@ -753,6 +764,7 @@ export function OrderScreen({
               view.state.q,
               view.state.supplier_id,
               (index + 1) * limit,
+              capability,
               controller.signal,
               limit,
             ),
@@ -773,9 +785,10 @@ export function OrderScreen({
         setPageLoadedKey(pageRequestKey);
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) {
-          auth.sessionExpired();
+          sessionExpired();
           return;
         }
         setStoredPageError("Florabase could not load Orders.");
@@ -786,7 +799,9 @@ export function OrderScreen({
       controller.abort();
     };
   }, [
-    auth,
+    authorized,
+    capability,
+    sessionExpired,
     attempt,
     offset,
     pageSize,
@@ -796,9 +811,9 @@ export function OrderScreen({
   ]);
 
   useEffect(() => {
-    if (!initialId) return;
+    if (!initialId || !authorized) return;
     const controller = new AbortController();
-    void getOrder(initialId, lotOffset, controller.signal)
+    void getOrder(initialId, lotOffset, capability, controller.signal)
       .then((item) => {
         if (controller.signal.aborted) return;
         setStoredDetail(item);
@@ -806,9 +821,10 @@ export function OrderScreen({
         setDetailLoadedKey(detailRequestKey);
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) {
-          auth.sessionExpired();
+          sessionExpired();
           return;
         }
         setStoredDetailError(
@@ -822,7 +838,15 @@ export function OrderScreen({
     return () => {
       controller.abort();
     };
-  }, [auth, attempt, detailRequestKey, initialId, lotOffset]);
+  }, [
+    authorized,
+    capability,
+    sessionExpired,
+    attempt,
+    detailRequestKey,
+    initialId,
+    lotOffset,
+  ]);
 
   useEffect(() => {
     if (startCreating === previousCreateRoute.current) return;
@@ -982,21 +1006,16 @@ export function OrderScreen({
     fallbackId: "order-search",
   });
 
-  if (
-    auth.state.status !== "authenticated" &&
-    auth.state.status !== "logging-out" &&
-    auth.state.status !== "logout-failed"
-  )
-    return null;
-  const csrf = auth.state.csrfToken;
+  if (!isPresentationRetainedState(auth.state)) return null;
+  const csrf = activeCsrfToken(auth.state);
 
   async function save(payload: OrderCreate) {
-    if (savePending) return;
+    if (savePending || !csrf) return;
     const existing = target;
     setSavePending(true);
     setFormError("");
     try {
-      const result = await saveOrder(existing?.id, payload, csrf);
+      const result = await saveOrder(existing?.id, payload, csrf, capability);
       setFormOpen(false);
       setEditing(false);
       setTarget(null);
@@ -1013,6 +1032,7 @@ export function OrderScreen({
         closeCollectionPage("#/orders");
       }
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) return;
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();
       else setFormError(orderError(error));
@@ -1022,11 +1042,11 @@ export function OrderScreen({
   }
 
   async function remove() {
-    if (!initialId || deletePending) return;
+    if (!initialId || deletePending || !csrf) return;
     setDeletePending(true);
     setDeleteError("");
     try {
-      await deleteOrder(initialId, csrf);
+      await deleteOrder(initialId, csrf, capability);
       setDeleting(false);
       setSelectedId(null);
       setSuccess("Order deleted.");
@@ -1034,6 +1054,7 @@ export function OrderScreen({
       if (window.location.hash !== "#/orders")
         window.location.hash = "#/orders";
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) return;
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();
       else setDeleteError(orderError(error));

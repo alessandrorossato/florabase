@@ -11,7 +11,8 @@ import {
 import { Icon } from "../components/Icon";
 import { TaskDialog } from "../components/TaskDialog";
 import { entryHref } from "../events/entryRequest";
-import { requestJson } from "../auth/api";
+import { isExpectedAuthCancellation, requestJson } from "../auth/api";
+import { useAuth } from "../auth/context";
 import { searchKindLabels, type SearchResponse } from "../collection/searchApi";
 import { labelRoute } from "./labelRoute";
 import { recordContext } from "./recordContext";
@@ -41,18 +42,23 @@ function hitHref(hit: Hit) {
 
 /** The existing global search, limited to the record kinds that have entry forms. */
 function useRecordSearch(query: string) {
+  const auth = useAuth();
+  const { capability } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const trimmed = query.trim();
   const [answer, setAnswer] = useState<{
     query: string;
     hits: Hit[] | null;
   } | null>(null);
   useEffect(() => {
-    if (trimmed.length < 2) return;
+    if (!authorized || trimmed.length < 2) return;
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       const params = new URLSearchParams({ q: trimmed, limit: "8" });
       for (const kind of recordKinds) params.append("kind", kind);
       requestJson<SearchResponse>(`/api/v1/search?${params.toString()}`, {
+        capability,
         signal: controller.signal,
       })
         .then((response) => {
@@ -66,7 +72,7 @@ function useRecordSearch(query: string) {
           });
         })
         .catch((error: unknown) => {
-          if (error instanceof DOMException && error.name === "AbortError")
+          if (controller.signal.aborted || isExpectedAuthCancellation(error))
             return;
           setAnswer({ query: trimmed, hits: null });
         });
@@ -75,7 +81,7 @@ function useRecordSearch(query: string) {
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [trimmed]);
+  }, [authorized, capability, trimmed]);
   const current = answer?.query === trimmed ? answer : null;
   if (trimmed.length < 2)
     return { hits: [], message: "Type at least two characters." };

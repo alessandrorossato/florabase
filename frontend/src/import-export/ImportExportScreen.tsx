@@ -1,8 +1,13 @@
-import { ActionLink } from "../components/Action";
+import { ActionButton } from "../components/Action";
 import { useState } from "react";
 import { PageHeader } from "../components/ReferenceUI";
 
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  downloadProtectedFile,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   applyImport,
@@ -77,6 +82,13 @@ export function ImportExportScreen() {
   const [guide, setGuide] = useState<FieldGuideItem[] | null>(null);
   const [guideBusy, setGuideBusy] = useState(false);
   const [guideError, setGuideError] = useState<string | null>(null);
+  const [activeDownload, setActiveDownload] = useState<
+    "template" | "example" | "export" | null
+  >(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const owner =
     auth.state.status === "authenticated" && auth.state.session.owner;
   const selectedType =
@@ -87,8 +99,36 @@ export function ImportExportScreen() {
     setPreview(null);
     setResult(null);
     setError(null);
+    setDownloadError(null);
     setFilter("all");
     setChoices({});
+  }
+
+  async function triggerDownload(
+    slot: "template" | "example" | "export",
+    path: string,
+    fallbackFilename: string,
+  ) {
+    if (activeDownload !== null || !authorized) return;
+    setActiveDownload(slot);
+    setDownloadError(null);
+    try {
+      await downloadProtectedFile({
+        path,
+        capability,
+        fallbackFilename,
+        accept: "text/csv",
+      });
+    } catch (caught: unknown) {
+      if (isExpectedAuthCancellation(caught)) return;
+      if (caught instanceof ApiError && caught.status === 401) {
+        sessionExpired();
+        return;
+      }
+      setDownloadError("Could not download the requested CSV file. Try again.");
+    } finally {
+      setActiveDownload(null);
+    }
   }
 
   async function toggleGuide() {
@@ -97,12 +137,17 @@ export function ImportExportScreen() {
       return;
     }
     setGuideOpen(true);
-    if (guide) return;
+    if (guide || !authorized) return;
     setGuideBusy(true);
     setGuideError(null);
     try {
-      setGuide((await getFieldGuide(kind)).fields);
+      setGuide((await getFieldGuide(kind, capability)).fields);
     } catch (caught: unknown) {
+      if (isExpectedAuthCancellation(caught)) return;
+      if (caught instanceof ApiError && caught.status === 401) {
+        sessionExpired();
+        return;
+      }
       setGuideError(errorMessage(caught));
     } finally {
       setGuideBusy(false);
@@ -110,16 +155,21 @@ export function ImportExportScreen() {
   }
 
   async function validate() {
-    if (!file) return;
+    if (!file || !authorized) return;
     setBusy("preview");
     setError(null);
     setResult(null);
     setFilter("all");
     setChoices({});
     try {
-      const response = await previewImport(kind, file);
+      const response = await previewImport(kind, file, capability);
       setPreview(response);
     } catch (caught: unknown) {
+      if (isExpectedAuthCancellation(caught)) return;
+      if (caught instanceof ApiError && caught.status === 401) {
+        sessionExpired();
+        return;
+      }
       setPreview(null);
       setError(errorMessage(caught));
     } finally {
@@ -128,7 +178,8 @@ export function ImportExportScreen() {
   }
 
   async function confirm() {
-    if (!file || !preview || auth.state.status !== "authenticated") return;
+    const csrfToken = activeCsrfToken(auth.state);
+    if (!file || !preview || !csrfToken || !authorized) return;
     setBusy("apply");
     setError(null);
     try {
@@ -136,12 +187,18 @@ export function ImportExportScreen() {
         kind,
         file,
         preview.confirmation_token,
-        auth.state.csrfToken,
+        csrfToken,
         choices,
+        capability,
       );
       setResult(response);
       setPreview(null);
     } catch (caught: unknown) {
+      if (isExpectedAuthCancellation(caught)) return;
+      if (caught instanceof ApiError && caught.status === 401) {
+        sessionExpired();
+        return;
+      }
       setPreview(null);
       setError(
         `${errorMessage(caught)} Validate the file again before importing.`,
@@ -222,20 +279,36 @@ export function ImportExportScreen() {
             role="group"
             aria-label="CSV preparation"
           >
-            <a
+            <button
+              type="button"
               className="import-resource"
-              href={`/api/v1/imports/templates/${kind}.csv`}
-              download
+              disabled={activeDownload !== null || !authorized}
+              onClick={() =>
+                void triggerDownload(
+                  "template",
+                  `/api/v1/imports/templates/${kind}.csv`,
+                  `${kind}-template.csv`,
+                )
+              }
             >
-              Blank template
-            </a>
-            <a
+              {activeDownload === "template"
+                ? "Downloading…"
+                : "Blank template"}
+            </button>
+            <button
+              type="button"
               className="import-resource"
-              href={`/api/v1/imports/examples/${kind}.csv`}
-              download
+              disabled={activeDownload !== null || !authorized}
+              onClick={() =>
+                void triggerDownload(
+                  "example",
+                  `/api/v1/imports/examples/${kind}.csv`,
+                  `${kind}-example.csv`,
+                )
+              }
             >
-              Example CSV
-            </a>
+              {activeDownload === "example" ? "Downloading…" : "Example CSV"}
+            </button>
             <button
               type="button"
               className="import-resource"
@@ -246,6 +319,11 @@ export function ImportExportScreen() {
               {guideOpen ? "Hide guide" : "Field guide"}
             </button>
           </div>
+          {downloadError && (
+            <p className="notice notice--error" role="alert">
+              {downloadError}
+            </p>
+          )}
           <div className="field">
             <label htmlFor="import-file">CSV file</label>
             <input
@@ -293,15 +371,21 @@ export function ImportExportScreen() {
         >
           <h3 id="export-heading">Export CSV</h3>
           <p className="import-workspace__selected">{selectedType}</p>
-          <ActionLink
+          <ActionButton
             icon="download"
-            className="button-link button--secondary"
-            href={`/api/v1/exports/${kind}.csv`}
+            variant="secondary"
             aria-label={`Download ${selectedType} CSV`}
-            download
+            disabled={activeDownload !== null || !authorized}
+            onClick={() =>
+              void triggerDownload(
+                "export",
+                `/api/v1/exports/${kind}.csv`,
+                `${kind}.csv`,
+              )
+            }
           >
-            Download CSV
-          </ActionLink>
+            {activeDownload === "export" ? "Downloading…" : "Download CSV"}
+          </ActionButton>
           <p>For spreadsheets, not backup or full collection transfer.</p>
           <div className="import-order">
             <strong>Recommended import order</strong>

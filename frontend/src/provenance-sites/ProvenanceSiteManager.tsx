@@ -16,7 +16,8 @@ import {
   type SyntheticEvent,
 } from "react";
 
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
+import { useAuth } from "../auth/context";
 import { FieldHelp } from "../components/ContextualHelp";
 import { loadWorkspaceChunk } from "../components/workspaceChunk";
 import {
@@ -82,6 +83,9 @@ export function ProvenanceSiteManager({
   query?: string;
   onPlaceSelect?: (id: string) => void;
 }) {
+  const { state: authState, capability, sessionExpired } = useAuth();
+  const authorized =
+    authState.status === "authenticated" && capability.isAuthorized();
   const [sites, setSites] = useState<ProvenanceSiteResponse[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [form, setForm] = useState<SiteForm>(blank);
@@ -115,12 +119,13 @@ export function ProvenanceSiteManager({
   }, [startCreating, onCreationStarted]);
 
   async function refresh() {
-    setSites(await listProvenanceSites());
+    setSites(await listProvenanceSites(capability));
   }
 
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void listProvenanceSites(controller.signal)
+    void listProvenanceSites(capability, controller.signal)
       .then((loaded) => {
         setSites(loaded);
         setLoading(false);
@@ -138,16 +143,23 @@ export function ProvenanceSiteManager({
           });
         }
       })
-      .catch(() => {
-        if (!controller.signal.aborted) {
-          setLoadError(true);
-          setLoading(false);
+      .catch((loadFailure: unknown) => {
+        if (
+          controller.signal.aborted ||
+          isExpectedAuthCancellation(loadFailure)
+        )
+          return;
+        if (loadFailure instanceof ApiError && loadFailure.status === 401) {
+          sessionExpired();
+          return;
         }
+        setLoadError(true);
+        setLoading(false);
       });
     return () => {
       controller.abort();
     };
-  }, [initialSiteId]);
+  }, [authorized, capability, initialSiteId, sessionExpired]);
 
   function select(site: ProvenanceSiteResponse) {
     setSelectedId(site.id);
@@ -177,13 +189,18 @@ export function ProvenanceSiteManager({
     };
     try {
       const saved = selectedId
-        ? await updateProvenanceSite(selectedId, payload, csrfToken)
-        : await createProvenanceSite(payload, csrfToken);
+        ? await updateProvenanceSite(selectedId, payload, csrfToken, capability)
+        : await createProvenanceSite(payload, csrfToken, capability);
       await refresh();
       select(saved);
       setEditing(false);
       setMessage(`${saved.name} was saved.`);
     } catch (error: unknown) {
+      if (isExpectedAuthCancellation(error)) return;
+      if (error instanceof ApiError && error.status === 401) {
+        sessionExpired();
+        return;
+      }
       if (error instanceof ApiError && error.status === 422)
         setValidationField(firstValidationField(error));
       setMessage(
@@ -388,13 +405,25 @@ export function ProvenanceSiteManager({
                           if (!window.confirm(`Delete ${selected.name}?`))
                             return;
                           setPending(true);
-                          void deleteProvenanceSite(selected.id, csrfToken)
+                          void deleteProvenanceSite(
+                            selected.id,
+                            csrfToken,
+                            capability,
+                          )
                             .then(async () => {
                               await refresh();
                               setSelectedId(null);
                               setMessage("The provenance site was deleted.");
                             })
                             .catch((error: unknown) => {
+                              if (isExpectedAuthCancellation(error)) return;
+                              if (
+                                error instanceof ApiError &&
+                                error.status === 401
+                              ) {
+                                sessionExpired();
+                                return;
+                              }
                               setMessage(
                                 error instanceof ApiError &&
                                   error.status === 409

@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import {
   cleanup,
   render,
@@ -6,12 +7,28 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { AuthContext, type AuthContextValue } from "../auth/context";
 import type { GeographicPlaceResponse } from "../geographic-places/api";
+import { acquireTestAuth } from "../test/auth";
 import { ProvenanceSiteManager } from "./ProvenanceSiteManager";
 import type { ProvenanceSiteResponse } from "./api";
 import type { MapPoint } from "../provenance-map/ProvenanceMap";
+
+let auth: AuthContextValue;
+function siteManagerElement(
+  props: ComponentProps<typeof ProvenanceSiteManager>,
+) {
+  return (
+    <AuthContext.Provider value={auth}>
+      <ProvenanceSiteManager {...props} />
+    </AuthContext.Provider>
+  );
+}
+beforeEach(async () => {
+  auth = (await acquireTestAuth({ csrfToken: "csrf" })).auth;
+});
 
 vi.mock("../provenance-map/ProvenanceMap", () => ({
   ProvenanceMap: ({
@@ -126,7 +143,7 @@ test("creates, edits, and deletes a path-aware ProvenanceSite", async () => {
   });
 
   const user = userEvent.setup();
-  render(<ProvenanceSiteManager places={[world]} csrfToken="csrf" />);
+  render(siteManagerElement({ places: [world], csrfToken: "csrf" }));
   await screen.findByText("No provenance sites recorded.");
   await user.click(screen.getByRole("button", { name: "New provenance site" }));
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
@@ -227,7 +244,7 @@ test("shows an actionable coordinate-pair validation error", async () => {
     return Promise.resolve(response([]));
   });
   const user = userEvent.setup();
-  render(<ProvenanceSiteManager places={[world]} csrfToken="csrf" />);
+  render(siteManagerElement({ places: [world], csrfToken: "csrf" }));
   await screen.findByText("No provenance sites recorded.");
   await user.click(screen.getByRole("button", { name: "New provenance site" }));
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
@@ -288,7 +305,7 @@ test("List and Map share all sites and selection; only stored coordinate pairs c
     return Promise.resolve(response([coordinateSite, withoutCoordinates]));
   });
   const { rerender } = render(
-    <ProvenanceSiteManager places={[world]} csrfToken="csrf" mode="browse" />,
+    siteManagerElement({ places: [world], csrfToken: "csrf", mode: "browse" }),
   );
   expect(
     await screen.findByRole("button", { name: /Historical valley/ }),
@@ -300,7 +317,7 @@ test("List and Map share all sites and selection; only stored coordinate pairs c
     ),
   ).toBeInTheDocument();
   rerender(
-    <ProvenanceSiteManager places={[world]} csrfToken="csrf" mode="map" />,
+    siteManagerElement({ places: [world], csrfToken: "csrf", mode: "map" }),
   );
   const directory = screen.getByRole("list", { name: "Provenance sites" });
   const user = userEvent.setup();
@@ -319,7 +336,7 @@ test("List and Map share all sites and selection; only stored coordinate pairs c
   expect(screen.getByRole("button", { name: "Edit" })).toBeEnabled();
   expect(screen.getAllByText("No coordinates recorded")).toHaveLength(2);
   rerender(
-    <ProvenanceSiteManager places={[world]} csrfToken="csrf" mode="browse" />,
+    siteManagerElement({ places: [world], csrfToken: "csrf", mode: "browse" }),
   );
   expect(
     within(directory).getByRole("button", { name: /Historical valley/ }),
@@ -375,7 +392,7 @@ test("shows zero accuracy and distinguishes delete conflicts from other failures
   });
   vi.spyOn(window, "confirm").mockReturnValue(true);
   const user = userEvent.setup();
-  render(<ProvenanceSiteManager places={[world]} csrfToken="csrf" />);
+  render(siteManagerElement({ places: [world], csrfToken: "csrf" }));
   await user.click(
     within(
       await screen.findByRole("list", { name: "Provenance sites" }),
@@ -413,12 +430,12 @@ test("associated sites use exact place identity independently of matching names 
   }));
   vi.spyOn(globalThis, "fetch").mockResolvedValue(response(sites));
   render(
-    <ProvenanceSiteManager
-      places={[world]}
-      placeId={world.id}
-      csrfToken="csrf"
-      query="Same locality"
-    />,
+    siteManagerElement({
+      places: [world],
+      placeId: world.id,
+      csrfToken: "csrf",
+      query: "Same locality",
+    }),
   );
   await screen.findByRole("button", { name: /Same locality site 0/ });
   expect(

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useAuth } from "../auth/context";
 import {
   listBotanicalIdentities,
   type BotanicalIdentityResponse,
@@ -14,6 +15,9 @@ export function RecordPresentationProvider({
   children: ReactNode;
   fetchIdentities: boolean;
 }) {
+  const { state, capability } = useAuth();
+  const authorized =
+    state.status === "authenticated" && capability.isAuthorized();
   const [identities, setIdentities] = useState<
     ReadonlyMap<string, BotanicalIdentityResponse>
   >(new Map());
@@ -21,9 +25,9 @@ export function RecordPresentationProvider({
     setIdentities(new Map(items.map((item) => [item.id, item])));
   }, []);
   useEffect(() => {
-    if (!fetchIdentities) return;
+    if (!authorized || !fetchIdentities) return;
     const controller = new AbortController();
-    void listBotanicalIdentities(controller.signal)
+    void listBotanicalIdentities(capability, controller.signal)
       .then((items) => {
         if (!controller.signal.aborted) publish(items);
       })
@@ -33,7 +37,7 @@ export function RecordPresentationProvider({
     return () => {
       controller.abort();
     };
-  }, [fetchIdentities, publish]);
+  }, [authorized, capability, fetchIdentities, publish]);
   return (
     <RecordIdentities value={identities}>
       <RecordIdentityWriter value={publish}>{children}</RecordIdentityWriter>

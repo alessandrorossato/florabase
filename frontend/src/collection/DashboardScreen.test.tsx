@@ -7,7 +7,10 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import type { ReactElement } from "react";
+import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { DashboardOverview } from "./DashboardScreen";
 import { emptyOverview, journalFixture } from "./dashboardFixtures";
 import type { DashboardResponse } from "./api";
@@ -16,11 +19,34 @@ import { recordWorkflows } from "../events/recordWorkflows";
 import type { Activity } from "../schedule/api";
 import { localDay } from "../schedule/state";
 
-const expired = vi.hoisted(() => vi.fn());
-const auth = { sessionExpired: expired };
-vi.mock("../auth/context", () => ({ useAuth: () => auth }));
+const expired = vi.fn();
+let auth: AuthContextValue;
 const get = vi.hoisted(() => vi.fn());
 vi.mock("./api", () => ({ getDashboard: get }));
+function mountOverview(ui = <DashboardOverview />) {
+  return render(<AuthContext.Provider value={auth}>{ui}</AuthContext.Provider>);
+}
+function renderWithAuth(ui: ReactElement) {
+  const result = render(
+    <AuthContext.Provider value={auth}>{ui}</AuthContext.Provider>,
+  );
+  return {
+    ...result,
+    rerender: (next: ReactElement) => {
+      result.rerender(
+        <AuthContext.Provider value={auth}>{next}</AuthContext.Provider>,
+      );
+    },
+  };
+}
+beforeEach(async () => {
+  auth = { ...(await acquireTestAuth()).auth, sessionExpired: expired };
+  vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+    Promise.resolve(
+      new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+    ),
+  );
+});
 const empty: DashboardResponse = {
   counts: {
     active_plants: 0,
@@ -36,11 +62,12 @@ const empty: DashboardResponse = {
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  vi.restoreAllMocks();
 });
 
 test("empty collection preserves all operational areas and uses the local calendar day", async () => {
   get.mockResolvedValue(empty);
-  render(<DashboardOverview />);
+  mountOverview();
   expect(
     await screen.findByRole("heading", { name: "Collection snapshot" }),
   ).toBeInTheDocument();
@@ -48,7 +75,11 @@ test("empty collection preserves all operational areas and uses the local calend
     expect(screen.getByRole("heading", { name })).toBeInTheDocument();
   expect(screen.getByText(/No planned activities/)).toBeInTheDocument();
   expect(screen.getByText(/No recent activity/)).toBeInTheDocument();
-  expect(get).toHaveBeenCalledWith(expect.any(AbortSignal), localDay());
+  expect(get).toHaveBeenCalledWith(
+    auth.capability,
+    expect.any(AbortSignal),
+    localDay(),
+  );
   expect(get).toHaveBeenCalledTimes(1);
   for (const name of ["Propagation", "Sourcing", "Botanical coverage"])
     expect(screen.queryByRole("heading", { name })).not.toBeInTheDocument();
@@ -65,7 +96,7 @@ test("loading, recoverable failure and retry never manufacture zero metrics", as
     )
     .mockResolvedValueOnce(empty);
   const user = userEvent.setup();
-  render(<DashboardOverview />);
+  mountOverview();
   expect(screen.getByRole("status")).toHaveTextContent("Loading");
   expect(
     screen.queryByRole("link", { name: "Individual Plants: 0" }),
@@ -80,7 +111,7 @@ test("loading, recoverable failure and retry never manufacture zero metrics", as
 
 test("auth failures expire the session", async () => {
   get.mockRejectedValue(new ApiError(401, "Expired"));
-  render(<DashboardOverview />);
+  mountOverview();
   await waitFor(() => {
     expect(expired).toHaveBeenCalledOnce();
   });
@@ -124,7 +155,7 @@ test("Journal, History, partial dates, reversal and planned work remain distingu
       overdue_items: [plan],
     },
   });
-  render(<DashboardOverview />);
+  mountOverview();
   await screen.findByRole("heading", { name: "Collection snapshot" });
   const recent = await screen.findByRole("region", { name: "Recent activity" });
   expect(within(recent).getByText("Journal")).toBeInTheDocument();
@@ -175,7 +206,7 @@ test("authoritative KPI units and at most four distinct protected photographs re
     },
     photos,
   });
-  render(<DashboardOverview />);
+  mountOverview();
   expect(
     await screen.findByRole("link", { name: "Individual Plants: 17" }),
   ).toHaveAttribute("href", "#/plants?type=plant");
@@ -188,7 +219,7 @@ test("authoritative KPI units and at most four distinct protected photographs re
     "#/seeds",
   );
   const grid = screen.getByRole("list", { name: "Selected individual Plants" });
-  const images = within(grid).getAllByRole("img");
+  const images = await within(grid).findAllByRole("img");
   expect(images).toHaveLength(4);
   expect(new Set(images.map((image) => image.getAttribute("src"))).size).toBe(
     4,
@@ -208,6 +239,13 @@ test("authoritative KPI units and at most four distinct protected photographs re
 });
 
 test("fewer images are not duplicated, and unavailable images are never drawn as placeholders or loaded remotely", async () => {
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(() =>
+      Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      ),
+    );
   const photo = storedPhoto(1);
   get.mockResolvedValue({
     ...empty,
@@ -223,10 +261,14 @@ test("fewer images are not duplicated, and unavailable images are never drawn as
       },
     ],
   });
-  render(<DashboardOverview />);
+  mountOverview();
   const image = await screen.findByRole("img", { name: photo.title });
   expect(screen.getAllByRole("img")).toHaveLength(1);
-  expect(image).toHaveAttribute("src", photo.image.thumbnail_url);
+  expect(image.getAttribute("src")).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenCalledWith(
+    photo.image.thumbnail_url,
+    expect.objectContaining({ credentials: "same-origin" }),
+  );
   expect(
     within(
       screen.getByRole("list", { name: "Selected individual Plants" }),
@@ -250,6 +292,13 @@ test("fewer images are not duplicated, and unavailable images are never drawn as
 });
 
 test("Plant visit sample stays stable through rerenders, and broken primary falls back to a labelled identity reference", async () => {
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(() =>
+      Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      ),
+    );
   const original = storedPhoto(1);
   const plant: NonNullable<DashboardResponse["photos"]>[number] = {
     ...original,
@@ -260,9 +309,13 @@ test("Plant visit sample stays stable through rerenders, and broken primary fall
     },
   };
   get.mockResolvedValue({ ...empty, photos: [plant] });
-  const rendered = render(<DashboardOverview />);
+  const rendered = renderWithAuth(<DashboardOverview />);
   const image = await screen.findByRole("img", { name: plant.title });
-  expect(image).toHaveAttribute("src", original.image.thumbnail_url);
+  expect(image.getAttribute("src")).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenLastCalledWith(
+    original.image.thumbnail_url,
+    expect.objectContaining({ credentials: "same-origin" }),
+  );
   rendered.rerender(<DashboardOverview />);
   expect(get).toHaveBeenCalledTimes(1);
   expect(screen.getByRole("link", { name: plant.title })).toHaveAttribute(
@@ -270,9 +323,11 @@ test("Plant visit sample stays stable through rerenders, and broken primary fall
     `#/plants/${plant.id}`,
   );
   fireEvent.error(image);
-  expect(screen.getByRole("img", { name: plant.title })).toHaveAttribute(
-    "src",
+  const fallback = await screen.findByRole("img", { name: plant.title });
+  expect(fallback.getAttribute("src")).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenLastCalledWith(
     "/api/v1/media-assets/reference/thumbnail",
+    expect.objectContaining({ credentials: "same-origin" }),
   );
   expect(screen.getByText("Identity reference", { exact: true })).toBeVisible();
   fireEvent.error(screen.getByRole("img", { name: plant.title }));
@@ -300,7 +355,7 @@ test("Today composes its summary only from returned counts and states every sour
       purchase_packets_without_order: 6,
     },
   });
-  render(<DashboardOverview />);
+  mountOverview();
   expect(
     await screen.findByText(
       "1 overdue and 2 due today in the Schedule. You hold 1 active Plant, 0 Plant groups, 7 seed lots and 0 active sowings.",
@@ -337,7 +392,7 @@ test("Today composes its summary only from returned counts and states every sour
 
 test("an empty Schedule says so instead of manufacturing work", async () => {
   get.mockResolvedValue(empty);
-  render(<DashboardOverview />);
+  mountOverview();
   expect(
     await screen.findByText(
       "Nothing is overdue or due today in the Schedule. You hold 0 active Plants, 0 Plant groups, 0 seed lots and 0 active sowings.",
@@ -367,8 +422,9 @@ function activity(id: string, due_on: string, extra: Partial<Activity> = {}) {
 
 test("sections follow the work-first order in the DOM, which is also the visual order", async () => {
   get.mockResolvedValue({ ...empty, photos: [storedPhoto(1)] });
-  const { container } = render(<DashboardOverview />);
+  const { container } = renderWithAuth(<DashboardOverview />);
   await screen.findByRole("heading", { name: "Next work" });
+  await screen.findByRole("heading", { name: "Plants in your collection" });
   expect(
     screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent),
   ).toEqual([
@@ -412,7 +468,7 @@ test("planned work is grouped by window with calendar-day ages, caps and links t
       next_seven_days_items: [activity("soon", "2026-10-14")],
     },
   });
-  render(<DashboardOverview />);
+  mountOverview();
   const overdue = await screen.findByRole("region", {
     name: "Overdue 2 earliest of 30",
   });
@@ -452,7 +508,7 @@ test("planned work beyond the three windows is acknowledged, not shown as an emp
     ...empty,
     overview: { ...emptyOverview, upcoming: [activity("far", "2026-12-01")] },
   });
-  render(<DashboardOverview />);
+  mountOverview();
   expect(
     await screen.findByText(/Later planned work is in Schedule/),
   ).toBeInTheDocument();
@@ -464,7 +520,7 @@ test("no usable image means one line and no photo strip; one image means a one-i
     ...empty,
     photos: [{ ...storedPhoto(1), image: null }],
   });
-  const first = render(<DashboardOverview />);
+  const first = renderWithAuth(<DashboardOverview />);
   expect(
     await screen.findByText(
       /None of the sampled Plants has a photo that can be shown yet/,
@@ -479,7 +535,7 @@ test("no usable image means one line and no photo strip; one image means a one-i
     ...empty,
     photos: [{ ...storedPhoto(1), image: null }, storedPhoto(2)],
   });
-  render(<DashboardOverview />);
+  mountOverview();
   expect(await screen.findAllByRole("img")).toHaveLength(1);
   expect(
     within(
@@ -491,7 +547,7 @@ test("no usable image means one line and no photo strip; one image means a one-i
 
 test("Record reuses the launcher's workflow links and adds Journal and Schedule entry points", async () => {
   get.mockResolvedValue(empty);
-  render(<DashboardOverview />);
+  mountOverview();
   const record = within(
     await screen.findByRole("navigation", { name: "Record choices" }),
   );

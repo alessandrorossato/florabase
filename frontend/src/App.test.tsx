@@ -666,23 +666,31 @@ test("keyboard login succeeds, clears the password, and stores no token", async 
 
 test("login exposes a busy state and prevents duplicate submission", async () => {
   let loginCalls = 0;
+  let releaseLogin: ((response: Response) => void) | undefined;
   noSessionThen((path) => {
     if (path.endsWith("/login")) {
       loginCalls += 1;
-      return new Promise<Response>(() => undefined);
+      return new Promise<Response>((resolve) => {
+        releaseLogin = resolve;
+      });
     }
     throw new Error("unexpected request");
   });
   const user = userEvent.setup();
   render(<App />);
 
-  await user.type(await screen.findByLabelText("Login name"), "owner");
-  await user.type(screen.getByLabelText("Password"), "a-password{Enter}");
-  const button = screen.getByRole("button", { name: "Signing in…" });
-  expect(button).toBeDisabled();
-  expect(button.closest("form")).toHaveAttribute("aria-busy", "true");
-  await user.click(button);
-  expect(loginCalls).toBe(1);
+  try {
+    await user.type(await screen.findByLabelText("Login name"), "owner");
+    await user.type(screen.getByLabelText("Password"), "a-password{Enter}");
+    const button = screen.getByRole("button", { name: "Signing in…" });
+    expect(button).toBeDisabled();
+    expect(button.closest("form")).toHaveAttribute("aria-busy", "true");
+    await user.click(button);
+    expect(loginCalls).toBe(1);
+  } finally {
+    releaseLogin?.(jsonResponse({ detail: "aborted" }, 500));
+    await Promise.resolve();
+  }
 });
 
 test("invalid credentials stay generic, clear password, and focus feedback", async () => {

@@ -1,6 +1,10 @@
 import { ActionButton } from "../components/Action";
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  activeCsrfToken,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import type { ExternalTaxonLinkResponse } from "../botanical-identities/api";
 import { MapWorkspace } from "../maps/MapWorkspace";
@@ -37,32 +41,33 @@ export function OccurrenceMapPanel({
   identityLabel?: ReactNode;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [evidence, setEvidence] = useState<OccurrenceEvidence | null>(null);
   const [checking, setChecking] = useState(Boolean(link));
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [localOnly, setLocalOnly] = useState(true);
-  const csrf =
-    auth.state.status === "authenticated" ||
-    auth.state.status === "logout-failed"
-      ? auth.state.csrfToken
-      : null;
+  const csrf = activeCsrfToken(auth.state) || null;
   const externalId = link?.external_id;
   const provider = link?.provider;
   useEffect(() => {
-    if (!externalId || provider !== "gbif") return;
+    if (!authorized || !externalId || provider !== "gbif") return;
     const controller = new AbortController();
-    void getCachedOccurrenceEvidence(identityId, controller.signal)
+    void getCachedOccurrenceEvidence(identityId, capability, controller.signal)
       .then((value) => {
         if (!controller.signal.aborted) {
           setEvidence(value);
           setChecking(false);
+          setError(null);
         }
       })
       .catch((failure: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
         if (failure instanceof ApiError && failure.status === 401)
-          auth.sessionExpired();
+          sessionExpired();
         else {
           setChecking(false);
           setError("Could not read local occurrence evidence.");
@@ -71,13 +76,24 @@ export function OccurrenceMapPanel({
     return () => {
       controller.abort();
     };
-  }, [identityId, externalId, provider, auth]);
+  }, [
+    authorized,
+    capability,
+    identityId,
+    externalId,
+    provider,
+    sessionExpired,
+  ]);
   async function load() {
     if (!csrf || pending) return;
     setPending(true);
     setError(null);
     try {
-      const value = await refreshOccurrenceEvidence(identityId, csrf);
+      const value = await refreshOccurrenceEvidence(
+        identityId,
+        csrf,
+        capability,
+      );
       setEvidence(value);
       setLocalOnly(Boolean(value.provider_error));
       if (value.provider_error)
@@ -85,13 +101,15 @@ export function OccurrenceMapPanel({
           "GBIF refresh failed. Previously saved evidence is still available.",
         );
     } catch (failure) {
+      if (isExpectedAuthCancellation(failure)) return;
+      if (failure instanceof ApiError && failure.status === 401) {
+        sessionExpired();
+        return;
+      }
       setLocalOnly(true);
-      if (failure instanceof ApiError && failure.status === 401)
-        auth.sessionExpired();
-      else
-        setError(
-          "GBIF occurrence evidence is temporarily unavailable. Your Florabase botanical and collection data remain available.",
-        );
+      setError(
+        "GBIF occurrence evidence is temporarily unavailable. Your Florabase botanical and collection data remain available.",
+      );
     } finally {
       setPending(false);
     }
@@ -100,11 +118,16 @@ export function OccurrenceMapPanel({
     if (!csrf || pending) return;
     setPending(true);
     try {
-      await clearOccurrenceEvidence(identityId, csrf);
+      await clearOccurrenceEvidence(identityId, csrf, capability);
       setEvidence(null);
       setLocalOnly(true);
       setError(null);
-    } catch {
+    } catch (failure) {
+      if (isExpectedAuthCancellation(failure)) return;
+      if (failure instanceof ApiError && failure.status === 401) {
+        sessionExpired();
+        return;
+      }
       setError(
         "Could not clear local evidence. The saved evidence remains available.",
       );
@@ -310,6 +333,7 @@ export function OccurrenceMapPanel({
               identityId={identityId}
               generation={evidence.generation}
               localOnly={localOnly}
+              capability={capability}
             />
           </Suspense>
           <div

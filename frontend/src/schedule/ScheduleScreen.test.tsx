@@ -10,6 +10,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../auth/context";
 import { ApiError } from "../auth/api";
+import { acquireTestAuth } from "../test/auth";
 import * as api from "./api";
 import { ScheduleScreen } from "./ScheduleScreen";
 import { RecordTimeline } from "../timeline/RecordTimeline";
@@ -36,24 +37,7 @@ const target: api.Target = {
   lifecycle: "active",
 };
 const expireSession = vi.fn();
-const auth: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    session: {
-      user_id: id,
-      login_name: "owner",
-      display_name: null,
-      owner: true,
-      canonical_origin: "http://localhost",
-    },
-    csrfToken: "csrf",
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired: expireSession,
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
 function item(overrides: Partial<api.Activity> = {}): api.Activity {
   return {
     id,
@@ -89,7 +73,12 @@ function mount(content = <ScheduleScreen />) {
     <AuthContext.Provider value={auth}>{content}</AuthContext.Provider>,
   );
 }
-beforeEach(() => {
+beforeEach(async () => {
+  const acquired = await acquireTestAuth({
+    session: { user_id: id },
+    csrfToken: "csrf",
+  });
+  auth = { ...acquired.auth, sessionExpired: expireSession };
   vi.spyOn(window, "matchMedia").mockReturnValue({
     matches: false,
   } as MediaQueryList);
@@ -144,6 +133,7 @@ test("create a concrete future intention without any Event", async () => {
         target: null,
       }),
       "csrf",
+      auth.capability,
     );
   });
   expect(api.transitionActivity).not.toHaveBeenCalled();
@@ -172,6 +162,7 @@ test("reschedule uses current version and preserved typed target", async () => {
         target: { kind: "plant", id },
       }),
       "csrf",
+      auth.capability,
     );
   });
 });
@@ -188,6 +179,7 @@ test("completion defaults to no Event; explicit recording asks actual date and n
       expect.objectContaining({ id, version: 1 }),
       "complete",
       "csrf",
+      auth.capability,
       null,
     );
   });
@@ -211,6 +203,7 @@ test("completion defaults to no Event; explicit recording asks actual date and n
       expect.objectContaining({ id }),
       "complete",
       "csrf",
+      auth.capability,
       {
         kind: "repotting",
         occurred_on: "2026-10-08",
@@ -234,6 +227,7 @@ test("cancel confirmation retains planning evidence and sends version", async ()
       expect.objectContaining({ version: 1 }),
       "cancel",
       "csrf",
+      auth.capability,
       null,
     );
   });
@@ -281,6 +275,7 @@ test("contextual create resolves exact selected target", async () => {
   expect(api.getTarget).toHaveBeenCalledWith(
     "plant",
     id,
+    auth.capability,
     expect.any(AbortSignal),
   );
 });
@@ -337,6 +332,7 @@ test("bounded entity and Dashboard summaries link to canonical Schedule filters"
     expect.objectContaining({ target_kind: ["plant"], target_id: id }),
     0,
     3,
+    auth.capability,
     expect.any(AbortSignal),
   );
   expect(
@@ -445,6 +441,7 @@ test("List and Calendar share filters, link URLs and restore browser state", asy
         activity_kind: ["repot"],
         q: "basil",
       }),
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -543,6 +540,7 @@ test("selected-date create and day actions reuse versioned Schedule dialogs incl
       null,
       expect.objectContaining({ due_on: "2026-10-01", title: "Day planning" }),
       "csrf",
+      auth.capability,
     );
   });
   drawer = screen.getByRole("dialog", { name: /Scheduled work/ });
@@ -568,6 +566,7 @@ test("selected-date create and day actions reuse versioned Schedule dialogs incl
     id,
     expect.objectContaining({ expected_version: 1, due_on: "2026-11-01" }),
     "csrf",
+    auth.capability,
   );
   await user.keyboard("{Escape}");
   await user.click(screen.getByRole("button", { name: "Discard changes" }));
@@ -583,6 +582,7 @@ test("selected-date create and day actions reuse versioned Schedule dialogs incl
       expect.objectContaining({ version: 1 }),
       "complete",
       "csrf",
+      auth.capability,
       null,
     );
   });
@@ -603,6 +603,7 @@ test("selected-date create and day actions reuse versioned Schedule dialogs incl
       expect.objectContaining({ version: 1 }),
       "cancel",
       "csrf",
+      auth.capability,
       null,
     );
   });
@@ -955,6 +956,7 @@ test("target pages remain bounded and preserve selection while server search res
     "plant",
     "",
     50,
+    auth.capability,
     expect.any(AbortSignal),
   );
   await user.type(
@@ -966,6 +968,7 @@ test("target pages remain bounded and preserve selection while server search res
       "plant",
       "b",
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -1052,6 +1055,7 @@ test("empty filtered List resets all filters from the shared toolbar", async () 
     expect.objectContaining({ status: ["completed"], q: "", window: "all" }),
     0,
     1,
+    auth.capability,
     expect.any(AbortSignal),
   );
 });
@@ -1102,6 +1106,7 @@ test("a concurrently emptied last List page returns to existing activities", asy
     expect.anything(),
     0,
     50,
+    auth.capability,
     expect.any(AbortSignal),
     undefined,
   );
@@ -1290,6 +1295,7 @@ test("Schedule PageTools search and filter drawer preserve query across views an
       expect.objectContaining({ q: "basil" }),
       0,
       50,
+      auth.capability,
       expect.any(AbortSignal),
       undefined,
     );
@@ -1308,6 +1314,7 @@ test("Schedule PageTools search and filter drawer preserve query across views an
   await waitFor(() => {
     expect(api.listCalendar).toHaveBeenLastCalledWith(
       expect.objectContaining({ q: "basil", view: "calendar" }),
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -1321,6 +1328,7 @@ test("Schedule PageTools search and filter drawer preserve query across views an
   await waitFor(() => {
     expect(api.listCalendar).toHaveBeenLastCalledWith(
       expect.objectContaining({ q: "bench", month: "2026-11" }),
+      auth.capability,
       expect.any(AbortSignal),
     );
   });

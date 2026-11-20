@@ -7,7 +7,11 @@ import {
   type ReactNode,
   type SyntheticEvent,
 } from "react";
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { TaskDialog } from "../components/TaskDialog";
 import { openDirectoryRoute } from "../components/recordNavigation";
@@ -58,18 +62,18 @@ export function SavedViews({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const meaningful = Boolean(state && Object.keys(state).length);
-  const token =
-    auth.state.status === "authenticated" ||
-    auth.state.status === "logout-failed"
-      ? auth.state.csrfToken
-      : null;
+  const token = activeCsrfToken(auth.state);
 
   useEffect(() => {
-    if (!expanded) return;
+    if (!authorized || !expanded) return;
     const controller = new AbortController();
     void listSavedViews(
       allSurfaces ? undefined : surface,
+      capability,
       controller.signal,
       offset,
     )
@@ -84,9 +88,10 @@ export function SavedViews({
         }
       })
       .catch((failure: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
         if (failure instanceof ApiError && failure.status === 401)
-          auth.sessionExpired();
+          sessionExpired();
         else {
           setLoadError(true);
           setLoadingMore(false);
@@ -95,7 +100,16 @@ export function SavedViews({
     return () => {
       controller.abort();
     };
-  }, [expanded, surface, allSurfaces, offset, attempt, auth]);
+  }, [
+    authorized,
+    capability,
+    expanded,
+    surface,
+    allSurfaces,
+    offset,
+    attempt,
+    sessionExpired,
+  ]);
 
   function begin(next: Action) {
     setError(null);
@@ -135,19 +149,21 @@ export function SavedViews({
     setError(null);
     try {
       if (action.kind === "delete")
-        await deleteSavedView(action.view.id, token);
+        await deleteSavedView(action.view.id, token, capability);
       else if (action.kind === "rename")
-        await updateSavedView(action.view.id, { name }, token);
+        await updateSavedView(action.view.id, { name }, token, capability);
       else if (action.kind === "update")
         await updateSavedView(
           action.view.id,
           { state_version: 1, state: state ?? {} },
           token,
+          capability,
         );
       else
         await createSavedView(
           { name, surface, state_version: 1, state: state ?? {} },
           token,
+          capability,
         );
       // The Workbench panel and palette list Saved Views; tell them to refresh.
       window.dispatchEvent(new Event(savedViewsChanged));
@@ -167,8 +183,9 @@ export function SavedViews({
       setAttempt((value) => value + 1);
       window.setTimeout(() => listTrigger.current?.focus(), 0);
     } catch (failure: unknown) {
+      if (isExpectedAuthCancellation(failure)) return;
       if (failure instanceof ApiError && failure.status === 401)
-        auth.sessionExpired();
+        sessionExpired();
       else
         setError(
           failure instanceof ApiError && failure.status === 409

@@ -1,5 +1,9 @@
 import type { components } from "../api/schema";
-import { ApiError, requestJson } from "../auth/api";
+import {
+  ApiError,
+  requestJson,
+  type ProtectedRequestCapability,
+} from "../auth/api";
 
 export type LocationCreate = components["schemas"]["LocationCreate"];
 export type LocationUpdate = components["schemas"]["LocationUpdate"];
@@ -57,9 +61,10 @@ export function locationConflictMessage(error: ApiError): string | null {
 }
 
 export function listLocations(
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<LocationResponse[]> {
-  return requestJson("/api/v1/locations", { signal });
+  return requestJson("/api/v1/locations", { capability, signal });
 }
 
 export function locationsForScope(
@@ -77,8 +82,10 @@ export function locationsForScope(
 export function createLocation(
   payload: LocationCreate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<LocationResponse> {
   return requestJson("/api/v1/locations", {
+    capability,
     method: "POST",
     headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
     body: JSON.stringify(payload),
@@ -89,8 +96,10 @@ export function updateLocation(
   id: string,
   payload: LocationUpdate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<LocationResponse> {
   return requestJson(`/api/v1/locations/${encodeURIComponent(id)}`, {
+    capability,
     method: "PUT",
     headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
     body: JSON.stringify(payload),
@@ -101,16 +110,23 @@ export function setLocationRetired(
   id: string,
   retired: boolean,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<LocationResponse> {
   const action = retired ? "retire" : "reactivate";
   return requestJson(`/api/v1/locations/${encodeURIComponent(id)}/${action}`, {
+    capability,
     method: "POST",
     headers: { "X-CSRF-Token": csrfToken },
   });
 }
 
-export function deleteLocation(id: string, csrfToken: string): Promise<void> {
+export function deleteLocation(
+  id: string,
+  csrfToken: string,
+  capability: ProtectedRequestCapability,
+): Promise<void> {
   return requestJson(`/api/v1/locations/${encodeURIComponent(id)}`, {
+    capability,
     method: "DELETE",
     headers: { "X-CSRF-Token": csrfToken },
   });

@@ -6,19 +6,16 @@ import {
   waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { CreationReversal } from "./CreationReversal";
 
-const auth = {
-  state: { status: "authenticated", csrfToken: "csrf-test", session: {} },
-  sessionExpired: vi.fn(),
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-} as unknown as AuthContextValue;
+let auth: AuthContextValue;
+beforeEach(async () => {
+  auth = (await acquireTestAuth({ csrfToken: "csrf-test" })).auth;
+});
 const eligibility = {
   status: "safe",
   operation_receipt_id: "receipt",

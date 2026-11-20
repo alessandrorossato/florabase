@@ -1,5 +1,9 @@
 import type { components } from "../api/schema";
-import { ApiError, requestJson } from "../auth/api";
+import {
+  ApiError,
+  requestJson,
+  type ProtectedRequestCapability,
+} from "../auth/api";
 
 export type GeographicPlaceCreate =
   components["schemas"]["GeographicPlaceCreate"];
@@ -51,16 +55,19 @@ export function geographyConflictMessage(error: ApiError): string | null {
 }
 
 export function listGeographicPlaces(
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<GeographicPlaceResponse[]> {
-  return requestJson("/api/v1/geographic-places", { signal });
+  return requestJson("/api/v1/geographic-places", { capability, signal });
 }
 
 export function createGeographicPlace(
   payload: GeographicPlaceCreate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<GeographicPlaceResponse> {
   return requestJson("/api/v1/geographic-places", {
+    capability,
     method: "POST",
     headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
     body: JSON.stringify(payload),
@@ -71,8 +78,10 @@ export function updateGeographicPlace(
   id: string,
   payload: GeographicPlaceUpdate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<GeographicPlaceResponse> {
   return requestJson(`/api/v1/geographic-places/${encodeURIComponent(id)}`, {
+    capability,
     method: "PUT",
     headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
     body: JSON.stringify(payload),
@@ -83,19 +92,22 @@ export function setGeographicPlaceRetired(
   id: string,
   retired: boolean,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<GeographicPlaceResponse> {
   const action = retired ? "retire" : "reactivate";
   return requestJson(
     `/api/v1/geographic-places/${encodeURIComponent(id)}/${action}`,
-    { method: "POST", headers: { "X-CSRF-Token": csrfToken } },
+    { capability, method: "POST", headers: { "X-CSRF-Token": csrfToken } },
   );
 }
 
 export function deleteGeographicPlace(
   id: string,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<void> {
   return requestJson(`/api/v1/geographic-places/${encodeURIComponent(id)}`, {
+    capability,
     method: "DELETE",
     headers: { "X-CSRF-Token": csrfToken },
   });

@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import {
   cleanup,
   fireEvent,
@@ -6,14 +7,34 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterAll, beforeAll, afterEach, expect, test, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  afterEach,
+  beforeEach,
+  expect,
+  test,
+  vi,
+} from "vitest";
+import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import * as graph from "./graph";
 import { TaxonomyFilters } from "./TaxonomyFilters";
 import { TreeExplorer } from "./TreeExplorer";
 import { TaxonomyCover } from "./TaxonomyCover";
 import { ids, largeGraph, sample } from "./graph.fixture";
 import { readState, taxonomyHash } from "./state";
-afterEach(cleanup);
+let auth: AuthContextValue;
+function wrap(ui: ReactElement) {
+  return <AuthContext.Provider value={auth}>{ui}</AuthContext.Provider>;
+}
+beforeEach(async () => {
+  auth = (await acquireTestAuth()).auth;
+});
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 beforeAll(() => {
   Object.defineProperties(HTMLElement.prototype, {
     setPointerCapture: { configurable: true, value: vi.fn() },
@@ -30,20 +51,22 @@ function setup() {
   const update = vi.fn(),
     select = vi.fn();
   const view = render(
-    <TreeExplorer
-      data={sample}
-      state={{
-        scope: "all",
-        record: [],
-        q: "",
-        taxon: ids.species,
-        view: "tree",
-      }}
-      update={update}
-      select={select}
-      detailsOpen
-      toggleDetails={vi.fn()}
-    />,
+    wrap(
+      <TreeExplorer
+        data={sample}
+        state={{
+          scope: "all",
+          record: [],
+          q: "",
+          taxon: ids.species,
+          view: "tree",
+        }}
+        update={update}
+        select={select}
+        detailsOpen
+        toggleDetails={vi.fn()}
+      />,
+    ),
   );
   return { ...view, update, select };
 }
@@ -82,13 +105,21 @@ test("select and disclosure are separate, with keyboard parent/child traversal",
   expect(select).toHaveBeenCalledWith(ids.species);
 });
 test("zoom and pan do not recompute layout or refetch images", async () => {
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(() =>
+      Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      ),
+    );
   const layout = vi.spyOn(graph, "layoutGraph"),
     user = userEvent.setup();
   setup();
+  const images = (await screen.findAllByRole("img")).map((img) =>
+    img.getAttribute("src"),
+  );
   const before = layout.mock.calls.length;
-  const images = screen
-    .getAllByRole("img")
-    .map((img) => img.getAttribute("src"));
+  const fetchCountBefore = fetch.mock.calls.length;
   await user.click(screen.getByRole("button", { name: "Zoom in" }));
   await user.click(screen.getByRole("button", { name: "Zoom out" }));
   const diagram = screen.getByRole("region", {
@@ -97,12 +128,21 @@ test("zoom and pan do not recompute layout or refetch images", async () => {
   diagram.focus();
   await user.keyboard("{ArrowLeft}{ArrowDown}");
   expect(layout).toHaveBeenCalledTimes(before);
+  expect(fetch.mock.calls.length).toBe(fetchCountBefore);
   expect(
     new Set(screen.getAllByRole("img").map((img) => img.getAttribute("src"))),
   ).toEqual(new Set(images));
-  expect([...new Set(images)]).toEqual([
-    "/api/v1/media-assets/asset-a/thumbnail?v=abc",
-  ]);
+  expect([
+    ...new Set(
+      fetch.mock.calls.map(([input]) =>
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url,
+      ),
+    ),
+  ]).toEqual(["/api/v1/media-assets/asset-a/thumbnail?v=abc"]);
   layout.mockRestore();
 });
 test("branch/rank controls serialize source IDs and never change collection scope", async () => {
@@ -160,23 +200,38 @@ test("branch/rank controls serialize source IDs and never change collection scop
     through: "genus",
   });
 });
-test("protected covers fall back on errors and never use a remote/full-size image", () => {
+test("protected covers fall back on errors and never use a remote/full-size image", async () => {
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(() =>
+      Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      ),
+    );
   const { rerender } = render(
-    <TaxonomyCover identity={sample.identities[0]} representative />,
+    wrap(<TaxonomyCover identity={sample.identities[0]} representative />),
   );
-  const image = screen.getByRole("img");
+  const image = await screen.findByRole("img");
   expect(image).toHaveAttribute("loading", "lazy");
-  expect(image).toHaveAttribute(
-    "src",
+  expect(image.getAttribute("src")).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenCalledWith(
     sample.identities[0].cover?.thumbnail_url,
+    expect.objectContaining({ credentials: "same-origin" }),
   );
   expect(image).toHaveAccessibleName(/representative descendant/);
   fireEvent.error(image);
   expect(screen.queryByRole("img")).toBeNull();
-  rerender(<TaxonomyCover identity={sample.identities[1]} />);
+  rerender(wrap(<TaxonomyCover identity={sample.identities[1]} />));
   expect(screen.queryByRole("img")).toBeNull();
 });
 test("large graph DOM and thumbnail work are bounded", async () => {
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(() =>
+      Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      ),
+    );
   const nodes = largeGraph();
   const data = {
     ...sample,
@@ -188,14 +243,16 @@ test("large graph DOM and thumbnail work are bounded", async () => {
     counts: { represented: 5000, living: 5000, current: 5000, historical: 0 },
   };
   render(
-    <TreeExplorer
-      data={data}
-      state={{ scope: "all", record: [], q: "", taxon: "", view: "tree" }}
-      update={vi.fn()}
-      select={vi.fn()}
-      detailsOpen
-      toggleDetails={vi.fn()}
-    />,
+    wrap(
+      <TreeExplorer
+        data={data}
+        state={{ scope: "all", record: [], q: "", taxon: "", view: "tree" }}
+        update={vi.fn()}
+        select={vi.fn()}
+        detailsOpen
+        toggleDetails={vi.fn()}
+      />,
+    ),
   );
   const diagram = screen.getByRole("region", {
     name: "Interactive taxonomy diagram",
@@ -203,9 +260,10 @@ test("large graph DOM and thumbnail work are bounded", async () => {
   expect(within(diagram).getAllByRole("button").length).toBeLessThanOrEqual(
     480,
   );
-  expect(within(diagram).queryAllByRole("img").length).toBeLessThanOrEqual(48);
+  const initialImages = await within(diagram).findAllByRole("img");
+  expect(initialImages.length).toBeLessThanOrEqual(48);
   const user = userEvent.setup();
-  expect(within(diagram).getAllByRole("img").length).toBeGreaterThan(0);
+  expect(initialImages.length).toBeGreaterThan(0);
   await user.click(screen.getByText("Branches"));
   for (let i = 0; i < 4; i++)
     await user.click(screen.getByRole("button", { name: "Expand displayed" }));
@@ -215,11 +273,16 @@ test("large graph DOM and thumbnail work are bounded", async () => {
   );
   expect(diagram.querySelectorAll(".tree-edges path").length).toBeLessThan(240);
   expect(within(diagram).queryAllByRole("img").length).toBeLessThanOrEqual(48);
+  expect(fetch.mock.calls.length).toBeLessThanOrEqual(48);
   expect(
     new Set(
-      within(diagram)
-        .queryAllByRole("img")
-        .map((image) => image.getAttribute("src")),
+      fetch.mock.calls.map(([input]) =>
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url,
+      ),
     ).size,
   ).toBeLessThanOrEqual(1);
 });

@@ -6,12 +6,32 @@ import {
   waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { GeographyOverview } from "./GeographyOverview";
 import { SiteSourceRecords } from "./SiteSourceRecords";
 
-const { auth } = vi.hoisted(() => ({ auth: { sessionExpired: vi.fn() } }));
-vi.mock("../auth/context", () => ({ useAuth: () => auth }));
+const sessionExpired = vi.fn();
+let auth: AuthContextValue;
+function renderOverview() {
+  return render(
+    <AuthContext.Provider value={auth}>
+      <GeographyOverview />
+    </AuthContext.Provider>,
+  );
+}
+function renderSiteSource(siteIdValue: string, hasCoordinates: boolean) {
+  return render(
+    <AuthContext.Provider value={auth}>
+      <SiteSourceRecords siteId={siteIdValue} hasCoordinates={hasCoordinates} />
+    </AuthContext.Provider>,
+  );
+}
+beforeEach(async () => {
+  const acquired = await acquireTestAuth();
+  auth = { ...acquired.auth, sessionExpired };
+});
 
 const identity = "01900000-0000-7000-8000-000000000001";
 const siteId = "01900000-0000-7000-8000-000000000002";
@@ -84,12 +104,12 @@ function localEvidence({
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
-  auth.sessionExpired.mockClear();
+  sessionExpired.mockClear();
 });
 
 test("overview reads local evidence only and links exact identities, sites and source records", async () => {
   const fetch = localEvidence();
-  render(<GeographyOverview />);
+  renderOverview();
   expect(screen.getAllByRole("status")).toHaveLength(3);
   await screen.findByText("represented identities with structured ranges");
   await userEvent.click(screen.getByText("Linked Botanical Identities"));
@@ -140,7 +160,7 @@ test("overview reads local evidence only and links exact identities, sites and s
 
 test("empty evidence keeps all destinations available and explains missing data", async () => {
   localEvidence({ empty: true });
-  render(<GeographyOverview />);
+  renderOverview();
   await screen.findByText(/No structured native ranges recorded/);
   expect(
     await screen.findByText(/No collection identities represented yet/),
@@ -159,7 +179,7 @@ test("empty evidence keeps all destinations available and explains missing data"
 test("a failed summary does not hide successful evidence or navigation and can retry", async () => {
   const user = userEvent.setup();
   const fetch = localEvidence({ failNative: true });
-  render(<GeographyOverview />);
+  renderOverview();
   await screen.findByRole("alert");
   await user.click(await screen.findByText("Linked sites and source records"));
   expect(
@@ -177,15 +197,15 @@ test("a failed summary does not hide successful evidence or navigation and can r
 
 test("summary authentication failures use the session expiry flow", async () => {
   localEvidence({ status: 401 });
-  render(<GeographyOverview />);
+  renderOverview();
   await waitFor(() => {
-    expect(auth.sessionExpired).toHaveBeenCalled();
+    expect(sessionExpired).toHaveBeenCalled();
   });
 });
 
 test("site details use the exact site's record IDs, including historical material", async () => {
   const fetch = localEvidence();
-  render(<SiteSourceRecords siteId={siteId} hasCoordinates />);
+  renderSiteSource(siteId, true);
   expect(
     await screen.findByRole("link", { name: "Original packet" }),
   ).toHaveAttribute("href", `#/seeds/${recordId}`);
@@ -195,7 +215,7 @@ test("site details use the exact site's record IDs, including historical materia
 
 test("coordinate-less sites report the missing record contract without a map request", () => {
   const fetch = localEvidence();
-  render(<SiteSourceRecords siteId={siteId} hasCoordinates={false} />);
+  renderSiteSource(siteId, false);
   expect(
     screen.getByText(
       /Exact record links are currently available only for sites with coordinates/,
@@ -210,7 +230,7 @@ test("source-record failure is retryable and does not substitute records from an
     .spyOn(globalThis, "fetch")
     .mockResolvedValueOnce(json({}, 503))
     .mockResolvedValue(json({ sites: [{ ...site, id: "another-site" }] }));
-  render(<SiteSourceRecords siteId={siteId} hasCoordinates />);
+  renderSiteSource(siteId, true);
   await screen.findByRole("alert");
   await user.click(
     screen.getByRole("button", { name: "Retry source records" }),

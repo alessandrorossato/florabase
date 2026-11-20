@@ -1,3 +1,4 @@
+import type { ProtectedRequestCapability } from "../auth/api";
 import { listBotanicalIdentities } from "../botanical-identities/api";
 import { formatPartialDate } from "../events/eventData";
 import { materials } from "../harvests/api";
@@ -94,19 +95,20 @@ function nonBlank(value: string | null | undefined): string | null {
 
 export async function listLabelRecords(
   kind: LabelKind,
+  capability: ProtectedRequestCapability,
   signal: AbortSignal,
 ): Promise<LabelRecord[]> {
   if (!isLabelKind(kind)) throw new Error("Unsupported label target.");
   // One identity request per chooser load; structured scientific/cultivar fields avoid parsing display text.
-  const identitiesPromise = listBotanicalIdentities(signal);
+  const identitiesPromise = listBotanicalIdentities(capability, signal);
   const recordsPromise =
     kind === "stored-material"
-      ? inventoryList(signal)
+      ? inventoryList(capability, signal)
       : kind === "seed-lot"
-        ? listSeedLots(signal)
+        ? listSeedLots(capability, signal)
         : kind === "plant"
-          ? listPlants(signal)
-          : listPlantGroups(signal);
+          ? listPlants(capability, signal)
+          : listPlantGroups(capability, signal);
   const [identities, records] = await Promise.all([
     identitiesPromise,
     recordsPromise,

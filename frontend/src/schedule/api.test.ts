@@ -1,11 +1,18 @@
-import { beforeEach, expect, test, vi } from "vitest";
-import { requestJson } from "../auth/api";
+import { afterEach, expect, test, vi } from "vitest";
+import { acquireTestAuth } from "../test/auth";
 import { listSchedule, listCalendar, type SchedulePage } from "./api";
 import { readScheduleState } from "./state";
-vi.mock("../auth/api", () => ({ requestJson: vi.fn() }));
-beforeEach(() => {
-  vi.resetAllMocks();
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
+
+function jsonResponse(body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 function page(offset: number, total: number): SchedulePage {
   return {
     items: [],
@@ -18,6 +25,7 @@ function page(offset: number, total: number): SchedulePage {
   };
 }
 test("bounded visible-month pages preserve filters, stable projection day and batched target labels", async () => {
+  const { capability } = await acquireTestAuth();
   const first = page(0, 101);
   first.items = Array.from(
     { length: 100 },
@@ -25,22 +33,29 @@ test("bounded visible-month pages preserve filters, stable projection day and ba
   );
   const second = page(100, 101);
   second.items = [{ id: "100" } as SchedulePage["items"][number]];
-  vi.mocked(requestJson)
-    .mockResolvedValueOnce(first)
-    .mockResolvedValueOnce(second);
-  const signal = new AbortController().signal;
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValueOnce(jsonResponse(first))
+    .mockResolvedValueOnce(jsonResponse(second));
+  const controller = new AbortController();
+  const signal = controller.signal;
   const result = await listCalendar(
     readScheduleState(
       "#/schedule?view=calendar&month=2024-02&activity_kind=inspect&target_kind=location&q=bench",
     ),
+    capability,
     signal,
   );
   expect(result.items).toHaveLength(101);
   expect(result.today).toBe("2024-02-29");
-  expect(requestJson).toHaveBeenCalledTimes(2);
-  const urls = vi
-    .mocked(requestJson)
-    .mock.calls.map(([url]) => new URL(url, "http://localhost"));
+  expect(fetch).toHaveBeenCalledTimes(2);
+  const urls = fetch.mock.calls.map(
+    ([url]) =>
+      new URL(
+        typeof url === "string" ? url : url instanceof URL ? url.href : url.url,
+        "http://localhost",
+      ),
+  );
   for (const url of urls) {
     expect(url.searchParams.get("due_from")).toBe("2024-02-01");
     expect(url.searchParams.get("due_to")).toBe("2024-02-29");
@@ -54,27 +69,66 @@ test("bounded visible-month pages preserve filters, stable projection day and ba
   expect(urls[0]?.searchParams.get("today")).toBe(
     urls[1]?.searchParams.get("today"),
   );
-  expect(requestJson).toHaveBeenLastCalledWith(expect.any(String), { signal });
+  expect(fetch).toHaveBeenLastCalledWith(
+    expect.any(String),
+    expect.objectContaining({
+      credentials: "same-origin",
+      signal: expect.any(AbortSignal) as AbortSignal,
+    }),
+  );
+  let abortableSignal: AbortSignal | undefined;
+  fetch.mockImplementationOnce(
+    (_url, init) =>
+      new Promise<Response>((_resolve, reject) => {
+        abortableSignal = init?.signal ?? undefined;
+        init?.signal?.addEventListener("abort", () => {
+          reject(new DOMException("Aborted", "AbortError"));
+        });
+      }),
+  );
+  const abortedCall = listCalendar(
+    readScheduleState("#/schedule?view=calendar&month=2024-02"),
+    capability,
+    signal,
+  ).catch(() => undefined);
+  await Promise.resolve();
+  expect(abortableSignal?.aborted).toBe(false);
+  controller.abort();
+  await abortedCall;
+  expect(abortableSignal?.aborted).toBe(true);
 });
 test("invalid or failed period responses surface a recoverable error", async () => {
+  const { capability } = await acquireTestAuth();
   const state = readScheduleState("#/schedule?view=calendar&month=2026-12");
-  vi.mocked(requestJson).mockResolvedValueOnce({ total: -1, items: [] });
-  await expect(listCalendar(state)).rejects.toThrow(
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValueOnce(jsonResponse({ total: -1, items: [] }))
+    .mockRejectedValueOnce(new Error("Network"));
+  await expect(listCalendar(state, capability)).rejects.toThrow(
     "Invalid Schedule response",
   );
-  vi.mocked(requestJson).mockRejectedValueOnce(new Error("Network"));
-  await expect(listCalendar(state)).rejects.toThrow("Network");
+  await expect(listCalendar(state, capability)).rejects.toThrow("Network");
+  expect(fetch).toHaveBeenCalledTimes(2);
 });
 
 test("Schedule sends every selected value and unrestricted statuses as real stored enum values", async () => {
-  vi.mocked(requestJson).mockResolvedValue(page(0, 0));
+  const { capability } = await acquireTestAuth();
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(() => Promise.resolve(jsonResponse(page(0, 0))));
   await listCalendar(
     readScheduleState(
       "#/schedule?status=cancelled&status=planned&activity_kind=inspect&activity_kind=water&target_kind=plant&target_kind=seed_lot&window=today&q=needle&view=calendar&month=2024-02",
     ),
+    capability,
   );
+  let callUrl = fetch.mock.calls[0][0];
   let url = new URL(
-    vi.mocked(requestJson).mock.calls[0][0],
+    typeof callUrl === "string"
+      ? callUrl
+      : callUrl instanceof URL
+        ? callUrl.href
+        : callUrl.url,
     "http://localhost",
   );
   expect(url.searchParams.getAll("status")).toEqual(["planned", "cancelled"]);
@@ -89,8 +143,17 @@ test("Schedule sends every selected value and unrestricted statuses as real stor
     readScheduleState(
       "#/schedule?status=planned&status=completed&status=cancelled&view=calendar&month=2024-02",
     ),
+    capability,
   );
-  url = new URL(vi.mocked(requestJson).mock.calls[1][0], "http://localhost");
+  callUrl = fetch.mock.calls[1][0];
+  url = new URL(
+    typeof callUrl === "string"
+      ? callUrl
+      : callUrl instanceof URL
+        ? callUrl.href
+        : callUrl.url,
+    "http://localhost",
+  );
   expect(url.searchParams.getAll("status")).toEqual([
     "planned",
     "completed",
@@ -100,16 +163,25 @@ test("Schedule sends every selected value and unrestricted statuses as real stor
 });
 
 test("selected-day Agenda uses server bounds rather than filtering a loaded page", async () => {
-  vi.mocked(requestJson).mockResolvedValue(page(0, 0));
+  const { capability } = await acquireTestAuth();
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(() => Promise.resolve(jsonResponse(page(0, 0))));
   await listSchedule(
     readScheduleState("#/schedule?date=2024-02-29&month=2024-02&q=aloe"),
     50,
     50,
+    capability,
     undefined,
     "2024-02-29",
   );
+  const rawCallUrl = fetch.mock.calls[0][0];
   const url = new URL(
-    vi.mocked(requestJson).mock.calls[0][0],
+    typeof rawCallUrl === "string"
+      ? rawCallUrl
+      : rawCallUrl instanceof URL
+        ? rawCallUrl.href
+        : rawCallUrl.url,
     "http://localhost",
   );
   expect(url.searchParams.get("due_from")).toBe("2024-02-29");

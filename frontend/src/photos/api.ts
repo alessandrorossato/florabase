@@ -1,5 +1,5 @@
 import type { components } from "../api/schema";
-import { requestJson } from "../auth/api";
+import { requestJson, type ProtectedRequestCapability } from "../auth/api";
 
 export type LocalPhoto = components["schemas"]["LocalPhotoResponse"];
 export type ExternalImage = components["schemas"]["ExternalImageResponse"];
@@ -25,9 +25,11 @@ function targetPath(target: PhotoTarget, id: string): string {
 export function getPrimaryPhoto(
   target: Exclude<PhotoTarget, "sowing" | "event">,
   id: string,
+  capability: ProtectedRequestCapability,
 ): Promise<PrimaryPhoto | null> {
   return requestJson(
     `/api/v1/collection-records/${target}/${encodeURIComponent(id)}/primary-photo`,
+    { capability },
   );
 }
 
@@ -36,10 +38,12 @@ export function setPrimaryPhoto(
   id: string,
   photo: Pick<PrimaryPhoto, "kind" | "photo_id">,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<PrimaryPhoto> {
   return requestJson(
     `/api/v1/collection-records/${target}/${encodeURIComponent(id)}/primary-photo`,
     {
+      capability,
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -54,19 +58,21 @@ export function clearPrimaryPhoto(
   target: Exclude<PhotoTarget, "sowing" | "event">,
   id: string,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<void> {
   return requestJson(
     `/api/v1/collection-records/${target}/${encodeURIComponent(id)}/primary-photo`,
-    { method: "DELETE", headers: { "X-CSRF-Token": csrfToken } },
+    { capability, method: "DELETE", headers: { "X-CSRF-Token": csrfToken } },
   );
 }
 
 export function listPhotos(
   target: PhotoTarget,
   id: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<CollectionPhoto[]> {
-  return requestJson(targetPath(target, id), { signal });
+  return requestJson(targetPath(target, id), { capability, signal });
 }
 
 export function uploadPhoto(
@@ -76,12 +82,14 @@ export function uploadPhoto(
   caption: string,
   attribution: string,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<LocalPhoto> {
   const body = new FormData();
   body.set("file", file);
   if (caption.trim()) body.set("caption", caption);
   if (attribution.trim()) body.set("attribution", attribution);
   return requestJson(`${targetPath(target, id)}/local`, {
+    capability,
     method: "POST",
     headers: { "X-CSRF-Token": csrfToken },
     body,
@@ -93,8 +101,10 @@ export function createExternalImage(
   id: string,
   payload: ExternalImageWrite,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<ExternalImage> {
   return requestJson(`${targetPath(target, id)}/external`, {
+    capability,
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -108,10 +118,12 @@ export function updateLocalPhoto(
   id: string,
   payload: LocalPhotoUpdate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<LocalPhoto> {
   return requestJson(
     `/api/v1/collection-photos/local/${encodeURIComponent(id)}`,
     {
+      capability,
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -126,10 +138,12 @@ export function updateExternalImage(
   id: string,
   payload: ExternalImageWrite,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<ExternalImage> {
   return requestJson(
     `/api/v1/collection-photos/external/${encodeURIComponent(id)}`,
     {
+      capability,
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -144,9 +158,10 @@ export function removePhoto(
   kind: "local" | "external",
   id: string,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<void> {
   return requestJson(
     `/api/v1/collection-photos/${kind}/${encodeURIComponent(id)}`,
-    { method: "DELETE", headers: { "X-CSRF-Token": csrfToken } },
+    { capability, method: "DELETE", headers: { "X-CSRF-Token": csrfToken } },
   );
 }

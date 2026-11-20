@@ -1,5 +1,9 @@
 import type { components } from "../api/schema";
-import { ApiError, requestJson } from "../auth/api";
+import {
+  ApiError,
+  requestJson,
+  type ProtectedRequestCapability,
+} from "../auth/api";
 
 export type BotanicalIdentityCreate =
   components["schemas"]["BotanicalIdentityCreate"];
@@ -84,8 +88,10 @@ export function validationMessages(error: ApiError): string[] {
 export function createBotanicalIdentity(
   payload: BotanicalIdentityCreate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<BotanicalIdentityResponse> {
   return requestJson("/api/v1/botanical-identities", {
+    capability,
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -96,18 +102,20 @@ export function createBotanicalIdentity(
 }
 
 export function listBotanicalIdentities(
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<BotanicalIdentityResponse[]> {
-  return requestJson("/api/v1/botanical-identities", { signal });
+  return requestJson("/api/v1/botanical-identities", { capability, signal });
 }
 
 export function getBotanicalIdentity(
   botanicalIdentityId: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<BotanicalIdentityResponse> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(botanicalIdentityId)}`,
-    { signal },
+    { capability, signal },
   );
 }
 
@@ -115,10 +123,12 @@ export function updateBotanicalIdentity(
   id: string,
   payload: BotanicalIdentityUpdate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<BotanicalIdentityResponse> {
   return requestJson<BotanicalIdentityResponse>(
     `/api/v1/botanical-identities/${id}`,
     {
+      capability,
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -132,8 +142,10 @@ export function updateBotanicalIdentity(
 export function deleteBotanicalIdentity(
   id: string,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<undefined> {
   return requestJson<undefined>(`/api/v1/botanical-identities/${id}`, {
+    capability,
     method: "DELETE",
     headers: { "X-CSRF-Token": csrfToken },
   });
@@ -141,11 +153,12 @@ export function deleteBotanicalIdentity(
 
 export function getBotanicalIdentityCover(
   id: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<BotanicalIdentityCover | null> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/cover-image`,
-    { signal },
+    { capability, signal },
   );
 }
 
@@ -153,12 +166,14 @@ export function setLocalBotanicalIdentityCover(
   id: string,
   file: File,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<LocalCoverResponse> {
   const body = new FormData();
   body.set("file", file);
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/cover-image/local`,
     {
+      capability,
       method: "POST",
       headers: { "X-CSRF-Token": csrfToken },
       body,
@@ -170,10 +185,12 @@ export function setExternalBotanicalIdentityCover(
   id: string,
   payload: ExternalCoverWrite,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<ExternalCoverResponse> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/cover-image/external`,
     {
+      capability,
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -187,30 +204,34 @@ export function setExternalBotanicalIdentityCover(
 export function deleteBotanicalIdentityCover(
   id: string,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<undefined> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/cover-image`,
-    { method: "DELETE", headers: { "X-CSRF-Token": csrfToken } },
+    { capability, method: "DELETE", headers: { "X-CSRF-Token": csrfToken } },
   );
 }
 
 export function getExternalTaxonLink(
   id: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<ExternalTaxonLinkResponse | null> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/external-taxon-link`,
-    { signal },
+    { capability, signal },
   );
 }
 
 export function searchExternalTaxa(
   id: string,
   query: string,
+  capability: ProtectedRequestCapability,
 ): Promise<TaxonSearchResponse> {
   const params = new URLSearchParams({ query });
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/external-taxa/search?${params.toString()}`,
+    { capability },
   );
 }
 
@@ -219,10 +240,12 @@ export function confirmExternalTaxonLink(
   externalId: string,
   scientificName: string,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<ExternalTaxonLinkResponse> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/external-taxon-link`,
     {
+      capability,
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -239,30 +262,33 @@ export function confirmExternalTaxonLink(
 export function refreshExternalTaxonLink(
   id: string,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<ExternalTaxonLinkResponse> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/external-taxon-link/refresh`,
-    { method: "POST", headers: { "X-CSRF-Token": csrfToken } },
+    { capability, method: "POST", headers: { "X-CSRF-Token": csrfToken } },
   );
 }
 
 export function unlinkExternalTaxon(
   id: string,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<undefined> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/external-taxon-link`,
-    { method: "DELETE", headers: { "X-CSRF-Token": csrfToken } },
+    { capability, method: "DELETE", headers: { "X-CSRF-Token": csrfToken } },
   );
 }
 
 export function getBotanicalIdentityReconciliation(
   id: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<IdentityReconciliationResponse> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/reconciliation`,
-    { signal },
+    { capability, signal },
   );
 }
 
@@ -270,10 +296,12 @@ export function correctBotanicalIdentityAcceptedName(
   id: string,
   payload: AcceptedNameCorrectionWrite,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<IdentityReconciliationResponse> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/reconciliation/correct-name`,
     {
+      capability,
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -288,10 +316,12 @@ export function mergeDuplicateBotanicalIdentity(
   id: string,
   payload: DuplicateIdentityMergeWrite,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<IdentityReconciliationResponse> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/reconciliation/merge-duplicate`,
     {
+      capability,
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -304,7 +334,8 @@ export function mergeDuplicateBotanicalIdentity(
 
 export function listBotanicalIdentitySynonyms(
   id: string,
-  statusKind?: IdentityHistoricalNameResponse["status_kind"],
+  statusKind: IdentityHistoricalNameResponse["status_kind"] | undefined,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<IdentityHistoricalNameResponse[]> {
   const query = statusKind
@@ -312,7 +343,7 @@ export function listBotanicalIdentitySynonyms(
     : "";
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/synonyms${query}`,
-    { signal },
+    { capability, signal },
   );
 }
 
@@ -320,10 +351,12 @@ export function createBotanicalIdentitySynonym(
   id: string,
   payload: OperatorSynonymCreate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<IdentityHistoricalNameResponse> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/synonyms`,
     {
+      capability,
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -339,10 +372,12 @@ export function updateBotanicalIdentitySynonym(
   nameId: string,
   payload: OperatorSynonymUpdate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<IdentityHistoricalNameResponse> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/synonyms/${encodeURIComponent(nameId)}`,
     {
+      capability,
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -357,10 +392,12 @@ export function deleteBotanicalIdentitySynonym(
   id: string,
   nameId: string,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<undefined> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(id)}/synonyms/${encodeURIComponent(nameId)}`,
     {
+      capability,
       method: "DELETE",
       headers: { "X-CSRF-Token": csrfToken },
     },

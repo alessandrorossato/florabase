@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { activeCsrfToken, isPresentationRetainedState } from "../../auth/api";
 import { useAuth } from "../../auth/context";
 import {
   DirectoryCard,
@@ -78,8 +79,8 @@ export function Cuttings({
   sourceType?: "plant" | "plant_group";
 }) {
   const { state } = useAuth();
-  if (state.status !== "authenticated") return null;
-  const token = state.csrfToken;
+  if (!isPresentationRetainedState(state)) return null;
+  const token = activeCsrfToken(state);
   if (route === "new")
     return (
       <CuttingForm

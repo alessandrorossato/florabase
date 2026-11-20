@@ -89,6 +89,10 @@ function setup(hash = "#/identities", mobile = false) {
       return Promise.resolve(json([identity, external, empty]));
     if (path.endsWith("/external/cover-image"))
       return Promise.resolve(json(externalCover));
+    if (path.endsWith("/cover-image/thumbnail"))
+      return Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      );
     if (path.endsWith("/cover-image")) return Promise.resolve(json(null));
     if (path.endsWith("/collection"))
       return Promise.resolve(
@@ -152,8 +156,10 @@ test("directory covers preserve protected media and keyboard activation opens de
   expect(within(card).getByText("‘Okra Burgundy’")).toBeInTheDocument();
   expect(card).toHaveTextContent("1 seed lot · 2 plants");
   expect(card).not.toHaveTextContent("Selected");
-  expect(within(card).getByRole("img")).toHaveAttribute(
-    "src",
+  expect((await within(card).findByRole("img")).getAttribute("src")).toMatch(
+    /^blob:/,
+  );
+  expect(requested).toContain(
     `/api/v1/botanical-identities/${identity.id}/cover-image/thumbnail`,
   );
   const noCover = screen.getByRole("button", {
@@ -450,7 +456,7 @@ test("broken thumbnails have an intentional local fallback", async () => {
   const card = await screen.findByRole("button", {
     name: /^Open details Abelmoschus.*Okra Burgundy/,
   });
-  fireEvent.error(within(card).getByRole("img"));
+  fireEvent.error(await within(card).findByRole("img"));
   expect(within(card).queryByRole("img")).not.toBeInTheDocument();
   expect(within(card).getByText("Cover unavailable")).toBeInTheDocument();
 });
