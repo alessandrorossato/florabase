@@ -1,0 +1,122 @@
+{
+  "base": "0784ce63c1e035343cc09a0eb53193e9dcad2c00",
+  "bootstrap": "0784ce63c1e035343cc09a0eb53193e9dcad2c00",
+  "bootstrap_commits": [],
+  "branch": "ci/batch-07b",
+  "reconciliation": {
+    "docs/performance/PERF-001.md": "Distinguish the historical modified-baseline source rehearsal from the strict candidate rehearsal with the approved refreshed pin.",
+    "docs/progress.md": "Retain both source milestones, record exact-tip Golden review attribution and add the CERT-01 documentation completion milestone for candidate 07b on the new base.",
+    "docs/release/evidence/wf-04-batch-07b.md": "Record exact source approval and overlap provenance, the supersession of af89351 on the changed base, and which combined checks this candidate repeats."
+  },
+  "sources": [
+    {
+      "base": "fdc75e83fa8818cab791ed82cbba65f4f97db7ae",
+      "branch": "fix/session-expiry-draft-recovery",
+      "claim": "0d09f6e4c3cb",
+      "commits": [
+        "173b9f6eed7979e4bc0793af88a55b4de7af1eeb",
+        "6bca8c8a70c20b48b5a17209a10265bbc086f147",
+        "a622ad84060b82496665f4ac29b9f3248472808b",
+        "9bd4548be506263392e673aa9bb4bef7f5b7f258",
+        "fd5c542683c8e5b95a977bd590a25cbbd0454549",
+        "08c0bb353d98ac752a5828fe8f207fe44ad789cd"
+      ],
+      "evidence": [
+        "docs/release/evidence/session-expiry-draft-recovery.md"
+      ],
+      "id": "FRONTEND-002",
+      "merge": "63211070a8d5456c61894a501dd3bc364bbf4f5b",
+      "resolutions": [],
+      "reviewer": "SOL",
+      "tip": "08c0bb353d98ac752a5828fe8f207fe44ad789cd",
+      "writer": "hydrogen-b-session-recovery"
+    },
+    {
+      "base": "c555baabe916e3fea1ef2c8f834c747ced5aa926",
+      "branch": "fix/mobile-directory-ux-defects",
+      "claim": "822763ea1f7c",
+      "commits": [
+        "d5e020952bfdbdba0dcdcacf2d0fd9db399e84e4",
+        "39080cb84145e3e70b4ae38179169fb7af36d7ba"
+      ],
+      "evidence": [
+        "docs/release/evidence/mobile-directory-ux-defects.md"
+      ],
+      "id": "UI-SYSTEM-001",
+      "merge": "dc03ba856f0e3128f27088830a0f3c69cbc483ce",
+      "resolutions": [],
+      "reviewer": "argon-batch07-source-qa",
+      "tip": "39080cb84145e3e70b4ae38179169fb7af36d7ba",
+      "writer": "hydrogen-b-mobile-ux"
+    },
+    {
+      "base": "fdc75e83fa8818cab791ed82cbba65f4f97db7ae",
+      "branch": "fix/golden-comprehensive-crosswalk-pin",
+      "claim": "8567eb6bf2e1",
+      "commits": [
+        "81848389b93204fb13dabf020aa5061c4d869072"
+      ],
+      "evidence": [
+        "docs/dev-golden.md",
+        "docs/progress.md"
+      ],
+      "id": "TEST-DATA-002",
+      "merge": "bf54c7235775901f680ed73c99edf8642a30b13d",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "Opus",
+      "tip": "81848389b93204fb13dabf020aa5061c4d869072",
+      "writer": "terra-golden-comprehensive-pin"
+    },
+    {
+      "base": "fdc75e83fa8818cab791ed82cbba65f4f97db7ae",
+      "branch": "feat/perf-001-comprehensive-harness",
+      "claim": "35cfc77b02e0",
+      "commits": [
+        "c2d5a1fecee385367f680b7d1172b1310157660d",
+        "df443575a7c18a7e1fd9e776e76685cd8a67c16c",
+        "67b2482f9f117963de5a10103d4250a692ed9f76",
+        "2c23c56e70aa3ca2e6231ff8bfcf4e0d4e9314f6",
+        "6175a03580581c5b5654502b4830146727d47e29",
+        "a9d01a805cdb6177db35ddf48b58bd9b9ba801e8",
+        "143bbc8ad69d07a47551f01976017c6218ff9a3b"
+      ],
+      "evidence": [
+        "docs/performance/PERF-001.md",
+        "docs/progress.md"
+      ],
+      "id": "PERF-001",
+      "merge": "0f3d153578ee8b805d388cc3f0356df97e38c86d",
+      "resolutions": [],
+      "reviewer": "Sonnet",
+      "tip": "143bbc8ad69d07a47551f01976017c6218ff9a3b",
+      "writer": "hydrogen-b-perf-harness"
+    },
+    {
+      "base": "fdc75e83fa8818cab791ed82cbba65f4f97db7ae",
+      "branch": "docs/batch-07-functional-ux-certification",
+      "claim": "49ea62281bdc",
+      "commits": [
+        "f54ac8786b783b53dec508f0ae84ee50faed85b3",
+        "213afff88188197ba812f99de56a36ccb8d25aff",
+        "00ec17c5a69ec4b2617b3237ab7355f8426d0386"
+      ],
+      "evidence": [
+        "docs/release/evidence/g-core-pre-rc.md",
+        "docs/release/evidence/g-ux-pre-rc.md",
+        "docs/release/evidence/cutting-001-acceptance.md",
+        "docs/release/evidence/ui-system-001-certification.md",
+        "docs/release/evidence/uat-operator-feedback-intake.md"
+      ],
+      "id": "CERT-01",
+      "merge": "04a47ecfc1b461a181b780cc4c4160b6b7a1448e",
+      "resolutions": [],
+      "reviewer": "SOL",
+      "tip": "00ec17c5a69ec4b2617b3237ab7355f8426d0386",
+      "writer": "hydrogen-b-functional-ux-cert"
+    }
+  ],
+  "summary": "Session recovery, mobile UX and certification evidence",
+  "version": 1
+}

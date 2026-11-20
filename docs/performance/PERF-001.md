@@ -473,6 +473,11 @@ by the reviewed WGSRPD crosswalk expansion and note changes in PR #175 (`51f7884
   be compared silently against persistent-storage measurements. Host CPU/RAM is shared with other
   worktrees/services, so benchmark runs require serialized execution under `florabase-perf.lock`.
 
+Batch 07 incorporates the reviewed [Golden COMPREHENSIVE pin refresh](../dev-golden.md#reviewed-baseline-at-20261110_0047).
+The modified-baseline results below describe the original PERF-001 source runs. The
+combined-candidate rehearsal uses the refreshed pin in strict mode, and its raw
+evidence is retained separately with the tested candidate identity.
+
 **Reconciled preliminary rehearsal (NOT formal RC G-PERF certification):**
 
 Executed on `feat/perf-001-comprehensive-harness` at clean commit `6175a03` (based on `origin/main`

@@ -9553,6 +9553,23 @@ Status remains implemented pending canonical verification.
   against the refreshed pin. A neighboring SMOKE copy also returned `baseline-verified`.
   `make golden-dataset-comprehensive-check` passed 29 tests. Offline document links, the feature
   graph, disclosure and whitespace checks passed. All owned TEST resources were retired.
-- Independent exact-tip QA is pending. WF-04 Batch 07 requires an explicit
-  `make golden-dataset-comprehensive-check` on the integrated candidate alongside the batch's
-  canonical FULL gate, which skips COMPREHENSIVE.
+- Opus independently approved the exact pin commit `8184838` after reproducing the
+  diagnosis on the base. The 29 passing exact-tip tests were run by the source writer.
+  WF-04 Batch 07 requires an explicit `make golden-dataset-comprehensive-check` on the
+  integrated candidate in addition to canonical FULL, whose default integration suite skips
+  COMPREHENSIVE.
+
+### WF-04 Batch 07 integrated (candidate 07b)
+
+- Integrated the approved browser session, mobile directory, Golden COMPREHENSIVE,
+  performance harness and CERT-01 sources from pinned main `0784ce6`, which includes
+  the BETA-SECURITY-001 nginx 1.30.7 base (#198). Candidate 07b supersedes `ci/batch-07`
+  at `af89351` (PR #197), whose base `fdc75e8` changed. The source tips and merge order
+  are unchanged. The [Batch 07b evidence](release/evidence/wf-04-batch-07b.md) records the
+  source reviews and the overlap reconciliation. Combined verification evidence belongs
+  to the exact candidate tested; `af89351` evidence is historical.
+- CERT-01 completed the approved pre-RC functional and UX documentation increment at
+  `00ec17c`. Sonnet performed the preceding comprehensive review, and the operator
+  supplied SOL's final approval of the three-file RC-SEQ-01 correction. Formal release
+  certification and operator acceptance remain pending. RC-SEQ-01 and all eight
+  release-candidate blockers remain open. Feature statuses and release membership are unchanged.
