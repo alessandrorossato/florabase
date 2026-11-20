@@ -6,6 +6,7 @@
 - **Base commit**: `fdc75e83fa8818cab791ed82cbba65f4f97db7ae`
 - **Historical ancestors**: `173b9f6` -> `6bca8c8` -> `a622ad84060b82496665f4ac29b9f3248472808b`
 - **Reviewed predecessor (`BATCH07_PROTECTED_JSON_BOUNDARY_FINAL_SECURITY_QA`)**: `9bd4548be506263392e673aa9bb4bef7f5b7f258` (tree `93687f2a23697bdf9c229696e4bfdd1e62e0c6f8`)
+- **Reviewed P2.1/P2.2 approval predecessor (`BATCH07_AUTH_FINAL_SECURITY_APPROVAL`)**: `fd5c542683c8e5b95a977bd590a25cbbd0454549` (tree `a8206073a743f7410d1aef9316ec8ee4e83a8d61`)
 - **Writer claim**: `hydrogen-b-session-recovery` / `0d09f6e4c3cb`
 
 ### Reviewed Git Inventories (Kept Distinct)
@@ -14,7 +15,8 @@
 | --- | ---: | ---: | ---: | ---: |
 | Cumulative base (`fdc75e83`) -> predecessor (`9bd4548`) | 188 | 119 | 68 (67 test files + `frontend/src/test/auth.ts`) | 1 |
 | Predecessor corrective delta (`a622ad84` -> `9bd4548`) | 186 | 117 | 68 | 1 |
-| Successor bounded security correction delta (`9bd4548` -> successor HEAD) | 6 | 3 (`auth/api.ts`, `auth/AuthProvider.tsx`, `photos/useProtectedImage.ts`) | 2 (`auth/SessionRecovery.test.tsx`, `occurrence-map/EvidenceTiles.test.ts`) | 1 (`docs/release/evidence/session-expiry-draft-recovery.md`) |
+| P2.1/P2.2/P2.3 initial correction delta (`9bd4548` -> `fd5c542`) | 6 | 3 (`auth/api.ts`, `auth/AuthProvider.tsx`, `photos/useProtectedImage.ts`) | 2 (`auth/SessionRecovery.test.tsx`, `occurrence-map/EvidenceTiles.test.ts`) | 1 (`docs/release/evidence/session-expiry-draft-recovery.md`) |
+| Final P2.3 private-issuance delta (`fd5c542` -> successor HEAD) | 5 | 2 (`auth/AuthProvider.tsx`, `auth/api.ts`) | 2 (`auth/SessionRecovery.test.tsx`, `occurrence-map/EvidenceTiles.test.ts`) | 1 (`docs/release/evidence/session-expiry-draft-recovery.md`) |
 | Cumulative base (`fdc75e83`) -> successor HEAD | 188 | 119 | 68 | 1 |
 
 ### Scope Rulings & Workstream B Overlap
@@ -36,9 +38,11 @@
 3. **P2.2 — Synchronous object URL revocation (`photos/useProtectedImage.ts`, `auth/api.ts`)**:
    - `ProtectedRequestCapability` exposes `subscribePermanentRevocation(listener)` invoked synchronously inside `record.revoke()` (and immediately if already revoked).
    - `useProtectedImage` binds every created `blob:` URL to `subscribePermanentRevocation` with idempotent release, revoking former-owner object URLs synchronously before replacement workspace unlock rather than waiting for React passive-effect cleanup, while preserving loaded images during temporary same-owner locks and preventing stale blob completions from creating or leaking URLs after revocation.
-4. **P2.3 — Provider-private capability issuance (`auth/api.ts`, `AuthProvider.tsx`)**:
-   - Removed public numeric provider IDs (`getActiveAuthProviderId`) and public-ID-based issuance (`acquireWorkspaceCapability(providerId)`).
-   - `attachAuthRequestGate` returns an opaque, frozen `AuthProviderGateController` held privately in `AuthProvider`. Gate mutation and workspace capability issuance are private controller closures permanently disabled on retirement or `detach()`.
+4. **P2.3 — Lexically private gate attachment & capability issuance (`AuthProvider.tsx`, `auth/api.ts`)**:
+   - Removed all unrestricted gate/issuance module exports: `attachAuthRequestGate`, `acquireWorkspaceCapability`, `getActiveAuthProviderId`, `syncAuthRequestGate`, `invalidateProtectedWorkspace`, `enqueueAuthCookieOperation`, and `revokedAuthCapability`.
+   - Co-located the `AuthProvider` React component implementation and the module-private gate/controller machinery (`attachAuthRequestGate`, `issueWorkspaceCapabilityForProvider`, `AuthProviderGateController`, `ManagedWorkspaceCapabilityHandle`, `enqueueAuthCookieOperation`, `revokedAuthCapability`) inside `frontend/src/auth/AuthProvider.tsx`.
+   - Reduced `frontend/src/auth/api.ts` to an explicit public compatibility facade re-exporting only the public non-issuance request/auth functions, error classes, and types from `./AuthProvider`.
+   - No callable module export or public `AuthContextValue` property can attach a gate controller or independently establish protected-request issuance authority; retired provider controllers remain permanently unauthorized.
 5. **Protected browser-managed resources & accepted original-tab behavior**:
    - Images render exclusively from `blob:` URLs via `useProtectedImage`; CSV exports/templates/examples use `downloadProtectedFile` with RFC 5987 `filename*` parsing, binary byte fidelity, and single-active-download mutex; occurrence map tiles use `EvidenceTiles`.
    - `openProtectedTab` (`"Open original image"`) allocates a popup tab synchronously on click, nulls `opener`, navigates to a `blob:` URL, and closes the tab on any auth lock occurring within its 60-second cleanup window (accepted by SOL as bounded cleanup behavior).
@@ -56,7 +60,22 @@
 - Verified `128` test suites / `1414` passing tests (`127`/`1410` repository tests + 4 independent regressions `QA-1`..`QA-4`), all `4` boundary mutation controls killed, all `5` R2 screens (`NativeRangesScreen`, `TerritoryInspector`, `TaxonomyScreen`, `DashboardSearch`, `SavedViews`) passing in disposable Chromium, legitimate original-image opening, byte-identical CSV downloads, zero former-owner calls in exact Identity Maps attribution runs, clean distributed bundle inspection, and combined Workstream A+B overlap (`45/45`).
 - Earlier author-reported pre-commit browser screenshots/logs from the `9bd4548` pass (local scratch `brain/c05760e3-f1a8-437f-ab38-604f6939176e/scratch/ws_a_final_e2e/`) are historical author-reported artifacts of unproven commit provenance and are superseded by Opus's independent `9bd4548` QA and the successor checks below.
 
-### Author-Executed Verification on Successor Candidate (P2.1, P2.2, P2.3)
+### Author-Executed Verification on Final P2.3 Private-Issuance Successor (`fd5c542` -> successor HEAD)
+
+- **Focused & independent regressions**:
+  - `SessionRecovery.test.tsx` (`16/16`, including runtime exported-surface audit, negative control against forbidden exports, and real-`AuthProvider` P2.3 lifecycle coverage), `EvidenceTiles.test.ts` (`7/7`, adapted to real `<AuthProvider>` without weakening assertions), and Opus's independent `QA-1`..`QA-6` (`claude-ws-a-delta-qa-fd5c542/IndependentBoundaryQA.test.tsx`, `6/6`): **3 files / 29 tests passed, 0 errors**.
+  - Broader affected regression run (`12` repository suites covering `SessionRecovery`, `EvidenceTiles`, `App`, `App.lazy`, `RecordVisual`, `MediaScreen`, `ImportExportScreen`, `SavedViews`, `DashboardSearch`, `NativeRangesScreen`, `TaxonomyScreen`, `OccurrenceMapPanel` + Opus `QA-1`..`QA-6`): **13 files / 286 tests passed**.
+- **Negative control (accidental re-export detection)**:
+  - `MUTANT_REEXPORT_KILLED`: temporarily adding `export` to `attachAuthRequestGate` in `AuthProvider.tsx` was immediately caught and failed by `SessionRecovery.test.tsx` P2.3.
+- **Formatting, lint, typing, build & bundle audit (`frontend/`)**:
+  - `pnpm format:check`: **PASS** (`All matched files use Prettier code style!`)
+  - `pnpm lint` (`eslint . --max-warnings 0`): **PASS** (`0` warnings, `0` errors)
+  - `pnpm typecheck` (`tsc -b --pretty false`): **PASS**
+  - `pnpm build` (`tsc -b && vite build`): **PASS**
+  - `dist/assets/*.js` grep for `acquireTestAuth|renderWithTestAuth|issueTestRequestCapability|defaultTestSession|getActiveAuthProviderId|attachAuthRequestGate`: **0 matches** (`CLEAN_DIST`).
+  - Export inventory across `auth/api.ts`, `auth/AuthProvider.tsx`, and `auth/context.ts`: zero exported gate attachment or capability issuance symbols; all gate/issuance functions remain module-private inside `AuthProvider.tsx`.
+
+### Author-Executed Verification on Prior `fd5c542` Candidate (P2.1, P2.2, P2.3)
 
 - **Focused & independent regressions**:
   - `SessionRecovery.test.tsx`: `16/16` passed (including strengthened StrictMode test and deterministic `P2.1`, `P2.2`, and `P2.3` regressions).

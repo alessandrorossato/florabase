@@ -17,11 +17,11 @@ import { EvidenceTiles } from "../occurrence-map/EvidenceTiles";
 import { PlantScreen } from "../plants/PlantScreen";
 import { useProtectedImage } from "../photos/useProtectedImage";
 import { openFormSection } from "../test/formSections";
+import * as authApiModule from "./api";
 import {
   activeCsrfToken,
   AuthRequestLockedError,
   StaleAuthEpochError,
-  attachAuthRequestGate,
   downloadProtectedFile,
   getProtectedAuthEpoch,
   isProtectedRequestAuthorized,
@@ -32,7 +32,9 @@ import {
   subscribeAuthInvalidation,
   type ProtectedRequestCapability,
 } from "./api";
+import * as authProviderModule from "./AuthProvider";
 import { AuthProvider } from "./AuthProvider";
+import * as authContextModule from "./context";
 import { useAuth, type AuthContextValue } from "./context";
 
 const identityId = "01900000-0000-7000-8000-000000000101";
@@ -631,41 +633,73 @@ test("backend outage (Scenario F: 503 then network recovery) keeps session authe
 });
 
 test("Scenarios A & B: requestJson fences stale Epoch-1 200 responses and delayed Epoch-1 401 errors after Epoch-2 login", async () => {
-  const onUnauthorized = vi.fn();
-  const gate = attachAuthRequestGate(onUnauthorized);
-  const epoch1Gate = gate.syncGate({
-    locked: false,
-    advanceEpoch: true,
-    ownerId: "owner-1",
-  });
-  const { capability: epoch1Capability } = gate.acquireWorkspaceCapability();
   const epoch1Response = deferred<Response>();
   const epoch1Delayed401 = deferred<Response>();
   const epoch1BodyJson = deferred<unknown>();
 
+  const fetchMock = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation((input) => {
+      const url = typeof input === "string" ? input : (input as Request).url;
+      if (url.endsWith("/api/v1/auth/session")) {
+        return Promise.resolve(
+          json({
+            user_id: "owner-1",
+            login_name: "owner-1",
+            display_name: "Owner 1",
+            owner: true,
+          }),
+        );
+      }
+      if (
+        url.endsWith("/api/v1/auth/csrf") ||
+        url.endsWith("/api/v1/auth/login")
+      ) {
+        return Promise.resolve(json({ csrf_token: "csrf-owner-1" }));
+      }
+      if (url.endsWith("/api/v1/plants")) return epoch1Response.promise;
+      if (url.endsWith("/api/v1/sowings")) return epoch1Delayed401.promise;
+      if (url.endsWith("/api/v1/orders")) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          headers: new Headers({ "Content-Type": "application/json" }),
+          json: () => epoch1BodyJson.promise,
+        } as unknown as Response);
+      }
+      return Promise.resolve(json({}));
+    });
+
+  const authRef: { current: AuthContextValue | null } = { current: null };
+  function Probe() {
+    authRef.current = useAuth();
+    return null;
+  }
+  const view = render(
+    <AuthProvider>
+      <Probe />
+    </AuthProvider>,
+  );
+  await waitFor(() => {
+    expect(authRef.current?.state.status).toBe("authenticated");
+  });
+  const epoch1Capability = authRef.current?.capability;
+  if (!epoch1Capability) throw new Error("Expected Epoch-1 capability");
   const initialEpoch = getProtectedAuthEpoch();
 
-  const fetchMock = vi.spyOn(globalThis, "fetch");
-  fetchMock.mockImplementationOnce(() => epoch1Response.promise);
-  fetchMock.mockImplementationOnce(() => epoch1Delayed401.promise);
-  fetchMock.mockImplementationOnce(() =>
-    Promise.resolve({
-      ok: true,
-      status: 200,
-      headers: new Headers({ "Content-Type": "application/json" }),
-      json: () => epoch1BodyJson.promise,
-    } as unknown as Response),
-  );
-
-  const p200 = requestJson("/api/v1/plants", { capability: epoch1Capability });
-  const p401 = requestJson("/api/v1/sowings", { capability: epoch1Capability });
-  const pBody = requestJson("/api/v1/orders", { capability: epoch1Capability });
+  const p200 = requestJson("/api/v1/plants", {
+    capability: epoch1Capability,
+  }).catch((error: unknown) => error);
+  const p401 = requestJson("/api/v1/sowings", {
+    capability: epoch1Capability,
+  }).catch((error: unknown) => error);
+  const pBody = requestJson("/api/v1/orders", {
+    capability: epoch1Capability,
+  }).catch((error: unknown) => error);
 
   // Locking gate refuses same-owner capability synchronously without touching fetch.
-  gate.syncGate({
-    locked: true,
-    advanceEpoch: true,
-    ownerId: "owner-1",
+  act(() => {
+    authRef.current?.sessionExpired();
   });
   expect(isProtectedRequestAuthorized()).toBe(false);
   const callsBeforeLockedCheck = fetchMock.mock.calls.length;
@@ -674,24 +708,27 @@ test("Scenarios A & B: requestJson fences stale Epoch-1 200 responses and delaye
   ).rejects.toBeInstanceOf(AuthRequestLockedError);
   expect(fetchMock.mock.calls.length).toBe(callsBeforeLockedCheck);
 
-  const nextEpoch = gate.syncGate({
-    locked: false,
-    advanceEpoch: true,
-    ownerId: "owner-1",
+  await act(async () => {
+    await authRef.current?.reauthenticate?.({
+      login_name: "owner-1",
+      password: "pw",
+    });
   });
+  const nextEpoch = getProtectedAuthEpoch();
   expect(nextEpoch).toBeGreaterThan(initialEpoch);
-  expect(epoch1Gate).toBeLessThan(nextEpoch);
+  expect(authRef.current?.state.status).toBe("authenticated");
 
   epoch1Response.resolve(json([{ id: "stale" }]));
   epoch1Delayed401.resolve(json({ detail: "Expired" }, 401));
   epoch1BodyJson.resolve([{ id: "stale-body" }]);
 
-  await expect(p200).rejects.toBeInstanceOf(StaleAuthEpochError);
-  await expect(p401).rejects.toBeInstanceOf(StaleAuthEpochError);
-  await expect(pBody).rejects.toBeInstanceOf(StaleAuthEpochError);
-  expect(onUnauthorized).not.toHaveBeenCalled();
+  expect(await p200).toBeInstanceOf(StaleAuthEpochError);
+  expect(await p401).toBeInstanceOf(StaleAuthEpochError);
+  expect(await pBody).toBeInstanceOf(StaleAuthEpochError);
+  expect(authRef.current?.state.status).toBe("authenticated");
+  expect(getProtectedAuthEpoch()).toBe(nextEpoch);
 
-  gate.detach();
+  view.unmount();
 });
 
 test("Scenario C: concurrent cookie-changing auth operations serialize without interleaving", async () => {
@@ -781,16 +818,23 @@ test("Scenario C: concurrent cookie-changing auth operations serialize without i
 
 test("Scenario G: EvidenceTiles aborts in-flight tile requests and cancels pending retry timers on auth lock", async () => {
   vi.useFakeTimers();
-  const gate = attachAuthRequestGate(vi.fn());
-  gate.syncGate({
-    locked: false,
-    ownerId: "owner-1",
-  });
-  const { capability } = gate.acquireWorkspaceCapability();
-
   const signals: AbortSignal[] = [];
   let fetchCount = 0;
-  vi.spyOn(globalThis, "fetch").mockImplementation((_input, init) => {
+  vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+    const url = typeof input === "string" ? input : (input as Request).url;
+    if (url.endsWith("/api/v1/auth/session")) {
+      return Promise.resolve(
+        json({
+          user_id: "owner-1",
+          login_name: "owner-1",
+          display_name: "Owner 1",
+          owner: true,
+        }),
+      );
+    }
+    if (url.endsWith("/api/v1/auth/csrf")) {
+      return Promise.resolve(json({ csrf_token: "csrf-owner-1" }));
+    }
     fetchCount++;
     if (init?.signal) signals.push(init.signal);
     if (fetchCount === 1) {
@@ -800,6 +844,25 @@ test("Scenario G: EvidenceTiles aborts in-flight tile requests and cancels pendi
       // Keep second tile request pending until aborted.
     });
   });
+
+  const authRef: { current: AuthContextValue | null } = { current: null };
+  function Probe() {
+    authRef.current = useAuth();
+    return null;
+  }
+  const view = render(
+    <AuthProvider>
+      <Probe />
+    </AuthProvider>,
+  );
+  for (let i = 0; i < 8; i += 1) {
+    if (authRef.current?.state.status === "authenticated") break;
+    await act(async () => {
+      await Promise.resolve();
+    });
+  }
+  const capability = authRef.current?.capability;
+  if (!capability) throw new Error("Expected authenticated capability");
 
   const report = vi.fn();
   const tiles = new EvidenceTiles(
@@ -827,10 +890,8 @@ test("Scenario G: EvidenceTiles aborts in-flight tile requests and cancels pendi
   expect(signals[1]?.aborted).toBe(false);
 
   // Locking auth gate aborts in-flight tile requests and clears retry timers.
-  gate.syncGate({
-    locked: true,
-    advanceEpoch: true,
-    ownerId: "owner-1",
+  act(() => {
+    authRef.current?.sessionExpired();
   });
   expect(signals[1]?.aborted).toBe(true);
 
@@ -846,7 +907,8 @@ test("Scenario G: EvidenceTiles aborts in-flight tile requests and cancels pendi
   expect(fetchCount).toBe(2);
   expect(done3).toHaveBeenCalledTimes(1);
 
-  gate.detach();
+  tiles.cancel();
+  view.unmount();
 });
 
 test("domain editors beyond PlantScreen (BotanicalIdentityScreen) retain unsaved draft across 401 recovery", async () => {
@@ -1350,37 +1412,95 @@ test("F2 pre-commit race: different-owner reauthentication revokes former-owner 
 });
 
 test("forged, missing, wrong-generation, and revoked capabilities fail closed before fetch across JSON, blob, download, tab, and tiles", async () => {
+  let activeOwner = "owner-a";
   const fetchSpy = vi
     .spyOn(globalThis, "fetch")
-    .mockResolvedValue(
-      new Response(JSON.stringify({ ok: true }), { status: 200 }),
-    );
+    .mockImplementation((input, init) => {
+      const url = typeof input === "string" ? input : (input as Request).url;
+      if (url.endsWith("/api/v1/auth/session")) {
+        return Promise.resolve(
+          json({
+            user_id: activeOwner,
+            login_name: activeOwner,
+            display_name: activeOwner,
+            owner: true,
+          }),
+        );
+      }
+      if (url.endsWith("/api/v1/auth/csrf")) {
+        return Promise.resolve(json({ csrf_token: `csrf-${activeOwner}` }));
+      }
+      if (url.endsWith("/api/v1/auth/login")) {
+        const bodyText = typeof init?.body === "string" ? init.body : "{}";
+        const body = JSON.parse(bodyText) as { login_name?: string };
+        activeOwner = body.login_name ?? activeOwner;
+        return Promise.resolve(json({ csrf_token: `csrf-${activeOwner}` }));
+      }
+      if (url.endsWith("/api/v1/auth/logout")) {
+        return Promise.resolve(new Response(null, { status: 204 }));
+      }
+      return Promise.resolve(
+        new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      );
+    });
   const openSpy = vi.spyOn(window, "open");
-  const retiredGate = attachAuthRequestGate(vi.fn(), false);
-  const gate = attachAuthRequestGate(vi.fn(), false);
-  gate.syncGate({ locked: false, ownerId: "owner-a" });
 
-  const handleValid = gate.acquireWorkspaceCapability();
-  const handleWrongGen = gate.acquireWorkspaceCapability();
+  const authRef: { current: AuthContextValue | null } = { current: null };
+  function Probe() {
+    authRef.current = useAuth();
+    return null;
+  }
+
+  // Provider 1: obtain a real capability then retire the provider via unmount.
+  const firstProvider = render(
+    <AuthProvider>
+      <Probe />
+    </AuthProvider>,
+  );
+  await waitFor(() => {
+    expect(authRef.current?.state.status).toBe("authenticated");
+  });
+  const retiredProviderCap = authRef.current?.capability;
+  if (!retiredProviderCap) throw new Error("Expected retiredProviderCap");
+  firstProvider.unmount();
+
+  // Provider 2: obtain capability for owner-a, then switch to owner-b (wrong-generation/revoked).
+  const secondProvider = render(
+    <AuthProvider>
+      <Probe />
+    </AuthProvider>,
+  );
+  await waitFor(() => {
+    expect(authRef.current?.state.status).toBe("authenticated");
+  });
+  const wrongGenCap = authRef.current?.capability;
+  if (!wrongGenCap) throw new Error("Expected wrongGenCap");
+  act(() => {
+    authRef.current?.sessionExpired();
+  });
+  await act(async () => {
+    await authRef.current?.reauthenticate?.({
+      login_name: "owner-b",
+      password: "pw",
+    });
+  });
+  await waitFor(() => {
+    expect(authRef.current?.state.status).toBe("authenticated");
+  });
+
   const forged = {
     isAuthorized: () => true,
     subscribeInvalidation: () => () => undefined,
     subscribePermanentRevocation: () => () => undefined,
   } as unknown as ProtectedRequestCapability;
-  const wrongProvider = retiredGate.acquireWorkspaceCapability();
 
-  // Explicit revoke + workspace generation bump + switch to active owner-b
-  handleValid.revoke();
-  gate.syncGate({
-    locked: false,
-    ownerId: "owner-b",
-    invalidateWorkspace: true,
-  });
+  fetchSpy.mockClear();
+  openSpy.mockClear();
 
   const tileLayerRevoked = new EvidenceTiles(
     () => "/api/v1/botanical-identities/1/occurrence-map/tiles/a/1/0/0.png",
     vi.fn(),
-    handleValid.capability,
+    retiredProviderCap,
   );
   const tileLayerForged = new EvidenceTiles(
     () => "/api/v1/botanical-identities/1/occurrence-map/tiles/b/1/0/0.png",
@@ -1391,9 +1511,8 @@ test("forged, missing, wrong-generation, and revoked capabilities fail closed be
   for (const bad of [
     undefined as unknown as ProtectedRequestCapability,
     forged,
-    handleValid.capability,
-    handleWrongGen.capability,
-    wrongProvider.capability,
+    retiredProviderCap,
+    wrongGenCap,
   ]) {
     await expect(
       requestJson("/api/v1/plants", { capability: bad }),
@@ -1427,8 +1546,7 @@ test("forged, missing, wrong-generation, and revoked capabilities fail closed be
   expect(openSpy).not.toHaveBeenCalled();
   tileLayerRevoked.cancel();
   tileLayerForged.cancel();
-  gate.detach();
-  retiredGate.detach();
+  secondProvider.unmount();
 });
 
 test("A -> B -> A permanent revocation keeps Alice's prior capability unusable and rejects delayed Epoch-1 bodies across owner switches", async () => {
@@ -2035,79 +2153,195 @@ test("P2.2: useProtectedImage releases loaded object URLs synchronously at perma
   revokeSpy.mockRestore();
 });
 
-test("P2.3: capability issuance is private to the active provider controller and permanently lost on retirement", async () => {
-  const fetchSpy = vi
-    .spyOn(globalThis, "fetch")
-    .mockResolvedValue(json({ ok: true }));
-  fetchSpy.mockClear();
+test("P2.3: gate attachment and capability issuance are lexically private to AuthProvider with no unrestricted module export", async () => {
+  // 1. Exported runtime surface audit + negative control for accidental re-export.
+  const forbiddenExports = [
+    "attachAuthRequestGate",
+    "acquireWorkspaceCapability",
+    "getActiveAuthProviderId",
+    "syncAuthRequestGate",
+    "invalidateProtectedWorkspace",
+    "enqueueAuthCookieOperation",
+    "revokedAuthCapability",
+    "issueWorkspaceCapabilityForProvider",
+  ];
+  const apiExports = Object.keys(authApiModule).sort();
+  const providerExports = Object.keys(authProviderModule).sort();
+  const contextExports = Object.keys(authContextModule).sort();
 
-  const controller1 = attachAuthRequestGate(vi.fn(), true);
-  expect(controller1.isActive()).toBe(true);
-  controller1.syncGate({ locked: false, ownerId: "owner-a" });
+  for (const forbidden of forbiddenExports) {
+    expect(apiExports).not.toContain(forbidden);
+    expect(providerExports).not.toContain(forbidden);
+    expect(contextExports).not.toContain(forbidden);
+  }
+  const expectedPublicApiExports = [
+    "ApiError",
+    "AuthRequestLockedError",
+    "ProtectedTabBlockedError",
+    "StaleAuthEpochError",
+    "activeCsrfToken",
+    "changePassword",
+    "classifyResourceUrl",
+    "downloadProtectedFile",
+    "getProtectedAuthEpoch",
+    "getProtectedWorkspaceGeneration",
+    "getSession",
+    "isExpectedAuthCancellation",
+    "isPresentationRetainedState",
+    "isProtectedRequestAuthorized",
+    "isReauthenticationState",
+    "login",
+    "logout",
+    "openProtectedTab",
+    "parseContentDispositionFilename",
+    "recoverCsrf",
+    "requestJson",
+    "requestProtectedBlob",
+    "subscribeAuthInvalidation",
+  ];
+  expect(apiExports).toEqual(expectedPublicApiExports);
+  expect(providerExports).toEqual(
+    ["AuthProvider", ...expectedPublicApiExports].sort(),
+  );
 
-  // Active controller issues a working capability.
-  const handleA = controller1.acquireWorkspaceCapability();
-  expect(handleA.capability.isAuthorized()).toBe(true);
+  // 2. Real AuthProvider lifecycle verification: legitimate attachment, same-owner identity
+  // preservation, provider replacement/retirement, former-owner rejection, and A->B->A revocation.
+  let activeOwner: "alice" | "bob" = "alice";
+  const protectedCalls: string[] = [];
+  vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+    const url = typeof input === "string" ? input : (input as Request).url;
+    const method = (init?.method ?? "GET").toUpperCase();
+    if (url.endsWith("/api/v1/auth/session")) {
+      return Promise.resolve(
+        json({
+          user_id: activeOwner,
+          login_name: activeOwner,
+          display_name: activeOwner === "alice" ? "Alice" : "Bob",
+          owner: true,
+        }),
+      );
+    }
+    if (url.endsWith("/api/v1/auth/csrf") && method === "POST") {
+      return Promise.resolve(json({ csrf_token: `csrf-${activeOwner}` }));
+    }
+    if (url.endsWith("/api/v1/auth/login") && method === "POST") {
+      const bodyText = typeof init?.body === "string" ? init.body : "{}";
+      const body = JSON.parse(bodyText) as { login_name?: string };
+      activeOwner = body.login_name === "bob" ? "bob" : "alice";
+      return Promise.resolve(json({ csrf_token: `csrf-${activeOwner}` }));
+    }
+    protectedCalls.push(url);
+    return Promise.resolve(json({ ok: true, owner: activeOwner }));
+  });
+
+  const authRef: { current: AuthContextValue | null } = { current: null };
+  function Probe() {
+    authRef.current = useAuth();
+    return null;
+  }
+
+  const first = render(
+    <AuthProvider>
+      <Probe />
+    </AuthProvider>,
+  );
+  await waitFor(() => {
+    expect(authRef.current?.state.status).toBe("authenticated");
+  });
+
+  // Public auth context exposes no gate attachment or capability issuance authority.
+  const firstContext = authRef.current;
+  if (!firstContext) throw new Error("Expected first AuthContextValue");
+  for (const forbidden of forbiddenExports) {
+    expect(Object.keys(firstContext)).not.toContain(forbidden);
+  }
+  const capAlice1 = firstContext.capability;
+  expect(capAlice1.isAuthorized()).toBe(true);
+
   await expect(
-    requestJson("/api/v1/plants", { capability: handleA.capability }),
-  ).resolves.toEqual({ ok: true });
-  expect(fetchSpy).toHaveBeenCalledTimes(1);
+    requestJson("/api/v1/plants", { capability: capAlice1 }),
+  ).resolves.toEqual({ ok: true, owner: "alice" });
+  expect(protectedCalls).toEqual(["/api/v1/plants"]);
 
-  // Same-owner temporary lock + unlock preserves capability identity & authorization.
-  controller1.syncGate({
-    locked: true,
-    advanceEpoch: true,
-    ownerId: "owner-a",
+  // Same-owner lock & recovery preserves exact capability object identity.
+  act(() => {
+    authRef.current?.sessionExpired();
   });
-  expect(handleA.capability.isAuthorized()).toBe(false);
-  controller1.syncGate({
-    locked: false,
-    advanceEpoch: true,
-    ownerId: "owner-a",
+  expect(capAlice1.isAuthorized()).toBe(false);
+  await act(async () => {
+    await authRef.current?.reauthenticate?.({
+      login_name: "alice",
+      password: "pw",
+    });
   });
-  expect(handleA.capability.isAuthorized()).toBe(true);
+  expect(authRef.current?.capability).toBe(capAlice1);
+  expect(capAlice1.isAuthorized()).toBe(true);
 
-  // Replacement provider controller retires controller1 permanently.
-  const controller2 = attachAuthRequestGate(vi.fn(), true);
-  expect(controller1.isActive()).toBe(false);
-  expect(controller2.isActive()).toBe(true);
-  expect(handleA.capability.isAuthorized()).toBe(false);
+  // Provider replacement retires Provider 1 permanently; stale Provider 1 actions cannot
+  // mutate Provider 2 or mint fresh capabilities.
+  const retiredContext = authRef.current;
+  first.unmount();
+  expect(capAlice1.isAuthorized()).toBe(false);
 
-  // Retired controller cannot mutate the gate or mint replacement capabilities.
-  expect(controller1.syncGate({ locked: false, ownerId: "owner-a" })).toBe(-1);
-  expect(controller1.invalidateWorkspace()).toBe(-1);
-  const retiredAttempt = controller1.acquireWorkspaceCapability();
-  expect(retiredAttempt.capability.isAuthorized()).toBe(false);
+  const second = render(
+    <AuthProvider>
+      <Probe />
+    </AuthProvider>,
+  );
+  await waitFor(() => {
+    expect(authRef.current?.state.status).toBe("authenticated");
+  });
+  const capAlice2 = authRef.current?.capability;
+  if (!capAlice2) throw new Error("Expected replacement capability");
+  expect(capAlice2).not.toBe(capAlice1);
+  expect(capAlice2.isAuthorized()).toBe(true);
+  expect(capAlice1.isAuthorized()).toBe(false);
 
-  // Active controller2 unlocks for owner-b; retired controller1 STILL cannot mint a live capability.
-  controller2.syncGate({ locked: false, ownerId: "owner-b" });
-  const retiredWhileActive = controller1.acquireWorkspaceCapability();
-  expect(retiredWhileActive.capability.isAuthorized()).toBe(false);
-  const handleB = controller2.acquireWorkspaceCapability();
-  expect(handleB.capability.isAuthorized()).toBe(true);
-  controller2.invalidateWorkspace();
-  controller2.syncGate({ locked: false, ownerId: "owner-a" });
-  expect(handleA.capability.isAuthorized()).toBe(false);
-  expect(handleB.capability.isAuthorized()).toBe(false);
-  expect(retiredAttempt.capability.isAuthorized()).toBe(false);
-  expect(retiredWhileActive.capability.isAuthorized()).toBe(false);
+  await act(async () => {
+    retiredContext?.sessionExpired();
+    await retiredContext?.logIn({ login_name: "bob", password: "pw" });
+  });
+  expect(authRef.current?.state.status).toBe("authenticated");
+  expect(capAlice2.isAuthorized()).toBe(true);
 
-  const callsBeforeRejected = fetchSpy.mock.calls.length;
-  for (const stale of [
-    handleA.capability,
-    handleB.capability,
-    retiredAttempt.capability,
-    retiredWhileActive.capability,
-  ]) {
+  // A -> B -> A owner switch permanently revokes former-owner capabilities before native fetch.
+  act(() => {
+    authRef.current?.sessionExpired();
+  });
+  await act(async () => {
+    await authRef.current?.reauthenticate?.({
+      login_name: "bob",
+      password: "pw",
+    });
+  });
+  const capBob = authRef.current?.capability;
+  if (!capBob) throw new Error("Expected Bob capability");
+  expect(capBob.isAuthorized()).toBe(true);
+  expect(capAlice2.isAuthorized()).toBe(false);
+
+  act(() => {
+    authRef.current?.sessionExpired();
+  });
+  await act(async () => {
+    await authRef.current?.reauthenticate?.({
+      login_name: "alice",
+      password: "pw",
+    });
+  });
+  const capAlice3 = authRef.current?.capability;
+  if (!capAlice3) throw new Error("Expected Alice Epoch-3 capability");
+  expect(capAlice3.isAuthorized()).toBe(true);
+  expect(capAlice1.isAuthorized()).toBe(false);
+  expect(capAlice2.isAuthorized()).toBe(false);
+  expect(capBob.isAuthorized()).toBe(false);
+
+  const callsBeforeRejected = protectedCalls.length;
+  for (const stale of [capAlice1, capAlice2, capBob]) {
     await expect(
       requestJson("/api/v1/plants", { capability: stale }),
     ).rejects.toThrow();
   }
-  expect(fetchSpy).toHaveBeenCalledTimes(callsBeforeRejected);
+  expect(protectedCalls.length).toBe(callsBeforeRejected);
 
-  controller2.detach();
-  expect(controller2.isActive()).toBe(false);
-  expect(
-    controller2.acquireWorkspaceCapability().capability.isAuthorized(),
-  ).toBe(false);
+  second.unmount();
 });
