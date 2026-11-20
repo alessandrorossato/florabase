@@ -9527,3 +9527,13 @@ Status remains implemented pending canonical verification.
 - The previous Docker evidence is historical. SOL's focused confirmation, independent Docker
   verification of the corrected client on the integrated candidate and canonical FULL remain
   pending. [Source evidence](release/evidence/portable-smoke-fail-closed.md#http-client-correction-after-independent-qa).
+
+### PORTABLE-COMPOSE-001 strict session-cookie validation
+
+- Replaced the two-stage interpretation with strict validation of the backend-issued cookie.
+  Both reported whitespace-separated assignments fail, and the regression matrix verifies
+  that every rejected response preserves the existing session and CSRF state.
+- All 16 focused tests passed in normal and both optimized modes, including the approved HTTP
+  diagnostics. The release and controller targets, direct Python 3.8.20 client tests, Ruff,
+  strict mypy, links and diff checks passed. SOL's cookie-only confirmation and integrated
+  Docker verification remain pending. [Source evidence](release/evidence/portable-smoke-fail-closed.md#strict-session-cookie-validation).

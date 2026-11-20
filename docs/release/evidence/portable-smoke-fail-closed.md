@@ -112,6 +112,27 @@ Independent Docker verification of the corrected client on the integrated candid
 exercise session issuance and the full portable smoke on the digest-bound assets. Canonical FULL,
 formal acceptance and G-SEC remain pending.
 
+## Strict session-cookie validation
+
+Final independent QA accepted the HTTP protocol diagnostics and held only on session-cookie
+attribute parsing. Both reported whitespace-separated assignments reproduced on `6361844`.
+The follow-up validates the raw cookie once against the pinned backend serializer's output. It
+requires an unquoted URL-safe token, both bare security flags, `Path=/`, `SameSite=strict`, and a
+positive decimal `Max-Age`. Each complete semicolon-delimited field is validated, including its
+boundaries and uniqueness, before the session and CSRF state changes. Attribute order, casing,
+horizontal whitespace at field boundaries, and unrelated cookies remain supported.
+
+The table-driven matrix checks both bypasses, reversed and duplicate assignments, malformed or
+missing attributes, tabs and vertical whitespace, quoted values, and valid issuance. Every rejected
+response preserves the previously installed credentials. All 16 focused tests passed with normal
+Python, `-O`, and `PYTHONOPTIMIZE=1`, including the approved HTTP diagnostic cases. The existing
+launcher passed, along with 78 release tests, four tool-lock tests, 63 host controller tests,
+and 51 pinned Python 3.8.20 controller tests. Four shared HTTP client tests also passed directly
+on Python 3.8.20. Ruff, strict mypy, links and diff checks passed.
+
+SOL's cookie-only confirmation and independent Docker verification on the integrated candidate
+remain pending. The prior runtime evidence retains its original provenance.
+
 ## Review and integration
 
 The ENG-03 comparison used the requested `c4a222ecf7085aee5ad7b57080870fd67ecb542b`. The live ref

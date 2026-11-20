@@ -276,7 +276,7 @@ class PortableSmokeEvidence(unittest.TestCase):
         client = Client("http://127.0.0.1:8080", self.smoke.ORIGIN)
         headers = HTTPMessage()
         headers["Set-Cookie"] = (
-            "__Host-florabase-session=session-token; Secure; HttpOnly; Path=/; SameSite=Strict"
+            "__Host-florabase-session=session-token; HttpOnly; Max-Age=2592000; Path=/; SameSite=strict; Secure"
         )
         valid = b'{"csrf_token":"csrf-token"}'
         for data, response_headers, message in (
@@ -302,59 +302,84 @@ class PortableSmokeEvidence(unittest.TestCase):
     def test_session_cookie_definitions_are_unambiguous(self) -> None:
         client = Client("http://127.0.0.1:8080", self.smoke.ORIGIN)
         cookie = "__Host-florabase-session"
-        attributes = "; Secure; HttpOnly; Path=/; SameSite=Strict"
-        issued = f"{cookie}=issued-fixture{attributes}"
-        insecure = f"{cookie}=unvalidated-fixture; Path=/"
-        good = HTTPMessage()
-        good.add_header("Set-Cookie", 'preferences="__Host-florabase-session=unrelated;theme=dark"')
-        good.add_header("Set-Cookie", issued + "; Max-Age=43200")
-        good.add_header("Set-Cookie", "view=compact; Path=/")
-        client.accept_session(b'{"csrf_token":"accepted-csrf"}', good, "login")
-        self.assertEqual(
-            (client.cookie, client.csrf), (f"{cookie}=issued-fixture", "accepted-csrf")
+        # Match the pinned backend serializer's secure login and password-change output.
+        issued = (
+            f"{cookie}=issued-fixture; HttpOnly; Max-Age=2592000; Path=/; SameSite=strict; Secure"
         )
-
-        duplicate = f"{cookie}=unvalidated-fixture{attributes}"
-        for fields in (
-            (issued, insecure),
-            (insecure, issued),
-            (issued, duplicate),
-            (issued, issued),
-            (issued + "; " + insecure,),
-            (issued + ", " + duplicate,),
-            (issued + " " + duplicate,),
-            (issued, cookie + "; Secure"),
-        ):
-            with (
-                self.subTest(fields=fields),
-                self.assertRaisesRegex(RuntimeError, "duplicate session cookie"),
-            ):
+        positive = {
+            "backend": (issued,),
+            "ordering, casing and horizontal whitespace": (
+                f"\t{cookie}=issued-fixture ;\tSECURE ; sAmEsItE=STRICT; PATH=/ ; max-age=86400; httpONLY\t",
+            ),
+            "unrelated cookies": (
+                'preferences="__Host-florabase-session=unrelated;theme=dark"',
+                issued,
+                "view=compact; Path=/",
+            ),
+        }
+        for case, fields in positive.items():
+            with self.subTest(case=case):
                 headers = HTTPMessage()
-                for definition in fields:
-                    headers.add_header("Set-Cookie", definition)
-                client.accept_session(b'{"csrf_token":"unvalidated-csrf"}', headers, "login")
+                for field in fields:
+                    headers.add_header("Set-Cookie", field)
+                client.accept_session(b'{"csrf_token":"accepted-csrf"}', headers, "login")
+                self.assertEqual(
+                    (client.cookie, client.csrf), (f"{cookie}=issued-fixture", "accepted-csrf")
+                )
 
-        for damaged in (
-            issued.replace("; Secure", ""),
-            issued.replace("; HttpOnly", ""),
-            issued.replace("; Path=/", ""),
-            issued.replace("; SameSite=Strict", ""),
-            issued.replace("; Secure", "; Secure=1"),
-            issued.replace("; HttpOnly", "; HttpOnly=true"),
-            issued.replace("Path=/", "Path=/other"),
-            issued.replace("SameSite=Strict", "SameSite=Lax"),
-            issued.replace("issued-fixture", ""),
-            issued + "; Domain=",
-            issued + "; $Domain=fixture.invalid",
-            issued + "; SameSite=Strict",
+        insecure = f"{cookie}=unvalidated-fixture; Path=/"
+        duplicate = issued.replace("issued-fixture", "unvalidated-fixture")
+        rejected = {
+            "valid then insecure": (issued, insecure),
+            "insecure then valid": (insecure, issued),
+            "two valid tokens": (issued, duplicate),
+            "same token twice": (issued, issued),
+            "combined definitions": (issued + "; " + insecure,),
+            "comma-separated definitions": (issued + ", " + duplicate,),
+            "space-separated definitions": (issued + " " + duplicate,),
+            "malformed second definition": (issued, cookie + "; Secure"),
+            "missing session": (),
+        }
+        for case, original, malformed in (
+            ("SOL path", "Path=/", "Path=/other Path=/"),
+            ("SOL SameSite", "SameSite=strict", "SameSite=Lax SameSite=Strict"),
+            ("reversed path", "Path=/", "Path=/ Path=/other"),
+            ("reversed SameSite", "SameSite=strict", "SameSite=Strict SameSite=Lax"),
+            ("identical path", "Path=/", "Path=/; PATH=/"),
+            ("identical flag", "Secure", "Secure; SECURE"),
+            ("conflicting paths", "Path=/", "Path=/other; Path=/"),
+            ("conflicting SameSite", "SameSite=strict", "SameSite=Lax; SameSite=Strict"),
+            ("valued Secure", "Secure", "Secure=1"),
+            ("empty Secure assignment", "Secure", "Secure="),
+            ("valued HttpOnly", "HttpOnly", "HttpOnly=true"),
+            ("invalid path", "Path=/", "Path=/other"),
+            ("invalid SameSite", "SameSite=strict", "SameSite=Lax"),
+            ("invalid Max-Age", "Max-Age=2592000", "Max-Age=0"),
+            ("embedded assignment", "Max-Age=2592000", "Max-Age=2592000 Expires=tomorrow"),
+            ("tab-separated assignment", "Path=/", "Path=/other\tPath=/"),
+            ("whitespace inside assignment", "Path=/", "Path= /"),
+            ("vertical whitespace", "Path=/", "Path=/\v"),
+            ("quoted token", "issued-fixture", '"issued-fixture"'),
+            ("quoted path", "Path=/", 'Path="/"'),
+            ("quoted semicolon", "Path=/", 'Path="/;other=value"'),
+            ("empty token", "issued-fixture", ""),
         ):
-            with (
-                self.subTest(damaged=damaged),
-                self.assertRaisesRegex(RuntimeError, "secure session cookie"),
-            ):
+            rejected[case] = (issued.replace(original, malformed),)
+        for attribute in ("HttpOnly", "Max-Age=2592000", "Path=/", "SameSite=strict", "Secure"):
+            rejected[f"missing {attribute}"] = (issued.replace(f"; {attribute}", ""),)
+        for extra in ("Domain=", "$Domain=fixture.invalid", "Unexpected=value", ""):
+            rejected[f"extra attribute {extra!r}"] = (issued + "; " + extra,)
+
+        for case, fields in rejected.items():
+            with self.subTest(case=case):
                 headers = HTTPMessage()
-                headers.add_header("Set-Cookie", damaged)
-                client.accept_session(b'{"csrf_token":"unvalidated-csrf"}', headers, "login")
+                for field in fields:
+                    headers.add_header("Set-Cookie", field.replace("issued-fixture", "new-fixture"))
+                with self.assertRaisesRegex(RuntimeError, "session cookie"):
+                    client.accept_session(b'{"csrf_token":"unvalidated-csrf"}', headers, "login")
+                self.assertEqual(
+                    (client.cookie, client.csrf), (f"{cookie}=issued-fixture", "accepted-csrf")
+                )
 
         response = urllib.response.addinfourl(io.BytesIO(b"ok"), HTTPMessage(), client.base, 200)
         with patch.object(client.opener, "open", return_value=response) as transport:
@@ -429,7 +454,7 @@ class PortableSmokeEvidence(unittest.TestCase):
         ).encode()
         headers = HTTPMessage()
         headers["Set-Cookie"] = (
-            "__Host-florabase-session=rotated-session; Secure; HttpOnly; Path=/; SameSite=Strict"
+            "__Host-florabase-session=rotated-session; HttpOnly; Max-Age=2592000; Path=/; SameSite=strict; Secure"
         )
 
         for fault, message in {

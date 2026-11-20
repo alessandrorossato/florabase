@@ -18,7 +18,6 @@ import urllib.error
 import urllib.request
 import zlib
 from http.client import HTTPException, HTTPMessage
-from http.cookies import CookieError, SimpleCookie
 from typing import Any
 
 SESSION_COOKIE = "__Host-florabase-session"
@@ -125,49 +124,42 @@ class Client:
             raise RuntimeError(f"{operation}: missing or invalid CSRF token")
         session_field = None
         for field in headers.get_all("Set-Cookie", []):
-            # SimpleCookie collapses repeated names, even within one header. Ignore names
-            # inside quoted values and detect ambiguity before loading the session field.
+            # Locate the session definition without counting text inside unrelated cookie values.
             unquoted = QUOTED_COOKIE_VALUE.sub('""', field)
             definitions = SESSION_COOKIE_NAME.findall(unquoted)
             if not definitions:
                 continue
             if session_field is not None or len(definitions) != 1:
                 raise RuntimeError(f"{operation}: duplicate session cookie definitions")
-            session_field = (field, unquoted)
+            session_field = field
         if session_field is None:
             raise RuntimeError(f"{operation}: missing or invalid secure session cookie")
-        field, unquoted = session_field
-        name, *attributes = unquoted.split(";")
-        attribute_names = [attribute.partition("=")[0].strip().lower() for attribute in attributes]
-        if (
-            name.partition("=")[0].strip() != SESSION_COOKIE
-            or "domain" in attribute_names
-            or any(key.startswith("$") for key in attribute_names)
-            or any(
-                attribute_names.count(key) != 1
-                for key in ("secure", "httponly", "path", "samesite")
-            )
-        ):
-            raise RuntimeError(f"{operation}: missing or invalid secure session cookie")
 
-        jar: SimpleCookie = SimpleCookie()
-        try:
-            jar.load(field)
-        except CookieError:
-            raise RuntimeError(f"{operation}: invalid session cookie") from None
-        morsel = jar.get(SESSION_COOKIE)
+        # The backend emits a URL-safe token and these five semicolon-delimited attributes.
+        # Trim horizontal whitespace at field boundaries only. Each assignment is consumed whole.
+        definition, *attributes = (part.strip(" \t") for part in session_field.split(";"))
+        name, _, token = definition.partition("=")
+        if name != SESSION_COOKIE or not re.fullmatch(r"[A-Za-z0-9_-]+", token):
+            raise RuntimeError(f"{operation}: missing or invalid secure session cookie")
+        parsed: dict[str, str | None] = {}
+        for attribute in attributes:
+            key, separator, value = attribute.partition("=")
+            key = key.lower()
+            if key in parsed:
+                raise RuntimeError(f"{operation}: missing or invalid secure session cookie")
+            parsed[key] = value if separator else None
+        max_age = parsed.get("max-age")
         if (
-            len(jar) != 1
-            or morsel is None
-            or not re.fullmatch(r"[A-Za-z0-9_-]+", morsel.value)
-            or morsel["secure"] is not True
-            or morsel["httponly"] is not True
-            or morsel["samesite"].lower() != "strict"
-            or morsel["path"] != "/"
-            or morsel["domain"]
+            parsed.keys() != {"secure", "httponly", "path", "samesite", "max-age"}
+            or parsed["secure"] is not None
+            or parsed["httponly"] is not None
+            or parsed["path"] != "/"
+            or (parsed["samesite"] or "").lower() != "strict"
+            or max_age is None
+            or not re.fullmatch(r"[1-9][0-9]*", max_age)
         ):
             raise RuntimeError(f"{operation}: missing or invalid secure session cookie")
-        self.cookie = morsel.key + "=" + morsel.value
+        self.cookie = f"{SESSION_COOKIE}={token}"
         self.csrf = csrf
 
     def upload(self, content: bytes, name: str) -> dict[str, Any]:
