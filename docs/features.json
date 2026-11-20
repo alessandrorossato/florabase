@@ -301,6 +301,19 @@
       "status": "implemented"
     },
     {
+      "id": "ENG-03",
+      "category": "security",
+      "description": "Automate the production API route inventory and public-operation allowlist",
+      "acceptance_criteria": [
+        "A test enumerates the production application's routes and fails when any operation other than sign-in, health and readiness lacks the authentication dependency"
+      ],
+      "dependencies": [
+        "SECURITY-002"
+      ],
+      "priority": "P3",
+      "status": "implemented"
+    },
+    {
       "id": "DOMAIN-001",
       "category": "domain",
       "description": "Define the first BotanicalIdentity aggregate contract",

@@ -9573,3 +9573,41 @@ Status remains implemented pending canonical verification.
   supplied SOL's final approval of the three-file RC-SEQ-01 correction. Formal release
   certification and operator acceptance remain pending. RC-SEQ-01 and all eight
   release-candidate blockers remain open. Feature statuses and release membership are unchanged.
+
+## 2026-11-19 — ENG-03 route inventory source
+
+- Extended the Batch 06 route allowlist regression into a standalone
+  [production inventory checker](release/evidence/eng-03-source.md) with text and JSON output and
+  explicit policy and inventory failures. Registered ENG-03 as `implemented` with proposed
+  `best-effort` membership for a future batch.
+- The production table has 234 operations, with 231 declaring authentication and exactly the
+  three reviewed public operations. Normal and optimized Python reports matched byte for byte.
+  The synthetic unreviewed route exited `1` in both modes. The focused pytest run passed 59 tests.
+  Ruff lint and format, strict mypy, the backend OpenAPI drift check, feature graph, documentation
+  links, disclosure and whitespace checks passed. Independent security review, canonical FULL,
+  formal ENG-03 acceptance and G-SEC certification remain pending.
+
+### ENG-03 bounded correction after independent QA HOLD
+
+- Checked registration order before sorting the route inventory. Earlier parameterized routes,
+  catch-alls and mounts now fail the check when they can shadow later operations. Preserved the
+  production static-before-parameterized pairs and restored the production `APIRoute` invariant.
+- Default backend pytest discovery found all 27 inventory regressions. The focused selection
+  passed 72 tests with three skips. Normal and optimized Python agreed on the production inventory
+  of 234 operations and exactly three public endpoints. Both editions rejected the extra-public
+  and shadowed-allowlist controls with exit `1` and `2`, respectively.
+- Ruff lint and format, strict mypy, backend OpenAPI drift, feature graph, documentation links,
+  disclosure and whitespace checks passed. The [review recipe](release/evidence/eng-03-source.md#independent-reproduction-without-docker)
+  uses the locked backend dependencies in a local virtual environment. The `best-effort` proposal,
+  focused independent approval, canonical FULL, formal acceptance and G-SEC remain pending.
+
+## 2026-11-20 — ENG-03 hermetic auth regression
+
+- Reproduced the runtime test's settings failure under standard Quality development/loopback mode.
+  The test now constructs isolated test/secure settings and retains the anonymous `401` and
+  non-owner `403` assertions. Reviewed the other inventory cases for ambient settings reads.
+- Standard Quality passed all 27 inventory cases without environment overrides. The corrected case
+  also passed with explicit test/secure settings. Focused Ruff lint and format, strict mypy, and
+  diff checks passed.
+- Sonnet independently reproduced the separate attachment-root failure on the base commit. That
+  failure is outside this correction. Focused independent confirmation remains pending.
