@@ -9500,3 +9500,17 @@ Status remains implemented pending canonical verification.
   retains the historical browser identity and records the focused probe, ownership and cleanup.
   Ruff, strict mypy, links, feature graph, disclosure and diff checks passed. SOL's focused
   review, integrated verification, ENG-02 acceptance and G-SEC remain pending.
+
+## 2026-11-20 — PORTABLE-COMPOSE-001 fail-closed smoke
+
+- Replaced all 15 portable operational assertions against the reviewed ENG-02 parent. Publisher
+  inputs now bind the rendered service images and expected Alembic head. The portable smoke
+  requires credential, HTTP, backup, restore and cleanup evidence before reporting success.
+- Thirteen focused controls passed in all three Python modes and run through the existing release
+  suite. Offline release and runtime targets, Ruff, strict mypy, feature graph, documentation
+  links, disclosure and diff checks passed. The optimized Docker smoke passed on local runtime
+  images. An incorrect-head control exited `1` without a success marker and left no owned
+  resources. The [source evidence](release/evidence/portable-smoke-fail-closed.md) records scope,
+  provenance, checks and limitations.
+- Independent review, integration after Batch 07, canonical FULL, exact-candidate rehearsal,
+  formal acceptance and G-SEC remain pending.

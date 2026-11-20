@@ -11,12 +11,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import struct
 import sys
 import urllib.error
 import urllib.request
 import zlib
-from http.cookies import SimpleCookie
+from http.client import HTTPMessage
+from http.cookies import CookieError, SimpleCookie
 from typing import Any
 
 
@@ -38,12 +40,30 @@ def png(red: int, green: int, blue: int) -> bytes:
     )
 
 
+def response_object(data: bytes, operation: str) -> dict[str, Any]:
+    try:
+        value = json.loads(data)
+    except ValueError:
+        raise RuntimeError(f"{operation}: invalid JSON response") from None
+    if not isinstance(value, dict):
+        raise RuntimeError(f"{operation}: expected a JSON object")
+    return value
+
+
+class ExactStatus(urllib.request.HTTPRedirectHandler):
+    def redirect_request(
+        self, req: Any, fp: Any, code: int, msg: str, headers: Any, newurl: str
+    ) -> None:
+        return None
+
+
 class Client:
     def __init__(self, base: str, origin: str) -> None:
         self.base = base.rstrip("/")
         self.origin = origin
         self.cookie = ""
         self.csrf = ""
+        self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), ExactStatus())
 
     def request(
         self,
@@ -52,7 +72,7 @@ class Client:
         body: bytes | None = None,
         content_type: str | None = None,
         expected: int = 200,
-    ) -> tuple[bytes, Any]:
+    ) -> tuple[bytes, HTTPMessage]:
         headers: dict[str, str] = {}
         if self.cookie:
             headers["Cookie"] = self.cookie
@@ -64,16 +84,17 @@ class Client:
             headers["Content-Type"] = content_type
         request = urllib.request.Request(self.base + path, body, headers, method=method)
         try:
-            response = urllib.request.urlopen(request, timeout=30)
+            response = self.opener.open(request, timeout=30)
         except urllib.error.HTTPError as error:
             response = error
+        except (OSError, ValueError):
+            raise RuntimeError(f"{method} {path.partition('?')[0]}: request failed") from None
         with response:
-            data = response.read()
             if response.status != expected:
-                raise SystemExit(
-                    f"{method} {path}: expected {expected}, got {response.status}: {data[:300]!r}"
+                raise RuntimeError(
+                    f"{method} {path.partition('?')[0]}: expected {expected}, got {response.status}"
                 )
-            return data, response.headers
+            return response.read(), response.headers
 
     def json(self, path: str, method: str = "GET", payload: Any = None, expected: int = 200) -> Any:
         body = None if payload is None else json.dumps(payload).encode()
@@ -89,14 +110,33 @@ class Client:
             json.dumps({"login_name": login, "password": password}).encode(),
             "application/json",
         )
-        jar: SimpleCookie = SimpleCookie()
-        for value in headers.get_all("Set-Cookie") or []:
-            jar.load(value)
-        morsel = jar["__Host-florabase-session"]
-        self.cookie = morsel.key + "=" + morsel.value
-        self.csrf = json.loads(data.decode())["csrf_token"]
+        self.accept_session(data, headers, "login")
 
-    def upload(self, content: bytes, name: str) -> Any:
+    def accept_session(self, data: bytes, headers: HTTPMessage, operation: str) -> None:
+        csrf = response_object(data, operation).get("csrf_token")
+        if not isinstance(csrf, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", csrf):
+            raise RuntimeError(f"{operation}: missing or invalid CSRF token")
+        jar: SimpleCookie = SimpleCookie()
+        try:
+            for value in headers.get_all("Set-Cookie", []):
+                jar.load(value)
+        except CookieError:
+            raise RuntimeError(f"{operation}: invalid session cookie") from None
+        morsel = jar.get("__Host-florabase-session")
+        if (
+            morsel is None
+            or not re.fullmatch(r"[A-Za-z0-9_-]+", morsel.value)
+            or not morsel["secure"]
+            or not morsel["httponly"]
+            or morsel["samesite"].lower() != "strict"
+            or morsel["path"] != "/"
+            or morsel["domain"]
+        ):
+            raise RuntimeError(f"{operation}: missing or invalid secure session cookie")
+        self.cookie = morsel.key + "=" + morsel.value
+        self.csrf = csrf
+
+    def upload(self, content: bytes, name: str) -> dict[str, Any]:
         boundary = "florabase-runtime-smoke"
         body = (
             f'--{boundary}\r\nContent-Disposition: form-data; name="title"\r\n\r\n{name}\r\n'
@@ -112,7 +152,7 @@ class Client:
             "multipart/form-data; boundary=" + boundary,
             201,
         )
-        return json.loads(data.decode())
+        return response_object(data, "media upload")
 
 
 def seed(client: Client) -> dict[str, Any]:
