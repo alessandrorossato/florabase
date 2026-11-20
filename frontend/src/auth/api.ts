@@ -104,11 +104,25 @@ export interface ProtectedRequestCapability {
   readonly [capabilityBrand]: true;
   isAuthorized: () => boolean;
   subscribeInvalidation: (listener: () => void) => () => void;
+  subscribePermanentRevocation: (listener: () => void) => () => void;
 }
 
 export interface ManagedWorkspaceCapabilityHandle {
   readonly capability: ProtectedRequestCapability;
   revoke: () => void;
+}
+
+export interface AuthProviderGateController {
+  readonly isActive: () => boolean;
+  readonly syncGate: (options: {
+    locked: boolean;
+    advanceEpoch?: boolean;
+    ownerId?: string | null;
+    invalidateWorkspace?: boolean;
+  }) => number;
+  readonly invalidateWorkspace: () => number;
+  readonly acquireWorkspaceCapability: () => ManagedWorkspaceCapabilityHandle;
+  readonly detach: () => void;
 }
 
 export interface ProtectedRequestInit extends RequestInit {
@@ -171,14 +185,25 @@ let cookieOpQueue: Promise<void> = Promise.resolve();
 let pendingCookieOpsCount = 0;
 
 /**
- * Serializes cookie-mutating authentication operations across provider remounts
- * so replacement providers observe settled browser cookie state before restoring.
+ * Serializes cookie- and CSRF-mutating authentication lifecycle operations
+ * across provider remounts so replacement providers observe settled server
+ * session and CSRF state before probing or publishing tokens.
  */
 export function enqueueAuthCookieOperation<T>(
   op: () => Promise<T>,
 ): Promise<T> {
+  const run = (): Promise<T> => {
+    try {
+      return Promise.resolve(op());
+    } catch (error: unknown) {
+      return Promise.reject(
+        error instanceof Error ? error : new Error(String(error)),
+      );
+    }
+  };
+  const nextRun =
+    pendingCookieOpsCount === 0 ? run() : cookieOpQueue.then(run, run);
   pendingCookieOpsCount += 1;
-  const nextRun = cookieOpQueue.then(op, op);
   cookieOpQueue = nextRun.then(
     () => {
       pendingCookieOpsCount -= 1;
@@ -188,16 +213,6 @@ export function enqueueAuthCookieOperation<T>(
     },
   );
   return nextRun;
-}
-
-export function waitForSettledAuthCookieOperations():
-  Promise<void> | undefined {
-  if (pendingCookieOpsCount === 0) return undefined;
-  return cookieOpQueue;
-}
-
-export function getActiveAuthProviderId(): number {
-  return gate.activeProviderId;
 }
 
 function revokeAllCapabilities(providerId?: number): void {
@@ -228,47 +243,15 @@ export function revokedAuthCapability(): ProtectedRequestCapability {
   const capability = Object.freeze({
     isAuthorized: () => false,
     subscribeInvalidation: () => () => undefined,
+    subscribePermanentRevocation: (listener: () => void) => {
+      listener();
+      return () => undefined;
+    },
   }) as unknown as ProtectedRequestCapability;
   return capability;
 }
 
-export function attachAuthRequestGate(
-  onUnauthorized: (originatingEpoch: number, providerId: number) => void,
-  initialLocked = true,
-): { providerId: number; detach: () => void } {
-  const providerId = ++gate.nextProviderId;
-  gate.activeProviderId = providerId;
-  gate.locked = initialLocked;
-  gate.epoch += 1;
-  gate.workspaceGeneration += 1;
-  gate.ownerId = null;
-  gate.onUnauthorized = onUnauthorized;
-  revokeAllCapabilities();
-  notifyInvalidation();
-  return {
-    providerId,
-    detach: () => {
-      if (gate.activeProviderId !== providerId) {
-        revokeAllCapabilities(providerId);
-        return;
-      }
-      gate.activeProviderId = 0;
-      gate.locked = true;
-      gate.epoch += 1;
-      gate.workspaceGeneration += 1;
-      gate.ownerId = null;
-      gate.onUnauthorized = undefined;
-      revokeAllCapabilities();
-      notifyInvalidation();
-    },
-  };
-}
-
-/**
- * Synchronously invalidates the active owner's workspace generation and revokes
- * every owner-bound request capability before any replacement owner session can unlock.
- */
-export function invalidateProtectedWorkspace(providerId: number): number {
+function invalidateProtectedWorkspaceForProvider(providerId: number): number {
   if (providerId !== gate.activeProviderId) {
     revokeAllCapabilities(providerId);
     return -1;
@@ -282,7 +265,7 @@ export function invalidateProtectedWorkspace(providerId: number): number {
   return gate.epoch;
 }
 
-export function syncAuthRequestGate({
+function syncAuthRequestGateForProvider({
   providerId,
   locked,
   advanceEpoch = false,
@@ -299,7 +282,7 @@ export function syncAuthRequestGate({
     return -1;
   }
   if (invalidateWorkspace) {
-    invalidateProtectedWorkspace(providerId);
+    invalidateProtectedWorkspaceForProvider(providerId);
   }
   const nextOwnerId = ownerId !== undefined ? ownerId : gate.ownerId;
   const changed =
@@ -316,31 +299,7 @@ export function syncAuthRequestGate({
   return gate.epoch;
 }
 
-export function isProtectedRequestAuthorized(): boolean {
-  return gate.activeProviderId !== 0 && !gate.locked && gate.ownerId !== null;
-}
-
-export function getProtectedAuthEpoch(): number {
-  return gate.epoch;
-}
-
-export function getProtectedWorkspaceGeneration(): number {
-  return gate.workspaceGeneration;
-}
-
-export function subscribeAuthInvalidation(listener: () => void): () => void {
-  invalidationListeners.add(listener);
-  return () => {
-    invalidationListeners.delete(listener);
-  };
-}
-
-/**
- * Issues a module-tracked workspace capability for an active authenticated provider.
- * Same-owner reauthentication keeps the binding alive across temporary locks; workspace
- * retirement or provider teardown revokes it permanently.
- */
-export function acquireWorkspaceCapability(
+function issueWorkspaceCapabilityForProvider(
   providerId: number,
 ): ManagedWorkspaceCapabilityHandle {
   if (
@@ -356,6 +315,7 @@ export function acquireWorkspaceCapability(
   const boundOwnerId = gate.ownerId;
   const unsubs = new Set<() => void>();
   const callbacks = new Set<() => void>();
+  const revocationCallbacks = new Set<() => void>();
 
   const record: CapabilityRecord = {
     providerId: boundProviderId,
@@ -368,6 +328,8 @@ export function acquireWorkspaceCapability(
       activeCapabilityRecords.delete(record);
       for (const unsub of [...unsubs]) unsub();
       unsubs.clear();
+      for (const listener of [...revocationCallbacks]) listener();
+      revocationCallbacks.clear();
       for (const listener of [...callbacks]) listener();
       callbacks.clear();
     },
@@ -397,10 +359,109 @@ export function acquireWorkspaceCapability(
         unsub();
       };
     },
+    subscribePermanentRevocation: (listener: () => void) => {
+      if (record.revoked) {
+        listener();
+        return () => undefined;
+      }
+      revocationCallbacks.add(listener);
+      return () => {
+        revocationCallbacks.delete(listener);
+      };
+    },
   }) as unknown as ProtectedRequestCapability;
 
   capabilityRecords.set(capability, record);
   return { capability, revoke: record.revoke };
+}
+
+/**
+ * Attaches an AuthProvider instance to the shared request gate and returns a
+ * provider-private controller. Capability issuance and gate mutation authority
+ * are bound to this opaque controller and permanently lost upon retirement.
+ */
+export function attachAuthRequestGate(
+  onUnauthorized: (originatingEpoch: number) => void,
+  initialLocked = true,
+): AuthProviderGateController {
+  const providerId = ++gate.nextProviderId;
+  let retired = false;
+  gate.activeProviderId = providerId;
+  gate.locked = initialLocked;
+  gate.epoch += 1;
+  gate.workspaceGeneration += 1;
+  gate.ownerId = null;
+  gate.onUnauthorized = (originatingEpoch, callbackProviderId) => {
+    if (
+      retired ||
+      callbackProviderId !== providerId ||
+      gate.activeProviderId !== providerId
+    ) {
+      return;
+    }
+    onUnauthorized(originatingEpoch);
+  };
+  revokeAllCapabilities();
+  notifyInvalidation();
+
+  const isActive = (): boolean =>
+    !retired && gate.activeProviderId === providerId;
+
+  return Object.freeze<AuthProviderGateController>({
+    isActive,
+    syncGate: (options) => {
+      if (!isActive()) return -1;
+      return syncAuthRequestGateForProvider({ providerId, ...options });
+    },
+    invalidateWorkspace: () => {
+      if (!isActive()) {
+        revokeAllCapabilities(providerId);
+        return -1;
+      }
+      return invalidateProtectedWorkspaceForProvider(providerId);
+    },
+    acquireWorkspaceCapability: () => {
+      if (!isActive()) {
+        return { capability: revokedAuthCapability(), revoke: () => undefined };
+      }
+      return issueWorkspaceCapabilityForProvider(providerId);
+    },
+    detach: () => {
+      if (retired) return;
+      retired = true;
+      if (gate.activeProviderId !== providerId) {
+        revokeAllCapabilities(providerId);
+        return;
+      }
+      gate.activeProviderId = 0;
+      gate.locked = true;
+      gate.epoch += 1;
+      gate.workspaceGeneration += 1;
+      gate.ownerId = null;
+      gate.onUnauthorized = undefined;
+      revokeAllCapabilities();
+      notifyInvalidation();
+    },
+  });
+}
+
+export function isProtectedRequestAuthorized(): boolean {
+  return gate.activeProviderId !== 0 && !gate.locked && gate.ownerId !== null;
+}
+
+export function getProtectedAuthEpoch(): number {
+  return gate.epoch;
+}
+
+export function getProtectedWorkspaceGeneration(): number {
+  return gate.workspaceGeneration;
+}
+
+export function subscribeAuthInvalidation(listener: () => void): () => void {
+  invalidationListeners.add(listener);
+  return () => {
+    invalidationListeners.delete(listener);
+  };
 }
 
 function validateCapability(capability: ProtectedRequestCapability): {
@@ -784,7 +845,31 @@ export async function openProtectedTab({
 }
 
 export function getSession(signal?: AbortSignal): Promise<SessionResponse> {
-  return fetchJson("/api/v1/auth/session", { signal });
+  if (signal?.aborted) {
+    return Promise.reject(
+      new DOMException("The operation was aborted.", "AbortError"),
+    );
+  }
+  const request = fetchJson<SessionResponse>("/api/v1/auth/session", {
+    signal,
+  });
+  if (!signal) return request;
+  return new Promise<SessionResponse>((resolve, reject) => {
+    const onAbort = () => {
+      reject(new DOMException("The operation was aborted.", "AbortError"));
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    request.then(
+      (value) => {
+        signal.removeEventListener("abort", onAbort);
+        resolve(value);
+      },
+      (error: unknown) => {
+        signal.removeEventListener("abort", onAbort);
+        reject(error instanceof Error ? error : new Error(String(error)));
+      },
+    );
+  });
 }
 
 export function recoverCsrf(signal?: AbortSignal): Promise<CsrfResponse> {

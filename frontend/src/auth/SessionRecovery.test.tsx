@@ -15,11 +15,12 @@ import { App } from "../App";
 import { RecordPresentationProvider } from "../components/RecordPresentationProvider";
 import { EvidenceTiles } from "../occurrence-map/EvidenceTiles";
 import { PlantScreen } from "../plants/PlantScreen";
+import { useProtectedImage } from "../photos/useProtectedImage";
 import { openFormSection } from "../test/formSections";
 import {
+  activeCsrfToken,
   AuthRequestLockedError,
   StaleAuthEpochError,
-  acquireWorkspaceCapability,
   attachAuthRequestGate,
   downloadProtectedFile,
   getProtectedAuthEpoch,
@@ -28,11 +29,11 @@ import {
   openProtectedTab,
   requestJson,
   requestProtectedBlob,
-  syncAuthRequestGate,
+  subscribeAuthInvalidation,
   type ProtectedRequestCapability,
 } from "./api";
 import { AuthProvider } from "./AuthProvider";
-import { useAuth } from "./context";
+import { useAuth, type AuthContextValue } from "./context";
 
 const identityId = "01900000-0000-7000-8000-000000000101";
 const supplierId = "01900000-0000-7000-8000-000000000301";
@@ -632,15 +633,12 @@ test("backend outage (Scenario F: 503 then network recovery) keeps session authe
 test("Scenarios A & B: requestJson fences stale Epoch-1 200 responses and delayed Epoch-1 401 errors after Epoch-2 login", async () => {
   const onUnauthorized = vi.fn();
   const gate = attachAuthRequestGate(onUnauthorized);
-  const epoch1Gate = syncAuthRequestGate({
-    providerId: gate.providerId,
+  const epoch1Gate = gate.syncGate({
     locked: false,
     advanceEpoch: true,
     ownerId: "owner-1",
   });
-  const { capability: epoch1Capability } = acquireWorkspaceCapability(
-    gate.providerId,
-  );
+  const { capability: epoch1Capability } = gate.acquireWorkspaceCapability();
   const epoch1Response = deferred<Response>();
   const epoch1Delayed401 = deferred<Response>();
   const epoch1BodyJson = deferred<unknown>();
@@ -664,8 +662,7 @@ test("Scenarios A & B: requestJson fences stale Epoch-1 200 responses and delaye
   const pBody = requestJson("/api/v1/orders", { capability: epoch1Capability });
 
   // Locking gate refuses same-owner capability synchronously without touching fetch.
-  syncAuthRequestGate({
-    providerId: gate.providerId,
+  gate.syncGate({
     locked: true,
     advanceEpoch: true,
     ownerId: "owner-1",
@@ -677,8 +674,7 @@ test("Scenarios A & B: requestJson fences stale Epoch-1 200 responses and delaye
   ).rejects.toBeInstanceOf(AuthRequestLockedError);
   expect(fetchMock.mock.calls.length).toBe(callsBeforeLockedCheck);
 
-  const nextEpoch = syncAuthRequestGate({
-    providerId: gate.providerId,
+  const nextEpoch = gate.syncGate({
     locked: false,
     advanceEpoch: true,
     ownerId: "owner-1",
@@ -786,12 +782,11 @@ test("Scenario C: concurrent cookie-changing auth operations serialize without i
 test("Scenario G: EvidenceTiles aborts in-flight tile requests and cancels pending retry timers on auth lock", async () => {
   vi.useFakeTimers();
   const gate = attachAuthRequestGate(vi.fn());
-  syncAuthRequestGate({
-    providerId: gate.providerId,
+  gate.syncGate({
     locked: false,
     ownerId: "owner-1",
   });
-  const { capability } = acquireWorkspaceCapability(gate.providerId);
+  const { capability } = gate.acquireWorkspaceCapability();
 
   const signals: AbortSignal[] = [];
   let fetchCount = 0;
@@ -832,8 +827,7 @@ test("Scenario G: EvidenceTiles aborts in-flight tile requests and cancels pendi
   expect(signals[1]?.aborted).toBe(false);
 
   // Locking auth gate aborts in-flight tile requests and clears retry timers.
-  syncAuthRequestGate({
-    providerId: gate.providerId,
+  gate.syncGate({
     locked: true,
     advanceEpoch: true,
     ownerId: "owner-1",
@@ -1362,21 +1356,22 @@ test("forged, missing, wrong-generation, and revoked capabilities fail closed be
       new Response(JSON.stringify({ ok: true }), { status: 200 }),
     );
   const openSpy = vi.spyOn(window, "open");
-  const { providerId, detach } = attachAuthRequestGate(vi.fn(), false);
-  syncAuthRequestGate({ providerId, locked: false, ownerId: "owner-a" });
+  const retiredGate = attachAuthRequestGate(vi.fn(), false);
+  const gate = attachAuthRequestGate(vi.fn(), false);
+  gate.syncGate({ locked: false, ownerId: "owner-a" });
 
-  const handleValid = acquireWorkspaceCapability(providerId);
-  const handleWrongGen = acquireWorkspaceCapability(providerId);
+  const handleValid = gate.acquireWorkspaceCapability();
+  const handleWrongGen = gate.acquireWorkspaceCapability();
   const forged = {
     isAuthorized: () => true,
     subscribeInvalidation: () => () => undefined,
+    subscribePermanentRevocation: () => () => undefined,
   } as unknown as ProtectedRequestCapability;
-  const wrongProvider = acquireWorkspaceCapability(providerId + 999);
+  const wrongProvider = retiredGate.acquireWorkspaceCapability();
 
   // Explicit revoke + workspace generation bump + switch to active owner-b
   handleValid.revoke();
-  syncAuthRequestGate({
-    providerId,
+  gate.syncGate({
     locked: false,
     ownerId: "owner-b",
     invalidateWorkspace: true,
@@ -1432,7 +1427,8 @@ test("forged, missing, wrong-generation, and revoked capabilities fail closed be
   expect(openSpy).not.toHaveBeenCalled();
   tileLayerRevoked.cancel();
   tileLayerForged.cancel();
-  detach();
+  gate.detach();
+  retiredGate.detach();
 });
 
 test("A -> B -> A permanent revocation keeps Alice's prior capability unusable and rejects delayed Epoch-1 bodies across owner switches", async () => {
@@ -1600,32 +1596,29 @@ test("A -> B -> A permanent revocation keeps Alice's prior capability unusable a
 });
 
 test("StrictMode + provider unmount with pending session restore prevents old capability handoff into replacement provider", async () => {
-  let resolveSession!: (res: Response) => void;
-  vi.stubGlobal(
-    "fetch",
-    vi.fn((input: RequestInfo | URL) => {
-      const url =
-        typeof input === "string"
-          ? input
-          : input instanceof URL
-            ? input.toString()
-            : input.url;
-      if (url.endsWith("/auth/session")) {
-        return new Promise<Response>((resolve) => {
-          resolveSession = resolve;
-        });
-      }
-      if (url.endsWith("/auth/csrf")) {
-        return Promise.resolve(
-          new Response(JSON.stringify({ csrf_token: "csrf-new" }), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          }),
-        );
-      }
-      return Promise.resolve(new Response("{}", { status: 200 }));
-    }),
-  );
+  let resolveSession: ((res: Response) => void) | null = null;
+  vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    const url =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+    if (url.endsWith("/auth/session")) {
+      return new Promise<Response>((resolve) => {
+        resolveSession = resolve;
+      });
+    }
+    if (url.endsWith("/auth/csrf")) {
+      return Promise.resolve(
+        new Response(JSON.stringify({ csrf_token: "csrf-new" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    }
+    return Promise.resolve(new Response("{}", { status: 200 }));
+  });
 
   let capFromFirst: ProtectedRequestCapability | undefined;
   function Probe() {
@@ -1641,10 +1634,14 @@ test("StrictMode + provider unmount with pending session restore prevents old ca
       </AuthProvider>
     </StrictMode>,
   );
-  const firstCap = capFromFirst;
-  first.unmount();
-  // Resolve the still-pending cookie/session response after StrictMode unmount.
-  resolveSession(
+  // Complete initial StrictMode restoration so firstCap is genuinely authorized before unmount.
+  await waitFor(() => {
+    expect(resolveSession).not.toBeNull();
+  });
+  const finishFirst = resolveSession as ((res: Response) => void) | null;
+  if (!finishFirst) throw new Error("Expected first session resolver");
+  resolveSession = null;
+  finishFirst(
     new Response(
       JSON.stringify({
         user_id: "alice",
@@ -1655,19 +1652,27 @@ test("StrictMode + provider unmount with pending session restore prevents old ca
       { status: 200, headers: { "Content-Type": "application/json" } },
     ),
   );
-  await act(async () => {
-    await Promise.resolve();
-    await Promise.resolve();
+  await waitFor(() => {
+    expect(capFromFirst?.isAuthorized()).toBe(true);
   });
+  const firstCap = capFromFirst;
+  expect(firstCap?.isAuthorized()).toBe(true);
+  first.unmount();
   expect(firstCap?.isAuthorized()).toBe(false);
 
-  // Mount replacement AuthProvider; old capability must NEVER regain authorization or dispatch fetch.
+  // Mount replacement AuthProvider; previously authorized capability must NEVER regain authorization or dispatch fetch.
   const second = render(
     <AuthProvider>
       <Probe />
     </AuthProvider>,
   );
-  resolveSession(
+  await waitFor(() => {
+    expect(resolveSession).not.toBeNull();
+  });
+  const finishSecond = resolveSession as ((res: Response) => void) | null;
+  if (!finishSecond) throw new Error("Expected second session resolver");
+  resolveSession = null;
+  finishSecond(
     new Response(
       JSON.stringify({
         user_id: "alice",
@@ -1678,19 +1683,431 @@ test("StrictMode + provider unmount with pending session restore prevents old ca
       { status: 200, headers: { "Content-Type": "application/json" } },
     ),
   );
-  await act(async () => {
-    await Promise.resolve();
-    await Promise.resolve();
+  await waitFor(() => {
+    expect(capFromFirst).not.toBe(firstCap);
+    expect(capFromFirst?.isAuthorized()).toBe(true);
   });
-  expect(capFromFirst?.isAuthorized()).toBe(true);
   expect(firstCap?.isAuthorized()).toBe(false);
   if (!firstCap) {
     throw new Error("Expected firstCap to be captured");
   }
+  const fetchCallsBeforeStale = vi.mocked(globalThis.fetch).mock.calls.length;
   await expect(
     requestJson("/api/v1/plants", {
       capability: firstCap,
     }),
   ).rejects.toThrow();
+  expect(vi.mocked(globalThis.fetch).mock.calls.length).toBe(
+    fetchCallsBeforeStale,
+  );
   second.unmount();
+});
+
+test("P2.1: provider replacement during pending restoration CSRF rotation serializes server rotation and preserves replacement CSRF validity", async () => {
+  // Independent server-side CSRF digest model: each POST /api/v1/auth/csrf rotates
+  // serverActiveCsrf upon completion regardless of client-side unmount/abort.
+  let serverActiveCsrf = "csrf-initial";
+  let sessionCallCount = 0;
+  let csrfCallCount = 0;
+  const firstCsrfServerWrite = deferred<Response>();
+
+  vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+    const url = typeof input === "string" ? input : (input as Request).url;
+    const method = (init?.method ?? "GET").toUpperCase();
+    if (url.endsWith("/api/v1/auth/session")) {
+      sessionCallCount += 1;
+      return Promise.resolve(
+        json({
+          user_id: "alice",
+          login_name: "alice",
+          display_name: "Alice",
+          owner: true,
+        }),
+      );
+    }
+    if (url.endsWith("/api/v1/auth/csrf") && method === "POST") {
+      csrfCallCount += 1;
+      if (csrfCallCount === 1) {
+        return new Promise<Response>((resolve, reject) => {
+          const onAbort = () => {
+            reject(new DOMException("Aborted", "AbortError"));
+          };
+          if (init?.signal?.aborted) {
+            onAbort();
+            return;
+          }
+          init?.signal?.addEventListener("abort", onAbort, { once: true });
+          void firstCsrfServerWrite.promise.then(resolve, reject);
+        });
+      }
+      const rotated = `csrf-server-gen-${String(csrfCallCount)}`;
+      serverActiveCsrf = rotated;
+      return Promise.resolve(json({ csrf_token: rotated }));
+    }
+    if (url.endsWith("/api/v1/plants") && method === "POST") {
+      const headers = new Headers(init?.headers);
+      if (headers.get("X-CSRF-Token") !== serverActiveCsrf) {
+        return Promise.resolve(json({ detail: "Invalid CSRF token" }, 403));
+      }
+      return Promise.resolve(json({ id: "plant-ok" }));
+    }
+    return Promise.resolve(json({}));
+  });
+
+  const latestAuthRef: { current: AuthContextValue | null } = { current: null };
+  let retiredStates: string[] = [];
+  function RetiredProbe() {
+    const auth = useAuth();
+    retiredStates.push(auth.state.status);
+    latestAuthRef.current = auth;
+    return <span>{auth.state.status}</span>;
+  }
+  function ReplacementProbe() {
+    const auth = useAuth();
+    latestAuthRef.current = auth;
+    return (
+      <span>
+        {auth.state.status}:{activeCsrfToken(auth.state) || "none"}
+      </span>
+    );
+  }
+
+  const first = render(
+    <AuthProvider>
+      <RetiredProbe />
+    </AuthProvider>,
+  );
+
+  await waitFor(() => {
+    expect(sessionCallCount).toBe(1);
+    expect(csrfCallCount).toBe(1);
+  });
+  const retiredAuth = latestAuthRef.current;
+  expect(retiredAuth?.capability.isAuthorized()).toBe(false);
+
+  // Replace provider while Provider 1's restoration POST /api/v1/auth/csrf is still in flight.
+  retiredStates = [];
+  first.unmount();
+  const second = render(
+    <AuthProvider>
+      <ReplacementProbe />
+    </AuthProvider>,
+  );
+
+  // Flush microtasks: replacement restoration MUST wait for Provider 1's dispatched CSRF rotation.
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+  expect(sessionCallCount).toBe(1);
+  expect(csrfCallCount).toBe(1);
+
+  // Retired provider cannot enqueue new lifecycle work or unlock.
+  await retiredAuth?.logIn({ login_name: "alice", password: "pw" });
+  expect(sessionCallCount).toBe(1);
+  expect(csrfCallCount).toBe(1);
+
+  // Settle Provider 1's server-side CSRF rotation.
+  serverActiveCsrf = "csrf-retired-1";
+  firstCsrfServerWrite.resolve(json({ csrf_token: "csrf-retired-1" }));
+
+  // Replacement provider now runs GET /session + POST /csrf AFTER retired rotation settled.
+  await waitFor(() => {
+    expect(sessionCallCount).toBe(2);
+    expect(csrfCallCount).toBe(2);
+    expect(latestAuthRef.current?.state.status).toBe("authenticated");
+  });
+
+  // Retired provider never published authenticated state after unmount.
+  expect(retiredStates).not.toContain("authenticated");
+  expect(retiredAuth?.capability.isAuthorized()).toBe(false);
+
+  // Replacement provider published the fresh server-current CSRF token; mutation succeeds (200).
+  const replacementAuth = latestAuthRef.current;
+  if (replacementAuth?.state.status !== "authenticated") {
+    throw new Error("Expected replacement provider to authenticate");
+  }
+  expect(replacementAuth.state.csrfToken).toBe("csrf-server-gen-2");
+  expect(serverActiveCsrf).toBe("csrf-server-gen-2");
+
+  const result = await requestJson<{ id: string }>("/api/v1/plants", {
+    capability: replacementAuth.capability,
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-Token": replacementAuth.state.csrfToken,
+    },
+    body: JSON.stringify({ label: "After replacement" }),
+  });
+  expect(result.id).toBe("plant-ok");
+  second.unmount();
+});
+
+test("P2.2: useProtectedImage releases loaded object URLs synchronously at permanent capability revocation before passive cleanup, while preserving same-owner locks and handling races", async () => {
+  let activeOwner: "alice" | "bob" = "alice";
+  let blobCounter = 0;
+  const createdUrls: string[] = [];
+  const revokedUrls: string[] = [];
+  const createSpy = vi.spyOn(URL, "createObjectURL").mockImplementation(() => {
+    blobCounter += 1;
+    const url = `blob:protected-${String(blobCounter)}`;
+    createdUrls.push(url);
+    return url;
+  });
+  const revokeSpy = vi
+    .spyOn(URL, "revokeObjectURL")
+    .mockImplementation((url) => {
+      revokedUrls.push(url);
+    });
+
+  const pendingStaleBlobRef: {
+    current: ReturnType<typeof deferred<Response>> | null;
+  } = { current: null };
+  vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+    const url = typeof input === "string" ? input : (input as Request).url;
+    const method = (init?.method ?? "GET").toUpperCase();
+    if (url.endsWith("/api/v1/auth/session")) {
+      return Promise.resolve(
+        json({
+          user_id: activeOwner,
+          login_name: activeOwner,
+          display_name: activeOwner === "alice" ? "Alice" : "Bob",
+          owner: true,
+        }),
+      );
+    }
+    if (url.endsWith("/api/v1/auth/csrf") && method === "POST") {
+      return Promise.resolve(json({ csrf_token: `csrf-${activeOwner}` }));
+    }
+    if (url.endsWith("/api/v1/auth/login") && method === "POST") {
+      const bodyText = typeof init?.body === "string" ? init.body : "{}";
+      const body = JSON.parse(bodyText) as {
+        login_name?: string;
+      };
+      activeOwner = body.login_name === "bob" ? "bob" : "alice";
+      return Promise.resolve(json({ csrf_token: `csrf-${activeOwner}` }));
+    }
+    if (url.endsWith("/api/v1/media-assets/stale/thumbnail")) {
+      const d = deferred<Response>();
+      pendingStaleBlobRef.current = d;
+      return d.promise;
+    }
+    if (url.includes("/api/v1/media-assets/")) {
+      return Promise.resolve(
+        new Response(new Blob(["png-bytes"], { type: "image/png" }), {
+          status: 200,
+          headers: { "Content-Type": "image/png" },
+        }),
+      );
+    }
+    return Promise.resolve(json({ detail: "Expired" }, 401));
+  });
+
+  const currentAuthRef: { current: AuthContextValue | null } = {
+    current: null,
+  };
+  function ImageProbe({ rawUrl }: { rawUrl: string | null }) {
+    const auth = useAuth();
+    currentAuthRef.current = auth;
+    const [targetRef, media] = useProtectedImage({ rawUrl, lazy: false });
+    return (
+      <div ref={targetRef}>
+        {media.src ? <img alt="Protected" src={media.src} /> : null}
+      </div>
+    );
+  }
+
+  function WorkspaceHost({ rawUrl }: { rawUrl: string | null }) {
+    const { workspaceKey } = useAuth();
+    return <ImageProbe key={workspaceKey} rawUrl={rawUrl} />;
+  }
+
+  const view = render(
+    <AuthProvider>
+      <WorkspaceHost rawUrl="/api/v1/media-assets/one/thumbnail" />
+    </AuthProvider>,
+  );
+
+  const img1 = await screen.findByRole("img", { name: "Protected" });
+  const firstBlobUrl = img1.getAttribute("src");
+  expect(firstBlobUrl).toBe("blob:protected-1");
+  expect(revokedUrls).toEqual([]);
+
+  // Source replacement releases image 1 immediately and cleans up its subscription.
+  view.rerender(
+    <AuthProvider>
+      <WorkspaceHost rawUrl="/api/v1/media-assets/two/thumbnail" />
+    </AuthProvider>,
+  );
+  await waitFor(() => {
+    expect(screen.getByRole("img", { name: "Protected" })).toHaveAttribute(
+      "src",
+      "blob:protected-2",
+    );
+  });
+  expect(revokedUrls).toEqual(["blob:protected-1"]);
+
+  // Temporary same-owner lock MUST preserve the loaded object URL.
+  const aliceAuth = currentAuthRef.current;
+  if (!aliceAuth) {
+    throw new Error("Expected Alice auth context");
+  }
+  const aliceCap = aliceAuth.capability;
+  await expect(
+    requestJson("/api/v1/protected-trigger-401", { capability: aliceCap }),
+  ).rejects.toThrow();
+  await waitFor(() => {
+    expect(currentAuthRef.current?.state.status).toBe("unauthenticated");
+  });
+  expect(revokedUrls).toEqual(["blob:protected-1"]);
+  expect(screen.getByRole("img", { name: "Protected" })).toHaveAttribute(
+    "src",
+    "blob:protected-2",
+  );
+
+  // Same-owner recovery keeps the identical capability and object URL alive.
+  await act(async () => {
+    await currentAuthRef.current?.reauthenticate?.({
+      login_name: "alice",
+      password: "pw",
+    });
+  });
+  expect(currentAuthRef.current?.capability).toBe(aliceCap);
+  expect(revokedUrls).toEqual(["blob:protected-1"]);
+
+  // Trigger lock again, then reauthenticate as Bob (owner switch).
+  // Observe revocation at the synchronous gate unlock boundary BEFORE React passive cleanup runs.
+  await expect(
+    requestJson("/api/v1/protected-trigger-401", { capability: aliceCap }),
+  ).rejects.toThrow();
+  await waitFor(() => {
+    expect(currentAuthRef.current?.state.status).toBe("unauthenticated");
+  });
+
+  let revokedBeforeReplacementUnlock = false;
+  const unsubBoundary = subscribeAuthInvalidation(() => {
+    if (isProtectedRequestAuthorized()) {
+      revokedBeforeReplacementUnlock = revokedUrls.includes("blob:protected-2");
+    }
+  });
+
+  await act(async () => {
+    await currentAuthRef.current?.reauthenticate?.({
+      login_name: "bob",
+      password: "pw",
+    });
+  });
+  unsubBoundary();
+
+  // Former-owner URL was revoked synchronously BEFORE Bob's workspace unlocked (not deferred to passive cleanup)
+  // and revoked exactly once even after React passive unmount cleanup flushed.
+  expect(revokedBeforeReplacementUnlock).toBe(true);
+  expect(revokedUrls.filter((u) => u === "blob:protected-2")).toHaveLength(1);
+
+  // Stale response completion race: start a blob fetch under Bob, then permanently revoke via unmount
+  // before the response resolves -> must NOT create or leak an object URL.
+  const createdBeforeStale = createdUrls.length;
+  view.rerender(
+    <AuthProvider>
+      <WorkspaceHost rawUrl="/api/v1/media-assets/stale/thumbnail" />
+    </AuthProvider>,
+  );
+  await waitFor(() => {
+    expect(pendingStaleBlobRef.current).not.toBeNull();
+  });
+  const staleDeferred = pendingStaleBlobRef.current;
+  if (!staleDeferred) throw new Error("Expected pending stale blob");
+  view.unmount();
+  staleDeferred.resolve(
+    new Response(new Blob(["late-bytes"], { type: "image/png" }), {
+      status: 200,
+      headers: { "Content-Type": "image/png" },
+    }),
+  );
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+  expect(createdUrls.length).toBe(createdBeforeStale);
+
+  createSpy.mockRestore();
+  revokeSpy.mockRestore();
+});
+
+test("P2.3: capability issuance is private to the active provider controller and permanently lost on retirement", async () => {
+  const fetchSpy = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValue(json({ ok: true }));
+  fetchSpy.mockClear();
+
+  const controller1 = attachAuthRequestGate(vi.fn(), true);
+  expect(controller1.isActive()).toBe(true);
+  controller1.syncGate({ locked: false, ownerId: "owner-a" });
+
+  // Active controller issues a working capability.
+  const handleA = controller1.acquireWorkspaceCapability();
+  expect(handleA.capability.isAuthorized()).toBe(true);
+  await expect(
+    requestJson("/api/v1/plants", { capability: handleA.capability }),
+  ).resolves.toEqual({ ok: true });
+  expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+  // Same-owner temporary lock + unlock preserves capability identity & authorization.
+  controller1.syncGate({
+    locked: true,
+    advanceEpoch: true,
+    ownerId: "owner-a",
+  });
+  expect(handleA.capability.isAuthorized()).toBe(false);
+  controller1.syncGate({
+    locked: false,
+    advanceEpoch: true,
+    ownerId: "owner-a",
+  });
+  expect(handleA.capability.isAuthorized()).toBe(true);
+
+  // Replacement provider controller retires controller1 permanently.
+  const controller2 = attachAuthRequestGate(vi.fn(), true);
+  expect(controller1.isActive()).toBe(false);
+  expect(controller2.isActive()).toBe(true);
+  expect(handleA.capability.isAuthorized()).toBe(false);
+
+  // Retired controller cannot mutate the gate or mint replacement capabilities.
+  expect(controller1.syncGate({ locked: false, ownerId: "owner-a" })).toBe(-1);
+  expect(controller1.invalidateWorkspace()).toBe(-1);
+  const retiredAttempt = controller1.acquireWorkspaceCapability();
+  expect(retiredAttempt.capability.isAuthorized()).toBe(false);
+
+  // Active controller2 unlocks for owner-b; retired controller1 STILL cannot mint a live capability.
+  controller2.syncGate({ locked: false, ownerId: "owner-b" });
+  const retiredWhileActive = controller1.acquireWorkspaceCapability();
+  expect(retiredWhileActive.capability.isAuthorized()).toBe(false);
+  const handleB = controller2.acquireWorkspaceCapability();
+  expect(handleB.capability.isAuthorized()).toBe(true);
+  controller2.invalidateWorkspace();
+  controller2.syncGate({ locked: false, ownerId: "owner-a" });
+  expect(handleA.capability.isAuthorized()).toBe(false);
+  expect(handleB.capability.isAuthorized()).toBe(false);
+  expect(retiredAttempt.capability.isAuthorized()).toBe(false);
+  expect(retiredWhileActive.capability.isAuthorized()).toBe(false);
+
+  const callsBeforeRejected = fetchSpy.mock.calls.length;
+  for (const stale of [
+    handleA.capability,
+    handleB.capability,
+    retiredAttempt.capability,
+    retiredWhileActive.capability,
+  ]) {
+    await expect(
+      requestJson("/api/v1/plants", { capability: stale }),
+    ).rejects.toThrow();
+  }
+  expect(fetchSpy).toHaveBeenCalledTimes(callsBeforeRejected);
+
+  controller2.detach();
+  expect(controller2.isActive()).toBe(false);
+  expect(
+    controller2.acquireWorkspaceCapability().capability.isAuthorized(),
+  ).toBe(false);
 });

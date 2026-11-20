@@ -1,12 +1,6 @@
 import { afterEach, expect, test, vi } from "vitest";
 import type { Coords } from "leaflet";
-import {
-  acquireWorkspaceCapability,
-  attachAuthRequestGate,
-  getProtectedAuthEpoch,
-  invalidateProtectedWorkspace,
-  syncAuthRequestGate,
-} from "../auth/api";
+import { attachAuthRequestGate, getProtectedAuthEpoch } from "../auth/api";
 import { acquireTestAuth } from "../test/auth";
 import { EvidenceTiles } from "./EvidenceTiles";
 const coords = { x: 0, y: 0, z: 1 } as Coords;
@@ -120,19 +114,17 @@ test("unloading cancels pending work and removes obsolete failure state", async 
 test("current-epoch tile HTTP 401 notifies auth gate once, cancels sibling retries, and blocks subsequent fetches while locked", async () => {
   vi.useFakeTimers();
   const onUnauthorized = vi.fn(() => {
-    syncAuthRequestGate({
-      providerId: gate.providerId,
+    gate.syncGate({
       locked: true,
       advanceEpoch: true,
     });
   });
   const gate = attachAuthRequestGate(onUnauthorized);
-  syncAuthRequestGate({
-    providerId: gate.providerId,
+  gate.syncGate({
     locked: false,
     ownerId: "owner-1",
   });
-  const { capability } = acquireWorkspaceCapability(gate.providerId);
+  const { capability } = gate.acquireWorkspaceCapability();
   const epoch1 = getProtectedAuthEpoch();
 
   let releaseInFlight!: (response: Response) => void;
@@ -166,7 +158,7 @@ test("current-epoch tile HTTP 401 notifies auth gate once, cancels sibling retri
   await vi.advanceTimersByTimeAsync(0);
 
   expect(onUnauthorized).toHaveBeenCalledTimes(1);
-  expect(onUnauthorized).toHaveBeenCalledWith(epoch1, gate.providerId);
+  expect(onUnauthorized).toHaveBeenCalledWith(epoch1);
   expect(done401).toHaveBeenCalledTimes(1);
   expect(done401.mock.calls[0]?.[0]).toBeInstanceOf(Error);
   expect(siblingSignals[1]?.aborted).toBe(true);
@@ -189,12 +181,11 @@ test("current-epoch tile HTTP 401 notifies auth gate once, cancels sibling retri
 test("stale-epoch tile 401 and aborted tile 401 never notify auth gate", async () => {
   const onUnauthorized = vi.fn();
   const gate = attachAuthRequestGate(onUnauthorized);
-  syncAuthRequestGate({
-    providerId: gate.providerId,
+  gate.syncGate({
     locked: false,
     ownerId: "owner-1",
   });
-  const { capability } = acquireWorkspaceCapability(gate.providerId);
+  const { capability } = gate.acquireWorkspaceCapability();
 
   let resolveEpoch1Tile!: (response: Response) => void;
   let resolveAbortedTile!: (response: Response) => void;
@@ -221,8 +212,7 @@ test("stale-epoch tile 401 and aborted tile 401 never notify auth gate", async (
   layer.fire("tileunload", { tile: unloadedTile });
 
   // Advance to epoch 2 (e.g., after reauthentication) while epoch 1 tile is still in flight.
-  syncAuthRequestGate({
-    providerId: gate.providerId,
+  gate.syncGate({
     locked: false,
     advanceEpoch: true,
     ownerId: "owner-1",
@@ -242,22 +232,18 @@ test("stale-epoch tile 401 and aborted tile 401 never notify auth gate", async (
 test("owner-bound capability resumes same-owner attached layers on unlock but permanently blocks former-owner fetches on owner switch", async () => {
   vi.useFakeTimers();
   const onUnauthorized = vi.fn(() => {
-    syncAuthRequestGate({
-      providerId: gate.providerId,
+    gate.syncGate({
       locked: true,
       advanceEpoch: true,
       ownerId: "owner-alice",
     });
   });
   const gate = attachAuthRequestGate(onUnauthorized);
-  syncAuthRequestGate({
-    providerId: gate.providerId,
+  gate.syncGate({
     locked: false,
     ownerId: "owner-alice",
   });
-  const { capability: aliceCapability } = acquireWorkspaceCapability(
-    gate.providerId,
-  );
+  const { capability: aliceCapability } = gate.acquireWorkspaceCapability();
 
   const requestedUrls: string[] = [];
   vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
@@ -293,8 +279,7 @@ test("owner-bound capability resumes same-owner attached layers on unlock but pe
   expect(onUnauthorized).toHaveBeenCalledTimes(1);
 
   // Same-owner recovery unlocks Alice's workspace generation -> automatically redraws.
-  syncAuthRequestGate({
-    providerId: gate.providerId,
+  gate.syncGate({
     locked: false,
     advanceEpoch: true,
     ownerId: "owner-alice",
@@ -315,16 +300,13 @@ test("owner-bound capability resumes same-owner attached layers on unlock but pe
   aliceRedraw.mockClear();
 
   // Different-owner authentication barrier fires BEFORE Alice's layer is unmounted, then unlocks Bob.
-  invalidateProtectedWorkspace(gate.providerId);
-  syncAuthRequestGate({
-    providerId: gate.providerId,
+  gate.invalidateWorkspace();
+  gate.syncGate({
     locked: false,
     advanceEpoch: true,
     ownerId: "owner-bob",
   });
-  const { capability: bobCapability } = acquireWorkspaceCapability(
-    gate.providerId,
-  );
+  const { capability: bobCapability } = gate.acquireWorkspaceCapability();
 
   // Even before React commits unmount or if timers/retryFailed/createTile fire on Alice's layer:
   await vi.advanceTimersByTimeAsync(10000);

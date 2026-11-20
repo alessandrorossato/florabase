@@ -9,16 +9,14 @@ import {
 } from "react";
 
 import {
-  acquireWorkspaceCapability,
   ApiError,
   attachAuthRequestGate,
+  type AuthProviderGateController,
   changePassword,
   type ChangePasswordRequest,
   enqueueAuthCookieOperation,
-  getActiveAuthProviderId,
   getProtectedWorkspaceGeneration,
   getSession,
-  invalidateProtectedWorkspace,
   isReauthenticationState,
   login as requestLogin,
   logout as requestLogout,
@@ -26,8 +24,6 @@ import {
   type ProtectedRequestCapability,
   recoverCsrf,
   revokedAuthCapability,
-  syncAuthRequestGate,
-  waitForSettledAuthCookieOperations,
   type LoginRequest,
 } from "./api";
 import {
@@ -65,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const stateRef = useRef<AuthState>(state);
   const generation = useRef(0);
   const authEpochRef = useRef(0);
-  const providerIdRef = useRef(0);
+  const providerGateRef = useRef<AuthProviderGateController | null>(null);
   const mountedRef = useRef(true);
   const changingPassword = useRef(false);
   const [passwordChangePending, setPasswordChangePending] = useState(false);
@@ -82,15 +78,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState(next);
   }, []);
 
-  const isActiveProvider = useCallback((expectedProviderId?: number) => {
-    const pid = expectedProviderId ?? providerIdRef.current;
-    return (
-      mountedRef.current &&
-      pid !== 0 &&
-      pid === providerIdRef.current &&
-      pid === getActiveAuthProviderId()
-    );
-  }, []);
+  const isActiveProvider = useCallback(
+    (expectedGate?: AuthProviderGateController | null) => {
+      const activeGate =
+        expectedGate !== undefined ? expectedGate : providerGateRef.current;
+      return (
+        mountedRef.current &&
+        activeGate !== null &&
+        activeGate === providerGateRef.current &&
+        activeGate.isActive()
+      );
+    },
+    [],
+  );
 
   const retireWorkspaceCapability = useCallback(() => {
     workspaceCapRef.current?.handle.revoke();
@@ -99,11 +99,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const ensureWorkspaceCapability = useCallback(
-    (providerId: number, ownerId: string) => {
+    (gateController: AuthProviderGateController | null, ownerId: string) => {
       if (
-        providerId === 0 ||
-        providerId !== providerIdRef.current ||
-        providerId !== getActiveAuthProviderId()
+        !gateController ||
+        gateController !== providerGateRef.current ||
+        !gateController.isActive()
       ) {
         return;
       }
@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       workspaceCapRef.current?.handle.revoke();
-      const handle = acquireWorkspaceCapability(providerId);
+      const handle = gateController.acquireWorkspaceCapability();
       workspaceCapRef.current = { ownerId, handle };
       setCapability(handle.capability);
     },
@@ -120,7 +120,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const expireAuthenticatedSession = useCallback(
     (expectedEpoch?: number) => {
-      if (!isActiveProvider()) return;
+      const gateController = providerGateRef.current;
+      if (!isActiveProvider(gateController) || !gateController) return;
       if (
         expectedEpoch !== undefined &&
         expectedEpoch !== authEpochRef.current
@@ -135,8 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       generation.current += 1;
-      authEpochRef.current = syncAuthRequestGate({
-        providerId: providerIdRef.current,
+      authEpochRef.current = gateController.syncGate({
         locked: true,
         advanceEpoch: true,
         ownerId: current.session.user_id,
@@ -156,14 +156,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useLayoutEffect(() => {
     mountedRef.current = true;
-    const { providerId, detach } = attachAuthRequestGate(
-      (originatingEpoch, callbackProviderId) => {
-        if (callbackProviderId !== providerIdRef.current) return;
-        expireAuthenticatedSession(originatingEpoch);
-      },
-      true,
-    );
-    providerIdRef.current = providerId;
+    const gateController = attachAuthRequestGate((originatingEpoch) => {
+      if (providerGateRef.current !== gateController) return;
+      expireAuthenticatedSession(originatingEpoch);
+    }, true);
+    providerGateRef.current = gateController;
     workspaceCapRef.current = null;
     const current = stateRef.current;
     const ownerId =
@@ -172,8 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         : isReauthenticationState(current)
           ? current.retainedIdentity.user_id
           : null;
-    authEpochRef.current = syncAuthRequestGate({
-      providerId,
+    authEpochRef.current = gateController.syncGate({
       locked:
         current.status !== "authenticated" &&
         current.status !== "logout-failed",
@@ -181,72 +177,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     return () => {
       mountedRef.current = false;
-      if (providerIdRef.current === providerId) {
-        providerIdRef.current = 0;
+      if (providerGateRef.current === gateController) {
+        providerGateRef.current = null;
       }
       workspaceCapRef.current = null;
       generation.current += 1;
-      detach();
+      gateController.detach();
     };
   }, [expireAuthenticatedSession]);
 
   useEffect(() => {
+    const capturedGate = providerGateRef.current;
+    if (!isActiveProvider(capturedGate) || !capturedGate) return;
+
     const controller = new AbortController();
     const attempt = ++generation.current;
-    const capturedProviderId = providerIdRef.current;
+    authEpochRef.current = capturedGate.invalidateWorkspace();
+    retireWorkspaceCapability();
+    commitState({ status: "restoring" });
 
-    async function restoreSession() {
-      if (!isActiveProvider(capturedProviderId)) return;
-      authEpochRef.current = invalidateProtectedWorkspace(capturedProviderId);
-      retireWorkspaceCapability();
-      commitState({ status: "restoring" });
-
-      const pendingCookies = waitForSettledAuthCookieOperations();
-      if (pendingCookies) {
-        await pendingCookies;
-      }
-      if (
-        attempt !== generation.current ||
-        !isActiveProvider(capturedProviderId)
-      ) {
+    void enqueueAuthCookieOperation(async () => {
+      if (attempt !== generation.current || !isActiveProvider(capturedGate)) {
         return;
       }
 
       try {
         const session = await getSession(controller.signal);
-        if (
-          attempt !== generation.current ||
-          !isActiveProvider(capturedProviderId)
-        ) {
+        if (attempt !== generation.current || !isActiveProvider(capturedGate)) {
           return;
         }
-        const csrf = await recoverCsrf(controller.signal);
-        if (
-          attempt !== generation.current ||
-          !isActiveProvider(capturedProviderId)
-        ) {
+        // CSRF recovery rotates server-side session CSRF state; once dispatched,
+        // it must settle inside the lifecycle queue barrier even if this provider
+        // unmounts so replacement restoration cannot race a late server rotation.
+        const csrf = await recoverCsrf();
+        if (attempt !== generation.current || !isActiveProvider(capturedGate)) {
           return;
         }
-        authEpochRef.current = syncAuthRequestGate({
-          providerId: capturedProviderId,
+        authEpochRef.current = capturedGate.syncGate({
           locked: false,
           advanceEpoch: true,
           ownerId: session.user_id,
         });
-        ensureWorkspaceCapability(capturedProviderId, session.user_id);
+        ensureWorkspaceCapability(capturedGate, session.user_id);
         commitState({
           status: "authenticated",
           session,
           csrfToken: csrf.csrf_token,
         });
       } catch (error: unknown) {
-        if (
-          attempt !== generation.current ||
-          !isActiveProvider(capturedProviderId)
-        ) {
+        if (attempt !== generation.current || !isActiveProvider(capturedGate)) {
           return;
         }
-        authEpochRef.current = invalidateProtectedWorkspace(capturedProviderId);
+        authEpochRef.current = capturedGate.invalidateWorkspace();
         retireWorkspaceCapability();
         if (error instanceof ApiError && error.status === 401) {
           commitState({ status: "unauthenticated" });
@@ -257,9 +239,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           message: serviceFailureMessage(),
         });
       }
-    }
+    });
 
-    void restoreSession();
     return () => {
       generation.current += 1;
       controller.abort();
@@ -274,11 +255,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logIn = useCallback(
     (payload: LoginRequest) => {
-      const capturedProviderId = providerIdRef.current;
+      const capturedGate = providerGateRef.current;
+      if (!isActiveProvider(capturedGate) || !capturedGate) {
+        return Promise.resolve();
+      }
       return enqueueAuthCookieOperation(async () => {
-        if (!isActiveProvider(capturedProviderId)) return;
+        if (!isActiveProvider(capturedGate)) return;
         const attempt = ++generation.current;
-        authEpochRef.current = invalidateProtectedWorkspace(capturedProviderId);
+        authEpochRef.current = capturedGate.invalidateWorkspace();
         retireWorkspaceCapability();
         commitState({ status: "submitting-login" });
         let csrfToken: string;
@@ -286,7 +270,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const csrf = await requestLogin(payload);
           if (
             attempt !== generation.current ||
-            !isActiveProvider(capturedProviderId)
+            !isActiveProvider(capturedGate)
           ) {
             return;
           }
@@ -294,7 +278,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error: unknown) {
           if (
             attempt !== generation.current ||
-            !isActiveProvider(capturedProviderId)
+            !isActiveProvider(capturedGate)
           ) {
             return;
           }
@@ -309,21 +293,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const session = await getSession();
           if (
             attempt !== generation.current ||
-            !isActiveProvider(capturedProviderId)
+            !isActiveProvider(capturedGate)
           ) {
             return;
           }
-          authEpochRef.current =
-            invalidateProtectedWorkspace(capturedProviderId);
+          authEpochRef.current = capturedGate.invalidateWorkspace();
           retireWorkspaceCapability();
           setWorkspaceKey((value) => value + 1);
-          authEpochRef.current = syncAuthRequestGate({
-            providerId: capturedProviderId,
+          authEpochRef.current = capturedGate.syncGate({
             locked: false,
             advanceEpoch: true,
             ownerId: session.user_id,
           });
-          ensureWorkspaceCapability(capturedProviderId, session.user_id);
+          ensureWorkspaceCapability(capturedGate, session.user_id);
           commitState({
             status: "authenticated",
             session,
@@ -332,7 +314,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch {
           if (
             attempt !== generation.current ||
-            !isActiveProvider(capturedProviderId)
+            !isActiveProvider(capturedGate)
           ) {
             return;
           }
@@ -353,18 +335,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const reauthenticate = useCallback(
     (payload: LoginRequest) => {
-      const capturedProviderId = providerIdRef.current;
+      const capturedGate = providerGateRef.current;
+      if (!isActiveProvider(capturedGate) || !capturedGate) {
+        return Promise.resolve();
+      }
       const capturedWorkspace = getProtectedWorkspaceGeneration();
       return enqueueAuthCookieOperation(async () => {
-        if (!isActiveProvider(capturedProviderId)) return;
+        if (!isActiveProvider(capturedGate)) return;
         if (getProtectedWorkspaceGeneration() !== capturedWorkspace) return;
         const current = stateRef.current;
         if (current.status !== "unauthenticated" || !current.retainedIdentity)
           return;
         const { retainedIdentity } = current;
         const attempt = ++generation.current;
-        authEpochRef.current = syncAuthRequestGate({
-          providerId: capturedProviderId,
+        authEpochRef.current = capturedGate.syncGate({
           locked: true,
           advanceEpoch: true,
           ownerId: retainedIdentity.user_id,
@@ -379,7 +363,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const csrf = await requestLogin(payload);
           if (
             attempt !== generation.current ||
-            !isActiveProvider(capturedProviderId)
+            !isActiveProvider(capturedGate)
           ) {
             return;
           }
@@ -387,7 +371,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error: unknown) {
           if (
             attempt !== generation.current ||
-            !isActiveProvider(capturedProviderId)
+            !isActiveProvider(capturedGate)
           ) {
             return;
           }
@@ -403,7 +387,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const session = await getSession();
           if (
             attempt !== generation.current ||
-            !isActiveProvider(capturedProviderId)
+            !isActiveProvider(capturedGate)
           ) {
             return;
           }
@@ -412,18 +396,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!sameOwnerRecovery) {
             // Retire previous owner workspace & revoke all old-owner capabilities
             // synchronously before unlocking the gate for the replacement owner.
-            authEpochRef.current =
-              invalidateProtectedWorkspace(capturedProviderId);
+            authEpochRef.current = capturedGate.invalidateWorkspace();
             retireWorkspaceCapability();
             setWorkspaceKey((value) => value + 1);
           }
-          authEpochRef.current = syncAuthRequestGate({
-            providerId: capturedProviderId,
+          authEpochRef.current = capturedGate.syncGate({
             locked: false,
             advanceEpoch: true,
             ownerId: session.user_id,
           });
-          ensureWorkspaceCapability(capturedProviderId, session.user_id);
+          ensureWorkspaceCapability(capturedGate, session.user_id);
           commitState({
             status: "authenticated",
             session,
@@ -432,7 +414,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch {
           if (
             attempt !== generation.current ||
-            !isActiveProvider(capturedProviderId)
+            !isActiveProvider(capturedGate)
           ) {
             return;
           }
@@ -453,11 +435,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const discardRetainedSession = useCallback(() => {
-    const capturedProviderId = providerIdRef.current;
+    const capturedGate = providerGateRef.current;
+    if (!isActiveProvider(capturedGate) || !capturedGate) {
+      return Promise.resolve();
+    }
     const capturedWorkspace = getProtectedWorkspaceGeneration();
     return enqueueAuthCookieOperation(() => {
       if (
-        !isActiveProvider(capturedProviderId) ||
+        !isActiveProvider(capturedGate) ||
         getProtectedWorkspaceGeneration() !== capturedWorkspace
       ) {
         return Promise.resolve();
@@ -471,7 +456,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return Promise.resolve();
       }
       generation.current += 1;
-      authEpochRef.current = invalidateProtectedWorkspace(capturedProviderId);
+      authEpochRef.current = capturedGate.invalidateWorkspace();
       retireWorkspaceCapability();
       setWorkspaceKey((value) => value + 1);
       commitState({ status: "unauthenticated" });
@@ -480,11 +465,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [commitState, isActiveProvider, retireWorkspaceCapability]);
 
   const logOut = useCallback(() => {
-    const capturedProviderId = providerIdRef.current;
+    const capturedGate = providerGateRef.current;
     const initialState = stateRef.current;
     if (
       changingPassword.current ||
-      !isActiveProvider(capturedProviderId) ||
+      !isActiveProvider(capturedGate) ||
+      !capturedGate ||
       (initialState.status !== "authenticated" &&
         initialState.status !== "logout-failed")
     ) {
@@ -497,7 +483,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const current = stateRef.current;
       if (
         changingPassword.current ||
-        !isActiveProvider(capturedProviderId) ||
+        !isActiveProvider(capturedGate) ||
         getProtectedWorkspaceGeneration() !== originatingWorkspace ||
         (current.status !== "authenticated" &&
           current.status !== "logout-failed") ||
@@ -508,8 +494,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const attempt = ++generation.current;
       const { session } = current;
       let csrfToken = current.csrfToken;
-      authEpochRef.current = syncAuthRequestGate({
-        providerId: capturedProviderId,
+      authEpochRef.current = capturedGate.syncGate({
         locked: true,
         advanceEpoch: true,
         ownerId: session.user_id,
@@ -521,7 +506,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error: unknown) {
           if (
             attempt !== generation.current ||
-            !isActiveProvider(capturedProviderId)
+            !isActiveProvider(capturedGate)
           ) {
             return;
           }
@@ -537,13 +522,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } catch (probeError: unknown) {
             if (
               attempt !== generation.current ||
-              !isActiveProvider(capturedProviderId)
+              !isActiveProvider(capturedGate)
             ) {
               return;
             }
             if (probeError instanceof ApiError && probeError.status === 401) {
-              authEpochRef.current =
-                invalidateProtectedWorkspace(capturedProviderId);
+              authEpochRef.current = capturedGate.invalidateWorkspace();
               retireWorkspaceCapability();
               setWorkspaceKey((value) => value + 1);
               commitState({ status: "unauthenticated" });
@@ -553,7 +537,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           if (
             attempt !== generation.current ||
-            !isActiveProvider(capturedProviderId)
+            !isActiveProvider(capturedGate)
           ) {
             return;
           }
@@ -563,27 +547,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           csrfToken = (await recoverCsrf()).csrf_token;
           if (
             attempt !== generation.current ||
-            !isActiveProvider(capturedProviderId)
+            !isActiveProvider(capturedGate)
           ) {
             return;
           }
           await requestLogout(csrfToken);
         }
-        if (
-          attempt === generation.current &&
-          isActiveProvider(capturedProviderId)
-        ) {
-          authEpochRef.current =
-            invalidateProtectedWorkspace(capturedProviderId);
+        if (attempt === generation.current && isActiveProvider(capturedGate)) {
+          authEpochRef.current = capturedGate.invalidateWorkspace();
           retireWorkspaceCapability();
           setWorkspaceKey((value) => value + 1);
           commitState({ status: "unauthenticated" });
         }
       } catch {
-        if (
-          attempt !== generation.current ||
-          !isActiveProvider(capturedProviderId)
-        ) {
+        if (attempt !== generation.current || !isActiveProvider(capturedGate)) {
           return;
         }
         commitState({
@@ -599,10 +576,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const submitPassword = useCallback(
     (payload: ChangePasswordRequest) => {
-      const capturedProviderId = providerIdRef.current;
+      const capturedGate = providerGateRef.current;
       const initialState = stateRef.current;
       if (
-        !isActiveProvider(capturedProviderId) ||
+        !isActiveProvider(capturedGate) ||
+        !capturedGate ||
         initialState.status !== "authenticated" ||
         !initialState.session.owner ||
         changingPassword.current
@@ -615,7 +593,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return enqueueAuthCookieOperation(async () => {
         const current = stateRef.current;
         if (
-          !isActiveProvider(capturedProviderId) ||
+          !isActiveProvider(capturedGate) ||
           getProtectedWorkspaceGeneration() !== originatingWorkspace ||
           current.status !== "authenticated" ||
           !current.session.owner ||
@@ -631,12 +609,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const response = await changePassword(payload, current.csrfToken);
           if (
             attempt !== generation.current ||
-            !isActiveProvider(capturedProviderId)
+            !isActiveProvider(capturedGate)
           ) {
             return false;
           }
-          authEpochRef.current = syncAuthRequestGate({
-            providerId: capturedProviderId,
+          authEpochRef.current = capturedGate.syncGate({
             locked: false,
             advanceEpoch: true,
             ownerId: current.session.user_id,
@@ -646,7 +623,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error: unknown) {
           if (
             attempt !== generation.current ||
-            !isActiveProvider(capturedProviderId)
+            !isActiveProvider(capturedGate)
           ) {
             return false;
           }
@@ -674,27 +651,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [expireAuthenticatedSession]);
 
   const retryRestoration = useCallback(() => {
-    const pid = providerIdRef.current;
-    if (!isActiveProvider(pid)) return;
+    const capturedGate = providerGateRef.current;
+    if (!isActiveProvider(capturedGate) || !capturedGate) return;
     generation.current += 1;
-    authEpochRef.current = invalidateProtectedWorkspace(pid);
+    authEpochRef.current = capturedGate.invalidateWorkspace();
     retireWorkspaceCapability();
     setRestorationAttempt((attempt) => attempt + 1);
   }, [isActiveProvider, retireWorkspaceCapability]);
 
   const cancelLogout = useCallback(() => {
-    const pid = providerIdRef.current;
-    if (!isActiveProvider(pid)) return;
+    const capturedGate = providerGateRef.current;
+    if (!isActiveProvider(capturedGate) || !capturedGate) return;
     const current = stateRef.current;
     if (current.status === "logout-failed") {
       generation.current += 1;
-      authEpochRef.current = syncAuthRequestGate({
-        providerId: pid,
+      authEpochRef.current = capturedGate.syncGate({
         locked: false,
         advanceEpoch: true,
         ownerId: current.session.user_id,
       });
-      ensureWorkspaceCapability(pid, current.session.user_id);
+      ensureWorkspaceCapability(capturedGate, current.session.user_id);
       commitState({
         status: "authenticated",
         session: current.session,

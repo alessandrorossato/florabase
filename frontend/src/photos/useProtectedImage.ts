@@ -22,6 +22,7 @@ interface LoadedBlob {
   url: string;
   objectUrl: string;
   capability: ProtectedRequestCapability;
+  release: () => void;
 }
 
 export function useProtectedImage({
@@ -64,8 +65,7 @@ export function useProtectedImage({
   useEffect(() => {
     return () => {
       if (loadedRef.current) {
-        URL.revokeObjectURL(loadedRef.current.objectUrl);
-        loadedRef.current = null;
+        loadedRef.current.release();
       }
     };
   }, []);
@@ -97,8 +97,7 @@ export function useProtectedImage({
       active.url !== protectedUrl ||
       active.capability !== capability
     ) {
-      URL.revokeObjectURL(active.objectUrl);
-      loadedRef.current = null;
+      active.release();
     }
   }, [capability, protectedUrl, retained]);
 
@@ -118,19 +117,34 @@ export function useProtectedImage({
       signal: controller.signal,
     })
       .then(({ blob }) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || !capability.isAuthorized()) return;
         const objectUrl = URL.createObjectURL(blob);
-        if (!capability.isAuthorized()) {
-          URL.revokeObjectURL(objectUrl);
-          return;
-        }
+        const lifecycle = { released: false };
+        let unsubscribeRevocation: () => void = () => undefined;
         const nextLoaded: LoadedBlob = {
           url: protectedUrl,
           objectUrl,
           capability,
+          release: () => {
+            if (lifecycle.released) return;
+            lifecycle.released = true;
+            unsubscribeRevocation();
+            unsubscribeRevocation = () => undefined;
+            URL.revokeObjectURL(objectUrl);
+            if (loadedRef.current === nextLoaded) {
+              loadedRef.current = null;
+            }
+          },
         };
+        unsubscribeRevocation = capability.subscribePermanentRevocation(
+          nextLoaded.release,
+        );
+        if (lifecycle.released || !capability.isAuthorized()) {
+          nextLoaded.release();
+          return;
+        }
         if (loadedRef.current) {
-          URL.revokeObjectURL(loadedRef.current.objectUrl);
+          loadedRef.current.release();
         }
         loadedRef.current = nextLoaded;
         setFailedState(null);
