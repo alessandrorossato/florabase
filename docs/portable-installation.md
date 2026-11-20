@@ -78,9 +78,10 @@ frontend traffic and allows the backend to reach external providers.
 
 ### Reverse proxy example
 
-The bundled frontend sends no security headers and applies no rate limit; the HTTPS proxy owns
-both. This nginx server block is an example for the values above. Adapt the certificate paths and
-translate it for another proxy.
+The bundled frontend sends the [baseline security headers](security.md).
+Pass them through the HTTPS proxy. Use one enforcing CSP at the public endpoint where possible
+because browsers enforce every policy they receive. The HTTPS proxy owns source-address rate
+limiting. Adapt the certificate paths and translate this example for another proxy.
 
 ```nginx
 server {
@@ -91,10 +92,6 @@ server {
 
     client_max_body_size 32m;
 
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-    add_header X-Frame-Options "DENY" always;
-    add_header Content-Security-Policy "default-src 'self'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
     # Add only after HTTPS works for every client of this hostname:
     # add_header Strict-Transport-Security "max-age=31536000" always;
 
@@ -107,14 +104,21 @@ server {
 }
 ```
 
-`img-src https:` permits external photo references, and online map tiles if they are enabled.
-The content policy is a
-starting point and has not been checked on every page: deploy it first as
-`Content-Security-Policy-Report-Only`, use the application, and enforce it once the browser
-console reports no violation. Florabase never reads its origin or the user's identity from
-forwarded headers. Add a source-address request limit for `/api/v1/auth/` if the proxy is
-reachable from untrusted networks; the application's own sign-in backoff is keyed by login name,
-not by source address.
+Verify the headers at the public URL after upgrading. If an older frontend image lacks the
+headers, add these directives in the HTTPS server block for that image:
+
+```nginx
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header X-Frame-Options "DENY" always;
+add_header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'" always;
+```
+
+If you customize the policy, validate proposed restrictions with
+`Content-Security-Policy-Report-Only` before enforcing them. Use HTTPS for any independently
+hosted basemap endpoint. Florabase never reads its origin or the user's identity from forwarded
+headers. Add a source-address request limit for `/api/v1/auth/` if the proxy is reachable from
+untrusted networks. The application's own sign-in backoff is keyed by login name.
 
 For the examples below, run from the directory with the verified file and private `.env` in a
 Bash shell. Set `project` to the exact name of the deployed stack and use a distinct name for each

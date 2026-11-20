@@ -21,10 +21,13 @@ import textwrap
 import unittest
 import urllib.error
 import urllib.parse
+import urllib.request
+import urllib.response
 from contextlib import nullcontext
+from http.client import HTTPMessage
 from pathlib import Path
-from typing import Any
-from unittest.mock import patch
+from typing import Any, ClassVar
+from unittest.mock import Mock, patch
 
 import beta_release
 from beta_release import (
@@ -42,6 +45,7 @@ from beta_release import (
     validate_release_assets,
     validate_scan,
 )
+from smoke_beta_runtime_client import Client, png
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("checks", ROOT / "scripts/beta-release-checks.py")
@@ -60,6 +64,587 @@ def load_tool(name: str) -> Any:
 
 tooling = load_tool("release-tools")
 publisher = load_tool("publish-beta-images")
+
+
+class PortableSmokeHeaders(unittest.TestCase):
+    smoke: ClassVar[Any]
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.smoke = load_tool("smoke-portable-compose")
+
+    def setUp(self) -> None:
+        self.headers = HTTPMessage()
+        self.headers["X-Content-Type-Options"] = "nosniff"
+        self.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        self.headers["X-Frame-Options"] = "DENY"
+        self.headers["Content-Security-Policy"] = (
+            "default-src 'none'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; "
+            "img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self'; "
+            "manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; "
+            "form-action 'self'; frame-ancestors 'none'"
+        )
+        self.client = Mock(spec=Client)
+        self.client.request.return_value = (b"", self.headers)
+
+    def test_missing_security_headers_fail_public_smoke(self) -> None:
+        for name, value in self.headers.items():
+            with self.subTest(name=name):
+                del self.headers[name]
+                with self.assertRaisesRegex(RuntimeError, rf"GET /: expected {name}"):
+                    self.smoke.exercise_bundled_headers(self.client)
+                self.headers[name] = value
+
+    def test_incorrect_security_headers_fail_public_smoke(self) -> None:
+        for name, value in self.headers.items():
+            with self.subTest(name=name):
+                self.headers.replace_header(name, "incorrect")
+                with self.assertRaisesRegex(RuntimeError, rf"GET /: expected {name}"):
+                    self.smoke.exercise_bundled_headers(self.client)
+                self.headers.replace_header(name, value)
+
+    def test_duplicate_nosniff_fails_authenticated_thumbnail_smoke(self) -> None:
+        self.headers["Cache-Control"] = "private, max-age=86400, must-revalidate"
+        self.headers["x-content-type-options"] = "nosniff"
+        with self.assertRaisesRegex(RuntimeError, "X-Content-Type-Options"):
+            self.smoke.exercise_authenticated_thumbnail(self.client, "/thumbnail")
+
+    def test_missing_incorrect_and_duplicate_cache_fail(self) -> None:
+        for values in ([], ["public"], ["no-cache", "no-cache"]):
+            with self.subTest(values=values):
+                for value in values:
+                    self.headers["Cache-Control"] = value
+                with self.assertRaisesRegex(RuntimeError, "GET /: expected Cache-Control"):
+                    self.smoke.exercise_bundled_headers(self.client)
+                del self.headers["Cache-Control"]
+
+    def test_unexpected_cache_header_fails(self) -> None:
+        self.headers["Cache-Control"] = "public"
+        with self.assertRaisesRegex(RuntimeError, "GET /healthz: expected Cache-Control"):
+            self.smoke.require_response_header("/healthz", self.headers, "Cache-Control", None)
+
+    def test_valid_headers_and_cache_pass(self) -> None:
+        self.smoke.require_bundled_headers("/", self.headers)
+        self.smoke.require_response_header("/healthz", self.headers, "Cache-Control", None)
+        self.headers["Cache-Control"] = "private, max-age=86400, must-revalidate"
+        with patch("sys.stdout", new=io.StringIO()):
+            self.smoke.exercise_authenticated_thumbnail(self.client, "/thumbnail")
+        self.client.request.assert_called_once_with("/thumbnail")
+
+
+class PortableSmokeEvidence(unittest.TestCase):
+    smoke: ClassVar[Any]
+    images: ClassVar[dict[str, str]] = {
+        "db": "postgres-fixture",
+        "backend": "backend-fixture",
+        "frontend": "frontend-fixture",
+    }
+    head = "20261009_0042"
+    media_id = "00000000-0000-7000-8000-000000000000"
+    content_url = f"/api/v1/attachments/{media_id}/content"
+    thumbnail_url = f"/api/v1/media-assets/{media_id}/thumbnail"
+    verified = b"Verified 1 stored attachment file(s) against database metadata\n"
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.smoke = load_tool("smoke-portable-compose")
+
+    def config(self, images: dict[str, str]) -> bytes:
+        return json.dumps(
+            {"services": {name: {"image": ref} for name, ref in images.items()}}
+        ).encode()
+
+    def run_fixture(self, fault: str = "") -> None:
+        source = Mock(spec=self.smoke.Stack)
+        restore = Mock(spec=self.smoke.Stack)
+        image_refs = (
+            {**self.images, "frontend": "unexpected-image"} if fault == "image" else self.images
+        )
+        cfg = {
+            "services": self.config({"db": self.images["db"]}),
+            "invalid-config": b"",
+        }.get(fault, self.config(image_refs))
+        source.compose.side_effect = [
+            cfg,
+            b"",  # Uninitialized PostgreSQL refusal, covered separately at the subprocess boundary.
+            b"0" if fault == "uid" else b"70",
+            b"10001",
+            b"101",
+            b"",  # Restart.
+            b"",  # Stop application writers.
+            b"invalid dump" if fault == "dump" else b"PGDMP fixture",
+        ]
+        source.backend.side_effect = [
+            b"",
+            b"",
+            b"",
+            b"",  # Schema guard and initialization.
+            b"unexpected (head)" if fault == "image-head" else f"{self.head} (head)\n".encode(),
+            b"",
+            b"",
+            b"",  # Owner bootstrap and foreign revision refusals.
+            b"" if fault == "verify" else self.verified,
+            b"" if fault == "archive" else b"media fixture",
+            b"",
+            b"",
+            b"",
+            b"",
+            b"",  # Downgrade and failed/recovered upgrade.
+        ]
+        revision = self.head.encode()
+        source.sql.side_effect = [
+            b"",
+            b"",  # Create/drop unmanaged table.
+            b"wrong" if fault == "schema-init" else revision,
+            b"wrong" if fault == "schema-restart" else revision,
+            b"",  # Set foreign revision.
+            revision if fault == "schema-foreign" else b"foreign_revision",
+            b"",
+            b"",  # Recover head and create conflicting relation.
+            b"wrong" if fault == "schema-rollback" else b"20261009_0041",
+            b"1" if fault == "sentinel" else b"0",
+            b"",  # Drop conflict.
+            b"wrong" if fault == "schema-recovery" else revision,
+        ]
+        original = png(19, 37, 59)
+        client = source.login.return_value
+        client.upload.return_value = {
+            "thumbnail_url": None if fault == "thumbnail-url" else self.thumbnail_url,
+            "content_url": "https://wrong.invalid" if fault == "content-url" else self.content_url,
+        }
+        client.request.side_effect = [
+            (b"" if fault == "restart" else original, HTTPMessage()),
+            (b"" if fault == "recovery" else original, HTTPMessage()),
+            (b"" if fault == "source" else original, HTTPMessage()),
+        ]
+        restore.compose.side_effect = [self.config(self.images), b""]
+        restore.backend.side_effect = [
+            b"",
+            b"Restored 0 attachment file(s)"
+            if fault == "restore-count"
+            else b"Restored 1 attachment file(s)\n",
+            b"malformed" if fault == "restore-verify" else self.verified,
+        ]
+        restore.sql.return_value = b"wrong" if fault == "restore-schema" else revision
+        restore.login.return_value.request.return_value = (
+            b"" if fault == "restore-media" else original,
+            HTTPMessage(),
+        )
+        with (
+            patch.object(self.smoke, "exercise_credentials", return_value="reset-fixture"),
+            patch.object(self.smoke, "exercise_bundled_headers"),
+            patch.object(self.smoke, "exercise_authenticated_thumbnail"),
+        ):
+            self.smoke.smoke(source, restore, self.images, self.head)
+        restore.backend.assert_any_call(*self.smoke.ARTIFACTS, "verify")
+        restore.login.return_value.request.assert_called_once_with(self.content_url)
+        self.assertEqual(client.request.call_count, 3)
+
+    def test_valid_smoke_evidence_reaches_both_stacks(self) -> None:
+        self.run_fixture()
+
+    def test_invalid_smoke_evidence_fails_at_its_check(self) -> None:
+        for fault, message in {
+            "services": "expected db, backend and frontend",
+            "invalid-config": "invalid JSON response",
+            "image": "incorrect frontend image reference",
+            "uid": "db: unexpected runtime UID",
+            "image-head": "unexpected Alembic head",
+            "schema-init": "schema initialization: unexpected database revision",
+            "thumbnail-url": "missing or invalid thumbnail URL",
+            "content-url": "missing or invalid content URL",
+            "restart": "service restart: original media differs",
+            "schema-restart": "service restart: unexpected database revision",
+            "schema-foreign": "foreign revision refusal: unexpected database revision",
+            "dump": "missing PostgreSQL custom-format dump",
+            "verify": "media backup: expected one verified attachment",
+            "archive": "missing attachment archive",
+            "schema-rollback": "failed upgrade rollback: unexpected database revision",
+            "sentinel": "sentinel table changed",
+            "schema-recovery": "upgrade recovery: unexpected database revision",
+            "recovery": "upgrade recovery: original media differs",
+            "restore-count": "expected one restored attachment",
+            "restore-verify": "media restore: expected one verified attachment",
+            "restore-schema": "isolated restore: unexpected database revision",
+            "restore-media": "isolated restore: original media differs",
+            "source": "source after isolated restore: original media differs",
+        }.items():
+            with self.subTest(fault=fault), self.assertRaisesRegex(RuntimeError, message):
+                self.run_fixture(fault)
+
+    def test_login_requires_json_csrf_and_a_usable_secure_cookie(self) -> None:
+        client = Client("http://127.0.0.1:8080", self.smoke.ORIGIN)
+        headers = HTTPMessage()
+        headers["Set-Cookie"] = (
+            "__Host-florabase-session=session-token; HttpOnly; Max-Age=2592000; Path=/; SameSite=strict; Secure"
+        )
+        valid = b'{"csrf_token":"csrf-token"}'
+        for data, response_headers, message in (
+            (b"not-json", headers, "invalid JSON response"),
+            (b"[]", headers, "expected a JSON object"),
+            (b"{}", headers, "missing or invalid CSRF token"),
+            (b'{"csrf_token":123}', headers, "missing or invalid CSRF token"),
+            (valid, HTTPMessage(), "missing or invalid secure session cookie"),
+        ):
+            with (
+                self.subTest(message=message, data=data),
+                patch.object(client, "request", return_value=(data, response_headers)),
+                self.assertRaisesRegex(RuntimeError, message),
+            ):
+                client.login("owner", "password-fixture")
+        self.assertEqual((client.cookie, client.csrf), ("", ""))
+        with patch.object(client, "request", return_value=(valid, headers)):
+            client.login("owner", "password-fixture")
+        self.assertEqual(
+            (client.cookie, client.csrf), ("__Host-florabase-session=session-token", "csrf-token")
+        )
+
+    def test_session_cookie_definitions_are_unambiguous(self) -> None:
+        client = Client("http://127.0.0.1:8080", self.smoke.ORIGIN)
+        cookie = "__Host-florabase-session"
+        # Match the pinned backend serializer's secure login and password-change output.
+        issued = (
+            f"{cookie}=issued-fixture; HttpOnly; Max-Age=2592000; Path=/; SameSite=strict; Secure"
+        )
+        positive = {
+            "backend": (issued,),
+            "ordering, casing and horizontal whitespace": (
+                f"\t{cookie}=issued-fixture ;\tSECURE ; sAmEsItE=STRICT; PATH=/ ; max-age=86400; httpONLY\t",
+            ),
+            "unrelated cookies": (
+                'preferences="__Host-florabase-session=unrelated;theme=dark"',
+                issued,
+                "view=compact; Path=/",
+            ),
+        }
+        for case, fields in positive.items():
+            with self.subTest(case=case):
+                headers = HTTPMessage()
+                for field in fields:
+                    headers.add_header("Set-Cookie", field)
+                client.accept_session(b'{"csrf_token":"accepted-csrf"}', headers, "login")
+                self.assertEqual(
+                    (client.cookie, client.csrf), (f"{cookie}=issued-fixture", "accepted-csrf")
+                )
+
+        insecure = f"{cookie}=unvalidated-fixture; Path=/"
+        duplicate = issued.replace("issued-fixture", "unvalidated-fixture")
+        rejected = {
+            "valid then insecure": (issued, insecure),
+            "insecure then valid": (insecure, issued),
+            "two valid tokens": (issued, duplicate),
+            "same token twice": (issued, issued),
+            "combined definitions": (issued + "; " + insecure,),
+            "comma-separated definitions": (issued + ", " + duplicate,),
+            "space-separated definitions": (issued + " " + duplicate,),
+            "malformed second definition": (issued, cookie + "; Secure"),
+            "missing session": (),
+        }
+        for case, original, malformed in (
+            ("SOL path", "Path=/", "Path=/other Path=/"),
+            ("SOL SameSite", "SameSite=strict", "SameSite=Lax SameSite=Strict"),
+            ("reversed path", "Path=/", "Path=/ Path=/other"),
+            ("reversed SameSite", "SameSite=strict", "SameSite=Strict SameSite=Lax"),
+            ("identical path", "Path=/", "Path=/; PATH=/"),
+            ("identical flag", "Secure", "Secure; SECURE"),
+            ("conflicting paths", "Path=/", "Path=/other; Path=/"),
+            ("conflicting SameSite", "SameSite=strict", "SameSite=Lax; SameSite=Strict"),
+            ("valued Secure", "Secure", "Secure=1"),
+            ("empty Secure assignment", "Secure", "Secure="),
+            ("valued HttpOnly", "HttpOnly", "HttpOnly=true"),
+            ("invalid path", "Path=/", "Path=/other"),
+            ("invalid SameSite", "SameSite=strict", "SameSite=Lax"),
+            ("invalid Max-Age", "Max-Age=2592000", "Max-Age=0"),
+            ("embedded assignment", "Max-Age=2592000", "Max-Age=2592000 Expires=tomorrow"),
+            ("tab-separated assignment", "Path=/", "Path=/other\tPath=/"),
+            ("whitespace inside assignment", "Path=/", "Path= /"),
+            ("vertical whitespace", "Path=/", "Path=/\v"),
+            ("quoted token", "issued-fixture", '"issued-fixture"'),
+            ("quoted path", "Path=/", 'Path="/"'),
+            ("quoted semicolon", "Path=/", 'Path="/;other=value"'),
+            ("empty token", "issued-fixture", ""),
+        ):
+            rejected[case] = (issued.replace(original, malformed),)
+        for attribute in ("HttpOnly", "Max-Age=2592000", "Path=/", "SameSite=strict", "Secure"):
+            rejected[f"missing {attribute}"] = (issued.replace(f"; {attribute}", ""),)
+        for extra in ("Domain=", "$Domain=fixture.invalid", "Unexpected=value", ""):
+            rejected[f"extra attribute {extra!r}"] = (issued + "; " + extra,)
+
+        for case, fields in rejected.items():
+            with self.subTest(case=case):
+                headers = HTTPMessage()
+                for field in fields:
+                    headers.add_header("Set-Cookie", field.replace("issued-fixture", "new-fixture"))
+                with self.assertRaisesRegex(RuntimeError, "session cookie"):
+                    client.accept_session(b'{"csrf_token":"unvalidated-csrf"}', headers, "login")
+                self.assertEqual(
+                    (client.cookie, client.csrf), (f"{cookie}=issued-fixture", "accepted-csrf")
+                )
+
+        response = urllib.response.addinfourl(io.BytesIO(b"ok"), HTTPMessage(), client.base, 200)
+        with patch.object(client.opener, "open", return_value=response) as transport:
+            client.request("/session", "POST")
+        request = transport.call_args.args[0]
+        self.assertEqual(request.get_header("Cookie"), f"{cookie}=issued-fixture")
+        self.assertEqual(request.get_header("X-csrf-token"), "accepted-csrf")
+
+    def test_protocol_failures_exit_with_sanitized_tracebacks(self) -> None:
+        child = textwrap.dedent("""\
+            import io
+            import sys
+            from http.client import HTTPException, HTTPResponse
+            from unittest.mock import Mock, patch
+
+            from smoke_beta_runtime_client import Client
+
+            case, marker = sys.argv[1:]
+            wire = (
+                (marker + "\\r\\n\\r\\n").encode() if case == "status" else
+                b"HTTP/1.1 200 OK\\r\\nContent-Length: 256\\r\\n\\r\\n" + marker.encode()
+            )
+            sock = Mock()
+            sock.makefile.return_value = io.BytesIO(wire)
+            def open_response(*args, **kwargs):
+                response = HTTPResponse(sock)
+                response.begin()
+                if case == "read":
+                    response.read = Mock(side_effect=HTTPException(marker))
+                return response
+
+            client = Client("http://127.0.0.1:8080", "https://fixture.invalid")
+            with patch.object(client.opener, "open", side_effect=open_response):
+                client.request("/status?check=" + marker)
+            print("unexpected success")
+            """)
+        marker = "synthetic-protocol-secret-marker"
+        for case in ("status", "truncated", "read"):
+            with self.subTest(case=case):
+                result = subprocess.run(
+                    [sys.executable, *(["-O"] * sys.flags.optimize), "-c", child, case, marker],
+                    cwd=ROOT / "scripts",
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
+                    check=False,
+                )
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(result.stdout, "")
+                self.assertIn("Traceback (most recent call last)", result.stderr)
+                self.assertIn("RuntimeError: GET /status: invalid HTTP response", result.stderr)
+                self.assertNotIn(marker, result.stderr)
+                self.assertNotIn("During handling of the above exception", result.stderr)
+
+    def test_expected_http_success_and_error_return_body_and_headers(self) -> None:
+        client = Client("http://127.0.0.1:8080", self.smoke.ORIGIN)
+        headers = HTTPMessage()
+        body = b'{"fixture":"body"}'
+        response = urllib.response.addinfourl(io.BytesIO(body), headers, client.base, 200)
+        refused = urllib.error.HTTPError(client.base, 401, "fixture", headers, io.BytesIO(body))
+        with patch.object(client.opener, "open", side_effect=[response, refused]):
+            self.assertEqual(client.request("/ready"), (body, headers))
+            self.assertEqual(client.request("/session", expected=401), (body, headers))
+
+    def test_password_change_and_reset_require_complete_secret_free_evidence(self) -> None:
+        initial_password = "original-password-fixture"
+        changed_password = "changed-password-fixture"
+        reset_password = "reset-password-fixture"
+        path = b"/api/v1/auth/password"
+        owner = json.dumps(
+            {"owner": True, "login_name": self.smoke.OWNER, "canonical_origin": self.smoke.ORIGIN}
+        ).encode()
+        headers = HTTPMessage()
+        headers["Set-Cookie"] = (
+            "__Host-florabase-session=rotated-session; HttpOnly; Max-Age=2592000; Path=/; SameSite=strict; Secure"
+        )
+
+        for fault, message in {
+            "": "",
+            "rotation": "session credentials did not rotate",
+            "session": "incorrect owner",
+            "revocation": "expected 401, got 200",
+            "logs": "backend: credential access log evidence is incomplete",
+            "log-secret": "backend: sensitive value in credential logs",
+            "reset": "missing commit confirmation",
+        }.items():
+            with self.subTest(fault=fault):
+                first = Client("http://127.0.0.1:8080", self.smoke.ORIGIN)
+                first.cookie = "__Host-florabase-session=original-session"
+                first.csrf = "original-csrf"
+                other = Mock(
+                    spec=Client, cookie="__Host-florabase-session=other-session", csrf="other-csrf"
+                )
+                if fault == "revocation":
+                    other.request.side_effect = RuntimeError(
+                        "GET /api/v1/auth/session: expected 401, got 200"
+                    )
+                stack = Mock(spec=self.smoke.Stack)
+                stack.login.side_effect = [first, other, Mock(spec=Client), Mock(spec=Client)]
+                frontend_logs = path + b"\n" + path
+                backend_logs = b"" if fault == "logs" else frontend_logs
+                if fault == "log-secret":
+                    backend_logs += b" auth-query-query-fixture"
+                stack.compose.side_effect = [frontend_logs, backend_logs, b""]
+                stack.backend.return_value = {
+                    "reset": b"no evidence",
+                }.get(fault, b"Owner password reset committed. Sign in again.\n")
+                csrf = b"original-csrf" if fault == "rotation" else b"rotated-csrf"
+                response = [
+                    (b'{"csrf_token":"' + csrf + b'"}', headers),
+                    (b"{}" if fault == "session" else owner, headers),
+                    (b"", headers),
+                ]
+                with (
+                    patch.object(first, "request", side_effect=response),
+                    patch.object(first, "json"),
+                    patch.object(
+                        self.smoke.secrets,
+                        "token_hex",
+                        side_effect=[changed_password, reset_password, "query-fixture"],
+                    ),
+                ):
+                    if message:
+                        with self.assertRaisesRegex(RuntimeError, message) as error:
+                            self.smoke.exercise_credentials(stack, initial_password)
+                        self.assertNotIn("-fixture", str(error.exception))
+                    else:
+                        self.assertEqual(
+                            self.smoke.exercise_credentials(stack, initial_password), reset_password
+                        )
+                        other.request.assert_called_once_with("/api/v1/auth/session", expected=401)
+                        stack.login.assert_called_with(reset_password)
+                        self.assertEqual(
+                            stack.backend.call_args.kwargs["secret"], reset_password.encode()
+                        )
+
+    def test_http_status_and_diagnostics_do_not_accept_redirect_or_leak_values(self) -> None:
+        class Response(urllib.response.addinfourl):
+            msg = "fixture"
+
+        client = Client("http://127.0.0.1:8080", self.smoke.ORIGIN)
+        path = "/api/v1/auth/password"
+        headers = HTTPMessage()
+        headers["Location"] = "/success-after-redirect"
+        for status in (302, 401, 500):
+            response = Response(io.BytesIO(b"body-canary"), headers, client.base + path, status)
+            success = Response(
+                io.BytesIO(b"ok"), HTTPMessage(), client.base + "/success-after-redirect", 200
+            )
+            with (
+                response,
+                success,
+                self.subTest(status=status),
+                patch.object(
+                    urllib.request.HTTPHandler, "http_open", side_effect=[response, success]
+                ) as transport,
+                self.assertRaisesRegex(RuntimeError, f"expected 200, got {status}") as error,
+            ):
+                # Build the opener while its transport is patched so the real redirect logic runs.
+                Client(client.base, self.smoke.ORIGIN).request(path + "?token=query-canary")
+            self.assertNotIn("canary", str(error.exception))
+            self.assertEqual(transport.call_count, 1)
+
+    def test_compose_requires_subprocess_status_and_refusal_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            stack = self.smoke.Stack(
+                directory / "source", directory / "asset.yaml", "fixture", self.images["backend"]
+            )
+            for code, stderr, refusal in (
+                (4, b"stderr-canary", None),
+                (0, b"expected marker stderr-canary", "expected marker"),
+                (1, b"stderr-canary", "expected marker"),
+                (125, b"expected marker stderr-canary", "expected marker"),
+            ):
+                with (
+                    self.subTest(code=code, refusal=refusal),
+                    patch.object(
+                        self.smoke,
+                        "run",
+                        return_value=subprocess.CompletedProcess(
+                            [], code, b"stdout-canary", stderr
+                        ),
+                    ),
+                    self.assertRaisesRegex(RuntimeError, rf"compose run.*exit {code}") as error,
+                ):
+                    stack.backend("fixture", failure=refusal)
+                self.assertNotIn("canary", str(error.exception))
+            for code, refusal in ((0, None), (1, "expected marker")):
+                with patch.object(
+                    self.smoke,
+                    "run",
+                    return_value=subprocess.CompletedProcess(
+                        [], code, b"payload", b"expected marker"
+                    ),
+                ):
+                    self.assertEqual(stack.backend("fixture", failure=refusal), b"payload")
+            for stdout, stderr in ((b"secret-canary", b""), (b"", b"secret-canary")):
+                with (
+                    patch.object(
+                        self.smoke,
+                        "run",
+                        return_value=subprocess.CompletedProcess([], 0, stdout, stderr),
+                    ),
+                    self.assertRaisesRegex(
+                        RuntimeError, "offline password reset: password in output"
+                    ) as error,
+                ):
+                    stack.backend(
+                        "fixture", check="offline password reset", secret=b"secret-canary"
+                    )
+                self.assertNotIn("canary", str(error.exception))
+
+    def test_publisher_passes_trusted_inputs_and_propagates_smoke_exit(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "scripts").mkdir()
+            child = root / "scripts/smoke-portable-compose.py"
+            child.write_text(
+                "import json, sys\nprint(json.dumps(sys.argv[1:]))\nraise SystemExit(7)\n"
+            )
+            log = root / "portable.log"
+            asset = root / "portable-compose.yaml"
+            with self.assertRaises(subprocess.CalledProcessError) as error:
+                publisher.run_portable_smoke(
+                    root, asset, {**self.images, "postgresql": self.images["db"]}, self.head, log
+                )
+            self.assertEqual(error.exception.returncode, 7)
+            self.assertEqual(
+                json.loads(log.read_text()),
+                [
+                    str(asset),
+                    self.images["backend"],
+                    "--frontend-image",
+                    self.images["frontend"],
+                    "--postgres-image",
+                    self.images["db"],
+                    "--alembic-head",
+                    self.head,
+                ],
+            )
+
+
+class PortableSmokeOptimization(unittest.TestCase):
+    def test_portable_controls_are_independent_of_python_optimization(self) -> None:
+        for flags, env_override in ((["-O"], {}), ([], {"PYTHONOPTIMIZE": "1"})):
+            with self.subTest(flags=flags, env_override=env_override):
+                env = {key: value for key, value in os.environ.items() if key != "PYTHONOPTIMIZE"}
+                env.update(env_override)
+                # Select only the portable controls so the child cannot run this launcher again.
+                result = subprocess.run(
+                    [
+                        sys.executable,
+                        *flags,
+                        __file__,
+                        "PortableSmokeHeaders",
+                        "PortableSmokeEvidence",
+                    ],
+                    env=env,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                    timeout=30,
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 def policy() -> dict[str, Any]:
@@ -1825,7 +2410,9 @@ class SharedPublicationTests(unittest.TestCase):
     def exercise_pipeline(self, output: Path, fault: str | None) -> None:
         host = "127.0.0.1:5055"
         value = candidate()
-        sha = beta_release.run("git", "-C", str(ROOT), "rev-parse", "HEAD")
+        sha = subprocess.check_output(
+            ["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True
+        ).strip()
         value["source"]["revision"] = sha
         for image in value["images"].values():
             image["reference"] = image["reference"].replace("ghcr.io", host)
@@ -1846,8 +2433,13 @@ class SharedPublicationTests(unittest.TestCase):
             if fault == "tag appeared":
                 tagged[("alessandrorossato/florabase-frontend", value["version"])] = "unexpected"
 
-        def portable_smoke(_root: Path, compose: Path, backend: str, _log_path: Path) -> None:
-            self.assertIn(f'image: "{backend}"', compose.read_text())
+        def portable_smoke(
+            _root: Path, compose: Path, refs: dict[str, str], head: str, _log_path: Path
+        ) -> None:
+            self.assertEqual(head, value["alembic_head"])
+            self.assertEqual(set(refs), {"backend", "frontend", "postgresql"})
+            for reference in refs.values():
+                self.assertIn(f'image: "{reference}"', compose.read_text())
             if fault == "portable":
                 raise ValueError("injected portable smoke failure")
 

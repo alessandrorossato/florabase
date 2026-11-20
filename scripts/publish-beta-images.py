@@ -333,10 +333,23 @@ def copy_smoke_artifact(root: Path, artifact: Path, manifest_path: Path) -> None
     shutil.copyfile(manifest_path, artifact / manifest_path.name)
 
 
-def run_portable_smoke(root: Path, compose: Path, backend: str, log_path: Path) -> None:
+def run_portable_smoke(
+    root: Path, compose: Path, refs: dict[str, str], alembic_head: str, log_path: Path
+) -> None:
     with log_path.open("w") as log:
         run_smoke_process(
-            ["python3", str(root / "scripts/smoke-portable-compose.py"), str(compose), backend],
+            [
+                "python3",
+                str(root / "scripts/smoke-portable-compose.py"),
+                str(compose),
+                refs["backend"],
+                "--frontend-image",
+                refs["frontend"],
+                "--postgres-image",
+                refs["postgresql"],
+                "--alembic-head",
+                alembic_head,
+            ],
             root,
             log,
         )
@@ -476,7 +489,9 @@ def run_pipeline(
                     registry_host=host,
                 )
 
-            run_portable_smoke(root, portable, refs["backend"], diagnostics / "portable-smoke.log")
+            run_portable_smoke(
+                root, portable, refs, value["alembic_head"], diagnostics / "portable-smoke.log"
+            )
 
         with publication.stage("VALIDATE ASSETS"):
             inventory = prepare_release_assets(root, assets, version, sha)
