@@ -11,13 +11,18 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import struct
 import sys
 import urllib.error
 import urllib.request
 import zlib
-from http.cookies import SimpleCookie
+from http.client import HTTPException, HTTPMessage
 from typing import Any
+
+SESSION_COOKIE = "__Host-florabase-session"
+QUOTED_COOKIE_VALUE = re.compile(r'"(?:[^"\\]|\\.)*"')
+SESSION_COOKIE_NAME = re.compile(rf"(?:^|[\s;,]){SESSION_COOKIE}(?=[\s=;,]|$)")
 
 
 def png(red: int, green: int, blue: int) -> bytes:
@@ -38,12 +43,30 @@ def png(red: int, green: int, blue: int) -> bytes:
     )
 
 
+def response_object(data: bytes, operation: str) -> dict[str, Any]:
+    try:
+        value = json.loads(data)
+    except ValueError:
+        raise RuntimeError(f"{operation}: invalid JSON response") from None
+    if not isinstance(value, dict):
+        raise RuntimeError(f"{operation}: expected a JSON object")
+    return value
+
+
+class ExactStatus(urllib.request.HTTPRedirectHandler):
+    def redirect_request(
+        self, req: Any, fp: Any, code: int, msg: str, headers: Any, newurl: str
+    ) -> None:
+        return None
+
+
 class Client:
     def __init__(self, base: str, origin: str) -> None:
         self.base = base.rstrip("/")
         self.origin = origin
         self.cookie = ""
         self.csrf = ""
+        self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), ExactStatus())
 
     def request(
         self,
@@ -52,7 +75,7 @@ class Client:
         body: bytes | None = None,
         content_type: str | None = None,
         expected: int = 200,
-    ) -> tuple[bytes, Any]:
+    ) -> tuple[bytes, HTTPMessage]:
         headers: dict[str, str] = {}
         if self.cookie:
             headers["Cookie"] = self.cookie
@@ -63,17 +86,21 @@ class Client:
         if content_type:
             headers["Content-Type"] = content_type
         request = urllib.request.Request(self.base + path, body, headers, method=method)
+        operation = f"{method} {path.partition('?')[0]}"
         try:
-            response = urllib.request.urlopen(request, timeout=30)
-        except urllib.error.HTTPError as error:
-            response = error
-        with response:
-            data = response.read()
-            if response.status != expected:
-                raise SystemExit(
-                    f"{method} {path}: expected {expected}, got {response.status}: {data[:300]!r}"
-                )
-            return data, response.headers
+            try:
+                response = self.opener.open(request, timeout=30)
+            except urllib.error.HTTPError as error:
+                response = error
+            with response:
+                status = response.getcode()
+                if status != expected:
+                    raise RuntimeError(f"{operation}: expected {expected}, got {status}")
+                return response.read(), response.headers
+        except HTTPException:
+            raise RuntimeError(f"{operation}: invalid HTTP response") from None
+        except (OSError, ValueError):
+            raise RuntimeError(f"{operation}: request failed") from None
 
     def json(self, path: str, method: str = "GET", payload: Any = None, expected: int = 200) -> Any:
         body = None if payload is None else json.dumps(payload).encode()
@@ -89,14 +116,53 @@ class Client:
             json.dumps({"login_name": login, "password": password}).encode(),
             "application/json",
         )
-        jar: SimpleCookie = SimpleCookie()
-        for value in headers.get_all("Set-Cookie") or []:
-            jar.load(value)
-        morsel = jar["__Host-florabase-session"]
-        self.cookie = morsel.key + "=" + morsel.value
-        self.csrf = json.loads(data.decode())["csrf_token"]
+        self.accept_session(data, headers, "login")
 
-    def upload(self, content: bytes, name: str) -> Any:
+    def accept_session(self, data: bytes, headers: HTTPMessage, operation: str) -> None:
+        csrf = response_object(data, operation).get("csrf_token")
+        if not isinstance(csrf, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", csrf):
+            raise RuntimeError(f"{operation}: missing or invalid CSRF token")
+        session_field = None
+        for field in headers.get_all("Set-Cookie", []):
+            # Locate the session definition without counting text inside unrelated cookie values.
+            unquoted = QUOTED_COOKIE_VALUE.sub('""', field)
+            definitions = SESSION_COOKIE_NAME.findall(unquoted)
+            if not definitions:
+                continue
+            if session_field is not None or len(definitions) != 1:
+                raise RuntimeError(f"{operation}: duplicate session cookie definitions")
+            session_field = field
+        if session_field is None:
+            raise RuntimeError(f"{operation}: missing or invalid secure session cookie")
+
+        # The backend emits a URL-safe token and these five semicolon-delimited attributes.
+        # Trim horizontal whitespace at field boundaries only. Each assignment is consumed whole.
+        definition, *attributes = (part.strip(" \t") for part in session_field.split(";"))
+        name, _, token = definition.partition("=")
+        if name != SESSION_COOKIE or not re.fullmatch(r"[A-Za-z0-9_-]+", token):
+            raise RuntimeError(f"{operation}: missing or invalid secure session cookie")
+        parsed: dict[str, str | None] = {}
+        for attribute in attributes:
+            key, separator, value = attribute.partition("=")
+            key = key.lower()
+            if key in parsed:
+                raise RuntimeError(f"{operation}: missing or invalid secure session cookie")
+            parsed[key] = value if separator else None
+        max_age = parsed.get("max-age")
+        if (
+            parsed.keys() != {"secure", "httponly", "path", "samesite", "max-age"}
+            or parsed["secure"] is not None
+            or parsed["httponly"] is not None
+            or parsed["path"] != "/"
+            or (parsed["samesite"] or "").lower() != "strict"
+            or max_age is None
+            or not re.fullmatch(r"[1-9][0-9]*", max_age)
+        ):
+            raise RuntimeError(f"{operation}: missing or invalid secure session cookie")
+        self.cookie = f"{SESSION_COOKIE}={token}"
+        self.csrf = csrf
+
+    def upload(self, content: bytes, name: str) -> dict[str, Any]:
         boundary = "florabase-runtime-smoke"
         body = (
             f'--{boundary}\r\nContent-Disposition: form-data; name="title"\r\n\r\n{name}\r\n'
@@ -112,7 +178,7 @@ class Client:
             "multipart/form-data; boundary=" + boundary,
             201,
         )
-        return json.loads(data.decode())
+        return response_object(data, "media upload")
 
 
 def seed(client: Client) -> dict[str, Any]:

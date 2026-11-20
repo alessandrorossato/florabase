@@ -9633,3 +9633,40 @@ Status remains implemented pending canonical verification.
   retains the historical browser identity and records the focused probe, ownership and cleanup.
   Ruff, strict mypy, links, feature graph, disclosure and diff checks passed. SOL's focused
   review, integrated verification, ENG-02 acceptance and G-SEC remain pending.
+
+## 2026-11-20 — PORTABLE-COMPOSE-001 fail-closed smoke
+
+- Replaced all 15 portable operational assertions against the reviewed ENG-02 parent. Publisher
+  inputs now bind the rendered service images and expected Alembic head. The portable smoke
+  requires credential, HTTP, backup, restore and cleanup evidence before reporting success.
+- Thirteen focused controls passed in all three Python modes and run through the existing release
+  suite. Offline release and runtime targets, Ruff, strict mypy, feature graph, documentation
+  links, disclosure and diff checks passed. The optimized Docker smoke passed on local runtime
+  images. An incorrect-head control exited `1` without a success marker and left no owned
+  resources. The [source evidence](release/evidence/portable-smoke-fail-closed.md) records scope,
+  provenance, checks and limitations.
+- Independent review, integration after Batch 07, canonical FULL, exact-candidate rehearsal,
+  formal acceptance and G-SEC remain pending.
+
+### PORTABLE-COMPOSE-001 HTTP client correction after independent QA
+
+- Corrected SOL's two HTTP findings. Session issuance rejects ambiguous or malformed cookie
+  definitions before installing credentials. HTTP protocol failures at open and body read exit
+  non-zero with sanitized tracebacks. Expected HTTP errors remain supported on Python 3.8.
+- All 16 focused tests passed under normal Python, `-O` and `PYTHONOPTIMIZE=1`. The release target
+  passed 78 tests and four tool-lock tests. The controller target passed 63 host and 51 Python
+  3.8 tests. Three new client tests passed directly on Python 3.8. Ruff, strict mypy, disclosure,
+  links and diff checks passed.
+- The previous Docker evidence is historical. SOL's focused confirmation, independent Docker
+  verification of the corrected client on the integrated candidate and canonical FULL remain
+  pending. [Source evidence](release/evidence/portable-smoke-fail-closed.md#http-client-correction-after-independent-qa).
+
+### PORTABLE-COMPOSE-001 strict session-cookie validation
+
+- Replaced the two-stage interpretation with strict validation of the backend-issued cookie.
+  Both reported whitespace-separated assignments fail, and the regression matrix verifies
+  that every rejected response preserves the existing session and CSRF state.
+- All 16 focused tests passed in normal and both optimized modes, including the approved HTTP
+  diagnostics. The release and controller targets, direct Python 3.8.20 client tests, Ruff,
+  strict mypy, links and diff checks passed. SOL's cookie-only confirmation and integrated
+  Docker verification remain pending. [Source evidence](release/evidence/portable-smoke-fail-closed.md#strict-session-cookie-validation).
