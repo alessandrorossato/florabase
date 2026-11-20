@@ -33,7 +33,8 @@
 1. **`UI-SYSTEM-001` Status (`in_progress`):**
    - Remains `in_progress` until:
      - Approved Batch 07 Sources A (`08c0bb353d98ac752a5828fe8f207fe44ad789cd`) and B (`39080cb84145e3e70b4ae38179169fb7af36d7ba`) are integrated via WF-04, complete combined-candidate checks, and pass fresh canonical FULL,
-     - The operator confirms that the mapped evidence for **`U02`** (`UI-SYSTEM-001 #9` non-Preview clauses) and **`#10`** (`R08`) is accepted, and
+     - The operator confirms that the mapped evidence for **`U02`** (`UI-SYSTEM-001 #9` non-Preview clauses) and **`#10`** (`R08`) is accepted,
+     - The operator records a policy-compatible future RC certification/publication sequencing decision (`RC-SEQ-01` in [`uat-operator-feedback-intake.md`](uat-operator-feedback-intake.md); does not block Batch 07 WF-04 integration), and
      - Formal `G-UX` and `G-CORE` (Step 1/7 for `R24`) are recorded on the immutable RC images.
 2. **`UI-REDESIGN-EXPLORATION-001` (`U04` — Criteria `#6`, `#7`, `#8`) and `CONTROLS-001 #3` (`R21`):**
    - Per [`restatements-v1.md`](../restatements-v1.md#unresolved-gaps-not-restated), `U04` (missing tracked paired screenshots under `docs/design/florabase-next/`, missing migration plan document, and pre-merge `"FULL NO-GO"` / `"Not approved for adoption or merge"` text in `docs/design/florabase-next/README.md:3`) and `R21` (which depends on `U04`) **are not silently approved by this dossier**. They require an explicit operator disposition or exception record in [`scope-v1.md`](../scope-v1.md) (see [`uat-operator-feedback-intake.md`](uat-operator-feedback-intake.md)).

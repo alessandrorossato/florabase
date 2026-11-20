@@ -50,4 +50,5 @@ Full map in [`certify/fable-fix-cuttings.md`](certify/fable-fix-cuttings.md):
 2. **Formal RC-Image `G-CORE` Step 12 & `G-UX` Cuttings Run:** Execute Step 12 and the Cuttings G-UX row on the immutable release-candidate images (`v1.0.0-rc.N`), recording image digests, created record UUIDs, screenshots, and HTTP traces.
 3. **Explicit Operator Acceptance Decisions (Pending):**
    - Rule on `FABLE-DP` (`FABLE-FIX-CUTTINGS #1, #4` under decision **DP**).
+   - Resolve the future RC certification/publication sequencing decision (`RC-SEQ-01` in [`uat-operator-feedback-intake.md`](uat-operator-feedback-intake.md)) before protected RC publication; this does not block Batch 07 WF-04 integration.
    - Approve promotion of `CUTTING-001` from `in_progress` only after Batch 07 integration, canonical FULL, and the formal RC-image `G-CORE` Step 12 and `G-UX` Cuttings records are completed and accepted.
