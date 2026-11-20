@@ -25,7 +25,7 @@ ARG SOURCE=https://github.com/alessandrorossato/florabase
 RUN pnpm build && node build-notices.mjs > dist/THIRD_PARTY_NOTICES.txt \
     && node -e 'const {version} = require("./package.json"); if (version !== process.env.VERSION) throw new Error("frontend package version mismatch"); require("fs").writeFileSync("dist/release.json", JSON.stringify({version, revision: process.env.REVISION, source: process.env.SOURCE}))'
 
-FROM nginxinc/nginx-unprivileged:stable-alpine-slim@sha256:5d8bb9437d74a600ec5dbf90c035451c724dc33eac8d3a71078f6f8612c345f6 AS runtime
+FROM nginx/nginx-unprivileged:1.30.7-alpine3.24-slim@sha256:8432c57ac86f178741af2b89948bd9087cb9df1c415bc1ab4d23735c4f0e3e61 AS runtime
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY LICENSE /usr/share/nginx/html/LICENSE
@@ -40,8 +40,8 @@ LABEL org.opencontainers.image.title="Florabase frontend" \
 HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=6 \
     CMD wget --quiet --tries=1 --spider http://127.0.0.1:8080/healthz
 USER root
-# Alpine fixes the pinned base predates (musl CVE-2026-107891, zlib CVE-2026-85091). Exact versions
-# fail the build once Alpine supersedes them; remove this line when the base digest carries them.
+# Alpine fixes for musl CVE-2026-107891 (now carried by the base) and zlib CVE-2026-85091 (base has
+# 1.3.2-r1). Exact versions fail the build once Alpine supersedes them; remove when the base carries both.
 RUN apk add --no-cache musl=1.2.6-r3 musl-utils=1.2.6-r3 zlib=1.4-r0 \
     && find /usr /bin /sbin -xdev -type f -perm /6000 -exec chmod a-s {} +
 USER 101:101

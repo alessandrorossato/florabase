@@ -19,6 +19,8 @@ Build/diagnostic logs remain in /tmp with hashes in verification-evidence.json; 
   [exact upstream gosu binary match](gosu-upstream.json).
 - [26 advisory-specific VEX drafts](vex-drafts.json): **UNAPPROVED**, no scanner ingestion,
   expire 2026-12-03T00:00:00Z or artifact/platform change. No exception proposed for curl/Brotli.
+- [Frontend nginx 1.30.7 base refresh (2026-11-20)](frontend-nginx-1.30.7/README.md): hashed
+  before/after frontend scan summary for the six nginx 1.30.6 findings.
 - [Compatibility probe](compatibility-probe.py), [test-tool wheel hashes](compatibility-test-inputs.json),
   [verification results and local diagnostic log hashes](verification-evidence.json).
 

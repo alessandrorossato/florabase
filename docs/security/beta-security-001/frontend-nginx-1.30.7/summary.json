@@ -1,0 +1,98 @@
+{
+  "source_id": "BETA-SECURITY-001",
+  "measured": "2026-11-20",
+  "before": {
+    "origin": "hosted rehearsal run 44765663940, PR #197 head af8935146e5aabcdfb15de6761e1e65053c0321f",
+    "artifact": "beta-release-rehearsal-44765663940-1",
+    "artifact_digest": "sha256:41d526bc99e763333cde05fcfa25bff59de37a86a0a0d8e7fd5402070de22aee",
+    "base": "nginxinc/nginx-unprivileged:stable-alpine-slim@sha256:5d8bb9437d74a600ec5dbf90c035451c724dc33eac8d3a71078f6f8612c345f6",
+    "report_sha256": "cb0d4e0d4d539163adb50d31a911ea01677aeaa79c2d396d28fb0e076a346ff6",
+    "scanner": "aquasec/trivy:0.69.3",
+    "report_created": "2026-11-20T15:42:30.73703434Z",
+    "os": {
+      "Family": "alpine",
+      "Name": "3.24.2"
+    },
+    "index_digest": "sha256:bc331bccacc11f7373ed04570928c9d39be090b891c84f8e3e770587a8c1f66a",
+    "platform_digest": "sha256:8f002c72e65a65ce3dabf4f060d96f1a844084da1c7a07575546882675a626ec",
+    "configuration_digest": "sha256:9a122bfa45b2190a4d5cacc707e44b82c066abf3eff6e8cfecfaab97de0f6181",
+    "packages": {
+      "nginx": "1.30.6-r1",
+      "musl": "1.2.6-r3",
+      "musl-utils": "1.2.6-r3",
+      "zlib": "1.4-r0",
+      "libssl3": "3.5.9-r0",
+      "libcrypto3": "3.5.9-r0"
+    },
+    "secrets": 0,
+    "findings": [
+      {
+        "id": "CVE-2026-113425",
+        "severity": "CRITICAL",
+        "package": "nginx",
+        "installed": "1.30.6-r1",
+        "fixed": "1.30.7-r0"
+      },
+      {
+        "id": "CVE-2026-121810",
+        "severity": "CRITICAL",
+        "package": "nginx",
+        "installed": "1.30.6-r1",
+        "fixed": "1.30.7-r0"
+      },
+      {
+        "id": "CVE-2026-123007",
+        "severity": "CRITICAL",
+        "package": "nginx",
+        "installed": "1.30.6-r1",
+        "fixed": "1.30.7-r0"
+      },
+      {
+        "id": "CVE-2026-123633",
+        "severity": "CRITICAL",
+        "package": "nginx",
+        "installed": "1.30.6-r1",
+        "fixed": "1.30.7-r0"
+      },
+      {
+        "id": "CVE-2026-118899",
+        "severity": "HIGH",
+        "package": "nginx",
+        "installed": "1.30.6-r1",
+        "fixed": "1.30.7-r0"
+      },
+      {
+        "id": "CVE-2026-123634",
+        "severity": "HIGH",
+        "package": "nginx",
+        "installed": "1.30.6-r1",
+        "fixed": "1.30.7-r0"
+      }
+    ]
+  },
+  "after": {
+    "origin": "local dirty-tree scripts/build-beta-candidate.py --security-dir on base main fdc75e83fa8818cab791ed82cbba65f4f97db7ae; not a release identity",
+    "base": "nginx/nginx-unprivileged:1.30.7-alpine3.24-slim@sha256:8432c57ac86f178741af2b89948bd9087cb9df1c415bc1ab4d23735c4f0e3e61",
+    "report_sha256": "543111640474f6a9f89c46fdbf1ffdb8c630f047228a1bedb4114970b1823a4b",
+    "scanner": "aquasec/trivy:0.69.3",
+    "report_created": "2026-11-20T16:51:06.974629989Z",
+    "os": {
+      "Family": "alpine",
+      "Name": "3.24.4"
+    },
+    "index_digest": "sha256:05f6ddef2fde9b162e71f96f15cded45b2ec9b9c2685e52395547e9060bcf0db",
+    "platform_digest": "sha256:8c926eeb26ce6251c73284a096fb5583ee04ef296f04a6d6e72f8e0289f0637c",
+    "configuration_digest": "sha256:9175c478bc2e17678c72be7e84e8968516571454bf398d1890268ec3b6c18b34",
+    "packages": {
+      "nginx": "1.30.7-r1",
+      "musl": "1.2.6-r3",
+      "musl-utils": "1.2.6-r3",
+      "zlib": "1.4-r0",
+      "libssl3": "3.5.9-r0",
+      "libcrypto3": "3.5.9-r0"
+    },
+    "secrets": 0,
+    "findings": []
+  },
+  "raw_reports": "Not committed: Trivy package metadata contains maintainer e-mail addresses, which the repository disclosure gate rejects without exemption. The before report is in the archived CI artifact; the authoritative after report is the hosted rehearsal on the exact fix commit."
+}

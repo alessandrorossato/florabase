@@ -9478,3 +9478,18 @@ Status remains implemented pending canonical verification.
   offline documentation links and the feature graph. Production local
   artifact-only smoke and disposable cleanup passed. All eight RC blockers
   remain. Independent combined QA and canonical FULL are pending.
+
+## 2026-11-20 — BETA-SECURITY-001 frontend nginx 1.30.7
+
+- The PR #197 hosted rehearsal blocked on six nginx 1.30.6 findings (four CRITICAL, two HIGH)
+  in the unchanged frontend base. Upstream fixed them in 1.30.7 on 18 November, but only under
+  the `nginx/` Docker Hub namespace. With operator approval, `frontend/Dockerfile` and
+  `release/inputs.json` now pin `nginx/nginx-unprivileged:1.30.7-alpine3.24-slim@sha256:8432c57a…3e61`.
+  The musl/zlib pins are kept. [Evidence](security/beta-security-001/frontend-nginx-1.30.7/README.md).
+- `make test-beta-images` passed 61 release and four tool-lock tests. A dirty-tree local candidate
+  build passed artifact-only smoke and cleanup. The pinned Trivy found zero HIGH, CRITICAL and secret
+  findings in the frontend (nginx 1.30.7-r1), backend and PostgreSQL. `make release-preflight-local`
+  refuses dirty source, so it did not run.
+- Open: independent QA, canonical FULL, the hosted rehearsal on the exact commit and operator
+  delivery. The proposed nginx-version cross-check in the scan gate is not part of this change.
+  After merge, Batch 07 must be re-integrated and re-certified. All eight RC blockers remain.
