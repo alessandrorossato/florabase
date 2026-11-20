@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -20,7 +21,7 @@ from florabase.auth.dependencies import (
     require_owner,
 )
 from florabase.auth.model import AuthSession
-from florabase.core.config import Environment, Settings, get_settings
+from florabase.core.config import CookieMode, Environment, Settings, get_settings
 from florabase.db.session import get_database_session
 
 
@@ -344,14 +345,26 @@ def test_initialization_failure_suppresses_exception_values(
     assert json.loads(capsys.readouterr().out) == {"status": "error", "error": "RuntimeError"}
 
 
-def test_declared_dependencies_deny_missing_session_and_non_owner_at_runtime() -> None:
+def test_declared_dependencies_deny_missing_session_and_non_owner_at_runtime(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with monkeypatch.context() as settings_env:
+        for name in tuple(os.environ):
+            if name.upper().startswith("FLORABASE_"):
+                settings_env.delenv(name)
+        settings = Settings(
+            _env_file=None,
+            environment=Environment.TEST,
+            database_url="postgresql+psycopg://test:test@db/test",
+            canonical_origin="https://florabase.example",
+            cookie_mode=CookieMode.SECURE,
+        )
+
     app = FastAPI(openapi_url=None)
     app.get("/private", dependencies=[Depends(require_owner)])(endpoint)
     # Supply the test database dependency without adding query parameters or connecting to it.
     app.dependency_overrides[get_database_session] = lambda: MagicMock()
-    app.dependency_overrides[get_settings] = lambda: Settings(
-        environment=Environment.TEST, database_url="postgresql+psycopg://test:test@db/test"
-    )
+    app.dependency_overrides[get_settings] = lambda: settings
     with TestClient(app) as client:
         assert client.get("/private").status_code == 401
         non_owner = AuthenticatedActor(uuid7(), "member", None, False, MagicMock(spec=AuthSession))

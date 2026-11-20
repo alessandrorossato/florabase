@@ -9505,3 +9505,14 @@ Status remains implemented pending canonical verification.
   disclosure and whitespace checks passed. The [review recipe](release/evidence/eng-03-source.md#independent-reproduction-without-docker)
   uses the locked backend dependencies in a local virtual environment. The `best-effort` proposal,
   focused independent approval, canonical FULL, formal acceptance and G-SEC remain pending.
+
+## 2026-11-20 — ENG-03 hermetic auth regression
+
+- Reproduced the runtime test's settings failure under standard Quality development/loopback mode.
+  The test now constructs isolated test/secure settings and retains the anonymous `401` and
+  non-owner `403` assertions. Reviewed the other inventory cases for ambient settings reads.
+- Standard Quality passed all 27 inventory cases without environment overrides. The corrected case
+  also passed with explicit test/secure settings. Focused Ruff lint and format, strict mypy, and
+  diff checks passed.
+- Sonnet independently reproduced the separate attachment-root failure on the base commit. That
+  failure is outside this correction. Focused independent confirmation remains pending.
