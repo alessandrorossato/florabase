@@ -1,0 +1,61 @@
+{
+  "source_id": "BETA-SECURITY-001",
+  "measured": "2026-11-20",
+  "before": {
+    "origin": "hosted rehearsal run 44811753173, PR #200 head 96ec8dfa37313d72204b49080e17dccdd17d4199",
+    "image": "18.6-alpine-florabase.2 (pinned identity)",
+    "report_sha256": "87b40e9f840111783d41c2b26e8fa13768a235d04a429e4a3a1e385adec32466",
+    "scanner": "aquasec/trivy:0.69.3",
+    "report_created": "2026-11-20T20:31:00.740500602Z",
+    "os": {
+      "Family": "alpine",
+      "Name": "3.24.4"
+    },
+    "index_digest": "sha256:baf7806351b332422b6dff9f956f1080a2f3150eab87e4ee70565a8236591658",
+    "platform_digest": "sha256:0a660365cb4cfb708fd5443bed32926ce01478107ff9a88c6b28b3e971c3a1e6",
+    "packages": {
+      "libxml2": "2.13.9-r2",
+      "libxslt": "1.1.43-r4",
+      "zlib": "1.4-r0",
+      "krb5-libs": "1.22.3-r0"
+    },
+    "secrets": 0,
+    "findings": [
+      {
+        "id": "CVE-2026-86144",
+        "severity": "HIGH",
+        "package": "libxml2",
+        "installed": "2.13.9-r2",
+        "fixed": "2.13.9-r3"
+      }
+    ]
+  },
+  "after": {
+    "origin": "local dirty-tree scripts/build-beta-candidate.py --security-dir on main a625e8cab9a269bbf70efee65c727291c4a70e9c; this local build path yields a different index digest than the deterministic pinned identity",
+    "image": "18.6-alpine-florabase.3 Dockerfile",
+    "report_sha256": "1c32ac072217720b1350e125aa28fb851a0d7d1cdf209ba41646f7c3923dacd0",
+    "scanner": "aquasec/trivy:0.69.3",
+    "report_created": "2026-11-20T20:57:00.003092094Z",
+    "os": {
+      "Family": "alpine",
+      "Name": "3.24.4"
+    },
+    "index_digest": "sha256:08b756f19ef6b4e749da5e40ddf6260f60cc82f3f817c7d44c7b41e09f22836e",
+    "platform_digest": "sha256:c7d00542d46900b8a2e27f81dbc23993694eb455c2fe4c08c2ba42427f40fd8e",
+    "packages": {
+      "libxml2": "2.13.9-r3",
+      "libxslt": "1.1.43-r4",
+      "zlib": "1.4-r0",
+      "krb5-libs": "1.22.3-r0"
+    },
+    "secrets": 0,
+    "findings": []
+  },
+  "pinned_identity": {
+    "version": "18.6-alpine-florabase.3",
+    "index_digest": "sha256:2a50cabff7df4e5f108065b51585c2c202b92805f0b842dd3522aaf7e9158115",
+    "platform_digest": "sha256:d5d9db7f574c22797ef3be56f61b893dfa4b308c1f25b4d33dd71d312c56c053",
+    "reproduced": "three independent beta_release.py postgres-identity builds with the pinned BuildKit; the third with --check printed POSTGRES_IDENTITY_REPRODUCED"
+  },
+  "raw_reports": "Not committed: Trivy package metadata contains maintainer e-mail addresses rejected by the disclosure gate. The before report is in the archived CI artifact; the authoritative after report is the hosted rehearsal on the exact fix commit."
+}

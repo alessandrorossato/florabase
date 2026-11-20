@@ -9679,3 +9679,17 @@ Status remains implemented pending canonical verification.
   records the source reviews, the 1.30.6/1.30.7 header comparison and the non-blocking
   follow-ups. The browser CSP sweep on release-candidate images and G-SEC acceptance
   remain pending. The ENG-03 release class awaits the operator's decision. All eight RC blockers remain.
+
+## 2026-11-20 — BETA-SECURITY-001 PostgreSQL libxml2 (`.3`)
+
+- The PR #200 hosted rehearsal blocked on HIGH CVE-2026-86144 (`libxml2` 2.13.9-r2) in the
+  unchanged pinned PostgreSQL `.2` identity, after the scanner database changed. With operator
+  authorization, `postgres/Dockerfile` pins `libxml2=2.13.9-r3` and `18.6-alpine-florabase.3`.
+  `release/inputs.json` pins the reproduced index `2a50cabf…8115` and platform `d5d9db7f…c053`.
+  [Evidence](security/beta-security-001/postgres-libxml2-2.13.9-r3/README.md).
+- Three pinned-BuildKit identity builds matched (`POSTGRES_IDENTITY_REPRODUCED`).
+  `make test-beta-images` (78 + 4) and `make test-beta-runtime` (63 + 51) passed. A local
+  candidate build passed smoke, and the pinned Trivy reported zero HIGH, CRITICAL and secret
+  findings on all three images. GHCR is untouched.
+- Open: independent QA, canonical FULL, the hosted rehearsal and operator delivery. All eight
+  RC blockers remain.

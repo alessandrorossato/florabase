@@ -2,6 +2,10 @@
 
 ## November 2026 security rebuild
 
+`18.6-alpine-florabase.3` (20 November) adds `libxml2=2.13.9-r3` for HIGH CVE-2026-86144 and
+keeps every other pin. See the [libxml2 evidence](../beta-security-001/postgres-libxml2-2.13.9-r3/README.md).
+The `.2` text below is historical.
+
 [Rehearsal 42988505037, job 130415337490](https://github.com/alessandrorossato/florabase/actions/runs/42988505037/job/130415337490)
 blocked the `18.6-alpine-florabase.1` index recorded below. The retained Trivy JSON reported 16 HIGH
 findings in `krb5-libs` 1.22.2-r1 and two in `libxslt` 1.1.43-r3. There were zero CRITICAL
