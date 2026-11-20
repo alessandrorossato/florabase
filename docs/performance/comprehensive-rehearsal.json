@@ -1,0 +1,4383 @@
+{
+  "schema_version": 2,
+  "summary_format": "perf-001-comprehensive-summary-v1",
+  "generated_at": "2026-11-19T21:41:21.154167+00:00",
+  "pin_mode": "allow-modified-baseline",
+  "warmup_s": 20,
+  "errors": [],
+  "environment": {
+    "started_at": "2026-11-19T21:34:55.528018+00:00",
+    "pin_mode": "allow-modified-baseline",
+    "invocation": {
+      "owner_id": "c4fa7f5f08f14e2a8330b0a83315f1c5",
+      "source_head": "6175a03580581c5b5654502b4830146727d47e29",
+      "images": [
+        "florabase-perf-backend:c4fa7f5f08f14e2a8330b0a83315f1c5",
+        "florabase-perf-frontend:c4fa7f5f08f14e2a8330b0a83315f1c5"
+      ]
+    },
+    "startup": {
+      "provision_bundle_s": 40.8,
+      "build_images_s": 2.8,
+      "database_health_s": 5.8,
+      "restore_db_s": 0.7,
+      "application_health_s": 11.0,
+      "restore_media_s": 2.5
+    },
+    "manifest": {
+      "valid": true,
+      "pin_mode": "allow-modified-baseline",
+      "strict_pin_enforced": false,
+      "certification_eligible": false,
+      "certification_blockers": [
+        "Source build benchmark; formal RC-image G-PERF requires immutable RC images",
+        "Modified fixture state (invariant-valid-baseline-modified) cannot produce formal certification evidence",
+        "Non-strict pin mode (allow-modified-baseline) used for preliminary rehearsal"
+      ],
+      "dataset": "florabase-golden",
+      "version": 1,
+      "profile": "comprehensive",
+      "seed": 20261102,
+      "anchor_date": "2026-09-15",
+      "volume": 420,
+      "schema_revision": "20261110_0047",
+      "pinned_schema_revision": "20261110_0047",
+      "plan_sha256": "8a1da67623c1f9c77071cf39e9bd0346a72483fa2a71cf5f1438877eb81c8c3f",
+      "canonical_sha256": "5f59cc7ff3829517a5957c9b0972957d17c6eb2825fc023ba0be455ae047dfd0",
+      "pinned_canonical_sha256": "a6141fc43cf46012007f342b0ba71b005f31141ae34c85f4cdb79bb30a9da88b",
+      "media_sha256": "50894e8a2283bf88349875824e1d3615d70d15be2ff43f708038c72a715afb93",
+      "scenario_keys_sha256": "f72fe62a3ec0bc139a4f6d18ba730e5218467d8a8fc98699214b38cfc5001971",
+      "baseline_state": "invariant-valid-baseline-modified",
+      "baseline_pin_matches": false,
+      "ledger_records_count": 3181,
+      "plan_nodes": 3200,
+      "counted_rows": 4004,
+      "domain_records": 3995,
+      "canonical_geographic_places": 287,
+      "total_rows_with_canonical_places": 4291,
+      "table_counts": {
+        "application_settings": 1,
+        "attachments": 32,
+        "botanical_identities": 115,
+        "botanical_identity_cover_images": 4,
+        "botanical_identity_names": 3,
+        "botanical_identity_reconciliations": 1,
+        "botanical_profile_native_ranges": 32,
+        "botanical_profiles": 28,
+        "collection_primary_photos": 7,
+        "event_measurement_corrections": 1,
+        "events": 851,
+        "external_provider_cache": 7,
+        "external_taxon_links": 6,
+        "geographic_places": 7,
+        "germination_observations": 390,
+        "harvest_items": 64,
+        "harvest_material_dispositions": 26,
+        "harvest_material_inventory": 45,
+        "harvest_seed_lot_conversions": 8,
+        "harvests": 62,
+        "locations": 34,
+        "media_assets": 37,
+        "native_range_applications": 2,
+        "native_range_proposals": 3,
+        "native_range_revisions": 28,
+        "operation_receipts": 653,
+        "orders": 50,
+        "plant_groups": 137,
+        "plants": 213,
+        "propagation_attempts": 2,
+        "provenance_sites": 24,
+        "record_media_links": 34,
+        "rooting_observations": 2,
+        "saved_views": 20,
+        "scheduled_activities": 69,
+        "seed_lots": 429,
+        "sowings": 538,
+        "suppliers": 24,
+        "users": 1,
+        "vegetative_lots": 1,
+        "wcvp_links": 4,
+        "wfo_links": 9
+      },
+      "media": {
+        "attachments_stored": 32,
+        "media_assets": 37,
+        "baseline_digest_media_files": 34,
+        "verification_summary": "Verified 32 stored attachment file(s) against database metadata"
+      },
+      "targets": {
+        "asset": "01a1f5bc-1e83-77c2-8a40-2bffadd1715b",
+        "attachment": "01a1f5bc-1e83-77c2-8a40-2bfe55643991",
+        "cutting_attempt": "01a1f5bc-3456-77c9-81c7-dfbadeb686c8",
+        "cutting_lot": "01a1f5bc-344d-7387-83a4-042e4e5b5374",
+        "group": "01a1f5bc-1e1c-7794-8591-3c0e3246e4f4",
+        "harvest": "01a1f5bc-1e39-724a-98b6-55c7c11aeb36",
+        "identity": "01a1f5bc-1d8e-72a7-af15-530daea56331",
+        "inventory": "01a1f5bc-1e41-71b8-939f-f32f312cd5b2",
+        "lineage_seed": "01a1f5bc-2152-74e4-9137-cf59b7c5a56f",
+        "location": "01a1f5bc-1d94-712f-a237-2754fb064ef4",
+        "order": "01a1f5bc-1dc4-719e-ae8d-e67b233db6a2",
+        "photo_link": "01a1f5bc-1e9c-7536-9dff-9781d7416194",
+        "place": "01a1f5bc-1d9c-7696-ba5d-41ad74e181ef",
+        "plant": "01a1f5bc-3467-714d-b604-9f5bebe457d2",
+        "rich_identity": "01a1f5bc-1da6-73b1-9daa-c6fa42abab1d",
+        "seed": "01a1f5bc-1e6f-72c3-ac34-f2e4585ecac6",
+        "site": "01a1f5bc-1d9e-748f-bedc-9e66bbb78765",
+        "sowing": "01a1f5bc-1deb-722a-b03b-dab468cc3a67",
+        "supplier": "01a1f5bc-1d92-70b3-8050-1b30a0d81651"
+      },
+      "differences_from_pin": [
+        "table native_range_applications: {'rows': 2, 'sha256': '75f4846957ef63e01691678a90b00122a5bff44e6f0010772f4af0326021db71'} != reviewed {'rows': 2, 'sha256': '825ec94ca1f150cfd0dc6a7abc417c69952a7f5b8a65ec3682c5a889fbb08d79'}",
+        "table native_range_proposals: {'rows': 3, 'sha256': 'e18865f307b5686c9e5bbd402ddca848d7bc6fef36e8c66a529d6d425346e469'} != reviewed {'rows': 3, 'sha256': '378a1244135860294c7278c28c4d95705da6faf99c0cb94febc6815a7dd2baab'}",
+        "canonical_sha256: 5f59cc7ff3829517a5957c9b0972957d17c6eb2825fc023ba0be455ae047dfd0 != reviewed a6141fc43cf46012007f342b0ba71b005f31141ae34c85f4cdb79bb30a9da88b"
+      ],
+      "targets_source": "validated_comprehensive_ledger"
+    },
+    "provisioning": {
+      "route": "disposable_test_copy",
+      "compose_file": "compose.integration.yaml",
+      "provisioning_project": "florabase-integration-4beee8b46d99",
+      "copy_name": "golden_perf",
+      "provisioned_at": "2026-11-19T21:35:36.290245+00:00",
+      "restored_via": [
+        "pg_dump/pg_restore",
+        "scripts/attachment_artifacts.py"
+      ],
+      "golden_target_guards_preserved": true
+    },
+    "runtime_config": {
+      "project": "florabase-perf",
+      "database": "florabase_perf",
+      "origin": "http://localhost:18080",
+      "environment": "development",
+      "cookie_mode": "loopback-development",
+      "storage_mode": "tmpfs",
+      "tmpfs_mounts": {
+        "db": "/var/lib/postgresql",
+        "backend": "/var/lib/florabase/attachments"
+      },
+      "tmpfs_disclosure": "PostgreSQL data and attachment storage run on tmpfs; disk durability/sync latency is excluded and results must not be silently compared against persistent-storage runs."
+    },
+    "source": {
+      "branch": "feat/perf-001-comprehensive-harness",
+      "head": "6175a03580581c5b5654502b4830146727d47e29",
+      "tree": "05f351f7abc223d2723666b8a75ac1da4a064430",
+      "base": "fdc75e83fa8818cab791ed82cbba65f4f97db7ae",
+      "dirty": false
+    },
+    "generator": {
+      "source_alembic_head": "20261110_0047",
+      "files_sha256": {
+        "scripts/golden_dataset.py": "a6fdf680584ac731fc3ac85c8313b90c0a78feacf8b5623e1d5db2154ea4511f",
+        "scripts/golden_plan.py": "95385d4ed9ee3692d907f756642a6441b9da77e3a62555922459584fe3c8f2df",
+        "scripts/fixtures/golden/scenarios.json": "c7e88c061fa5d430d3b4e36d8c369d81dec5150b95fe3114a652d2cc94b9384f",
+        "scripts/perf/compose.sh": "2550958582cd3f7c66408f84435871bf6d6c3e9d29e17e7b26fee605bc6002a5",
+        "scripts/perf/comprehensive.py": "60cbde26bf24428a758f61659407f648742a13211667830b322a3641f0affc2f",
+        "scripts/perf/measure.py": "274bd0d1d004fc0aeac1fd0a5ba7ef2f31ad7ff46c9ad78a6af8c980957fe5f8",
+        "scripts/perf/browser.mjs": "3826372116478c20778ffb75518a2e1314b4bc4808f2594df2e3796f9b12b612",
+        "scripts/perf/verify-chunk-recovery.mjs": "dbdcdb3a3f0bb18f4de13983bac95bd4ff4958632b57508fe669d9fcdb3a3cfa",
+        "compose.yaml": "81ccdbe8af4a0a581e8d45e0a543eb40ffcdd880308dd2be8ac58fad8a6c1914",
+        "compose.perf.yaml": "75a98fbbdf8b76ff528f6dedae0a66fc23817e109d2ec54b1318833d16aecb20"
+      }
+    },
+    "host": {
+      "platform": "Linux-7.0.0-113043-tuxedo-x86_64-with-glibc2.43",
+      "machine": "x86_64",
+      "host_python": "3.14.4",
+      "cpu_model": "AMD Ryzen AI 9 HX 370 w/ Radeon 890M",
+      "cpu_count_os": 24,
+      "docker_info": "24 CPUs; 65407606784 bytes RAM",
+      "docker_version": "29.10.0",
+      "compose_version": "5.7.1"
+    },
+    "software": {
+      "postgresql": "18.6",
+      "backend_python": "3.14.10",
+      "uvicorn": "0.54.0",
+      "nginx": "nginx version: nginx/1.30.6"
+    },
+    "images": [
+      {
+        "id": "sha256:4056286db443d908ac032f71bb9fed9f9a155ae71c4d8914aa3d0c5ed5ef1b89",
+        "repo_tags": [
+          "florabase-perf-backend:c4fa7f5f08f14e2a8330b0a83315f1c5"
+        ],
+        "size_bytes": 228120795,
+        "created": "2026-11-18T13:49:34.772950412+01:00",
+        "source_head": "6175a03580581c5b5654502b4830146727d47e29",
+        "owner_id": "c4fa7f5f08f14e2a8330b0a83315f1c5"
+      },
+      {
+        "id": "sha256:5b5f66336e8f0cd341349d49e5a2dc7c02b3bf922be131a17131dd20b1609f55",
+        "repo_tags": [
+          "florabase-perf-frontend:c4fa7f5f08f14e2a8330b0a83315f1c5"
+        ],
+        "size_bytes": 40318963,
+        "created": "2026-11-17T19:09:36.630385048+01:00",
+        "source_head": "6175a03580581c5b5654502b4830146727d47e29",
+        "owner_id": "c4fa7f5f08f14e2a8330b0a83315f1c5"
+      },
+      {
+        "id": "sha256:9ba53c7d41ea093baf5c1ba635ba5434c4f979880527d49bb7d9237d3193085b",
+        "repo_tags": [
+          "postgres:18.6-alpine"
+        ],
+        "size_bytes": 432777476,
+        "created": "2026-11-05T19:08:30.016975331Z",
+        "source_head": null,
+        "owner_id": null
+      }
+    ],
+    "process_counts": {
+      "db": {
+        "count": 9,
+        "commands": [
+          "postgres",
+          "postgres",
+          "postgres",
+          "postgres",
+          "postgres",
+          "postgres",
+          "postgres",
+          "postgres",
+          "postgres"
+        ]
+      },
+      "backend": {
+        "count": 2,
+        "commands": [
+          "docker-init",
+          "uvicorn"
+        ]
+      },
+      "frontend": {
+        "count": 26,
+        "commands": [
+          "docker-init",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx",
+          "nginx"
+        ]
+      }
+    },
+    "platform": "Linux-7.0.0-113043-tuxedo-x86_64-with-glibc2.43",
+    "cpu": "x86_64",
+    "sha": "6175a03580581c5b5654502b4830146727d47e29"
+  },
+  "transfer": {
+    "measured_at": "2026-11-19T21:37:52.540290+00:00",
+    "static_assets": {
+      "/assets/index-C2O9H-mu.js": {
+        "content_type": "application/javascript",
+        "vary": "Accept-Encoding",
+        "raw_bytes": 296957,
+        "gzip_bytes": 106478
+      },
+      "/assets/index-CqeGrgEY.css": {
+        "content_type": "text/css",
+        "vary": "Accept-Encoding",
+        "raw_bytes": 228170,
+        "gzip_bytes": 54903
+      }
+    },
+    "runtime_configuration": {
+      "bytes": 344,
+      "cache_control": "no-store",
+      "compressed": false
+    },
+    "health": {
+      "content_type": "text/plain",
+      "compressed": false
+    },
+    "authenticated_api_bytes": 698368,
+    "authenticated_api_content_type": "application/json",
+    "protected_api_compressed": false
+  },
+  "chunk_recovery": {
+    "stale_asset_path": "/assets/PERF-review-stale-chunk.js",
+    "nginx_fallback": {
+      "status": 200,
+      "contentType": "text/html"
+    },
+    "shell_retained": true,
+    "automatic_reload": false,
+    "page_errors": []
+  },
+  "cleanup": {
+    "project": "florabase-perf",
+    "owner_id": "c4fa7f5f08f14e2a8330b0a83315f1c5",
+    "ownership_verified": true,
+    "stopped_at": "2026-11-19T21:41:21.153809+00:00",
+    "compose_down_output": "",
+    "images_removed": [
+      "florabase-perf-backend:c4fa7f5f08f14e2a8330b0a83315f1c5",
+      "florabase-perf-frontend:c4fa7f5f08f14e2a8330b0a83315f1c5"
+    ],
+    "containers_remaining": 0,
+    "networks_remaining": 0,
+    "volumes_remaining": 0,
+    "images_remaining": 0,
+    "named_volumes_deleted": 0
+  },
+  "live_occurrence": {
+    "attempted": true,
+    "endpoint": "/api/v1/botanical-identities/{id}/occurrence-map/summary",
+    "folded_into_local_timings": false,
+    "probes": [
+      {
+        "status": 200,
+        "seconds": 0.332,
+        "total": 9855,
+        "eligible": 3854,
+        "error": null
+      },
+      {
+        "status": 200,
+        "seconds": 0.227,
+        "total": 9855,
+        "eligible": 3854,
+        "error": null
+      },
+      {
+        "status": 200,
+        "seconds": 0.226,
+        "total": 9855,
+        "eligible": 3854,
+        "error": null
+      }
+    ]
+  },
+  "api": {
+    "started_at": "2026-11-19T21:36:24.785737+00:00",
+    "completed_at": "2026-11-19T21:37:50.014499+00:00",
+    "manifest": {
+      "valid": true,
+      "pin_mode": "allow-modified-baseline",
+      "strict_pin_enforced": false,
+      "certification_eligible": false,
+      "certification_blockers": [
+        "Source build benchmark; formal RC-image G-PERF requires immutable RC images",
+        "Modified fixture state (invariant-valid-baseline-modified) cannot produce formal certification evidence",
+        "Non-strict pin mode (allow-modified-baseline) used for preliminary rehearsal"
+      ],
+      "dataset": "florabase-golden",
+      "version": 1,
+      "profile": "comprehensive",
+      "seed": 20261102,
+      "anchor_date": "2026-09-15",
+      "volume": 420,
+      "schema_revision": "20261110_0047",
+      "pinned_schema_revision": "20261110_0047",
+      "plan_sha256": "8a1da67623c1f9c77071cf39e9bd0346a72483fa2a71cf5f1438877eb81c8c3f",
+      "canonical_sha256": "5f59cc7ff3829517a5957c9b0972957d17c6eb2825fc023ba0be455ae047dfd0",
+      "pinned_canonical_sha256": "a6141fc43cf46012007f342b0ba71b005f31141ae34c85f4cdb79bb30a9da88b",
+      "media_sha256": "50894e8a2283bf88349875824e1d3615d70d15be2ff43f708038c72a715afb93",
+      "scenario_keys_sha256": "f72fe62a3ec0bc139a4f6d18ba730e5218467d8a8fc98699214b38cfc5001971",
+      "baseline_state": "invariant-valid-baseline-modified",
+      "baseline_pin_matches": false,
+      "ledger_records_count": 3181,
+      "plan_nodes": 3200,
+      "counted_rows": 4004,
+      "domain_records": 3995,
+      "canonical_geographic_places": 287,
+      "total_rows_with_canonical_places": 4291,
+      "table_counts": {
+        "application_settings": 1,
+        "attachments": 32,
+        "botanical_identities": 115,
+        "botanical_identity_cover_images": 4,
+        "botanical_identity_names": 3,
+        "botanical_identity_reconciliations": 1,
+        "botanical_profile_native_ranges": 32,
+        "botanical_profiles": 28,
+        "collection_primary_photos": 7,
+        "event_measurement_corrections": 1,
+        "events": 851,
+        "external_provider_cache": 7,
+        "external_taxon_links": 6,
+        "geographic_places": 7,
+        "germination_observations": 390,
+        "harvest_items": 64,
+        "harvest_material_dispositions": 26,
+        "harvest_material_inventory": 45,
+        "harvest_seed_lot_conversions": 8,
+        "harvests": 62,
+        "locations": 34,
+        "media_assets": 37,
+        "native_range_applications": 2,
+        "native_range_proposals": 3,
+        "native_range_revisions": 28,
+        "operation_receipts": 653,
+        "orders": 50,
+        "plant_groups": 137,
+        "plants": 213,
+        "propagation_attempts": 2,
+        "provenance_sites": 24,
+        "record_media_links": 34,
+        "rooting_observations": 2,
+        "saved_views": 20,
+        "scheduled_activities": 69,
+        "seed_lots": 429,
+        "sowings": 538,
+        "suppliers": 24,
+        "users": 1,
+        "vegetative_lots": 1,
+        "wcvp_links": 4,
+        "wfo_links": 9
+      },
+      "media": {
+        "attachments_stored": 32,
+        "media_assets": 37,
+        "baseline_digest_media_files": 34,
+        "verification_summary": "Verified 32 stored attachment file(s) against database metadata"
+      },
+      "targets": {
+        "asset": "01a1f5bc-1e83-77c2-8a40-2bffadd1715b",
+        "attachment": "01a1f5bc-1e83-77c2-8a40-2bfe55643991",
+        "cutting_attempt": "01a1f5bc-3456-77c9-81c7-dfbadeb686c8",
+        "cutting_lot": "01a1f5bc-344d-7387-83a4-042e4e5b5374",
+        "group": "01a1f5bc-1e1c-7794-8591-3c0e3246e4f4",
+        "harvest": "01a1f5bc-1e39-724a-98b6-55c7c11aeb36",
+        "identity": "01a1f5bc-1d8e-72a7-af15-530daea56331",
+        "inventory": "01a1f5bc-1e41-71b8-939f-f32f312cd5b2",
+        "lineage_seed": "01a1f5bc-2152-74e4-9137-cf59b7c5a56f",
+        "location": "01a1f5bc-1d94-712f-a237-2754fb064ef4",
+        "order": "01a1f5bc-1dc4-719e-ae8d-e67b233db6a2",
+        "photo_link": "01a1f5bc-1e9c-7536-9dff-9781d7416194",
+        "place": "01a1f5bc-1d9c-7696-ba5d-41ad74e181ef",
+        "plant": "01a1f5bc-3467-714d-b604-9f5bebe457d2",
+        "rich_identity": "01a1f5bc-1da6-73b1-9daa-c6fa42abab1d",
+        "seed": "01a1f5bc-1e6f-72c3-ac34-f2e4585ecac6",
+        "site": "01a1f5bc-1d9e-748f-bedc-9e66bbb78765",
+        "sowing": "01a1f5bc-1deb-722a-b03b-dab468cc3a67",
+        "supplier": "01a1f5bc-1d92-70b3-8050-1b30a0d81651"
+      },
+      "differences_from_pin": [
+        "table native_range_applications: {'rows': 2, 'sha256': '75f4846957ef63e01691678a90b00122a5bff44e6f0010772f4af0326021db71'} != reviewed {'rows': 2, 'sha256': '825ec94ca1f150cfd0dc6a7abc417c69952a7f5b8a65ec3682c5a889fbb08d79'}",
+        "table native_range_proposals: {'rows': 3, 'sha256': 'e18865f307b5686c9e5bbd402ddca848d7bc6fef36e8c66a529d6d425346e469'} != reviewed {'rows': 3, 'sha256': '378a1244135860294c7278c28c4d95705da6faf99c0cb94febc6815a7dd2baab'}",
+        "canonical_sha256: 5f59cc7ff3829517a5957c9b0972957d17c6eb2825fc023ba0be455ae047dfd0 != reviewed a6141fc43cf46012007f342b0ba71b005f31141ae34c85f4cdb79bb30a9da88b"
+      ],
+      "targets_source": "validated_comprehensive_ledger"
+    },
+    "sql_instrumentation": {
+      "extension_installed": true,
+      "shared_preload_libraries": "pg_stat_statements",
+      "reset_executed_per_sample": true,
+      "probe_query_captured": true,
+      "sample_count_per_endpoint": 7,
+      "endpoints_measured": 48
+    },
+    "create_edit_delete_ms": 54.9,
+    "fixture_integrity_after_mutation": {
+      "checked": true,
+      "created_identity_deleted": true,
+      "residual_perf_records": 0,
+      "schema_revision": "20261110_0047",
+      "expected_schema_revision": "20261110_0047",
+      "canonical_geographic_places": 287,
+      "expected_canonical_geographic_places": 287,
+      "audit_deltas": {},
+      "unexpected_table_deltas": {},
+      "media_verified": true,
+      "media_verification_summary": "Verified 32 stored attachment file(s) against database metadata"
+    },
+    "resources": {
+      "at": 1795124270.0,
+      "timestamp_utc": "2026-11-19T21:37:50.014522+00:00",
+      "containers": [
+        {
+          "BlockIO": "0B / 24.6kB",
+          "CPUPerc": "0.25%",
+          "Container": "florabase-perf-backend-1",
+          "ID": "d94dcd211676",
+          "MemPerc": "0.27%",
+          "MemUsage": "166.7MiB / 60.92GiB",
+          "Name": "florabase-perf-backend-1",
+          "NetIO": "38MB / 30MB",
+          "PIDs": "3"
+        },
+        {
+          "BlockIO": "0B / 12.3kB",
+          "CPUPerc": "0.00%",
+          "Container": "florabase-perf-frontend-1",
+          "ID": "62bb12b0df47",
+          "MemPerc": "0.03%",
+          "MemUsage": "19.79MiB / 60.92GiB",
+          "Name": "florabase-perf-frontend-1",
+          "NetIO": "26MB / 26.1MB",
+          "PIDs": "26"
+        },
+        {
+          "BlockIO": "0B / 24.6kB",
+          "CPUPerc": "5.27%",
+          "Container": "florabase-perf-db-1",
+          "ID": "841fdc5905d2",
+          "MemPerc": "0.21%",
+          "MemUsage": "129.8MiB / 60.92GiB",
+          "Name": "florabase-perf-db-1",
+          "NetIO": "4.53MB / 37.6MB",
+          "PIDs": "10"
+        }
+      ],
+      "connections": {
+        "total": 1,
+        "idle": 1
+      },
+      "sessions": {
+        "count": 1,
+        "last_seen_at": "2026-11-19T21:36:24.972547+00:00",
+        "idle_expires_at": "2026-11-20T21:36:24.972547+00:00"
+      },
+      "load": "3.51 3.17 2.63 4/3710 526425"
+    },
+    "reads": {
+      "/dashboard": {
+        "first_ms": 110.3,
+        "median_ms": 78.4,
+        "range_ms": [
+          68.6,
+          93.8
+        ],
+        "samples_ms": [
+          93.8,
+          78.4,
+          78.4,
+          69.6,
+          68.6,
+          81.8,
+          72.8
+        ],
+        "bytes": 14975,
+        "queries": [
+          24,
+          25
+        ],
+        "query_count_samples": [
+          25,
+          24,
+          25,
+          24,
+          24,
+          25,
+          24
+        ],
+        "sql_statements_count": 24,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/botanical-identities": {
+        "first_ms": 158.4,
+        "median_ms": 15.0,
+        "range_ms": [
+          13.0,
+          16.9
+        ],
+        "samples_ms": [
+          14.1,
+          16.9,
+          15.7,
+          13.0,
+          13.6,
+          15.0,
+          16.3
+        ],
+        "bytes": 56683,
+        "queries": [
+          4
+        ],
+        "query_count_samples": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "sql_statements_count": 4,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/seed-lots": {
+        "first_ms": 118.0,
+        "median_ms": 59.5,
+        "range_ms": [
+          51.6,
+          71.2
+        ],
+        "samples_ms": [
+          59.5,
+          67.4,
+          51.6,
+          54.6,
+          58.9,
+          71.2,
+          64.6
+        ],
+        "bytes": 545678,
+        "queries": [
+          10
+        ],
+        "query_count_samples": [
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "sql_statements_count": 10,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/sowings": {
+        "first_ms": 65.3,
+        "median_ms": 38.3,
+        "range_ms": [
+          37.0,
+          175.0
+        ],
+        "samples_ms": [
+          38.3,
+          41.8,
+          175.0,
+          40.1,
+          37.7,
+          37.0,
+          38.0
+        ],
+        "bytes": 501226,
+        "queries": [
+          4
+        ],
+        "query_count_samples": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "sql_statements_count": 4,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/plants": {
+        "first_ms": 56.8,
+        "median_ms": 42.4,
+        "range_ms": [
+          33.4,
+          62.3
+        ],
+        "samples_ms": [
+          34.6,
+          60.6,
+          62.3,
+          42.4,
+          33.4,
+          38.0,
+          44.1
+        ],
+        "bytes": 245468,
+        "queries": [
+          8
+        ],
+        "query_count_samples": [
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "sql_statements_count": 8,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/plant-groups": {
+        "first_ms": 49.3,
+        "median_ms": 26.2,
+        "range_ms": [
+          22.7,
+          45.1
+        ],
+        "samples_ms": [
+          28.3,
+          26.1,
+          45.1,
+          26.2,
+          26.2,
+          23.8,
+          22.7
+        ],
+        "bytes": 156239,
+        "queries": [
+          7
+        ],
+        "query_count_samples": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "sql_statements_count": 7,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/vegetative-lots": {
+        "first_ms": 145.2,
+        "median_ms": 6.6,
+        "range_ms": [
+          5.8,
+          7.9
+        ],
+        "samples_ms": [
+          7.5,
+          5.8,
+          7.9,
+          7.3,
+          6.5,
+          6.2,
+          6.6
+        ],
+        "bytes": 724,
+        "queries": [
+          3
+        ],
+        "query_count_samples": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "sql_statements_count": 3,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/propagation-attempts": {
+        "first_ms": 12.1,
+        "median_ms": 7.4,
+        "range_ms": [
+          7.0,
+          8.6
+        ],
+        "samples_ms": [
+          7.4,
+          8.6,
+          7.0,
+          7.4,
+          7.7,
+          7.4,
+          7.8
+        ],
+        "bytes": 1414,
+        "queries": [
+          3
+        ],
+        "query_count_samples": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "sql_statements_count": 3,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/harvests": {
+        "first_ms": 19.3,
+        "median_ms": 15.7,
+        "range_ms": [
+          14.0,
+          17.2
+        ],
+        "samples_ms": [
+          15.2,
+          17.2,
+          15.7,
+          16.5,
+          14.1,
+          15.8,
+          14.0
+        ],
+        "bytes": 57422,
+        "queries": [
+          9
+        ],
+        "query_count_samples": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "sql_statements_count": 8,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/harvest-inventory": {
+        "first_ms": 21.0,
+        "median_ms": 15.0,
+        "range_ms": [
+          11.5,
+          15.6
+        ],
+        "samples_ms": [
+          15.2,
+          15.6,
+          15.5,
+          15.0,
+          14.1,
+          12.4,
+          11.5
+        ],
+        "bytes": 37134,
+        "queries": [
+          9
+        ],
+        "query_count_samples": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "sql_statements_count": 9,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/orders": {
+        "first_ms": 27.0,
+        "median_ms": 9.7,
+        "range_ms": [
+          8.9,
+          11.1
+        ],
+        "samples_ms": [
+          10.6,
+          9.8,
+          9.3,
+          9.7,
+          9.4,
+          11.1,
+          8.9
+        ],
+        "bytes": 22175,
+        "queries": [
+          4
+        ],
+        "query_count_samples": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "sql_statements_count": 4,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/suppliers": {
+        "first_ms": 15.4,
+        "median_ms": 10.4,
+        "range_ms": [
+          10.1,
+          11.5
+        ],
+        "samples_ms": [
+          10.3,
+          10.8,
+          11.5,
+          10.3,
+          10.6,
+          10.1,
+          10.4
+        ],
+        "bytes": 12385,
+        "queries": [
+          5
+        ],
+        "query_count_samples": [
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "sql_statements_count": 5,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/locations": {
+        "first_ms": 18.7,
+        "median_ms": 13.8,
+        "range_ms": [
+          12.6,
+          15.4
+        ],
+        "samples_ms": [
+          13.2,
+          13.8,
+          15.4,
+          13.1,
+          14.5,
+          12.6,
+          14.8
+        ],
+        "bytes": 40635,
+        "queries": [
+          4
+        ],
+        "query_count_samples": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "sql_statements_count": 4,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/geographic-places": {
+        "first_ms": 18.1,
+        "median_ms": 13.6,
+        "range_ms": [
+          11.9,
+          17.0
+        ],
+        "samples_ms": [
+          13.6,
+          13.9,
+          17.0,
+          12.6,
+          15.0,
+          12.0,
+          11.9
+        ],
+        "bytes": 149367,
+        "queries": [
+          9
+        ],
+        "query_count_samples": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "sql_statements_count": 9,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/provenance-sites": {
+        "first_ms": 10.0,
+        "median_ms": 10.2,
+        "range_ms": [
+          8.1,
+          14.0
+        ],
+        "samples_ms": [
+          10.2,
+          8.1,
+          9.2,
+          8.8,
+          10.2,
+          14.0,
+          13.0
+        ],
+        "bytes": 11749,
+        "queries": [
+          5
+        ],
+        "query_count_samples": [
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "sql_statements_count": 5,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/provenance-sites/map": {
+        "first_ms": 27.3,
+        "median_ms": 15.4,
+        "range_ms": [
+          11.9,
+          18.1
+        ],
+        "samples_ms": [
+          11.9,
+          15.4,
+          16.6,
+          15.2,
+          18.1,
+          16.1,
+          15.3
+        ],
+        "bytes": 16867,
+        "queries": [
+          9
+        ],
+        "query_count_samples": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "sql_statements_count": 9,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/events": {
+        "first_ms": 101.6,
+        "median_ms": 69.4,
+        "range_ms": [
+          66.8,
+          198.8
+        ],
+        "samples_ms": [
+          67.8,
+          70.7,
+          198.8,
+          69.4,
+          66.8,
+          71.7,
+          68.1
+        ],
+        "bytes": 698368,
+        "queries": [
+          15
+        ],
+        "query_count_samples": [
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "sql_statements_count": 11,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/history": {
+        "first_ms": 39.6,
+        "median_ms": 33.0,
+        "range_ms": [
+          30.9,
+          36.9
+        ],
+        "samples_ms": [
+          33.0,
+          31.1,
+          30.9,
+          36.9,
+          34.5,
+          31.6,
+          36.1
+        ],
+        "bytes": 31398,
+        "queries": [
+          3
+        ],
+        "query_count_samples": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "sql_statements_count": 3,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/schedule": {
+        "first_ms": 55.1,
+        "median_ms": 11.5,
+        "range_ms": [
+          10.1,
+          13.4
+        ],
+        "samples_ms": [
+          10.1,
+          11.1,
+          12.3,
+          13.4,
+          11.5,
+          12.5,
+          11.3
+        ],
+        "bytes": 18976,
+        "queries": [
+          11
+        ],
+        "query_count_samples": [
+          11,
+          11,
+          11,
+          11,
+          11,
+          11,
+          11
+        ],
+        "sql_statements_count": 11,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/media-assets": {
+        "first_ms": 9.1,
+        "median_ms": 8.3,
+        "range_ms": [
+          7.1,
+          10.6
+        ],
+        "samples_ms": [
+          7.9,
+          7.2,
+          10.6,
+          9.9,
+          8.3,
+          10.1,
+          7.1
+        ],
+        "bytes": 17026,
+        "queries": [
+          4
+        ],
+        "query_count_samples": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "sql_statements_count": 4,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/saved-views": {
+        "first_ms": 8.4,
+        "median_ms": 6.9,
+        "range_ms": [
+          5.6,
+          8.1
+        ],
+        "samples_ms": [
+          5.6,
+          6.9,
+          6.9,
+          7.1,
+          6.8,
+          6.7,
+          8.1
+        ],
+        "bytes": 5372,
+        "queries": [
+          3
+        ],
+        "query_count_samples": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "sql_statements_count": 3,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/explore/native-ranges/overview": {
+        "first_ms": 46.7,
+        "median_ms": 24.0,
+        "range_ms": [
+          19.9,
+          28.8
+        ],
+        "samples_ms": [
+          28.8,
+          25.9,
+          19.9,
+          24.3,
+          22.3,
+          24.0,
+          19.9
+        ],
+        "bytes": 3787,
+        "queries": [
+          6
+        ],
+        "query_count_samples": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "sql_statements_count": 6,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/explore/species-distribution/identities": {
+        "first_ms": 22.5,
+        "median_ms": 11.8,
+        "range_ms": [
+          11.4,
+          12.4
+        ],
+        "samples_ms": [
+          11.4,
+          11.8,
+          11.4,
+          12.4,
+          11.4,
+          12.4,
+          11.9
+        ],
+        "bytes": 17237,
+        "queries": [
+          4
+        ],
+        "query_count_samples": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "sql_statements_count": 4,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/explore/taxonomy/tree": {
+        "first_ms": 18.1,
+        "median_ms": 14.7,
+        "range_ms": [
+          12.4,
+          19.7
+        ],
+        "samples_ms": [
+          15.9,
+          12.4,
+          12.8,
+          14.5,
+          14.7,
+          17.4,
+          19.7
+        ],
+        "bytes": 38133,
+        "queries": [
+          4
+        ],
+        "query_count_samples": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "sql_statements_count": 4,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/search?q=Golden": {
+        "first_ms": 194.1,
+        "median_ms": 125.5,
+        "range_ms": [
+          110.7,
+          137.4
+        ],
+        "samples_ms": [
+          125.9,
+          137.4,
+          124.3,
+          127.6,
+          110.7,
+          115.3,
+          125.5
+        ],
+        "bytes": 56213,
+        "queries": [
+          32
+        ],
+        "query_count_samples": [
+          32,
+          32,
+          32,
+          32,
+          32,
+          32,
+          32
+        ],
+        "sql_statements_count": 32,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/botanical-identities/{id}": {
+        "first_ms": 8.3,
+        "median_ms": 6.3,
+        "range_ms": [
+          6.2,
+          7.2
+        ],
+        "samples_ms": [
+          6.2,
+          7.2,
+          7.0,
+          6.6,
+          6.3,
+          6.3,
+          6.2
+        ],
+        "bytes": 381,
+        "queries": [
+          4
+        ],
+        "query_count_samples": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "sql_statements_count": 4,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/botanical-identities/{id}/collection": {
+        "first_ms": 91.4,
+        "median_ms": 58.8,
+        "range_ms": [
+          52.0,
+          62.2
+        ],
+        "samples_ms": [
+          58.8,
+          62.2,
+          62.0,
+          57.9,
+          52.0,
+          59.1,
+          56.7
+        ],
+        "bytes": 22229,
+        "queries": [
+          31
+        ],
+        "query_count_samples": [
+          31,
+          31,
+          31,
+          31,
+          31,
+          31,
+          31
+        ],
+        "sql_statements_count": 21,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/botanical-identities/{id}/profile": {
+        "first_ms": 8.7,
+        "median_ms": 6.6,
+        "range_ms": [
+          5.7,
+          7.6
+        ],
+        "samples_ms": [
+          7.5,
+          6.6,
+          5.7,
+          6.6,
+          5.8,
+          6.9,
+          7.6
+        ],
+        "bytes": 1431,
+        "queries": [
+          3
+        ],
+        "query_count_samples": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "sql_statements_count": 3,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/seed-lots/{id}": {
+        "first_ms": 21.3,
+        "median_ms": 14.4,
+        "range_ms": [
+          12.3,
+          22.1
+        ],
+        "samples_ms": [
+          22.1,
+          19.7,
+          12.3,
+          13.3,
+          13.4,
+          14.4,
+          15.2
+        ],
+        "bytes": 1005,
+        "queries": [
+          6
+        ],
+        "query_count_samples": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "sql_statements_count": 6,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/seed-lots/{id}/lineage": {
+        "first_ms": 18.7,
+        "median_ms": 14.2,
+        "range_ms": [
+          12.2,
+          27.2
+        ],
+        "samples_ms": [
+          27.2,
+          13.1,
+          12.8,
+          16.5,
+          14.2,
+          12.2,
+          17.9
+        ],
+        "bytes": 492,
+        "queries": [
+          6
+        ],
+        "query_count_samples": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "sql_statements_count": 6,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/sowings/{id}": {
+        "first_ms": 10.1,
+        "median_ms": 8.7,
+        "range_ms": [
+          6.3,
+          9.9
+        ],
+        "samples_ms": [
+          8.7,
+          8.4,
+          8.8,
+          9.6,
+          9.9,
+          8.3,
+          6.3
+        ],
+        "bytes": 977,
+        "queries": [
+          4
+        ],
+        "query_count_samples": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "sql_statements_count": 4,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/sowings/{id}/germination": {
+        "first_ms": 9.4,
+        "median_ms": 6.2,
+        "range_ms": [
+          5.3,
+          7.7
+        ],
+        "samples_ms": [
+          7.7,
+          5.6,
+          6.4,
+          6.2,
+          7.3,
+          5.4,
+          5.3
+        ],
+        "bytes": 958,
+        "queries": [
+          4
+        ],
+        "query_count_samples": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "sql_statements_count": 4,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/plants/{id}": {
+        "first_ms": 16.8,
+        "median_ms": 12.3,
+        "range_ms": [
+          12.0,
+          16.9
+        ],
+        "samples_ms": [
+          16.9,
+          14.4,
+          12.7,
+          12.3,
+          12.0,
+          12.1,
+          12.1
+        ],
+        "bytes": 901,
+        "queries": [
+          4
+        ],
+        "query_count_samples": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "sql_statements_count": 4,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/plants/{id}/lineage": {
+        "first_ms": 26.0,
+        "median_ms": 14.7,
+        "range_ms": [
+          11.0,
+          18.9
+        ],
+        "samples_ms": [
+          12.9,
+          14.7,
+          16.6,
+          15.9,
+          11.0,
+          12.2,
+          18.9
+        ],
+        "bytes": 1441,
+        "queries": [
+          9
+        ],
+        "query_count_samples": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "sql_statements_count": 9,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/plant-groups/{id}": {
+        "first_ms": 16.0,
+        "median_ms": 13.5,
+        "range_ms": [
+          10.6,
+          17.1
+        ],
+        "samples_ms": [
+          12.3,
+          17.1,
+          16.5,
+          13.5,
+          15.6,
+          11.1,
+          10.6
+        ],
+        "bytes": 777,
+        "queries": [
+          4
+        ],
+        "query_count_samples": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "sql_statements_count": 4,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/vegetative-lots/{id}": {
+        "first_ms": 11.7,
+        "median_ms": 7.2,
+        "range_ms": [
+          6.5,
+          9.2
+        ],
+        "samples_ms": [
+          9.2,
+          7.4,
+          7.1,
+          8.1,
+          6.5,
+          7.2,
+          7.0
+        ],
+        "bytes": 1936,
+        "queries": [
+          4
+        ],
+        "query_count_samples": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "sql_statements_count": 4,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/propagation-attempts/{id}": {
+        "first_ms": 10.6,
+        "median_ms": 8.7,
+        "range_ms": [
+          7.5,
+          9.7
+        ],
+        "samples_ms": [
+          7.5,
+          7.6,
+          8.7,
+          8.2,
+          9.6,
+          9.0,
+          9.7
+        ],
+        "bytes": 1716,
+        "queries": [
+          6
+        ],
+        "query_count_samples": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "sql_statements_count": 6,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/harvests/{id}": {
+        "first_ms": 19.4,
+        "median_ms": 8.7,
+        "range_ms": [
+          7.3,
+          9.9
+        ],
+        "samples_ms": [
+          7.3,
+          8.5,
+          9.7,
+          9.7,
+          9.9,
+          8.7,
+          8.3
+        ],
+        "bytes": 1002,
+        "queries": [
+          7
+        ],
+        "query_count_samples": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "sql_statements_count": 7,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/harvest-inventory/{id}": {
+        "first_ms": 11.1,
+        "median_ms": 9.1,
+        "range_ms": [
+          8.3,
+          9.9
+        ],
+        "samples_ms": [
+          8.8,
+          9.6,
+          9.2,
+          8.8,
+          8.3,
+          9.1,
+          9.9
+        ],
+        "bytes": 847,
+        "queries": [
+          8
+        ],
+        "query_count_samples": [
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "sql_statements_count": 8,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/orders/{id}": {
+        "first_ms": 11.8,
+        "median_ms": 7.6,
+        "range_ms": [
+          6.3,
+          10.4
+        ],
+        "samples_ms": [
+          10.4,
+          7.8,
+          7.3,
+          7.6,
+          6.3,
+          7.6,
+          9.4
+        ],
+        "bytes": 1062,
+        "queries": [
+          5
+        ],
+        "query_count_samples": [
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "sql_statements_count": 5,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/suppliers/{id}": {
+        "first_ms": 19.6,
+        "median_ms": 13.2,
+        "range_ms": [
+          12.0,
+          15.1
+        ],
+        "samples_ms": [
+          12.3,
+          12.0,
+          13.2,
+          14.0,
+          12.3,
+          15.1,
+          14.6
+        ],
+        "bytes": 1697,
+        "queries": [
+          9
+        ],
+        "query_count_samples": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "sql_statements_count": 9,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/locations/{id}": {
+        "first_ms": 16.4,
+        "median_ms": 14.9,
+        "range_ms": [
+          13.4,
+          17.8
+        ],
+        "samples_ms": [
+          13.9,
+          13.4,
+          16.4,
+          16.6,
+          17.8,
+          14.8,
+          14.9
+        ],
+        "bytes": 1163,
+        "queries": [
+          5
+        ],
+        "query_count_samples": [
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "sql_statements_count": 5,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/provenance-sites/{id}": {
+        "first_ms": 18.0,
+        "median_ms": 10.4,
+        "range_ms": [
+          10.2,
+          11.7
+        ],
+        "samples_ms": [
+          11.7,
+          10.3,
+          10.2,
+          10.6,
+          10.9,
+          10.4,
+          10.4
+        ],
+        "bytes": 580,
+        "queries": [
+          5
+        ],
+        "query_count_samples": [
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "sql_statements_count": 5,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/collection-records/seed_lot/{id}/photos": {
+        "first_ms": 12.7,
+        "median_ms": 8.9,
+        "range_ms": [
+          7.4,
+          9.5
+        ],
+        "samples_ms": [
+          9.5,
+          8.9,
+          8.9,
+          9.1,
+          7.4,
+          8.1,
+          7.7
+        ],
+        "bytes": 977,
+        "queries": [
+          5
+        ],
+        "query_count_samples": [
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "sql_statements_count": 5,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/media-assets/{id}": {
+        "first_ms": 17.8,
+        "median_ms": 11.3,
+        "range_ms": [
+          10.2,
+          11.9
+        ],
+        "samples_ms": [
+          10.2,
+          11.6,
+          11.9,
+          11.3,
+          11.6,
+          11.0,
+          10.5
+        ],
+        "bytes": 2013,
+        "queries": [
+          12
+        ],
+        "query_count_samples": [
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12
+        ],
+        "sql_statements_count": 12,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/media-assets/{id}/thumbnail": {
+        "first_ms": 38.9,
+        "median_ms": 6.9,
+        "range_ms": [
+          6.5,
+          7.6
+        ],
+        "samples_ms": [
+          6.7,
+          6.9,
+          6.7,
+          7.0,
+          7.6,
+          6.5,
+          7.0
+        ],
+        "bytes": 266,
+        "queries": [
+          5
+        ],
+        "query_count_samples": [
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "sql_statements_count": 4,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/collection-photos/local/{id}/thumbnail": {
+        "first_ms": 10.5,
+        "median_ms": 8.2,
+        "range_ms": [
+          8.0,
+          8.5
+        ],
+        "samples_ms": [
+          8.5,
+          8.3,
+          8.5,
+          8.0,
+          8.1,
+          8.2,
+          8.2
+        ],
+        "bytes": 266,
+        "queries": [
+          4
+        ],
+        "query_count_samples": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "sql_statements_count": 4,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      },
+      "/attachments/{id}/content": {
+        "first_ms": 7.4,
+        "median_ms": 7.6,
+        "range_ms": [
+          6.7,
+          9.4
+        ],
+        "samples_ms": [
+          6.7,
+          6.8,
+          8.2,
+          9.4,
+          7.6,
+          8.5,
+          7.4
+        ],
+        "bytes": 545,
+        "queries": [
+          3
+        ],
+        "query_count_samples": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "sql_statements_count": 3,
+        "sql_zero_queries_verified": false,
+        "sample_note": "7 samples; not a statistical p95"
+      }
+    },
+    "statements_externalized": true
+  },
+  "browser": {
+    "chromium": "159.0.8154.6",
+    "initial": {
+      "ms": 813,
+      "request_count": 37,
+      "resources": [
+        {
+          "path": "/appearance.js",
+          "bytes": 4283,
+          "transfer": 4583,
+          "ms": 9
+        },
+        {
+          "path": "/assets/rolldown-runtime-4tVxZq34.js",
+          "bytes": 237,
+          "transfer": 537,
+          "ms": 14
+        },
+        {
+          "path": "/assets/index-C2O9H-mu.js",
+          "bytes": 106478,
+          "transfer": 106778,
+          "ms": 14
+        },
+        {
+          "path": "/assets/jsx-runtime-BqZj9D7S.js",
+          "bytes": 3213,
+          "transfer": 3513,
+          "ms": 16
+        },
+        {
+          "path": "/assets/index-CqeGrgEY.css",
+          "bytes": 54903,
+          "transfer": 55203,
+          "ms": 15
+        },
+        {
+          "path": "/assets/api-BH6p4WcD.js",
+          "bytes": 527,
+          "transfer": 827,
+          "ms": 16
+        },
+        {
+          "path": "/runtime-config.js",
+          "bytes": 344,
+          "transfer": 644,
+          "ms": 16
+        },
+        {
+          "path": "/api/v1/auth/session",
+          "bytes": 165,
+          "transfer": 465,
+          "ms": 10
+        },
+        {
+          "path": "/release.json",
+          "bytes": 105,
+          "transfer": 405,
+          "ms": 7
+        },
+        {
+          "path": "/assets/instrument-sans-latin-wght-normal-BbzFLZTg.woff2",
+          "bytes": 30092,
+          "transfer": 30392,
+          "ms": 18
+        },
+        {
+          "path": "/assets/newsreader-latin-opsz-normal-s-izfB6B.woff2",
+          "bytes": 132000,
+          "transfer": 132300,
+          "ms": 18
+        },
+        {
+          "path": "/api/v1/auth/csrf",
+          "bytes": 60,
+          "transfer": 360,
+          "ms": 9
+        },
+        {
+          "path": "/assets/DashboardScreen-z7yL5OaS.js",
+          "bytes": 8338,
+          "transfer": 8638,
+          "ms": 9
+        },
+        {
+          "path": "/assets/WorkspaceUI-DDHLAekN.js",
+          "bytes": 767,
+          "transfer": 1067,
+          "ms": 9
+        },
+        {
+          "path": "/assets/WorkspaceUI-CRoIMbwk.css",
+          "bytes": 646,
+          "transfer": 946,
+          "ms": 15
+        },
+        {
+          "path": "/assets/presentation-CU-6jePs.js",
+          "bytes": 794,
+          "transfer": 1094,
+          "ms": 15
+        },
+        {
+          "path": "/assets/SavedViews-Dlh5O7vw.js",
+          "bytes": 2665,
+          "transfer": 2965,
+          "ms": 15
+        },
+        {
+          "path": "/assets/recordWorkflows-Bznbgij5.js",
+          "bytes": 287,
+          "transfer": 587,
+          "ms": 15
+        },
+        {
+          "path": "/assets/ScheduleTargetLabel-U0Pix4wu.js",
+          "bytes": 346,
+          "transfer": 646,
+          "ms": 15
+        },
+        {
+          "path": "/assets/state-EV0z7Vtz.js",
+          "bytes": 1757,
+          "transfer": 2057,
+          "ms": 17
+        },
+        {
+          "path": "/assets/api-DHCEg3ji.js",
+          "bytes": 296,
+          "transfer": 596,
+          "ms": 17
+        },
+        {
+          "path": "/assets/api-L6IHvRen.js",
+          "bytes": 861,
+          "transfer": 1161,
+          "ms": 17
+        },
+        {
+          "path": "/assets/api-DrY5SF04.js",
+          "bytes": 591,
+          "transfer": 891,
+          "ms": 17
+        },
+        {
+          "path": "/assets/api-B3IyNvlK.js",
+          "bytes": 939,
+          "transfer": 1239,
+          "ms": 17
+        },
+        {
+          "path": "/assets/ReferencePicker-CA4RRV9m.js",
+          "bytes": 2142,
+          "transfer": 2442,
+          "ms": 19
+        },
+        {
+          "path": "/assets/ContextualHelp-Cp1AzW_4.js",
+          "bytes": 781,
+          "transfer": 1081,
+          "ms": 18
+        },
+        {
+          "path": "/assets/api-CKrgCXp4.js",
+          "bytes": 649,
+          "transfer": 949,
+          "ms": 19
+        },
+        {
+          "path": "/assets/DashboardScreen-BDyGjTWD.css",
+          "bytes": 3268,
+          "transfer": 3568,
+          "ms": 16
+        },
+        {
+          "path": "/icons/florabase-512.png",
+          "bytes": 151240,
+          "transfer": 0,
+          "ms": 19
+        },
+        {
+          "path": "/assets/ibm-plex-mono-latin-500-normal-DSY6xOcd.woff2",
+          "bytes": 14888,
+          "transfer": 15188,
+          "ms": 17
+        },
+        {
+          "path": "/api/v1/botanical-identities",
+          "bytes": 56683,
+          "transfer": 56983,
+          "ms": 34
+        },
+        {
+          "path": "/api/v1/saved-views",
+          "bytes": 5372,
+          "transfer": 5672,
+          "ms": 40
+        },
+        {
+          "path": "/api/v1/health",
+          "bytes": 15,
+          "transfer": 315,
+          "ms": 11
+        },
+        {
+          "path": "/api/v1/dashboard",
+          "bytes": 14943,
+          "transfer": 15243,
+          "ms": 101
+        },
+        {
+          "path": "/icons/florabase-192.png",
+          "bytes": 29242,
+          "transfer": 0,
+          "ms": 4
+        },
+        {
+          "path": "/assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+          "bytes": 14708,
+          "transfer": 15008,
+          "ms": 9
+        }
+      ]
+    },
+    "workload": [
+      {
+        "name": "today",
+        "ms": 518,
+        "request_count": 0,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "identities",
+        "ms": 948,
+        "request_count": 33,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "identity",
+        "ms": 632,
+        "request_count": 5,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "identity_reference",
+        "ms": 561,
+        "request_count": 1,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "identity_maps",
+        "ms": 571,
+        "request_count": 4,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "seeds",
+        "ms": 1106,
+        "request_count": 30,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "seed",
+        "ms": 568,
+        "request_count": 3,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "photos",
+        "ms": 1100,
+        "request_count": 1,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "lineage",
+        "ms": 1146,
+        "request_count": 3,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "sowings",
+        "ms": 969,
+        "request_count": 8,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "sowing",
+        "ms": 615,
+        "request_count": 4,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "germination",
+        "ms": 1097,
+        "request_count": 1,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "cuttings",
+        "ms": 920,
+        "request_count": 5,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "cutting_lot",
+        "ms": 570,
+        "request_count": 6,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "plants",
+        "ms": 1077,
+        "request_count": 11,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "plant",
+        "ms": 616,
+        "request_count": 4,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "group",
+        "ms": 822,
+        "request_count": 4,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "harvests",
+        "ms": 927,
+        "request_count": 6,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "harvest",
+        "ms": 564,
+        "request_count": 3,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "stored_material",
+        "ms": 565,
+        "request_count": 1,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "suppliers",
+        "ms": 929,
+        "request_count": 4,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "supplier",
+        "ms": 570,
+        "request_count": 1,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "orders",
+        "ms": 948,
+        "request_count": 3,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "order",
+        "ms": 571,
+        "request_count": 1,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "locations",
+        "ms": 880,
+        "request_count": 5,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "location",
+        "ms": 561,
+        "request_count": 1,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "geography",
+        "ms": 922,
+        "request_count": 11,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "site",
+        "ms": 1181,
+        "request_count": 10,
+        "external": 0,
+        "maps": 1
+      },
+      {
+        "name": "place",
+        "ms": 564,
+        "request_count": 1,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "native_ranges",
+        "ms": 1019,
+        "request_count": 4,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "taxonomy",
+        "ms": 1071,
+        "request_count": 5,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "media",
+        "ms": 1072,
+        "request_count": 25,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "events",
+        "ms": 976,
+        "request_count": 6,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "history",
+        "ms": 976,
+        "request_count": 2,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "schedule",
+        "ms": 869,
+        "request_count": 3,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "provenance",
+        "ms": 877,
+        "request_count": 2,
+        "external": 0,
+        "maps": 1
+      },
+      {
+        "name": "occurrence",
+        "ms": 1929,
+        "request_count": 19,
+        "external": 0,
+        "maps": 1
+      },
+      {
+        "name": "labels",
+        "ms": 922,
+        "request_count": 5,
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "dashboard",
+        "ms": 621,
+        "request_count": 2,
+        "external": 0,
+        "maps": 0
+      }
+    ],
+    "cycles": [
+      {
+        "Documents": 2,
+        "JSEventListeners": 345,
+        "Nodes": 759,
+        "JSHeapUsedSize": 8000592,
+        "timers": {
+          "intervals": 2,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 2,
+        "JSEventListeners": 484,
+        "Nodes": 759,
+        "JSHeapUsedSize": 8276904,
+        "timers": {
+          "intervals": 2,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 2,
+        "JSEventListeners": 484,
+        "Nodes": 759,
+        "JSHeapUsedSize": 8475572,
+        "timers": {
+          "intervals": 2,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 2,
+        "JSEventListeners": 484,
+        "Nodes": 759,
+        "JSHeapUsedSize": 8697164,
+        "timers": {
+          "intervals": 2,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 2,
+        "JSEventListeners": 484,
+        "Nodes": 759,
+        "JSHeapUsedSize": 8769864,
+        "timers": {
+          "intervals": 2,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 2,
+        "JSEventListeners": 487,
+        "Nodes": 795,
+        "JSHeapUsedSize": 8841600,
+        "timers": {
+          "intervals": 2,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 2,
+        "JSEventListeners": 484,
+        "Nodes": 759,
+        "JSHeapUsedSize": 8904588,
+        "timers": {
+          "intervals": 2,
+          "timeouts": 0
+        },
+        "maps": 0
+      }
+    ],
+    "cycleRequests": [
+      38,
+      38,
+      38,
+      38,
+      39,
+      38
+    ],
+    "idleSeconds": 122,
+    "idleRequests": [],
+    "idle": [
+      {
+        "at": 1795124350.8,
+        "timestamp_utc": "2026-11-19T21:39:10.803950+00:00",
+        "containers": [
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.18%",
+            "Container": "florabase-perf-backend-1",
+            "ID": "d94dcd211676",
+            "MemPerc": "0.28%",
+            "MemUsage": "177.1MiB / 60.92GiB",
+            "Name": "florabase-perf-backend-1",
+            "NetIO": "54.9MB / 47.5MB",
+            "PIDs": "8"
+          },
+          {
+            "BlockIO": "0B / 12.3kB",
+            "CPUPerc": "0.00%",
+            "Container": "florabase-perf-frontend-1",
+            "ID": "62bb12b0df47",
+            "MemPerc": "0.03%",
+            "MemUsage": "20MiB / 60.92GiB",
+            "Name": "florabase-perf-frontend-1",
+            "NetIO": "40.7MB / 43.1MB",
+            "PIDs": "26"
+          },
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "3.45%",
+            "Container": "florabase-perf-db-1",
+            "ID": "841fdc5905d2",
+            "MemPerc": "0.22%",
+            "MemUsage": "138.1MiB / 60.92GiB",
+            "Name": "florabase-perf-db-1",
+            "NetIO": "7.7MB / 54.2MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-11-19T21:37:53.008385+00:00",
+          "idle_expires_at": "2026-11-20T21:37:53.008385+00:00"
+        },
+        "load": "3.24 3.17 2.68 3/3794 529206"
+      },
+      {
+        "at": 1795124360.8,
+        "timestamp_utc": "2026-11-19T21:39:20.817839+00:00",
+        "containers": [
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.17%",
+            "Container": "florabase-perf-backend-1",
+            "ID": "d94dcd211676",
+            "MemPerc": "0.28%",
+            "MemUsage": "176.7MiB / 60.92GiB",
+            "Name": "florabase-perf-backend-1",
+            "NetIO": "54.9MB / 47.5MB",
+            "PIDs": "4"
+          },
+          {
+            "BlockIO": "0B / 12.3kB",
+            "CPUPerc": "0.00%",
+            "Container": "florabase-perf-frontend-1",
+            "ID": "62bb12b0df47",
+            "MemPerc": "0.03%",
+            "MemUsage": "19.99MiB / 60.92GiB",
+            "Name": "florabase-perf-frontend-1",
+            "NetIO": "40.7MB / 43.1MB",
+            "PIDs": "26"
+          },
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.01%",
+            "Container": "florabase-perf-db-1",
+            "ID": "841fdc5905d2",
+            "MemPerc": "0.22%",
+            "MemUsage": "138.2MiB / 60.92GiB",
+            "Name": "florabase-perf-db-1",
+            "NetIO": "7.71MB / 54.2MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-11-19T21:37:53.008385+00:00",
+          "idle_expires_at": "2026-11-20T21:37:53.008385+00:00"
+        },
+        "load": "3.05 3.13 2.67 3/3782 529550"
+      },
+      {
+        "at": 1795124370.8,
+        "timestamp_utc": "2026-11-19T21:39:30.823092+00:00",
+        "containers": [
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.22%",
+            "Container": "florabase-perf-backend-1",
+            "ID": "d94dcd211676",
+            "MemPerc": "0.28%",
+            "MemUsage": "177.2MiB / 60.92GiB",
+            "Name": "florabase-perf-backend-1",
+            "NetIO": "54.9MB / 47.5MB",
+            "PIDs": "3"
+          },
+          {
+            "BlockIO": "0B / 12.3kB",
+            "CPUPerc": "0.01%",
+            "Container": "florabase-perf-frontend-1",
+            "ID": "62bb12b0df47",
+            "MemPerc": "0.03%",
+            "MemUsage": "19.98MiB / 60.92GiB",
+            "Name": "florabase-perf-frontend-1",
+            "NetIO": "40.7MB / 43.1MB",
+            "PIDs": "26"
+          },
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.00%",
+            "Container": "florabase-perf-db-1",
+            "ID": "841fdc5905d2",
+            "MemPerc": "0.22%",
+            "MemUsage": "137.5MiB / 60.92GiB",
+            "Name": "florabase-perf-db-1",
+            "NetIO": "7.71MB / 54.2MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-11-19T21:37:53.008385+00:00",
+          "idle_expires_at": "2026-11-20T21:37:53.008385+00:00"
+        },
+        "load": "2.89 3.09 2.66 1/3773 529899"
+      },
+      {
+        "at": 1795124380.9,
+        "timestamp_utc": "2026-11-19T21:39:40.855229+00:00",
+        "containers": [
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.20%",
+            "Container": "florabase-perf-backend-1",
+            "ID": "d94dcd211676",
+            "MemPerc": "0.28%",
+            "MemUsage": "177.5MiB / 60.92GiB",
+            "Name": "florabase-perf-backend-1",
+            "NetIO": "54.9MB / 47.5MB",
+            "PIDs": "3"
+          },
+          {
+            "BlockIO": "0B / 12.3kB",
+            "CPUPerc": "0.00%",
+            "Container": "florabase-perf-frontend-1",
+            "ID": "62bb12b0df47",
+            "MemPerc": "0.03%",
+            "MemUsage": "19.97MiB / 60.92GiB",
+            "Name": "florabase-perf-frontend-1",
+            "NetIO": "40.7MB / 43.1MB",
+            "PIDs": "26"
+          },
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.00%",
+            "Container": "florabase-perf-db-1",
+            "ID": "841fdc5905d2",
+            "MemPerc": "0.22%",
+            "MemUsage": "138.5MiB / 60.92GiB",
+            "Name": "florabase-perf-db-1",
+            "NetIO": "7.71MB / 54.2MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-11-19T21:37:53.008385+00:00",
+          "idle_expires_at": "2026-11-20T21:37:53.008385+00:00"
+        },
+        "load": "2.76 3.06 2.65 1/3760 530215"
+      },
+      {
+        "at": 1795124390.8,
+        "timestamp_utc": "2026-11-19T21:39:50.844966+00:00",
+        "containers": [
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.16%",
+            "Container": "florabase-perf-backend-1",
+            "ID": "d94dcd211676",
+            "MemPerc": "0.28%",
+            "MemUsage": "176.7MiB / 60.92GiB",
+            "Name": "florabase-perf-backend-1",
+            "NetIO": "54.9MB / 47.5MB",
+            "PIDs": "3"
+          },
+          {
+            "BlockIO": "0B / 12.3kB",
+            "CPUPerc": "0.00%",
+            "Container": "florabase-perf-frontend-1",
+            "ID": "62bb12b0df47",
+            "MemPerc": "0.03%",
+            "MemUsage": "19.96MiB / 60.92GiB",
+            "Name": "florabase-perf-frontend-1",
+            "NetIO": "40.7MB / 43.1MB",
+            "PIDs": "26"
+          },
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "3.61%",
+            "Container": "florabase-perf-db-1",
+            "ID": "841fdc5905d2",
+            "MemPerc": "0.22%",
+            "MemUsage": "138.4MiB / 60.92GiB",
+            "Name": "florabase-perf-db-1",
+            "NetIO": "7.71MB / 54.2MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-11-19T21:37:53.008385+00:00",
+          "idle_expires_at": "2026-11-20T21:37:53.008385+00:00"
+        },
+        "load": "2.49 2.99 2.63 1/3781 530569"
+      },
+      {
+        "at": 1795124400.8,
+        "timestamp_utc": "2026-11-19T21:40:00.825627+00:00",
+        "containers": [
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.26%",
+            "Container": "florabase-perf-backend-1",
+            "ID": "d94dcd211676",
+            "MemPerc": "0.28%",
+            "MemUsage": "177.5MiB / 60.92GiB",
+            "Name": "florabase-perf-backend-1",
+            "NetIO": "54.9MB / 47.5MB",
+            "PIDs": "3"
+          },
+          {
+            "BlockIO": "0B / 12.3kB",
+            "CPUPerc": "0.00%",
+            "Container": "florabase-perf-frontend-1",
+            "ID": "62bb12b0df47",
+            "MemPerc": "0.03%",
+            "MemUsage": "19.96MiB / 60.92GiB",
+            "Name": "florabase-perf-frontend-1",
+            "NetIO": "40.7MB / 43.1MB",
+            "PIDs": "26"
+          },
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "2.31%",
+            "Container": "florabase-perf-db-1",
+            "ID": "841fdc5905d2",
+            "MemPerc": "0.22%",
+            "MemUsage": "137.5MiB / 60.92GiB",
+            "Name": "florabase-perf-db-1",
+            "NetIO": "7.71MB / 54.2MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-11-19T21:37:53.008385+00:00",
+          "idle_expires_at": "2026-11-20T21:37:53.008385+00:00"
+        },
+        "load": "2.34 2.94 2.62 2/3770 530873"
+      },
+      {
+        "at": 1795124410.8,
+        "timestamp_utc": "2026-11-19T21:40:10.846126+00:00",
+        "containers": [
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.28%",
+            "Container": "florabase-perf-backend-1",
+            "ID": "d94dcd211676",
+            "MemPerc": "0.28%",
+            "MemUsage": "177.7MiB / 60.92GiB",
+            "Name": "florabase-perf-backend-1",
+            "NetIO": "54.9MB / 47.5MB",
+            "PIDs": "3"
+          },
+          {
+            "BlockIO": "0B / 12.3kB",
+            "CPUPerc": "0.01%",
+            "Container": "florabase-perf-frontend-1",
+            "ID": "62bb12b0df47",
+            "MemPerc": "0.03%",
+            "MemUsage": "19.94MiB / 60.92GiB",
+            "Name": "florabase-perf-frontend-1",
+            "NetIO": "40.7MB / 43.1MB",
+            "PIDs": "26"
+          },
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "4.92%",
+            "Container": "florabase-perf-db-1",
+            "ID": "841fdc5905d2",
+            "MemPerc": "0.22%",
+            "MemUsage": "138MiB / 60.92GiB",
+            "Name": "florabase-perf-db-1",
+            "NetIO": "7.71MB / 54.2MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-11-19T21:37:53.008385+00:00",
+          "idle_expires_at": "2026-11-20T21:37:53.008385+00:00"
+        },
+        "load": "2.29 2.91 2.61 5/3760 531172"
+      },
+      {
+        "at": 1795124420.8,
+        "timestamp_utc": "2026-11-19T21:40:20.825743+00:00",
+        "containers": [
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.30%",
+            "Container": "florabase-perf-backend-1",
+            "ID": "d94dcd211676",
+            "MemPerc": "0.28%",
+            "MemUsage": "176.9MiB / 60.92GiB",
+            "Name": "florabase-perf-backend-1",
+            "NetIO": "54.9MB / 47.5MB",
+            "PIDs": "3"
+          },
+          {
+            "BlockIO": "0B / 12.3kB",
+            "CPUPerc": "0.00%",
+            "Container": "florabase-perf-frontend-1",
+            "ID": "62bb12b0df47",
+            "MemPerc": "0.03%",
+            "MemUsage": "19.91MiB / 60.92GiB",
+            "Name": "florabase-perf-frontend-1",
+            "NetIO": "40.7MB / 43.1MB",
+            "PIDs": "26"
+          },
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "3.76%",
+            "Container": "florabase-perf-db-1",
+            "ID": "841fdc5905d2",
+            "MemPerc": "0.22%",
+            "MemUsage": "138.8MiB / 60.92GiB",
+            "Name": "florabase-perf-db-1",
+            "NetIO": "7.71MB / 54.2MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-11-19T21:37:53.008385+00:00",
+          "idle_expires_at": "2026-11-20T21:37:53.008385+00:00"
+        },
+        "load": "2.24 2.88 2.61 1/3790 531579"
+      },
+      {
+        "at": 1795124430.8,
+        "timestamp_utc": "2026-11-19T21:40:30.831753+00:00",
+        "containers": [
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.22%",
+            "Container": "florabase-perf-backend-1",
+            "ID": "d94dcd211676",
+            "MemPerc": "0.28%",
+            "MemUsage": "176.8MiB / 60.92GiB",
+            "Name": "florabase-perf-backend-1",
+            "NetIO": "54.9MB / 47.5MB",
+            "PIDs": "3"
+          },
+          {
+            "BlockIO": "0B / 12.3kB",
+            "CPUPerc": "0.00%",
+            "Container": "florabase-perf-frontend-1",
+            "ID": "62bb12b0df47",
+            "MemPerc": "0.03%",
+            "MemUsage": "19.91MiB / 60.92GiB",
+            "Name": "florabase-perf-frontend-1",
+            "NetIO": "40.7MB / 43.1MB",
+            "PIDs": "26"
+          },
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.00%",
+            "Container": "florabase-perf-db-1",
+            "ID": "841fdc5905d2",
+            "MemPerc": "0.22%",
+            "MemUsage": "137.1MiB / 60.92GiB",
+            "Name": "florabase-perf-db-1",
+            "NetIO": "7.71MB / 54.2MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-11-19T21:37:53.008385+00:00",
+          "idle_expires_at": "2026-11-20T21:37:53.008385+00:00"
+        },
+        "load": "2.20 2.85 2.60 5/3776 531892"
+      },
+      {
+        "at": 1795124440.8,
+        "timestamp_utc": "2026-11-19T21:40:40.812977+00:00",
+        "containers": [
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.18%",
+            "Container": "florabase-perf-backend-1",
+            "ID": "d94dcd211676",
+            "MemPerc": "0.29%",
+            "MemUsage": "178.7MiB / 60.92GiB",
+            "Name": "florabase-perf-backend-1",
+            "NetIO": "54.9MB / 47.5MB",
+            "PIDs": "3"
+          },
+          {
+            "BlockIO": "0B / 12.3kB",
+            "CPUPerc": "0.00%",
+            "Container": "florabase-perf-frontend-1",
+            "ID": "62bb12b0df47",
+            "MemPerc": "0.03%",
+            "MemUsage": "20.04MiB / 60.92GiB",
+            "Name": "florabase-perf-frontend-1",
+            "NetIO": "40.7MB / 43.1MB",
+            "PIDs": "26"
+          },
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "5.24%",
+            "Container": "florabase-perf-db-1",
+            "ID": "841fdc5905d2",
+            "MemPerc": "0.22%",
+            "MemUsage": "138MiB / 60.92GiB",
+            "Name": "florabase-perf-db-1",
+            "NetIO": "7.72MB / 54.2MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-11-19T21:37:53.008385+00:00",
+          "idle_expires_at": "2026-11-20T21:37:53.008385+00:00"
+        },
+        "load": "2.34 2.85 2.61 2/3768 532239"
+      },
+      {
+        "at": 1795124450.8,
+        "timestamp_utc": "2026-11-19T21:40:50.838605+00:00",
+        "containers": [
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.23%",
+            "Container": "florabase-perf-backend-1",
+            "ID": "d94dcd211676",
+            "MemPerc": "0.29%",
+            "MemUsage": "178.6MiB / 60.92GiB",
+            "Name": "florabase-perf-backend-1",
+            "NetIO": "54.9MB / 47.5MB",
+            "PIDs": "3"
+          },
+          {
+            "BlockIO": "0B / 12.3kB",
+            "CPUPerc": "0.00%",
+            "Container": "florabase-perf-frontend-1",
+            "ID": "62bb12b0df47",
+            "MemPerc": "0.03%",
+            "MemUsage": "19.91MiB / 60.92GiB",
+            "Name": "florabase-perf-frontend-1",
+            "NetIO": "40.7MB / 43.1MB",
+            "PIDs": "26"
+          },
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "5.09%",
+            "Container": "florabase-perf-db-1",
+            "ID": "841fdc5905d2",
+            "MemPerc": "0.22%",
+            "MemUsage": "137.8MiB / 60.92GiB",
+            "Name": "florabase-perf-db-1",
+            "NetIO": "7.72MB / 54.2MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-11-19T21:37:53.008385+00:00",
+          "idle_expires_at": "2026-11-20T21:37:53.008385+00:00"
+        },
+        "load": "2.29 2.83 2.60 1/3789 532566"
+      },
+      {
+        "at": 1795124460.9,
+        "timestamp_utc": "2026-11-19T21:41:00.855716+00:00",
+        "containers": [
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.22%",
+            "Container": "florabase-perf-backend-1",
+            "ID": "d94dcd211676",
+            "MemPerc": "0.29%",
+            "MemUsage": "177.9MiB / 60.92GiB",
+            "Name": "florabase-perf-backend-1",
+            "NetIO": "54.9MB / 47.5MB",
+            "PIDs": "3"
+          },
+          {
+            "BlockIO": "0B / 12.3kB",
+            "CPUPerc": "0.00%",
+            "Container": "florabase-perf-frontend-1",
+            "ID": "62bb12b0df47",
+            "MemPerc": "0.03%",
+            "MemUsage": "19.91MiB / 60.92GiB",
+            "Name": "florabase-perf-frontend-1",
+            "NetIO": "40.7MB / 43.1MB",
+            "PIDs": "26"
+          },
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "0.55%",
+            "Container": "florabase-perf-db-1",
+            "ID": "841fdc5905d2",
+            "MemPerc": "0.22%",
+            "MemUsage": "137.2MiB / 60.92GiB",
+            "Name": "florabase-perf-db-1",
+            "NetIO": "7.72MB / 54.2MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-11-19T21:37:53.008385+00:00",
+          "idle_expires_at": "2026-11-20T21:37:53.008385+00:00"
+        },
+        "load": "2.17 2.78 2.59 1/3802 532961"
+      },
+      {
+        "at": 1795124470.8,
+        "timestamp_utc": "2026-11-19T21:41:10.813816+00:00",
+        "containers": [
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "27.01%",
+            "Container": "florabase-perf-backend-1",
+            "ID": "d94dcd211676",
+            "MemPerc": "0.29%",
+            "MemUsage": "178.6MiB / 60.92GiB",
+            "Name": "florabase-perf-backend-1",
+            "NetIO": "54.9MB / 47.5MB",
+            "PIDs": "3"
+          },
+          {
+            "BlockIO": "0B / 12.3kB",
+            "CPUPerc": "0.00%",
+            "Container": "florabase-perf-frontend-1",
+            "ID": "62bb12b0df47",
+            "MemPerc": "0.03%",
+            "MemUsage": "19.91MiB / 60.92GiB",
+            "Name": "florabase-perf-frontend-1",
+            "NetIO": "40.7MB / 43.1MB",
+            "PIDs": "26"
+          },
+          {
+            "BlockIO": "0B / 24.6kB",
+            "CPUPerc": "2.98%",
+            "Container": "florabase-perf-db-1",
+            "ID": "841fdc5905d2",
+            "MemPerc": "0.22%",
+            "MemUsage": "139.1MiB / 60.92GiB",
+            "Name": "florabase-perf-db-1",
+            "NetIO": "7.72MB / 54.2MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-11-19T21:37:53.008385+00:00",
+          "idle_expires_at": "2026-11-20T21:37:53.008385+00:00"
+        },
+        "load": "2.14 2.76 2.58 8/3772 533383"
+      }
+    ],
+    "final": {
+      "Documents": 2,
+      "JSEventListeners": 484,
+      "Nodes": 759,
+      "JSHeapUsedSize": 8905008,
+      "timers": {
+        "intervals": 2,
+        "timeouts": 0
+      },
+      "maps": 0
+    },
+    "errors": [],
+    "resources": [
+      {
+        "path": "/assets/rolldown-runtime-4tVxZq34.js",
+        "bytes": 237,
+        "transfer": 537
+      },
+      {
+        "path": "/assets/index-C2O9H-mu.js",
+        "bytes": 106478,
+        "transfer": 106778
+      },
+      {
+        "path": "/assets/jsx-runtime-BqZj9D7S.js",
+        "bytes": 3213,
+        "transfer": 3513
+      },
+      {
+        "path": "/assets/index-CqeGrgEY.css",
+        "bytes": 54903,
+        "transfer": 55203
+      },
+      {
+        "path": "/assets/api-BH6p4WcD.js",
+        "bytes": 527,
+        "transfer": 827
+      },
+      {
+        "path": "/assets/instrument-sans-latin-wght-normal-BbzFLZTg.woff2",
+        "bytes": 30092,
+        "transfer": 30392
+      },
+      {
+        "path": "/assets/newsreader-latin-opsz-normal-s-izfB6B.woff2",
+        "bytes": 132000,
+        "transfer": 132300
+      },
+      {
+        "path": "/assets/DashboardScreen-z7yL5OaS.js",
+        "bytes": 8338,
+        "transfer": 8638
+      },
+      {
+        "path": "/assets/WorkspaceUI-DDHLAekN.js",
+        "bytes": 767,
+        "transfer": 1067
+      },
+      {
+        "path": "/assets/WorkspaceUI-CRoIMbwk.css",
+        "bytes": 646,
+        "transfer": 946
+      },
+      {
+        "path": "/assets/presentation-CU-6jePs.js",
+        "bytes": 794,
+        "transfer": 1094
+      },
+      {
+        "path": "/assets/SavedViews-Dlh5O7vw.js",
+        "bytes": 2665,
+        "transfer": 2965
+      },
+      {
+        "path": "/assets/recordWorkflows-Bznbgij5.js",
+        "bytes": 287,
+        "transfer": 587
+      },
+      {
+        "path": "/assets/ScheduleTargetLabel-U0Pix4wu.js",
+        "bytes": 346,
+        "transfer": 646
+      },
+      {
+        "path": "/assets/state-EV0z7Vtz.js",
+        "bytes": 1757,
+        "transfer": 2057
+      },
+      {
+        "path": "/assets/api-DHCEg3ji.js",
+        "bytes": 296,
+        "transfer": 596
+      },
+      {
+        "path": "/assets/api-L6IHvRen.js",
+        "bytes": 861,
+        "transfer": 1161
+      },
+      {
+        "path": "/assets/api-DrY5SF04.js",
+        "bytes": 591,
+        "transfer": 891
+      },
+      {
+        "path": "/assets/api-B3IyNvlK.js",
+        "bytes": 939,
+        "transfer": 1239
+      },
+      {
+        "path": "/assets/ReferencePicker-CA4RRV9m.js",
+        "bytes": 2142,
+        "transfer": 2442
+      },
+      {
+        "path": "/assets/ContextualHelp-Cp1AzW_4.js",
+        "bytes": 781,
+        "transfer": 1081
+      },
+      {
+        "path": "/assets/api-CKrgCXp4.js",
+        "bytes": 649,
+        "transfer": 949
+      },
+      {
+        "path": "/assets/DashboardScreen-BDyGjTWD.css",
+        "bytes": 3268,
+        "transfer": 3568
+      },
+      {
+        "path": "/assets/ibm-plex-mono-latin-500-normal-DSY6xOcd.woff2",
+        "bytes": 14888,
+        "transfer": 15188
+      },
+      {
+        "path": "/assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+        "bytes": 14708,
+        "transfer": 15008
+      },
+      {
+        "path": "/assets/BotanicalIdentityScreen-BGuya_yo.js",
+        "bytes": 37387,
+        "transfer": 37687
+      },
+      {
+        "path": "/assets/DirectoryPage-V935GUR6.js",
+        "bytes": 2111,
+        "transfer": 2411
+      },
+      {
+        "path": "/assets/DirectoryPage-ZXBWhFen.css",
+        "bytes": 9615,
+        "transfer": 9915
+      },
+      {
+        "path": "/assets/DirectoryResults-Qs54T9LB.js",
+        "bytes": 803,
+        "transfer": 1103
+      },
+      {
+        "path": "/assets/useEditRoute-yO9zTr1T.css",
+        "bytes": 759,
+        "transfer": 1059
+      },
+      {
+        "path": "/assets/DirectoryTools-DKaaZS1O.js",
+        "bytes": 1050,
+        "transfer": 1350
+      },
+      {
+        "path": "/assets/useEditRoute-BePZgaNT.js",
+        "bytes": 664,
+        "transfer": 964
+      },
+      {
+        "path": "/assets/FormSections-O4pWEPvS.js",
+        "bytes": 1338,
+        "transfer": 1638
+      },
+      {
+        "path": "/assets/useDirectoryPagination-HWjw2LoO.js",
+        "bytes": 520,
+        "transfer": 820
+      },
+      {
+        "path": "/assets/useDirectoryView-B9mclJbs.js",
+        "bytes": 730,
+        "transfer": 1030
+      },
+      {
+        "path": "/assets/MapWorkspace-BWAk9p7-.css",
+        "bytes": 488,
+        "transfer": 788
+      },
+      {
+        "path": "/assets/OccurrenceMapPanel-BTrhWud_.js",
+        "bytes": 3732,
+        "transfer": 4032
+      },
+      {
+        "path": "/assets/MapWorkspace-lday5qpC.js",
+        "bytes": 893,
+        "transfer": 1193
+      },
+      {
+        "path": "/assets/api-R18eNeWU.js",
+        "bytes": 114,
+        "transfer": 414
+      },
+      {
+        "path": "/assets/DetailEmptyState-DsvjEYp4.js",
+        "bytes": 210,
+        "transfer": 510
+      },
+      {
+        "path": "/assets/PhotosSection-CrhAnoXK.js",
+        "bytes": 7931,
+        "transfer": 8231
+      },
+      {
+        "path": "/assets/DetailEmptyState-DZCqqZcw.css",
+        "bytes": 218,
+        "transfer": 518
+      },
+      {
+        "path": "/assets/PhotosSection-B3jAYkLc.css",
+        "bytes": 954,
+        "transfer": 1254
+      },
+      {
+        "path": "/assets/formValidation-v__28_VR.js",
+        "bytes": 177,
+        "transfer": 477
+      },
+      {
+        "path": "/assets/CollectionUI-CU60ympn.js",
+        "bytes": 2056,
+        "transfer": 2356
+      },
+      {
+        "path": "/assets/CollectionUI-DeNCieJc.css",
+        "bytes": 3253,
+        "transfer": 3553
+      },
+      {
+        "path": "/assets/useCreationDisclosure-BQ16pDcq.js",
+        "bytes": 578,
+        "transfer": 878
+      },
+      {
+        "path": "/assets/EventFeed-ClyKGSf1.js",
+        "bytes": 2102,
+        "transfer": 2402
+      },
+      {
+        "path": "/assets/EventTargetPhoto-D3XEbFbd.js",
+        "bytes": 318,
+        "transfer": 618
+      },
+      {
+        "path": "/assets/RecordVisual-BdnjjRfq.js",
+        "bytes": 1543,
+        "transfer": 1843
+      },
+      {
+        "path": "/assets/almanac-CjBaWykf.js",
+        "bytes": 805,
+        "transfer": 1105
+      },
+      {
+        "path": "/assets/EventFeed-B6GalyRP.css",
+        "bytes": 1420,
+        "transfer": 1720
+      },
+      {
+        "path": "/assets/state-CctvEAP_.js",
+        "bytes": 4506,
+        "transfer": 4806
+      },
+      {
+        "path": "/assets/collection-directory-Cnxb1eq4.css",
+        "bytes": 911,
+        "transfer": 1211
+      },
+      {
+        "path": "/assets/state-AlbfbYtC.css",
+        "bytes": 635,
+        "transfer": 935
+      },
+      {
+        "path": "/assets/BotanicalIdentityScreen-B6zn5X2X.css",
+        "bytes": 6803,
+        "transfer": 7103
+      },
+      {
+        "path": "/assets/newsreader-latin-opsz-italic-kJKFiXvB.woff2",
+        "bytes": 146872,
+        "transfer": 147172
+      },
+      {
+        "path": "/assets/SeedLotScreen-CaCtYAYw.js",
+        "bytes": 13931,
+        "transfer": 14231
+      },
+      {
+        "path": "/assets/BulkLocation-ux0gh8Ml.js",
+        "bytes": 3786,
+        "transfer": 4086
+      },
+      {
+        "path": "/assets/directoryPresentation-BdsYpOTm.js",
+        "bytes": 594,
+        "transfer": 894
+      },
+      {
+        "path": "/assets/useRecordDetailFocus-CoX4F7Ea.js",
+        "bytes": 846,
+        "transfer": 1146
+      },
+      {
+        "path": "/assets/useCollectionPageReturnFocus-DsS3ox5Q.js",
+        "bytes": 438,
+        "transfer": 738
+      },
+      {
+        "path": "/assets/ConversionHistory-Cu3lVpcY.js",
+        "bytes": 1876,
+        "transfer": 2176
+      },
+      {
+        "path": "/assets/OrderPicker-B2hAFsYv.js",
+        "bytes": 1753,
+        "transfer": 2053
+      },
+      {
+        "path": "/assets/PurchaseContext-BsFziaIk.js",
+        "bytes": 3608,
+        "transfer": 3908
+      },
+      {
+        "path": "/assets/PurchaseContext-VexC7BKh.css",
+        "bytes": 2761,
+        "transfer": 3061
+      },
+      {
+        "path": "/assets/api-D9gifKdt.js",
+        "bytes": 870,
+        "transfer": 1170
+      },
+      {
+        "path": "/assets/LineageStrip-DIA9_0uD.js",
+        "bytes": 3242,
+        "transfer": 3542
+      },
+      {
+        "path": "/assets/api-0Qaw4wjv.js",
+        "bytes": 659,
+        "transfer": 959
+      },
+      {
+        "path": "/assets/LineageStrip-AyJ4TWMe.css",
+        "bytes": 2601,
+        "transfer": 2901
+      },
+      {
+        "path": "/assets/useRecordedLineage-Bva6LqKK.js",
+        "bytes": 830,
+        "transfer": 1130
+      },
+      {
+        "path": "/assets/LineagePanel-BKvbed7K.js",
+        "bytes": 971,
+        "transfer": 1271
+      },
+      {
+        "path": "/assets/PropagationPath-DYjjxfof.css",
+        "bytes": 487,
+        "transfer": 787
+      },
+      {
+        "path": "/assets/PropagationPath-CU7OPsAO.js",
+        "bytes": 764,
+        "transfer": 1064
+      },
+      {
+        "path": "/assets/api-BVtDwzj4.js",
+        "bytes": 1135,
+        "transfer": 1435
+      },
+      {
+        "path": "/assets/PartialDateField-C0SWxJC7.js",
+        "bytes": 1493,
+        "transfer": 1793
+      },
+      {
+        "path": "/assets/PartialDateField-DYl5qx3_.css",
+        "bytes": 678,
+        "transfer": 978
+      },
+      {
+        "path": "/assets/dateControls-BcMOVQFN.js",
+        "bytes": 325,
+        "transfer": 625
+      },
+      {
+        "path": "/assets/SeedLotScreen-CRrmdGWw.css",
+        "bytes": 2450,
+        "transfer": 2750
+      },
+      {
+        "path": "/assets/collection-page-DE7K5F5N.css",
+        "bytes": 1302,
+        "transfer": 1602
+      },
+      {
+        "path": "/assets/instrument-sans-latin-wght-italic-BlcgWI5J.woff2",
+        "bytes": 31828,
+        "transfer": 32128
+      },
+      {
+        "path": "/assets/SowingScreen-CpD9iuKe.js",
+        "bytes": 13987,
+        "transfer": 14287
+      },
+      {
+        "path": "/assets/CreationReversal-CWOQLt51.js",
+        "bytes": 2402,
+        "transfer": 2702
+      },
+      {
+        "path": "/assets/SowingFormFields-BKmtMqx0.js",
+        "bytes": 1854,
+        "transfer": 2154
+      },
+      {
+        "path": "/assets/collection-visual-CbqHtnFV.css",
+        "bytes": 1697,
+        "transfer": 1997
+      },
+      {
+        "path": "/assets/Cuttings-DXcOQmpb.js",
+        "bytes": 11982,
+        "transfer": 12282
+      },
+      {
+        "path": "/assets/Cuttings-DdT7syHb.css",
+        "bytes": 713,
+        "transfer": 1013
+      },
+      {
+        "path": "/assets/PlantScreen-CgbFNyTT.js",
+        "bytes": 27257,
+        "transfer": 27557
+      },
+      {
+        "path": "/assets/PlantFormFields-CMrV5r5R.js",
+        "bytes": 1087,
+        "transfer": 1387
+      },
+      {
+        "path": "/assets/activity-BwlBHNKr.css",
+        "bytes": 3233,
+        "transfer": 3533
+      },
+      {
+        "path": "/assets/HarvestScreen-DonPeiG5.js",
+        "bytes": 15584,
+        "transfer": 15884
+      },
+      {
+        "path": "/assets/HarvestScreen-W_NTB-6U.css",
+        "bytes": 259,
+        "transfer": 559
+      },
+      {
+        "path": "/assets/collection-visual-CcOGQH9W.css",
+        "bytes": 4755,
+        "transfer": 5055
+      },
+      {
+        "path": "/assets/SupplierScreen-CPYEfZ8S.js",
+        "bytes": 7826,
+        "transfer": 8126
+      },
+      {
+        "path": "/assets/SupplierScreen-DPkE9mIC.css",
+        "bytes": 1487,
+        "transfer": 1787
+      },
+      {
+        "path": "/assets/OrderScreen-DApfvgsi.js",
+        "bytes": 8182,
+        "transfer": 8482
+      },
+      {
+        "path": "/assets/LocationScreen-CzerncFT.js",
+        "bytes": 7406,
+        "transfer": 7706
+      },
+      {
+        "path": "/assets/hierarchy-DjH9am4z.js",
+        "bytes": 200,
+        "transfer": 500
+      },
+      {
+        "path": "/assets/hierarchy-DllWK5Tf.css",
+        "bytes": 663,
+        "transfer": 963
+      },
+      {
+        "path": "/assets/LocationScreen-x1XGuNl0.css",
+        "bytes": 1,
+        "transfer": 301
+      },
+      {
+        "path": "/assets/GeographyWorkspace-Dxn7cuwm.js",
+        "bytes": 1335,
+        "transfer": 1635
+      },
+      {
+        "path": "/assets/GeographyOverview-B4HEjBMC.js",
+        "bytes": 2414,
+        "transfer": 2714
+      },
+      {
+        "path": "/assets/api-Ko9LZte1.js",
+        "bytes": 838,
+        "transfer": 1138
+      },
+      {
+        "path": "/assets/model-DHMF1PEF.js",
+        "bytes": 770,
+        "transfer": 1070
+      },
+      {
+        "path": "/assets/GeographyHeader-COrRhfOG.css",
+        "bytes": 2101,
+        "transfer": 2401
+      },
+      {
+        "path": "/assets/api-BxjT43Lj.js",
+        "bytes": 303,
+        "transfer": 603
+      },
+      {
+        "path": "/assets/GeographyHeader-Du_d5rMg.js",
+        "bytes": 568,
+        "transfer": 868
+      },
+      {
+        "path": "/assets/GeographyScreen-CfdsjAj5.js",
+        "bytes": 11728,
+        "transfer": 12028
+      },
+      {
+        "path": "/assets/origins-CcBhhC9i.js",
+        "bytes": 2108,
+        "transfer": 2408
+      },
+      {
+        "path": "/assets/origins-CEeS3r_C.css",
+        "bytes": 1820,
+        "transfer": 2120
+      },
+      {
+        "path": "/assets/ProvenanceMap-BuqYT6rU.js",
+        "bytes": 2780,
+        "transfer": 3080
+      },
+      {
+        "path": "/assets/config-guYr4AL2.js",
+        "bytes": 52349,
+        "transfer": 52649
+      },
+      {
+        "path": "/assets/geometry-DQWizj3m.js",
+        "bytes": 592,
+        "transfer": 892
+      },
+      {
+        "path": "/assets/world-110m-CpoHhobN.js",
+        "bytes": 67246,
+        "transfer": 67546
+      },
+      {
+        "path": "/assets/NativeRangesScreen-CjXXM3Z7.js",
+        "bytes": 6945,
+        "transfer": 7245
+      },
+      {
+        "path": "/assets/native-ranges-Bdv19wZw.js",
+        "bytes": 6413,
+        "transfer": 6713
+      },
+      {
+        "path": "/assets/native-ranges-DjjQArvO.css",
+        "bytes": 3171,
+        "transfer": 3471
+      },
+      {
+        "path": "/assets/TaxonomyScreen-BguDLbn9.js",
+        "bytes": 13814,
+        "transfer": 14114
+      },
+      {
+        "path": "/assets/TaxonomyScreen-ySXi-SyD.css",
+        "bytes": 5143,
+        "transfer": 5443
+      },
+      {
+        "path": "/assets/MediaScreen-GT3e4hVp.js",
+        "bytes": 9603,
+        "transfer": 9903
+      },
+      {
+        "path": "/assets/MediaScreen-DE2at3Uh.css",
+        "bytes": 882,
+        "transfer": 1182
+      },
+      {
+        "path": "/assets/GlobalEventsScreen-DKqAozc3.js",
+        "bytes": 2091,
+        "transfer": 2391
+      },
+      {
+        "path": "/assets/ActivityFilters-9LjTRdJb.js",
+        "bytes": 858,
+        "transfer": 1158
+      },
+      {
+        "path": "/assets/ScheduleTargetPicker-5dZPVhue.js",
+        "bytes": 1182,
+        "transfer": 1482
+      },
+      {
+        "path": "/assets/HistoryScreen-Cfu3FhKU.js",
+        "bytes": 2935,
+        "transfer": 3235
+      },
+      {
+        "path": "/assets/ScheduleScreen-TCSguD5v.js",
+        "bytes": 9381,
+        "transfer": 9681
+      },
+      {
+        "path": "/assets/ScheduleScreen-DSgDemDo.css",
+        "bytes": 3819,
+        "transfer": 4119
+      }
+    ],
+    "route_requests_externalized": true
+  },
+  "profile_excerpt": "         1259476 function calls (1255586 primitive calls) in 0.628 seconds\n\n   Ordered by: cumulative time\n   List reduced from 781 to 35 due to restriction <35>\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n        7    0.036    0.005    0.312    0.045 service.py:365(responses)\n        7    0.003    0.000    0.233    0.033 service.py:324(list_seed_lots)\n     8253    0.004    0.000    0.175    0.000 result.py:565(iterrows)\n      196    0.008    0.000    0.171    0.001 loading.py:208(chunks)\n      105    0.001    0.000    0.166    0.002 session.py:2141(_execute_internal)\n      105    0.000    0.000    0.164    0.002 context.py:296(orm_execute_statement)\n      105    0.000    0.000    0.158    0.002 base.py:1420(execute)\n      105    0.000    0.000    0.158    0.002 elements.py:517(_execute_on_connection)\n      105    0.001    0.000    0.158    0.002 base.py:1636(_execute_clauseelement)",
+  "query_plans_summary": {
+    "seeds": 1,
+    "recent_events": 1,
+    "geography": 1
+  },
+  "full_artifact": {
+    "sha256": "368d7d96536366b7ee5978e8aff97db7ac75742642e6e0ca3c4a7e43a507b8d9",
+    "bytes": 807825,
+    "external_location": "$XDG_STATE_HOME/florabase/perf-evidence/comprehensive-rehearsal-6175a03-full.json"
+  },
+  "limitations": [
+    "Preliminary source-build rehearsal only; not formal immutable RC-image G-PERF certification.",
+    "PostgreSQL data and attachment storage use tmpfs; disk durability and fsync latency are excluded.",
+    "browser.mjs route ms includes a 500ms network-quiescence settle wait (time-to-quiet, not paint/render latency).",
+    "browser.mjs stubs /occurrence-map/cache and tiles locally; external provider/tile latency is excluded from browser timings.",
+    "Host load and concurrent agent worktrees are shared; timings are host-specific loopback HTTP numbers."
+  ],
+  "evaluation": {
+    "pin_mode": "allow-modified-baseline",
+    "execution_stage": "preliminary_modified_baseline_rehearsal",
+    "rc_g_perf_certification": false,
+    "certification_eligible": false,
+    "harness_status": "passed",
+    "application_status": "passed",
+    "invariant_status": "passed",
+    "failure_classification": "none",
+    "fixture_pin_status": "invariant-valid-baseline-modified",
+    "fixture_differences_from_pin": [
+      "table native_range_applications: {'rows': 2, 'sha256': '75f4846957ef63e01691678a90b00122a5bff44e6f0010772f4af0326021db71'} != reviewed {'rows': 2, 'sha256': '825ec94ca1f150cfd0dc6a7abc417c69952a7f5b8a65ec3682c5a889fbb08d79'}",
+      "table native_range_proposals: {'rows': 3, 'sha256': 'e18865f307b5686c9e5bbd402ddca848d7bc6fef36e8c66a529d6d425346e469'} != reviewed {'rows': 3, 'sha256': '378a1244135860294c7278c28c4d95705da6faf99c0cb94febc6815a7dd2baab'}",
+      "canonical_sha256: 5f59cc7ff3829517a5957c9b0972957d17c6eb2825fc023ba0be455ae047dfd0 != reviewed a6141fc43cf46012007f342b0ba71b005f31141ae34c85f4cdb79bb30a9da88b"
+    ],
+    "missing_sections": [],
+    "harness_failures": [],
+    "application_failures": [],
+    "failures": [],
+    "enforced_invariants": [
+      {
+        "id": "harness_execution_no_errors",
+        "category": "harness",
+        "passed": true,
+        "observed": {
+          "errors": [],
+          "warmup_s": 20
+        },
+        "threshold": {
+          "errors": [],
+          "warmup_s": ">= 0"
+        },
+        "detail": "execution errors=[], warmup_s=20"
+      },
+      {
+        "id": "required_measurement_sections_present",
+        "category": "harness",
+        "passed": true,
+        "observed": {
+          "missing_sections": [],
+          "missing_startup": [],
+          "storage_mode": "tmpfs",
+          "process_counts_present": true,
+          "images_present": true
+        },
+        "threshold": {
+          "sections": [
+            "environment",
+            "api",
+            "transfer",
+            "browser",
+            "chunk_recovery",
+            "cleanup"
+          ],
+          "startup": [
+            "provision_bundle_s",
+            "database_health_s",
+            "restore_db_s",
+            "application_health_s",
+            "restore_media_s"
+          ],
+          "services_process_counts": [
+            "db",
+            "backend",
+            "frontend"
+          ]
+        },
+        "detail": "missing sections=[], missing startup=[]"
+      },
+      {
+        "id": "fixture_manifest_valid",
+        "category": "harness",
+        "passed": true,
+        "observed": {
+          "valid": true,
+          "pin_mode": "allow-modified-baseline",
+          "pin_mode_consistent": true,
+          "baseline_state": "invariant-valid-baseline-modified",
+          "baseline_pin_matches": false,
+          "schema_revision": "20261110_0047",
+          "api_manifest_matches_env": true
+        },
+        "threshold": {
+          "valid": true,
+          "pin_mode": "allow-modified-baseline",
+          "baseline_state": [
+            "baseline-verified",
+            "invariant-valid-baseline-modified"
+          ],
+          "certification_eligible": false
+        },
+        "detail": "Golden COMPREHENSIVE domain/schema/count/media manifest and pin validation"
+      },
+      {
+        "id": "api_measurements_complete",
+        "category": "harness",
+        "passed": true,
+        "observed": {
+          "endpoint_count": 48,
+          "expected_count": 48,
+          "missing_endpoints": [],
+          "unexpected_endpoints": [],
+          "malformed": {},
+          "create_edit_delete_ms": 54.9
+        },
+        "threshold": {
+          "endpoint_count": 48,
+          "samples_per_endpoint": 7,
+          "create_edit_delete_ms": ">= 0"
+        },
+        "detail": "Complete 48-endpoint inventory with 7 samples, bytes, query counts and mutation trace"
+      },
+      {
+        "id": "api_sql_instrumentation_complete",
+        "category": "harness",
+        "passed": true,
+        "observed": {
+          "sql_instrumentation": {
+            "extension_installed": true,
+            "shared_preload_libraries": "pg_stat_statements",
+            "reset_executed_per_sample": true,
+            "probe_query_captured": true,
+            "sample_count_per_endpoint": 7,
+            "endpoints_measured": 48
+          },
+          "any_nonzero_queries": true,
+          "unverified_zero_queries": []
+        },
+        "threshold": {
+          "extension_installed": true,
+          "probe_query_captured": true,
+          "zero_query_distinguished_from_uninstrumented": true
+        },
+        "detail": "pg_stat_statements instrumentation verified active; zero-query routes require verified instrumentation"
+      },
+      {
+        "id": "fixture_post_mutation_integrity_verified",
+        "category": "harness",
+        "passed": true,
+        "observed": {
+          "checked": true,
+          "created_identity_deleted": true,
+          "residual_perf_records": 0,
+          "schema_revision": "20261110_0047",
+          "expected_schema_revision": "20261110_0047",
+          "canonical_geographic_places": 287,
+          "expected_canonical_geographic_places": 287,
+          "audit_deltas": {},
+          "unexpected_table_deltas": {},
+          "media_verified": true,
+          "media_verification_summary": "Verified 32 stored attachment file(s) against database metadata"
+        },
+        "threshold": {
+          "created_identity_deleted": true,
+          "residual_perf_records": 0,
+          "unexpected_table_deltas": {},
+          "media_verified": true
+        },
+        "detail": "Logical fixture invariants preserved after POST/PUT/DELETE mutation trace"
+      },
+      {
+        "id": "static_compression_and_api_integrity",
+        "category": "application",
+        "passed": true,
+        "observed": {
+          "static_assets_checked": 2,
+          "protected_api_compressed": false
+        },
+        "threshold": "static gzip + Vary; runtime-config/health/authenticated API uncompressed",
+        "detail": ""
+      },
+      {
+        "id": "frontend_largest_chunk_under_vite_advisory",
+        "category": "application",
+        "passed": true,
+        "observed": 106478,
+        "threshold": 500000,
+        "detail": "largest raw JS chunk 106478 bytes (limit 500000)"
+      },
+      {
+        "id": "browser_workload_complete",
+        "category": "harness",
+        "passed": true,
+        "observed": {
+          "route_count": 39,
+          "missing_routes": [],
+          "duplicate_routes": [],
+          "unexpected_routes": [],
+          "malformed_routes": [],
+          "maps_lifecycle_ok": true
+        },
+        "threshold": {
+          "route_count": 39,
+          "unique_routes": true,
+          "maps_lifecycle": {
+            "provenance": ">=1",
+            "occurrence": ">=1",
+            "dashboard": 0
+          }
+        },
+        "detail": ""
+      },
+      {
+        "id": "browser_zero_errors",
+        "category": "application",
+        "passed": true,
+        "observed": [],
+        "threshold": [],
+        "detail": "0 errors"
+      },
+      {
+        "id": "browser_no_unrelated_external_requests",
+        "category": "application",
+        "passed": true,
+        "observed": [],
+        "threshold": [],
+        "detail": "0 external requests on unrelated routes"
+      },
+      {
+        "id": "browser_six_cycles_stability",
+        "category": "application",
+        "passed": true,
+        "observed": {
+          "cycle_count": 6,
+          "cycle_requests": [
+            38,
+            38,
+            38,
+            38,
+            39,
+            38
+          ],
+          "interval_counts": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          "document_counts": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          "invalid_checkpoints": [],
+          "final_checkpoint_valid": true
+        },
+        "threshold": {
+          "cycles": 6,
+          "maps_on_today": 0,
+          "documents_on_today": "1..2 and constant across cycles and final",
+          "intervals_on_today": "<= 2 and constant across cycles (Today day check + release watcher)",
+          "timeouts_on_today": 0,
+          "cycles_2_to_6_request_spread_max": 4
+        },
+        "detail": ""
+      },
+      {
+        "id": "browser_idle_120s_stability",
+        "category": "application",
+        "passed": true,
+        "observed": {
+          "idle_seconds": 122,
+          "idle_requests_count": 0,
+          "sample_count": 13,
+          "valid_samples": 13,
+          "timestamps_valid": true,
+          "distinct_session_states": 1
+        },
+        "threshold": {
+          "idle_seconds": ">= 120",
+          "idle_requests_count": 0,
+          "sample_count": ">= 13",
+          "idle_span_seconds": ">= 115",
+          "distinct_session_states": 1
+        },
+        "detail": ""
+      },
+      {
+        "id": "lazy_chunk_recovery_verified",
+        "category": "application",
+        "passed": true,
+        "observed": {
+          "stale_asset_path": "/assets/PERF-review-stale-chunk.js",
+          "nginx_fallback": {
+            "status": 200,
+            "contentType": "text/html"
+          },
+          "shell_retained": true,
+          "automatic_reload": false,
+          "page_errors": []
+        },
+        "threshold": {
+          "shell_retained": true,
+          "automatic_reload": false,
+          "page_errors": [],
+          "fallback_status": 200
+        },
+        "detail": ""
+      },
+      {
+        "id": "benchmark_resource_cleanup_verified",
+        "category": "harness",
+        "passed": true,
+        "observed": {
+          "containers_remaining": 0,
+          "networks_remaining": 0,
+          "volumes_remaining": 0,
+          "images_remaining": 0,
+          "ownership_verified": true
+        },
+        "threshold": {
+          "containers_remaining": 0,
+          "networks_remaining": 0,
+          "volumes_remaining": 0,
+          "images_remaining": 0,
+          "ownership_verified": true
+        },
+        "detail": ""
+      }
+    ],
+    "operator_g_perf_thresholds": {
+      "status": "unset_until_g_perf",
+      "authority": "docs/release/scope-v1.md (G-PERF, decision 7)",
+      "note": "No runtime latency, CPU, RAM or supported collection-size pass/fail thresholds exist until the operator sets them from RC-image G-PERF measurements."
+    }
+  },
+  "historical_c2d5a1f_artifact": {
+    "sha256": "dd5919c1530cb451585bb80461897384d13a3febdda12d1636e2bff439395a8c",
+    "bytes": 788494,
+    "measured_commit": "c2d5a1fecee385367f680b7d1172b1310157660d",
+    "git_commit": "df443575a7c18a7e1fd9e776e76685cd8a67c16c",
+    "git_path": "docs/performance/comprehensive-rehearsal.json",
+    "external_location": "$XDG_STATE_HOME/florabase/perf-evidence/comprehensive-rehearsal-c2d5a1f-full.json",
+    "build_metadata_note": "Original c2d5a1f rehearsal reused pre-existing florabase-perf-backend:latest (created 2026-11-18T13:49:34+01:00) and florabase-perf-frontend:latest (created 2026-11-17T19:09:36+01:00) without embedded source-revision labels; no missing build metadata was fabricated."
+  }
+}

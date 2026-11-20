@@ -6,12 +6,17 @@ import assert from "node:assert/strict";
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PERF_PLAYWRIGHT ?? "playwright");
 const [output] = process.argv.slice(2);
-if (!output || existsSync(output))
+if (!output || existsSync(output)) {
   throw Error("Provide a NEW evidence output path");
+}
 
 const origin = "http://localhost:18080";
 const stalePath = "/assets/PERF-review-stale-chunk.js";
-const browser = await chromium.launch({ headless: true });
+const launchOptions = { headless: true };
+if (process.env.PERF_CHROMIUM_EXECUTABLE) {
+  launchOptions.executablePath = process.env.PERF_CHROMIUM_EXECUTABLE;
+}
+const browser = await chromium.launch(launchOptions);
 try {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 844 },
@@ -19,8 +24,8 @@ try {
   const login = await context.request.post(`${origin}/api/v1/auth/login`, {
     headers: { Origin: origin },
     data: {
-      login_name: "perf-owner",
-      password: "disposable-perf-owner-password",
+      login_name: "golden-owner",
+      password: "disposable-golden-owner-password",
     },
   });
   assert.equal(login.status(), 200);
@@ -50,12 +55,25 @@ try {
     }
   });
 
-  await page.goto(origin);
-  await page.getByRole("button", { name: "Seeds", exact: true }).click();
+  await page.goto(`${origin}/#/dashboard`, {
+    waitUntil: "networkidle",
+    timeout: 30000,
+  });
+  await page
+    .getByRole("heading", { name: "Today", exact: true })
+    .waitFor({ timeout: 15000 });
+  const collectionTab = page.getByRole("tab", { name: /^Collection/ });
+  if ((await collectionTab.getAttribute("aria-selected")) !== "true") {
+    await collectionTab.click();
+  }
+  await page
+    .getByRole("navigation", { name: "Primary navigation" })
+    .getByRole("link", { name: "Seeds", exact: true })
+    .click();
   await page
     .getByRole("alert")
     .filter({ hasText: "Florabase could not load this workspace." })
-    .waitFor();
+    .waitFor({ timeout: 15000 });
   await page.waitForTimeout(250);
   assert.equal(staleRequest, true, "The Seeds JavaScript chunk was requested");
   assert.equal(fallback?.status, 200);
@@ -66,7 +84,9 @@ try {
     0,
     "The handled chunk error must not escape the boundary",
   );
-  await page.getByRole("button", { name: "Sign out", exact: true }).waitFor();
+  await page
+    .getByRole("button", { name: "Sign out", exact: true })
+    .waitFor({ timeout: 15000 });
   writeFileSync(
     output,
     JSON.stringify(
