@@ -9670,3 +9670,12 @@ Status remains implemented pending canonical verification.
   diagnostics. The release and controller targets, direct Python 3.8.20 client tests, Ruff,
   strict mypy, links and diff checks passed. SOL's cookie-only confirmation and integrated
   Docker verification remain pending. [Source evidence](release/evidence/portable-smoke-fail-closed.md#strict-session-cookie-validation).
+
+### WF-04 Batch 08 integrated
+
+- Integrated the independently reviewed ENG-03 route inventory, ENG-02 security headers
+  and PORTABLE-COMPOSE-001 fail-closed portable smoke from pinned main `4eeaa9b`, which
+  carries the nginx 1.30.7 frontend base. The [Batch 08 evidence](release/evidence/wf-04-batch-08.md)
+  records the source reviews, the 1.30.6/1.30.7 header comparison and the non-blocking
+  follow-ups. The browser CSP sweep on release-candidate images and G-SEC acceptance
+  remain pending. The ENG-03 release class awaits the operator's decision. All eight RC blockers remain.

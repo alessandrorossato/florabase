@@ -1,0 +1,76 @@
+{
+  "base": "4eeaa9badba9353d2608bf62fee703057d10dcb9",
+  "bootstrap": "4eeaa9badba9353d2608bf62fee703057d10dcb9",
+  "bootstrap_commits": [],
+  "branch": "ci/batch-08",
+  "reconciliation": {
+    "docs/progress.md": "Retain all source milestones and add the Batch 08 integration milestone.",
+    "docs/release/evidence/wf-04-batch-08.md": "Record exact source approvals, the nginx 1.30.6/1.30.7 header comparison on the integrated base, pending CSP sweep and non-blocking reviewer follow-ups."
+  },
+  "sources": [
+    {
+      "base": "fdc75e83fa8818cab791ed82cbba65f4f97db7ae",
+      "branch": "feat/eng-03-route-inventory",
+      "claim": "b37e8f0c45c3",
+      "commits": [
+        "b318a9145eb74f9b770c78288a13551a2ae0f1ee",
+        "c4a222ecf7085aee5ad7b57080870fd67ecb542b",
+        "c43b4161275181b45e33ebc86dbe08794c405e34"
+      ],
+      "evidence": [
+        "docs/release/evidence/eng-03-source.md"
+      ],
+      "id": "ENG-03",
+      "merge": "28c18b32f206434b1e97695d42f9c321a038a708",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "hydrogen-batch08-eng03-qa",
+      "tip": "c43b4161275181b45e33ebc86dbe08794c405e34",
+      "writer": "terra-eng-03-route-inventory"
+    },
+    {
+      "base": "fdc75e83fa8818cab791ed82cbba65f4f97db7ae",
+      "branch": "feat/eng-02-security-headers",
+      "claim": "6196758a8968",
+      "commits": [
+        "b31048dd332e8ac6e21753b11f21a5fcac765a8c",
+        "48cc11ead7a6438e6c14015889d2653c4e450349"
+      ],
+      "evidence": [
+        "docs/release/evidence/eng-02-source.md"
+      ],
+      "id": "ENG-02",
+      "merge": "9177fe431d47e848bb9e9109f5920232c2ce876e",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "neon-batch08-security-qa",
+      "tip": "48cc11ead7a6438e6c14015889d2653c4e450349",
+      "writer": "terra-eng-02-security-headers"
+    },
+    {
+      "base": "fdc75e83fa8818cab791ed82cbba65f4f97db7ae",
+      "branch": "fix/portable-smoke-fail-closed",
+      "claim": "75417096b4f5",
+      "commits": [
+        "b31048dd332e8ac6e21753b11f21a5fcac765a8c",
+        "48cc11ead7a6438e6c14015889d2653c4e450349",
+        "ca73d2d141b6fb74ba45582c64b8559c76817905",
+        "63618445700076100639db0e133cfdfccf6c004b",
+        "0626b2385ef13a310ab7cf3a7d9465f2212af012"
+      ],
+      "evidence": [
+        "docs/release/evidence/portable-smoke-fail-closed.md"
+      ],
+      "id": "PORTABLE-COMPOSE-001",
+      "merge": "4a734053f82379c184a02ff22a9300ff86c30354",
+      "resolutions": [],
+      "reviewer": "neon-batch08-security-qa",
+      "tip": "0626b2385ef13a310ab7cf3a7d9465f2212af012",
+      "writer": "terra-portable-smoke-hardening"
+    }
+  ],
+  "summary": "Security headers, route inventory and portable smoke",
+  "version": 1
+}
