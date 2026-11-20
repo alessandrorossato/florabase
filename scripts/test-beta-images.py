@@ -22,9 +22,10 @@ import unittest
 import urllib.error
 import urllib.parse
 from contextlib import nullcontext
+from http.client import HTTPMessage
 from pathlib import Path
-from typing import Any
-from unittest.mock import patch
+from typing import Any, ClassVar
+from unittest.mock import Mock, patch
 
 import beta_release
 from beta_release import (
@@ -42,6 +43,7 @@ from beta_release import (
     validate_release_assets,
     validate_scan,
 )
+from smoke_beta_runtime_client import Client
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("checks", ROOT / "scripts/beta-release-checks.py")
@@ -60,6 +62,72 @@ def load_tool(name: str) -> Any:
 
 tooling = load_tool("release-tools")
 publisher = load_tool("publish-beta-images")
+
+
+class PortableSmokeHeaders(unittest.TestCase):
+    smoke: ClassVar[Any]
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.smoke = load_tool("smoke-portable-compose")
+
+    def setUp(self) -> None:
+        self.headers = HTTPMessage()
+        self.headers["X-Content-Type-Options"] = "nosniff"
+        self.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        self.headers["X-Frame-Options"] = "DENY"
+        self.headers["Content-Security-Policy"] = (
+            "default-src 'none'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; "
+            "img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self'; "
+            "manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; "
+            "form-action 'self'; frame-ancestors 'none'"
+        )
+        self.client = Mock(spec=Client)
+        self.client.request.return_value = (b"", self.headers)
+
+    def test_missing_security_headers_fail_public_smoke(self) -> None:
+        for name, value in self.headers.items():
+            with self.subTest(name=name):
+                del self.headers[name]
+                with self.assertRaisesRegex(RuntimeError, rf"GET /: expected {name}"):
+                    self.smoke.exercise_bundled_headers(self.client)
+                self.headers[name] = value
+
+    def test_incorrect_security_headers_fail_public_smoke(self) -> None:
+        for name, value in self.headers.items():
+            with self.subTest(name=name):
+                self.headers.replace_header(name, "incorrect")
+                with self.assertRaisesRegex(RuntimeError, rf"GET /: expected {name}"):
+                    self.smoke.exercise_bundled_headers(self.client)
+                self.headers.replace_header(name, value)
+
+    def test_duplicate_nosniff_fails_authenticated_thumbnail_smoke(self) -> None:
+        self.headers["Cache-Control"] = "private, max-age=86400, must-revalidate"
+        self.headers["x-content-type-options"] = "nosniff"
+        with self.assertRaisesRegex(RuntimeError, "X-Content-Type-Options"):
+            self.smoke.exercise_authenticated_thumbnail(self.client, "/thumbnail")
+
+    def test_missing_incorrect_and_duplicate_cache_fail(self) -> None:
+        for values in ([], ["public"], ["no-cache", "no-cache"]):
+            with self.subTest(values=values):
+                for value in values:
+                    self.headers["Cache-Control"] = value
+                with self.assertRaisesRegex(RuntimeError, "GET /: expected Cache-Control"):
+                    self.smoke.exercise_bundled_headers(self.client)
+                del self.headers["Cache-Control"]
+
+    def test_unexpected_cache_header_fails(self) -> None:
+        self.headers["Cache-Control"] = "public"
+        with self.assertRaisesRegex(RuntimeError, "GET /healthz: expected Cache-Control"):
+            self.smoke.require_response_header("/healthz", self.headers, "Cache-Control", None)
+
+    def test_valid_headers_and_cache_pass(self) -> None:
+        self.smoke.require_bundled_headers("/", self.headers)
+        self.smoke.require_response_header("/healthz", self.headers, "Cache-Control", None)
+        self.headers["Cache-Control"] = "private, max-age=86400, must-revalidate"
+        with patch("sys.stdout", new=io.StringIO()):
+            self.smoke.exercise_authenticated_thumbnail(self.client, "/thumbnail")
+        self.client.request.assert_called_once_with("/thumbnail")
 
 
 def policy() -> dict[str, Any]:

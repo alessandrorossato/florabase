@@ -12,6 +12,7 @@ import signal
 import subprocess
 import tempfile
 from contextlib import ExitStack, suppress
+from http.client import HTTPMessage
 from http.cookies import SimpleCookie
 from pathlib import Path
 
@@ -243,6 +244,69 @@ def exercise_credentials(stack: Stack, password: str) -> str:
     return reset_password
 
 
+def require_response_header(
+    path: str, headers: HTTPMessage, name: str, expected: str | None
+) -> None:
+    values = headers.get_all(name, [])
+    expected_values = [] if expected is None else [expected]
+    if values != expected_values:
+        raise RuntimeError(f"GET {path}: expected {name} {expected_values!r}, got {values!r}")
+
+
+def require_bundled_headers(path: str, headers: HTTPMessage) -> None:
+    security_headers = {
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "X-Frame-Options": "DENY",
+        "Content-Security-Policy": (
+            "default-src 'none'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; "
+            "img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self'; "
+            "manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; "
+            "form-action 'self'; frame-ancestors 'none'"
+        ),
+    }
+    for name, value in security_headers.items():
+        require_response_header(path, headers, name, value)
+
+
+def exercise_bundled_headers(client: Client) -> None:
+    for path, status, cache in (
+        ("/", 200, "no-cache"),
+        ("/spa-fallback-probe", 200, "no-cache"),
+        ("/index.html", 200, "no-cache"),
+        ("/appearance.js", 200, "no-cache"),
+        ("/runtime-config.js", 200, "no-store"),
+        ("/release.json", 200, "no-store"),
+        ("/sw.js", 200, "no-cache, no-store, must-revalidate"),
+        ("/manifest.webmanifest", 200, "no-cache"),
+        ("/offline.html", 200, "no-cache"),
+        ("/offline.css", 200, "no-cache"),
+        ("/offline.js", 200, "no-cache"),
+        ("/icons/florabase-192.png", 200, "public, max-age=86400"),
+        ("/favicon.ico", 200, "public, max-age=86400"),
+        ("/icons/missing-eng02-icon.png", 404, None),
+        ("/healthz", 200, None),
+        ("/api/v1/ready", 200, None),
+        ("/api/v1/media-assets", 401, None),
+        ("/api/v1/missing-eng02-route", 404, None),
+        ("/api/v1/auth/session", 401, None),
+    ):
+        _, headers = client.request(path, expected=status)
+        require_bundled_headers(path, headers)
+        if not path.startswith("/api/"):
+            require_response_header(path, headers, "Cache-Control", cache)
+    print("Bundled security headers and static cache policy passed", flush=True)
+
+
+def exercise_authenticated_thumbnail(client: Client, path: str) -> None:
+    _, headers = client.request(path)
+    require_bundled_headers(path, headers)
+    require_response_header(
+        path, headers, "Cache-Control", "private, max-age=86400, must-revalidate"
+    )
+    print("Authenticated thumbnail security headers and private cache policy passed", flush=True)
+
+
 def smoke(source: Stack, restore: Stack) -> None:
     assert set(source.compose("config", "--services").split()) == {b"db", b"backend", b"frontend"}
     source.compose("run", "--rm", "--no-deps", "-T", "db", failure="Run initdb")
@@ -269,10 +333,12 @@ def smoke(source: Stack, restore: Stack) -> None:
     source.up()
     for service, uid in (("db", b"70"), ("backend", b"10001"), ("frontend", b"101")):
         assert source.compose("exec", "-T", service, "id", "-u").strip() == uid
+    exercise_bundled_headers(source.client())
     password = exercise_credentials(source, password)
     original = png(19, 37, 59)
     client = source.login(password)
     asset = client.upload(original, "portable-smoke")
+    exercise_authenticated_thumbnail(client, asset["thumbnail_url"])
     path = asset["content_url"]
 
     # Real service restarts preserve both state roots and never run Alembic.
