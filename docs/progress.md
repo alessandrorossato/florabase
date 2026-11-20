@@ -9493,3 +9493,24 @@ Status remains implemented pending canonical verification.
 - Open: independent QA, canonical FULL, the hosted rehearsal on the exact commit and operator
   delivery. The proposed nginx-version cross-check in the scan gate is not part of this change.
   After merge, Batch 07 must be re-integrated and re-certified. All eight RC blockers remain.
+
+## 2026-11-19 — Golden COMPREHENSIVE crosswalk pin refresh
+
+- Refreshed the [reviewed COMPREHENSIVE baseline](dev-golden.md#reviewed-baseline-at-20261110_0047)
+  after PR #175 (`51f7884`) moved the WGSRPD crosswalk to v2. Following the
+  [pin review procedure](test-data-002-design.md#baseline-contract-what-changed), removed the
+  COMPREHENSIVE `expected` block from a scratch manifest and ran `generate`, `validate` and
+  `digest` in two fresh disposable TEST copies with different hash seeds, time zones and UUIDs.
+- Both copies reproduced all 49 domain projections, 4,004 counted rows, 4,291 total rows,
+  34 media files and their aggregate hash, the plan and scenario-key hashes, and schema
+  `20261110_0047`. The reviewed table hashes match for 40 of 42 tables. Restoring the v1 label
+  in the in-memory row projections for three proposals and two applications exactly reproduced
+  the previous table hashes and canonical digest. Recorded only the two affected table digests
+  and the canonical digest in the fixture manifest.
+- Four fresh COMPREHENSIVE copies across two separate TEST stacks returned `baseline-verified`
+  against the refreshed pin. A neighboring SMOKE copy also returned `baseline-verified`.
+  `make golden-dataset-comprehensive-check` passed 29 tests. Offline document links, the feature
+  graph, disclosure and whitespace checks passed. All owned TEST resources were retired.
+- Independent exact-tip QA is pending. WF-04 Batch 07 requires an explicit
+  `make golden-dataset-comprehensive-check` on the integrated candidate alongside the batch's
+  canonical FULL gate, which skips COMPREHENSIVE.
