@@ -1,6 +1,6 @@
 import { useEffect, useId, useState, type ReactNode } from "react";
 
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { type EventResponse, type EventTargetKind } from "../events/api";
 import { useJournalReader } from "../events/journalReader";
@@ -36,15 +36,20 @@ function laneFor<T>(result: Loaded<T> | null, key: string): Lane<T> {
 /** The record's next three planned activities; refetched when the local day changes. */
 function usePlanned(kind: TargetKind, id: string, day: string) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<Loaded<SchedulePage> | null>(null);
   const key = JSON.stringify([kind, id, day, attempt]);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     void listSchedule(
       { ...defaultState, target_kind: [kind], target_id: id },
       0,
       3,
+      capability,
       controller.signal,
     )
       .then((value) => {
@@ -52,15 +57,15 @@ function usePlanned(kind: TargetKind, id: string, day: string) {
           setResult({ key, status: "ready", value });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setResult({ key, status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [kind, id, key, auth]);
+  }, [kind, id, key, authorized, capability, sessionExpired]);
   return [
     laneFor(result, key),
     () => {

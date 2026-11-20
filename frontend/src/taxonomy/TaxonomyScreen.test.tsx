@@ -1,13 +1,16 @@
 import {
   act,
   cleanup,
-  render,
+  render as rtlRender,
   screen,
   waitFor,
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import type { ReactElement } from "react";
+import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { TaxonomyScreen } from "./TaxonomyScreen";
 import { IdentityTaxonomyPanel } from "./IdentityTaxonomyPanel";
 import { ApiError } from "../auth/api";
@@ -37,8 +40,8 @@ vi.mock("./api", () => ({
   confirmLink: vi.fn(),
   unlink: vi.fn(),
 }));
-vi.mock("../auth/context", () => ({ useAuth: () => auth }));
-const auth = { state: { csrfToken: "csrf" }, sessionExpired: vi.fn() };
+const sessionExpired = vi.fn();
+let auth: AuthContextValue;
 const rootId = "wfo-4100001250",
   genusId = "wfo-4000000001",
   speciesId = "wfo-0000000001";
@@ -126,8 +129,15 @@ const link = {
   stale: false,
 };
 afterEach(cleanup);
-beforeEach(() => {
+function render(ui: ReactElement) {
+  return rtlRender(
+    <AuthContext.Provider value={auth}>{ui}</AuthContext.Provider>,
+  );
+}
+beforeEach(async () => {
   vi.resetAllMocks();
+  const acquired = await acquireTestAuth({ csrfToken: "csrf" });
+  auth = { ...acquired.auth, sessionExpired };
   window.history.replaceState(null, "", "#/taxonomy");
   vi.mocked(getTree).mockResolvedValue(tree);
   vi.mocked(getBotanicalIdentity).mockResolvedValue({
@@ -202,6 +212,7 @@ test("classification expansion, selection, distinct counts and unresolved identi
   );
   expect(getBotanicalIdentity).toHaveBeenCalledWith(
     unresolvedId,
+    auth.capability,
     expect.any(AbortSignal),
   );
 });
@@ -262,6 +273,7 @@ test("scope and category OR filters, search, URL restoration and unavailable sel
         record: ["seed_lot", "plant"],
         q: "Basil",
       }),
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -420,6 +432,7 @@ test("explicit search, candidate inspection and confirmation preserve literal so
         identity_updated_at: "2026-10-09T00:00:00Z",
       },
       "csrf",
+      auth.capability,
     );
   });
 });
@@ -619,7 +632,10 @@ test("a 409 refreshes the authoritative identity and requires new candidate revi
   await user.click(
     screen.getByRole("button", { name: "Refresh identity and review again" }),
   );
-  expect(getBotanicalIdentity).toHaveBeenCalledWith(identityId);
+  expect(getBotanicalIdentity).toHaveBeenCalledWith(
+    identityId,
+    auth.capability,
+  );
   await screen.findByText("Updated local basil");
   expect(
     screen.queryByRole("button", { name: "Confirm taxonomy link" }),
@@ -650,6 +666,7 @@ test("a 409 refreshes the authoritative identity and requires new candidate revi
         expected_version: null,
       }),
       "csrf",
+      auth.capability,
     );
   });
 });
@@ -718,6 +735,7 @@ test("Tree Explorer mode preserves filters/selection, restores URL state and kee
       scope: "current",
       record: ["plant"],
     }),
+    auth.capability,
     expect.any(AbortSignal),
   );
   await user.click(screen.getByRole("button", { name: "List" }));
@@ -891,4 +909,43 @@ test("native fullscreen external exit, denied request and navigation cleanup lea
     delete (document as Partial<Document>).exitFullscreen;
     Reflect.deleteProperty(document, "fullscreenElement");
   }
+});
+
+test("logout-failed retains loaded taxonomy tree without issuing new protected reads", async () => {
+  window.history.replaceState(null, "", `#/taxonomy?taxon=${speciesId}`);
+  const { auth: baseAuth } = await acquireTestAuth();
+  const view = rtlRender(
+    <AuthContext.Provider value={baseAuth}>
+      <TaxonomyScreen />
+    </AuthContext.Provider>,
+  );
+  await screen.findByRole("navigation", { name: "Source classification" });
+  const callsBeforeLock = vi.mocked(getTree).mock.calls.length;
+
+  view.rerender(
+    <AuthContext.Provider
+      value={{
+        ...baseAuth,
+        state: {
+          status: "logout-failed",
+          session: {
+            user_id: identityId,
+            login_name: "owner",
+            display_name: "Owner",
+            owner: true,
+            canonical_origin: "http://localhost:15174",
+          },
+          csrfToken: "stale",
+          message: "Sign out failed.",
+        },
+      }}
+    >
+      <TaxonomyScreen />
+    </AuthContext.Provider>,
+  );
+  await Promise.resolve();
+  expect(vi.mocked(getTree).mock.calls.length).toBe(callsBeforeLock);
+  expect(
+    screen.getByRole("navigation", { name: "Source classification" }),
+  ).toBeVisible();
 });

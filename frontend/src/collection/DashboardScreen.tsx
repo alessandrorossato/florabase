@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { PageHeader } from "../components/ReferenceUI";
 import {
@@ -87,6 +87,9 @@ function summary(value: DashboardResponse) {
 
 export function DashboardOverview() {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [state, setState] = useState<State>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
   const [day, setDay] = useState(localDay);
@@ -100,8 +103,9 @@ export function DashboardOverview() {
     };
   }, []);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void getDashboard(controller.signal, day)
+    void getDashboard(capability, controller.signal, day)
       .then((value: unknown) => {
         if (!isDashboardResponse(value))
           throw new Error("Invalid Dashboard response");
@@ -118,15 +122,15 @@ export function DashboardOverview() {
           }));
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setState({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [attempt, auth, day]);
+  }, [attempt, authorized, capability, day, sessionExpired]);
   if (state.status === "loading")
     return <LoadingState>Loading collection overview…</LoadingState>;
   if (state.status === "error")

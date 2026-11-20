@@ -1,11 +1,22 @@
+import type { ReactElement } from "react";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { AuthContext, type AuthContextValue } from "../auth/context";
 import { ApiError, requestJson } from "../auth/api";
 import type { components } from "../api/schema";
+import { acquireTestAuth } from "../test/auth";
 import { AncestryExplorer } from "./AncestryExplorer";
 import { LineagePanel } from "./LineagePanel";
+
+let auth: AuthContextValue;
+function renderWithAuth(ui: ReactElement) {
+  return render(<AuthContext.Provider value={auth}>{ui}</AuthContext.Provider>);
+}
+beforeEach(async () => {
+  auth = (await acquireTestAuth()).auth;
+});
 
 vi.mock("../auth/api", async (original) => ({
   ...(await original<typeof import("../auth/api")>()),
@@ -70,13 +81,15 @@ test("the recorded chain reads oldest first with origin, generations, evidence a
     ],
     children: page([]),
   });
-  render(<AncestryExplorer kind="plant" id="Second-generation plant" />);
+  renderWithAuth(
+    <AncestryExplorer kind="plant" id="Second-generation plant" />,
+  );
   const chain = await screen.findByRole("list", {
     name: "Recorded upstream path",
   });
   expect(request).toHaveBeenCalledWith(
     "/api/v1/lineage/plant/Second-generation plant?limit=25",
-    expect.anything(),
+    expect.objectContaining({ capability: auth.capability }),
   );
   expect(
     screen.getByRole("heading", { level: 2, name: "Second-generation plant" }),
@@ -138,7 +151,9 @@ test.each([
   ],
 ])("an unrecorded parent is stated, never invented", async (focus, text) => {
   request.mockResolvedValue({ focus, ancestors: [], children: page([]) });
-  render(<AncestryExplorer kind={focus.record.kind} id={focus.record.id} />);
+  renderWithAuth(
+    <AncestryExplorer kind={focus.record.kind} id={focus.record.id} />,
+  );
   expect(await screen.findByText(text)).toBeInTheDocument();
   expect(
     within(
@@ -161,7 +176,7 @@ test("descendants branch progressively with bounded pages and keyboard focus", a
     ancestors: [],
     children: page([sowing], 1),
   });
-  render(<AncestryExplorer kind="seed_lot" id="Root packet" />);
+  renderWithAuth(<AncestryExplorer kind="seed_lot" id="Root packet" />);
   const toggle = await screen.findByRole("button", {
     name: "Show 2 recorded descendants of Spring sowing",
   });
@@ -214,6 +229,7 @@ test("descendants branch progressively with bounded pages and keyboard focus", a
   await user.click(screen.getByRole("button", { name: "Show 5 more" }));
   expect(request).toHaveBeenLastCalledWith(
     "/api/v1/lineage/plant_group/Seedling tray/children?offset=25&limit=25",
+    expect.objectContaining({ capability: auth.capability }),
   );
   const next = await screen.findByRole("link", { name: "Packet 26" });
   expect(next).toHaveFocus();
@@ -239,21 +255,23 @@ test("descendants branch progressively with bounded pages and keyboard focus", a
 test("missing, failed and failed-expansion states are explicit and retryable", async () => {
   const user = userEvent.setup();
   request.mockRejectedValueOnce(new ApiError(404));
-  const { unmount } = render(<AncestryExplorer kind="plant" id="gone" />);
+  const { unmount } = renderWithAuth(
+    <AncestryExplorer kind="plant" id="gone" />,
+  );
   expect(
     await screen.findByText("This record was not found."),
   ).toBeInTheDocument();
   unmount();
   // A malformed address is not a retryable failure.
   request.mockRejectedValueOnce(new ApiError(422));
-  render(<AncestryExplorer kind="plant" id="not-a-uuid" />);
+  renderWithAuth(<AncestryExplorer kind="plant" id="not-a-uuid" />);
   expect(
     await screen.findByText("This record was not found."),
   ).toBeInTheDocument();
   cleanup();
 
   request.mockRejectedValueOnce(new ApiError(500));
-  render(<AncestryExplorer kind="sowing" id="sowing" />);
+  renderWithAuth(<AncestryExplorer kind="sowing" id="sowing" />);
   request.mockResolvedValueOnce({
     focus: node("sowing", "sowing", { descendant_count: 1 }),
     ancestors: [node("seed_lot", "lot", { origin: "unknown" })],
@@ -280,7 +298,7 @@ test("missing, failed and failed-expansion states are explicit and retryable", a
 
 test("each record's Lineage tab opens the explorer centred on it", () => {
   request.mockReturnValue(new Promise(() => undefined));
-  render(<LineagePanel kind="plant-groups" id="group" />);
+  renderWithAuth(<LineagePanel kind="plant-groups" id="group" />);
   expect(
     screen.getByRole("link", { name: "Explore material ancestry" }),
   ).toHaveAttribute("href", "#/lineage/plant_group/group");
@@ -292,7 +310,7 @@ test("a rooting attempt shows its mother, material and clonal offspring", async 
     ancestors: [node("vegetative_lot", "lot"), node("plant", "mother")],
     children: page([node("plant", "clone")]),
   });
-  render(<AncestryExplorer kind="propagation_attempt" id="bench" />);
+  renderWithAuth(<AncestryExplorer kind="propagation_attempt" id="bench" />);
   expect(await screen.findByText("provided cuttings for")).toBeVisible();
   expect(screen.getByText("struck in")).toBeVisible();
   expect(screen.getByText("rooted into")).toBeVisible();

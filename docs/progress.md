@@ -1,3 +1,45 @@
+## 2026-11-19 — PERF-001 Golden COMPREHENSIVE performance harness (Batch 07 Workstream D)
+
+- On `feat/perf-001-comprehensive-harness` from `fdc75e8` (writer `hydrogen-b-perf-harness`).
+- Updated `scripts/perf/` (`comprehensive.py`, `measure.py`, `browser.mjs`,
+  `verify-chunk-recovery.mjs`, `test_measure.py`) to provision the canonical `comprehensive` Golden
+  Dataset through the unmodified disposable TEST-copy route (`compose.integration.yaml` +
+  `golden_dataset.py --copy golden_perf --profile comprehensive`), export via `pg_dump` and
+  `scripts/attachment_artifacts.py archive`, restore into `florabase-perf`, and validate live
+  schema (`20261110_0047`), table counts, media, and scenario targets before measurement.
+- Expanded API (48 read endpoints + write trace), browser (39 routes across Today, Workbench,
+  Cuttings, Harvests, Orders, History, Schedule, Taxonomy, Media, Geography, Maps, Labels, and
+  Lineage), 6-cycle, 120s idle, and lazy-chunk recovery coverage; preserved `PERF-001` `verified`
+  status, `golden_dataset.py` target guards, and Decision 7 (`operator_g_perf_thresholds` unset
+  until RC G-PERF).
+- Preliminary source rehearsals and remediation:
+  - Initial `c2d5a1f` raw JSON (`788,494` bytes, `sha256:
+    dd5919c1530cb451585bb80461897384d13a3febdda12d1636e2bff439395a8c`, commit `df44357`) is
+    preserved externally under `$XDG_STATE_HOME/florabase/perf-evidence/comprehensive-rehearsal-c2d5a1f-full.json`
+    (and Git object `df44357:docs/performance/comprehensive-rehearsal.json`).
+  - Independent QA remediation (`6175a03`) enforced kernel-locked ownership lifecycle +
+    invocation-tagged images (`florabase-perf-{backend,frontend}:<owner_id>`, labeled with source
+    HEAD), fail-closed `--pin-mode strict` default vs. explicit `--pin-mode
+    allow-modified-baseline`, hardened 48-endpoint / 39-route / SQL instrumentation / post-mutation
+    integrity evaluation, container process counts, separate `live-occurrence` probing, and compacted
+    summary output (`--summary-out`).
+  - Reconciled `6175a03` run: `--pin-mode strict` rejected `invariant-valid-baseline-modified`
+    (from PR #175 `51f7884` crosswalk changes, not PR #174) before measurement with owned-only
+    cleanup; explicit `--pin-mode allow-modified-baseline` passed (`harness_status = "passed"`,
+    `application_status = "passed"`, `invariant_status = "passed"`, `rc_g_perf_certification = false`),
+    recorded compact summary in
+    [comprehensive-rehearsal.json](performance/comprehensive-rehearsal.json) and [PERF-001.md](performance/PERF-001.md)
+    with raw profiles/plans kept externally (`sha256:
+    368d7d96536366b7ee5978e8aff97db7ac75742642e6e0ca3c4a7e43a507b8d9`).
+  - Final lock correction hardened `scripts/perf/compose.sh` inherited-fd validation (format,
+    regular-file device/inode identity against `workflow_resources.lock_root()`, non-blocking
+    `flock`, non-truncating `>>`, close-before-`exec` so descendants never inherit parent lock
+    fds) and corrected the `${XDG_STATE_HOME:-$HOME/.local/state}` fallback in `PERF-001.md`.
+- Checks: `scripts/perf/test_measure.py` (38 OK), `ruff check`, `ruff format --check`,
+  `mypy --strict`, Prettier on `.mjs`, `bash -n scripts/perf/compose.sh`,
+  `node --check`, `scripts/check-features.py`, `scripts/check-doc-links.py`,
+  `scripts/test-beta-runtime.py Disclosure -q`, and `git diff --check`.
+
 ## 2026-11-17 — WF-04 Batch 04 prepared
 
 - Prepared CERT-01, WF-07 and CERT-05 in order from pinned main `b088a94`. The planner
@@ -9493,3 +9535,41 @@ Status remains implemented pending canonical verification.
 - Open: independent QA, canonical FULL, the hosted rehearsal on the exact commit and operator
   delivery. The proposed nginx-version cross-check in the scan gate is not part of this change.
   After merge, Batch 07 must be re-integrated and re-certified. All eight RC blockers remain.
+
+## 2026-11-19 — Golden COMPREHENSIVE crosswalk pin refresh
+
+- Refreshed the [reviewed COMPREHENSIVE baseline](dev-golden.md#reviewed-baseline-at-20261110_0047)
+  after PR #175 (`51f7884`) moved the WGSRPD crosswalk to v2. Following the
+  [pin review procedure](test-data-002-design.md#baseline-contract-what-changed), removed the
+  COMPREHENSIVE `expected` block from a scratch manifest and ran `generate`, `validate` and
+  `digest` in two fresh disposable TEST copies with different hash seeds, time zones and UUIDs.
+- Both copies reproduced all 49 domain projections, 4,004 counted rows, 4,291 total rows,
+  34 media files and their aggregate hash, the plan and scenario-key hashes, and schema
+  `20261110_0047`. The reviewed table hashes match for 40 of 42 tables. Restoring the v1 label
+  in the in-memory row projections for three proposals and two applications exactly reproduced
+  the previous table hashes and canonical digest. Recorded only the two affected table digests
+  and the canonical digest in the fixture manifest.
+- Four fresh COMPREHENSIVE copies across two separate TEST stacks returned `baseline-verified`
+  against the refreshed pin. A neighboring SMOKE copy also returned `baseline-verified`.
+  `make golden-dataset-comprehensive-check` passed 29 tests. Offline document links, the feature
+  graph, disclosure and whitespace checks passed. All owned TEST resources were retired.
+- Opus independently approved the exact pin commit `8184838` after reproducing the
+  diagnosis on the base. The 29 passing exact-tip tests were run by the source writer.
+  WF-04 Batch 07 requires an explicit `make golden-dataset-comprehensive-check` on the
+  integrated candidate in addition to canonical FULL, whose default integration suite skips
+  COMPREHENSIVE.
+
+### WF-04 Batch 07 integrated (candidate 07b)
+
+- Integrated the approved browser session, mobile directory, Golden COMPREHENSIVE,
+  performance harness and CERT-01 sources from pinned main `0784ce6`, which includes
+  the BETA-SECURITY-001 nginx 1.30.7 base (#198). Candidate 07b supersedes `ci/batch-07`
+  at `af89351` (PR #197), whose base `fdc75e8` changed. The source tips and merge order
+  are unchanged. The [Batch 07b evidence](release/evidence/wf-04-batch-07b.md) records the
+  source reviews and the overlap reconciliation. Combined verification evidence belongs
+  to the exact candidate tested; `af89351` evidence is historical.
+- CERT-01 completed the approved pre-RC functional and UX documentation increment at
+  `00ec17c`. Sonnet performed the preceding comprehensive review, and the operator
+  supplied SOL's final approval of the three-file RC-SEQ-01 correction. Formal release
+  certification and operator acceptance remain pending. RC-SEQ-01 and all eight
+  release-candidate blockers remain open. Feature statuses and release membership are unchanged.

@@ -9,7 +9,12 @@ import {
 } from "react";
 
 import type { components } from "../api/schema";
-import { ApiError, requestJson } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+  requestJson,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { OverflowMenu } from "../components/ReferenceUI";
 import { TaskDialog } from "../components/TaskDialog";
@@ -53,6 +58,9 @@ export function CreationReversal({
   triggerRef?: RefObject<HTMLButtonElement | null>;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const titleId = useId();
   const [open, setOpen] = useState(false);
   const internalTrigger = useRef<HTMLButtonElement>(null);
@@ -67,9 +75,10 @@ export function CreationReversal({
   const feedback = useRef<HTMLParagraphElement>(null);
   const url = `/api/v1/${paths[kind]}/${encodeURIComponent(id)}`;
   useEffect(() => {
-    if (!open || lifecycle === "reversed" || completed) return;
+    if (!authorized || !open || lifecycle === "reversed" || completed) return;
     const controller = new AbortController();
     void requestJson<Eligibility>(`${url}/creation-reversal`, {
+      capability,
       signal: controller.signal,
     })
       .then((value) => {
@@ -85,9 +94,9 @@ export function CreationReversal({
         if (!controller.signal.aborted) setEligibility(value);
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else
           setError(
             "Florabase could not check reversal eligibility. Retry before continuing.",
@@ -96,14 +105,25 @@ export function CreationReversal({
     return () => {
       controller.abort();
     };
-  }, [url, lifecycle, revision, attempt, auth, open, completed]);
+  }, [
+    authorized,
+    capability,
+    url,
+    lifecycle,
+    revision,
+    attempt,
+    open,
+    completed,
+    sessionExpired,
+  ]);
 
   async function submit() {
+    const csrfToken = activeCsrfToken(auth.state);
     if (
       submitting.current ||
       !eligibility ||
       eligibility.status === "blocked" ||
-      auth.state.status !== "authenticated"
+      !csrfToken
     )
       return;
     if (eligibility.status === "confirmation_required" && !confirmed) return;
@@ -114,10 +134,11 @@ export function CreationReversal({
       const result = await requestJson<CreationReversalResponse>(
         `${url}/reverse-creation`,
         {
+          capability,
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-CSRF-Token": auth.state.csrfToken,
+            "X-CSRF-Token": csrfToken,
           },
           body: JSON.stringify({ confirm_retained_observations: confirmed }),
         },
@@ -126,8 +147,8 @@ export function CreationReversal({
       onReversed(result);
       window.setTimeout(() => feedback.current?.focus(), 0);
     } catch (error: unknown) {
-      if (error instanceof ApiError && error.status === 401)
-        auth.sessionExpired();
+      if (isExpectedAuthCancellation(error)) return;
+      if (error instanceof ApiError && error.status === 401) sessionExpired();
       else {
         setError(
           error instanceof ApiError && error.status === 409

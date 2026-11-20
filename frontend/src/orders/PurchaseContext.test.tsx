@@ -9,6 +9,8 @@ import {
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { ApiError } from "../auth/api";
+import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { PurchaseContextDialog, LinkExistingSeedLot } from "./PurchaseContext";
 import {
   previewPurchase,
@@ -56,19 +58,23 @@ const review: PurchasePreview = {
 };
 const onApplied = vi.fn();
 const onCancel = vi.fn();
+let auth: AuthContextValue;
 function mount(value = review) {
   vi.mocked(previewPurchase).mockResolvedValue(value);
   return render(
-    <PurchaseContextDialog
-      orderId={orderId}
-      seedLotId={seedId}
-      csrf="csrf"
-      onApplied={onApplied}
-      onCancel={onCancel}
-    />,
+    <AuthContext.Provider value={auth}>
+      <PurchaseContextDialog
+        orderId={orderId}
+        seedLotId={seedId}
+        csrf="csrf"
+        onApplied={onApplied}
+        onCancel={onCancel}
+      />
+    </AuthContext.Provider>,
   );
 }
-beforeEach(() => {
+beforeEach(async () => {
+  auth = (await acquireTestAuth()).auth;
   vi.mocked(previewPurchase).mockResolvedValue(review);
   vi.mocked(applyPurchase).mockResolvedValue({
     order: review.order,
@@ -128,6 +134,7 @@ test("Apply sends server context and both versions with explicit date choice", a
       use_order_date: true,
     },
     "csrf",
+    auth.capability,
   );
 });
 test("known Supplier conflict cannot Apply until replacement is confirmed; differing date stays", async () => {
@@ -164,6 +171,7 @@ test("known Supplier conflict cannot Apply until replacement is confirmed; diffe
       },
     }),
     "csrf",
+    auth.capability,
   );
 });
 test("incompatible source displays server explanation and blocks Apply", async () => {
@@ -220,6 +228,7 @@ test("stale Apply exposes conflict and refreshes authoritative acquisition befor
     expect(previewPurchase).toHaveBeenLastCalledWith(
       orderId,
       { seed_lot_id: seedId },
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -240,12 +249,14 @@ test("Order reverse selector searches bounded choices then opens the same previe
     limit: 50,
   });
   render(
-    <LinkExistingSeedLot
-      orderId={orderId}
-      csrf="csrf"
-      onApplied={onApplied}
-      onCancel={onCancel}
-    />,
+    <AuthContext.Provider value={auth}>
+      <LinkExistingSeedLot
+        orderId={orderId}
+        csrf="csrf"
+        onApplied={onApplied}
+        onCancel={onCancel}
+      />
+    </AuthContext.Provider>,
   );
   await userEvent.click(
     await screen.findByRole("button", { name: "Next seed choices" }),
@@ -255,6 +266,7 @@ test("Order reverse selector searches bounded choices then opens the same previe
       orderId,
       "",
       50,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -267,6 +279,7 @@ test("Order reverse selector searches bounded choices then opens the same previe
       orderId,
       "packet",
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -283,6 +296,7 @@ test("Order reverse selector searches bounded choices then opens the same previe
   expect(previewPurchase).toHaveBeenLastCalledWith(
     orderId,
     expect.objectContaining({ seed_lot_id: seedId }),
+    auth.capability,
     expect.any(AbortSignal),
   );
   expect(applyPurchase).not.toHaveBeenCalled();
@@ -303,12 +317,14 @@ test("Link existing seed lot renders a selectable row and dismisses outside or w
     limit: 50,
   });
   render(
-    <LinkExistingSeedLot
-      orderId={orderId}
-      csrf="csrf"
-      onApplied={onApplied}
-      onCancel={onCancel}
-    />,
+    <AuthContext.Provider value={auth}>
+      <LinkExistingSeedLot
+        orderId={orderId}
+        csrf="csrf"
+        onApplied={onApplied}
+        onCancel={onCancel}
+      />
+    </AuthContext.Provider>,
   );
   const dialog = await screen.findByRole("dialog", {
     name: "Link existing seed lot",

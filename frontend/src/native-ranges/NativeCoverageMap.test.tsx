@@ -1,14 +1,17 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { NativeCoverageMap } from "./NativeCoverageMap";
 import { coverageScale } from "./coverageScale";
 import { comparisonPalette, reconcileColors } from "./comparison";
 import type { RangeIdentity } from "./api";
 import geometry from "./data/world-110m.json";
-vi.mock("../auth/context", () => ({
-  useAuth: () => ({ sessionExpired: vi.fn() }),
-}));
+let auth: AuthContextValue;
+beforeEach(async () => {
+  auth = (await acquireTestAuth()).auth;
+});
 const identities: RangeIdentity[] = Array.from({ length: 5 }, (_, index) => ({
   id: `species-${String(index)}`,
   display_label: `Species ${String(index + 1)}`,
@@ -49,36 +52,38 @@ const territories = [
 afterEach(cleanup);
 function show(count?: number) {
   return render(
-    <div className="native-ranges">
-      <NativeCoverageMap
-        territories={
-          count
-            ? territories.map((unit) => ({
-                ...unit,
-                identity_count: count,
-                identity_ids: identities
-                  .slice(0, count)
-                  .map((identity) => identity.id),
-              }))
-            : territories
-        }
-        geometry={{ status: "ready", data: geometry }}
-        retry={vi.fn()}
-        identities={identities.slice(0, count ?? 3)}
-        colors={
-          count
-            ? reconcileColors(
-                identities.slice(0, count).map((identity) => identity.id),
-                {},
-              )
-            : undefined
-        }
-        contributors={{
-          br: ["Species 1", "Species 2", "Species 3"],
-          ar: ["Species 1", "Species 2"],
-        }}
-      />
-    </div>,
+    <AuthContext.Provider value={auth}>
+      <div className="native-ranges">
+        <NativeCoverageMap
+          territories={
+            count
+              ? territories.map((unit) => ({
+                  ...unit,
+                  identity_count: count,
+                  identity_ids: identities
+                    .slice(0, count)
+                    .map((identity) => identity.id),
+                }))
+              : territories
+          }
+          geometry={{ status: "ready", data: geometry }}
+          retry={vi.fn()}
+          identities={identities.slice(0, count ?? 3)}
+          colors={
+            count
+              ? reconcileColors(
+                  identities.slice(0, count).map((identity) => identity.id),
+                  {},
+                )
+              : undefined
+          }
+          contributors={{
+            br: ["Species 1", "Species 2", "Species 3"],
+            ar: ["Species 1", "Species 2"],
+          }}
+        />
+      </div>
+    </AuthContext.Provider>,
   );
 }
 
@@ -256,12 +261,14 @@ test("integer overview bins cover each count exactly once", () => {
 test("a retained territory with no coverage stays neutral and removable after scope changes", () => {
   const state = { codes: ["BR"], onChange: vi.fn() };
   render(
-    <NativeCoverageMap
-      territories={[]}
-      geometry={{ status: "ready", data: geometry }}
-      retry={vi.fn()}
-      territorySelection={state}
-    />,
+    <AuthContext.Provider value={auth}>
+      <NativeCoverageMap
+        territories={[]}
+        geometry={{ status: "ready", data: geometry }}
+        retry={vi.fn()}
+        territorySelection={state}
+      />
+    </AuthContext.Provider>,
   );
   const brazil = within(
     screen.getByRole("group", { name: /coverage map/ }),

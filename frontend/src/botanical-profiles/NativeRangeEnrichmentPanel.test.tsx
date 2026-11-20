@@ -1,13 +1,22 @@
+import type { ComponentProps } from "react";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { NativeRangeEnrichmentPanel } from "./NativeRangeEnrichmentPanel";
 
-const auth = {
-  state: { status: "authenticated", csrfToken: "csrf" },
-  sessionExpired: vi.fn(),
-};
-vi.mock("../auth/context", () => ({ useAuth: () => auth }));
+let auth: AuthContextValue;
+function renderPanel(props: ComponentProps<typeof NativeRangeEnrichmentPanel>) {
+  return render(
+    <AuthContext.Provider value={auth}>
+      <NativeRangeEnrichmentPanel {...props} />
+    </AuthContext.Provider>,
+  );
+}
+beforeEach(async () => {
+  auth = (await acquireTestAuth({ csrfToken: "csrf" })).auth;
+});
 const identityId = "01900000-0000-7000-8000-000000000099";
 const bo = "01900000-0000-7000-8000-000000000001";
 const pe = "01900000-0000-7000-8000-000000000002";
@@ -225,9 +234,7 @@ function setup(
         );
       throw new Error(`Unexpected request ${path}`);
     });
-  render(
-    <NativeRangeEnrichmentPanel identityId={identityId} onApplied={applied} />,
-  );
+  renderPanel({ identityId, onApplied: applied });
   return { fetch, applied, user: userEvent.setup() };
 }
 
@@ -423,9 +430,7 @@ test("defaults to v16 and requires an explicit choice and confirmation when swit
       throw new Error(`Unexpected ${url.href}`);
     });
   const user = userEvent.setup();
-  render(
-    <NativeRangeEnrichmentPanel identityId={identityId} onApplied={vi.fn()} />,
-  );
+  renderPanel({ identityId, onApplied: vi.fn() });
   await user.click(
     screen.getByRole("button", { name: "Check trusted source" }),
   );
@@ -494,9 +499,7 @@ test("missing default v16 keeps frozen v15 history inspectable without silent fa
     throw new Error(`Unexpected ${url.href}`);
   });
   const user = userEvent.setup();
-  render(
-    <NativeRangeEnrichmentPanel identityId={identityId} onApplied={vi.fn()} />,
-  );
+  renderPanel({ identityId, onApplied: vi.fn() });
   await user.click(
     screen.getByRole("button", { name: "Check trusted source" }),
   );

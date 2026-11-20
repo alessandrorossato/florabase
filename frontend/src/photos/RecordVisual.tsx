@@ -1,8 +1,9 @@
-import { useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import type { CSSProperties } from "react";
 import type { BotanicalIdentityResponse } from "../botanical-identities/api";
 import { RecordIdentities } from "../components/recordPresentation";
 import type { PrimaryPhoto } from "./api";
+import { useProtectedImage } from "./useProtectedImage";
 
 type Identity = Pick<BotanicalIdentityResponse, "id" | "display_label"> &
   Partial<BotanicalIdentityResponse>;
@@ -88,6 +89,13 @@ export function RecordVisual({
   const source = [direct, ...inherited, cover].find(
     (src) => src && !broken.has(src),
   );
+  const markBroken = useCallback((failedUrl: string) => {
+    setBroken((current) => new Set([...current, failedUrl]));
+  }, []);
+  const [mediaTarget, media] = useProtectedImage({
+    rawUrl: source,
+    onError: markBroken,
+  });
   const primary = source === direct;
   const sourceLabel = source
     ? primary
@@ -100,22 +108,19 @@ export function RecordVisual({
       : "No image";
   return (
     <span
+      ref={mediaTarget}
       title={showSource ? sourceLabel : undefined}
       className={`record-visual record-visual--${kind}${compact ? " record-visual--compact" : ""} ${className}`}
     >
-      {source ? (
+      {source && media.src ? (
         <img
-          src={source}
+          src={media.src}
           alt={`${primary ? "Primary photo" : inherited.includes(source) ? "Source primary photo" : "Botanical identity cover"} for ${label}`}
           loading="lazy"
           decoding="async"
-          referrerPolicy={
-            !primary && identity?.compact_cover_kind === "external"
-              ? "no-referrer"
-              : undefined
-          }
+          referrerPolicy={media.referrerPolicy}
           onError={() => {
-            setBroken((current) => new Set([...current, source]));
+            markBroken(source);
           }}
           onLoad={(event) => {
             const { naturalWidth: width, naturalHeight: height } =

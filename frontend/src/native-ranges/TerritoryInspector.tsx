@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { BotanicalName, DirectorySearch } from "../components/ReferenceUI";
 import {
@@ -45,6 +45,9 @@ export function TerritoryInspector({
     failed?: boolean;
   } | null>(null);
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const key = JSON.stringify({
     codes,
     filters,
@@ -62,7 +65,7 @@ export function TerritoryInspector({
       offset: number;
     };
     const requestFilters = request.filters;
-    if (!request.codes.length || !requestFilters) return;
+    if (!authorized || !request.codes.length || !requestFilters) return;
     const abort = new AbortController();
     const timer = window.setTimeout(() => {
       void listTerritoryIdentities(
@@ -71,15 +74,16 @@ export function TerritoryInspector({
         request.match,
         request.comparisonIds,
         request.offset,
+        capability,
         abort.signal,
       ).then(
         (data) => {
           if (!abort.signal.aborted) setResult({ key, data });
         },
         (error: unknown) => {
-          if (abort.signal.aborted) return;
+          if (abort.signal.aborted || isExpectedAuthCancellation(error)) return;
           if (error instanceof ApiError && error.status === 401)
-            auth.sessionExpired();
+            sessionExpired();
           else setResult({ key, failed: true });
         },
       );
@@ -88,7 +92,7 @@ export function TerritoryInspector({
       clearTimeout(timer);
       abort.abort();
     };
-  }, [key, auth]);
+  }, [authorized, capability, key, sessionExpired]);
   const current = result?.key === key ? result : null;
   const selected = territories.filter((unit) =>
     codes.includes(unit.source_code),

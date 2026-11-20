@@ -7,6 +7,7 @@ import {
   type TileEvent,
 } from "leaflet";
 import { useEffect, useRef, useState } from "react";
+import type { ProtectedRequestCapability } from "../auth/api";
 import { mapRuntimeConfig } from "../provenance-map/config";
 import { loadGeometry } from "../native-ranges/geometry";
 import { occurrenceTileUrl } from "./api";
@@ -16,10 +17,12 @@ export function OccurrenceDensityMap({
   identityId,
   generation,
   localOnly = true,
+  capability,
 }: {
   identityId: string;
   generation?: string | null;
   localOnly?: boolean;
+  capability: ProtectedRequestCapability;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
@@ -104,20 +107,24 @@ export function OccurrenceDensityMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const overlay = new EvidenceTiles((coords) => {
-      const base = occurrenceTileUrl(identityId)
-        .replace("{z}", String(coords.z))
-        .replace("{x}", String(coords.x))
-        .replace("{y}", String(coords.y));
-      return `${base}?${new URLSearchParams({ ...(generation ? { generation } : {}), local_only: String(localOnly) })}`;
-    }, setStatus).addTo(map);
+    const overlay = new EvidenceTiles(
+      (coords) => {
+        const base = occurrenceTileUrl(identityId)
+          .replace("{z}", String(coords.z))
+          .replace("{x}", String(coords.x))
+          .replace("{y}", String(coords.y));
+        return `${base}?${new URLSearchParams({ ...(generation ? { generation } : {}), local_only: String(localOnly) })}`;
+      },
+      setStatus,
+      capability,
+    ).addTo(map);
     overlayRef.current = overlay;
     return () => {
       overlay.cancel();
       overlay.remove();
       overlayRef.current = null;
     };
-  }, [identityId, generation, localOnly]);
+  }, [identityId, generation, localOnly, capability]);
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !online) return;

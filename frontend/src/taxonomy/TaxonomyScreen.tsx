@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
   getBotanicalIdentity,
@@ -152,27 +152,31 @@ function IdentityReview({
   refresh: () => void;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<{
     data?: BotanicalIdentityResponse;
     failed?: boolean;
   } | null>(null);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void getBotanicalIdentity(identity.id, controller.signal)
+    void getBotanicalIdentity(identity.id, capability, controller.signal)
       .then((data) => {
         if (!controller.signal.aborted) setResult({ data });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setResult({ failed: true });
       });
     return () => {
       controller.abort();
     };
-  }, [identity.id, attempt, auth]);
+  }, [authorized, capability, identity.id, attempt, sessionExpired]);
   const commonName = result?.data
     ? result.data.common_name
     : identity.common_name;
@@ -734,6 +738,9 @@ function CollectionTree({
 
 export function TaxonomyScreen() {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const fullscreenHost = useRef<HTMLDivElement>(null);
   const nativeFullscreen = useRef(false);
   const [fullscreen, setFullscreen] = useState(false);
@@ -830,16 +837,18 @@ export function TaxonomyScreen() {
     };
   }, [leaveFullscreen]);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
-      void getTree(filters, controller.signal)
+      void getTree(filters, capability, controller.signal)
         .then((data) => {
           if (!controller.signal.aborted) setResult({ key, data });
         })
         .catch((error: unknown) => {
-          if (controller.signal.aborted) return;
+          if (controller.signal.aborted || isExpectedAuthCancellation(error))
+            return;
           if (error instanceof ApiError && error.status === 401)
-            auth.sessionExpired();
+            sessionExpired();
           else
             setResult((previous) => ({
               key,
@@ -855,7 +864,7 @@ export function TaxonomyScreen() {
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [key, filters, attempt, auth]);
+  }, [authorized, capability, key, filters, attempt, sessionExpired]);
   const update = (next: TaxonomyState, typing = false) => {
     const hash = taxonomyHash(next);
     if (hash !== window.location.hash)

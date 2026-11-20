@@ -7,33 +7,28 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { PhotosSection } from "./PhotosSection";
 import type { CollectionPhoto, ExternalImage, PrimaryPhoto } from "./api";
 
 const targetId = "01900000-0000-7000-8000-000000000701";
 const localId = "01900000-0000-7000-8000-000000000801";
 const externalId = "01900000-0000-7000-8000-000000000802";
-const auth: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    session: {
-      user_id: "01900000-0000-7000-8000-000000000001",
-      login_name: "owner",
-      display_name: "Owner",
-      owner: true,
-      canonical_origin: "http://localhost:5173",
-    },
-    csrfToken: "csrf-test",
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired: vi.fn(),
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
+beforeEach(async () => {
+  auth = (
+    await acquireTestAuth({
+      session: {
+        display_name: "Owner",
+        canonical_origin: "http://localhost:5173",
+      },
+      csrfToken: "csrf-test",
+    })
+  ).auth;
+});
 
 const photos: CollectionPhoto[] = [
   {
@@ -106,16 +101,27 @@ test("renders uploaded photos lazily and never loads an external image automatic
     innerWidth: { configurable: true, value: 390 },
     innerHeight: { configurable: true, value: 844 },
   });
-  vi.spyOn(globalThis, "fetch").mockResolvedValue(json(photos));
+  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    const url = requestPath(input);
+    if (url.endsWith("/thumbnail")) {
+      return Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      );
+    }
+    return Promise.resolve(json(photos));
+  });
   const user = userEvent.setup();
   renderSection();
 
   expect(await screen.findByText("Uploaded photo")).toBeVisible();
-  const local = screen.getByRole("img", { name: "Photo for Avocado #1" });
+  const local = await screen.findByRole("img", {
+    name: "Photo for Avocado #1",
+  });
   expect(local).toHaveAttribute("loading", "lazy");
-  expect(local).toHaveAttribute(
-    "src",
+  expect(local.getAttribute("src")).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenCalledWith(
     `/api/v1/collection-photos/local/${localId}/thumbnail`,
+    expect.objectContaining({ credentials: "same-origin" }),
   );
   expect(
     screen.getByText("External reference · not stored locally"),
@@ -134,11 +140,22 @@ test("renders uploaded photos lazily and never loads an external image automatic
     "src",
     "https://images.example.test/specimen.jpg",
   );
-  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(
+    fetch.mock.calls.filter(
+      ([input]) => !requestPath(input).endsWith("/thumbnail"),
+    ),
+  ).toHaveLength(1);
 });
 
 test("shows understandable local and external image failure states", async () => {
-  vi.spyOn(globalThis, "fetch").mockResolvedValue(json(photos));
+  vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    if (requestPath(input).endsWith("/thumbnail")) {
+      return Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      );
+    }
+    return Promise.resolve(json(photos));
+  });
   const user = userEvent.setup();
   renderSection();
   const local = await screen.findByRole("img", {
@@ -370,12 +387,21 @@ test("record-linked external media renders its saved local thumbnail without pre
         }
       : photo,
   );
-  vi.spyOn(globalThis, "fetch").mockResolvedValue(json(stored));
+  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    const url = requestPath(input);
+    if (url.includes("/thumbnail")) {
+      return Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      );
+    }
+    return Promise.resolve(json(stored));
+  });
   renderSection();
   const image = await screen.findByRole("img", { name: "Flowering specimen" });
-  expect(image).toHaveAttribute(
-    "src",
+  expect(image.getAttribute("src")).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenCalledWith(
     "/api/v1/media-assets/saved/thumbnail?v=1",
+    expect.objectContaining({ credentials: "same-origin" }),
   );
   expect(
     screen.queryByRole("button", { name: "Preview once" }),
@@ -400,6 +426,12 @@ test("compact attached media retains primary, metadata, details and explicit unl
             : input.url;
       if (path.endsWith("/primary-photo") && init?.method === "DELETE")
         return Promise.resolve(new Response(null, { status: 204 }));
+      if (path.includes("/thumbnail"))
+        return Promise.resolve(
+          new Response(new Blob(["img"], { type: "image/png" }), {
+            status: 200,
+          }),
+        );
       return Promise.resolve(json([photos[0], copy]));
     });
   const user = userEvent.setup();
@@ -435,8 +467,14 @@ test("compact attached media retains primary, metadata, details and explicit unl
     }),
   ).toHaveAttribute("href", "#/media/asset-copy");
   expect(
-    screen.getByRole("img", { name: "Flowering specimen" }),
-  ).toHaveAttribute("src", copy.thumbnail_url);
+    (
+      await screen.findByRole("img", { name: "Flowering specimen" })
+    ).getAttribute("src"),
+  ).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenCalledWith(
+    copy.thumbnail_url,
+    expect.objectContaining({ credentials: "same-origin" }),
+  );
   expect(
     screen.queryByRole("button", { name: "Edit details" }),
   ).not.toBeInTheDocument();
@@ -581,6 +619,13 @@ test.each([true, false])(
           saved = true;
           return Promise.resolve(json({ id: externalId }));
         }
+        if (path.includes("/thumbnail")) {
+          return Promise.resolve(
+            new Response(new Blob(["img"], { type: "image/png" }), {
+              status: 200,
+            }),
+          );
+        }
         return Promise.resolve(
           json(added ? [saved ? savedExternal : photos[1]] : []),
         );
@@ -601,8 +646,11 @@ test.each([true, false])(
     ).toHaveLength(copy ? 1 : 0);
     if (copy) {
       expect(
-        screen.getByRole("img", { name: "Flowering specimen" }),
-      ).toHaveAttribute("src", savedExternal.thumbnail_url);
+        (
+          await screen.findByRole("img", { name: "Flowering specimen" })
+        ).getAttribute("src"),
+      ).toMatch(/^blob:/);
+      expect(requests).toContain(`GET ${savedExternal.thumbnail_url ?? ""}`);
       expect(
         screen.queryByRole("button", { name: "Preview once" }),
       ).not.toBeInTheDocument();
@@ -647,6 +695,10 @@ test("copy failure retains one linked reference and Retry saves it without recre
       );
     }
     if (path.endsWith("/primary-photo")) return Promise.resolve(json(null));
+    if (path.includes("/thumbnail"))
+      return Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      );
     return Promise.resolve(
       json(created ? [copyAttempts > 1 ? savedExternal : photos[1]] : []),
     );
@@ -666,25 +718,42 @@ test("copy failure retains one linked reference and Retry saves it without recre
   expect(created).toBe(1);
   expect(copyAttempts).toBe(2);
   expect(
-    screen.getByRole("img", { name: "Flowering specimen" }),
-  ).toHaveAttribute("src", savedExternal.thumbnail_url);
+    (
+      await screen.findByRole("img", { name: "Flowering specimen" })
+    ).getAttribute("src"),
+  ).toMatch(/^blob:/);
   expect(
     screen.queryByRole("button", { name: "Preview once" }),
   ).not.toBeInTheDocument();
 });
 
 test("saved external photos render protected thumbnails after reload without remote preview", async () => {
-  const fetch = vi
-    .spyOn(globalThis, "fetch")
-    .mockResolvedValue(json([savedExternal]));
+  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    if (requestPath(input).includes("/thumbnail")) {
+      return Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      );
+    }
+    return Promise.resolve(json([savedExternal]));
+  });
   renderSection();
   expect(
-    await screen.findByRole("img", { name: "Flowering specimen" }),
-  ).toHaveAttribute("src", savedExternal.thumbnail_url);
+    (
+      await screen.findByRole("img", { name: "Flowering specimen" })
+    ).getAttribute("src"),
+  ).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenCalledWith(
+    savedExternal.thumbnail_url,
+    expect.objectContaining({ credentials: "same-origin" }),
+  );
   expect(
     screen.queryByRole("button", { name: "Preview once" }),
   ).not.toBeInTheDocument();
-  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(
+    fetch.mock.calls.filter(
+      ([input]) => !requestPath(input).includes("/thumbnail"),
+    ),
+  ).toHaveLength(1);
 });
 
 test("empty Photos uses compact detail content and keeps all three media actions", async () => {

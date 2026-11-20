@@ -1,6 +1,6 @@
 import { GeographyHeader } from "../geography/GeographyHeader";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { DirectoryTools } from "../components/DirectoryTools";
 import { DirectorySearch } from "../components/ReferenceUI";
@@ -21,6 +21,9 @@ type MapState =
 
 export function ProvenanceMapScreen() {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [state, setState] = useState<MapState>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -40,21 +43,22 @@ export function ProvenanceMapScreen() {
     [view.state],
   );
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void getCollectionProvenanceMap(controller.signal)
+    void getCollectionProvenanceMap(capability, controller.signal)
       .then((dataset) => {
         if (!controller.signal.aborted) setState({ status: "ready", dataset });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setState({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [attempt, auth]);
+  }, [attempt, authorized, capability, sessionExpired]);
   const visibleSites = useMemo(
     () =>
       state.status === "ready"

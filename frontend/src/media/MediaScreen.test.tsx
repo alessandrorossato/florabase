@@ -8,8 +8,9 @@ import {
   waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { MediaScreen } from "./MediaScreen";
 import { MediaPicker } from "./MediaPicker";
 import { MediaLinker } from "./MediaLinker";
@@ -19,24 +20,19 @@ import type { MediaAsset, MediaDetail, MediaLink } from "./api";
 const assetId = "01900000-0000-7000-8000-000000000910";
 const recordId = "01900000-0000-7000-8000-000000000911";
 const linkId = "01900000-0000-7000-8000-000000000912";
-const auth: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    session: {
-      user_id: recordId,
-      login_name: "owner",
-      display_name: "Owner",
-      owner: true,
-      canonical_origin: "http://localhost:5173",
-    },
-    csrfToken: "test-csrf",
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired: vi.fn(),
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
+beforeEach(async () => {
+  auth = (
+    await acquireTestAuth({
+      session: {
+        user_id: recordId,
+        display_name: "Owner",
+        canonical_origin: "http://localhost:5173",
+      },
+      csrfToken: "test-csrf",
+    })
+  ).auth;
+});
 function requestUrl(input: RequestInfo | URL): string {
   return typeof input === "string"
     ? input
@@ -127,6 +123,10 @@ test("Gallery distinguishes source and references, uses thumbnails and filters/p
   });
   const fetch = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
     const url = requestUrl(input);
+    if (url.endsWith("/thumbnail") || url.endsWith("/content"))
+      return Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      );
     if (url === `/api/v1/media-assets/${assetId}`)
       return Promise.resolve(
         json(detail({ cover_reference_count: 1, can_delete: false })),
@@ -152,9 +152,11 @@ test("Gallery distinguishes source and references, uses thumbnails and filters/p
   expect(screen.getByLabelText("Directory results")).toHaveTextContent(
     "2 of 30 records",
   );
-  expect(screen.getByRole("img", { name: "Garden image" })).toHaveAttribute(
-    "src",
+  const thumbImg = await screen.findByRole("img", { name: "Garden image" });
+  expect(thumbImg.getAttribute("src")).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenCalledWith(
     `/api/v1/media-assets/${assetId}/thumbnail`,
+    expect.objectContaining({ credentials: "same-origin" }),
   );
   expect(
     screen.queryByRole("img", { name: "Remote reference" }),
@@ -530,6 +532,13 @@ test("external detail explicitly saves, refreshes and removes the persistent loc
     "fetch",
     vi.fn((input: RequestInfo | URL, options?: RequestInit) => {
       const path = requestUrl(input);
+      if (path.includes("/thumbnail") || path.endsWith("/content")) {
+        return Promise.resolve(
+          new Response(new Blob(["img"], { type: "image/png" }), {
+            status: 200,
+          }),
+        );
+      }
       if (options?.method === "POST") {
         mutations.push(path);
         current = {
@@ -562,20 +571,26 @@ test("external detail explicitly saves, refreshes and removes the persistent loc
     await screen.findByText("External reference · local copy saved"),
   ).toBeVisible();
   expect(screen.getByText("2026-10-01")).toBeVisible();
-  expect(screen.getByRole("img")).toHaveAttribute(
-    "src",
+  expect((await screen.findByRole("img")).getAttribute("src")).toMatch(
+    /^blob:/,
+  );
+  expect(globalThis.fetch).toHaveBeenCalledWith(
     "/api/v1/attachments/1/content",
+    expect.objectContaining({ credentials: "same-origin" }),
   );
   expect(
     screen.queryByRole("button", { name: "Preview once" }),
   ).not.toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Refresh local copy" }));
   await waitFor(() => {
-    expect(screen.getByRole("img")).toHaveAttribute(
-      "src",
+    expect(globalThis.fetch).toHaveBeenCalledWith(
       "/api/v1/attachments/2/content",
+      expect.objectContaining({ credentials: "same-origin" }),
     );
   });
+  expect((await screen.findByRole("img")).getAttribute("src")).toMatch(
+    /^blob:/,
+  );
   await user.click(screen.getByRole("button", { name: "Remove local copy" }));
   const dialog = screen.getByRole("dialog", { name: "Remove local copy?" });
   expect(
@@ -632,6 +647,12 @@ test("Quick Preview saves an external reference only on request and refreshes ga
     vi.fn((input: RequestInfo | URL, options?: RequestInit) => {
       const path = requestUrl(input);
       paths.push(path);
+      if (path.includes("/thumbnail") || path.endsWith("/content"))
+        return Promise.resolve(
+          new Response(new Blob(["img"], { type: "image/png" }), {
+            status: 200,
+          }),
+        );
       if (path.startsWith("/api/v1/media-assets?"))
         return Promise.resolve(
           json(page([local, alreadySaved, remote], 27, 24)),
@@ -699,10 +720,10 @@ test("Quick Preview saves an external reference only on request and refreshes ga
   expect(
     within(preview).getByText("Protected local copy saved."),
   ).toHaveFocus();
-  expect(within(preview).getByRole("img")).toHaveAttribute(
-    "src",
-    `/api/v1/attachments/${remoteId}/content`,
+  expect((await within(preview).findByRole("img")).getAttribute("src")).toMatch(
+    /^blob:/,
   );
+  expect(paths).toContain(`/api/v1/attachments/${remoteId}/content`);
   expect(
     within(preview).queryByRole("button", { name: "Save local copy" }),
   ).toBeNull();
@@ -794,19 +815,24 @@ test("failed refresh explains the error and keeps the saved image", async () => 
   });
   vi.stubGlobal(
     "fetch",
-    vi.fn((_input: RequestInfo | URL, options?: RequestInit) =>
+    vi.fn((input: RequestInfo | URL, options?: RequestInit) =>
       Promise.resolve(
-        options?.method === "POST"
-          ? json(
-              {
-                detail: {
-                  code: "external_fetch_failed",
-                  message: "The external image is unavailable. Try again.",
+        requestUrl(input).endsWith("/content") ||
+          requestUrl(input).includes("/thumbnail")
+          ? new Response(new Blob(["img"], { type: "image/png" }), {
+              status: 200,
+            })
+          : options?.method === "POST"
+            ? json(
+                {
+                  detail: {
+                    code: "external_fetch_failed",
+                    message: "The external image is unavailable. Try again.",
+                  },
                 },
-              },
-              422,
-            )
-          : json(current),
+                422,
+              )
+            : json(current),
       ),
     ),
   );
@@ -817,7 +843,9 @@ test("failed refresh explains the error and keeps the saved image", async () => 
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "The external image is unavailable.",
   );
-  expect(screen.getByRole("img")).toHaveAttribute("src", current.content_url);
+  expect((await screen.findByRole("img")).getAttribute("src")).toMatch(
+    /^blob:/,
+  );
 });
 
 test("Gallery and Quick Preview use only the protected snapshot of an external asset", async () => {
@@ -835,20 +863,31 @@ test("Gallery and Quick Preview use only the protected snapshot of an external a
     "fetch",
     vi.fn((input: RequestInfo | URL) =>
       Promise.resolve(
-        json(requestUrl(input).includes("?") ? page([stored]) : detail(stored)),
+        requestUrl(input).endsWith("/content") ||
+          requestUrl(input).includes("/thumbnail")
+          ? new Response(new Blob(["img"], { type: "image/png" }), {
+              status: 200,
+            })
+          : json(
+              requestUrl(input).includes("?") ? page([stored]) : detail(stored),
+            ),
       ),
     ),
   );
   mount(<MediaScreen />);
   await user.click(await screen.findByRole("button", { name: /Garden image/ }));
   const preview = await screen.findByRole("dialog", { name: "Quick Preview" });
-  expect(await within(preview).findByRole("img")).toHaveAttribute(
-    "src",
-    stored.content_url,
+  expect((await within(preview).findByRole("img")).getAttribute("src")).toMatch(
+    /^blob:/,
   );
-  expect(screen.getAllByRole("img")[0]).toHaveAttribute(
-    "src",
+  expect(globalThis.fetch).toHaveBeenCalledWith(
+    stored.content_url,
+    expect.objectContaining({ credentials: "same-origin" }),
+  );
+  expect(screen.getAllByRole("img")[0]?.getAttribute("src")).toMatch(/^blob:/);
+  expect(globalThis.fetch).toHaveBeenCalledWith(
     stored.thumbnail_url,
+    expect.objectContaining({ credentials: "same-origin" }),
   );
   expect(
     screen.queryByRole("button", { name: "Preview once" }),
@@ -1006,15 +1045,25 @@ test("exact media detail reports a missing asset with a safe return link", async
 test("exact media detail accepts case-insensitive UUID spelling", async () => {
   const lowerId = "01900000-0000-7000-8000-000000000abc";
   const upperId = lowerId.toUpperCase();
-  const fetch = vi
-    .spyOn(globalThis, "fetch")
-    .mockResolvedValue(json(detail({ id: lowerId })));
+  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    const url = requestUrl(input);
+    if (url.includes("/thumbnail") || url.endsWith("/content"))
+      return Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      );
+    return Promise.resolve(json(detail({ id: lowerId })));
+  });
   mount(<MediaScreen initialId={upperId} />);
   expect(
     await screen.findByRole("heading", { name: "Garden image" }),
   ).toBeVisible();
-  expect(fetch).toHaveBeenCalledTimes(1);
-  expect(requestUrl(fetch.mock.calls[0]?.[0] ?? "")).toBe(
+  const detailCalls = fetch.mock.calls.filter(
+    ([input]) =>
+      !requestUrl(input).includes("/thumbnail") &&
+      !requestUrl(input).endsWith("/content"),
+  );
+  expect(detailCalls).toHaveLength(1);
+  expect(requestUrl(detailCalls[0]?.[0] ?? "")).toBe(
     `/api/v1/media-assets/${upperId}`,
   );
 });
@@ -1139,10 +1188,15 @@ test("deliberate preview loads one original and exact shared records, Escape res
     "matchMedia",
     vi.fn(() => ({ matches: false })),
   );
-  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation((input) =>
-    Promise.resolve(
+  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    const url = requestUrl(input);
+    if (url.includes("/thumbnail") || url.endsWith("/content"))
+      return Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      );
+    return Promise.resolve(
       json(
-        requestUrl(input).includes("?")
+        url.includes("?")
           ? page([asset()])
           : detail({
               links: [
@@ -1155,12 +1209,14 @@ test("deliberate preview loads one original and exact shared records, Escape res
               ],
             }),
       ),
-    ),
-  );
+    );
+  });
   const user = userEvent.setup();
   mount(<MediaScreen />);
   const card = await screen.findByRole("button", { name: /Garden image/ });
-  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(
+    fetch.mock.calls.filter(([input]) => requestUrl(input).includes("?")),
+  ).toHaveLength(1);
   card.focus();
   await user.keyboard("{Enter}");
   const preview = screen.getByRole("dialog", { name: "Quick Preview" });
@@ -1173,11 +1229,20 @@ test("deliberate preview loads one original and exact shared records, Escape res
   expect(
     within(preview).getByText("Plant · Primary image for this record"),
   ).toBeVisible();
-  expect(within(preview).getByRole("img")).toHaveAttribute(
-    "src",
-    asset().content_url,
+  expect((await within(preview).findByRole("img")).getAttribute("src")).toMatch(
+    /^blob:/,
   );
-  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(fetch).toHaveBeenCalledWith(
+    asset().content_url,
+    expect.objectContaining({ credentials: "same-origin" }),
+  );
+  expect(
+    fetch.mock.calls.filter(
+      ([input]) =>
+        !requestUrl(input).includes("/thumbnail") &&
+        !requestUrl(input).endsWith("/content"),
+    ),
+  ).toHaveLength(2);
   await user.keyboard("{Escape}");
   expect(screen.queryByRole("dialog")).toBeNull();
   expect(card).toHaveFocus();
@@ -1387,9 +1452,12 @@ test("confirmation success retains filtered directory context without touching o
   ).toEqual([`/api/v1/media-assets/${assetId}`]);
 });
 
-test("a missing thumbnail falls back without trying an original or remote URL", () => {
+test("a missing thumbnail falls back without trying an original or remote URL", async () => {
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+  );
   mount(<MediaPreview asset={asset()} />);
-  fireEvent.error(screen.getByRole("img"));
+  fireEvent.error(await screen.findByRole("img"));
   expect(screen.getByRole("status")).toHaveTextContent("Image unavailable");
   expect(screen.queryByRole("img")).toBeNull();
 });
@@ -1402,8 +1470,12 @@ test("closing a loading preview aborts its request and ignores a late detail res
   let finish: ((value: Response) => void) | undefined;
   let signal: AbortSignal | null | undefined;
   vi.spyOn(globalThis, "fetch").mockImplementation((input, options) => {
-    if (requestUrl(input).includes("?"))
-      return Promise.resolve(json(page([asset()])));
+    const url = requestUrl(input);
+    if (url.includes("/thumbnail"))
+      return Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      );
+    if (url.includes("?")) return Promise.resolve(json(page([asset()])));
     signal = options?.signal;
     return new Promise<Response>((resolve) => {
       finish = resolve;
@@ -1421,5 +1493,81 @@ test("closing a loading preview aborts its request and ignores a late detail res
     expect(screen.queryByRole("dialog")).toBeNull();
   });
   expect(card).toHaveFocus();
-  expect(screen.getByRole("img")).toHaveAttribute("src", asset().thumbnail_url);
+  expect((await screen.findByRole("img")).getAttribute("src")).toMatch(
+    /^blob:/,
+  );
+});
+
+test("Open original image streams protected blob to synchronous popup, handles blocker, and closes tab on 401 failure", async () => {
+  const user = userEvent.setup();
+  const detailValue = detail({
+    content_url: `/api/v1/attachments/${assetId}/content`,
+    thumbnail_url: `/api/v1/media-assets/${assetId}/thumbnail`,
+  });
+  let contentStatus = 200;
+  vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    const url = requestUrl(input);
+    if (url.includes("/thumbnail")) {
+      return Promise.resolve(
+        new Response(new Blob(["thumb"], { type: "image/png" }), {
+          status: 200,
+        }),
+      );
+    }
+    if (url.endsWith("/content")) {
+      return Promise.resolve(
+        contentStatus === 200
+          ? new Response(new Blob(["original"], { type: "image/png" }), {
+              status: 200,
+            })
+          : json({ detail: "Expired" }, contentStatus),
+      );
+    }
+    return Promise.resolve(json(detailValue));
+  });
+
+  const popup = {
+    opener: window,
+    closed: false,
+    location: { replace: vi.fn() },
+    close: vi.fn(() => {
+      popup.closed = true;
+    }),
+  };
+  const openSpy = vi
+    .spyOn(window, "open")
+    .mockReturnValueOnce(popup as unknown as Window)
+    .mockReturnValueOnce(null)
+    .mockReturnValueOnce(popup as unknown as Window);
+
+  mount(<MediaScreen initialId={assetId} />);
+  const openBtn = await screen.findByRole("button", {
+    name: "Open original image",
+  });
+
+  // 1. Success opens blank popup synchronously, clears opener, and navigates popup to protected blob URL.
+  await user.click(openBtn);
+  await waitFor(() => {
+    expect(popup.location.replace).toHaveBeenCalledWith(
+      expect.stringMatching(/^blob:/),
+    );
+  });
+  expect(openSpy).toHaveBeenCalledWith("", "_blank");
+  expect(popup.opener).toBeNull();
+
+  // 2. Popup blocker surfaces clear alert without hitting /content endpoint.
+  const callsBeforeBlocker = vi.mocked(globalThis.fetch).mock.calls.length;
+  await user.click(openBtn);
+  expect(await screen.findByRole("alert")).toHaveTextContent(/Pop-up blocked/i);
+  expect(vi.mocked(globalThis.fetch).mock.calls.length).toBe(
+    callsBeforeBlocker,
+  );
+
+  // 3. HTTP 401 during protected content fetch closes the pre-opened blank tab cleanly.
+  popup.closed = false;
+  contentStatus = 401;
+  await user.click(openBtn);
+  await waitFor(() => {
+    expect(popup.close).toHaveBeenCalled();
+  });
 });

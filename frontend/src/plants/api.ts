@@ -1,5 +1,9 @@
 import type { components } from "../api/schema";
-import { ApiError, requestJson } from "../auth/api";
+import {
+  ApiError,
+  requestJson,
+  type ProtectedRequestCapability,
+} from "../auth/api";
 
 export type DirectOriginKind = components["schemas"]["DirectOriginKind"];
 export type PartialDate = components["schemas"]["PartialDate"];
@@ -25,28 +29,38 @@ export type PlantTransferResponse =
 export type PlantGroupTransferResponse =
   components["schemas"]["PlantGroupTransferResponse"];
 
-export function listPlants(signal?: AbortSignal): Promise<PlantResponse[]> {
-  return requestJson("/api/v1/plants", { signal });
+export function listPlants(
+  capability: ProtectedRequestCapability,
+  signal?: AbortSignal,
+): Promise<PlantResponse[]> {
+  return requestJson("/api/v1/plants", { capability, signal });
 }
 
 export function listPlantGroups(
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<PlantGroupResponse[]> {
-  return requestJson("/api/v1/plant-groups", { signal });
+  return requestJson("/api/v1/plant-groups", { capability, signal });
 }
 
 export function getPlant(
   id: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<PlantResponse> {
-  return requestJson(`/api/v1/plants/${encodeURIComponent(id)}`, { signal });
+  return requestJson(`/api/v1/plants/${encodeURIComponent(id)}`, {
+    capability,
+    signal,
+  });
 }
 
 export function getPlantGroup(
   id: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<PlantGroupResponse> {
   return requestJson(`/api/v1/plant-groups/${encodeURIComponent(id)}`, {
+    capability,
     signal,
   });
 }
@@ -54,17 +68,22 @@ export function getPlantGroup(
 export function createPlant(
   payload: PlantCreate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<PlantResponse> {
-  return requestJson("/api/v1/plants", mutation("POST", payload, csrfToken));
+  return requestJson(
+    "/api/v1/plants",
+    mutation("POST", payload, csrfToken, capability),
+  );
 }
 
 export function createPlantGroup(
   payload: PlantGroupCreate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<PlantGroupResponse> {
   return requestJson(
     "/api/v1/plant-groups",
-    mutation("POST", payload, csrfToken),
+    mutation("POST", payload, csrfToken, capability),
   );
 }
 
@@ -72,10 +91,11 @@ export function updatePlant(
   id: string,
   payload: PlantUpdate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<PlantResponse> {
   return requestJson(
     `/api/v1/plants/${encodeURIComponent(id)}`,
-    mutation("PUT", payload, csrfToken),
+    mutation("PUT", payload, csrfToken, capability),
   );
 }
 
@@ -83,10 +103,11 @@ export function updatePlantGroup(
   id: string,
   payload: PlantGroupUpdate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<PlantGroupResponse> {
   return requestJson(
     `/api/v1/plant-groups/${encodeURIComponent(id)}`,
-    mutation("PUT", payload, csrfToken),
+    mutation("PUT", payload, csrfToken, capability),
   );
 }
 
@@ -94,18 +115,21 @@ export function extractPlantFromGroup(
   id: string,
   payload: PlantExtractionCreate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<PlantExtractionResponse> {
   return requestJson(
     `/api/v1/plant-groups/${encodeURIComponent(id)}/extract-plant`,
-    mutation("POST", payload, csrfToken),
+    mutation("POST", payload, csrfToken, capability),
   );
 }
 
 export function getPlantReintegrationEligibility(
   id: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<PlantReintegrationEligibility> {
   return requestJson(`/api/v1/plants/${encodeURIComponent(id)}/reintegration`, {
+    capability,
     signal,
   });
 }
@@ -114,6 +138,7 @@ export function reintegratePlant(
   id: string,
   confirmRetainedObservations: boolean,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<PlantReintegrationResponse> {
   return requestJson(
     `/api/v1/plants/${encodeURIComponent(id)}/reintegrate`,
@@ -121,6 +146,7 @@ export function reintegratePlant(
       "POST",
       { confirm_retained_observations: confirmRetainedObservations },
       csrfToken,
+      capability,
     ),
   );
 }
@@ -129,10 +155,11 @@ export function transferPlant(
   id: string,
   payload: TransferCreate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<PlantTransferResponse> {
   return requestJson(
     `/api/v1/plants/${encodeURIComponent(id)}/transfer`,
-    mutation("POST", payload, csrfToken),
+    mutation("POST", payload, csrfToken, capability),
   );
 }
 
@@ -140,15 +167,22 @@ export function transferPlantGroup(
   id: string,
   payload: TransferCreate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<PlantGroupTransferResponse> {
   return requestJson(
     `/api/v1/plant-groups/${encodeURIComponent(id)}/transfer`,
-    mutation("POST", payload, csrfToken),
+    mutation("POST", payload, csrfToken, capability),
   );
 }
 
-function mutation(method: "POST" | "PUT", payload: unknown, csrfToken: string) {
+function mutation(
+  method: "POST" | "PUT",
+  payload: unknown,
+  csrfToken: string,
+  capability: ProtectedRequestCapability,
+) {
   return {
+    capability,
     method,
     headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
     body: JSON.stringify(payload),

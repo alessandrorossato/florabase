@@ -1,5 +1,9 @@
 import type { components } from "../api/schema";
-import { ApiError, requestJson } from "../auth/api";
+import {
+  ApiError,
+  requestJson,
+  type ProtectedRequestCapability,
+} from "../auth/api";
 
 export type SeedLotCreate = components["schemas"]["SeedLotCreate"];
 export type SeedLotUpdate = components["schemas"]["SeedLotUpdate"];
@@ -13,15 +17,20 @@ export type SeedLotSowingTransitionCreate =
 export type SeedLotSowingTransitionResponse =
   components["schemas"]["SeedLotSowingTransitionResponse"];
 
-export function listSeedLots(signal?: AbortSignal): Promise<SeedLotResponse[]> {
-  return requestJson("/api/v1/seed-lots", { signal });
+export function listSeedLots(
+  capability: ProtectedRequestCapability,
+  signal?: AbortSignal,
+): Promise<SeedLotResponse[]> {
+  return requestJson("/api/v1/seed-lots", { capability, signal });
 }
 
 export function createSeedLot(
   payload: SeedLotCreate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<SeedLotResponse> {
   return requestJson("/api/v1/seed-lots", {
+    capability,
     method: "POST",
     headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
     body: JSON.stringify(payload),
@@ -32,10 +41,12 @@ export function createSowingFromSeedLot(
   id: string,
   payload: SeedLotSowingTransitionCreate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<SeedLotSowingTransitionResponse> {
   return requestJson(
     `/api/v1/seed-lots/${encodeURIComponent(id)}/create-sowing`,
     {
+      capability,
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -50,8 +61,10 @@ export function updateSeedLot(
   id: string,
   payload: SeedLotUpdate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<SeedLotResponse> {
   return requestJson(`/api/v1/seed-lots/${encodeURIComponent(id)}`, {
+    capability,
     method: "PUT",
     headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
     body: JSON.stringify(payload),

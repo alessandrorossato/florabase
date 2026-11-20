@@ -10,6 +10,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { ApiError } from "../auth/api";
 import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { getOccurrenceMapSummary } from "../occurrence-map/api";
 import { createSavedView, listSavedViews } from "../saved-views/api";
 import {
@@ -46,24 +47,7 @@ vi.mock("../saved-views/api", () => ({
 const id = "01900000-0000-7000-8000-000000000911";
 const other = "01900000-0000-7000-8000-000000000912";
 const sessionExpired = vi.fn();
-const auth: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    csrfToken: "csrf",
-    session: {
-      user_id: id,
-      login_name: "owner",
-      display_name: "Owner",
-      owner: true,
-      canonical_origin: "http://localhost:15174",
-    },
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired,
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
 const identity: RangeIdentity = {
   id,
   display_label: "Synthetic species ‘Long cultivar’",
@@ -147,8 +131,17 @@ async function openDisclosure(
   await screen.findByRole("heading", { name });
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  const acquired = await acquireTestAuth({
+    session: {
+      user_id: id,
+      display_name: "Owner",
+      canonical_origin: "http://localhost:15174",
+    },
+    csrfToken: "csrf",
+  });
+  auth = { ...acquired.auth, sessionExpired };
   Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
     configurable: true,
     value: vi.fn(),
@@ -259,6 +252,7 @@ test("overview exposes distinct coverage, exact places, meaning and local-only s
     expect(getNativeOverview).toHaveBeenLastCalledWith(
       { q: "synthetic", scope: "all", withRange: true, record: [] },
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -491,6 +485,7 @@ test("Saved Views persist stable state, opening same view rebuilds at page one w
         state,
       },
       "csrf",
+      auth.capability,
     );
   });
   await screen.findByRole("button", { name: "Open Living recorded ranges" });
@@ -506,6 +501,7 @@ test("Saved Views persist stable state, opening same view rebuilds at page one w
     expect(listNativeIdentities).toHaveBeenLastCalledWith(
       expect.any(Object),
       50,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -519,6 +515,7 @@ test("Saved Views persist stable state, opening same view rebuilds at page one w
     expect(listNativeIdentities).toHaveBeenLastCalledWith(
       { q: "synthetic", scope: "living", withRange: true, record: [] },
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -548,6 +545,7 @@ test("Back/Forward restores mode/scope and selection independent of search resul
       id,
       { q: "", scope: "current", withRange: false, record: [] },
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -628,6 +626,7 @@ test("explicit multiple selection shows contributors, filter exclusions, removal
     expect(getNativeComparison).toHaveBeenLastCalledWith(
       [id, other],
       { q: "", scope: "all", withRange: false, record: ["seed_lot", "plant"] },
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -714,6 +713,7 @@ test("comparison keeps stale UUIDs explicit and restorable from repeated URL par
   expect(getNativeComparison).toHaveBeenCalledWith(
     [id, other],
     expect.any(Object),
+    auth.capability,
     expect.any(AbortSignal),
   );
   expect(
@@ -767,6 +767,7 @@ test("opening a multi-species Saved View restores its exact set and category fil
   expect(getNativeComparison).toHaveBeenLastCalledWith(
     [id, other],
     { q: "", scope: "current", withRange: true, record: ["seed_lot", "plant"] },
+    auth.capability,
     expect.any(AbortSignal),
   );
   window.history.replaceState(
@@ -779,6 +780,7 @@ test("opening a multi-species Saved View restores its exact set and category fil
     expect(getNativeComparison).toHaveBeenLastCalledWith(
       [id, other],
       { q: "", scope: "living", withRange: false, record: ["plant"] },
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -800,6 +802,7 @@ test("actual Back and Forward restore selection and filters without persisting t
       id,
       { q: "", scope: "current", withRange: false, record: [] },
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -851,6 +854,7 @@ test("reset filters preserves search and explicit selection while restoring unre
       id,
       { q: "synthetic", scope: "all", withRange: false, record: [] },
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -900,6 +904,7 @@ test("KPI drill-down reveals exact evidence or opens bounded species selection w
   expect(listNativeIdentities).toHaveBeenLastCalledWith(
     { q: "", scope: "all", withRange: true, record: [] },
     0,
+    auth.capability,
     expect.any(AbortSignal),
   );
   await user.click(screen.getByRole("button", { name: "Done" }));
@@ -939,6 +944,7 @@ test("chooser returns focus, preserves inspection, and keeps selected IDs throug
     expect(listNativeIdentities).toHaveBeenLastCalledWith(
       { q: "cultivar", scope: "all", withRange: false, record: [] },
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -1073,6 +1079,7 @@ test("Explore all inspector uses full scoped collection while Compare passes onl
       "any",
       undefined,
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -1089,6 +1096,7 @@ test("Explore all inspector uses full scoped collection while Compare passes onl
       "any",
       undefined,
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -1103,6 +1111,7 @@ test("Explore all inspector uses full scoped collection while Compare passes onl
       "all",
       undefined,
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -1120,6 +1129,7 @@ test("Explore all inspector uses full scoped collection while Compare passes onl
       "any",
       [id],
       0,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -1185,6 +1195,7 @@ test("paging exact recorded evidence retains the dialog and committed map territ
     expect(getNativeOverview).toHaveBeenLastCalledWith(
       expect.any(Object),
       50,
+      auth.capability,
       expect.any(AbortSignal),
     );
   });
@@ -1197,4 +1208,44 @@ test("paging exact recorded evidence retains the dialog and committed map territ
     "aria-pressed",
     "true",
   );
+});
+
+test("logout-failed keeps loaded native-range workspace mounted without issuing protected reads", async () => {
+  const { auth: baseAuth } = await acquireTestAuth();
+  const baseCount = vi.mocked(getNativeOverview).mock.calls.length;
+  const view = render(
+    <AuthContext.Provider value={baseAuth}>
+      <NativeRangesScreen />
+    </AuthContext.Provider>,
+  );
+  await screen.findByRole("group", { name: /Collection recorded/ });
+  const callsAfterLoad = vi.mocked(getNativeOverview).mock.calls.length;
+  expect(callsAfterLoad).toBeGreaterThan(baseCount);
+
+  view.rerender(
+    <AuthContext.Provider
+      value={{
+        ...baseAuth,
+        state: {
+          status: "logout-failed",
+          session: {
+            user_id: id,
+            login_name: "owner",
+            display_name: "Owner",
+            owner: true,
+            canonical_origin: "http://localhost:15174",
+          },
+          csrfToken: "csrf-stale",
+          message: "Sign out failed.",
+        },
+      }}
+    >
+      <NativeRangesScreen />
+    </AuthContext.Provider>,
+  );
+  await Promise.resolve();
+  expect(vi.mocked(getNativeOverview).mock.calls.length).toBe(callsAfterLoad);
+  expect(
+    screen.getByRole("group", { name: /Collection recorded/ }),
+  ).toBeInTheDocument();
 });

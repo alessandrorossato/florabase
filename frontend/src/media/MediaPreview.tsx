@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useProtectedImage } from "../photos/useProtectedImage";
 import type { MediaAsset } from "./api";
 
 export function MediaPreview({
@@ -13,36 +14,44 @@ export function MediaPreview({
   const [loadExternal, setLoadExternal] = useState(false);
   const [broken, setBroken] = useState(false);
   const alt = asset.title ?? asset.original_filename ?? "Media image";
-  const src =
-    asset.content_url != null
+  const rawSrc = asset.deletion_pending
+    ? null
+    : asset.content_url != null
       ? full
         ? asset.content_url
         : asset.thumbnail_url
       : loadExternal
         ? asset.image_url
         : null;
-  if (broken)
+  const [mediaTarget, media] = useProtectedImage({
+    rawUrl: rawSrc,
+    onError: () => {
+      setBroken(true);
+    },
+  });
+  if (broken || media.failed)
     return (
       <div className="media-image media-placeholder" role="status">
         Image unavailable
       </div>
     );
-  if (src && !asset.deletion_pending)
+  if (rawSrc && media.src && !asset.deletion_pending)
     return (
       <img
+        ref={mediaTarget}
         className="media-image"
-        src={src}
+        src={media.src}
         alt={alt}
         loading="lazy"
         decoding="async"
-        referrerPolicy="no-referrer"
+        referrerPolicy={media.referrerPolicy ?? "no-referrer"}
         onError={() => {
           setBroken(true);
         }}
       />
     );
   return (
-    <div className="media-image media-placeholder">
+    <div ref={mediaTarget} className="media-image media-placeholder">
       <span aria-hidden="true">▧</span>
       <span>
         {asset.deletion_pending

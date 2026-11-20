@@ -11,6 +11,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../auth/context";
 import { ApiError } from "../auth/api";
+import { acquireTestAuth } from "../test/auth";
 import { listSuppliers } from "../suppliers/api";
 import {
   getOrder,
@@ -39,24 +40,7 @@ vi.mock("./api", async (importOriginal) => ({
 }));
 const id = "01900000-0000-7000-8000-000000000911";
 const supplierId = "01900000-0000-7000-8000-000000000912";
-const auth: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    csrfToken: "csrf",
-    session: {
-      user_id: id,
-      login_name: "owner",
-      display_name: "Owner",
-      owner: true,
-      canonical_origin: "http://localhost:15174",
-    },
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired: vi.fn(),
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
 const detail: OrderDetail = {
   id,
   supplier_id: supplierId,
@@ -121,7 +105,17 @@ function mount(initialId?: string, initialTab?: string) {
 function orderRow() {
   return screen.findByRole("button", { name: "REF-1" });
 }
-beforeEach(() => {
+beforeEach(async () => {
+  auth = (
+    await acquireTestAuth({
+      session: {
+        user_id: id,
+        display_name: "Owner",
+        canonical_origin: "http://localhost:15174",
+      },
+      csrfToken: "csrf",
+    })
+  ).auth;
   window.history.replaceState(null, "", "#/orders");
   vi.mocked(listSuppliers).mockResolvedValue([supplier]);
   vi.mocked(listOrders).mockResolvedValue({
@@ -145,6 +139,11 @@ test("directory exposes exact price, partial date, authoritative count and a hid
   const user = userEvent.setup();
   mount();
   const row = await orderRow();
+  expect(
+    screen
+      .getByRole("heading", { level: 2, name: "Orders" })
+      .closest(".page-header"),
+  ).toHaveClass("page-header--directory");
   expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
   expect(row.closest("li")).not.toHaveAttribute("data-selected");
   expect(screen.getByText("EUR 42.5000")).toBeVisible();
@@ -175,6 +174,7 @@ test("directory exposes exact price, partial date, authoritative count and a hid
       "ABC",
       supplierId,
       0,
+      auth.capability,
       expect.any(AbortSignal),
       20,
     );
@@ -252,6 +252,7 @@ test("new Order keeps unknown date and absent price, then sends the exact suppli
         order_reference: "NEW",
       }),
       "csrf",
+      auth.capability,
     );
   });
   await waitFor(() => {
@@ -480,6 +481,7 @@ test("opening an Orders Saved View resets pagination", async () => {
       "",
       "",
       20,
+      auth.capability,
       expect.any(AbortSignal),
       20,
     );
@@ -491,6 +493,7 @@ test("opening an Orders Saved View resets pagination", async () => {
       "REF",
       "",
       0,
+      auth.capability,
       expect.any(AbortSignal),
       20,
     );
@@ -585,6 +588,7 @@ test("the explicit create route supports a real Order with all descriptive facts
         notes: null,
       },
       "csrf",
+      auth.capability,
     );
   });
 });
@@ -601,6 +605,7 @@ test("Supplier filter popup stays anchored, wraps long names, and clears before 
       "",
       supplierId,
       0,
+      auth.capability,
       expect.any(AbortSignal),
       20,
     );
@@ -650,13 +655,14 @@ test("typing a multi-character search query keeps focus while results are in fli
       "ABC",
       "",
       0,
+      auth.capability,
       expect.any(AbortSignal),
       20,
     );
   });
 });
 
-test("a missing Supplier filter UUID stays exact and visible", async () => {
+test("missing filtered Supplier remains visible as a clearable fallback option", async () => {
   const missing = "01900000-0000-7000-8000-000000000999";
   vi.mocked(listOrders).mockResolvedValue({
     items: [],
@@ -672,6 +678,7 @@ test("a missing Supplier filter UUID stays exact and visible", async () => {
       "",
       missing,
       0,
+      auth.capability,
       expect.any(AbortSignal),
       20,
     );
@@ -715,6 +722,7 @@ test("Order Details and Back preserve Supplier, query, current page and gallery"
       "REF",
       supplierId,
       20,
+      auth.capability,
       expect.any(AbortSignal),
       20,
     );
@@ -833,6 +841,7 @@ test("an incomplete Order date blocks saving and is never sent; a stored date sa
         ordered_on: { precision: "day", year: 2026, month: 2, day: 28 },
       }),
       "csrf",
+      auth.capability,
     );
   });
 });
@@ -851,6 +860,7 @@ test("editing an Order without touching its month-precision date sends it unchan
         ordered_on: { precision: "month", year: 2026, month: 10 },
       }),
       "csrf",
+      auth.capability,
     );
   });
 });

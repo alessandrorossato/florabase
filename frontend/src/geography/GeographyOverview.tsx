@@ -1,5 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { ApiError } from "../auth/api";
+import {
+  ApiError,
+  isExpectedAuthCancellation,
+  type ProtectedRequestCapability,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { ActionLink } from "../components/Action";
 import { getNativeOverview, listNativeIdentities } from "../native-ranges/api";
@@ -10,12 +14,16 @@ import { GeographyHeader } from "./GeographyHeader";
 
 const filters = { q: "", scope: "all", withRange: false, record: [] } as const;
 
-async function nativeSummary(signal: AbortSignal) {
+async function nativeSummary(
+  signal: AbortSignal,
+  capability: ProtectedRequestCapability,
+) {
   const [overview, page] = await Promise.all([
-    getNativeOverview({ ...filters, record: [] }, 0, signal),
+    getNativeOverview({ ...filters, record: [] }, 0, capability, signal),
     listNativeIdentities(
       { ...filters, withRange: true, record: [] },
       0,
+      capability,
       signal,
     ),
   ]);
@@ -65,8 +73,17 @@ async function nativeSummary(signal: AbortSignal) {
     </>
   );
 }
-async function distributionSummary(signal: AbortSignal) {
-  const page = await listRepresentedIdentities("", "all", 0, signal);
+async function distributionSummary(
+  signal: AbortSignal,
+  capability: ProtectedRequestCapability,
+) {
+  const page = await listRepresentedIdentities(
+    "",
+    "all",
+    0,
+    capability,
+    signal,
+  );
   return (
     <>
       <p className="geography-coverage">
@@ -93,8 +110,11 @@ async function distributionSummary(signal: AbortSignal) {
     </>
   );
 }
-async function originsSummary(signal: AbortSignal) {
-  const data = await getCollectionProvenanceMap(signal);
+async function originsSummary(
+  signal: AbortSignal,
+  capability: ProtectedRequestCapability,
+) {
+  const data = await getCollectionProvenanceMap(capability, signal);
   const records = uniqueRecords(data.sites);
   return (
     <>
@@ -147,9 +167,15 @@ async function originsSummary(signal: AbortSignal) {
 function EvidenceSummary({
   load,
 }: {
-  load: (signal: AbortSignal) => Promise<ReactNode>;
+  load: (
+    signal: AbortSignal,
+    capability: ProtectedRequestCapability,
+  ) => Promise<ReactNode>;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "error" }
@@ -157,21 +183,22 @@ function EvidenceSummary({
   >({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
-    void load(controller.signal)
+    void load(controller.signal, capability)
       .then((content) => {
         if (!controller.signal.aborted) setState({ status: "ready", content });
       })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        if (error instanceof ApiError && error.status === 401)
-          auth.sessionExpired();
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setState({ status: "error" });
       });
     return () => {
       controller.abort();
     };
-  }, [attempt, auth, load]);
+  }, [attempt, authorized, capability, load, sessionExpired]);
   if (state.status === "loading")
     return <p role="status">Loading local evidence…</p>;
   if (state.status === "error")

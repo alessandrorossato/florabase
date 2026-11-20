@@ -1,7 +1,10 @@
+import type { ComponentProps } from "react";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { ApiError } from "../auth/api";
+import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import {
   createBotanicalIdentitySynonym,
   deleteBotanicalIdentitySynonym,
@@ -13,8 +16,16 @@ import {
 } from "./api";
 import { IdentityReconciliationPanel } from "./IdentityReconciliationPanel";
 
-const auth = { sessionExpired: vi.fn() };
-vi.mock("../auth/context", () => ({ useAuth: () => auth }));
+let auth: AuthContextValue;
+function panelElement(
+  props: ComponentProps<typeof IdentityReconciliationPanel>,
+) {
+  return (
+    <AuthContext.Provider value={auth}>
+      <IdentityReconciliationPanel {...props} />
+    </AuthContext.Provider>
+  );
+}
 vi.mock("./api", async () => {
   const actual = await vi.importActual<typeof import("./api")>("./api");
   return {
@@ -28,6 +39,9 @@ vi.mock("./api", async () => {
   };
 });
 
+beforeEach(async () => {
+  auth = (await acquireTestAuth()).auth;
+});
 afterEach(() => {
   cleanup();
   vi.resetAllMocks();
@@ -160,11 +174,11 @@ test("displays distinct badges for accepted, original, historical, source, and o
   );
 
   render(
-    <IdentityReconciliationPanel
-      identity={baseIdentity}
-      csrfToken="csrf-1"
-      onIdentityUpdated={vi.fn()}
-    />,
+    panelElement({
+      identity: baseIdentity,
+      csrfToken: "csrf-1",
+      onIdentityUpdated: vi.fn(),
+    }),
   );
 
   expect(await screen.findByText("Accepted name")).toBeVisible();
@@ -236,11 +250,11 @@ test("supports loading failure retry and full operator synonym add, edit, confir
   const user = userEvent.setup();
 
   render(
-    <IdentityReconciliationPanel
-      identity={baseIdentity}
-      csrfToken="csrf-xyz"
-      onIdentityUpdated={onIdentityUpdated}
-    />,
+    panelElement({
+      identity: baseIdentity,
+      csrfToken: "csrf-xyz",
+      onIdentityUpdated,
+    }),
   );
 
   expect(
@@ -282,6 +296,7 @@ test("supports loading failure retry and full operator synonym add, edit, confir
       source_citation: "Hortus Third",
     },
     "csrf-xyz",
+    auth.capability,
   );
   expect(
     await screen.findByText(
@@ -327,6 +342,7 @@ test("supports loading failure retry and full operator synonym add, edit, confir
       source_citation: "RHS Index 2026",
     },
     "csrf-xyz",
+    auth.capability,
   );
   expect(
     await screen.findByText(
@@ -361,6 +377,7 @@ test("supports loading failure retry and full operator synonym add, edit, confir
     "id-bridgesii",
     "syn-new-1",
     "csrf-xyz",
+    auth.capability,
   );
   expect(
     await screen.findByText(
@@ -399,11 +416,11 @@ test("validates blank names, accepted-name collisions, duplicate synonyms, and a
 
   const user = userEvent.setup();
   render(
-    <IdentityReconciliationPanel
-      identity={baseIdentity}
-      csrfToken="csrf-val"
-      onIdentityUpdated={vi.fn()}
-    />,
+    panelElement({
+      identity: baseIdentity,
+      csrfToken: "csrf-val",
+      onIdentityUpdated: vi.fn(),
+    }),
   );
 
   await user.click(
@@ -478,11 +495,11 @@ test("source assessment prefills operator synonym form without automatic accepta
 
   const user = userEvent.setup();
   const { rerender } = render(
-    <IdentityReconciliationPanel
-      identity={baseIdentity}
-      csrfToken="csrf-prefill"
-      onIdentityUpdated={vi.fn()}
-    />,
+    panelElement({
+      identity: baseIdentity,
+      csrfToken: "csrf-prefill",
+      onIdentityUpdated: vi.fn(),
+    }),
   );
 
   await user.click(
@@ -509,11 +526,11 @@ test("source assessment prefills operator synonym form without automatic accepta
     }),
   );
   rerender(
-    <IdentityReconciliationPanel
-      identity={mergedIdentity}
-      csrfToken="csrf-prefill"
-      onIdentityUpdated={vi.fn()}
-    />,
+    panelElement({
+      identity: mergedIdentity,
+      csrfToken: "csrf-prefill",
+      onIdentityUpdated: vi.fn(),
+    }),
   );
 
   expect(

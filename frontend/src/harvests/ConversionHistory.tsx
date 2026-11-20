@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { TaskDialog } from "../components/TaskDialog";
 import {
@@ -23,6 +27,9 @@ export function ConversionHistory({
   refreshKey?: string;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [open, setOpen] = useState(kind === "seed_lot_id");
   const [rows, setRows] = useState<Conversion[] | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -31,9 +38,9 @@ export function ConversionHistory({
   const [eligibility, setEligibility] = useState<Eligibility | null>(null);
   const [pending, setPending] = useState(false);
   useEffect(() => {
-    if (!open) return;
+    if (!authorized || !open) return;
     const controller = new AbortController();
-    void listConversions(kind, id, controller.signal)
+    void listConversions(kind, id, capability, controller.signal)
       .then((data) => {
         if (!controller.signal.aborted) {
           setRows(data);
@@ -41,48 +48,59 @@ export function ConversionHistory({
         }
       })
       .catch((failure: unknown) => {
-        if (!controller.signal.aborted) {
-          if (failure instanceof ApiError && failure.status === 401)
-            auth.sessionExpired();
-          else setError("Could not load Seed lot conversions.");
-        }
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
+        if (failure instanceof ApiError && failure.status === 401)
+          sessionExpired();
+        else setError("Could not load Seed lot conversions.");
       });
     return () => {
       controller.abort();
     };
-  }, [open, kind, id, attempt, refreshKey, auth]);
+  }, [
+    authorized,
+    capability,
+    open,
+    kind,
+    id,
+    attempt,
+    refreshKey,
+    sessionExpired,
+  ]);
   useEffect(() => {
-    if (!selected) return;
+    if (!authorized || !selected) return;
     const controller = new AbortController();
-    void reversalEligibility(selected.id, controller.signal)
+    void reversalEligibility(selected.id, capability, controller.signal)
       .then((data) => {
         if (!controller.signal.aborted) setEligibility(data);
       })
       .catch((failure: unknown) => {
-        if (!controller.signal.aborted) {
-          if (failure instanceof ApiError && failure.status === 401)
-            auth.sessionExpired();
-          else setError("Could not check undo eligibility. Close and retry.");
-        }
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
+        if (failure instanceof ApiError && failure.status === 401)
+          sessionExpired();
+        else setError("Could not check undo eligibility. Close and retry.");
       });
     return () => {
       controller.abort();
     };
-  }, [selected, auth]);
+  }, [authorized, capability, selected, sessionExpired]);
   async function undo() {
     if (!selected || pending) return;
     setPending(true);
     try {
       await reverseConversion(
         selected.id,
-        auth.state.status === "authenticated" ? auth.state.csrfToken : "",
+        activeCsrfToken(auth.state),
+        capability,
       );
       setSelected(null);
       setAttempt((v) => v + 1);
       onChanged?.();
     } catch (failure: unknown) {
+      if (isExpectedAuthCancellation(failure)) return;
       if (failure instanceof ApiError && failure.status === 401)
-        auth.sessionExpired();
+        sessionExpired();
       else {
         setError(inventoryError(failure));
         setEligibility({

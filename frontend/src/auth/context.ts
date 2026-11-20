@@ -3,13 +3,27 @@ import { createContext, useContext } from "react";
 import type {
   ChangePasswordRequest,
   LoginRequest,
+  ProtectedRequestCapability,
   SessionResponse,
 } from "./api";
 
+export interface RetainedOwnerIdentity {
+  user_id: string;
+  login_name: string;
+  display_name?: string | null;
+}
+
 export type AuthState =
   | { status: "restoring" }
-  | { status: "unauthenticated"; message?: string }
-  | { status: "submitting-login" }
+  | {
+      status: "unauthenticated";
+      message?: string;
+      retainedIdentity?: RetainedOwnerIdentity;
+    }
+  | {
+      status: "submitting-login";
+      retainedIdentity?: RetainedOwnerIdentity;
+    }
   | {
       status: "authenticated";
       session: SessionResponse;
@@ -26,7 +40,11 @@ export type AuthState =
 
 export interface AuthContextValue {
   state: AuthState;
+  capability: ProtectedRequestCapability;
+  workspaceKey?: number;
   logIn(payload: LoginRequest): Promise<void>;
+  reauthenticate?: (payload: LoginRequest) => Promise<void>;
+  discardRetainedSession?: () => Promise<void>;
   logOut(): Promise<void>;
   sessionExpired: () => void;
   retryRestoration(): void;
@@ -34,6 +52,10 @@ export interface AuthContextValue {
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function useOptionalAuth(): AuthContextValue | null {
+  return useContext(AuthContext);
+}
 
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);

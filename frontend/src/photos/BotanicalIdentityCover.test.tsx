@@ -7,10 +7,17 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { BotanicalIdentityCover } from "./BotanicalIdentityCover";
 import type { BotanicalIdentityCover as Cover } from "../botanical-identities/api";
+
+let auth: AuthContextValue;
+beforeEach(async () => {
+  auth = (await acquireTestAuth({ csrfToken: "csrf-test" })).auth;
+});
 
 const identityId = "01900000-0000-7000-8000-000000000501";
 const external: Cover = {
@@ -46,11 +53,13 @@ function json(body: unknown, status = 200): Response {
 
 function renderCover() {
   return render(
-    <BotanicalIdentityCover
-      csrfToken="csrf-test"
-      identityId={identityId}
-      identityLabel="Passiflora edulis"
-    />,
+    <AuthContext.Provider value={auth}>
+      <BotanicalIdentityCover
+        csrfToken="csrf-test"
+        identityId={identityId}
+        identityLabel="Passiflora edulis"
+      />
+    </AuthContext.Provider>,
   );
 }
 
@@ -138,14 +147,33 @@ test("requires explicit privacy approval then automatically renders an external 
 test("renders local content lazily, reports breakage, uploads a replacement, and restores focus", async () => {
   const fetch = vi
     .spyOn(globalThis, "fetch")
-    .mockResolvedValueOnce(json(local))
-    .mockResolvedValueOnce(json({ ...local, original_filename: "new.png" }));
+    .mockImplementation((input, init) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url;
+      if (url.endsWith("/content")) {
+        return Promise.resolve(
+          new Response(new Blob(["img"], { type: "image/png" }), {
+            status: 200,
+          }),
+        );
+      }
+      if (init?.method === "POST") {
+        return Promise.resolve(
+          json({ ...local, original_filename: "new.png" }),
+        );
+      }
+      return Promise.resolve(json(local));
+    });
   const user = userEvent.setup();
   renderCover();
   const image = await screen.findByRole("img", {
     name: "Representative image for Passiflora edulis",
   });
-  expect(image).toHaveAttribute("src", local.content_url);
+  expect(image.getAttribute("src")).toMatch(/^blob:/);
   expect(image).toHaveAttribute("loading", "lazy");
   fireEvent.error(image);
   expect(
@@ -168,7 +196,9 @@ test("renders local content lazily, reports breakage, uploads a replacement, and
   if (!form) throw new Error("Local cover form was not rendered");
   fireEvent.submit(form);
   expect(await screen.findByText("Cover image was saved.")).toBeVisible();
-  const upload = fetch.mock.calls[1]?.[1];
+  const upload = fetch.mock.calls.find(
+    ([, init]) => init?.method === "POST",
+  )?.[1];
   expect(upload?.method).toBe("POST");
   expect(upload?.body).toBeInstanceOf(FormData);
   expect(new Headers(upload?.headers).get("Content-Type")).toBeNull();
@@ -234,20 +264,32 @@ test("removes only the pending cover reference and retains the media asset", asy
 });
 
 test("external identity cover prefers its persistent protected local copy", async () => {
-  vi.spyOn(globalThis, "fetch").mockResolvedValue(
-    json({
-      ...external,
-      content_url: "/api/v1/attachments/snapshot/content",
-      thumbnail_url: "/api/v1/media-assets/snapshot/thumbnail?v=1",
-      fetched_at: "2026-10-01T12:00:00Z",
-    }),
-  );
+  vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    const url =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+    if (url.endsWith("/content")) {
+      return Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      );
+    }
+    return Promise.resolve(
+      json({
+        ...external,
+        content_url: "/api/v1/attachments/snapshot/content",
+        thumbnail_url: "/api/v1/media-assets/snapshot/thumbnail?v=1",
+        fetched_at: "2026-10-01T12:00:00Z",
+      }),
+    );
+  });
   renderCover();
-  expect(
-    await screen.findByRole("img", {
-      name: "Representative image for Passiflora edulis",
-    }),
-  ).toHaveAttribute("src", "/api/v1/attachments/snapshot/content");
+  const img = await screen.findByRole("img", {
+    name: "Representative image for Passiflora edulis",
+  });
+  expect(img.getAttribute("src")).toMatch(/^blob:/);
 });
 
 test("cover draft dismissal and source switching require explicit discard while preserving values", async () => {

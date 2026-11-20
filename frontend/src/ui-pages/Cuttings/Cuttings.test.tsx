@@ -6,18 +6,17 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../../auth/context";
+import { acquireTestAuth } from "../../test/auth";
 import { Cuttings } from "./Cuttings";
 
-const auth = {
-  state: { status: "authenticated", csrfToken: "csrf-test", session: {} },
-  sessionExpired: vi.fn(),
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-} as unknown as AuthContextValue;
+const sessionExpired = vi.fn();
+let auth: AuthContextValue;
+beforeEach(async () => {
+  const acquired = await acquireTestAuth({ csrfToken: "csrf-test" });
+  auth = { ...acquired.auth, sessionExpired };
+});
 const lot = {
   id: "lot",
   label: "Bench cuttings",
@@ -56,7 +55,7 @@ function show(props: Parameters<typeof Cuttings>[0] = {}) {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
-  vi.mocked(auth.sessionExpired).mockClear();
+  sessionExpired.mockClear();
   window.history.replaceState(null, "", "/");
 });
 
@@ -254,7 +253,7 @@ test("cuttings session expiry returns to the sign-in flow", async () => {
   );
   show();
   await waitFor(() => {
-    expect(auth.sessionExpired).toHaveBeenCalled();
+    expect(sessionExpired).toHaveBeenCalled();
   });
 });
 
@@ -286,6 +285,18 @@ test("cuttings directory keeps statuses, long labels, views, and preview usable"
   const lotPreview = await screen.findByRole("button", {
     name: `Quick preview ${longName}`,
   });
+  expect(
+    screen.getByRole("heading", { level: 2, name: "Cuttings" }),
+  ).toBeInTheDocument();
+  expect(
+    screen
+      .getByRole("heading", { level: 2, name: "Cuttings" })
+      .closest(".page-header"),
+  ).toHaveClass("page-header--directory");
+  expect(lotPreview.querySelector(".ui-record-summary")).toBeNull();
+  expect(
+    lotPreview.querySelector(".ui-record-identity > .ui-record-secondary"),
+  ).not.toBeNull();
   expect(screen.getByText("Exhausted")).toHaveClass("ui-status-chip");
   expect(
     screen.getByRole("link", { name: `Open details: ${longName}` }),
@@ -301,11 +312,14 @@ test("cuttings directory keeps statuses, long labels, views, and preview usable"
     "ui-directory-records--gallery",
   );
   await user.click(screen.getByRole("button", { name: "Rooting attempts" }));
+  const attemptPreview = await screen.findByRole("button", {
+    name: "Quick preview Long label rooting trial in coarse perlite and pumice",
+  });
+  expect(attemptPreview).toBeVisible();
+  expect(attemptPreview.querySelector(".ui-record-summary")).toBeNull();
   expect(
-    await screen.findByRole("button", {
-      name: "Quick preview Long label rooting trial in coarse perlite and pumice",
-    }),
-  ).toBeVisible();
+    attemptPreview.querySelector(".ui-record-identity > .ui-record-secondary"),
+  ).not.toBeNull();
   expect(screen.getByText("Active")).toHaveClass("ui-status-chip");
 });
 

@@ -7,9 +7,10 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import type { ProvenanceMapResponse, ProvenanceMapSite } from "./api";
 import { identityGroups, uniqueRecords } from "./model";
 import { filterMapSites } from "./filter";
@@ -42,24 +43,18 @@ vi.mock("./ProvenanceMap", () => ({
   ),
 }));
 
-const auth: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    session: {
-      user_id: "01900000-0000-7000-8000-000000000001",
-      login_name: "owner",
-      display_name: "Owner",
-      owner: true,
-      canonical_origin: "http://localhost:5173",
-    },
-    csrfToken: "csrf",
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired: vi.fn(),
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
+beforeEach(async () => {
+  auth = (
+    await acquireTestAuth({
+      session: {
+        display_name: "Owner",
+        canonical_origin: "http://localhost:5173",
+      },
+      csrfToken: "csrf",
+    })
+  ).auth;
+});
 
 const site: ProvenanceMapSite = {
   id: "01900000-0000-7000-8000-000000000010",

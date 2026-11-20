@@ -11,7 +11,11 @@ import {
   type RefObject,
 } from "react";
 import { inventoryError } from "./inventoryApi";
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { FormSections } from "../components/FormSections";
 import { EditWorkspace } from "../components/EditWorkspace";
@@ -47,6 +51,9 @@ export function HarvestForm({
   onSaved: (harvest: Harvest) => void;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const recordIdentities = useContext(RecordIdentities);
   const name = useRecordName();
   const id = useId();
@@ -80,11 +87,12 @@ export function HarvestForm({
   );
   const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     void (
       type === "plant"
-        ? listPlants(controller.signal)
-        : listPlantGroups(controller.signal)
+        ? listPlants(capability, controller.signal)
+        : listPlantGroups(capability, controller.signal)
     )
       .then((records) => {
         if (controller.signal.aborted) return;
@@ -102,9 +110,10 @@ export function HarvestForm({
         );
       })
       .catch((failure: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
         if (failure instanceof ApiError && failure.status === 401)
-          auth.sessionExpired();
+          sessionExpired();
         else
           setError("Could not load Harvest sources. Retry to choose a source.");
       });
@@ -113,7 +122,7 @@ export function HarvestForm({
     };
     // Source naming uses the shell's already-published identity context.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, attempt]);
+  }, [type, attempt, authorized, capability, sessionExpired]);
   const snapshot = JSON.stringify({ type, source, date, label, notes, lines });
   const baseline = useRef(snapshot);
   const canDismiss = () =>
@@ -172,12 +181,14 @@ export function HarvestForm({
       })),
     };
     try {
-      const token =
-        auth.state.status === "authenticated" ? auth.state.csrfToken : "";
-      onSaved(await saveHarvest(harvest?.id ?? null, payload, token));
+      const token = activeCsrfToken(auth.state);
+      onSaved(
+        await saveHarvest(harvest?.id ?? null, payload, token, capability),
+      );
     } catch (failure: unknown) {
+      if (isExpectedAuthCancellation(failure)) return;
       if (failure instanceof ApiError && failure.status === 401)
-        auth.sessionExpired();
+        sessionExpired();
       else {
         const detail =
           failure instanceof ApiError

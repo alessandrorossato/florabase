@@ -1,5 +1,9 @@
 import type { components } from "../../api/schema";
-import { ApiError, requestJson } from "../../auth/api";
+import {
+  ApiError,
+  isExpectedAuthCancellation,
+  requestJson,
+} from "../../auth/api";
 import { useAuth } from "../../auth/context";
 import { useEffect, useState } from "react";
 
@@ -24,7 +28,9 @@ type Resource<T> =
   | { state: "error"; error: unknown };
 
 export function useCuttingData<T>(path: string, keepOnRefresh = false) {
-  const { sessionExpired } = useAuth();
+  const { state, capability, sessionExpired } = useAuth();
+  const authorized =
+    state.status === "authenticated" && capability.isAuthorized();
   const [version, setVersion] = useState(0);
   const key = `${path}:${String(version)}`;
   const [result, setResult] = useState<{
@@ -33,15 +39,16 @@ export function useCuttingData<T>(path: string, keepOnRefresh = false) {
     data: Resource<T>;
   }>();
   useEffect(() => {
-    if (!path) return;
+    if (!path || !authorized) return;
     const controller = new AbortController();
-    void requestJson<T>(path, { signal: controller.signal }).then(
+    void requestJson<T>(path, { capability, signal: controller.signal }).then(
       (value) => {
         if (!controller.signal.aborted)
           setResult({ key, path, data: { state: "ready", value } });
       },
       (error: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setResult({ key, path, data: { state: "error", error } });
       },
@@ -49,7 +56,7 @@ export function useCuttingData<T>(path: string, keepOnRefresh = false) {
     return () => {
       controller.abort();
     };
-  }, [key, path, sessionExpired]);
+  }, [authorized, capability, key, path, sessionExpired]);
   const data: Resource<T> =
     result && (result.key === key || (keepOnRefresh && result.path === path))
       ? result.data
@@ -63,7 +70,7 @@ export function useCuttingData<T>(path: string, keepOnRefresh = false) {
 }
 
 export function useSaveCutting(token: string) {
-  const { sessionExpired } = useAuth();
+  const { capability, sessionExpired } = useAuth();
   return async function saveCutting<T>(
     path: string,
     body: object,
@@ -71,6 +78,7 @@ export function useSaveCutting(token: string) {
   ): Promise<T> {
     try {
       return await requestJson<T>(path, {
+        capability,
         method,
         headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
         body: JSON.stringify(body),

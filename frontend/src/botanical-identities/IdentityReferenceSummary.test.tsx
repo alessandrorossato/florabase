@@ -1,10 +1,13 @@
+import type { ComponentProps } from "react";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { AuthContext, type AuthContextValue } from "../auth/context";
 import {
   getBotanicalProfile,
   listBotanicalNativeRanges,
 } from "../botanical-profiles/api";
+import { acquireTestAuth } from "../test/auth";
 import {
   correctBotanicalIdentityAcceptedName,
   getBotanicalIdentityReconciliation,
@@ -14,8 +17,23 @@ import {
 import { IdentityReconciliationPanel } from "./IdentityReconciliationPanel";
 import { IdentityReferenceSummary } from "./IdentityReferenceSummary";
 
-const auth = { sessionExpired: vi.fn() };
-vi.mock("../auth/context", () => ({ useAuth: () => auth }));
+let auth: AuthContextValue;
+function renderSummary(props: ComponentProps<typeof IdentityReferenceSummary>) {
+  return render(
+    <AuthContext.Provider value={auth}>
+      <IdentityReferenceSummary {...props} />
+    </AuthContext.Provider>,
+  );
+}
+function renderReconciliation(
+  props: ComponentProps<typeof IdentityReconciliationPanel>,
+) {
+  return render(
+    <AuthContext.Provider value={auth}>
+      <IdentityReconciliationPanel {...props} />
+    </AuthContext.Provider>,
+  );
+}
 vi.mock("../botanical-profiles/api", () => ({
   getBotanicalProfile: vi.fn(),
   listBotanicalNativeRanges: vi.fn(),
@@ -26,6 +44,9 @@ vi.mock("./api", () => ({
   correctBotanicalIdentityAcceptedName: vi.fn(),
   mergeDuplicateBotanicalIdentity: vi.fn(),
 }));
+beforeEach(async () => {
+  auth = (await acquireTestAuth()).auth;
+});
 afterEach(() => {
   cleanup();
   vi.resetAllMocks();
@@ -41,7 +62,7 @@ test("Overview distinguishes absent reference from recorded collection context a
   });
   vi.mocked(listBotanicalNativeRanges).mockResolvedValue([]);
   vi.mocked(getExternalTaxonLink).mockResolvedValue(null);
-  render(<IdentityReferenceSummary id="identity" />);
+  renderSummary({ id: "identity" });
   expect(
     await screen.findByText("Operator-entered reference description."),
   ).toBeVisible();
@@ -55,6 +76,7 @@ test("Overview distinguishes absent reference from recorded collection context a
   ).toHaveAttribute("href", "#/identities/identity?tab=reference");
   expect(getBotanicalProfile).toHaveBeenCalledWith(
     "identity",
+    auth.capability,
     expect.any(AbortSignal),
   );
   expect(listBotanicalNativeRanges).toHaveBeenCalledTimes(1);
@@ -65,7 +87,7 @@ test("a failed local summary remains explicit and retryable without claiming ref
   vi.mocked(listBotanicalNativeRanges).mockResolvedValue([]);
   vi.mocked(getExternalTaxonLink).mockResolvedValue(null);
   const user = userEvent.setup();
-  render(<IdentityReferenceSummary id="identity" />);
+  renderSummary({ id: "identity" });
   expect(
     await screen.findByText("Botanical description unavailable."),
   ).toBeVisible();
@@ -184,13 +206,11 @@ test("IdentityReconciliationPanel displays provenance, source conflicts, and req
 
   const onIdentityUpdated = vi.fn().mockResolvedValue(undefined);
   const user = userEvent.setup();
-  render(
-    <IdentityReconciliationPanel
-      identity={identity}
-      csrfToken="csrf-123"
-      onIdentityUpdated={onIdentityUpdated}
-    />,
-  );
+  renderReconciliation({
+    identity,
+    csrfToken: "csrf-123",
+    onIdentityUpdated,
+  });
 
   expect(
     await screen.findByText(
@@ -224,6 +244,7 @@ test("IdentityReconciliationPanel displays provenance, source conflicts, and req
       acknowledge_conflict: true,
     }),
     "csrf-123",
+    auth.capability,
   );
   expect(onIdentityUpdated).toHaveBeenCalledWith(updatedIdentity);
   expect(
@@ -319,13 +340,11 @@ test("IdentityReconciliationPanel blocks silent merge on collision and enables e
 
   const onIdentityUpdated = vi.fn().mockResolvedValue(undefined);
   const user = userEvent.setup();
-  render(
-    <IdentityReconciliationPanel
-      identity={duplicateIdentity}
-      csrfToken="csrf-123"
-      onIdentityUpdated={onIdentityUpdated}
-    />,
-  );
+  renderReconciliation({
+    identity: duplicateIdentity,
+    csrfToken: "csrf-123",
+    onIdentityUpdated,
+  });
 
   expect(
     await screen.findByText(/Duplicate identity collision:/),
@@ -358,6 +377,7 @@ test("IdentityReconciliationPanel blocks silent merge on collision and enables e
       profile_resolution: "keep_survivor",
     }),
     "csrf-123",
+    auth.capability,
   );
   expect(onIdentityUpdated).toHaveBeenCalledTimes(1);
 });

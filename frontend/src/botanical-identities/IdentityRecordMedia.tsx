@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ApiError } from "../auth/api";
+import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { getMedia, type MediaDetail } from "../media/api";
 import { MediaPreview } from "../media/MediaPreview";
@@ -25,6 +25,9 @@ export function IdentityRecordMedia({
   records: IdentityMediaRecord[];
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [limit, setLimit] = useState(6);
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<{
@@ -33,6 +36,7 @@ export function IdentityRecordMedia({
     legacy: number;
   } | null>(null);
   useEffect(() => {
+    if (!authorized) return;
     const controller = new AbortController();
     const assets = new Map<string, Promise<MediaDetail>>();
     void Promise.allSettled(
@@ -40,6 +44,7 @@ export function IdentityRecordMedia({
         const photos = await listPhotos(
           owner.target,
           owner.id,
+          capability,
           controller.signal,
         );
         const images = await Promise.all(
@@ -47,7 +52,11 @@ export function IdentityRecordMedia({
             if (!photo.media_asset_id) return null;
             let asset = assets.get(photo.media_asset_id);
             if (!asset) {
-              asset = getMedia(photo.media_asset_id, controller.signal);
+              asset = getMedia(
+                photo.media_asset_id,
+                capability,
+                controller.signal,
+              );
               assets.set(photo.media_asset_id, asset);
             }
             return { asset: await asset, caption: photo.caption, owner };
@@ -65,8 +74,18 @@ export function IdentityRecordMedia({
           r.status === "rejected" &&
           r.reason instanceof ApiError &&
           r.reason.status === 401
+        ) {
+          sessionExpired();
+          return;
+        }
+      if (
+        results.some(
+          (r) =>
+            r.status === "rejected" && isExpectedAuthCancellation(r.reason),
         )
-          auth.sessionExpired();
+      ) {
+        return;
+      }
       setResult({
         images: results.flatMap((r) =>
           r.status === "fulfilled"
@@ -83,7 +102,7 @@ export function IdentityRecordMedia({
     return () => {
       controller.abort();
     };
-  }, [records, limit, attempt, auth]);
+  }, [records, limit, attempt, authorized, capability, sessionExpired]);
   return (
     <>
       {!result && <p role="status">Loading images from linked records…</p>}

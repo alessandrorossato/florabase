@@ -7,8 +7,9 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { SupplierScreen } from "./SupplierScreen";
 import { browserBack } from "../test/history";
 
@@ -24,24 +25,19 @@ const id = "01900000-0000-7000-8000-000000000911";
 const photoId = "01900000-0000-7000-8000-000000000912";
 const assetId = "01900000-0000-7000-8000-000000000913";
 const thumb = `/api/v1/media-assets/${assetId}/thumbnail`;
-const auth: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    csrfToken: "csrf",
-    session: {
-      user_id: id,
-      login_name: "owner",
-      display_name: "Owner",
-      owner: true,
-      canonical_origin: "http://localhost:15174",
-    },
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired: vi.fn(),
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+let auth: AuthContextValue;
+beforeEach(async () => {
+  auth = (
+    await acquireTestAuth({
+      session: {
+        user_id: id,
+        display_name: "Owner",
+        canonical_origin: "http://localhost:15174",
+      },
+      csrfToken: "csrf",
+    })
+  ).auth;
+});
 const supplier = {
   id,
   name: "Review nursery",
@@ -89,27 +85,40 @@ afterEach(() => {
 });
 
 test("Supplier directory uses protected thumbnails, neutral absence and direct record navigation", async () => {
-  vi.spyOn(globalThis, "fetch").mockResolvedValue(
-    json([
-      supplier,
-      {
-        ...supplier,
-        id: assetId,
-        name: "No image supplier",
-        primary_photo: null,
-      },
-    ]),
-  );
+  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    if (requestUrl(input) === thumb) {
+      return Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      );
+    }
+    return Promise.resolve(
+      json([
+        supplier,
+        {
+          ...supplier,
+          id: assetId,
+          name: "No image supplier",
+          primary_photo: null,
+        },
+      ]),
+    );
+  });
   const user = userEvent.setup();
   mount();
   const row = await screen.findByRole("button", { name: "Review nursery" });
   const record = row.closest("li");
   if (!record) throw new Error("Expected a directory record");
   expect(
-    within(record).getByRole("img", {
-      name: "Primary photo for Review nursery",
-    }),
-  ).toHaveAttribute("src", thumb);
+    (
+      await within(record).findByRole("img", {
+        name: "Primary photo for Review nursery",
+      })
+    ).getAttribute("src"),
+  ).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenCalledWith(
+    thumb,
+    expect.objectContaining({ credentials: "same-origin" }),
+  );
   expect(screen.getByText("Supplier image placeholder")).toBeVisible();
   expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
   expect(
@@ -169,6 +178,13 @@ test("Supplier detail exposes compact Photos actions and updates/clears its repr
     .spyOn(globalThis, "fetch")
     .mockImplementation((input, init) => {
       const path = requestUrl(input);
+      if (path === thumb) {
+        return Promise.resolve(
+          new Response(new Blob(["img"], { type: "image/png" }), {
+            status: 200,
+          }),
+        );
+      }
       if (path.endsWith("/primary-photo")) {
         if (init?.method === "DELETE") primary = null;
         else if (init?.method === "PUT") primary = supplier.primary_photo;
@@ -200,8 +216,16 @@ test("Supplier detail exposes compact Photos actions and updates/clears its repr
   mount({ initialId: id, initialTab: "photos" });
   await screen.findByRole("heading", { name: "Review nursery" });
   expect(
-    screen.getByRole("img", { name: "Primary photo for Review nursery" }),
-  ).toHaveAttribute("src", thumb);
+    (
+      await screen.findByRole("img", {
+        name: "Primary photo for Review nursery",
+      })
+    ).getAttribute("src"),
+  ).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenCalledWith(
+    thumb,
+    expect.objectContaining({ credentials: "same-origin" }),
+  );
   for (const name of ["Add media", "Link existing", "External"])
     expect(await screen.findByRole("button", { name })).toBeVisible();
   await user.click(
@@ -564,14 +588,20 @@ test("Supplier Details and Back preserve canonical search and gallery history", 
   mount();
   await screen.findByRole("button", { name: "Review nursery" });
   expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
-  const requests = fetch.mock.calls.length;
+  const listCalls = fetch.mock.calls.filter(
+    ([input]) => requestUrl(input) === "/api/v1/suppliers",
+  ).length;
   await user.click(screen.getByRole("button", { name: "Gallery" }));
   expect(window.location.hash).toBe("#/suppliers?q=Review&view=gallery");
   expect(window.history.state).toEqual({ review: true });
   expect(screen.getByRole("list", { name: "Suppliers" })).toHaveClass(
     "ui-directory-records--gallery",
   );
-  expect(fetch).toHaveBeenCalledTimes(requests);
+  expect(
+    fetch.mock.calls.filter(
+      ([input]) => requestUrl(input) === "/api/v1/suppliers",
+    ),
+  ).toHaveLength(listCalls);
   await user.click(screen.getByRole("button", { name: "Review nursery" }));
   expect(window.location.hash).toBe(`#/suppliers/${id}`);
   await browserBack();

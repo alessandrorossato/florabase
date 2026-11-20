@@ -913,3 +913,53 @@ test("Dashboard recent facts distinguish completion and owned operations from Jo
     }),
   ).toHaveAttribute("href", `#/schedule/${id}`);
 });
+
+test("logout-failed retains Dashboard search UI, suspends background reads, and recovers cleanly on Stay signed in", async () => {
+  const searchSpy = vi.fn(() =>
+    json({ query: "basil", total: 0, offset: 0, limit: 20, groups: [] }),
+  );
+  const calls = setup(() => searchSpy());
+  // Override /auth/logout to fail once so App enters logout-failed state cleanly.
+  const baseFetch = vi.mocked(globalThis.fetch).getMockImplementation();
+  vi.mocked(globalThis.fetch).mockImplementation((input, init) => {
+    const path =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+    if (path.endsWith("/auth/logout")) {
+      return Promise.resolve(json({ detail: "Temporary failure" }, 500));
+    }
+    return baseFetch ? baseFetch(input, init) : Promise.resolve(json({}));
+  });
+
+  const user = userEvent.setup();
+  render(<App />);
+  const searchBox = await screen.findByRole("searchbox", {
+    name: "Search your collection",
+  });
+  await user.type(searchBox, "basil");
+  await waitFor(() => {
+    expect(calls.some((p) => p.includes("/search"))).toBe(true);
+  });
+
+  await user.click(screen.getByRole("button", { name: "Sign out" }));
+  expect(
+    await screen.findByRole("button", { name: "Stay signed in" }),
+  ).toBeVisible();
+
+  const searchCallsWhileLogoutFailed = calls.filter((p) =>
+    p.includes("/search"),
+  ).length;
+  await user.type(searchBox, "x");
+  await Promise.resolve();
+  expect(calls.filter((p) => p.includes("/search")).length).toBe(
+    searchCallsWhileLogoutFailed,
+  );
+
+  await user.click(screen.getByRole("button", { name: "Stay signed in" }));
+  await waitFor(() => {
+    expect(screen.queryByRole("button", { name: "Stay signed in" })).toBeNull();
+  });
+});

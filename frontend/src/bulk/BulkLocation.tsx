@@ -1,5 +1,9 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { ApiError } from "../auth/api";
+import {
+  activeCsrfToken,
+  ApiError,
+  isExpectedAuthCancellation,
+} from "../auth/api";
 import { useAuth } from "../auth/context";
 import { TaskDialog } from "../components/TaskDialog";
 import { OverflowMenu } from "../components/ReferenceUI";
@@ -194,6 +198,9 @@ function MoveDialog({
   onSuccess: (result: BulkResult) => void;
 }) {
   const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const errorId = useId();
   const [locations, setLocations] = useState<LocationResponse[] | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -211,21 +218,21 @@ function MoveDialog({
     harvest_inventory: "harvest_inventory",
   } as const;
   useEffect(() => {
+    if (!authorized) return;
     const abort = new AbortController();
-    void listLocations(abort.signal)
+    void listLocations(capability, abort.signal)
       .then(setLocations)
       .catch((failure: unknown) => {
-        if (!abort.signal.aborted) {
-          if (failure instanceof ApiError && failure.status === 401)
-            auth.sessionExpired();
-          else setError("Could not load Locations. Retry.");
-        }
+        if (abort.signal.aborted || isExpectedAuthCancellation(failure)) return;
+        if (failure instanceof ApiError && failure.status === 401)
+          sessionExpired();
+        else setError("Could not load Locations. Retry.");
       });
     return () => {
       abort.abort();
       controller.current?.abort();
     };
-  }, [auth, attempt]);
+  }, [attempt, authorized, capability, sessionExpired]);
   const choices =
     locations
       ?.filter(
@@ -234,10 +241,11 @@ function MoveDialog({
           records.every((ref) => row.usage_scopes.includes(scopes[ref.kind])),
       )
       .map((row) => ({ id: row.id, label: row.display_path })) ?? [];
-  const token = "csrfToken" in auth.state ? auth.state.csrfToken : "";
+  const token = activeCsrfToken(auth.state);
   const showError = (failure: unknown) => {
+    if (isExpectedAuthCancellation(failure)) return;
     if (failure instanceof ApiError && failure.status === 401) {
-      auth.sessionExpired();
+      sessionExpired();
       return;
     }
     if (failure instanceof ApiError && failure.status === 403) {
@@ -374,7 +382,13 @@ function MoveDialog({
             controller.current?.abort();
             const abort = new AbortController();
             controller.current = abort;
-            void previewLocation(records, target, token, abort.signal)
+            void previewLocation(
+              records,
+              target,
+              token,
+              capability,
+              abort.signal,
+            )
               .then((result) => {
                 if (!abort.signal.aborted) setPreview(result);
               })
@@ -399,7 +413,7 @@ function MoveDialog({
             if (!preview) return;
             setBusy("apply");
             setError("");
-            void applyLocation(preview, token)
+            void applyLocation(preview, token, capability)
               .then(onSuccess)
               .catch(showError)
               .finally(() => {

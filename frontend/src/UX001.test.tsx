@@ -411,6 +411,13 @@ test("Botanical identity directory uses bounded local thumbnails and configured 
   const fetch = vi.fn((path: string) => {
     if (path === "/api/v1/botanical-identities")
       return json([localCoverIdentity, externalCoverIdentity, noCoverIdentity]);
+    if (
+      path ===
+      `/api/v1/botanical-identities/${identity.id}/cover-image/thumbnail`
+    )
+      return new Response(new Blob(["img"], { type: "image/png" }), {
+        status: 200,
+      });
     throw new Error(`Unexpected request: ${path}`);
   });
   mockAuthenticated(fetch);
@@ -445,11 +452,14 @@ test("Botanical identity directory uses bounded local thumbnails and configured 
       name: `Record harvest for ${externalCoverIdentity.display_label}`,
     }),
   ).toBeVisible();
+  await waitFor(() => {
+    expect(directory.querySelectorAll("img")).toHaveLength(2);
+  });
   const images = Array.from(directory.querySelectorAll("img"));
-  expect(images).toHaveLength(2);
-  expect(images[0]).toHaveAttribute(
-    "src",
+  expect(images[0]?.getAttribute("src")).toMatch(/^blob:/);
+  expect(fetch).toHaveBeenCalledWith(
     `/api/v1/botanical-identities/${identity.id}/cover-image/thumbnail`,
+    expect.objectContaining({ credentials: "same-origin" }),
   );
   expect(images[1]).toHaveAttribute(
     "src",

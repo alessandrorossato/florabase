@@ -1,14 +1,20 @@
+import type { ComponentProps } from "react";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 
 import { ExternalBotanicalDataPanel } from "./ExternalBotanicalDataPanel";
 
-const authStub = vi.hoisted(() => ({
-  state: { status: "authenticated", csrfToken: "csrf" },
-  sessionExpired: vi.fn(),
-}));
-vi.mock("../auth/context", () => ({ useAuth: () => authStub }));
+let auth: AuthContextValue;
+function renderPanel(props: ComponentProps<typeof ExternalBotanicalDataPanel>) {
+  return render(
+    <AuthContext.Provider value={auth}>
+      <ExternalBotanicalDataPanel {...props} />
+    </AuthContext.Provider>,
+  );
+}
 
 const identityId = "01900000-0000-7000-8000-000000000099";
 const candidate = {
@@ -54,6 +60,10 @@ function requestPath(input: RequestInfo | URL): string {
   if (input instanceof URL) return input.toString();
   return input.url;
 }
+
+beforeEach(async () => {
+  auth = (await acquireTestAuth({ csrfToken: "csrf" })).auth;
+});
 
 afterEach(() => {
   cleanup();
@@ -104,13 +114,11 @@ test("search exposes ambiguity and requires explicit confirmation before linking
       throw new Error(`Unexpected request ${path}`);
     });
   const user = userEvent.setup();
-  render(
-    <ExternalBotanicalDataPanel
-      identityId={identityId}
-      scientificName="Acacia"
-      csrfToken="csrf"
-    />,
-  );
+  renderPanel({
+    identityId,
+    scientificName: "Acacia",
+    csrfToken: "csrf",
+  });
   await user.click(
     await screen.findByRole("button", {
       name: "About GBIF search and linking",
@@ -167,13 +175,11 @@ test("linked stale state refreshes, changes, and unlinks without editing identit
       throw new Error(`Unexpected request ${path}`);
     });
   const user = userEvent.setup();
-  render(
-    <ExternalBotanicalDataPanel
-      identityId={identityId}
-      scientificName="Acacia"
-      csrfToken="csrf"
-    />,
-  );
+  renderPanel({
+    identityId,
+    scientificName: "Acacia",
+    csrfToken: "csrf",
+  });
   expect(
     await screen.findByText(/retained cached data is shown/i),
   ).toBeInTheDocument();
@@ -246,13 +252,11 @@ test("narrow viewport preserves loading, empty-search, failure, and keyboard sta
     throw new Error(`Unexpected request ${path}`);
   });
   const user = userEvent.setup();
-  render(
-    <ExternalBotanicalDataPanel
-      identityId={identityId}
-      scientificName="Unknown plant"
-      csrfToken="csrf"
-    />,
-  );
+  renderPanel({
+    identityId,
+    scientificName: "Unknown plant",
+    csrfToken: "csrf",
+  });
 
   expect(screen.getByRole("status")).toHaveTextContent(
     "Loading external reference",

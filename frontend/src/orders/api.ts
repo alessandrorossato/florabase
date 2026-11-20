@@ -1,5 +1,9 @@
 import type { components } from "../api/schema";
-import { ApiError, requestJson } from "../auth/api";
+import {
+  ApiError,
+  requestJson,
+  type ProtectedRequestCapability,
+} from "../auth/api";
 export type Order = components["schemas"]["OrderResponse"];
 export type OrderDetail = components["schemas"]["OrderDetailResponse"];
 export type OrderPage = components["schemas"]["OrderPage"];
@@ -9,6 +13,7 @@ export function listOrders(
   q = "",
   supplierId = "",
   offset = 0,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
   limit = 50,
 ): Promise<OrderPage> {
@@ -18,34 +23,42 @@ export function listOrders(
   });
   if (q.trim()) params.set("q", q.trim());
   if (supplierId) params.set("supplier_id", supplierId);
-  return requestJson(`/api/v1/orders?${params}`, { signal });
+  return requestJson(`/api/v1/orders?${params}`, { capability, signal });
 }
 export function getOrder(
   id: string,
   offset = 0,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<OrderDetail> {
   return requestJson(
     `/api/v1/orders/${encodeURIComponent(id)}?seed_lots_offset=${String(offset)}`,
-    { signal },
+    { capability, signal },
   );
 }
 export function saveOrder(
   id: string | undefined,
   payload: OrderCreate,
   csrf: string,
+  capability: ProtectedRequestCapability,
 ): Promise<Order> {
   return requestJson(
     `/api/v1/orders${id ? `/${encodeURIComponent(id)}` : ""}`,
     {
+      capability,
       method: id ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf },
       body: JSON.stringify(payload),
     },
   );
 }
-export function deleteOrder(id: string, csrf: string): Promise<void> {
+export function deleteOrder(
+  id: string,
+  csrf: string,
+  capability: ProtectedRequestCapability,
+): Promise<void> {
   return requestJson(`/api/v1/orders/${encodeURIComponent(id)}`, {
+    capability,
     method: "DELETE",
     headers: { "X-CSRF-Token": csrf },
   });

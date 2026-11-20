@@ -1,29 +1,23 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { App } from "../App";
 import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { SettingsScreen } from "./SettingsScreen";
 
 const expired = vi.fn();
-const state: AuthContextValue = {
-  state: {
-    status: "authenticated",
-    csrfToken: "csrf",
+let state: AuthContextValue;
+beforeEach(async () => {
+  const acquired = await acquireTestAuth({
     session: {
-      user_id: "01900000-0000-7000-8000-000000000001",
-      login_name: "owner",
       display_name: "Owner",
-      owner: true,
       canonical_origin: "https://security.example",
     },
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired: expired,
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-};
+    csrfToken: "csrf",
+  });
+  state = { ...acquired.auth, sessionExpired: expired };
+});
 function json(value: unknown, status = 200) {
   return new Response(JSON.stringify(value), {
     status,

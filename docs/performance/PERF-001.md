@@ -390,3 +390,169 @@ The environment/dataset/protocol sections cover handoff items 1–3; immutable b
 comparison cover 4–8; frontend/maps, repeated navigation/idle and footprint cover 9–11; this section
 covers migration/files/tests/checks (12–16); remaining costs/resource expectations/release sanity
 cover 17–19. Large raw profiles/plans, browser/cache artifacts and fixture binaries stay in `/tmp`.
+
+## Golden COMPREHENSIVE harness (Batch 07)
+
+The harness in `scripts/perf/` (`compose.sh`, `comprehensive.py`, `measure.py`, `browser.mjs`,
+`verify-chunk-recovery.mjs`, `test_measure.py`) provisions the canonical synthetic `comprehensive`
+Golden Dataset (`florabase-golden` v1, seed `20261102`, anchor `2026-09-15`, volume `420`) through
+the repository's supported disposable TEST-copy route without modifying or bypassing any target
+guard in `scripts/golden_dataset.py`:
+
+1. `scripts/perf/comprehensive.py` spins up a disposable `compose.integration.yaml` project
+   (`FLORABASE_ENVIRONMENT=test`, `FLORABASE_DATABASE_DISPOSABLE=true`, no `FLORABASE_WORKFLOW_MODE`)
+   via `Owner.disposable("integration", ROOT)` and `Disposable`.
+2. Inside the `tests` container, `golden_dataset.py` executes `create-copy --copy golden_perf`,
+   `generate --copy golden_perf --profile comprehensive`, `verify-baseline`, `digest`, and
+   `validate`.
+3. `pg_dump` and `scripts/attachment_artifacts.py archive` export the synthetic database dump and
+   originals tar stream before `retire-copy --copy golden_perf` and `Disposable` retire all
+   temporary integration resources.
+4. `scripts/perf/measure.py start` and `run` acquire the machine-wide `florabase-perf` lifecycle
+   lock (`workflow_resources.machine_lock`), build invocation-owned image tags
+   (`florabase-perf-{backend,frontend}:<owner_id>`, labeled with `io.florabase.workflow.owner`,
+   `io.florabase.workflow.source_head`, and `org.opencontainers.image.revision`), start `db`, restore
+   the dump into `florabase_perf`, enable `pg_stat_statements`, start `backend` and `frontend`,
+   capture service process counts, restore/verify all 32 attachments via
+   `scripts/attachment_artifacts.py`, and validate live schema revision (`20261110_0047`), live
+   per-table counts, and scenario target UUIDs before any measured stage runs.
+5. Cleanup requires matching invocation ownership (`io.florabase.workflow.owner`) before calling
+   `compose down` or removing invocation-owned `:owner_id` image tags; foreign projects and shared
+   `:latest` tags are refused without destructive action.
+6. `scripts/perf/compose.sh` resolves the canonical lock path via `workflow_resources.lock_root()`
+   (`FLORABASE_LOCK_DIR` or account passwd home rather than `$HOME`), opens non-truncating (`>>`)
+   when uninherited so active holder diagnostics are preserved, and—when called synchronously by
+   `measure.py` with `FLORABASE_PERF_LOCK_FD` via `pass_fds`—validates descriptor format (`>= 3`),
+   regular-file device/inode identity against the canonical lock file, and active non-blocking
+   `flock(LOCK_EX | LOCK_NB)` before closing the child descriptor prior to `exec docker compose` so
+   parent lock ownership stays intact and Docker Compose cannot leak the lock fd to background
+   descendants.
+
+**Strict pin mode vs. explicit preliminary mode:**
+
+- `--pin-mode strict` (default, fail-closed) rejects any `verify-baseline` state other than
+  `baseline-verified` before API/transfer/browser stages execute and still cleans up only owned
+  invocation resources.
+- `--pin-mode allow-modified-baseline` is an explicit opt-in for preliminary rehearsal when
+  `verify-baseline` returns `invariant-valid-baseline-modified` (zero domain problems and matching
+  table counts, schema revision, `plan_sha256`, media, and targets). Modified-baseline runs set
+  `execution_stage = "preliminary_modified_baseline_rehearsal"`, `certification_eligible = false`,
+  and cannot produce formal certification evidence.
+
+**Crosswalk divergence cause:**
+
+`golden_dataset.py verify-baseline` currently returns `invariant-valid-baseline-modified`
+(`domain_problems = []`) because `native_range_proposals` (3 rows) and `native_range_applications`
+(2 rows) differ in content hash (`canonical_sha256 =
+5f59cc7ff3829517a5957c9b0972957d17c6eb2825fc023ba0be455ae047dfd0` vs. pinned
+`a6141fc43cf46012007f342b0ba71b005f31141ae34c85f4cdb79bb30a9da88b`). This divergence was introduced
+by the reviewed WGSRPD crosswalk expansion and note changes in PR #175 (`51f7884`), not PR #174
+(`WCVP-DEFAULT-001`). Refreshing `scenarios.json` is out of scope for this harness workstream.
+
+**Methodology and environment limitations:**
+
+- **Time-to-quiet vs. rendering time:** `browser.mjs` waits for `pending.size === 0` plus `>= 500 ms`
+  of network quiescence (`settle()`) and explicit UI readiness locators per route/tab interaction;
+  reported `initial.ms` and `workload[].ms` are diagnostic time-to-settled-quiet traces, not browser
+  FCP/LCP or frame render latency.
+- **Occurrence map stubbing vs. live probe:** Inside Playwright, `browser.mjs` intercepts
+  `/occurrence-map/cache` (`GET` and `POST`, returning fixed `48GBK` / `Ocimum basilicum` metadata)
+  and `/occurrence-map/tiles/*` + cross-origin basemap tiles (returning 1x1 PNGs) so lazy loading and
+  Leaflet mounting/cleanup run deterministically. To cover live provider reachability separately
+  without folding network latency into local timings, `measure.py live-occurrence` (run at the end of
+  `measure.py run` unless `--skip-live-occurrence` is passed) probes
+  `/api/v1/botanical-identities/{id}/occurrence-map/summary` directly.
+- **Lazy-chunk recovery semantics:** `verify-chunk-recovery.mjs` rewrites `SeedLotScreen-*.js` to
+  nonexistent `/assets/PERF-review-stale-chunk.js`. Nginx returns the SPA `200 text/html` fallback,
+  Chromium rejects dynamic module evaluation, and `WorkspaceBoundary` (`workspaceChunk.ts`) displays
+  the `role="alert"` fallback while retaining the authenticated shell (`Sign out`), causing `0`
+  uncaught `pageerror`s and `0` automatic document reloads (`documents.length === 1`). This verifies
+  error containment without automatic background retry or reload.
+- **tmpfs and host contention:** `compose.perf.yaml` mounts `/var/lib/postgresql` and
+  `/var/lib/florabase/attachments` on `tmpfs`; disk durability/fsync latency is excluded and must not
+  be compared silently against persistent-storage measurements. Host CPU/RAM is shared with other
+  worktrees/services, so benchmark runs require serialized execution under `florabase-perf.lock`.
+
+Batch 07 incorporates the reviewed [Golden COMPREHENSIVE pin refresh](../dev-golden.md#reviewed-baseline-at-20261110_0047).
+The modified-baseline results below describe the original PERF-001 source runs. The
+combined-candidate rehearsal uses the refreshed pin in strict mode, and its raw
+evidence is retained separately with the tested candidate identity.
+
+**Reconciled preliminary rehearsal (NOT formal RC G-PERF certification):**
+
+Executed on `feat/perf-001-comprehensive-harness` at clean commit `6175a03` (based on `origin/main`
+`fdc75e8`):
+
+- **Distinction of stages:** Covers (1) harness implementation, (2) automated verification (34/34
+  tests in `scripts/perf/test_measure.py`), and (3) preliminary source rehearsal under explicit
+  `--pin-mode allow-modified-baseline`. Strict rejection (`--pin-mode strict`) was also verified
+  end-to-end (`STRICT_EXIT=1`, zero measured stages executed, owned cleanup verified). Independent QA
+  (stage 4) and formal immutable RC-image G-PERF certification (stage 5,
+  [scope-v1.md](../release/scope-v1.md)) remain separate (`rc_g_perf_certification = false`,
+  `certification_eligible = false`).
+- **Build & container provenance:** Invocation-owned images
+  `florabase-perf-{backend,frontend}:<owner_id>` recorded `source_head =
+  6175a03580581c5b5654502b4830146727d47e29` and captured service process counts (`db`: 9 postgres,
+  `backend`: 2 (`docker-init`, `uvicorn`), `frontend`: 26 (`docker-init` + `nginx` master/workers on
+  24-CPU host)). Startup: `provision_bundle_s = 40.8`, `build_images_s = 2.8`, `database_health_s =
+  5.8`, `restore_db_s = 0.7`, `application_health_s = 11.0`, `restore_media_s = 2.5`.
+- **API, SQL instrumentation, transfer & post-mutation integrity:** All 48 read endpoints measured
+  (`pg_stat_statements` extension + preload + probe verified active) plus protected
+  create/edit/delete (`54.9 ms`) and post-mutation logical integrity check (`created_identity_deleted =
+  true`, `residual_perf_records = 0`, `unexpected_table_deltas = {}`, `media_verified = true` for all
+  32 stored attachments). Largest raw JS chunk was `106,478` bytes (`<= 500,000`); static gzip +
+  `Vary: Accept-Encoding` and uncompressed `no-store` `/runtime-config.js`, `/healthz`, and
+  `/api/v1/events` passed.
+- **Browser, 6 cycles, 120s idle, live occurrence, chunk recovery & cleanup:** 39 routes, initial
+  Today `813 ms` (36 resources), 6 cycles (`cycleRequests = [38, 38, 38, 38, 39, 38]`,
+  `Documents = 2` constant across all 7 cycle checkpoints + `final`, `Nodes = 759`,
+  `JSEventListeners = 484`, `intervals = 2` constant for Today's 30s day check + 15m release watcher,
+  `timeouts = 0`, `maps = 0` on Today), `122 s` idle (`0` browser requests, `120.0 s` sample span,
+  `1` session state across 13 samples), separate `live_occurrence` probes (`0.332 / 0.227 / 0.226 s`,
+  `200`, `9,855` total / `3,854` eligible), stale-chunk containment verified, and `0` remaining owned
+  containers/networks/volumes/images after `stop`.
+- **Evidence preservation:** The compact machine-readable summary is committed in
+  [comprehensive-rehearsal.json](comprehensive-rehearsal.json) (~113 KB), matching the repository
+  convention of keeping bulky raw SQL statement lists, `cProfile` dumps, and `EXPLAIN ANALYZE` plans
+  external:
+  - Remediated `6175a03` full raw JSON (`807,825` bytes, `sha256:
+    368d7d96536366b7ee5978e8aff97db7ac75742642e6e0ca3c4a7e43a507b8d9`):
+    `$XDG_STATE_HOME/florabase/perf-evidence/comprehensive-rehearsal-6175a03-full.json`.
+  - Preserved original `c2d5a1f` raw JSON (`788,494` bytes, `sha256:
+    dd5919c1530cb451585bb80461897384d13a3febdda12d1636e2bff439395a8c`, commit
+    `df443575a7c18a7e1fd9e776e76685cd8a67c16c` without fabricated build labels):
+    `$XDG_STATE_HOME/florabase/perf-evidence/comprehensive-rehearsal-c2d5a1f-full.json` (and in Git
+    object `df443575a7c18a7e1fd9e776e76685cd8a67c16c:docs/performance/comprehensive-rehearsal.json`).
+- **Assessment of related harness items:**
+  - `scripts/perf/fixture.py` is the superseded v1 fixture generator retained unchanged for historical
+    traceability against `baseline.json` and `after.json`; any archival/removal is a separate follow-up.
+  - `scripts/perf/` edits already trigger full-tier checks in `scripts/verification-impact.json`,
+    while `Makefile` `workflow-check` / `test-workflow-helpers` enumerate top-level `scripts/*.py`
+    explicitly; wiring `scripts/perf/test_measure.py` and `scripts/perf/` lint/mypy/Prettier into
+    `Makefile` is left as a separate workflow follow-up so shared CI/Makefile contracts are unchanged here.
+- **Disclosed residuals (deferred beyond Batch 07 harness scope):**
+  - Standalone `measure.py stop` resolves `owner_id` from `--env` or the machine-global
+    `florabase-perf.invocation.json` state file without requiring caller source matching (cooperative
+    protocol residual).
+  - Strict rejection reports reuse the generic `evaluate_report` classifier (`application_status =
+    "failed"`, `failure_classification = "both"`) even though measured application stages did not run;
+    distinguishing a dedicated `not_measured` / `fixture_rejected` class is left as a future cleanup.
+  - `--pin-mode allow-modified-baseline` relies on `golden_dataset.py` domain validation and records
+    every table difference explicitly rather than whitelisting specific tables in Python.
+- **G-PERF thresholds:** `operator_g_perf_thresholds.status = "unset_until_g_perf"` per
+  [scope-v1.md](../release/scope-v1.md) Decision 7.
+
+```bash
+# Reproducible COMPREHENSIVE harness run (requires external Playwright + Chromium)
+# Strict mode (fail-closed default; rejects modified baseline before measurement):
+python3 scripts/perf/measure.py run \
+  --out "${XDG_STATE_HOME:-$HOME/.local/state}/florabase/perf-evidence/strict-run.json"
+
+# Explicit preliminary rehearsal with compact summary output:
+PERF_PLAYWRIGHT=/path/to/node_modules/playwright \
+PLAYWRIGHT_BROWSERS_PATH=/path/to/installed/browsers \
+python3 scripts/perf/measure.py run \
+  --pin-mode allow-modified-baseline \
+  --out "${XDG_STATE_HOME:-$HOME/.local/state}/florabase/perf-evidence/rehearsal-full.json" \
+  --summary-out docs/performance/comprehensive-rehearsal.json
+```

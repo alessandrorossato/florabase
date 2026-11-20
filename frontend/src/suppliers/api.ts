@@ -1,5 +1,9 @@
 import type { components } from "../api/schema";
-import { ApiError, requestJson } from "../auth/api";
+import {
+  ApiError,
+  requestJson,
+  type ProtectedRequestCapability,
+} from "../auth/api";
 
 export type SupplierCreate = components["schemas"]["SupplierCreate"];
 export type SupplierDetailResponse =
@@ -47,23 +51,30 @@ export function supplierValidationMessages(error: ApiError): string[] {
 }
 
 export function listSuppliers(
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<SupplierListResponse[]> {
-  return requestJson("/api/v1/suppliers", { signal });
+  return requestJson("/api/v1/suppliers", { capability, signal });
 }
 
 export function getSupplier(
   id: string,
+  capability: ProtectedRequestCapability,
   signal?: AbortSignal,
 ): Promise<SupplierDetailResponse> {
-  return requestJson(`/api/v1/suppliers/${encodeURIComponent(id)}`, { signal });
+  return requestJson(`/api/v1/suppliers/${encodeURIComponent(id)}`, {
+    capability,
+    signal,
+  });
 }
 
 export function createSupplier(
   payload: SupplierCreate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<SupplierResponse> {
   return requestJson("/api/v1/suppliers", {
+    capability,
     method: "POST",
     headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
     body: JSON.stringify(payload),
@@ -74,8 +85,10 @@ export function updateSupplier(
   id: string,
   payload: SupplierUpdate,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<SupplierResponse> {
   return requestJson(`/api/v1/suppliers/${encodeURIComponent(id)}`, {
+    capability,
     method: "PUT",
     headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
     body: JSON.stringify(payload),
@@ -86,9 +99,11 @@ export function setSupplierRetired(
   id: string,
   retired: boolean,
   csrfToken: string,
+  capability: ProtectedRequestCapability,
 ): Promise<SupplierResponse> {
   const action = retired ? "retire" : "reactivate";
   return requestJson(`/api/v1/suppliers/${encodeURIComponent(id)}/${action}`, {
+    capability,
     method: "POST",
     headers: { "X-CSRF-Token": csrfToken },
   });

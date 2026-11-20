@@ -8,11 +8,12 @@ import * as schedule from "../schedule/api";
 import { localDay } from "../schedule/state";
 import { JournalScope } from "../events/JournalScope";
 import { useJournalReader } from "../events/journalReader";
+import { acquireTestAuth } from "../test/auth";
 import { RecordTimeline } from "./RecordTimeline";
 
 vi.mock("../events/api", () => ({ listEvents: vi.fn() }));
 vi.mock("../schedule/api", () => ({ listSchedule: vi.fn() }));
-const auth = { sessionExpired: vi.fn() } as unknown as AuthContextValue;
+let auth: AuthContextValue;
 type Item = schedule.SchedulePage["items"][number];
 type Event = events.EventResponse;
 
@@ -54,7 +55,8 @@ function mount(element: React.ReactElement) {
   );
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  auth = (await acquireTestAuth()).auth;
   vi.mocked(schedule.listSchedule).mockResolvedValue({
     items: [
       planned({
@@ -129,6 +131,7 @@ test("planned work stays planned, overdue is not shown as done, and Journal date
     }),
     0,
     3,
+    auth.capability,
     expect.any(AbortSignal),
   );
 
@@ -196,7 +199,11 @@ test("empty and failed lanes are explicit and retryable", async () => {
   expect(await screen.findByText("No planned activities.")).toBeVisible();
   await userEvent.click(screen.getByRole("button", { name: "Retry Journal" }));
   expect(await screen.findByText("No Journal entries yet.")).toBeVisible();
-  expect(events.listEvents).toHaveBeenLastCalledWith("group", "g");
+  expect(events.listEvents).toHaveBeenLastCalledWith(
+    "group",
+    "g",
+    auth.capability,
+  );
 });
 
 test("inside a record view the Almanac and the Journal share one Journal request", async () => {

@@ -7,7 +7,8 @@ import {
   type RefObject,
 } from "react";
 
-import { requestJson } from "../auth/api";
+import { isExpectedAuthCancellation, requestJson } from "../auth/api";
+import { useAuth } from "../auth/context";
 import {
   searchKindLabels,
   type SearchKind,
@@ -87,6 +88,10 @@ export function CommandPalette({
   /** The open route; a record detail adds its own actions first. */
   hash?: string;
 }) {
+  const auth = useAuth();
+  const { capability } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
   const [query, setQuery] = useState("");
   const [answer, setAnswer] = useState<Answer | null>(null);
   const [active, setActive] = useState(0);
@@ -94,11 +99,12 @@ export function CommandPalette({
   const trimmed = query.trim();
 
   useEffect(() => {
-    if (trimmed.length < 2) return;
+    if (!authorized || trimmed.length < 2) return;
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       const params = new URLSearchParams({ q: trimmed, limit: "5" });
       requestJson<SearchResponse>(`/api/v1/search?${params.toString()}`, {
+        capability,
         signal: controller.signal,
       })
         .then((response) => {
@@ -110,7 +116,7 @@ export function CommandPalette({
           });
         })
         .catch((error: unknown) => {
-          if (error instanceof DOMException && error.name === "AbortError")
+          if (controller.signal.aborted || isExpectedAuthCancellation(error))
             return;
           setAnswer({ query: trimmed, status: "error" });
         });
@@ -119,7 +125,7 @@ export function CommandPalette({
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [trimmed]);
+  }, [authorized, capability, trimmed]);
   // Record state is derived: a query without its own answer yet is loading.
   const records = useMemo<RecordState>(
     () =>

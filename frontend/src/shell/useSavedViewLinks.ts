@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { useOptionalAuth } from "../auth/context";
 import { listSavedViews } from "../saved-views/api";
 import { savedViewsChanged } from "../saved-views/events";
 import { savedViewHash, surfaceLabels } from "../saved-views/state";
@@ -20,6 +21,11 @@ export interface SavedViewLink {
  * in its directory's Saved views dialog, which explains it. No new API or route.
  */
 export function useSavedViewLinks(): SavedViewLink[] {
+  const auth = useOptionalAuth();
+  const capability = auth?.capability;
+  const authorized =
+    auth?.state.status === "authenticated" &&
+    Boolean(capability?.isAuthorized());
   const [views, setViews] = useState<SavedViewLink[]>([]);
   const [version, setVersion] = useState(0);
   useEffect(() => {
@@ -32,8 +38,9 @@ export function useSavedViewLinks(): SavedViewLink[] {
     };
   }, []);
   useEffect(() => {
+    if (!authorized || !capability) return;
     const controller = new AbortController();
-    Promise.resolve(listSavedViews(undefined, controller.signal))
+    Promise.resolve(listSavedViews(undefined, capability, controller.signal))
       .then((list: unknown) => {
         if (!Array.isArray(list)) return;
         setViews(
@@ -68,6 +75,6 @@ export function useSavedViewLinks(): SavedViewLink[] {
     return () => {
       controller.abort();
     };
-  }, [version]);
+  }, [authorized, capability, version]);
   return views;
 }

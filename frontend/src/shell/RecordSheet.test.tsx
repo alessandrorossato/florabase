@@ -3,28 +3,12 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { AuthContext, type AuthContextValue } from "../auth/context";
+import { acquireTestAuth } from "../test/auth";
 import { RecordSheet } from "./RecordSheet";
 
 const plantId = "0190d2a8-0000-7000-8000-000000000002";
 const sowingId = "0190d2a8-0000-7000-8000-000000000003";
-const auth = {
-  state: {
-    status: "authenticated",
-    session: {
-      user_id: "u",
-      login_name: "owner",
-      display_name: null,
-      owner: true,
-      canonical_origin: "https://florabase.example",
-    },
-    csrfToken: "csrf",
-  },
-  logIn: vi.fn(),
-  logOut: vi.fn(),
-  sessionExpired: vi.fn(),
-  retryRestoration: vi.fn(),
-  cancelLogout: vi.fn(),
-} as AuthContextValue;
+let auth: AuthContextValue;
 
 // The Record sheet searches the existing global search endpoint for record kinds.
 const fetch = vi.fn((path: string) =>
@@ -57,7 +41,17 @@ const fetch = vi.fn((path: string) =>
     ),
   ),
 );
-beforeEach(() => {
+beforeEach(async () => {
+  auth = (
+    await acquireTestAuth({
+      session: {
+        user_id: "u",
+        display_name: null,
+        canonical_origin: "https://florabase.example",
+      },
+      csrfToken: "csrf",
+    })
+  ).auth;
   vi.stubGlobal("fetch", fetch);
 });
 afterEach(() => {
