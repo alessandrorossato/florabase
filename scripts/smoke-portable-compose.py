@@ -11,6 +11,7 @@ import secrets
 import shutil
 import signal
 import subprocess
+import sys
 import tempfile
 from contextlib import ExitStack, suppress
 from http.client import HTTPMessage
@@ -164,6 +165,10 @@ class Stack:
         result = run([*self.command(), "up", "-d", "--wait", "--wait-timeout", "180"], env=self.env)
         require(result.returncode != 0, f"{self.project}: {operation} was not refused")
         logs = self.compose("logs", "--no-color", service)
+        if message.encode() not in logs:
+            # Service logs carry guard lines only; up output and states name the failing stage.
+            state = self.compose("ps", "--all", "--format", "{{.Service}} {{.State}} {{.Status}}")
+            sys.stderr.buffer.write(result.stderr[-4000:] + state + logs[-4000:])
         require(message.encode() in logs, f"{self.project}: {operation}: expected {message!r}")
         self.compose("stop")
 
