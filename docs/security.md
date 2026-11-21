@@ -60,6 +60,10 @@ requires tests and release-note review.
 
 ## Local owner bootstrap
 
+This describes `v0.1.0-beta.6` and source builds. From INSTALL-001 the production `compose.yaml`
+may also create the first owner once from its environment
+([ADR 0008](decisions/0008-self-initializing-single-compose.md)).
+
 After applying migrations, create the first owner from an interactive terminal:
 
 ```bash

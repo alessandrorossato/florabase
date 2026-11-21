@@ -1,6 +1,8 @@
 # ADR 0005: Backend-owned authentication and database sessions
 
-Status: accepted
+Status: accepted. The first-owner bootstrap channel is superseded in part by
+[ADR 0008](0008-self-initializing-single-compose.md): the owner may also be created once from the
+production Compose environment.
 
 ## Context
 

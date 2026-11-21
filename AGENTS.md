@@ -41,12 +41,16 @@ VERIFY → OPERATOR DELIVERY → FINISH.
 
 - `backend/src/florabase/`: FastAPI application, configuration, database infrastructure, and domain
   capabilities.
-- `backend/alembic/`: the only database schema-change path; application startup never migrates.
+- `backend/alembic/`: the only database schema-change path. The backend process never migrates; only
+  the guarded one-shot `migrate` service of production `compose.yaml` applies migrations
+  ([ADR 0008](docs/decisions/0008-self-initializing-single-compose.md)).
 - `backend/tests/`: unit tests and clearly isolated PostgreSQL integration tests.
 - `frontend/src/`: accessible React UI and generated API declarations.
 - `docs/`: architecture, operations, domain model, backlog, progress, and ADRs.
 - `scripts/`: guarded operational and verification scripts.
-- `compose.yaml`: production-oriented baseline; `compose.dev.yaml`: development override.
+- `compose.yaml`: the only production Compose (self-initializing, ADR 0008); `compose.dev.yaml`: the
+  only development Compose. Workflow stacks are derived from it at run time; never add tracked
+  Compose files.
 
 ## Engineering conventions
 

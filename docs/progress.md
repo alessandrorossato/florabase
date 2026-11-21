@@ -9712,3 +9712,14 @@ Status remains implemented pending canonical verification.
 - `docs/release/scope-v1.md` names beta.6 as the current G-MIGRATE and G-UPGRADE baseline under
   its existing rule. No feature status changed. Host deployment (BETA-RUNTIME-001), real-data
   onboarding and the beta soak remain open, and so do all eight RC blockers.
+
+## 2026-11-21 — ADR 0008 self-initializing single Compose
+
+- The operator decided that the production installation is one self-initializing `compose.yaml`
+  and that the repository keeps only `compose.yaml` and `compose.dev.yaml`.
+  [ADR 0008](decisions/0008-self-initializing-single-compose.md) records the data-directory guard,
+  the guarded `migrate` one-shot with a pre-upgrade dump, the one-time owner from the environment,
+  and the supersessions of ADR 0005, release decision 3 and PORTABLE-COMPOSE-001 criteria 2 and 3.
+- INSTALL-001 (`release-work`, `planned`) and WF-09 (a workflow enabler) are registered. AGENTS.md
+  states the new rules, and INSTALL-001 is a ninth release-candidate blocker. No code changed. The
+  beta.6 manual procedure remains valid for beta.6.
