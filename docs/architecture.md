@@ -35,7 +35,7 @@ responsibilities.
 
 ## Runtime and configuration
 
-`compose.yaml` is production-oriented: PostgreSQL and FastAPI are internal, the frontend alone
+`compose.runtime.yaml` (the source-build baseline; `compose.yaml` from INSTALL-001) is production-oriented: PostgreSQL and FastAPI are internal, the frontend alone
 publishes a port, services have health checks, and application containers run non-root where
 practical. `compose.dev.yaml` adds bind-mounted source, hot reload, and loopback-only development
 ports. `compose.integration.yaml` owns an isolated tmpfs PostgreSQL test project.

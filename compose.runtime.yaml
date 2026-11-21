@@ -1,3 +1,5 @@
+# Source-build production targets for workflow tooling only (prod role, verification build,
+# performance and Stable Preview). It is not an installation file; WF-09 replaces it (ADR 0008).
 name: florabase-prod
 
 services:

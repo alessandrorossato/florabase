@@ -153,7 +153,12 @@ def compose_invocation(
         str(root),
         "--file",
         str(
-            root / ("compose.yaml" if role == "verification-build" else "compose.integration.yaml")
+            root
+            / (
+                "compose.runtime.yaml"
+                if role == "verification-build"
+                else "compose.integration.yaml"
+            )
         ),
         "--file",
         str(path),

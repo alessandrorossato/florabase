@@ -104,7 +104,7 @@ def require_session_revoked(origin: str, cookie: str) -> None:
 def fixture_source(repository: Repository, source: Path) -> None:
     for name in (
         ".gitignore",
-        "compose.yaml",
+        "compose.runtime.yaml",
         "compose.dev.yaml",
         "compose.integration.yaml",
     ):

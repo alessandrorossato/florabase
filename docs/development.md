@@ -147,7 +147,7 @@ The current Alembic head is discovered from the migration chain rather than dupl
 `make feature-review-status` when needed.
 
 To upgrade the existing development database explicitly, use `make dev-upgrade`. It uses
-`compose.yaml` plus `compose.dev.yaml`, displays the current revision, applies `alembic upgrade head`,
+`compose.runtime.yaml` plus `compose.dev.yaml`, displays the current revision, applies `alembic upgrade head`,
 and displays the resulting revision without deleting volumes. Back up meaningful production data
 before production upgrades; this development helper is not a production deployment command.
 

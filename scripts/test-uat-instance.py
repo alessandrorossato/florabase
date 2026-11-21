@@ -85,7 +85,7 @@ class InstanceTests(unittest.TestCase):
         self.assertEqual(
             [Path(item).name for item in files],
             [
-                "compose.yaml",
+                "compose.runtime.yaml",
                 "compose.dev.yaml",
                 "compose.review.yaml",
                 "compose.uat.yaml",

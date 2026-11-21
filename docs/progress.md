@@ -9723,3 +9723,25 @@ Status remains implemented pending canonical verification.
 - INSTALL-001 (`release-work`, `planned`) and WF-09 (a workflow enabler) are registered. AGENTS.md
   states the new rules, and INSTALL-001 is a ninth release-candidate blocker. No code changed. The
   beta.6 manual procedure remains valid for beta.6.
+
+## 2026-11-21 — Source-build baseline renamed to compose.runtime.yaml
+
+- The build-based root `compose.yaml` is renamed, unchanged apart from a header, to the transitional
+  `compose.runtime.yaml`, which frees the root path for the INSTALL-001 installation file
+  ([ADR 0008](decisions/0008-self-initializing-single-compose.md)). WF-09 removes it with the other
+  workflow overlays. The tracked Compose file count is unchanged.
+- The workflow environment, Stable Preview and the stable-preview smoke pick `compose.runtime.yaml`
+  when the source has it and `compose.yaml` otherwise. DEV drives the primary checkout, and older
+  preview revisions such as `v0.1.0-beta.6` keep their layout. The DEV recovery smoke models a
+  legacy source with the old name. Verification build, performance, Golden, workflow-resource
+  fixtures, overlay comments and the development, deployment, architecture and workflow docs use
+  the new name. Historical evidence and performance records keep the name they recorded.
+- Focused checks: `test-preview-workflow`, `test-environment-workflow` (both with a new
+  layout-selection test), `test-uat-instance`, `test-uat-preview`, `test-workflow-helpers`,
+  `test-verification-impact`, `workflow-check` and `docker compose config` for the prod, dev,
+  quality, sourcing and performance topologies all passed. Workflow scripts from worktrees based
+  before this change fail against a primary checkout that has it; rebase them on `main`.
+- Independent QA found three source-build commands in `docs/backup-restore.md` and one in
+  `docs/security.md` that relied on the default `compose.yaml`; they now use the `prod` workflow
+  helper. `smoke-dev-recovery` and `smoke-workflow-resources` fail identically on the unchanged
+  `main` tree, so they are tracked as a separate fix.

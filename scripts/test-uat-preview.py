@@ -345,7 +345,7 @@ class UATTests(unittest.TestCase):
         command = compose.call_args.args
         self.assertIn(f"{ROOT / 'scripts/uat_fixture.py'}:/uat/uat_fixture.py:ro", command)
         self.assertNotIn("uat_fixture", (ROOT / "backend/Dockerfile").read_text())
-        self.assertNotIn("uat_fixture", (ROOT / "compose.yaml").read_text())
+        self.assertNotIn("uat_fixture", (ROOT / "compose.runtime.yaml").read_text())
 
     def test_context_rejects_primary_and_arbitrary_project(self) -> None:
         with (

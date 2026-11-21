@@ -67,7 +67,7 @@ may also create the first owner once from its environment
 After applying migrations, create the first owner from an interactive terminal:
 
 ```bash
-docker compose run --rm backend python -m florabase.auth.bootstrap owner
+python3 ./scripts/workflow_environment.py prod compose -- run --rm backend python -m florabase.auth.bootstrap owner
 ```
 
 The command prompts with `getpass`. For non-interactive automation, pass `--password-stdin` and

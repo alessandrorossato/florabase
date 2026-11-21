@@ -1,5 +1,5 @@
 # Persistent per-worktree Sourcing Preview. Merge only through scripts/sourcing_preview.py
-# (compose.yaml + compose.dev.yaml + compose.review.yaml + this overlay). Never merge into DEV,
+# (compose.runtime.yaml + compose.dev.yaml + compose.review.yaml + this overlay). Never merge into DEV,
 # Feature Review, UAT, Stable Preview or production.
 #
 # The isolated database/credentials come from the Sourcing role's environment overrides; this

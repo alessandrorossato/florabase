@@ -6,7 +6,7 @@ primary checkout off `main`.
 
 | Environment      | Source                                                      | Compose files                                | Project                                  | Browser                    | State                                                         |
 | ---------------- | ----------------------------------------------------------- | -------------------------------------------- | ---------------------------------------- | -------------------------- | ------------------------------------------------------------- |
-| DEV              | Primary checkout discovered through Git                     | `compose.yaml` + `compose.dev.yaml`          | `florabase`                              | `http://localhost:5173`    | Persistent DB, media, dependencies                            |
+| DEV              | Primary checkout discovered through Git                     | `compose.runtime.yaml` + `compose.dev.yaml`  | `florabase`                              | `http://localhost:5173`    | Persistent DB, media, dependencies                            |
 | Feature Review   | Current feature worktree, including dirty/untracked files   | baseline + DEV + `compose.review.yaml`       | `florabase-feature-review`               | `http://localhost:15174`   | Persistent, isolated DB/media/dependencies                    |
 | UAT Preview      | Owning feature source or clean delivered detached owner     | baseline + DEV + Review + `compose.uat.yaml` | `florabase-uat-preview`                  | `http://localhost:15174`   | Persistent isolated synthetic DB/media/dependencies           |
 | Sourcing Preview | Current Sourcing worktree, including dirty/untracked files  | baseline + DEV + Review + `compose.sourcing.yaml` | `florabase-sourcing-preview`         | `http://localhost:15175`   | Persistent isolated synthetic DB/media/dependencies           |
@@ -14,7 +14,7 @@ primary checkout off `main`.
 | Stable Preview   | Clean detached checkout of fetched `origin/main` by default | baseline + `compose.preview.yaml`            | `florabase-preview`                      | `http://localhost:15173`   | Persistent isolated DB/media, immutable frontend dependencies |
 | Quality checks   | Current feature worktree                                    | baseline + DEV + `compose.quality.yaml`      | `florabase-quality-<metadata-path-hash>` | None started               | Isolated volumes, no live DB, `network_mode: none` (`bridge` only via `--quality-network`) |
 | Integration / CI | Current source / CI checkout                                | `compose.integration.yaml`                   | `florabase-integration-<random-run-id>`  | None                       | Disposable PostgreSQL tmpfs and test state                    |
-| Production       | Selected deployable source/artifact                         | `compose.yaml`                               | `florabase-prod`                         | Proxy port 8080 by default | Persistent DB/media                                           |
+| Production       | Selected deployable source/artifact                         | `compose.runtime.yaml`                       | `florabase-prod`                         | Proxy port 8080 by default | Persistent DB/media                                           |
 
 Migration verification (`florabase-feature-migration-<run-id>`), selected production verification
 builds (`florabase-verification-build-<run-id>`) and unique smoke fixtures are also disposable.
@@ -653,7 +653,7 @@ same disposable workflow; its copies exist only beside disposable test PostgreSQ
 way. It is manual: the default integration suite skips that module, so CI and the canonical gate do not run it.
 
 `make up`, `build`, `migrate`, `down`, `backup`, and `restore` use the explicit `florabase-prod` project.
-`compose.yaml` remains the production distribution topology: immutable non-root backend/frontend
+`compose.runtime.yaml` remains the source-build production topology: immutable non-root backend/frontend
 images, same-origin nginx proxy, internal PostgreSQL/backend, health/readiness, persistent DB/media,
 secure cookies and explicit HTTPS origin. Application startup never migrates. For source-build upgrades, follow the
 [maintenance procedure](deployment.md#safe-upgrade) to keep writers stopped from backup through migration.

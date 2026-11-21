@@ -16,7 +16,7 @@ fail() {
 }
 
 assert_attachment_configuration() {
-  local compose="${repository_root}/compose.yaml"
+  local compose="${repository_root}/compose.runtime.yaml"
   local development="${repository_root}/compose.dev.yaml"
   local integration="${repository_root}/compose.integration.yaml"
   local nginx="${repository_root}/frontend/nginx.conf"

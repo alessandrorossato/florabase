@@ -1,5 +1,5 @@
 # Per-worktree UAT instance (MULTIBRANCH-UAT-001). Merge only through scripts/uat_instance.py, after
-# compose.yaml + compose.dev.yaml + compose.review.yaml + compose.uat.yaml. Never merge into DEV,
+# compose.runtime.yaml + compose.dev.yaml + compose.review.yaml + compose.uat.yaml. Never merge into DEV,
 # Feature Review, the singleton UAT Preview, Stable Preview or production.
 # Volume labels are the durable allocation record: Docker cannot relabel an existing volume, so the
 # instance's port and dataset profile stay fixed until its guarded reset or removal.

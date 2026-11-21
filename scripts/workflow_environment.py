@@ -454,7 +454,9 @@ class Environment:
         return env
 
     def command(self, *args: str) -> list[str]:
-        files = ["compose.yaml"]
+        # DEV drives the primary checkout, which may predate the ADR 0008 baseline rename.
+        runtime = "compose.runtime.yaml"
+        files = [runtime if (self.source / runtime).is_file() else "compose.yaml"]
         if self.role != "prod":
             files.append("compose.dev.yaml")
         if self.role in {"review", "uat", "sourcing"}:

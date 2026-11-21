@@ -80,4 +80,4 @@ export POSTGRES_PASSWORD=disposable-perf-password
 export FLORABASE_DATABASE_URL=postgresql+psycopg://florabase_perf:disposable-perf-password@db:5432/florabase_perf
 export FLORABASE_CANONICAL_ORIGIN=http://localhost:18080
 exec docker compose --env-file /dev/null --project-name florabase-perf \
-  --file compose.yaml --file compose.perf.yaml "$@"
+  --file compose.runtime.yaml --file compose.perf.yaml "$@"
