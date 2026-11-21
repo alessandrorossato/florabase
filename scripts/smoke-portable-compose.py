@@ -168,7 +168,7 @@ class Stack:
         if message.encode() not in logs:
             # Service logs carry guard lines only; up output and states name the failing stage.
             state = self.compose("ps", "--all", "--format", "{{.Service}} {{.State}} {{.Status}}")
-            sys.stderr.buffer.write(result.stderr[-4000:] + state + logs[-4000:])
+            sys.stderr.buffer.write((result.stderr or b"")[-4000:] + state + logs[-4000:])
         require(message.encode() in logs, f"{self.project}: {operation}: expected {message!r}")
         self.compose("stop")
 
