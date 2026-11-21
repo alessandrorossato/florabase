@@ -1,4 +1,4 @@
-# Merge with compose.yaml + compose.dev.yaml only through the review helper.
+# Merge with compose.runtime.yaml + compose.dev.yaml only through the review helper.
 name: florabase-feature-review
 
 x-source: &source

@@ -143,7 +143,7 @@ def main() -> None:
                     "*.tsbuildinfo",
                 ),
             )
-        for name in ("compose.yaml", "compose.dev.yaml"):
+        for name in ("compose.runtime.yaml", "compose.dev.yaml"):
             shutil.copy2(repository.source / name, source / name)
         # A disposable source repository, never a worktree/commit in the operator repository.
         for args in (

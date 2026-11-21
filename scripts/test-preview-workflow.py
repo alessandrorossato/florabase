@@ -179,6 +179,16 @@ class PreviewIsolationTests(unittest.TestCase):
         self.assertIn(str(self.preview_path / "compose.preview.yaml"), command)
         self.assertNotIn(str(self.repository / "compose.preview.yaml"), command)
 
+    def test_runtime_compose_follows_the_selected_revision_layout(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            preview = Preview(self.repository, Path(temporary), RecordingCommands())
+            self.assertEqual(preview.runtime_compose(), preview.preview_path / "compose.yaml")
+            (preview.preview_path / "compose.runtime.yaml").write_text("services: {}\n")
+            (preview.preview_path / "compose.yaml").write_text("services: {}\n")
+            self.assertEqual(
+                preview.runtime_compose(), preview.preview_path / "compose.runtime.yaml"
+            )
+
     def test_git_workflow_contains_no_destructive_primary_operations(self) -> None:
         source = (ROOT / "scripts/preview.py").read_text()
         for operation in ('git("reset"', 'git("stash"', 'git("clean"', 'git("checkout"'):

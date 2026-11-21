@@ -116,7 +116,14 @@ def main() -> None:
             "--project-directory",
             str(stable),
             "-f",
-            str(stable / "compose.yaml"),
+            # origin/main may predate the ADR 0008 rename of the source-build baseline.
+            str(
+                next(
+                    p
+                    for p in (stable / "compose.runtime.yaml", stable / "compose.yaml")
+                    if p.is_file()
+                )
+            ),
             "-f",
             str(stable / "compose.preview.yaml"),
         ]

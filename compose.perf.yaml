@@ -1,4 +1,4 @@
-# PERF-001 only: merge with compose.yaml using scripts/perf/compose.sh.
+# PERF-001 only: merge with compose.runtime.yaml using scripts/perf/compose.sh.
 services:
   db:
     environment:

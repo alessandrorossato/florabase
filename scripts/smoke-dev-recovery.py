@@ -93,7 +93,7 @@ def main() -> None:
                     "*.tsbuildinfo",
                 ),
             )
-        for name in ("compose.yaml", "compose.dev.yaml"):
+        for name in ("compose.runtime.yaml", "compose.dev.yaml"):
             shutil.copy2(repository.source / name, primary / name)
         (primary / ".gitignore").write_text(".env\n")
         (primary / ".env").write_text(
@@ -132,7 +132,8 @@ def main() -> None:
             try:
                 env.compose("build")
                 shutil.copytree(primary, old, ignore=shutil.ignore_patterns(".git"))
-                shutil.copy2(primary / "compose.yaml", old / "compose.yaml")
+                # Model a source from before the ADR 0008 rename of the source-build baseline.
+                (old / "compose.runtime.yaml").rename(old / "compose.yaml")
                 # Model the real older development override, including its tmpfs media and retained
                 # durable attachment mount. Automatic Compose labels are the legacy identity evidence.
                 (old / "compose.dev.yaml").write_text(

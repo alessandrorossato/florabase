@@ -348,6 +348,15 @@ class EnvironmentTests(unittest.TestCase):
                 str(self.feature / "compose.dev.yaml"), Environment(self.repo, "prod").command()
             )
 
+    def test_runtime_baseline_follows_the_source_layout(self) -> None:
+        dev = Environment(self.repo, "dev")
+        self.assertIn(str(self.primary / "compose.yaml"), dev.command())
+        (self.primary / "compose.runtime.yaml").touch()
+        (self.primary / "compose.yaml").touch()
+        command = dev.command()
+        self.assertIn(str(self.primary / "compose.runtime.yaml"), command)
+        self.assertNotIn(str(self.primary / "compose.yaml"), command)
+
     def test_only_dev_workflow_enforces_wcvp_v16_seal(self) -> None:
         setting = "FLORABASE_WCVP_V16_REQUIRE_SEAL"
         with patch.dict(os.environ, {setting: "false"}):
@@ -425,7 +434,7 @@ class EnvironmentTests(unittest.TestCase):
         command = review.command(*compose.call_args.args)
         self.assertIn("florabase-feature-review", command)
         self.assertIn(str(self.feature), command)
-        self.assertNotIn(str(self.primary / "compose.yaml"), command)
+        self.assertNotIn(str(self.primary / "compose.runtime.yaml"), command)
         self.assertNotIn("downgrade", command)
         self.assertEqual(code_heads(migration_graph(dev.source)), ["0029"])
 
@@ -834,7 +843,7 @@ class EnvironmentTests(unittest.TestCase):
         self.assertIn('FLORABASE_QUALITY_OFFLINE: "0"', network_overlay)
 
         for name in (
-            "compose.yaml",
+            "compose.runtime.yaml",
             "compose.dev.yaml",
             "compose.review.yaml",
             "compose.uat.yaml",

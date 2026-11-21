@@ -180,7 +180,7 @@ GENERATOR_FILES: tuple[str, ...] = (
     "scripts/perf/measure.py",
     "scripts/perf/browser.mjs",
     "scripts/perf/verify-chunk-recovery.mjs",
-    "compose.yaml",
+    "compose.runtime.yaml",
     "compose.perf.yaml",
 )
 

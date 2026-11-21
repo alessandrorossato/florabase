@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Persistent, per-worktree Sourcing Preview for visual review of the Sourcing slice.
 
-This environment reuses the supported Review runtime (compose.yaml + compose.dev.yaml +
+This environment reuses the supported Review runtime (compose.runtime.yaml + compose.dev.yaml +
 compose.review.yaml) plus a tiny `compose.sourcing.yaml` endpoint overlay, but owns an
 independent project, network, database, media volume and dependency volume, and publishes
 only `127.0.0.1:15175`. It never reads, starts, stops, removes or resets Feature Review

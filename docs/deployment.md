@@ -17,7 +17,7 @@ For the source checkout workflow, install Docker Engine with Compose **2.24.4 or
 Python 3, GNU Make, Git and `curl`. Clone the repository on a host where an operator-managed
 HTTPS reverse proxy can reach the frontend port.
 
-The base source-build `compose.yaml` has no custom merge tags. Repository development and
+The base source-build `compose.runtime.yaml` has no custom merge tags. Repository development and
 verification overlays use `!override` and `!reset`, which is why the checkout workflow specifies
 a newer Compose plugin. With 2.20.1,
 the DEV overlay can render both frontend port mappings instead of replacing the production mapping.
@@ -25,13 +25,13 @@ The image-only beta uses a separate stack without those tags and its controller 
 **2.20 or newer**. The beta smoke results apply to that image-only stack.
 [Docker Compose merge rules](https://docs.docker.com/reference/compose-file/merge/)
 
-`compose.yaml` builds the production targets in the explicit `florabase-prod` project. DEV retains
+`compose.runtime.yaml` builds the production targets in the explicit `florabase-prod` project. DEV retains
 its separate legacy `florabase` project; Review and Preview use their own resources. Existing baseline
 installations previously using `florabase` must preserve and deliberately migrate coordinated DB/media
 before adopting the new production project name. No helper silently attaches those volumes.
 See [environment boundaries](development-workflow.md).
 
-`compose.yaml` builds the production targets. PostgreSQL and FastAPI remain on the internal Compose
+`compose.runtime.yaml` builds the production targets. PostgreSQL and FastAPI remain on the internal Compose
 network; only the nginx frontend proxy publishes `${APP_BIND_ADDRESS}:${APP_PORT}`. The frontend
 serves the React application and forwards `/api/` to FastAPI.
 

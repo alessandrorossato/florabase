@@ -169,6 +169,11 @@ class Preview:
             "FLORABASE_PREVIEW_SHA": self.sha,
         }
 
+    def runtime_compose(self) -> Path:
+        # Revisions before the ADR 0008 rename name the source-build baseline compose.yaml.
+        renamed = self.preview_path / "compose.runtime.yaml"
+        return renamed if renamed.is_file() else self.preview_path / "compose.yaml"
+
     def compose_command(self, *args: str) -> list[str]:
         return [
             "docker",
@@ -180,7 +185,7 @@ class Preview:
             "--project-directory",
             str(self.preview_path),
             "--file",
-            str(self.preview_path / "compose.yaml"),
+            str(self.runtime_compose()),
             "--file",
             str(self.preview_path / "compose.preview.yaml"),
             *args,
@@ -371,14 +376,14 @@ for current in os.environ['FLORABASE_SOURCE_REVISIONS'].split(','):
                 raise PreviewError(
                     f"preview readiness failed: {last_error}; inspect logs with: "
                     f"docker compose --project-name {PROJECT} --project-directory "
-                    f"{self.preview_path} --file {self.preview_path / 'compose.yaml'} --file "
+                    f"{self.preview_path} --file {self.runtime_compose()} --file "
                     f"{self.preview_path / 'compose.preview.yaml'} logs --tail=100"
                 )
 
     def start(self, ref: str) -> None:
         self.resolve_and_prepare_worktree(ref)
-        if not (self.preview_path / "compose.yaml").is_file():
-            raise PreviewError("selected preview revision has no compose.yaml")
+        if not self.runtime_compose().is_file():
+            raise PreviewError("selected preview revision has no source-build runtime Compose file")
         self.validate_compose_config()
         self.compose("build", "backend", "frontend")
         self.compose("up", "--detach", "--wait", "--wait-timeout", "120", "db")
