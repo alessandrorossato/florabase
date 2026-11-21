@@ -15,10 +15,11 @@ against the accepted release candidate when v1.0.0 is cut.
 - Upgrade from beta requires a paired backup and the documented upgrade or isolated restore.
   The supported origins remain subject to the G-MIGRATE and G-UPGRADE acceptance gates.
 
-## Unreleased
+## v0.1.0-beta.6 — 2026-11-21
 
-Changes on `main` since `v0.1.0-beta.5`. They ship in the next prerelease. The source is versioned
-`0.1.0-beta.6`, which is not tagged or published.
+Prerelease of the private beta series: changes since `v0.1.0-beta.5`. The GitHub Release carries
+the same asset set as beta.5 plus the portable Compose asset, with digest-pinned linux/amd64
+images including PostgreSQL `18.6-alpine-florabase.3`.
 
 ### Added
 
@@ -36,6 +37,11 @@ Changes on `main` since `v0.1.0-beta.5`. They ship in the next prerelease. The s
 - Explicit date choice for Journal entries: Today, Another date or Date unknown; and a work-first
   Today page (#177).
 - A collection onboarding guide and CSV templates for a first import (#159).
+- After a session expires, a sign-in dialog keeps unsaved edits in place; a failed save is never
+  repeated automatically and is retried with Save once signed in again as the same owner (#199).
+- The bundled web server sends security headers, including a Content-Security-Policy (#200).
+  Operators who put their own reverse proxy in front should check that it does not add a
+  conflicting policy.
 
 ### Changed
 
@@ -45,11 +51,27 @@ Changes on `main` since `v0.1.0-beta.5`. They ship in the next prerelease. The s
 - The reviewed WGSRPD crosswalk covers more regions (#175).
 - Backend and frontend dependency updates (#169, #171).
 - New Florabase logo, favicon and web-app icons (#186).
+- A new Journal entry opens with Today selected; Another date and Date unknown stay available (#192).
+- Cuttings: the Journal shows rooting observations and links back to the rooting attempt (#195).
+- The frontend image is based on nginx 1.30.7 (#198), and the PostgreSQL image is
+  `18.6-alpine-florabase.3` with updated Alpine packages (#196, #202).
 
 ### Fixed
 
 - Merging duplicate botanical identities while another change is being saved can no longer
   leave a record pointing at the merged identity (#185).
+- On an empty database, creating a Plant or Plant group links to Botanical identities when a
+  first identity is needed (#192).
+- Directories stay scrollable on short and mobile screens, and Escape closes a reference picker
+  before its parent dialog (#195, #199).
+
+### Security
+
+- The production backend no longer serves the generated API documentation and schema routes;
+  only the sign-in, health and readiness API routes are reachable without signing in (#196, #200).
+- The frontend base image moves to nginx 1.30.7 for nginx security advisories fixed in that
+  release (#198). The PostgreSQL image adds Alpine fixes for Kerberos, libxslt and libxml2
+  (#196, #202).
 
 ### Upgrade notes
 
@@ -59,6 +81,11 @@ Changes on `main` since `v0.1.0-beta.5`. They ship in the next prerelease. The s
 - Installations from the `v0.1.0-beta.5` controller bundle upgrade with the controller's
   documented upgrade, or move to the portable stack through a paired backup and the
   [isolated restore](docs/portable-installation.md#isolated-restore) procedure.
+- The PostgreSQL image changes from `18.6-alpine-florabase.1` (beta.5) to
+  `18.6-alpine-florabase.3`. Switching the database image digest is separate database
+  maintenance, and the controller refuses it during an application upgrade: take a paired backup
+  first, as described in
+  [the PostgreSQL image notes](docs/security/beta-distribution-001/postgresql-image.md).
 
 ## v0.1.0-beta.5 — 2026-11-08
 
