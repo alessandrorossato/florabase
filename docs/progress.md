@@ -9785,3 +9785,13 @@ Status remains implemented pending canonical verification.
   PostgreSQL stays `18.6-alpine-florabase.3`; the backend declares beta.6 as its previous release.
 - No feature status changes. Tag, protected publication and publication evidence remain operator
   actions.
+
+## 2026-11-21 — Release rehearsal upgrade smoke under umask 077
+
+- The hosted `rehearse` job failed from #207 onward: the release pipeline runs under umask 077, so
+  the derived test-only upgrade image copied its migration and previous-release declaration as
+  0600 and `migrate` (uid 10001) stopped with `PermissionError` instead of the expected
+  `SQLSTATE 42P07`. The derived Dockerfile now copies both with `--chmod=0644`; the production
+  backend image is unaffected. A mismatched refusal now prints the `up` output, service states
+  and the service log tail. The local checks did not catch it because they ran under umask 022.
+- Checks: hosted `rehearse` on this branch (workflow dispatch) and the canonical gate.
