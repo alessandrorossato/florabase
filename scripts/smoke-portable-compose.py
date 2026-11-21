@@ -435,8 +435,9 @@ def build_upgrade_image(backend_image: str, head: str, tag: str, work: Path) -> 
     (work / "release-upgrade-from.json").write_text(json.dumps({"alembic_head": head}) + "\n")
     (work / "Dockerfile").write_text(
         f"FROM {backend_image}\n"
-        f"COPY {SMOKE_REVISION}_smoke_upgrade.py /app/alembic/versions/\n"
-        "COPY release-upgrade-from.json /app/alembic/release-upgrade-from.json\n"
+        # The release pipeline runs under umask 077; the image user must still read both files.
+        f"COPY --chmod=0644 {SMOKE_REVISION}_smoke_upgrade.py /app/alembic/versions/\n"
+        "COPY --chmod=0644 release-upgrade-from.json /app/alembic/release-upgrade-from.json\n"
     )
     result = run(["docker", "build", "--quiet", "--pull=false", "--tag", tag, str(work)])
     require(result.returncode == 0, "smoke upgrade image build failed")
