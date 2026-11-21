@@ -15,9 +15,11 @@ against the accepted release candidate when v1.0.0 is cut.
 - Upgrade from beta requires a paired backup and the documented upgrade or isolated restore.
   The supported origins remain subject to the G-MIGRATE and G-UPGRADE acceptance gates.
 
-## Unreleased
+## v0.1.0-beta.7 — 2026-11-21
 
-Changes since `v0.1.0-beta.6`, for the next beta.
+Prerelease of the private beta series: changes since `v0.1.0-beta.6`. The installation is now a
+single self-initializing `compose.yaml` release asset (#205, #207), with digest-pinned linux/amd64
+images and PostgreSQL `18.6-alpine-florabase.3`.
 
 ### Changed
 
@@ -32,6 +34,8 @@ Changes since `v0.1.0-beta.6`, for the next beta.
 - The backend image includes the PostgreSQL 18 client tools used for the pre-upgrade dump.
 - The release carries `compose.yaml`, `RELEASE.md`, `release-manifest.json` (schema version 3),
   the PostgreSQL SBOM and the source archive.
+- Backend dependency updates: FastAPI 0.163.2, psycopg 3.3.9, pwdlib 0.4.2, pydantic-settings
+  2.16.3, python-multipart 0.0.34 and SQLAlchemy 2.0.58 (#207).
 
 ### Removed
 

@@ -5,7 +5,7 @@ Florabase is installed with one file: the `compose.yaml` attached to each releas
 deploys it as-is, or you run `docker compose up -d`. The only host step is creating two empty
 folders. Building from source is for development only ([development](development.md)).
 
-This guide applies from the first release after `v0.1.0-beta.6`. Use the documentation at the
+This guide applies from `v0.1.0-beta.7`. Use the documentation at the
 `v0.1.0-beta.6` tag for that release's manual procedure.
 [Florabase releases](https://github.com/alessandrorossato/florabase/releases)
 

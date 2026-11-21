@@ -1,7 +1,7 @@
 # Install Florabase with portable Docker Compose
 
 The portable `portable-compose.yaml` and its manual initialization, owner and upgrade commands
-were the installation of `v0.1.0-beta.6`. From the next release, the single self-initializing
+were the installation of `v0.1.0-beta.6`. From `v0.1.0-beta.7`, the single self-initializing
 `compose.yaml` replaces them ([ADR 0008](decisions/0008-self-initializing-single-compose.md)).
 Follow [Install Florabase](installation.md). For `v0.1.0-beta.6` itself, read this page at the
 `v0.1.0-beta.6` tag.
