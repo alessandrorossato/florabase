@@ -9795,3 +9795,14 @@ Status remains implemented pending canonical verification.
   backend image is unaffected. A mismatched refusal now prints the `up` output, service states
   and the service log tail. The local checks did not catch it because they ran under umask 022.
 - Checks: hosted `rehearse` on this branch (workflow dispatch) and the canonical gate.
+
+## 2026-11-21 — v0.1.0-beta.7 published
+
+- `1126c03` was tagged `v0.1.0-beta.7` and published through the protected release workflow
+  (run `44949666442`, attempt 2, after the operator updated `RELEASE_APPROVED_SHA` from the beta.6
+  commit). The [publication record](release/evidence/beta-7-publication.md) lists the five Release
+  assets with matching SHA-256 digests and GHCR tags resolving to the manifest digests;
+  `gh attestation verify` succeeded for the three images, `compose.yaml` and the manifest, bound
+  to the commit and run.
+- `docs/release/scope-v1.md` names beta.7 as the current G-MIGRATE and G-UPGRADE baseline. No
+  feature status changed.
