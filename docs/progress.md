@@ -9741,3 +9741,7 @@ Status remains implemented pending canonical verification.
   `test-verification-impact`, `workflow-check` and `docker compose config` for the prod, dev,
   quality, sourcing and performance topologies all passed. Workflow scripts from worktrees based
   before this change fail against a primary checkout that has it; rebase them on `main`.
+- Independent QA found three source-build commands in `docs/backup-restore.md` and one in
+  `docs/security.md` that relied on the default `compose.yaml`; they now use the `prod` workflow
+  helper. `smoke-dev-recovery` and `smoke-workflow-resources` fail identically on the unchanged
+  `main` tree, so they are tracked as a separate fix.

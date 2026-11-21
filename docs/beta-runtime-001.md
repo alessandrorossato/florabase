@@ -38,7 +38,7 @@ artifacts an operator copies to the host; no checkout, Git or package installati
   `_reference_data` are local-driver *bind* volumes onto host directories. A missing directory stops
   the container instead of creating an empty database; removing the Docker volume object never
   deletes host data. The controller refuses any existing project volume that is plain or bound
-  elsewhere (for example one left by the source-build `compose.yaml`, which shares the project name).
+  elsewhere (for example one left by the source-build `compose.runtime.yaml`, which shares the project name).
 - **Private exposure.** Only frontend publishes, and `compose.yaml` fixes the address to a literal
   `127.0.0.1`. Only the host port (`FLORABASE_HTTP_PORT`) is a variable, so no ambient shell, `.env`
   or Dockhand variable can widen it. The controller has no bind-address option, and acceptance

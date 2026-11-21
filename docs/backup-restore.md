@@ -30,13 +30,13 @@ the database or Docker volume are unsupported and outside this guarantee.
 Validate a dump without restoring it:
 
 ```bash
-docker compose exec -T db pg_restore --list < backups/example.dump >/dev/null
+python3 ./scripts/workflow_environment.py prod compose -- exec -T db pg_restore --list < backups/example.dump >/dev/null
 ```
 
 Validate the paired attachment archive without extracting it:
 
 ```bash
-docker compose run --rm --no-deps -T backend \
+python3 ./scripts/workflow_environment.py prod compose -- run --rm --no-deps -T backend \
   python scripts/attachment_artifacts.py validate-archive \
   < backups/example.attachments.tar
 ```
@@ -152,7 +152,7 @@ docker exec --interactive "$restore_container" \
 docker exec "$restore_container" \
   psql --username restore_smoke --dbname restore_smoke --tuples-only --no-align \
   --command "SELECT version_num FROM alembic_version; SELECT key, value FROM app_metadata ORDER BY key;"
-docker compose exec -T db sh -c \
+python3 ./scripts/workflow_environment.py prod compose -- exec -T db sh -c \
   'psql --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" --tuples-only --no-align --command "SELECT version_num FROM alembic_version; SELECT key, value FROM app_metadata ORDER BY key;"'
 docker logs "$restore_container"
 
