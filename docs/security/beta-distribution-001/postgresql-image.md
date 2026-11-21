@@ -4,7 +4,8 @@
 
 `18.6-alpine-florabase.3` (20 November) adds `libxml2=2.13.9-r3` for HIGH CVE-2026-86144 and
 keeps every other pin. See the [libxml2 evidence](../beta-security-001/postgres-libxml2-2.13.9-r3/README.md).
-The `.2` text below is historical.
+It was first published to GHCR with `v0.1.0-beta.6` on 2026-11-21
+([publication record](../../release/evidence/beta-6-publication.md)). The `.2` text below is historical.
 
 [Rehearsal 42988505037, job 130415337490](https://github.com/alessandrorossato/florabase/actions/runs/42988505037/job/130415337490)
 blocked the `18.6-alpine-florabase.1` index recorded below. The retained Trivy JSON reported 16 HIGH

@@ -184,9 +184,10 @@ says what applies when the task is deferred; a deferred optional task never fail
 
 The upgrade baseline for G-MIGRATE and G-UPGRADE is the last beta that is published when the
 release candidate is cut. At the scope baseline that is **`v0.1.0-beta.5`** (commit `4c845b1`),
-whose Alembic head is `20261013_0042`; `main` is at `20261110_0047`. The sources name
-`0.1.0-beta.6`, which is not tagged or published. If a later beta is published before the
-candidate, it becomes the baseline and the gate record names it.
+whose Alembic head is `20261013_0042`; `main` was then at `20261110_0047`. If a later beta is
+published before the candidate, it becomes the baseline and the gate record names it.
+`v0.1.0-beta.6` (commit `3552b3d`, Alembic head `20261110_0047`) was published on 2026-11-21 and
+is the current baseline under this rule ([publication record](evidence/beta-6-publication.md)).
 
 ### Core acceptance script (G-CORE)
 
