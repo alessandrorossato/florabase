@@ -19624,7 +19624,7 @@
   },
   "info": {
     "title": "Florabase API",
-    "version": "0.1.0-beta.6"
+    "version": "0.1.0-beta.7"
   },
   "openapi": "3.1.0",
   "paths": {

@@ -9775,3 +9775,13 @@ Status remains implemented pending canonical verification.
   The documentation handoff to Antigravity Neon was not taken up; on the operator's explicit
   instruction the orchestrator ran the operator TAKEOVER of that handoff and wrote the documents.
   The compose smoke passed again with the updated dependencies.
+
+## 2026-11-21 — v0.1.0-beta.7 release preparation
+
+- Version surfaces move to `0.1.0-beta.7` (`release/inputs.json`, backend package and module,
+  frontend package, both Dockerfiles, regenerated OpenAPI). The Unreleased CHANGELOG section
+  becomes the `v0.1.0-beta.7` entry, the first release with the self-initializing `compose.yaml`
+  (#205, #207). The installation guides name beta.7 as the first release of the new layout.
+  PostgreSQL stays `18.6-alpine-florabase.3`; the backend declares beta.6 as its previous release.
+- No feature status changes. Tag, protected publication and publication evidence remain operator
+  actions.

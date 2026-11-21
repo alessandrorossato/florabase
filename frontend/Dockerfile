@@ -19,7 +19,7 @@ RUN pnpm install --frozen-lockfile \
 
 FROM dependencies AS build
 COPY . .
-ARG VERSION=0.1.0-beta.6
+ARG VERSION=0.1.0-beta.7
 ARG REVISION=unknown
 ARG SOURCE=https://github.com/alessandrorossato/florabase
 RUN pnpm build && node build-notices.mjs > dist/THIRD_PARTY_NOTICES.txt \
@@ -29,7 +29,7 @@ FROM nginx/nginx-unprivileged:1.30.7-alpine3.24-slim@sha256:8432c57ac86f178741af
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY LICENSE /usr/share/nginx/html/LICENSE
-ARG VERSION=0.1.0-beta.6
+ARG VERSION=0.1.0-beta.7
 ARG REVISION=unknown
 ARG SOURCE=https://github.com/alessandrorossato/florabase
 LABEL org.opencontainers.image.title="Florabase frontend" \

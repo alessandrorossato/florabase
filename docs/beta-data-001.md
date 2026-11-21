@@ -8,9 +8,9 @@ published release and the Synology checks below are accepted.
 
 ## Choose the installation path
 
-Main contains the source and release packaging for Portable Compose. Before an
+Main contains the source and release packaging for the release `compose.yaml`. Before an
 installation, verify that the authorized GitHub Release actually has the
-attested assets and that its pinned images are available. The beta.6 version
+attested assets and that its pinned images are available. The beta.7 version
 in source, a tag or a rehearsal artifact does not establish publication.
 
 | Path | Installation and maintenance authority |
