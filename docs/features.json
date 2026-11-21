@@ -2720,6 +2720,26 @@
       "status": "implemented"
     },
     {
+      "id": "INSTALL-001",
+      "category": "infrastructure",
+      "description": "Ship one self-initializing production compose.yaml that a Compose manager deploys as-is (ADR 0008)",
+      "acceptance_criteria": [
+        "The release attaches one attested image-only compose.yaml with immutable digests; it replaces deploy/portable/portable-compose.yaml and the build-based root baseline, and the controller bundle is withdrawn",
+        "A disposable smoke deploys the attached file with docker compose up -d on a new empty data directory and a separate backup directory, with no other host command, and reaches a healthy stack where the owner can sign in",
+        "Data-directory guard: a missing path fails; a non-empty directory without the installation marker, a marker with a missing or empty database directory, and a marker whose PostgreSQL major version or system identifier differs are each refused before PostgreSQL starts; the marker is written atomically only after cluster and schema exist",
+        "migrate initializes an empty database, leaves an at-head database unchanged, and refuses newer, unknown or older-than-previous-release revisions so that nothing starts; it holds an advisory lock against concurrent runs",
+        "Before upgrading from the exact previous release head, migrate writes a named pg_dump to the required separate backup directory and verifies it with pg_restore --list; a missing or unwritable backup directory or an unverifiable dump refuses before any migration; after a failed or interrupted upgrade the backend refuses to start and the dump restores",
+        "The backend process never migrates and keeps its exact-head guard on every start",
+        "FLORABASE_OWNER_LOGIN and FLORABASE_OWNER_PASSWORD create the owner only when no user exists, under the ADR 0005 single-owner constraint; a database with users, including a restored one, never gets a new owner; one variable alone or a password failing policy refuses before creation; captured logs of every service never contain the password",
+        "An isolated restore of a paired database and media backup into a fresh data directory and distinct project reaches a healthy stack with the same records and media digests",
+        "README, installation, portable installation, deployment, security, versioning, feature reconciliation and CHANGELOG describe only this installation path; PORTABLE-COMPOSE-001 is restated",
+        "Independent infrastructure QA and the canonical FULL gate pass before operator delivery"
+      ],
+      "dependencies": ["PORTABLE-COMPOSE-001"],
+      "priority": "P0",
+      "status": "planned"
+    },
+    {
       "id": "MEASUREMENT-001",
       "category": "event",
       "description": "Record and browse longitudinal Plant height measurements as typed Journal Events",

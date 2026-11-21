@@ -156,6 +156,7 @@
     "DEV-REFERENCES-001": "tooling",
     "GOLDEN-REFERENCE-001": "post-1.0",
     "PORTABLE-COMPOSE-001": "certify",
+    "INSTALL-001": "release-work",
     "MEASUREMENT-001": "certify",
     "PHENOLOGY-001": "certify",
     "VERIFICATION-EVIDENCE-001": "tooling",

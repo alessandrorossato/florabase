@@ -114,7 +114,9 @@ make migrate &&
 make up
 ```
 
-Application startup never runs migrations. Create the first and only initial owner after migration:
+Application startup never runs migrations. (From INSTALL-001, the production `compose.yaml` applies
+them through a guarded one-shot `migrate` service; see
+[ADR 0008](decisions/0008-self-initializing-single-compose.md).) Create the first and only initial owner after migration:
 
 ```bash
 prod run --rm backend python -m florabase.auth.bootstrap owner

@@ -23,7 +23,7 @@ entry relates to this release and is stored in the release-scope manifest
 | --- | --- |
 | 1 | **Release line.** The existing private beta (`v0.1.0-beta.N`) is followed by `v1.0.0-rc.N` and then `v1.0.0`. There is no intermediate public 0.1 stable release. |
 | 2 | **No new domains.** No new roadmap domain is mandatory before 1.0. |
-| 3 | **Installation.** Portable Docker Compose on linux/amd64 is the official installation. Building from source is for development only. The controller bundle is advanced and best-effort; it is not a separately certified installation path. |
+| 3 | **Installation.** Portable Docker Compose on linux/amd64 is the official installation. Building from source is for development only. The controller bundle is advanced and best-effort; it is not a separately certified installation path. *Amended 2026-11-21 ([ADR 0008](../decisions/0008-self-initializing-single-compose.md)): the official installation becomes the single self-initializing `compose.yaml`, and the controller bundle is withdrawn when INSTALL-001 is delivered.* |
 | 4 | **Compatibility.** 1.0 supports documented database upgrades, paired database and media backups, and the documented CSV contracts. Compatibility of the HTTP API for outside clients is not guaranteed. |
 | 5 | **Care entries.** Journal kinds for watering and feeding are wanted before 1.0. They are dropped from 1.0 if their implementation or migration risk threatens the release. |
 | 6 | **Cuttings.** Cuttings is finished and certified, not hidden. |
@@ -64,7 +64,7 @@ Release work must not weaken any of these. A change to one of them is a scope ch
 - **Verification.** Exact-tree receipts, the fail-closed impact plan, protected `quality`,
   `integration` and `build` checks, and operator-only delivery remain as defined in the
   [development workflow](../development-workflow.md). Delivery never accepts reused stage evidence.
-- **Data safety.** Application startup never migrates. No volume is deleted without exact
+- **Data safety.** Application startup never migrates (narrowed by [ADR 0008](../decisions/0008-self-initializing-single-compose.md) on INSTALL-001 delivery: the backend process never migrates, and only the guarded `migrate` one-shot of `compose.yaml` does). No volume is deleted without exact
   identity proof. No shared-daemon prune is automated. Destructive actions keep their explicit
   confirmations.
 
@@ -108,6 +108,7 @@ through the development workflow, and they are not release gates in themselves.
 | WF-04 | A documented batch integration profile with provenance and retirement |
 | WF-06 | A report-then-confirm command to retire resources of finished work |
 | WF-07 | Human-readable WF-04 batch PR titles from a reviewed manifest summary |
+| WF-09 | Exactly two tracked Compose files; workflow stacks derived from `compose.dev.yaml` at run time ([ADR 0008](../decisions/0008-self-initializing-single-compose.md)) |
 
 ### 3. Optional PRE-1.0 improvements
 
@@ -151,7 +152,7 @@ the [product roadmap](../product-roadmap.md).
 | **Internal foundation** | Delivered code with no user-facing surface. It is exempt from user-facing feature-completion certification. It is not exempt from regression and security verification: its tests run in the canonical gate, and any route or interface later added on top of it falls under the ordinary authentication and gate rules. BOTANICAL-MATCH-1A is the only entry in this class. |
 | **Tooling** | Development workflow and test data. Its status does not gate the release. |
 | **Historical record** | Audit or design records with no product deliverable. Closed without certification. |
-| **Best-effort** | The controller bundle (decision 3). Kept and not certified. |
+| **Best-effort** | The controller bundle (decision 3). Kept and not certified. *Withdrawn on INSTALL-001 delivery ([ADR 0008](../decisions/0008-self-initializing-single-compose.md)).* |
 
 ## Release gates
 
@@ -297,6 +298,8 @@ functional batch, with these requirements:
 | 2026-11-16 | CERT-01, CERT-02, CERT-03, CERT-04 | Registered with class `tooling` as the Batch 03 source identifiers: certification documentation (CERT-01), frontend certification regressions (CERT-02), Harvest certification regressions (CERT-03) and the scaffold verification gate (CERT-04). No new mandatory requirement, no reclassification of existing entries, no status change of any certification item | Each WF-04 source needs a feature identifier; these add evidence and checks and do not change the product | Operator |
 | 2026-11-17 | WF-07 | Registered as a required workflow enabler: human-readable WF-04 batch PR titles from a reviewed manifest summary. No `features.json` entry, like WF-01 to WF-06; delivered by source WF-07 in Batch 04. No status or class change | Batch PR titles listing commit hashes are unreadable for review; the change affects the workflow only | Operator |
 | 2026-11-17 | CERT-05 | Registered with class `tooling` as the Batch 04 source identifier for release-evidence reconciliation of BETA-IMAGE-001 and beta-postgres-repro-001. No status change of any other entry; supersessions and status moves it recommends need separate operator acceptance | Each WF-04 source needs a feature identifier; the record adds evidence and does not change the product | Operator |
+| 2026-11-21 | INSTALL-001 | Added with class `release-work` and status `planned`: one self-initializing production `compose.yaml` per [ADR 0008](../decisions/0008-self-initializing-single-compose.md). It amends decision 3, withdraws the controller bundle on delivery and supersedes the PORTABLE-COMPOSE-001 description, criteria 2 and 3 and the upgrade part of criterion 4 (restatement recorded on delivery). It is a new release-candidate blocker until delivered, making nine | Operator decision: the installation must be one Compose deployable in a manager such as Dockhand, without host commands | Operator |
+| 2026-11-21 | WF-09 | Registered as a required workflow enabler: exactly two tracked Compose files (`compose.yaml`, `compose.dev.yaml`); workflow stacks are derived from `compose.dev.yaml` at run time. No `features.json` entry, like WF-01 to WF-07. No status or class change | Fifteen tracked Compose files make the authoritative one unclear | Operator |
 
 ## History
 
