@@ -9701,3 +9701,14 @@ Status remains implemented pending canonical verification.
   The version surfaces were already `0.1.0-beta.6`. Publication, the tag and environment approval
   remain operator actions. The scope upgrade baseline in `docs/release/scope-v1.md` still names
   beta.5 until beta.6 is published.
+
+## 2026-11-21 — v0.1.0-beta.6 published
+
+- The operator tagged `3552b3d` as `v0.1.0-beta.6`, approved the exact commit and ran the protected
+  release workflow (run `44888816590`). The [publication record](release/evidence/beta-6-publication.md)
+  lists the eight Release assets with matching SHA-256 digests and GHCR tags resolving to the
+  manifest digests, including the first PostgreSQL `.3` publication. `gh attestation verify`
+  succeeded for all three images and five bundle files, bound to the commit and run.
+- `docs/release/scope-v1.md` names beta.6 as the current G-MIGRATE and G-UPGRADE baseline under
+  its existing rule. No feature status changed. Host deployment (BETA-RUNTIME-001), real-data
+  onboarding and the beta soak remain open, and so do all eight RC blockers.
