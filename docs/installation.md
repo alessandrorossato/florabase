@@ -1,245 +1,125 @@
-# Advanced controller-based installation and recovery
+# Install Florabase
 
-**Status: advanced, best-effort.** The controller bundle is kept but is not a certified
-installation path; the official installation is [portable Docker Compose](portable-installation.md).
-This guide is for people who want to **run** Florabase on their own server from the published
-container images. You do not need the source code, Node.js, a Python development environment or a
-compiler. To build and deploy from a checkout, see [source-build deployment](deployment.md). For
-local development, see the [development guide](development.md).
+Florabase is installed with one file: the `compose.yaml` attached to each release
+([ADR 0008](decisions/0008-self-initializing-single-compose.md)). A Compose manager such as Dockhand
+deploys it as-is, or you run `docker compose up -d`. The only host step is creating two empty
+folders. Building from source is for development only ([development](development.md)).
 
-> **Beta status.** This guide is maintained on `main` and may be newer than the
-> last published prerelease, `v0.1.0-beta.5`. For a published release, follow this guide as it
-> stands at that release's tag. For a three-service deployment, see the
-> [portable Compose guide](portable-installation.md). Proceed only when the release's GitHub Release and verified assets are
-> available. Keep a tested backup before every upgrade.
+This guide applies from the first release after `v0.1.0-beta.6`. Use the documentation at the
+`v0.1.0-beta.6` tag for that release's manual procedure.
+[Florabase releases](https://github.com/alessandrorossato/florabase/releases)
 
 ## What you install
 
-| Part | Image | Role |
+`compose.yaml` pins three linux/amd64 images by digest and defines five services:
+
+| Service | Runs | Role |
 | --- | --- | --- |
-| `frontend` | `ghcr.io/alessandrorossato/florabase-frontend` | nginx serving the built React app; forwards `/api/` to the backend; the only published port, on `127.0.0.1` |
-| `backend` | `ghcr.io/alessandrorossato/florabase-backend` | FastAPI/Uvicorn API, owner authentication, media storage |
-| `db` | `ghcr.io/alessandrorossato/florabase-postgres` | PostgreSQL 18.6: the official `postgres:18.6-alpine` image without its unused `gosu` tool, runs only as uid/gid 70; never published to the host |
+| `prepare` | once per deployment, PostgreSQL image, no network | Checks the two folders and creates their subfolders with the right owners. Refuses anything that is neither an empty folder nor this installation. |
+| `db` | always | PostgreSQL 18. Creates its cluster only for a new installation. |
+| `migrate` | once per deployment, backend image | Initializes the schema, leaves a current schema unchanged, or backs up and upgrades from the previous release. Creates the first owner once. |
+| `backend` | always | The API. It never migrates and refuses to start unless the schema matches its image exactly. |
+| `frontend` | always | The web app and the only published port, bound to `127.0.0.1`. |
 
-All three images are pinned by immutable digest in one attested (build-provenance) release manifest,
-so they can never be mixed across versions. The backend and frontend come from one source commit; the
-PostgreSQL image keeps one identity across releases (it is built reproducibly once, then re-verified
-by every release), so application upgrades never change the database image ([details](security/beta-distribution-001/postgresql-image.md)). A small
-host program, `florabasectl.py` (Python standard library only), installs, migrates, backs up,
-restores and upgrades the stack. Docker Compose runs the containers.
+Stopping or restarting services keeps all data. Docker restarts `db`, `backend` and `frontend`
+after a host reboot; the backend schema check still applies.
 
-Download these four installation assets from the release:
+## Prerequisites
 
-| Asset | Purpose |
-| --- | --- |
-| `release-manifest.json` | Exact image digests, source commit, PostgreSQL identity and database schema version |
-| `compose.yaml` | The stack definition (image-only; no builds, no source mounts) |
-| `florabasectl.py` | The installation controller |
-| `florabase.env.example` | Annotated list of every stack variable (for review; the controller writes the real file) |
+- A linux/amd64 Docker host with Engine 24+ and Compose 2.20+. Other architectures are not built.
+- A Compose manager that supports environment interpolation, long-form bind mounts, health and
+  completion dependencies, and host-IP port bindings, or the Docker CLI on the host.
+- Local storage for a data folder and a separate backup folder.
+- A hostname dedicated to Florabase and an HTTPS reverse proxy on the Docker host with a
+  certificate for it, or [Tailscale Serve](#tailscale-and-https). Florabase is served at the root
+  of that origin, not under a subpath.
+- Pull access to the release's GHCR images from the Docker host.
+- Private storage, off the host, for backups and for the credentials needed to restore them.
 
-## Quick start
+### Verify the release assets
 
-### Prerequisites
-
-- A **linux/amd64** host. linux/arm64 (for example a Raspberry Pi or an ARM NAS) is **not supported
-  in this beta**: no arm64 images are built or tested.
-- Docker Engine **24.0 or newer** and the Docker Compose plugin **2.20 or newer**
-  (`docker compose version`). The image-only stack avoids the `!override` and `!reset` tags used in
-  repository overlays. Disposable smoke tests exercised Engine 24.0.2 and Compose 2.20.1 in an
-  isolated daemon. Acceptance on the candidate Synology DSM 7.2 host remains pending.
-  [Beta runtime evidence](beta-runtime-001.md#disposable-verification)
-- Python **3.8 or newer** on the host (`python3 --version`), for `florabasectl.py`.
-- Bash, GitHub CLI **2.103.3 or newer** with access to the repository and release attestations,
-  and `curl` for health checks. Downloads and verification may run on an admin workstation.
-- A root shell on the host (`sudo -i`). The controller creates directories owned by the
-  container users and protects the secret files.
-- At least 2 GiB of available memory and 20 GiB of free disk for the application, database, media
-  and several backups. Keep the database on a local disk (ext4, Btrfs, XFS), never a network share.
-- An **HTTPS reverse proxy on the same host** (nginx, Caddy, Traefik, Tailscale Serve and so on).
-  Florabase only accepts HTTPS in production and always serves on its own host name, never on a
-  sub-path such as `https://example.org/florabase/`.
-
-### 1. Download and verify the release
-
-Open the tagged release under **Releases** in the trusted
-[`alessandrorossato/florabase` repository](https://github.com/alessandrorossato/florabase/releases).
-Use `gh auth login --hostname github.com` with an account that can read the repository and its
-attestations. Sign in as the user running `gh`; a private release needs authenticated downloads.
-GitHub access and GHCR pull access are separate.
-
-Get the approved full source commit from the trusted release record and confirm it is the commit
-the release tag points to. Set `tag` and `authorized_commit` below before running the block.
-Use the release record to establish the commit independently of the downloaded manifest.
-
-Run the following as one Bash block. It creates a private directory under the working directory.
-Run it outside the future installation root, for example from `/srv` on Linux or from a private
-admin directory. Any download, attestation or digest failure stops the block.
+On an admin workstation with the GitHub CLI (`gh`), verify `compose.yaml` and
+`release-manifest.json` against the protected release workflow and the full approved source SHA
+from the release record. Keep both files for upgrades and recovery.
 
 ```bash
+repo=alessandrorossato/florabase
 (
   set -e
-  umask 077
-  tag='<published-release-tag>'   # for example v0.1.0-beta.5
-  authorized_commit='<approved-40-character-commit>'
-  [[ "$authorized_commit" =~ ^[0-9a-f]{40}$ ]]
-  repo=alessandrorossato/florabase
-  bundle_dir=$(mktemp -d "$PWD/florabase-bundle.XXXXXX")
-  files=(release-manifest.json compose.yaml florabasectl.py florabase.env.example)
-  patterns=()
-
-  for file in "${files[@]}"; do
-    patterns+=(--pattern "$file")
-  done
-  gh release download "$tag" --repo "$repo" --dir "$bundle_dir" "${patterns[@]}"
-  cd "$bundle_dir"
-
-  for file in "${files[@]}"; do
+  for file in compose.yaml release-manifest.json; do
     gh attestation verify "$file" --repo "$repo" \
       --signer-workflow "$repo/.github/workflows/beta-images.yml" \
-      --source-ref refs/heads/main --source-digest "$authorized_commit" --deny-self-hosted-runners
+      --source-ref refs/heads/main --source-digest '<approved-40-character-commit>' \
+      --deny-self-hosted-runners
   done
-
-  python3 - "${tag#v}" "$authorized_commit" <<'PYTHON'
-import hashlib
-import json
-import sys
-from pathlib import Path
-
-manifest_bytes = Path("release-manifest.json").read_bytes()
-manifest = json.loads(manifest_bytes)
-if manifest["version"] != sys.argv[1]:
-    sys.exit("STOP: manifest version differs from the selected release tag")
-if manifest["source"]["url"] != "https://github.com/alessandrorossato/florabase":
-    sys.exit("STOP: manifest identifies a different source repository")
-if manifest["source"]["revision"] != sys.argv[2]:
-    sys.exit("STOP: manifest source differs from the approved release commit")
-for name in ("compose.yaml", "florabasectl.py", "florabase.env.example"):
-    digest = hashlib.sha256(Path(name).read_bytes()).hexdigest()
-    if manifest["install_bundle"][name] != "sha256:" + digest:
-        sys.exit("STOP: manifest SHA-256 mismatch for " + name)
-print("Manifest SHA-256:", hashlib.sha256(manifest_bytes).hexdigest())
-print("Source revision:", manifest["source"]["revision"])
-PYTHON
-  printf 'Verified bundle directory: %s\n' "$bundle_dir"
 )
 ```
 
-Attestation verification checks the downloaded bytes against provenance from the protected release
-workflow. The SHA-256 checks also bind all three bundle files to the selected release's attested
-manifest. Keep the printed manifest hash for install and upgrade. If verification ran on a
-workstation, transfer the files over a trusted connection. Check `sha256sum release-manifest.json`
-against the previously recorded hash and repeat the bundle digest checks on the host before
-execution. Keep the verified files under a root-only directory on the host and change to that
-directory before running the controller.
-[GitHub CLI attestation verification](https://cli.github.com/manual/gh_attestation_verify) ·
-[Florabase release identity policy](beta-image-001.md#manifest-contract-and-consumption)
+## Quick start
 
-Now run the verified controller's host preflight. It checks platform, tool versions and local
-resources. Keep the resulting `preflight.json` private and resolve any failed checks before
-initializing the installation.
+### 1. Create two empty folders
 
-```bash
-python3 florabasectl.py --root /srv/florabase preflight --evidence preflight.json
+Create a data folder and a separate backup folder **inside** a storage volume, for example with a
+NAS file manager. Never point Florabase at a volume mountpoint itself: when the volume is missing,
+the folder is then missing too and the deployment fails instead of starting empty.
+
+```text
+/volume1/docker/florabase/data      FLORABASE_DATA_DIR    (empty)
+/volume1/docker/backup/florabase    FLORABASE_BACKUP_DIR  (empty or existing; not inside the data folder)
 ```
 
-If the GHCR packages require authentication, run `docker login ghcr.io` in the same root shell
-that will run the controller. Use your GitHub username and a classic personal access token with
-`read:packages` and access to the packages. Docker reads the token from the terminal.
-[GitHub Container registry authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry)
+`prepare` creates `postgres/` (owner `70`), `media/` and `state/` (owner `10001`) in the data
+folder and `pre-upgrade/` (owner `10001`) in the backup folder. It adds the search permission for
+other users to the two folder roots if it is missing, so the container users can reach their
+subfolders. It never changes anything else, and Compose never creates a missing folder.
 
-### 2. Initialize the installation
+### 2. Set the variables
 
-Choose an installation root (any absolute path; examples use `/srv/florabase`, on Synology
-`/volume1/docker/florabase`) and the **final** HTTPS address users will open:
+Set these in the manager's stack environment or in a mode-0600 `.env` next to `compose.yaml`.
+Generate the database password with `openssl rand -hex 32`.
 
-```bash
-python3 florabasectl.py --root /srv/florabase init --origin https://florabase.example.org
-```
-
-- `--origin` is the exact public origin: scheme and host (and port only if it is not 443), with
-  no path or trailing slash. Login cookies and cross-site request protection are bound to it.
-  Changing it later is not supported in this beta, so choose the final name now.
-- `--http-port 8080` (default) is the loopback port your reverse proxy forwards to. The address
-  is always `127.0.0.1`; no setting can publish Florabase, the API or PostgreSQL on another
-  interface.
-- `--db-memory 1g` and `--backend-memory 768m` are memory ceilings; lower them on small hosts.
-
-`init` refuses a non-empty root. It creates the host layout and secrets. The controller renders
-the stack during `install` and creates restore directories as needed.
-
-| Directory | Owner / mode | Content |
+| Variable | Required | Meaning |
 | --- | --- | --- |
-| `stack/` | root 0750 | `compose.yaml`, rendered `.env` and `reference.env` |
-| `secrets/` | root 0700 | `db.env`, `backend.env`: randomly generated database credentials (0600) |
-| `postgres/` | 70:70 0700 | PostgreSQL data |
-| `media/` | 10001:10001 0700 | Uploaded original images and saved copies |
-| `reference/` | root 0755 | Optional read-only botanical reference datasets |
-| `backups/` | root 0700 | Recovery sets |
-| `state/` | root 0700 | Installation record, current release, operation journal |
-| `restore/`, `preserved/` | root 0700 | Restore drills and data set aside by a replacement restore |
+| `FLORABASE_DATA_DIR` | yes | Absolute path of the data folder |
+| `FLORABASE_BACKUP_DIR` | yes | Absolute path of the backup folder |
+| `FLORABASE_DB_PASSWORD` | yes | PostgreSQL password, fixed when the database is created |
+| `FLORABASE_CANONICAL_ORIGIN` | yes | The exact HTTPS origin, for example `https://florabase.example.org`, without a trailing slash or path |
+| `FLORABASE_HTTP_PORT` | no | Loopback port of the frontend, default `8080` |
+| `FLORABASE_OWNER_LOGIN` | once | Login name of the first owner: 3 to 64 lowercase letters, digits, `.`, `_` or `-`, starting with a letter or digit |
+| `FLORABASE_OWNER_PASSWORD` | once | Password of the first owner, at least 12 characters |
 
-No password, key or default credential is shipped in an image or in `compose.yaml`.
+Set both owner variables or neither. Without them, the stack still starts and you create the owner
+offline with `docker compose --project-name florabase run --rm --no-deps backend python -m
+florabase.auth.bootstrap <login>`, using the stack's own name.
 
-#### Configuration reference
+### 3. Deploy
 
-The controller renders `stack/.env` from your `init` choices and the release manifest;
-`florabase.env.example` documents each variable. Do not edit the rendered files by hand: upgrades
-check the recorded configuration and refuse drifted files. `florabasectl.py apply` re-renders
-and redeploys the recorded release.
-
-| Variable | Meaning |
-| --- | --- |
-| `FLORABASE_RELEASE_VERSION`, `FLORABASE_EXPECTED_ALEMBIC_HEAD` | Installed release and its database schema version |
-| `FLORABASE_BACKEND_IMAGE`, `FLORABASE_FRONTEND_IMAGE`, `FLORABASE_POSTGRES_IMAGE` | Digest-pinned images from the manifest |
-| `FLORABASE_CANONICAL_ORIGIN` | The HTTPS origin from `init --origin` |
-| `FLORABASE_HTTP_PORT` | Loopback port for the reverse proxy |
-| `FLORABASE_SECRETS_DIR`, `FLORABASE_POSTGRES_DIR`, `FLORABASE_MEDIA_DIR`, `FLORABASE_REFERENCE_DIR` | Absolute host paths under the root |
-| `FLORABASE_DB_MEMORY`, `FLORABASE_BACKEND_MEMORY`, `FLORABASE_*_CPUS` | Resource ceilings (`0` CPUs = unlimited) |
-| `FLORABASE_LOG_LEVEL` | Backend log level (`INFO` by default; logs are JSON) |
-
-Secrets live only in `secrets/db.env` (`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`) and
-`secrets/backend.env` (`FLORABASE_DATABASE_URL`). Back them up separately from the data.
-
-### 3. Install the release
-
-From the verified bundle directory, substitute the manifest hash printed in step 1.
+In Dockhand, create a stack from `compose.yaml` and its environment, and deploy it. On the command
+line:
 
 ```bash
-python3 florabasectl.py --root /srv/florabase install \
-  --manifest release-manifest.json --manifest-sha256 '<manifest-sha256>'
+docker compose --project-name florabase up -d --wait
 ```
 
-This pulls the three images by digest, verifies their labels, platform and schema version, starts
-PostgreSQL, **creates the database schema explicitly** (the only migration that ever runs without
-a backup, because the database is empty), starts the application and runs acceptance checks. A
-second `install` against a non-empty database is refused. If the install is interrupted, re-run
-the same command.
+The first deployment creates the database cluster, initializes the schema, records the
+installation and creates the owner. If it fails, for example because of a wrong owner variable,
+correct the variable and deploy again: the pending installation is resumed without emptying the
+folder.
 
-### 4. Create the owner account
+### 4. Sign in as the owner
 
-Florabase has exactly one owner account and no default login. Create it once:
-
-```bash
-python3 florabasectl.py --root /srv/florabase bootstrap-owner '<login-name>'
-```
-
-The password (at least 12 characters) is prompted without echo, or read from standard input for
-automation; it is never accepted as a command-line argument. A second owner is refused. There is no
-password reset in this beta, so store the password in a password manager.
+Sign in at the HTTPS address, then remove `FLORABASE_OWNER_PASSWORD` (and the login) from the stack
+environment and change the password from the account page. Until removed, the password stays
+visible in the manager's environment, in `docker inspect` and in manager exports; it is never
+logged. Later deployments ignore the variables once any user exists and say so in the `migrate`
+log. A restored database never gets a new owner.
 
 ### 5. Put Florabase behind HTTPS and check readiness
 
-Forward your HTTPS host name to `http://127.0.0.1:<http-port>` on the same host. The proxy must:
-
-- terminate TLS for exactly the origin given to `init`, at the root path;
-- pass the original `Host` header;
-- allow request bodies of at least **32 MiB** (images up to 25 MiB plus form overhead);
-- replace any forwarding headers sent by clients. Florabase does not derive its origin, scheme
-  or user identity from `X-Forwarded-*` or `Forwarded` headers, but your proxy logs and rate
-  limits might.
-
-Minimal nginx server block. The disposable runtime smoke uses a similar TLS proxy and deliberately
-injects hostile forwarding headers to check that Florabase ignores them.
+Forward your HTTPS hostname to `http://127.0.0.1:<FLORABASE_HTTP_PORT>` on the same host. The proxy
+must terminate TLS for exactly `FLORABASE_CANONICAL_ORIGIN` at the root path, pass the original
+`Host` header, allow request bodies of at least **32 MiB**, and replace any forwarding headers sent
+by clients. Florabase never derives its origin, scheme or user identity from forwarded headers.
 
 ```nginx
 server {
@@ -258,402 +138,190 @@ server {
 }
 ```
 
-Add HSTS, login rate limiting and certificate renewal in the proxy. Then accept the installation
-through the configured HTTPS address, including an owner login and logout. For tailnet access,
-follow [Tailscale and HTTPS](#tailscale-and-https) first and use its origin in these checks.
+The bundled frontend sends the [baseline security headers](security.md); pass them through. Add
+HSTS once HTTPS works for every client, plus a source-address limit for `/api/v1/auth/` if the
+proxy is reachable from untrusted networks. Then check readiness and sign in:
 
 ```bash
 curl --fail --show-error https://florabase.example.org/api/v1/ready
-python3 florabasectl.py --root /srv/florabase acceptance \
-  --base-url https://florabase.example.org --owner '<login-name>'
 ```
-
-Open that same HTTPS address in a browser and sign in as the owner. Production cookies use
-`Secure`, and the API checks the configured origin for state-changing requests.
 
 > **Docker Engine older than 28** may let other machines on the same local network reach ports
 > published on `127.0.0.1`. On such hosts, confirm from another device that
 > `http://<host-lan-address>:8080` is **not** reachable, and block the port in the host firewall
 > if it is.
 
-## Linux and VPS
-
-Use the host's local, rootful Docker daemon. Run `sudo -i` before preflight and controller
-operations. Docker socket access is equivalent to root access, so keep Docker group membership and
-socket access restricted. Enable Docker at boot using the host's service manager. On systemd hosts
-with the Docker Engine package, use `systemctl enable --now docker`.
-
-Use `/srv/florabase` on a persistent local filesystem, with verified bundles in separate
-`/srv/florabase-bundle.*` directories. Mount the filesystem before Docker starts if it is on a
-separate disk. Keep the same absolute paths across reboots. Follow the [quick start](#quick-start)
-for registry login, preflight, initialization and owner setup. Allow inbound HTTPS to the proxy
-from the intended clients. Keep port 8080, PostgreSQL and the backend off the public network.
+Once Florabase answers on its HTTPS origin, browsers can install it as an online-only app. See
+[Install Florabase as an app](pwa.md).
 
 ## Synology NAS
 
-The DS224+ is an amd64 candidate with a DSM Container Manager package. Check the versions actually
-installed on the NAS. Engine 24.0.2 and Compose 2.20.1 were exercised in a disposable Linux daemon.
-Synology filesystem, boot and network behavior still require a real-host run.
-[Synology Container Manager](https://www.synology.com/en-in/dsm/packages/ContainerManager)
+The DS224+ is an amd64 target with Container Manager. Check the Engine and Compose versions it
+actually installs; Engine 24.0.2 and Compose 2.20.1 are the baseline.
 
-1. Install Container Manager through DSM. From a trusted administration network, use SSH and
-   `sudo -i` to run `uname -m`, `docker version`, `docker compose version` and
-   `python3 --version`. If the package exposes standalone Compose, check `docker-compose version`;
-   the controller can detect it. Substitute `docker-compose` in any direct Compose examples in
-   this guide. Use verified Python 3.8 or newer and check preflight for memory,
-   disk and cgroup support. Allow for DSM's own memory use.
-2. Create a restricted DSM shared folder on a local Btrfs or ext4 volume. For example, use the
-   `docker` share on `/volume1` and reserve `/volume1/docker/florabase` as the installation root.
-   Keep the verified bundle in a separate root-only directory. Substitute the NAS root for
-   `/srv/florabase` in every quick-start and maintenance command. Let `init` create the empty
-   installation layout before importing anything into a management UI.
-3. Keep `postgres/` and `media/` on that local volume. Check their numeric ownership and mode
-   from the NAS shell after `init`. PostgreSQL needs `70:70` and media needs `10001:10001`,
-   both mode `0700`. Check DSM ACLs before admitting users to the share. Avoid recursive ACL or
-   ownership resets, and keep the database, media and secrets out of SMB or NFS exports.
-4. Set up HTTPS on the NAS itself. Verify LAN peers cannot reach the raw loopback port and that the
-   HTTPS route works from the intended clients. Confirm the share is mounted and Container
-   Manager and the proxy are running after a planned reboot. Check readiness and open an uploaded
-   image to verify persistence.
-5. Use DSM Task Scheduler to run [controller backups](#backups-and-restores) as root. Verify and
-   copy recovery sets off the NAS. For DSM backups or snapshots, copy completed recovery sets and
-   protect the separate configuration backup. A snapshot of a running database directory alone
-   does not capture the paired database and media recovery set.
+1. Create the two folders with File Station inside a local Btrfs or ext4 shared folder, for example
+   `/volume1/docker/florabase/data` and `/volume1/docker/backup/florabase`. Keep them out of SMB and
+   NFS exports and avoid recursive ACL or ownership resets on them.
+2. Deploy `compose.yaml` with Dockhand or Container Manager using the variables above.
+3. Set up HTTPS with [Tailscale Serve](#tailscale-and-https) or the DSM reverse proxy, verify that
+   LAN peers cannot reach the raw port, and repeat the readiness and sign-in check after a planned
+   reboot.
+4. Schedule the [paired backup](#paired-backup) and copy completed sets off the NAS. A snapshot of
+   a running database folder alone is not a backup.
 
 ## Tailscale and HTTPS
 
 For private access, run Tailscale on the same host as Docker, enable MagicDNS and HTTPS
-certificates, and choose the full device DNS name before `init`. For example, use
-`https://<device>.<tailnet>.ts.net` as the canonical origin and use it consistently for
-acceptance and browser login. Keep Funnel disabled and restrict access with the tailnet policy.
-[Tailscale HTTPS setup](https://tailscale.com/docs/how-to/set-up-https-certificates)
+certificates, and use the full device name as the canonical origin, for example
+`https://<device>.<tailnet>.ts.net`. Keep Funnel disabled and restrict access with the tailnet
+policy. [Tailscale HTTPS setup](https://tailscale.com/docs/how-to/set-up-https-certificates)
 
 ```bash
 tailscale serve --bg --https=443 http://127.0.0.1:8080
 tailscale serve status
 ```
 
-Confirm Serve prints the expected HTTPS origin and target. Test readiness, owner login and uploads
-from a permitted tailnet client. Check raw LAN port isolation separately, and repeat after reboot.
-Serve's background mode is designed to persist across restarts. Florabase acceptance on a real
-Tailscale host, including certificate renewal and reboot, is pending.
+Confirm Serve prints the expected origin and target, then test readiness, owner sign-in and an
+upload from a permitted tailnet client, and again after a reboot.
 [Tailscale Serve reference](https://tailscale.com/docs/reference/tailscale-cli/serve)
 
-Once Florabase answers on its HTTPS origin, phones, tablets and desktop browsers can install it as an
-online-only app. See [Install Florabase as an app](pwa.md) for browser steps, update behavior and
-what the app does while the server is unreachable.
+## Upgrade
 
-## Day-to-day operation
+1. Read the release notes and verify the new `compose.yaml` and `release-manifest.json`. A change of
+   PostgreSQL major version needs its own documented migration.
+2. Take a [paired backup](#paired-backup) with the current release.
+3. Replace the stack's `compose.yaml` with the new file, keeping the same stack name, folders,
+   password and origin, and deploy it. Current Docker Compose versions stop the previous backend
+   before `migrate` runs; with another manager, stop the stack before deploying a new release.
 
-Containers restart automatically (`restart: unless-stopped`) after a crash, a Docker restart or a
-reboot. Restarting **never** changes the database. From the stack directory you can use ordinary
-Compose commands:
+`migrate` upgrades only from the exact previous release. Before migrating it writes
+`florabase-<from>-to-<to>-<UTC time>.dump` to `pre-upgrade/` in the backup folder and verifies it
+with `pg_restore --list`. If the backup folder is missing or the dump cannot be written or verified,
+nothing is migrated. Deleting old dumps is your decision.
 
-```bash
-cd /srv/florabase/stack
-docker compose ps
-docker compose logs --tail=100 backend
-```
+The upgrade runs in one PostgreSQL transaction. If it fails, the database stays at the previous
+release, the backend refuses to start and nothing is lost: fix the cause and deploy again, or
+restore the dump or the paired backup with the [isolated restore](#isolated-restore). A database
+from a newer or unknown release is refused and nothing starts. To go back after a successful
+upgrade, restore the pre-upgrade backup into a new data folder with the previous release. For
+`v0.1.0-beta.6`, which has no self-initializing layout, follow that tag's documentation; the
+pre-upgrade dump holds the database only, so restore it together with the paired media backup.
 
-Run `status` from the verified bundle before restarting services. Use controller recovery if it
-reports an unfinished upgrade or restore.
+## Paired backup
 
-```bash
-python3 florabasectl.py --root /srv/florabase status --json
-```
-
-`status` summarizes health, the newest backup and any unfinished operation. It exits non-zero
-when something needs attention, including when the first backup is still missing. Schedule it
-hourly and `backup` nightly (cron or DSM Task Scheduler, as root, with failure notification).
-Use absolute paths to the verified controller and installation root in scheduled tasks.
-
-From `/srv/florabase/stack`, restart the app services when needed and check readiness once they
-start. PostgreSQL keeps running.
+The automatic pre-upgrade dump protects against a failed migration; the paired database and media
+backup remains the recovery procedure. Take both together while the application is stopped. In a
+Bash shell, from the folder with `compose.yaml` and `.env` (the same values the manager uses), set
+`project` to the stack name and run this as a block:
 
 ```bash
-cd /srv/florabase/stack
-docker compose restart backend frontend
-curl --fail --show-error http://127.0.0.1:8080/api/v1/ready
+project=florabase
+dc() { docker compose --project-name "$project" --file compose.yaml "$@"; }
+backup='/absolute/path/to/a/new/backup-directory'
+(
+  set -e
+  umask 077
+  mkdir "$backup"
+  dc stop frontend backend
+  dc exec -T db sh -ec '
+    export PGPASSWORD="$POSTGRES_PASSWORD"
+    exec pg_dump -Fc --no-owner --no-privileges -U "$POSTGRES_USER" "$POSTGRES_DB"
+  ' > "$backup/database.dump"
+  dc run --rm --no-deps -T backend python /app/scripts/attachment_artifacts.py verify
+  dc run --rm --no-deps -T backend python /app/scripts/attachment_artifacts.py archive \
+    > "$backup/media.tar"
+  cp compose.yaml release-manifest.json "$backup/"
+  cd "$backup"
+  sha256sum database.dump media.tar compose.yaml release-manifest.json > SHA256SUMS
+)
+dc up -d --wait
 ```
 
-### Data and volumes
+Treat a partially written backup directory as incomplete. Keep encrypted off-host copies of the set
+and store the credentials separately. A restore drill is part of validating a backup.
 
-All persistent data lives in host directories under the root. The Compose volumes
-(`florabase-prod_postgres_data`, `_attachment_data`, `_reference_data`) are only bind mounts onto
-those directories: if a directory is missing the container refuses to start instead of creating an
-empty database, and removing a Docker volume object never deletes the host data.
+## Isolated restore
 
-### Optional botanical reference datasets
+Restore into a **new, empty data folder** under a distinct stack name, never over the live one.
+This is also how a `v0.1.0-beta.6` installation moves to this layout: take its paired backup with
+the beta.6 procedure, then restore it here.
 
-Florabase runs without them. The WFO taxonomy index (`--kind wfo`) and the WCVP v16 index
-(`--kind wcvp-v16`) are SQLite files that the backend reads directly, so **use only indexes built
-by Florabase's own builders from the pinned official archives**. Never install an index you
-downloaded or received from someone else: a crafted SQLite file can drive known SQLite
-memory-safety bugs inside the backend process, which holds the database credentials.
+1. Deploy the restore stack with its own empty data folder, a backup folder and a new database
+   password, **without** the owner variables, and wait until it is healthy.
+2. Stop the application services and replace the empty schema with the dump:
 
-Build each index with the backend image of the release you run (its digest is in
-`release-manifest.json`), offline, from the archive named in
-[collection-taxonomy.md](collection-taxonomy.md) or [native-range-enrichment.md](native-range-enrichment.md).
-The builder verifies the archive's pinned SHA-256 before reading it:
-
-```bash
-backend='ghcr.io/alessandrorossato/florabase-backend@sha256:<backend-index-digest>'
-mkdir -m 0700 /srv/florabase-build && chown 10001:10001 /srv/florabase-build
-docker run --rm --network none --read-only --tmpfs /tmp --user 10001:10001 \
-  -v /path/to/wfo_plantlist_2026-06.zip:/in/archive.zip:ro -v /srv/florabase-build:/out \
-  "$backend" python -m florabase.taxonomy.snapshot /in/archive.zip /out/wfo-2026-06.sqlite \
-  --retrieved-at '<archive-retrieval-time-in-UTC>'
-install -m 0644 /srv/florabase-build/wfo-2026-06.sqlite /srv/florabase-build/wfo-2026-06.sha256 \
-  /srv/florabase/reference/
-# The digest the builder recorded at build time (the WFO seal), not one computed from the copy.
-python3 florabasectl.py --root /srv/florabase reference set --kind wfo \
-  --file wfo-2026-06.sqlite --sha256 "$(cat /srv/florabase-build/wfo-2026-06.sha256)" \
-  --provenance "florabase.taxonomy.snapshot from the pinned WFO 2026-06 archive"
-```
-
-For WCVP v16, run `python -m florabase.native_range_enrichment.snapshot /out/wcvp-v16.sqlite
---version 16 --archive /in/archive.zip --retrieved-at …` the same way. That builder writes no seal,
-so record `sha256sum /srv/florabase-build/wcvp-v16.sqlite` right after the build, then pass that
-value to `reference set --kind wcvp-v16`.
-
-The SHA-256 you pass to `reference set` (and the WFO `.sha256` seal next to the index) proves
-only that the file was not changed after you built it. It says nothing about who built the file,
-so it does not make an index from another source safe. Provenance comes from building the index
-yourself, as above.
-
-As an additional safeguard, the backend refuses any index whose SQLite schema differs from the
-exact layout the builder writes, including views, triggers, virtual tables and extra or altered
-tables and indexes. It checks this before it runs any query. Each connection is read-only, with
-views, triggers, extension loading and untrusted schema functions disabled. A refused index shows
-as the source being unavailable in the app, and the backend log names the unexpected objects.
-Rebuild such an index with the builder; do not edit it.
-
-## Database migrations and upgrades
-
-Florabase **never migrates the database on `docker compose up`, a restart or an image update.**
-Before the server starts, the backend checks that the database is exactly at the schema version of
-its release and refuses otherwise, with a message that names the action to take (see
-[Troubleshooting](#troubleshooting)). A newer image therefore cannot silently change your data.
-
-Download and verify the new release's files into a new directory exactly as in
-[step 1](#1-download-and-verify-the-release), setting `tag` to the target version. Change to the
-new verified bundle directory and substitute the new manifest hash.
-
-```bash
-python3 florabasectl.py --root /srv/florabase promote \
-  --manifest release-manifest.json --manifest-sha256 '<manifest-sha256>' \
-  --confirm-migration
-```
-
-`--confirm-migration` is required only when the new release changes the schema; without it a
-schema-changing release is refused before anything happens. `promote` is one serialized, journaled
-operation that performs the upgrade sequence in order:
-
-1. **Quiesce writers.** Refuses if another operation is unfinished, the stack files were edited,
-   the volumes are foreign, the manifest or images fail verification, the database is newer than
-   the target, or the PostgreSQL image would change. Then stops `backend` and `frontend`.
-2. **Back up and verify.** Writes a pre-upgrade recovery set (database dump plus every original
-   image), verifies it and records checksums.
-3. **Migrate explicitly.** Runs the *target* backend image's one-shot migration
-   (`docker compose --profile maintenance run --rm migrate`, which executes `alembic upgrade head`)
-   against the stopped installation.
-4. **Verify the schema.** Checks that the database is exactly at the target release's head.
-5. **Start and check.** Pins the new image pair, starts the services and runs acceptance.
-
-Check `status` for the recorded operation and phase. A promotion failure after the controller
-starts the operation attempts to stop writers and reports the recovery choices:
-
-| Situation | Command |
-| --- | --- |
-| Interrupted (killed, reboot) | `resume` continues from the recorded phase |
-| Failed before the schema changed | `abort` returns to the previous release |
-| Migrated, but the new application fails | `abort` is refused; `promote --after-failed` with a fixed release, or `restore-replace <pre-upgrade set>` |
-
-Run `python3 florabasectl.py --root /srv/florabase resume` only for an in-progress operation.
-Keep the target's verified bundle and image access available until acceptance succeeds.
-If the controller reports a failed operation, use `abort` only when the database is still at the
-previous release head. For a forward fix, use the normal `promote` command with the fixed verified
-bundle and add `--after-failed`. To recover data from the pre-upgrade set, use the confirmations in
-[replacement restore](#replace-live-data). Keep the HTTPS route unavailable to users while resolving
-an interruption if the state of the application is uncertain.
-
-Never run the `migrate` service by hand on a live installation, and never "downgrade" by pinning
-older images: an older backend refuses a newer schema.
-
-### PostgreSQL versions
-
-The beta uses **PostgreSQL 18.6** in the Florabase PostgreSQL image pinned by digest in
-the release manifest. Application upgrades never change the PostgreSQL image. The `promote` command
-refuses a release whose PostgreSQL identity differs. A new PostgreSQL image (an upstream rebuild, a security
-fix or a minor update) is separate, explicitly announced maintenance with its own backup. The image
-runs only as the `postgres` account (uid/gid 70): starting it as root stops immediately with
-`florabase-postgres: refusing to run as root`, before anything on disk changes. This holds for the
-image's own entry point and for the upstream `docker-entrypoint.sh` and `docker-ensure-initdb.sh`
-when they are used as an overridden entry point. A **major** version change
-(for example to 19) cannot reuse the data directory: it needs a new installation restored from a
-logical backup, and it is not automated in this beta. PostgreSQL itself refuses to start on a data
-directory from another major version, so a wrong image fails instead of corrupting data. A database
-created by PostgreSQL 18 cannot be opened by an older major version.
-
-## Backups and restores
-
-A **recovery set** pairs the PostgreSQL dump with the archive of every original image, the stack
-document, table counts and checksums. Database and media are always taken together, with the
-application stopped while the set is created so both describe the same moment. Allow a maintenance
-window that scales with the amount of data.
-
-```bash
-python3 florabasectl.py --root /srv/florabase backup          # prints BACKUP_COMPLETE <set-id>
-python3 florabasectl.py --root /srv/florabase verify-backup '<set-id>'
-python3 florabasectl.py --root /srv/florabase list-backups
-python3 florabasectl.py --root /srv/florabase retention         # dry run; add --apply
-```
-
-Copy sets off the host. The controller can store a set in an encrypted
-[restic](https://restic.net/) repository, check it, restore it to scratch space and verify every
-checksum before reporting success:
-
-```bash
-python3 florabasectl.py --root /srv/florabase export '<set-id>' \
-  --repository '<restic-repository>' --password-file /root/restic-password
-```
-
-Add `--init` only when creating a new restic repository. Keep the restic password file root-only.
-For a remote repository that needs credentials, use a separate root-only `--restic-env-file`.
-Check retention with the dry run before using `retention --apply`, which deletes expired local sets.
-
-Keep separate protected copies of `secrets/`, `state/installation.json`, the restic password and
-credentials, the proxy configuration, and the verified bundles and hashes needed to access the
-backup's release. Record the canonical origin and any optional reference dataset configuration.
-
-**Test a restore without touching live data** (recommended after the first backup and regularly):
-
-```bash
-python3 florabasectl.py --root /srv/florabase restore-isolated '<set-id>' --http-port 18081 --owner '<login>'
-python3 florabasectl.py --root /srv/florabase restore-remove --project '<printed-name>' --confirm '<printed-name>'
-```
-
-The drill restores into a separate project on another loopback port, compares the schema version
-and every table count, verifies every original image and logs in. Keep the drill port private.
-`restore-remove` deletes the named drill project and its restored copy.
-
-### Replace live data
-
-Replacement discards active writes made after the recovery point. Take the installation out of
-service, verify the selected set and check free space for both the old and restored copies. Use
-the installation ID printed by `status` and the database name shown below.
-
-```bash
-python3 florabasectl.py --root /srv/florabase restore-replace '<set-id>' \
-  --confirm-installation '<installation-id>' --confirm-database florabase
-```
-
-The current `postgres/` and `media/` directories are moved to `preserved/<time>/`, not deleted, so
-writes made after the set can still be inspected. All sessions are signed out. Check readiness and
-sign in again before returning the installation to service. If a replacement restore is interrupted,
-preserve its marker, logs, recovery set and the directories under `preserved/`. Keep the proxy
-route closed, check available space and re-run `restore-replace` for the same verified set.
-`resume` is for interrupted promotions.
-
-### Fresh-host disaster recovery
-
-1. Prepare a clean host and private proxy route. Follow the [quick start](#quick-start) to verify the
-   bundle for the release in the recovery set and pull its images. Run `init` using the original
-   canonical origin and `install` using that bundle's manifest. Use the new root and new
-   installation ID. Let `init` generate fresh database credentials. The logical restore brings
-   back the saved owner, so skip `bootstrap-owner`.
-2. Import the selected set from restic, or copy an off-host copy of the complete set directory into
-   the new root's `backups/`. Keep it root-only, and verify it before replacement.
+   Reuse the `dc` function from [Paired backup](#paired-backup), run from a folder whose
+   `compose.yaml` and `.env` hold the restore stack's values.
 
    ```bash
-   python3 florabasectl.py --root /srv/florabase import-set '<set-id>' \
-     --repository '<restic-repository>' --password-file /root/restic-password
-   python3 florabasectl.py --root /srv/florabase verify-backup '<set-id>'
+   project=florabase-restore
+   dc stop frontend backend
+   dc exec -T db sh -ec '
+     export PGPASSWORD="$POSTGRES_PASSWORD"
+     psql -XAq -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+       -c "DROP SCHEMA public CASCADE" -c "CREATE SCHEMA public"
+     exec pg_restore --single-transaction --exit-on-error --no-owner --no-privileges \
+       -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+   ' < /path/to/backup/database.dump
+   dc run --rm --no-deps -T backend python /app/scripts/attachment_artifacts.py restore \
+     < /path/to/backup/media.tar
+   dc run --rm --no-deps -T backend python /app/scripts/attachment_artifacts.py verify
    ```
 
-3. Run [replacement restore](#replace-live-data) with the new installation ID. Restore optional
-   reference files and register them with the controller as needed. Check readiness, sign in with
-   the recovered owner credentials, and open a restored image before routing users to the new host.
+3. Deploy again. `migrate` leaves a current schema unchanged, or backs up and upgrades a dump from
+   the previous release. Sign in with the restored credentials and check the media, then switch
+   traffic. Reset the owner password first if the backup may hold old credentials.
 
-## Managing Florabase with Dockhand
+## Recover a forgotten owner password
 
-Dockhand can show, start, stop, restart and inspect the stack's logs.
-Installation, upgrades, migrations, backups and restores stay in `florabasectl.py` on the host,
-because they must quiesce writers and take a verified backup first.
+From a trusted, unrecorded terminal on the host, with `dc` selecting the deployed stack and the
+database healthy, stop the application services and reset offline:
 
-1. Install Florabase with `init`, `install` and `bootstrap-owner` as above.
-2. Select the Docker environment that already runs `florabase-prod`. Use **Stacks → Import**
-   only if Dockhand can adopt the existing project with its original `stack/compose.yaml` and
-   `stack/.env` in place. Preserve the project name and host paths. The Compose runner must see
-   `reference.env` next to the stack and the controller's secret files at their original absolute
-   paths. If Dockhand needs to copy the stack or store the secrets in its own settings, use it for
-   inspection only.
-3. Disable automatic container updates in that environment. The Florabase services also carry
-   the `dockhand.update=false` label. Leave Git sync, update hooks and stack editing disabled.
-4. Use Dockhand for logs and routine lifecycle actions on the existing containers. During an
-   unfinished controller operation, leave lifecycle actions to the controller. Run `promote`
-   on the host for every upgrade. For release notifications, run `check-release` with the
-   verified newer manifest and its `--manifest-sha256`.
+```bash
+dc stop frontend backend
+dc run --rm --no-deps backend python -m florabase.auth.reset_password '<login-name>'
+dc up -d --wait
+```
 
-Protect Dockhand itself: enable its authentication, never expose it publicly and back up its data
-directory including its encryption key. Import behavior, lifecycle actions and update exclusions
-still need to be checked on the selected Dockhand version. Promotion, backup and recovery are
-controller procedures. [Dockhand manual](https://dockhand.pro/manual/)
+The command commits the new password, revokes all sessions and clears the sign-in backoff. It never
+migrates. Automation can use `-T` and `--password-json-stdin` with exactly one UTF-8 JSON string
+from a protected pipe; keep the password out of arguments, environment variables and logs.
+
+## Optional botanical reference datasets
+
+Florabase runs without them. The production `compose.yaml` of this release mounts no reference
+dataset folder, so WFO and WCVP v16 index lookups are unavailable there. Only indexes built by
+Florabase's own builders from the pinned official archives are ever supported
+([SQLite reference indexes](security/beta-distribution-001/sqlite-reference-indexes.md)).
 
 ## Troubleshooting
 
-| Symptom (backend log or command output) | Cause and action |
-| --- | --- |
-| `schema-guard: invalid configuration (ValidationError) …` | A setting is missing or invalid; the message names the field (values are never printed). Fix the installation with `florabasectl.py apply`; a hand-edited `.env` is the usual cause |
-| `… database revision unavailable …` | Check `docker compose ps db`, `docker compose logs db` and the protected credentials. Use `status` before restarting services in case an operation is pending |
-| `… not release head … (the database is not initialized …)` | Use `install` for a new installation or to retry the same interrupted install. For an existing installation, investigate the mounted database path and recover from the verified set if needed |
-| `… (a migration is pending …)` | Images are newer than the database. Use `promote`, which backs up and migrates; never run `migrate` by hand |
-| `… (the database is newer than or foreign to this image …)` | An older or unrelated image was pinned. Run `florabasectl.py apply` to restore the recorded release, or restore a recovery set |
-| `Failed to load …/secrets/backend.env: … no such file or directory` from Compose | The secrets directory is missing or unreadable; Compose changes nothing. Restore `secrets/` from your configuration backup |
-| Login fails with HTTP 403 | The browser address differs from `--origin`, or the proxy changes the `Origin`/`Host`. Open exactly the configured origin |
-| Uploads fail with HTTP 413 | The reverse proxy's body limit is below 32 MiB |
-| `florabase-postgres: refusing to run as root` | The database container was started as root (for example `user: root` in an edited Compose file, or `docker run --user 0`). Use the release `compose.yaml`, which runs it as `70:70` |
-| `Refusing WFO reference index …` / `Refusing WCVP reference index …` | The reference file is not an index built by Florabase's builder (unexpected or missing schema objects). Rebuild it as described under [optional botanical reference datasets](#optional-botanical-reference-datasets), then `reference set` it again |
-| `status` reports an old backup or low disk | Check the scheduled `backup`, free space under the root, and `retention --apply` |
+Read the `prepare`, `db` or `migrate` log: every refusal says why, and nothing was changed.
 
-Readiness is `GET /api/v1/ready` through the frontend; liveness is `/healthz`. With PostgreSQL
-stopped or hung, readiness answers 503 within a few seconds (connection attempts are bounded to 3 s;
-name resolution adds the resolver's timeout) while `/healthz` stays live, and the backend
-healthcheck reports unhealthy.
+| Message | Meaning and action |
+| --- | --- |
+| `bind source path does not exist` | A folder is missing or its volume is not mounted. Mount or create it; never let it be created empty elsewhere. |
+| `... exists and there is no installation marker; use an empty data folder` | The data folder holds something that is not this installation. Use a new empty folder, or restore into one. |
+| `the installation marker exists but its database folder is missing or empty` | The database files are gone or the wrong folder is mounted. Fix the mount or restore from a backup. |
+| `the installation uses PostgreSQL N, this image M` | A PostgreSQL major-version change needs its own migration. Deploy the previous release. |
+| `the database folder belongs to another PostgreSQL cluster` | The marker and the database files come from different installations. Restore the matching pair. |
+| `FLORABASE_BACKUP_DIR is inside FLORABASE_DATA_DIR` (or the reverse, or `the same`) | Use a backup folder outside the data folder. |
+| `set both FLORABASE_OWNER_LOGIN and FLORABASE_OWNER_PASSWORD, or neither` / `first owner refused` | Fix the owner variables and deploy again. |
+| `pre-upgrade backup failed` / `backup directory ... is missing or not writable` | Fix the backup folder or free space and deploy again. Nothing was migrated. |
+| `database revision ... is neither image head ... nor the previous release head` | The database comes from a newer, older or unknown release. Deploy the matching release or restore. |
+| `differs from image head` (backend) | The schema does not match the backend image; `migrate` did not complete. Read its log. |
 
 ## Uninstalling without losing data
 
-Stopping and removing containers never removes data:
-
-```bash
-cd /srv/florabase/stack
-docker compose down          # containers and network only
-```
-
-Omit `--volumes` and retain the host directories. For permanent removal, take and verify a final
-`backup` before stopping the stack, then copy the set off the host. Deleting the installation root
-destroys the live database, media, secrets and local backups.
-
-## What has been tested
-
-| Evidence | Scope |
-| --- | --- |
-| Static procedure checks | Controller arguments, Compose paths and port bindings, and release asset and provenance expectations checked against the repository |
-| Disposable runtime | Local candidate smoke on Engine 24.0.2, Compose 2.20.1 and Python 3.8 covered install, migrations, HTTPS via nginx, backup, restore and upgrade interruption. See the [runtime runbook](beta-runtime-001.md#disposable-verification) and [distribution evidence](beta-distribution-001-evidence.json) |
-| Published release | End-to-end asset download and verification, GHCR pulls and installation of the published beta remain pending successful publication |
-| Real hosts | Synology permissions and reboot, Dockhand import and lifecycle behavior, Tailscale TLS and reboot, network isolation, and off-host recovery on the selected host remain pending |
+Stop or remove the stack; containers and networks hold no data. The data folder and the backup
+folder stay as they are. Delete them only after verifying an off-host backup.
 
 ## Known limitations of this beta
 
-- linux/amd64 only; arm64 is not built or tested.
-- One owner account; no password change or reset, no additional users.
-- The HTTPS origin and loopback-only publication are fixed at `init`; a reverse proxy on another
-  machine is not supported.
-- PostgreSQL major upgrades and automatic application promotion are not provided.
-- Optional online map tiles (`runtime-config.js`) are not configurable in this stack.
-
-Operator and developer background: [beta runtime runbook](beta-runtime-001.md),
-[image release contract](beta-image-001.md), [security](security.md).
-
-For the first collection pilot and host acceptance record, use the
-[onboarding runbook and Synology checklist](beta-data-001.md).
+- linux/amd64 only.
+- Upgrades go from the exact previous release; skipping a release requires installing each one in
+  turn or restoring a backup.
+- The first owner password stays in the stack environment until you remove it.
+- Current Docker Compose versions stop the previous backend before they start the new `migrate`, so
+  no writer runs during the dump and upgrade (observed with Compose 5.7.1). With another manager or
+  an older Compose, stop the stack before deploying a new release.

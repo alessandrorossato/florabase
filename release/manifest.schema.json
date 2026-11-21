@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "const": 2
+      "const": 3
     },
     "distribution": {
       "const": "registry-candidate"
@@ -269,28 +269,18 @@
         "run_attempt"
       ]
     },
-    "install_bundle": {
+    "compose_template": {
       "type": "object",
       "additionalProperties": false,
-      "description": "SHA-256 of each install-bundle release asset; the controller refuses a bundle that differs.",
+      "description": "SHA-256 of the tracked compose.yaml template; the attested release asset is rendered from it with the image references above.",
       "properties": {
         "compose.yaml": {
-          "type": "string",
-          "pattern": "^sha256:[a-f0-9]{64}$"
-        },
-        "florabasectl.py": {
-          "type": "string",
-          "pattern": "^sha256:[a-f0-9]{64}$"
-        },
-        "florabase.env.example": {
           "type": "string",
           "pattern": "^sha256:[a-f0-9]{64}$"
         }
       },
       "required": [
-        "compose.yaml",
-        "florabasectl.py",
-        "florabase.env.example"
+        "compose.yaml"
       ]
     }
   },
@@ -305,6 +295,6 @@
     "images",
     "build_inputs",
     "workflow",
-    "install_bundle"
+    "compose_template"
   ]
 }

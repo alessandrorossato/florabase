@@ -30,7 +30,7 @@ protected release workflow. A tag alone does not establish that a GitHub Release
 From 1.0.0 onward, within the 1.x series:
 
 - **Database upgrades.** A database created by any 1.x release can be upgraded forward by the
-  documented procedure in the [installation guide](portable-installation.md#upgrade).
+  documented procedure in the [installation guide](installation.md#upgrade).
 - **Backups.** A paired database and media backup made by the documented procedure can be
   restored by it.
 - **CSV.** The documented [CSV import and export](import-export.md) columns keep their meaning.
@@ -42,8 +42,9 @@ From 1.0.0 onward, within the 1.x series:
 - **In-place downgrades.** The documented installation procedures never migrate a database
   backwards. Returning to an earlier release means restoring the paired backup taken before
   the upgrade, with the earlier release's images, into fresh paths.
-- **Other installations.** Only the portable Docker Compose installation on linux/amd64 is
-  certified. Building from source is for development, and the controller bundle is best-effort.
+- **Other installations.** Only the release `compose.yaml` on linux/amd64 is certified. Building
+  from source is for development. The controller bundle was withdrawn by
+  [ADR 0008](decisions/0008-self-initializing-single-compose.md).
 - **Betas.** They carry none of the promises above. The upgrade path that v1.0.0 certifies
   from the beta series is the one recorded by its release gates (G-MIGRATE, G-UPGRADE).
 - Multi-user use, offline use and architectures other than linux/amd64.

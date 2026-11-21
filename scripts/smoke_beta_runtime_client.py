@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""HTTP client for smoke-beta-runtime.py; runs beside the stack under the DSM-equivalent Python 3.8.
+"""Stdlib HTTP client for the compose.yaml release smoke and its offline tests.
 
 seed:     create relationship/media fixtures through the public API as the owner.
 snapshot: canonical owner-visible state (assets, links, original SHA-256) for exact comparison.

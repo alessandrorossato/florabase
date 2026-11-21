@@ -18,7 +18,7 @@ independent version and pinned index and platform digests.
    disposable local registries to write and test images. The generated Compose file refers to that
    run's local registry. The protected workflow renders the public asset from the same template
    with GHCR digest references.
-4. Compare `output/assets/release-manifest.json`, `output/assets/portable-compose.yaml`,
+4. Compare `output/assets/release-manifest.json`, `output/assets/compose.yaml`,
    `output/diagnostics/image-smoke.log` and `output/diagnostics/publication-state.json`.
    The package, module, label, Compose header and manifest versions should agree. Python package
    metadata uses its normalized spelling, such as `1.0.0rc1` for `1.0.0-rc.1`.

@@ -33,8 +33,8 @@ import beta_release
 from beta_release import (
     build_application_image,
     check_platform,
+    compose_template,
     inputs,
-    install_bundle,
     read,
     registry_record,
     release_attestation_inputs,
@@ -45,7 +45,7 @@ from beta_release import (
     validate_release_assets,
     validate_scan,
 )
-from smoke_beta_runtime_client import Client, png
+from smoke_beta_runtime_client import Client
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("checks", ROOT / "scripts/beta-release-checks.py")
@@ -149,128 +149,72 @@ class PortableSmokeEvidence(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.smoke = load_tool("smoke-portable-compose")
 
-    def config(self, images: dict[str, str]) -> bytes:
-        return json.dumps(
-            {"services": {name: {"image": ref} for name, ref in images.items()}}
-        ).encode()
+    def config(self, images: dict[str, str], command: list[str] | None = None) -> bytes:
+        services: dict[str, Any] = {name: {"image": ref} for name, ref in images.items()}
+        if command is not None:
+            services["backend"]["command"] = command
+        return json.dumps({"services": services}).encode()
 
-    def run_fixture(self, fault: str = "") -> None:
-        source = Mock(spec=self.smoke.Stack)
-        restore = Mock(spec=self.smoke.Stack)
-        image_refs = (
-            {**self.images, "frontend": "unexpected-image"} if fault == "image" else self.images
-        )
-        cfg = {
-            "services": self.config({"db": self.images["db"]}),
-            "invalid-config": b"",
-        }.get(fault, self.config(image_refs))
-        source.compose.side_effect = [
-            cfg,
-            b"",  # Uninitialized PostgreSQL refusal, covered separately at the subprocess boundary.
-            b"0" if fault == "uid" else b"70",
-            b"10001",
-            b"101",
-            b"",  # Restart.
-            b"",  # Stop application writers.
-            b"invalid dump" if fault == "dump" else b"PGDMP fixture",
-        ]
-        source.backend.side_effect = [
-            b"",
-            b"",
-            b"",
-            b"",  # Schema guard and initialization.
-            b"unexpected (head)" if fault == "image-head" else f"{self.head} (head)\n".encode(),
-            b"",
-            b"",
-            b"",  # Owner bootstrap and foreign revision refusals.
-            b"" if fault == "verify" else self.verified,
-            b"" if fault == "archive" else b"media fixture",
-            b"",
-            b"",
-            b"",
-            b"",
-            b"",  # Downgrade and failed/recovered upgrade.
-        ]
-        revision = self.head.encode()
-        source.sql.side_effect = [
-            b"",
-            b"",  # Create/drop unmanaged table.
-            b"wrong" if fault == "schema-init" else revision,
-            b"wrong" if fault == "schema-restart" else revision,
-            b"",  # Set foreign revision.
-            revision if fault == "schema-foreign" else b"foreign_revision",
-            b"",
-            b"",  # Recover head and create conflicting relation.
-            b"wrong" if fault == "schema-rollback" else b"20261009_0041",
-            b"1" if fault == "sentinel" else b"0",
-            b"",  # Drop conflict.
-            b"wrong" if fault == "schema-recovery" else revision,
-        ]
-        original = png(19, 37, 59)
-        client = source.login.return_value
-        client.upload.return_value = {
-            "thumbnail_url": None if fault == "thumbnail-url" else self.thumbnail_url,
-            "content_url": "https://wrong.invalid" if fault == "content-url" else self.content_url,
+    def stack(self, directory: Path) -> Any:
+        return self.smoke.Stack(directory / "source", directory / "c.yaml", "fixture", "helper")
+
+    def test_service_evidence_requires_the_five_images_and_no_migrating_server(self) -> None:
+        images = {
+            "prepare": "postgres-fixture",
+            "db": "postgres-fixture",
+            "migrate": "backend-fixture",
+            "backend": "backend-fixture",
+            "frontend": "frontend-fixture",
         }
-        client.request.side_effect = [
-            (b"" if fault == "restart" else original, HTTPMessage()),
-            (b"" if fault == "recovery" else original, HTTPMessage()),
-            (b"" if fault == "source" else original, HTTPMessage()),
-        ]
-        restore.compose.side_effect = [self.config(self.images), b""]
-        restore.backend.side_effect = [
-            b"",
-            b"Restored 0 attachment file(s)"
-            if fault == "restore-count"
-            else b"Restored 1 attachment file(s)\n",
-            b"malformed" if fault == "restore-verify" else self.verified,
-        ]
-        restore.sql.return_value = b"wrong" if fault == "restore-schema" else revision
-        restore.login.return_value.request.return_value = (
-            b"" if fault == "restore-media" else original,
-            HTTPMessage(),
-        )
-        with (
-            patch.object(self.smoke, "exercise_credentials", return_value="reset-fixture"),
-            patch.object(self.smoke, "exercise_bundled_headers"),
-            patch.object(self.smoke, "exercise_authenticated_thumbnail"),
-        ):
-            self.smoke.smoke(source, restore, self.images, self.head)
-        restore.backend.assert_any_call(*self.smoke.ARTIFACTS, "verify")
-        restore.login.return_value.request.assert_called_once_with(self.content_url)
-        self.assertEqual(client.request.call_count, 3)
+        with tempfile.TemporaryDirectory() as temporary:
+            stack = self.stack(Path(temporary))
+            for config, message in (
+                (self.config({"db": "postgres-fixture"}), "expected prepare, db, migrate"),
+                (self.config({**images, "frontend": "other"}), "incorrect frontend image"),
+                (self.config({**images, "migrate": "other"}), "incorrect migrate image"),
+                (self.config(images, ["python", "-m", "x", "deploy"]), "backend migrates"),
+                (self.config(images, ["alembic", "upgrade", "head"]), "backend migrates"),
+            ):
+                with (
+                    self.subTest(message=message),
+                    patch.object(stack, "compose", return_value=config),
+                    self.assertRaisesRegex(RuntimeError, message),
+                ):
+                    self.smoke.require_services(stack, images)
+            with patch.object(stack, "compose", return_value=self.config(images)):
+                self.smoke.require_services(stack, images)
 
-    def test_valid_smoke_evidence_reaches_both_stacks(self) -> None:
-        self.run_fixture()
+    def test_refusal_requires_a_failed_deployment_and_the_service_message(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            stack = self.stack(Path(temporary))
+            for code, logs, message in (
+                (0, b"refused: marker", "was not refused"),
+                (1, b"another reason", "expected 'marker'"),
+            ):
+                with (
+                    self.subTest(code=code),
+                    patch.object(
+                        self.smoke, "run", return_value=subprocess.CompletedProcess([], code)
+                    ),
+                    patch.object(stack, "compose", return_value=logs),
+                    self.assertRaisesRegex(RuntimeError, message),
+                ):
+                    stack.refuse("prepare", "marker", "probe")
+            with (
+                patch.object(self.smoke, "run", return_value=subprocess.CompletedProcess([], 1)),
+                patch.object(stack, "compose", return_value=b"REFUSED: marker") as compose,
+            ):
+                stack.refuse("prepare", "marker", "probe")
+            compose.assert_called_with("stop")
 
-    def test_invalid_smoke_evidence_fails_at_its_check(self) -> None:
-        for fault, message in {
-            "services": "expected db, backend and frontend",
-            "invalid-config": "invalid JSON response",
-            "image": "incorrect frontend image reference",
-            "uid": "db: unexpected runtime UID",
-            "image-head": "unexpected Alembic head",
-            "schema-init": "schema initialization: unexpected database revision",
-            "thumbnail-url": "missing or invalid thumbnail URL",
-            "content-url": "missing or invalid content URL",
-            "restart": "service restart: original media differs",
-            "schema-restart": "service restart: unexpected database revision",
-            "schema-foreign": "foreign revision refusal: unexpected database revision",
-            "dump": "missing PostgreSQL custom-format dump",
-            "verify": "media backup: expected one verified attachment",
-            "archive": "missing attachment archive",
-            "schema-rollback": "failed upgrade rollback: unexpected database revision",
-            "sentinel": "sentinel table changed",
-            "schema-recovery": "upgrade recovery: unexpected database revision",
-            "recovery": "upgrade recovery: original media differs",
-            "restore-count": "expected one restored attachment",
-            "restore-verify": "media restore: expected one verified attachment",
-            "restore-schema": "isolated restore: unexpected database revision",
-            "restore-media": "isolated restore: original media differs",
-            "source": "source after isolated restore: original media differs",
-        }.items():
-            with self.subTest(fault=fault), self.assertRaisesRegex(RuntimeError, message):
-                self.run_fixture(fault)
+    def test_secret_evidence_covers_every_service_log(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            stack = self.stack(Path(temporary))
+            with patch.object(stack, "compose", return_value=b"x secret-canary y") as compose:
+                with self.assertRaisesRegex(RuntimeError, "probe: secret in logs") as error:
+                    self.smoke.require_no_secret(stack, ("secret-canary",), "probe")
+                self.assertNotIn("canary", str(error.exception))
+            compose.assert_called_once_with("logs", "--no-color", *self.smoke.SERVICES)
 
     def test_login_requires_json_csrf_and_a_usable_secure_cookie(self) -> None:
         client = Client("http://127.0.0.1:8080", self.smoke.ORIGIN)
@@ -665,7 +609,7 @@ def candidate() -> dict[str, Any]:
         "platform": "linux/amd64",
     }
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "distribution": "registry-candidate",
         "version": locked["version"],
         "source": {
@@ -685,17 +629,10 @@ def candidate() -> dict[str, Any]:
             },
         },
         "postgresql": locked["postgresql"],
-        "install_bundle": install_bundle(ROOT),
+        "compose_template": compose_template(ROOT),
         "build_inputs": locked,
         "workflow": {"run_id": "1", "run_attempt": "1"},
     }
-
-
-def ctl_bundle_names() -> tuple[str, ...]:
-    source = (ROOT / "deploy/beta/florabasectl.py").read_text()
-    match = re.search(r"^INSTALL_BUNDLE = \(([^)]*)\)", source, re.MULTILINE)
-    assert match is not None
-    return tuple(re.findall(r'"([^"]+)"', match.group(1)))
 
 
 class ReleaseTests(unittest.TestCase):
@@ -730,15 +667,22 @@ class ReleaseTests(unittest.TestCase):
                     validate_manifest(value)
                 refs = {name: image["reference"] for name, image in value["images"].items()}
                 refs["postgresql"] = value["postgresql"]["reference"]
-                compose = beta_release.render_portable_compose(ROOT, version, refs)
-                self.assertTrue(compose.startswith(f"# Florabase {version}, linux/amd64."))
+                compose = beta_release.render_compose(ROOT, version, refs)
+                self.assertTrue(compose.startswith(f"# Florabase {version}, linux/amd64:"))
                 self.assertCountEqual(
-                    re.findall(r'^    image: "(.*)"$', compose, re.M), refs.values()
+                    re.findall(r'^    image: "(.*)"$', compose, re.M),
+                    [
+                        refs["postgresql"],
+                        refs["postgresql"],
+                        refs["backend"],
+                        refs["backend"],
+                        refs["frontend"],
+                    ],
                 )
-                self.assertEqual(compose.count("platform: linux/amd64"), 3)
+                self.assertEqual(compose.count("platform: linux/amd64"), 5)
+                self.assertNotRegex(compose, r"@[A-Z]+@")
                 names = (
-                    *beta_release.INSTALL_BUNDLE,
-                    beta_release.PORTABLE_COMPOSE,
+                    beta_release.INSTALL_COMPOSE,
                     "RELEASE.md",
                     "release-manifest.json",
                     beta_release.POSTGRES_SBOM,
@@ -884,12 +828,12 @@ class ReleaseTests(unittest.TestCase):
                 path,
                 value["source"]["revision"],
                 ".github/workflows/beta-images.yml",
-                value["install_bundle"],
+                {"compose.yaml": "sha256:" + "c" * 64},
                 host,
             )
         self.assertEqual(result["source_sha"], value["source"]["revision"])
         self.assertEqual(set(result["subjects"]), {"backend", "frontend", "postgresql"})
-        self.assertEqual(result["file_subjects"], value["install_bundle"])
+        self.assertEqual(result["file_subjects"], {"compose.yaml": "sha256:" + "c" * 64})
         self.assertFalse(result["attestations_created"])
         with self.assertRaises(ValueError):
             release_attestation_inputs(
@@ -898,9 +842,20 @@ class ReleaseTests(unittest.TestCase):
                 path,
                 value["source"]["revision"],
                 ".github/workflows/beta-images.yml",
-                value["install_bundle"],
+                {"compose.yaml": "sha256:" + "c" * 64},
                 host,
             )
+        for assets in ({}, {"compose.yaml": "sha256:" + "c" * 64, "florabasectl.py": "x"}):
+            with self.assertRaises(ValueError):
+                release_attestation_inputs(
+                    value,
+                    refs,
+                    path,
+                    value["source"]["revision"],
+                    ".github/workflows/beta-images.yml",
+                    assets,
+                    host,
+                )
 
     def test_release_finalization_inputs_match_protected_draft_request_without_api_call(
         self,
@@ -908,8 +863,7 @@ class ReleaseTests(unittest.TestCase):
         value = candidate()
         sha = value["source"]["revision"]
         names = (
-            *beta_release.INSTALL_BUNDLE,
-            beta_release.PORTABLE_COMPOSE,
+            beta_release.INSTALL_COMPOSE,
             "RELEASE.md",
             "release-manifest.json",
             beta_release.POSTGRES_SBOM,
@@ -1044,12 +998,12 @@ class ReleaseTests(unittest.TestCase):
                 validate_manifest(changed)
         for change in (
             {},
-            {"compose.yaml": "sha256:" + "a" * 64},
-            {**install_bundle(ROOT), "extra": "sha256:" + "a" * 64},
-            {**install_bundle(ROOT), "florabasectl.py": "unpinned"},
+            {"compose.yaml": "unpinned"},
+            {**compose_template(ROOT), "extra": "sha256:" + "a" * 64},
+            {**compose_template(ROOT), "florabasectl.py": "sha256:" + "a" * 64},
         ):
             changed = copy.deepcopy(valid)
-            changed["install_bundle"] = change
+            changed["compose_template"] = change
             with self.subTest(bundle=sorted(change)), self.assertRaises(ValueError):
                 validate_manifest(changed)
         # The official image itself is no longer an acceptable release database identity.
@@ -1465,9 +1419,9 @@ class ReleaseTests(unittest.TestCase):
         workflow = (ROOT / ".github/workflows/beta-images.yml").read_text()
         self.assertIn("subject-digest: ${{ steps.pair.outputs.postgresql_digest }}", workflow)
         source = (ROOT / "scripts/publish-beta-images.py").read_text()
-        self.assertIn("subject-path: |", workflow)
-        for name in ("compose.yaml", "florabasectl.py", "florabase.env.example"):
-            self.assertIn("${{ runner.temp }}/beta-release/assets/" + name, workflow)
+        self.assertIn("subject-path: ${{ runner.temp }}/beta-release/assets/compose.yaml", workflow)
+        for name in ("portable-compose.yaml", "florabasectl.py", "florabase.env.example"):
+            self.assertNotIn(name, workflow)
         # The rebuild check must not gate every release: the publisher runs it only for an
         # unpublished identity, so a superseded Alpine pin never blocks application releases.
         self.assertNotIn("postgres-identity --check", workflow)
@@ -1604,8 +1558,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertNotIn("make ci", workflow)
         self.assertIn("publish-beta-images.py --finalize", workflow)
         for name in (
-            *beta_release.INSTALL_BUNDLE,
-            beta_release.PORTABLE_COMPOSE,
+            beta_release.INSTALL_COMPOSE,
             "release-manifest.json",
         ):
             self.assertIn(f"/beta-release/assets/{name}", workflow)
@@ -1650,10 +1603,19 @@ class ReleaseTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "oversize.tar.gz"):
                 beta_release.release_asset_inventory(output)
 
-    def test_install_bundle_uses_the_controller_contract(self) -> None:
-        self.assertEqual(beta_release.INSTALL_BUNDLE, ctl_bundle_names())
-        for name in beta_release.INSTALL_BUNDLE:
-            self.assertTrue((ROOT / "deploy/beta" / name).is_file(), name)
+    def test_compose_template_slots_and_withdrawn_bundle(self) -> None:
+        template = (ROOT / beta_release.INSTALL_COMPOSE).read_text()
+        for name, count in beta_release.COMPOSE_SLOTS.items():
+            self.assertEqual(template.count("@" + name.upper() + "@"), count, name)
+        self.assertFalse((ROOT / "deploy").exists())
+        refs = {
+            "backend": "ghcr.io/x/b@sha256:" + "a" * 64,
+            "frontend": "ghcr.io/x/f@sha256:" + "b" * 64,
+            "postgresql": "ghcr.io/x/p@sha256:" + "c" * 64,
+        }
+        for bad in ({**refs, "backend": "ghcr.io/x/b:latest"}, {"backend": refs["backend"]}):
+            with self.assertRaises(ValueError):
+                beta_release.render_compose(ROOT, "0.1.0-beta.7", bad)
 
     def test_partial_or_wrong_release_assets_cannot_be_published(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -2490,7 +2452,7 @@ class SharedPublicationTests(unittest.TestCase):
                     self.assertEqual(command[1], "pull")
                     return None
                 if fault is not None and "archive" in command:
-                    return real_run([*command, "deploy/beta"], **kwargs)
+                    return real_run([*command, "docs/decisions"], **kwargs)
                 return real_run(command, **kwargs)
 
             commands.side_effect = docker_only
@@ -2510,7 +2472,8 @@ class SharedPublicationTests(unittest.TestCase):
         if fault is None:
             self.assertTrue(all(stage["status"] == "passed" for stage in stages.values()))
             assets = state["release"]["assets"]
-            self.assertEqual(len(assets), 8)
+            # compose.yaml, RELEASE.md, manifest, PostgreSQL SBOM and source archive.
+            self.assertEqual(len(assets), 5)
             self.assertEqual(
                 {name: (item["size"], item["sha256"]) for name, item in assets.items()},
                 beta_release.release_asset_inventory(output / "assets"),
@@ -2537,8 +2500,7 @@ class SharedPublicationTests(unittest.TestCase):
             assets = output / "assets"
             assets.mkdir()
             for name in (
-                *beta_release.INSTALL_BUNDLE,
-                beta_release.PORTABLE_COMPOSE,
+                beta_release.INSTALL_COMPOSE,
                 "RELEASE.md",
                 beta_release.POSTGRES_SBOM,
                 f"florabase-{value['version']}-source.tar.gz",

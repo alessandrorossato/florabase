@@ -10,7 +10,6 @@ import importlib
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 import tarfile
@@ -32,9 +31,9 @@ SOURCE = "https://github.com/alessandrorossato/florabase"
 POSTGRES_REPOSITORY = "ghcr.io/alessandrorossato/florabase-postgres"
 UPSTREAM_POSTGRES = "docker.io/library/postgres"
 POSTGRES_ENTRYPOINT = "florabase-postgres-entrypoint"
-# deploy/beta files attached to every release and bound by hash into the attested manifest.
-INSTALL_BUNDLE = ("compose.yaml", "florabasectl.py", "florabase.env.example")
-PORTABLE_COMPOSE = "portable-compose.yaml"
+# The only production Compose (ADR 0008): the manifest binds the tracked template by hash, and the
+# release attaches and attests the copy rendered with the immutable image references.
+INSTALL_COMPOSE = "compose.yaml"
 POSTGRES_SBOM = "postgresql-sbom.cdx.json"
 REGISTRY_IMAGE = (
     "registry:2.8.3@sha256:a3d8aaa63ed8681a604f1dea0aa03f100d5895b6a58ace528858a7b332415373"
@@ -556,12 +555,10 @@ def local_postgres_identity(
         return built
 
 
-def install_bundle(root: Path) -> dict[str, str]:
-    """SHA-256 of each deploy/beta file attached to the release, bound into the manifest."""
-    return {
-        name: "sha256:" + hashlib.sha256((root / "deploy/beta" / name).read_bytes()).hexdigest()
-        for name in INSTALL_BUNDLE
-    }
+def compose_template(root: Path) -> dict[str, str]:
+    """SHA-256 of the tracked compose.yaml template the release asset is rendered from."""
+    digest = hashlib.sha256((root / INSTALL_COMPOSE).read_bytes()).hexdigest()
+    return {INSTALL_COMPOSE: "sha256:" + digest}
 
 
 def registry_record(
@@ -649,7 +646,7 @@ def validate_manifest(
         if value["build_inputs"] != read(trusted_path):
             raise ValueError("manifest build inputs differ from trusted release inputs")
     if (
-        value["schema_version"] != 2
+        value["schema_version"] != 3
         or value["platforms"] != ["linux/amd64"]
         or not RELEASE_VERSION.fullmatch(value["version"])
         or not SHA.fullmatch(value["source"]["revision"])
@@ -679,13 +676,13 @@ def validate_manifest(
         ):
             raise ValueError("invalid immutable image identity")
     validate_postgres_identity(value["postgresql"])
-    bundle = value.get("install_bundle")
+    template = value.get("compose_template")
     if (
-        not isinstance(bundle, dict)
-        or set(bundle) != set(INSTALL_BUNDLE)
-        or not all(isinstance(d, str) and DIGEST.fullmatch(d) for d in bundle.values())
+        not isinstance(template, dict)
+        or set(template) != {INSTALL_COMPOSE}
+        or not all(isinstance(d, str) and DIGEST.fullmatch(d) for d in template.values())
     ):
-        raise ValueError("release manifest must bind the install bundle by SHA-256")
+        raise ValueError("release manifest must bind the compose.yaml template by SHA-256")
 
 
 def manifest(
@@ -716,7 +713,7 @@ def manifest(
         else:
             images[service] = registry_record(reference, "linux/amd64", registry_host)
     result = {
-        "schema_version": 2,
+        "schema_version": 3,
         "distribution": "local-candidate" if local else "registry-candidate",
         "version": locked["version"],
         "source": {
@@ -733,7 +730,7 @@ def manifest(
         ),
         "postgresql": locked["postgresql"],
         "images": images,
-        "install_bundle": install_bundle(root),
+        "compose_template": compose_template(root),
         "build_inputs": locked,
         "workflow": {
             "run_id": os.environ.get("GITHUB_RUN_ID"),
@@ -1118,20 +1115,26 @@ def release_asset_inventory(output: Path) -> dict[str, tuple[int, str]]:
     return result
 
 
-def render_portable_compose(root: Path, version: str, refs: dict[str, str]) -> str:
+# Slots per token: prepare and db run the PostgreSQL image, migrate and backend the backend image.
+COMPOSE_SLOTS = {"version": 1, "backend": 2, "frontend": 1, "postgresql": 2}
+
+
+def render_compose(root: Path, version: str, refs: dict[str, str]) -> str:
     """Render the same immutable stack for rehearsal and protected publication."""
     if not RELEASE_VERSION.fullmatch(version):
-        raise ValueError("invalid portable Compose release version")
+        raise ValueError("invalid compose.yaml release version")
     if set(refs) != {"backend", "frontend", "postgresql"} or not all(
         re.fullmatch(r"[a-z0-9.:/-]+@sha256:[a-f0-9]{64}", ref) for ref in refs.values()
     ):
-        raise ValueError("portable Compose requires all three immutable image references")
-    template = (root / "deploy/portable" / PORTABLE_COMPOSE).read_text()
+        raise ValueError("compose.yaml requires all three immutable image references")
+    template = (root / INSTALL_COMPOSE).read_text()
     for name, value in {"version": version, **refs}.items():
         token = "@" + name.upper() + "@"
-        if template.count(token) != 1:
-            raise ValueError(f"portable Compose requires exactly one {token} slot")
+        if template.count(token) != COMPOSE_SLOTS[name]:
+            raise ValueError(f"compose.yaml requires exactly {COMPOSE_SLOTS[name]} {token} slots")
         template = template.replace(token, value)
+    if re.search(r"@[A-Z]+@", template):
+        raise ValueError("compose.yaml has an unrendered slot")
     return template
 
 
@@ -1146,7 +1149,7 @@ def prepare_release_assets(
         )
     pg = locked["postgresql"]
     archive = "florabase-" + version + "-source.tar.gz"
-    for name in (*INSTALL_BUNDLE, "RELEASE.md", archive):
+    for name in ("RELEASE.md", archive):
         path = output / name
         if path.exists() or path.is_symlink():
             raise ValueError(f"refuse to overwrite release asset: {name}")
@@ -1164,11 +1167,9 @@ def prepare_release_assets(
         ],
         check=True,
     )
-    for name in INSTALL_BUNDLE:
-        shutil.copyfile(root / "deploy/beta" / name, output / name)
     channel = "prerelease" if "-" in version else "stable release"
     (output / "RELEASE.md").write_text(
-        f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair and PostgreSQL passed native amd64 registry-pull smoke and the pinned Trivy gate (HIGH/CRITICAL vulnerabilities and secrets); that gate is a single scanner, and findings it does not report are recorded in docs/security/beta-distribution-001/postgresql-image.md at this source revision. PostgreSQL is the Florabase-built {pg['version']} image ({pg['reference']}): derived from the official {pg['upstream']['reference']} with pinned Alpine package updates. The gosu executable remains in an upstream layer and is absent from the container filesystem. A PostgreSQL digest change requires separate database maintenance. Install with the attested {PORTABLE_COMPOSE} as described in docs/portable-installation.md at this source revision. The advanced controller bundle remains available as described in docs/installation.md. This is a {channel}. Application images use the exact version tag. Never overwrite this release or delete its image identities.\n"
+        f"Florabase {version}\n\nSource: {SOURCE}/commit/{sha}\n\nUse release-manifest.json digest references; the pair and PostgreSQL passed native amd64 registry-pull smoke and the pinned Trivy gate (HIGH/CRITICAL vulnerabilities and secrets); that gate is a single scanner, and findings it does not report are recorded in docs/security/beta-distribution-001/postgresql-image.md at this source revision. PostgreSQL is the Florabase-built {pg['version']} image ({pg['reference']}): derived from the official {pg['upstream']['reference']} with pinned Alpine package updates. The gosu executable remains in an upstream layer and is absent from the container filesystem. A PostgreSQL digest change requires separate database maintenance. Install by deploying the attested {INSTALL_COMPOSE} as described in docs/installation.md at this source revision; it initializes a new installation and backs up before every upgrade. This is a {channel}. Application images use the exact version tag. Never overwrite this release or delete its image identities.\n"
     )
     return release_asset_inventory(output)
 
@@ -1189,7 +1190,7 @@ def release_attestation_inputs(
         "backend",
         "frontend",
         "postgresql",
-    } or asset_digests != manifest.get("install_bundle"):
+    } or set(asset_digests) != {INSTALL_COMPOSE}:
         raise ValueError("attestation subject set differs from the release contract")
     if manifest.get("source", {}).get("dirty") is not False:
         raise ValueError("attestation source must be a clean accepted revision")
@@ -1242,8 +1243,7 @@ def release_finalization_inputs(
     ):
         raise ValueError("Release API source, version or cleanliness input is invalid")
     if set(assets) != {
-        *INSTALL_BUNDLE,
-        PORTABLE_COMPOSE,
+        INSTALL_COMPOSE,
         "RELEASE.md",
         "release-manifest.json",
         POSTGRES_SBOM,

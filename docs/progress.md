@@ -9745,3 +9745,33 @@ Status remains implemented pending canonical verification.
   `docs/security.md` that relied on the default `compose.yaml`; they now use the `prod` workflow
   helper. `smoke-dev-recovery` and `smoke-workflow-resources` fail identically on the unchanged
   `main` tree, so they are tracked as a separate fix.
+
+## 2026-11-21 — INSTALL-001 self-initializing compose.yaml implemented
+
+- Root `compose.yaml` is the production template: `prepare` (folder guard and setup), `db` (cluster
+  only for a new installation), `migrate` (`release_schema deploy`: marker, pending retry,
+  advisory lock, init, no-op, verified pre-upgrade dump then upgrade, refusal, one-time owner from
+  the environment), `backend` (exact-head guard, never migrates) and `frontend`. Services bind the
+  data and backup folder roots because Docker validates bind sources before `prepare` runs. The
+  backend image adds `postgresql18-client` and declares `v0.1.0-beta.6` as its previous release.
+- Release tooling attaches and attests one rendered `compose.yaml` (manifest schema 3,
+  `compose_template`). The controller bundle, `deploy/portable/` and `smoke-beta-runtime.py` are
+  removed; `test-beta-runtime.py` keeps the disclosure gate and checks the new stack contract.
+  `smoke-portable-compose.py` exercises the rendered file end to end, including a derived
+  test-only image for the real dump and upgrade path. PORTABLE-COMPOSE-001 is restated (R26);
+  INSTALL-001 is `implemented`.
+- `smoke-dev-recovery` and `smoke-workflow-resources`, which failed on `main`, are fixed.
+- Checks: backend release-schema tests, the compose smoke against a local backend image with the
+  beta.6 frontend and PostgreSQL, `workflow-check`, `smoke-dev-recovery` and
+  `smoke-workflow-resources` passed. An independent review found no high-severity defect; its
+  fixes (absolute, slash-normalized folder distinctness, refusal of an empty database with a
+  marker, exclusive marker creation, backup folder sync, PGDATA from the image major) are covered
+  by tests and the smoke. Compose 5.7.1 was observed to stop and remove the previous backend before
+  starting the recreated `migrate`; the guide asks other managers to stop the stack first.
+  Residual: attestation inputs check the compose.yaml asset name, and the publisher compares its
+  bytes with the rendered file. The backend dependency group from Dependabot PR #201 (FastAPI
+  0.163.2, psycopg 3.3.9, pwdlib 0.4.2, pydantic-settings 2.16.3, python-multipart 0.0.34,
+  SQLAlchemy 2.0.58, pip-tools 7.7.0, Ruff 0.17.5) is folded in with regenerated hash locks.
+  The documentation handoff to Antigravity Neon was not taken up; on the operator's explicit
+  instruction the orchestrator ran the operator TAKEOVER of that handoff and wrote the documents.
+  The compose smoke passed again with the updated dependencies.

@@ -10,10 +10,34 @@ to know.
 Not yet released or published. The final release entry and upgrade notes will be confirmed
 against the accepted release candidate when v1.0.0 is cut.
 
-- The planned distribution is portable Docker Compose for linux/amd64; see the
-  [release scope](docs/release/scope-v1.md) and [installation guide](docs/portable-installation.md).
+- The planned distribution is the single self-initializing `compose.yaml` for linux/amd64; see
+  the [release scope](docs/release/scope-v1.md) and [installation guide](docs/installation.md).
 - Upgrade from beta requires a paired backup and the documented upgrade or isolated restore.
   The supported origins remain subject to the G-MIGRATE and G-UPGRADE acceptance gates.
+
+## Unreleased
+
+Changes since `v0.1.0-beta.6`, for the next beta.
+
+### Changed
+
+- One self-initializing `compose.yaml` is the only installation file
+  ([ADR 0008](docs/decisions/0008-self-initializing-single-compose.md)). Create an empty data
+  folder and a separate backup folder, then deploy the file as-is with Dockhand or
+  `docker compose up -d`. The one-shot `prepare` service refuses any folder that is neither empty
+  nor this installation, and `migrate` initializes the schema, leaves a current one unchanged, or
+  upgrades from the previous release after writing and verifying a dump in the backup folder.
+- The first owner can be created once from `FLORABASE_OWNER_LOGIN` and `FLORABASE_OWNER_PASSWORD`;
+  remove them after the first sign-in. The offline bootstrap and reset commands remain.
+- The backend image includes the PostgreSQL 18 client tools used for the pre-upgrade dump.
+- The release carries `compose.yaml`, `RELEASE.md`, `release-manifest.json` (schema version 3),
+  the PostgreSQL SBOM and the source archive.
+
+### Removed
+
+- The controller bundle (`florabasectl.py`, its `compose.yaml` and `florabase.env.example`) and
+  `portable-compose.yaml`. A `v0.1.0-beta.6` installation moves to the new layout through its
+  paired backup and the [isolated restore](docs/installation.md#isolated-restore).
 
 ## v0.1.0-beta.6 — 2026-11-21
 

@@ -141,7 +141,11 @@ def finish_fixture(root: Path, owner: Owner) -> None:
             f"#!/bin/sh\nif [ \"$1\" = auth ]; then exit 0; fi\nprintf '%s\\n' 'MERGED|main|ci/smoke|{head}|{merge}'\n"
         )
         gh.chmod(0o755)
-        env = {**os.environ, "PATH": str(bin_path) + ":" + os.environ["PATH"]}
+        # The fixture finish is an operator action; an inherited agent AGENT_ID is refused first.
+        env = {
+            **{key: value for key, value in os.environ.items() if key != "AGENT_ID"},
+            "PATH": str(bin_path) + ":" + os.environ["PATH"],
+        }
         (primary / "base").write_text("staged operator change")
         git("add", "base", cwd=primary)
         failed = subprocess.run(
@@ -153,7 +157,7 @@ def finish_fixture(root: Path, owner: Owner) -> None:
         )
         require(
             failed.returncode != 0 and "has staged or working changes" in failed.stderr,
-            "dirty primary finish refusal",
+            f"dirty primary finish refusal: {failed.stderr.strip()}",
         )
         require(
             bool(Resources(quality).inventory()["containers"]), "refused finish preserves Quality"

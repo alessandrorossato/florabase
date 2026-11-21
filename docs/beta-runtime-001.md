@@ -1,5 +1,7 @@
 # BETA-RUNTIME-001 — image-only beta runtime and recovery runbook
 
+> Superseded by [ADR 0008](decisions/0008-self-initializing-single-compose.md): the controller bundle described here was withdrawn with INSTALL-001. This page is a historical record.
+
 This increment delivers the versioned distribution stack, a host controller and disposable proof
 that install, persistence, recovery and upgrade work on the Synology DSM 7.2 Container Manager software
 baseline (Engine 24.0.2, Compose 2.20.1, Python 3.8). It

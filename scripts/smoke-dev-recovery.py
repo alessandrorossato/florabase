@@ -10,7 +10,7 @@ import tempfile
 import uuid
 from pathlib import Path
 
-from smoke_lifecycle import SmokeLifecycle
+from smoke_lifecycle import SmokeLifecycle, overlay
 from workflow_environment import (
     Environment,
     Repository,
@@ -128,7 +128,7 @@ def main() -> None:
         )
         inherited_env_file = os.environ.pop("FLORABASE_ENV_FILE", None)
         env.env_source = primary / ".env"
-        with SmokeLifecycle(env):
+        with SmokeLifecycle(env) as lifecycle:
             try:
                 env.compose("build")
                 shutil.copytree(primary, old, ignore=shutil.ignore_patterns(".git"))
@@ -178,7 +178,21 @@ def main() -> None:
                 )
                 old_env = FixtureEnvironment(Repository(primary), "dev")
                 old_env.project, old_env.source, old_env.env_source = project, old, primary / ".env"
-                old_env.workflow_overlay = env.workflow_overlay
+                # Ownership goes into the legacy override itself: a third Compose file would change
+                # the legacy config_files identity, and the current DEV overlay names services the
+                # old source does not define.
+                legacy_path = old / "compose.dev.yaml"
+                legacy = json.loads(legacy_path.read_text())
+                owned = overlay(
+                    json.loads(old_env.compose("config", "--format", "json", capture=True)),
+                    lifecycle.owner,
+                )
+                for kind, entries in owned.items():
+                    for name, value in entries.items():
+                        target = legacy.setdefault(kind, {}).setdefault(name, {})
+                        for key, item in value.items():
+                            target[key] = {**target.get(key, {}), **item}
+                legacy_path.write_text(json.dumps(legacy))
                 old_env.compose("up", "-d", "--wait", "--wait-timeout", "120")
                 env.upgrade()  # Only the fixture DB, using primary migrations.
                 old_env.compose(
@@ -269,7 +283,11 @@ def main() -> None:
                     "stop changed volume identities",
                 )
                 env.stop()  # Idempotent; stopped backend tmpfs is never read again.
-                env.up()
+                try:
+                    env.up()
+                except WorkflowError:
+                    env.compose("logs", "--no-color", "--tail=60")
+                    raise
                 require(
                     all(
                         item["Config"]["Labels"].get("io.florabase.source") == str(primary)
