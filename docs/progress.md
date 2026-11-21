@@ -9693,3 +9693,11 @@ Status remains implemented pending canonical verification.
   findings on all three images. GHCR is untouched.
 - Open: independent QA, canonical FULL, the hosted rehearsal and operator delivery. All eight
   RC blockers remain.
+
+## 2026-11-21 — v0.1.0-beta.6 changelog
+
+- `CHANGELOG.md` turns the Unreleased section into `v0.1.0-beta.6 — 2026-11-21`, adding the
+  operator-facing changes from #192 through #202 and the PostgreSQL `.1` to `.3` maintenance note.
+  The version surfaces were already `0.1.0-beta.6`. Publication, the tag and environment approval
+  remain operator actions. The scope upgrade baseline in `docs/release/scope-v1.md` still names
+  beta.5 until beta.6 is published.
