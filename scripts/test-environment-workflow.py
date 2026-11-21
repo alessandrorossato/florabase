@@ -9,12 +9,14 @@ import copy
 import io
 import json
 import os
+import shutil
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import call, patch
 
+import compose_stacks
 from workflow_environment import (
     Environment,
     Repository,
@@ -344,15 +346,21 @@ class EnvironmentTests(unittest.TestCase):
             self.assertEqual(production["LOCAL_UID"], "1000")
             get_uid.assert_not_called()
             get_gid.assert_not_called()
-            self.assertNotIn(
-                str(self.feature / "compose.dev.yaml"), Environment(self.repo, "prod").command()
+            production_files = Environment(self.repo, "prod").command()
+            self.assertIn(str(self.feature / "compose.dev.yaml"), production_files)
+            self.assertTrue(
+                any(item.endswith("/compose.production.yaml") for item in production_files)
             )
 
     def test_runtime_baseline_follows_the_source_layout(self) -> None:
         dev = Environment(self.repo, "dev")
+        files = [v for f, v in zip(dev.command(), dev.command()[1:]) if f == "--file"]
+        self.assertEqual(files, [str(self.primary / "compose.dev.yaml")])
+        # A tree from before WF-09 keeps its tracked overlays and source-build baseline.
+        (self.primary / "compose.review.yaml").touch()
+        (self.primary / "compose.yaml").touch()
         self.assertIn(str(self.primary / "compose.yaml"), dev.command())
         (self.primary / "compose.runtime.yaml").touch()
-        (self.primary / "compose.yaml").touch()
         command = dev.command()
         self.assertIn(str(self.primary / "compose.runtime.yaml"), command)
         self.assertNotIn(str(self.primary / "compose.yaml"), command)
@@ -720,14 +728,14 @@ class EnvironmentTests(unittest.TestCase):
 
     def test_quality_network_mode_defaults_none_and_opt_in_bridge(self) -> None:
         quality = Environment(self.repo, "quality")
-        default_command = quality.command("config")
-        self.assertIn(str(self.feature / "compose.quality.yaml"), default_command)
-        self.assertNotIn(str(self.feature / "compose.quality-network.yaml"), default_command)
+        default_command = " ".join(quality.command("config"))
+        self.assertIn("/compose.quality.yaml", default_command)
+        self.assertNotIn("/compose.quality-network.yaml", default_command)
 
         networked = Environment(self.repo, "quality", quality_network=True)
-        net_command = networked.command("config")
-        self.assertIn(str(self.feature / "compose.quality.yaml"), net_command)
-        self.assertIn(str(self.feature / "compose.quality-network.yaml"), net_command)
+        net_command = " ".join(networked.command("config"))
+        self.assertIn("/compose.quality.yaml", net_command)
+        self.assertIn("/compose.quality-network.yaml", net_command)
 
         with self.assertRaisesRegex(WorkflowError, "--quality-network"):
             Environment(self.repo, "dev", quality_network=True)
@@ -743,7 +751,7 @@ class EnvironmentTests(unittest.TestCase):
             ):
                 self.assertEqual(main(), 1)
 
-        quality_overlay = (ROOT / "compose.quality.yaml").read_text(encoding="utf-8")
+        quality_overlay = compose_stacks.OVERRIDES["quality"]
         for service in ("db:", "backend:", "frontend:", "dev-state-init:"):
             self.assertIn(service, quality_overlay)
         self.assertEqual(quality_overlay.count("network_mode: none"), 4)
@@ -751,7 +759,7 @@ class EnvironmentTests(unittest.TestCase):
         self.assertEqual(quality_overlay.count("ports: !reset []"), 3)
         self.assertIn("networks: !reset {}", quality_overlay)
 
-        network_overlay = (ROOT / "compose.quality-network.yaml").read_text(encoding="utf-8")
+        network_overlay = compose_stacks.OVERRIDES["quality-network"]
         self.assertIn("frontend-lockfile:", network_overlay)
         self.assertIn("target: toolchain", network_overlay)
         self.assertEqual(network_overlay.count("network_mode: bridge"), 3)
@@ -837,21 +845,20 @@ class EnvironmentTests(unittest.TestCase):
             )
 
     def test_quality_offline_frontend_overlay_and_entrypoint_scoping(self) -> None:
-        quality_overlay = (ROOT / "compose.quality.yaml").read_text(encoding="utf-8")
-        network_overlay = (ROOT / "compose.quality-network.yaml").read_text(encoding="utf-8")
+        quality_overlay = compose_stacks.OVERRIDES["quality"]
+        network_overlay = compose_stacks.OVERRIDES["quality-network"]
         self.assertIn('FLORABASE_QUALITY_OFFLINE: "1"', quality_overlay)
         self.assertIn('FLORABASE_QUALITY_OFFLINE: "0"', network_overlay)
 
-        for name in (
-            "compose.runtime.yaml",
-            "compose.dev.yaml",
-            "compose.review.yaml",
-            "compose.uat.yaml",
-            "compose.sourcing.yaml",
-            "compose.preview.yaml",
-            "compose.integration.yaml",
-        ):
-            content = (ROOT / name).read_text(encoding="utf-8")
+        others = {
+            "compose.dev.yaml": (ROOT / "compose.dev.yaml").read_text(encoding="utf-8"),
+            **{
+                name: text
+                for name, text in compose_stacks.OVERRIDES.items()
+                if not name.startswith("quality")
+            },
+        }
+        for name, content in others.items():
             self.assertNotIn("FLORABASE_QUALITY_OFFLINE", content, msg=name)
             self.assertNotIn("compose.quality", content, msg=name)
 
@@ -1385,6 +1392,83 @@ class EnvironmentTests(unittest.TestCase):
             )
             self.assertNotEqual(result.returncode, 0)
             self.assertIn(message, result.stderr)
+
+
+class ComposeStackTests(unittest.TestCase):
+    """WF-09: two tracked Compose files; every workflow stack is derived at run time."""
+
+    def test_repository_tracks_exactly_two_compose_files(self) -> None:
+        tracked = execute(["git", "-C", str(ROOT), "ls-files"], capture=True).splitlines()
+        compose = sorted(
+            name for name in tracked if Path(name).name.startswith("compose") and name.endswith(".yaml")
+        )
+        self.assertEqual(compose, ["compose.dev.yaml", "compose.yaml"])
+
+    def test_files_follow_the_tree_layout(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root, state = Path(temporary), Path(temporary) / "state"
+            files = compose_stacks.files(root, "uat-instance", state)
+            self.assertEqual(files[0], root / "compose.dev.yaml")
+            self.assertEqual(
+                [path.name for path in files[1:]],
+                ["compose.review.yaml", "compose.uat.yaml", "compose.uat-instance.yaml"],
+            )
+            self.assertTrue(all(path.is_relative_to(state) for path in files[1:]))
+            # Content-addressed and idempotent: the same text always yields the same file.
+            self.assertEqual(compose_stacks.files(root, "uat-instance", state), files)
+            for path in files[1:]:
+                stack = path.name.removeprefix("compose.").removesuffix(".yaml")
+                self.assertEqual(path.read_text(), compose_stacks.OVERRIDES[stack])
+            (root / "compose.review.yaml").touch()
+            (root / "compose.yaml").touch()
+            self.assertEqual(
+                compose_stacks.files(root, "prod", state), [root / "compose.yaml"]
+            )
+            (root / "compose.runtime.yaml").touch()
+            self.assertEqual(
+                compose_stacks.files(root, "review", state),
+                [root / name for name in ("compose.runtime.yaml", "compose.dev.yaml", "compose.review.yaml")],
+            )
+
+    def test_every_stack_has_an_override_and_legacy_names(self) -> None:
+        self.assertEqual(set(compose_stacks.STACKS), set(compose_stacks.LEGACY))
+        used = {name for names in compose_stacks.STACKS.values() for name in names}
+        self.assertEqual(used | {"integration"}, set(compose_stacks.OVERRIDES))
+
+    @unittest.skipUnless(shutil.which("docker"), "Docker CLI is not available")
+    def test_production_stack_is_the_source_built_runtime(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            files = compose_stacks.files(ROOT, "prod", Path(temporary))
+            rendered = execute(
+                [
+                    "docker",
+                    "compose",
+                    "--env-file",
+                    str(ROOT / ".env.example"),
+                    "--project-directory",
+                    str(ROOT),
+                    *[part for path in files for part in ("--file", str(path))],
+                    "config",
+                    "--format",
+                    "json",
+                ],
+                capture=True,
+            )
+        model = json.loads(rendered)
+        services = model["services"]
+        self.assertEqual(set(services), {"db", "backend", "frontend"})
+        for name in ("backend", "frontend"):
+            self.assertEqual(services[name]["build"]["target"], "runtime")
+            self.assertNotIn("user", services[name])
+            self.assertFalse(
+                [m for m in services[name].get("volumes", []) if m["type"] == "bind"], name
+            )
+        self.assertEqual(services["backend"]["environment"]["FLORABASE_ENVIRONMENT"], "production")
+        self.assertEqual(services["backend"]["environment"]["FLORABASE_COOKIE_MODE"], "secure")
+        self.assertNotIn("ports", services["db"])
+        self.assertNotIn("ports", services["backend"])
+        self.assertEqual(services["frontend"]["ports"][0]["target"], 8080)
+        self.assertEqual(set(model["volumes"]), {"postgres_data", "attachment_data"})
 
 
 if __name__ == "__main__":

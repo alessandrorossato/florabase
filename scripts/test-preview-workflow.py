@@ -22,6 +22,7 @@ preview_workflow = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(preview_workflow)
 Preview = preview_workflow.Preview
 PreviewError = preview_workflow.PreviewError
+compose_stacks = preview_workflow.compose_stacks
 
 
 def run(*command: str, cwd: Path | None = None) -> str:
@@ -172,22 +173,28 @@ class PreviewIsolationTests(unittest.TestCase):
         self.assertIn("--project-name", command)
         self.assertEqual(command[command.index("--project-name") + 1], "florabase-preview")
         self.assertEqual(command[command.index("--project-directory") + 1], str(self.preview_path))
+        files = [value for flag, value in zip(command, command[1:]) if flag == "--file"]
+        # The selected revision's development file turned into production targets (WF-09).
+        self.assertEqual(files[0], str(self.preview_path / "compose.dev.yaml"))
         self.assertEqual(
-            command[command.index("--file") + 1], str(self.preview_path / "compose.yaml")
+            [Path(item).name for item in files[1:]],
+            ["compose.production.yaml", "compose.preview.yaml"],
         )
-        self.assertNotIn("compose.dev.yaml", " ".join(command))
-        self.assertIn(str(self.preview_path / "compose.preview.yaml"), command)
         self.assertNotIn(str(self.repository / "compose.preview.yaml"), command)
 
     def test_runtime_compose_follows_the_selected_revision_layout(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             preview = Preview(self.repository, Path(temporary), RecordingCommands())
-            self.assertEqual(preview.runtime_compose(), preview.preview_path / "compose.yaml")
-            (preview.preview_path / "compose.runtime.yaml").write_text("services: {}\n")
-            (preview.preview_path / "compose.yaml").write_text("services: {}\n")
+            root = preview.preview_path
+            self.assertEqual(preview.compose_files()[0], root / "compose.dev.yaml")
+            # Revisions before WF-09 keep their tracked preview overlay and baseline.
+            for name in ("compose.review.yaml", "compose.preview.yaml", "compose.yaml"):
+                (root / name).write_text("services: {}\n")
             self.assertEqual(
-                preview.runtime_compose(), preview.preview_path / "compose.runtime.yaml"
+                preview.compose_files(), [root / "compose.yaml", root / "compose.preview.yaml"]
             )
+            (root / "compose.runtime.yaml").write_text("services: {}\n")
+            self.assertEqual(preview.compose_files()[0], root / "compose.runtime.yaml")
 
     def test_git_workflow_contains_no_destructive_primary_operations(self) -> None:
         source = (ROOT / "scripts/preview.py").read_text()
@@ -238,7 +245,7 @@ class PreviewIsolationTests(unittest.TestCase):
             preview_call[preview_call.index("--project-name") + 1], "florabase-preview"
         )
         self.assertEqual(dev_call[dev_call.index("--project-name") + 1], "florabase")
-        self.assertIn(str(self.preview_path / "compose.yaml"), preview_call)
+        self.assertIn(str(self.preview_path / "compose.dev.yaml"), preview_call)
         self.assertIn(str(preview_workflow.Repository(self.repository).primary / "compose.dev.yaml"), dev_call)
 
     def test_stop_and_remove_commands_preserve_volume_and_local_changes(self) -> None:
@@ -393,7 +400,7 @@ class PreviewIsolationTests(unittest.TestCase):
         self.assertIn("('volumes'", ownership.replace('"', "'"))
         self.assertIn("residual_containers_networks_volumes=0", ownership)
         self.assertNotIn("florabase-preview", integration)
-        compose = (ROOT / "compose.integration.yaml").read_text()
+        compose = compose_stacks.OVERRIDES["integration"]
         self.assertIn("tmpfs:", compose)
         self.assertNotIn("postgres_data", compose)
 

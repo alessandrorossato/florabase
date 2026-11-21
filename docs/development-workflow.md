@@ -6,15 +6,20 @@ primary checkout off `main`.
 
 | Environment      | Source                                                      | Compose files                                | Project                                  | Browser                    | State                                                         |
 | ---------------- | ----------------------------------------------------------- | -------------------------------------------- | ---------------------------------------- | -------------------------- | ------------------------------------------------------------- |
-| DEV              | Primary checkout discovered through Git                     | `compose.runtime.yaml` + `compose.dev.yaml`  | `florabase`                              | `http://localhost:5173`    | Persistent DB, media, dependencies                            |
-| Feature Review   | Current feature worktree, including dirty/untracked files   | baseline + DEV + `compose.review.yaml`       | `florabase-feature-review`               | `http://localhost:15174`   | Persistent, isolated DB/media/dependencies                    |
-| UAT Preview      | Owning feature source or clean delivered detached owner     | baseline + DEV + Review + `compose.uat.yaml` | `florabase-uat-preview`                  | `http://localhost:15174`   | Persistent isolated synthetic DB/media/dependencies           |
-| Sourcing Preview | Current Sourcing worktree, including dirty/untracked files  | baseline + DEV + Review + `compose.sourcing.yaml` | `florabase-sourcing-preview`         | `http://localhost:15175`   | Persistent isolated synthetic DB/media/dependencies           |
-| UAT instance     | Its owning linked feature worktree (one instance each)      | UAT Preview files + `compose.uat-instance.yaml` | `florabase-uat-branch-<branch>`      | `http://localhost:15180`–`15183` | Persistent isolated golden SMOKE/COMPREHENSIVE DB/media       |
-| Stable Preview   | Clean detached checkout of fetched `origin/main` by default | baseline + `compose.preview.yaml`            | `florabase-preview`                      | `http://localhost:15173`   | Persistent isolated DB/media, immutable frontend dependencies |
-| Quality checks   | Current feature worktree                                    | baseline + DEV + `compose.quality.yaml`      | `florabase-quality-<metadata-path-hash>` | None started               | Isolated volumes, no live DB, `network_mode: none` (`bridge` only via `--quality-network`) |
-| Integration / CI | Current source / CI checkout                                | `compose.integration.yaml`                   | `florabase-integration-<random-run-id>`  | None                       | Disposable PostgreSQL tmpfs and test state                    |
-| Production       | Selected deployable source/artifact                         | `compose.runtime.yaml`                       | `florabase-prod`                         | Proxy port 8080 by default | Persistent DB/media                                           |
+| DEV              | Primary checkout discovered through Git                     | `compose.dev.yaml`                           | `florabase`                              | `http://localhost:5173`    | Persistent DB, media, dependencies                            |
+| Feature Review   | Current feature worktree, including dirty/untracked files   | DEV + review                                 | `florabase-feature-review`               | `http://localhost:15174`   | Persistent, isolated DB/media/dependencies                    |
+| UAT Preview      | Owning feature source or clean delivered detached owner     | DEV + review + uat                           | `florabase-uat-preview`                  | `http://localhost:15174`   | Persistent isolated synthetic DB/media/dependencies           |
+| Sourcing Preview | Current Sourcing worktree, including dirty/untracked files  | DEV + review + sourcing                      | `florabase-sourcing-preview`         | `http://localhost:15175`   | Persistent isolated synthetic DB/media/dependencies           |
+| UAT instance     | Its owning linked feature worktree (one instance each)      | UAT Preview + uat-instance                   | `florabase-uat-branch-<branch>`      | `http://localhost:15180`–`15183` | Persistent isolated golden SMOKE/COMPREHENSIVE DB/media       |
+| Stable Preview   | Clean detached checkout of fetched `origin/main` by default | DEV + production + preview                   | `florabase-preview`                      | `http://localhost:15173`   | Persistent isolated DB/media, immutable frontend dependencies |
+| Quality checks   | Current feature worktree                                    | DEV + quality                                | `florabase-quality-<metadata-path-hash>` | None started               | Isolated volumes, no live DB, `network_mode: none` (`bridge` only via `--quality-network`) |
+| Integration / CI | Current source / CI checkout                                | integration (standalone)                     | `florabase-integration-<random-run-id>`  | None                       | Disposable PostgreSQL tmpfs and test state                    |
+| Production       | Selected deployable source/artifact                         | DEV + production                             | `florabase-prod`                         | Proxy port 8080 by default | Persistent DB/media                                           |
+
+DEV is the tracked `compose.dev.yaml`; every other name in the Compose column is an override that
+`scripts/compose_stacks.py` generates under the checkout's untracked Git directory
+(`florabase-compose/<digest>/compose.<name>.yaml`) and loads after it (ADR 0008, WF-09). A revision
+from before WF-09 keeps its own tracked overlays, which the helpers still load.
 
 Migration verification (`florabase-feature-migration-<run-id>`), selected production verification
 builds (`florabase-verification-build-<run-id>`) and unique smoke fixtures are also disposable.
@@ -467,7 +472,7 @@ The project is `florabase-uat-branch-` plus the branch with `/` replaced by `-` 
 `florabase-uat-branch-feat-example-001`); branches with `.` or `_` or longer than 40 characters are
 refused. It reuses every UAT Preview guard (linked source, origin, exact container labels, mounts,
 networks, internal DB/backend, loopback-only frontend, foreign volume users) with its own role label
-`uat-instance`, `golden_uat` database and the additional `compose.uat-instance.yaml` overlay. It
+`uat-instance`, `golden_uat` database and the additional generated `uat-instance` override. It
 resolves no `.env` secrets and never reads, copies or mounts another environment's data.
 
 **Allocation.** Four slots, ports 15180–15183, bound networks, image tags and memory. The record is
@@ -653,7 +658,7 @@ same disposable workflow; its copies exist only beside disposable test PostgreSQ
 way. It is manual: the default integration suite skips that module, so CI and the canonical gate do not run it.
 
 `make up`, `build`, `migrate`, `down`, `backup`, and `restore` use the explicit `florabase-prod` project.
-`compose.runtime.yaml` remains the source-build production topology: immutable non-root backend/frontend
+The `prod` stack (DEV + production override) is the source-build production topology: immutable non-root backend/frontend
 images, same-origin nginx proxy, internal PostgreSQL/backend, health/readiness, persistent DB/media,
 secure cookies and explicit HTTPS origin. Application startup never migrates. For source-build upgrades, follow the
 [maintenance procedure](deployment.md#safe-upgrade) to keep writers stopped from backup through migration.
@@ -849,9 +854,9 @@ local helpers; direct Docker, Git and non-cooperating processes can still race t
 external writers before confirmation. No global Docker prune or cache removal is performed.
 
 Quality remains reusable during feature work; individual test/lint/type commands do not retire it.
-Quality services run under `compose.quality.yaml` with `network_mode: none` (and no project
-networks), while `make dependency-update` and `make dev-references-setup` opt into Docker's shared
-`bridge` network via `--quality-network` (`compose.quality-network.yaml`). `make dependency-update`
+Quality services run under the generated `quality` override with `network_mode: none` (and no
+project networks), while `make dependency-update` and `make dev-references-setup` opt into Docker's
+shared `bridge` network via `--quality-network` (the `quality-network` override). `make dependency-update`
 refreshes `frontend/pnpm-lock.yaml` through the dedicated `frontend-lockfile` (`toolchain`) service
 without building or mounting `frontend_node_modules`; any non-offline `frontend` run clears its
 Quality offline provenance marker so subsequent offline Quality refuses mixed state until

@@ -17,6 +17,7 @@ import uuid
 from contextlib import ExitStack
 from pathlib import Path
 
+import compose_stacks
 from smoke_lifecycle import SmokeLifecycle, overlay
 from workflow_environment import (
     Environment,
@@ -115,17 +116,8 @@ def main() -> None:
             preview_project,
             "--project-directory",
             str(stable),
-            "-f",
-            # origin/main may predate the ADR 0008 rename of the source-build baseline.
-            str(
-                next(
-                    p
-                    for p in (stable / "compose.runtime.yaml", stable / "compose.yaml")
-                    if p.is_file()
-                )
-            ),
-            "-f",
-            str(stable / "compose.preview.yaml"),
+            # origin/main may predate WF-09 and keep its own preview files.
+            *[part for path in compose_stacks.files(stable, "preview") for part in ("-f", str(path))],
         ]
         if run(
             [
@@ -324,7 +316,7 @@ def main() -> None:
                         "--env-file",
                         "/dev/null",
                         "-f",
-                        str(repo.source / "compose.integration.yaml"),
+                        str(compose_stacks.integration()),
                         "config",
                         "--quiet",
                     ]

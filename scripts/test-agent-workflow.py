@@ -1389,7 +1389,12 @@ class AgentWorkflowTests(unittest.TestCase):
         self.write_tool("gh", "exit 0\n")
         scripts = worktree / "scripts"
         scripts.mkdir()
-        for name in ("feature_worktree.py", "workflow_environment.py", "workflow_resources.py"):
+        for name in (
+            "feature_worktree.py",
+            "workflow_environment.py",
+            "workflow_resources.py",
+            "compose_stacks.py",
+        ):
             shutil.copy2(ROOT / "scripts" / name, scripts / name)
         (self.primary / ".git/info/exclude").write_text("scripts/\n")
         for script in ("feature-finish.sh", "feature-deliver.py"):

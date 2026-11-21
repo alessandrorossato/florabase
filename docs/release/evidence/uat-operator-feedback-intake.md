@@ -32,6 +32,17 @@ Per [`restatements-v1.md`](../restatements-v1.md#proposed-changes-awaiting-appro
 
 ---
 
+## Operator decisions recorded 2026-11-21
+
+The operator ruled on these items in chat with the master orchestrator on 2026-11-21; Batch 09
+records them. The rows below in section 2 stay as the history of the request.
+
+| Item | Decision |
+| --- | --- |
+| `RC-SEQ-01` | Resolved: `CUTTING-001` and `UI-SYSTEM-001` move to `implemented`, not `verified`, so `scripts/check-features.py --release-candidate` no longer blocks protected RC publication on them. Each becomes `verified` only after formal `G-CORE` and `G-UX` acceptance on immutable RC images and explicit operator acceptance. The Codex claim `codex-cutting-31a6` on the `feat/cutting-001-implementation` worktree was taken over by the operator's instruction (claim `1998d43a297c`); its uncommitted files are retained untouched. |
+| `U02` | Accepted: the mapped evidence on `main` for the non-Preview clauses of `UI-SYSTEM-001 #9`, subject to formal RC `G-UX`. |
+| `UI-FLICKER-001` (`UI-SYSTEM-001 #10`, `R08`) | Option (a): the three P3 observations become `G-UX` measurement items; no code fix now. |
+
 ## 2. Unresolved Evidence Gaps, Proposed Inventory Changes & Formal Acceptance Decisions
 
 | Decision / Gap ID | Affected Feature(s) / Gate(s) | Exact Description | Options / Action Required from Operator |

@@ -1,6 +1,6 @@
 # ADR 0008: Self-initializing single Compose installation
 
-- Status: accepted (operator decision, 2026-11-21); implementation pending in INSTALL-001 and WF-09
+- Status: accepted (operator decision, 2026-11-21); implemented by INSTALL-001 (#207) and WF-09
 - Date: 2026-11-21
 - Supersedes in part: [ADR 0005](0005-authentication-and-sessions.md) (first-owner bootstrap
   channel); release decision 3 and the controller bundle's best-effort class in

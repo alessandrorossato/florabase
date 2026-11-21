@@ -742,6 +742,7 @@ class RemoteHistoryTests(unittest.TestCase):
                 "verification-impact.json",
                 "feature-tree-fingerprint.py",
                 "disposable_workflow.py",
+                "compose_stacks.py",
                 "workflow_resources.py",
                 "check-features.py",
             ):
@@ -1223,6 +1224,7 @@ class TestOwnershipInventoryTests(unittest.TestCase):
             "verification_gate.py",
             "feature-tree-fingerprint.py",
             "disposable_workflow.py",
+            "compose_stacks.py",
             "workflow_resources.py",
         ):
             shutil.copy2(ROOT / "scripts" / name, root / "scripts" / name)

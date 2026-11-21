@@ -17,7 +17,8 @@ import feature_batch
 from workflow_environment import Repository, WorkflowError
 
 REPOSITORY = "alessandrorossato/florabase"
-REQUIRED_CHECKS = ("quality", "integration", "build")
+# rehearse is the non-publishing release pipeline; #207 merged while it failed (WF-09 batch).
+REQUIRED_CHECKS = ("quality", "integration", "build", "rehearse")
 BRANCH_PATTERN = re.compile(r"^(feat|fix|docs|ci)/[a-z0-9][a-z0-9._-]*$")
 DEFAULT_PR_HEAD_POLL_SECONDS = 2
 DEFAULT_PR_HEAD_TIMEOUT_SECONDS = 60

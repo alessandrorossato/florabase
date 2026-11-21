@@ -2,9 +2,10 @@
 
 **Status: development only.** Building from source is not a supported installation; the official
 installation is the single self-initializing [`compose.yaml`](installation.md) of each release.
-This guide builds Florabase from a repository checkout with the transitional source-build
-`compose.runtime.yaml`, which WF-09 replaces. Keep a source build and a release installation on
-separate hosts; they use different storage layouts.
+This guide builds Florabase's production targets from a repository checkout: the `prod` workflow
+stack, `compose.dev.yaml` with the generated production override from `scripts/compose_stacks.py`.
+Keep a source build and a release installation on separate hosts; they use different storage
+layouts.
 
 Florabase is pre-release software. Review the incoming changes and keep a tested backup before
 every upgrade.
@@ -15,21 +16,18 @@ For the source checkout workflow, install Docker Engine with Compose **2.24.4 or
 Python 3, GNU Make, Git and `curl`. Clone the repository on a host where an operator-managed
 HTTPS reverse proxy can reach the frontend port.
 
-The base source-build `compose.runtime.yaml` has no custom merge tags. Repository development and
-verification overlays use `!override` and `!reset`, which is why the checkout workflow specifies
-a newer Compose plugin. With 2.20.1,
-the DEV overlay can render both frontend port mappings instead of replacing the production mapping.
-The image-only beta uses a separate stack without those tags and its controller accepts Compose
-**2.20 or newer**. The beta smoke results apply to that image-only stack.
+The generated workflow overrides use `!override` and `!reset`, which is why the checkout workflow
+specifies a newer Compose plugin. With 2.20.1, an override can render both frontend port mappings
+instead of replacing the mapping.
 [Docker Compose merge rules](https://docs.docker.com/reference/compose-file/merge/)
 
-`compose.runtime.yaml` builds the production targets in the explicit `florabase-prod` project. DEV retains
+The `prod` stack builds the production targets in the explicit `florabase-prod` project. DEV retains
 its separate legacy `florabase` project; Review and Preview use their own resources. Existing baseline
 installations previously using `florabase` must preserve and deliberately migrate coordinated DB/media
 before adopting the new production project name. No helper silently attaches those volumes.
 See [environment boundaries](development-workflow.md).
 
-`compose.runtime.yaml` builds the production targets. PostgreSQL and FastAPI remain on the internal Compose
+The `prod` stack builds the production targets. PostgreSQL and FastAPI remain on the internal Compose
 network; only the nginx frontend proxy publishes `${APP_BIND_ADDRESS}:${APP_PORT}`. The frontend
 serves the React application and forwards `/api/` to FastAPI.
 

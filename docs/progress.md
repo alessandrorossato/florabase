@@ -9806,3 +9806,30 @@ Status remains implemented pending canonical verification.
   to the commit and run.
 - `docs/release/scope-v1.md` names beta.7 as the current G-MIGRATE and G-UPGRADE baseline. No
   feature status changed.
+
+## 2026-11-21 — Batch 09: WF-09 two Compose files, rehearse in delivery, RC-SEQ-01 records
+
+- WF-09 (ADR 0008): the repository tracks exactly `compose.yaml` and a standalone
+  `compose.dev.yaml` (the former `compose.runtime.yaml` base merged with the development
+  override). `scripts/compose_stacks.py` holds the workflow overrides (production, review, UAT,
+  UAT instance, sourcing, quality, quality-network, preview, performance and the standalone
+  integration stack) and writes them content-addressed under the checkout's untracked Git
+  directory (`florabase-compose/<digest>/compose.<name>.yaml`). The eleven tracked overlays and the
+  two historical `docs/review` stacks are removed. A revision from before WF-09 keeps its tracked
+  overlays and the helpers still load them (DEV on an older primary, Stable Preview of an older
+  ref). `docker compose config` of every stack (DEV, prod, review, sourcing, UAT, UAT instance,
+  quality, quality-network, preview, perf, integration) was identical before and after, apart from
+  top-level `x-` anchors that Compose ignores. Release artifact copies, lint/type lists and tests
+  carry the new module.
+- `feature-deliver` now also waits for the hosted `rehearse` job and fails loudly when it fails,
+  after #207 merged with a failing rehearsal. The `main` ruleset still requires only quality,
+  integration and build, so a failing rehearsal can still merge until the operator adds it there.
+- RC-SEQ-01 operator decisions are recorded: CUTTING-001 and UI-SYSTEM-001 are `implemented`
+  (verified only after RC-image G-CORE/G-UX and operator acceptance), U02 accepted for the
+  non-Preview clauses, UI-FLICKER-001 option (a). The Codex CUTTING-001 claim was taken over on
+  the operator's instruction; its uncommitted files are untouched.
+- Batch 08 follow-ups: mypy includes `backend/scripts/check_api_routes.py`, and the production
+  route inventory test no longer passes ambient `FLORABASE_*` variables. The impact classification
+  of that script and the smoke `assert` statements remain open.
+- The beta.7 publication record is part of this batch. Trivy database pinning is not: pinning
+  makes scans reproducible but hides newly published CVEs, which is an operator decision.

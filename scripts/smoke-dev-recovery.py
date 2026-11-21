@@ -9,7 +9,9 @@ import shutil
 import tempfile
 import uuid
 from pathlib import Path
+from typing import cast
 
+import compose_stacks
 from smoke_lifecycle import SmokeLifecycle, overlay
 from workflow_environment import (
     Environment,
@@ -67,6 +69,30 @@ class FixtureEnvironment(Environment):
         return env
 
 
+def old_baseline(source: Path) -> dict[str, object]:
+    """The production source build as one standalone file, as trees before WF-09 tracked it."""
+    files = compose_stacks.files(source, "prod")
+    rendered = run(
+        [
+            "docker",
+            "compose",
+            "--project-directory",
+            str(source),
+            *[part for path in files for part in ("--file", str(path))],
+            "config",
+            "--no-interpolate",
+            "--format",
+            "json",
+        ],
+        capture=True,
+    )
+    baseline: dict[str, object] = json.loads(rendered)
+    baseline.pop("name", None)
+    services = cast(dict[str, object], baseline["services"])
+    services.pop("dev-state-init", None)
+    return baseline
+
+
 def main() -> None:
     repository = Repository(Path.cwd())
     before = operator_snapshot(repository)
@@ -93,8 +119,7 @@ def main() -> None:
                     "*.tsbuildinfo",
                 ),
             )
-        for name in ("compose.runtime.yaml", "compose.dev.yaml"):
-            shutil.copy2(repository.source / name, primary / name)
+        shutil.copy2(repository.source / "compose.dev.yaml", primary / "compose.dev.yaml")
         (primary / ".gitignore").write_text(".env\n")
         (primary / ".env").write_text(
             "POSTGRES_DB=recovery_fixture\nPOSTGRES_USER=recovery_fixture\n"
@@ -132,8 +157,11 @@ def main() -> None:
             try:
                 env.compose("build")
                 shutil.copytree(primary, old, ignore=shutil.ignore_patterns(".git"))
-                # Model a source from before the ADR 0008 rename of the source-build baseline.
-                (old / "compose.runtime.yaml").rename(old / "compose.yaml")
+                # Model a source from before ADR 0008: a standalone source-build compose.yaml, a
+                # development override and tracked workflow overlays (compose.review.yaml).
+                baseline = old_baseline(old)
+                (old / "compose.yaml").write_text(json.dumps(baseline))
+                (old / "compose.review.yaml").write_text("services: {}\n")
                 # Model the real older development override, including its tmpfs media and retained
                 # durable attachment mount. Automatic Compose labels are the legacy identity evidence.
                 (old / "compose.dev.yaml").write_text(

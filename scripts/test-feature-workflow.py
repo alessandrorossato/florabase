@@ -230,7 +230,7 @@ class VerifyHelperTests(unittest.TestCase):
             "check-features.py",
             "verify-migration-cycle.sh",
             "verification_impact.py", "verification_gate.py", "verification-impact.json",
-            "disposable_workflow.py", "workflow_resources.py", "stage_evidence.py",
+            "disposable_workflow.py", "compose_stacks.py", "workflow_resources.py", "stage_evidence.py",
             "workflow_environment.py", "feature_worktree.py",
         ):
             shutil.copy2(ROOT / "scripts" / name, scripts / name)

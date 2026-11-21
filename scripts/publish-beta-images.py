@@ -326,6 +326,7 @@ def copy_smoke_artifact(root: Path, artifact: Path, manifest_path: Path) -> None
         "smoke-beta-images.py",
         "beta_release.py",
         "disposable_workflow.py",
+        "compose_stacks.py",
         "workflow_resources.py",
     ):
         shutil.copyfile(root / "scripts" / name, artifact / name)
