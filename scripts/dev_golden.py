@@ -163,6 +163,12 @@ class DevGolden:
             for flag, value in zip(arguments[:-1], arguments[1:], strict=True)
             if flag == "--file"
         )
+        # DEV containers created before WF-09 carry the former base file; their rendered
+        # configuration is identical, so Compose does not recreate them on its own.
+        accepted_files = {
+            expected_files,
+            f"{env.source / 'compose.runtime.yaml'},{env.source / 'compose.dev.yaml'}",
+        }
         expected_network = f"{self.project}_internal"
         ids = set(helpers or ())
         for service, container in self.services.items():
@@ -173,7 +179,7 @@ class DevGolden:
                 and labels.get("io.florabase.branch") == "main"
                 and labels.get("io.florabase.source") == str(env.source)
                 and labels.get("com.docker.compose.project.working_dir") == str(env.source)
-                and labels.get("com.docker.compose.project.config_files") == expected_files
+                and labels.get("com.docker.compose.project.config_files") in accepted_files
                 and container["Name"] == f"/{self.project}-{service}-1"
                 and container["HostConfig"]["NetworkMode"] == expected_network
                 and not container["HostConfig"]["Privileged"]

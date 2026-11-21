@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import hashlib
 import os
+import runpy
+import stat
 import tempfile
 from pathlib import Path
 
@@ -393,8 +395,18 @@ LEGACY: dict[str, tuple[str, ...]] = {
 
 
 def is_legacy(source: Path) -> bool:
-    """A tree from before WF-09 still tracks its own workflow overlays."""
-    return (source / "compose.review.yaml").is_file()
+    """A tree from before WF-09 has no stack definitions and tracks its own workflow overlays."""
+    return not (source / "scripts" / "compose_stacks.py").is_file()
+
+
+def definitions(source: Path) -> tuple[dict[str, str], dict[str, tuple[str, ...]]]:
+    """The override texts and stacks of the tree at source, which pair with its compose.dev.yaml."""
+    module = (source / "scripts" / "compose_stacks.py").resolve()
+    if module == Path(__file__).resolve():
+        return OVERRIDES, STACKS
+    # Another tree (a previewed ref, a delivered owner) carries its own definitions.
+    loaded = runpy.run_path(str(module))
+    return dict(loaded["OVERRIDES"]), dict(loaded["STACKS"])
 
 
 def state_directory() -> Path:
@@ -408,13 +420,18 @@ def state_directory() -> Path:
             text = marker.read_text().strip()
             if text.startswith("gitdir: "):
                 return (folder / text.removeprefix("gitdir: ")).resolve() / "florabase-compose"
-    # Copied tooling outside a checkout (release smoke artifacts).
-    return Path(tempfile.gettempdir()) / f"florabase-compose-{os.getuid()}"
+    # Copied tooling outside a checkout (release smoke artifacts): a private per-user directory.
+    fallback = Path(tempfile.gettempdir()) / f"florabase-compose-{os.getuid()}"
+    fallback.mkdir(mode=0o700, exist_ok=True)
+    status = fallback.lstat()
+    if not stat.S_ISDIR(status.st_mode) or status.st_uid != os.getuid() or status.st_mode & 0o077:
+        raise RuntimeError(f"{fallback} is not a private directory of this user")
+    return fallback
 
 
-def override(name: str, directory: Path | None = None) -> Path:
+def override(name: str, directory: Path | None = None, text: str | None = None) -> Path:
     """Write one override under a content-addressed name and return its path."""
-    text = OVERRIDES[name]
+    text = OVERRIDES[name] if text is None else text
     directory = directory or state_directory()
     # The former tracked file name keeps logs, Compose labels and tooling matches readable.
     folder = directory / hashlib.sha256(text.encode()).hexdigest()[:16]
@@ -436,12 +453,17 @@ def files(source: Path, stack: str, directory: Path | None = None) -> list[Path]
         renamed = source / "compose.runtime.yaml"
         base = renamed if renamed.is_file() else source / "compose.yaml"
         return [base, *(source / name for name in LEGACY[stack])]
-    return [source / DEV, *(override(name, directory) for name in STACKS[stack])]
+    overrides, stacks = definitions(source)
+    return [
+        source / DEV,
+        *(override(name, directory, overrides[name]) for name in stacks[stack]),
+    ]
 
 
-def integration(directory: Path | None = None) -> Path:
-    """The standalone disposable integration stack."""
-    return override("integration", directory)
+def integration(source: Path | None = None, directory: Path | None = None) -> Path:
+    """The standalone disposable integration stack of the tree at source (default: this one)."""
+    overrides = definitions(source)[0] if source is not None else OVERRIDES
+    return override("integration", directory, overrides["integration"])
 
 
 def main() -> None:

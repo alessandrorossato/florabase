@@ -69,6 +69,11 @@ class EnvironmentTests(unittest.TestCase):
         (versions / "0029.py").write_text(
             "revision: str = '0029'\ndown_revision: str | None = None\n"
         )
+        # The stack definitions mark a tree from WF-09 onward.
+        (self.primary / "scripts").mkdir()
+        (self.primary / "scripts/compose_stacks.py").write_bytes(
+            (ROOT / "scripts/compose_stacks.py").read_bytes()
+        )
         git(self.primary, "add", ".")
         git(self.primary, "commit", "-m", "fixture stable main")
         git(self.primary, "update-ref", "refs/remotes/origin/main", "HEAD")
@@ -354,9 +359,11 @@ class EnvironmentTests(unittest.TestCase):
 
     def test_runtime_baseline_follows_the_source_layout(self) -> None:
         dev = Environment(self.repo, "dev")
-        files = [v for f, v in zip(dev.command(), dev.command()[1:]) if f == "--file"]
+        command = dev.command()
+        files = [v for f, v in zip(command, command[1:], strict=False) if f == "--file"]
         self.assertEqual(files, [str(self.primary / "compose.dev.yaml")])
         # A tree from before WF-09 keeps its tracked overlays and source-build baseline.
+        (self.primary / "scripts/compose_stacks.py").unlink()
         (self.primary / "compose.review.yaml").touch()
         (self.primary / "compose.yaml").touch()
         self.assertIn(str(self.primary / "compose.yaml"), dev.command())
@@ -1400,13 +1407,27 @@ class ComposeStackTests(unittest.TestCase):
     def test_repository_tracks_exactly_two_compose_files(self) -> None:
         tracked = execute(["git", "-C", str(ROOT), "ls-files"], capture=True).splitlines()
         compose = sorted(
-            name for name in tracked if Path(name).name.startswith("compose") and name.endswith(".yaml")
+            name
+            for name in tracked
+            if Path(name).name.startswith("compose") and name.endswith(".yaml")
         )
         self.assertEqual(compose, ["compose.dev.yaml", "compose.yaml"])
 
     def test_files_follow_the_tree_layout(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root, state = Path(temporary), Path(temporary) / "state"
+            (root / "scripts").mkdir()
+            (root / "scripts/compose_stacks.py").write_text(
+                (ROOT / "scripts/compose_stacks.py")
+                .read_text()
+                .replace('VITEST_MAX_WORKERS: "1"', 'VITEST_MAX_WORKERS: "2"')
+            )
+            # Another tree's own definitions pair with its compose.dev.yaml.
+            quality = compose_stacks.files(root, "quality", state)[1].read_text()
+            self.assertIn('VITEST_MAX_WORKERS: "2"', quality)
+            (root / "scripts/compose_stacks.py").write_bytes(
+                (ROOT / "scripts/compose_stacks.py").read_bytes()
+            )
             files = compose_stacks.files(root, "uat-instance", state)
             self.assertEqual(files[0], root / "compose.dev.yaml")
             self.assertEqual(
@@ -1419,15 +1440,16 @@ class ComposeStackTests(unittest.TestCase):
             for path in files[1:]:
                 stack = path.name.removeprefix("compose.").removesuffix(".yaml")
                 self.assertEqual(path.read_text(), compose_stacks.OVERRIDES[stack])
-            (root / "compose.review.yaml").touch()
+            (root / "scripts/compose_stacks.py").unlink()
             (root / "compose.yaml").touch()
-            self.assertEqual(
-                compose_stacks.files(root, "prod", state), [root / "compose.yaml"]
-            )
+            self.assertEqual(compose_stacks.files(root, "prod", state), [root / "compose.yaml"])
             (root / "compose.runtime.yaml").touch()
             self.assertEqual(
                 compose_stacks.files(root, "review", state),
-                [root / name for name in ("compose.runtime.yaml", "compose.dev.yaml", "compose.review.yaml")],
+                [
+                    root / name
+                    for name in ("compose.runtime.yaml", "compose.dev.yaml", "compose.review.yaml")
+                ],
             )
 
     def test_every_stack_has_an_override_and_legacy_names(self) -> None:

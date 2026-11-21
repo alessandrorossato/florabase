@@ -117,7 +117,11 @@ def main() -> None:
             "--project-directory",
             str(stable),
             # origin/main may predate WF-09 and keep its own preview files.
-            *[part for path in compose_stacks.files(stable, "preview") for part in ("-f", str(path))],
+            *[
+                part
+                for path in compose_stacks.files(stable, "preview")
+                for part in ("-f", str(path))
+            ],
         ]
         if run(
             [
@@ -316,7 +320,7 @@ def main() -> None:
                         "--env-file",
                         "/dev/null",
                         "-f",
-                        str(compose_stacks.integration()),
+                        str(compose_stacks.integration(repo.source)),
                         "config",
                         "--quiet",
                     ]

@@ -172,8 +172,11 @@ class UATInstance(UATPreview):
         return env
 
     def command(self, *args: str) -> list[str]:
-        legacy = self.source / "compose.uat-instance.yaml"
-        extra = legacy if compose_stacks.is_legacy(self.source) else compose_stacks.override("uat-instance")
+        if compose_stacks.is_legacy(self.source):
+            extra = self.source / "compose.uat-instance.yaml"
+        else:
+            overrides = compose_stacks.definitions(self.source)[0]
+            extra = compose_stacks.override("uat-instance", text=overrides["uat-instance"])
         return [*super().command(), "--file", str(extra), *args]
 
     def require_profile(self) -> None:

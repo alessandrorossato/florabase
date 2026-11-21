@@ -165,7 +165,7 @@ def stack_files(root: Path, role: str) -> list[Path]:
         return compose_stacks.files(root, "prod")
     if compose_stacks.is_legacy(root):
         return [root / "compose.integration.yaml"]
-    return [compose_stacks.integration()]
+    return [compose_stacks.integration(root)]
 
 
 def check_frontend_image(disposable: Disposable, root: Path, directory: Path) -> None:

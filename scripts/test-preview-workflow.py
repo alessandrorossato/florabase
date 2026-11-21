@@ -174,11 +174,13 @@ class PreviewIsolationTests(unittest.TestCase):
         self.assertEqual(command[command.index("--project-name") + 1], "florabase-preview")
         self.assertEqual(command[command.index("--project-directory") + 1], str(self.preview_path))
         files = [value for flag, value in zip(command, command[1:]) if flag == "--file"]
-        # The selected revision's development file turned into production targets (WF-09).
-        self.assertEqual(files[0], str(self.preview_path / "compose.dev.yaml"))
+        # This selected revision has no stack definitions, so its own tracked files load.
         self.assertEqual(
-            [Path(item).name for item in files[1:]],
-            ["compose.production.yaml", "compose.preview.yaml"],
+            files,
+            [
+                str(self.preview_path / "compose.yaml"),
+                str(self.preview_path / "compose.preview.yaml"),
+            ],
         )
         self.assertNotIn(str(self.repository / "compose.preview.yaml"), command)
 
@@ -186,9 +188,15 @@ class PreviewIsolationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             preview = Preview(self.repository, Path(temporary), RecordingCommands())
             root = preview.preview_path
+            (root / "scripts").mkdir()
+            (root / "scripts/compose_stacks.py").write_bytes(
+                (ROOT / "scripts/compose_stacks.py").read_bytes()
+            )
             self.assertEqual(preview.compose_files()[0], root / "compose.dev.yaml")
-            # Revisions before WF-09 keep their tracked preview overlay and baseline.
-            for name in ("compose.review.yaml", "compose.preview.yaml", "compose.yaml"):
+            # Revisions before WF-09, even ones with an override compose.dev.yaml, keep their
+            # tracked preview overlay and baseline.
+            (root / "scripts/compose_stacks.py").unlink()
+            for name in ("compose.dev.yaml", "compose.preview.yaml", "compose.yaml"):
                 (root / name).write_text("services: {}\n")
             self.assertEqual(
                 preview.compose_files(), [root / "compose.yaml", root / "compose.preview.yaml"]
@@ -245,8 +253,10 @@ class PreviewIsolationTests(unittest.TestCase):
             preview_call[preview_call.index("--project-name") + 1], "florabase-preview"
         )
         self.assertEqual(dev_call[dev_call.index("--project-name") + 1], "florabase")
-        self.assertIn(str(self.preview_path / "compose.dev.yaml"), preview_call)
-        self.assertIn(str(preview_workflow.Repository(self.repository).primary / "compose.dev.yaml"), dev_call)
+        self.assertIn(str(self.preview_path / "compose.preview.yaml"), preview_call)
+        self.assertIn(
+            str(preview_workflow.Repository(self.repository).primary / "compose.dev.yaml"), dev_call
+        )
 
     def test_stop_and_remove_commands_preserve_volume_and_local_changes(self) -> None:
         source = (ROOT / "scripts/preview.py").read_text()
@@ -291,7 +301,10 @@ class PreviewIsolationTests(unittest.TestCase):
 
     def test_import_refuses_database_only_clone_before_any_commands(self) -> None:
         preview = Preview(self.repository, self.preview_path, RecordingCommands())
-        with patch.object(preview, "require_worktree"), self.assertRaisesRegex(PreviewError, r"coordinated DB\+media"):
+        with (
+            patch.object(preview, "require_worktree"),
+            self.assertRaisesRegex(PreviewError, r"coordinated DB\+media"),
+        ):
             preview.import_development("yes", "florabase_preview")
         self.assertEqual(preview.commands.calls, [])
 
@@ -308,6 +321,9 @@ class PreviewIsolationTests(unittest.TestCase):
             patch.object(preview, "resolve_and_prepare_worktree", side_effect=prepared),
             patch.object(preview, "validate_compose_config"),
             patch.object(preview, "compose"),
+            patch.object(
+                preview, "compose_files", return_value=[self.preview_path / "compose.dev.yaml"]
+            ),
             patch.object(preview, "migrate_forward", return_value=["20260908_0020"]),
             patch.object(preview, "wait_for_readiness"),
             patch.object(preview, "owner_exists", return_value=True),
@@ -378,7 +394,9 @@ class PreviewIsolationTests(unittest.TestCase):
             with (
                 patch.object(preview, "git", side_effect=["e" * 40, "", "e" * 40]),
                 patch.object(preview, "database_revisions", return_value=["20260908_0020"]),
-                patch.object(preview_workflow, "migration_graph", return_value={"20260908_0020": []}),
+                patch.object(
+                    preview_workflow, "migration_graph", return_value={"20260908_0020": []}
+                ),
                 contextlib.redirect_stdout(output),
             ):
                 preview.status()
