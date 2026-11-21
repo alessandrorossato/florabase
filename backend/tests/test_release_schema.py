@@ -1,4 +1,7 @@
+import json
+import subprocess
 import sys
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -166,3 +169,280 @@ def test_driver_error_reports_sqlstate_without_exception_details(
     assert "SQLSTATE 42P07" in message
     assert detail not in message
     schema.exec_server.assert_not_called()
+
+
+IDENTITY = {"FLORABASE_PG_MAJOR": "18", "FLORABASE_PG_SYSTEM_ID": "7710579520300167193"}
+
+
+def cluster(schema: SimpleNamespace, *, user_objects: bool = False) -> None:
+    def scalar(statement: object, *_: object) -> object:
+        sql = str(statement)
+        if "server_version_num" in sql:
+            return "180006"
+        if "pg_control_system" in sql:
+            return int(IDENTITY["FLORABASE_PG_SYSTEM_ID"])
+        return user_objects
+
+    schema.connection.scalar.side_effect = scalar
+
+
+def marked(state: Path, **override: str) -> Path:
+    values = {"FLORABASE_INSTALLATION_ID": "ab12", **IDENTITY, **override}
+    (state / release_schema.MARKER_NAME).write_text(
+        "".join(f"{key}={values[key]}\n" for key in release_schema.MARKER_KEYS)
+    )
+    return state
+
+
+def deploy(
+    schema: SimpleNamespace,
+    state: Path,
+    previous: str | None = PREVIOUS,
+    dump: MagicMock | None = None,
+) -> MagicMock:
+    dump = dump or MagicMock(side_effect=lambda directory, name: directory / name)
+    release_schema.deploy(
+        MagicMock(attributes={}),
+        schema.scripts,
+        HEAD,
+        previous,
+        state_dir=state,
+        backup_dir=state,
+        dump=dump,
+    )
+    return dump
+
+
+def test_deploy_initializes_an_empty_database_then_writes_the_marker(
+    schema: SimpleNamespace, tmp_path: Path
+) -> None:
+    cluster(schema)
+    schema.current.side_effect = [(), (HEAD,)]
+
+    dump = deploy(schema, tmp_path)
+
+    dump.assert_not_called()
+    assert schema.upgrade.call_args.args[1] == HEAD
+    marker = release_schema.read_marker(tmp_path)
+    assert marker is not None
+    assert {key: marker[key] for key in IDENTITY} == IDENTITY
+    assert not list(tmp_path.glob(".*.tmp"))
+
+
+def test_deploy_keeps_an_at_head_database_unchanged(
+    schema: SimpleNamespace, tmp_path: Path
+) -> None:
+    cluster(schema, user_objects=True)
+    before = marked(tmp_path).joinpath(release_schema.MARKER_NAME).read_text()
+
+    dump = deploy(schema, tmp_path, previous=HEAD)
+
+    dump.assert_not_called()
+    schema.upgrade.assert_not_called()
+    assert (tmp_path / release_schema.MARKER_NAME).read_text() == before
+
+
+def test_deploy_dumps_before_upgrading_from_the_previous_release_head(
+    schema: SimpleNamespace, tmp_path: Path
+) -> None:
+    cluster(schema, user_objects=True)
+    schema.current.side_effect = [(PREVIOUS,), (HEAD,)]
+    order: list[str] = []
+
+    def record_dump(directory: Path, name: str) -> Path:
+        order.append("dump")
+        return directory / name
+
+    dump = MagicMock(side_effect=record_dump)
+    schema.upgrade.side_effect = lambda *_: order.append("upgrade")
+
+    deploy(schema, marked(tmp_path), dump=dump)
+
+    assert order == ["dump", "upgrade"]
+    name = dump.call_args.args[1]
+    assert name.startswith(f"florabase-{PREVIOUS}-to-{HEAD}-")
+    assert name.endswith(".dump")
+
+
+def test_deploy_refuses_the_upgrade_when_the_backup_fails(
+    schema: SimpleNamespace, tmp_path: Path
+) -> None:
+    cluster(schema, user_objects=True)
+    schema.current.return_value = (PREVIOUS,)
+    dump = MagicMock(side_effect=release_schema.SchemaError("pre-upgrade backup failed"))
+
+    with pytest.raises(release_schema.SchemaError, match="backup failed"):
+        deploy(schema, marked(tmp_path), dump=dump)
+
+    schema.upgrade.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("current", "marker", "message"),
+    [
+        ((HEAD,), None, "no installation marker"),
+        ((HEAD,), {"FLORABASE_PG_SYSTEM_ID": "1"}, "does not match"),
+        ((HEAD,), {"FLORABASE_PG_MAJOR": "17"}, "does not match"),
+        (("foreign",), {}, "neither image head"),
+        (("newer",), {}, "neither image head"),
+    ],
+)
+def test_deploy_refuses_unknown_states_without_changes(
+    schema: SimpleNamespace,
+    tmp_path: Path,
+    current: tuple[str, ...],
+    marker: dict[str, str] | None,
+    message: str,
+) -> None:
+    cluster(schema, user_objects=True)
+    schema.current.return_value = current
+    if marker is not None:
+        marked(tmp_path, **marker)
+    dump = MagicMock()
+
+    with pytest.raises(release_schema.SchemaError, match=message):
+        deploy(schema, tmp_path, dump=dump)
+
+    dump.assert_not_called()
+    schema.upgrade.assert_not_called()
+
+
+def test_deploy_refuses_an_unwritable_state_directory_before_connecting(
+    schema: SimpleNamespace, tmp_path: Path
+) -> None:
+    tmp_path.chmod(0o500)
+    try:
+        with pytest.raises(release_schema.SchemaError, match="not writable"):
+            deploy(schema, tmp_path)
+    finally:
+        tmp_path.chmod(0o700)
+    schema.engine.begin.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "content", ["", "FLORABASE_PG_MAJOR=18\n", "garbage\n", "FLORABASE_PG_MAJOR=$(id)\n"]
+)
+def test_malformed_marker_is_refused(tmp_path: Path, content: str) -> None:
+    (tmp_path / release_schema.MARKER_NAME).write_text(content)
+
+    with pytest.raises(release_schema.SchemaError, match="malformed"):
+        release_schema.read_marker(tmp_path)
+
+
+def test_owner_variables_are_validated_without_echoing_the_password() -> None:
+    secret = "short-secret"[:8]
+    assert release_schema.owner_from_environment({}) is None
+    assert release_schema.owner_from_environment(
+        {"FLORABASE_OWNER_LOGIN": " Owner ", "FLORABASE_OWNER_PASSWORD": "correct horse battery"}
+    ) == ("owner", "correct horse battery")
+    for environ in (
+        {"FLORABASE_OWNER_LOGIN": "owner"},
+        {"FLORABASE_OWNER_PASSWORD": secret},
+        {"FLORABASE_OWNER_LOGIN": "owner", "FLORABASE_OWNER_PASSWORD": secret},
+    ):
+        with pytest.raises(release_schema.SchemaError) as refused:
+            release_schema.owner_from_environment(environ)
+        assert secret not in str(refused.value)
+
+
+def test_deploy_command_refuses_partial_owner_variables_before_any_change(
+    schema: SimpleNamespace, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("FLORABASE_OWNER_LOGIN", "owner")
+    monkeypatch.delenv("FLORABASE_OWNER_PASSWORD", raising=False)
+
+    assert invoke(monkeypatch, "deploy") == 1
+
+    assert "or neither" in capsys.readouterr().err
+    schema.engine.begin.assert_not_called()
+
+
+def test_dump_refuses_a_missing_backup_directory(tmp_path: Path) -> None:
+    with pytest.raises(release_schema.SchemaError, match="missing or not writable"):
+        release_schema.dump_database(tmp_path / "absent", "florabase.dump")
+
+
+def test_dump_refuses_an_unwritable_backup_directory(tmp_path: Path) -> None:
+    tmp_path.chmod(0o500)
+    try:
+        with pytest.raises(release_schema.SchemaError, match="missing or not writable"):
+            release_schema.dump_database(tmp_path, "florabase.dump")
+    finally:
+        tmp_path.chmod(0o700)
+
+
+def test_failed_dump_leaves_no_partial_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def failing(command: list[str], **_: object) -> None:
+        Path(command[2].removeprefix("--file=")).write_bytes(b"partial")
+        raise subprocess.CalledProcessError(1, command)
+
+    monkeypatch.setattr(subprocess, "run", failing)
+
+    with pytest.raises(release_schema.SchemaError, match="nothing was migrated"):
+        release_schema.dump_database(tmp_path, "florabase.dump")
+
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_previous_release_head_declaration(tmp_path: Path) -> None:
+    assert release_schema.previous_release_head(tmp_path / "absent.json") is None
+    declared = Path(__file__).parents[1] / "alembic/release-upgrade-from.json"
+    assert (
+        release_schema.previous_release_head(declared)
+        == json.loads(declared.read_text())["alembic_head"]
+    )
+    (tmp_path / "bad.json").write_text('{"alembic_head": "../x"}')
+    with pytest.raises(release_schema.SchemaError, match="malformed"):
+        release_schema.previous_release_head(tmp_path / "bad.json")
+
+
+def test_deploy_resumes_a_pending_first_installation_at_head(
+    schema: SimpleNamespace, tmp_path: Path
+) -> None:
+    cluster(schema, user_objects=True)
+    (tmp_path / release_schema.PENDING_NAME).touch()
+
+    deploy(schema, tmp_path)
+
+    schema.upgrade.assert_not_called()
+    assert release_schema.read_marker(tmp_path) is not None
+    assert not (tmp_path / release_schema.PENDING_NAME).exists()
+
+
+def test_pending_installation_still_refuses_a_foreign_revision(
+    schema: SimpleNamespace, tmp_path: Path
+) -> None:
+    cluster(schema, user_objects=True)
+    schema.current.return_value = ("foreign",)
+    (tmp_path / release_schema.PENDING_NAME).touch()
+
+    with pytest.raises(release_schema.SchemaError, match="no installation marker"):
+        deploy(schema, tmp_path)
+
+    assert release_schema.read_marker(tmp_path) is None
+
+
+def test_deploy_refuses_an_empty_database_of_a_recorded_installation(
+    schema: SimpleNamespace, tmp_path: Path
+) -> None:
+    cluster(schema)
+    schema.current.return_value = ()
+
+    with pytest.raises(release_schema.SchemaError, match="database is empty"):
+        deploy(schema, marked(tmp_path))
+
+    schema.upgrade.assert_not_called()
+
+
+def test_marker_is_created_exclusively_and_a_concurrent_one_must_match(tmp_path: Path) -> None:
+    release_schema.write_marker(tmp_path, IDENTITY)
+    first = (tmp_path / release_schema.MARKER_NAME).read_text()
+
+    release_schema.write_marker(tmp_path, IDENTITY)
+    assert (tmp_path / release_schema.MARKER_NAME).read_text() == first
+
+    with pytest.raises(release_schema.SchemaError, match="different PostgreSQL cluster"):
+        release_schema.write_marker(tmp_path, {**IDENTITY, "FLORABASE_PG_SYSTEM_ID": "1"})
+    assert sorted(path.name for path in tmp_path.iterdir()) == [release_schema.MARKER_NAME]

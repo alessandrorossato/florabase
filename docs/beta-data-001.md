@@ -15,14 +15,14 @@ in source, a tag or a rehearsal artifact does not establish publication.
 
 | Path | Installation and maintenance authority |
 | --- | --- |
-| [Portable Compose](portable-installation.md) | Verify the published `portable-compose.yaml` and manifest against the approved source commit. Keep the stack's exact project name, private configuration and dedicated local PostgreSQL/media binds. Use the guide's explicit empty-cluster initialization, `release_schema init`, and owner bootstrap before bringing up the full stack. For upgrades, stop writers, take the paired backup with the old file, check that the PostgreSQL digest is unchanged, and use the target backend's `release_schema upgrade` with the previous head. Restore into fresh paths and a distinct project, port and private HTTPS origin. Keep the existing data until recovery is validated. |
-| [Advanced controller bundle](installation.md) | Use the verified bundle and manifest with `florabasectl.py` for preflight, install, backup, promotion, journaling and restore. Follow the [runtime runbook](beta-runtime-001.md) for interrupted and failed promotion. Retain this path for an installation already managed by the controller unless the operator explicitly approves a separately validated transfer. |
+| [Release `compose.yaml`](installation.md) | Verify the published `compose.yaml` and manifest against the approved source commit. Create the empty data folder and the separate backup folder and deploy the file as-is with the stack's exact name and private configuration; it initializes the installation and creates the owner once. For upgrades, take the paired backup, check that the PostgreSQL digest is unchanged, and deploy the new file; `migrate` writes a verified dump before migrating. Restore into a new data folder and a distinct stack, port and private HTTPS origin. Keep the existing data until recovery is validated. |
 
-Keep manager updates, Git sync and unattended redeploys disabled in either
-path. Serialize operator maintenance with Dockhand actions. For a planned
-controller-to-portable transfer, use a verified paired logical dump and media
-archive and validate a compatible portable restore before switching traffic.
-Keep the original binds separate from the restore.
+The controller bundle and the `v0.1.0-beta.6` manual portable procedure are withdrawn
+([ADR 0008](decisions/0008-self-initializing-single-compose.md)). Keep manager updates, Git sync
+and unattended redeploys disabled. Serialize operator maintenance with Dockhand actions. An
+installation of an earlier release moves through a verified paired logical dump and media archive
+and a validated isolated restore before switching traffic. Keep the original folders separate from
+the restore.
 
 ## Prepare the private source inventory
 
@@ -146,13 +146,12 @@ synthetic installation for write and failure drills.
 
 - [ ] **Published bundle and host.** Verify the required published assets and
   approved source commit for the selected path above. Stop if the assets,
-  attestations or immutable images are unavailable. For the advanced bundle,
-  also capture controller preflight. Record DSM, Engine, Compose, Python
-  where needed, architecture, resources and capacity alongside normal NAS workloads.
-- [ ] **Durable storage.** Verify the PostgreSQL and media
-  binds resolve to the intended local NAS paths and keep stable
-  identities. Check DSM ACLs and ownership (DB 70:70, media 10001:10001, both
-  0700) and protect secrets, stack state and backups. Record a synthetic
+  attestations or immutable images are unavailable. Record DSM, Engine,
+  Compose, architecture, resources and capacity alongside normal NAS workloads.
+- [ ] **Durable storage.** Verify the data and backup folders resolve to the
+  intended local NAS paths inside a volume and keep stable identities. Check
+  DSM ACLs and the ownership `prepare` sets (postgres 70:70 and media 10001:10001,
+  both 0700) and protect secrets, stack state and backups. Record a synthetic
   database marker and original media checksum before restart and reboot.
 - [ ] **HTTPS, owner and network boundary.** Confirm Tailscale Serve on the exact
   configured HTTPS origin. Check `/api/v1/ready` and owner login, session reload,
@@ -160,44 +159,33 @@ synthetic installation for write and failure drills.
   denial of unauthenticated originals. Test desktop and mobile. From a
   separate LAN device on the same segment verify the loopback-published port
   is unreachable, particularly on Engine versions before 28. Verify that the
-  backend and PostgreSQL have no published ports. For the advanced bundle
-  also run the [controller acceptance command](installation.md#5-put-florabase-behind-https-and-check-readiness).
+  backend and PostgreSQL have no published ports
+  ([HTTPS and readiness](installation.md#5-put-florabase-behind-https-and-check-readiness)).
 - [ ] **Dockhand exclusions.** Record the pinned version and behavior. Verify
   environment automatic updates are disabled and no per-container or stack
-  override permits updates. The advanced bundle supplies
-  `dockhand.update=false` on frontend, backend and PostgreSQL. The current
-  Portable Compose template omits those labels. If using Portable Compose
-  with Dockhand, hold acceptance until the required exclusions are applied
-  through a separately approved configuration and proven on all three services.
-  Disable Git sync and update webhooks. For Portable Compose, preserve the
-  exact project and configuration used by the documented maintenance
-  commands. For a controller stack, adopt in place only when original project,
-  stack, environment and secrets paths are preserved, and leave stack editing
-  disabled. Otherwise use inspection only. Protect Dockhand access and back up
+  override permits updates. The release `compose.yaml` references images only
+  by digest and carries no `dockhand.update` labels; hold acceptance until the
+  required exclusions are applied through a separately approved configuration
+  and proven on all services. Disable Git sync and update webhooks. Preserve
+  the exact stack name and configuration used by the documented maintenance
+  commands. Protect Dockhand access and back up
   its data and encryption key. Check
   image digests remain unchanged after restart. Run explicit upgrades via the
   selected path. A PostgreSQL digest change requires separate maintenance.
-- [ ] **Paired recovery.** Take and verify the selected path's paired backup.
-  For Portable Compose use the documented stopped-writer dump, media archive
-  and checksum procedure. For the advanced bundle use `backup` and
-  `verify-backup`. Keep independent encrypted copies and verify off-host
+- [ ] **Paired recovery.** Take and verify the paired backup with the
+  documented stopped-writer dump, media archive and checksum procedure. Keep independent encrypted copies and verify off-host
   retrieval and custody of keys, installation configuration and verified
   bundles. Run the selected path's isolated restore and compare revision, counts,
   representative relationships, owner login, and checksums for shared,
   unlinked and saved originals. Time retrieval and usable recovery against
-  owner-approved RPO/RTO and record retention. For the advanced bundle,
-  retire only the named drill project using `restore-remove`. For Portable
-  Compose stop the distinct drill stack and retain its files per the drill plan.
+  owner-approved RPO/RTO and record retention, including the pre-upgrade dumps.
+  Stop the distinct drill stack and retain its files per the drill plan.
 - [ ] **Reboot, failure and recovery.** Reboot the NAS in a scheduled window.
   Check HTTPS, readiness, owner login, durable paths, database marker and
-  original checksum. In the isolated drill, exercise backend and DB failure,
-  interrupted promotion and failed application or migration. Record readiness
-  refusal, quiescence and recovery. With Portable Compose keep writers
-  stopped, establish the actual schema revision before retrying and restore
-  the old verified set into fresh paths when reverting a successful schema
-  change. With the advanced bundle use controller `status` to choose
-  `resume` for interruption, `abort` only when the prior schema still holds,
-  or the documented forward fix or verified replacement restore when required.
+  original checksum. In the isolated drill, exercise backend and DB failure
+  and a failed upgrade. Record the `migrate` refusal, the backend's schema
+  refusal and recovery, and restore the pre-upgrade dump or the old verified set
+  into a new data folder when reverting a successful schema change.
   Record the owner's post-snapshot data-loss decision before any replacement.
 - [ ] **Beta admission.** Once separately authorized, run the actual-data pilot
   and agree on unresolved data decisions. Record the BETA-ACCEPTANCE-001 soak

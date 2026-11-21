@@ -60,11 +60,19 @@ requires tests and release-note review.
 
 ## Local owner bootstrap
 
-This describes `v0.1.0-beta.6` and source builds. From INSTALL-001 the production `compose.yaml`
-may also create the first owner once from its environment
-([ADR 0008](decisions/0008-self-initializing-single-compose.md)).
+The release `compose.yaml` creates the first owner once from `FLORABASE_OWNER_LOGIN` and
+`FLORABASE_OWNER_PASSWORD` ([ADR 0008](decisions/0008-self-initializing-single-compose.md)). Its
+`migrate` service validates both before any change, refuses one without the other or a password
+outside the policy, creates the owner only while no user exists under the same advisory lock as
+the command below, and never logs, echoes or stores the password outside its hash. A database with
+users, including a restored one, never gets a new owner; the variables are then ignored with a log
+notice. Accepted risk: the initial password stays visible in the Compose manager's stack
+environment, `docker inspect` and manager exports until the operator removes it. Mitigations are
+one-time use, the log notice and the documented password change at first sign-in
+([installation](installation.md#4-sign-in-as-the-owner)).
 
-After applying migrations, create the first owner from an interactive terminal:
+Without those variables, and for source builds, create the first owner offline after applying
+migrations, from an interactive terminal:
 
 ```bash
 python3 ./scripts/workflow_environment.py prod compose -- run --rm backend python -m florabase.auth.bootstrap owner
@@ -86,7 +94,7 @@ share the cookie may need to reload for a fresh CSRF token. If sign-out overlaps
 change in another tab, use **Sign out** after that tab reports completion.
 
 The password-change backoff bucket is separate from the public login bucket. The host-only
-[portable recovery command](portable-installation.md#recover-a-forgotten-owner-password)
+[offline recovery command](installation.md#recover-a-forgotten-owner-password)
 bypasses both, clears both on success and revokes every session. It requires local deployment
 administration and a healthy, writable database at the installed revision.
 
@@ -96,7 +104,7 @@ The implementation deliberately stays within the small boundaries accepted by AD
 
 | Component                                             | Reuse boundary                                                                                                                                                                                                                             |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Password hashing and verification                     | `pwdlib[argon2]` 0.3.1 with Argon2id, `verify_and_update`, and a cached dummy Argon2id encoding for unknown users.                                                                                                                         |
+| Password hashing and verification                     | `pwdlib[argon2]` 0.4.2 with Argon2id, `verify_and_update`, and a cached dummy Argon2id encoding for unknown users.                                                                                                                         |
 | Session and CSRF token generation                     | Python `secrets` with an explicit 32-byte input.                                                                                                                                                                                           |
 | Stored token digests and constant-time checks         | Python `hashlib.sha256` and `secrets.compare_digest`; SHA-256 is only for high-entropy tokens, never passwords.                                                                                                                            |
 | Cookie handling                                       | Starlette `Response.set_cookie` and `delete_cookie`, with minimal Florabase policy selecting the production or loopback-development attributes.                                                                                            |

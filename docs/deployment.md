@@ -1,12 +1,10 @@
 # Source-build deployment and upgrades
 
 **Status: development only.** Building from source is not a supported installation; the official
-installation is [portable Docker Compose](portable-installation.md).
-This guide builds Florabase from a repository checkout. For the linux/amd64 beta distributed as
-digest-pinned container images, use the [image-only installation guide](installation.md) and
-[beta runtime runbook](beta-runtime-001.md). The two paths both use the `florabase-prod` Compose
-project name and have different storage layouts. Keep them on separate hosts. The beta controller
-refuses to adopt source-build volumes.
+installation is the single self-initializing [`compose.yaml`](installation.md) of each release.
+This guide builds Florabase from a repository checkout with the transitional source-build
+`compose.runtime.yaml`, which WF-09 replaces. Keep a source build and a release installation on
+separate hosts; they use different storage layouts.
 
 Florabase is pre-release software. Review the incoming changes and keep a tested backup before
 every upgrade.
@@ -114,9 +112,9 @@ make migrate &&
 make up
 ```
 
-Application startup never runs migrations. (From INSTALL-001, the production `compose.yaml` applies
-them through a guarded one-shot `migrate` service; see
-[ADR 0008](decisions/0008-self-initializing-single-compose.md).) Create the first and only initial owner after migration:
+The backend process never runs migrations. A source build applies them with `make migrate`; the
+release `compose.yaml` applies them through its guarded one-shot `migrate` service
+([ADR 0008](decisions/0008-self-initializing-single-compose.md)). Create the first and only initial owner after migration:
 
 ```bash
 prod run --rm backend python -m florabase.auth.bootstrap owner
@@ -126,7 +124,7 @@ The password is prompted without echo. Automation may use `--password-stdin` wit
 that writes one line to standard input. Never put the password in a command argument, Compose file,
 image layer, or source-controlled environment file.
 
-For an existing source-build installation, the [owner recovery procedure](portable-installation.md#recover-a-forgotten-owner-password)
+For an existing source-build installation, the [owner recovery procedure](installation.md#recover-a-forgotten-owner-password)
 also applies. Select the installed source deployment with `prod` in place of `dc`, and run
 `prod run --rm --no-deps backend python -m florabase.auth.reset_password '<login-name>'`.
 
@@ -148,7 +146,7 @@ public HTTPS origin.
 Terminate TLS at an operator-managed proxy and forward to the frontend published port. The proxy
 owns certificate renewal, HSTS after validation, request/body limits, replacement of untrusted
 forwarding headers, and source-address login rate limiting. Pass the bundled security headers
-through to the browser as in the [portable proxy example](portable-installation.md#reverse-proxy-example).
+through to the browser as in the [installation proxy example](installation.md#5-put-florabase-behind-https-and-check-readiness).
 Florabase does not infer its security origin or user identity from forwarded headers.
 
 ## Persistence

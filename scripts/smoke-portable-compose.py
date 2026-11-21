@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise the rendered release asset on two fresh, isolated bind-mounted stacks."""
+"""Exercise the rendered self-initializing compose.yaml on fresh, isolated bind-mounted stacks."""
 
 from __future__ import annotations
 
@@ -21,14 +21,29 @@ from workflow_resources import Disposable
 
 ORIGIN = "https://portable.example.invalid"
 OWNER = "portable-owner"
-SCHEMA = ("python", "-m", "florabase.db.release_schema")
 ARTIFACTS = ("python", "/app/scripts/attachment_artifacts.py")
 REVISION_SQL = "SELECT version_num FROM alembic_version"
+SERVICES = ("prepare", "db", "migrate", "backend", "frontend")
 SERVICE_UIDS = {"db": b"70", "backend": b"10001", "frontend": b"101"}
-DB_INIT = (
-    'entries=$(ls -A /var/lib/postgresql); test -z "$entries" || { echo "PostgreSQL bind directory is not empty" >&2; exit 1; }; '
-    "exec docker-ensure-initdb.sh"
-)
+MARKER = "/bind/data/state/installation.env"
+SMOKE_REVISION = "29991231_9999"
+SMOKE_MIGRATION = '''"""Smoke-only upgrade step; it fails while the sentinel table exists."""
+
+from alembic import op
+
+revision = "{revision}"
+down_revision = "{head}"
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    op.execute("CREATE TABLE smoke_upgrade (id integer)")
+
+
+def downgrade() -> None:
+    op.execute("DROP TABLE smoke_upgrade")
+'''
 
 
 def require(condition: bool, message: str) -> None:
@@ -48,7 +63,7 @@ def run(
         start_new_session=True,
     ) as process:
         try:
-            stdout, stderr = process.communicate(data, timeout=180)
+            stdout, stderr = process.communicate(data, timeout=300)
         except BaseException:
             with suppress(ProcessLookupError):
                 os.killpg(process.pid, signal.SIGKILL)
@@ -58,12 +73,14 @@ def run(
 
 
 class Stack:
-    def __init__(self, root: Path, compose: Path, prefix: str, backend_image: str) -> None:
+    def __init__(self, root: Path, compose: Path, prefix: str, helper_image: str) -> None:
         self.root = root
-        self.backend_image = backend_image
+        self.compose_file = compose
+        self.helper_image = helper_image
         self.project = f"{prefix}-{root.name}"
         root.mkdir(mode=0o700)
-        for directory in ("db", "media"):
+        # Operator-created folders: owned by the invoking user and not traversable by others.
+        for directory in ("data", "backup"):
             (root / directory).mkdir(mode=0o700)
         self.env = {
             key: value
@@ -73,11 +90,13 @@ class Stack:
         self.env.update(
             FLORABASE_DB_PASSWORD=secrets.token_hex(24) + "@:%",
             FLORABASE_CANONICAL_ORIGIN=ORIGIN,
-            FLORABASE_POSTGRES_DIR=str(root / "db"),
-            FLORABASE_MEDIA_DIR=str(root / "media"),
+            FLORABASE_DATA_DIR=str(root / "data"),
+            FLORABASE_BACKUP_DIR=str(root / "backup"),
             FLORABASE_HTTP_PORT="0",
         )
-        self.command = [
+
+    def command(self) -> list[str]:
+        return [
             "docker",
             "compose",
             "--env-file",
@@ -85,10 +104,11 @@ class Stack:
             "--project-name",
             self.project,
             "--file",
-            str(compose),
+            str(self.compose_file),
         ]
 
     def owner(self, command: str) -> None:
+        """Run a root shell over the stack's folders, standing in for the operator's host."""
         result = run(
             [
                 "docker",
@@ -104,12 +124,12 @@ class Stack:
                 "sh",
                 "--mount",
                 f"type=bind,src={self.root},dst=/bind",
-                self.backend_image,
+                self.helper_image,
                 "-ec",
                 command,
             ],
         )
-        require(result.returncode == 0, f"{self.project}: bind preparation/cleanup failed")
+        require(result.returncode == 0, f"{self.project}: host folder operation failed")
 
     def compose(
         self,
@@ -119,7 +139,7 @@ class Stack:
         check: str | None = None,
         secret: bytes | None = None,
     ) -> bytes:
-        result = run([*self.command, *args], env=self.env, data=data)
+        result = run([*self.command(), *args], env=self.env, data=data)
         operation = f"{self.project}: {check or 'compose ' + args[0]}"
         if secret is not None:
             require(
@@ -135,6 +155,17 @@ class Stack:
             # Do not echo command arguments or output, which can carry credentials or dump bytes.
             require(result.returncode == 0, f"{operation} failed (exit {result.returncode})")
         return result.stdout
+
+    def deploy(self) -> None:
+        """The whole operator procedure: one docker compose up -d."""
+        self.compose("up", "-d", "--wait", "--wait-timeout", "180", check="docker compose up -d")
+
+    def refuse(self, service: str, message: str, operation: str) -> None:
+        result = run([*self.command(), "up", "-d", "--wait", "--wait-timeout", "180"], env=self.env)
+        require(result.returncode != 0, f"{self.project}: {operation} was not refused")
+        logs = self.compose("logs", "--no-color", service)
+        require(message.encode() in logs, f"{self.project}: {operation}: expected {message!r}")
+        self.compose("stop")
 
     def backend(
         self,
@@ -171,29 +202,6 @@ class Stack:
             check="PostgreSQL query",
         ).strip()
 
-    def init_cluster(self, failure: str | None = None) -> None:
-        self.compose("stop", "db")
-        self.compose(
-            "run",
-            "--rm",
-            "--no-deps",
-            "-T",
-            "-e",
-            "POSTGRES_INITDB_ARGS=--auth=scram-sha-256",
-            "--entrypoint",
-            "sh",
-            "db",
-            "-ec",
-            DB_INIT,
-            failure=failure,
-            check="PostgreSQL cluster initialization",
-        )
-        if failure is None:
-            self.up("db")
-
-    def up(self, *services: str) -> None:
-        self.compose("up", "-d", "--wait", "--wait-timeout", "90", *services)
-
     def client(self) -> Client:
         address = self.compose("port", "frontend", "8080").strip()
         match = re.fullmatch(rb"127\.0\.0\.1:([0-9]{1,5})", address)
@@ -209,9 +217,31 @@ class Stack:
         require_owner_session(client)
         return client
 
+    def dumps(self) -> list[str]:
+        listing = run(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--network",
+                "none",
+                "--user",
+                "0",
+                "--entrypoint",
+                "ls",
+                "--mount",
+                f"type=bind,src={self.root},dst=/bind,readonly",
+                self.helper_image,
+                "-A",
+                "/bind/backup/pre-upgrade",
+            ]
+        )
+        require(listing.returncode == 0, f"{self.project}: could not list pre-upgrade backups")
+        return sorted(listing.stdout.decode().split())
+
     def close(self) -> None:
         self.compose("down", "--remove-orphans")
-        self.owner("rm -rf /bind/db /bind/media")
+        self.owner("rm -rf /bind/data /bind/backup")
         self.assert_no_resources()
 
     def assert_no_resources(self) -> None:
@@ -229,6 +259,11 @@ def require_owner_session(client: Client) -> None:
         "owner session: incorrect owner",
     )
     require(session.get("canonical_origin") == ORIGIN, "owner session: incorrect canonical origin")
+
+
+def require_no_secret(stack: Stack, values: tuple[str, ...], operation: str) -> None:
+    logs = stack.compose("logs", "--no-color", *SERVICES)
+    require(all(value.encode() not in logs for value in values), f"{operation}: secret in logs")
 
 
 def exercise_credentials(stack: Stack, password: str) -> str:
@@ -286,7 +321,7 @@ def exercise_credentials(stack: Stack, password: str) -> str:
         secret=reset_password.encode(),
     )
     require(b"reset committed" in result, "offline password reset: missing commit confirmation")
-    stack.up()
+    stack.deploy()
     restarted = stack.client()
     restarted.cookie = first.cookie
     restarted.request("/api/v1/auth/session", expected=401)
@@ -361,14 +396,19 @@ def exercise_authenticated_thumbnail(client: Client, path: str) -> None:
 def require_services(stack: Stack, images: dict[str, str]) -> None:
     config = response_object(stack.compose("config", "--format", "json"), "Compose configuration")
     services = config.get("services")
-    if not isinstance(services, dict) or services.keys() != SERVICE_UIDS.keys():
-        raise RuntimeError("Compose configuration: expected db, backend and frontend services")
-    for name in SERVICE_UIDS:
+    if not isinstance(services, dict) or set(services) != set(SERVICES):
+        raise RuntimeError(
+            "Compose configuration: expected prepare, db, migrate, backend, frontend"
+        )
+    for name in SERVICES:
         service = services[name]
         require(
             isinstance(service, dict) and service.get("image") == images[name],
             f"Compose configuration: incorrect {name} image reference",
         )
+    for name in ("db", "backend"):
+        command = " ".join(services[name].get("command") or [])
+        require("alembic" not in command and "deploy" not in command, f"{name} migrates")
 
 
 def require_revision(stack: Stack, revision: bytes, operation: str) -> None:
@@ -381,40 +421,88 @@ def require_media(stack: Stack, password: str, path: str, original: bytes, opera
     )
 
 
-def smoke(source: Stack, restore: Stack, images: dict[str, str], head: str) -> None:
+def build_upgrade_image(backend_image: str, head: str, tag: str, work: Path) -> None:
+    """A test-only image one migration ahead that declares this release head as its previous."""
+    work.mkdir()
+    (work / f"{SMOKE_REVISION}_smoke_upgrade.py").write_text(
+        SMOKE_MIGRATION.format(revision=SMOKE_REVISION, head=head)
+    )
+    (work / "release-upgrade-from.json").write_text(json.dumps({"alembic_head": head}) + "\n")
+    (work / "Dockerfile").write_text(
+        f"FROM {backend_image}\n"
+        f"COPY {SMOKE_REVISION}_smoke_upgrade.py /app/alembic/versions/\n"
+        "COPY release-upgrade-from.json /app/alembic/release-upgrade-from.json\n"
+    )
+    result = run(["docker", "build", "--quiet", "--pull=false", "--tag", tag, str(work)])
+    require(result.returncode == 0, "smoke upgrade image build failed")
+
+
+def refusals_before_any_data(probe: Stack) -> None:
+    """Data-directory guards on a folder that never holds real data."""
+    absent = probe.env["FLORABASE_DATA_DIR"]
+    probe.env["FLORABASE_DATA_DIR"] = str(probe.root / "absent")
+    probe.compose("up", "-d", failure="does not exist", check="missing data folder")
+    probe.compose("down", "--remove-orphans")
+    probe.env["FLORABASE_DATA_DIR"] = absent
+
+    probe.owner("echo stray > /bind/data/stray")
+    probe.refuse("prepare", "no installation marker", "non-empty folder without marker")
+    probe.owner("rm /bind/data/stray")
+
+    marker = (
+        "FLORABASE_INSTALLATION_ID=ab12\\nFLORABASE_PG_MAJOR={major}\\nFLORABASE_PG_SYSTEM_ID=1\\n"
+    )
+    probe.owner(f"mkdir -p /bind/data/state && printf '{marker.format(major=18)}' > {MARKER}")
+    probe.refuse("prepare", "database folder is missing or empty", "marker without database")
+    probe.owner(f"printf '{marker.format(major=17)}' > {MARKER}")
+    probe.refuse("prepare", "uses PostgreSQL 17", "marker with another PostgreSQL major")
+    probe.owner("rm -rf /bind/data/state")
+
+    probe.env["FLORABASE_BACKUP_DIR"] = probe.env["FLORABASE_DATA_DIR"] + "/backup"
+    probe.owner("mkdir /bind/data/backup")
+    probe.refuse("prepare", "is inside FLORABASE_DATA_DIR", "backup folder inside data folder")
+    probe.compose("down", "--remove-orphans")
+    probe.owner("rm -rf /bind/data/backup")
+    # A trailing slash must not hide the data folder inside the backup folder.
+    probe.env["FLORABASE_BACKUP_DIR"] = str(probe.root) + "/"
+    probe.refuse("prepare", "is inside FLORABASE_BACKUP_DIR", "data folder inside backup folder")
+    probe.compose("down", "--remove-orphans")
+    probe.env["FLORABASE_BACKUP_DIR"] = str(probe.root / "backup")
+
+
+def smoke(
+    source: Stack, restore: Stack, images: dict[str, str], head: str, upgrade_compose: Path
+) -> None:
     require_services(source, images)
-    require_services(restore, images)
-    source.compose("run", "--rm", "--no-deps", "-T", "db", failure="Run initdb")
-    source.init_cluster()
-    source.init_cluster(failure="PostgreSQL bind directory is not empty")
-    source.up("db")
-    source.backend(failure="differs from image head")
-    source.sql("CREATE TABLE unmanaged (id int)")
-    source.backend(*SCHEMA, "init", failure="requires an empty")
-    source.sql("DROP TABLE unmanaged")
-    source.backend(*SCHEMA, "init")
-    source.backend(*SCHEMA, "init", failure="requires an empty")
-    require(
-        source.backend("alembic", "heads").strip() == f"{head} (head)".encode(),
-        "backend image: unexpected Alembic head",
-    )
-    require_revision(source, head.encode(), "schema initialization")
+    refusals_before_any_data(restore)
+
+    # A failed first deployment is retried without emptying the folder.
     password = secrets.token_hex(24)
-    source.backend(
-        "python",
-        "-m",
-        "florabase.auth.bootstrap",
-        OWNER,
-        "--password-stdin",
-        data=(password + "\n").encode(),
-    )
-    source.up()
+    source.env["FLORABASE_OWNER_LOGIN"] = OWNER
+    source.refuse("migrate", "or neither", "owner login without password")
+    weak = "w" + secrets.token_hex(4)
+    source.env["FLORABASE_OWNER_PASSWORD"] = weak
+    source.refuse("migrate", "first owner refused", "owner password below policy")
+    require_no_secret(source, (weak,), "refused owner password")
+    source.env["FLORABASE_OWNER_PASSWORD"] = password
+    source.deploy()
+    require_revision(source, head.encode(), "first installation")
+    require_no_secret(source, (password,), "first installation")
     for service, uid in SERVICE_UIDS.items():
         require(
             source.compose("exec", "-T", service, "id", "-u").strip() == uid,
             f"{service}: unexpected runtime UID",
         )
     exercise_bundled_headers(source.client())
+    source.login(password)
+
+    # Redeploying the same file changes nothing and never creates a second owner.
+    source.deploy()
+    logs = source.compose("logs", "--no-color", "migrate")
+    require(b"users already exist" in logs, "redeploy: owner variables were not ignored")
+    require(source.dumps() == [], "redeploy at head wrote a backup")
+    del source.env["FLORABASE_OWNER_LOGIN"], source.env["FLORABASE_OWNER_PASSWORD"]
+
     password = exercise_credentials(source, password)
     original = png(19, 37, 59)
     client = source.login(password)
@@ -430,30 +518,26 @@ def smoke(source: Stack, restore: Stack, images: dict[str, str], head: str) -> N
     ):
         raise RuntimeError("media upload: missing or invalid content URL")
     exercise_authenticated_thumbnail(client, thumbnail)
-
-    # Real service restarts preserve both state roots and never run Alembic.
     source.compose("restart")
-    source.up()
+    source.deploy()
     require_media(source, password, path, original, "service restart")
-    require_revision(source, head.encode(), "service restart")
 
+    # The cluster found must be the one the marker recorded.
+    source.compose("stop")
+    source.owner(f"cp {MARKER} /bind/marker && sed -i 's/_SYSTEM_ID=.*/_SYSTEM_ID=1/' {MARKER}")
+    source.refuse("prepare", "another PostgreSQL cluster", "marker of another cluster")
+    source.owner(f"mv /bind/marker {MARKER}")
+
+    # The backend process never migrates; migrate refuses an unknown revision.
+    source.deploy()
     source.compose("stop", "frontend", "backend")
     source.sql("UPDATE alembic_version SET version_num = 'foreign_revision'")
-    source.backend(failure="foreign_revision")
-    source.backend(*SCHEMA, "upgrade", "foreign_revision", failure="migration history")
-    require_revision(source, b"foreign_revision", "foreign revision refusal")
+    source.backend(failure="differs from image head", check="backend schema guard")
+    source.refuse("migrate", "neither image head", "unknown database revision")
+    source.compose("start", "db")
     source.sql(f"UPDATE alembic_version SET version_num = '{head}'")
-    dump = source.compose(
-        "exec",
-        "-T",
-        "db",
-        "sh",
-        "-ec",
-        'export PGPASSWORD="$POSTGRES_PASSWORD"; '
-        'exec pg_dump -Fc --no-owner --no-privileges -U "$POSTGRES_USER" "$POSTGRES_DB"',
-        check="database backup",
-    )
-    require(dump.startswith(b"PGDMP"), "database backup: missing PostgreSQL custom-format dump")
+    source.deploy()
+
     verified = b"Verified 1 stored attachment file(s) against database metadata"
     require(
         source.backend(*ARTIFACTS, "verify").strip() == verified,
@@ -462,26 +546,54 @@ def smoke(source: Stack, restore: Stack, images: dict[str, str], head: str) -> N
     media = source.backend(*ARTIFACTS, "archive")
     require(bool(media), "media backup: missing attachment archive")
 
-    # Deliberately create a conflicting relation at the parent of the last migration.
-    # Only this disposable fixture is downgraded to construct that historical schema.
-    source.backend("alembic", "downgrade", "20261009_0041")
-    source.sql("CREATE TABLE application_settings (sentinel int)")
-    source.backend(failure="differs from image head")
-    source.backend(*SCHEMA, "upgrade", "20261009_0041", failure="SQLSTATE 42P07")
-    require_revision(source, b"20261009_0041", "failed upgrade rollback")
-    require(
-        source.sql("SELECT count(sentinel) FROM application_settings") == b"0",
-        "failed upgrade rollback: sentinel table changed",
-    )
-    source.backend(failure="differs from image head")
-    source.sql("DROP TABLE application_settings")
-    source.backend(*SCHEMA, "upgrade", "20261009_0041")
-    source.up()
-    require_revision(source, head.encode(), "upgrade recovery")
-    require_media(source, password, path, original, "upgrade recovery")
+    # Upgrades to an image one migration ahead.
+    current = source.compose_file
+    source.compose_file = upgrade_compose
+    # A missing backup folder stops the deployment before migrate can run.
+    backup = source.env["FLORABASE_BACKUP_DIR"]
+    source.env["FLORABASE_BACKUP_DIR"] = str(source.root / "absent-backup")
+    source.compose("up", "-d", failure="does not exist", check="missing backup folder")
+    source.env["FLORABASE_BACKUP_DIR"] = backup
+    source.compose("start", "db")
+    require_revision(source, head.encode(), "refused upgrade")
+    source.sql("CREATE TABLE smoke_upgrade (sentinel int)")
+    source.refuse("migrate", "SQLSTATE 42P07", "failed upgrade")
+    failed = source.dumps()
+    require(len(failed) == 1 and failed[0].startswith(f"florabase-{head}-to-"), "failed: no dump")
+    source.compose("start", "db")
+    require_revision(source, head.encode(), "failed upgrade rollback")
+    source.backend(failure="differs from image head", check="backend after failed upgrade")
+    source.sql("DROP TABLE smoke_upgrade")
+    source.deploy()
+    require_revision(source, SMOKE_REVISION.encode(), "upgrade")
+    require(len(source.dumps()) == 2, "upgrade: expected a second verified dump")
+    require_media(source, password, path, original, "upgrade")
 
-    restore.init_cluster()
-    restore.backend(failure="differs from image head")
+    # An older image refuses the newer database, and nothing starts.
+    source.compose_file = current
+    source.refuse("migrate", "neither image head", "newer database revision")
+
+    # Isolated restore of the failed attempt's dump and the media archive into a new folder.
+    restore.deploy()
+    restore.compose("stop", "frontend", "backend")
+    dump = run(
+        [
+            "docker",
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            "--user",
+            "0",
+            "--entrypoint",
+            "cat",
+            "--mount",
+            f"type=bind,src={source.root},dst=/bind,readonly",
+            source.helper_image,
+            f"/bind/backup/pre-upgrade/{failed[0]}",
+        ]
+    ).stdout
+    require(dump.startswith(b"PGDMP"), "pre-upgrade backup: missing PostgreSQL custom-format dump")
     restore.compose(
         "exec",
         "-T",
@@ -489,19 +601,14 @@ def smoke(source: Stack, restore: Stack, images: dict[str, str], head: str) -> N
         "sh",
         "-ec",
         'export PGPASSWORD="$POSTGRES_PASSWORD"; '
+        'psql -XAq -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" '
+        '-c "DROP SCHEMA public CASCADE" -c "CREATE SCHEMA public"; '
         "exec pg_restore --single-transaction --exit-on-error --no-owner --no-privileges "
         '-U "$POSTGRES_USER" -d "$POSTGRES_DB"',
         data=dump,
         check="database restore",
     )
-    restored = restore.backend(
-        "sh",
-        "-ec",
-        'entries=$(ls -A "$FLORABASE_ATTACHMENT_STORAGE_ROOT"); test -z "$entries"; '
-        "exec python /app/scripts/attachment_artifacts.py restore",
-        data=media,
-        check="media restore",
-    )
+    restored = restore.backend(*ARTIFACTS, "restore", data=media, check="media restore")
     require(
         restored.strip() == b"Restored 1 attachment file(s)",
         "media restore: expected one restored attachment",
@@ -510,10 +617,9 @@ def smoke(source: Stack, restore: Stack, images: dict[str, str], head: str) -> N
         restore.backend(*ARTIFACTS, "verify").strip() == verified,
         "media restore: expected one verified attachment",
     )
-    restore.up()
+    restore.deploy()
     require_revision(restore, head.encode(), "isolated restore")
     require_media(restore, password, path, original, "isolated restore")
-    require_media(source, password, path, original, "source after isolated restore")
 
 
 def main() -> None:
@@ -527,30 +633,39 @@ def main() -> None:
     if not re.fullmatch(r"[A-Za-z0-9_]+", args.alembic_head):
         parser.error("invalid Alembic head")
     images = {
+        "prepare": args.postgres_image,
+        "db": args.postgres_image,
+        "migrate": args.backend_image,
         "backend": args.backend_image,
         "frontend": args.frontend_image,
-        "db": args.postgres_image,
     }
     if any(not reference or reference.startswith("-") for reference in images.values()):
         parser.error("invalid expected image reference")
     compose = args.compose.resolve()
+    text = compose.read_text()
+    require(text.count(args.backend_image) == 2, "compose.yaml: expected two backend references")
     prefix = "florabase-portable-" + secrets.token_hex(6)
     root = Path(tempfile.mkdtemp(prefix=prefix + "-"))
+    upgrade_tag = f"{prefix}-upgrade:smoke"
     signal.signal(signal.SIGTERM, Disposable.interrupt)
     signal.signal(signal.SIGINT, Disposable.interrupt)
     with ExitStack() as cleanup:
         cleanup.callback(shutil.rmtree, root)
+        cleanup.callback(run, ["docker", "image", "rm", "--force", upgrade_tag])
+        build_upgrade_image(args.backend_image, args.alembic_head, upgrade_tag, root / "image")
+        upgrade_compose = root / "upgrade-compose.yaml"
+        upgrade_compose.write_text(text.replace(args.backend_image, upgrade_tag))
         stacks = []
         for name in ("source", "restore"):
             stack = Stack(root / name, compose, prefix, args.backend_image)
             stack.assert_no_resources()
             cleanup.callback(stack.close)
-            print(f"Disposable project {stack.project}, binds under {stack.root}", flush=True)
-            stack.owner("chown 70:70 /bind/db && chown 10001:10001 /bind/media")
+            print(f"Disposable project {stack.project}, folders under {stack.root}", flush=True)
             stacks.append(stack)
-        smoke(stacks[0], stacks[1], images, args.alembic_head)
+        smoke(stacks[0], stacks[1], images, args.alembic_head, upgrade_compose)
     print(
-        "Portable Compose smoke passed (fresh install, restart, refusal, failed upgrade, restore)"
+        "compose.yaml smoke passed (self-initializing install, retry, guards, owner, redeploy, "
+        "backup and upgrade, failed upgrade, newer refusal, isolated restore)"
     )
 
 

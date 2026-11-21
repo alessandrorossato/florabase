@@ -72,14 +72,13 @@ Repository development requires Docker Engine with Docker Compose **2.24.4 or ne
 Python 3 and `curl`. The development overlay uses Compose's `!override` tag. Host Node.js is optional.
 [Docker Compose merge rules](https://docs.docker.com/reference/compose-file/merge/)
 
-For self-hosting, [install with portable Docker Compose](docs/portable-installation.md) from
-verified release assets on linux/amd64. This is the official installation; its Compose stack
-supports the 2.20 baseline. It requires an operator-managed HTTPS reverse proxy and the exact
-public HTTPS origin.
+For self-hosting, [install Florabase](docs/installation.md) with the release's single
+`compose.yaml` on linux/amd64: create an empty data folder and a backup folder, then deploy the
+file as-is in a Compose manager such as Dockhand or with `docker compose up -d`. It initializes a
+new installation, backs up before every upgrade, and supports the Compose 2.20 baseline. It
+requires an HTTPS reverse proxy (or Tailscale Serve) and the exact public HTTPS origin.
 
-[Building from a source checkout](docs/deployment.md) is for development. The
-[controller bundle](docs/installation.md) is an advanced, best-effort alternative and is not a
-separately certified installation path.
+[Building from a source checkout](docs/deployment.md) is for development only.
 
 ## Quick start for development
 
@@ -124,8 +123,7 @@ configuration and secrets still need a separate protected backup.
 ## Project information
 
 - [v1.0.0 release scope](docs/release/scope-v1.md)
-- [Portable Docker Compose installation](docs/portable-installation.md)
-- [Advanced controller-based installation and recovery](docs/installation.md) (best-effort)
+- [Installation, upgrade, backup and restore](docs/installation.md)
 - [Source-build deployment and upgrades](docs/deployment.md) (development)
 - [Development guide](docs/development.md)
 - [Domain model](docs/domain-model.md)

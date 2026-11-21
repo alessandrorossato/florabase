@@ -12,6 +12,7 @@ annotated-types==0.8.0
     # via pydantic
 anyio==4.14.2
     # via
+    #   fastapi
     #   httpx
     #   starlette
 argon2-cffi==25.1.0
@@ -34,7 +35,7 @@ click==8.5.0
     #   uvicorn
 coverage==7.15.4
     # via pytest-cov
-fastapi==0.162.0
+fastapi==0.163.2
     # via florabase-backend (pyproject.toml)
 greenlet==3.5.5
     # via sqlalchemy
@@ -73,17 +74,17 @@ pathspec==1.1.1
     # via mypy
 pillow==13.0.0
     # via florabase-backend (pyproject.toml)
-pip-tools==7.6.2
+pip-tools==7.7.0
     # via florabase-backend (pyproject.toml)
 pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-psycopg==3.3.8
+psycopg==3.3.9
     # via florabase-backend (pyproject.toml)
-psycopg-binary==3.3.8
+psycopg-binary==3.3.9
     # via psycopg
-pwdlib==0.3.1
+pwdlib==0.4.2
     # via florabase-backend (pyproject.toml)
 pycparser==3.0
     # via cffi
@@ -93,7 +94,7 @@ pydantic==2.13.4
     #   pydantic-settings
 pydantic-core==2.46.4
     # via pydantic
-pydantic-settings==2.16.2
+pydantic-settings==2.16.3
     # via florabase-backend (pyproject.toml)
 pygments==2.21.0
     # via pytest
@@ -109,11 +110,11 @@ pytest-cov==7.1.0
     # via florabase-backend (pyproject.toml)
 python-dotenv==1.2.3
     # via pydantic-settings
-python-multipart==0.0.33
+python-multipart==0.0.34
     # via florabase-backend (pyproject.toml)
-ruff==0.17.4
+ruff==0.17.5
     # via florabase-backend (pyproject.toml)
-sqlalchemy==2.0.57
+sqlalchemy==2.0.58
     # via
     #   alembic
     #   florabase-backend (pyproject.toml)

@@ -24,8 +24,7 @@ from pathlib import Path
 from typing import Any
 
 from beta_release import (
-    INSTALL_BUNDLE,
-    PORTABLE_COMPOSE,
+    INSTALL_COMPOSE,
     POSTGRES_REPOSITORY,
     POSTGRES_SBOM,
     REGISTRY_IMAGE,
@@ -41,7 +40,7 @@ from beta_release import (
     release_asset_inventory,
     release_attestation_inputs,
     release_finalization_inputs,
-    render_portable_compose,
+    render_compose,
     require_remote_release_tag,
     run,
     run_artifact_smoke,
@@ -469,8 +468,8 @@ def run_pipeline(
             manifest_path = assets / "release-manifest.json"
             manifest_path.write_text(json.dumps(value, indent=2) + "\n")
 
-            portable = assets / PORTABLE_COMPOSE
-            portable_bytes = render_portable_compose(root, version, refs).encode()
+            portable = assets / INSTALL_COMPOSE
+            portable_bytes = render_compose(root, version, refs).encode()
             portable.write_bytes(portable_bytes)
 
         with publication.stage("SCAN/SMOKE"):
@@ -496,7 +495,7 @@ def run_pipeline(
         with publication.stage("VALIDATE ASSETS"):
             inventory = prepare_release_assets(root, assets, version, sha)
             if portable.read_bytes() != portable_bytes:
-                raise ValueError("portable Compose changed after the artifact smoke")
+                raise ValueError("compose.yaml changed after the artifact smoke")
             if read(manifest_path) != value:
                 raise ValueError("release manifest changed after the artifact smoke")
             request = release_finalization_inputs(value, sha, inventory)
@@ -507,7 +506,7 @@ def run_pipeline(
                 manifest_path,
                 sha,
                 WORKFLOW,
-                {name: inventory[name][1] for name in INSTALL_BUNDLE},
+                {INSTALL_COMPOSE: inventory[INSTALL_COMPOSE][1]},
                 host,
             )
             if attestation["release_manifest_sha256"] != inventory[manifest_path.name][1]:

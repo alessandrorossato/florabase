@@ -170,6 +170,30 @@ at 390×844).
   decision verifies nothing.
 - Release scope: unchanged.
 
+**R26 — PORTABLE-COMPOSE-001 description, #2, #3 and the upgrade part of #4** (added 2026-11-21).
+- Original (stays in `features.json`): a three-service portable Compose shipped alongside the
+  controller bundle; the runtime "never initializes PostgreSQL or migrates on startup"; one-time
+  cluster and schema initialization, owner bootstrap and an explicit upgrade are documented manual
+  steps; the smoke proves the explicit upgrade.
+- Intent kept: the database never silently starts empty in place of existing data, an image update
+  never changes data without a backup, and the backend process never migrates.
+- Decision: [ADR 0008](../decisions/0008-self-initializing-single-compose.md), accepted by the
+  operator on 2026-11-21 and recorded in the scope-change table (INSTALL-001, WF-09).
+- Replacement: "The release attaches one self-initializing `compose.yaml` (INSTALL-001). Its
+  one-shot `prepare` accepts only an empty data folder or the installation its marker records, and
+  `db` creates a cluster only for a new installation. The backend process never migrates; the
+  one-shot `migrate` initializes an empty database, leaves an at-head database unchanged, upgrades
+  only from the exact previous release head after a verified dump, and refuses anything else.
+  Owner bootstrap is one-time from the environment or offline; paired backup and isolated restore
+  are documented. The smoke proves these cases on the rendered asset."
+- Implementation: INSTALL-001 on branch `feat/install-001` (`compose.yaml`,
+  `release_schema deploy`, `scripts/smoke-portable-compose.py`). PORTABLE-COMPOSE-001 keeps its
+  delivered evidence and status; criteria #1 (attested asset, digests, one published port) and #5
+  are unchanged.
+- Verification still required: INSTALL-001 delivery, its publication in the next beta and the
+  G-INSTALL, G-UPGRADE and G-RESTORE real-host runs.
+- Release scope: unchanged; INSTALL-001 is already a release-work blocker.
+
 ## Proposed changes awaiting approval
 
 ### Rows resting only on later delivered features
@@ -406,5 +430,6 @@ missing**.
 | R22 | PORTABLE-COMPOSE-001 #1 | Proposed | No: RC not published |
 | R23 | COLLECTION-VISUAL-002 #8 | Proposed | No |
 | R24 (was U01) | UI-SYSTEM-001 #4 | Yes (operator decision 2026-11-16, scope-change record) | No: selection, Plant links, fallback, responsive (G-UX Today) |
+| R26 | PORTABLE-COMPOSE-001 description, #2, #3, upgrade part of #4 | Yes (ADR 0008, 2026-11-21) | No: INSTALL-001 delivery and real-host gates |
 | U02, U03 | UI-SYSTEM-001 #9; GEOGRAPHY-VISUAL-001 #4 | Not applicable | No |
 | U04 | UI-REDESIGN-EXPLORATION-001 #6–8 | No | No |

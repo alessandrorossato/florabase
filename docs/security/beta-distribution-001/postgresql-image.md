@@ -175,7 +175,8 @@ Florabase now owns a third published image. The owner of the release process mus
      `18.6-alpine-florabase.N` (never reuse a tag);
    - run `python3 scripts/release-tools.py scripts/beta_release.py postgres-identity`, record the
      printed digests as the new pins, and confirm with `--check` from a second fresh run;
-   - rerun the scans, `make test-beta-images`, `make test-beta-runtime` and the runtime smoke;
+   - rerun the scans, `make test-beta-images`, `make test-beta-runtime` and the release
+     `compose.yaml` smoke (`scripts/smoke-portable-compose.py`);
    - treat it as PostgreSQL maintenance under the BETA-RUNTIME-001 rule: a new PostgreSQL identity
      needs reviewed compatibility, a paired backup/restore rehearsal and operator approval; it never
      rides on an application release.

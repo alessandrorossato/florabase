@@ -105,15 +105,11 @@ jobs:
         with:
           subject-name: ${{ steps.pair.outputs.postgresql_name }}
           subject-digest: ${{ steps.pair.outputs.postgresql_digest }}
-      - name: "ATTEST / install bundle files"
+      - name: "ATTEST / rendered compose.yaml"
         id: attest_bundle
         uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
         with:
-          subject-path: |
-            ${{ runner.temp }}/beta-release/assets/compose.yaml
-            ${{ runner.temp }}/beta-release/assets/portable-compose.yaml
-            ${{ runner.temp }}/beta-release/assets/florabasectl.py
-            ${{ runner.temp }}/beta-release/assets/florabase.env.example
+          subject-path: ${{ runner.temp }}/beta-release/assets/compose.yaml
       - name: "ATTEST / release manifest"
         id: attest_manifest
         uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
