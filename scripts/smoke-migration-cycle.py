@@ -114,7 +114,7 @@ def main() -> None:
             ):
                 shutil.copy2(ROOT / path, fixture / path)
             git(fixture, "add", ".")
-            git(fixture, "commit", "-m", "synthetic verification baseline")
+            git(fixture, "commit", "--allow-empty", "-m", "synthetic verification baseline")
             os.chdir(fixture)
             base = git(fixture, "rev-parse", "HEAD")
             lock = fixture / "frontend/pnpm-lock.yaml"

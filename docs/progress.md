@@ -9822,8 +9822,8 @@ Status remains implemented pending canonical verification.
   top-level `x-` anchors that Compose ignores. Release artifact copies, lint/type lists and tests
   carry the new module.
 - `feature-deliver` now also waits for the hosted `rehearse` job and fails loudly when it fails,
-  after #207 merged with a failing rehearsal. The `main` ruleset still requires only quality,
-  integration and build, so a failing rehearsal can still merge until the operator adds it there.
+  after #207 merged with a failing rehearsal. On 2026-11-21 the operator also added `rehearse` to
+  the `Protect main` ruleset, which now requires quality, integration, build and rehearse.
 - RC-SEQ-01 operator decisions are recorded: CUTTING-001 and UI-SYSTEM-001 are `implemented`
   (verified only after RC-image G-CORE/G-UX and operator acceptance), U02 accepted for the
   non-Preview clauses, UI-FLICKER-001 option (a). The Codex CUTTING-001 claim was taken over on
@@ -9831,5 +9831,26 @@ Status remains implemented pending canonical verification.
 - Batch 08 follow-ups: mypy includes `backend/scripts/check_api_routes.py`, and the production
   route inventory test no longer passes ambient `FLORABASE_*` variables. The impact classification
   of that script and the smoke `assert` statements remain open.
-- The beta.7 publication record is part of this batch. Trivy database pinning is not: pinning
-  makes scans reproducible but hides newly published CVEs, which is an operator decision.
+- The beta.7 publication record is part of this batch. Trivy keeps the floating vulnerability
+  database (operator decision 2026-11-21): pinning would make scans reproducible but hide newly
+  published CVEs. Instead every scan set records the database that judged it: `scan_images`
+  (used by `publish-beta-images` and `rehearse`) writes `scanner-version.json` (`trivy version`
+  with the DB `Version`, `UpdatedAt`, `NextUpdate`, `DownloadedAt`) next to the reports and blocks
+  the security gate when that record is missing.
+- Smoke fixtures follow WF-09: `smoke-dev-recovery` and `smoke-dev-upgrade` copy
+  `scripts/compose_stacks.py` (without it the fixture read as a pre-WF-09 tree lacking a base
+  `compose.yaml`), and the recovery smoke's modelled old source drops it again. `smoke-dev-golden`
+  already copied `scripts/`. `smoke-migration-cycle` commits its baseline with `--allow-empty`,
+  since a clean HEAD plus identical copied files left nothing to commit.
+- The recovery smoke rendered its modelled pre-WF-09 baseline under the generator's
+  `florabase-prod` name, which pinned `florabase-prod_*` network and volume names into the fixture;
+  the baseline now drops those names so only the fixture project owns them.
+- Checks: `make workflow-check` passed. Real smokes: `smoke-workflow-resources` (502 s) and
+  `smoke-uat-instance` (203 s) passed on `73e5510`; after the fixes `smoke-environment-workflow`
+  (114 s, Review and Stable Preview), `smoke-dev-recovery`, `smoke-dev-upgrade` (40 s) and
+  `smoke-migration-cycle` (76 s) passed. `trivy version --format json` with a populated cache was
+  run against the pinned 0.69.3 image and returns the DB `Version`/`UpdatedAt`; the full
+  `scan_images` path runs first in hosted `rehearse`.
+- Unresolved: `smoke-uat-preview` fails in `test-uat-fixture.py` because the UAT fixture creates no
+  scheduled activity for the `vegetative_lot` and `propagation_attempt` targets added by #167. This
+  predates Batch 09 and is not in the FULL gate; it needs its own fixture fix.

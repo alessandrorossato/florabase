@@ -88,6 +88,11 @@ def old_baseline(source: Path) -> dict[str, object]:
     )
     baseline: dict[str, object] = json.loads(rendered)
     baseline.pop("name", None)
+    # Rendering under the generator's `florabase-prod` name pins network/volume names; the old
+    # source's own project must own them, never the production names.
+    for kind in ("networks", "volumes"):
+        for entry in cast(dict[str, dict[str, object]], baseline.get(kind, {})).values():
+            entry.pop("name", None)
     services = cast(dict[str, object], baseline["services"])
     services.pop("dev-state-init", None)
     return baseline
@@ -120,6 +125,11 @@ def main() -> None:
                 ),
             )
         shutil.copy2(repository.source / "compose.dev.yaml", primary / "compose.dev.yaml")
+        # WF-09: without the generator the fixture reads as a pre-WF-09 tree.
+        (primary / "scripts").mkdir()
+        shutil.copy2(
+            repository.source / "scripts/compose_stacks.py", primary / "scripts/compose_stacks.py"
+        )
         (primary / ".gitignore").write_text(".env\n")
         (primary / ".env").write_text(
             "POSTGRES_DB=recovery_fixture\nPOSTGRES_USER=recovery_fixture\n"
@@ -160,6 +170,8 @@ def main() -> None:
                 # Model a source from before ADR 0008: a standalone source-build compose.yaml, a
                 # development override and tracked workflow overlays (compose.review.yaml).
                 baseline = old_baseline(old)
+                # Rendered by the generator; the old source itself predates WF-09 and lacks it.
+                (old / "scripts/compose_stacks.py").unlink()
                 (old / "compose.yaml").write_text(json.dumps(baseline))
                 (old / "compose.review.yaml").write_text("services: {}\n")
                 # Model the real older development override, including its tmpfs media and retained
