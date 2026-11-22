@@ -142,9 +142,7 @@ test("retains exact coordinates, accuracy circles, safe tooltip and Space/click 
   });
   expect(select).toHaveBeenCalledTimes(3);
   expect(mocks.tileLayer).not.toHaveBeenCalled();
-  expect(
-    screen.getByRole("checkbox", { name: "Online basemap" }),
-  ).toBeDisabled();
+  expect(screen.queryByRole("checkbox", { name: "Online basemap" })).toBeNull();
   expect(screen.getByText(/Local overview/)).toHaveTextContent(
     "not street-level detail",
   );
