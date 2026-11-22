@@ -289,7 +289,9 @@ class UATPreview(Environment):
                         f"type=volume,src={self.project}_attachment_data,dst={MEDIA_ROOT},readonly",
                         "--entrypoint",
                         "python",
-                        backend["Image"],
+                        # The project's own current tag: with the containerd image store a rebuild
+                        # replaces the manifest-list ID a retained container still names.
+                        f"{self.project}-backend-development",
                         "-c",
                         program,
                     ],

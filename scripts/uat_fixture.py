@@ -43,6 +43,14 @@ from florabase.collection_photos import primary
 from florabase.collection_photos.model import MediaAsset, RecordMediaLink
 from florabase.collection_photos.schemas import PrimaryPhotoSelection
 from florabase.core.config import CookieMode, Environment, Settings, get_settings
+from florabase.cuttings import service as cuttings
+from florabase.cuttings.model import PropagationAttempt, VegetativeLot
+from florabase.cuttings.schemas import (
+    AttemptSetup,
+    FastCreate,
+    SourceAdjustment,
+    VegetativeLotCreate,
+)
 from florabase.db.base import Base
 from florabase.db.session import get_engine
 from florabase.events import service as events
@@ -187,6 +195,8 @@ MODELS: dict[str, type[Base]] = {
     "inventory": HarvestMaterialInventory,
     "asset": MediaAsset,
     "link": RecordMediaLink,
+    "lot": VegetativeLot,
+    "attempt": PropagationAttempt,
 }
 
 
@@ -439,6 +449,8 @@ def validate_manifest(database: Session, root: Path, manifest: dict[str, Any]) -
         )
     if manifest.get("manual_review_extension") == 1:
         expected.update({"identity:genovese", "seed:genovese", "schedule:collection"})
+    if manifest.get("cutting_schedule_extension") == 1:
+        expected.update(CUTTING_SCHEDULE_KEYS)
     if fixture_prefix() == "review" and manifest.get("collection_visual_extension") == 1:
         expected.update(COLLECTION_VISUAL_KEYS)
     if fixture_prefix() == "review" and manifest.get("lineage_explorer_extension") == 1:
@@ -682,6 +694,64 @@ def ensure_schedule_calendar(database: Session, root: Path, manifest: dict[str, 
         manifest["records"]["schedule:calendar_" + key] = str(activity.id)
     database.commit()
     manifest["schedule_calendar_extension"] = 1
+    if ready:
+        manifest["state"] = "ready"
+    write_manifest(root, manifest)
+
+
+CUTTING_SCHEDULE_KEYS = frozenset(
+    {"lot:cutting", "attempt:cutting", "schedule:cutting_lot", "schedule:cutting_attempt"}
+)
+
+
+def ensure_cutting_schedule(database: Session, root: Path, manifest: dict[str, Any]) -> None:
+    """Give the cutting Schedule targets one planned activity each; added once, never rescheduled."""
+    if manifest.get("cutting_schedule_extension") == 1:
+        return
+    ready = manifest["state"] == "ready"
+    manifest["state"] = "building"
+    write_manifest(root, manifest)
+    today = datetime.now(UTC).date()
+    lot, attempt, _ = cuttings.fast_create(
+        database,
+        FastCreate(
+            vegetative_lot=VegetativeLotCreate(
+                botanical_identity_id=UUID(manifest["records"]["identity:Ocimum basilicum"]),
+                label="Preview basil stem cuttings",
+                material_type="stem_cutting",
+                notes=NOTE,
+            ),
+            propagation_attempt=AttemptSetup(label="Preview basil rooting tray", notes=NOTE),
+            source_adjustment=SourceAdjustment(mode="none"),
+        ),
+    )
+    manifest["records"]["lot:cutting"] = str(lot.id)
+    manifest["records"]["attempt:cutting"] = str(attempt.id)
+    samples: tuple[tuple[str, ActivityKind, int, TargetKind, UUID, str], ...] = (
+        ("cutting_lot", "inspect", 5, "vegetative_lot", lot.id, "Inspect basil cuttings"),
+        (
+            "cutting_attempt",
+            "follow_up",
+            9,
+            "propagation_attempt",
+            attempt.id,
+            "Check basil cutting roots",
+        ),
+    )
+    for key, kind, delta, target_kind, identifier, title in samples:
+        activity = schedule.create(
+            database,
+            ScheduleWrite(
+                activity_kind=kind,
+                title="Preview — " + title,
+                due_on=today + timedelta(days=delta),
+                target=ScheduleTarget(kind=target_kind, id=identifier),
+                notes=NOTE,
+            ),
+        )
+        manifest["records"]["schedule:" + key] = str(activity.id)
+    database.commit()
+    manifest["cutting_schedule_extension"] = 1
     if ready:
         manifest["state"] = "ready"
     write_manifest(root, manifest)
@@ -1318,6 +1388,7 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
         ensure_taxonomy(database, root, existing)
         ensure_schedule(database, root, existing)
         ensure_schedule_calendar(database, root, existing)
+        ensure_cutting_schedule(database, root, existing)
         ensure_dashboard(database, root, existing)
         ensure_manual_review(database, root, existing)
         ensure_collection_visual(database, root, existing)
@@ -1818,6 +1889,7 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
     ensure_taxonomy(database, root, manifest)
     ensure_schedule(database, root, manifest)
     ensure_schedule_calendar(database, root, manifest)
+    ensure_cutting_schedule(database, root, manifest)
     ensure_dashboard(database, root, manifest)
     ensure_manual_review(database, root, manifest)
     ensure_collection_visual(database, root, manifest)

@@ -9864,4 +9864,20 @@ Status remains implemented pending canonical verification.
   `scan_images` path runs first in hosted `rehearse`.
 - Unresolved: `smoke-uat-preview` fails in `test-uat-fixture.py` because the UAT fixture creates no
   scheduled activity for the `vegetative_lot` and `propagation_attempt` targets added by #167. This
-  predates Batch 09 and is not in the FULL gate; it needs its own fixture fix.
+  predates Batch 09 and is not in the FULL gate; it needs its own fixture fix. Resolved by the milestone below.
+
+## 2026-11-22 — UAT Preview smoke repaired on main
+
+- On `fix/uat-fixture-activity-targets`, rebased on `e2db9f4` (writer `claude-uat-fixture`).
+- `smoke-uat-preview` failed on `main` since PR #167: `test-uat-fixture.py` requires a Schedule
+  activity for every `TARGETS` kind, but the fixture created no vegetative lot or propagation
+  attempt. Added the additive `cutting_schedule_extension` (one basil stem-cutting lot and rooting
+  attempt via `cuttings.fast_create`, plus two planned activities at today+5/+9) to both seed paths
+  and `validate_manifest`; existing manifests gain it once and operator edits are never rescheduled.
+- A second defect hidden behind the first: `UATPreview.marker_state` ran `docker run` on the
+  retained backend container's image ID, which the containerd image store (Docker 29) drops after a
+  rebuild (`No such image`). It now uses the project's own `-backend-development` tag, as
+  `uat_instance.py` already does; regression test added to `test-uat-preview.py`.
+- Checks: `make smoke-uat-preview` passed (fixture pytest 52 passed, 1 skipped; exact cleanup);
+  `python3 scripts/test-uat-preview.py` 20 OK; ruff check/format and strict mypy on the touched
+  scripts clean. Not run: FULL `make feature-verify`.

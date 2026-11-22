@@ -365,6 +365,21 @@ class UATTests(unittest.TestCase):
             with self.assertRaisesRegex(WorkflowError, "linked feature worktree"):
                 self.preview.require_context()
 
+    def test_marker_is_read_through_the_current_project_image(self) -> None:
+        backend = {"Config": {"Labels": {"com.docker.compose.service": "backend"}}}
+        backend["Image"] = "sha256:" + "0" * 64  # Retained, possibly no longer existing, ID.
+        with (
+            patch.object(self.preview, "containers", return_value=[backend]),
+            patch.object(
+                self.preview, "environment", return_value={"LOCAL_UID": "1", "LOCAL_GID": "1"}
+            ),
+            patch("uat_preview.run", return_value="{}") as run,
+        ):
+            self.assertEqual(self.preview.marker_state(), {})
+        command = run.call_args.args[0]
+        self.assertIn(f"{self.preview.project}-backend-development", command)
+        self.assertNotIn(backend["Image"], command)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
