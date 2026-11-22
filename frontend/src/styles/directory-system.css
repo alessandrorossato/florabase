@@ -101,6 +101,10 @@
 .app-content
   .ui-directory-card
   .ui-directory-trigger:has(> .ui-record-content) {
+  /* A stretched <button> centres its content; keep every plate on the card's top edge. */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   padding: 0 0 var(--space-2);
 }
 .app-content .ui-directory-card :is(.ui-record-identity, .ui-record-summary) {
