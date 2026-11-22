@@ -1,188 +1,41 @@
-# Florabase @VERSION@, linux/amd64: the only production Compose file (ADR 0008).
-# Deploy the compose.yaml attached to the release, which carries immutable image digests; this
-# tracked template is rendered by scripts/beta_release.py. See docs/installation.md.
-#
-# Create two empty folders inside a storage volume first, never a volume mountpoint itself: one for
-# FLORABASE_DATA_DIR and a separate one for FLORABASE_BACKUP_DIR. prepare accepts a new installation
-# only in an empty data folder, and migrate backs up to the backup folder before every upgrade.
-x-backend-environment: &backend-environment
-  FLORABASE_ENVIRONMENT: production
-  FLORABASE_DATABASE_URL: postgresql+psycopg://florabase@db:5432/florabase
-  PGPASSWORD: ${FLORABASE_DB_PASSWORD:?Set FLORABASE_DB_PASSWORD}
-  FLORABASE_CANONICAL_ORIGIN: ${FLORABASE_CANONICAL_ORIGIN:?Set FLORABASE_CANONICAL_ORIGIN}
-  FLORABASE_COOKIE_MODE: secure
-  FLORABASE_CORS_ORIGINS: "[]"
-  FLORABASE_ATTACHMENT_STORAGE_ROOT: /var/lib/florabase/data/media
-
-x-data: &data
-  type: bind
-  source: ${FLORABASE_DATA_DIR:?Set FLORABASE_DATA_DIR}
-  bind:
-    create_host_path: false
-
-x-backup: &backup
-  type: bind
-  source: ${FLORABASE_BACKUP_DIR:?Set FLORABASE_BACKUP_DIR}
-  target: /var/lib/florabase/backup
-  bind:
-    create_host_path: false
-
-x-hardening: &hardening
-  read_only: true
-  cap_drop: [ALL]
-  security_opt: ["no-new-privileges:true"]
-
+# Florabase @VERSION@, linux/amd64: see docs/installation.md
 services:
-  # One-shot: accept an empty folder or an existing installation; refuse anything else.
-  prepare:
-    image: "@POSTGRESQL@"
-    platform: linux/amd64
-    user: "0:0"
-    entrypoint: ["sh", "-euc"]
-    command:
-      - |
-        fail() { echo "florabase-prepare: REFUSED: $$*" >&2; exit 1; }
-        data_host=$$(printf '%s' "$$DATA_HOST" | sed 's#//*#/#g; s#/$$##')
-        backup_host=$$(printf '%s' "$$BACKUP_HOST" | sed 's#//*#/#g; s#/$$##')
-        case "$$data_host" in /?*) ;; *) fail "FLORABASE_DATA_DIR must be an absolute path";; esac
-        case "$$backup_host" in /?*) ;; *) fail "FLORABASE_BACKUP_DIR must be an absolute path";; esac
-        case "$$data_host/" in "$$backup_host"/*) fail "FLORABASE_DATA_DIR is inside FLORABASE_BACKUP_DIR";; esac
-        case "$$backup_host/" in "$$data_host"/*) fail "FLORABASE_BACKUP_DIR is inside FLORABASE_DATA_DIR";; esac
-        [ "$$(stat -c %d:%i /data)" != "$$(stat -c %d:%i /backup)" ] || fail "the data and backup folders are the same"
-        marker=/data/state/installation.env
-        if [ -e "$$marker" ]; then
-          major=$$(sed -n 's/^FLORABASE_PG_MAJOR=\([0-9][0-9]*\)$$/\1/p' "$$marker")
-          system=$$(sed -n 's/^FLORABASE_PG_SYSTEM_ID=\([0-9][0-9]*\)$$/\1/p' "$$marker")
-          [ -n "$$major" ] && [ -n "$$system" ] || fail "the installation marker is malformed"
-          [ "$$major" = "$$PG_MAJOR" ] || fail "the installation uses PostgreSQL $$major, this image $$PG_MAJOR"
-          cluster="/data/postgres/$$major/docker"
-          [ -s "$$cluster/PG_VERSION" ] || fail "the installation marker exists but its database folder is missing or empty"
-          found=$$(pg_controldata "$$cluster" | sed -n 's/^Database system identifier: *//p')
-          [ "$$found" = "$$system" ] || fail "the database folder belongs to another PostgreSQL cluster"
-        else
-          # A pending first installation may be retried; anything else must be an empty folder.
-          retry=
-          [ ! -e /data/state/installation.pending ] || retry=1
-          for entry in /data/* /data/.[!.]* /data/..?*; do
-            [ -e "$$entry" ] || continue
-            case "$$entry" in
-              /data/postgres|/data/media|/data/state) [ -n "$$retry" ] || [ -z "$$(ls -A "$$entry")" ] || fail "$$entry is not empty and there is no installation marker; use an empty data folder";;
-              *) fail "$$entry exists and there is no installation marker; use an empty data folder";;
-            esac
-          done
-        fi
-        for root in /data /backup; do
-          case "$$(stat -c %A "$$root")" in *x|*t) ;; *) chmod o+x "$$root";; esac
-        done
-        install -d -o 70 -g 70 -m 0700 /data/postgres
-        install -d -o 10001 -g 10001 -m 0700 /data/media /backup/pre-upgrade
-        install -d -o 10001 -g 10001 -m 0755 /data/state
-        [ -e "$$marker" ] || [ -e /data/state/installation.pending ] || touch /data/state/installation.pending
-        echo "florabase-prepare: ready"
-    environment:
-      DATA_HOST: ${FLORABASE_DATA_DIR:?Set FLORABASE_DATA_DIR}
-      BACKUP_HOST: ${FLORABASE_BACKUP_DIR:?Set FLORABASE_BACKUP_DIR}
-    volumes:
-      - {<<: *data, target: /data}
-      - {<<: *backup, target: /backup}
-    network_mode: none
-    <<: *hardening
-    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER]
-    restart: "no"
-
   db:
     image: "@POSTGRESQL@"
-    platform: linux/amd64
-    user: "70:70"
-    # Initialize a cluster only for a new installation; a missing cluster with a marker fails.
-    entrypoint: ["sh", "-euc"]
-    command:
-      - |
-        # The same per-major cluster path that prepare checks.
-        export PGDATA="/var/lib/postgresql/postgres/$$PG_MAJOR/docker"
-        if [ ! -s "$$PGDATA/PG_VERSION" ]; then
-          if [ -e /var/lib/postgresql/state/installation.env ]; then
-            echo "florabase-db: REFUSED: the installation marker exists but the cluster is missing" >&2
-            exit 1
-          fi
-          docker-ensure-initdb.sh
-        fi
-        exec postgres -c listen_addresses=*
-    environment:
-      POSTGRES_DB: florabase
-      POSTGRES_USER: florabase
-      POSTGRES_PASSWORD: ${FLORABASE_DB_PASSWORD:?Set FLORABASE_DB_PASSWORD}
-    volumes:
-      - {<<: *data, target: /var/lib/postgresql}
-    depends_on:
-      prepare:
-        condition: service_completed_successfully
-    healthcheck:
-      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "florabase", "-d", "florabase"]
-      interval: 5s
-      timeout: 3s
-      retries: 24
-    <<: *hardening
-    tmpfs: ["/tmp", "/var/run/postgresql"]
-    shm_size: 128m
+    container_name: florabase-db
     restart: unless-stopped
-    stop_grace_period: 60s
-    networks: [internal]
-
-  # One-shot: initialize, keep, or back up and upgrade the schema; create the first owner once.
-  migrate:
-    image: "@BACKEND@"
-    platform: linux/amd64
-    user: "10001:10001"
-    command: ["python", "-m", "florabase.db.release_schema", "deploy"]
     environment:
-      <<: *backend-environment
-      FLORABASE_OWNER_LOGIN: ${FLORABASE_OWNER_LOGIN:-}
-      FLORABASE_OWNER_PASSWORD: ${FLORABASE_OWNER_PASSWORD:-}
+      - TZ=${TZ:-Europe/Rome}
+      - FLORABASE_DB_PASSWORD=${FLORABASE_DB_PASSWORD:?Set FLORABASE_DB_PASSWORD}
     volumes:
-      - {<<: *data, target: /var/lib/florabase/data}
-      - *backup
-    depends_on:
-      db:
-        condition: service_healthy
-    <<: *hardening
-    tmpfs: ["/tmp"]
-    restart: "no"
-    networks: [internal]
+      - {type: bind, source: "${FLORABASE_DATA_DIR:?Set FLORABASE_DATA_DIR}", target: /var/lib/postgresql, bind: {create_host_path: false}}
 
   backend:
     image: "@BACKEND@"
-    platform: linux/amd64
-    user: "10001:10001"
-    environment: *backend-environment
-    volumes:
-      - {<<: *data, target: /var/lib/florabase/data}
-    depends_on:
-      db:
-        condition: service_healthy
-        restart: true
-      migrate:
-        condition: service_completed_successfully
-    <<: *hardening
-    tmpfs: ["/tmp"]
+    container_name: florabase-backend
     restart: unless-stopped
-    networks: [internal, app]
+    command: ["florabase-start"]
+    depends_on:
+      db: {condition: service_healthy}
+    environment:
+      - TZ=${TZ:-Europe/Rome}
+      - FLORABASE_DB_PASSWORD=${FLORABASE_DB_PASSWORD:?Set FLORABASE_DB_PASSWORD}
+      - FLORABASE_CANONICAL_ORIGIN=${FLORABASE_CANONICAL_ORIGIN:?Set FLORABASE_CANONICAL_ORIGIN}
+      - FLORABASE_DATA_DIR=${FLORABASE_DATA_DIR:?Set FLORABASE_DATA_DIR}
+      - FLORABASE_BACKUP_DIR=${FLORABASE_BACKUP_DIR:?Set FLORABASE_BACKUP_DIR}
+      - FLORABASE_OWNER_LOGIN=${FLORABASE_OWNER_LOGIN:-}
+      - FLORABASE_OWNER_PASSWORD=${FLORABASE_OWNER_PASSWORD:-}
+    volumes:
+      - {type: bind, source: "${FLORABASE_DATA_DIR:?Set FLORABASE_DATA_DIR}", target: /var/lib/florabase/data, bind: {create_host_path: false}}
+      - {type: bind, source: "${FLORABASE_BACKUP_DIR:?Set FLORABASE_BACKUP_DIR}", target: /var/lib/florabase/backup, bind: {create_host_path: false}}
 
   frontend:
     image: "@FRONTEND@"
-    platform: linux/amd64
+    container_name: florabase-frontend
+    restart: unless-stopped
     depends_on:
-      backend:
-        condition: service_healthy
+      backend: {condition: service_healthy}
     ports:
       - "127.0.0.1:${FLORABASE_HTTP_PORT:-8080}:8080"
-    <<: *hardening
-    tmpfs: ["/tmp"]
-    restart: unless-stopped
-    networks: [app]
-
-networks:
-  internal:
-    internal: true
-  # This bridge carries frontend traffic and lets the API reach external providers.
-  app:
+    environment:
+      - TZ=${TZ:-Europe/Rome}

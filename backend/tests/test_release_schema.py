@@ -446,3 +446,199 @@ def test_marker_is_created_exclusively_and_a_concurrent_one_must_match(tmp_path:
     with pytest.raises(release_schema.SchemaError, match="different PostgreSQL cluster"):
         release_schema.write_marker(tmp_path, {**IDENTITY, "FLORABASE_PG_SYSTEM_ID": "1"})
     assert sorted(path.name for path in tmp_path.iterdir()) == [release_schema.MARKER_NAME]
+
+
+def test_validate_host_paths_refuses_relative_same_and_nested(tmp_path: Path) -> None:
+    data = tmp_path / "data"
+    backup = tmp_path / "backup"
+    data.mkdir()
+    backup.mkdir()
+    release_schema.validate_host_paths("/volume1/data", "/volume1/backup", data, backup)
+    with pytest.raises(release_schema.SchemaError, match="FLORABASE_DATA_DIR must be an absolute"):
+        release_schema.validate_host_paths("relative/data", "/volume1/backup", data, backup)
+    with pytest.raises(
+        release_schema.SchemaError, match="FLORABASE_BACKUP_DIR must be an absolute"
+    ):
+        release_schema.validate_host_paths("/volume1/data", "/", data, backup)
+    with pytest.raises(release_schema.SchemaError, match="same"):
+        release_schema.validate_host_paths("/volume1/data/", "/volume1/data", data, backup)
+    with pytest.raises(release_schema.SchemaError, match="same"):
+        release_schema.validate_host_paths("/volume1/data", "/volume1/backup", data, data)
+    with pytest.raises(release_schema.SchemaError, match="is inside FLORABASE_DATA_DIR"):
+        release_schema.validate_host_paths("/volume1/data", "/volume1/data/backup", data, backup)
+    with pytest.raises(release_schema.SchemaError, match="is inside FLORABASE_BACKUP_DIR"):
+        release_schema.validate_host_paths("/volume1/backup/data", "/volume1/backup/", data, backup)
+    with pytest.raises(release_schema.SchemaError, match="is inside FLORABASE_DATA_DIR"):
+        release_schema.validate_host_paths(
+            "/volume1/data", "/volume1/other/../data/./backup", data, backup
+        )
+
+
+def test_read_marker_refuses_symlinks_and_directories(tmp_path: Path) -> None:
+    target = tmp_path / "other"
+    target.write_text("FLORABASE_INSTALLATION_ID=ab12\n")
+    (tmp_path / release_schema.MARKER_NAME).symlink_to(target)
+    with pytest.raises(release_schema.SchemaError, match="malformed"):
+        release_schema.read_marker(tmp_path)
+    (tmp_path / release_schema.MARKER_NAME).unlink()
+    (tmp_path / release_schema.MARKER_NAME).mkdir()
+    with pytest.raises(release_schema.SchemaError, match="malformed"):
+        release_schema.read_marker(tmp_path)
+
+
+def test_deploy_refuses_non_private_backup_mode_when_strict(
+    schema: SimpleNamespace, tmp_path: Path
+) -> None:
+    state = tmp_path / "state"
+    backup = tmp_path / "backup"
+    state.mkdir(mode=0o755)
+    backup.mkdir(mode=0o755)
+    backup.chmod(0o755)
+
+    with pytest.raises(release_schema.SchemaError, match=r"unsafe owner or mode.*installation\.md"):
+        release_schema.deploy(
+            MagicMock(attributes={}),
+            schema.scripts,
+            HEAD,
+            PREVIOUS,
+            state_dir=state,
+            backup_dir=backup,
+            strict_backup_permissions=True,
+        )
+    schema.engine.begin.assert_not_called()
+
+
+def test_dump_database_strips_owner_variables_from_subprocess_env(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen_env: dict[str, str] = {}
+
+    def fake_run(command: list[str], **kwargs: object) -> SimpleNamespace:
+        if command[0] == "pg_dump":
+            env = kwargs.get("env")
+            assert isinstance(env, dict)
+            seen_env.update(env)
+            Path(command[2].removeprefix("--file=")).write_bytes(b"PGDMP")
+            return SimpleNamespace(stdout="")
+        return SimpleNamespace(stdout="1; 0 0 TABLE public users\n")
+
+    monkeypatch.setattr(
+        release_schema,
+        "get_settings",
+        lambda: SimpleNamespace(database_url="postgresql+psycopg://florabase@db:5432/florabase"),
+    )
+    monkeypatch.setenv("FLORABASE_OWNER_LOGIN", "owner")
+    monkeypatch.setenv("FLORABASE_OWNER_PASSWORD", "secret-owner-pw")
+    monkeypatch.setenv("FLORABASE_DB_PASSWORD", "db-secret")
+    monkeypatch.delenv("PGPASSWORD", raising=False)
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    path = release_schema.dump_database(tmp_path, "test.dump")
+    assert path.exists()
+    assert seen_env["PGPASSWORD"] == "db-secret"
+    assert "FLORABASE_OWNER_LOGIN" not in seen_env
+    assert "FLORABASE_OWNER_PASSWORD" not in seen_env
+
+
+def test_deploy_refuses_non_empty_media_without_marker(
+    schema: SimpleNamespace, tmp_path: Path
+) -> None:
+    state = tmp_path / "state"
+    media = tmp_path / "media"
+    backup = tmp_path / "backup"
+    for folder in (state, media, backup):
+        folder.mkdir()
+    (media / "stray").write_text("data")
+
+    with pytest.raises(release_schema.SchemaError, match="not empty and there is no installation"):
+        release_schema.deploy(
+            MagicMock(attributes={}),
+            schema.scripts,
+            HEAD,
+            PREVIOUS,
+            state_dir=state,
+            backup_dir=backup,
+            media_dir=media,
+        )
+    schema.engine.begin.assert_not_called()
+
+
+def test_deploy_refuses_missing_or_unwritable_backup_dir_before_connecting(
+    schema: SimpleNamespace, tmp_path: Path
+) -> None:
+    state = tmp_path / "state"
+    state.mkdir()
+
+    with pytest.raises(release_schema.SchemaError, match=r"docs/installation\.md"):
+        release_schema.deploy(
+            MagicMock(attributes={}),
+            schema.scripts,
+            HEAD,
+            PREVIOUS,
+            state_dir=state,
+            backup_dir=tmp_path / "missing-backup",
+        )
+    schema.engine.begin.assert_not_called()
+
+
+def test_failed_upgrade_latches_upgrade_failed_env_and_blocks_repeated_dumps(
+    schema: SimpleNamespace, tmp_path: Path
+) -> None:
+    cluster(schema, user_objects=True)
+    schema.current.return_value = (PREVIOUS,)
+    schema.upgrade.side_effect = ProgrammingError("boom", None, DuplicateTable("dup"))
+    marked(tmp_path)
+    dump = MagicMock(side_effect=lambda directory, name: directory / name)
+
+    with pytest.raises(ProgrammingError):
+        deploy(schema, tmp_path, dump=dump)
+
+    latch = tmp_path / release_schema.UPGRADE_FAILED_NAME
+    assert latch.is_file()
+    text = latch.read_text()
+    assert f"FLORABASE_UPGRADE_FROM={PREVIOUS}\n" in text
+    assert f"FLORABASE_UPGRADE_TO={HEAD}\n" in text
+    assert "SQLSTATE 42P07" in text
+    assert dump.call_count == 1
+
+    # Simulated container restart: refuses immediately and performs zero additional dumps.
+    with pytest.raises(release_schema.SchemaError, match=r"remove state/upgrade-failed\.env"):
+        deploy(schema, tmp_path, dump=dump)
+    assert dump.call_count == 1
+
+    # After operator fixes cause and removes latch, retry succeeds cleanly.
+    latch.unlink()
+    schema.upgrade.side_effect = None
+    schema.current.side_effect = [(PREVIOUS,), (HEAD,)]
+    deploy(schema, tmp_path, dump=dump)
+    assert dump.call_count == 2
+
+
+def test_wait_for_database_retries_until_ready_or_times_out(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("florabase.db.release_schema.time.sleep", lambda _: None)
+    results = iter([SimpleNamespace(returncode=1), SimpleNamespace(returncode=0)])
+    monkeypatch.setattr(subprocess, "run", lambda *_, **__: next(results))
+    release_schema.wait_for_database(timeout_seconds=5.0, interval_seconds=0.1)
+
+    monkeypatch.setattr(subprocess, "run", lambda *_, **__: SimpleNamespace(returncode=1))
+    with pytest.raises(release_schema.SchemaError, match="database is not ready"):
+        release_schema.wait_for_database(timeout_seconds=0.0, interval_seconds=0.0)
+
+
+def test_database_connect_args_pins_utc_and_falls_back_to_db_password(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from florabase.db.session import database_connect_args
+
+    monkeypatch.delenv("PGPASSWORD", raising=False)
+    monkeypatch.setenv("FLORABASE_DB_PASSWORD", "s3cr3t@:%")
+    args = database_connect_args("postgresql+psycopg://florabase@db:5432/florabase")
+    assert args == {"options": "-c timezone=UTC", "password": "s3cr3t@:%"}
+
+    args_with_timeout = database_connect_args(
+        "postgresql+psycopg://florabase:embedded@db:5432/florabase",
+        options="-c statement_timeout=2000",
+    )
+    assert args_with_timeout == {"options": "-c statement_timeout=2000 -c timezone=UTC"}

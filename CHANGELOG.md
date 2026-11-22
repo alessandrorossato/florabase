@@ -5,6 +5,40 @@ Notable changes to Florabase, newest first. Versions follow the
 [docs/progress.md](docs/progress.md); this file lists what an operator of an installation needs
 to know.
 
+## Unreleased
+
+Changes since `v0.1.0-beta.7`, planned for the next prerelease.
+
+### Changed
+
+- Production `compose.yaml` is now a minimal 41-line, three-service file (`db`, `backend`,
+  `frontend`) with fixed `container_name` values (`florabase-db`, `florabase-backend`,
+  `florabase-frontend`), no YAML anchors, no inline shell scripts and no root containers
+  ([ADR 0009](docs/decisions/0009-minimal-production-compose.md), `INSTALL-002`).
+- Removed the root `prepare` and separate `migrate` services:
+  - Folder creation and ownership (`postgres` `70:70` `0700`, `media` `10001:10001` `0700`, `state`
+    `10001:10001` `0755`, `backup/pre-upgrade` `10001:10001` `0700`) are a one-time host step in
+    [docs/installation.md](docs/installation.md#1-create-the-folders-and-set-owners-once).
+  - Data-directory, ownership/mode, marker and cluster-identity guards, image `HEALTHCHECK`,
+    `PGDATA`/`POSTGRES_DB`/`POSTGRES_USER` defaults and UTC `timezone` move into
+    `florabase-postgres:18.6-alpine-florabase.4` (same PostgreSQL 18.6 base and cluster layout).
+  - Constant backend production settings move into the backend `runtime` image; `florabase-start`
+    waits for PostgreSQL, validates data/backup paths and writability, runs the guarded deploy step
+    (latching `state/upgrade-failed.env` if an upgrade fails so restarts never write duplicate
+    dumps), scrubs one-time owner variables and `exec`s the exact-head `release_schema serve` guard.
+- All services share a single `FLORABASE_DB_PASSWORD` variable and optional `TZ` (default
+  `Europe/Rome` for container logs; database storage and backend sessions remain pinned to UTC).
+- Optional container hardening (`read_only`, `cap_drop`, `no-new-privileges`, split `internal`/`app`
+  networks) moves out of the default `compose.yaml` into a documented override snippet in
+  [docs/security.md](docs/security.md#optional-container-hardening).
+- **Upgrading from `v0.1.0-beta.7`:** Take a paired backup (required because this release updates
+  the PostgreSQL image identity from `18.6-alpine-florabase.3` to `18.6-alpine-florabase.4` on
+  the same PostgreSQL 18.6 cluster layout), then replace `compose.yaml` with the new release file
+  and redeploy using the exact same `FLORABASE_DATA_DIR`, `FLORABASE_BACKUP_DIR`,
+  `FLORABASE_DB_PASSWORD` and `FLORABASE_CANONICAL_ORIGIN` variables. Existing beta.7 folder
+  owners and modes already match. Paired-backup `docker compose exec` snippets now read
+  `$FLORABASE_DB_PASSWORD` instead of `$POSTGRES_PASSWORD`.
+
 ## v1.0.0 — planned
 
 Not yet released or published. The final release entry and upgrade notes will be confirmed
