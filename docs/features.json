@@ -2359,6 +2359,25 @@
       "status": "implemented"
     },
     {
+      "id": "UI-REVIEW-001",
+      "category": "ux",
+      "description": "Operator UI/UX review on DEV: correct visual misalignments and usability defects without new capabilities",
+      "acceptance_criteria": [
+        "Harvests and Cuttings share one record-type switch placed under the search toolbar in every view",
+        "Directories use one List/Gallery toggle and Schedule one Agenda/Calendar toggle that name the view they open",
+        "Saved views appear as sub-items of their owning section with a confirmed remove control; records are never changed",
+        "Activity headers follow the directory grammar; the Schedule month fits one desktop screen with compact pointer targets",
+        "Taxonomy no longer extends the document scroll; map overviews share the metric-card presentation; Online basemap is offered only when configured",
+        "Every palette shares the Field Ledger system and changes colour only; Botanical, Herbarium and Mineral remain, a retired choice falls back to Botanical",
+        "The README shows a showcase of the main screens with synthetic data; focused and full frontend checks pass, canonical verification pending operator authorization"
+      ],
+      "dependencies": [
+        "UI-POLISH-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "TEST-DATA-001",
       "category": "testing",
       "description": "Deterministic synthetic golden dataset with independent copies for Feature Review, UAT and performance testing",

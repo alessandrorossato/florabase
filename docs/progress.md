@@ -9903,3 +9903,27 @@ Status remains implemented pending canonical verification.
   Visual check of both pages at desktop and phone width, no horizontal overflow.
 - Not run: FULL `make feature-verify`, `make api-check` (both need the Docker quality stack).
   Release class proposed for the operator: `best-effort`.
+
+## 2026-11-22 — UI-REVIEW-001 operator UI/UX review (with LINEAGE-004 merged)
+
+- On `fix/ui-ux-review` from `1e985f1` (writer `claude-ui-review`); LINEAGE-004 (`77b8b54`) merged in
+  at the operator's request so one FULL and one delivery cover both. Bugs and visual alignment only.
+- Harvests/Stored material use the Cuttings record-type switch (`.directory-surfaces`) under the
+  search in both views. One List/Gallery toggle and one Agenda/Calendar toggle name the view they open.
+- Workbench: Saved views are sub-items of their owning section (five, then "Show all"), with a
+  hover/focus remove control confirmed in a dialog (`DELETE /api/v1/saved-views/{id}`); the separate
+  panel group and the Today "all views" list are gone. `sectionOfHash` is shared with `workspaceOfHash`.
+- Journal/History/Schedule headers follow the directory grammar; Schedule month is one compact row of
+  controls with viewport-sized cells and 24px pointer targets (44px kept for touch).
+- Taxonomy: absolutely positioned sr-only text escaped the review list and grew the document by
+  ~2,500px; the list now contains it. Gallery plates no longer centre inside stretched card buttons.
+- Maps: Collection origins and Species distribution use the Native ranges metric cards; Online basemap
+  is shown only when `mapOnlineEnabled` is set (Species distribution previously ignored the flag).
+- Themes: the Field Ledger system (fonts, radii, controls) applies to every palette; Field Ledger is
+  labelled Botanical, the old Botanical palette is retired (stored choice falls back), Herbarium and
+  Mineral gain rail and lineage colours (contrast-tested). Settings and identity lineage gain breadcrumbs.
+- README: `docs/assets/readme-showcase.png` mosaic from the synthetic Feature Review dataset.
+- Checks: frontend typecheck, ESLint, Prettier and the full Vitest suite (128 files, 1419 tests) in the
+  Review container; browser review on Feature Review at 1440×900, 768 and 375, light and dark.
+  Not run yet: FULL `make feature-verify` (queued behind WF-SCOPE-001 and INSTALL-002).
+  Release class proposed for the operator: `best-effort`.
