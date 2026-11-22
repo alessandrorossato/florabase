@@ -292,21 +292,11 @@ class Disclosure(unittest.TestCase):
                 disclosure_findings(Path(temporary) / "missing", "HEAD")
 
 
-def rendered_compose(directory: Path) -> Path:
-    """The tracked template with immutable fixture references, as the release renders it."""
-    text = (ROOT / "compose.yaml").read_text().replace("@VERSION@", "0.1.0-beta.99")
-    for token, reference in IMAGES.items():
-        text = text.replace(token, reference)
-    path = directory / "compose.yaml"
-    path.write_text(text)
-    return path
-
-
 def compose_config(
-    compose: Path, env: dict[str, str], ambient: dict[str, str] | None = None
+    compose: Path, env: dict[str, str] | None = None, ambient: dict[str, str] | None = None
 ) -> subprocess.CompletedProcess[str]:
     clean = {k: v for k, v in os.environ.items() if not k.startswith(("COMPOSE_", "FLORABASE_"))}
-    clean.update(env)
+    clean.update(env or {})
     clean.update(ambient or {})
     return subprocess.run(
         COMPOSE + ["--env-file", "/dev/null", "--file", str(compose), "config", "--format", "json"],
@@ -316,76 +306,61 @@ def compose_config(
     )
 
 
-IMAGES = {
-    "@BACKEND@": "ghcr.io/alessandrorossato/florabase-backend@sha256:" + "b" * 64,
-    "@FRONTEND@": "ghcr.io/alessandrorossato/florabase-frontend@sha256:" + "f" * 64,
-    "@POSTGRESQL@": "ghcr.io/alessandrorossato/florabase-postgres@sha256:" + "a" * 64,
-}
-ENV = {
-    "FLORABASE_DATA_DIR": "/volume1/docker/florabase/data",
-    "FLORABASE_BACKUP_DIR": "/volume1/backup/florabase",
-    "FLORABASE_DB_PASSWORD": "fixture-database-password",
-    "FLORABASE_CANONICAL_ORIGIN": "https://florabase.example.invalid",
+EXPECTED_IMAGES = {
+    "db": "ghcr.io/alessandrorossato/florabase-postgres:latest",
+    "backend": "ghcr.io/alessandrorossato/florabase-backend:latest",
+    "frontend": "ghcr.io/alessandrorossato/florabase-frontend:latest",
 }
 
 
 class StackContract(unittest.TestCase):
-    """The production compose.yaml stays minimal, image-only, private, non-root and guarded."""
+    """The production compose.yaml stays directly usable, minimal, image-only, non-root and guarded."""
 
-    temporary: tempfile.TemporaryDirectory[str]
     compose: Path
     config: dict[str, Any]
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.temporary = tempfile.TemporaryDirectory()
-        cls.compose = rendered_compose(Path(cls.temporary.name))
-        result = compose_config(cls.compose, ENV)
+        cls.compose = ROOT / "compose.yaml"
+        result = compose_config(cls.compose)
         if result.returncode:
             raise AssertionError(result.stderr)
         cls.config = json.loads(result.stdout)
 
-    @classmethod
-    def tearDownClass(cls) -> None:
-        cls.temporary.cleanup()
-
-    def test_minimal_shape_services_and_immutable_images(self) -> None:
-        template = (ROOT / "compose.yaml").read_text()
-        self.assertLessEqual(len(template.splitlines()), 60)
+    def test_minimal_shape_services_and_latest_images(self) -> None:
+        template = self.compose.read_text()
+        self.assertLessEqual(len(template.splitlines()), 50)
         self.assertNotIn("&", template, "compose.yaml must stay flat with no YAML anchors")
         self.assertNotIn("entrypoint:", template, "no inline entrypoints in compose.yaml")
         self.assertNotIn("sh -", template, "no inline shell scripts in compose.yaml")
         self.assertNotIn("healthcheck:", template, "healthchecks live in the images")
+        self.assertNotIn("${", template, "compose.yaml uses plain values without interpolation")
+        self.assertNotRegex(template, r"@[A-Z]+@", "compose.yaml has no template slots")
+        self.assertIn("docs/installation.md", template)
         services = self.config["services"]
         self.assertEqual(set(services), {"db", "backend", "frontend"})
         expected = {
-            "db": ("@POSTGRESQL@", "florabase-db"),
-            "backend": ("@BACKEND@", "florabase-backend"),
-            "frontend": ("@FRONTEND@", "florabase-frontend"),
+            "db": (EXPECTED_IMAGES["db"], "florabase-db"),
+            "backend": (EXPECTED_IMAGES["backend"], "florabase-backend"),
+            "frontend": (EXPECTED_IMAGES["frontend"], "florabase-frontend"),
         }
         for name, service in services.items():
             with self.subTest(name):
-                token, container_name = expected[name]
+                image, container_name = expected[name]
                 self.assertNotIn("build", service)
-                self.assertEqual(service["image"], IMAGES[token])
+                self.assertEqual(service["image"], image)
                 self.assertEqual(service["container_name"], container_name)
                 self.assertEqual(service["restart"], "unless-stopped")
                 self.assertIsNone(
                     service.get("user"), "no container overrides image USER or runs root"
                 )
 
-    def test_private_exposure(self) -> None:
-        networks = self.config.get("networks", {})
-        self.assertEqual(set(networks), {"internal", "app"})
-        self.assertIs(networks["internal"].get("internal"), True)
-        expected_networks = {
-            "db": {"internal"},
-            "backend": {"internal", "app"},
-            "frontend": {"app"},
-        }
+    def test_private_exposure_and_no_custom_networks(self) -> None:
+        self.assertNotIn("networks:", self.compose.read_text())
+        self.assertEqual(set(self.config.get("networks", {})), {"default"})
         for name, service in self.config["services"].items():
             with self.subTest(name):
-                self.assertEqual(set(service.get("networks", {})), expected_networks[name])
+                self.assertEqual(set(service.get("networks", {})), {"default"})
                 if name == "frontend":
                     self.assertEqual(
                         [(p["host_ip"], p["published"], p["target"]) for p in service["ports"]],
@@ -399,36 +374,33 @@ class StackContract(unittest.TestCase):
         for ambient in (
             {"FLORABASE_BIND_ADDRESS": "0.0.0.0", "APP_BIND_ADDRESS": "0.0.0.0"},
             {"FLORABASE_BIND_ADDRESS": "::"},
+            {"FLORABASE_HTTP_PORT": "0.0.0.0:8080"},
         ):
             with self.subTest(ambient=ambient):
-                result = compose_config(self.compose, ENV, ambient)
+                result = compose_config(self.compose, ambient=ambient)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 ports = json.loads(result.stdout)["services"]["frontend"]["ports"]
                 self.assertEqual({p["host_ip"] for p in ports}, {"127.0.0.1"})
-        for port in ("0.0.0.0:8080", "8080:8080", "[::]:8080"):
-            with self.subTest(port=port):
-                result = compose_config(self.compose, ENV, {"FLORABASE_HTTP_PORT": port})
-                if result.returncode == 0:
-                    ports = json.loads(result.stdout)["services"]["frontend"]["ports"]
-                    self.assertEqual({p["host_ip"] for p in ports}, {"127.0.0.1"})
 
-    def test_host_folders_are_never_created_and_stay_separate(self) -> None:
+    def test_plain_bind_mounts_and_no_host_path_env_vars(self) -> None:
         services = self.config["services"]
         targets = {
-            "db": {"/var/lib/postgresql"},
-            "backend": {"/var/lib/florabase/data", "/var/lib/florabase/backup"},
-            "frontend": set(),
+            "db": {"/var/lib/postgresql": "/volume1/docker/florabase/data"},
+            "backend": {
+                "/var/lib/florabase/data": "/volume1/docker/florabase/data",
+                "/var/lib/florabase/backup": "/volume1/docker/florabase/backup",
+            },
+            "frontend": {},
         }
         for name, service in services.items():
             with self.subTest(name):
                 mounts = service.get("volumes", [])
-                self.assertEqual({m["target"] for m in mounts}, targets[name])
+                self.assertEqual({m["target"]: m["source"] for m in mounts}, targets[name])
                 for mount in mounts:
                     self.assertEqual(mount["type"], "bind")
-                    self.assertFalse(mount["bind"].get("create_host_path", True))
-                    self.assertIn(
-                        mount["source"], {ENV["FLORABASE_DATA_DIR"], ENV["FLORABASE_BACKUP_DIR"]}
-                    )
+                env = service.get("environment", {})
+                self.assertNotIn("FLORABASE_DATA_DIR", env)
+                self.assertNotIn("FLORABASE_BACKUP_DIR", env)
         self.assertNotIn("volumes", self.config)
 
     def test_startup_ordering_and_guarded_entrypoints(self) -> None:
@@ -455,6 +427,7 @@ class StackContract(unittest.TestCase):
             "use an empty data folder",
             "docs/installation.md",
             "FLORABASE_DB_PASSWORD",
+            "change-me",
         ):
             self.assertIn(required, pg_entrypoint)
         pg_dockerfile = (ROOT / "postgres/Dockerfile").read_text()
@@ -478,33 +451,31 @@ class StackContract(unittest.TestCase):
             self.assertIn(required, backend_start)
         release_schema = (ROOT / "backend/src/florabase/db/release_schema.py").read_text()
         for required in (
-            "is inside FLORABASE_DATA_DIR",
-            "is inside FLORABASE_BACKUP_DIR",
-            "must be an absolute path",
             "the data and backup folders are the same",
+            "the backup folder is inside the data folder",
+            "the data folder is inside the backup folder",
+            "check_mountinfo_nesting",
+            "reject_placeholder_config",
+            "placeholder 'change-me'",
+            "PLACEHOLDER_CANONICAL_ORIGIN",
             "upgrade-failed.env",
             "pg_isready",
         ):
             self.assertIn(required, release_schema)
 
-    def test_owner_variables_and_timezone_configuration(self) -> None:
+    def test_plain_environment_defaults(self) -> None:
         services = self.config["services"]
-        self.assertEqual(services["backend"]["environment"]["FLORABASE_OWNER_LOGIN"], "")
         for name in ("db", "backend", "frontend"):
             self.assertEqual(services[name]["environment"]["TZ"], "Europe/Rome")
-        owner = {
-            "FLORABASE_OWNER_LOGIN": "owner",
-            "FLORABASE_OWNER_PASSWORD": "fixture-owner-pw",
-            "TZ": "UTC",
-        }
-        result = compose_config(self.compose, {**ENV, **owner})
-        self.assertEqual(result.returncode, 0, result.stderr)
-        configured = json.loads(result.stdout)["services"]
-        self.assertEqual(configured["backend"]["environment"]["FLORABASE_OWNER_LOGIN"], "owner")
-        for name in ("db", "frontend"):
-            self.assertNotIn("FLORABASE_OWNER_PASSWORD", configured[name].get("environment", {}))
+        self.assertEqual(services["db"]["environment"]["FLORABASE_DB_PASSWORD"], "change-me")
+        self.assertEqual(services["backend"]["environment"]["FLORABASE_DB_PASSWORD"], "change-me")
+        self.assertEqual(
+            services["backend"]["environment"]["FLORABASE_CANONICAL_ORIGIN"],
+            "https://florabase.example.org",
+        )
         for name in ("db", "backend", "frontend"):
-            self.assertEqual(configured[name]["environment"]["TZ"], "UTC")
+            self.assertNotIn("FLORABASE_OWNER_LOGIN", services[name].get("environment", {}))
+            self.assertNotIn("FLORABASE_OWNER_PASSWORD", services[name].get("environment", {}))
 
     def test_production_constants_live_in_backend_runtime_image(self) -> None:
         backend_env = self.config["services"]["backend"]["environment"]
@@ -531,13 +502,6 @@ class StackContract(unittest.TestCase):
             'CMD ["python", "-m", "florabase.db.release_schema", "serve"]',
         ):
             self.assertIn(required, backend_dockerfile)
-
-    def test_missing_required_value_fails_closed(self) -> None:
-        for key in ENV:
-            with self.subTest(key):
-                result = compose_config(self.compose, {k: v for k, v in ENV.items() if k != key})
-                self.assertNotEqual(result.returncode, 0)
-                self.assertIn(key, result.stderr)
 
 
 def main() -> None:

@@ -272,7 +272,7 @@
     "compose_template": {
       "type": "object",
       "additionalProperties": false,
-      "description": "SHA-256 of the tracked compose.yaml template; the attested release asset is rendered from it with the image references above.",
+      "description": "SHA-256 of the tracked deployable compose.yaml at this source revision.",
       "properties": {
         "compose.yaml": {
           "type": "string",

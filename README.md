@@ -2,6 +2,10 @@
   <img src="docs/assets/florabase-logo.png" alt="Florabase" width="300">
 </p>
 
+<p align="center">
+  <img src="docs/assets/readme-showcase.png" alt="Florabase screens: Today, a botanical identity, native ranges, taxonomy, collection origins, the Schedule calendar and two phone views" width="100%">
+</p>
+
 Florabase is a self-hosted web application for managing a personal botanical collection. It keeps
 botanical reference information separate from the material and plants in a collection, while
 preserving explicit provenance through real collection workflows.
@@ -47,10 +51,10 @@ capture and the other themes after v1.0.0 are in the [product roadmap](docs/prod
 
 ## Screenshots
 
-Feature-review screenshots exist in engineering handoffs; a curated public screenshot set remains
-a release gate. Before the first public release, capture the authenticated
-desktop Plants view, the mobile Seed lots or Sowings workflow, and a lineage-aware PlantGroup
-extraction result using non-sensitive demonstration data.
+The showcase above uses invented demonstration data (no real collection, provenance or locations):
+Today, a botanical identity, native ranges, the WFO taxonomy, collection origins and the month
+calendar on desktop, plus Today and an identity on a phone, in the light and dark appearances. A
+curated public screenshot set remains a release gate.
 
 ## Architecture
 
@@ -63,8 +67,9 @@ Florabase is a modular monolith:
 - Docker Compose for development and self-hosting
 - backend-owned OpenAPI with committed generated TypeScript declarations
 
-The production-oriented Compose stack publishes only the frontend proxy. PostgreSQL and the backend
-remain on an internal network.
+The production-oriented Compose stack publishes only the frontend proxy on `127.0.0.1`.
+PostgreSQL and the backend publish no ports (and can be isolated on a separate `internal: true`
+network via the optional hardened override in [docs/security.md](docs/security.md#optional-container-hardening)).
 
 ## Requirements
 
@@ -72,10 +77,12 @@ Repository development requires Docker Engine with Docker Compose **2.24.4 or ne
 Python 3 and `curl`. The development overlay uses Compose's `!override` tag. Host Node.js is optional.
 [Docker Compose merge rules](https://docs.docker.com/reference/compose-file/merge/)
 
-For self-hosting, [install Florabase](docs/installation.md) with the release's minimal three-service
-`compose.yaml` on linux/amd64: create the data and backup folders with their owners once, then
-deploy the file as-is in a Compose manager such as Dockhand or with `docker compose up -d`. No
-container runs as root; it initializes a new installation, backs up before every upgrade, and
+For self-hosting, [install Florabase](docs/installation.md) with `compose.yaml` from the latest
+release tag (`https://github.com/alessandrorossato/florabase/blob/<latest-tag>/compose.yaml`;
+`main` may be ahead of the published `:latest` images): create the data and backup folders with
+their owners once, edit the host folder paths, database password and canonical origin in
+`compose.yaml`, and deploy in a Compose manager such as Dockhand or with `docker compose up -d`.
+No container runs as root; it initializes a new installation, backs up before every upgrade, and
 supports the Compose 2.20 baseline. It requires an HTTPS reverse proxy (or Tailscale Serve) and
 the exact public HTTPS origin.
 

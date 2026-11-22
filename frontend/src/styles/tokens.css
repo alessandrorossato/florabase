@@ -98,60 +98,6 @@
   --font-editorial: var(--font-botanical);
 }
 
-:root[data-palette="botanical"][data-appearance="light"],
-[data-preview-palette="botanical"][data-preview-appearance="light"] {
-  color-scheme: light;
-  --background: #f6f7f3;
-  --surface: #ffffff;
-  --surface-subtle: #eef1ec;
-  --surface-hover: #e7ede6;
-  --text: #1e2621;
-  --text-muted: #5c665e;
-  --border: #dde3dc;
-  --border-strong: #7c8980;
-  --primary: #2f684f;
-  --primary-hover: #24533e;
-  --primary-subtle: #e7f0ea;
-  --on-primary: #ffffff;
-  --success: #276d4c;
-  --warning: #a66a16;
-  --warning-text: #85520c;
-  --danger: #a13b3b;
-  --danger-subtle: #fbefef;
-  --warning-subtle: #fbf4e7;
-  --info: #3d6f8e;
-  --focus-ring: #3d6f8e;
-  --overlay-backdrop: rgb(30 38 33 / 55%);
-  --elevation-overlay: 0 8px 32px rgb(30 38 33 / 16%);
-}
-
-:root[data-palette="botanical"][data-appearance="dark"],
-[data-preview-palette="botanical"][data-preview-appearance="dark"] {
-  color-scheme: dark;
-  --background: #151c18;
-  --surface: #1d2721;
-  --surface-subtle: #242f28;
-  --surface-hover: #2d3b32;
-  --text: #e5ece6;
-  --text-muted: #b1beb4;
-  --border: #3b4a40;
-  --border-strong: #82978a;
-  --primary: #8dc5a3;
-  --primary-hover: #acd8bd;
-  --primary-subtle: #283e30;
-  --on-primary: #14251c;
-  --success: #8bc8a3;
-  --warning: #e2b66e;
-  --warning-text: #e8c184;
-  --danger: #f0a3a3;
-  --danger-subtle: #3b272b;
-  --warning-subtle: #3b3223;
-  --info: #9bc5e0;
-  --focus-ring: #9bc5e0;
-  --overlay-backdrop: rgb(0 0 0 / 64%);
-  --elevation-overlay: 0 8px 32px rgb(0 0 0 / 32%);
-}
-
 :root[data-palette="herbarium"][data-appearance="light"],
 [data-preview-palette="herbarium"][data-preview-appearance="light"] {
   color-scheme: light;
@@ -177,6 +123,13 @@
   --focus-ring: #35627d;
   --overlay-backdrop: rgb(30 38 33 / 55%);
   --elevation-overlay: 0 8px 32px rgb(30 38 33 / 16%);
+  --rail-background: #1d1b17;
+  --rail-text: #eee9dd;
+  --rail-text-muted: #c4bba8;
+  --rail-active: #c6c18b;
+  --rail-active-subtle: #3a3b29;
+  --lineage: #35627d;
+  --lineage-subtle: #e6edf1;
 }
 
 :root[data-palette="herbarium"][data-appearance="dark"],
@@ -204,6 +157,13 @@
   --focus-ring: #9bc5e0;
   --overlay-backdrop: rgb(0 0 0 / 64%);
   --elevation-overlay: 0 8px 32px rgb(0 0 0 / 32%);
+  --rail-background: #141310;
+  --rail-text: #eee9dd;
+  --rail-text-muted: #c4bba8;
+  --rail-active: #c6c18b;
+  --rail-active-subtle: #3a3b29;
+  --lineage: #9bc5e0;
+  --lineage-subtle: #22303a;
 }
 
 :root[data-palette="mineral"][data-appearance="light"],
@@ -231,6 +191,13 @@
   --focus-ring: #35627d;
   --overlay-backdrop: rgb(30 38 33 / 55%);
   --elevation-overlay: 0 8px 32px rgb(30 38 33 / 16%);
+  --rail-background: #151c23;
+  --rail-text: #e3ebf3;
+  --rail-text-muted: #b2c2d0;
+  --rail-active: #9bbfdc;
+  --rail-active-subtle: #293d4e;
+  --lineage: #35627d;
+  --lineage-subtle: #e4edf4;
 }
 
 :root[data-palette="mineral"][data-appearance="dark"],
@@ -258,15 +225,22 @@
   --focus-ring: #9bc5e0;
   --overlay-backdrop: rgb(0 0 0 / 64%);
   --elevation-overlay: 0 8px 32px rgb(0 0 0 / 32%);
+  --rail-background: #0d1217;
+  --rail-text: #e3ebf3;
+  --rail-text-muted: #b2c2d0;
+  --rail-active: #9bbfdc;
+  --rail-active-subtle: #293d4e;
+  --lineage: #9bc5e0;
+  --lineage-subtle: #22303a;
 }
 
-/* FIELD LEDGER (Florabase Next, experimental). Unlike the three palettes above it is a system:
-   one block sets type, data font, radii, control geometry and focus geometry, and two blocks
-   set colour. Instrument Sans (UI), Newsreader italic (scientific names) and IBM Plex Mono
+/* FIELD LEDGER system: type, data font, radii, control geometry and focus geometry are shared
+   by every palette, so a palette changes colour only. Field Ledger's colours are labelled
+   "Botanical" in Settings; Herbarium and Mineral are colour variants of the same system. Instrument Sans (UI), Newsreader italic (scientific names) and IBM Plex Mono
    (recorded quantities, dates, labels) are bundled OFL-1.1 Fontsource packages; see
    /licenses/. Desktop pointer controls are 40px; coarse pointers and compact widths keep 44px. */
-:root[data-palette="field-ledger"],
-[data-preview-palette="field-ledger"] {
+:root[data-palette],
+[data-preview-palette] {
   --font-ui: "Instrument Sans Variable", system-ui, sans-serif;
   --font-botanical: "Newsreader Variable", Georgia, serif;
   --font-data: "IBM Plex Mono", ui-monospace, monospace;
@@ -293,8 +267,8 @@
   --tracking-heading: -0.012em;
 }
 @media (max-width: 48rem), (any-pointer: coarse) {
-  :root[data-palette="field-ledger"],
-  [data-preview-palette="field-ledger"] {
+  :root[data-palette],
+  [data-preview-palette] {
     --control-height: var(--control-height-touch);
   }
 }
@@ -366,12 +340,6 @@
   --rail-active-subtle: #183326;
   --lineage: #8db6e2;
   --lineage-subtle: #1a2a3b;
-}
-
-/* Settings theme swatches show each system's own UI face; custom properties otherwise inherit
-   the active palette's font into the other swatches. */
-[data-preview-palette]:not([data-preview-palette="field-ledger"]) {
-  --font-ui: "Source Sans 3 Variable", system-ui, sans-serif;
 }
 
 /* Evidence slots retain identity across palettes; only appearance changes the values. */

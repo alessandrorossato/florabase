@@ -739,7 +739,7 @@ function Detail({
                 stages={[
                   [
                     {
-                      type: "Source SeedLot",
+                      type: "Seed lot",
                       label: recordName(sowing.seed_lot, "Unlabelled SeedLot"),
                       href: `#/seeds/${sowing.seed_lot.id}`,
                       state: sowing.seed_lot.lifecycle,
@@ -747,7 +747,7 @@ function Detail({
                   ],
                   [
                     {
-                      type: "Current Sowing",
+                      type: "This sowing",
                       current: true,
                       label: recordName(sowing, "Unlabelled Sowing"),
                       href: `#/sowings/${sowing.id}`,

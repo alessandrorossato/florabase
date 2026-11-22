@@ -234,3 +234,98 @@ def test_endpoints_return_not_found_conflict_and_delegate_paging(
     assert api.read_children("sowing", item_id, actor, database, offset=25, limit=50) is stub
     assert seen == [(("sowing", item_id), 25, 50)]
     assert isinstance(seen[0][0][1], UUID)
+
+
+class GraphSession:
+    """Answers the identity graph's member and edge statements."""
+
+    def __init__(self, members: list[dict[str, Any]], edges: list[dict[str, Any]]) -> None:
+        self.members, self.edges = members, edges
+
+    def execute(self, statement: object, params: Any = None) -> Any:
+        result = MagicMock()
+        if statement is service._IDENTITY_MEMBERS:
+            result.mappings.return_value = self.members
+        elif statement is service._IDENTITY_EDGES:
+            result.mappings.return_value = self.edges
+        elif statement is service._PARENT_COUNTS:
+            result.mappings.return_value = []
+        else:
+            return []
+        return result
+
+
+def _edge(parent: LineageKey, child: LineageKey) -> dict[str, Any]:
+    return {
+        "parent_kind": parent[0],
+        "parent_id": parent[1],
+        "child_kind": child[0],
+        "child_id": child[1],
+    }
+
+
+def test_identity_graph_orders_truncates_and_keeps_foreign_ends_only(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(service, "_summaries", _summaries())
+    monkeypatch.setattr(service, "_identity_summary", lambda _identity: IDENTITY)
+    lot, sowing, plant, foreign = (
+        ("seed_lot", uuid7()),
+        ("sowing", uuid7()),
+        ("plant", uuid7()),
+        ("plant", uuid7()),
+    )
+    database = GraphSession(
+        # Arrival order is not the response order: kinds follow material flow.
+        members=[{"kind": k, "id": i} for k, i in (plant, sowing, lot)],
+        edges=[_edge(foreign, lot), _edge(lot, sowing), _edge(sowing, plant)],  # type: ignore[arg-type]
+    )
+    graph = service.identity_graph(database, MagicMock())  # type: ignore[arg-type]
+    assert (graph.total, graph.truncated, graph.limit) == (3, False, service.MAX_IDENTITY_GRAPH)
+    assert [(node.record.kind, node.in_identity) for node in graph.nodes] == [
+        ("seed_lot", True),
+        ("sowing", True),
+        ("plant", True),
+        ("plant", False),
+    ]
+    assert len(graph.edges) == 3
+
+    truncated = service.identity_graph(database, MagicMock(), limit=1)  # type: ignore[arg-type]
+    assert (truncated.total, truncated.truncated) == (3, True)
+    # The member Sowing left out is never shown as foreign; its edge is dropped.
+    assert [(node.record.id, node.in_identity) for node in truncated.nodes] == [
+        (lot[1], True),
+        (foreign[1], False),
+    ]
+    assert [(edge.parent_id, edge.child_id) for edge in truncated.edges] == [(foreign[1], lot[1])]
+
+    # An edge between two left-out members is dropped too.
+    two = service.identity_graph(database, MagicMock(), limit=2)  # type: ignore[arg-type]
+    assert [(edge.parent_id, edge.child_id) for edge in two.edges] == [
+        (foreign[1], lot[1]),
+        (lot[1], sowing[1]),
+    ]
+
+
+def test_identity_graph_endpoint_refuses_a_missing_identity(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    database = MagicMock()
+    database.get.return_value = None
+    with pytest.raises(HTTPException) as missing:
+        api.read_identity_graph(uuid7(), MagicMock(), database)
+    assert missing.value.status_code == 404
+    detail: Any = missing.value.detail
+    assert detail["code"] == "botanical_identity_not_found"
+
+    identity, graph = object(), object()
+    database.get.return_value = identity
+    calls: list[tuple[object, int]] = []
+
+    def build(_database: object, value: object, *, limit: int) -> object:
+        calls.append((value, limit))
+        return graph
+
+    monkeypatch.setattr(api, "identity_graph", build)
+    assert api.read_identity_graph(uuid7(), MagicMock(), database, limit=7) is graph
+    assert calls == [(identity, 7)]

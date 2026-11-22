@@ -1,0 +1,70 @@
+{
+  "base": "ef5451f782d8ef9c44d3a7f0d28394bcf1a5a8ea",
+  "bootstrap": "ef5451f782d8ef9c44d3a7f0d28394bcf1a5a8ea",
+  "bootstrap_commits": [],
+  "branch": "ci/batch-11",
+  "reconciliation": {
+    "docs/progress.md": "Retain all source milestones newest first above main's VERIFY-SPEED-001 milestone (preserving main's tail UAT smoke milestone) and prepend the Batch 11 integration milestone.",
+    "docs/release/evidence/wf-04-batch-11.md": "Record Batch 11 source provenance, conflict resolution, cross-branch checks and proposed release classes."
+  },
+  "sources": [
+    {
+      "base": "16ccf4b331734c146cd2b23dc66a36855716a51d",
+      "branch": "feat/install-003-latest-compose",
+      "claim": "5af1376e1e27",
+      "commits": [
+        "ac93677107886284a91c9b36e2bdb751a2cf458f"
+      ],
+      "evidence": [
+        "docs/decisions/0010-deployable-latest-compose.md",
+        "docs/installation.md",
+        "docs/progress.md"
+      ],
+      "id": "INSTALL-003",
+      "merge": "fae46af542029ec4f9f137d4162408a2bea62b90",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "independent-source-qa",
+      "tip": "ac93677107886284a91c9b36e2bdb751a2cf458f",
+      "writer": "antigravity-install-003"
+    },
+    {
+      "base": "ef5451f782d8ef9c44d3a7f0d28394bcf1a5a8ea",
+      "branch": "fix/ui-ux-review",
+      "claim": "fbcdb25a6958",
+      "commits": [
+        "491a5a15fb269d70ff5ec11bd0f58a917003bf3b",
+        "263339ec5b16f0583114640b35f3378fd6fc85ac",
+        "77b8b5441d68fcbc0e494c999fa32ef38c81da73",
+        "34ef3b86ef6a218a09913aded705d94ba031e50b",
+        "37f7e1f8b93bb3b9e164444b7baff5d86ebe10b1",
+        "ab7d393865eaae6e1bb391687ae642dd50e8736b",
+        "1406bb8a608e4dd41ab5a592f3756bc4f60c5e02",
+        "7a87c528e76cced3ad9a81ef4f9d6e758808c45a",
+        "f8abf354fe8014d10b3ac72fd6fd7663780a79ff",
+        "240c67799f9c3c6f05e3ec3ff7121775144db09d",
+        "f39422f7b87655ce1480510ef1185e125399e0ff",
+        "c0f9b9a4340e09e73e86c00a5c44b73c63707203",
+        "1b066f85c0ec1e40f5b59b9d69174115be9fa393",
+        "d2fddae6c92e7d26da6c77c2b544618bd5978903",
+        "3c55bdc3e32c2147976a4a3f4a1d3a578afc6175",
+        "e82b529c5e229f317625d353a41183d0be4515a2",
+        "27ece94337fff7ba40951ee9194e1eb707b2e51e"
+      ],
+      "evidence": [
+        "docs/lineage-explorer.md",
+        "docs/release/page-inventory-v1.md",
+        "docs/progress.md"
+      ],
+      "id": "UI-REVIEW-001",
+      "merge": "76b0479d201a527169769fae3cf85e6076b73ffd",
+      "resolutions": [],
+      "reviewer": "independent-source-qa",
+      "tip": "27ece94337fff7ba40951ee9194e1eb707b2e51e",
+      "writer": "claude-ui-review"
+    }
+  ],
+  "summary": "Deployable latest Compose, UI/UX review and identity lineage",
+  "version": 1
+}

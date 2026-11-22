@@ -26,16 +26,21 @@ export function GeographyHeader({
         ]}
       />
       <PageHeader
-        title="Geography"
-        titleId="geography-title"
+        // The page title is the menu entry the person chose, like every other section.
+        title={view === "overview" ? "Geography" : label}
+        titleId={
+          view === "overview" ? "geography-title" : `geography-${view}-title`
+        }
         eyebrow=""
         description={description}
         tools={tools}
         actions={actions}
       />
-      <h3 className="sr-only" id={`geography-${view}-title`}>
-        {label}
-      </h3>
+      {view === "overview" && (
+        <h3 className="sr-only" id={`geography-${view}-title`}>
+          {label}
+        </h3>
+      )}
     </>
   );
 }

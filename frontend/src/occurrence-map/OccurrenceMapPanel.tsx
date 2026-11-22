@@ -8,6 +8,7 @@ import {
 import { useAuth } from "../auth/context";
 import type { ExternalTaxonLinkResponse } from "../botanical-identities/api";
 import { MapWorkspace } from "../maps/MapWorkspace";
+import { mapRuntimeConfig } from "../provenance-map/config";
 import { loadWorkspaceChunk } from "../components/workspaceChunk";
 import {
   clearOccurrenceEvidence,
@@ -214,8 +215,9 @@ export function OccurrenceMapPanel({
         Florabase asks GBIF for the exact linked taxon only after Load or
         Refresh. Collection records, notes, account identity, and physical
         location are not sent. Local evidence reads make no external requests.
-        The optional online basemap sends your IP and visible tile area to the
-        configured provider.
+        {mapRuntimeConfig.onlineConfigured
+          ? " The optional online basemap sends your IP and visible tile area to the configured provider."
+          : " Online basemaps are not enabled for this deployment."}
       </p>
       {summary && (
         <>

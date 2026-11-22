@@ -10,6 +10,7 @@ export const breadcrumbGroups = new Set([
   "Reference",
   "Tools",
   "Application",
+  "Settings",
 ]);
 
 /** Root workspaces share the same group/current-page convention; record/task paths own theirs. */

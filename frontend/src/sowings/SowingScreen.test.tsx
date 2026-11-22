@@ -1559,9 +1559,7 @@ test("Sowing Gallery Details and browser Back preserve search and presentation",
   await waitFor(() => {
     expect(document.querySelector(".ui-directory-records")).toBeInTheDocument();
   });
-  expect(
-    await screen.findByRole("button", { name: "Gallery", pressed: true }),
-  ).toBeVisible();
+  expect(await screen.findByRole("button", { name: "List" })).toBeVisible();
   expect(screen.getByLabelText("Search Sowings")).toHaveValue("Tray");
   expect(
     screen.queryByRole("complementary", { name: /Quick preview|inspection/i }),

@@ -1,3 +1,124 @@
+## 2026-11-22 — WF-04 Batch 11 integration (`INSTALL-003` + `UI-REVIEW-001` / `LINEAGE-004`)
+
+- Prepared `ci/batch-11` on top of pinned `origin/main` (`ef5451f`, includes #215) with writer
+  `neon` via `make feature-batch-plan` and `make feature-batch-prepare`.
+- Merged `INSTALL-003` (`feat/install-003-latest-compose` at `ac93677`, merge `fae46af`) and
+  `UI-REVIEW-001` with `LINEAGE-004` (`fix/ui-ux-review` at `27ece94`, merge `76b0479`) without
+  rewriting source branches. `README.md`, `docs/features.json` and `docs/release/scope-v1.json`
+  merged cleanly keeping all 176 features; `docs/progress.md` resolved additively and was
+  reconciled newest-first (`INSTALL-003`, `UI-REVIEW-001`, `LINEAGE-004` above `VERIFY-SPEED-001`,
+  retaining `1e985f1`'s tail UAT smoke milestone).
+- Recorded [Batch 11 provenance](release/evidence/wf-04-batch-11.md) and
+  [batch-11.json](release/evidence/batches/batch-11.json). Proposed release classes in
+  `docs/release/scope-v1.json`: `INSTALL-003` (`release-work`), `UI-REVIEW-001` (`best-effort`),
+  `LINEAGE-004` (`best-effort`).
+- Exact-head independent batch QA (`make feature-batch-review`) and one fresh canonical FULL gate
+  (`env -u REUSE FRESH=1 make feature-verify AGENT_ID=neon`) run on this frozen committed head
+  before operator delivery.
+
+## 2026-11-22 — INSTALL-003 directly usable `:latest` `compose.yaml` (ADR 0010)
+
+- On `feat/install-003-latest-compose` from `16ccf4b` (writer `antigravity-install-003`).
+- Adopted [ADR 0010](decisions/0010-deployable-latest-compose.md) amending
+  [ADR 0009](decisions/0009-minimal-production-compose.md): `compose.yaml` on `main` is now a
+  directly usable 40-line file referencing `:latest` images
+  (`ghcr.io/alessandrorossato/florabase-{postgres,backend,frontend}:latest`), plain short bind
+  mounts with Synology-style absolute host path examples, plain environment literals (no `.env` or
+  Compose interpolation), header folder-setup instructions, and no custom networks (`internal: true`
+  and `app` moved to the optional hardened override in [docs/security.md](security.md)).
+- Added `change-me` placeholder password refusal in both
+  `postgres/florabase-postgres-entrypoint.sh` (reproduced `18.6-alpine-florabase.4` at
+  `index_digest` `sha256:2d843bd2ac7e9cebc4b4aaed2d24bb6f7717261fa27e798fe1f28583e853d625`,
+  `platform_digest` `sha256:c677e9e20e56d6c32c2d359f66b44b66e2ead27d51fcaa64528f78a88299589d`) and
+  `backend/src/florabase/db/release_schema.py`.
+- Removed `FLORABASE_DATA_DIR` / `FLORABASE_BACKUP_DIR` env vars from `compose.yaml`; added
+  `/proc/self/mountinfo` identical/nested bind-mount detection in `release_schema.py` (including
+  btrfs subvolumes, warning and continuing on indeterminate mountinfo and refusing on positive
+  detection).
+- Updated `scripts/beta_release.py`, `scripts/publish-beta-images.py` and
+  `.github/workflows/beta-images.yml`: dropped `render_compose()` and the rendered `compose.yaml`
+  release asset/attestation (keeping OCI image + `release-manifest.json` attestations), and added
+  `:latest` promotion alongside versioned tags with a code-enforced PostgreSQL 18 major guard.
+- Updated `docs/installation.md`, `docs/security.md`, `README.md`, `CHANGELOG.md`,
+  `docs/security/beta-distribution-001/postgresql-image.md`, `docs/features.json` (`INSTALL-003`
+  `implemented`) and `docs/release/scope-v1.json` (`INSTALL-003` proposed class `release-work`).
+- Checks passed: `make format-check lint typecheck test-backend` (1300 passed, 90.18% coverage),
+  `make workflow-check` (81+4 release tests, 16 beta-runtime tests, ruff/format/strict mypy),
+  `python3 scripts/test-environment-workflow.py` (44 OK), `python3 scripts/check-features.py`,
+  `python3 scripts/beta_release.py check --publication`,
+  `python3 scripts/beta_release.py postgres-identity --check` (`POSTGRES_IDENTITY_REPRODUCED`), and
+  live disposable `scripts/smoke-portable-compose.py` against `compose.yaml`. Not run: full
+  `make feature-verify` (not yet committed/pushed per operator Phase 2 instructions).
+
+## 2026-11-22 — UI-REVIEW-001 operator UI/UX review (with LINEAGE-004 merged)
+
+- On `fix/ui-ux-review` from `1e985f1` (writer `claude-ui-review`); LINEAGE-004 (`77b8b54`) merged in
+  at the operator's request so one FULL and one delivery cover both. Bugs and visual alignment only.
+- Harvests/Stored material use the Cuttings record-type switch (`.directory-surfaces`) under the
+  search in both views. One List/Gallery toggle and one Agenda/Calendar toggle name the view they open.
+- Workbench: Saved views are sub-items of their owning section (five, then "Show all"), with a
+  hover/focus remove control confirmed in a dialog (`DELETE /api/v1/saved-views/{id}`); the separate
+  panel group and the Today "all views" list are gone. `sectionOfHash` is shared with `workspaceOfHash`.
+- Journal/History/Schedule headers follow the directory grammar; Schedule month is one compact row of
+  controls with viewport-sized cells and 24px pointer targets (44px kept for touch).
+- Taxonomy: absolutely positioned sr-only text escaped the review list and grew the document by
+  ~2,500px; the list now contains it. Gallery plates no longer centre inside stretched card buttons.
+- Maps: Collection origins and Species distribution use the Native ranges metric cards; Online basemap
+  is shown only when `mapOnlineEnabled` is set (Species distribution previously ignored the flag).
+- Themes: the Field Ledger system (fonts, radii, controls) applies to every palette; Field Ledger is
+  labelled Botanical, the old Botanical palette is retired (stored choice falls back), Herbarium and
+  Mineral gain rail and lineage colours (contrast-tested). Settings and identity lineage gain breadcrumbs.
+- Later rounds: Cuttings rows use the shared Details/Edit actions (`?action=edit` opens the edit
+  dialog); Explore titles equal their menu entries (Taxonomy, Collection origins, Species
+  distribution, Native ranges, Places); Taxonomy uses one List/Tree toggle with icons and an inline
+  stage; Lineage home shows metric cards and an identity gallery on a dotted stage; record lineage
+  cards share one grammar; Settings adds **Help** (built from the navigation) and a static **Data
+  sources** page (current references, access rules, planned integration standard).
+- README: `docs/assets/readme-showcase.png` mosaic (desktop and phone) from the Feature Review dataset with demo names and WFO links applied only to that disposable Review database.
+- Record ancestry (`#/lineage/<kind>/<id>`) now belongs to Explore → Lineage with breadcrumbs; record pages keep their Lineage tab and link there. The record-type switch is a `DirectoryTools` `surfaces` slot directly under the toolbar.
+- Checks: frontend typecheck, ESLint, Prettier and the full Vitest suite (128 files, 1419 tests) in the
+  Review container; browser review on Feature Review at 1440×900, 768 and 375, light and dark.
+  Canonical gate: `make feature-verify` (tier full, after merging `origin/main` at `16ccf4b`) passed
+  all stages, including quality, production builds, migration cycle and integration (1324.6s).
+  Two earlier attempts failed for environmental reasons: WCVP/WFO indexes copied into this
+  worktree's ignored `backend/src/.source-cache/` for the Review screenshots made
+  `test_missing_v16_keeps_v15_link_current_without_silent_fallback` see a real v16 index (cache
+  removed), and `PlantScreen.test.tsx` "detail loading, detail failure, authorization, and session
+  expiry" failed once under full-suite load but passes in isolation and on rerun (possible flake).
+- Independent QA (read-only, detached `3c55bdc`): no P0/P1. Fixed every P2: focus returns to the
+  owning section link after a saved-view removal and an expired session shows an error; Cuttings
+  `?action=edit` no longer opens editing for reversed attempts and is cleared on close; the Taxonomy
+  tree scroller also contains sr-only text; the Lineage gallery shows counts with " · " (no implied
+  ancestry), uses `display_label` for cultivars and handles 401; Data sources describes all GBIF
+  online requests and WCVP CC BY 3.0. P3: remove-button hover specificity, one `aria-current` per
+  view, compact "+N more" in the Schedule month, occurrence tile guard and basemap copy, palette test
+  names plus an explicit retired-Botanical fallback test, docs (lineage routes, page inventory nav),
+  refreshed README showcase. Gate rerun after these fixes is recorded below.
+  UI-REVIEW-001 and LINEAGE-004 are marked verified. Release class proposed for the operator for
+  UI-REVIEW-001: `best-effort`.
+
+## 2026-11-22 — LINEAGE-004 identity lineage in Explore
+
+- On `feat/lineage-004` from `1e985f1` (writer `claude-lineage004`). Reuses the LINEAGE-003 explorer.
+- Backend: `GET /api/v1/lineage/identities/{identity_id}/graph` (`getIdentityLineageGraph`) returns
+  one BotanicalIdentity's records (Sowings and rooting attempts through their own source lot) with
+  only explicit edges from the explorer's source columns; linked records of other identities are
+  flagged `in_identity=false`; bounded at 500 with `truncated`, never presenting a left-out member as
+  foreign; 404 `botanical_identity_not_found`. No schema change.
+- Frontend: Explore → **Lineage** (`#/lineage`) searches identities, Seed lots, Sowings, Plants and
+  Plant groups via `/api/v1/search`; `#/lineage/identity/<id>` draws one stem per recorded line,
+  with outside-identity cards, references for multi-parent records and a separate list of records
+  without recorded relationships. The identity overview links to it. New `lineage` icon and section.
+- Checks (cloud session, outside Docker: the quality images cannot fetch dependencies through the
+  session proxy): ruff check/format and strict mypy clean; backend unit suite 1281 passed with
+  coverage 90.15% (3 failures are root/host-path environment tests, unrelated); PostgreSQL 16
+  integration `test_lineage_api.py` 14 passed; frontend tsc, ESLint and Prettier clean; lineage and
+  navigation tests pass; the remaining 46 frontend failures are identical on `origin/main` under the
+  session's Node 22 (the project pins Node 24). OpenAPI regenerated with the locked dependencies.
+  Visual check of both pages at desktop and phone width, no horizontal overflow.
+- Not run: FULL `make feature-verify`, `make api-check` (both need the Docker quality stack).
+  Release class proposed for the operator: `best-effort`.
+
 ## 2026-11-22 — VERIFY-SPEED-001 canonical FULL wall-time optimization
 
 - On `ci/verify-speed-001` from `origin/main` `16ccf4b` (writer `neon`).

@@ -52,8 +52,9 @@ model applies; the endpoints expose only summaries of records already readable b
 
 ## UI
 
-`#/lineage/{kind}/{id}` renders within the focus record's section (Seeds, Sowings, Plants or Cuttings); no
-navigation entry is added. Every record Lineage tab has **Explore material ancestry**.
+`#/lineage/{kind}/{id}` renders in Explore → Lineage with the breadcrumb Explore / Lineage / record; the record's own Lineage tab links there.
+Every record Lineage tab has **Explore material ancestry**. Since LINEAGE-004 the Explore workspace
+also has a **Lineage** destination (see [Identity lineage](#identity-lineage-lineage-004)).
 
 - Recorded origin: oldest-first vertical chain, relationship verbs, lifecycle chips, evidence and
   **Explore from here** (re-centre; browser Back returns).
@@ -72,3 +73,21 @@ dead mother Plant, a transferred sibling and a reversed mistaken Plant; an extra
 Harvest with two conversions (one reversed); a second-generation Sowing and Plant; a directly
 recorded group producer; a produced lot without producer; a same-identity independent Plant; and a
 27-Plant flat exercising paging.
+
+## Identity lineage (LINEAGE-004)
+
+`GET /api/v1/lineage/identities/{identity_id}/graph?limit=` (`getIdentityLineageGraph`, limit
+1–500, default 500) returns every record of one BotanicalIdentity (SeedLots, PlantGroups, Plants,
+VegetativeLots, and Sowings and PropagationAttempts through their own source lot) with only the
+explicit edges from the same source columns as the explorer. Each node is an `AncestryNode` plus
+`in_identity`; a record of another identity appears only as the other end of an explicit edge,
+with `in_identity=false`. Members are ordered by material kind then UUIDv7; past `limit` the graph is
+`truncated`, and an edge is kept only when each end is a returned record or a non-member, so a
+left-out member is never shown as foreign. Unknown identity: 404 `botanical_identity_not_found`.
+
+UI: Explore → **Lineage** (`#/lineage`) searches identities, Seed lots, Sowings, Plants and Plant
+groups through `/api/v1/search`; identities open `#/lineage/identity/{id}`, records open the
+explorer. The identity page draws one stem per recorded line (roots in response order, identity
+records first), with relationship verbs, origin notes, dashed cards for records outside the
+identity, a reference for a record already drawn under another parent, and a separate **Without
+recorded relationships** list. The identity overview links to it. No schema change.

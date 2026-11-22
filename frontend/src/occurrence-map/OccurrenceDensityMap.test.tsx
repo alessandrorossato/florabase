@@ -51,9 +51,11 @@ vi.mock("./EvidenceTiles", () => ({
   },
 }));
 import { acquireTestAuth } from "../test/auth";
+import { mapRuntimeConfig } from "../provenance-map/config";
 import { OccurrenceDensityMap } from "./OccurrenceDensityMap";
 afterEach(() => {
   cleanup();
+  mapRuntimeConfig.onlineConfigured = false;
   vi.clearAllMocks();
   vi.unstubAllGlobals();
 });
@@ -90,6 +92,7 @@ test("cache playback has no online basemap, refresh changes only the overlay", a
   expect(mocks.overlayRemove).toHaveBeenCalledTimes(1);
 });
 test("configured basemap is explicitly enabled with independent recoverable errors", async () => {
+  mapRuntimeConfig.onlineConfigured = true;
   const { capability } = await acquireTestAuth();
   render(
     <OccurrenceDensityMap

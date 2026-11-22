@@ -159,7 +159,7 @@ test("classification expansion, selection, distinct counts and unresolved identi
   render(<TaxonomyScreen />);
   await screen.findByRole("button", { name: "Ocimum genus 1 identity" });
   expect(
-    screen.getByRole("heading", { name: "Collection taxonomy", level: 2 }),
+    screen.getByRole("heading", { name: "Taxonomy", level: 2 }),
   ).toBeVisible();
   expect(screen.getByRole("region", { name: "Taxonomic tree" })).toBeVisible();
   expect(screen.getByRole("button", { name: "Needs review 1" })).toBeVisible();

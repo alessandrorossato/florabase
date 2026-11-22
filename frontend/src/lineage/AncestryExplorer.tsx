@@ -5,6 +5,7 @@ import { ApiError, isExpectedAuthCancellation, requestJson } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { InfoDisclosure } from "../components/ContextualHelp";
 import { DetailEmptyState } from "../components/DetailEmptyState";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 import { PageHeader } from "../components/ReferenceUI";
 import { LifecycleStatus } from "../components/WorkspaceUI";
 import { formatPartialDate } from "../events/eventData";
@@ -46,7 +47,11 @@ function childrenPath(node: AncestryNode, offset: number) {
  * How the oldest recorded record entered the collection. Nothing beyond it is recorded, so
  * the explorer states that instead of implying a parent.
  */
-function OriginNote({ node }: { node: AncestryNode }) {
+export function OriginNote({
+  node,
+}: {
+  node: Pick<AncestryNode, "record" | "origin">;
+}) {
   const { origin } = node;
   let text: string;
   if (origin === "collection_produced")
@@ -460,8 +465,15 @@ export function AncestryExplorer({
   const focusGeneration = generations[chain.length];
   return (
     <section className="ancestry-explorer" aria-labelledby={titleId}>
+      <Breadcrumbs
+        items={[
+          { label: "Explore" },
+          { label: "Lineage", href: "#/lineage" },
+          { label: nameOf(focus) },
+        ]}
+      />
       <PageHeader
-        eyebrow="Material ancestry"
+        eyebrow=""
         title={nameOf(focus)}
         titleId={titleId}
         description={`${lineageKindLabels[focus.record.kind]} · recorded material relationships only`}

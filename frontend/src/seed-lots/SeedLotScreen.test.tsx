@@ -2600,9 +2600,7 @@ test("Seeds List/Gallery keeps canonical filters, Details history and bulk choic
   mockApi(directoryHandler([lot()]));
   const user = await openSeeds();
   setViewportMatches(false);
-  expect(
-    await screen.findByRole("button", { name: "List", pressed: true }),
-  ).toBeVisible();
+  expect(await screen.findByRole("button", { name: "Gallery" })).toBeVisible();
   await selectDirectoryFilter(user, "Lifecycle", "all");
   await user.type(screen.getByLabelText("Search seed inventory"), "Blue");
   await user.click(
@@ -2634,9 +2632,7 @@ test("Seeds List/Gallery keeps canonical filters, Details history and bulk choic
   await waitFor(() => {
     expect(document.querySelector(".ui-directory-records")).toBeInTheDocument();
   });
-  expect(
-    await screen.findByRole("button", { name: "Gallery", pressed: true }),
-  ).toBeVisible();
+  expect(await screen.findByRole("button", { name: "List" })).toBeVisible();
   expect(screen.getByLabelText("Search seed inventory")).toHaveValue("Blue");
   expect(
     screen.getByRole("checkbox", {
@@ -2644,9 +2640,7 @@ test("Seeds List/Gallery keeps canonical filters, Details history and bulk choic
     }),
   ).toBeChecked();
   await browserForward();
-  expect(
-    await screen.findByRole("button", { name: "List", pressed: true }),
-  ).toBeVisible();
+  expect(await screen.findByRole("button", { name: "Gallery" })).toBeVisible();
 });
 
 test.each(["list", "gallery"])(
@@ -2656,11 +2650,9 @@ test.each(["list", "gallery"])(
     mockApi(directoryHandler([lot()]));
     const user = await openSeeds();
     setViewportMatches(false);
-    await user.click(
-      screen.getByRole("button", {
-        name: mode === "list" ? "List" : "Gallery",
-      }),
-    );
+    // Seeds opens in List; the single toggle names the view it switches to.
+    if (mode === "gallery")
+      await user.click(screen.getByRole("button", { name: "Gallery" }));
     const row = screen
       .getByRole("list", { name: "Seed inventory" })
       .querySelector(".ui-directory-trigger");

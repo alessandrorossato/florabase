@@ -241,9 +241,34 @@ function IdentityLink({ id }: { id: string }) {
   );
 }
 
+/** Drops ?action=edit once the dialog closes, so a reload does not reopen it. */
+function clearEditRequest() {
+  if (!editRequested()) return;
+  const [path, query = ""] = window.location.hash.split("?", 2);
+  const params = new URLSearchParams(query);
+  params.delete("action");
+  const next = params.toString();
+  window.history.replaceState(
+    window.history.state,
+    "",
+    `${window.location.pathname}${window.location.search}${path}${next ? `?${next}` : ""}`,
+  );
+}
+
+function editRequested() {
+  return (
+    new URLSearchParams(window.location.hash.split("?", 2)[1] ?? "").get(
+      "action",
+    ) === "edit"
+  );
+}
+
 export function LotPage({ id, token }: { id: string; token: string }) {
   const [data, retry] = useCuttingData<LotDetail>(`${lots}/${id}`, true);
-  const [dialog, setDialog] = useState<"start" | "edit">();
+  // Directory rows open Edit through ?action=edit, like the other collection directories.
+  const [dialog, setDialog] = useState<"start" | "edit" | undefined>(
+    editRequested() ? "edit" : undefined,
+  );
   const lot = data.state === "ready" ? data.value : undefined;
   return (
     <Page titleId="cutting-lot-title">
@@ -327,6 +352,7 @@ export function LotPage({ id, token }: { id: string; token: string }) {
               lifecycle={lot.lifecycle}
               token={token}
               close={() => {
+                clearEditRequest();
                 setDialog(undefined);
               }}
               refresh={retry}
@@ -957,12 +983,15 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
   const [summary, retrySummary] = useCuttingData<AttemptSummary>(
     `${attempts}/${id}/propagation-summary`,
   );
-  const [dialog, setDialog] = useState<DialogMode>();
+  const [dialog, setDialog] = useState<DialogMode | undefined>(
+    editRequested() ? { type: "edit" } : undefined,
+  );
   const overview = useRef<HTMLHeadingElement>(null);
   const attempt = data.state === "ready" ? data.value : undefined;
   const editable = attempt && attempt.lifecycle !== "reversed";
   const active = attempt?.lifecycle === "active";
   function close() {
+    clearEditRequest();
     setDialog(undefined);
   }
   function refresh() {
@@ -1216,7 +1245,7 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
             id={id}
             label={displayAttempt(attempt)}
           />
-          {dialog?.type === "edit" && (
+          {dialog?.type === "edit" && editable && (
             <AttemptEditDialog
               attempt={attempt}
               token={token}

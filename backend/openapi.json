@@ -5932,6 +5932,140 @@
         "title": "IdentityHistoricalNameResponse",
         "type": "object"
       },
+      "IdentityLineageGraph": {
+        "description": "Every record of one BotanicalIdentity and only its explicitly recorded relationships.\n\nSharing the identity is not lineage: records without an edge stay unconnected.",
+        "properties": {
+          "botanical_identity": {
+            "$ref": "#/components/schemas/BotanicalIdentitySummary"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/LineageEdge"
+            },
+            "title": "Edges",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/IdentityLineageNode"
+            },
+            "title": "Nodes",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "botanical_identity",
+          "total",
+          "limit",
+          "truncated",
+          "nodes",
+          "edges"
+        ],
+        "title": "IdentityLineageGraph",
+        "type": "object"
+      },
+      "IdentityLineageNode": {
+        "properties": {
+          "descendant_count": {
+            "title": "Descendant Count",
+            "type": "integer"
+          },
+          "harvest_conversion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HarvestConversionEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "in_identity": {
+            "title": "In Identity",
+            "type": "boolean"
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeedLotSourceKind"
+              },
+              {
+                "$ref": "#/components/schemas/DirectOriginKind"
+              },
+              {
+                "enum": [
+                  "collection_produced",
+                  "purchased",
+                  "gift_exchange",
+                  "self_collected",
+                  "other",
+                  "unknown"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin"
+          },
+          "record": {
+            "discriminator": {
+              "mapping": {
+                "plant": "#/components/schemas/PlantLineageNode",
+                "plant_group": "#/components/schemas/PlantGroupLineageNode",
+                "propagation_attempt": "#/components/schemas/PropagationAttemptLineageNode",
+                "seed_lot": "#/components/schemas/SeedLotLineageNode",
+                "sowing": "#/components/schemas/SowingLineageNode",
+                "vegetative_lot": "#/components/schemas/VegetativeLotLineageNode"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SeedLotLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/SowingLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/PlantLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/PlantGroupLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/VegetativeLotLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/PropagationAttemptLineageNode"
+              }
+            ],
+            "title": "Record"
+          }
+        },
+        "required": [
+          "record",
+          "origin",
+          "harvest_conversion",
+          "descendant_count",
+          "in_identity"
+        ],
+        "title": "IdentityLineageNode",
+        "type": "object"
+      },
       "IdentityReconciliationEventResponse": {
         "additionalProperties": false,
         "properties": {
@@ -6711,6 +6845,53 @@
         ],
         "title": "LengthUnit",
         "type": "string"
+      },
+      "LineageEdge": {
+        "description": "One explicit recorded source relationship: the child's own source column.",
+        "properties": {
+          "child_id": {
+            "format": "uuid",
+            "title": "Child Id",
+            "type": "string"
+          },
+          "child_kind": {
+            "enum": [
+              "seed_lot",
+              "sowing",
+              "plant",
+              "plant_group",
+              "vegetative_lot",
+              "propagation_attempt"
+            ],
+            "title": "Child Kind",
+            "type": "string"
+          },
+          "parent_id": {
+            "format": "uuid",
+            "title": "Parent Id",
+            "type": "string"
+          },
+          "parent_kind": {
+            "enum": [
+              "seed_lot",
+              "sowing",
+              "plant",
+              "plant_group",
+              "vegetative_lot",
+              "propagation_attempt"
+            ],
+            "title": "Parent Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "parent_kind",
+          "parent_id",
+          "child_kind",
+          "child_id"
+        ],
+        "title": "LineageEdge",
+        "type": "object"
       },
       "LineageResponse": {
         "properties": {
@@ -27114,6 +27295,61 @@
         "summary": "Preview Import",
         "tags": [
           "import-export"
+        ]
+      }
+    },
+    "/api/v1/lineage/identities/{identity_id}/graph": {
+      "get": {
+        "operationId": "getIdentityLineageGraph",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 500,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityLineageGraph"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Identity Graph",
+        "tags": [
+          "lineage"
         ]
       }
     },

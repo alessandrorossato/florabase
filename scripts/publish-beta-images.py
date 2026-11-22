@@ -25,6 +25,7 @@ from typing import Any
 
 from beta_release import (
     INSTALL_COMPOSE,
+    POSTGRES_LATEST_MAJOR,
     POSTGRES_REPOSITORY,
     POSTGRES_SBOM,
     REGISTRY_IMAGE,
@@ -40,7 +41,6 @@ from beta_release import (
     release_asset_inventory,
     release_attestation_inputs,
     release_finalization_inputs,
-    render_compose,
     require_remote_release_tag,
     run,
     run_artifact_smoke,
@@ -194,7 +194,7 @@ class Publication:
         if create:
             output.mkdir(parents=True, exist_ok=False, mode=0o700)
             self.path.parent.mkdir()
-            self.state: dict[str, Any] = {"stages": {}, "promoted": {}}
+            self.state: dict[str, Any] = {"stages": {}, "promoted": {}, "promoted_latest": {}}
         else:
             self.state = read(self.path)
 
@@ -394,6 +394,10 @@ def run_pipeline(
             if run("git", "status", "--porcelain"):
                 raise ValueError("release preparation requires a clean source tree")
             version, pg = locked["version"], locked["postgresql"]
+            if not pg["version"].startswith(POSTGRES_LATEST_MAJOR + "."):
+                raise ValueError(
+                    "refuse to move florabase-postgres:latest across PostgreSQL major versions"
+                )
             state.update(
                 source_sha=sha,
                 version=version,
@@ -469,10 +473,6 @@ def run_pipeline(
             manifest_path = assets / "release-manifest.json"
             manifest_path.write_text(json.dumps(value, indent=2) + "\n")
 
-            portable = assets / INSTALL_COMPOSE
-            portable_bytes = render_compose(root, version, refs).encode()
-            portable.write_bytes(portable_bytes)
-
         with publication.stage("SCAN/SMOKE"):
             for ref in refs.values():
                 subprocess.run(["docker", "pull", "--platform", "linux/amd64", ref], check=True)
@@ -490,13 +490,15 @@ def run_pipeline(
                 )
 
             run_portable_smoke(
-                root, portable, refs, value["alembic_head"], diagnostics / "portable-smoke.log"
+                root,
+                root / INSTALL_COMPOSE,
+                refs,
+                value["alembic_head"],
+                diagnostics / "portable-smoke.log",
             )
 
         with publication.stage("VALIDATE ASSETS"):
             inventory = prepare_release_assets(root, assets, version, sha)
-            if portable.read_bytes() != portable_bytes:
-                raise ValueError("compose.yaml changed after the artifact smoke")
             if read(manifest_path) != value:
                 raise ValueError("release manifest changed after the artifact smoke")
             request = release_finalization_inputs(value, sha, inventory)
@@ -507,7 +509,7 @@ def run_pipeline(
                 manifest_path,
                 sha,
                 WORKFLOW,
-                {INSTALL_COMPOSE: inventory[INSTALL_COMPOSE][1]},
+                {},
                 host,
             )
             if attestation["release_manifest_sha256"] != inventory[manifest_path.name][1]:
@@ -548,8 +550,32 @@ def run_pipeline(
                 state["promoted"][service] = promote_image(refs[service], tag, host)
                 del state["promotion_in_progress"]
                 publication.save()
-            if lookup(pg_repository.split("/", 1)[1], pg["version"]) != pg["index_digest"]:
+            pg_repo_path = pg_repository.split("/", 1)[1]
+            if lookup(pg_repo_path, pg["version"]) != pg["index_digest"]:
                 raise ValueError("promoted PostgreSQL tag does not match the pinned index")
+            for service in ("backend", "frontend"):
+                state["promotion_in_progress"] = f"{service}:latest"
+                publication.save()
+                state["promoted_latest"][service] = promote_image(refs[service], "latest", host)
+                del state["promotion_in_progress"]
+                publication.save()
+            if not pg["version"].startswith(POSTGRES_LATEST_MAJOR + "."):
+                raise ValueError(
+                    "refuse to move florabase-postgres:latest across PostgreSQL major versions"
+                )
+            if lookup(pg_repo_path, "latest") != pg["index_digest"]:
+                state["promotion_in_progress"] = "postgresql:latest"
+                publication.save()
+                state["promoted_latest"]["postgresql"] = promote_image(
+                    refs["postgresql"], "latest", host
+                )
+                del state["promotion_in_progress"]
+                publication.save()
+            else:
+                state["promoted_latest"]["postgresql"] = pg["index_digest"]
+                publication.save()
+            if lookup(pg_repo_path, "latest") != pg["index_digest"]:
+                raise ValueError("promoted PostgreSQL :latest tag does not match the pinned index")
     return publication
 
 

@@ -127,7 +127,7 @@ export function OccurrenceDensityMap({
   }, [identityId, generation, localOnly, capability]);
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !online) return;
+    if (!map || !online || !mapRuntimeConfig.onlineConfigured) return;
     const layer = tileLayer(mapRuntimeConfig.tileUrl, {
       pane: "occurrence-basemap",
       attribution: mapRuntimeConfig.attribution,
@@ -212,19 +212,22 @@ export function OccurrenceDensityMap({
         role="region"
         tabIndex={0}
       />
-      <label className="occurrence-online-basemap">
-        <input
-          type="checkbox"
-          checked={online}
-          onChange={(event) => {
-            setOnline(event.target.checked);
-          }}
-        />{" "}
-        Online basemap{" "}
-        <span className="field-help">
-          Optional · sends your IP and viewed area to the configured provider.
-        </span>
-      </label>
+      {/* Offered only when the operator enabled a tile provider (docs/deployment.md). */}
+      {mapRuntimeConfig.onlineConfigured && (
+        <label className="occurrence-online-basemap">
+          <input
+            type="checkbox"
+            checked={online}
+            onChange={(event) => {
+              setOnline(event.target.checked);
+            }}
+          />{" "}
+          Online basemap{" "}
+          <span className="field-help">
+            Optional · sends your IP and viewed area to the configured provider.
+          </span>
+        </label>
+      )}
     </>
   );
 }

@@ -272,17 +272,20 @@ export function ProvenanceMap({
         >
           Fit visible sites
         </button>
-        <label>
-          <input
-            type="checkbox"
-            checked={online}
-            disabled={!mapRuntimeConfig.onlineConfigured || tileFailed}
-            onChange={(event) => {
-              setOnline(event.currentTarget.checked);
-            }}
-          />
-          Online basemap
-        </label>
+        {/* Not offered at all unless the operator enabled a provider (docs/deployment.md). */}
+        {mapRuntimeConfig.onlineConfigured && (
+          <label>
+            <input
+              type="checkbox"
+              checked={online}
+              disabled={tileFailed}
+              onChange={(event) => {
+                setOnline(event.currentTarget.checked);
+              }}
+            />
+            Online basemap
+          </label>
+        )}
         <span className="origins-marker-key">
           <span aria-hidden="true">●</span> Recorded site · rings show accuracy
         </span>

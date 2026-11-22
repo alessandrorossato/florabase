@@ -5,7 +5,8 @@
   const key = "florabase.appearance.v1";
   // Florabase Next (experimental branch): Field Ledger is the default; the other palettes are unchanged.
   const defaultPalette = "field-ledger";
-  const palettes = ["field-ledger", "botanical", "herbarium", "mineral"];
+  // "botanical" (retired) falls back to the default, whose colours now carry that name.
+  const palettes = ["field-ledger", "herbarium", "mineral"];
   const appearances = ["system", "light", "dark"];
   const listeners = new Set();
   const media = window.matchMedia?.("(prefers-color-scheme: dark)");

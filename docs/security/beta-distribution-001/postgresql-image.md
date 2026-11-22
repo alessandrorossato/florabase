@@ -14,14 +14,15 @@ image so `compose.yaml` carries no inline shell scripts or root `prepare` contai
 - Image `CMD`: `["postgres", "-c", "timezone=UTC"]` (pins SQL/session timezone to `UTC` even when
   `TZ` is set for local log timestamps).
 - `florabase-postgres-entrypoint`: refuses root (`exit 64`), maps `FLORABASE_DB_PASSWORD` →
-  `POSTGRES_PASSWORD`, validates required subfolder owners/modes (`postgres` `70:70` `0700`,
+  `POSTGRES_PASSWORD`, refuses the placeholder `change-me` password before touching disk,
+  validates required subfolder owners/modes (`postgres` `70:70` `0700`,
   `media` `10001:10001` `0700`, `state` `10001:10001` `0755`), enforces the empty-folder /
   `postgres/installation.pending` retry rule, and validates `state/installation.env` (PG major,
   cluster existence and `pg_controldata` system identifier) before PostgreSQL starts.
 - Reproducible identity (`beta_release.py postgres-identity --check`, two fresh `--no-cache`
   `moby/buildkit:v0.34.2` builds):
-  - index digest: `sha256:93797c3941d06b3a8d591851df04605b5287ace2a11bb32421589ddff1a1782c`
-  - platform digest: `sha256:7213d5bb35a00e1f80ca60193ad81a07c946e328ad4128a57e53e50fb47bb8b9`
+  - index digest: `sha256:2d843bd2ac7e9cebc4b4aaed2d24bb6f7717261fa27e798fe1f28583e853d625`
+  - platform digest: `sha256:c677e9e20e56d6c32c2d359f66b44b66e2ead27d51fcaa64528f78a88299589d`
 - Cluster data compatibility: identical PostgreSQL 18.6 binary and `postgres/18/docker` layout;
   `v0.1.0-beta.7` clusters open unchanged. Existing installations still treat the digest switch as
   PostgreSQL maintenance with a paired backup before upgrading.
