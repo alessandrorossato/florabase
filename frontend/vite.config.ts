@@ -1,6 +1,15 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
+const parsedMaxWorkers = Number.parseInt(
+  process.env.VITEST_MAX_WORKERS ?? "",
+  10,
+);
+const maxWorkers =
+  Number.isInteger(parsedMaxWorkers) && parsedMaxWorkers > 0
+    ? parsedMaxWorkers
+    : 3;
+
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -14,7 +23,9 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
-    fileParallelism: false,
+    fileParallelism: true,
+    pool: "forks",
+    maxWorkers,
     setupFiles: "./src/test/setup.ts",
     testTimeout: 15_000,
     coverage: {
