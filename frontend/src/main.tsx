@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import { App } from "./App.tsx";
 import { trackInputModality } from "./focusModality";
+import { isNativeShell } from "./mobile/runtime";
 import { registerServiceWorker } from "./pwa/registerServiceWorker";
 import { UpdateNotice } from "./pwa/UpdateNotice";
 import "leaflet/dist/leaflet.css";
@@ -31,10 +32,22 @@ if (root === null) {
 }
 
 trackInputModality();
-void registerServiceWorker();
-createRoot(root).render(
-  <StrictMode>
-    <App />
-    <UpdateNotice />
-  </StrictMode>,
-);
+if (isNativeShell()) {
+  void import("./mobile/NativeServerOnboarding").then(
+    ({ NativeServerOnboarding }) => {
+      createRoot(root).render(
+        <StrictMode>
+          <NativeServerOnboarding />
+        </StrictMode>,
+      );
+    },
+  );
+} else {
+  void registerServiceWorker();
+  createRoot(root).render(
+    <StrictMode>
+      <App />
+      <UpdateNotice />
+    </StrictMode>,
+  );
+}

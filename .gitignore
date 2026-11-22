@@ -21,3 +21,14 @@ uploads/
 build/
 .source-cache/
 .taxonomy-review/
+
+# Android / Gradle / Capacitor outputs and signing secrets
+*.apk
+*.aab
+*.ap_
+*.dex
+*.jks
+*.keystore
+*.p12
+.gradle/
+local.properties

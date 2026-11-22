@@ -3133,6 +3133,25 @@
       ],
       "priority": "P1",
       "status": "implemented"
+    },
+    {
+      "id": "MOBILE-001",
+      "category": "mobile",
+      "description": "Capacitor Android shell spike with native runtime isolation, server URL health onboarding, user-CA network security config, build targets, impact classification, and MOBILE-002 ADR while preserving the PWA unchanged",
+      "acceptance_criteria": [
+        "make mobile-android-debug produces a debug APK from a clean checkout following docs/mobile.md using exact pinned Capacitor 8 packages in mobile/",
+        "On an Android emulator pointing to the dev server (http://10.0.2.2:5173), native onboarding shows the /api/v1/health response, persists the server URL via Capacitor Preferences, displays the MOBILE-002 sign-in placeholder, and shows distinct errors for invalid URL, unreachable, TLS, and non-Florabase responses",
+        "Web/PWA build, tests, lint, typecheck, and frontend/src/pwa/*.test.ts pass unmodified with zero @capacitor imports in the web bundle and /sw.js registration preserved",
+        "scripts/verification-impact.json classifies mobile/-only changes as non-FULL and non-golden with regression coverage in scripts/test-verification-impact.py",
+        "docs/mobile.md and docs/mobile-001-adr.md document toolchain setup, 10.0.2.2 and user-CA trust, observed login blockers, recommended MOBILE-002 transport, version compatibility, F-Droid constraints, offline outbox design, PWA preservation rules, and open decisions"
+      ],
+      "dependencies": [
+        "PWA-001",
+        "WF-SCOPE-001",
+        "VERIFY-SPEED-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
     }
   ]
 }

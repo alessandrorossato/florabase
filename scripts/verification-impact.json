@@ -1119,6 +1119,17 @@
     "collection-views-regression": {
       "suite_scope": "collection-views",
       "affects": []
+    },
+    "mobile": {
+      "backend_dirs": [],
+      "integration_dirs": [],
+      "frontend_dirs": [
+        "frontend/src/mobile/"
+      ],
+      "backend": [],
+      "integration": [],
+      "frontend": [],
+      "affects": []
     }
   },
   "rules": [
@@ -1420,6 +1431,16 @@
     {
       "prefix": "frontend/src/geography/",
       "scope": "geography",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "mobile/",
+      "scope": "mobile",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "frontend/src/mobile/",
+      "scope": "mobile",
       "layer": "frontend"
     }
   ]

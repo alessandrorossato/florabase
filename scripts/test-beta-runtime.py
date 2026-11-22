@@ -119,8 +119,9 @@ def disclosure_findings(repo: Path, base: str) -> list[str]:
 
 
 # No exemptions: patterns and samples are assembled so that their own source never matches.
+# 10.0.2.2 is Android Emulator's universal host-loopback alias (equivalent to 127.0.0.1).
 DISCLOSURE_PATTERNS = {
-    "private or CGNAT IPv4": r"\b(?:10\.\d{1,3}|192\.168|172\.(?:1[6-9]|2\d|3[01])|"
+    "private or CGNAT IPv4": r"\b(?!10\.0\.2\.2\b)(?:10\.\d{1,3}|192\.168|172\.(?:1[6-9]|2\d|3[01])|"
     r"100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])|169\.254)\.\d{1,3}\.\d{1,3}\b",
     "concrete tailnet name": r"[A-Za-z0-9-]+\.(?!tailnet\.)[A-Za-z0-9-]+\.ts\.net",
     "personal home path": r"/(?:home|Users)/[A-Za-z0-9._-]+",
@@ -239,8 +240,14 @@ class Disclosure(unittest.TestCase):
         source = Path(__file__).read_text()
         for label, pattern in DISCLOSURE_PATTERNS.items():
             self.assertIsNone(re.search(pattern, source), label)
-        for allowed in ("https://<node>.<tailnet>.ts.net", "127.0.0.1:8080", "@sha256:abc"):
+        for allowed in (
+            "https://<node>.<tailnet>.ts.net",
+            "127.0.0.1:8080",
+            "10.0.2.2:5173",
+            "@sha256:abc",
+        ):
             self.assertFalse(any(re.search(p, allowed) for p in DISCLOSURE_PATTERNS.values()))
+        self.assertRegex("10.0.2." + "3", DISCLOSURE_PATTERNS["private or CGNAT IPv4"])
 
     def test_staged_blob_is_scanned_even_when_worktree_is_clean(self) -> None:
         """Codex bypass: stage sensitive content, then put a safe placeholder in the worktree."""
