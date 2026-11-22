@@ -9,6 +9,7 @@ services:
       - FLORABASE_DB_PASSWORD=${FLORABASE_DB_PASSWORD:?Set FLORABASE_DB_PASSWORD}
     volumes:
       - {type: bind, source: "${FLORABASE_DATA_DIR:?Set FLORABASE_DATA_DIR}", target: /var/lib/postgresql, bind: {create_host_path: false}}
+    networks: [internal]
 
   backend:
     image: "@BACKEND@"
@@ -28,6 +29,7 @@ services:
     volumes:
       - {type: bind, source: "${FLORABASE_DATA_DIR:?Set FLORABASE_DATA_DIR}", target: /var/lib/florabase/data, bind: {create_host_path: false}}
       - {type: bind, source: "${FLORABASE_BACKUP_DIR:?Set FLORABASE_BACKUP_DIR}", target: /var/lib/florabase/backup, bind: {create_host_path: false}}
+    networks: [internal, app]
 
   frontend:
     image: "@FRONTEND@"
@@ -39,3 +41,9 @@ services:
       - "127.0.0.1:${FLORABASE_HTTP_PORT:-8080}:8080"
     environment:
       - TZ=${TZ:-Europe/Rome}
+    networks: [app]
+
+networks:
+  internal:
+    internal: true
+  app:

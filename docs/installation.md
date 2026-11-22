@@ -24,7 +24,7 @@ container runs as root:
 
 Stopping or restarting services keeps all data. Docker restarts `db`, `backend` and `frontend`
 after a host reboot; all image guards and the exact-head schema check still apply. Operators who
-want read-only root filesystems, dropped capabilities and split networks can layer the optional
+want read-only root filesystems and dropped capabilities can layer the optional
 [hardened Compose override](security.md#optional-container-hardening).
 
 ## Prerequisites

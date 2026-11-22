@@ -155,15 +155,31 @@ class PortableSmokeEvidence(unittest.TestCase):
         *,
         names: dict[str, str] | None = None,
         users: dict[str, str] | None = None,
+        networks: dict[str, Any] | None = None,
+        service_networks: dict[str, dict[str, Any]] | None = None,
     ) -> bytes:
         container_names = names if names is not None else self.smoke.CONTAINER_NAMES
+        default_service_networks: dict[str, dict[str, Any]] = {
+            "db": {"internal": None},
+            "backend": {"internal": None, "app": None},
+            "frontend": {"app": None},
+        }
+        if service_networks:
+            default_service_networks.update(service_networks)
         services: dict[str, Any] = {
-            name: {"image": ref, "container_name": container_names.get(name)}
+            name: {
+                "image": ref,
+                "container_name": container_names.get(name),
+                "networks": default_service_networks.get(name, {}),
+            }
             for name, ref in images.items()
         }
         for name, user in (users or {}).items():
             services[name]["user"] = user
-        return json.dumps({"services": services}).encode()
+        top_networks = (
+            networks if networks is not None else {"internal": {"internal": True}, "app": {}}
+        )
+        return json.dumps({"services": services, "networks": top_networks}).encode()
 
     def stack(self, directory: Path) -> Any:
         return self.smoke.Stack(directory / "source", directory / "c.yaml", "fixture", "helper")
@@ -178,12 +194,22 @@ class PortableSmokeEvidence(unittest.TestCase):
             stack = self.stack(Path(temporary))
             for config, message in (
                 (self.config({"db": "postgres-fixture"}), "expected db, backend, frontend"),
+                (
+                    self.config(images, networks={"internal": {"internal": False}, "app": {}}),
+                    "expected internal: true and app networks",
+                ),
                 (self.config({**images, "frontend": "other"}), "incorrect frontend image"),
                 (
                     self.config(images, names={**self.smoke.CONTAINER_NAMES, "db": "other"}),
                     "incorrect db image",
                 ),
                 (self.config(images, users={"backend": "0:0"}), "incorrect backend image"),
+                (
+                    self.config(
+                        images, service_networks={"frontend": {"app": None, "internal": None}}
+                    ),
+                    "incorrect frontend image",
+                ),
             ):
                 with (
                     self.subTest(message=message),

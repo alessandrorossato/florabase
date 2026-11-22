@@ -3,10 +3,11 @@
 - On `feat/install-002-minimal-compose` from `c5f9cdf` (writer `neon`).
 - Adopted [ADR 0009](decisions/0009-minimal-production-compose.md) amending
   [ADR 0008](decisions/0008-self-initializing-single-compose.md), shrinking production
-  `compose.yaml` from 188 lines to 41 lines with three non-root services (`db`, `backend`,
+  `compose.yaml` from 188 lines to 49 lines with three non-root services (`db`, `backend`,
   `frontend`), fixed `container_name` (`florabase-db`, `florabase-backend`, `florabase-frontend`),
-  no YAML anchors, no inline shell scripts, no root containers, `create_host_path: false` on every
-  bind mount, literal `127.0.0.1` frontend-only publication, single `FLORABASE_DB_PASSWORD`, and
+  `internal: true` (`db`/`backend`) and `app` (`backend`/`frontend`) network isolation, no YAML
+  anchors, no inline shell scripts, no root containers, `create_host_path: false` on every bind
+  mount, literal `127.0.0.1` frontend-only publication, single `FLORABASE_DB_PASSWORD`, and
   `TZ=${TZ:-Europe/Rome}` (logs only).
 - Built and verified reproducible `florabase-postgres:18.6-alpine-florabase.4`
   (`index_digest` `sha256:93797c3941d06b3a8d591851df04605b5287ace2a11bb32421589ddff1a1782c`,

@@ -61,25 +61,27 @@ containers:
      clear line, sleep a short backoff (3 seconds by default, under Docker's 10-second reset window
      so Docker's exponential restart backoff also applies) and exit `1`, so logs do not flood while
      `docker compose up -d --wait` still fails fast.
-4. **Minimal Compose defaults and optional hardening.** Fixed `container_name: florabase-<role>`
-   values, `TZ=${TZ:-Europe/Rome}` (log/display only; DB and SQLAlchemy sessions remain pinned to
-   UTC), and Compose's default bridge network replace the custom `internal`/`app` networks and
-   inline hardening blocks (`read_only`, `tmpfs`, `cap_drop`, `no-new-privileges`). Only `frontend`
-   publishes a port, bound literally to `127.0.0.1:${FLORABASE_HTTP_PORT:-8080}:8080`. Operators
-   who want read-only root filesystems, dropped capability bounding sets and split networks apply
-   the documented override snippet in [docs/security.md](../security.md).
+4. **Minimal Compose defaults, network isolation and optional hardening.** Fixed
+   `container_name: florabase-<role>` values and `TZ=${TZ:-Europe/Rome}` (log/display only; DB and
+   SQLAlchemy sessions remain pinned to UTC) simplify the file while keeping the two-network split:
+   an `internal: true` network shared only by `db` and `backend` (so PostgreSQL has no outbound NAT
+   and `frontend` cannot reach PostgreSQL) and an `app` network shared by `backend` and `frontend`.
+   Only `frontend` publishes a port, bound literally to
+   `127.0.0.1:${FLORABASE_HTTP_PORT:-8080}:8080`. Container-level hardening blocks (`read_only`,
+   `tmpfs`, `cap_drop`, `no-new-privileges`) stay out of the default file; operators who want them
+   apply the documented override snippet in [docs/security.md](../security.md).
 
 ## Consequences
 
-- `compose.yaml` drops from 188 lines to 41 lines while preserving every ADR 0008 data-safety
-  refusal and `v0.1.0-beta.7` folder-layout compatibility.
+- `compose.yaml` drops from 188 lines to 49 lines while preserving every ADR 0008 data-safety
+  refusal, `internal`/`app` network isolation, and `v0.1.0-beta.7` folder-layout compatibility.
 - Trade-offs explicitly accepted by the operator and documented in [docs/security.md](../security.md):
   - `backend` now mounts `FLORABASE_BACKUP_DIR` read-write and carries the one-time
     `FLORABASE_OWNER_*` variables in its container configuration (`docker inspect`) until removed
     (scrubbed from the `uvicorn` process environment before `exec`).
-  - Default deployments run without `read_only`, `cap_drop: [ALL]`, `no-new-privileges`, or the
-    `internal`/`app` network split; images remain non-root (`70`, `10001`, `101`), setuid/setgid
-    stripped, and `gosu`-free, and an optional hardened override is documented.
+  - Default deployments run without `read_only`, `cap_drop: [ALL]` or `no-new-privileges`; images
+    remain non-root (`70`, `10001`, `101`), setuid/setgid stripped, `gosu`-free and network-isolated
+    (`internal: true` + `app`), and an optional hardened override is documented.
   - Fixed `container_name` values mean side-by-side stacks (such as isolated restore and automated
     smoke tests) load a small untracked override resetting `container_name`.
 - `florabase-postgres` advances to `18.6-alpine-florabase.4` under the BETA-RUNTIME-001 database

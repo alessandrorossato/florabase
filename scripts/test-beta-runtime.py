@@ -356,7 +356,6 @@ class StackContract(unittest.TestCase):
         self.assertNotIn("entrypoint:", template, "no inline entrypoints in compose.yaml")
         self.assertNotIn("sh -", template, "no inline shell scripts in compose.yaml")
         self.assertNotIn("healthcheck:", template, "healthchecks live in the images")
-        self.assertNotIn("networks:", template, "default Compose network only")
         services = self.config["services"]
         self.assertEqual(set(services), {"db", "backend", "frontend"})
         expected = {
@@ -376,8 +375,17 @@ class StackContract(unittest.TestCase):
                 )
 
     def test_private_exposure(self) -> None:
+        networks = self.config.get("networks", {})
+        self.assertEqual(set(networks), {"internal", "app"})
+        self.assertIs(networks["internal"].get("internal"), True)
+        expected_networks = {
+            "db": {"internal"},
+            "backend": {"internal", "app"},
+            "frontend": {"app"},
+        }
         for name, service in self.config["services"].items():
             with self.subTest(name):
+                self.assertEqual(set(service.get("networks", {})), expected_networks[name])
                 if name == "frontend":
                     self.assertEqual(
                         [(p["host_ip"], p["published"], p["target"]) for p in service["ports"]],

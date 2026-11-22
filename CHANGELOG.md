@@ -28,8 +28,10 @@ Changes since `v0.1.0-beta.7`, planned for the next prerelease.
     dumps), scrubs one-time owner variables and `exec`s the exact-head `release_schema serve` guard.
 - All services share a single `FLORABASE_DB_PASSWORD` variable and optional `TZ` (default
   `Europe/Rome` for container logs; database storage and backend sessions remain pinned to UTC).
-- Optional container hardening (`read_only`, `cap_drop`, `no-new-privileges`, split `internal`/`app`
-  networks) moves out of the default `compose.yaml` into a documented override snippet in
+- Network isolation stays in `compose.yaml` (`internal: true` shared by `db` and `backend`; `app`
+  shared by `backend` and `frontend`, so `frontend` cannot reach PostgreSQL). Optional container
+  hardening (`read_only`, `cap_drop`, `no-new-privileges`) moves out of the default `compose.yaml`
+  into a documented override snippet in
   [docs/security.md](docs/security.md#optional-container-hardening).
 - **Upgrading from `v0.1.0-beta.7`:** Take a paired backup (required because this release updates
   the PostgreSQL image identity from `18.6-alpine-florabase.3` to `18.6-alpine-florabase.4` on

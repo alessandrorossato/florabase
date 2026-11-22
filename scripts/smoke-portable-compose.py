@@ -441,15 +441,68 @@ def require_services(stack: Stack, images: dict[str, str]) -> None:
     services = config.get("services")
     if not isinstance(services, dict) or set(services) != set(SERVICES):
         raise RuntimeError("Compose configuration: expected db, backend, frontend")
+    networks = config.get("networks")
+    require(
+        isinstance(networks, dict)
+        and set(networks) == {"internal", "app"}
+        and isinstance(networks["internal"], dict)
+        and networks["internal"].get("internal") is True,
+        "Compose configuration: expected internal: true and app networks",
+    )
+    expected_networks = {
+        "db": {"internal"},
+        "backend": {"internal", "app"},
+        "frontend": {"app"},
+    }
     for name in SERVICES:
         service = services[name]
+        service_networks = service.get("networks") if isinstance(service, dict) else None
         require(
             isinstance(service, dict)
             and service.get("image") == images[name]
             and service.get("container_name") == CONTAINER_NAMES[name]
-            and service.get("user") is None,
-            f"Compose configuration: incorrect {name} image, container_name or user",
+            and service.get("user") is None
+            and isinstance(service_networks, dict)
+            and set(service_networks) == expected_networks[name],
+            f"Compose configuration: incorrect {name} image, container_name, user or networks",
         )
+
+
+def require_network_isolation(stack: Stack) -> None:
+    """Prove live db is on an internal-only network and frontend cannot reach db."""
+    attached: dict[str, set[str]] = {}
+    for service in SERVICES:
+        cid = stack.compose("ps", "-q", service).decode().strip()
+        require(bool(cid), f"{service}: missing running container ID")
+        raw = run(["docker", "inspect", "--format", "{{json .NetworkSettings.Networks}}", cid])
+        require(raw.returncode == 0, f"{service}: docker inspect failed")
+        nets = response_object(raw.stdout, f"{service} networks")
+        attached[service] = set(nets)
+    internal_net = f"{stack.project}_internal"
+    app_net = f"{stack.project}_app"
+    require(attached["db"] == {internal_net}, f"db networks unexpected: {attached['db']!r}")
+    require(
+        attached["backend"] == {internal_net, app_net},
+        f"backend networks unexpected: {attached['backend']!r}",
+    )
+    require(
+        attached["frontend"] == {app_net}, f"frontend networks unexpected: {attached['frontend']!r}"
+    )
+    net_info = run(["docker", "network", "inspect", "--format", "{{.Internal}}", internal_net])
+    require(
+        net_info.returncode == 0 and net_info.stdout.strip() == b"true",
+        f"{internal_net}: expected Docker network Internal=true",
+    )
+    positive = run(
+        [*stack.command(), "exec", "-T", "frontend", "sh", "-c", "getent hosts backend"],
+        env=stack.env,
+    )
+    require(positive.returncode == 0, "frontend could not resolve backend on app network")
+    probe = run(
+        [*stack.command(), "exec", "-T", "frontend", "sh", "-c", "getent hosts db"],
+        env=stack.env,
+    )
+    require(probe.returncode != 0, "frontend unexpectedly resolved db across isolated networks")
 
 
 def require_revision(stack: Stack, revision: bytes, operation: str) -> None:
@@ -586,6 +639,7 @@ def smoke(
             source.compose("exec", "-T", service, "id", "-u").strip() == uid,
             f"{service}: unexpected runtime UID",
         )
+    require_network_isolation(source)
     # TZ=Europe/Rome is set on every service, yet DB and backend sessions stay pinned to UTC.
     require(source.sql("SHOW TimeZone") == b"UTC", "PostgreSQL session TimeZone is not UTC")
     backend_tz = source.backend(
