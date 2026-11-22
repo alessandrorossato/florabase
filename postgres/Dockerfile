@@ -22,11 +22,16 @@ RUN apk add --no-cache zlib=1.4-r0 krb5-libs=1.22.3-r0 libxslt=1.1.43-r4 libxml2
     && grep -q '^source /usr/local/bin/docker-entrypoint.sh$' /usr/local/bin/docker-ensure-initdb.sh
 LABEL org.opencontainers.image.title="Florabase PostgreSQL" \
     org.opencontainers.image.description="Official postgres:18.6-alpine without gosu; runs only as 70:70" \
-    org.opencontainers.image.version="18.6-alpine-florabase.3" \
+    org.opencontainers.image.version="18.6-alpine-florabase.4" \
     org.opencontainers.image.source="https://github.com/alessandrorossato/florabase" \
     org.opencontainers.image.licenses="PostgreSQL AND AGPL-3.0-or-later" \
     org.opencontainers.image.base.name="docker.io/library/postgres:18.6-alpine" \
     org.opencontainers.image.base.digest="sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395"
+ENV PGDATA=/var/lib/postgresql/postgres/18/docker \
+    POSTGRES_DB=florabase \
+    POSTGRES_USER=florabase
+HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=24 \
+    CMD pg_isready -h 127.0.0.1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"
 USER 70:70
 ENTRYPOINT ["florabase-postgres-entrypoint"]
-CMD ["postgres"]
+CMD ["postgres", "-c", "timezone=UTC"]

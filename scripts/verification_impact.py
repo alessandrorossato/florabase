@@ -39,7 +39,13 @@ WORKFLOW = [
     "test-ui-page",
     "workflow-check",
 ]
-TIER_ORDER: dict[str, int] = {"docs": 0, "affected": 1, "product": 2, "full": 3}
+TIER_ORDER: dict[str, int] = {
+    "docs": 0,
+    "affected": 1,
+    "product-frontend": 2,
+    "product": 3,
+    "full": 4,
+}
 
 
 def plan_tier(plan: dict[str, Any]) -> str:
@@ -50,6 +56,8 @@ def plan_tier(plan: dict[str, Any]) -> str:
         expected = "full"
     elif mode == "product" and docs_only is False:
         expected = "product"
+    elif mode == "product-frontend" and docs_only is False:
+        expected = "product-frontend"
     elif mode == "affected" and isinstance(docs_only, bool):
         expected = "docs" if docs_only else "affected"
     if expected is None:
@@ -199,20 +207,40 @@ def discover_repo_tests() -> dict[str, list[str]]:
 
 def load_map() -> dict[str, Any]:
     data = cast(dict[str, Any], json.loads(MAP_PATH.read_text()))
-    if data["version"] != 1 or not data["scopes"] or not data["rules"]:
+    if data["version"] != 2 or not data["scopes"] or not data["rules"]:
         raise ValueError("unsupported or empty impact map")
-    for prefix_key in ("full_prefixes", "product_prefixes"):
+    for legacy_key in ("product_prefixes", "product_tests"):
+        if legacy_key in data:
+            raise ValueError(f"legacy impact map key is not supported: {legacy_key}")
+    prefix_requirements: tuple[tuple[str, str | None], ...] = (
+        ("full_prefixes", None),
+        ("product_backend_prefixes", "backend/"),
+        ("product_frontend_prefixes", "frontend/"),
+    )
+    for prefix_key, required_root in prefix_requirements:
         prefixes = data.get(prefix_key)
         if (
             not isinstance(prefixes, list)
             or not prefixes
-            or any(not isinstance(prefix, str) or not prefix for prefix in prefixes)
+            or any(
+                not isinstance(prefix, str)
+                or not prefix
+                or (required_root is not None and not prefix.startswith(required_root))
+                for prefix in prefixes
+            )
         ):
             raise ValueError(f"invalid {prefix_key}")
-    for test_key in ("full_tests", "product_tests"):
+    test_requirements: tuple[tuple[str, frozenset[str] | None], ...] = (
+        ("full_tests", None),
+        ("product_backend_tests", frozenset({"backend", "integration"})),
+        ("product_frontend_tests", frozenset({"frontend"})),
+    )
+    for test_key, allowed_layers in test_requirements:
         entries = data.get(test_key)
         if not isinstance(entries, list) or any(
-            not _is_safe_relative(entry, directory=False) or test_layer_for(entry) is None
+            not _is_safe_relative(entry, directory=False)
+            or test_layer_for(entry) is None
+            or (allowed_layers is not None and test_layer_for(entry) not in allowed_layers)
             for entry in entries
         ):
             raise ValueError(f"invalid {test_key}")
@@ -296,14 +324,15 @@ def test_scopes_for(path: str, data: dict[str, Any]) -> list[tuple[str, str]]:
 
 
 def is_test_owned(path: str, data: dict[str, Any]) -> bool:
-    if any(path.startswith(prefix) for prefix in data["full_prefixes"]) or path in set(
-        data["full_tests"]
+    for prefix_key, test_key in (
+        ("full_prefixes", "full_tests"),
+        ("product_backend_prefixes", "product_backend_tests"),
+        ("product_frontend_prefixes", "product_frontend_tests"),
     ):
-        return True
-    if any(path.startswith(prefix) for prefix in data["product_prefixes"]) or path in set(
-        data["product_tests"]
-    ):
-        return True
+        if any(path.startswith(prefix) for prefix in data[prefix_key]) or path in set(
+            data[test_key]
+        ):
+            return True
     return bool(test_scopes_for(path, data))
 
 
@@ -331,13 +360,15 @@ def plan_paths(
     data = load_map()
     validate_test_inventory(data, paths)
     full_tests = set(data["full_tests"])
-    product_tests = set(data["product_tests"])
+    product_backend_tests = set(data["product_backend_tests"])
+    product_frontend_tests = set(data["product_frontend_tests"])
     reasons: list[str] = []
     product_reasons: list[str] = []
     direct: set[str] = set()
     layers: set[str] = set()
     generated = False
-    product = False
+    product_backend = False
+    product_frontend = False
     docs_only = True
     for path in sorted(set(paths)):
         if any(path.startswith(prefix) for prefix in data["full_prefixes"]) or path in full_tests:
@@ -345,12 +376,21 @@ def plan_paths(
             docs_only = False
             continue
         if (
-            any(path.startswith(prefix) for prefix in data["product_prefixes"])
-            or path in product_tests
+            any(path.startswith(prefix) for prefix in data["product_backend_prefixes"])
+            or path in product_backend_tests
         ):
-            product = True
+            product_backend = True
             product_reasons.append(f"shared product path: {path}")
             layers.update(("backend", "frontend"))
+            docs_only = False
+            continue
+        if (
+            any(path.startswith(prefix) for prefix in data["product_frontend_prefixes"])
+            or path in product_frontend_tests
+        ):
+            product_frontend = True
+            product_reasons.append(f"shared frontend product path: {path}")
+            layers.add("frontend")
             docs_only = False
             continue
         if path in data["generated_paths"]:
@@ -382,7 +422,7 @@ def plan_paths(
         for scope, rule_layer in matches:
             direct.add(scope)
             layers.add(rule_layer)
-    if generated and not product and not direct.difference({"documentation"}):
+    if generated and not product_backend and not direct.difference({"documentation"}):
         reasons.append("generated contract without classified owning production scope")
     if force_full:
         reasons.append("operator requested full verification")
@@ -394,12 +434,15 @@ def plan_paths(
                 affected.add(target)
                 pending.append(target)
     full = bool(reasons)
-    product_wide = not full and product
+    product_wide = not full and (product_backend or (product_frontend and "backend" in layers))
+    product_fe_wide = not full and not product_wide and product_frontend
     suites: dict[str, list[str]] = {}
     for layer in TEST_LAYERS:
         required = layer == "frontend" or "backend" in layers
         if full or product_wide:
             suites[layer] = ["ALL"]
+        elif product_fe_wide:
+            suites[layer] = ["ALL"] if layer == "frontend" else []
         elif required:
             selected: set[str] = set()
             for scope in affected:
@@ -418,13 +461,14 @@ def plan_paths(
         else:
             suites[layer] = []
         # A missing mapped suite is a policy error, never permission to skip it.
-        if not full and not product_wide:
+        if not full and not product_wide and not product_fe_wide:
             missing = [path for path in suites[layer] if not Path(path).is_file()]
             if missing:
                 raise ValueError(f"missing mapped suites: {missing}")
     explicit_tests = (
         full_tests
-        | product_tests
+        | product_backend_tests
+        | product_frontend_tests
         | {
             p
             for scope in data["scopes"].values()
@@ -438,9 +482,27 @@ def plan_paths(
     ]
     if missing_explicit:
         raise ValueError(f"missing mapped suites: {missing_explicit}")
-    mode = "full" if full else "product" if product_wide else "affected"
-    is_docs_only = docs_only and not full and not product_wide
-    tier = "full" if full else "product" if product_wide else "docs" if is_docs_only else "affected"
+    mode = (
+        "full"
+        if full
+        else "product"
+        if product_wide
+        else "product-frontend"
+        if product_fe_wide
+        else "affected"
+    )
+    is_docs_only = docs_only and not full and not product_wide and not product_fe_wide
+    tier = (
+        "full"
+        if full
+        else "product"
+        if product_wide
+        else "product-frontend"
+        if product_fe_wide
+        else "docs"
+        if is_docs_only
+        else "affected"
+    )
     return {
         "version": 1,
         "base": base,
@@ -469,9 +531,9 @@ def plan_paths(
         else ["backend"]
         if "backend" in layers
         else ["frontend"]
-        if "frontend" in layers
+        if product_fe_wide or "frontend" in layers
         else [],
-        "remote_ci": "conservative-impact",
+        "remote_ci": "scoped-impact",
     }
 
 
@@ -513,8 +575,9 @@ def describe(plan: dict[str, Any]) -> str:
         lines.append(f"{key.title()}: {summary}")
     lines += [
         f"Migration: {plan['migration']}",
-        "Remote PR CI: docs checks only / affected product skips workflow helpers; "
-        "all product suites and both builds remain exhaustive; main is full",
+        "Remote PR CI: docs skips product suites/builds/rehearse; affected and product-frontend "
+        "run selected suites and builds; product, full and main run complete suites and both "
+        "builds",
     ]
     return "\n".join(lines)
 

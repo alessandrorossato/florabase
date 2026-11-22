@@ -214,7 +214,7 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(plan["builds"], ["backend"])
 
     def test_product_tier_matrix_and_no_product_check_loss(self) -> None:
-        product_paths = [
+        frontend_product_paths = [
             "frontend/src/components/TaskDialog.tsx",
             "frontend/src/components/actions/OverflowMenu.tsx",
             "frontend/src/auth/AuthContext.tsx",
@@ -234,6 +234,15 @@ class SelectionTests(unittest.TestCase):
             "frontend/src/seed-lots/ReferencePicker.tsx",
             "frontend/src/seed-lots/PartialDateField.tsx",
             "frontend/src/seed-lots/partial-date.css",
+            "frontend/src/ui-pages/DirectoryPage.tsx",
+            "frontend/src/ui-lab/LabApp.tsx",
+            "frontend/src/shell/AppShell.tsx",
+            "frontend/src/timeline/Timeline.tsx",
+            "frontend/src/settings/AccountScreen.tsx",
+            "frontend/src/focusModality.ts",
+            "frontend/src/focusModality.test.ts",
+        ]
+        backend_product_paths = [
             "backend/src/florabase/application_settings/service.py",
             "backend/src/florabase/auth/security.py",
             "backend/src/florabase/core/config.py",
@@ -241,6 +250,7 @@ class SelectionTests(unittest.TestCase):
             "backend/src/florabase/db/session.py",
             "backend/src/florabase/api/router.py",
             "backend/src/florabase/main.py",
+            "backend/tests/test_health.py",
         ]
         full_reference = checks_for(self.plan("scripts/feature-verify.sh"))
         full_product_checks = [
@@ -248,8 +258,8 @@ class SelectionTests(unittest.TestCase):
             for c in full_reference
             if c["id"] != "migration-cycle" and c["id"] not in set(WORKFLOW)
         ]
-        for path in product_paths:
-            with self.subTest(path=path):
+        for path in backend_product_paths:
+            with self.subTest(layer="backend", path=path):
                 plan = self.plan(path)
                 self.assertEqual(plan_tier(plan), "product")
                 self.assertEqual(plan["tier"], "product")
@@ -264,6 +274,46 @@ class SelectionTests(unittest.TestCase):
                 self.assertEqual(plan["escalation_reasons"], [])
                 self.assertEqual(plan["product_reasons"], [f"shared product path: {path}"])
                 self.assertEqual(checks_for(plan), full_product_checks)
+
+        expected_frontend_product_ids = [
+            "feature-graph",
+            "doc-links",
+            "test-doc-links",
+            "whitespace",
+            "staged-whitespace",
+            "untracked-whitespace",
+            "format-check",
+            "lint",
+            "typecheck",
+            "api-check",
+            "frontend",
+            "production-builds",
+        ]
+        for path in frontend_product_paths:
+            with self.subTest(layer="frontend", path=path):
+                plan = self.plan(path)
+                self.assertEqual(plan_tier(plan), "product-frontend")
+                self.assertEqual(plan["tier"], "product-frontend")
+                self.assertEqual(plan["mode"], "product-frontend")
+                self.assertFalse(plan["docs_only"])
+                self.assertEqual(plan["backend"], [])
+                self.assertEqual(plan["integration"], [])
+                self.assertEqual(plan["frontend"], ["ALL"])
+                self.assertEqual(plan["builds"], ["frontend"])
+                self.assertEqual(plan["workflow"], [])
+                self.assertEqual(plan["migration"], "skip")
+                self.assertEqual(plan["escalation_reasons"], [])
+                self.assertEqual(plan["product_reasons"], [f"shared frontend product path: {path}"])
+                selected = checks_for(plan)
+                self.assertEqual([c["id"] for c in selected], expected_frontend_product_ids)
+                self.assertIn({"id": "frontend", "command": ["make", "test-frontend"]}, selected)
+                self.assertIn(
+                    {
+                        "id": "production-builds",
+                        "command": ["make", "verify-build", "SERVICES=frontend"],
+                    },
+                    selected,
+                )
 
     def test_full_escalation_matrix(self) -> None:
         for path in [
@@ -284,6 +334,7 @@ class SelectionTests(unittest.TestCase):
             "postgres/init.sql",
             "release/manifest.json",
             "AGENTS.md",
+            "LICENSE",
             "unknown.config",
             "backend/src/florabase/newcapability/service.py",
             "frontend/src/newcapability/Screen.tsx",
@@ -293,19 +344,43 @@ class SelectionTests(unittest.TestCase):
                 plan = self.plan(path)
                 self.assertEqual(plan_tier(plan), "full")
                 self.assertEqual(plan["mode"], "full")
+                self.assertFalse(plan["docs_only"])
                 self.assertEqual(plan["workflow"], WORKFLOW)
                 self.assertEqual(plan["migration"], "full-cycle")
+        self.assertEqual(self.plan("LICENSE")["builds"], ["backend", "frontend"])
         self.assertEqual(self.plan("backend/alembic/versions/new.py")["migration"], "full-cycle")
         self.assertEqual(self.plan("scripts/verify-migration-cycle.sh")["migration"], "full-cycle")
 
     def test_tier_precedence_and_fail_closed_validation(self) -> None:
-        mixed_product = self.plan(
+        mixed_frontend_product = self.plan(
             "docs/architecture.md",
             "frontend/src/taxonomy/TaxonomyScreen.tsx",
             "frontend/src/components/TaskDialog.tsx",
         )
-        self.assertEqual(plan_tier(mixed_product), "product")
-        self.assertEqual(mixed_product["workflow"], [])
+        self.assertEqual(plan_tier(mixed_frontend_product), "product-frontend")
+        self.assertEqual(mixed_frontend_product["backend"], [])
+        self.assertEqual(mixed_frontend_product["integration"], [])
+        self.assertEqual(mixed_frontend_product["builds"], ["frontend"])
+        self.assertEqual(mixed_frontend_product["workflow"], [])
+
+        mixed_both_shared = self.plan(
+            "frontend/src/components/TaskDialog.tsx",
+            "backend/src/florabase/core/config.py",
+        )
+        self.assertEqual(plan_tier(mixed_both_shared), "product")
+        self.assertEqual(mixed_both_shared["builds"], ["backend", "frontend"])
+
+        mixed_frontend_shared_and_backend_affected = self.plan(
+            "frontend/src/components/TaskDialog.tsx",
+            "backend/src/florabase/plants/service.py",
+        )
+        self.assertEqual(plan_tier(mixed_frontend_shared_and_backend_affected), "product")
+        self.assertEqual(mixed_frontend_shared_and_backend_affected["backend"], ["ALL"])
+        self.assertEqual(mixed_frontend_shared_and_backend_affected["integration"], ["ALL"])
+        self.assertEqual(mixed_frontend_shared_and_backend_affected["frontend"], ["ALL"])
+        self.assertEqual(
+            mixed_frontend_shared_and_backend_affected["builds"], ["backend", "frontend"]
+        )
 
         product_generated = self.plan("backend/src/florabase/auth/api.py", "backend/openapi.json")
         self.assertEqual(plan_tier(product_generated), "product")
@@ -325,7 +400,7 @@ class SelectionTests(unittest.TestCase):
         forced = plan_paths(["frontend/src/components/TaskDialog.tsx"], "base", force_full=True)
         self.assertEqual(plan_tier(forced), "full")
 
-        product_plan = self.plan("frontend/src/components/TaskDialog.tsx")
+        product_plan = self.plan("backend/src/florabase/core/config.py")
         for invalid in (
             {**product_plan, "backend": []},
             {**product_plan, "integration": ["backend/tests/integration/test_taxonomy.py"]},
@@ -337,6 +412,24 @@ class SelectionTests(unittest.TestCase):
         ):
             with self.subTest(invalid=invalid), self.assertRaises(ValueError):
                 checks_for(invalid)
+
+        frontend_product_plan = self.plan("frontend/src/components/TaskDialog.tsx")
+        for invalid in (
+            {**frontend_product_plan, "backend": ["ALL"]},
+            {**frontend_product_plan, "integration": ["ALL"]},
+            {**frontend_product_plan, "frontend": []},
+            {**frontend_product_plan, "frontend": ["frontend/src/App.test.tsx"]},
+            {**frontend_product_plan, "builds": ["backend"]},
+            {**frontend_product_plan, "builds": ["backend", "frontend"]},
+            {**frontend_product_plan, "workflow": ["test-verification-impact"]},
+            {**frontend_product_plan, "migration": "full-cycle"},
+            {**frontend_product_plan, "static": ["feature-graph", "whitespace"]},
+            {**frontend_product_plan, "docs_only": True},
+            {**frontend_product_plan, "tier": "product"},
+        ):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                checks_for(invalid)
+                CI.ci_checks_for(invalid, "quality")
 
     def test_migration_decision_matrix_and_execution(self) -> None:
         for paths, forced, decision in (
@@ -473,7 +566,11 @@ class SelectionTests(unittest.TestCase):
             self.assertTrue(
                 any(
                     relative.startswith(p)
-                    for p in (*data["full_prefixes"], *data["product_prefixes"])
+                    for p in (
+                        *data["full_prefixes"],
+                        *data["product_backend_prefixes"],
+                        *data["product_frontend_prefixes"],
+                    )
                 )
                 or any(
                     relative.startswith(r.get("prefix", "\0")) or r.get("path") == relative
@@ -482,7 +579,7 @@ class SelectionTests(unittest.TestCase):
                 relative,
             )
         self.assertIn("backend/src/florabase/__init__.py", data["full_prefixes"])
-        self.assertNotIn("backend/src/florabase/__init__.py", data["product_prefixes"])
+        self.assertNotIn("backend/src/florabase/__init__.py", data["product_backend_prefixes"])
 
     def test_test_ownership_inventory_cannot_silently_drift(self) -> None:
         data = load_map()
@@ -491,7 +588,11 @@ class SelectionTests(unittest.TestCase):
         self.assertTrue(discovered["integration"])
         self.assertTrue(discovered["frontend"])
         # Every declared frontend_dirs must exist, and every explicit mapped file must exist.
-        for entry in (*data["full_tests"], *data["product_tests"]):
+        for entry in (
+            *data["full_tests"],
+            *data["product_backend_tests"],
+            *data["product_frontend_tests"],
+        ):
             self.assertTrue((ROOT / entry).is_file(), entry)
         for name, scope in data["scopes"].items():
             if "suite_scope" in scope:
@@ -502,6 +603,10 @@ class SelectionTests(unittest.TestCase):
                 for entry in scope[layer]:
                     self.assertTrue((ROOT / entry).is_file(), f"{name}.{layer}: {entry}")
         # Every scope with owned frontend_dirs selects every test file inside them.
+        all_product_prefixes = (
+            *data["product_backend_prefixes"],
+            *data["product_frontend_prefixes"],
+        )
         for name, scope in data["scopes"].items():
             if "suite_scope" in scope or not scope["frontend_dirs"]:
                 continue
@@ -515,7 +620,7 @@ class SelectionTests(unittest.TestCase):
             )
             if rule is None:
                 continue
-            if any(rule["prefix"].startswith(p) for p in data["product_prefixes"]):
+            if any(rule["prefix"].startswith(p) for p in all_product_prefixes):
                 continue
             plan = self.plan(rule["prefix"] + "probe.ts")
             if plan["mode"] == "affected":
@@ -530,25 +635,122 @@ class SelectionTests(unittest.TestCase):
         for path in (
             "docs/example.md",
             "docs/review/taxonomy-visual-001/compose.yaml",
+            "frontend/src/plants/PlantList.tsx",
             "frontend/src/taxonomy/taxonomy.css",
             "frontend/src/taxonomy/TaxonomyScreen.tsx",
             "frontend/src/components/Controls.tsx",
             "frontend/src/styles/tokens.css",
+            "backend/src/florabase/seed_lots/service.py",
             "backend/src/florabase/taxonomy/service.py",
+            "backend/src/florabase/core/config.py",
             "backend/openapi.json",
             "frontend/package.json",
             "backend/alembic/versions/new.py",
             "backend/src/florabase/auth/service.py",
             ".github/workflows/ci.yml",
+            "LICENSE",
             "unknown.conf",
         ):
             with self.subTest(path=path):
                 plan = self.plan(path)
+                tier = plan_tier(plan)
                 jobs = {
                     job: CI.ci_checks_for(plan, job) for job in ("quality", "integration", "build")
                 }
-                if plan["docs_only"]:
+                if tier == "docs":
                     self.assertTrue(all(checks == checks_for(plan) for checks in jobs.values()))
+                elif tier == "affected":
+                    quality_ids = [c["id"] for c in jobs["quality"]]
+                    self.assertEqual(
+                        quality_ids[:7],
+                        [
+                            "feature-graph",
+                            "doc-links",
+                            "test-doc-links",
+                            "format-check",
+                            "lint",
+                            "typecheck",
+                            "api-check",
+                        ],
+                    )
+                    self.assertNotIn("quality", quality_ids)
+                    self.assertEqual("backend" in quality_ids, bool(plan["backend"]))
+                    self.assertEqual("frontend" in quality_ids, bool(plan["frontend"]))
+                    if plan["integration"]:
+                        self.assertEqual(
+                            jobs["integration"],
+                            [
+                                {
+                                    "id": "integration",
+                                    "command": [
+                                        "./scripts/test-integration.sh",
+                                        *plan["integration"],
+                                    ],
+                                }
+                            ],
+                        )
+                    else:
+                        self.assertEqual(
+                            [c["id"] for c in jobs["integration"]],
+                            [
+                                "feature-graph",
+                                "doc-links",
+                                "test-doc-links",
+                                "whitespace",
+                                "staged-whitespace",
+                                "untracked-whitespace",
+                            ],
+                        )
+                    self.assertEqual(
+                        jobs["build"],
+                        [
+                            {
+                                "id": "production-builds",
+                                "command": [
+                                    "make",
+                                    "verify-build",
+                                    "SERVICES=" + " ".join(plan["builds"]),
+                                ],
+                            }
+                        ],
+                    )
+                elif tier == "product-frontend":
+                    self.assertEqual(
+                        [c["id"] for c in jobs["quality"]],
+                        [
+                            "feature-graph",
+                            "doc-links",
+                            "test-doc-links",
+                            "format-check",
+                            "lint",
+                            "typecheck",
+                            "api-check",
+                            "frontend",
+                        ],
+                    )
+                    self.assertIn(
+                        {"id": "frontend", "command": ["make", "test-frontend"]}, jobs["quality"]
+                    )
+                    self.assertEqual(
+                        [c["id"] for c in jobs["integration"]],
+                        [
+                            "feature-graph",
+                            "doc-links",
+                            "test-doc-links",
+                            "whitespace",
+                            "staged-whitespace",
+                            "untracked-whitespace",
+                        ],
+                    )
+                    self.assertEqual(
+                        jobs["build"],
+                        [
+                            {
+                                "id": "production-builds",
+                                "command": ["make", "verify-build", "SERVICES=frontend"],
+                            }
+                        ],
+                    )
                 else:
                     self.assertIn({"id": "quality", "command": ["make", "check"]}, jobs["quality"])
                     self.assertEqual(
@@ -563,7 +765,42 @@ class SelectionTests(unittest.TestCase):
                         for c in jobs["quality"]
                         if c["id"].startswith("test-") and c["id"] != "test-doc-links"
                     ]
-                    self.assertEqual(bool(helpers), plan["mode"] == "full")
+                    self.assertEqual(bool(helpers), tier == "full")
+
+        # Concrete scoped assertions requested by WF-SCOPE-001.
+        plants_fe = self.plan("frontend/src/plants/PlantList.tsx")
+        self.assertEqual(plan_tier(plants_fe), "affected")
+        self.assertEqual(plants_fe["backend"], [])
+        self.assertEqual(plants_fe["integration"], [])
+        self.assertEqual(plants_fe["builds"], ["frontend"])
+        plants_quality = CI.ci_checks_for(plants_fe, "quality")
+        self.assertNotIn("backend", [c["id"] for c in plants_quality])
+        self.assertIn("frontend", [c["id"] for c in plants_quality])
+        self.assertEqual(
+            CI.ci_checks_for(plants_fe, "build"),
+            [{"id": "production-builds", "command": ["make", "verify-build", "SERVICES=frontend"]}],
+        )
+
+        seeds_be = self.plan("backend/src/florabase/seed_lots/service.py")
+        self.assertEqual(plan_tier(seeds_be), "affected")
+        self.assertTrue(seeds_be["integration"])
+        self.assertEqual(
+            CI.ci_checks_for(seeds_be, "integration"),
+            [
+                {
+                    "id": "integration",
+                    "command": ["./scripts/test-integration.sh", *seeds_be["integration"]],
+                }
+            ],
+        )
+        self.assertEqual(
+            CI.ci_checks_for(seeds_be, "build"),
+            [{"id": "production-builds", "command": ["make", "verify-build", "SERVICES=backend"]}],
+        )
+
+        # Empty builds in an affected plan succeeds without running verify-build.
+        self.assertEqual(CI.ci_checks_for({**plants_fe, "builds": []}, "build"), [])
+
         with self.assertRaises(ValueError):
             CI.ci_checks_for(self.plan("docs/example.md"), "unknown")
 
@@ -720,6 +957,21 @@ class SelectionTests(unittest.TestCase):
         self.assertIn('git merge-base --is-ancestor "$BASE_SHA" "$GITHUB_SHA"', workflow)
         result = subprocess.run(["bash", "-o", "pipefail", "-c", "exit 7 | cat"])
         self.assertEqual(result.returncode, 7)
+
+    def test_rehearsal_workflow_uses_docs_early_exit_without_skipping_required_job(self) -> None:
+        workflow = (ROOT / ".github/workflows/beta-release-rehearsal.yml").read_text()
+        self.assertNotIn("paths:", workflow)
+        self.assertNotIn("paths-ignore:", workflow)
+        self.assertNotIn("continue-on-error", workflow)
+        self.assertIn(
+            "cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
+            workflow,
+        )
+        self.assertIn("python3 scripts/ci-verify.py rehearse-scope", workflow)
+        self.assertIn("if: steps.scope.outputs.skip != 'true'", workflow)
+        # Job-level if: must not exist on rehearse (would leave required check pending/skipped).
+        job_block = workflow.split("\n  rehearse:\n", 1)[1].split("\n    steps:\n", 1)[0]
+        self.assertNotIn("\n    if:", job_block)
 
 
 class RemoteHistoryTests(unittest.TestCase):
@@ -904,6 +1156,151 @@ class RemoteHistoryTests(unittest.TestCase):
                 self.assertIn("exit=7", result.stderr)
                 self.assertNotIn("CI_JOB_PASSED", result.stdout)
                 self.assertFalse((root / ".git/info/florabase-feature-verification.json").exists())
+            finally:
+                os.chdir(previous)
+
+    def test_rehearse_scope_docs_early_exit_and_fail_closed_fallbacks(self) -> None:
+        previous = Path.cwd()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+
+            def git(*args: str) -> str:
+                return subprocess.run(
+                    ["git", "-C", str(root), *args], check=True, text=True, capture_output=True
+                ).stdout.strip()
+
+            (root / "scripts").mkdir()
+            (root / "docs").mkdir()
+            for name in (
+                "ci-verify.py",
+                "verification_gate.py",
+                "verification_impact.py",
+                "verification-impact.json",
+                "feature-tree-fingerprint.py",
+                "disposable_workflow.py",
+                "compose_stacks.py",
+                "workflow_resources.py",
+            ):
+                shutil.copy(ROOT / "scripts" / name, root / "scripts" / name)
+            (root / ".gitignore").write_text("__pycache__/\n")
+            (root / "README.md").write_text("base\n")
+            (root / "LICENSE").write_text("base license\n")
+            git("init", "--initial-branch=main")
+            git("config", "user.name", "Test")
+            git("config", "user.email", "test@localhost")
+            git("add", ".")
+            git("commit", "-m", "base")
+            base = git("rev-parse", "HEAD")
+
+            def make_pr_merge(
+                branch: str, filename: str, content: str
+            ) -> tuple[str, dict[str, str]]:
+                git("checkout", "-B", branch, base)
+                (root / filename).write_text(content)
+                git("add", filename)
+                git("commit", "-m", f"update {filename}")
+                head = git("rev-parse", "HEAD")
+                git("checkout", "main")
+                git("reset", "--hard", base)
+                git("merge", "--no-ff", branch, "-m", f"merge {branch}")
+                merge = git("rev-parse", "HEAD")
+                event_path = root / ".git/event.json"
+                event_path.write_text(
+                    json.dumps(
+                        {
+                            "pull_request": {
+                                "base": {"sha": base},
+                                "head": {"sha": head, "ref": branch},
+                            }
+                        }
+                    )
+                )
+                return merge, {
+                    "GITHUB_EVENT_NAME": "pull_request",
+                    "GITHUB_HEAD_REF": branch,
+                    "GITHUB_EVENT_PATH": str(event_path),
+                    "GITHUB_SHA": merge,
+                }
+
+            def run_scope(env_vars: dict[str, str]) -> tuple[subprocess.CompletedProcess[str], str]:
+                output_file = root / ".git/github-output.txt"
+                output_file.unlink(missing_ok=True)
+                result = subprocess.run(
+                    [sys.executable, "scripts/ci-verify.py", "rehearse-scope"],
+                    cwd=root,
+                    env={**os.environ, **env_vars, "GITHUB_OUTPUT": str(output_file)},
+                    text=True,
+                    capture_output=True,
+                )
+                contents = output_file.read_text(encoding="utf-8") if output_file.exists() else ""
+                return result, contents
+
+            os.chdir(root)
+            try:
+                # Docs-only PR skips rehearsal early and exits 0.
+                _, docs_env = make_pr_merge("docs/readme-update", "README.md", "updated docs\n")
+                result, output = run_scope(docs_env)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("REHEARSE_SKIPPED", result.stdout)
+                self.assertEqual(output.strip(), "skip=true")
+
+                # Push to main, workflow_dispatch, invalid event and SHA mismatch run full rehearsal.
+                for label, overrides in (
+                    ("push", {"GITHUB_EVENT_NAME": "push"}),
+                    ("workflow_dispatch", {"GITHUB_EVENT_NAME": "workflow_dispatch"}),
+                    ("missing-event", {"GITHUB_EVENT_PATH": "/missing-event.json"}),
+                    ("sha-mismatch", {"GITHUB_SHA": base}),
+                    ("invalid-sha", {"GITHUB_SHA": "not-a-sha"}),
+                ):
+                    with self.subTest(case=label):
+                        result, output = run_scope({**docs_env, **overrides})
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        self.assertEqual(output.strip(), "skip=false")
+                        self.assertNotIn("REHEARSE_SKIPPED", result.stdout)
+
+                # LICENSE change is never docs-only and requires full rehearsal.
+                _, license_env = make_pr_merge("docs/license-update", "LICENSE", "new license\n")
+                result, output = run_scope(license_env)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("REHEARSE_REQUIRED: tier=full", result.stdout)
+                self.assertEqual(output.strip(), "skip=false")
+
+                # Corrupt impact map falls back to full rehearsal without failing the step.
+                _, docs_env = make_pr_merge("docs/corrupt-map", "README.md", "another doc edit\n")
+                original_map = (root / "scripts/verification-impact.json").read_text(
+                    encoding="utf-8"
+                )
+                (root / "scripts/verification-impact.json").write_text("{invalid json\n")
+                result, output = run_scope(docs_env)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("Rehearsal scope fallback", result.stdout)
+                self.assertEqual(output.strip(), "skip=false")
+                (root / "scripts/verification-impact.json").write_text(original_map)
+
+                # Import error in a helper module falls back to full rehearsal instead of failing.
+                original_impact = (root / "scripts/verification_impact.py").read_text(
+                    encoding="utf-8"
+                )
+                (root / "scripts/verification_impact.py").write_text(
+                    "import nonexistent_florabase_module_xyz\n"
+                )
+                result, output = run_scope(docs_env)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("Rehearsal scope fallback", result.stdout)
+                self.assertEqual(output.strip(), "skip=false")
+                (root / "scripts/verification_impact.py").write_text(original_impact)
+
+                # Validated ci/batch-* PRs keep the same scoped plan as ordinary PRs.
+                _, batch_env = make_pr_merge("ci/batch-99", "README.md", "batch doc edit\n")
+                with (
+                    patch.dict(os.environ, batch_env),
+                    patch("feature_batch.validate_platform_tree") as validator,
+                    redirect_stdout(io.StringIO()),
+                ):
+                    batch_plan = CI.ci_plan()
+                validator.assert_called_once()
+                self.assertEqual(plan_tier(batch_plan), "docs")
+                self.assertTrue(batch_plan["docs_only"])
             finally:
                 os.chdir(previous)
 
@@ -1149,8 +1546,8 @@ class InventoryTests(unittest.TestCase):
             self.assertEqual(docs_receipt["verification"]["tier"], "docs")
             base = run_git("rev-parse", "origin/main")
 
-            # Change a shared component (requiring product tier) without re-verifying;
-            # keep working_tree_digest matching to isolate tier enforcement from digest drift.
+            # Change a shared frontend component (requiring product-frontend tier) without
+            # re-verifying; keep working_tree_digest matching to isolate tier enforcement.
             shared = fixture.work / "frontend/src/components/TierCheckFixture.tsx"
             shared.parent.mkdir(parents=True, exist_ok=True)
             shared.write_text("export const TierCheckFixture = () => null;\n", encoding="utf-8")
@@ -1172,14 +1569,42 @@ class InventoryTests(unittest.TestCase):
             self.assertNotEqual(rejected.returncode, 0)
             self.assertIn("below required tier", rejected.stderr)
             self.assertIn("'docs'", rejected.stderr)
-            self.assertIn("'product'", rejected.stderr)
+            self.assertIn("'product-frontend'", rejected.stderr)
 
-            # Higher --full receipt passes delivery verification on a product-tier change.
+            # Higher --full receipt passes delivery verification on a product-frontend change.
             full_override = fixture.verify(full=True)
             self.assertEqual(full_override.returncode, 0, full_override.stderr)
             self.assertEqual(
                 subprocess.run(verify_cmd, cwd=fixture.work, capture_output=True).returncode, 0
             )
+
+            # Verify at product-frontend tier -> passes verify, then escalate to product via
+            # backend shared path -> receipt at product-frontend is rejected below product.
+            fe_product_result = fixture.verify()
+            self.assertEqual(fe_product_result.returncode, 0, fe_product_result.stderr)
+            fe_product_receipt = json.loads(receipt_path.read_text())
+            self.assertEqual(fe_product_receipt["verification"]["tier"], "product-frontend")
+            self.assertEqual(fe_product_receipt["verification"]["backend"], [])
+            self.assertEqual(fe_product_receipt["verification"]["integration"], [])
+            self.assertEqual(fe_product_receipt["verification"]["builds"], ["frontend"])
+            self.assertEqual(fe_product_receipt["verification"]["workflow"], [])
+            self.assertEqual(fe_product_receipt["migration"]["result"], "skipped_by_impact")
+
+            backend_shared = fixture.work / "backend/src/florabase/core/tier_check_fixture.py"
+            backend_shared.parent.mkdir(parents=True, exist_ok=True)
+            backend_shared.write_text("VALUE = 1\n", encoding="utf-8")
+            run_git("add", "backend/src/florabase/core/tier_check_fixture.py")
+            run_git("commit", "-m", "Add shared backend module")
+            receipt_path.write_text(
+                json.dumps({**fe_product_receipt, "working_tree_digest": digest_tree()})
+            )
+            rejected_product = subprocess.run(
+                verify_cmd, cwd=fixture.work, text=True, capture_output=True
+            )
+            self.assertNotEqual(rejected_product.returncode, 0)
+            self.assertIn("below required tier", rejected_product.stderr)
+            self.assertIn("'product-frontend'", rejected_product.stderr)
+            self.assertIn("'product'", rejected_product.stderr)
 
             # Verify at product tier -> passes verify, then escalate via unknown path
             # -> receipt at product tier is rejected as below required full tier.
@@ -1342,7 +1767,8 @@ class TestOwnershipInventoryTests(unittest.TestCase):
                 (root / "scripts/verification-impact.json").read_text(encoding="utf-8"), map_before
             )
 
-            # A test added in a product-owned shared directory selects product tier without edits.
+            # A test added in a frontend shared directory alongside a backend change promotes to
+            # product; alone it selects product-frontend without editing the impact map.
             shared_test = root / "frontend/src/components/NewShared.test.tsx"
             shared_test.parent.mkdir(parents=True, exist_ok=True)
             shared_test.write_text("// shared\n", encoding="utf-8")
@@ -1354,6 +1780,16 @@ class TestOwnershipInventoryTests(unittest.TestCase):
             )
             self.assertEqual(product_result.returncode, 0, product_result.stderr)
             self.assertEqual(json.loads(product_result.stdout)["tier"], "product")
+
+            src.unlink()
+            fe_product_result = subprocess.run(
+                [sys.executable, "scripts/verification_impact.py", "--base", new_base, "--json"],
+                cwd=root,
+                text=True,
+                capture_output=True,
+            )
+            self.assertEqual(fe_product_result.returncode, 0, fe_product_result.stderr)
+            self.assertEqual(json.loads(fe_product_result.stdout)["tier"], "product-frontend")
 
     def test_unowned_test_file_fails_verification_plan_and_gate_before_docker(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -1647,12 +2083,45 @@ class TestOwnershipInventoryTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "invalid backend suites"):
                     load_map()
 
-                # Non-test file in product_tests.
-                bad_product = json.loads(json.dumps(original))
-                bad_product["product_tests"].append("backend/src/florabase/main.py")
-                temp_map.write_text(json.dumps(bad_product), encoding="utf-8")
-                with self.assertRaisesRegex(ValueError, "invalid product_tests"):
+                # Schema version must be 2; legacy keys are refused.
+                old_version = json.loads(json.dumps(original))
+                old_version["version"] = 1
+                temp_map.write_text(json.dumps(old_version), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "unsupported or empty impact map"):
                     load_map()
+
+                for legacy_key in ("product_prefixes", "product_tests"):
+                    with_legacy = json.loads(json.dumps(original))
+                    with_legacy[legacy_key] = []
+                    temp_map.write_text(json.dumps(with_legacy), encoding="utf-8")
+                    with self.assertRaisesRegex(ValueError, f"legacy impact map key.*{legacy_key}"):
+                        load_map()
+
+                # Prefix layer mismatch in product_backend_prefixes / product_frontend_prefixes.
+                bad_be_prefix = json.loads(json.dumps(original))
+                bad_be_prefix["product_backend_prefixes"].append("frontend/src/components/")
+                temp_map.write_text(json.dumps(bad_be_prefix), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "invalid product_backend_prefixes"):
+                    load_map()
+
+                bad_fe_prefix = json.loads(json.dumps(original))
+                bad_fe_prefix["product_frontend_prefixes"].append("backend/src/florabase/core/")
+                temp_map.write_text(json.dumps(bad_fe_prefix), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "invalid product_frontend_prefixes"):
+                    load_map()
+
+                # Non-test or wrong-layer file in product_backend_tests / product_frontend_tests.
+                for key, bad_entry in (
+                    ("product_backend_tests", "backend/src/florabase/main.py"),
+                    ("product_backend_tests", "frontend/src/UX001.test.tsx"),
+                    ("product_frontend_tests", "frontend/src/App.tsx"),
+                    ("product_frontend_tests", "backend/tests/test_health.py"),
+                ):
+                    bad_product = json.loads(json.dumps(original))
+                    bad_product[key].append(bad_entry)
+                    temp_map.write_text(json.dumps(bad_product), encoding="utf-8")
+                    with self.assertRaisesRegex(ValueError, f"invalid {key}"):
+                        load_map()
 
 
 if __name__ == "__main__":

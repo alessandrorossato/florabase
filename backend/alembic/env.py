@@ -22,6 +22,7 @@ from florabase.collection_photos.model import (
 from florabase.core.config import get_settings
 from florabase.cuttings.model import PropagationAttempt, RootingObservation, VegetativeLot
 from florabase.db.base import Base
+from florabase.db.session import database_connect_args
 from florabase.events.model import Event
 from florabase.external_botany.model import ExternalProviderCache, ExternalTaxonLink
 from florabase.geographic_places.model import GeographicPlace
@@ -135,6 +136,7 @@ def run_migrations_online() -> None:
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=database_connect_args(get_settings().database_url),
     )
     with connectable.connect() as connection:
         migrate_connection(connection)

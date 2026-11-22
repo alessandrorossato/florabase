@@ -21,6 +21,7 @@ from florabase.auth.service import (
 )
 from florabase.core.config import get_settings
 from florabase.db.release_schema import SCHEMA_LOCK, SchemaError, image_schema, require_image_head
+from florabase.db.session import database_connect_args
 
 MAX_JSON_INPUT = 16 * 1024
 
@@ -93,11 +94,12 @@ def main() -> int:
 
     committing = False
     try:
+        url = get_settings().database_url
         engine = create_engine(
-            get_settings().database_url,
+            url,
             poolclass=NullPool,
             hide_parameters=True,
-            connect_args={"connect_timeout": 5},
+            connect_args={"connect_timeout": 5, **database_connect_args(url)},
         )
         with Session(engine) as database, database.begin():
             set_auth_timeouts(database)

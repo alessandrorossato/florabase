@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Conservative remote checks using the existing complete-tree impact policy."""
+"""Scoped remote checks using the repository complete-tree impact policy."""
 
 from __future__ import annotations
 
@@ -11,11 +11,28 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from verification_gate import checks_for, run_checks
-from verification_impact import describe, make_plan, plan_paths
+_IMPORT_ERROR: Exception | None = None
+try:
+    from verification_gate import (
+        backend_test_command,
+        checks_for,
+        docs_checks_for,
+        frontend_test_command,
+        run_checks,
+        validate_plan,
+    )
+    from verification_impact import describe, make_plan, plan_paths, plan_tier
+except Exception as _error:
+    _IMPORT_ERROR = _error
+
+
+def _require_imports() -> None:
+    if _IMPORT_ERROR is not None:
+        raise _IMPORT_ERROR
 
 
 def ci_plan() -> dict[str, Any]:
+    _require_imports()
     sha = os.environ.get("GITHUB_SHA", "")
     actual = subprocess.run(
         ["git", "rev-list", "--parents", "-1", "HEAD"],
@@ -62,10 +79,44 @@ def ci_plan() -> dict[str, Any]:
 
 
 def ci_checks_for(plan: dict[str, Any], job: str) -> list[dict[str, Any]]:
+    _require_imports()
     if job not in {"quality", "integration", "build"}:
         raise ValueError("unknown required job")
-    if plan["docs_only"]:
+    tier = validate_plan(plan)
+    if tier == "docs":
         return checks_for(plan)
+    if tier in {"affected", "product-frontend"}:
+        if job == "quality":
+            checks: list[dict[str, Any]] = [
+                {"id": "feature-graph", "command": ["python3", "./scripts/check-features.py"]},
+                {"id": "doc-links", "command": ["python3", "./scripts/check-doc-links.py"]},
+                {"id": "test-doc-links", "command": ["python3", "./scripts/test-doc-links.py"]},
+            ]
+            for stage in plan["static"]:
+                if stage not in {"feature-graph", "whitespace"}:
+                    checks.append({"id": stage, "command": ["make", stage]})
+            if plan["backend"]:
+                checks.append({"id": "backend", "command": backend_test_command(plan)})
+            if plan["frontend"]:
+                checks.append({"id": "frontend", "command": frontend_test_command(plan)})
+            return checks
+        if job == "integration":
+            if plan["integration"]:
+                return [
+                    {
+                        "id": "integration",
+                        "command": ["./scripts/test-integration.sh", *plan["integration"]],
+                    }
+                ]
+            return docs_checks_for(plan)
+        if plan["builds"]:
+            return [
+                {
+                    "id": "production-builds",
+                    "command": ["make", "verify-build", "SERVICES=" + " ".join(plan["builds"])],
+                }
+            ]
+        return []
     if job == "quality":
         return [
             {"id": "feature-graph", "command": ["python3", "./scripts/check-features.py"]},
@@ -84,14 +135,65 @@ def ci_checks_for(plan: dict[str, Any], job: str) -> list[dict[str, Any]]:
     ]
 
 
+def _write_github_output(name: str, value: str) -> None:
+    output_path = os.environ.get("GITHUB_OUTPUT")
+    if output_path:
+        with Path(output_path).open("a", encoding="utf-8") as stream:
+            stream.write(f"{name}={value}\n")
+
+
+def rehearse_scope() -> bool:
+    """Decide whether release rehearsal may exit early on a proven docs-only PR.
+
+    Any non-docs tier, non-PR event or error falls back to running the full rehearsal
+    (writing skip=false and exiting 0) so the workflow step never fails prematurely.
+    """
+    try:
+        plan = ci_plan()
+        tier = validate_plan(plan)
+        print("Rehearsal scope plan:", flush=True)
+        print(describe(plan), flush=True)
+        if tier == "docs" and plan["docs_only"] is True:
+            print(
+                "REHEARSE_SKIPPED: docs-only PR; release rehearsal not required",
+                flush=True,
+            )
+            _write_github_output("skip", "true")
+            return True
+        print(
+            f"REHEARSE_REQUIRED: tier={tier}; running full release rehearsal",
+            flush=True,
+        )
+        _write_github_output("skip", "false")
+        return False
+    except Exception as error:
+        print(
+            f"Rehearsal scope fallback: running full rehearsal ({error})",
+            flush=True,
+        )
+        _write_github_output("skip", "false")
+        return False
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("job", choices=("quality", "integration", "build"))
+    parser.add_argument("job", choices=("quality", "integration", "build", "rehearse-scope"))
     args = parser.parse_args()
+    if args.job == "rehearse-scope":
+        rehearse_scope()
+        return
     plan = ci_plan()
-    print("Local acceptance policy plan (remote commands follow):", flush=True)
+    tier = plan_tier(plan)
+    print("Verification impact plan (remote commands follow):", flush=True)
     print(describe(plan), flush=True)
-    print(f"Required job: {args.job}; remote product suites remain exhaustive", flush=True)
+    scope_note = (
+        "docs checks only"
+        if tier == "docs"
+        else "selected suites and builds"
+        if tier in {"affected", "product-frontend"}
+        else "complete product suites and both builds"
+    )
+    print(f"Required job: {args.job}; tier={tier} ({scope_note})", flush=True)
     run_checks(plan, ci_checks_for(plan, args.job))
     print(f"CI_JOB_PASSED: {args.job}; no local delivery receipt issued", flush=True)
 

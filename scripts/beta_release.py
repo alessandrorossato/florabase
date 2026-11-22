@@ -1115,8 +1115,8 @@ def release_asset_inventory(output: Path) -> dict[str, tuple[int, str]]:
     return result
 
 
-# Slots per token: prepare and db run the PostgreSQL image, migrate and backend the backend image.
-COMPOSE_SLOTS = {"version": 1, "backend": 2, "frontend": 1, "postgresql": 2}
+# Slots per token: db uses PostgreSQL, backend and frontend each use their own image once.
+COMPOSE_SLOTS = {"version": 1, "backend": 1, "frontend": 1, "postgresql": 1}
 
 
 def render_compose(root: Path, version: str, refs: dict[str, str]) -> str:

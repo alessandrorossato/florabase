@@ -2740,6 +2740,22 @@
       "status": "implemented"
     },
     {
+      "id": "INSTALL-002",
+      "category": "infrastructure",
+      "description": "Make the production compose.yaml a minimal three-service file by moving guards, constants and healthchecks into the images (ADR 0009)",
+      "acceptance_criteria": [
+        "The rendered production compose.yaml is a flat three-service file (db, backend, frontend) under 60 lines with fixed container_name values, internal: true and app network isolation, no YAML anchors, no inline shell scripts, no root containers, create_host_path: false on every bind mount, loopback-only frontend port binding, one FLORABASE_DB_PASSWORD variable and TZ=${TZ:-Europe/Rome}",
+        "PostgreSQL 18.6-alpine-florabase.4 carries PGDATA, POSTGRES_DB, POSTGRES_USER, HEALTHCHECK, UTC session timezone, FLORABASE_DB_PASSWORD mapping, root refusal (exit 64) and the pre-start data-directory, ownership/mode, marker and cluster-identity guards with postgres/installation.pending retry, proven reproducible by beta_release.py postgres-identity --check",
+        "The backend runtime image carries constant production ENV settings, derives PGPASSWORD from FLORABASE_DB_PASSWORD, pins SQLAlchemy/Alembic sessions to UTC, validates host data/backup paths and folder writability, runs wait-db and release_schema deploy before scrubbing owner variables and exec'ing release_schema serve, and latches state/upgrade-failed.env on failed upgrades so restart loops never write duplicate dumps",
+        "Offline contract tests (make test-beta-runtime, make test-beta-images) and real disposable smoke (make smoke-beta-images, smoke-portable-compose.py) prove every ADR 0008/0009 refusal including missing folders, wrong ownership/mode, failed-upgrade single-dump latch, UTC session timezone with TZ=Europe/Rome, beta.7-to-beta.8 upgrade on unchanged folders, and isolated restore via an untracked container_name override",
+        "ADR 0009, docs/installation.md, docs/deployment.md, docs/security.md, docs/security/beta-distribution-001/postgresql-image.md, README.md, CHANGELOG.md and docs/progress.md document the three-service installation, one-time folder setup, optional hardened override, accepted trade-offs and beta.7 upgrade path",
+        "Independent infrastructure QA and the canonical FULL gate pass before operator delivery"
+      ],
+      "dependencies": ["INSTALL-001"],
+      "priority": "P0",
+      "status": "implemented"
+    },
+    {
       "id": "MEASUREMENT-001",
       "category": "event",
       "description": "Record and browse longitudinal Plant height measurements as typed Journal Events",
@@ -3003,6 +3019,23 @@
       ],
       "dependencies": [
         "UI-SYSTEM-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
+      "id": "WF-SCOPE-001",
+      "category": "infrastructure",
+      "description": "Scope local and pull-request verification by changed files with a frontend-only product tier and docs-only release rehearsal early exit",
+      "acceptance_criteria": [
+        "Release rehearsal reuses ci_plan() for exact-revision planning, exits early with green status on proven docs-only PRs without workflow path filters or job-level if:, runs full rehearsal on pushes to main, workflow_dispatch or any planning/import error, and cancels superseded PR runs only",
+        "Remote PR CI quality, integration and build jobs execute selected suites and builds for affected and product-frontend plans while product, full, main pushes and fallbacks remain exhaustive and ci/batch-* retains platform tree validation",
+        "The impact map schema v2 splits shared product prefixes and tests into backend (product) and frontend (product-frontend) tiers with strict loader, gate and receipt validation, and moves LICENSE out of documentation_paths into full_prefixes",
+        "Verification regressions prove docs-only, frontend-scoped, frontend-shared, backend-shared, backend-scoped, LICENSE, main push, invalid-event and import-error cases"
+      ],
+      "dependencies": [
+        "CI-004",
+        "CI-005"
       ],
       "priority": "P1",
       "status": "implemented"

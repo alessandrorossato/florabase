@@ -111,8 +111,11 @@ make up
 ```
 
 The backend process never runs migrations. A source build applies them with `make migrate`; the
-release `compose.yaml` applies them through its guarded one-shot `migrate` service
-([ADR 0008](decisions/0008-self-initializing-single-compose.md)). Create the first and only initial owner after migration:
+release `compose.yaml` applies them through its guarded `florabase-start` step before `exec`ing
+the exact-head server ([ADR 0008](decisions/0008-self-initializing-single-compose.md),
+[ADR 0009](decisions/0009-minimal-production-compose.md)). For optional container-level hardening
+on the release `compose.yaml`, see [optional container hardening](security.md#optional-container-hardening).
+Create the first and only initial owner after migration:
 
 ```bash
 prod run --rm backend python -m florabase.auth.bootstrap owner
