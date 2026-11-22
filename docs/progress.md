@@ -1,3 +1,90 @@
+## 2026-11-22 — WF-04 Batch 10 integration (`WF-SCOPE-001` + `INSTALL-002`)
+
+- Prepared `ci/batch-10` on top of pinned `origin/main` (`1e985f1`) with writer `neon` via
+  `make feature-batch-plan` and `make feature-batch-prepare`.
+- Linear bootstrap commit `b51e2b3` updated `additive_progress` in `scripts/feature_batch.py` (with
+  regression coverage in `scripts/test-agent-workflow.py`) so pure top-of-file progress prepends
+  preserve non-conflicting tail edits on `main` (such as PR #213's `1e985f1` entry) while staying
+  fail-closed on edits inside existing progress content.
+- Merged `INSTALL-002` (`feat/install-002-minimal-compose` at `a012f43`, including `internal: true`
+  and `app` network isolation in `compose.yaml`, `scripts/test-beta-runtime.py`,
+  `scripts/test-beta-images.py`, `scripts/smoke-portable-compose.py`, ADR 0009 and
+  `docs/security.md`, merge `b150388`) and `WF-SCOPE-001` (`feat/wf-scope-001-scoped-verification`
+  at `1b78a04`, merge `b34ab43`) without rewriting source branches. `docs/features.json` and
+  `docs/release/scope-v1.json` merged cleanly; `docs/progress.md` resolved additively keeping all
+  entries newest-first alongside `1e985f1`'s tail milestone.
+- Recorded [Batch 10 provenance](release/evidence/wf-04-batch-10.md) and
+  [batch-10.json](release/evidence/batches/batch-10.json). Proposed release classes in
+  `docs/release/scope-v1.json`: `WF-SCOPE-001` (`tooling`), `INSTALL-002` (`release-work`).
+- Exact-head independent review (`make feature-batch-review`) and one fresh canonical FULL gate
+  (`env -u REUSE FRESH=1 make feature-verify AGENT_ID=neon`) run on this frozen committed head
+  before operator delivery.
+
+## 2026-11-22 — INSTALL-002 minimal three-service production `compose.yaml` (ADR 0009)
+
+- On `feat/install-002-minimal-compose` from `c5f9cdf` (writer `neon`).
+- Adopted [ADR 0009](decisions/0009-minimal-production-compose.md) amending
+  [ADR 0008](decisions/0008-self-initializing-single-compose.md), shrinking production
+  `compose.yaml` from 188 lines to 49 lines with three non-root services (`db`, `backend`,
+  `frontend`), fixed `container_name` (`florabase-db`, `florabase-backend`, `florabase-frontend`),
+  `internal: true` (`db`/`backend`) and `app` (`backend`/`frontend`) network isolation, no YAML
+  anchors, no inline shell scripts, no root containers, `create_host_path: false` on every bind
+  mount, literal `127.0.0.1` frontend-only publication, single `FLORABASE_DB_PASSWORD`, and
+  `TZ=${TZ:-Europe/Rome}` (logs only).
+- Built and verified reproducible `florabase-postgres:18.6-alpine-florabase.4`
+  (`index_digest` `sha256:93797c3941d06b3a8d591851df04605b5287ace2a11bb32421589ddff1a1782c`,
+  `platform_digest` `sha256:7213d5bb35a00e1f80ca60193ad81a07c946e328ad4128a57e53e50fb47bb8b9`),
+  adding `PGDATA`, `POSTGRES_DB`, `POSTGRES_USER`, image `HEALTHCHECK`, `-c timezone=UTC`,
+  `FLORABASE_DB_PASSWORD` mapping, and pre-start ownership/mode/empty-folder/marker/`pg_controldata`
+  guards with 70-owned `postgres/installation.pending` while preserving `gosu` removal, `USER 70:70`
+  and exit 64 root refusal.
+- Moved backend constant production `ENV` values into `backend/Dockerfile` (`runtime`), added
+  `florabase-backend-entrypoint` (`PGPASSWORD` derivation) and `florabase-start` (`wait-db` →
+  `release_schema deploy` → owner-env scrub → `exec release_schema serve`), pinned SQLAlchemy,
+  Alembic and password-reset sessions to `-c timezone=UTC`, added host-path/non-nesting/same-folder
+  and private `backup/pre-upgrade` permission guards, and added atomic `state/upgrade-failed.env`
+  latching so restart loops never write repeated dumps.
+- Registered `INSTALL-002` (`implemented`, `release-work`) in `docs/features.json` and
+  `docs/release/scope-v1.json`; updated `scripts/beta_release.py` (`COMPOSE_SLOTS`),
+  `scripts/test-beta-runtime.py`, `scripts/test-beta-images.py`, `scripts/smoke-beta-images.py`,
+  `scripts/smoke-portable-compose.py` (ownership refusals, failed-upgrade single-dump latch, UTC
+  check with `TZ=Europe/Rome`, beta.7 `0701`-folder upgrade, isolated restore via untracked
+  `container_name` override), `docs/installation.md`, `docs/deployment.md`, `docs/security.md`
+  (accepted trade-offs + optional hardened override), `docs/security/beta-distribution-001/postgresql-image.md`,
+  `README.md`, `CHANGELOG.md`, and `AGENTS.md`.
+- Checks: `beta_release.py postgres-identity --check` (`POSTGRES_IDENTITY_REPRODUCED`),
+  `make test-beta-runtime` (17 OK), `make test-beta-images` (80 + 4 OK), `make smoke-beta-images`
+  (`LOCAL_BETA_CANDIDATE_PASSED`), live `smoke-portable-compose.py` (all 3 stacks green with zero
+  residual resources), `make workflow-check`, `pytest tests/test_release_schema.py
+  tests/test_infrastructure.py` (68 OK), `check-features.py` (171 valid), `check-doc-links.py`
+  (352 docs), independent infrastructure QA (all P0–P3 findings resolved), and canonical FULL
+  `make feature-verify AGENT_ID=neon` plus `make release-preflight-local`.
+
+## 2026-11-22 — WF-SCOPE-001 scoped verification by changed files
+
+- On `feat/wf-scope-001-scoped-verification` from `c5f9cdf` (writer `neon-wf-scope-001`).
+- Added the `product-frontend` tier (`TIER_ORDER`: `docs < affected < product-frontend < product <
+  full`), bumped `scripts/verification-impact.json` to schema v2 (`product_backend_prefixes`,
+  `product_frontend_prefixes`, `product_backend_tests`, `product_frontend_tests`), and moved
+  `LICENSE` from `documentation_paths` into `full_prefixes` because all three Dockerfiles copy it.
+- Scoped PR CI (`scripts/ci-verify.py`): `affected` and `product-frontend` plans run selected
+  static/unit suites, selected integration files (or docs checks when empty) and selected builds,
+  while `product`, `full`, pushes to `main` and fallbacks remain exhaustive and `ci/batch-*` keeps
+  platform-tree validation plus `make_plan(base)`.
+- Added `python3 scripts/ci-verify.py rehearse-scope` and PR-only `concurrency` to
+  `.github/workflows/beta-release-rehearsal.yml` so docs-only PRs exit `rehearse` early with green
+  status while non-docs PRs, pushes to `main`, `workflow_dispatch` and any planning or import error
+  fail closed into the full rehearsal.
+- Registered `WF-SCOPE-001` (`implemented`) in `docs/features.json` and proposed class `tooling` in
+  `docs/release/scope-v1.json`; updated `docs/development-workflow.md`.
+- Checks before final canonical gate: `test-verification-impact.py` (42 OK), `workflow-check`
+  (Dependabot policy, 79 `test-beta-images`, 4 `test-release-tools-lock`, 18 `test-beta-runtime`,
+  Ruff check/format, `mypy --strict` across 49 scripts), `test-feature-workflow` (55 OK),
+  `test-agent-workflow` (75 OK, 3 skipped), `check-features.py`, `check-doc-links.py`,
+  `test-doc-links.py`. Canonical `make verify-full` runs on this frozen tree before commit/delivery.
+- Unresolved: none locally; PR description will link a real docs-only commit run showing `rehearse`
+  exiting early after operator approves push/PR.
+
 ## 2026-11-22 — ENG-05 closed on branch (a)
 
 - Documentation only, on `claude/project-thread-7djkvu` from `1126c03`. The operator chose

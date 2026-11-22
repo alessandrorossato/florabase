@@ -1,34 +1,37 @@
 # Install Florabase
 
-Florabase is installed with one file: the `compose.yaml` attached to each release
-([ADR 0008](decisions/0008-self-initializing-single-compose.md)). A Compose manager such as Dockhand
-deploys it as-is, or you run `docker compose up -d`. The only host step is creating two empty
-folders. Building from source is for development only ([development](development.md)).
+Florabase is installed with one minimal file: the `compose.yaml` attached to each release
+([ADR 0008](decisions/0008-self-initializing-single-compose.md),
+[ADR 0009](decisions/0009-minimal-production-compose.md)). A Compose manager such as Dockhand
+deploys it as-is, or you run `docker compose up -d`. The only host step is creating the data and
+backup folders with their container owners once. Building from source is for development only
+([development](development.md)).
 
-This guide applies from `v0.1.0-beta.7`. Use the documentation at the
-`v0.1.0-beta.6` tag for that release's manual procedure.
+This guide applies from `v0.1.0-beta.8` (and upgrades `v0.1.0-beta.7` installations in place). Use
+the documentation at the `v0.1.0-beta.6` tag for that release's manual procedure.
 [Florabase releases](https://github.com/alessandrorossato/florabase/releases)
 
 ## What you install
 
-`compose.yaml` pins three linux/amd64 images by digest and defines five services:
+`compose.yaml` pins three linux/amd64 images by digest and defines three non-root services. No
+container runs as root:
 
-| Service | Runs | Role |
+| Service | Container | Role |
 | --- | --- | --- |
-| `prepare` | once per deployment, PostgreSQL image, no network | Checks the two folders and creates their subfolders with the right owners. Refuses anything that is neither an empty folder nor this installation. |
-| `db` | always | PostgreSQL 18. Creates its cluster only for a new installation. |
-| `migrate` | once per deployment, backend image | Initializes the schema, leaves a current schema unchanged, or backs up and upgrades from the previous release. Creates the first owner once. |
-| `backend` | always | The API. It never migrates and refuses to start unless the schema matches its image exactly. |
-| `frontend` | always | The web app and the only published port, bound to `127.0.0.1`. |
+| `db` | `florabase-db` (`70:70`) | PostgreSQL 18 (`18.6-alpine-florabase.4`). Validates folder owners, modes, empty-folder rules, marker and cluster identity before PostgreSQL starts; pins session `timezone` to `UTC`. |
+| `backend` | `florabase-backend` (`10001:10001`) | Runs `florabase-start`: waits for `db`, runs the guarded deploy step (path/backup checks, advisory lock, init/keep/verified pre-upgrade dump and upgrade, atomic marker, one-time first owner), scrubs owner variables, then `exec`s the exact-head API server (`release_schema serve`). |
+| `frontend` | `florabase-frontend` (`101:101`) | The web app and the only published port, bound to `127.0.0.1`. |
 
 Stopping or restarting services keeps all data. Docker restarts `db`, `backend` and `frontend`
-after a host reboot; the backend schema check still applies.
+after a host reboot; all image guards and the exact-head schema check still apply. Operators who
+want read-only root filesystems and dropped capabilities can layer the optional
+[hardened Compose override](security.md#optional-container-hardening).
 
 ## Prerequisites
 
 - A linux/amd64 Docker host with Engine 24+ and Compose 2.20+. Other architectures are not built.
-- A Compose manager that supports environment interpolation, long-form bind mounts, health and
-  completion dependencies, and host-IP port bindings, or the Docker CLI on the host.
+- A Compose manager that supports environment interpolation, long-form bind mounts, health
+  dependencies and host-IP port bindings, or the Docker CLI on the host.
 - Local storage for a data folder and a separate backup folder.
 - A hostname dedicated to Florabase and an HTTPS reverse proxy on the Docker host with a
   certificate for it, or [Tailscale Serve](#tailscale-and-https). Florabase is served at the root
@@ -57,21 +60,25 @@ repo=alessandrorossato/florabase
 
 ## Quick start
 
-### 1. Create two empty folders
+### 1. Create the folders and set owners once
 
-Create a data folder and a separate backup folder **inside** a storage volume, for example with a
-NAS file manager. Never point Florabase at a volume mountpoint itself: when the volume is missing,
-the folder is then missing too and the deployment fails instead of starting empty.
+Create a data folder and a separate backup folder **inside** a storage volume, never at a volume
+mountpoint itself: when the volume is missing, the folder is missing too and `create_host_path:
+false` fails the deployment instead of starting an empty database on the wrong disk.
 
-```text
-/volume1/docker/florabase/data      FLORABASE_DATA_DIR    (empty)
-/volume1/docker/backup/florabase    FLORABASE_BACKUP_DIR  (empty or existing; not inside the data folder)
+```bash
+DATA=/volume1/docker/florabase/data
+BACKUP=/volume1/docker/backup/florabase
+
+mkdir -p "$DATA/postgres" "$DATA/media" "$DATA/state" "$BACKUP/pre-upgrade"
+chmod a+rx "$DATA" && chmod a+x "$BACKUP"
+chown 70:70 "$DATA/postgres" && chmod 0700 "$DATA/postgres"
+chown 10001:10001 "$DATA/media" "$DATA/state" "$BACKUP/pre-upgrade"
+chmod 0700 "$DATA/media" "$BACKUP/pre-upgrade" && chmod 0755 "$DATA/state"
 ```
 
-`prepare` creates `postgres/` (owner `70`), `media/` and `state/` (owner `10001`) in the data
-folder and `pre-upgrade/` (owner `10001`) in the backup folder. It adds the search permission for
-other users to the two folder roots if it is missing, so the container users can reach their
-subfolders. It never changes anything else, and Compose never creates a missing folder.
+This matches the `v0.1.0-beta.7` layout exactly. If any folder is missing or has the wrong owner
+or mode, `db` or `backend` refuses to start and prints a message pointing back to this block.
 
 ### 2. Set the variables
 
@@ -81,10 +88,11 @@ Generate the database password with `openssl rand -hex 32`.
 | Variable | Required | Meaning |
 | --- | --- | --- |
 | `FLORABASE_DATA_DIR` | yes | Absolute path of the data folder |
-| `FLORABASE_BACKUP_DIR` | yes | Absolute path of the backup folder |
-| `FLORABASE_DB_PASSWORD` | yes | PostgreSQL password, fixed when the database is created |
+| `FLORABASE_BACKUP_DIR` | yes | Absolute path of the backup folder (separate from the data folder) |
+| `FLORABASE_DB_PASSWORD` | yes | PostgreSQL password, shared by `db` and `backend`, fixed when the database is created |
 | `FLORABASE_CANONICAL_ORIGIN` | yes | The exact HTTPS origin, for example `https://florabase.example.org`, without a trailing slash or path |
 | `FLORABASE_HTTP_PORT` | no | Loopback port of the frontend, default `8080` |
+| `TZ` | no | IANA timezone for container logs, default `Europe/Rome` (database storage and sessions always stay in UTC) |
 | `FLORABASE_OWNER_LOGIN` | once | Login name of the first owner: 3 to 64 lowercase letters, digits, `.`, `_` or `-`, starting with a letter or digit |
 | `FLORABASE_OWNER_PASSWORD` | once | Password of the first owner, at least 12 characters |
 
@@ -104,15 +112,17 @@ docker compose --project-name florabase up -d --wait
 The first deployment creates the database cluster, initializes the schema, records the
 installation and creates the owner. If it fails, for example because of a wrong owner variable,
 correct the variable and deploy again: the pending installation is resumed without emptying the
-folder.
+folder (`db` keeps `postgres/installation.pending` until `state/installation.env` is written, and
+`backend` keeps `state/installation.pending` across initial schema creation).
 
 ### 4. Sign in as the owner
 
 Sign in at the HTTPS address, then remove `FLORABASE_OWNER_PASSWORD` (and the login) from the stack
-environment and change the password from the account page. Until removed, the password stays
-visible in the manager's environment, in `docker inspect` and in manager exports; it is never
-logged. Later deployments ignore the variables once any user exists and say so in the `migrate`
-log. A restored database never gets a new owner.
+environment and change the password from the account page. `florabase-start` removes both
+variables from the API server process before starting `uvicorn`, but until you remove them from
+the stack environment they remain visible in the manager's configuration, `docker inspect` and
+manager exports; the password is never logged. Later deployments ignore the variables once any
+user exists and say so in the `backend` log. A restored database never gets a new owner.
 
 ### 5. Put Florabase behind HTTPS and check readiness
 
@@ -159,9 +169,10 @@ Once Florabase answers on its HTTPS origin, browsers can install it as an online
 The DS224+ is an amd64 target with Container Manager. Check the Engine and Compose versions it
 actually installs; Engine 24.0.2 and Compose 2.20.1 are the baseline.
 
-1. Create the two folders with File Station inside a local Btrfs or ext4 shared folder, for example
-   `/volume1/docker/florabase/data` and `/volume1/docker/backup/florabase`. Keep them out of SMB and
-   NFS exports and avoid recursive ACL or ownership resets on them.
+1. Run the [folder setup block](#1-create-the-folders-and-set-owners-once) inside a local Btrfs or
+   ext4 shared folder, for example `/volume1/docker/florabase/data` and
+   `/volume1/docker/backup/florabase`. Keep them out of SMB and NFS exports and avoid recursive ACL
+   or ownership resets on them.
 2. Deploy `compose.yaml` with Dockhand or Container Manager using the variables above.
 3. Set up HTTPS with [Tailscale Serve](#tailscale-and-https) or the DSM reverse proxy, verify that
    LAN peers cannot reach the raw port, and repeat the readiness and sign-in check after a planned
@@ -191,17 +202,18 @@ upload from a permitted tailnet client, and again after a reboot.
    PostgreSQL major version needs its own documented migration.
 2. Take a [paired backup](#paired-backup) with the current release.
 3. Replace the stack's `compose.yaml` with the new file, keeping the same stack name, folders,
-   password and origin, and deploy it. Current Docker Compose versions stop the previous backend
-   before `migrate` runs; with another manager, stop the stack before deploying a new release.
+   password and origin, and deploy it. When upgrading from `v0.1.0-beta.7`, the existing folder
+   layout and owners already match — no folder changes are needed.
 
-`migrate` upgrades only from the exact previous release. Before migrating it writes
+Before migrating, `backend`'s guarded deploy step writes
 `florabase-<from>-to-<to>-<UTC time>.dump` to `pre-upgrade/` in the backup folder and verifies it
-with `pg_restore --list`. If the backup folder is missing or the dump cannot be written or verified,
-nothing is migrated. Deleting old dumps is your decision.
+with `pg_restore --list`. If the backup folder is missing or unwritable, or the dump cannot be
+written or verified, nothing is migrated. Deleting old dumps is your decision.
 
 The upgrade runs in one PostgreSQL transaction. If it fails, the database stays at the previous
-release, the backend refuses to start and nothing is lost: fix the cause and deploy again, or
-restore the dump or the paired backup with the [isolated restore](#isolated-restore). A database
+release, `backend` writes `state/upgrade-failed.env` (recording the revisions and dump filename)
+and refuses to start or write duplicate dumps on subsequent restarts. Fix the cause (or restore
+from backup), remove `<FLORABASE_DATA_DIR>/state/upgrade-failed.env`, and deploy again. A database
 from a newer or unknown release is refused and nothing starts. To go back after a successful
 upgrade, restore the pre-upgrade backup into a new data folder with the previous release. For
 `v0.1.0-beta.6`, which has no self-initializing layout, follow that tag's documentation; the
@@ -224,7 +236,7 @@ backup='/absolute/path/to/a/new/backup-directory'
   mkdir "$backup"
   dc stop frontend backend
   dc exec -T db sh -ec '
-    export PGPASSWORD="$POSTGRES_PASSWORD"
+    export PGPASSWORD="$FLORABASE_DB_PASSWORD"
     exec pg_dump -Fc --no-owner --no-privileges -U "$POSTGRES_USER" "$POSTGRES_DB"
   ' > "$backup/database.dump"
   dc run --rm --no-deps -T backend python /app/scripts/attachment_artifacts.py verify
@@ -242,22 +254,44 @@ and store the credentials separately. A restore drill is part of validating a ba
 
 ## Isolated restore
 
-Restore into a **new, empty data folder** under a distinct stack name, never over the live one.
-This is also how a `v0.1.0-beta.6` installation moves to this layout: take its paired backup with
-the beta.6 procedure, then restore it here.
+Restore into a **new, empty data folder** (prepared with the
+[folder setup block](#1-create-the-folders-and-set-owners-once)) under a distinct stack name,
+never over the live one. This is also how a `v0.1.0-beta.6` installation moves to this layout:
+take its paired backup with the beta.6 procedure, then restore it here.
 
-1. Deploy the restore stack with its own empty data folder, a backup folder and a new database
-   password, **without** the owner variables, and wait until it is healthy.
-2. Stop the application services and replace the empty schema with the dump:
+Because `compose.yaml` sets fixed `container_name: florabase-<role>` names for the primary stack,
+create a temporary local override file next to the restore stack's `compose.yaml` so the restore
+containers do not collide with the live stack:
 
-   Reuse the `dc` function from [Paired backup](#paired-backup), run from a folder whose
-   `compose.yaml` and `.env` hold the restore stack's values.
+```yaml
+# restore-override.yaml (local only, never committed)
+services:
+  db:
+    container_name: florabase-restore-db
+  backend:
+    container_name: florabase-restore-backend
+  frontend:
+    container_name: florabase-restore-frontend
+```
+
+1. Deploy the restore stack with its own prepared empty data folder, a backup folder, a distinct
+   `FLORABASE_HTTP_PORT`, and a new database password, **without** the owner variables, and wait
+   until it is healthy:
 
    ```bash
    project=florabase-restore
+   dc() {
+     docker compose --project-name "$project" --file compose.yaml --file restore-override.yaml "$@"
+   }
+   dc up -d --wait
+   ```
+
+2. Stop the application services and replace the empty schema with the dump:
+
+   ```bash
    dc stop frontend backend
    dc exec -T db sh -ec '
-     export PGPASSWORD="$POSTGRES_PASSWORD"
+     export PGPASSWORD="$FLORABASE_DB_PASSWORD"
      psql -XAq -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
        -c "DROP SCHEMA public CASCADE" -c "CREATE SCHEMA public"
      exec pg_restore --single-transaction --exit-on-error --no-owner --no-privileges \
@@ -268,9 +302,10 @@ the beta.6 procedure, then restore it here.
    dc run --rm --no-deps -T backend python /app/scripts/attachment_artifacts.py verify
    ```
 
-3. Deploy again. `migrate` leaves a current schema unchanged, or backs up and upgrades a dump from
-   the previous release. Sign in with the restored credentials and check the media, then switch
-   traffic. Reset the owner password first if the backup may hold old credentials.
+3. Deploy again (`dc up -d --wait`). The guarded deploy step leaves a current schema unchanged, or
+   backs up and upgrades a dump from the previous release. Sign in with the restored credentials
+   and check the media, then switch traffic. Reset the owner password first if the backup may hold
+   old credentials.
 
 ## Recover a forgotten owner password
 
@@ -296,11 +331,12 @@ Florabase's own builders from the pinned official archives are ever supported
 
 ## Troubleshooting
 
-Read the `prepare`, `db` or `migrate` log: every refusal says why, and nothing was changed.
+Read the `db` or `backend` log: every refusal says why, and nothing was changed.
 
 | Message | Meaning and action |
 | --- | --- |
 | `bind source path does not exist` | A folder is missing or its volume is not mounted. Mount or create it; never let it be created empty elsewhere. |
+| `missing required folder ...` / `has owner ..., expected ...` / `has mode ..., expected ...` / `is missing or not writable; run the folder setup commands in docs/installation.md` | A required subfolder is missing or has the wrong owner/mode. Run the [folder setup block](#1-create-the-folders-and-set-owners-once) and deploy again. |
 | `... exists and there is no installation marker; use an empty data folder` | The data folder holds something that is not this installation. Use a new empty folder, or restore into one. |
 | `the installation marker exists but its database folder is missing or empty` | The database files are gone or the wrong folder is mounted. Fix the mount or restore from a backup. |
 | `the installation uses PostgreSQL N, this image M` | A PostgreSQL major-version change needs its own migration. Deploy the previous release. |
@@ -308,8 +344,9 @@ Read the `prepare`, `db` or `migrate` log: every refusal says why, and nothing w
 | `FLORABASE_BACKUP_DIR is inside FLORABASE_DATA_DIR` (or the reverse, or `the same`) | Use a backup folder outside the data folder. |
 | `set both FLORABASE_OWNER_LOGIN and FLORABASE_OWNER_PASSWORD, or neither` / `first owner refused` | Fix the owner variables and deploy again. |
 | `pre-upgrade backup failed` / `backup directory ... is missing or not writable` | Fix the backup folder or free space and deploy again. Nothing was migrated. |
+| `previous upgrade from ... to ... failed ... remove state/upgrade-failed.env before redeploying` | A prior upgrade failed after writing a verified pre-upgrade dump. Inspect the earlier log, resolve the database issue or restore, remove `<FLORABASE_DATA_DIR>/state/upgrade-failed.env`, and deploy again. |
 | `database revision ... is neither image head ... nor the previous release head` | The database comes from a newer, older or unknown release. Deploy the matching release or restore. |
-| `differs from image head` (backend) | The schema does not match the backend image; `migrate` did not complete. Read its log. |
+| `differs from image head` (`release_schema serve`) | The schema does not match the backend image; the guarded deploy step did not complete. Read the `backend` log. |
 
 ## Uninstalling without losing data
 
@@ -321,7 +358,9 @@ folder stay as they are. Delete them only after verifying an off-host backup.
 - linux/amd64 only.
 - Upgrades go from the exact previous release; skipping a release requires installing each one in
   turn or restoring a backup.
-- The first owner password stays in the stack environment until you remove it.
-- Current Docker Compose versions stop the previous backend before they start the new `migrate`, so
-  no writer runs during the dump and upgrade (observed with Compose 5.7.1). With another manager or
-  an older Compose, stop the stack before deploying a new release.
+- The first owner password stays in the stack environment (and `florabase-backend`'s container
+  configuration) until you remove it; `florabase-start` scrubs it from the `uvicorn` process
+  environment before serving requests.
+- `florabase-backend` mounts `FLORABASE_BACKUP_DIR` read-write so its guarded start step can write
+  pre-upgrade dumps without a separate `migrate` container; keep off-host encrypted copies of
+  paired backups.

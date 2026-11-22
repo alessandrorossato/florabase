@@ -330,7 +330,7 @@ ENV = {
 
 
 class StackContract(unittest.TestCase):
-    """The production compose.yaml stays image-only, private, hardened and self-initializing."""
+    """The production compose.yaml stays minimal, image-only, private, non-root and guarded."""
 
     temporary: tempfile.TemporaryDirectory[str]
     compose: Path
@@ -349,25 +349,43 @@ class StackContract(unittest.TestCase):
     def tearDownClass(cls) -> None:
         cls.temporary.cleanup()
 
-    def test_services_and_immutable_images(self) -> None:
+    def test_minimal_shape_services_and_immutable_images(self) -> None:
+        template = (ROOT / "compose.yaml").read_text()
+        self.assertLessEqual(len(template.splitlines()), 60)
+        self.assertNotIn("&", template, "compose.yaml must stay flat with no YAML anchors")
+        self.assertNotIn("entrypoint:", template, "no inline entrypoints in compose.yaml")
+        self.assertNotIn("sh -", template, "no inline shell scripts in compose.yaml")
+        self.assertNotIn("healthcheck:", template, "healthchecks live in the images")
         services = self.config["services"]
-        self.assertEqual(set(services), {"prepare", "db", "migrate", "backend", "frontend"})
+        self.assertEqual(set(services), {"db", "backend", "frontend"})
         expected = {
-            "prepare": "@POSTGRESQL@",
-            "db": "@POSTGRESQL@",
-            "migrate": "@BACKEND@",
-            "backend": "@BACKEND@",
-            "frontend": "@FRONTEND@",
+            "db": ("@POSTGRESQL@", "florabase-db"),
+            "backend": ("@BACKEND@", "florabase-backend"),
+            "frontend": ("@FRONTEND@", "florabase-frontend"),
         }
         for name, service in services.items():
             with self.subTest(name):
+                token, container_name = expected[name]
                 self.assertNotIn("build", service)
-                self.assertEqual(service["image"], IMAGES[expected[name]])
-                self.assertEqual(service["platform"], "linux/amd64")
+                self.assertEqual(service["image"], IMAGES[token])
+                self.assertEqual(service["container_name"], container_name)
+                self.assertEqual(service["restart"], "unless-stopped")
+                self.assertIsNone(
+                    service.get("user"), "no container overrides image USER or runs root"
+                )
 
     def test_private_exposure(self) -> None:
+        networks = self.config.get("networks", {})
+        self.assertEqual(set(networks), {"internal", "app"})
+        self.assertIs(networks["internal"].get("internal"), True)
+        expected_networks = {
+            "db": {"internal"},
+            "backend": {"internal", "app"},
+            "frontend": {"app"},
+        }
         for name, service in self.config["services"].items():
             with self.subTest(name):
+                self.assertEqual(set(service.get("networks", {})), expected_networks[name])
                 if name == "frontend":
                     self.assertEqual(
                         [(p["host_ip"], p["published"], p["target"]) for p in service["ports"]],
@@ -375,9 +393,6 @@ class StackContract(unittest.TestCase):
                     )
                 else:
                     self.assertFalse(service.get("ports"), "only the frontend publishes")
-        self.assertEqual(self.config["services"]["prepare"]["network_mode"], "none")
-        self.assertTrue(self.config["networks"]["internal"]["internal"])
-        self.assertEqual(self.config["services"]["db"]["networks"], {"internal": None})
 
     def test_hostile_bind_variables_cannot_widen_publication(self) -> None:
         """Ambient values a Compose manager might inject keep the loopback-only port."""
@@ -397,25 +412,11 @@ class StackContract(unittest.TestCase):
                     ports = json.loads(result.stdout)["services"]["frontend"]["ports"]
                     self.assertEqual({p["host_ip"] for p in ports}, {"127.0.0.1"})
 
-    def test_hardening(self) -> None:
-        for name, service in self.config["services"].items():
-            with self.subTest(name):
-                self.assertTrue(service["read_only"])
-                self.assertEqual(service["cap_drop"], ["ALL"])
-                self.assertIn("no-new-privileges:true", service["security_opt"])
-                self.assertEqual(
-                    service.get("cap_add", []),
-                    ["CHOWN", "DAC_OVERRIDE", "FOWNER"] if name == "prepare" else [],
-                )
-                self.assertEqual(service.get("user") == "0:0", name == "prepare")
-
     def test_host_folders_are_never_created_and_stay_separate(self) -> None:
         services = self.config["services"]
         targets = {
-            "prepare": {"/data", "/backup"},
             "db": {"/var/lib/postgresql"},
-            "migrate": {"/var/lib/florabase/data", "/var/lib/florabase/backup"},
-            "backend": {"/var/lib/florabase/data"},
+            "backend": {"/var/lib/florabase/data", "/var/lib/florabase/backup"},
             "frontend": set(),
         }
         for name, service in services.items():
@@ -430,72 +431,106 @@ class StackContract(unittest.TestCase):
                     )
         self.assertNotIn("volumes", self.config)
 
-    def test_one_shots_gate_startup_and_only_migrate_migrates(self) -> None:
+    def test_startup_ordering_and_guarded_entrypoints(self) -> None:
         services = self.config["services"]
-        self.assertEqual(
-            services["db"]["depends_on"]["prepare"]["condition"], "service_completed_successfully"
-        )
-        self.assertEqual(services["migrate"]["depends_on"]["db"]["condition"], "service_healthy")
-        backend = services["backend"]["depends_on"]
-        self.assertEqual(backend["migrate"]["condition"], "service_completed_successfully")
-        self.assertEqual(backend["db"]["condition"], "service_healthy")
+        self.assertEqual(services["backend"]["depends_on"]["db"]["condition"], "service_healthy")
         self.assertEqual(
             services["frontend"]["depends_on"]["backend"]["condition"], "service_healthy"
         )
-        self.assertEqual(
-            services["migrate"]["command"],
-            ["python", "-m", "florabase.db.release_schema", "deploy"],
-        )
-        # The backend image's own command is the exact-head guard (release_schema serve).
-        self.assertIsNone(services["backend"].get("command"))
-        self.assertIsNone(services["backend"].get("entrypoint"))
-        for name in ("prepare", "migrate"):
-            self.assertEqual(services[name]["restart"], "no")
-        for name in ("db", "backend", "frontend"):
-            self.assertEqual(services[name]["restart"], "unless-stopped")
+        self.assertEqual(services["backend"]["command"], ["florabase-start"])
+        self.assertIsNone(services["db"].get("command"))
+        self.assertIsNone(services["db"].get("entrypoint"))
+        self.assertIsNone(services["frontend"].get("command"))
 
-    def test_guards_are_in_place(self) -> None:
-        prepare = " ".join(self.config["services"]["prepare"]["command"])
+    def test_guards_live_in_image_scripts_and_dockerfiles(self) -> None:
+        pg_entrypoint = (ROOT / "postgres/florabase-postgres-entrypoint.sh").read_text()
         for required in (
+            "florabase-postgres-refuse-root",
             "installation.env",
             "installation.pending",
             "pg_controldata",
             "Database system identifier",
+            "database folder is missing or empty",
+            "belongs to another PostgreSQL cluster",
+            "use an empty data folder",
+            "docs/installation.md",
+            "FLORABASE_DB_PASSWORD",
+        ):
+            self.assertIn(required, pg_entrypoint)
+        pg_dockerfile = (ROOT / "postgres/Dockerfile").read_text()
+        for required in (
+            "PGDATA=/var/lib/postgresql/postgres/18/docker",
+            "POSTGRES_DB=florabase",
+            "POSTGRES_USER=florabase",
+            "HEALTHCHECK",
+            "USER 70:70",
+            'CMD ["postgres", "-c", "timezone=UTC"]',
+        ):
+            self.assertIn(required, pg_dockerfile)
+
+        backend_start = (ROOT / "backend/florabase-start.sh").read_text()
+        for required in (
+            "florabase.db.release_schema wait-db",
+            "florabase.db.release_schema deploy",
+            "unset FLORABASE_OWNER_LOGIN FLORABASE_OWNER_PASSWORD",
+            "exec python -m florabase.db.release_schema serve",
+        ):
+            self.assertIn(required, backend_start)
+        release_schema = (ROOT / "backend/src/florabase/db/release_schema.py").read_text()
+        for required in (
             "is inside FLORABASE_DATA_DIR",
             "is inside FLORABASE_BACKUP_DIR",
             "must be an absolute path",
-            "use an empty data folder",
+            "the data and backup folders are the same",
+            "upgrade-failed.env",
+            "pg_isready",
         ):
-            self.assertIn(required, prepare)
-        db = " ".join(self.config["services"]["db"]["command"])
-        self.assertIn("installation marker exists but the cluster is missing", db)
-        self.assertIn("exec postgres", db)
+            self.assertIn(required, release_schema)
 
-    def test_owner_variables_are_optional_and_reach_only_migrate(self) -> None:
+    def test_owner_variables_and_timezone_configuration(self) -> None:
         services = self.config["services"]
-        self.assertEqual(services["migrate"]["environment"]["FLORABASE_OWNER_LOGIN"], "")
-        owner = {"FLORABASE_OWNER_LOGIN": "owner", "FLORABASE_OWNER_PASSWORD": "fixture-owner-pw"}
+        self.assertEqual(services["backend"]["environment"]["FLORABASE_OWNER_LOGIN"], "")
+        for name in ("db", "backend", "frontend"):
+            self.assertEqual(services[name]["environment"]["TZ"], "Europe/Rome")
+        owner = {
+            "FLORABASE_OWNER_LOGIN": "owner",
+            "FLORABASE_OWNER_PASSWORD": "fixture-owner-pw",
+            "TZ": "UTC",
+        }
         result = compose_config(self.compose, {**ENV, **owner})
         self.assertEqual(result.returncode, 0, result.stderr)
         configured = json.loads(result.stdout)["services"]
-        self.assertEqual(configured["migrate"]["environment"]["FLORABASE_OWNER_LOGIN"], "owner")
-        for name in ("prepare", "db", "backend", "frontend"):
+        self.assertEqual(configured["backend"]["environment"]["FLORABASE_OWNER_LOGIN"], "owner")
+        for name in ("db", "frontend"):
             self.assertNotIn("FLORABASE_OWNER_PASSWORD", configured[name].get("environment", {}))
+        for name in ("db", "backend", "frontend"):
+            self.assertEqual(configured[name]["environment"]["TZ"], "UTC")
 
-    def test_production_settings(self) -> None:
-        environment = self.config["services"]["backend"]["environment"]
-        self.assertEqual(environment["FLORABASE_ENVIRONMENT"], "production")
-        self.assertEqual(environment["FLORABASE_COOKIE_MODE"], "secure")
-        self.assertEqual(environment["FLORABASE_CORS_ORIGINS"], "[]")
-        self.assertEqual(
-            environment["FLORABASE_ATTACHMENT_STORAGE_ROOT"], "/var/lib/florabase/data/media"
-        )
-        db = self.config["services"]["db"]
-        self.assertNotIn("PGDATA", db["environment"])
-        # Compose keeps the escaped $$ of literal shell variables in its rendered model.
-        self.assertIn('PGDATA="/var/lib/postgresql/postgres/$$PG_MAJOR/docker"', db["command"][0])
-        prepare = self.config["services"]["prepare"]["command"][0]
-        self.assertIn('cluster="/data/postgres/$$major/docker"', prepare)
+    def test_production_constants_live_in_backend_runtime_image(self) -> None:
+        backend_env = self.config["services"]["backend"]["environment"]
+        for constant in (
+            "FLORABASE_ENVIRONMENT",
+            "FLORABASE_DATABASE_URL",
+            "FLORABASE_COOKIE_MODE",
+            "FLORABASE_CORS_ORIGINS",
+            "FLORABASE_ATTACHMENT_STORAGE_ROOT",
+            "PGPASSWORD",
+        ):
+            self.assertNotIn(constant, backend_env)
+        db_env = self.config["services"]["db"]["environment"]
+        for constant in ("POSTGRES_DB", "POSTGRES_USER", "POSTGRES_PASSWORD", "PGDATA"):
+            self.assertNotIn(constant, db_env)
+        backend_dockerfile = (ROOT / "backend/Dockerfile").read_text()
+        for required in (
+            "FLORABASE_ENVIRONMENT=production",
+            "FLORABASE_DATABASE_URL=postgresql+psycopg://florabase@db:5432/florabase",
+            "FLORABASE_COOKIE_MODE=secure",
+            "FLORABASE_CORS_ORIGINS=[]",
+            "FLORABASE_ATTACHMENT_STORAGE_ROOT=/var/lib/florabase/data/media",
+            'ENTRYPOINT ["florabase-backend-entrypoint"]',
+            'CMD ["python", "-m", "florabase.db.release_schema", "serve"]',
+        ):
+            self.assertIn(required, backend_dockerfile)
 
     def test_missing_required_value_fails_closed(self) -> None:
         for key in ENV:

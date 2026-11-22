@@ -3,9 +3,12 @@
 import argparse
 import json
 import os
+import posixpath
 import re
+import stat
 import subprocess
 import sys
+import time
 import uuid
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
@@ -41,13 +44,18 @@ USER_OBJECTS = text("""
 """)
 
 
-# Mount points of the production compose.yaml one-shot `migrate` service (ADR 0008).
+# Mount points of the production compose.yaml backend service (ADR 0008 / ADR 0009).
 UPGRADE_FROM = Path("/app/alembic/release-upgrade-from.json")
-STATE_DIR = Path("/var/lib/florabase/data/state")
-BACKUP_DIR = Path("/var/lib/florabase/backup/pre-upgrade")
+DATA_DIR = Path("/var/lib/florabase/data")
+MEDIA_DIR = DATA_DIR / "media"
+STATE_DIR = DATA_DIR / "state"
+BACKUP_ROOT = Path("/var/lib/florabase/backup")
+BACKUP_DIR = BACKUP_ROOT / "pre-upgrade"
 MARKER_NAME = "installation.env"
-# Written by prepare when it accepts an empty folder; lets a failed first deployment be retried.
+# Written right before initial schema creation so an interrupted first deploy can retry.
 PENDING_NAME = "installation.pending"
+# Written if an upgrade fails after dumping so restart loops never write repeated dumps.
+UPGRADE_FAILED_NAME = "upgrade-failed.env"
 MARKER_KEYS = ("FLORABASE_INSTALLATION_ID", "FLORABASE_PG_MAJOR", "FLORABASE_PG_SYSTEM_ID")
 
 
@@ -142,8 +150,12 @@ def cluster_identity(connection: Connection) -> dict[str, str]:
 
 def read_marker(state_dir: Path) -> dict[str, str] | None:
     path = state_dir / MARKER_NAME
+    if path.is_symlink():
+        raise SchemaError("the installation marker is malformed; nothing was changed")
     if not path.exists():
         return None
+    if not path.is_file():
+        raise SchemaError("the installation marker is malformed; nothing was changed")
     values: dict[str, str] = {}
     for line in path.read_text().splitlines():
         key, separator, value = line.partition("=")
@@ -187,6 +199,126 @@ def write_marker(state_dir: Path, identity: dict[str, str]) -> None:
     sync_directory(state_dir)
 
 
+def _normalize_host_path(value: str, variable: str) -> str:
+    if not value.startswith("/"):
+        raise SchemaError(f"{variable} must be an absolute path")
+    normalized = posixpath.normpath(re.sub(r"/+", "/", value)).rstrip("/")
+    if not normalized.startswith("/") or len(normalized) < 2:
+        raise SchemaError(f"{variable} must be an absolute path")
+    return normalized
+
+
+def validate_host_paths(
+    host_data_dir: str | None,
+    host_backup_dir: str | None,
+    data_dir: Path | None,
+    backup_root: Path | None,
+) -> None:
+    """Refuse relative, identical, or nested data and backup folders before any migration."""
+    if host_data_dir is not None or host_backup_dir is not None:
+        data_host = _normalize_host_path(host_data_dir or "", "FLORABASE_DATA_DIR")
+        backup_host = _normalize_host_path(host_backup_dir or "", "FLORABASE_BACKUP_DIR")
+        if data_host == backup_host:
+            raise SchemaError("the data and backup folders are the same")
+        if f"{data_host}/".startswith(f"{backup_host}/"):
+            raise SchemaError("FLORABASE_DATA_DIR is inside FLORABASE_BACKUP_DIR")
+        if f"{backup_host}/".startswith(f"{data_host}/"):
+            raise SchemaError("FLORABASE_BACKUP_DIR is inside FLORABASE_DATA_DIR")
+    if data_dir is not None and backup_root is not None:
+        try:
+            data_stat = os.stat(data_dir)
+            backup_stat = os.stat(backup_root)
+        except OSError:
+            return
+        if (data_stat.st_dev, data_stat.st_ino) == (backup_stat.st_dev, backup_stat.st_ino):
+            raise SchemaError("the data and backup folders are the same")
+
+
+def _require_writable_dir(path: Path, label: str, *, require_private_owner: bool = False) -> None:
+    if path.is_symlink() or not path.is_dir() or not os.access(path, os.R_OK | os.W_OK | os.X_OK):
+        raise SchemaError(
+            f"{label} {path} is missing or not writable; "
+            "run the folder setup commands in docs/installation.md"
+        )
+    if require_private_owner:
+        info = path.stat()
+        if info.st_uid != os.geteuid() or (stat.S_IMODE(info.st_mode) & 0o077) != 0:
+            raise SchemaError(
+                f"{label} {path} has unsafe owner or mode; "
+                "run the folder setup commands in docs/installation.md"
+            )
+
+
+def check_upgrade_failed(state_dir: Path) -> None:
+    """Refuse restarts after a failed upgrade so no repeated dumps or retries occur."""
+    path = state_dir / UPGRADE_FAILED_NAME
+    if not path.exists() and not path.is_symlink():
+        return
+    values: dict[str, str] = {}
+    if not path.is_symlink() and path.is_file():
+        try:
+            for line in path.read_text().splitlines():
+                key, separator, value = line.partition("=")
+                if separator and key:
+                    values[key] = value
+        except OSError:
+            pass
+    source = values.get("FLORABASE_UPGRADE_FROM", "unknown")
+    target = values.get("FLORABASE_UPGRADE_TO", "unknown")
+    dump_name = values.get("FLORABASE_UPGRADE_DUMP", "unknown")
+    raise SchemaError(
+        f"previous upgrade from {source} to {target} failed (pre-upgrade backup: {dump_name}); "
+        f"resolve the cause and remove state/{UPGRADE_FAILED_NAME} before redeploying"
+    )
+
+
+def write_upgrade_failed(
+    state_dir: Path, previous: str, head: str, dump_name: str, detail: str
+) -> None:
+    payload = (
+        f"FLORABASE_UPGRADE_FROM={previous}\n"
+        f"FLORABASE_UPGRADE_TO={head}\n"
+        f"FLORABASE_UPGRADE_DUMP={dump_name}\n"
+        f"FLORABASE_UPGRADE_ERROR={detail}\n"
+    )
+    temporary = state_dir / f".{UPGRADE_FAILED_NAME}.{uuid.uuid4().hex}.tmp"
+    try:
+        with temporary.open("w") as handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, state_dir / UPGRADE_FAILED_NAME)
+        sync_directory(state_dir)
+    except OSError:
+        temporary.unlink(missing_ok=True)
+        sys.stderr.write(f"schema-guard: warning: could not write state/{UPGRADE_FAILED_NAME}\n")
+
+
+def _error_summary(error: Exception) -> str:
+    sqlstate = getattr(error.orig, "sqlstate", None) if isinstance(error, DBAPIError) else None
+    return f"{type(error).__name__}, SQLSTATE {sqlstate}" if sqlstate else type(error).__name__
+
+
+def wait_for_database(*, timeout_seconds: float = 60.0, interval_seconds: float = 1.0) -> None:
+    """Wait for PostgreSQL to accept connections with a bounded pg_isready retry loop."""
+    url = make_url(get_settings().database_url)
+    probe = [
+        "pg_isready",
+        f"--host={url.host or 'localhost'}",
+        f"--port={url.port or 5432}",
+        f"--username={url.username or ''}",
+        f"--dbname={url.database or ''}",
+    ]
+    deadline = time.monotonic() + timeout_seconds
+    while True:
+        result = subprocess.run(probe, check=False, capture_output=True)
+        if result.returncode == 0:
+            return
+        if time.monotonic() >= deadline:
+            raise SchemaError("database is not ready; check db logs and configuration")
+        time.sleep(min(interval_seconds, max(0.0, deadline - time.monotonic())))
+
+
 def dump_database(backup_dir: Path, name: str) -> Path:
     """Write and verify a custom-format dump; any failure refuses the upgrade."""
     if not backup_dir.is_dir() or not os.access(backup_dir, os.W_OK | os.X_OK):
@@ -195,8 +327,12 @@ def dump_database(backup_dir: Path, name: str) -> Path:
         )
     url = make_url(get_settings().database_url)
     environment = dict(os.environ)
+    environment.pop("FLORABASE_OWNER_LOGIN", None)
+    environment.pop("FLORABASE_OWNER_PASSWORD", None)
     if url.password:
         environment["PGPASSWORD"] = str(url.password)
+    elif not environment.get("PGPASSWORD") and environment.get("FLORABASE_DB_PASSWORD"):
+        environment["PGPASSWORD"] = environment["FLORABASE_DB_PASSWORD"]
     connection = [
         f"--host={url.host or 'localhost'}",
         f"--port={url.port or 5432}",
@@ -232,56 +368,83 @@ def deploy(
     *,
     state_dir: Path = STATE_DIR,
     backup_dir: Path = BACKUP_DIR,
+    media_dir: Path | None = None,
+    data_dir: Path | None = None,
+    backup_root: Path | None = None,
+    host_data_dir: str | None = None,
+    host_backup_dir: str | None = None,
+    strict_backup_permissions: bool = False,
     dump: Dump = dump_database,
 ) -> None:
-    """Initialize, keep, or back up and upgrade the schema; refuse anything else (ADR 0008)."""
+    """Initialize, keep, or back up and upgrade the schema; refuse anything else (ADR 0008/0009)."""
+    validate_host_paths(host_data_dir, host_backup_dir, data_dir, backup_root)
+    _require_writable_dir(state_dir, "state directory")
+    check_upgrade_failed(state_dir)
     marker = read_marker(state_dir)
     pending = (state_dir / PENDING_NAME).exists()
-    if marker is None and not os.access(state_dir, os.W_OK | os.X_OK):
-        raise SchemaError(f"state directory {state_dir} is not writable; nothing was changed")
-    with get_readiness_engine().begin() as connection:
-        connection.execute(text("SET LOCAL statement_timeout = 0"))
-        connection.execute(text("SET LOCAL lock_timeout = '10s'"))
-        connection.execute(text("SELECT pg_advisory_xact_lock(:key)"), {"key": SCHEMA_LOCK})
-        identity = cluster_identity(connection)
-        if marker is not None and {key: marker[key] for key in identity} != identity:
+    if media_dir is not None:
+        _require_writable_dir(media_dir, "media directory")
+        if marker is None and not pending and any(media_dir.iterdir()):
             raise SchemaError(
-                "the installation marker does not match this PostgreSQL cluster; "
-                "nothing was changed"
+                f"{media_dir} is not empty and there is no installation marker; "
+                "use an empty data folder"
             )
-        current = current_heads(connection)
-        empty = not current and not connection.scalar(USER_OBJECTS)
-        if marker is not None and empty:
-            raise SchemaError(
-                "the installation marker exists but the database is empty; restore it instead "
-                "of initializing a new one"
+    _require_writable_dir(
+        backup_dir, "backup directory", require_private_owner=strict_backup_permissions
+    )
+    upgrading_dump: str | None = None
+    try:
+        with get_readiness_engine().begin() as connection:
+            connection.execute(text("SET LOCAL statement_timeout = 0"))
+            connection.execute(text("SET LOCAL lock_timeout = '10s'"))
+            connection.execute(text("SELECT pg_advisory_xact_lock(:key)"), {"key": SCHEMA_LOCK})
+            identity = cluster_identity(connection)
+            if marker is not None and {key: marker[key] for key in identity} != identity:
+                raise SchemaError(
+                    "the installation marker does not match this PostgreSQL cluster; "
+                    "nothing was changed"
+                )
+            current = current_heads(connection)
+            empty = not current and not connection.scalar(USER_OBJECTS)
+            if marker is not None and empty:
+                raise SchemaError(
+                    "the installation marker exists but the database is empty; restore it instead "
+                    "of initializing a new one"
+                )
+            if marker is None and not empty and not (pending and current == (head,)):
+                raise SchemaError(
+                    "the database has data but no installation marker; restore into a new data "
+                    "directory instead"
+                )
+            history = {revision.revision for revision in scripts.walk_revisions()}
+            upgrade = (
+                previous is not None
+                and previous != head
+                and previous in history
+                and current == (previous,)
             )
-        if marker is None and not empty and not (pending and current == (head,)):
-            raise SchemaError(
-                "the database has data but no installation marker; restore into a new data "
-                "directory instead"
-            )
-        history = {revision.revision for revision in scripts.walk_revisions()}
-        upgrade = (
-            previous is not None
-            and previous != head
-            and previous in history
-            and current == (previous,)
-        )
-        if not empty and current != (head,) and not upgrade:
-            raise SchemaError(
-                f"database revision {current or 'unknown'} is neither image head {head} nor the "
-                f"previous release head {previous}; nothing was changed"
-            )
-        if upgrade:
-            stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-            path = dump(backup_dir, f"florabase-{previous}-to-{head}-{stamp}.dump")
-            sys.stdout.write(f"schema-guard: pre-upgrade backup verified: {path.name}\n")
-        if empty or upgrade:
-            config.attributes["connection"] = connection
-            command.upgrade(config, head)
-            if current_heads(connection) != (head,):
-                raise SchemaError(f"migration did not reach image head {head}")
+            if not empty and current != (head,) and not upgrade:
+                raise SchemaError(
+                    f"database revision {current or 'unknown'} is neither image head {head} "
+                    f"nor the previous release head {previous}; nothing was changed"
+                )
+            if upgrade:
+                stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+                dump_path = dump(backup_dir, f"florabase-{previous}-to-{head}-{stamp}.dump")
+                sys.stdout.write(f"schema-guard: pre-upgrade backup verified: {dump_path.name}\n")
+                upgrading_dump = dump_path.name
+            if empty and marker is None and not pending:
+                (state_dir / PENDING_NAME).touch(exist_ok=True)
+                sync_directory(state_dir)
+            if empty or upgrade:
+                config.attributes["connection"] = connection
+                command.upgrade(config, head)
+                if current_heads(connection) != (head,):
+                    raise SchemaError(f"migration did not reach image head {head}")
+    except Exception as error:
+        if upgrading_dump is not None and previous is not None:
+            write_upgrade_failed(state_dir, previous, head, upgrading_dump, _error_summary(error))
+        raise
     if marker is None:
         write_marker(state_dir, identity)
         (state_dir / PENDING_NAME).unlink(missing_ok=True)
@@ -311,18 +474,33 @@ def main() -> int:
     actions = parser.add_subparsers(dest="action", required=True)
     actions.add_parser("serve")
     actions.add_parser("deploy")
+    actions.add_parser("wait-db")
     actions.add_parser("init")
     upgrade = actions.add_parser("upgrade")
     upgrade.add_argument("previous_head")
     args = parser.parse_args()
     try:
+        if args.action == "wait-db":
+            wait_for_database()
+            return 0
         config, scripts, head = image_schema()
         if args.action == "serve":
             with get_readiness_engine().connect() as connection:
                 require_image_head(connection, head)
         elif args.action == "deploy":
             owner = owner_from_environment(os.environ)
-            deploy(config, scripts, head, previous_release_head())
+            deploy(
+                config,
+                scripts,
+                head,
+                previous_release_head(),
+                media_dir=MEDIA_DIR,
+                data_dir=DATA_DIR,
+                backup_root=BACKUP_ROOT,
+                host_data_dir=os.environ.get("FLORABASE_DATA_DIR"),
+                host_backup_dir=os.environ.get("FLORABASE_BACKUP_DIR"),
+                strict_backup_permissions=True,
+            )
             create_first_owner(owner)
         else:
             previous = args.previous_head if args.action == "upgrade" else None

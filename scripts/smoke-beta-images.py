@@ -41,10 +41,12 @@ def check_postgres_image(reference: str, pg: dict[str, Any]) -> None:
     if (
         config.get("User") != "70:70"
         or config.get("Entrypoint") != [POSTGRES_ENTRYPOINT]
+        or config.get("Cmd") != ["postgres", "-c", "timezone=UTC"]
+        or not config.get("Healthcheck")
         or labels.get("org.opencontainers.image.base.digest") != pg["upstream"]["index_digest"]
         or labels.get("org.opencontainers.image.version") != pg["version"]
     ):
-        raise ValueError("PostgreSQL image identity, user or entrypoint mismatch")
+        raise ValueError("PostgreSQL image identity, user, healthcheck or entrypoint mismatch")
     probe = ["docker", "run", "--rm", "--network", "none"]
     files = run(
         *probe,
@@ -146,7 +148,12 @@ def smoke(
                     "POSTGRES_USER": "image_smoke",
                     "POSTGRES_PASSWORD": db_password,
                 },
-                "tmpfs": ["/var/lib/postgresql:rw"],
+                "tmpfs": [
+                    "/var/lib/postgresql:rw,mode=0755",
+                    "/var/lib/postgresql/postgres:rw,uid=70,gid=70,mode=0700",
+                    "/var/lib/postgresql/media:rw,uid=10001,gid=10001,mode=0700",
+                    "/var/lib/postgresql/state:rw,uid=10001,gid=10001,mode=0755",
+                ],
                 "healthcheck": {
                     "test": ["CMD-SHELL", "pg_isready -U image_smoke -d image_smoke"],
                     "interval": "1s",
