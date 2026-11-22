@@ -29,6 +29,10 @@ REUSABLE_STAGES = frozenset({"quality", "integration"})
 
 def validate_plan(plan: dict[str, Any]) -> str:
     tier = plan_tier(plan)
+    if type(plan.get("golden_dataset")) is not bool:
+        raise ValueError("invalid golden_dataset decision")
+    if tier == "docs" and plan["golden_dataset"]:
+        raise ValueError("invalid docs-tier verification plan")
     if plan["migration"] not in {"skip", "affected-cycle", "full-cycle"} or (
         tier == "full" and plan["migration"] != "full-cycle"
     ):
@@ -48,6 +52,7 @@ def validate_plan(plan: dict[str, Any]) -> str:
         or plan["builds"] != ["frontend"]
         or bool(plan["workflow"])
         or plan["migration"] != "skip"
+        or plan["golden_dataset"]
         or any(stage not in plan["static"] for stage in STATIC)
     ):
         raise ValueError("invalid product-frontend-tier verification plan")
@@ -156,6 +161,8 @@ def checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
             if plan["mode"] in {"product", "full"}
             else ["./scripts/test-integration.sh", *plan["integration"]],
         )
+    if plan["golden_dataset"]:
+        add("golden-dataset", ["make", "golden-dataset-check"])
     return checks
 
 

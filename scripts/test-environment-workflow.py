@@ -1420,7 +1420,9 @@ class ComposeStackTests(unittest.TestCase):
             (root / "scripts/compose_stacks.py").write_text(
                 (ROOT / "scripts/compose_stacks.py")
                 .read_text()
-                .replace('VITEST_MAX_WORKERS: "1"', 'VITEST_MAX_WORKERS: "2"')
+                .replace(
+                    'VITEST_MAX_WORKERS: "${VITEST_MAX_WORKERS:-3}"', 'VITEST_MAX_WORKERS: "2"'
+                )
             )
             # Another tree's own definitions pair with its compose.dev.yaml.
             quality = compose_stacks.files(root, "quality", state)[1].read_text()

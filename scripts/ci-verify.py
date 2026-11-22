@@ -69,7 +69,7 @@ def ci_plan() -> dict[str, Any]:
             raise ValueError("cannot prove exact batch PR parents") from error
         print(f"Remote impact: FULL fallback ({error})", flush=True)
         # No selection is possible here; avoid hashing the entire tree just to run everything.
-        return plan_paths([], sha, force_full=True)
+        return plan_paths([], sha, force_full=True, force_golden=True)
     if batch_branch:
         from feature_batch import validate_platform_tree
         from workflow_environment import Repository
@@ -101,14 +101,19 @@ def ci_checks_for(plan: dict[str, Any], job: str) -> list[dict[str, Any]]:
                 checks.append({"id": "frontend", "command": frontend_test_command(plan)})
             return checks
         if job == "integration":
+            integration_checks: list[dict[str, Any]] = []
             if plan["integration"]:
-                return [
+                integration_checks.append(
                     {
                         "id": "integration",
                         "command": ["./scripts/test-integration.sh", *plan["integration"]],
                     }
-                ]
-            return docs_checks_for(plan)
+                )
+            if plan["golden_dataset"]:
+                integration_checks.append(
+                    {"id": "golden-dataset", "command": ["make", "golden-dataset-check"]}
+                )
+            return integration_checks or docs_checks_for(plan)
         if plan["builds"]:
             return [
                 {
@@ -126,7 +131,12 @@ def ci_checks_for(plan: dict[str, Any], job: str) -> list[dict[str, Any]]:
             {"id": "quality", "command": ["make", "check"]},
         ]
     if job == "integration":
-        return [{"id": "integration", "command": ["make", "test-integration"]}]
+        integration_checks = [{"id": "integration", "command": ["make", "test-integration"]}]
+        if plan["golden_dataset"]:
+            integration_checks.append(
+                {"id": "golden-dataset", "command": ["make", "golden-dataset-check"]}
+            )
+        return integration_checks
     return [
         {
             "id": "production-builds",

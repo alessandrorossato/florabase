@@ -20,7 +20,9 @@ automatic resource cleanup, preserving exact-run manual recovery. It never adopt
 because it uses an owned network. Ordinary success, foreign-user refusal and repeated cleanup remain
 covered. This coordinates the release smoke's Compose calls; it is not a Docker-wide process killer.
 
-Real probe `scripts/test-beta-lifecycle.py`: timed SIGTERM during a real Compose run; its owned
+Real probe `scripts/test-beta-lifecycle.py` (manual real-Docker probe via `make smoke-beta-lifecycle`;
+linted and type-checked by `make workflow-check`, never run automatically in CI or the canonical gate):
+timed SIGTERM during a real Compose run; its owned
 wrapper deliberately creates another exactly labelled container during shutdown. The final run
 `florabase-workflow-smoke-2678fd1e30cf` removed **2 containers, 1 network, 1 media volume**, verified
 zero residuals, passed repeated cleanup, and compared equal before/after foreign container inventories.

@@ -191,8 +191,8 @@ services:
     networks: !reset []
     ports: !reset []
     environment:
-      # Keep the full jsdom suite stable on small linked-worktree hosts.
-      VITEST_MAX_WORKERS: "1"
+      # Bound Vitest worker count for stability on small hosts; overridable via VITEST_MAX_WORKERS.
+      VITEST_MAX_WORKERS: "${VITEST_MAX_WORKERS:-3}"
       FLORABASE_QUALITY_OFFLINE: "1"
     build:
       labels:

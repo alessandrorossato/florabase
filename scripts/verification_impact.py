@@ -214,6 +214,7 @@ def load_map() -> dict[str, Any]:
             raise ValueError(f"legacy impact map key is not supported: {legacy_key}")
     prefix_requirements: tuple[tuple[str, str | None], ...] = (
         ("full_prefixes", None),
+        ("golden_prefixes", None),
         ("product_backend_prefixes", "backend/"),
         ("product_frontend_prefixes", "frontend/"),
     )
@@ -355,6 +356,7 @@ def plan_paths(
     base: str,
     *,
     force_full: bool = False,
+    force_golden: bool = False,
     non_static_paths: frozenset[str] = frozenset(),
 ) -> dict[str, Any]:
     data = load_map()
@@ -369,8 +371,12 @@ def plan_paths(
     generated = False
     product_backend = False
     product_frontend = False
+    golden_matched = False
+    unclassified = False
     docs_only = True
     for path in sorted(set(paths)):
+        if any(path.startswith(prefix) for prefix in data["golden_prefixes"]):
+            golden_matched = True
         if any(path.startswith(prefix) for prefix in data["full_prefixes"]) or path in full_tests:
             reasons.append(f"high-risk path: {path}")
             docs_only = False
@@ -406,6 +412,7 @@ def plan_paths(
                 and Path(path).suffix.lower() not in data["documentation_suffixes"]
             ):
                 reasons.append(f"executable or unclassified documentation path: {path}")
+                unclassified = True
                 docs_only = False
             else:
                 direct.add("documentation")
@@ -419,11 +426,13 @@ def plan_paths(
         matches.extend(test_scopes_for(path, data))
         if not matches:
             reasons.append(f"unclassified path: {path}")
+            unclassified = True
         for scope, rule_layer in matches:
             direct.add(scope)
             layers.add(rule_layer)
     if generated and not product_backend and not direct.difference({"documentation"}):
         reasons.append("generated contract without classified owning production scope")
+        unclassified = True
     if force_full:
         reasons.append("operator requested full verification")
     affected = direct.difference({"documentation"})
@@ -526,6 +535,7 @@ def plan_paths(
         else "affected-cycle"
         if any(p.startswith("backend/alembic/") for p in paths)
         else "skip",
+        "golden_dataset": golden_matched or unclassified or force_golden,
         "builds": ["backend", "frontend"]
         if full or product_wide or layers == {"backend", "frontend"}
         else ["backend"]
@@ -575,9 +585,10 @@ def describe(plan: dict[str, Any]) -> str:
         lines.append(f"{key.title()}: {summary}")
     lines += [
         f"Migration: {plan['migration']}",
+        f"Golden dataset: {'required' if plan['golden_dataset'] else 'skipped'}",
         "Remote PR CI: docs skips product suites/builds/rehearse; affected and product-frontend "
         "run selected suites and builds; product, full and main run complete suites and both "
-        "builds",
+        "builds (main push also runs golden-dataset)",
     ]
     return "\n".join(lines)
 
