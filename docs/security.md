@@ -61,15 +61,25 @@ requires tests and release-note review.
 ## Local owner bootstrap
 
 The release `compose.yaml` creates the first owner once from `FLORABASE_OWNER_LOGIN` and
-`FLORABASE_OWNER_PASSWORD` ([ADR 0008](decisions/0008-self-initializing-single-compose.md)). Its
-`migrate` service validates both before any change, refuses one without the other or a password
-outside the policy, creates the owner only while no user exists under the same advisory lock as
-the command below, and never logs, echoes or stores the password outside its hash. A database with
-users, including a restored one, never gets a new owner; the variables are then ignored with a log
-notice. Accepted risk: the initial password stays visible in the Compose manager's stack
-environment, `docker inspect` and manager exports until the operator removes it. Mitigations are
-one-time use, the log notice and the documented password change at first sign-in
-([installation](installation.md#4-sign-in-as-the-owner)).
+`FLORABASE_OWNER_PASSWORD` ([ADR 0008](decisions/0008-self-initializing-single-compose.md),
+[ADR 0009](decisions/0009-minimal-production-compose.md)). The backend container's guarded
+`florabase-start` entrypoint runs `release_schema deploy` before starting `uvicorn`: it validates
+both variables before any change, refuses one without the other or a password outside the policy,
+creates the owner only while no user exists under the same advisory lock as the command below, and
+never logs, echoes or stores the password outside its hash. Before `exec`ing `release_schema serve`
+(`uvicorn`), `florabase-start` unsets both variables from the server process environment. A
+database with users, including a restored one, never gets a new owner; the variables are then
+ignored with a log notice.
+
+Accepted trade-offs of the minimal three-service `compose.yaml` (ADR 0009):
+
+- The initial owner password stays visible in the Compose manager's stack environment, `docker
+  inspect florabase-backend`, and manager exports until the operator removes it. Mitigations:
+  one-time use, process-environment scrubbing before `uvicorn` starts, the log notice and the
+  documented password change at first sign-in ([installation](installation.md#4-sign-in-as-the-owner)).
+- `florabase-backend` mounts `FLORABASE_BACKUP_DIR` read-write so `florabase-start` can write
+  verified pre-upgrade dumps without a separate `migrate` container; keep encrypted off-host copies
+  of paired backups.
 
 Without those variables, and for source builds, create the first owner offline after applying
 migrations, from an interactive terminal:
@@ -84,6 +94,48 @@ environment variable, Compose file, or image layer. The login name is normalized
 ASCII and must contain 3–64 letters, digits, dots, underscores, or hyphens. Passwords must contain
 12–1024 characters. Bootstrap takes a PostgreSQL transaction-scoped advisory lock and refuses to
 run once any user exists, including during concurrent attempts.
+
+## Optional container hardening
+
+Every image in the production `compose.yaml` runs as a dedicated non-root user (`db` `70:70`,
+`backend` `10001:10001`, `frontend` `101:101`), strips setuid/setgid binaries (backend/frontend) or
+removes `gosu` and refuses root with exit 64 (`florabase-postgres`), isolates `db` on an
+`internal: true` network shared only with `backend` (separate from the `app` network shared by
+`backend` and `frontend`, so `frontend` cannot reach PostgreSQL), and publishes only `frontend` on
+`127.0.0.1`.
+
+To keep `compose.yaml` flat and readable for self-hosting managers (ADR 0009), container-level
+hardening flags are omitted from the default file. What defense-in-depth is absent by default:
+
+- **Writable container overlay layer:** without `read_only: true`, a compromised runtime process
+  can write inside its container overlay (root-owned `/app`, `/usr` and `/etc` remain non-writable
+  to non-root UIDs).
+- **Default Docker capability bounding set and `no-new-privileges`:** without `cap_drop: [ALL]` and
+  `security_opt: ["no-new-privileges:true"]`, containers retain Docker's default capability
+  bounding set (non-root processes still hold an empty effective/permitted capability set, and
+  setuid/setgid bits are stripped from the images).
+
+Operators who want those controls can layer a local override file alongside the attested
+`compose.yaml` (`docker compose -f compose.yaml -f compose.hardened.yaml up -d --wait`):
+
+```yaml
+services:
+  db:
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: ["/tmp", "/var/run/postgresql"]
+  backend:
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: ["/tmp"]
+  frontend:
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: ["/tmp"]
+```
 
 ## Owner credential management
 

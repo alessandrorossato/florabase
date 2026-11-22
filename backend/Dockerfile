@@ -31,7 +31,12 @@ FROM python:3.14-alpine@sha256:eb2c62658b8d51bff0acc408504b76521d02030de56a8a3c1
 
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    FLORABASE_ENVIRONMENT=production \
+    FLORABASE_DATABASE_URL=postgresql+psycopg://florabase@db:5432/florabase \
+    FLORABASE_COOKIE_MODE=secure \
+    FLORABASE_CORS_ORIGINS=[] \
+    FLORABASE_ATTACHMENT_STORAGE_ROOT=/var/lib/florabase/data/media
 
 # zlib fix the pinned base predates (CVE-2026-4738, reported by Grype; Trivy does not flag it).
 # The exact version fails the build once Alpine supersedes it; drop it when the base carries it.
@@ -48,6 +53,8 @@ RUN /opt/venv/bin/python -m pip uninstall --yes pip \
 COPY alembic.ini ./
 COPY alembic ./alembic
 COPY scripts/attachment_artifacts.py ./scripts/attachment_artifacts.py
+COPY --chmod=0755 florabase-backend-entrypoint.sh /usr/local/bin/florabase-backend-entrypoint
+COPY --chmod=0755 florabase-start.sh /usr/local/bin/florabase-start
 
 COPY LICENSE /usr/share/licenses/florabase/LICENSE
 ARG VERSION=0.1.0-beta.7
@@ -63,6 +70,7 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=6 \
 RUN find /usr /bin /sbin -xdev -type f -perm /6000 -exec chmod a-s {} +
 USER florabase
 EXPOSE 8000
+ENTRYPOINT ["florabase-backend-entrypoint"]
 CMD ["python", "-m", "florabase.db.release_schema", "serve"]
 
 FROM development-builder AS development

@@ -1,3 +1,43 @@
+## 2026-11-22 — INSTALL-002 minimal three-service production `compose.yaml` (ADR 0009)
+
+- On `feat/install-002-minimal-compose` from `c5f9cdf` (writer `neon`).
+- Adopted [ADR 0009](decisions/0009-minimal-production-compose.md) amending
+  [ADR 0008](decisions/0008-self-initializing-single-compose.md), shrinking production
+  `compose.yaml` from 188 lines to 49 lines with three non-root services (`db`, `backend`,
+  `frontend`), fixed `container_name` (`florabase-db`, `florabase-backend`, `florabase-frontend`),
+  `internal: true` (`db`/`backend`) and `app` (`backend`/`frontend`) network isolation, no YAML
+  anchors, no inline shell scripts, no root containers, `create_host_path: false` on every bind
+  mount, literal `127.0.0.1` frontend-only publication, single `FLORABASE_DB_PASSWORD`, and
+  `TZ=${TZ:-Europe/Rome}` (logs only).
+- Built and verified reproducible `florabase-postgres:18.6-alpine-florabase.4`
+  (`index_digest` `sha256:93797c3941d06b3a8d591851df04605b5287ace2a11bb32421589ddff1a1782c`,
+  `platform_digest` `sha256:7213d5bb35a00e1f80ca60193ad81a07c946e328ad4128a57e53e50fb47bb8b9`),
+  adding `PGDATA`, `POSTGRES_DB`, `POSTGRES_USER`, image `HEALTHCHECK`, `-c timezone=UTC`,
+  `FLORABASE_DB_PASSWORD` mapping, and pre-start ownership/mode/empty-folder/marker/`pg_controldata`
+  guards with 70-owned `postgres/installation.pending` while preserving `gosu` removal, `USER 70:70`
+  and exit 64 root refusal.
+- Moved backend constant production `ENV` values into `backend/Dockerfile` (`runtime`), added
+  `florabase-backend-entrypoint` (`PGPASSWORD` derivation) and `florabase-start` (`wait-db` →
+  `release_schema deploy` → owner-env scrub → `exec release_schema serve`), pinned SQLAlchemy,
+  Alembic and password-reset sessions to `-c timezone=UTC`, added host-path/non-nesting/same-folder
+  and private `backup/pre-upgrade` permission guards, and added atomic `state/upgrade-failed.env`
+  latching so restart loops never write repeated dumps.
+- Registered `INSTALL-002` (`implemented`, `release-work`) in `docs/features.json` and
+  `docs/release/scope-v1.json`; updated `scripts/beta_release.py` (`COMPOSE_SLOTS`),
+  `scripts/test-beta-runtime.py`, `scripts/test-beta-images.py`, `scripts/smoke-beta-images.py`,
+  `scripts/smoke-portable-compose.py` (ownership refusals, failed-upgrade single-dump latch, UTC
+  check with `TZ=Europe/Rome`, beta.7 `0701`-folder upgrade, isolated restore via untracked
+  `container_name` override), `docs/installation.md`, `docs/deployment.md`, `docs/security.md`
+  (accepted trade-offs + optional hardened override), `docs/security/beta-distribution-001/postgresql-image.md`,
+  `README.md`, `CHANGELOG.md`, and `AGENTS.md`.
+- Checks: `beta_release.py postgres-identity --check` (`POSTGRES_IDENTITY_REPRODUCED`),
+  `make test-beta-runtime` (17 OK), `make test-beta-images` (80 + 4 OK), `make smoke-beta-images`
+  (`LOCAL_BETA_CANDIDATE_PASSED`), live `smoke-portable-compose.py` (all 3 stacks green with zero
+  residual resources), `make workflow-check`, `pytest tests/test_release_schema.py
+  tests/test_infrastructure.py` (68 OK), `check-features.py` (171 valid), `check-doc-links.py`
+  (352 docs), independent infrastructure QA (all P0–P3 findings resolved), and canonical FULL
+  `make feature-verify AGENT_ID=neon` plus `make release-preflight-local`.
+
 ## 2026-11-22 — ENG-05 closed on branch (a)
 
 - Documentation only, on `claude/project-thread-7djkvu` from `1126c03`. The operator chose

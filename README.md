@@ -72,11 +72,12 @@ Repository development requires Docker Engine with Docker Compose **2.24.4 or ne
 Python 3 and `curl`. The development overlay uses Compose's `!override` tag. Host Node.js is optional.
 [Docker Compose merge rules](https://docs.docker.com/reference/compose-file/merge/)
 
-For self-hosting, [install Florabase](docs/installation.md) with the release's single
-`compose.yaml` on linux/amd64: create an empty data folder and a backup folder, then deploy the
-file as-is in a Compose manager such as Dockhand or with `docker compose up -d`. It initializes a
-new installation, backs up before every upgrade, and supports the Compose 2.20 baseline. It
-requires an HTTPS reverse proxy (or Tailscale Serve) and the exact public HTTPS origin.
+For self-hosting, [install Florabase](docs/installation.md) with the release's minimal three-service
+`compose.yaml` on linux/amd64: create the data and backup folders with their owners once, then
+deploy the file as-is in a Compose manager such as Dockhand or with `docker compose up -d`. No
+container runs as root; it initializes a new installation, backs up before every upgrade, and
+supports the Compose 2.20 baseline. It requires an HTTPS reverse proxy (or Tailscale Serve) and
+the exact public HTTPS origin.
 
 [Building from a source checkout](docs/deployment.md) is for development only.
 

@@ -131,7 +131,7 @@ def test_readiness_engine_is_unpooled_and_time_bounded() -> None:
     keywords = create.call_args.kwargs
     assert keywords["poolclass"] is NullPool
     assert keywords["connect_args"]["connect_timeout"] == READINESS_CONNECT_TIMEOUT_SECONDS
-    assert keywords["connect_args"]["options"] == "-c statement_timeout=2000"
+    assert keywords["connect_args"]["options"] == "-c statement_timeout=2000 -c timezone=UTC"
     # Docker health checks give the probe 5 to 10 seconds.
     assert READINESS_CONNECT_TIMEOUT_SECONDS < 5
 

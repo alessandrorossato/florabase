@@ -1,5 +1,31 @@
 # Florabase PostgreSQL image (`florabase-postgres`)
 
+## `18.6-alpine-florabase.4` (2026-11-22, INSTALL-002 / ADR 0009)
+
+`18.6-alpine-florabase.4` keeps the exact same upstream `postgres:18.6-alpine` base digest, Alpine
+security package pins (`zlib=1.4-r0`, `krb5-libs=1.22.3-r0`, `libxslt=1.1.43-r4`,
+`libxml2=2.13.9-r3`), `gosu` removal, `USER 70:70`, and exit 64 root refusal through every entry
+point, while moving the production database defaults and pre-start data-directory guard inside the
+image so `compose.yaml` carries no inline shell scripts or root `prepare` container:
+
+- Image `ENV`: `PGDATA=/var/lib/postgresql/postgres/18/docker`, `POSTGRES_DB=florabase`,
+  `POSTGRES_USER=florabase`.
+- Image `HEALTHCHECK`: `pg_isready -h 127.0.0.1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"`.
+- Image `CMD`: `["postgres", "-c", "timezone=UTC"]` (pins SQL/session timezone to `UTC` even when
+  `TZ` is set for local log timestamps).
+- `florabase-postgres-entrypoint`: refuses root (`exit 64`), maps `FLORABASE_DB_PASSWORD` →
+  `POSTGRES_PASSWORD`, validates required subfolder owners/modes (`postgres` `70:70` `0700`,
+  `media` `10001:10001` `0700`, `state` `10001:10001` `0755`), enforces the empty-folder /
+  `postgres/installation.pending` retry rule, and validates `state/installation.env` (PG major,
+  cluster existence and `pg_controldata` system identifier) before PostgreSQL starts.
+- Reproducible identity (`beta_release.py postgres-identity --check`, two fresh `--no-cache`
+  `moby/buildkit:v0.34.2` builds):
+  - index digest: `sha256:93797c3941d06b3a8d591851df04605b5287ace2a11bb32421589ddff1a1782c`
+  - platform digest: `sha256:7213d5bb35a00e1f80ca60193ad81a07c946e328ad4128a57e53e50fb47bb8b9`
+- Cluster data compatibility: identical PostgreSQL 18.6 binary and `postgres/18/docker` layout;
+  `v0.1.0-beta.7` clusters open unchanged. Existing installations still treat the digest switch as
+  PostgreSQL maintenance with a paired backup before upgrading.
+
 ## November 2026 security rebuild
 
 `18.6-alpine-florabase.3` (20 November) adds `libxml2=2.13.9-r3` for HIGH CVE-2026-86144 and

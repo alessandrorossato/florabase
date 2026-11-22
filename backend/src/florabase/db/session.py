@@ -1,8 +1,11 @@
+import os
 import time
 from collections.abc import Iterator
 from functools import lru_cache
+from typing import Any
 
 from sqlalchemy import Engine, create_engine, text
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import NullPool
 
@@ -18,20 +21,43 @@ READINESS_SUCCESS_CACHE_SECONDS = 1.0
 _readiness_ok_until = 0.0
 
 
+def database_connect_args(url: str, *, options: str = "") -> dict[str, Any]:
+    """Pin PostgreSQL sessions to UTC and fall back to FLORABASE_DB_PASSWORD when needed."""
+    session_options = "-c timezone=UTC" if not options else f"{options} -c timezone=UTC"
+    args: dict[str, Any] = {"options": session_options}
+    parsed = make_url(url)
+    if (
+        parsed.password is None
+        and not os.environ.get("PGPASSWORD")
+        and (password := os.environ.get("FLORABASE_DB_PASSWORD"))
+    ):
+        args["password"] = password
+    return args
+
+
 @lru_cache
 def get_engine() -> Engine:
-    return create_engine(get_settings().database_url, pool_pre_ping=True, hide_parameters=True)
+    url = get_settings().database_url
+    return create_engine(
+        url,
+        pool_pre_ping=True,
+        hide_parameters=True,
+        connect_args=database_connect_args(url),
+    )
 
 
 @lru_cache
 def get_readiness_engine() -> Engine:
     """Unpooled, time-bounded engine: a probe never waits on a stale pooled connection."""
+    url = get_settings().database_url
     return create_engine(
-        get_settings().database_url,
+        url,
         poolclass=NullPool,
         connect_args={
             "connect_timeout": READINESS_CONNECT_TIMEOUT_SECONDS,
-            "options": f"-c statement_timeout={READINESS_STATEMENT_TIMEOUT_MILLISECONDS}",
+            **database_connect_args(
+                url, options=f"-c statement_timeout={READINESS_STATEMENT_TIMEOUT_MILLISECONDS}"
+            ),
         },
     )
 

@@ -149,31 +149,67 @@ class PortableSmokeEvidence(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.smoke = load_tool("smoke-portable-compose")
 
-    def config(self, images: dict[str, str], command: list[str] | None = None) -> bytes:
-        services: dict[str, Any] = {name: {"image": ref} for name, ref in images.items()}
-        if command is not None:
-            services["backend"]["command"] = command
-        return json.dumps({"services": services}).encode()
+    def config(
+        self,
+        images: dict[str, str],
+        *,
+        names: dict[str, str] | None = None,
+        users: dict[str, str] | None = None,
+        networks: dict[str, Any] | None = None,
+        service_networks: dict[str, dict[str, Any]] | None = None,
+    ) -> bytes:
+        container_names = names if names is not None else self.smoke.CONTAINER_NAMES
+        default_service_networks: dict[str, dict[str, Any]] = {
+            "db": {"internal": None},
+            "backend": {"internal": None, "app": None},
+            "frontend": {"app": None},
+        }
+        if service_networks:
+            default_service_networks.update(service_networks)
+        services: dict[str, Any] = {
+            name: {
+                "image": ref,
+                "container_name": container_names.get(name),
+                "networks": default_service_networks.get(name, {}),
+            }
+            for name, ref in images.items()
+        }
+        for name, user in (users or {}).items():
+            services[name]["user"] = user
+        top_networks = (
+            networks if networks is not None else {"internal": {"internal": True}, "app": {}}
+        )
+        return json.dumps({"services": services, "networks": top_networks}).encode()
 
     def stack(self, directory: Path) -> Any:
         return self.smoke.Stack(directory / "source", directory / "c.yaml", "fixture", "helper")
 
-    def test_service_evidence_requires_the_five_images_and_no_migrating_server(self) -> None:
+    def test_service_evidence_requires_the_three_images_names_and_non_root_services(self) -> None:
         images = {
-            "prepare": "postgres-fixture",
             "db": "postgres-fixture",
-            "migrate": "backend-fixture",
             "backend": "backend-fixture",
             "frontend": "frontend-fixture",
         }
         with tempfile.TemporaryDirectory() as temporary:
             stack = self.stack(Path(temporary))
             for config, message in (
-                (self.config({"db": "postgres-fixture"}), "expected prepare, db, migrate"),
+                (self.config({"db": "postgres-fixture"}), "expected db, backend, frontend"),
+                (
+                    self.config(images, networks={"internal": {"internal": False}, "app": {}}),
+                    "expected internal: true and app networks",
+                ),
                 (self.config({**images, "frontend": "other"}), "incorrect frontend image"),
-                (self.config({**images, "migrate": "other"}), "incorrect migrate image"),
-                (self.config(images, ["python", "-m", "x", "deploy"]), "backend migrates"),
-                (self.config(images, ["alembic", "upgrade", "head"]), "backend migrates"),
+                (
+                    self.config(images, names={**self.smoke.CONTAINER_NAMES, "db": "other"}),
+                    "incorrect db image",
+                ),
+                (self.config(images, users={"backend": "0:0"}), "incorrect backend image"),
+                (
+                    self.config(
+                        images, service_networks={"frontend": {"app": None, "internal": None}}
+                    ),
+                    "incorrect frontend image",
+                ),
             ):
                 with (
                     self.subTest(message=message),
@@ -199,12 +235,12 @@ class PortableSmokeEvidence(unittest.TestCase):
                     patch.object(stack, "compose", return_value=logs),
                     self.assertRaisesRegex(RuntimeError, message),
                 ):
-                    stack.refuse("prepare", "marker", "probe")
+                    stack.refuse("db", "marker", "probe")
             with (
                 patch.object(self.smoke, "run", return_value=subprocess.CompletedProcess([], 1)),
                 patch.object(stack, "compose", return_value=b"REFUSED: marker") as compose,
             ):
-                stack.refuse("prepare", "marker", "probe")
+                stack.refuse("db", "marker", "probe")
             compose.assert_called_with("stop")
 
     def test_secret_evidence_covers_every_service_log(self) -> None:
@@ -673,13 +709,11 @@ class ReleaseTests(unittest.TestCase):
                     re.findall(r'^    image: "(.*)"$', compose, re.M),
                     [
                         refs["postgresql"],
-                        refs["postgresql"],
-                        refs["backend"],
                         refs["backend"],
                         refs["frontend"],
                     ],
                 )
-                self.assertEqual(compose.count("platform: linux/amd64"), 5)
+                self.assertNotIn("platform:", compose)
                 self.assertNotRegex(compose, r"@[A-Z]+@")
                 names = (
                     beta_release.INSTALL_COMPOSE,
@@ -1373,34 +1407,188 @@ class ReleaseTests(unittest.TestCase):
                 pinned,
             )
 
-    def test_postgres_entrypoint_refuses_root_before_upstream_entrypoint(self) -> None:
+    def test_postgres_entrypoint_refuses_root_and_guards_data_directory(self) -> None:
         guard = ROOT / "postgres/florabase-postgres-entrypoint.sh"
-        for uid, expected in (("0", 64), ("70", 0)):
-            with self.subTest(uid=uid), tempfile.TemporaryDirectory() as temporary:
-                bin_dir = Path(temporary)
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            bin_dir = base / "bin"
+            bin_dir.mkdir()
+            pg_root = base / "data"
+            for sub in ("postgres", "media", "state"):
+                (pg_root / sub).mkdir(parents=True)
+            (bin_dir / "docker-entrypoint.sh").write_text(
+                '#!/bin/sh\necho "upstream=$* pgdata=$PGDATA pw=${POSTGRES_PASSWORD:-}" > "$MARKER"\n'
+            )
+            (bin_dir / "florabase-postgres-refuse-root").write_bytes(
+                (ROOT / "postgres/florabase-postgres-refuse-root.sh").read_bytes()
+            )
+            (bin_dir / "stat").write_text(
+                "#!/bin/sh\n"
+                'fmt="$2"; path="$3"\n'
+                'case "$path" in\n'
+                '  */postgres) owner="${PG_OWNER:-70:70}"; mode="${PG_MODE:-700}" ;;\n'
+                '  */media) owner="${MEDIA_OWNER:-10001:10001}"; mode="${MEDIA_MODE:-700}" ;;\n'
+                '  */state) owner="${STATE_OWNER:-10001:10001}"; mode="${STATE_MODE:-755}" ;;\n'
+                '  *) owner="0:0"; mode="755" ;;\n'
+                "esac\n"
+                'if [ "$fmt" = "%u:%g" ]; then echo "$owner"; else echo "$mode"; fi\n'
+            )
+            (bin_dir / "pg_controldata").write_text(
+                '#!/bin/sh\necho "Database system identifier:           ${CLUSTER_ID:-999}"\n'
+            )
+            for name in (
+                "docker-entrypoint.sh",
+                "florabase-postgres-refuse-root",
+                "stat",
+                "pg_controldata",
+            ):
+                (bin_dir / name).chmod(0o755)
+
+            def invoke(
+                uid: str = "70", extra: dict[str, str] | None = None
+            ) -> tuple[subprocess.CompletedProcess[str], Path]:
                 (bin_dir / "id").write_text(f"#!/bin/sh\necho {uid}\n")
-                (bin_dir / "docker-entrypoint.sh").write_text(
-                    '#!/bin/sh\necho upstream-entrypoint "$@" > "$MARKER"\n'
-                )
-                (bin_dir / "florabase-postgres-refuse-root").write_bytes(
-                    (ROOT / "postgres/florabase-postgres-refuse-root.sh").read_bytes()
-                )
-                for name in ("id", "docker-entrypoint.sh", "florabase-postgres-refuse-root"):
-                    (bin_dir / name).chmod(0o755)
-                marker = bin_dir / "marker"
-                result = subprocess.run(
-                    ["/bin/sh", str(guard), "postgres"],
-                    env={"PATH": f"{bin_dir}:/usr/bin:/bin", "MARKER": str(marker)},
+                (bin_dir / "id").chmod(0o755)
+                marker = base / "upstream-ran"
+                marker.unlink(missing_ok=True)
+                env = {
+                    "PATH": f"{bin_dir}:/usr/bin:/bin",
+                    "MARKER": str(marker),
+                    "FLORABASE_PG_ROOT": str(pg_root),
+                    "FLORABASE_REFUSAL_BACKOFF_SECONDS": "0",
+                    "PG_MAJOR": "18",
+                    "FLORABASE_DB_PASSWORD": "stack-password",
+                }
+                if extra:
+                    env.update(extra)
+                res = subprocess.run(
+                    ["/bin/sh", str(guard), "postgres", "-c", "timezone=UTC"],
+                    env=env,
                     capture_output=True,
                     text=True,
                     check=False,
                 )
-                self.assertEqual(result.returncode, expected)
-                if uid == "0":
-                    self.assertIn("refusing to run as root", result.stderr)
-                    self.assertFalse(marker.exists(), "upstream entrypoint must not run as root")
-                else:
-                    self.assertEqual(marker.read_text(), "upstream-entrypoint postgres\n")
+                return res, marker
+
+            # Root is refused immediately with exit 64 before touching disk.
+            root_res, ran = invoke(uid="0")
+            self.assertEqual(root_res.returncode, 64)
+            self.assertIn("refusing to run as root", root_res.stderr)
+            self.assertFalse(ran.exists())
+
+            # Wrong ownership or mode is refused with pointer to docs/installation.md.
+            bad_owner, ran = invoke(extra={"PG_OWNER": "1000:1000"})
+            self.assertEqual(bad_owner.returncode, 1)
+            self.assertIn("docs/installation.md", bad_owner.stderr)
+            self.assertFalse(ran.exists())
+
+            # Stray file without marker is refused.
+            (pg_root / "stray").write_text("x")
+            stray_res, ran = invoke()
+            self.assertEqual(stray_res.returncode, 1)
+            self.assertIn("no installation marker", stray_res.stderr)
+            self.assertFalse(ran.exists())
+            (pg_root / "stray").unlink()
+
+            # Fresh empty folders succeed, touch postgres/installation.pending, map password & PGDATA.
+            ok, ran = invoke()
+            self.assertEqual(ok.returncode, 0, ok.stderr)
+            self.assertIn("upstream=postgres -c timezone=UTC", ran.read_text())
+            self.assertIn(f"pgdata={pg_root}/postgres/18/docker", ran.read_text())
+            self.assertIn("pw=stack-password", ran.read_text())
+            self.assertTrue((pg_root / "postgres/installation.pending").exists())
+
+            # Pending first-install retry allows existing cluster under postgres/.
+            cluster = pg_root / "postgres/18/docker"
+            cluster.mkdir(parents=True)
+            (cluster / "PG_VERSION").write_text("18\n")
+            retry_ok, ran = invoke()
+            self.assertEqual(retry_ok.returncode, 0, retry_ok.stderr)
+
+            # Removing pending while cluster exists and marker is absent refuses.
+            (pg_root / "postgres/installation.pending").unlink()
+            no_marker, ran = invoke()
+            self.assertEqual(no_marker.returncode, 1)
+            self.assertIn("no installation marker", no_marker.stderr)
+
+            # Marker checks: wrong major, mismatched cluster ID, missing cluster, then exact match.
+            inst = pg_root / "state/installation.env"
+            inst.write_text(
+                "FLORABASE_INSTALLATION_ID=ab12\nFLORABASE_PG_MAJOR=17\nFLORABASE_PG_SYSTEM_ID=999\n"
+            )
+            self.assertIn("uses PostgreSQL 17", invoke()[0].stderr)
+            inst.write_text(
+                "FLORABASE_INSTALLATION_ID=ab12\nFLORABASE_PG_MAJOR=18\nFLORABASE_PG_SYSTEM_ID=1\n"
+            )
+            self.assertIn("another PostgreSQL cluster", invoke()[0].stderr)
+            inst.write_text(
+                "FLORABASE_INSTALLATION_ID=ab12\nFLORABASE_PG_MAJOR=18\nFLORABASE_PG_SYSTEM_ID=999\n"
+            )
+            (pg_root / "postgres/installation.pending").touch()
+            matched, ran = invoke()
+            self.assertEqual(matched.returncode, 0, matched.stderr)
+            self.assertFalse((pg_root / "postgres/installation.pending").exists())
+            (cluster / "PG_VERSION").unlink()
+            self.assertIn("database folder is missing or empty", invoke()[0].stderr)
+
+    def test_backend_entrypoint_and_start_scripts_order_steps_and_scrub_owner_env(self) -> None:
+        entrypoint = ROOT / "backend/florabase-backend-entrypoint.sh"
+        start = ROOT / "backend/florabase-start.sh"
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            res = subprocess.run(
+                ["/bin/sh", str(entrypoint), "/bin/sh", "-c", 'printf "%s" "$PGPASSWORD"'],
+                env={"PATH": "/usr/bin:/bin", "FLORABASE_DB_PASSWORD": "derived-pw"},
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            self.assertEqual(res.stdout, "derived-pw")
+
+            bin_dir = base / "bin"
+            bin_dir.mkdir()
+            log = base / "calls.log"
+            fake_python = bin_dir / "python"
+            fake_python.write_text(
+                "#!/bin/sh\n"
+                f'echo "$* owner=${{FLORABASE_OWNER_PASSWORD:-unset}}" >> "{log}"\n'
+                'if [ "${FAIL_STEP:-}" = "$3" ]; then exit 1; fi\n'
+                "exit 0\n"
+            )
+            fake_python.chmod(0o755)
+            base_env = {
+                "PATH": f"{bin_dir}:/usr/bin:/bin",
+                "FLORABASE_OWNER_LOGIN": "owner",
+                "FLORABASE_OWNER_PASSWORD": "secret-owner-password",
+                "FLORABASE_REFUSAL_BACKOFF_SECONDS": "0",
+            }
+            ok = subprocess.run(
+                ["/bin/sh", str(start)], env=base_env, capture_output=True, text=True
+            )
+            self.assertEqual(ok.returncode, 0, ok.stderr)
+            self.assertEqual(
+                log.read_text().splitlines(),
+                [
+                    "-m florabase.db.release_schema wait-db owner=secret-owner-password",
+                    "-m florabase.db.release_schema deploy owner=secret-owner-password",
+                    "-m florabase.db.release_schema serve owner=unset",
+                ],
+            )
+            log.unlink()
+            failed = subprocess.run(
+                ["/bin/sh", str(start)],
+                env={**base_env, "FAIL_STEP": "deploy"},
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(failed.returncode, 1)
+            self.assertEqual(
+                log.read_text().splitlines(),
+                [
+                    "-m florabase.db.release_schema wait-db owner=secret-owner-password",
+                    "-m florabase.db.release_schema deploy owner=secret-owner-password",
+                ],
+            )
 
     def test_postgres_build_context_normalizes_checkout_license_mode(self) -> None:
         import beta_release
