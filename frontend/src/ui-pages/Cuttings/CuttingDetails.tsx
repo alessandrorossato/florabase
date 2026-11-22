@@ -241,9 +241,20 @@ function IdentityLink({ id }: { id: string }) {
   );
 }
 
+function editRequested() {
+  return (
+    new URLSearchParams(window.location.hash.split("?", 2)[1] ?? "").get(
+      "action",
+    ) === "edit"
+  );
+}
+
 export function LotPage({ id, token }: { id: string; token: string }) {
   const [data, retry] = useCuttingData<LotDetail>(`${lots}/${id}`, true);
-  const [dialog, setDialog] = useState<"start" | "edit">();
+  // Directory rows open Edit through ?action=edit, like the other collection directories.
+  const [dialog, setDialog] = useState<"start" | "edit" | undefined>(
+    editRequested() ? "edit" : undefined,
+  );
   const lot = data.state === "ready" ? data.value : undefined;
   return (
     <Page titleId="cutting-lot-title">
@@ -957,7 +968,9 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
   const [summary, retrySummary] = useCuttingData<AttemptSummary>(
     `${attempts}/${id}/propagation-summary`,
   );
-  const [dialog, setDialog] = useState<DialogMode>();
+  const [dialog, setDialog] = useState<DialogMode | undefined>(
+    editRequested() ? { type: "edit" } : undefined,
+  );
   const overview = useRef<HTMLHeadingElement>(null);
   const attempt = data.state === "ready" ? data.value : undefined;
   const editable = attempt && attempt.lifecycle !== "reversed";

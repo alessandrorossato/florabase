@@ -9,6 +9,7 @@ import {
   DirectoryRow,
   DirectoryRecordContent,
   DirectoryTrigger,
+  DirectoryRecordActions,
   DirectoryViewSwitcher,
 } from "../../components/DirectoryPage";
 import {
@@ -18,7 +19,6 @@ import {
 } from "../../components/DirectoryTools";
 import { PageHeader } from "../../components/ReferenceUI";
 import { Icon } from "../../components/Icon";
-import { ActionLink } from "../../components/Action";
 import {
   EmptyState,
   ErrorState,
@@ -367,15 +367,19 @@ function CuttingsDirectory({
                           status={<LifecycleStatus state={item.lifecycle} />}
                         />
                       </DirectoryTrigger>
-                      <div className="ui-directory-record-actions">
-                        <ActionLink
-                          href={`#/cuttings/${surface}/${item.id}`}
-                          aria-label={`Open details: ${label(item)}`}
-                          icon="overview"
-                        >
-                          Details
-                        </ActionLink>
-                      </div>
+                      <DirectoryRecordActions
+                        label={label(item)}
+                        onDetails={() => {
+                          window.location.assign(
+                            `#/cuttings/${surface}/${item.id}`,
+                          );
+                        }}
+                        onEdit={() => {
+                          window.location.assign(
+                            `#/cuttings/${surface}/${item.id}?action=edit`,
+                          );
+                        }}
+                      />
                     </DirectoryRow>
                   ) : (
                     <DirectoryCard key={item.id} selected={preview === item.id}>
@@ -395,15 +399,19 @@ function CuttingsDirectory({
                           status={<LifecycleStatus state={item.lifecycle} />}
                         />
                       </DirectoryTrigger>
-                      <div className="ui-directory-record-actions">
-                        <ActionLink
-                          href={`#/cuttings/${surface}/${item.id}`}
-                          aria-label={`Open details: ${label(item)}`}
-                          icon="overview"
-                        >
-                          Details
-                        </ActionLink>
-                      </div>
+                      <DirectoryRecordActions
+                        label={label(item)}
+                        onDetails={() => {
+                          window.location.assign(
+                            `#/cuttings/${surface}/${item.id}`,
+                          );
+                        }}
+                        onEdit={() => {
+                          window.location.assign(
+                            `#/cuttings/${surface}/${item.id}?action=edit`,
+                          );
+                        }}
+                      />
                     </DirectoryCard>
                   ),
                 )}

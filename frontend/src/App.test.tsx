@@ -2700,7 +2700,7 @@ test("Geography navigation loads, filters, and selects broad and country canonic
     ).getByRole("link", { name: "Geography" }),
   ).toHaveAttribute("aria-current", "page");
   expect(
-    await screen.findByRole("heading", { name: "Geography" }),
+    await screen.findByRole("heading", { name: "Places", level: 2 }),
   ).toBeInTheDocument();
   expect(
     screen.queryByRole("navigation", { name: "Geography views" }),
@@ -3686,7 +3686,7 @@ test("Workbench workspaces, panels and mobile sheets retain every destination an
       within(nav).getByRole("link", { name: destination }),
     ).toHaveAttribute("aria-current", "page");
     await screen.findByRole("heading", {
-      name: destination === "Taxonomy" ? "Collection taxonomy" : destination,
+      name: destination,
       level: 2,
     });
     if (destination === "Taxonomy") {

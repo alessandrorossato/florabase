@@ -10009,6 +10009,12 @@ Status remains implemented pending canonical verification.
 - Themes: the Field Ledger system (fonts, radii, controls) applies to every palette; Field Ledger is
   labelled Botanical, the old Botanical palette is retired (stored choice falls back), Herbarium and
   Mineral gain rail and lineage colours (contrast-tested). Settings and identity lineage gain breadcrumbs.
+- Later rounds: Cuttings rows use the shared Details/Edit actions (`?action=edit` opens the edit
+  dialog); Explore titles equal their menu entries (Taxonomy, Collection origins, Species
+  distribution, Native ranges, Places); Taxonomy uses one List/Tree toggle with icons and an inline
+  stage; Lineage home shows metric cards and an identity gallery on a dotted stage; record lineage
+  cards share one grammar; Settings adds **Help** (built from the navigation) and a static **Data
+  sources** page (current references, access rules, planned integration standard).
 - README: `docs/assets/readme-showcase.png` mosaic (desktop and phone) from the Feature Review dataset with demo names and WFO links applied only to that disposable Review database.
 - Record ancestry (`#/lineage/<kind>/<id>`) now belongs to Explore → Lineage with breadcrumbs; record pages keep their Lineage tab and link there. The record-type switch is a `DirectoryTools` `surfaces` slot directly under the toolbar.
 - Checks: frontend typecheck, ESLint, Prettier and the full Vitest suite (128 files, 1419 tests) in the

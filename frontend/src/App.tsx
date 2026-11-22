@@ -136,6 +136,20 @@ const SettingsScreen = lazy(() =>
   }),
 );
 
+const HelpScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./settings/HelpScreen");
+    return { default: module.HelpScreen };
+  }),
+);
+
+const DataSourcesScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./settings/DataSourcesScreen");
+    return { default: module.DataSourcesScreen };
+  }),
+);
+
 const LabelsScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./labels/LabelsScreen");
@@ -353,6 +367,8 @@ function currentRoute(): Route {
     "import-export",
     "labels",
     "settings",
+    "help",
+    "data-sources",
     "account",
     "media",
   ];
@@ -689,6 +705,10 @@ function ApplicationShell({
                 />
               ) : route.section === "settings" ? (
                 <SettingsScreen />
+              ) : route.section === "help" ? (
+                <HelpScreen />
+              ) : route.section === "data-sources" ? (
+                <DataSourcesScreen />
               ) : route.section === "labels" ? (
                 <LabelsScreen
                   key={`${route.labelKind ?? ""}:${route.labelRecord ?? ""}`}

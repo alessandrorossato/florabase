@@ -23,6 +23,8 @@ export type Section =
   | "labels"
   | "account"
   | "settings"
+  | "help"
+  | "data-sources"
   | "media";
 
 export type WorkspaceId =
@@ -180,12 +182,14 @@ export const workspaces: Workspace[] = [
     id: "settings",
     label: "Settings",
     icon: "gear",
-    summary: "Theme, printed labels and data transfer.",
+    summary: "Theme, printed labels, data transfer, data sources and help.",
     destinations: [
       destination("account", "Account"),
       destination("settings", "Theme"),
       destination("labels", "Labels"),
       destination("import-export", "Import / Export"),
+      destination("data-sources", "Data sources"),
+      destination("help", "Help"),
     ],
   },
 ];

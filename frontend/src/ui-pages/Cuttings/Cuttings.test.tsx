@@ -299,7 +299,7 @@ test("cuttings directory keeps statuses, long labels, views, and preview usable"
   ).not.toBeNull();
   expect(screen.getByText("Exhausted")).toHaveClass("ui-status-chip");
   expect(
-    screen.getByRole("link", { name: `Open details: ${longName}` }),
+    screen.getByRole("button", { name: `Open details ${longName}` }),
   ).toBeVisible();
   lotPreview.focus();
   await user.keyboard("{Enter}");

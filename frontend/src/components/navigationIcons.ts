@@ -23,4 +23,6 @@ export const navigationIcons = {
   "import-export": "exchange",
   account: "person",
   settings: "gear",
+  "data-sources": "layers",
+  help: "document",
 } as const satisfies Record<string, IconName>;

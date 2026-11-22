@@ -958,7 +958,7 @@ export function TaxonomyScreen() {
         <Breadcrumbs items={[{ label: "Explore" }, { label: "Taxonomy" }]} />
         <PageHeader
           eyebrow=""
-          title="Collection taxonomy"
+          title="Taxonomy"
           titleId="taxonomy-title"
           description="Classification of the botanical identities in your collection."
           actions={
@@ -977,30 +977,30 @@ export function TaxonomyScreen() {
                       update({ ...state, q }, true);
                     }}
                   />
-                  <div
-                    className="taxonomy-view-switch"
-                    role="group"
-                    aria-label="Taxonomy view"
-                  >
-                    <ActionButton
-                      variant="secondary"
-                      aria-pressed={state.view !== "tree"}
-                      onClick={() => {
-                        leaveFullscreen();
-                        update({ ...state, view: undefined });
-                      }}
-                    >
-                      List
-                    </ActionButton>
-                    <ActionButton
-                      variant="secondary"
-                      aria-pressed={state.view === "tree"}
-                      onClick={() => {
-                        update({ ...state, view: "tree" });
-                      }}
-                    >
-                      Tree explorer
-                    </ActionButton>
+                  {/* One toggle naming the view it opens, like List/Gallery. */}
+                  <div className="taxonomy-view-switch">
+                    {state.view === "tree" ? (
+                      <ActionButton
+                        variant="secondary"
+                        icon="list"
+                        onClick={() => {
+                          leaveFullscreen();
+                          update({ ...state, view: undefined });
+                        }}
+                      >
+                        List
+                      </ActionButton>
+                    ) : (
+                      <ActionButton
+                        variant="secondary"
+                        icon="taxonomy"
+                        onClick={() => {
+                          update({ ...state, view: "tree" });
+                        }}
+                      >
+                        Tree explorer
+                      </ActionButton>
+                    )}
                   </div>
                 </>
               }
