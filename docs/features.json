@@ -3039,6 +3039,25 @@
       ],
       "priority": "P1",
       "status": "implemented"
+    },
+    {
+      "id": "VERIFY-SPEED-001",
+      "category": "infrastructure",
+      "description": "Cut canonical FULL verification wall time via Golden closure stage selection, bounded Vitest file parallelism, workflow-check consolidation, hygiene cleanup and a two-lane gate design note",
+      "acceptance_criteria": [
+        "The default integration suite skips backend/tests/integration/test_golden_dataset.py using explicit file selection while keeping test_the_full_suite_skips_the_comprehensive_module passing and adding the equivalent golden skip test",
+        "scripts/verification-impact.json declares validated golden_prefixes; the gate adds golden-dataset only when changed paths intersect the closure or cannot be classified fail-closed, main push CI always includes golden-dataset, and REUSABLE_STAGES stays quality and integration",
+        "frontend/vite.config.ts enables fileParallelism with pool forks and bounded overridable maxWorkers (default 3 via VITEST_MAX_WORKERS in compose_stacks.py) and make test-frontend passes 5 consecutive times locally without retries",
+        "Makefile workflow-check consolidates all backend Ruff and mypy checks into one container run with shared file-list variables, a worktree-owned disposable mypy cache and run-all failure reporting",
+        "Retired deploy/ prefix is removed from full_prefixes, scripts/test-beta-lifecycle.py has a manual probe target and doc note, scripts/test-stage-evidence.py is profiled, and docs/verify-speed-001.md records the two-lane gate design note without implementing parallel lanes"
+      ],
+      "dependencies": [
+        "VERIFICATION-FAST-001",
+        "VERIFICATION-EVIDENCE-001",
+        "WF-SCOPE-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
     }
   ]
 }
