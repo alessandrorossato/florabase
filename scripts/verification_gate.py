@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from disposable_workflow import MIGRATION_REPORT, expected_migration_evidence
-from verification_impact import describe, make_plan, plan_tier
+from verification_impact import STATIC, describe, make_plan, plan_tier
 from workflow_resources import ResourceError, machine_lock, verification_lock
 
 # Workflow suites that need the Quality Docker project; the others are offline host suites.
@@ -27,7 +27,7 @@ JOURNAL_NAME = "florabase-verification-last-run.json"
 REUSABLE_STAGES = frozenset({"quality", "integration"})
 
 
-def checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
+def validate_plan(plan: dict[str, Any]) -> str:
     tier = plan_tier(plan)
     if plan["migration"] not in {"skip", "affected-cycle", "full-cycle"} or (
         tier == "full" and plan["migration"] != "full-cycle"
@@ -41,6 +41,77 @@ def checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
         or bool(plan["workflow"])
     ):
         raise ValueError("invalid product-tier verification plan")
+    if tier == "product-frontend" and (
+        plan["backend"] != []
+        or plan["integration"] != []
+        or plan["frontend"] != ["ALL"]
+        or plan["builds"] != ["frontend"]
+        or bool(plan["workflow"])
+        or plan["migration"] != "skip"
+        or any(stage not in plan["static"] for stage in STATIC)
+    ):
+        raise ValueError("invalid product-frontend-tier verification plan")
+    if tier == "affected" and any(
+        "ALL" in plan[layer] for layer in ("backend", "integration", "frontend")
+    ):
+        raise ValueError("invalid affected-tier verification plan")
+    return tier
+
+
+def docs_checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
+        {"id": "feature-graph", "command": ["python3", "./scripts/check-features.py"]},
+        {"id": "doc-links", "command": ["python3", "./scripts/check-doc-links.py"]},
+        {"id": "test-doc-links", "command": ["python3", "./scripts/test-doc-links.py"]},
+        {"id": "whitespace", "command": ["git", "diff", "--check", plan["base"]]},
+        {"id": "staged-whitespace", "command": ["git", "diff", "--cached", "--check"]},
+        {
+            "id": "untracked-whitespace",
+            "command": ["python3", "./scripts/verification_gate.py", "--untracked-whitespace"],
+        },
+    ]
+
+
+def backend_test_command(plan: dict[str, Any]) -> list[str]:
+    return [
+        "python3",
+        "./scripts/workflow_environment.py",
+        "quality",
+        "compose",
+        "--",
+        "run",
+        "--rm",
+        "--no-deps",
+        "backend",
+        "pytest",
+        "--no-cov",
+        "-m",
+        "not integration",
+        *[str(Path(p).relative_to("backend")) for p in plan["backend"]],
+    ]
+
+
+def frontend_test_command(plan: dict[str, Any]) -> list[str]:
+    if plan["frontend"] == ["ALL"]:
+        return ["make", "test-frontend"]
+    return [
+        "python3",
+        "./scripts/workflow_environment.py",
+        "quality",
+        "compose",
+        "--",
+        "run",
+        "--rm",
+        "--no-deps",
+        "frontend",
+        "pnpm",
+        "test",
+        *[str(Path(p).relative_to("frontend")) for p in plan["frontend"]],
+    ]
+
+
+def checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
+    validate_plan(plan)
     checks: list[dict[str, Any]] = []
 
     def add(name: str, command: list[str]) -> None:
@@ -49,15 +120,7 @@ def checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
     # Cheapest deterministic checks first: graph and source-state defects must never wait behind
     # Docker suites. feature-verify.sh compares the frozen working tree, index and HEAD after the
     # last stage, so checking whitespace early covers exactly the tree every later stage verified.
-    add("feature-graph", ["python3", "./scripts/check-features.py"])
-    add("doc-links", ["python3", "./scripts/check-doc-links.py"])
-    add("test-doc-links", ["python3", "./scripts/test-doc-links.py"])
-    add("whitespace", ["git", "diff", "--check", plan["base"]])
-    add("staged-whitespace", ["git", "diff", "--cached", "--check"])
-    add(
-        "untracked-whitespace",
-        ["python3", "./scripts/verification_gate.py", "--untracked-whitespace"],
-    )
+    checks.extend(docs_checks_for(plan))
     # Offline host suites run before the Docker-backed workflow static/type checks.
     for suite in [s for s in plan["workflow"] if s not in DOCKER_WORKFLOW]:
         add(suite, ["make", suite])
@@ -70,43 +133,9 @@ def checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
             if stage not in {"feature-graph", "whitespace"}:
                 add(stage, ["make", stage])
         if plan["backend"]:
-            add(
-                "backend",
-                [
-                    "python3",
-                    "./scripts/workflow_environment.py",
-                    "quality",
-                    "compose",
-                    "--",
-                    "run",
-                    "--rm",
-                    "--no-deps",
-                    "backend",
-                    "pytest",
-                    "--no-cov",
-                    "-m",
-                    "not integration",
-                    *[str(Path(p).relative_to("backend")) for p in plan["backend"]],
-                ],
-            )
+            add("backend", backend_test_command(plan))
         if plan["frontend"]:
-            add(
-                "frontend",
-                [
-                    "python3",
-                    "./scripts/workflow_environment.py",
-                    "quality",
-                    "compose",
-                    "--",
-                    "run",
-                    "--rm",
-                    "--no-deps",
-                    "frontend",
-                    "pnpm",
-                    "test",
-                    *[str(Path(p).relative_to("frontend")) for p in plan["frontend"]],
-                ],
-            )
+            add("frontend", frontend_test_command(plan))
     # Independent disposable stages, cheapest observed first: builds (cached), one PostgreSQL
     # migration cycle, then the PostgreSQL integration suite.
     if plan["builds"]:

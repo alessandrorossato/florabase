@@ -3022,6 +3022,23 @@
       ],
       "priority": "P1",
       "status": "implemented"
+    },
+    {
+      "id": "WF-SCOPE-001",
+      "category": "infrastructure",
+      "description": "Scope local and pull-request verification by changed files with a frontend-only product tier and docs-only release rehearsal early exit",
+      "acceptance_criteria": [
+        "Release rehearsal reuses ci_plan() for exact-revision planning, exits early with green status on proven docs-only PRs without workflow path filters or job-level if:, runs full rehearsal on pushes to main, workflow_dispatch or any planning/import error, and cancels superseded PR runs only",
+        "Remote PR CI quality, integration and build jobs execute selected suites and builds for affected and product-frontend plans while product, full, main pushes and fallbacks remain exhaustive and ci/batch-* retains platform tree validation",
+        "The impact map schema v2 splits shared product prefixes and tests into backend (product) and frontend (product-frontend) tiers with strict loader, gate and receipt validation, and moves LICENSE out of documentation_paths into full_prefixes",
+        "Verification regressions prove docs-only, frontend-scoped, frontend-shared, backend-shared, backend-scoped, LICENSE, main push, invalid-event and import-error cases"
+      ],
+      "dependencies": [
+        "CI-004",
+        "CI-005"
+      ],
+      "priority": "P1",
+      "status": "implemented"
     }
   ]
 }

@@ -683,8 +683,8 @@ Independent review seeks objective correctness defects. It does not reopen opera
 choices without a correctness/accessibility reason. Visual acceptance does not redefine established
 domain contracts.
 
-Local verification distinguishes four policy tiers (`docs`, `affected`, `product`, and `full`),
-grouped across developer iteration and canonical gating:
+Local verification distinguishes five policy tiers (`docs`, `affected`, `product-frontend`,
+`product`, and `full`), grouped across developer iteration and canonical gating:
 
 - **Focused:** developer-selected existing test/check commands for iteration. These do not write a
   delivery receipt. Integration accepts explicit existing files, for example
@@ -693,39 +693,46 @@ grouped across developer iteration and canonical gating:
   from the exact base and complete committed/index/dirty/untracked feature tree, then writes the
   exact completed-plan receipt:
   - **`docs`:** docs-only static changes run `feature-graph` and the three whitespace checks with no
-    Docker/product suites or image builds.
+    Docker/product suites or image builds. (`LICENSE` is in `full_prefixes`, not docs, because all
+    three Dockerfiles copy it into container images.)
   - **`affected`:** module-scoped product changes run explicit affected suites, global product
     static checks, selected independent production builds, and skip workflow suites and migration
     cycling.
-  - **`product`:** shared product changes (`product_prefixes` such as `frontend/src/components/`,
-    `frontend/src/styles/`, `frontend/src/maps/`, shared `backend/src/florabase/` infrastructure
-    other than `__init__.py`, etc.) run the full product baseline (`make check` for all backend and
-    frontend unit/component tests and static/API-drift checks, both `backend` and `frontend`
-    production builds, and `make test-integration` on disposable PostgreSQL), while omitting
-    workflow/release suites and forced migration cycling.
-  - **`full` (`make verify-full`):** runs everything in `product` plus all nine workflow/release
+  - **`product-frontend`:** shared frontend changes (`product_frontend_prefixes` such as
+    `frontend/src/components/`, `frontend/src/styles/`, `frontend/src/maps/`, `frontend/src/shell/`,
+    and `product_frontend_tests`) without backend-layer changes run global static/API-drift checks,
+    all frontend tests (`make test-frontend`), and the `frontend` production build, with no backend
+    unit tests, no integration tests, no workflow suites, and no migration cycling. Combining a
+    shared frontend path with any backend-layer change promotes to `product`.
+  - **`product`:** shared backend product changes (`product_backend_prefixes` such as shared
+    `backend/src/florabase/` infrastructure other than `__init__.py`, and `product_backend_tests`),
+    or mixed shared-frontend + backend changes, run the full product baseline (`make check` for all
+    backend and frontend unit/component tests and static/API-drift checks, both `backend` and
+    `frontend` production builds, and `make test-integration` on disposable PostgreSQL), while
+    omitting workflow/release suites and forced migration cycling.
+  - **`full` (`make verify-full`):** runs everything in `product` plus all ten workflow/release
     suites (`WORKFLOW`) and the four-transition PostgreSQL migration cycle (`--force-cycle`). Full
     remains mandatory for infrastructure/scripts/Makefile/Compose/CI/Dockerfile/lockfile/Alembic/release
-    changes, `backend/src/florabase/__init__.py`, unknown or unclassified paths (fail-closed),
-    releases, and operator-requested exhaustive checks. Every selected FULL stage executes
-    exhaustively; there is no force-narrow override.
+    changes, `LICENSE`, `backend/src/florabase/__init__.py`, unknown or unclassified paths
+    (fail-closed), releases, and operator-requested exhaustive checks. Every selected FULL stage
+    executes exhaustively; there is no force-narrow override.
 
 Preview the human plan with `make verification-plan`; use `make verification-plan FORMAT=json`
 for the same machine-readable decision. `REF=<exact-base>` selects a diagnostic base; canonical
 verification still fetches main and requires that exact base to be an ancestor. The versioned
-[scripts/verification-impact.json](../scripts/verification-impact.json) contains explicit source/test
-ownership (`backend_dirs`, `integration_dirs`, `frontend_dirs`, legacy flat test lists,
-`product_tests`, and `full_tests`), consumer regression boundaries and transitive relationships. A new
-test file placed in a directory owned by a scope (or under a `product_prefixes` / `full_prefixes`
-directory) is discovered and selected automatically with that scope without editing the map; any
-test file on disk under `backend/tests/` or `frontend/` that is owned by no scope or tier causes the
-pre-gate inventory check (`make verification-plan`, `make feature-verify`, and `scripts/ci-verify.py`)
-to exit non-zero and name the file before starting Docker. Any unknown non-test path escalates
-full. Editing the map or verification infrastructure also escalates full. Migration revisions
-conservatively escalate full. Every full plan requires the complete base → head → base → head cycle
-on disposable PostgreSQL; no changed-file shortcut may suppress it. Affected plans may skip migration
-cycling only when impact analysis proves it unnecessary. Generated contracts require an owning
-classified production scope.
+[scripts/verification-impact.json](../scripts/verification-impact.json) (schema v2) contains explicit
+source/test ownership (`backend_dirs`, `integration_dirs`, `frontend_dirs`, legacy flat test lists,
+`product_backend_tests`, `product_frontend_tests`, and `full_tests`), consumer regression boundaries
+and transitive relationships. A new test file placed in a directory owned by a scope (or under a
+`product_backend_prefixes` / `product_frontend_prefixes` / `full_prefixes` directory) is discovered
+and selected automatically with that scope without editing the map; any test file on disk under
+`backend/tests/` or `frontend/` that is owned by no scope or tier causes the pre-gate inventory check
+(`make verification-plan`, `make feature-verify`, and `scripts/ci-verify.py`) to exit non-zero and
+name the file before starting Docker. Any unknown non-test path escalates full. Editing the map or
+verification infrastructure also escalates full. Migration revisions conservatively escalate full.
+Every full plan requires the complete base → head → base → head cycle on disposable PostgreSQL; no
+changed-file shortcut may suppress it. Affected plans may skip migration cycling only when impact
+analysis proves it unnecessary. Generated contracts require an owning classified production scope.
 
 True docs-only plans run feature graph and complete whitespace checks with no Docker/product
 suites or image builds. Under `docs/`, the impact map allows only known static documentation
@@ -784,23 +791,37 @@ cycles verify the database revision after all four transitions and record succes
 affected skips record `skipped_by_impact`. Older v2 receipts lacking this evidence are incompatible and
 require a new canonical gate.
 Delivery recomputes the policy, rejects receipts below the recomputed required tier (such as `docs`,
-`affected`, or `product` when `full` is required, or `docs`/`affected` when `product` is required),
-and rejects incomplete, obsolete, mismatched or stale evidence. The
-normal same reviewed tree can be committed without a ceremonial rerun. Transient staged/committed
-changes masked by unstaged reverts are classified conservatively; freeze the index too when using
-such unusual combinations, since removing transient impact invalidates the stored plan.
+`affected`, `product-frontend`, or `product` when `full` is required, or `docs`/`affected`/
+`product-frontend` when `product` is required), and rejects incomplete, obsolete, mismatched or stale
+evidence. The normal same reviewed tree can be committed without a ceremonial rerun. Transient
+staged/committed changes masked by unstaged reverts are classified conservatively; freeze the index
+too when using such unusual combinations, since removing transient impact invalidates the stored
+plan.
 
-Protected GitHub `quality`, `integration`, and `build` remain stable, independent jobs with no job
-conditions or path filters. Each independently validates the platform PR merge SHA and both exact
-parents, then recomputes the complete-tree impact plan. Docs-only PRs run graph/whitespace checks
-in each job. Affected product PRs omit workflow helpers; **all product PRs still run complete product
-suites, API/static checks, disposable PostgreSQL integration and both production builds**. Main,
-high-risk/unknown changes retain exhaustive remote checks. Missing/invalid platform SHA or a checkout
-at another SHA refuses before checks. Once checkout identity is proven, missing/inconsistent impact
-event metadata falls back to full. Depth-two checkout retains the merge and both exact parents.
-No local receipt or client impact metadata is trusted. Missing/invalid policy fails the job.
-`make ci` remains exhaustive; remote product test sectorization is deferred. See the
-[CI-004 handoff/evidence](ci-004-verification-efficiency-handoff.md).
+Protected GitHub `quality`, `integration`, `build`, and `rehearse` remain stable, independent jobs
+with no job-level conditions or workflow path filters. Each independently validates the platform PR
+merge SHA and both exact parents, then recomputes the complete-tree impact plan:
+
+- **Docs-only PRs:** `quality`, `integration`, and `build` run graph/link/whitespace checks only;
+  `rehearse` runs `python3 scripts/ci-verify.py rehearse-scope`, prints the reason and exits early
+  with green status.
+- **`affected` and `product-frontend` PRs:** `quality` runs graph/link checks, global static/API
+  checks and only the selected backend/frontend suites (`make test-frontend` for `product-frontend`);
+  `integration` runs only selected integration files (or docs checks when empty); `build` builds only
+  selected production services (`SERVICES=frontend` or `SERVICES=backend`); `rehearse` runs the full
+  release rehearsal.
+- **`product`, `full`, pushes to `main`, `workflow_dispatch`, and any fallback:** retain exhaustive
+  remote checks (`make check`, `make test-integration`, both builds, full `rehearse`, and
+  `release-migration` on `main`).
+
+Missing/invalid platform SHA or a checkout at another SHA refuses before `quality`/`integration`/
+`build` checks (and falls back to running full `rehearse` in `rehearse-scope`, catching any error
+including import errors). Once checkout identity is proven, missing/inconsistent impact event
+metadata falls back to full (while `ci/batch-*` still requires exact parent proof and platform-tree
+validation before using `make_plan(base)`). Depth-two checkout retains the merge and both exact
+parents. No local receipt or client impact metadata is trusted. Missing/invalid policy fails
+`quality`/`integration`/`build` and falls back to full in `rehearse`. `make ci` remains exhaustive.
+See the [CI-004 handoff/evidence](ci-004-verification-efficiency-handoff.md).
 
 The implementing agent runs focused tests, relevant static/build checks and records uncovered risks.
 A different agent or session performs independent QA: it reviews behavior/code, runs focused regressions for uncovered risks, fixes
