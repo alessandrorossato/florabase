@@ -49,9 +49,9 @@ VERIFY → OPERATOR DELIVERY → FINISH.
 - `docs/`: architecture, operations, domain model, backlog, progress, and ADRs.
 - `scripts/`: guarded operational and verification scripts.
 - `compose.yaml`: the only production Compose (self-initializing, ADR 0008); `compose.dev.yaml`: the
-  only development Compose. Workflow stacks are derived from it at run time; never add tracked
-  Compose files. Until WF-09, `compose.runtime.yaml` is the transitional source-build baseline under
-  the workflow stacks; it is not an installation file.
+  only development Compose. Workflow stacks are derived from it at run time by
+  `scripts/compose_stacks.py` (generated overrides under untracked state); never add tracked Compose
+  files.
 
 ## Engineering conventions
 

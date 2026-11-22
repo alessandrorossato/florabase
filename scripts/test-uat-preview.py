@@ -11,6 +11,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import compose_stacks
 from uat_preview import UATPreview
 from workflow_environment import UAT_PROJECT, Environment, Repository, WorkflowError
 
@@ -30,8 +31,10 @@ class UATTests(unittest.TestCase):
             self.assertNotIn("FLORABASE_WORKFLOW_MODE", env.environment())
         self.assertEqual(self.preview.env_source, Path("/dev/null"))
         self.assertEqual(self.preview.source, ROOT)
-        self.assertIn(str(ROOT / "compose.review.yaml"), self.preview.command("ps"))
-        self.assertIn(str(ROOT / "compose.uat.yaml"), self.preview.command("ps"))
+        files = " ".join(self.preview.command("ps"))
+        self.assertIn(str(ROOT / "compose.dev.yaml"), files)
+        self.assertIn("/compose.review.yaml", files)
+        self.assertIn("/compose.uat.yaml", files)
         self.assertEqual(self.preview.url, "http://localhost:15174")
         with patch.dict("os.environ", {"POSTGRES_DB": "prod", "FRONTEND_PORT": "8080"}):
             self.assertEqual(self.preview.environment()["POSTGRES_DB"], "florabase_uat")
@@ -345,7 +348,8 @@ class UATTests(unittest.TestCase):
         command = compose.call_args.args
         self.assertIn(f"{ROOT / 'scripts/uat_fixture.py'}:/uat/uat_fixture.py:ro", command)
         self.assertNotIn("uat_fixture", (ROOT / "backend/Dockerfile").read_text())
-        self.assertNotIn("uat_fixture", (ROOT / "compose.runtime.yaml").read_text())
+        self.assertNotIn("uat_fixture", (ROOT / "compose.dev.yaml").read_text())
+        self.assertNotIn("uat_fixture", compose_stacks.OVERRIDES["production"])
 
     def test_context_rejects_primary_and_arbitrary_project(self) -> None:
         with (

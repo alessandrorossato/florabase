@@ -35,10 +35,12 @@ responsibilities.
 
 ## Runtime and configuration
 
-`compose.runtime.yaml` (the source-build baseline; `compose.yaml` from INSTALL-001) is production-oriented: PostgreSQL and FastAPI are internal, the frontend alone
-publishes a port, services have health checks, and application containers run non-root where
-practical. `compose.dev.yaml` adds bind-mounted source, hot reload, and loopback-only development
-ports. `compose.integration.yaml` owns an isolated tmpfs PostgreSQL test project.
+The release `compose.yaml` is the only installation: image-only, PostgreSQL and FastAPI internal,
+the frontend alone publishes a port, services have health checks, and application containers run
+non-root. `compose.dev.yaml` is the standalone development stack with bind-mounted source, hot reload
+and loopback-only ports. Every other workflow stack (the source-built production targets, review,
+UAT, quality, preview, sourcing, performance and the isolated tmpfs PostgreSQL integration project)
+is derived from it at run time by `scripts/compose_stacks.py` (ADR 0008, WF-09).
 
 Backend settings are centralized in `florabase.core.config`. Production requires an exact HTTPS
 canonical origin, secure cookies, and empty CORS configuration for the same-origin application.

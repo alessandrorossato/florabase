@@ -527,7 +527,7 @@ def _build_and_start_services(
         "manifest": manifest,
         "provisioning": {
             "route": "disposable_test_copy",
-            "compose_file": "compose.integration.yaml",
+            "compose_file": "scripts/compose_stacks.py integration",
             "provisioning_project": bundle.provisioning_project,
             "copy_name": bundle.copy_name,
             "provisioned_at": bundle.provisioned_at,

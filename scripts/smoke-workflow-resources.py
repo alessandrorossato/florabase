@@ -190,10 +190,7 @@ def quality_network_smoke(root: Path) -> None:
     seed.mkdir(parents=True)
     for name in (
         "Makefile",
-        "compose.runtime.yaml",
         "compose.dev.yaml",
-        "compose.quality.yaml",
-        "compose.quality-network.yaml",
         ".env.example",
     ):
         shutil.copy2(ROOT / name, seed / name)

@@ -1392,6 +1392,22 @@ def scan_images(refs: dict[str, str], output: Path, scanner: str) -> None:
                     failures.append(service + ": scanner exit " + str(result.returncode))
             finally:
                 archive.unlink(missing_ok=True)
+        # The vulnerability DB floats by decision (2026-11-21): record which one judged these bytes.
+        command = ["docker", "run", "--rm", "--network", "none"]
+        command.extend(["--user", f"{os.getuid()}:{os.getgid()}"])
+        for key, value in owner.labels().items():
+            command.extend(["--label", key + "=" + value])
+        command.extend(["--mount", f"type=bind,src={cache},dst=/cache", scanner])
+        command.extend(["version", "--cache-dir", "/cache", "--format", "json"])
+        version = subprocess.run(command, check=False, capture_output=True, text=True)
+        try:
+            recorded = json.loads(version.stdout)
+            database = recorded["VulnerabilityDB"]
+            if not database.get("Version") or not database.get("UpdatedAt"):
+                raise KeyError("VulnerabilityDB Version/UpdatedAt")
+            (output / "scanner-version.json").write_text(json.dumps(recorded, indent=2) + "\n")
+        except (ValueError, KeyError, TypeError, AttributeError) as error:
+            failures.append("scanner database version unrecorded: " + str(error))
     if failures:
         raise ValueError(
             "SECURITY GATE BLOCKED: "

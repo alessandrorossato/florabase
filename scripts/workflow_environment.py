@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, cast
 from urllib.parse import unquote, urlsplit
 
+import compose_stacks
 from workflow_resources import ResourceError, machine_lock
 
 DEV_PROJECT = "florabase"  # Preserve existing operator volumes; never silently rename them.
@@ -454,21 +455,9 @@ class Environment:
         return env
 
     def command(self, *args: str) -> list[str]:
-        # DEV drives the primary checkout, which may predate the ADR 0008 baseline rename.
-        runtime = "compose.runtime.yaml"
-        files = [runtime if (self.source / runtime).is_file() else "compose.yaml"]
-        if self.role != "prod":
-            files.append("compose.dev.yaml")
-        if self.role in {"review", "uat", "sourcing"}:
-            files.append("compose.review.yaml")
-        if self.role == "sourcing":
-            files.append("compose.sourcing.yaml")
-        if self.role == "quality":
-            files.append("compose.quality.yaml")
-            if self.quality_network:
-                files.append("compose.quality-network.yaml")
-        if self.role == "uat":
-            files.append("compose.uat.yaml")
+        # DEV drives the primary checkout, which may predate WF-09; such trees keep their files.
+        stack = "quality-network" if self.quality_network else self.role
+        files = compose_stacks.files(self.source, stack)
         return [
             "docker",
             "compose",
@@ -478,7 +467,7 @@ class Environment:
             self.project,
             "--project-directory",
             str(self.source),
-            *[part for name in files for part in ("--file", str(self.source / name))],
+            *[part for path in files for part in ("--file", str(path))],
             *(["--file", str(self.workflow_overlay)] if self.workflow_overlay else []),
             *args,
         ]

@@ -16,6 +16,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+import compose_stacks
 from uat_preview import VOLUMES, UATPreview
 from workflow_environment import (
     MEDIA_ROOT,
@@ -171,7 +172,12 @@ class UATInstance(UATPreview):
         return env
 
     def command(self, *args: str) -> list[str]:
-        return [*super().command(), "--file", str(self.source / "compose.uat-instance.yaml"), *args]
+        if compose_stacks.is_legacy(self.source):
+            extra = self.source / "compose.uat-instance.yaml"
+        else:
+            overrides = compose_stacks.definitions(self.source)[0]
+            extra = compose_stacks.override("uat-instance", text=overrides["uat-instance"])
+        return [*super().command(), "--file", str(extra), *args]
 
     def require_profile(self) -> None:
         """Only a confirmed reset changes the profile; up and seed refuse a different request."""
