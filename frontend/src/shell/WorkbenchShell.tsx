@@ -14,11 +14,13 @@ import { TaskDialog } from "../components/TaskDialog";
 import { ThemeControl } from "../components/ThemeControl";
 import { CommandPalette } from "./CommandPalette";
 import { RecordSheet } from "./RecordSheet";
+import { SavedViewRemoval } from "./SavedViewRemoval";
 import {
   createActions,
   currentLink,
   destinationOfHash,
   primaryWorkspaces,
+  sectionOfHash,
   workspaceOf,
   workspaces,
   type Section,
@@ -66,23 +68,39 @@ const shortcutLabel =
     ? "⌘K"
     : "Ctrl K";
 
+const savedViewLimit = 5;
+
 /** The sections of one workspace, with sub-destinations, as a list of links. */
 function WorkspaceLinks({
   workspace,
   section,
   hash,
   follow,
+  savedViews = [],
+  onRemoveView,
 }: {
   workspace: Workspace;
   section: Section;
   hash: string;
   follow: (event: MouseEvent<HTMLAnchorElement>, href: string) => void;
+  /** Saved views appear as sub-items of the section that owns them. */
+  savedViews?: SavedViewLink[];
+  onRemoveView?: (view: SavedViewLink, trigger: HTMLButtonElement) => void;
 }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
   return (
     <ul className="wb-links">
       {workspace.destinations.map((item) => {
         const current = currentLink(item, section, hash);
         const href = `#/${item.section}`;
+        const views = savedViews.filter(
+          (view) => sectionOfHash(view.href) === item.section,
+        );
+        const capped = views.length > savedViewLimit;
+        const shown =
+          capped && expanded !== item.section
+            ? views.slice(0, savedViewLimit)
+            : views;
         return (
           <li key={item.section}>
             <a
@@ -114,6 +132,59 @@ function WorkspaceLinks({
                     </a>
                   </li>
                 ))}
+              </ul>
+            )}
+            {views.length > 0 && (
+              <ul
+                className="wb-sublinks wb-saved"
+                aria-label={`${item.label} saved views`}
+              >
+                {shown.map((view) => (
+                  <li key={view.id} className="wb-saved__item">
+                    <a
+                      href={view.href}
+                      className="wb-sublink"
+                      aria-current={hash === view.href ? "page" : undefined}
+                      onClick={(event) => {
+                        follow(event, view.href);
+                      }}
+                    >
+                      <Icon name="saved-views" />
+                      <span className="wb-saved__name">{view.name}</span>
+                    </a>
+                    {onRemoveView && (
+                      <button
+                        type="button"
+                        className="button--quiet wb-saved__remove"
+                        aria-label={`Remove saved view ${view.name}`}
+                        title="Remove saved view"
+                        onClick={(event) => {
+                          onRemoveView(view, event.currentTarget);
+                        }}
+                      >
+                        <Icon name="close" />
+                      </button>
+                    )}
+                  </li>
+                ))}
+                {capped && (
+                  <li>
+                    <button
+                      type="button"
+                      className="button--quiet wb-group__more"
+                      aria-expanded={expanded === item.section}
+                      onClick={() => {
+                        setExpanded((value) =>
+                          value === item.section ? null : item.section,
+                        );
+                      }}
+                    >
+                      {expanded === item.section
+                        ? "Show fewer"
+                        : `Show all ${String(views.length)} saved views`}
+                    </button>
+                  </li>
+                )}
               </ul>
             )}
           </li>
@@ -184,17 +255,6 @@ function LinkGroup({
   );
 }
 
-function savedItems(views: SavedViewLink[], workspace: WorkspaceId) {
-  return views
-    .filter((view) => workspace === "today" || view.workspace === workspace)
-    .map((view) => ({
-      key: view.id,
-      href: view.href,
-      name: view.name,
-      detail: view.surface,
-    }));
-}
-
 /**
  * Florabase Next Workbench shell. A rail of workspaces (a vertical tablist)
  * switches the context panel without navigating, like an activity bar; the
@@ -238,6 +298,12 @@ export function WorkbenchShell({
     storedCollapsed ||
     (recordPagePattern.test(hash) && panelChoice?.from !== hash);
   const savedViews = useSavedViewLinks();
+  const [removal, setRemoval] = useState<SavedViewLink | null>(null);
+  const removalTrigger = useRef<HTMLElement | null>(null);
+  const requestRemoval = (view: SavedViewLink, trigger: HTMLButtonElement) => {
+    removalTrigger.current = trigger;
+    setRemoval(view);
+  };
   // Recently opened section-level destinations in this session (never records,
   // never stored). Updated while rendering when the route changes.
   const [recentState, setRecentState] = useState<{
@@ -580,15 +646,10 @@ export function WorkbenchShell({
               section={section}
               hash={hash}
               follow={follow}
+              savedViews={savedViews}
+              onRemoveView={requestRemoval}
             />
           </nav>
-          <LinkGroup
-            label="Saved views"
-            items={savedItems(savedViews, panel.id)}
-            follow={follow}
-            limit={5}
-            moreLabel={(count) => `Show all ${String(count)} saved views`}
-          />
           <LinkGroup label="Recent" items={recent} follow={follow} />
           <footer className="wb-panel__footer">
             <p className="wb-account">{`Signed in as ${signedInAs}`}</p>
@@ -681,16 +742,21 @@ export function WorkbenchShell({
               section={section}
               hash={hash}
               follow={follow}
+              savedViews={savedViews}
+              onRemoveView={requestRemoval}
             />
           </nav>
-          <LinkGroup
-            label="Saved views"
-            items={savedItems(savedViews, sheetWorkspace.id)}
-            follow={follow}
-            limit={5}
-            moreLabel={(count) => `Show all ${String(count)} saved views`}
-          />
         </TaskDialog>
+      )}
+
+      {removal && (
+        <SavedViewRemoval
+          view={removal}
+          returnFocusTo={removalTrigger}
+          onClose={() => {
+            setRemoval(null);
+          }}
+        />
       )}
 
       {sheet === "account" && settingsWorkspace && (

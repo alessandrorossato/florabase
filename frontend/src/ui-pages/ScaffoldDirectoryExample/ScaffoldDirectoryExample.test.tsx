@@ -14,9 +14,7 @@ test("keyboard view switching retains search; request feedback uses the house st
   );
   screen.getByRole("button", { name: "Gallery" }).focus();
   await user.keyboard(" ");
-  expect(
-    screen.getByRole("button", { name: "Gallery", pressed: true }),
-  ).toHaveFocus();
+  expect(screen.getByRole("button", { name: "List" })).toHaveFocus();
   expect(screen.getByRole("searchbox")).toHaveValue("Aloe");
   rerender(
     <ScaffoldDirectoryExample

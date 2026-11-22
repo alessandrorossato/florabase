@@ -299,7 +299,7 @@ function CuttingsDirectory({
       content={
         <>
           <div
-            className="cuttings-directory__surfaces"
+            className="directory-surfaces"
             role="group"
             aria-label="Cuttings record type"
           >

@@ -244,8 +244,8 @@ export function currentLink(
   return { section: item.section === activeSection };
 }
 
-/** The workspace whose sections own a hash route (ignoring record ids and query). */
-export function workspaceOfHash(hash: string): Workspace | undefined {
+/** The section that owns a hash route (ignoring record ids and query). */
+export function sectionOfHash(hash: string): string {
   const first = hash.replace(/^#\/?/, "").split(/[/?]/, 1)[0];
   const alias: Partial<Record<string, Section>> = {
     "plant-groups": "plants",
@@ -253,7 +253,12 @@ export function workspaceOfHash(hash: string): Workspace | undefined {
     "species-distribution": "geography",
     "native-ranges": "geography",
   };
-  const section: string = alias[first] ?? first;
+  return alias[first] ?? first;
+}
+
+/** The workspace whose sections own a hash route (ignoring record ids and query). */
+export function workspaceOfHash(hash: string): Workspace | undefined {
+  const section = sectionOfHash(hash);
   return workspaces.find((workspace) =>
     workspace.destinations.some((item) => item.section === section),
   );

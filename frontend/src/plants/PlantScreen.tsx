@@ -681,7 +681,7 @@ function Detail({
             aria-labelledby="tab-overview"
           >
             <section
-              className="plant-fact-group"
+              className="plant-fact-group plant-fact-group--wide"
               aria-labelledby="plant-cuttings-title"
             >
               <h4 id="plant-cuttings-title">Vegetative offspring</h4>

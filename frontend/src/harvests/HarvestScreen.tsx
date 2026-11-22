@@ -358,28 +358,6 @@ export function HarvestScreen({
         contextOnly={Boolean(displayId)}
         directory
       />
-      {!displayId && (
-        <nav className="workspace-view-nav" aria-label="Harvest views">
-          <button
-            type="button"
-            aria-pressed={!storedMode}
-            onClick={() => {
-              window.location.assign("#/harvests");
-            }}
-          >
-            Harvests
-          </button>
-          <button
-            type="button"
-            aria-pressed={storedMode}
-            onClick={() => {
-              window.location.assign("#/harvests?tab=stored-material");
-            }}
-          >
-            Stored material
-          </button>
-        </nav>
-      )}
       {!displayId && !storedMode && (
         <DirectoryTools
           context={
@@ -508,6 +486,30 @@ export function HarvestScreen({
               : []),
           ]}
         />
+      )}
+      {!displayId && (
+        <nav className="directory-surfaces" aria-label="Harvest views">
+          <button
+            type="button"
+            className="button--secondary"
+            aria-pressed={!storedMode}
+            onClick={() => {
+              window.location.assign("#/harvests");
+            }}
+          >
+            Harvests
+          </button>
+          <button
+            type="button"
+            className="button--secondary"
+            aria-pressed={storedMode}
+            onClick={() => {
+              window.location.assign("#/harvests?tab=stored-material");
+            }}
+          >
+            Stored material
+          </button>
+        </nav>
       )}
 
       {error && (

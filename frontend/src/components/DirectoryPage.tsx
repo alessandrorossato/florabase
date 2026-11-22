@@ -66,21 +66,20 @@ export function DirectoryViewSwitcher({
   value: DirectoryView;
   onChange: (value: DirectoryView) => void;
 }) {
+  // One toggle that names the view it switches to, like Drive's list/grid toggle.
+  const next: DirectoryView = value === "list" ? "gallery" : "list";
   return (
-    <div className="ui-view-switcher" role="group" aria-label="Directory view">
-      {(["list", "gallery"] as const).map((view) => (
-        <ActionButton
-          key={view}
-          variant="secondary"
-          icon={view}
-          aria-pressed={value === view}
-          onClick={() => {
-            onChange(view);
-          }}
-        >
-          {view === "list" ? "List" : "Gallery"}
-        </ActionButton>
-      ))}
+    <div className="ui-view-switcher">
+      <ActionButton
+        variant="secondary"
+        icon={next}
+        title={`Show as ${next}`}
+        onClick={() => {
+          onChange(next);
+        }}
+      >
+        {next === "list" ? "List" : "Gallery"}
+      </ActionButton>
     </div>
   );
 }

@@ -27,21 +27,35 @@ body:has(.activity-page dialog[open]) {
 .workspace.activity-page:has(#global-events-title) .page-header,
 .workspace.activity-page:has(#history-title) .page-header,
 .workspace.activity-page:has(#schedule-title) .page-header {
+  /* Same grammar as the Collection directories: identity, then a full-width toolbar. */
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-4) var(--space-6);
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
   margin: 0 0 var(--space-6);
 }
-.activity-page .page-identity {
-  flex: 1 1 16rem;
+.activity-page .page-header > :is(.page-identity, .page-tools) {
+  flex: none;
+  width: 100%;
   min-width: 0;
 }
-.activity-page .page-tools {
-  flex: 2 1 36rem;
-  min-width: 0;
+/* Active filter chips and their Clear filters action share one row under the toolbar. */
+.activity-page .page-header > .page-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.activity-page .page-tools > .directory-tools {
+  flex: 1 1 100%;
+}
+.activity-page
+  .page-tools
+  > :is(.directory-context, .directory-filter-summary) {
+  margin: 0;
+}
+.activity-page .page-tools > .directory-context {
+  order: 1;
 }
 .activity-page .page-header h2 {
   font: var(--type-h2);

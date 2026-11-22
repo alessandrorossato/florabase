@@ -360,7 +360,7 @@ const view = (
   updated_at: "2026-11-01T00:00:00Z",
 });
 
-test("supported Saved Views open as their ordinary directory URLs in the owning workspace, Today and the palette", async () => {
+test("supported Saved Views are sub-items of their owning section and open as ordinary directory URLs", async () => {
   const fetch = savedViewsFetch([
     view("0190d2a8-0000-7000-8000-00000000000a", "Basil lots", "seed_lots", {
       q: "basil",
@@ -376,22 +376,15 @@ test("supported Saved Views open as their ordinary directory URLs in the owning 
   vi.stubGlobal("fetch", fetch);
   const user = userEvent.setup();
   const { onNavigate } = renderShell({ section: "seeds", hash: "#/seeds" });
-  const saved = await screen.findByRole("navigation", { name: "Saved views" });
+  const saved = await screen.findByRole("list", { name: "Seeds saved views" });
   expect(
     within(saved).getByRole("link", { name: /Basil lots/ }),
   ).toHaveAttribute("href", "#/seeds?q=basil");
-  expect(within(saved).queryByText("Broken")).toBeNull();
+  expect(screen.queryByText("Broken")).toBeNull();
   await user.click(within(saved).getByRole("link", { name: /Basil lots/ }));
   expect(onNavigate).toHaveBeenCalledWith("#/seeds?q=basil");
   await user.click(screen.getByRole("tab", { name: /^Sourcing/ }));
-  expect(screen.queryByRole("navigation", { name: "Saved views" })).toBeNull();
-  await user.click(screen.getByRole("tab", { name: /^Today/ }));
-  expect(
-    within(screen.getByRole("navigation", { name: "Saved views" })).getByRole(
-      "link",
-      { name: /Basil lots/ },
-    ),
-  ).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: /Basil lots/ })).toBeNull();
   await user.keyboard("{Control>}k{/Control}");
   expect(
     within(
@@ -406,6 +399,55 @@ test("supported Saved Views open as their ordinary directory URLs in the owning 
   });
 });
 
+test("a Saved View is removed from the menu only after confirmation", async () => {
+  let views = [
+    view("0190d2a8-0000-7000-8000-00000000000a", "Basil lots", "seed_lots", {
+      q: "basil",
+    }),
+  ];
+  const fetch = vi.fn((path: string, init?: RequestInit) => {
+    if (init?.method === "DELETE") {
+      views = [];
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    return Promise.resolve(
+      new Response(
+        JSON.stringify(path.startsWith("/api/v1/saved-views") ? views : []),
+        { headers: { "Content-Type": "application/json" } },
+      ),
+    );
+  });
+  vi.stubGlobal("fetch", fetch);
+  const user = userEvent.setup();
+  renderShell({ section: "seeds", hash: "#/seeds" });
+  const remove = await screen.findByRole("button", {
+    name: "Remove saved view Basil lots",
+  });
+  await user.click(remove);
+  const dialog = screen.getByRole("dialog", { name: "Remove saved view" });
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(fetch).not.toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({ method: "DELETE" }),
+  );
+  await user.click(
+    screen.getByRole("button", { name: "Remove saved view Basil lots" }),
+  );
+  await user.click(
+    within(screen.getByRole("dialog", { name: "Remove saved view" })).getByRole(
+      "button",
+      { name: "Remove saved view" },
+    ),
+  );
+  await waitFor(() => {
+    expect(screen.queryByRole("link", { name: /Basil lots/ })).toBeNull();
+  });
+  expect(fetch).toHaveBeenCalledWith(
+    "/api/v1/saved-views/0190d2a8-0000-7000-8000-00000000000a",
+    expect.objectContaining({ method: "DELETE" }),
+  );
+});
+
 test("Saved View listing failure leaves the panel usable without the group", async () => {
   vi.stubGlobal(
     "fetch",
@@ -416,7 +458,7 @@ test("Saved View listing failure leaves the panel usable without the group", asy
     screen.getByRole("navigation", { name: "Primary navigation" }),
   ).toBeInTheDocument();
   await new Promise((resolve) => setTimeout(resolve, 0));
-  expect(screen.queryByRole("navigation", { name: "Saved views" })).toBeNull();
+  expect(screen.queryByRole("list", { name: "Seeds saved views" })).toBeNull();
 });
 
 test("Recent lists previously opened sections, not records or the current page", () => {
@@ -461,7 +503,7 @@ test("Recent lists previously opened sections, not records or the current page",
   ).toEqual(["#/seeds"]);
 });
 
-test("many Saved Views stay reachable: five shown, the rest behind a disclosure and in the palette", async () => {
+test("many Saved Views in one section stay reachable: five shown, the rest behind a disclosure and in the palette", async () => {
   const views = Array.from({ length: 12 }, (_, index) =>
     view(
       `0190d2a8-0000-7000-8000-0000000001${String(index).padStart(2, "0")}`,
@@ -473,7 +515,7 @@ test("many Saved Views stay reachable: five shown, the rest behind a disclosure 
   vi.stubGlobal("fetch", savedViewsFetch(views));
   const user = userEvent.setup();
   renderShell({ section: "seeds", hash: "#/seeds" });
-  const saved = await screen.findByRole("navigation", { name: "Saved views" });
+  const saved = await screen.findByRole("list", { name: "Seeds saved views" });
   expect(within(saved).getAllByRole("link")).toHaveLength(5);
   const more = within(saved).getByRole("button", {
     name: "Show all 12 saved views",

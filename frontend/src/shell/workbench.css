@@ -318,6 +318,57 @@ html:has(.wb-shell) {
 .wb-sheet .wb-sublink[aria-current="page"] {
   font-weight: 600;
 }
+/* Saved views sit under the section they filter; the remove control shows on hover/focus. */
+.wb-shell .wb-saved__item,
+.wb-sheet .wb-saved__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.wb-shell .wb-saved .wb-sublink,
+.wb-sheet .wb-saved .wb-sublink {
+  flex: 1;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  padding-inline-end: calc(var(--control-height-compact) + var(--space-1));
+}
+.wb-saved .wb-sublink .control-icon {
+  flex: none;
+  width: 0.875rem;
+  height: 0.875rem;
+}
+.wb-saved__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wb-shell .wb-saved__remove,
+.wb-sheet .wb-saved__remove {
+  position: absolute;
+  inset-inline-end: 2px;
+  display: grid;
+  place-items: center;
+  inline-size: var(--control-height-compact);
+  block-size: var(--control-height-compact);
+  min-block-size: 0;
+  padding: 0;
+  color: var(--text-muted);
+  border-radius: var(--radius-small);
+  opacity: 0;
+}
+.wb-saved__item:is(:hover, :focus-within) .wb-saved__remove {
+  opacity: 1;
+}
+.wb-saved__remove:hover {
+  color: var(--danger);
+  background: var(--surface-hover);
+}
+@media (hover: none) {
+  .wb-shell .wb-saved__remove,
+  .wb-sheet .wb-saved__remove {
+    opacity: 1;
+  }
+}
 /* Saved views and Recent: quieter link groups below the sections. */
 .wb-group {
   margin-block-start: var(--space-4);

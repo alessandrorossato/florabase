@@ -385,6 +385,8 @@
   margin-top: var(--space-2);
 }
 .taxonomy-review-list {
+  /* Contain absolutely positioned sr-only text so it cannot grow the document scroll. */
+  position: relative;
   list-style: none;
   padding: 0 var(--space-3);
   margin: 0 0 var(--space-3);

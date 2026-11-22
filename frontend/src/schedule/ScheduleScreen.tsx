@@ -975,7 +975,7 @@ export function ScheduleScreen() {
             </p>
           )}
           {state.view === "list" && page && (
-            <p role="status">
+            <p role="status" className="sr-only">
               {page.total} matching activities
               {state.date ? ` on ${state.date}` : ""} · counts below refer to
               this page
