@@ -14,6 +14,7 @@ export const navigationIcons = {
   schedule: "calendar",
   identities: "flower",
   taxonomy: "taxonomy",
+  lineage: "lineage",
   media: "image",
   geography: "globe",
   suppliers: "store",

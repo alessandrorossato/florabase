@@ -84,6 +84,14 @@ const shapes = {
       <path d="M12 7v5M5 17v-5h14v5" />
     </>
   ),
+  lineage: (
+    <>
+      <circle cx="12" cy="4" r="2" />
+      <circle cx="5" cy="20" r="2" />
+      <circle cx="19" cy="20" r="2" />
+      <path d="M12 6v6M12 12c-4 0-7 2-7 6M12 12c4 0 7 2 7 6" />
+    </>
+  ),
   image: (
     <>
       <rect x="3" y="3" width="18" height="18" rx="2" />

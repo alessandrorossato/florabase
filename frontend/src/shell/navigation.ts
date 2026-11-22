@@ -13,6 +13,7 @@ export type Section =
   | "history"
   | "schedule"
   | "taxonomy"
+  | "lineage"
   | "identities"
   | "suppliers"
   | "orders"
@@ -132,10 +133,11 @@ export const workspaces: Workspace[] = [
     id: "explore",
     label: "Explore",
     icon: "globe",
-    summary: "Species, classification, media and geography.",
+    summary: "Species, classification, lineage, media and geography.",
     destinations: [
       destination("identities", "Botanical identities"),
       destination("taxonomy", "Taxonomy"),
+      destination("lineage", "Lineage"),
       destination("media", "Media"),
       destination("geography", "Geography", [
         {

@@ -61,6 +61,11 @@ export function ancestryHref(kind: LineageNode["kind"], id: string) {
   return `#/lineage/${kind}/${id}`;
 }
 
+/** Recorded lineage across every record of one Botanical identity. */
+export function identityLineageHref(identityId: string) {
+  return `#/lineage/identity/${identityId}`;
+}
+
 /**
  * The recorded relationship between two adjacent steps, named only from their kinds (every
  * step is an explicitly recorded source, so the pair determines the relationship).

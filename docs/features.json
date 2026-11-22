@@ -1580,6 +1580,22 @@
       "status": "implemented"
     },
     {
+      "id": "LINEAGE-004",
+      "category": "lineage",
+      "description": "Explore recorded lineage from the Explore workspace and across one BotanicalIdentity",
+      "acceptance_criteria": [
+        "Explore offers a Lineage destination that finds a BotanicalIdentity, SeedLot, Sowing, Plant or PlantGroup and opens its existing ancestry explorer or identity lineage",
+        "The identity lineage lists every record of one BotanicalIdentity and connects them only through explicitly recorded relationships; shared identity never implies lineage and records without relationships stay separate",
+        "Explicitly linked records of other identities are shown and marked as outside the identity; inactive and reversed records keep their status",
+        "Large identities are bounded and truncation is stated without presenting identity records as foreign"
+      ],
+      "dependencies": [
+        "LINEAGE-003"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "ENRICHMENT-001",
       "category": "enrichment",
       "description": "Add reviewable Kew WCVP source-backed structured native-range proposals with explicit selective Apply",

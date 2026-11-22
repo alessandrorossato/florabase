@@ -1,0 +1,80 @@
+/* Identity lineage: one stem per recorded line, reusing the ancestry explorer's tree. */
+.identity-lineage__roots,
+.identity-lineage__independent {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.identity-lineage__roots > li,
+.identity-lineage__independent > li {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+.identity-lineage__roots > li::before,
+.identity-lineage__independent > li::before {
+  content: none;
+}
+.identity-lineage__line > .ancestry-tree {
+  padding-inline-start: var(--space-4);
+  border-inline-start: 2px solid var(--lineage);
+}
+.identity-lineage__node[data-outside="true"] {
+  border-style: dashed;
+  background: transparent;
+}
+.identity-lineage__reference {
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+@media (max-width: 40rem) {
+  .identity-lineage__line > .ancestry-tree {
+    padding-inline-start: var(--space-3);
+  }
+}
+
+.lineage-home__search {
+  display: grid;
+  gap: var(--space-1);
+  max-inline-size: 34rem;
+}
+.lineage-home__hits {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lineage-home__hits > li {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+}
+.lineage-home__hits > li::before {
+  content: none;
+}
+.lineage-home__hits a {
+  font: var(--type-strong);
+}
+.lineage-home__hits span {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+@media (max-width: 48rem), (any-pointer: coarse) {
+  .lineage-home__hits a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--control-height-touch, 2.75rem);
+  }
+}
+.lineage-home__results {
+  display: grid;
+  gap: var(--space-6);
+  margin-block-start: var(--space-2);
+}

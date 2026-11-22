@@ -46,7 +46,11 @@ function childrenPath(node: AncestryNode, offset: number) {
  * How the oldest recorded record entered the collection. Nothing beyond it is recorded, so
  * the explorer states that instead of implying a parent.
  */
-function OriginNote({ node }: { node: AncestryNode }) {
+export function OriginNote({
+  node,
+}: {
+  node: Pick<AncestryNode, "record" | "origin">;
+}) {
   const { origin } = node;
   let text: string;
   if (origin === "collection_produced")

@@ -793,3 +793,90 @@ def test_taxonomy_reconciliation_keeps_lineage_measurements_and_uuids_intact(
     assert len(events_after[0]["measurement_corrections"]) == 1
     for body in after.values():
         assert event["id"] not in str(body)
+
+
+def _graph(cookie: str, identity_id: str, query: str = "") -> tuple[int, Any]:
+    return _explore(cookie, f"identities/{identity_id}/graph{query}")
+
+
+def _edges(graph: dict[str, Any]) -> set[tuple[str, str, str, str]]:
+    return {
+        (edge["parent_kind"], edge["parent_id"], edge["child_kind"], edge["child_id"])
+        for edge in graph["edges"]
+    }
+
+
+def test_identity_graph_shows_only_explicit_edges_and_marks_other_identities(
+    authenticated_browser: tuple[str, str], lineage_records: dict[str, str]
+) -> None:
+    cookie, _ = authenticated_browser
+    records = lineage_records
+
+    status_code, graph = _graph(cookie, records["producer_identity"])
+    assert status_code == 200
+    assert graph["botanical_identity"]["id"] == records["producer_identity"]
+    assert (graph["total"], graph["truncated"], graph["limit"]) == (4, False, 500)
+    in_identity = {
+        (node["record"]["kind"], node["record"]["id"])
+        for node in graph["nodes"]
+        if node["in_identity"]
+    }
+    outside = {
+        (node["record"]["kind"], node["record"]["id"])
+        for node in graph["nodes"]
+        if not node["in_identity"]
+    }
+    assert in_identity == {
+        ("plant_group", records["group_a"]),
+        ("plant_group", records["direct_group"]),
+        ("plant", records["plant_a"]),
+        ("plant", records["direct_plant"]),
+    }
+    # Explicitly linked records of other identities appear, flagged; nothing else does.
+    assert outside == {
+        ("sowing", records["root_sowing"]),
+        ("plant", records["extracted_plant"]),
+        ("seed_lot", records["lot_b"]),
+    }
+    assert _edges(graph) == {
+        ("sowing", records["root_sowing"], "plant", records["plant_a"]),
+        ("sowing", records["root_sowing"], "plant_group", records["group_a"]),
+        ("plant_group", records["group_a"], "plant", records["extracted_plant"]),
+        ("plant", records["plant_a"], "seed_lot", records["lot_b"]),
+    }
+    # Sharing the identity is not lineage: independent roots have no edge at all.
+    for independent in (records["direct_plant"], records["direct_group"]):
+        assert all(independent not in edge for edge in _edges(graph))
+    lifecycles = {node["record"]["id"]: node["record"]["lifecycle"] for node in graph["nodes"]}
+    assert lifecycles[records["plant_a"]] == "dead"
+
+    # Sowings belong to their own SeedLot's identity and carry the chain inside it.
+    _, descendant = _graph(cookie, records["descendant_identity"])
+    assert descendant["total"] == 4
+    assert _edges(descendant) == {
+        ("plant", records["plant_a"], "seed_lot", records["lot_b"]),
+        ("seed_lot", records["lot_b"], "sowing", records["sowing_b"]),
+        ("sowing", records["sowing_b"], "plant", records["plant_b"]),
+        ("plant_group", records["group_a"], "plant", records["extracted_plant"]),
+    }
+
+
+def test_identity_graph_truncates_without_presenting_members_as_foreign(
+    authenticated_browser: tuple[str, str], lineage_records: dict[str, str]
+) -> None:
+    cookie, _ = authenticated_browser
+    records = lineage_records
+    _, graph = _graph(cookie, records["descendant_identity"], "?limit=1")
+    assert (graph["total"], graph["limit"], graph["truncated"]) == (4, 1, True)
+    nodes = {(node["record"]["id"], node["in_identity"]) for node in graph["nodes"]}
+    # The oldest SeedLot is returned; its Sowing (a member left out) is not shown as foreign.
+    assert nodes == {(records["lot_b"], True), (records["plant_a"], False)}
+    assert _edges(graph) == {("plant", records["plant_a"], "seed_lot", records["lot_b"])}
+
+    _, empty = _graph(cookie, records["root_identity"])
+    assert empty["total"] == 2
+
+    assert request("GET", f"/api/v1/lineage/identities/{records['root_identity']}/graph")[0] == 401
+    assert _graph(cookie, str(uuid7()))[0] == 404
+    assert _graph(cookie, records["root_identity"], "?limit=0")[0] == 422
+    assert _graph(cookie, records["root_identity"], "?limit=501")[0] == 422

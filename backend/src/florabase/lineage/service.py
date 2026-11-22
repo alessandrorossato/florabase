@@ -17,6 +17,10 @@ from florabase.lineage.schemas import (
     AncestryResponse,
     BotanicalIdentitySummary,
     HarvestConversionEvidence,
+    IdentityLineageGraph,
+    IdentityLineageNode,
+    LineageEdge,
+    LineageKind,
     LineageNode,
     LineageResponse,
     PlantGroupLineageNode,
@@ -31,9 +35,6 @@ from florabase.seed_lots.model import SeedLot, SeedLotSourceKind
 from florabase.seed_lots.schemas import PartialDate
 from florabase.sowings.model import Sowing
 
-LineageKind = Literal[
-    "seed_lot", "sowing", "plant", "plant_group", "vegetative_lot", "propagation_attempt"
-]
 LineageKey = tuple[LineageKind, UUID]
 
 
@@ -487,4 +488,113 @@ def ancestry(database: Session, subject: LineageKey, *, limit: int = 25) -> Ance
         focus=nodes[keys[0]],
         ancestors=[nodes[key] for key in keys[1:]],
         children=children(database, subject, limit=limit),
+    )
+
+
+# Every record of one identity. Sowings and attempts carry no identity of their own and
+# belong to the identity of their own source lot.
+_IDENTITY_MEMBERS = text(
+    """
+    SELECT 'seed_lot'::text AS kind, id FROM seed_lots
+    WHERE botanical_identity_id = CAST(:identity_id AS uuid)
+    UNION ALL
+    SELECT 'sowing', sowing.id FROM sowings AS sowing
+    JOIN seed_lots AS lot ON lot.id = sowing.seed_lot_id
+    WHERE lot.botanical_identity_id = CAST(:identity_id AS uuid)
+    UNION ALL
+    SELECT 'plant_group', id FROM plant_groups
+    WHERE botanical_identity_id = CAST(:identity_id AS uuid)
+    UNION ALL
+    SELECT 'plant', id FROM plants
+    WHERE botanical_identity_id = CAST(:identity_id AS uuid)
+    UNION ALL
+    SELECT 'vegetative_lot', id FROM vegetative_lots
+    WHERE botanical_identity_id = CAST(:identity_id AS uuid)
+    UNION ALL
+    SELECT 'propagation_attempt', attempt.id FROM propagation_attempts AS attempt
+    JOIN vegetative_lots AS lot ON lot.id = attempt.vegetative_lot_id
+    WHERE lot.botanical_identity_id = CAST(:identity_id AS uuid)
+    """
+)
+
+_KIND_ORDER: tuple[LineageKind, ...] = (
+    "seed_lot",
+    "sowing",
+    "plant_group",
+    "plant",
+    "vegetative_lot",
+    "propagation_attempt",
+)
+
+# Explicit edges touching any member, from the same source columns as the explorer.
+_IDENTITY_EDGES = text(
+    f"""
+    WITH members AS ({_IDENTITY_MEMBERS.text})
+    SELECT edge.parent_kind, edge.parent_id, edge.kind AS child_kind, edge.id AS child_id
+    FROM ({_CHILD_EDGES}) AS edge
+    WHERE EXISTS (
+        SELECT 1 FROM members WHERE members.kind = edge.kind AND members.id = edge.id
+    ) OR EXISTS (
+        SELECT 1 FROM members
+        WHERE members.kind = edge.parent_kind AND members.id = edge.parent_id
+    )
+    ORDER BY edge.parent_kind, edge.parent_id, edge.kind, edge.id
+    """
+)
+
+MAX_IDENTITY_GRAPH = 500
+
+
+def identity_graph(
+    database: Session, identity: BotanicalIdentity, *, limit: int = MAX_IDENTITY_GRAPH
+) -> IdentityLineageGraph:
+    """The identity's records with their explicit edges; never infers a relationship.
+
+    A large identity is truncated to ``limit`` records (oldest first per kind); an edge is kept
+    only when each end is a returned record or a record outside the identity, so truncation
+    never presents a member of the identity as foreign.
+    """
+    limit = min(limit, MAX_IDENTITY_GRAPH)
+    params = {"identity_id": identity.id}
+    members = sorted(
+        (
+            (cast(LineageKind, row["kind"]), cast(UUID, row["id"]))
+            for row in database.execute(_IDENTITY_MEMBERS, params).mappings()
+        ),
+        key=lambda key: (_KIND_ORDER.index(key[0]), key[1]),
+    )
+    member_set = set(members)
+    returned = members[:limit]
+    returned_set = set(returned)
+    edges: list[LineageEdge] = []
+    external: dict[LineageKey, None] = {}
+    for row in database.execute(_IDENTITY_EDGES, params).mappings():
+        parent = (cast(LineageKind, row["parent_kind"]), cast(UUID, row["parent_id"]))
+        child = (cast(LineageKind, row["child_kind"]), cast(UUID, row["child_id"]))
+        # The query only returns edges touching a member, so a kept edge has a returned end.
+        if not all(end in returned_set or end not in member_set for end in (parent, child)):
+            continue
+        for end in (parent, child):
+            if end not in member_set:
+                external[end] = None
+        edges.append(
+            LineageEdge(
+                parent_kind=parent[0],
+                parent_id=parent[1],
+                child_kind=child[0],
+                child_id=child[1],
+            )
+        )
+    keys = [*returned, *external]
+    nodes = _nodes(database, keys)
+    return IdentityLineageGraph(
+        botanical_identity=_identity_summary(identity),
+        total=len(members),
+        limit=limit,
+        truncated=len(members) > len(returned),
+        nodes=[
+            IdentityLineageNode(**nodes[key].model_dump(), in_identity=key in returned_set)
+            for key in keys
+        ],
+        edges=edges,
     )
