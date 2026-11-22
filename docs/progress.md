@@ -10130,3 +10130,16 @@ Status remains implemented pending canonical verification.
 - Checks: `make smoke-uat-preview` passed (fixture pytest 52 passed, 1 skipped; exact cleanup);
   `python3 scripts/test-uat-preview.py` 20 OK; ruff check/format and strict mypy on the touched
   scripts clean. Not run: FULL `make feature-verify`.
+
+## 2026-11-22 — v0.1.0-beta.8 release preparation
+
+- Version surfaces move to `0.1.0-beta.8` (`release/inputs.json`, backend package and module,
+  frontend package, both Dockerfiles, OpenAPI `info.version`). The Unreleased CHANGELOG section
+  becomes the `v0.1.0-beta.8` entry: minimal `:latest` three-service `compose.yaml` (#214, #216),
+  `LINEAGE-004` and `UI-REVIEW-001`, and a note that a Compose-manager update pulls the current
+  `:latest` images including rebuilt `florabase-postgres` images within PostgreSQL 18.
+  PostgreSQL moves to `18.6-alpine-florabase.4`, published for the first time by this release.
+  `docs/beta-data-001.md` names beta.8 and the backend deploy step instead of the removed
+  `migrate` service.
+- No feature status changes. Tag, protected publication and publication evidence remain operator
+  actions.

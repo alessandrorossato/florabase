@@ -5,12 +5,26 @@ Notable changes to Florabase, newest first. Versions follow the
 [docs/progress.md](docs/progress.md); this file lists what an operator of an installation needs
 to know.
 
-## Unreleased
+## v0.1.0-beta.8 — 2026-11-22
 
-Changes since `v0.1.0-beta.7`, planned for the next prerelease.
+Prerelease of the private beta series: changes since `v0.1.0-beta.7`. The installation is now a
+minimal three-service `compose.yaml` on `:latest` images (#214, #216), with PostgreSQL
+`18.6-alpine-florabase.4`. Take `compose.yaml` from the `v0.1.0-beta.8` tag, not from `main`.
+
+### Added
+
+- **Explore > Lineage:** find an identity or a lineage record and view every record of one
+  botanical identity connected by explicitly recorded relationships, reachable from the identity
+  overview (`LINEAGE-004`).
 
 ### Changed
 
+- **Updates through a Compose manager:** an "update" (pull and redeploy) in Dockhand or
+  Container Manager pulls whatever `:latest` currently points to for all three images. For
+  `backend` and `frontend` that is the newest published release; for `florabase-postgres` it can
+  be a rebuilt image within PostgreSQL 18 (Alpine security or guard updates). Take a paired backup
+  before every update, as for any release upgrade; pin `@sha256:` digests instead of `:latest` if
+  you want updates to happen only when you edit the file.
 - Production `compose.yaml` on `main` is now a directly usable 40-line, three-service file (`db`,
   `backend`, `frontend`) referencing `:latest` images (`ghcr.io/alessandrorossato/florabase-*`),
   plain short bind mounts with Synology-style absolute host path examples, plain environment
@@ -55,6 +69,14 @@ Changes since `v0.1.0-beta.7`, planned for the next prerelease.
   `FLORABASE_CANONICAL_ORIGIN`, and redeploy. Existing beta.7 folder owners and modes already
   match. Paired-backup `docker compose exec` snippets now read `$FLORABASE_DB_PASSWORD` instead of
   `$POSTGRES_PASSWORD`.
+
+### Fixed
+
+- Operator UI/UX review (`UI-REVIEW-001`): aligned harvest surfaces, one shared
+  palette system for the Botanical, Herbarium and Mineral themes, saved views in the directory
+  menu, a compact one-screen Schedule month with a single Agenda/Calendar toggle, map overviews as
+  metric cards, Settings and lineage breadcrumbs, and copy fixes. The Online basemap is offered
+  only when the operator enabled a tile provider.
 
 ## v1.0.0 — planned
 
