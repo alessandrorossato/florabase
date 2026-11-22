@@ -9806,3 +9806,62 @@ Status remains implemented pending canonical verification.
   backend image is unaffected. A mismatched refusal now prints the `up` output, service states
   and the service log tail. The local checks did not catch it because they ran under umask 022.
 - Checks: hosted `rehearse` on this branch (workflow dispatch) and the canonical gate.
+
+## 2026-11-21 — v0.1.0-beta.7 published
+
+- `1126c03` was tagged `v0.1.0-beta.7` and published through the protected release workflow
+  (run `44949666442`, attempt 2, after the operator updated `RELEASE_APPROVED_SHA` from the beta.6
+  commit). The [publication record](release/evidence/beta-7-publication.md) lists the five Release
+  assets with matching SHA-256 digests and GHCR tags resolving to the manifest digests;
+  `gh attestation verify` succeeded for the three images, `compose.yaml` and the manifest, bound
+  to the commit and run.
+- `docs/release/scope-v1.md` names beta.7 as the current G-MIGRATE and G-UPGRADE baseline. No
+  feature status changed.
+
+## 2026-11-21 — Batch 09: WF-09 two Compose files, rehearse in delivery, RC-SEQ-01 records
+
+- WF-09 (ADR 0008): the repository tracks exactly `compose.yaml` and a standalone
+  `compose.dev.yaml` (the former `compose.runtime.yaml` base merged with the development
+  override). `scripts/compose_stacks.py` holds the workflow overrides (production, review, UAT,
+  UAT instance, sourcing, quality, quality-network, preview, performance and the standalone
+  integration stack) and writes them content-addressed under the checkout's untracked Git
+  directory (`florabase-compose/<digest>/compose.<name>.yaml`). The eleven tracked overlays and the
+  two historical `docs/review` stacks are removed. A revision from before WF-09 keeps its tracked
+  overlays and the helpers still load them (DEV on an older primary, Stable Preview of an older
+  ref). `docker compose config` of every stack (DEV, prod, review, sourcing, UAT, UAT instance,
+  quality, quality-network, preview, perf, integration) was identical before and after, apart from
+  top-level `x-` anchors that Compose ignores. Release artifact copies, lint/type lists and tests
+  carry the new module.
+- `feature-deliver` now also waits for the hosted `rehearse` job and fails loudly when it fails,
+  after #207 merged with a failing rehearsal. On 2026-11-21 the operator also added `rehearse` to
+  the `Protect main` ruleset, which now requires quality, integration, build and rehearse.
+- RC-SEQ-01 operator decisions are recorded: CUTTING-001 and UI-SYSTEM-001 are `implemented`
+  (verified only after RC-image G-CORE/G-UX and operator acceptance), U02 accepted for the
+  non-Preview clauses, UI-FLICKER-001 option (a). The Codex CUTTING-001 claim was taken over on
+  the operator's instruction; its uncommitted files are untouched.
+- Batch 08 follow-ups: mypy includes `backend/scripts/check_api_routes.py`, and the production
+  route inventory test no longer passes ambient `FLORABASE_*` variables. The impact classification
+  of that script and the smoke `assert` statements remain open.
+- The beta.7 publication record is part of this batch. Trivy keeps the floating vulnerability
+  database (operator decision 2026-11-21): pinning would make scans reproducible but hide newly
+  published CVEs. Instead every scan set records the database that judged it: `scan_images`
+  (used by `publish-beta-images` and `rehearse`) writes `scanner-version.json` (`trivy version`
+  with the DB `Version`, `UpdatedAt`, `NextUpdate`, `DownloadedAt`) next to the reports and blocks
+  the security gate when that record is missing.
+- Smoke fixtures follow WF-09: `smoke-dev-recovery` and `smoke-dev-upgrade` copy
+  `scripts/compose_stacks.py` (without it the fixture read as a pre-WF-09 tree lacking a base
+  `compose.yaml`), and the recovery smoke's modelled old source drops it again. `smoke-dev-golden`
+  already copied `scripts/`. `smoke-migration-cycle` commits its baseline with `--allow-empty`,
+  since a clean HEAD plus identical copied files left nothing to commit.
+- The recovery smoke rendered its modelled pre-WF-09 baseline under the generator's
+  `florabase-prod` name, which pinned `florabase-prod_*` network and volume names into the fixture;
+  the baseline now drops those names so only the fixture project owns them.
+- Checks: `make workflow-check` passed. Real smokes: `smoke-workflow-resources` (502 s) and
+  `smoke-uat-instance` (203 s) passed on `73e5510`; after the fixes `smoke-environment-workflow`
+  (114 s, Review and Stable Preview), `smoke-dev-recovery`, `smoke-dev-upgrade` (40 s) and
+  `smoke-migration-cycle` (76 s) passed. `trivy version --format json` with a populated cache was
+  run against the pinned 0.69.3 image and returns the DB `Version`/`UpdatedAt`; the full
+  `scan_images` path runs first in hosted `rehearse`.
+- Unresolved: `smoke-uat-preview` fails in `test-uat-fixture.py` because the UAT fixture creates no
+  scheduled activity for the `vegetative_lot` and `propagation_attempt` targets added by #167. This
+  predates Batch 09 and is not in the FULL gate; it needs its own fixture fix.

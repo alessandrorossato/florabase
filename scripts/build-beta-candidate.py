@@ -75,6 +75,7 @@ def main() -> None:
                 "smoke-beta-images.py",
                 "beta_release.py",
                 "disposable_workflow.py",
+                "compose_stacks.py",
                 "workflow_resources.py",
             ):
                 shutil.copyfile(root / "scripts" / name, artifact / name)

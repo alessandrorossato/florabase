@@ -13,6 +13,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+import compose_stacks
 from workflow_resources import Disposable, Owner, ResourceError
 
 MIGRATION_REPORT = "MIGRATION_CYCLE_PASSED "
@@ -151,19 +152,20 @@ def compose_invocation(
         owner.project,
         "--project-directory",
         str(root),
-        "--file",
-        str(
-            root
-            / (
-                "compose.runtime.yaml"
-                if role == "verification-build"
-                else "compose.integration.yaml"
-            )
-        ),
+        *[part for item in stack_files(root, role) for part in ("--file", str(item))],
         "--file",
         str(path),
     ]
     return command, env
+
+
+def stack_files(root: Path, role: str) -> list[Path]:
+    """The production source build, or the standalone disposable integration stack."""
+    if role == "verification-build":
+        return compose_stacks.files(root, "prod")
+    if compose_stacks.is_legacy(root):
+        return [root / "compose.integration.yaml"]
+    return [compose_stacks.integration(root)]
 
 
 def check_frontend_image(disposable: Disposable, root: Path, directory: Path) -> None:

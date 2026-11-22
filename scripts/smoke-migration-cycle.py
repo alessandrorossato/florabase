@@ -106,6 +106,7 @@ def main() -> None:
             git(fixture, "config", "user.email", "smoke@example.invalid")
             for path in (
                 "scripts/disposable_workflow.py",
+                "scripts/compose_stacks.py",
                 "scripts/verification_impact.py",
                 "scripts/verification_gate.py",
                 "scripts/feature-tree-fingerprint.py",
@@ -113,7 +114,7 @@ def main() -> None:
             ):
                 shutil.copy2(ROOT / path, fixture / path)
             git(fixture, "add", ".")
-            git(fixture, "commit", "-m", "synthetic verification baseline")
+            git(fixture, "commit", "--allow-empty", "-m", "synthetic verification baseline")
             os.chdir(fixture)
             base = git(fixture, "rev-parse", "HEAD")
             lock = fixture / "frontend/pnpm-lock.yaml"

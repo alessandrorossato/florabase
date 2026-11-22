@@ -16,9 +16,14 @@ fail() {
 }
 
 assert_attachment_configuration() {
-  local compose="${repository_root}/compose.runtime.yaml"
+  # Production and integration are generated from scripts/compose_stacks.py (WF-09).
+  local compose="${temporary_root}/compose.production.yaml"
   local development="${repository_root}/compose.dev.yaml"
-  local integration="${repository_root}/compose.integration.yaml"
+  local integration="${temporary_root}/compose.integration.yaml"
+  python3 -c 'import sys; sys.path.insert(0, sys.argv[1]); import compose_stacks; print(compose_stacks.OVERRIDES[sys.argv[2]], end="")' \
+    "${repository_root}/scripts" production >"${compose}"
+  python3 -c 'import sys; sys.path.insert(0, sys.argv[1]); import compose_stacks; print(compose_stacks.OVERRIDES[sys.argv[2]], end="")' \
+    "${repository_root}/scripts" integration >"${integration}"
   local nginx="${repository_root}/frontend/nginx.conf"
   local dockerfile="${repository_root}/backend/Dockerfile"
   local backup="${repository_root}/scripts/backup.sh"

@@ -79,5 +79,11 @@ export POSTGRES_DB=florabase_perf POSTGRES_USER=florabase_perf
 export POSTGRES_PASSWORD=disposable-perf-password
 export FLORABASE_DATABASE_URL=postgresql+psycopg://florabase_perf:disposable-perf-password@db:5432/florabase_perf
 export FLORABASE_CANONICAL_ORIGIN=http://localhost:18080
+# compose.dev.yaml plus the generated production and performance overrides (WF-09).
+files=()
+while IFS= read -r file; do
+  files+=(--file "$file")
+done < <(python3 scripts/compose_stacks.py . perf)
+[[ ${#files[@]} -gt 0 ]] || { echo "florabase-perf: no Compose files" >&2; exit 1; }
 exec docker compose --env-file /dev/null --project-name florabase-perf \
-  --file compose.runtime.yaml --file compose.perf.yaml "$@"
+  --project-directory . "${files[@]}" "$@"

@@ -2217,6 +2217,7 @@ class RegistryPreflightTests(unittest.TestCase):
             "release-tools.py",
             "smoke-beta-images.py",
             "disposable_workflow.py",
+            "compose_stacks.py",
             "workflow_resources.py",
         ):
             with self.subTest(name=name):

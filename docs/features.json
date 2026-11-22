@@ -1035,7 +1035,7 @@
         "TAXONOMY-001"
       ],
       "priority": "P2",
-      "status": "in_progress"
+      "status": "implemented"
     },
     {
       "id": "LABEL-001",
@@ -2248,7 +2248,7 @@
         "CI-004"
       ],
       "priority": "P1",
-      "status": "in_progress"
+      "status": "implemented"
     },
     {
       "id": "DASHBOARD-CUSTOMIZATION-001",

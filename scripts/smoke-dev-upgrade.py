@@ -143,8 +143,12 @@ def main() -> None:
                     "*.tsbuildinfo",
                 ),
             )
-        for name in ("compose.runtime.yaml", "compose.dev.yaml"):
-            shutil.copy2(repository.source / name, source / name)
+        shutil.copy2(repository.source / "compose.dev.yaml", source / "compose.dev.yaml")
+        # WF-09: without the generator the fixture reads as a pre-WF-09 tree.
+        (source / "scripts").mkdir()
+        shutil.copy2(
+            repository.source / "scripts/compose_stacks.py", source / "scripts/compose_stacks.py"
+        )
         # A disposable source repository, never a worktree/commit in the operator repository.
         for args in (
             ("init", "--initial-branch=main"),

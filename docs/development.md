@@ -71,15 +71,15 @@ Disposable integration/migration/build/smoke resources retire automatically on s
 caught interruption, with exact positive ownership and residual verification. Quality remains
 reusable; `make quality-status`, `make quality-clean` and `make workflow-resources` expose its exact
 worktree lifecycle. Proven `feature-finish` retires only the finishing worktree's Quality project.
-Quality services default to `network_mode: none` (`compose.quality.yaml`) so ordinary lint, format,
+Quality services default to `network_mode: none` (the generated `quality` override) so ordinary lint, format,
 typecheck, API-check, workflow-check, unit-test and local reference status/verify runs do not
 allocate per-worktree Docker bridge networks; only `make dependency-update` and
-`make dependency-update` and `make dev-references-setup` opt into `compose.quality-network.yaml` (via
+`make dependency-update` and `make dev-references-setup` opt into the `quality-network` override (via
 `workflow_environment.py --quality-network`), attaching to Docker's shared default `bridge` without
 creating project bridge subnets. `make dependency-update` refreshes `frontend/pnpm-lock.yaml` via the
 isolated `frontend-lockfile` service (`toolchain` stage, bind-mounted `./frontend` without a
 `node_modules` volume, temporary store in `/tmp`), so lockfile updates still work cleanly when
-`package.json` changes before rebuilding frozen images. `compose.quality.yaml` also sets
+`package.json` changes before rebuilding frozen images. The `quality` override also sets
 `FLORABASE_QUALITY_OFFLINE: "1"` (cleared to `"0"` under `--quality-network`, with any non-offline
 `frontend` entrypoint invocation removing the image provenance marker) so offline Quality runs validate
 Florabase's own lockfile provenance marker (`/app/node_modules/.florabase-pnpm-lock.sha256`, written
@@ -147,7 +147,7 @@ The current Alembic head is discovered from the migration chain rather than dupl
 `make feature-review-status` when needed.
 
 To upgrade the existing development database explicitly, use `make dev-upgrade`. It uses
-`compose.runtime.yaml` plus `compose.dev.yaml`, displays the current revision, applies `alembic upgrade head`,
+`compose.dev.yaml`, displays the current revision, applies `alembic upgrade head`,
 and displays the resulting revision without deleting volumes. Back up meaningful production data
 before production upgrades; this development helper is not a production deployment command.
 

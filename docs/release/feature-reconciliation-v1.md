@@ -132,7 +132,7 @@ operator can close them with a one-line acceptance record.
 | EVENT-003 | `planned` | POST-1.0 | no progress.md record | No work recorded. The watering/feeding kinds (decision 5) need their own bounded increment ID, not this entry. |
 | PLANT-004 | `verified` | 1.0 baseline | progress.md:4522 · 5a9fb41 |  |
 | TUBER-001 | `planned` | POST-1.0 | no progress.md record | No work recorded. |
-| CUTTING-001 | `in_progress` | PRE-1.0 certify | progress.md:8432, 8446, 8463, 8481 · `cutting-001-design.md` · 18dda87#168 | Delivered on main in #167 (routes, migration 0047, navigation) but acceptance pending; an active writer (`codex-cutting-31a6`) holds uncommitted Cuttings work. Decision 6: finish and certify. |
+| CUTTING-001 | `implemented` (RC-SEQ-01, 2026-11-21) | PRE-1.0 certify | progress.md:8432, 8446, 8463, 8481 · `cutting-001-design.md` · 18dda87#168 | Delivered on main in #167 (routes, migration 0047, navigation) but acceptance pending; an active writer (`codex-cutting-31a6`) holds uncommitted Cuttings work. Decision 6: finish and certify. |
 | LABEL-001 | `verified` | 1.0 baseline | progress.md:3332, 3354 · `label-001-review.md` |  |
 | SEARCH-001 | `implemented` | PRE-1.0 certify | progress.md:3471, 3485, 3501 | Log: canonical gate "remains for later review"; no later record. |
 | SEARCH-002 | `verified` | 1.0 baseline | progress.md:2013, 2038 · `search-002-handoff.md` | Depends on unverified: SEARCH-001, HARVEST-001, ATTACHMENT-005. |
@@ -198,7 +198,7 @@ operator can close them with a one-line acceptance record.
 | TAXONOMY-VISUAL-001 | `verified` | 1.0 baseline | progress.md:744, 773, 6488, 6511 · `taxonomy-visual-001-handoff.md` | Depends on unverified: THEMES-001, CONTROLS-001, BOTANICAL-IDENTITIES-VISUAL-001. |
 | MEDIA-VISUAL-001 | `implemented` | PRE-1.0 certify | progress.md:645, 671, 694, 723 · `media-visual-001-design-review.md` | Delivered in #127; "remains `implemented` until all acceptance and receipt evidence is complete". |
 | RELEASE-VISUAL-AUDIT-001 | `implemented` | historical record | progress.md:611 | Audit/design record with no product deliverable; operator decision was pending. Close without certification. |
-| UI-SYSTEM-001 | `in_progress` | PRE-1.0 certify | progress.md:578, 6539, 6572, 6601 | Gate B review candidate; later waves closed around it. Needs an operator decision to close at the delivered state. |
+| UI-SYSTEM-001 | `implemented` (RC-SEQ-01, 2026-11-21) | PRE-1.0 certify | progress.md:578, 6539, 6572, 6601 | Gate B review candidate; later waves closed around it. Needs an operator decision to close at the delivered state. |
 | DASHBOARD-CUSTOMIZATION-001 | `planned` | POST-1.0 | progress.md mentions only (1) | Deferred in the roadmap. |
 | UI-SYSTEM-WAVE2-001 | `implemented` | PRE-1.0 certify | progress.md mentions only (2) | No heading in `progress.md`; two mentions only. |
 | ACTIVITY-CONCEPT-001 | `implemented` | historical record | progress.md mentions only (1) | Audit and prototype record; SCHEDULE-UX-001 (verified) built on it. Close without certification. |

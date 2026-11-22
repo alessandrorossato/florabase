@@ -469,7 +469,8 @@ def test_production_route_inventory_satisfies_gsec_allowlist() -> None:
     result = subprocess.run(
         [sys.executable, "scripts/check_api_routes.py", "--format", "json"],
         cwd=Path(__file__).resolve().parents[1],
-        env=os.environ
+        # Ambient FLORABASE_* settings must not leak into the production inventory check.
+        env={key: value for key, value in os.environ.items() if not key.startswith("FLORABASE_")}
         | {
             "FLORABASE_ENVIRONMENT": "production",
             "FLORABASE_DATABASE_URL": "postgresql+psycopg://test:test@db/test",
