@@ -144,7 +144,7 @@ function WorkspaceLinks({
                     <a
                       href={view.href}
                       className="wb-sublink"
-                      aria-current={hash === view.href ? "page" : undefined}
+                      data-current={hash === view.href || undefined}
                       onClick={(event) => {
                         follow(event, view.href);
                       }}
@@ -303,6 +303,14 @@ export function WorkbenchShell({
   const requestRemoval = (view: SavedViewLink, trigger: HTMLButtonElement) => {
     removalTrigger.current = trigger;
     setRemoval(view);
+  };
+  // After a delete the row (and its remove button) disappears; the dialog returns focus to the
+  // owning section link instead, so it never falls to <body>.
+  const focusOwningSection = () => {
+    const sectionLink = removalTrigger.current
+      ?.closest(".wb-saved")
+      ?.parentElement?.querySelector<HTMLElement>(":scope > .wb-link");
+    if (sectionLink) removalTrigger.current = sectionLink;
   };
   // Recently opened section-level destinations in this session (never records,
   // never stored). Updated while rendering when the route changes.
@@ -753,6 +761,7 @@ export function WorkbenchShell({
         <SavedViewRemoval
           view={removal}
           returnFocusTo={removalTrigger}
+          onRemoved={focusOwningSection}
           onClose={() => {
             setRemoval(null);
           }}

@@ -129,10 +129,14 @@
   border-color: var(--primary);
   background: var(--primary-subtle);
 }
-.lineage-gallery .scientific-name {
+.lineage-gallery strong {
   color: var(--primary);
+  font: var(--type-strong);
+}
+.lineage-gallery .scientific-name {
   font-family: var(--font-botanical);
   font-size: 1.0625rem;
+  font-weight: 400;
 }
 .lineage-gallery span {
   color: var(--text-muted);

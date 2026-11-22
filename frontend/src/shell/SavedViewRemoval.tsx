@@ -1,4 +1,9 @@
-import { useState, type RefObject, type SyntheticEvent } from "react";
+import {
+  useEffect,
+  useState,
+  type RefObject,
+  type SyntheticEvent,
+} from "react";
 
 import { activeCsrfToken } from "../auth/api";
 import { useOptionalAuth } from "../auth/context";
@@ -13,25 +18,40 @@ export function SavedViewRemoval({
   view,
   returnFocusTo,
   onClose,
+  onRemoved,
 }: {
   view: SavedViewLink;
   returnFocusTo: RefObject<HTMLElement | null>;
   onClose: () => void;
+  /** Called after a successful delete, before closing, so the caller can move focus. */
+  onRemoved?: () => void;
 }) {
   const auth = useOptionalAuth();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [removed, setRemoved] = useState(false);
+  // Close one render after onRemoved, so the dialog has picked up the new return-focus target.
+  useEffect(() => {
+    if (removed) onClose();
+  }, [removed, onClose]);
   const submit = async (event: SyntheticEvent) => {
     event.preventDefault();
     const capability = auth?.capability;
     const token = auth ? activeCsrfToken(auth.state) : "";
-    if (!capability || !token || pending) return;
+    if (pending) return;
+    if (!capability || !token) {
+      setError(
+        "Your session expired. Sign in again to remove this saved view.",
+      );
+      return;
+    }
     setPending(true);
     setError("");
     try {
       await deleteSavedView(view.id, token, capability);
+      onRemoved?.();
       window.dispatchEvent(new Event(savedViewsChanged));
-      onClose();
+      setRemoved(true);
     } catch {
       setError("Could not remove the saved view. Try again.");
       setPending(false);

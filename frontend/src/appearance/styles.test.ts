@@ -84,7 +84,7 @@ function contrast(first: string, second: string) {
   return (values[1] + 0.05) / (values[0] + 0.05);
 }
 
-test("all six original and two Field Ledger sets meet the approved shared text, state and boundary contrast pairs", () => {
+test("every palette light and dark set meets the approved shared text, state and boundary contrast pairs", () => {
   for (const palette of ["herbarium", "mineral", "field-ledger"]) {
     for (const mode of ["light", "dark"]) {
       const selector = `:root[data-palette="${palette}"][data-appearance="${mode}"]`;
@@ -144,7 +144,7 @@ function block(selector: string) {
   return tokens.slice(start).split("}")[0];
 }
 
-test("new system tokens default to UI Foundation geometry, so only Field Ledger changes it", () => {
+test("new system tokens default to UI Foundation geometry; the shared palette system overrides it", () => {
   const root = block(":root {");
   for (const declaration of [
     "--font-data: var(--font-ui);",

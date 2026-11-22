@@ -86,6 +86,17 @@ test("invalid fields fall back independently; unknown values never enter root at
   });
 });
 
+test("a stored retired Botanical palette falls back to the default, now labelled Botanical", () => {
+  bootstrap(
+    JSON.stringify({ version: 1, palette: "botanical", appearance: "dark" }),
+  );
+  expect(window.florabaseAppearance.getSnapshot()).toMatchObject({
+    palette: "field-ledger",
+    appearance: "dark",
+  });
+  expect(document.documentElement.dataset.palette).toBe("field-ledger");
+});
+
 test("System follows live OS changes; explicit appearance ignores them and re-entering System resolves current OS", () => {
   const media = bootstrap(null);
   media.matches = true;

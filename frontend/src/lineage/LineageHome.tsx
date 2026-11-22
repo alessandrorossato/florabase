@@ -6,7 +6,11 @@ import type { SearchResponse } from "../collection/searchApi";
 import { searchKindLabels } from "../collection/searchApi";
 import { InfoDisclosure } from "../components/ContextualHelp";
 import { DetailEmptyState } from "../components/DetailEmptyState";
-import { DirectorySearch, PageHeader } from "../components/ReferenceUI";
+import {
+  BotanicalName,
+  DirectorySearch,
+  PageHeader,
+} from "../components/ReferenceUI";
 import type { BotanicalIdentityResponse } from "../botanical-identities/api";
 import { ancestryHref, identityLineageHref } from "./useRecordedLineage";
 import "../maps/maps.css";
@@ -32,22 +36,29 @@ const materialTotal = (c: Counts) =>
 const plural = (n: number, one: string, many: string) =>
   `${String(n)} ${n === 1 ? one : many}`;
 
-/** The material path of one identity in collection order, e.g. "3 seed lots → 2 sowings → 1 plant". */
+/** Material counts of one identity in collection order, e.g. "3 seed lots · 2 sowings · 1 plant". */
 function chain(c: Counts) {
-  return [
-    c.seed_lots && plural(c.seed_lots, "seed lot", "seed lots"),
-    c.sowings && plural(c.sowings, "sowing", "sowings"),
-    c.plants + c.plant_groups &&
-      plural(c.plants + c.plant_groups, "plant or group", "plants and groups"),
-    c.vegetative_lots + c.propagation_attempts &&
-      plural(
-        c.vegetative_lots + c.propagation_attempts,
-        "cutting record",
-        "cutting records",
-      ),
-  ]
-    .filter(Boolean)
-    .join(" → ");
+  return (
+    [
+      c.seed_lots && plural(c.seed_lots, "seed lot", "seed lots"),
+      c.sowings && plural(c.sowings, "sowing", "sowings"),
+      c.plants + c.plant_groups &&
+        plural(
+          c.plants + c.plant_groups,
+          "plant or group",
+          "plants and groups",
+        ),
+      c.vegetative_lots + c.propagation_attempts &&
+        plural(
+          c.vegetative_lots + c.propagation_attempts,
+          "cutting record",
+          "cutting records",
+        ),
+    ]
+      .filter(Boolean)
+      // Counts only: a shared identity never implies recorded lineage, so no arrows here.
+      .join(" · ")
+  );
 }
 
 type Hit = SearchResponse["groups"][number]["items"][number];
@@ -101,12 +112,16 @@ export function LineageHome() {
       .catch((error: unknown) => {
         if (controller.signal.aborted || isExpectedAuthCancellation(error))
           return;
+        if (error instanceof ApiError && error.status === 401) {
+          sessionExpired();
+          return;
+        }
         setIdentities("error");
       });
     return () => {
       controller.abort();
     };
-  }, [authorized, capability]);
+  }, [authorized, capability, sessionExpired]);
 
   useEffect(() => {
     if (!authorized || trimmed.length < 2) return;
@@ -236,7 +251,13 @@ export function LineageHome() {
               {represented.map((item) => (
                 <li key={item.id}>
                   <a href={identityLineageHref(item.id)}>
-                    <i className="scientific-name">{item.scientific_name}</i>
+                    {/* display_label keeps cultivars of one species apart. */}
+                    <strong>
+                      <BotanicalName
+                        label={item.display_label}
+                        scientificName={item.scientific_name}
+                      />
+                    </strong>
                     {item.common_name && <span>{item.common_name}</span>}
                     <small>{chain(countsOf(item))}</small>
                   </a>

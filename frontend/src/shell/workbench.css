@@ -337,6 +337,12 @@ html:has(.wb-shell) {
   width: 0.875rem;
   height: 0.875rem;
 }
+/* The section link keeps aria-current; the matching saved view is only highlighted. */
+.wb-shell .wb-saved .wb-sublink[data-current],
+.wb-sheet .wb-saved .wb-sublink[data-current] {
+  color: var(--primary);
+  font-weight: 600;
+}
 .wb-saved__name {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -359,7 +365,8 @@ html:has(.wb-shell) {
 .wb-saved__item:is(:hover, :focus-within) .wb-saved__remove {
   opacity: 1;
 }
-.wb-saved__remove:hover {
+.wb-shell .wb-saved__remove.button--quiet:not(:disabled):hover,
+.wb-sheet .wb-saved__remove.button--quiet:not(:disabled):hover {
   color: var(--danger);
   background: var(--surface-hover);
 }

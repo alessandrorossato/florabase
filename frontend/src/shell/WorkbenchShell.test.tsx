@@ -445,6 +445,12 @@ test("a Saved View is removed from the menu only after confirmation", async () =
   await waitFor(() => {
     expect(screen.queryByRole("link", { name: /Basil lots/ })).toBeNull();
   });
+  // Focus does not fall to <body> when the removed row disappears.
+  expect(
+    within(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Seeds" }),
+  ).toHaveFocus();
   expect(fetch).toHaveBeenCalledWith(
     "/api/v1/saved-views/0190d2a8-0000-7000-8000-00000000000a",
     expect.objectContaining({ method: "DELETE" }),

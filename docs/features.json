@@ -2371,7 +2371,7 @@
         "Every palette shares the Field Ledger system and changes colour only; Botanical, Herbarium and Mineral remain, a retired choice falls back to Botanical",
         "Explore page titles match their menu entries, Taxonomy uses one List/Tree toggle, Lineage has its own stage, and record ancestry opens in Explore",
         "Settings gains a Help page derived from the navigation and a static Data sources page describing current references and the planned integration standard",
-        "The README shows a showcase of the main screens with demo data; focused and full frontend checks pass, canonical verification pending operator authorization"
+        "The README shows a showcase of the main screens with demo data; focused frontend checks and the canonical full gate pass"
       ],
       "dependencies": [
         "UI-POLISH-001"

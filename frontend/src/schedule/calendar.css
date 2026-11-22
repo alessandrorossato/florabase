@@ -544,7 +544,8 @@ body:has(.schedule-workspace dialog[open]) {
     min-block-size: 1.75rem;
     padding: 0.125rem var(--space-1);
   }
-  .schedule-month .schedule-cell-activity {
+  .schedule-month .schedule-cell-activity,
+  .schedule-month .schedule-day-more {
     min-block-size: 1.5rem;
     padding-block: 0.125rem;
   }

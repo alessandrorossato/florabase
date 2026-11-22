@@ -130,6 +130,8 @@
   font: var(--type-small);
 }
 .taxonomy-tree-scroll {
+  /* Contain absolutely positioned sr-only text so it cannot grow the document scroll. */
+  position: relative;
   max-height: 31rem;
   overflow: auto;
   scrollbar-gutter: stable;

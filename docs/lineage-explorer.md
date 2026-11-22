@@ -52,7 +52,7 @@ model applies; the endpoints expose only summaries of records already readable b
 
 ## UI
 
-`#/lineage/{kind}/{id}` renders within the focus record's section (Seeds, Sowings, Plants or Cuttings).
+`#/lineage/{kind}/{id}` renders in Explore → Lineage with the breadcrumb Explore / Lineage / record; the record's own Lineage tab links there.
 Every record Lineage tab has **Explore material ancestry**. Since LINEAGE-004 the Explore workspace
 also has a **Lineage** destination (see [Identity lineage](#identity-lineage-lineage-004)).
 

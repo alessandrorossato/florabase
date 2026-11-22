@@ -10026,5 +10026,14 @@ Status remains implemented pending canonical verification.
   `test_missing_v16_keeps_v15_link_current_without_silent_fallback` see a real v16 index (cache
   removed), and `PlantScreen.test.tsx` "detail loading, detail failure, authorization, and session
   expiry" failed once under full-suite load but passes in isolation and on rerun (possible flake).
+- Independent QA (read-only, detached `3c55bdc`): no P0/P1. Fixed every P2: focus returns to the
+  owning section link after a saved-view removal and an expired session shows an error; Cuttings
+  `?action=edit` no longer opens editing for reversed attempts and is cleared on close; the Taxonomy
+  tree scroller also contains sr-only text; the Lineage gallery shows counts with " · " (no implied
+  ancestry), uses `display_label` for cultivars and handles 401; Data sources describes all GBIF
+  online requests and WCVP CC BY 3.0. P3: remove-button hover specificity, one `aria-current` per
+  view, compact "+N more" in the Schedule month, occurrence tile guard and basemap copy, palette test
+  names plus an explicit retired-Botanical fallback test, docs (lineage routes, page inventory nav),
+  refreshed README showcase. Gate rerun after these fixes is recorded below.
   UI-REVIEW-001 and LINEAGE-004 are marked verified. Release class proposed for the operator for
   UI-REVIEW-001: `best-effort`.

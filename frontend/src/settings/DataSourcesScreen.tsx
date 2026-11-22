@@ -15,13 +15,14 @@ const sources = [
     name: "Kew WCVP",
     use: "Reviewable native-range proposals",
     access: "Local sealed index installed by the operator",
-    licence: "CC BY",
+    licence: "CC BY 3.0",
     where: "#/native-ranges",
   },
   {
     name: "GBIF",
-    use: "Occurrence evidence for one identity at a time",
-    access: "Online request only when you press Load on a confirmed link",
+    use: "Reference links on botanical identities and occurrence evidence for one identity at a time",
+    access:
+      "Online, only when you search, confirm or refresh a GBIF link, or press Load on a confirmed link",
     licence: "Per dataset",
     where: "#/species-distribution",
   },

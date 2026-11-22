@@ -35,6 +35,7 @@ The inventory is derived from two places in the frontend, and from nothing else:
 | Activity | Schedule | `#/schedule` | Calendar `#/schedule?view=calendar` |
 | Explore | Botanical identities | `#/identities` | — |
 | Explore | Taxonomy | `#/taxonomy` | — |
+| Explore | Lineage | `#/lineage` | — |
 | Explore | Media | `#/media` | — |
 | Explore | Geography | `#/geography` | Collection origins `#/map`; Species distribution `#/species-distribution`; Native ranges `#/native-ranges` |
 | Sourcing | Suppliers | `#/suppliers` | — |
@@ -42,8 +43,10 @@ The inventory is derived from two places in the frontend, and from nothing else:
 | Settings | Theme | `#/settings` | — |
 | Settings | Labels | `#/labels` | — |
 | Settings | Import / Export | `#/import-export` | — |
+| Settings | Data sources | `#/data-sources` | — |
+| Settings | Help | `#/help` | — |
 
-That is 19 destinations and 6 subdestinations.
+That is 22 destinations and 6 subdestinations.
 
 ## Record and detail routes
 
@@ -62,7 +65,7 @@ That is 19 destinations and 6 subdestinations.
 | Provenance site | `#/geography/<id>` |
 | Supplier | `#/suppliers/<id>` |
 | Order | `#/orders/<id>` |
-| Material ancestry | `#/lineage/<kind>/<id>` for seed lot, sowing, plant, plant group, vegetative lot and propagation attempt |
+| Material ancestry | `#/lineage/<kind>/<id>` for seed lot, sowing, plant, plant group, vegetative lot and propagation attempt, shown in Explore → Lineage |
 | Lineage (Explore) | `#/lineage` search, and `#/lineage/identity/<id>` for one botanical identity's recorded lineage |
 | Label composer for one record | `#/labels?kind=<kind>&record=<id>` |
 

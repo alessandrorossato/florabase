@@ -241,6 +241,20 @@ function IdentityLink({ id }: { id: string }) {
   );
 }
 
+/** Drops ?action=edit once the dialog closes, so a reload does not reopen it. */
+function clearEditRequest() {
+  if (!editRequested()) return;
+  const [path, query = ""] = window.location.hash.split("?", 2);
+  const params = new URLSearchParams(query);
+  params.delete("action");
+  const next = params.toString();
+  window.history.replaceState(
+    window.history.state,
+    "",
+    `${window.location.pathname}${window.location.search}${path}${next ? `?${next}` : ""}`,
+  );
+}
+
 function editRequested() {
   return (
     new URLSearchParams(window.location.hash.split("?", 2)[1] ?? "").get(
@@ -338,6 +352,7 @@ export function LotPage({ id, token }: { id: string; token: string }) {
               lifecycle={lot.lifecycle}
               token={token}
               close={() => {
+                clearEditRequest();
                 setDialog(undefined);
               }}
               refresh={retry}
@@ -976,6 +991,7 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
   const editable = attempt && attempt.lifecycle !== "reversed";
   const active = attempt?.lifecycle === "active";
   function close() {
+    clearEditRequest();
     setDialog(undefined);
   }
   function refresh() {
@@ -1229,7 +1245,7 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
             id={id}
             label={displayAttempt(attempt)}
           />
-          {dialog?.type === "edit" && (
+          {dialog?.type === "edit" && editable && (
             <AttemptEditDialog
               attempt={attempt}
               token={token}

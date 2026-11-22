@@ -127,7 +127,7 @@ export function OccurrenceDensityMap({
   }, [identityId, generation, localOnly, capability]);
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !online) return;
+    if (!map || !online || !mapRuntimeConfig.onlineConfigured) return;
     const layer = tileLayer(mapRuntimeConfig.tileUrl, {
       pane: "occurrence-basemap",
       attribution: mapRuntimeConfig.attribution,
