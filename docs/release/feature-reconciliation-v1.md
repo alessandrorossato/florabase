@@ -65,7 +65,7 @@ operator can close them with a one-line acceptance record.
 
 ## Verified entries that need attention
 
-- **TAXONOMY-001** — Two concurrency findings recorded open (progress 138, 408). Status not changed here; needs a fix or a written accepted-risk record before the RC.
+- **TAXONOMY-001** — The two concurrency findings were fixed in #185 and closed on branch (a) of ENG-05 on 2026-11-22 ([evidence](evidence/eng-05.md)). Status unchanged.
 - **DASHBOARD-001** — Its photo-first layout was deliberately reversed by UX-TODAY-001 (progress 8740); the verified evidence describes the earlier layout.
 - 12 verified entries depend on entries that are not verified: PERF-001, ATTACHMENT-004, HARVEST-002, SEARCH-002, HISTORY-001, DASHBOARD-001, SUPPLIER-003, IA-FREEZE-001, MAPS-ORIGINS-001, TAXONOMY-VISUAL-001, SCHEDULE-UX-001, UI-DESIGN-001.
   Each is marked in the matrix. The count is computed from the feature graph after the status changes above.
@@ -168,7 +168,7 @@ operator can close them with a one-line acceptance record.
 | WCVP-DEFAULT-001 | `implemented` | PRE-1.0 certify | progress.md:35 · b94757e#174 | Delivered in #174; FULL and independent QA said to run on the rebased commit, result not recorded in the log. |
 | WGSRPD-CROSSWALK-V2 | `implemented` | PRE-1.0 certify | progress.md:8657 | Delivered in #175; verification recorded only in the worktree receipt. |
 | ENRICHMENT-002 | `planned` | POST-1.0 | progress.md mentions only (6) | Deferred in the roadmap. |
-| TAXONOMY-001 | `verified` | 1.0 baseline | progress.md:266, 8422 · 48f35ea#165 | Two concurrency findings recorded open (progress 138, 408). Status not changed here; needs a fix or a written accepted-risk record before the RC. |
+| TAXONOMY-001 | `verified` | 1.0 baseline | progress.md:266, 8422 · 48f35ea#165 | Two concurrency findings fixed in #185; ENG-05 closed on branch (a) ([evidence](evidence/eng-05.md)). |
 | TAXONOMY-002 | `implemented` | PRE-1.0 certify | progress.md:172 | Delivered in #167; log: no individual canonical receipt (consolidated integration policy). |
 | WEATHER-001 | `planned` | POST-1.0 | no progress.md record | No work recorded. |
 | REMINDER-001 | `planned` | POST-1.0 | no progress.md record | No work recorded. |

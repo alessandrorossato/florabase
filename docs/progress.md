@@ -1,3 +1,14 @@
+## 2026-11-22 — ENG-05 closed on branch (a)
+
+- Documentation only, on `claude/project-thread-7djkvu` from `1126c03`. The operator chose
+  branch (a) of the ENG-05 criterion: the two-session PostgreSQL regression delivered in #185.
+- `./scripts/test-integration.sh backend/tests/integration/test_taxonomy_concurrency.py` passed
+  13 tests on PostgreSQL 18.6 with clean disposable cleanup; recorded in
+  [ENG-05 evidence](release/evidence/eng-05.md).
+- Updated the TAXONOMY-001 lines of `feature-reconciliation-v1.md` and answered question 3 of
+  `scope-v1-handoff.md`. The CERT-02 note of 2026-11-16 that calls both findings open predates
+  this record and is superseded by it. TAXONOMY-001 status is unchanged.
+
 ## 2026-11-19 — PERF-001 Golden COMPREHENSIVE performance harness (Batch 07 Workstream D)
 
 - On `feat/perf-001-comprehensive-harness` from `fdc75e8` (writer `hydrogen-b-perf-harness`).

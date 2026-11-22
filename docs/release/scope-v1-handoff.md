@@ -113,6 +113,8 @@ when this was written; the corrections follow the findings as relayed by the orc
    MULTIBRANCH-UAT-001 (operator UAT), or leave them for the release certification?
 3. **ENG-05.** Which branch: the two-session regression, or a documented risk disposition?
    TAXONOMY-001 stays `verified` meanwhile.
+   *Resolved 2026-11-22: branch (a). The regression was delivered in #185 and passed the
+   integration stage; see [ENG-05 evidence](evidence/eng-05.md).*
 4. **DASHBOARD-001.** Its verified layout was reversed by UX-TODAY-001. Re-verify under
    UX-TODAY-001, or annotate the entry?
 5. **UI-SYSTEM-001.** Close at the delivered state, or keep open?
