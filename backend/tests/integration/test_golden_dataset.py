@@ -351,7 +351,7 @@ def test_the_full_suite_skips_the_golden_dataset_module() -> None:
 
 
 def test_comprehensive_does_not_touch_the_smoke_plan() -> None:
-    """Pure and cheap, so the default CI path guards this without a COMPREHENSIVE generation."""
+    """Pure and cheap, so the golden-dataset stage guards this without a COMPREHENSIVE run."""
     manifest = plan_module.load_manifest()
     smoke = plan_module.build_plan("smoke", manifest=manifest)
     comprehensive = plan_module.build_plan("comprehensive", manifest=manifest)

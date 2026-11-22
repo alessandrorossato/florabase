@@ -21,10 +21,17 @@ Date: 2026-11-22. Branch: `ci/verify-speed-001` (from `origin/main` `16ccf4b`).
      - `scripts/uat_fixture.py` (imported by `golden_dataset.py`)
      - `scripts/review_dataset_v5.py` (imported by `golden_dataset.py`)
      - `scripts/attachment_artifacts.py` (imported by `dev_golden_payload.py`)
+     - `scripts/test-integration.sh`
      - `scripts/fixtures/golden/`
      - `scripts/fixtures/botanical-v5/` (loaded by `review_dataset_v5.py`)
      - `backend/alembic/`
-     - `backend/src/florabase/db/`
+     - `backend/src/florabase/` (Golden tooling imports ~30 domain packages plus `florabase.main`)
+     - `backend/pyproject.toml`
+     - `backend/requirements` (`requirements.lock`, `requirements-dev.lock`)
+     - `backend/uv.lock`
+     - `backend/Dockerfile`
+     - `compose.dev.yaml`
+     - `Makefile`
      - `backend/tests/integration/test_golden_dataset.py`
      - `backend/tests/integration/test_golden_comprehensive.py`
      - `backend/tests/integration/conftest.py`
@@ -58,7 +65,11 @@ Date: 2026-11-22. Branch: `ci/verify-speed-001` (from `origin/main` `16ccf4b`).
    - Mypy receives a disposable, worktree-owned cache directory under
      `$(git rev-parse --absolute-git-dir)/florabase-mypy-workflow-cache` (separate subdirs per
      invocation flags/`MYPYPATH`, never shared across worktrees, never a named Docker volume, and
-     never touching the working tree).
+     never touching the working tree). Verified host-UID ownership: `compose.dev.yaml` runs
+     `backend` as `user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"` with the invoking host UID:GID
+     propagated by `workflow_environment.py`, so all files under
+     `.git/worktrees/<name>/florabase-mypy-workflow-cache` are host-owned (`0` root-owned files)
+     and cleanly removable by `make feature-retire`.
    - Measured locally: `33.06 s` before -> `27.16 s` cold cache / `23.73 s` warm cache after (the
      backend container portion drops from `~14 s` to `~8 s` cold / `~4.5 s` warm; GitHub Actions
      runners avoid 6 container startups + BuildKit checks).

@@ -4,11 +4,16 @@
 - Split `backend/tests/integration/test_golden_dataset.py` out of the default integration run using
   the same explicit-selection fixture as `test_golden_comprehensive.py` (`SEARCH_PATH =
   "test_golden_dataset"`), preserving `test_the_full_suite_skips_the_comprehensive_module` and
-  adding `test_the_full_suite_skips_the_golden_dataset_module`. Added validated `golden_prefixes`
-  to `scripts/verification-impact.json`, `golden_dataset` selection (closure-triggered or
-  fail-closed on unclassified paths) in `scripts/verification_impact.py`, the non-reusable
-  `golden-dataset` stage (`make golden-dataset-check`) in `scripts/verification_gate.py`, and
-  exhaustive `main` push CI coverage in `scripts/ci-verify.py`.
+  adding `test_the_full_suite_skips_the_golden_dataset_module` and updating the stale default-CI
+  comment in `test_comprehensive_does_not_touch_the_smoke_plan`. Added validated `golden_prefixes`
+  to `scripts/verification-impact.json` covering the full Golden import and runtime closure
+  (`backend/src/florabase/`, `backend/alembic/`, `backend/pyproject.toml`, `backend/requirements`,
+  `backend/uv.lock`, `backend/Dockerfile`, `compose.dev.yaml`, `Makefile`,
+  `scripts/test-integration.sh`, Golden/fixture scripts, and integration test fixtures),
+  `golden_dataset` selection (closure-triggered or fail-closed on unclassified paths) in
+  `scripts/verification_impact.py`, the non-reusable `golden-dataset` stage
+  (`make golden-dataset-check`) in `scripts/verification_gate.py`, and exhaustive `main` push CI
+  coverage in `scripts/ci-verify.py`.
 - Enabled Vitest file parallelism in `frontend/vite.config.ts` (`fileParallelism: true`,
   `pool: "forks"`, `maxWorkers` defaulting to `3` via `VITEST_MAX_WORKERS`, keeping `testTimeout:
   15_000`) and lifted the pinned `VITEST_MAX_WORKERS: "1"` in `scripts/compose_stacks.py` to
@@ -17,8 +22,8 @@
   from `~258 s` serial locally).
 - Consolidated `workflow-check` in `Makefile` from 7 separate backend container runs into one
   container invocation with shared file-list Make variables, run-all failure reporting, and a
-  worktree-owned disposable mypy cache under `<git-dir>/florabase-mypy-workflow-cache` (`33.06 s`
-  before -> `27.16 s` cold / `23.73 s` warm).
+  worktree-owned disposable mypy cache under `<git-dir>/florabase-mypy-workflow-cache` (verified
+  host-UID owned, zero root-owned files; `33.06 s` before -> `27.16 s` cold / `23.73 s` warm).
 - Hygiene: removed retired `deploy/` from `full_prefixes`, added manual `make smoke-beta-lifecycle`
   and documented `scripts/test-beta-lifecycle.py` in `docs/beta-image-001-final-reliability.md`,
   profiled all 22 tests in `scripts/test-stage-evidence.py` (`110.26 s` total; fixtures retained

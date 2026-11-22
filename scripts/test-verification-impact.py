@@ -280,7 +280,7 @@ class SelectionTests(unittest.TestCase):
                 self.assertEqual(plan["escalation_reasons"], [])
                 self.assertEqual(plan["product_reasons"], [f"shared product path: {path}"])
                 expected_checks = list(full_product_checks)
-                if path.startswith("backend/src/florabase/db/"):
+                if path.startswith("backend/src/florabase/"):
                     self.assertTrue(plan["golden_dataset"])
                     expected_checks.append(
                         {"id": "golden-dataset", "command": ["make", "golden-dataset-check"]}
@@ -692,18 +692,23 @@ class SelectionTests(unittest.TestCase):
                     self.assertEqual("backend" in quality_ids, bool(plan["backend"]))
                     self.assertEqual("frontend" in quality_ids, bool(plan["frontend"]))
                     if plan["integration"]:
-                        self.assertEqual(
-                            jobs["integration"],
-                            [
+                        expected_affected_integration = [
+                            {
+                                "id": "integration",
+                                "command": [
+                                    "./scripts/test-integration.sh",
+                                    *plan["integration"],
+                                ],
+                            }
+                        ]
+                        if plan["golden_dataset"]:
+                            expected_affected_integration.append(
                                 {
-                                    "id": "integration",
-                                    "command": [
-                                        "./scripts/test-integration.sh",
-                                        *plan["integration"],
-                                    ],
+                                    "id": "golden-dataset",
+                                    "command": ["make", "golden-dataset-check"],
                                 }
-                            ],
-                        )
+                            )
+                        self.assertEqual(jobs["integration"], expected_affected_integration)
                     else:
                         self.assertEqual(
                             [c["id"] for c in jobs["integration"]],
@@ -804,13 +809,15 @@ class SelectionTests(unittest.TestCase):
         seeds_be = self.plan("backend/src/florabase/seed_lots/service.py")
         self.assertEqual(plan_tier(seeds_be), "affected")
         self.assertTrue(seeds_be["integration"])
+        self.assertTrue(seeds_be["golden_dataset"])
         self.assertEqual(
             CI.ci_checks_for(seeds_be, "integration"),
             [
                 {
                     "id": "integration",
                     "command": ["./scripts/test-integration.sh", *seeds_be["integration"]],
-                }
+                },
+                {"id": "golden-dataset", "command": ["make", "golden-dataset-check"]},
             ],
         )
         self.assertEqual(
@@ -881,7 +888,7 @@ class SelectionTests(unittest.TestCase):
         ids = [c["id"] for c in affected]
         for cheap, costly in (("api-check", "backend"), ("backend", "production-builds")):
             self.assertLess(ids.index(cheap), ids.index(costly))
-        self.assertEqual(ids[-1], "integration")
+        self.assertEqual(ids[-2:], ["integration", "golden-dataset"])
 
     def test_golden_dataset_closure_selection_and_fail_closed(self) -> None:
         data = load_map()
@@ -898,14 +905,24 @@ class SelectionTests(unittest.TestCase):
                 self.assertIn(golden_check, checks_for(plan))
                 self.assertIn(golden_check, CI.ci_checks_for(plan, "integration"))
 
-        # Unrelated product files (affected, product-frontend, product outside db/) and docs skip it.
+        # Backend domain/shared modules and Makefile are inside the Golden import/runtime closure.
+        for path in (
+            "backend/src/florabase/schedule/service.py",
+            "backend/src/florabase/core/config.py",
+            "backend/src/florabase/auth/security.py",
+            "Makefile",
+        ):
+            with self.subTest(closure_member=path):
+                plan = self.plan(path)
+                self.assertTrue(plan["golden_dataset"])
+                self.assertIn(golden_check, checks_for(plan))
+                self.assertIn(golden_check, CI.ci_checks_for(plan, "integration"))
+
+        # Docs and frontend-only changes outside the Golden closure skip it.
         for path in (
             "docs/architecture.md",
             "frontend/src/plants/PlantList.tsx",
             "frontend/src/components/TaskDialog.tsx",
-            "backend/src/florabase/schedule/service.py",
-            "backend/src/florabase/core/config.py",
-            "backend/src/florabase/auth/security.py",
         ):
             with self.subTest(unrelated=path):
                 plan = self.plan(path)
@@ -916,7 +933,6 @@ class SelectionTests(unittest.TestCase):
         # FULL without touching the Golden closure omits golden-dataset.
         for plan in (
             self.plan("scripts/feature-verify.sh"),
-            self.plan("Makefile"),
             self.plan(".github/workflows/ci.yml"),
             plan_paths(["frontend/src/plants/PlantList.tsx"], "base", force_full=True),
         ):
