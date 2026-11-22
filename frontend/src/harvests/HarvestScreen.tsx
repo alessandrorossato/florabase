@@ -348,6 +348,31 @@ export function HarvestScreen({
       setPending(false);
     }
   }
+  // Same place in both views: under the search toolbar, like Cuttings.
+  const surfaces = (
+    <nav className="directory-surfaces" aria-label="Harvest views">
+      <button
+        type="button"
+        className="button--secondary"
+        aria-pressed={!storedMode}
+        onClick={() => {
+          window.location.assign("#/harvests");
+        }}
+      >
+        Harvests
+      </button>
+      <button
+        type="button"
+        className="button--secondary"
+        aria-pressed={storedMode}
+        onClick={() => {
+          window.location.assign("#/harvests?tab=stored-material");
+        }}
+      >
+        Stored material
+      </button>
+    </nav>
+  );
   return (
     <section className="harvest-workspace" aria-labelledby={headingId}>
       <WorkspaceIntro
@@ -487,30 +512,7 @@ export function HarvestScreen({
           ]}
         />
       )}
-      {!displayId && (
-        <nav className="directory-surfaces" aria-label="Harvest views">
-          <button
-            type="button"
-            className="button--secondary"
-            aria-pressed={!storedMode}
-            onClick={() => {
-              window.location.assign("#/harvests");
-            }}
-          >
-            Harvests
-          </button>
-          <button
-            type="button"
-            className="button--secondary"
-            aria-pressed={storedMode}
-            onClick={() => {
-              window.location.assign("#/harvests?tab=stored-material");
-            }}
-          >
-            Stored material
-          </button>
-        </nav>
-      )}
+      {!displayId && !storedMode && surfaces}
 
       {error && (
         <div className="notice notice--error" role="alert">
@@ -674,6 +676,7 @@ export function HarvestScreen({
         )
       ) : storedMode ? (
         <StoredMaterialDirectory
+          surfaces={surfaces}
           actions={
             <ActionButton
               icon="add"

@@ -511,7 +511,8 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
 
 export function StoredMaterialDirectory({
   actions,
-}: { actions?: ReactNode } = {}) {
+  surfaces,
+}: { actions?: ReactNode; surfaces?: ReactNode } = {}) {
   const recordIdentities = useContext(RecordIdentities);
   const auth = useAuth();
   const { capability, sessionExpired } = auth;
@@ -780,6 +781,7 @@ export function StoredMaterialDirectory({
           </>
         }
       />
+      {surfaces}
       <BulkToolbar
         selection={bulk}
         visible={bulkChoices}

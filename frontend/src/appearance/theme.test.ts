@@ -53,7 +53,7 @@ test.each([
   });
 });
 
-test.each(["field-ledger", "botanical", "herbarium", "mineral"])(
+test.each(["field-ledger", "herbarium", "mineral"])(
   "Florabase Next defaults to Field Ledger but honours a saved %s choice",
   (palette) => {
     bootstrap(JSON.stringify({ version: 1, palette, appearance: "light" }));

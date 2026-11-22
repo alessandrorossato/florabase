@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 
@@ -31,7 +30,7 @@ test("every palette has two complete semantic sets without changing geometry or 
     "overlay-backdrop",
     "elevation-overlay",
   ];
-  for (const palette of ["botanical", "herbarium", "mineral", "field-ledger"]) {
+  for (const palette of ["herbarium", "mineral", "field-ledger"]) {
     for (const appearance of ["light", "dark"]) {
       const selector = `:root[data-palette="${palette}"][data-appearance="${appearance}"]`;
       const start = tokens.indexOf(selector);
@@ -86,7 +85,7 @@ function contrast(first: string, second: string) {
 }
 
 test("all six original and two Field Ledger sets meet the approved shared text, state and boundary contrast pairs", () => {
-  for (const palette of ["botanical", "herbarium", "mineral", "field-ledger"]) {
+  for (const palette of ["herbarium", "mineral", "field-ledger"]) {
     for (const mode of ["light", "dark"]) {
       const selector = `:root[data-palette="${palette}"][data-appearance="${mode}"]`;
       const block = tokens.slice(tokens.indexOf(selector)).split("}")[0];
@@ -145,30 +144,6 @@ function block(selector: string) {
   return tokens.slice(start).split("}")[0];
 }
 
-test("the six UI Foundation themes stay byte-identical to main d94f275", () => {
-  const pinned: Record<string, string> = {
-    "botanical light":
-      "aedad2d5144195729fc67a8e67c5f8c9d09ddc5d2cbb533c2f51de44606deca5",
-    "botanical dark":
-      "f5d53430ee9e1e6f8d986e4fcc4e6a406268d6ee7549ea000dabab84bc57648d",
-    "herbarium light":
-      "a10e710e859dbb8c8068a29290ea9aac1e6aed0194d85785bccae14f214e7326",
-    "herbarium dark":
-      "a82d9cbd13ff2d1f02278044241322f18afec834b8a38ae1b0f4333b0beaea97",
-    "mineral light":
-      "9a56dbe574dc231d8e14f91d5e220f556cf7d04acf800d52754c3dfc9709743e",
-    "mineral dark":
-      "458adfb372ed06401fc9810e2ec87fc78865eca485684b5f4143a2acd93ca93b",
-  };
-  for (const [name, digest] of Object.entries(pinned)) {
-    const [palette, appearance] = name.split(" ");
-    const text = block(
-      `:root[data-palette="${palette}"][data-appearance="${appearance}"]`,
-    );
-    expect(createHash("sha256").update(text).digest("hex"), name).toBe(digest);
-  }
-});
-
 test("new system tokens default to UI Foundation geometry, so only Field Ledger changes it", () => {
   const root = block(":root {");
   for (const declaration of [
@@ -185,8 +160,8 @@ test("new system tokens default to UI Foundation geometry, so only Field Ledger 
     expect(root).toContain(declaration);
 });
 
-test("Field Ledger is a complete system: type, data font, radii, focus and pointer-aware controls", () => {
-  const system = block(':root[data-palette="field-ledger"],');
+test("Field Ledger is the one shared system for every palette: type, data font, radii, focus and pointer-aware controls", () => {
+  const system = block(":root[data-palette],");
   expect(system).toContain('--font-ui: "Instrument Sans Variable"');
   expect(system).toContain('--font-botanical: "Newsreader Variable"');
   expect(system).toContain('--font-data: "IBM Plex Mono"');
@@ -214,9 +189,16 @@ test("Field Ledger is a complete system: type, data font, radii, focus and point
   expect(touch.split("}")[0]).toContain(
     "--control-height: var(--control-height-touch);",
   );
-  for (const mode of ["light", "dark"]) {
+  for (const [palette, mode] of [
+    "field-ledger",
+    "herbarium",
+    "mineral",
+  ].flatMap((name) => [
+    [name, "light"],
+    [name, "dark"],
+  ])) {
     const colors = block(
-      `:root[data-palette="field-ledger"][data-appearance="${mode}"]`,
+      `:root[data-palette="${palette}"][data-appearance="${mode}"]`,
     );
     for (const role of [
       "rail-background",

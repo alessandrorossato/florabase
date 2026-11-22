@@ -326,7 +326,7 @@ test.each([false, true])(
     const fits = mocks.map.fitBounds.mock.calls.length;
     const removals = mocks.layer.remove.mock.calls.length;
     const fetch = vi.spyOn(globalThis, "fetch");
-    for (const palette of ["botanical", "herbarium", "mineral"] as const) {
+    for (const palette of ["field-ledger", "herbarium", "mineral"] as const) {
       for (const appearance of ["light", "dark"] as const) {
         act(() => {
           window.florabaseAppearance.setPalette(palette);
