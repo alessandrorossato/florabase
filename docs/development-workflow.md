@@ -653,7 +653,10 @@ and fixed disposable credentials. An EXIT trap removes only that run's container
 No DEV or Review volumes are mounted. Feature migration-cycle testing uses another isolated project
 and applies previous-main head → feature head → previous-main head → feature head when required.
 `make golden-dataset-check` runs the [TEST-DATA-001 golden dataset](test-data-001-design.md) inside that
-same disposable workflow; its copies exist only beside disposable test PostgreSQL.
+same disposable workflow; its copies exist only beside disposable test PostgreSQL. The default
+integration suite skips that module; the verification gate adds the `golden-dataset` stage only when
+changed paths intersect `golden_prefixes` in `scripts/verification-impact.json` or cannot be
+classified (fail-closed), while `main` push CI always runs it.
 `make golden-dataset-comprehensive-check` runs the [TEST-DATA-002 profile](test-data-002-design.md) the same
 way. It is manual: the default integration suite skips that module, so CI and the canonical gate do not run it.
 
@@ -750,7 +753,8 @@ Stages run cheapest-first and independently of the launching terminal:
 1. Feature graph and the three whitespace checks.
 2. Offline workflow suites, then the Docker `workflow-check`.
 3. Global static checks, then unit suites (`make check` runs `api-check` before `test`).
-4. Production builds, then the migration cycle, then integration.
+4. Production builds, then the migration cycle, then integration (and `golden-dataset` when changed
+   paths intersect the Golden closure or fail-closed classification).
 
 Every stage gets `/dev/null` as stdin. The gate prints the stage order up front and a per-stage
 summary (passed, failed, interrupted or not run, with elapsed time) at the end or on failure. It

@@ -1,3 +1,44 @@
+## 2026-11-22 — VERIFY-SPEED-001 canonical FULL wall-time optimization
+
+- On `ci/verify-speed-001` from `origin/main` `16ccf4b` (writer `neon`).
+- Split `backend/tests/integration/test_golden_dataset.py` out of the default integration run using
+  the same explicit-selection fixture as `test_golden_comprehensive.py` (`SEARCH_PATH =
+  "test_golden_dataset"`), preserving `test_the_full_suite_skips_the_comprehensive_module` and
+  adding `test_the_full_suite_skips_the_golden_dataset_module` and updating the stale default-CI
+  comment in `test_comprehensive_does_not_touch_the_smoke_plan`. Added validated `golden_prefixes`
+  to `scripts/verification-impact.json` covering the full Golden import and runtime closure
+  (`backend/src/florabase/`, `backend/alembic/`, `backend/pyproject.toml`, `backend/requirements`,
+  `backend/uv.lock`, `backend/Dockerfile`, `compose.dev.yaml`, `Makefile`,
+  `scripts/test-integration.sh`, Golden/fixture scripts, and integration test fixtures),
+  `golden_dataset` selection (closure-triggered or fail-closed on unclassified paths) in
+  `scripts/verification_impact.py`, the non-reusable `golden-dataset` stage
+  (`make golden-dataset-check`) in `scripts/verification_gate.py`, and exhaustive `main` push CI
+  coverage in `scripts/ci-verify.py`.
+- Enabled Vitest file parallelism in `frontend/vite.config.ts` (`fileParallelism: true`,
+  `pool: "forks"`, `maxWorkers` defaulting to `3` via `VITEST_MAX_WORKERS`, keeping `testTimeout:
+  15_000`) and lifted the pinned `VITEST_MAX_WORKERS: "1"` in `scripts/compose_stacks.py` to
+  `"${VITEST_MAX_WORKERS:-3}"`. Five consecutive `make test-frontend` runs passed (127 files,
+  1,414 tests each, zero retries): `96.84 s`, `98.33 s`, `96.01 s`, `96.12 s`, `96.43 s` (down
+  from `~258 s` serial locally).
+- Consolidated `workflow-check` in `Makefile` from 7 separate backend container runs into one
+  container invocation with shared file-list Make variables, run-all failure reporting, and a
+  worktree-owned disposable mypy cache under `<git-dir>/florabase-mypy-workflow-cache` (verified
+  host-UID owned, zero root-owned files; `33.06 s` before -> `27.16 s` cold / `23.73 s` warm).
+- Hygiene: removed retired `deploy/` from `full_prefixes`, added manual `make smoke-beta-lifecycle`
+  and documented `scripts/test-beta-lifecycle.py` in `docs/beta-image-001-final-reliability.md`,
+  profiled all 22 tests in `scripts/test-stage-evidence.py` (`110.26 s` total; fixtures retained
+  unchanged to preserve subprocess/Git coverage), and recorded the two-lane gate design note in
+  [VERIFY-SPEED-001](verify-speed-001.md) without implementing parallel lanes.
+- Registered `VERIFY-SPEED-001` (`implemented`, proposed release class `tooling`) in
+  `docs/features.json` and `docs/release/scope-v1.json`.
+- Focused checks before canonical FULL: `test-verification-impact.py` (43 OK),
+  `test-stage-evidence.py` (22 OK, 110.26 s), `test-check-features.py` (26 OK),
+  `test-feature-workflow.py` (55 OK), `test-environment-workflow.py` (44 OK),
+  `make golden-dataset-check` (35 passed in 349.73 s), `make test-frontend` ×5 (5/5 passed),
+  `make workflow-check` (cold + warm pass), `check-features.py`, `check-doc-links.py`, and
+  `test-doc-links.py`. Canonical FULL (`env -u REUSE FRESH=1 make feature-verify AGENT_ID=neon`)
+  runs on this frozen committed tree; no push, PR or merge.
+
 ## 2026-11-22 — WF-04 Batch 10 integration (`WF-SCOPE-001` + `INSTALL-002`)
 
 - Prepared `ci/batch-10` on top of pinned `origin/main` (`1e985f1`) with writer `neon` via

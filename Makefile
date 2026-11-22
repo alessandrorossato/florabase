@@ -325,14 +325,147 @@ smoke-dev-recovery: ## Prove recovery on unique fixtures without touching operat
 smoke-dev-upgrade: ## Prove upgrade image freshness/retry on unique disposable state
 	@python3 ./scripts/smoke-dev-upgrade.py
 
+WORKFLOW_RUFF_FILES := \
+	/workflow/workflow_resources.py \
+	/workflow/workflow_cleanup.py \
+	/workflow/smoke-workflow-cleanup.py \
+	/workflow/feature_worktree.py \
+	/workflow/feature_batch.py \
+	/workflow/test-agent-workflow.py \
+	/workflow/smoke_lifecycle.py \
+	/workflow/disposable_workflow.py \
+	/workflow/compose_stacks.py \
+	/workflow/verification_impact.py \
+	/workflow/verification_gate.py \
+	/workflow/stage_evidence.py \
+	/workflow/ci-verify.py \
+	/workflow/feature-tree-fingerprint.py \
+	/workflow/test-verification-impact.py \
+	/workflow/test-stage-evidence.py \
+	/workflow/test-workflow-resources.py \
+	/workflow/test-workflow-cleanup.py \
+	/workflow/smoke-workflow-resources.py \
+	/workflow/smoke-migration-cycle.py \
+	/workflow/workflow_environment.py \
+	/workflow/sourcing_preview.py \
+	/workflow/test-environment-workflow.py \
+	/workflow/smoke-environment-workflow.py \
+	/workflow/smoke-dev-recovery.py \
+	/workflow/smoke-dev-upgrade.py \
+	/workflow/uat_source.py \
+	/workflow/uat_preview.py \
+	/workflow/uat_instance.py \
+	/workflow/test-uat-instance.py \
+	/workflow/smoke-uat-instance.py \
+	/workflow/test-uat-source.py \
+	/workflow/test-uat-preview.py \
+	/workflow/smoke-uat-preview.py \
+	/workflow/uat_fixture.py \
+	/workflow/review_dataset_v5.py \
+	/workflow/golden_plan.py \
+	/workflow/golden_dataset.py \
+	/workflow/dev_golden.py \
+	/workflow/dev_golden_snapshot.py \
+	/workflow/dev_golden_payload.py \
+	/workflow/test-dev-golden.py \
+	/workflow/smoke-dev-golden.py \
+	/workflow/test-uat-fixture.py \
+	/workflow/test-review-fixture.py \
+	/workflow/beta_release.py \
+	/workflow/beta-release-checks.py \
+	/workflow/publish-beta-images.py \
+	/workflow/smoke-beta-images.py \
+	/workflow/rehearse-beta-release.py \
+	/workflow/build-beta-candidate.py \
+	/workflow/test-beta-images.py \
+	/workflow/test-release-tools-lock.py \
+	/workflow/release-tools.py \
+	/workflow/test-beta-lifecycle.py \
+	/workflow/smoke-portable-compose.py
+
+WORKFLOW_MYPY_STRICT_FILES := \
+	/workflow/workflow_resources.py \
+	/workflow/workflow_cleanup.py \
+	/workflow/smoke-workflow-cleanup.py \
+	/workflow/feature_worktree.py \
+	/workflow/feature_batch.py \
+	/workflow/test-agent-workflow.py \
+	/workflow/smoke_lifecycle.py \
+	/workflow/disposable_workflow.py \
+	/workflow/compose_stacks.py \
+	/workflow/verification_impact.py \
+	/workflow/verification_gate.py \
+	/workflow/stage_evidence.py \
+	/workflow/ci-verify.py \
+	/workflow/feature-tree-fingerprint.py \
+	/workflow/smoke-workflow-resources.py \
+	/workflow/smoke-migration-cycle.py \
+	/workflow/workflow_environment.py \
+	/workflow/sourcing_preview.py \
+	/workflow/smoke-environment-workflow.py \
+	/workflow/smoke-dev-recovery.py \
+	/workflow/smoke-dev-upgrade.py \
+	/workflow/dev_golden.py \
+	/workflow/dev_golden_snapshot.py \
+	/workflow/test-dev-golden.py \
+	/workflow/smoke-dev-golden.py \
+	/workflow/uat_source.py \
+	/workflow/uat_preview.py \
+	/workflow/uat_instance.py \
+	/workflow/smoke-uat-instance.py \
+	/workflow/smoke-uat-preview.py \
+	/workflow/beta_release.py \
+	/workflow/beta-release-checks.py \
+	/workflow/publish-beta-images.py \
+	/workflow/smoke-beta-images.py \
+	/workflow/rehearse-beta-release.py \
+	/workflow/build-beta-candidate.py \
+	/workflow/test-beta-images.py \
+	/workflow/test-release-tools-lock.py \
+	/workflow/release-tools.py \
+	/workflow/test-beta-lifecycle.py \
+	/workflow/smoke-portable-compose.py
+
+WORKFLOW_RUNTIME_CLIENT_FILES := \
+	/repo/scripts/smoke_beta_runtime_client.py \
+	/repo/scripts/test-beta-runtime.py
+
+WORKFLOW_APP_MYPY_FILES := \
+	/workflow/uat_fixture.py \
+	/workflow/review_dataset_v5.py \
+	/workflow/golden_plan.py \
+	/workflow/golden_dataset.py \
+	/workflow/dev_golden_payload.py \
+	/app/scripts/verify_migration_cycle.py
+
 workflow-check: test-dependabot-policy test-beta-images test-beta-runtime ## Lint, format-check and strictly type-check the new environment helpers
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff check --no-cache --isolated --select E4,E7,E9,F,I,B,UP /workflow/workflow_resources.py /workflow/workflow_cleanup.py /workflow/smoke-workflow-cleanup.py /workflow/feature_worktree.py /workflow/feature_batch.py /workflow/test-agent-workflow.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/compose_stacks.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/stage_evidence.py /workflow/ci-verify.py /workflow/feature-tree-fingerprint.py /workflow/test-verification-impact.py /workflow/test-stage-evidence.py /workflow/test-workflow-resources.py /workflow/test-workflow-cleanup.py /workflow/smoke-workflow-resources.py /workflow/smoke-migration-cycle.py /workflow/workflow_environment.py /workflow/sourcing_preview.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_source.py /workflow/uat_preview.py /workflow/uat_instance.py /workflow/test-uat-instance.py /workflow/smoke-uat-instance.py /workflow/test-uat-source.py /workflow/test-uat-preview.py /workflow/smoke-uat-preview.py /workflow/uat_fixture.py /workflow/review_dataset_v5.py /workflow/golden_plan.py /workflow/golden_dataset.py /workflow/dev_golden.py /workflow/dev_golden_snapshot.py /workflow/dev_golden_payload.py /workflow/test-dev-golden.py /workflow/smoke-dev-golden.py /workflow/test-uat-fixture.py /workflow/test-review-fixture.py /workflow/beta_release.py /workflow/beta-release-checks.py /workflow/publish-beta-images.py /workflow/smoke-beta-images.py /workflow/rehearse-beta-release.py /workflow/build-beta-candidate.py /workflow/test-beta-images.py /workflow/test-release-tools-lock.py /workflow/release-tools.py /workflow/test-beta-lifecycle.py /workflow/smoke-portable-compose.py
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff format --no-cache --config /app/pyproject.toml --check /workflow/workflow_resources.py /workflow/workflow_cleanup.py /workflow/smoke-workflow-cleanup.py /workflow/feature_worktree.py /workflow/feature_batch.py /workflow/test-agent-workflow.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/compose_stacks.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/stage_evidence.py /workflow/ci-verify.py /workflow/feature-tree-fingerprint.py /workflow/test-verification-impact.py /workflow/test-stage-evidence.py /workflow/test-workflow-resources.py /workflow/test-workflow-cleanup.py /workflow/smoke-workflow-resources.py /workflow/smoke-migration-cycle.py /workflow/workflow_environment.py /workflow/sourcing_preview.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_source.py /workflow/uat_preview.py /workflow/uat_instance.py /workflow/test-uat-instance.py /workflow/smoke-uat-instance.py /workflow/test-uat-source.py /workflow/test-uat-preview.py /workflow/smoke-uat-preview.py /workflow/uat_fixture.py /workflow/review_dataset_v5.py /workflow/golden_plan.py /workflow/golden_dataset.py /workflow/dev_golden.py /workflow/dev_golden_snapshot.py /workflow/dev_golden_payload.py /workflow/test-dev-golden.py /workflow/smoke-dev-golden.py /workflow/test-uat-fixture.py /workflow/test-review-fixture.py /workflow/beta_release.py /workflow/beta-release-checks.py /workflow/publish-beta-images.py /workflow/smoke-beta-images.py /workflow/rehearse-beta-release.py /workflow/build-beta-candidate.py /workflow/test-beta-images.py /workflow/test-release-tools-lock.py /workflow/release-tools.py /workflow/test-beta-lifecycle.py /workflow/smoke-portable-compose.py
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend mypy --strict --follow-imports=skip /workflow/workflow_resources.py /workflow/workflow_cleanup.py /workflow/smoke-workflow-cleanup.py /workflow/feature_worktree.py /workflow/feature_batch.py /workflow/test-agent-workflow.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/compose_stacks.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/stage_evidence.py /workflow/ci-verify.py /workflow/feature-tree-fingerprint.py /workflow/smoke-workflow-resources.py /workflow/smoke-migration-cycle.py /workflow/workflow_environment.py /workflow/sourcing_preview.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/dev_golden.py /workflow/dev_golden_snapshot.py /workflow/test-dev-golden.py /workflow/smoke-dev-golden.py /workflow/uat_source.py /workflow/uat_preview.py /workflow/uat_instance.py /workflow/smoke-uat-instance.py /workflow/smoke-uat-preview.py /workflow/beta_release.py /workflow/beta-release-checks.py /workflow/publish-beta-images.py /workflow/smoke-beta-images.py /workflow/rehearse-beta-release.py /workflow/build-beta-candidate.py /workflow/test-beta-images.py /workflow/test-release-tools-lock.py /workflow/release-tools.py /workflow/test-beta-lifecycle.py /workflow/smoke-portable-compose.py
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR):/repo:ro" backend ruff check --no-cache --isolated --select E4,E7,E9,F,I,B,UP /repo/scripts/smoke_beta_runtime_client.py /repo/scripts/test-beta-runtime.py
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR):/repo:ro" backend ruff format --no-cache --isolated --line-length 100 --check /repo/scripts/smoke_beta_runtime_client.py /repo/scripts/test-beta-runtime.py
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR):/repo:ro" backend mypy --strict /repo/scripts/smoke_beta_runtime_client.py /repo/scripts/test-beta-runtime.py
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" -e MYPYPATH=/app/src:/app/scripts:/workflow backend mypy --strict --follow-imports=skip /workflow/uat_fixture.py /workflow/review_dataset_v5.py /workflow/golden_plan.py /workflow/golden_dataset.py /workflow/dev_golden_payload.py /app/scripts/verify_migration_cycle.py
+	@cache_dir="$$(git rev-parse --absolute-git-dir)/florabase-mypy-workflow-cache"; \
+	mkdir -p "$$cache_dir"; \
+	$(DEV_COMPOSE) run --rm --no-deps \
+		-v "$(CURDIR)/scripts:/workflow:ro" \
+		-v "$(CURDIR):/repo:ro" \
+		-v "$$cache_dir:/tmp/florabase-mypy-workflow" \
+		backend sh -eu -c ' \
+			failed=""; \
+			run_step() { \
+				name="$$1"; shift; \
+				printf "== workflow-check: %s ==\n" "$$name"; \
+				if ! "$$@"; then \
+					failed="$${failed:+$$failed, }$$name"; \
+				fi; \
+			}; \
+			run_step "ruff-check-workflow" ruff check --no-cache --isolated --select E4,E7,E9,F,I,B,UP $(WORKFLOW_RUFF_FILES); \
+			run_step "ruff-format-workflow" ruff format --no-cache --config /app/pyproject.toml --check $(WORKFLOW_RUFF_FILES); \
+			run_step "mypy-workflow" mypy --cache-dir /tmp/florabase-mypy-workflow/workflow --strict --follow-imports=skip $(WORKFLOW_MYPY_STRICT_FILES); \
+			run_step "ruff-check-runtime-client" ruff check --no-cache --isolated --select E4,E7,E9,F,I,B,UP $(WORKFLOW_RUNTIME_CLIENT_FILES); \
+			run_step "ruff-format-runtime-client" ruff format --no-cache --isolated --line-length 100 --check $(WORKFLOW_RUNTIME_CLIENT_FILES); \
+			run_step "mypy-runtime-client" mypy --cache-dir /tmp/florabase-mypy-workflow/runtime-client --strict $(WORKFLOW_RUNTIME_CLIENT_FILES); \
+			run_step "mypy-app-scripts" env MYPYPATH=/app/src:/app/scripts:/workflow mypy --cache-dir /tmp/florabase-mypy-workflow/app-scripts --strict --follow-imports=skip $(WORKFLOW_APP_MYPY_FILES); \
+			if [ -n "$$failed" ]; then \
+				printf "workflow-check failed: %s\n" "$$failed" >&2; \
+				exit 1; \
+			fi \
+		'
 
 
 UAT_HELPER := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))scripts/uat_preview.py
@@ -444,7 +577,7 @@ ui-page: export FLORABASE_UI_PAGE_ARCHETYPE = $(ARCHETYPE)
 ui-page: ## Scaffold an approved composition: NAME=Example ARCHETYPE=directory|activity
 	@python3 scripts/ui_page.py
 
-.PHONY: test-beta-images smoke-beta-images test-beta-runtime
+.PHONY: test-beta-images smoke-beta-images test-beta-runtime smoke-beta-lifecycle
 test-beta-images: ## Validate beta release identities and fail-closed publication prerequisites
 	@python3 ./scripts/release-tools.py ./scripts/test-beta-images.py
 	@python3 ./scripts/test-release-tools-lock.py
@@ -454,6 +587,9 @@ smoke-beta-images: ## Build and test disposable local production images (no publ
 
 test-beta-runtime: ## Offline disclosure gate and production compose.yaml contract
 	@python3 ./scripts/test-beta-runtime.py -q
+
+smoke-beta-lifecycle: ## Real disposable Compose SIGTERM and late-create cleanup probe; manual
+	@python3 ./scripts/test-beta-lifecycle.py
 
 .PHONY: release-preflight-local
 release-preflight-local: ## Rehearse protected release preparation and promotion in an owned local registry
