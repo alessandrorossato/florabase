@@ -7,6 +7,7 @@ import {
   isExpectedAuthCancellation,
 } from "../auth/api";
 import { useAuth } from "../auth/context";
+import { ActionLink } from "../components/Action";
 import { FormActions } from "../components/ReferenceUI";
 import { ActivityPage } from "../components/ActivityPage";
 import { ActivityChoices } from "../events/ActivityFilters";
@@ -773,29 +774,27 @@ export function ScheduleScreen() {
     "Completed",
     "Cancelled",
   ];
+  // One toggle naming the view it opens, like the directories' List/Gallery toggle.
+  const nextView = state.view === "list" ? "calendar" : "list";
   const viewSwitcher = (
-    <nav className="schedule-view-switch" aria-label="Schedule view">
-      {(["list", "calendar"] as const).map((view) => (
-        <a
-          key={view}
-          href={scheduleHash({ ...state, view })}
-          aria-current={state.view === view ? "page" : undefined}
-          onClick={(event) => {
-            if (
-              !event.ctrlKey &&
-              !event.metaKey &&
-              !event.shiftKey &&
-              !event.altKey
-            ) {
-              event.preventDefault();
-              update({ ...state, view });
-            }
-          }}
-        >
-          {view === "list" ? "Agenda" : "Month"}
-        </a>
-      ))}
-    </nav>
+    <ActionLink
+      className="button-link button--secondary schedule-view-switch"
+      icon={nextView === "list" ? "list" : "calendar"}
+      href={scheduleHash({ ...state, view: nextView })}
+      onClick={(event) => {
+        if (
+          !event.ctrlKey &&
+          !event.metaKey &&
+          !event.shiftKey &&
+          !event.altKey
+        ) {
+          event.preventDefault();
+          update({ ...state, view: nextView });
+        }
+      }}
+    >
+      {nextView === "list" ? "Agenda" : "Calendar"}
+    </ActionLink>
   );
   function group(item: Activity): string {
     if (item.status !== "planned")
