@@ -106,6 +106,7 @@ test("the navigation model lists every former destination and Settings tool exac
       "schedule",
       "identities",
       "taxonomy",
+      "lineage",
       "media",
       "geography",
       "suppliers",

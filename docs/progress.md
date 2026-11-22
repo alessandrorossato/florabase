@@ -9881,3 +9881,25 @@ Status remains implemented pending canonical verification.
 - Checks: `make smoke-uat-preview` passed (fixture pytest 52 passed, 1 skipped; exact cleanup);
   `python3 scripts/test-uat-preview.py` 20 OK; ruff check/format and strict mypy on the touched
   scripts clean. Not run: FULL `make feature-verify`.
+
+## 2026-11-22 — LINEAGE-004 identity lineage in Explore
+
+- On `feat/lineage-004` from `1e985f1` (writer `claude-lineage004`). Reuses the LINEAGE-003 explorer.
+- Backend: `GET /api/v1/lineage/identities/{identity_id}/graph` (`getIdentityLineageGraph`) returns
+  one BotanicalIdentity's records (Sowings and rooting attempts through their own source lot) with
+  only explicit edges from the explorer's source columns; linked records of other identities are
+  flagged `in_identity=false`; bounded at 500 with `truncated`, never presenting a left-out member as
+  foreign; 404 `botanical_identity_not_found`. No schema change.
+- Frontend: Explore → **Lineage** (`#/lineage`) searches identities, Seed lots, Sowings, Plants and
+  Plant groups via `/api/v1/search`; `#/lineage/identity/<id>` draws one stem per recorded line,
+  with outside-identity cards, references for multi-parent records and a separate list of records
+  without recorded relationships. The identity overview links to it. New `lineage` icon and section.
+- Checks (cloud session, outside Docker: the quality images cannot fetch dependencies through the
+  session proxy): ruff check/format and strict mypy clean; backend unit suite 1281 passed with
+  coverage 90.15% (3 failures are root/host-path environment tests, unrelated); PostgreSQL 16
+  integration `test_lineage_api.py` 14 passed; frontend tsc, ESLint and Prettier clean; lineage and
+  navigation tests pass; the remaining 46 frontend failures are identical on `origin/main` under the
+  session's Node 22 (the project pins Node 24). OpenAPI regenerated with the locked dependencies.
+  Visual check of both pages at desktop and phone width, no horizontal overflow.
+- Not run: FULL `make feature-verify`, `make api-check` (both need the Docker quality stack).
+  Release class proposed for the operator: `best-effort`.

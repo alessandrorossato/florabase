@@ -63,6 +63,7 @@ That is 19 destinations and 6 subdestinations.
 | Supplier | `#/suppliers/<id>` |
 | Order | `#/orders/<id>` |
 | Material ancestry | `#/lineage/<kind>/<id>` for seed lot, sowing, plant, plant group, vegetative lot and propagation attempt |
+| Lineage (Explore) | `#/lineage` search, and `#/lineage/identity/<id>` for one botanical identity's recorded lineage |
 | Label composer for one record | `#/labels?kind=<kind>&record=<id>` |
 
 ## Creation and task routes

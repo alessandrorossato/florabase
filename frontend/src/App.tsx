@@ -150,6 +150,20 @@ const PlantScreen = lazy(() =>
   }),
 );
 
+const LineageHome = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./lineage/LineageHome");
+    return { default: module.LineageHome };
+  }),
+);
+
+const IdentityLineage = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./lineage/IdentityLineage");
+    return { default: module.IdentityLineage };
+  }),
+);
+
 const SeedLotSowingWizard = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./propagation/SeedLotSowingWizard");
@@ -230,6 +244,8 @@ interface Route {
     kind: keyof typeof ancestrySections;
     id: string;
   };
+  /** #/lineage/identity/<id>: recorded lineage across one Botanical identity's records. */
+  identityLineageId?: string;
 }
 
 const ancestrySections = {
@@ -278,6 +294,10 @@ function currentRoute(): Route {
       ancestry: { kind, id: ancestry[2] },
     };
   }
+  if (first === "lineage")
+    return id === "identity" && detailId
+      ? { section: "lineage", identityLineageId: detailId }
+      : { section: "lineage" };
   if (first === "cuttings")
     return {
       section: "cuttings",
@@ -562,6 +582,15 @@ function ApplicationShell({
                   kind={route.ancestry.kind}
                   id={route.ancestry.id}
                 />
+              ) : route.section === "lineage" ? (
+                route.identityLineageId ? (
+                  <IdentityLineage
+                    key={route.identityLineageId}
+                    identityId={route.identityLineageId}
+                  />
+                ) : (
+                  <LineageHome />
+                )
               ) : route.section === "sowings" &&
                 route.action === "start" &&
                 route.seedLotId ? (

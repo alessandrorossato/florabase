@@ -1481,6 +1481,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/lineage/identities/{identity_id}/graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Identity Graph */
+        get: operations["getIdentityLineageGraph"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/lineage/{kind}/{item_id}": {
         parameters: {
             query?: never;
@@ -4787,6 +4804,37 @@ export interface components {
             /** Superseded At */
             superseded_at?: string | null;
         };
+        /**
+         * IdentityLineageGraph
+         * @description Every record of one BotanicalIdentity and only its explicitly recorded relationships.
+         *
+         *     Sharing the identity is not lineage: records without an edge stay unconnected.
+         */
+        IdentityLineageGraph: {
+            botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
+            /** Edges */
+            edges: components["schemas"]["LineageEdge"][];
+            /** Limit */
+            limit: number;
+            /** Nodes */
+            nodes: components["schemas"]["IdentityLineageNode"][];
+            /** Total */
+            total: number;
+            /** Truncated */
+            truncated: boolean;
+        };
+        /** IdentityLineageNode */
+        IdentityLineageNode: {
+            /** Descendant Count */
+            descendant_count: number;
+            harvest_conversion: components["schemas"]["HarvestConversionEvidence"] | null;
+            /** In Identity */
+            in_identity: boolean;
+            /** Origin */
+            origin: components["schemas"]["SeedLotSourceKind"] | components["schemas"]["DirectOriginKind"] | ("collection_produced" | "purchased" | "gift_exchange" | "self_collected" | "other" | "unknown") | null;
+            /** Record */
+            record: components["schemas"]["SeedLotLineageNode"] | components["schemas"]["SowingLineageNode"] | components["schemas"]["PlantLineageNode"] | components["schemas"]["PlantGroupLineageNode"] | components["schemas"]["VegetativeLotLineageNode"] | components["schemas"]["PropagationAttemptLineageNode"];
+        };
         /** IdentityReconciliationEventResponse */
         IdentityReconciliationEventResponse: {
             /** Applied Common Name */
@@ -5063,6 +5111,32 @@ export interface components {
          * @enum {string}
          */
         LengthUnit: "mm" | "cm" | "m";
+        /**
+         * LineageEdge
+         * @description One explicit recorded source relationship: the child's own source column.
+         */
+        LineageEdge: {
+            /**
+             * Child Id
+             * Format: uuid
+             */
+            child_id: string;
+            /**
+             * Child Kind
+             * @enum {string}
+             */
+            child_kind: "seed_lot" | "sowing" | "plant" | "plant_group" | "vegetative_lot" | "propagation_attempt";
+            /**
+             * Parent Id
+             * Format: uuid
+             */
+            parent_id: string;
+            /**
+             * Parent Kind
+             * @enum {string}
+             */
+            parent_kind: "seed_lot" | "sowing" | "plant" | "plant_group" | "vegetative_lot" | "propagation_attempt";
+        };
         /** LineageResponse */
         LineageResponse: {
             /** Ancestors */
@@ -13176,6 +13250,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ImportPreviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getIdentityLineageGraph: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityLineageGraph"];
                 };
             };
             /** @description Validation Error */

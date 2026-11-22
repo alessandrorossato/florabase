@@ -68,6 +68,7 @@ import {
 } from "../components/ReferenceUI";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import { EventFeed } from "../events/EventFeed";
+import { identityLineageHref } from "../lineage/useRecordedLineage";
 import { BotanicalIdentityCover } from "../photos/BotanicalIdentityCover";
 import { PhotoDialog } from "../photos/PhotosSection";
 import { IdentityTaxonomyPanel } from "../taxonomy/IdentityTaxonomyPanel";
@@ -957,6 +958,9 @@ function IdentityDetails({
                       Counts are records, including history. Plant groups are
                       separate; harvests do not indicate stored remainder.
                     </p>
+                    <a href={identityLineageHref(identity.id)}>
+                      Explore the recorded lineage of these records
+                    </a>
                   </section>
                   <div className="identity-overview-facts">
                     <IdentityReferenceSummary id={identity.id} />
