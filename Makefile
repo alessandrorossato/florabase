@@ -577,7 +577,7 @@ ui-page: export FLORABASE_UI_PAGE_ARCHETYPE = $(ARCHETYPE)
 ui-page: ## Scaffold an approved composition: NAME=Example ARCHETYPE=directory|activity
 	@python3 scripts/ui_page.py
 
-.PHONY: test-beta-images smoke-beta-images test-beta-runtime
+.PHONY: test-beta-images smoke-beta-images test-beta-runtime smoke-beta-lifecycle
 test-beta-images: ## Validate beta release identities and fail-closed publication prerequisites
 	@python3 ./scripts/release-tools.py ./scripts/test-beta-images.py
 	@python3 ./scripts/test-release-tools-lock.py
@@ -587,6 +587,9 @@ smoke-beta-images: ## Build and test disposable local production images (no publ
 
 test-beta-runtime: ## Offline disclosure gate and production compose.yaml contract
 	@python3 ./scripts/test-beta-runtime.py -q
+
+smoke-beta-lifecycle: ## Real disposable Compose SIGTERM and late-create cleanup probe; manual
+	@python3 ./scripts/test-beta-lifecycle.py
 
 .PHONY: release-preflight-local
 release-preflight-local: ## Rehearse protected release preparation and promotion in an owned local registry

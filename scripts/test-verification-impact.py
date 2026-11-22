@@ -361,6 +361,7 @@ class SelectionTests(unittest.TestCase):
                 self.assertFalse(plan["docs_only"])
                 self.assertEqual(plan["workflow"], WORKFLOW)
                 self.assertEqual(plan["migration"], "full-cycle")
+        self.assertNotIn("deploy/", load_map()["full_prefixes"])
         self.assertEqual(self.plan("LICENSE")["builds"], ["backend", "frontend"])
         self.assertEqual(self.plan("backend/alembic/versions/new.py")["migration"], "full-cycle")
         self.assertEqual(self.plan("scripts/verify-migration-cycle.sh")["migration"], "full-cycle")

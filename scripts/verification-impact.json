@@ -7,7 +7,6 @@
     "Makefile",
     "AGENTS.md",
     "LICENSE",
-    "deploy/",
     "postgres/",
     "release/",
     "backend/Dockerfile",
