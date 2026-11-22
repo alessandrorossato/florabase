@@ -1,3 +1,28 @@
+## 2026-11-22 — WF-SCOPE-001 scoped verification by changed files
+
+- On `feat/wf-scope-001-scoped-verification` from `c5f9cdf` (writer `neon-wf-scope-001`).
+- Added the `product-frontend` tier (`TIER_ORDER`: `docs < affected < product-frontend < product <
+  full`), bumped `scripts/verification-impact.json` to schema v2 (`product_backend_prefixes`,
+  `product_frontend_prefixes`, `product_backend_tests`, `product_frontend_tests`), and moved
+  `LICENSE` from `documentation_paths` into `full_prefixes` because all three Dockerfiles copy it.
+- Scoped PR CI (`scripts/ci-verify.py`): `affected` and `product-frontend` plans run selected
+  static/unit suites, selected integration files (or docs checks when empty) and selected builds,
+  while `product`, `full`, pushes to `main` and fallbacks remain exhaustive and `ci/batch-*` keeps
+  platform-tree validation plus `make_plan(base)`.
+- Added `python3 scripts/ci-verify.py rehearse-scope` and PR-only `concurrency` to
+  `.github/workflows/beta-release-rehearsal.yml` so docs-only PRs exit `rehearse` early with green
+  status while non-docs PRs, pushes to `main`, `workflow_dispatch` and any planning or import error
+  fail closed into the full rehearsal.
+- Registered `WF-SCOPE-001` (`implemented`) in `docs/features.json` and proposed class `tooling` in
+  `docs/release/scope-v1.json`; updated `docs/development-workflow.md`.
+- Checks before final canonical gate: `test-verification-impact.py` (42 OK), `workflow-check`
+  (Dependabot policy, 79 `test-beta-images`, 4 `test-release-tools-lock`, 18 `test-beta-runtime`,
+  Ruff check/format, `mypy --strict` across 49 scripts), `test-feature-workflow` (55 OK),
+  `test-agent-workflow` (75 OK, 3 skipped), `check-features.py`, `check-doc-links.py`,
+  `test-doc-links.py`. Canonical `make verify-full` runs on this frozen tree before commit/delivery.
+- Unresolved: none locally; PR description will link a real docs-only commit run showing `rehearse`
+  exiting early after operator approves push/PR.
+
 ## 2026-11-22 — ENG-05 closed on branch (a)
 
 - Documentation only, on `claude/project-thread-7djkvu` from `1126c03`. The operator chose
