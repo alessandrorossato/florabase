@@ -431,6 +431,85 @@ class AgentWorkflowTests(unittest.TestCase):
             self.batch_archive(head, base, merge)
         self.assertTrue(all(self.git(path, "branch", "--show-current") for path in sources))
 
+    def test_batch_additive_progress_preserves_main_tail_edit_and_fails_closed(self) -> None:
+        (self.primary / "docs").mkdir()
+        common_text = "## Entry 0\n\n- Line 1\n- Line 2\n- Tail unresolved.\n"
+        (self.primary / "docs/progress.md").write_text(common_text)
+        self.git(self.primary, "add", ".")
+        self.git(self.primary, "commit", "-m", "seed progress")
+        self.git(self.primary, "push", "origin", "main")
+        request = []
+        for number in (1, 2):
+            branch = f"feat/progress-{number}"
+            source = self.create(branch)
+            self.ok(source, "claim", AGENT_ID=f"writer-{number}")
+            evidence = f"docs/progress-{number}.md"
+            (source / evidence).write_text(f"Source {number} reviewed\n")
+            (source / "docs/progress.md").write_text(f"## Entry {number}\n\n" + common_text)
+            self.git(source, "add", ".")
+            self.git(source, "commit", "-m", f"feature {number}")
+            request.append(
+                {
+                    "branch": branch,
+                    "id": f"FN-1{number}",
+                    "reviewer": "independent",
+                    "evidence": [evidence],
+                    "tip": self.git(source, "rev-parse", "HEAD"),
+                }
+            )
+        # Main advances with a non-conflicting edit at the tail of docs/progress.md.
+        main_progress = (
+            "## Entry 0\n\n- Line 1\n- Line 2\n- Tail unresolved. Resolved below.\n\n## Tail\n"
+        )
+        (self.primary / "docs/progress.md").write_text(main_progress)
+        self.git(self.primary, "add", "docs/progress.md")
+        self.git(self.primary, "commit", "-m", "main tail update")
+        self.git(self.primary, "push", "origin", "main")
+        base = self.git(self.primary, "rev-parse", "HEAD")
+
+        batch = self.create("ci/batch-tail")
+        self.ok(batch, "claim", AGENT_ID="integrator")
+        request_path = self.root / "tail-request.json"
+        request_path.write_text(
+            json.dumps(
+                {
+                    "branch": "ci/batch-tail",
+                    "summary": "Preserve main tail edit during additive progress merge",
+                    "base": base,
+                    "sources": request,
+                }
+            )
+        )
+        plan = self.batch_command(batch, "plan", str(request_path))
+        self.assertEqual(plan.returncode, 0, plan.stderr)
+        plan_path = self.root / "tail-plan.json"
+        plan_path.write_text(plan.stdout)
+        prepared = self.batch_command(batch, "prepare", str(plan_path), AGENT_ID="integrator")
+        self.assertEqual(prepared.returncode, 0, prepared.stderr)
+        self.assertEqual(
+            (batch / "docs/progress.md").read_text(),
+            "## Entry 1\n\n## Entry 2\n\n" + main_progress,
+        )
+        self.git(batch, "add", ".")
+        self.git(batch, "commit", "-m", "batch tail manifest")
+        head = self.git(batch, "rev-parse", "HEAD")
+        manifest = feature_batch.load_manifest(Repository(batch), "ci/batch-tail", head)
+        self.assertEqual(manifest["sources"][0]["resolutions"], [])
+        self.assertEqual(manifest["sources"][1]["resolutions"], ["docs/progress.md"])
+
+        # Negative: incoming source that edits inside common must still refuse.
+        edited = self.create("feat/progress-edited")
+        self.ok(edited, "claim", AGENT_ID="writer-edited")
+        (edited / "docs/progress.md").write_text(
+            "## Entry edited\n\n" + main_progress.replace("- Line 1", "- Line 1 edited")
+        )
+        self.git(edited, "add", ".")
+        self.git(edited, "commit", "-m", "edited common")
+        with self.assertRaisesRegex(workflow_environment.WorkflowError, "progress conflict"):
+            feature_batch.additive_progress(
+                Repository(batch), head, self.git(edited, "rev-parse", "HEAD")
+            )
+
     def advance_main(self) -> str:
         seed = self.root / "seed"
         if not seed.exists():
