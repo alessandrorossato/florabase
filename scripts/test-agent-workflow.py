@@ -84,6 +84,12 @@ class AgentWorkflowTests(unittest.TestCase):
             "docker",
             'printf \'%s\\n\' "$*" >>"${DOCKER_LOG}"\n'
             'if [[ -n "${MOCK_DOCKER_FAIL:-}" ]]; then exit 1; fi\n'
+            'if [[ "$1 ${2:-}" == "ps --quiet" && -n "${MOCK_RUNNING_MOUNT_SOURCE:-}" ]]; then\n'
+            "  printf '%064d\\n' 1 | tr '0' 'a'\nfi\n"
+            'if [[ "$1 ${2:-}" == "inspect --type" && -n "${MOCK_RUNNING_MOUNT_SOURCE:-}" ]]; then\n'
+            "  cid=\"$(printf '%064d' 1 | tr '0' 'a')\"\n"
+            '  printf \'{"Id":"%s","Running":true,"Mounts":[{"Type":"bind","Source":"%s","Destination":"/data"}]}\\n\' '
+            '"${cid}" "${MOCK_RUNNING_MOUNT_SOURCE}"\nfi\n'
             'if [[ "$1 ${2:-}" == "ps -a" && "$*" == *"source=${MOCK_OWNED_SOURCE:-none}"* ]]; then\n'
             "  printf 'florabase-feature-review\\trunning\\n'\nfi\n"
             'if [[ "$1 ${2:-}" == "volume ls" && "$*" == *"source=${MOCK_VOLUME_SOURCE:-none}"* ]]; then\n'
@@ -122,6 +128,7 @@ class AgentWorkflowTests(unittest.TestCase):
             "FEATURE",
             "CONFIRM_RETIRE",
             "FLORABASE_WORKTREE_ROOT",
+            "KEEP_WORKTREE",
         ):
             if key not in values:
                 env.pop(key, None)
@@ -365,13 +372,48 @@ class AgentWorkflowTests(unittest.TestCase):
             (self.bin / "docker").unlink()
         result = self.batch_command(self.primary, "finish", "42", MOCK_BATCH_PR=json.dumps(pr))
         self.assertEqual(result.returncode, 0, result.stderr)
-        resumed = self.batch_command(self.primary, "finish", "42", MOCK_BATCH_PR=json.dumps(pr))
-        self.assertEqual(resumed.returncode, 0, resumed.stderr)
-        for source in sources:
-            self.assertEqual(self.git(source, "branch", "--show-current"), "")
-            env = {"FEATURE": source.name, "CONFIRM_RETIRE": source.name}
-            self.ok(self.primary, "retire", **env)
+        for source, item in zip(sources, manifest["sources"], strict=True):
+            self.assertIn(
+                f"FINISHED {item['branch']} at {item['tip']}; RETIRED {source}",
+                result.stdout,
+            )
             self.assertFalse(source.exists())
+            self.assertEqual(self.git(self.primary, "branch", "--list", item["branch"]), "")
+
+    def test_batch_finish_retains_unsafe_or_opted_out_sources_without_failing(self) -> None:
+        _, sources, base, head, manifest = self.batch_fixture()
+        merge = self.squash_fixture(head, base)
+        pr = self.batch_archive(head, base, merge)
+        env = {"MOCK_BATCH_PR": json.dumps(pr)}
+
+        # KEEP_WORKTREE=1 finishes both sources while keeping both detached worktrees.
+        kept = self.batch_command(self.primary, "finish", "42", KEEP_WORKTREE="1", **env)
+        self.assertEqual(kept.returncode, 0, kept.stderr)
+        for source, item in zip(sources, manifest["sources"], strict=True):
+            self.assertIn(
+                f"FINISHED {item['branch']} at {item['tip']}; RETAINED {source} (KEEP_WORKTREE=1)",
+                kept.stdout,
+            )
+            self.assertTrue(source.is_dir())
+            self.assertEqual(self.git(source, "branch", "--show-current"), "")
+            self.assertEqual(self.git(self.primary, "branch", "--list", item["branch"]), "")
+
+        # Resuming without KEEP_WORKTREE=1 retires the clean source and retains the one with .env.
+        (sources[1] / ".env").write_text("SECRET=keep-me\n")
+        resumed = self.batch_command(self.primary, "finish", "42", **env)
+        self.assertEqual(resumed.returncode, 0, resumed.stderr)
+        self.assertIn(
+            f"FINISHED {manifest['sources'][0]['branch']} at {manifest['sources'][0]['tip']}; "
+            f"RETIRED {sources[0]}",
+            resumed.stdout,
+        )
+        self.assertIn(
+            f"FINISHED {manifest['sources'][1]['branch']} at {manifest['sources'][1]['tip']}; "
+            f"RETAINED {sources[1]} (ignored local files need a decision first: .env)",
+            resumed.stdout,
+        )
+        self.assertFalse(sources[0].exists())
+        self.assertTrue(sources[1].is_dir())
 
     def test_batch_refuses_wrong_pr_omitted_moved_busy_and_protected_sources(self) -> None:
         _, sources, base, head, manifest = self.batch_fixture()
@@ -1460,7 +1502,7 @@ class AgentWorkflowTests(unittest.TestCase):
     def test_delivery_and_finish_are_operator_only(self) -> None:
         worktree = self.create()
         self.ok(worktree, "claim", AGENT_ID="codex")
-        for agent in ("claude-code", "codex", "opencode"):
+        for agent in ("claude-code", "codex", "neon", "opencode"):
             self.refused("operator actions", worktree, "require-operator", AGENT_ID=agent)
         self.ok(worktree, "require-operator")
         self.ok(worktree, "require-operator", AGENT_ID="operator")
@@ -1476,24 +1518,36 @@ class AgentWorkflowTests(unittest.TestCase):
         ):
             shutil.copy2(ROOT / "scripts" / name, scripts / name)
         (self.primary / ".git/info/exclude").write_text("scripts/\n")
-        for script in ("feature-finish.sh", "feature-deliver.py"):
-            attempt = subprocess.run(
-                [str(ROOT / "scripts" / script)],
-                cwd=worktree,
-                env=self.env(AGENT_ID="codex"),
-                capture_output=True,
-                text=True,
-            )
-            self.assertNotEqual(attempt.returncode, 0, script)
-            self.assertIn("operator actions", attempt.stderr, script)
+        for agent in ("codex", "neon"):
+            for script in ("feature-finish.sh", "feature-deliver.py"):
+                attempt = subprocess.run(
+                    [str(ROOT / "scripts" / script)],
+                    cwd=worktree,
+                    env=self.env(AGENT_ID=agent),
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertNotEqual(attempt.returncode, 0, f"{script} {agent}")
+                self.assertIn("operator actions", attempt.stderr, f"{script} {agent}")
         self.assertEqual(self.git(worktree, "branch", "--show-current"), "feat/example-001")
         self.assertEqual(self.git(self.remote, "branch", "--list", "feat/example-001"), "")
 
     # Finish and retirement ---------------------------------------------------------------------
 
-    def finished(self, branch: str = "feat/example-001", *, frontend: bool = False) -> Path:
-        worktree = self.create(branch)
-        self.ok(worktree, "claim", AGENT_ID="claude-code")
+    def prepare_merged_feature(
+        self,
+        branch: str = "feat/example-001",
+        *,
+        frontend: bool = False,
+        managed: bool = True,
+    ) -> tuple[Path, str, str]:
+        if managed:
+            worktree = self.create(branch)
+            self.ok(worktree, "claim", AGENT_ID="claude-code")
+        else:
+            worktree = self.root / "provider-worktrees" / branch.split("/", 1)[1]
+            worktree.parent.mkdir(parents=True, exist_ok=True)
+            self.git(self.primary, "worktree", "add", "-b", branch, str(worktree), "origin/main")
         content = "feature\n" if branch == "feat/example-001" else f"{branch}\n"
         (worktree / "feature.txt").write_text(content)
         if frontend:
@@ -1515,20 +1569,67 @@ class AgentWorkflowTests(unittest.TestCase):
             'if [[ "$1" == "auth" ]]; then exit 0; fi\n'
             f"printf 'MERGED|main|{branch}|{feature}|{merge}\\n'\n",
         )
-        result = subprocess.run(
+        return worktree, feature, merge
+
+    def run_finish(self, worktree: Path, **values: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
             [str(ROOT / "scripts/feature-finish.sh")],
             cwd=worktree,
-            env=self.env(),
+            env=self.env(**values),
             capture_output=True,
             text=True,
         )
+
+    def finished(self, branch: str = "feat/example-001", *, frontend: bool = False) -> Path:
+        worktree, _, merge = self.prepare_merged_feature(branch, frontend=frontend)
+        result = self.run_finish(worktree, KEEP_WORKTREE="1")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("feature-retire", result.stdout)
+        self.assertEqual(
+            result.stdout.splitlines()[-1],
+            f"WORKTREE: RETAINED {worktree} (KEEP_WORKTREE=1)",
+        )
         self.assertEqual(self.git(self.primary, "rev-parse", "HEAD"), merge)
         self.assertEqual(self.git(worktree, "branch", "--show-current"), "")
         return worktree
 
-    def test_linked_finish_then_explicit_retirement_preserves_environments(self) -> None:
+    def assert_docker_log_read_only_inventory(self, *, include_quality_clean: bool = False) -> None:
+        # DEV/Review/UAT preservation: only exact read-only inventory/inspection commands.
+        prefixes: tuple[str, ...] = (
+            "ps -a --filter",
+            "volume ls --filter",
+            "inspect --type container --format",
+            "volume inspect --format",
+        )
+        if include_quality_clean:
+            prefixes += (
+                "ps -aq --no-trunc --filter label=com.docker.compose.project=florabase-quality-",
+                "volume ls -q --filter label=com.docker.compose.project=florabase-quality-",
+                "network ls -q --filter label=com.docker.compose.project=florabase-quality-",
+                "image ls -q --filter label=io.florabase.workflow.owner=",
+            )
+        for line in self.docker_log.read_text().splitlines():
+            self.assertTrue(
+                line == "ps --quiet --no-trunc" or line.startswith(prefixes),
+                line,
+            )
+
+    def test_linked_finish_retires_managed_worktree(self) -> None:
+        worktree, _, merge = self.prepare_merged_feature()
+        self.docker_log.unlink(missing_ok=True)
+        result = self.run_finish(worktree)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(worktree.exists())
+        self.assertEqual(self.git(self.primary, "branch", "--show-current"), "main")
+        self.assertEqual(self.git(self.primary, "rev-parse", "HEAD"), merge)
+        self.assertEqual(self.git(self.primary, "status", "--porcelain"), "")
+        self.assertEqual(self.git(self.primary, "branch", "--list", "feat/example-001"), "")
+        self.assertIn(f"FEATURE WORKTREE RETIRED: {worktree}", result.stdout)
+        self.assertIn(f"Your shell is in a removed directory: cd {self.primary}", result.stdout)
+        self.assertEqual(result.stdout.splitlines()[-1], f"WORKTREE: RETIRED {worktree}")
+        self.assert_docker_log_read_only_inventory(include_quality_clean=True)
+
+    def test_linked_finish_keep_worktree_and_explicit_retirement(self) -> None:
         worktree = self.finished()
         self.assertIsNone(self.context(worktree)["writer"])
         self.refused("requires CONFIRM_RETIRE", self.primary, "retire", FEATURE="example-001")
@@ -1543,20 +1644,72 @@ class AgentWorkflowTests(unittest.TestCase):
         self.ok(self.primary, "retire", FEATURE="example-001", CONFIRM_RETIRE="example-001")
         self.assertFalse(worktree.exists())
         self.assertEqual(self.git(self.primary, "status", "--porcelain"), "")
-        # DEV/Review/UAT preservation: only exact read-only inventory/inspection commands.
-        for line in self.docker_log.read_text().splitlines():
-            self.assertTrue(
-                line == "ps --quiet --no-trunc"
-                or line.startswith(
-                    (
-                        "ps -a --filter",
-                        "volume ls --filter",
-                        "inspect --type container --format",
-                        "volume inspect --format",
+        self.assert_docker_log_read_only_inventory()
+
+    def test_linked_finish_retains_provider_managed_worktree(self) -> None:
+        worktree, _, merge = self.prepare_merged_feature("feat/provider-001", managed=False)
+        result = self.run_finish(worktree)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(worktree.is_dir())
+        self.assertEqual(self.git(worktree, "branch", "--show-current"), "")
+        self.assertEqual(self.git(self.primary, "rev-parse", "HEAD"), merge)
+        self.assertEqual(self.git(self.primary, "branch", "--list", "feat/provider-001"), "")
+        self.assertIn(
+            f"WORKTREE RETAINED (provider-managed): {worktree}; "
+            "remove it with the agent tool that created it",
+            result.stdout,
+        )
+        self.assertEqual(
+            result.stdout.splitlines()[-1],
+            f"WORKTREE: RETAINED {worktree} (provider-managed)",
+        )
+
+    def test_linked_finish_retains_managed_worktree_when_retire_guard_refuses(self) -> None:
+        cases = (
+            ("feat/owned-review", "owned_review"),
+            ("feat/running-mount", "running_mount"),
+            ("feat/ignored-env", "ignored_env"),
+        )
+        for branch, kind in cases:
+            with self.subTest(kind=kind):
+                worktree, _, merge = self.prepare_merged_feature(branch)
+                env: dict[str, str] = {}
+                if kind == "owned_review":
+                    env["MOCK_OWNED_SOURCE"] = str(worktree)
+                    needle = "still owns Docker resources"
+                    followup = (
+                        "make feature-review-remove CONFIRM_REMOVE_REVIEW=florabase-feature-review"
                     )
-                ),
-                line,
-            )
+                elif kind == "running_mount":
+                    env["MOCK_RUNNING_MOUNT_SOURCE"] = str(worktree)
+                    needle = "running container"
+                    followup = f"make feature-retire FEATURE={worktree.name} CONFIRM_RETIRE={worktree.name}"
+                else:
+                    (worktree / ".env").write_text("SECRET=fixture\n")
+                    needle = "ignored local files need a decision first: .env"
+                    followup = f"make feature-retire FEATURE={worktree.name} CONFIRM_RETIRE={worktree.name}"
+                result = self.run_finish(worktree, **env)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertTrue(worktree.is_dir())
+                self.assertEqual(self.git(worktree, "branch", "--show-current"), "")
+                self.assertEqual(self.git(self.primary, "rev-parse", "HEAD"), merge)
+                self.assertEqual(self.git(self.primary, "branch", "--list", branch), "")
+                self.assertIn(needle, result.stdout)
+                self.assertIn(followup, result.stdout)
+                final_line = result.stdout.splitlines()[-1]
+                self.assertTrue(final_line.startswith(f"WORKTREE: RETAINED {worktree} ("))
+                self.assertIn(needle, final_line)
+        # Docker unavailable at the retirement step retains without failing finish.
+        docker_down = self.finished("feat/docker-down")
+        retained = self.helper(
+            self.primary, "retire-finished", "--path", str(docker_down), MOCK_DOCKER_FAIL="1"
+        )
+        self.assertEqual(retained.returncode, 0, retained.stderr)
+        self.assertTrue(docker_down.is_dir())
+        self.assertIn("Docker command failed", retained.stdout)
+        self.assertTrue(
+            retained.stdout.splitlines()[-1].startswith(f"WORKTREE: RETAINED {docker_down} (")
+        )
 
     def test_retirement_refuses_every_unsafe_state(self) -> None:
         worktree = self.finished()
@@ -2168,15 +2321,25 @@ class AgentWorkflowTests(unittest.TestCase):
         args = {"FEATURE": "example-001", "CONFIRM_RETIRE": "example-001"}
         self.docker_log.unlink(missing_ok=True)
         lock_stat = (metadata / "florabase-verification.lock").stat()
-        for agent in ("claude-code", "codex", "opencode", "operator-2"):
+        for agent in ("claude-code", "codex", "neon", "opencode", "operator-2"):
             self.refused("operator actions", self.primary, "retire", AGENT_ID=agent, **args)
             self.assertFalse(self.docker_log.exists())
             self.assertEqual(list(common.glob("florabase-retire-*.lock")), [])
             self.assertEqual((metadata / "florabase-verification.lock").stat(), lock_stat)
             self.assert_finished_intact(worktree)
+            auto_refused = self.helper(
+                self.primary, "retire-finished", "--path", str(worktree), AGENT_ID=agent
+            )
+            self.assertEqual(auto_refused.returncode, 1, auto_refused.stdout)
+            self.assertIn("operator actions", auto_refused.stderr)
+            self.assertFalse(self.docker_log.exists())
+            self.assertEqual(list(common.glob("florabase-retire-*.lock")), [])
+            self.assert_finished_intact(worktree)
             with patch.dict(os.environ, self.env(AGENT_ID=agent), clear=True):
                 with self.assertRaisesRegex(workflow_environment.WorkflowError, "operator actions"):
                     feature_worktree.retire(Repository(self.primary), "example-001", "example-001")
+                with self.assertRaisesRegex(workflow_environment.WorkflowError, "operator actions"):
+                    feature_worktree.retire_finished(Repository(self.primary), worktree)
             self.assert_finished_intact(worktree)
             mark_refused = self.helper(
                 worktree,

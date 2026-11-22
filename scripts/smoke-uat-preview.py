@@ -432,16 +432,19 @@ def main() -> None:
     from florabase.harvests.model import Harvest,HarvestItem
     from florabase.collection_photos.model import RecordMediaLink,CollectionPrimaryPhoto
     m=json.loads(Path('/var/lib/florabase/attachments/.uat-fixture.json').read_text())['records']
+    def check(condition, message):
+        if not condition:
+            raise RuntimeError(message)
     with Session(get_engine()) as db:
         row=lambda key,model:db.get(model,UUID(m[key]))
-        assert row('plant:derived',Plant).originating_sowing_id==row('sowing:basil',Sowing).id
-        assert row('group:basil',PlantGroup).originating_sowing_id==row('sowing:basil',Sowing).id
-        assert row('sowing:basil',Sowing).seed_lot_id==row('seed:0',SeedLot).id
-        assert row('harvest:basil',Harvest).plant_id==row('plant:derived',Plant).id
-        assert row('item:basil',HarvestItem).harvest_id==row('harvest:basil',Harvest).id
+        check(row('plant:derived',Plant).originating_sowing_id==row('sowing:basil',Sowing).id,'plant:derived sowing link mismatch')
+        check(row('group:basil',PlantGroup).originating_sowing_id==row('sowing:basil',Sowing).id,'group:basil sowing link mismatch')
+        check(row('sowing:basil',Sowing).seed_lot_id==row('seed:0',SeedLot).id,'sowing:basil seed lot link mismatch')
+        check(row('harvest:basil',Harvest).plant_id==row('plant:derived',Plant).id,'harvest:basil plant link mismatch')
+        check(row('item:basil',HarvestItem).harvest_id==row('harvest:basil',Harvest).id,'item:basil harvest link mismatch')
         links=[row('link:'+kind,RecordMediaLink) for kind in ('supplier','plant','seed_lot')]
-        assert len({link.media_asset_id for link in links})==1
-        assert len(list(db.scalars(select(CollectionPrimaryPhoto))))==3
+        check(len({link.media_asset_id for link in links})==1,'shared media link mismatch')
+        check(len(list(db.scalars(select(CollectionPrimaryPhoto))))==3,'primary photo count mismatch')
         supplier=row('supplier:nursery',Supplier)
         update_supplier(db,supplier,SupplierUpdate(name='Operator-edited nursery',kind='nursery',notes='UAT edit must persist'))
         create_supplier(db,SupplierCreate(name='Operator-only UAT supplier',kind='exchange'))

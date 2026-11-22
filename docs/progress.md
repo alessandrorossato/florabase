@@ -1,3 +1,59 @@
+## 2026-11-23 — WF-CLEANUP-001 finish auto-retirement, Golden closure and review residue
+
+- On `ci/wf-cleanup-001` from `origin/main` `c4ffd63` (writer `neon`).
+- **Auto-retirement on finish & batch finish:** Factored `retire_path()`, `is_managed_worktree()`,
+  `retire_finished_worktree()` and `retire-finished --path <abs>` out of `retire()` in
+  `scripts/feature_worktree.py` so `scripts/feature-finish.sh` (from the primary checkout via final
+  `exec`) and `scripts/feature_batch.py finish()` reuse every retirement guard (operator identity,
+  managed marker directly under `florabase-worktrees/`, locks, finish proof, clean/ignored checks,
+  Docker resource and running-mount guards, mountinfo/symlink/permission preflight, non-forced
+  `git worktree remove`). Managed worktrees auto-retire best-effort (`WORKTREE: RETIRED <path>` /
+  `FINISHED <branch> at <tip>; RETIRED <path>`); any refusal or `KEEP_WORKTREE=1` retains the
+  worktree with exit code 0, exact reason and follow-up command (`WORKTREE: RETAINED <path>
+  (<reason>)`). Provider-managed worktrees are never touched. Updated `Makefile` (`KEEP_WORKTREE`
+  export + help), `AGENTS.md`, `docs/development-workflow.md`, `scripts/test-agent-workflow.py`,
+  and `scripts/test-workflow-helpers.sh`.
+- **Agent post-delivery guidance:** Documented the 3-step post-delivery worktree removal rule for
+  provider-managed worktrees in `AGENTS.md`, `docs/development-workflow.md`, and
+  [agent-prompt-template.md](agent-prompt-template.md).
+- **Verification impact & Golden closure:** Added `backend/alembic.ini`, `backend/scripts/` and
+  `postgres/` to `golden_prefixes` and classified `backend/scripts/check_api_routes.py` and
+  `backend/scripts/test_check_api_routes.py` under `product_backend_prefixes` (product tier backend
+  ALL + `golden-dataset`, no FULL escalation) in `scripts/verification-impact.json`, with focused
+  regressions in `scripts/test-verification-impact.py`.
+- **No `assert` in container smoke snippets:** Replaced `assert` checks inside container Python
+  snippets in `scripts/smoke-beta-images.py` (dev-tool check, now naming offending packages via
+  `sys.exit`) and `scripts/smoke-uat-preview.py` (relationship/photo checks via `RuntimeError`) and
+  in the `scripts/test-beta-images.py` fake-checker fixture, with an offline `python -O` regression
+  in `scripts/test-beta-images.py`.
+- **Batch 11 P3 notes, L5 closure & operator dispositions (2026-11-22):**
+  - Promoted `INSTALL-003` to `verified` in `docs/features.json` (normalized multi-line
+    `dependencies`, citing [wf-04-batch-11.md](release/evidence/wf-04-batch-11.md)) and updated the
+    stale UI-REVIEW-001 gate-rerun pointer below.
+  - Closed L5 review residue: verified `scripts/beta_release.py` `compose_template()` binds the
+    tracked `compose.yaml` by SHA-256 in the `compose_template` field of the attested
+    `release-manifest.json` (`release/manifest.schema.json`, `.github/workflows/beta-images.yml`),
+    and appended the resolution note to the historical INSTALL-001 residual below.
+  - Applied operator dispositions (option (a), 2026-11-22): `BETA-RUNTIME-001` moved to
+    `implemented` / `record` (`docs/features.json`, `docs/release/scope-v1.json`,
+    `docs/release/feature-reconciliation-v1.md`) with its real-host persistence, paired
+    backup/restore, HTTPS/origin/CSRF and failure-recovery gates folded into `BETA-ACCEPTANCE-001`
+    (retaining `BETA-RUNTIME-001` in `dependencies`); `ENG-03` confirmed `best-effort` across
+    `docs/release/feature-reconciliation-v1.md`, `docs/release/scope-v1.md` and
+    `docs/release/scope-v1-handoff.md`.
+  - Registered `WF-CLEANUP-001` (`implemented`, proposed release class `tooling`) in
+    `docs/features.json` and `docs/release/scope-v1.json`.
+- Focused checks before canonical FULL: `test-agent-workflow.py` (80 OK, 3 skipped),
+  `test-workflow-helpers.sh` (pass), `test-feature-workflow.py` (55 OK),
+  `test-verification-impact.py` (45 OK), `test-stage-evidence.py` (22 OK),
+  `test-check-features.py` (26 OK), `workflow-check` (82 `test-beta-images` + 4 lock + 16
+  `test-beta-runtime` + Dependabot policy + Ruff + strict mypy across 49 scripts),
+  `check-features.py` (177 valid; `--release-candidate` blockers unchanged: `RELEASE-001`,
+  `BETA-IMAGE-001`, `beta-postgres-repro-001`, `BETA-SECURITY-001`, `BETA-DATA-001`,
+  `BETA-ACCEPTANCE-001`), `check-doc-links.py` (357 docs), and `test-doc-links.py` (4 OK).
+  Canonical FULL (`make feature-verify AGENT_ID=neon`) runs on this frozen committed head before
+  operator delivery; no push, PR or merge.
+
 ## 2026-11-22 — WF-04 Batch 11 integration (`INSTALL-003` + `UI-REVIEW-001` / `LINEAGE-004`)
 
 - Prepared `ci/batch-11` on top of pinned `origin/main` (`ef5451f`, includes #215) with writer
@@ -93,7 +149,8 @@
   online requests and WCVP CC BY 3.0. P3: remove-button hover specificity, one `aria-current` per
   view, compact "+N more" in the Schedule month, occurrence tile guard and basemap copy, palette test
   names plus an explicit retired-Botanical fallback test, docs (lineage routes, page inventory nav),
-  refreshed README showcase. Gate rerun after these fixes is recorded below.
+  refreshed README showcase. Canonical gate rerun after these fixes was the Batch 11 FULL recorded
+  in the Batch 11 milestone above and [wf-04-batch-11.md](release/evidence/wf-04-batch-11.md).
   UI-REVIEW-001 and LINEAGE-004 are marked verified. Release class proposed for the operator for
   UI-REVIEW-001: `best-effort`.
 
@@ -10029,7 +10086,9 @@ Status remains implemented pending canonical verification.
   by tests and the smoke. Compose 5.7.1 was observed to stop and remove the previous backend before
   starting the recreated `migrate`; the guide asks other managers to stop the stack first.
   Residual: attestation inputs check the compose.yaml asset name, and the publisher compares its
-  bytes with the rendered file. The backend dependency group from Dependabot PR #201 (FastAPI
+  bytes with the rendered file. (Resolved 2026-11-22 by INSTALL-003: the rendered asset was removed
+  and the release manifest binds the tracked `compose.yaml` by SHA-256 via `compose_template()`.)
+  The backend dependency group from Dependabot PR #201 (FastAPI
   0.163.2, psycopg 3.3.9, pwdlib 0.4.2, pydantic-settings 2.16.3, python-multipart 0.0.34,
   SQLAlchemy 2.0.58, pip-tools 7.7.0, Ruff 0.17.5) is folded in with regenerated hash locks.
   The documentation handoff to Antigravity Neon was not taken up; on the operator's explicit

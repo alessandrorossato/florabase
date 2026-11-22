@@ -771,17 +771,50 @@ def require_clean_finished_proof(target: Repository, path: Path) -> None:
         validate_finished_source(target, proof["batch_pr"], branch, sha, merge)
 
 
-def retire(repo: Repository, identifier: str, confirmation: str) -> None:
-    """Remove one finished managed worktree; provider-managed and foreign paths always refuse."""
-    require_operator_identity()
-    if not re.fullmatch(r"[a-z0-9][a-z0-9._-]*", identifier):
-        raise WorkflowError("FEATURE must be a feature worktree id, for example event-001")
+def normalize_target_path(raw_path: Path) -> Path | None:
+    if not raw_path.is_absolute() or ".." in raw_path.parts or not raw_path.name:
+        return None
+    if not raw_path.parent.exists():
+        return raw_path
+    return raw_path.parent.resolve() / raw_path.name
+
+
+def is_managed_worktree(repo: Repository, raw_path: Path) -> bool:
+    """Return True only when raw_path is directly under worktree_root() with a managed marker."""
+    path = normalize_target_path(raw_path)
+    if path is None or path.is_symlink() or not path.is_dir():
+        return False
     root = worktree_root(repo).resolve()
-    path = root / identifier
-    if confirmation != identifier:
-        raise WorkflowError(f"retirement requires CONFIRM_RETIRE={identifier}")
-    if path == repo.primary.resolve() or matching_worktree(repo, path) is None:
-        raise WorkflowError(f"{path} is not a registered managed worktree under {root}")
+    if path.parent != root or path == repo.primary.resolve():
+        return False
+    git_pointer = path / ".git"
+    if git_pointer.is_symlink() or not git_pointer.is_file():
+        return False
+    try:
+        target = Repository(path)
+    except WorkflowError:
+        return False
+    if (
+        target.common.resolve() != repo.common.resolve()
+        or target.metadata.resolve() == repo.metadata.resolve()
+    ):
+        return False
+    marker = managed_marker(target)
+    return not marker.is_symlink() and marker.is_file()
+
+
+def retire_path(repo: Repository, raw_path: Path) -> Path:
+    """Remove one finished managed worktree at an exact path; all guards apply."""
+    require_operator_identity()
+    root = worktree_root(repo).resolve()
+    path = normalize_target_path(raw_path)
+    if (
+        path is None
+        or path.parent != root
+        or path == repo.primary.resolve()
+        or matching_worktree(repo, path) is None
+    ):
+        raise WorkflowError(f"{raw_path} is not a registered managed worktree under {root}")
     if Path.cwd().resolve().is_relative_to(path):
         raise WorkflowError("run retirement from the primary checkout, not the retiring worktree")
     lock_suffix = hashlib.sha256(str(path).encode("utf-8")).hexdigest()[:12]
@@ -808,7 +841,75 @@ def retire(repo: Repository, identifier: str, confirmation: str) -> None:
             validate_retirement_tree(path)
             # No --force: Git must still refuse anything it considers unsafe.
             repo.git("worktree", "remove", str(path))
-    print(f"FEATURE WORKTREE RETIRED: {path}; volumes, branches and other worktrees unchanged")
+    return path
+
+
+def retention_followup(repo: Repository, path: Path, reason: str) -> str:
+    retire_cmd = f"make feature-retire FEATURE={path.name} CONFIRM_RETIRE={path.name}"
+    env_hints: list[str] = []
+    if REVIEW_PROJECT in reason:
+        env_hints.append(f"make feature-review-remove CONFIRM_REMOVE_REVIEW={REVIEW_PROJECT}")
+    if UAT_PROJECT in reason:
+        env_hints.append(f"make uat-preview-remove CONFIRM_REMOVE_UAT_PREVIEW={UAT_PROJECT}")
+    if SOURCING_PROJECT in reason:
+        env_hints.append(f"make sourcing-preview-remove CONFIRM_REMOVE_SOURCING={SOURCING_PROJECT}")
+    for project in sorted(set(re.findall(r"florabase-uat-branch-[a-z0-9_-]+", reason))):
+        env_hints.append(f"make uat-instance-remove CONFIRM_REMOVE_UAT_INSTANCE={project}")
+    if env_hints:
+        return (
+            f"Retire owned environment(s) from {path} first ({'; '.join(env_hints)}), "
+            f"then from {repo.primary} run: {retire_cmd}"
+        )
+    return f"Resolve the condition above, then from {repo.primary} run: {retire_cmd}"
+
+
+def retire_finished_worktree(repo: Repository, raw_path: Path) -> tuple[bool, str]:
+    """Best-effort auto-retire a finished managed worktree; operator refusal still raises."""
+    require_operator_identity()
+    if not is_managed_worktree(repo, raw_path):
+        return False, "provider-managed"
+    try:
+        retire_path(repo, raw_path)
+    except (WorkflowError, ResourceError) as error:
+        return False, str(error)
+    return True, ""
+
+
+def retire_finished(repo: Repository, raw_path: Path) -> None:
+    """Finish-hook entry point: auto-retire a managed finished worktree or retain with reason."""
+    require_operator_identity()
+    if not raw_path.is_absolute():
+        raise WorkflowError("retire-finished requires an absolute --path")
+    retired, reason = retire_finished_worktree(repo, raw_path)
+    if retired:
+        print(f"FEATURE WORKTREE RETIRED: {raw_path}")
+        print(f"Your shell is in a removed directory: cd {repo.primary}")
+        print(f"WORKTREE: RETIRED {raw_path}")
+        return
+    if reason == "provider-managed":
+        print(
+            f"WORKTREE RETAINED (provider-managed): {raw_path}; "
+            "remove it with the agent tool that created it"
+        )
+    else:
+        print(f"Linked feature worktree retained at {raw_path}: {reason}")
+        print(retention_followup(repo, raw_path, reason))
+    print(f"WORKTREE: RETAINED {raw_path} ({reason})")
+
+
+def retire(repo: Repository, identifier: str, confirmation: str) -> None:
+    """Remove one finished managed worktree; provider-managed and foreign paths always refuse."""
+    require_operator_identity()
+    if not re.fullmatch(r"[a-z0-9][a-z0-9._-]*", identifier):
+        raise WorkflowError("FEATURE must be a feature worktree id, for example event-001")
+    root = worktree_root(repo).resolve()
+    path = root / identifier
+    if confirmation != identifier:
+        raise WorkflowError(f"retirement requires CONFIRM_RETIRE={identifier}")
+    retired_path = retire_path(repo, path)
+    print(
+        f"FEATURE WORKTREE RETIRED: {retired_path}; volumes, branches and other worktrees unchanged"
+    )
 
 
 def main() -> int:
@@ -829,6 +930,8 @@ def main() -> int:
     finished = commands.add_parser("mark-finished")
     for option in ("--branch", "--sha", "--merge"):
         finished.add_argument(option, required=True)
+    auto_retire = commands.add_parser("retire-finished")
+    auto_retire.add_argument("--path", required=True, type=Path)
     args = parser.parse_args()
     environment = os.environ
     try:
@@ -861,6 +964,8 @@ def main() -> int:
             require_operator(repo)
         elif args.command == "mark-finished":
             mark_finished(repo, args.branch, args.sha, args.merge)
+        elif args.command == "retire-finished":
+            retire_finished(repo, args.path)
         else:
             retire(repo, environment.get("FEATURE", ""), environment.get("CONFIRM_RETIRE", ""))
     except (WorkflowError, ResourceError) as error:

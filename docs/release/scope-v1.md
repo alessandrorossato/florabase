@@ -114,13 +114,14 @@ through the development workflow, and they are not release gates in themselves.
 
 Wanted, not required. No mandatory gate depends on any of them. Each may be deferred by a
 scope-change record, and a gate clause that mentions one states what applies when it is deferred.
-The operator ruled explicitly on ENG-02, FN-02, FN-04 and DOC-06. ENG-03, ENG-04, ENG-06 and FN-07
-are classed optional on the audit's recommendation and await an explicit ruling.
+The operator ruled explicitly on ENG-02, ENG-03 (confirmed optional / `best-effort`, 2026-11-22),
+FN-02, FN-04 and DOC-06. ENG-04, ENG-06 and FN-07 are classed optional on the audit's
+recommendation and await an explicit ruling.
 
 | ID | Work | Note |
 | --- | --- | --- |
 | ENG-02 | Baseline security headers in the bundled nginx | |
-| ENG-03 | A test that every route requires authentication | |
+| ENG-03 | A test that every route requires authentication | Confirmed optional (`best-effort`) by operator decision on 2026-11-22 |
 | ENG-04 | Request identifier logging and an unhandled-error log | |
 | ENG-06 | A real-browser smoke test on the production images | |
 | FN-02 | Sorting in the Seeds, Sowings and Plants directories | |
