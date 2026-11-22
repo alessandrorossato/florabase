@@ -11,6 +11,8 @@
   border: 0;
   border-radius: 0;
   background: transparent;
+  /* An inline stage, not an overlay: no dialog elevation, same plane as every page. */
+  box-shadow: none;
   color: var(--text);
   overflow: visible;
   height: calc(100dvh - 3rem);

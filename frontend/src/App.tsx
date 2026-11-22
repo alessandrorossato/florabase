@@ -136,6 +136,20 @@ const SettingsScreen = lazy(() =>
   }),
 );
 
+const HelpScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./settings/HelpScreen");
+    return { default: module.HelpScreen };
+  }),
+);
+
+const DataSourcesScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./settings/DataSourcesScreen");
+    return { default: module.DataSourcesScreen };
+  }),
+);
+
 const LabelsScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./labels/LabelsScreen");
@@ -147,6 +161,20 @@ const PlantScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./plants/PlantScreen");
     return { default: module.PlantScreen };
+  }),
+);
+
+const LineageHome = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./lineage/LineageHome");
+    return { default: module.LineageHome };
+  }),
+);
+
+const IdentityLineage = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./lineage/IdentityLineage");
+    return { default: module.IdentityLineage };
   }),
 );
 
@@ -225,21 +253,22 @@ interface Route {
   labelRecord?: string;
   /** The former Settings QR address (#/settings?tab=general) opens Labels' QR dialog. */
   labelQr?: boolean;
-  /** #/lineage/<kind>/<id>: Material ancestry, within the focus record's own section. */
+  /** #/lineage/<kind>/<id>: Material ancestry, in Explore → Lineage (the cross-collection view). */
   ancestry?: {
-    kind: keyof typeof ancestrySections;
+    kind: AncestryKind;
     id: string;
   };
+  /** #/lineage/identity/<id>: recorded lineage across one Botanical identity's records. */
+  identityLineageId?: string;
 }
 
-const ancestrySections = {
-  seed_lot: "seeds",
-  sowing: "sowings",
-  plant: "plants",
-  plant_group: "plants",
-  vegetative_lot: "cuttings",
-  propagation_attempt: "cuttings",
-} as const;
+type AncestryKind =
+  | "seed_lot"
+  | "sowing"
+  | "plant"
+  | "plant_group"
+  | "vegetative_lot"
+  | "propagation_attempt";
 
 function currentRoute(): Route {
   const raw = window.location.hash.slice(1) || "/dashboard";
@@ -272,12 +301,16 @@ function currentRoute(): Route {
       pathname,
     );
   if (ancestry) {
-    const kind = ancestry[1] as keyof typeof ancestrySections;
+    const kind = ancestry[1] as AncestryKind;
     return {
-      section: ancestrySections[kind],
+      section: "lineage",
       ancestry: { kind, id: ancestry[2] },
     };
   }
+  if (first === "lineage")
+    return id === "identity" && detailId
+      ? { section: "lineage", identityLineageId: detailId }
+      : { section: "lineage" };
   if (first === "cuttings")
     return {
       section: "cuttings",
@@ -334,6 +367,8 @@ function currentRoute(): Route {
     "import-export",
     "labels",
     "settings",
+    "help",
+    "data-sources",
     "account",
     "media",
   ];
@@ -562,6 +597,15 @@ function ApplicationShell({
                   kind={route.ancestry.kind}
                   id={route.ancestry.id}
                 />
+              ) : route.section === "lineage" ? (
+                route.identityLineageId ? (
+                  <IdentityLineage
+                    key={route.identityLineageId}
+                    identityId={route.identityLineageId}
+                  />
+                ) : (
+                  <LineageHome />
+                )
               ) : route.section === "sowings" &&
                 route.action === "start" &&
                 route.seedLotId ? (
@@ -661,6 +705,10 @@ function ApplicationShell({
                 />
               ) : route.section === "settings" ? (
                 <SettingsScreen />
+              ) : route.section === "help" ? (
+                <HelpScreen />
+              ) : route.section === "data-sources" ? (
+                <DataSourcesScreen />
               ) : route.section === "labels" ? (
                 <LabelsScreen
                   key={`${route.labelKind ?? ""}:${route.labelRecord ?? ""}`}

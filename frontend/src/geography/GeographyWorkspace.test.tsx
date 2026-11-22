@@ -111,9 +111,10 @@ test.each([
     window.history.replaceState(null, "", hash);
     render(<App />);
     // Cold entry loads the Geography workspace and then the selected map chunk.
+    // The page title is the chosen menu entry.
     await screen.findByRole(
       "heading",
-      { name: "Geography", level: 2 },
+      { name: label, level: 2 },
       { timeout: 5000 },
     );
     expect(

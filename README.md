@@ -2,6 +2,10 @@
   <img src="docs/assets/florabase-logo.png" alt="Florabase" width="300">
 </p>
 
+<p align="center">
+  <img src="docs/assets/readme-showcase.png" alt="Florabase screens: Today, a botanical identity, native ranges, taxonomy, collection origins, the Schedule calendar and two phone views" width="100%">
+</p>
+
 Florabase is a self-hosted web application for managing a personal botanical collection. It keeps
 botanical reference information separate from the material and plants in a collection, while
 preserving explicit provenance through real collection workflows.
@@ -47,10 +51,10 @@ capture and the other themes after v1.0.0 are in the [product roadmap](docs/prod
 
 ## Screenshots
 
-Feature-review screenshots exist in engineering handoffs; a curated public screenshot set remains
-a release gate. Before the first public release, capture the authenticated
-desktop Plants view, the mobile Seed lots or Sowings workflow, and a lineage-aware PlantGroup
-extraction result using non-sensitive demonstration data.
+The showcase above uses invented demonstration data (no real collection, provenance or locations):
+Today, a botanical identity, native ranges, the WFO taxonomy, collection origins and the month
+calendar on desktop, plus Today and an identity on a phone, in the light and dark appearances. A
+curated public screenshot set remains a release gate.
 
 ## Architecture
 

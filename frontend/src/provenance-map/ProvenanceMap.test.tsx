@@ -142,9 +142,7 @@ test("retains exact coordinates, accuracy circles, safe tooltip and Space/click 
   });
   expect(select).toHaveBeenCalledTimes(3);
   expect(mocks.tileLayer).not.toHaveBeenCalled();
-  expect(
-    screen.getByRole("checkbox", { name: "Online basemap" }),
-  ).toBeDisabled();
+  expect(screen.queryByRole("checkbox", { name: "Online basemap" })).toBeNull();
   expect(screen.getByText(/Local overview/)).toHaveTextContent(
     "not street-level detail",
   );
@@ -326,7 +324,7 @@ test.each([false, true])(
     const fits = mocks.map.fitBounds.mock.calls.length;
     const removals = mocks.layer.remove.mock.calls.length;
     const fetch = vi.spyOn(globalThis, "fetch");
-    for (const palette of ["botanical", "herbarium", "mineral"] as const) {
+    for (const palette of ["field-ledger", "herbarium", "mineral"] as const) {
       for (const appearance of ["light", "dark"] as const) {
         act(() => {
           window.florabaseAppearance.setPalette(palette);

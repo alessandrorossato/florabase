@@ -9,6 +9,7 @@ import {
   DirectoryRow,
   DirectoryRecordContent,
   DirectoryTrigger,
+  DirectoryRecordActions,
   DirectoryViewSwitcher,
 } from "../../components/DirectoryPage";
 import {
@@ -18,7 +19,6 @@ import {
 } from "../../components/DirectoryTools";
 import { PageHeader } from "../../components/ReferenceUI";
 import { Icon } from "../../components/Icon";
-import { ActionLink } from "../../components/Action";
 import {
   EmptyState,
   ErrorState,
@@ -235,6 +235,34 @@ function CuttingsDirectory({
               presentation={
                 <DirectoryViewSwitcher value={view} onChange={setView} />
               }
+              surfaces={
+                <div
+                  className="directory-surfaces"
+                  role="group"
+                  aria-label="Cuttings record type"
+                >
+                  {(["lots", "attempts"] as const).map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      className="button--secondary"
+                      aria-pressed={surface === item}
+                      onClick={() => {
+                        if (surface === item) return;
+                        directory.replace({
+                          ...defaults.cuttings,
+                          record_type: item,
+                          q,
+                        });
+                        setOffset(0);
+                        clearPreview();
+                      }}
+                    >
+                      {item === "lots" ? "Material lots" : "Rooting attempts"}
+                    </button>
+                  ))}
+                </div>
+              }
               savedViews={
                 <SavedViews
                   surface="cuttings"
@@ -298,32 +326,6 @@ function CuttingsDirectory({
       }
       content={
         <>
-          <div
-            className="cuttings-directory__surfaces"
-            role="group"
-            aria-label="Cuttings record type"
-          >
-            {(["lots", "attempts"] as const).map((item) => (
-              <button
-                key={item}
-                type="button"
-                className="button--secondary"
-                aria-pressed={surface === item}
-                onClick={() => {
-                  if (surface === item) return;
-                  directory.replace({
-                    ...defaults.cuttings,
-                    record_type: item,
-                    q,
-                  });
-                  setOffset(0);
-                  clearPreview();
-                }}
-              >
-                {item === "lots" ? "Material lots" : "Rooting attempts"}
-              </button>
-            ))}
-          </div>
           {data.state === "loading" && (
             <LoadingState>Loading cuttings…</LoadingState>
           )}
@@ -365,15 +367,19 @@ function CuttingsDirectory({
                           status={<LifecycleStatus state={item.lifecycle} />}
                         />
                       </DirectoryTrigger>
-                      <div className="ui-directory-record-actions">
-                        <ActionLink
-                          href={`#/cuttings/${surface}/${item.id}`}
-                          aria-label={`Open details: ${label(item)}`}
-                          icon="overview"
-                        >
-                          Details
-                        </ActionLink>
-                      </div>
+                      <DirectoryRecordActions
+                        label={label(item)}
+                        onDetails={() => {
+                          window.location.assign(
+                            `#/cuttings/${surface}/${item.id}`,
+                          );
+                        }}
+                        onEdit={() => {
+                          window.location.assign(
+                            `#/cuttings/${surface}/${item.id}?action=edit`,
+                          );
+                        }}
+                      />
                     </DirectoryRow>
                   ) : (
                     <DirectoryCard key={item.id} selected={preview === item.id}>
@@ -393,15 +399,19 @@ function CuttingsDirectory({
                           status={<LifecycleStatus state={item.lifecycle} />}
                         />
                       </DirectoryTrigger>
-                      <div className="ui-directory-record-actions">
-                        <ActionLink
-                          href={`#/cuttings/${surface}/${item.id}`}
-                          aria-label={`Open details: ${label(item)}`}
-                          icon="overview"
-                        >
-                          Details
-                        </ActionLink>
-                      </div>
+                      <DirectoryRecordActions
+                        label={label(item)}
+                        onDetails={() => {
+                          window.location.assign(
+                            `#/cuttings/${surface}/${item.id}`,
+                          );
+                        }}
+                        onEdit={() => {
+                          window.location.assign(
+                            `#/cuttings/${surface}/${item.id}?action=edit`,
+                          );
+                        }}
+                      />
                     </DirectoryCard>
                   ),
                 )}

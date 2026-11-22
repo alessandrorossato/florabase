@@ -9,6 +9,10 @@ from florabase.seed_lots.model import SeedLotLifecycle, SeedLotSourceKind
 from florabase.seed_lots.schemas import PartialDate
 from florabase.sowings.model import SowingLifecycle
 
+LineageKind = Literal[
+    "seed_lot", "sowing", "plant", "plant_group", "vegetative_lot", "propagation_attempt"
+]
+
 
 class BotanicalIdentitySummary(BaseModel):
     id: UUID
@@ -107,3 +111,32 @@ class AncestryResponse(BaseModel):
     # Nearest first, exactly as the recorded upstream walk.
     ancestors: list[AncestryNode]
     children: AncestryChildren
+
+
+class IdentityLineageNode(AncestryNode):
+    # False for a record outside the identity that one of its records is explicitly linked to.
+    in_identity: bool
+
+
+class LineageEdge(BaseModel):
+    """One explicit recorded source relationship: the child's own source column."""
+
+    parent_kind: LineageKind
+    parent_id: UUID
+    child_kind: LineageKind
+    child_id: UUID
+
+
+class IdentityLineageGraph(BaseModel):
+    """Every record of one BotanicalIdentity and only its explicitly recorded relationships.
+
+    Sharing the identity is not lineage: records without an edge stay unconnected.
+    """
+
+    botanical_identity: BotanicalIdentitySummary
+    # Records belonging to the identity (Sowings and attempts through their own source lot).
+    total: int
+    limit: int
+    truncated: bool
+    nodes: list[IdentityLineageNode]
+    edges: list[LineageEdge]

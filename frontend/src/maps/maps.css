@@ -69,3 +69,42 @@
 .maps-workspace.maps-workspace--canvas {
   grid-template-columns: minmax(0, 1fr);
 }
+
+/* Map overviews (Collection origins, Species distribution) use the Native ranges metric cards:
+   label and context above, the count below, each card a target. */
+:is(.origins-overview, .distribution-overview, .lineage-overview) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.app-content
+  :is(.origins-overview, .distribution-overview, .lineage-overview)
+  > :is(button, a, span) {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: var(--space-1);
+  min-width: 0;
+  min-block-size: 0;
+  padding: var(--space-3);
+  color: var(--text);
+  text-align: start;
+  text-decoration: none;
+  white-space: normal;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+  font: var(--type-small);
+}
+.app-content
+  :is(.origins-overview, .distribution-overview, .lineage-overview)
+  > :is(button, a):hover {
+  border-color: var(--primary);
+  background: var(--primary-subtle);
+}
+:is(.origins-overview, .distribution-overview, .lineage-overview) strong {
+  font: var(--type-metric);
+  font-variant-numeric: tabular-nums;
+}

@@ -3317,9 +3317,7 @@ test("Plants Gallery/List keeps group scope, search, Details history and bulk ch
   expect(
     screen.queryByRole("complementary", { name: /preview|inspection/i }),
   ).not.toBeInTheDocument();
-  expect(
-    screen.getByRole("button", { name: "Gallery", pressed: true }),
-  ).toBeVisible();
+  expect(screen.getByRole("button", { name: "List" })).toBeVisible();
   await selectDirectoryFilter(user, "Record type", "group");
   await user.type(screen.getByLabelText("Search Plants"), "Tamarillo");
   const row = within(
@@ -3351,9 +3349,7 @@ test("Plants Gallery/List keeps group scope, search, Details history and bulk ch
   await waitFor(() => {
     expect(document.querySelector(".ui-directory-records")).toBeInTheDocument();
   });
-  expect(
-    await screen.findByRole("button", { name: "List", pressed: true }),
-  ).toBeVisible();
+  expect(await screen.findByRole("button", { name: "Gallery" })).toBeVisible();
   expect(screen.getByLabelText("Search Plants")).toHaveValue("Tamarillo");
   expect(
     screen.getByRole("checkbox", {
@@ -3362,9 +3358,7 @@ test("Plants Gallery/List keeps group scope, search, Details history and bulk ch
   ).toBeChecked();
   localStorage.clear();
   await browserForward();
-  expect(
-    await screen.findByRole("button", { name: "Gallery", pressed: true }),
-  ).toBeVisible();
+  expect(await screen.findByRole("button", { name: "List" })).toBeVisible();
 });
 
 test.each(["plant", "group"] as const)(

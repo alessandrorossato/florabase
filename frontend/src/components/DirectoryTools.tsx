@@ -21,6 +21,7 @@ export function DirectoryTools({
   onReset,
   activeFilters = [],
   context,
+  surfaces,
   stableFilterSummary = false,
 }: {
   name: string;
@@ -32,6 +33,8 @@ export function DirectoryTools({
   onReset?: () => void;
   activeFilters?: ActiveDirectoryFilter[];
   context?: ReactNode;
+  /** Record-type switch (Cuttings, Harvests): always directly under the toolbar. */
+  surfaces?: ReactNode;
   stableFilterSummary?: boolean;
 }) {
   const id = useId();
@@ -64,6 +67,7 @@ export function DirectoryTools({
         {savedViews}
         {actions}
       </div>
+      {surfaces}
       {context && <div className="directory-context">{context}</div>}
       {(activeFilters.length > 0 || stableFilterSummary) && (
         <div

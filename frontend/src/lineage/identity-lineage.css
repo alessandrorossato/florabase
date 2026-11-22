@@ -1,0 +1,164 @@
+/* Identity lineage: one stem per recorded line, reusing the ancestry explorer's tree. */
+.identity-lineage__roots,
+.identity-lineage__independent {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.identity-lineage__roots > li,
+.identity-lineage__independent > li {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+.identity-lineage__roots > li::before,
+.identity-lineage__independent > li::before {
+  content: none;
+}
+.identity-lineage__line > .ancestry-tree {
+  padding-inline-start: var(--space-4);
+  border-inline-start: 2px solid var(--lineage);
+}
+.identity-lineage__node[data-outside="true"] {
+  border-style: dashed;
+  background: transparent;
+}
+.identity-lineage__reference {
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+@media (max-width: 40rem) {
+  .identity-lineage__line > .ancestry-tree {
+    padding-inline-start: var(--space-3);
+  }
+}
+
+.lineage-home__search {
+  display: grid;
+  gap: var(--space-1);
+  max-inline-size: 34rem;
+}
+.lineage-home__hits {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lineage-home__hits > li {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+}
+.lineage-home__hits > li::before {
+  content: none;
+}
+.lineage-home__hits a {
+  font: var(--type-strong);
+}
+.lineage-home__hits span {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+@media (max-width: 48rem), (any-pointer: coarse) {
+  .lineage-home__hits a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--control-height-touch, 2.75rem);
+  }
+}
+.lineage-home__results {
+  display: grid;
+  gap: var(--space-6);
+  margin-block-start: var(--space-2);
+}
+
+/* UI-REVIEW-001: Lineage has its own stage, like Taxonomy and Maps: metric cards above, a
+   dotted "growing bench" canvas holding identity cards or recorded lines. */
+.lineage-stage {
+  margin-block: var(--space-3);
+  padding: var(--space-4);
+  background-color: var(--surface-subtle);
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--border-strong) 35%, transparent) 1px,
+    transparent 1.5px
+  );
+  background-size: 1.25rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-large);
+}
+.lineage-stage > h3 {
+  margin: 0 0 var(--space-3);
+  font: var(--type-h3);
+}
+.lineage-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lineage-gallery > li {
+  margin: 0;
+  padding: 0;
+}
+.lineage-gallery > li::before {
+  content: none;
+}
+.lineage-gallery a {
+  display: grid;
+  gap: var(--space-1);
+  block-size: 100%;
+  padding: var(--space-3) var(--space-4);
+  color: var(--text);
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-inline-start: 3px solid var(--lineage);
+  border-radius: var(--radius-normal);
+}
+.lineage-gallery a:hover {
+  border-color: var(--primary);
+  background: var(--primary-subtle);
+}
+.lineage-gallery strong {
+  color: var(--primary);
+  font: var(--type-strong);
+}
+.lineage-gallery .scientific-name {
+  font-family: var(--font-botanical);
+  font-size: 1.0625rem;
+  font-weight: 400;
+}
+.lineage-gallery span {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.lineage-gallery small {
+  color: var(--text);
+  font: var(--type-label);
+  font-weight: 400;
+}
+/* Recorded lines sit side by side as panels on wide screens. */
+.lineage-stage .identity-lineage__roots {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 24rem), 1fr));
+  align-items: start;
+}
+.lineage-stage .identity-lineage__roots > li,
+.lineage-stage .identity-lineage__independent > li {
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+}
+.lineage-stage .identity-lineage__independent {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+}

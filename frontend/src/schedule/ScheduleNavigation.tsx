@@ -37,65 +37,66 @@ export function ScheduleNavigation({
   }).filter((date) => /^(?!0000)\d{4}-/.test(date));
   return (
     <>
-      <div className="schedule-view-heading">
-        <h3>{monthLabel(state.month)}</h3>
-        {switcher}
-      </div>
       <nav className="schedule-period-bar" aria-label="Planning dates">
-        <div className="actions">
-          <button
-            className="button--secondary"
-            disabled={
-              month ? state.month === "0001-01" : selected <= "0001-01-07"
-            }
-            onClick={() => {
-              shift(-1);
-            }}
-          >
-            Previous {month ? "month" : "week"}
-          </button>
-          <button
-            className="button--secondary"
-            onClick={() => {
-              choose(today);
-            }}
-          >
-            Today
-          </button>
-          <button
-            className="button--secondary"
-            disabled={
-              month ? state.month === "9999-12" : selected >= "9999-12-24"
-            }
-            onClick={() => {
-              shift(1);
-            }}
-          >
-            Next {month ? "month" : "week"}
-          </button>
-          <label className="schedule-jump">
-            Jump to date
-            <input
-              type="date"
-              min="0001-01-01"
-              max="9999-12-31"
-              value={selected}
-              onChange={(e) => {
-                if (e.target.validity.valid && e.target.value)
-                  choose(e.target.value);
-              }}
-            />
-          </label>
-          {!month && state.date && (
+        {/* One compact row: period, navigation and the Agenda/Calendar toggle. */}
+        <div className="schedule-view-heading">
+          <h3>{monthLabel(state.month)}</h3>
+          <div className="actions">
             <button
-              className="button--quiet"
+              className="button--secondary"
+              disabled={
+                month ? state.month === "0001-01" : selected <= "0001-01-07"
+              }
               onClick={() => {
-                onChange({ ...state, date: "" });
+                shift(-1);
               }}
             >
-              All dates
+              Previous {month ? "month" : "week"}
             </button>
-          )}
+            <button
+              className="button--secondary"
+              onClick={() => {
+                choose(today);
+              }}
+            >
+              Today
+            </button>
+            <button
+              className="button--secondary"
+              disabled={
+                month ? state.month === "9999-12" : selected >= "9999-12-24"
+              }
+              onClick={() => {
+                shift(1);
+              }}
+            >
+              Next {month ? "month" : "week"}
+            </button>
+            <label className="schedule-jump">
+              Jump to date
+              <input
+                type="date"
+                min="0001-01-01"
+                max="9999-12-31"
+                value={selected}
+                onChange={(e) => {
+                  if (e.target.validity.valid && e.target.value)
+                    choose(e.target.value);
+                }}
+              />
+            </label>
+            {!month && state.date && (
+              <button
+                className="button--quiet"
+                onClick={() => {
+                  onChange({ ...state, date: "" });
+                }}
+              >
+                All dates
+              </button>
+            )}
+          </div>
+          {switcher}
         </div>
         {!month && (
           <div className="schedule-date-strip">

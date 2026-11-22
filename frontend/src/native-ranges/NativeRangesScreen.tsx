@@ -1163,7 +1163,7 @@ export function NativeRangesScreen() {
             <div className="empty-state">
               <h3>Select a species</h3>
               <p>
-                Choose a represented BotanicalIdentity to explore its exact
+                Choose a represented botanical identity to explore its exact
                 recorded native-range places. Species without a range remain
                 visible.
               </p>

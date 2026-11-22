@@ -181,12 +181,6 @@
 }
 .ui-view-switcher {
   display: flex;
-  gap: var(--space-1);
-}
-.ui-view-switcher [aria-pressed="true"] {
-  background: var(--primary-subtle);
-  color: var(--primary);
-  border-color: var(--primary);
 }
 @media (max-width: 75rem) {
   .ui-directory-frame--selected {

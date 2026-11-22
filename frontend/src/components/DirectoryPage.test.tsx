@@ -182,12 +182,12 @@ test("Back/forward view restoration follows URL over the preference, while Saved
   window.history.replaceState(null, "", "#/plants?view=list&q=Aloe");
   fireEvent.popState(window);
   expect(
-    await screen.findByRole("button", { name: "List", pressed: true }),
+    await screen.findByRole("button", { name: "Gallery" }),
   ).toBeInTheDocument();
   window.history.replaceState(null, "", "#/plants?q=Ficus");
   fireEvent(window, new HashChangeEvent("hashchange"));
   expect(
-    await screen.findByRole("button", { name: "Gallery", pressed: true }),
+    await screen.findByRole("button", { name: "List" }),
   ).toBeInTheDocument();
 });
 
@@ -202,9 +202,7 @@ test("browser storage denial does not prevent keyboard view switching", async ()
   render(<Example />);
   screen.getByRole("button", { name: "List" }).focus();
   await userEvent.keyboard(" ");
-  expect(
-    screen.getByRole("button", { name: "List", pressed: true }),
-  ).toHaveFocus();
+  expect(screen.getByRole("button", { name: "Gallery" })).toHaveFocus();
   expect(window.location.hash).toContain("view=list");
 });
 
@@ -419,9 +417,7 @@ test("Back restores the displayed default even after persisting the opposite mod
   render(<Example />);
   await userEvent.click(screen.getByRole("button", { name: "List" }));
   await import("../test/history").then(({ browserBack }) => browserBack());
-  expect(
-    await screen.findByRole("button", { name: "Gallery", pressed: true }),
-  ).toBeVisible();
+  expect(await screen.findByRole("button", { name: "List" })).toBeVisible();
   expect(window.location.hash).toBe("#/plants?q=Aloe&view=gallery");
   expect(window.history.state).toEqual({ review: true });
 });

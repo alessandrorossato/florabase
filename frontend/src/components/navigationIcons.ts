@@ -14,6 +14,7 @@ export const navigationIcons = {
   schedule: "calendar",
   identities: "flower",
   taxonomy: "taxonomy",
+  lineage: "lineage",
   media: "image",
   geography: "globe",
   suppliers: "store",
@@ -22,4 +23,6 @@ export const navigationIcons = {
   "import-export": "exchange",
   account: "person",
   settings: "gear",
+  "data-sources": "layers",
+  help: "document",
 } as const satisfies Record<string, IconName>;

@@ -84,6 +84,14 @@ const shapes = {
       <path d="M12 7v5M5 17v-5h14v5" />
     </>
   ),
+  lineage: (
+    <>
+      <circle cx="12" cy="4" r="2" />
+      <circle cx="5" cy="20" r="2" />
+      <circle cx="19" cy="20" r="2" />
+      <path d="M12 6v6M12 12c-4 0-7 2-7 6M12 12c4 0 7 2 7 6" />
+    </>
+  ),
   image: (
     <>
       <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -203,6 +211,7 @@ const shapes = {
   ),
   "chevron-down": <path d="m6 9 6 6 6-6" />,
   "chevron-up": <path d="m6 15 6-6 6 6" />,
+  "chevron-right": <path d="m9 6 6 6-6 6" />,
   check: <path d="m5 12 4 4L19 6" />,
   close: <path d="m6 6 12 12M18 6 6 18" />,
   monitor: (
