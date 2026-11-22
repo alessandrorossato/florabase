@@ -858,6 +858,13 @@
 }
 /* The switch sits directly under the toolbar in every directory, including phone headers. */
 .app-content .directory-tools + .directory-surfaces {
-  flex: 1 1 100%;
+  /* Own line in a wrapping row (phone headers) without growing in a column container. */
+  flex: none;
+  inline-size: 100%;
+  align-items: flex-start;
   margin-block: var(--space-3) 0;
+}
+.app-content .ui-directory-action-placeholder {
+  flex: none;
+  inline-size: var(--control-height-compact);
 }

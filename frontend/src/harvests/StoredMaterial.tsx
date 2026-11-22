@@ -208,8 +208,7 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
       ).get("inventory");
       if (!inventoryId || !rows.some((row) => row.id === inventoryId)) return;
       const item = document.getElementById(`inventory-${inventoryId}`);
-      if (item && typeof item.scrollIntoView === "function")
-        item.scrollIntoView({ block: "center" });
+      // Details open at the top like every other record; the stored item keeps focus.
       item?.focus({ preventScroll: true });
       const params = new URLSearchParams(
         window.location.hash.split("?", 2)[1] ?? "",
@@ -907,6 +906,32 @@ export function StoredMaterialDirectory({
                         />
                       </DirectoryTrigger>
                       <div className="ui-directory-record-actions">
+                        {!bulk.active &&
+                          (row.material_kind === "seed" &&
+                          row.state === "active" ? (
+                            <OverflowMenu
+                              ariaLabel={`Create or record for ${row.harvest_title}`}
+                              keepMounted
+                              closeOnAction={false}
+                              popoverClassName="ui-directory-action-menu"
+                            >
+                              <IconButton
+                                icon="seed"
+                                label="Create Seed lot"
+                                tooltip="Create Seed lot"
+                                className="ui-directory-quick-action"
+                                onClick={() => {
+                                  setConverting(row);
+                                }}
+                              />
+                            </OverflowMenu>
+                          ) : (
+                            // Keeps Details and Edit aligned with rows that have a menu.
+                            <span
+                              className="ui-directory-action-placeholder"
+                              aria-hidden="true"
+                            />
+                          ))}
                         {!bulk.active && (
                           <ActionLink
                             className="ui-directory-quick-action"
@@ -933,26 +958,6 @@ export function StoredMaterialDirectory({
                             <span className="sr-only">Edit</span>
                           </ActionLink>
                         )}
-                        {!bulk.active &&
-                          row.material_kind === "seed" &&
-                          row.state === "active" && (
-                            <OverflowMenu
-                              ariaLabel={`Create or record for ${row.harvest_title}`}
-                              keepMounted
-                              closeOnAction={false}
-                              popoverClassName="ui-directory-action-menu"
-                            >
-                              <IconButton
-                                icon="seed"
-                                label="Create Seed lot"
-                                tooltip="Create Seed lot"
-                                className="ui-directory-quick-action"
-                                onClick={() => {
-                                  setConverting(row);
-                                }}
-                              />
-                            </OverflowMenu>
-                          )}
                       </div>
                     </li>
                   ))}

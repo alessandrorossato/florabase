@@ -24,6 +24,7 @@ import {
   recordHref,
 } from "./useRecordedLineage";
 import "./ancestry-explorer.css";
+import "../maps/maps.css";
 import "./identity-lineage.css";
 
 const nameOf = (node: GraphNode) =>
@@ -192,7 +193,7 @@ export function IdentityLineage({ identityId }: { identityId: string }) {
         eyebrow=""
         title={identity.display_label}
         titleId={titleId}
-        description={`${String(graph.total)} ${graph.total === 1 ? "record" : "records"} · ${String(relationships)} recorded ${relationships === 1 ? "relationship" : "relationships"} · ${String(forest.independent.length)} without recorded relationships`}
+        description="Every record of this identity, connected only where a relationship was recorded."
         actions={
           <a
             className="button-link button--secondary"
@@ -222,9 +223,23 @@ export function IdentityLineage({ identityId }: { identityId: string }) {
         <DetailEmptyState>No records use this identity yet.</DetailEmptyState>
       )}
 
+      <div className="lineage-overview" aria-label="Identity lineage counts">
+        <span>
+          <strong>{graph.total}</strong> Records
+        </span>
+        <span>
+          <strong>{relationships}</strong> Recorded relationships
+        </span>
+        <span>
+          <strong>{lineItems.length}</strong> Recorded lines
+        </span>
+        <span>
+          <strong>{forest.independent.length}</strong> Without relationships
+        </span>
+      </div>
       {lineItems.length > 0 && (
         <section
-          className="ancestry-section"
+          className="ancestry-section lineage-stage"
           aria-labelledby={`${titleId}-lines`}
         >
           <h3 id={`${titleId}-lines`}>Recorded lines</h3>
@@ -243,7 +258,7 @@ export function IdentityLineage({ identityId }: { identityId: string }) {
 
       {forest.independent.length > 0 && (
         <section
-          className="ancestry-section"
+          className="ancestry-section lineage-stage"
           aria-labelledby={`${titleId}-independent`}
         >
           <h3 id={`${titleId}-independent`}>Without recorded relationships</h3>

@@ -132,11 +132,10 @@ test("identity lineage draws only recorded relationships and marks other identit
     "/api/v1/lineage/identities/basil/graph",
     expect.anything(),
   );
-  expect(
-    screen.getByText(
-      "6 records · 4 recorded relationships · 1 without recorded relationships",
-    ),
-  ).toBeInTheDocument();
+  const counts = screen.getByLabelText("Identity lineage counts");
+  expect(counts).toHaveTextContent("6 Records");
+  expect(counts).toHaveTextContent("4 Recorded relationships");
+  expect(counts).toHaveTextContent("1 Without relationships");
 
   const lines = screen.getByRole("region", { name: "Recorded lines" });
   expect(within(lines).getByText("sown as")).toBeInTheDocument();
@@ -264,7 +263,12 @@ test("lineage home searches identities and lineage records and links to their vi
     ],
   });
   renderWithAuth(<LineageHome />);
-  expect(screen.getByText("Type at least two characters.")).toBeInTheDocument();
+  // Before a search the stage lists the collection's identities instead.
+  expect(
+    screen.getByRole("heading", {
+      name: "Botanical identities in the collection",
+    }),
+  ).toBeInTheDocument();
   await userEvent.type(
     screen.getByLabelText("Find an identity or record"),
     "basil",

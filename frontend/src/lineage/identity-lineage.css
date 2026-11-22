@@ -78,3 +78,83 @@
   gap: var(--space-6);
   margin-block-start: var(--space-2);
 }
+
+/* UI-REVIEW-001: Lineage has its own stage, like Taxonomy and Maps: metric cards above, a
+   dotted "growing bench" canvas holding identity cards or recorded lines. */
+.lineage-stage {
+  margin-block: var(--space-3);
+  padding: var(--space-4);
+  background-color: var(--surface-subtle);
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--border-strong) 35%, transparent) 1px,
+    transparent 1.5px
+  );
+  background-size: 1.25rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-large);
+}
+.lineage-stage > h3 {
+  margin: 0 0 var(--space-3);
+  font: var(--type-h3);
+}
+.lineage-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lineage-gallery > li {
+  margin: 0;
+  padding: 0;
+}
+.lineage-gallery > li::before {
+  content: none;
+}
+.lineage-gallery a {
+  display: grid;
+  gap: var(--space-1);
+  block-size: 100%;
+  padding: var(--space-3) var(--space-4);
+  color: var(--text);
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-inline-start: 3px solid var(--lineage);
+  border-radius: var(--radius-normal);
+}
+.lineage-gallery a:hover {
+  border-color: var(--primary);
+  background: var(--primary-subtle);
+}
+.lineage-gallery .scientific-name {
+  color: var(--primary);
+  font-family: var(--font-botanical);
+  font-size: 1.0625rem;
+}
+.lineage-gallery span {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.lineage-gallery small {
+  color: var(--text);
+  font: var(--type-label);
+  font-weight: 400;
+}
+/* Recorded lines sit side by side as panels on wide screens. */
+.lineage-stage .identity-lineage__roots {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 24rem), 1fr));
+  align-items: start;
+}
+.lineage-stage .identity-lineage__roots > li,
+.lineage-stage .identity-lineage__independent > li {
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+}
+.lineage-stage .identity-lineage__independent {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+}

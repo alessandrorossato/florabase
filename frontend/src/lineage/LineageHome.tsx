@@ -6,9 +6,49 @@ import type { SearchResponse } from "../collection/searchApi";
 import { searchKindLabels } from "../collection/searchApi";
 import { InfoDisclosure } from "../components/ContextualHelp";
 import { DetailEmptyState } from "../components/DetailEmptyState";
-import { PageHeader } from "../components/ReferenceUI";
+import { DirectorySearch, PageHeader } from "../components/ReferenceUI";
+import type { BotanicalIdentityResponse } from "../botanical-identities/api";
 import { ancestryHref, identityLineageHref } from "./useRecordedLineage";
+import "../maps/maps.css";
 import "./identity-lineage.css";
+
+type Counts = NonNullable<BotanicalIdentityResponse["collection_counts"]>;
+const countsOf = (item: BotanicalIdentityResponse): Counts =>
+  item.collection_counts ?? {
+    seed_lots: 0,
+    sowings: 0,
+    plants: 0,
+    plant_groups: 0,
+    vegetative_lots: 0,
+    propagation_attempts: 0,
+  };
+const materialTotal = (c: Counts) =>
+  c.seed_lots +
+  c.sowings +
+  c.plants +
+  c.plant_groups +
+  c.vegetative_lots +
+  c.propagation_attempts;
+const plural = (n: number, one: string, many: string) =>
+  `${String(n)} ${n === 1 ? one : many}`;
+
+/** The material path of one identity in collection order, e.g. "3 seed lots → 2 sowings → 1 plant". */
+function chain(c: Counts) {
+  return [
+    c.seed_lots && plural(c.seed_lots, "seed lot", "seed lots"),
+    c.sowings && plural(c.sowings, "sowing", "sowings"),
+    c.plants + c.plant_groups &&
+      plural(c.plants + c.plant_groups, "plant or group", "plants and groups"),
+    c.vegetative_lots + c.propagation_attempts &&
+      plural(
+        c.vegetative_lots + c.propagation_attempts,
+        "cutting record",
+        "cutting records",
+      ),
+  ]
+    .filter(Boolean)
+    .join(" → ");
+}
 
 type Hit = SearchResponse["groups"][number]["items"][number];
 
@@ -43,7 +83,30 @@ export function LineageHome() {
   const inputId = useId();
   const [query, setQuery] = useState("");
   const [answer, setAnswer] = useState<Answer | null>(null);
+  const [identities, setIdentities] = useState<
+    BotanicalIdentityResponse[] | null | "error"
+  >(null);
   const trimmed = query.trim();
+
+  useEffect(() => {
+    if (!authorized) return;
+    const controller = new AbortController();
+    requestJson<BotanicalIdentityResponse[]>("/api/v1/botanical-identities", {
+      capability,
+      signal: controller.signal,
+    })
+      .then((list) => {
+        setIdentities(Array.isArray(list) ? list : []);
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        setIdentities("error");
+      });
+    return () => {
+      controller.abort();
+    };
+  }, [authorized, capability]);
 
   useEffect(() => {
     if (!authorized || trimmed.length < 2) return;
@@ -86,14 +149,65 @@ export function LineageHome() {
   }, [authorized, capability, sessionExpired, trimmed]);
 
   const current = answer?.query === trimmed ? answer : null;
+  const represented = Array.isArray(identities)
+    ? identities
+        .filter((item) => !item.merged_into_id)
+        .filter((item) => materialTotal(countsOf(item)) > 0)
+        .sort(
+          (a, b) =>
+            materialTotal(countsOf(b)) - materialTotal(countsOf(a)) ||
+            a.display_label.localeCompare(b.display_label),
+        )
+    : [];
+  const sum = (pick: (c: Counts) => number) =>
+    represented.reduce((total, item) => total + pick(countsOf(item)), 0);
   return (
-    <section className="ancestry-explorer" aria-labelledby={titleId}>
+    <section
+      className="ancestry-explorer lineage-home"
+      aria-labelledby={titleId}
+    >
       <PageHeader
         eyebrow="Explore"
         title="Lineage"
         titleId={titleId}
         description="Follow recorded material relationships for one record or across a whole botanical identity."
+        tools={
+          <DirectorySearch
+            id={inputId}
+            label="Find an identity or record"
+            placeholder="Scientific name, label…"
+            value={query}
+            onChange={setQuery}
+            hideLabel
+          />
+        }
       />
+      {represented.length > 0 && (
+        <div
+          className="lineage-overview"
+          aria-label="Collection material counts"
+        >
+          <span>
+            <strong>{represented.length}</strong> Represented identities
+          </span>
+          <span>
+            <strong>{sum((c) => c.seed_lots)}</strong> Seed lots
+          </span>
+          <span>
+            <strong>{sum((c) => c.sowings)}</strong> Sowings
+          </span>
+          <span>
+            <strong>{sum((c) => c.plants + c.plant_groups)}</strong> Plants and
+            groups
+          </span>
+          <span>
+            <strong>
+              {sum((c) => c.vegetative_lots + c.propagation_attempts)}
+            </strong>{" "}
+            Cutting records
+          </span>
+        </div>
+      )}
       <InfoDisclosure label="What lineage shows">
         <p>
           Choose a botanical identity to see every record of it arranged by its
@@ -103,27 +217,34 @@ export function LineageHome() {
           taxonomy never implies ancestry.
         </p>
       </InfoDisclosure>
-      <form
-        role="search"
-        className="lineage-home__search"
-        onSubmit={(event) => {
-          event.preventDefault();
-        }}
-      >
-        <label htmlFor={inputId}>Find an identity or record</label>
-        <input
-          id={inputId}
-          type="search"
-          value={query}
-          autoComplete="off"
-          placeholder="Scientific name, label…"
-          onChange={(event) => {
-            setQuery(event.target.value);
-          }}
-        />
-      </form>
       {trimmed.length < 2 ? (
-        <p className="ancestry-origin">Type at least two characters.</p>
+        <section className="lineage-stage" aria-labelledby={`${titleId}-all`}>
+          <h3 id={`${titleId}-all`}>Botanical identities in the collection</h3>
+          {identities === null && <p role="status">Loading identities…</p>}
+          {identities === "error" && (
+            <p className="notice notice--error" role="alert">
+              Florabase could not load the botanical identities.
+            </p>
+          )}
+          {Array.isArray(identities) && represented.length === 0 && (
+            <DetailEmptyState>
+              No botanical identity has collection records yet.
+            </DetailEmptyState>
+          )}
+          {represented.length > 0 && (
+            <ul className="lineage-gallery">
+              {represented.map((item) => (
+                <li key={item.id}>
+                  <a href={identityLineageHref(item.id)}>
+                    <i className="scientific-name">{item.scientific_name}</i>
+                    {item.common_name && <span>{item.common_name}</span>}
+                    <small>{chain(countsOf(item))}</small>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       ) : !current ? (
         <p role="status">Searching…</p>
       ) : current.status === "error" ? (

@@ -72,14 +72,14 @@
 
 /* Map overviews (Collection origins, Species distribution) use the Native ranges metric cards:
    label and context above, the count below, each card a target. */
-:is(.origins-overview, .distribution-overview) {
+:is(.origins-overview, .distribution-overview, .lineage-overview) {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
   gap: var(--space-2);
   margin-bottom: var(--space-3);
 }
 .app-content
-  :is(.origins-overview, .distribution-overview)
+  :is(.origins-overview, .distribution-overview, .lineage-overview)
   > :is(button, a, span) {
   display: flex;
   flex-direction: column-reverse;
@@ -99,12 +99,12 @@
   font: var(--type-small);
 }
 .app-content
-  :is(.origins-overview, .distribution-overview)
+  :is(.origins-overview, .distribution-overview, .lineage-overview)
   > :is(button, a):hover {
   border-color: var(--primary);
   background: var(--primary-subtle);
 }
-:is(.origins-overview, .distribution-overview) strong {
+:is(.origins-overview, .distribution-overview, .lineage-overview) strong {
   font: var(--type-metric);
   font-variant-numeric: tabular-nums;
 }

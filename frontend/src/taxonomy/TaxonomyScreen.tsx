@@ -84,7 +84,7 @@ function Branch({
               toggle(id);
             }}
           >
-            <Icon name={open ? "chevron-down" : "chevron-up"} />
+            <Icon name={open ? "chevron-down" : "chevron-right"} />
           </button>
         ) : (
           <span className="taxonomy-disclosure-space" />
