@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/readme-showcase.png" alt="Florabase screens: Today, a botanical identity, native ranges, the Schedule calendar, collection origins and identity lineage" width="100%">
+  <img src="docs/assets/readme-showcase.png" alt="Florabase screens: Today, a botanical identity, native ranges, taxonomy, collection origins, the Schedule calendar and two phone views" width="100%">
 </p>
 
 Florabase is a self-hosted web application for managing a personal botanical collection. It keeps
@@ -51,10 +51,10 @@ capture and the other themes after v1.0.0 are in the [product roadmap](docs/prod
 
 ## Screenshots
 
-The showcase above uses the synthetic Feature Review dataset (no real collection, provenance or
-locations): Today, a botanical identity, native ranges, the month calendar, collection origins and
-identity lineage, in the light and dark appearances. A curated public screenshot set remains a release
-gate.
+The showcase above uses invented demonstration data (no real collection, provenance or locations):
+Today, a botanical identity, native ranges, the WFO taxonomy, collection origins and the month
+calendar on desktop, plus Today and an identity on a phone, in the light and dark appearances. A
+curated public screenshot set remains a release gate.
 
 ## Architecture
 

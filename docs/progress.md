@@ -9922,7 +9922,8 @@ Status remains implemented pending canonical verification.
 - Themes: the Field Ledger system (fonts, radii, controls) applies to every palette; Field Ledger is
   labelled Botanical, the old Botanical palette is retired (stored choice falls back), Herbarium and
   Mineral gain rail and lineage colours (contrast-tested). Settings and identity lineage gain breadcrumbs.
-- README: `docs/assets/readme-showcase.png` mosaic from the synthetic Feature Review dataset.
+- README: `docs/assets/readme-showcase.png` mosaic (desktop and phone) from the Feature Review dataset with demo names and WFO links applied only to that disposable Review database.
+- Record ancestry (`#/lineage/<kind>/<id>`) now belongs to Explore → Lineage with breadcrumbs; record pages keep their Lineage tab and link there. The record-type switch is a `DirectoryTools` `surfaces` slot directly under the toolbar.
 - Checks: frontend typecheck, ESLint, Prettier and the full Vitest suite (128 files, 1419 tests) in the
   Review container; browser review on Feature Review at 1440×900, 768 and 375, light and dark.
   Not run yet: FULL `make feature-verify` (queued behind WF-SCOPE-001 and INSTALL-002).
