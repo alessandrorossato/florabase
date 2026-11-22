@@ -239,23 +239,22 @@ interface Route {
   labelRecord?: string;
   /** The former Settings QR address (#/settings?tab=general) opens Labels' QR dialog. */
   labelQr?: boolean;
-  /** #/lineage/<kind>/<id>: Material ancestry, within the focus record's own section. */
+  /** #/lineage/<kind>/<id>: Material ancestry, in Explore → Lineage (the cross-collection view). */
   ancestry?: {
-    kind: keyof typeof ancestrySections;
+    kind: AncestryKind;
     id: string;
   };
   /** #/lineage/identity/<id>: recorded lineage across one Botanical identity's records. */
   identityLineageId?: string;
 }
 
-const ancestrySections = {
-  seed_lot: "seeds",
-  sowing: "sowings",
-  plant: "plants",
-  plant_group: "plants",
-  vegetative_lot: "cuttings",
-  propagation_attempt: "cuttings",
-} as const;
+type AncestryKind =
+  | "seed_lot"
+  | "sowing"
+  | "plant"
+  | "plant_group"
+  | "vegetative_lot"
+  | "propagation_attempt";
 
 function currentRoute(): Route {
   const raw = window.location.hash.slice(1) || "/dashboard";
@@ -288,9 +287,9 @@ function currentRoute(): Route {
       pathname,
     );
   if (ancestry) {
-    const kind = ancestry[1] as keyof typeof ancestrySections;
+    const kind = ancestry[1] as AncestryKind;
     return {
-      section: ancestrySections[kind],
+      section: "lineage",
       ancestry: { kind, id: ancestry[2] },
     };
   }

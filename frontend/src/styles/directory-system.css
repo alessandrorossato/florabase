@@ -856,3 +856,8 @@
   border-color: var(--primary);
   background: var(--primary-subtle);
 }
+/* The switch sits directly under the toolbar in every directory, including phone headers. */
+.app-content .directory-tools + .directory-surfaces {
+  flex: 1 1 100%;
+  margin-block: var(--space-3) 0;
+}

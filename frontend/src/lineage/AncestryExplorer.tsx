@@ -5,6 +5,7 @@ import { ApiError, isExpectedAuthCancellation, requestJson } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { InfoDisclosure } from "../components/ContextualHelp";
 import { DetailEmptyState } from "../components/DetailEmptyState";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 import { PageHeader } from "../components/ReferenceUI";
 import { LifecycleStatus } from "../components/WorkspaceUI";
 import { formatPartialDate } from "../events/eventData";
@@ -464,8 +465,15 @@ export function AncestryExplorer({
   const focusGeneration = generations[chain.length];
   return (
     <section className="ancestry-explorer" aria-labelledby={titleId}>
+      <Breadcrumbs
+        items={[
+          { label: "Explore" },
+          { label: "Lineage", href: "#/lineage" },
+          { label: nameOf(focus) },
+        ]}
+      />
       <PageHeader
-        eyebrow="Material ancestry"
+        eyebrow=""
         title={nameOf(focus)}
         titleId={titleId}
         description={`${lineageKindLabels[focus.record.kind]} · recorded material relationships only`}

@@ -385,6 +385,7 @@ export function HarvestScreen({
       />
       {!displayId && !storedMode && (
         <DirectoryTools
+          surfaces={surfaces}
           context={
             identity ? (
               <a href={`#/identities/${identity}?tab=overview`}>
@@ -512,7 +513,6 @@ export function HarvestScreen({
           ]}
         />
       )}
-      {!displayId && !storedMode && surfaces}
 
       {error && (
         <div className="notice notice--error" role="alert">

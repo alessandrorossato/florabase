@@ -636,6 +636,7 @@ export function StoredMaterialDirectory({
         />
       )}
       <DirectoryTools
+        surfaces={surfaces}
         name="Stored material"
         actions={actions}
         stableFilterSummary
@@ -781,7 +782,6 @@ export function StoredMaterialDirectory({
           </>
         }
       />
-      {surfaces}
       <BulkToolbar
         selection={bulk}
         visible={bulkChoices}
