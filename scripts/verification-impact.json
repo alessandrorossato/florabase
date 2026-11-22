@@ -32,6 +32,24 @@
     "backend/.",
     "scripts/verification-impact.json"
   ],
+  "golden_prefixes": [
+    "scripts/golden_plan.py",
+    "scripts/golden_dataset.py",
+    "scripts/dev_golden",
+    "scripts/test-dev-golden.py",
+    "scripts/smoke-dev-golden.py",
+    "scripts/uat_fixture.py",
+    "scripts/review_dataset_v5.py",
+    "scripts/attachment_artifacts.py",
+    "scripts/fixtures/golden/",
+    "scripts/fixtures/botanical-v5/",
+    "backend/alembic/",
+    "backend/src/florabase/db/",
+    "backend/tests/integration/test_golden_dataset.py",
+    "backend/tests/integration/test_golden_comprehensive.py",
+    "backend/tests/integration/conftest.py",
+    "backend/tests/conftest.py"
+  ],
   "full_tests": [
     "backend/tests/integration/test_autogenerate_checks.py",
     "backend/tests/integration/test_database.py",

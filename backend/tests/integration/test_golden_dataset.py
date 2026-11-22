@@ -23,6 +23,7 @@ sys.path.insert(0, "/review")
 plan_module = pytest.importorskip("golden_plan", reason="available in integration runner only")
 pytestmark = pytest.mark.integration
 SCRIPT = "/review/golden_dataset.py"
+SEARCH_PATH = "test_golden_dataset"
 COPIES = Path("/tmp/florabase-golden")
 LOCKS = COPIES / ".locks"
 BUSY = 75
@@ -120,8 +121,16 @@ def objects(name: str) -> list[Path]:
     return sorted(path for path in root.rglob("*") if path.is_file() and "objects" in path.parts)
 
 
+@pytest.fixture(scope="module", autouse=True)
+def explicitly_selected(request: pytest.FixtureRequest) -> None:
+    """Only `make golden-dataset-check` names this file; the full integration suite skips it."""
+    arguments = request.config.invocation_params.args
+    if not any(SEARCH_PATH in str(argument) for argument in arguments):
+        pytest.skip("Golden dataset runs only when this module is selected explicitly")
+
+
 @pytest.fixture(scope="module")
-def copies() -> Iterator[list[str]]:
+def copies(explicitly_selected: None) -> Iterator[list[str]]:
     created: list[str] = []
     yield created
     # Independent copies retire independently, so this also exercises per-copy locking.
@@ -305,6 +314,30 @@ def test_the_full_suite_skips_the_comprehensive_module() -> None:
             "integration",
             "-k",
             "golden_comprehensive",
+        ],
+        cwd="/app",
+        capture_output=True,
+        text=True,
+        timeout=180,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout
+    assert " skipped" in result.stdout, result.stdout
+    assert " passed" not in result.stdout, result.stdout
+
+
+def test_the_full_suite_skips_the_golden_dataset_module() -> None:
+    """Default integration runs name no file, so they skip the Golden tooling module."""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "--no-cov",
+            "-m",
+            "integration",
+            "-k",
+            "golden_dataset",
         ],
         cwd="/app",
         capture_output=True,

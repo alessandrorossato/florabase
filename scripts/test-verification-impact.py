@@ -18,7 +18,13 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import disposable_workflow
-from verification_gate import checks_for, execute, run_checks, validate_execution
+from verification_gate import (
+    REUSABLE_STAGES,
+    checks_for,
+    execute,
+    run_checks,
+    validate_execution,
+)
 from verification_impact import (
     MAP_PATH,
     WORKFLOW,
@@ -273,7 +279,15 @@ class SelectionTests(unittest.TestCase):
                 self.assertEqual(plan["migration"], "skip")
                 self.assertEqual(plan["escalation_reasons"], [])
                 self.assertEqual(plan["product_reasons"], [f"shared product path: {path}"])
-                self.assertEqual(checks_for(plan), full_product_checks)
+                expected_checks = list(full_product_checks)
+                if path.startswith("backend/src/florabase/db/"):
+                    self.assertTrue(plan["golden_dataset"])
+                    expected_checks.append(
+                        {"id": "golden-dataset", "command": ["make", "golden-dataset-check"]}
+                    )
+                else:
+                    self.assertFalse(plan["golden_dataset"])
+                self.assertEqual(checks_for(plan), expected_checks)
 
         expected_frontend_product_ids = [
             "feature-graph",
@@ -753,9 +767,14 @@ class SelectionTests(unittest.TestCase):
                     )
                 else:
                     self.assertIn({"id": "quality", "command": ["make", "check"]}, jobs["quality"])
-                    self.assertEqual(
-                        jobs["integration"][0]["command"], ["make", "test-integration"]
-                    )
+                    expected_integration = [
+                        {"id": "integration", "command": ["make", "test-integration"]}
+                    ]
+                    if plan["golden_dataset"]:
+                        expected_integration.append(
+                            {"id": "golden-dataset", "command": ["make", "golden-dataset-check"]}
+                        )
+                    self.assertEqual(jobs["integration"], expected_integration)
                     self.assertEqual(
                         jobs["build"][0]["command"],
                         ["make", "verify-build", "SERVICES=backend frontend"],
@@ -807,33 +826,37 @@ class SelectionTests(unittest.TestCase):
     def test_cheap_source_checks_precede_every_docker_stage_without_losing_coverage(self) -> None:
         # Before VERIFICATION-FAST-001 whitespace ran last; a trailing Markdown blank line failed
         # a FULL only after every Docker suite. The stage *set* must be exactly preserved.
-        full = self.plan("unknown.conf")
-        order = [c["id"] for c in checks_for(full)]
+        base_full_order = [
+            "feature-graph",
+            "doc-links",
+            "test-doc-links",
+            "whitespace",
+            "staged-whitespace",
+            "untracked-whitespace",
+            "test-workflow-helpers",
+            "test-feature-workflow",
+            "test-agent-workflow",
+            "test-preview-workflow",
+            "test-environment-workflow",
+            "test-uat-preview",
+            "test-verification-impact",
+            "test-workflow-resources",
+            "test-ui-page",
+            "workflow-check",
+            "quality",
+            "production-builds",
+            "migration-cycle",
+            "integration",
+        ]
+        # Unclassified path fails closed and includes golden-dataset.
+        unclassified_full = self.plan("unknown.conf")
         self.assertEqual(
-            order,
-            [
-                "feature-graph",
-                "doc-links",
-                "test-doc-links",
-                "whitespace",
-                "staged-whitespace",
-                "untracked-whitespace",
-                "test-workflow-helpers",
-                "test-feature-workflow",
-                "test-agent-workflow",
-                "test-preview-workflow",
-                "test-environment-workflow",
-                "test-uat-preview",
-                "test-verification-impact",
-                "test-workflow-resources",
-                "test-ui-page",
-                "workflow-check",
-                "quality",
-                "production-builds",
-                "migration-cycle",
-                "integration",
-            ],
+            [c["id"] for c in checks_for(unclassified_full)],
+            [*base_full_order, "golden-dataset"],
         )
+        # Classified FULL outside the Golden closure omits golden-dataset.
+        classified_full = self.plan("scripts/feature-verify.sh")
+        self.assertEqual([c["id"] for c in checks_for(classified_full)], base_full_order)
         for paths in (
             ("backend/src/florabase/schedule/service.py",),
             ("frontend/src/taxonomy/TaxonomyScreen.tsx",),
@@ -858,6 +881,70 @@ class SelectionTests(unittest.TestCase):
         for cheap, costly in (("api-check", "backend"), ("backend", "production-builds")):
             self.assertLess(ids.index(cheap), ids.index(costly))
         self.assertEqual(ids[-1], "integration")
+
+    def test_golden_dataset_closure_selection_and_fail_closed(self) -> None:
+        data = load_map()
+        golden_check = {"id": "golden-dataset", "command": ["make", "golden-dataset-check"]}
+        self.assertEqual(REUSABLE_STAGES, frozenset({"quality", "integration"}))
+        self.assertNotIn("golden-dataset", REUSABLE_STAGES)
+
+        # Every declared closure prefix selects golden-dataset locally and in PR CI integration.
+        for prefix in data["golden_prefixes"]:
+            sample = f"{prefix}probe.py" if prefix.endswith("/") else prefix
+            with self.subTest(closure_prefix=prefix, sample=sample):
+                plan = self.plan(sample)
+                self.assertTrue(plan["golden_dataset"])
+                self.assertIn(golden_check, checks_for(plan))
+                self.assertIn(golden_check, CI.ci_checks_for(plan, "integration"))
+
+        # Unrelated product files (affected, product-frontend, product outside db/) and docs skip it.
+        for path in (
+            "docs/architecture.md",
+            "frontend/src/plants/PlantList.tsx",
+            "frontend/src/components/TaskDialog.tsx",
+            "backend/src/florabase/schedule/service.py",
+            "backend/src/florabase/core/config.py",
+            "backend/src/florabase/auth/security.py",
+        ):
+            with self.subTest(unrelated=path):
+                plan = self.plan(path)
+                self.assertFalse(plan["golden_dataset"])
+                self.assertNotIn(golden_check, checks_for(plan))
+                self.assertNotIn(golden_check, CI.ci_checks_for(plan, "integration"))
+
+        # FULL without touching the Golden closure omits golden-dataset.
+        for plan in (
+            self.plan("scripts/feature-verify.sh"),
+            self.plan("Makefile"),
+            self.plan(".github/workflows/ci.yml"),
+            plan_paths(["frontend/src/plants/PlantList.tsx"], "base", force_full=True),
+        ):
+            with self.subTest(full_without_golden=plan["changed_paths"]):
+                self.assertEqual(plan_tier(plan), "full")
+                self.assertFalse(plan["golden_dataset"])
+                self.assertNotIn(golden_check, checks_for(plan))
+                self.assertNotIn(golden_check, CI.ci_checks_for(plan, "integration"))
+
+        # Unclassified paths fail closed and select golden-dataset.
+        for path in ("unknown.conf", "docs/new/run.sh", "backend/openapi.json"):
+            with self.subTest(fail_closed=path):
+                plan = self.plan(path)
+                self.assertEqual(plan_tier(plan), "full")
+                self.assertTrue(plan["golden_dataset"])
+                self.assertIn(golden_check, checks_for(plan))
+                self.assertIn(golden_check, CI.ci_checks_for(plan, "integration"))
+
+        # Plan validation rejects tampered or non-boolean golden_dataset flags.
+        docs_plan = self.plan("docs/architecture.md")
+        fe_plan = self.plan("frontend/src/components/TaskDialog.tsx")
+        for invalid in (
+            {**docs_plan, "golden_dataset": True},
+            {**docs_plan, "golden_dataset": 0},
+            {**docs_plan, "golden_dataset": None},
+            {**fe_plan, "golden_dataset": True},
+        ):
+            with self.subTest(invalid_golden=invalid), self.assertRaises(ValueError):
+                checks_for(invalid)
 
     def test_make_check_runs_static_and_api_drift_before_unit_suites(self) -> None:
         line = next(
@@ -1096,9 +1183,13 @@ class RemoteHistoryTests(unittest.TestCase):
                 ):
                     full = CI.ci_plan()
                     self.assertEqual(full["mode"], "full")
+                    self.assertTrue(full["golden_dataset"])
                     self.assertEqual(
-                        CI.ci_checks_for(full, "integration")[0]["command"],
-                        ["make", "test-integration"],
+                        CI.ci_checks_for(full, "integration"),
+                        [
+                            {"id": "integration", "command": ["make", "test-integration"]},
+                            {"id": "golden-dataset", "command": ["make", "golden-dataset-check"]},
+                        ],
                     )
                 bad_map = root / ".git/bad-map.json"
                 bad_map.write_text('{"version": 0}')
@@ -2095,6 +2186,17 @@ class TestOwnershipInventoryTests(unittest.TestCase):
                     with_legacy[legacy_key] = []
                     temp_map.write_text(json.dumps(with_legacy), encoding="utf-8")
                     with self.assertRaisesRegex(ValueError, f"legacy impact map key.*{legacy_key}"):
+                        load_map()
+
+                # Missing or invalid golden_prefixes is refused.
+                for bad_golden in ([], [""], None, [123]):
+                    bad_map = json.loads(json.dumps(original))
+                    if bad_golden is None:
+                        bad_map.pop("golden_prefixes", None)
+                    else:
+                        bad_map["golden_prefixes"] = bad_golden
+                    temp_map.write_text(json.dumps(bad_map), encoding="utf-8")
+                    with self.assertRaisesRegex(ValueError, "invalid golden_prefixes"):
                         load_map()
 
                 # Prefix layer mismatch in product_backend_prefixes / product_frontend_prefixes.
