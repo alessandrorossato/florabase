@@ -1,3 +1,25 @@
+## 2026-11-22 — WF-04 Batch 10 integration (`WF-SCOPE-001` + `INSTALL-002`)
+
+- Prepared `ci/batch-10` on top of pinned `origin/main` (`1e985f1`) with writer `neon` via
+  `make feature-batch-plan` and `make feature-batch-prepare`.
+- Linear bootstrap commit `b51e2b3` updated `additive_progress` in `scripts/feature_batch.py` (with
+  regression coverage in `scripts/test-agent-workflow.py`) so pure top-of-file progress prepends
+  preserve non-conflicting tail edits on `main` (such as PR #213's `1e985f1` entry) while staying
+  fail-closed on edits inside existing progress content.
+- Merged `INSTALL-002` (`feat/install-002-minimal-compose` at `a012f43`, including `internal: true`
+  and `app` network isolation in `compose.yaml`, `scripts/test-beta-runtime.py`,
+  `scripts/test-beta-images.py`, `scripts/smoke-portable-compose.py`, ADR 0009 and
+  `docs/security.md`, merge `b150388`) and `WF-SCOPE-001` (`feat/wf-scope-001-scoped-verification`
+  at `1b78a04`, merge `b34ab43`) without rewriting source branches. `docs/features.json` and
+  `docs/release/scope-v1.json` merged cleanly; `docs/progress.md` resolved additively keeping all
+  entries newest-first alongside `1e985f1`'s tail milestone.
+- Recorded [Batch 10 provenance](release/evidence/wf-04-batch-10.md) and
+  [batch-10.json](release/evidence/batches/batch-10.json). Proposed release classes in
+  `docs/release/scope-v1.json`: `WF-SCOPE-001` (`tooling`), `INSTALL-002` (`release-work`).
+- Exact-head independent review (`make feature-batch-review`) and one fresh canonical FULL gate
+  (`env -u REUSE FRESH=1 make feature-verify AGENT_ID=neon`) run on this frozen committed head
+  before operator delivery.
+
 ## 2026-11-22 — INSTALL-002 minimal three-service production `compose.yaml` (ADR 0009)
 
 - On `feat/install-002-minimal-compose` from `c5f9cdf` (writer `neon`).

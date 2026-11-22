@@ -1,0 +1,56 @@
+{
+  "base": "1e985f106b6f34185a3724605ea1b47e44da79dd",
+  "bootstrap": "b51e2b31496df993d42a5f07b8ea448dadb56aad",
+  "bootstrap_commits": [
+    "b51e2b31496df993d42a5f07b8ea448dadb56aad"
+  ],
+  "branch": "ci/batch-10",
+  "reconciliation": {
+    "docs/progress.md": "Retain all source milestones newest first alongside main's tail UAT smoke milestone and prepend the Batch 10 integration milestone.",
+    "docs/release/evidence/wf-04-batch-10.md": "Record Batch 10 source provenance, bootstrap commit rationale, conflict resolution and proposed release classes."
+  },
+  "sources": [
+    {
+      "base": "c5f9cdf5d2c3b711e904db9b0d1d2b7e12400720",
+      "branch": "feat/install-002-minimal-compose",
+      "claim": "9d5fb21c4fa9",
+      "commits": [
+        "82eda80f2bb959cd678be0c9c30967f991bea4d9",
+        "a012f4360171b1a34ca5422d6487b811ba94fb98"
+      ],
+      "evidence": [
+        "docs/decisions/0009-minimal-production-compose.md",
+        "docs/installation.md",
+        "docs/progress.md"
+      ],
+      "id": "INSTALL-002",
+      "merge": "b150388bd30f7e89d9cb3aa2a528305aa1a4cc32",
+      "resolutions": [],
+      "reviewer": "independent-source-qa",
+      "tip": "a012f4360171b1a34ca5422d6487b811ba94fb98",
+      "writer": "neon"
+    },
+    {
+      "base": "c5f9cdf5d2c3b711e904db9b0d1d2b7e12400720",
+      "branch": "feat/wf-scope-001-scoped-verification",
+      "claim": "8e4e68575432",
+      "commits": [
+        "1b78a0452031bd5ad0ebacc0515916037d7a2a28"
+      ],
+      "evidence": [
+        "docs/development-workflow.md",
+        "docs/progress.md"
+      ],
+      "id": "WF-SCOPE-001",
+      "merge": "b34ab43bc84b9152e068282f7b0e1674c7bafd52",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "independent-source-qa",
+      "tip": "1b78a0452031bd5ad0ebacc0515916037d7a2a28",
+      "writer": "neon-wf-scope-001"
+    }
+  ],
+  "summary": "Scoped verification tiers and minimal production Compose",
+  "version": 1
+}
