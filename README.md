@@ -63,8 +63,9 @@ Florabase is a modular monolith:
 - Docker Compose for development and self-hosting
 - backend-owned OpenAPI with committed generated TypeScript declarations
 
-The production-oriented Compose stack publishes only the frontend proxy. PostgreSQL and the backend
-remain on an internal network.
+The production-oriented Compose stack publishes only the frontend proxy on `127.0.0.1`.
+PostgreSQL and the backend publish no ports (and can be isolated on a separate `internal: true`
+network via the optional hardened override in [docs/security.md](docs/security.md#optional-container-hardening)).
 
 ## Requirements
 
@@ -72,10 +73,12 @@ Repository development requires Docker Engine with Docker Compose **2.24.4 or ne
 Python 3 and `curl`. The development overlay uses Compose's `!override` tag. Host Node.js is optional.
 [Docker Compose merge rules](https://docs.docker.com/reference/compose-file/merge/)
 
-For self-hosting, [install Florabase](docs/installation.md) with the release's minimal three-service
-`compose.yaml` on linux/amd64: create the data and backup folders with their owners once, then
-deploy the file as-is in a Compose manager such as Dockhand or with `docker compose up -d`. No
-container runs as root; it initializes a new installation, backs up before every upgrade, and
+For self-hosting, [install Florabase](docs/installation.md) with `compose.yaml` from the latest
+release tag (`https://github.com/alessandrorossato/florabase/blob/<latest-tag>/compose.yaml`;
+`main` may be ahead of the published `:latest` images): create the data and backup folders with
+their owners once, edit the host folder paths, database password and canonical origin in
+`compose.yaml`, and deploy in a Compose manager such as Dockhand or with `docker compose up -d`.
+No container runs as root; it initializes a new installation, backs up before every upgrade, and
 supports the Compose 2.20 baseline. It requires an HTTPS reverse proxy (or Tailscale Serve) and
 the exact public HTTPS origin.
 

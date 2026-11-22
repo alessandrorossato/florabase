@@ -1,3 +1,37 @@
+## 2026-11-22 — INSTALL-003 directly usable `:latest` `compose.yaml` (ADR 0010)
+
+- On `feat/install-003-latest-compose` from `16ccf4b` (writer `antigravity-install-003`).
+- Adopted [ADR 0010](decisions/0010-deployable-latest-compose.md) amending
+  [ADR 0009](decisions/0009-minimal-production-compose.md): `compose.yaml` on `main` is now a
+  directly usable 40-line file referencing `:latest` images
+  (`ghcr.io/alessandrorossato/florabase-{postgres,backend,frontend}:latest`), plain short bind
+  mounts with Synology-style absolute host path examples, plain environment literals (no `.env` or
+  Compose interpolation), header folder-setup instructions, and no custom networks (`internal: true`
+  and `app` moved to the optional hardened override in [docs/security.md](security.md)).
+- Added `change-me` placeholder password refusal in both
+  `postgres/florabase-postgres-entrypoint.sh` (reproduced `18.6-alpine-florabase.4` at
+  `index_digest` `sha256:2d843bd2ac7e9cebc4b4aaed2d24bb6f7717261fa27e798fe1f28583e853d625`,
+  `platform_digest` `sha256:c677e9e20e56d6c32c2d359f66b44b66e2ead27d51fcaa64528f78a88299589d`) and
+  `backend/src/florabase/db/release_schema.py`.
+- Removed `FLORABASE_DATA_DIR` / `FLORABASE_BACKUP_DIR` env vars from `compose.yaml`; added
+  `/proc/self/mountinfo` identical/nested bind-mount detection in `release_schema.py` (including
+  btrfs subvolumes, warning and continuing on indeterminate mountinfo and refusing on positive
+  detection).
+- Updated `scripts/beta_release.py`, `scripts/publish-beta-images.py` and
+  `.github/workflows/beta-images.yml`: dropped `render_compose()` and the rendered `compose.yaml`
+  release asset/attestation (keeping OCI image + `release-manifest.json` attestations), and added
+  `:latest` promotion alongside versioned tags with a code-enforced PostgreSQL 18 major guard.
+- Updated `docs/installation.md`, `docs/security.md`, `README.md`, `CHANGELOG.md`,
+  `docs/security/beta-distribution-001/postgresql-image.md`, `docs/features.json` (`INSTALL-003`
+  `implemented`) and `docs/release/scope-v1.json` (`INSTALL-003` proposed class `release-work`).
+- Checks passed: `make format-check lint typecheck test-backend` (1300 passed, 90.18% coverage),
+  `make workflow-check` (81+4 release tests, 16 beta-runtime tests, ruff/format/strict mypy),
+  `python3 scripts/test-environment-workflow.py` (44 OK), `python3 scripts/check-features.py`,
+  `python3 scripts/beta_release.py check --publication`,
+  `python3 scripts/beta_release.py postgres-identity --check` (`POSTGRES_IDENTITY_REPRODUCED`), and
+  live disposable `scripts/smoke-portable-compose.py` against `compose.yaml`. Not run: full
+  `make feature-verify` (not yet committed/pushed per operator Phase 2 instructions).
+
 ## 2026-11-22 — WF-04 Batch 10 integration (`WF-SCOPE-001` + `INSTALL-002`)
 
 - Prepared `ci/batch-10` on top of pinned `origin/main` (`1e985f1`) with writer `neon` via

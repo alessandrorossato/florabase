@@ -28,6 +28,9 @@ refuse() {
 if [ -z "${POSTGRES_PASSWORD:-}" ] && [ -n "${FLORABASE_DB_PASSWORD:-}" ]; then
     export POSTGRES_PASSWORD="$FLORABASE_DB_PASSWORD"
 fi
+if [ "${FLORABASE_DB_PASSWORD:-}" = "change-me" ] || [ "${POSTGRES_PASSWORD:-}" = "change-me" ]; then
+    refuse "FLORABASE_DB_PASSWORD is still the placeholder 'change-me'; set a strong password (see docs/installation.md)"
+fi
 
 root="${FLORABASE_PG_ROOT:-/var/lib/postgresql}"
 marker="$root/state/installation.env"
