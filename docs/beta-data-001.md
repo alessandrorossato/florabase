@@ -10,12 +10,12 @@ published release and the Synology checks below are accepted.
 
 Main contains the source and release packaging for the release `compose.yaml`. Before an
 installation, verify that the authorized GitHub Release actually has the
-attested assets and that its pinned images are available. The beta.7 version
+attested assets and that its pinned images are available. The beta.8 version
 in source, a tag or a rehearsal artifact does not establish publication.
 
 | Path | Installation and maintenance authority |
 | --- | --- |
-| [Release `compose.yaml`](installation.md) | Verify the published `compose.yaml` and manifest against the approved source commit. Create the empty data folder and the separate backup folder and deploy the file as-is with the stack's exact name and private configuration; it initializes the installation and creates the owner once. For upgrades, take the paired backup, check that the PostgreSQL digest is unchanged, and deploy the new file; `migrate` writes a verified dump before migrating. Restore into a new data folder and a distinct stack, port and private HTTPS origin. Keep the existing data until recovery is validated. |
+| [Release `compose.yaml`](installation.md) | Verify the published `compose.yaml` and manifest against the approved source commit. Create the empty data folder and the separate backup folder and deploy the file as-is with the stack's exact name and private configuration; it initializes the installation and creates the owner once. For upgrades, take the paired backup, check that the PostgreSQL digest is unchanged, and deploy the new file; the backend's guarded deploy step writes a verified dump before migrating. Restore into a new data folder and a distinct stack, port and private HTTPS origin. Keep the existing data until recovery is validated. |
 
 The controller bundle and the `v0.1.0-beta.6` manual portable procedure are withdrawn
 ([ADR 0008](decisions/0008-self-initializing-single-compose.md)). Keep manager updates, Git sync

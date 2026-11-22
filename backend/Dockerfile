@@ -57,7 +57,7 @@ COPY --chmod=0755 florabase-backend-entrypoint.sh /usr/local/bin/florabase-backe
 COPY --chmod=0755 florabase-start.sh /usr/local/bin/florabase-start
 
 COPY LICENSE /usr/share/licenses/florabase/LICENSE
-ARG VERSION=0.1.0-beta.7
+ARG VERSION=0.1.0-beta.8
 ARG REVISION=unknown
 ARG SOURCE=https://github.com/alessandrorossato/florabase
 LABEL org.opencontainers.image.title="Florabase backend" \
