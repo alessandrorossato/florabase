@@ -64,7 +64,7 @@ export function PageHeader({
         className={`page-header${tools ? " page-header--with-tools" : ""}${directory ? " page-header--directory" : ""}`}
       >
         <div className="page-identity">
-          {!breadcrumbs && <p className="eyebrow">{eyebrow}</p>}
+          {!breadcrumbs && eyebrow && <p className="eyebrow">{eyebrow}</p>}
           <h2 id={titleId}>{title}</h2>
           {description && <p>{description}</p>}
         </div>

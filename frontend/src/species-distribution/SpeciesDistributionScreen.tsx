@@ -405,7 +405,7 @@ export function SpeciesDistributionScreen() {
             <section>
               <h3>Observed occurrences</h3>
               <p>
-                Explore one Botanical Identity at a time. A confirmed GBIF link
+                Explore one botanical identity at a time. A confirmed GBIF link
                 allows loading; it does not guarantee records.
               </p>
               <p>
@@ -418,7 +418,7 @@ export function SpeciesDistributionScreen() {
           <div className="distribution-map-placeholder">
             <h3>Select a species</h3>
             <p>
-              Choose a represented BotanicalIdentity, then explicitly load its
+              Choose a represented botanical identity, then explicitly load its
               occurrence map.
             </p>
             <button type="button" onClick={choose}>

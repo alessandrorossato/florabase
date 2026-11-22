@@ -4,6 +4,7 @@ import { ApiError, isExpectedAuthCancellation, requestJson } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { InfoDisclosure } from "../components/ContextualHelp";
 import { DetailEmptyState } from "../components/DetailEmptyState";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 import { PageHeader } from "../components/ReferenceUI";
 import { LifecycleStatus } from "../components/WorkspaceUI";
 import { OriginNote } from "./AncestryExplorer";
@@ -180,8 +181,15 @@ export function IdentityLineage({ identityId }: { identityId: string }) {
   const relationships = graph.edges.length;
   return (
     <section className="ancestry-explorer" aria-labelledby={titleId}>
+      <Breadcrumbs
+        items={[
+          { label: "Explore" },
+          { label: "Lineage", href: "#/lineage" },
+          { label: identity.display_label },
+        ]}
+      />
       <PageHeader
-        eyebrow="Explore"
+        eyebrow=""
         title={identity.display_label}
         titleId={titleId}
         description={`${String(graph.total)} ${graph.total === 1 ? "record" : "records"} · ${String(relationships)} recorded ${relationships === 1 ? "relationship" : "relationships"} · ${String(forest.independent.length)} without recorded relationships`}

@@ -17,33 +17,6 @@
   grid-template-columns: minmax(0, 7fr) minmax(17rem, 3fr);
   gap: var(--space-4);
 }
-.origins-overview {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-block: 1px solid var(--border);
-  margin-bottom: var(--space-4);
-  padding-block: var(--space-2);
-  gap: var(--space-2);
-}
-.origins-overview > :is(button, a) {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  text-align: start;
-  white-space: normal;
-  min-width: 0;
-  padding: var(--space-2);
-  text-decoration: none;
-  color: var(--text);
-  border-radius: var(--radius-small);
-}
-.origins-overview > a:hover {
-  background: var(--surface-hover);
-}
-.origins-overview strong {
-  font: var(--type-h2);
-  font-variant-numeric: tabular-nums;
-}
 .origins-overview span {
   font: var(--type-small);
 }
@@ -302,10 +275,6 @@
   .origins-overview {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-1);
-  }
-  .origins-overview > :is(button, a) {
-    gap: var(--space-2);
-    padding: var(--space-1);
   }
   .collection-origins .provenance-map {
     min-height: 18rem;
