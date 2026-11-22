@@ -1593,7 +1593,7 @@
         "LINEAGE-003"
       ],
       "priority": "P2",
-      "status": "implemented"
+      "status": "verified"
     },
     {
       "id": "ENRICHMENT-001",
@@ -2377,7 +2377,7 @@
         "UI-POLISH-001"
       ],
       "priority": "P2",
-      "status": "implemented"
+      "status": "verified"
     },
     {
       "id": "TEST-DATA-001",

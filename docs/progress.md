@@ -10019,5 +10019,12 @@ Status remains implemented pending canonical verification.
 - Record ancestry (`#/lineage/<kind>/<id>`) now belongs to Explore → Lineage with breadcrumbs; record pages keep their Lineage tab and link there. The record-type switch is a `DirectoryTools` `surfaces` slot directly under the toolbar.
 - Checks: frontend typecheck, ESLint, Prettier and the full Vitest suite (128 files, 1419 tests) in the
   Review container; browser review on Feature Review at 1440×900, 768 and 375, light and dark.
-  Not run yet: FULL `make feature-verify` (queued behind WF-SCOPE-001 and INSTALL-002).
-  Release class proposed for the operator: `best-effort`.
+  Canonical gate: `make feature-verify` (tier full, after merging `origin/main` at `16ccf4b`) passed
+  all stages, including quality, production builds, migration cycle and integration (1324.6s).
+  Two earlier attempts failed for environmental reasons: WCVP/WFO indexes copied into this
+  worktree's ignored `backend/src/.source-cache/` for the Review screenshots made
+  `test_missing_v16_keeps_v15_link_current_without_silent_fallback` see a real v16 index (cache
+  removed), and `PlantScreen.test.tsx` "detail loading, detail failure, authorization, and session
+  expiry" failed once under full-suite load but passes in isolation and on rerun (possible flake).
+  UI-REVIEW-001 and LINEAGE-004 are marked verified. Release class proposed for the operator for
+  UI-REVIEW-001: `best-effort`.
