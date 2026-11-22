@@ -355,9 +355,9 @@ def test_manual_review_and_schedule_fixture_coverage_preserves_operator_edits() 
         assert packet is not None and packet.quantity_value is None
         assert packet.order_id == UUID(records["order:partial"])
         activities = list(database.scalars(select(ScheduledActivity)))
-        assert len(activities) == 19
+        assert len(activities) == 21
         assert Counter(a.status for a in activities) == {
-            "planned": 16,
+            "planned": 18,
             "completed": 2,
             "cancelled": 1,
         }
