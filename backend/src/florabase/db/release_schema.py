@@ -57,6 +57,9 @@ PENDING_NAME = "installation.pending"
 # Written if an upgrade fails after dumping so restart loops never write repeated dumps.
 UPGRADE_FAILED_NAME = "upgrade-failed.env"
 MARKER_KEYS = ("FLORABASE_INSTALLATION_ID", "FLORABASE_PG_MAJOR", "FLORABASE_PG_SYSTEM_ID")
+PLACEHOLDER_DB_PASSWORD = "change-me"
+PLACEHOLDER_CANONICAL_ORIGIN = "https://florabase.example.org"
+MOUNTINFO_PATH = Path("/proc/self/mountinfo")
 
 
 class SchemaError(Exception):
@@ -199,31 +202,110 @@ def write_marker(state_dir: Path, identity: dict[str, str]) -> None:
     sync_directory(state_dir)
 
 
-def _normalize_host_path(value: str, variable: str) -> str:
-    if not value.startswith("/"):
-        raise SchemaError(f"{variable} must be an absolute path")
-    normalized = posixpath.normpath(re.sub(r"/+", "/", value)).rstrip("/")
-    if not normalized.startswith("/") or len(normalized) < 2:
-        raise SchemaError(f"{variable} must be an absolute path")
-    return normalized
+def reject_placeholder_config(environ: Mapping[str, str]) -> None:
+    """Refuse compose.yaml placeholder password or origin before touching disk or PostgreSQL."""
+    if (
+        environ.get("FLORABASE_DB_PASSWORD") == PLACEHOLDER_DB_PASSWORD
+        or environ.get("PGPASSWORD") == PLACEHOLDER_DB_PASSWORD
+    ):
+        raise SchemaError(
+            "FLORABASE_DB_PASSWORD is still the placeholder 'change-me'; "
+            "set a strong password (see docs/installation.md)"
+        )
+    origin = environ.get("FLORABASE_CANONICAL_ORIGIN", "").strip().rstrip("/")
+    if origin == PLACEHOLDER_CANONICAL_ORIGIN:
+        raise SchemaError(
+            "FLORABASE_CANONICAL_ORIGIN is still the placeholder "
+            f"{PLACEHOLDER_CANONICAL_ORIGIN!r}; "
+            "set your real HTTPS origin (see docs/installation.md)"
+        )
+
+
+def _decode_mountinfo_field(value: str) -> str:
+    return re.sub(r"\\([0-7]{3})", lambda match: chr(int(match.group(1), 8)), value)
+
+
+def _parse_mountinfo_line(line: str) -> tuple[str, str, str, str, str] | None:
+    """Return (major_minor, root, mount_point, fstype, source) or None if malformed."""
+    left, separator, right = line.partition(" - ")
+    if not separator:
+        return None
+    left_fields = left.split()
+    right_fields = right.split()
+    if len(left_fields) < 6 or len(right_fields) < 2:
+        return None
+    dev = left_fields[2]
+    root = posixpath.normpath(_decode_mountinfo_field(left_fields[3]))
+    mount_point = posixpath.normpath(_decode_mountinfo_field(left_fields[4]))
+    fstype = _decode_mountinfo_field(right_fields[0])
+    source = _decode_mountinfo_field(right_fields[1])
+    if not root.startswith("/") or not mount_point.startswith("/"):
+        return None
+    return dev, root, mount_point, fstype, source
+
+
+def _is_nested_path(child: str, parent: str) -> bool:
+    if parent == "/":
+        return child != "/"
+    return child.startswith(parent + "/")
+
+
+def check_mountinfo_nesting(
+    data_dir: Path,
+    backup_root: Path,
+    mountinfo_path: Path = MOUNTINFO_PATH,
+) -> None:
+    """Detect identical or nested bind mounts via mountinfo; warn and continue if indeterminate."""
+    try:
+        text_content = mountinfo_path.read_text()
+    except OSError:
+        sys.stderr.write(
+            "schema-guard: warning: could not read mountinfo to verify data/backup mount nesting; "
+            "continuing\n"
+        )
+        return
+    data_target = posixpath.normpath(str(data_dir))
+    backup_target = posixpath.normpath(str(backup_root))
+    mounts: dict[str, tuple[str, str, str, str]] = {}
+    malformed = False
+    for raw_line in text_content.splitlines():
+        if not raw_line.strip():
+            continue
+        parsed = _parse_mountinfo_line(raw_line)
+        if parsed is None:
+            malformed = True
+            continue
+        dev, root, mount_point, fstype, source = parsed
+        if mount_point in (data_target, backup_target):
+            mounts[mount_point] = (dev, root, fstype, source)
+    if data_target not in mounts or backup_target not in mounts:
+        reason = "malformed mountinfo" if malformed else "data/backup mount entries not found"
+        sys.stderr.write(
+            f"schema-guard: warning: mount nesting check indeterminate ({reason}); continuing\n"
+        )
+        return
+    data_dev, data_root, data_fs, data_src = mounts[data_target]
+    backup_dev, backup_root_path, backup_fs, backup_src = mounts[backup_target]
+    same_fs = data_dev == backup_dev or (
+        data_fs == "btrfs" and backup_fs == "btrfs" and bool(data_src) and data_src == backup_src
+    )
+    if not same_fs:
+        return
+    if data_root == backup_root_path:
+        raise SchemaError("the data and backup folders are the same")
+    if _is_nested_path(data_root, backup_root_path):
+        raise SchemaError("the data folder is inside the backup folder")
+    if _is_nested_path(backup_root_path, data_root):
+        raise SchemaError("the backup folder is inside the data folder")
 
 
 def validate_host_paths(
-    host_data_dir: str | None,
-    host_backup_dir: str | None,
     data_dir: Path | None,
     backup_root: Path | None,
+    *,
+    mountinfo_path: Path = MOUNTINFO_PATH,
 ) -> None:
-    """Refuse relative, identical, or nested data and backup folders before any migration."""
-    if host_data_dir is not None or host_backup_dir is not None:
-        data_host = _normalize_host_path(host_data_dir or "", "FLORABASE_DATA_DIR")
-        backup_host = _normalize_host_path(host_backup_dir or "", "FLORABASE_BACKUP_DIR")
-        if data_host == backup_host:
-            raise SchemaError("the data and backup folders are the same")
-        if f"{data_host}/".startswith(f"{backup_host}/"):
-            raise SchemaError("FLORABASE_DATA_DIR is inside FLORABASE_BACKUP_DIR")
-        if f"{backup_host}/".startswith(f"{data_host}/"):
-            raise SchemaError("FLORABASE_BACKUP_DIR is inside FLORABASE_DATA_DIR")
+    """Refuse identical or nested data and backup folders before any migration."""
     if data_dir is not None and backup_root is not None:
         try:
             data_stat = os.stat(data_dir)
@@ -232,6 +314,7 @@ def validate_host_paths(
             return
         if (data_stat.st_dev, data_stat.st_ino) == (backup_stat.st_dev, backup_stat.st_ino):
             raise SchemaError("the data and backup folders are the same")
+        check_mountinfo_nesting(data_dir, backup_root, mountinfo_path=mountinfo_path)
 
 
 def _require_writable_dir(path: Path, label: str, *, require_private_owner: bool = False) -> None:
@@ -371,13 +454,12 @@ def deploy(
     media_dir: Path | None = None,
     data_dir: Path | None = None,
     backup_root: Path | None = None,
-    host_data_dir: str | None = None,
-    host_backup_dir: str | None = None,
+    mountinfo_path: Path = MOUNTINFO_PATH,
     strict_backup_permissions: bool = False,
     dump: Dump = dump_database,
 ) -> None:
     """Initialize, keep, or back up and upgrade the schema; refuse anything else (ADR 0008/0009)."""
-    validate_host_paths(host_data_dir, host_backup_dir, data_dir, backup_root)
+    validate_host_paths(data_dir, backup_root, mountinfo_path=mountinfo_path)
     _require_writable_dir(state_dir, "state directory")
     check_upgrade_failed(state_dir)
     marker = read_marker(state_dir)
@@ -481,13 +563,16 @@ def main() -> int:
     args = parser.parse_args()
     try:
         if args.action == "wait-db":
+            reject_placeholder_config(os.environ)
             wait_for_database()
             return 0
         config, scripts, head = image_schema()
         if args.action == "serve":
+            reject_placeholder_config(os.environ)
             with get_readiness_engine().connect() as connection:
                 require_image_head(connection, head)
         elif args.action == "deploy":
+            reject_placeholder_config(os.environ)
             owner = owner_from_environment(os.environ)
             deploy(
                 config,
@@ -497,8 +582,6 @@ def main() -> int:
                 media_dir=MEDIA_DIR,
                 data_dir=DATA_DIR,
                 backup_root=BACKUP_ROOT,
-                host_data_dir=os.environ.get("FLORABASE_DATA_DIR"),
-                host_backup_dir=os.environ.get("FLORABASE_BACKUP_DIR"),
                 strict_backup_permissions=True,
             )
             create_first_owner(owner)

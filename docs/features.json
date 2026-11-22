@@ -2756,6 +2756,22 @@
       "status": "implemented"
     },
     {
+      "id": "INSTALL-003",
+      "category": "infrastructure",
+      "description": "Make compose.yaml on main directly usable with :latest images, plain short bind mounts, plain literals and in-image guards (ADR 0010)",
+      "acceptance_criteria": [
+        "compose.yaml on main is directly usable with no template slots, no Compose interpolation, :latest tags for db/backend/frontend, plain short bind mounts with Synology-style absolute host path examples, plain environment literals, header setup instructions and no custom networks",
+        "Both florabase-postgres-entrypoint (18.6-alpine-florabase.4, reproduced and pinned in release/inputs.json) and backend release_schema refuse to start if FLORABASE_DB_PASSWORD is still 'change-me'",
+        "Backend drops FLORABASE_DATA_DIR/FLORABASE_BACKUP_DIR env vars and detects identical or nested data/backup bind mounts via stat and /proc/self/mountinfo (including btrfs subvolumes), warning and continuing when indeterminate and refusing on positive detection",
+        "publish-beta-images.py promotes :latest alongside versioned tags for backend, frontend, and postgresql (guarded to PostgreSQL major 18 only) with the same digest-unchanged proof, and drops the rendered compose.yaml release asset while keeping image and release-manifest.json attestations",
+        "Offline contract tests, backend unit tests, release tests and real disposable smoke (smoke-portable-compose.py) cover auto-created missing folders, placeholder password refusal, mountinfo nesting, :latest promotion and PG-major guard",
+        "ADR 0010, docs/installation.md, docs/security.md, README.md, CHANGELOG.md and docs/progress.md are updated"
+      ],
+      "dependencies": ["INSTALL-002"],
+      "priority": "P0",
+      "status": "implemented"
+    },
+    {
       "id": "MEASUREMENT-001",
       "category": "event",
       "description": "Record and browse longitudinal Plant height measurements as typed Journal Events",

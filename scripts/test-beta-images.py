@@ -176,15 +176,14 @@ class PortableSmokeEvidence(unittest.TestCase):
         }
         for name, user in (users or {}).items():
             services[name]["user"] = user
-        top_networks = (
-            networks if networks is not None else {"internal": {"internal": True}, "app": {}}
-        )
+        top_networks = networks if networks is not None else {"default": {}}
         return json.dumps({"services": services, "networks": top_networks}).encode()
 
     def stack(self, directory: Path) -> Any:
-        return self.smoke.Stack(directory / "source", directory / "c.yaml", "fixture", "helper")
+        return self.smoke.Stack(directory / "source", directory / "c.yaml", "fixture", self.images)
 
     def test_service_evidence_requires_the_three_images_names_and_non_root_services(self) -> None:
+        latest = self.smoke.LATEST_IMAGES
         images = {
             "db": "postgres-fixture",
             "backend": "backend-fixture",
@@ -193,23 +192,17 @@ class PortableSmokeEvidence(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             stack = self.stack(Path(temporary))
             for config, message in (
-                (self.config({"db": "postgres-fixture"}), "expected db, backend, frontend"),
+                (self.config({"db": latest["db"]}), "expected db, backend, frontend"),
                 (
-                    self.config(images, networks={"internal": {"internal": False}, "app": {}}),
-                    "expected internal: true and app networks",
+                    self.config(latest, networks={"internal": {"internal": True}, "app": {}}),
+                    "expected default network only",
                 ),
-                (self.config({**images, "frontend": "other"}), "incorrect frontend image"),
+                (self.config({**latest, "frontend": "other"}), "incorrect frontend image"),
                 (
-                    self.config(images, names={**self.smoke.CONTAINER_NAMES, "db": "other"}),
+                    self.config(latest, names={**self.smoke.CONTAINER_NAMES, "db": "other"}),
                     "incorrect db image",
                 ),
-                (self.config(images, users={"backend": "0:0"}), "incorrect backend image"),
-                (
-                    self.config(
-                        images, service_networks={"frontend": {"app": None, "internal": None}}
-                    ),
-                    "incorrect frontend image",
-                ),
+                (self.config(latest, users={"backend": "0:0"}), "incorrect backend image"),
             ):
                 with (
                     self.subTest(message=message),
@@ -217,7 +210,20 @@ class PortableSmokeEvidence(unittest.TestCase):
                     self.assertRaisesRegex(RuntimeError, message),
                 ):
                     self.smoke.require_services(stack, images)
-            with patch.object(stack, "compose", return_value=self.config(images)):
+            with (
+                patch.object(
+                    stack,
+                    "compose",
+                    side_effect=[self.config(latest), self.config({**images, "frontend": "other"})],
+                ),
+                self.assertRaisesRegex(RuntimeError, "Override configuration: incorrect frontend"),
+            ):
+                self.smoke.require_services(stack, images)
+            with patch.object(
+                stack,
+                "compose",
+                side_effect=[self.config(latest), self.config(images)],
+            ):
                 self.smoke.require_services(stack, images)
 
     def test_refusal_requires_a_failed_deployment_and_the_service_message(self) -> None:
@@ -527,7 +533,7 @@ class PortableSmokeEvidence(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
             stack = self.smoke.Stack(
-                directory / "source", directory / "asset.yaml", "fixture", self.images["backend"]
+                directory / "source", directory / "asset.yaml", "fixture", self.images
             )
             for code, stderr, refusal in (
                 (4, b"stderr-canary", None),
@@ -701,22 +707,7 @@ class ReleaseTests(unittest.TestCase):
                     ),
                 ):
                     validate_manifest(value)
-                refs = {name: image["reference"] for name, image in value["images"].items()}
-                refs["postgresql"] = value["postgresql"]["reference"]
-                compose = beta_release.render_compose(ROOT, version, refs)
-                self.assertTrue(compose.startswith(f"# Florabase {version}, linux/amd64:"))
-                self.assertCountEqual(
-                    re.findall(r'^    image: "(.*)"$', compose, re.M),
-                    [
-                        refs["postgresql"],
-                        refs["backend"],
-                        refs["frontend"],
-                    ],
-                )
-                self.assertNotIn("platform:", compose)
-                self.assertNotRegex(compose, r"@[A-Z]+@")
                 names = (
-                    beta_release.INSTALL_COMPOSE,
                     "RELEASE.md",
                     "release-manifest.json",
                     beta_release.POSTGRES_SBOM,
@@ -862,12 +853,12 @@ class ReleaseTests(unittest.TestCase):
                 path,
                 value["source"]["revision"],
                 ".github/workflows/beta-images.yml",
-                {"compose.yaml": "sha256:" + "c" * 64},
+                {},
                 host,
             )
         self.assertEqual(result["source_sha"], value["source"]["revision"])
         self.assertEqual(set(result["subjects"]), {"backend", "frontend", "postgresql"})
-        self.assertEqual(result["file_subjects"], {"compose.yaml": "sha256:" + "c" * 64})
+        self.assertEqual(result["file_subjects"], {})
         self.assertFalse(result["attestations_created"])
         with self.assertRaises(ValueError):
             release_attestation_inputs(
@@ -876,10 +867,13 @@ class ReleaseTests(unittest.TestCase):
                 path,
                 value["source"]["revision"],
                 ".github/workflows/beta-images.yml",
-                {"compose.yaml": "sha256:" + "c" * 64},
+                {},
                 host,
             )
-        for assets in ({}, {"compose.yaml": "sha256:" + "c" * 64, "florabasectl.py": "x"}):
+        for assets in (
+            {"compose.yaml": "sha256:" + "c" * 64},
+            {"compose.yaml": "sha256:" + "c" * 64, "florabasectl.py": "x"},
+        ):
             with self.assertRaises(ValueError):
                 release_attestation_inputs(
                     value,
@@ -897,7 +891,6 @@ class ReleaseTests(unittest.TestCase):
         value = candidate()
         sha = value["source"]["revision"]
         names = (
-            beta_release.INSTALL_COMPOSE,
             "RELEASE.md",
             "release-manifest.json",
             beta_release.POSTGRES_SBOM,
@@ -1607,8 +1600,15 @@ class ReleaseTests(unittest.TestCase):
         workflow = (ROOT / ".github/workflows/beta-images.yml").read_text()
         self.assertIn("subject-digest: ${{ steps.pair.outputs.postgresql_digest }}", workflow)
         source = (ROOT / "scripts/publish-beta-images.py").read_text()
-        self.assertIn("subject-path: ${{ runner.temp }}/beta-release/assets/compose.yaml", workflow)
-        for name in ("portable-compose.yaml", "florabasectl.py", "florabase.env.example"):
+        self.assertIn(
+            "subject-path: ${{ runner.temp }}/beta-release/assets/release-manifest.json", workflow
+        )
+        for name in (
+            "compose.yaml",
+            "portable-compose.yaml",
+            "florabasectl.py",
+            "florabase.env.example",
+        ):
             self.assertNotIn(name, workflow)
         # The rebuild check must not gate every release: the publisher runs it only for an
         # unpublished identity, so a superseded Alpine pin never blocks application releases.
@@ -1745,11 +1745,8 @@ class ReleaseTests(unittest.TestCase):
         self.assertNotIn("/releases/tags/", workflow)
         self.assertNotIn("make ci", workflow)
         self.assertIn("publish-beta-images.py --finalize", workflow)
-        for name in (
-            beta_release.INSTALL_COMPOSE,
-            "release-manifest.json",
-        ):
-            self.assertIn(f"/beta-release/assets/{name}", workflow)
+        self.assertIn("/beta-release/assets/release-manifest.json", workflow)
+        self.assertNotIn("/beta-release/assets/compose.yaml", workflow)
         ci = (ROOT / ".github/workflows/ci.yml").read_text()
         self.assertIn("name: release-migration", ci)
         self.assertIn('verify-migration-cycle.sh "$BASE_SHA" --force-cycle', ci)
@@ -1791,19 +1788,12 @@ class ReleaseTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "oversize.tar.gz"):
                 beta_release.release_asset_inventory(output)
 
-    def test_compose_template_slots_and_withdrawn_bundle(self) -> None:
-        template = (ROOT / beta_release.INSTALL_COMPOSE).read_text()
-        for name, count in beta_release.COMPOSE_SLOTS.items():
-            self.assertEqual(template.count("@" + name.upper() + "@"), count, name)
+    def test_deployable_compose_has_no_slots_and_withdrawn_bundle_is_absent(self) -> None:
+        compose = (ROOT / beta_release.INSTALL_COMPOSE).read_text()
+        self.assertNotRegex(compose, r"@[A-Z]+@")
+        for repo in ("florabase-postgres", "florabase-backend", "florabase-frontend"):
+            self.assertIn(f"ghcr.io/alessandrorossato/{repo}:latest", compose)
         self.assertFalse((ROOT / "deploy").exists())
-        refs = {
-            "backend": "ghcr.io/x/b@sha256:" + "a" * 64,
-            "frontend": "ghcr.io/x/f@sha256:" + "b" * 64,
-            "postgresql": "ghcr.io/x/p@sha256:" + "c" * 64,
-        }
-        for bad in ({**refs, "backend": "ghcr.io/x/b:latest"}, {"backend": refs["backend"]}):
-            with self.assertRaises(ValueError):
-                beta_release.render_compose(ROOT, "0.1.0-beta.7", bad)
 
     def test_partial_or_wrong_release_assets_cannot_be_published(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -2589,8 +2579,7 @@ class SharedPublicationTests(unittest.TestCase):
         ) -> None:
             self.assertEqual(head, value["alembic_head"])
             self.assertEqual(set(refs), {"backend", "frontend", "postgresql"})
-            for reference in refs.values():
-                self.assertIn(f'image: "{reference}"', compose.read_text())
+            self.assertEqual(compose, ROOT / beta_release.INSTALL_COMPOSE)
             if fault == "portable":
                 raise ValueError("injected portable smoke failure")
 
@@ -2647,7 +2636,7 @@ class SharedPublicationTests(unittest.TestCase):
             commands.side_effect = docker_only
             if fault is None:
                 publisher.run_pipeline(ROOT, output)
-                self.assertEqual(promotion.call_count, 3)
+                self.assertEqual(promotion.call_count, 6)
             else:
                 with self.assertRaises(ValueError):
                     publisher.run_pipeline(ROOT, output)
@@ -2661,11 +2650,21 @@ class SharedPublicationTests(unittest.TestCase):
         if fault is None:
             self.assertTrue(all(stage["status"] == "passed" for stage in stages.values()))
             assets = state["release"]["assets"]
-            # compose.yaml, RELEASE.md, manifest, PostgreSQL SBOM and source archive.
-            self.assertEqual(len(assets), 5)
+            # RELEASE.md, manifest, PostgreSQL SBOM and source archive.
+            self.assertEqual(len(assets), 4)
             self.assertEqual(
                 {name: (item["size"], item["sha256"]) for name, item in assets.items()},
                 beta_release.release_asset_inventory(output / "assets"),
+            )
+            self.assertEqual(set(state["promoted_latest"]), {"backend", "frontend", "postgresql"})
+            for service in ("backend", "frontend"):
+                self.assertEqual(
+                    tagged[(f"alessandrorossato/florabase-{service}", "latest")],
+                    images[service]["index_digest"],
+                )
+            self.assertEqual(
+                tagged[("alessandrorossato/florabase-postgres", "latest")],
+                value["postgresql"]["index_digest"],
             )
         else:
             failed = {"smoke": "SCAN/SMOKE", "portable": "SCAN/SMOKE", "promotion": "PROMOTE"}.get(
@@ -2689,7 +2688,6 @@ class SharedPublicationTests(unittest.TestCase):
             assets = output / "assets"
             assets.mkdir()
             for name in (
-                beta_release.INSTALL_COMPOSE,
                 "RELEASE.md",
                 beta_release.POSTGRES_SBOM,
                 f"florabase-{value['version']}-source.tar.gz",
@@ -2753,6 +2751,22 @@ class SharedPublicationTests(unittest.TestCase):
                             self.assertEqual(mutation.call_count, 1)
                         with self.assertRaisesRegex(ValueError, "refuse to finalize"):
                             publisher.finalize_release(output)
+
+    def test_postgres_latest_promotion_refuses_major_version_jump(self) -> None:
+        with (
+            tempfile.TemporaryDirectory() as temporary,
+            patch.object(publisher, "POSTGRES_LATEST_MAJOR", "17"),
+        ):
+            output = Path(temporary) / "output"
+            with self.assertRaisesRegex(
+                ValueError, "refuse to move florabase-postgres:latest across PostgreSQL major"
+            ):
+                self.exercise_pipeline(output, None)
+            state = read(output / "diagnostics/publication-state.json")
+            self.assertEqual(state["stages"]["PREPARE"]["status"], "failed")
+            self.assertNotIn("PROMOTE", state["stages"])
+            self.assertEqual(state["promoted"], {})
+            self.assertEqual(state["promoted_latest"], {})
 
 
 if __name__ == "__main__":

@@ -1,10 +1,15 @@
 # Install Florabase
 
-Florabase is installed with one minimal file: the `compose.yaml` attached to each release
+Florabase is installed with one directly usable `compose.yaml` file
 ([ADR 0008](decisions/0008-self-initializing-single-compose.md),
-[ADR 0009](decisions/0009-minimal-production-compose.md)). A Compose manager such as Dockhand
-deploys it as-is, or you run `docker compose up -d`. The only host step is creating the data and
-backup folders with their container owners once. Building from source is for development only
+[ADR 0009](decisions/0009-minimal-production-compose.md),
+[ADR 0010](decisions/0010-deployable-latest-compose.md)). Take `compose.yaml` from the **latest
+release tag** (`https://github.com/alessandrorossato/florabase/blob/<latest-tag>/compose.yaml` —
+see [Florabase releases](https://github.com/alessandrorossato/florabase/releases)) rather than
+`main`, because `main` may be ahead of the published `:latest` images. Create the data and backup
+folders with their container owners once, edit the host folder paths, database password and
+canonical origin in `compose.yaml`, and deploy in a Compose manager such as Dockhand or with
+`docker compose up -d`. Building from source is for development only
 ([development](development.md)).
 
 This guide applies from `v0.1.0-beta.8` (and upgrades `v0.1.0-beta.7` installations in place). Use
@@ -13,62 +18,63 @@ the documentation at the `v0.1.0-beta.6` tag for that release's manual procedure
 
 ## What you install
 
-`compose.yaml` pins three linux/amd64 images by digest and defines three non-root services. No
-container runs as root:
+`compose.yaml` references three linux/amd64 `:latest` images (`ghcr.io/alessandrorossato/florabase-*`)
+and defines three non-root services. No container runs as root:
 
 | Service | Container | Role |
 | --- | --- | --- |
-| `db` | `florabase-db` (`70:70`) | PostgreSQL 18 (`18.6-alpine-florabase.4`). Validates folder owners, modes, empty-folder rules, marker and cluster identity before PostgreSQL starts; pins session `timezone` to `UTC`. |
-| `backend` | `florabase-backend` (`10001:10001`) | Runs `florabase-start`: waits for `db`, runs the guarded deploy step (path/backup checks, advisory lock, init/keep/verified pre-upgrade dump and upgrade, atomic marker, one-time first owner), scrubs owner variables, then `exec`s the exact-head API server (`release_schema serve`). |
-| `frontend` | `florabase-frontend` (`101:101`) | The web app and the only published port, bound to `127.0.0.1`. |
+| `db` | `florabase-db` (`70:70`) | PostgreSQL 18 (`florabase-postgres:latest`, currently `18.6-alpine-florabase.4`). Refuses the `change-me` placeholder password, validates folder owners, modes, empty-folder rules, marker and cluster identity before PostgreSQL starts; pins session `timezone` to `UTC`. |
+| `backend` | `florabase-backend` (`10001:10001`) | Runs `florabase-start`: refuses `change-me`, waits for `db`, runs the guarded deploy step (mount separation via `stat` and `/proc/self/mountinfo`, backup checks, advisory lock, init/keep/verified pre-upgrade dump and upgrade, atomic marker, one-time first owner), scrubs owner variables, then `exec`s the exact-head API server (`release_schema serve`). |
+| `frontend` | `florabase-frontend` (`101:101`) | The web app and the only published port, bound to `127.0.0.1:8080`. |
 
 Stopping or restarting services keeps all data. Docker restarts `db`, `backend` and `frontend`
 after a host reboot; all image guards and the exact-head schema check still apply. Operators who
-want read-only root filesystems and dropped capabilities can layer the optional
+want `internal: true` database network isolation, read-only root filesystems and dropped
+capabilities can layer the optional
 [hardened Compose override](security.md#optional-container-hardening).
 
 ## Prerequisites
 
 - A linux/amd64 Docker host with Engine 24+ and Compose 2.20+. Other architectures are not built.
-- A Compose manager that supports environment interpolation, long-form bind mounts, health
-  dependencies and host-IP port bindings, or the Docker CLI on the host.
+- A Compose manager such as Dockhand or Synology Container Manager, or the Docker CLI on the host.
 - Local storage for a data folder and a separate backup folder.
 - A hostname dedicated to Florabase and an HTTPS reverse proxy on the Docker host with a
   certificate for it, or [Tailscale Serve](#tailscale-and-https). Florabase is served at the root
   of that origin, not under a subpath.
-- Pull access to the release's GHCR images from the Docker host.
+- Pull access to GHCR (`ghcr.io/alessandrorossato/florabase-*`) from the Docker host.
 - Private storage, off the host, for backups and for the credentials needed to restore them.
 
-### Verify the release assets
+### Verify the release provenance (optional digest pinning)
 
-On an admin workstation with the GitHub CLI (`gh`), verify `compose.yaml` and
-`release-manifest.json` against the protected release workflow and the full approved source SHA
-from the release record. Keep both files for upgrades and recovery.
+Every published release attests its three OCI image indexes (`backend`, `frontend`, `postgresql`)
+and `release-manifest.json` (which records the exact immutable `@sha256:...` digests and the
+SHA-256 of `compose.yaml`). On an admin workstation with the GitHub CLI (`gh`), verify
+`release-manifest.json` against the protected release workflow and the approved source SHA:
 
 ```bash
 repo=alessandrorossato/florabase
-(
-  set -e
-  for file in compose.yaml release-manifest.json; do
-    gh attestation verify "$file" --repo "$repo" \
-      --signer-workflow "$repo/.github/workflows/beta-images.yml" \
-      --source-ref refs/heads/main --source-digest '<approved-40-character-commit>' \
-      --deny-self-hosted-runners
-  done
-)
+gh attestation verify release-manifest.json --repo "$repo" \
+  --signer-workflow "$repo/.github/workflows/beta-images.yml" \
+  --source-ref refs/heads/main --source-digest '<approved-40-character-commit>' \
+  --deny-self-hosted-runners
 ```
+
+You can also verify any pulled image directly with `gh attestation verify oci://<image>@sha256:...`.
+Operators who prefer digest pinning over `:latest` replace the three `image:` lines in
+`compose.yaml` with the `reference` values from `release-manifest.json`.
 
 ## Quick start
 
 ### 1. Create the folders and set owners once
 
 Create a data folder and a separate backup folder **inside** a storage volume, never at a volume
-mountpoint itself: when the volume is missing, the folder is missing too and `create_host_path:
-false` fails the deployment instead of starting an empty database on the wrong disk.
+mountpoint itself. Even though short bind syntax lets Docker auto-create a missing host folder
+(empty, root-owned), the in-image guards in `db` and `backend` refuse to start until these folders
+and owners exist, so an empty database is never silently initialized on the wrong disk.
 
 ```bash
 DATA=/volume1/docker/florabase/data
-BACKUP=/volume1/docker/backup/florabase
+BACKUP=/volume1/docker/florabase/backup
 
 mkdir -p "$DATA/postgres" "$DATA/media" "$DATA/state" "$BACKUP/pre-upgrade"
 chmod a+rx "$DATA" && chmod a+x "$BACKUP"
@@ -80,21 +86,22 @@ chmod 0700 "$DATA/media" "$BACKUP/pre-upgrade" && chmod 0755 "$DATA/state"
 This matches the `v0.1.0-beta.7` layout exactly. If any folder is missing or has the wrong owner
 or mode, `db` or `backend` refuses to start and prints a message pointing back to this block.
 
-### 2. Set the variables
+### 2. Edit `compose.yaml`
 
-Set these in the manager's stack environment or in a mode-0600 `.env` next to `compose.yaml`.
-Generate the database password with `openssl rand -hex 32`.
+Download `compose.yaml` from the latest release tag
+(`https://github.com/alessandrorossato/florabase/blob/<latest-tag>/compose.yaml`) into your stack
+directory or paste it into Dockhand, then edit these values in place (no `.env` file is required).
+Generate the database password with `openssl rand -hex 32`:
 
-| Variable | Required | Meaning |
+| Field | Required | Meaning |
 | --- | --- | --- |
-| `FLORABASE_DATA_DIR` | yes | Absolute path of the data folder |
-| `FLORABASE_BACKUP_DIR` | yes | Absolute path of the backup folder (separate from the data folder) |
-| `FLORABASE_DB_PASSWORD` | yes | PostgreSQL password, shared by `db` and `backend`, fixed when the database is created |
-| `FLORABASE_CANONICAL_ORIGIN` | yes | The exact HTTPS origin, for example `https://florabase.example.org`, without a trailing slash or path |
-| `FLORABASE_HTTP_PORT` | no | Loopback port of the frontend, default `8080` |
-| `TZ` | no | IANA timezone for container logs, default `Europe/Rome` (database storage and sessions always stay in UTC) |
-| `FLORABASE_OWNER_LOGIN` | once | Login name of the first owner: 3 to 64 lowercase letters, digits, `.`, `_` or `-`, starting with a letter or digit |
-| `FLORABASE_OWNER_PASSWORD` | once | Password of the first owner, at least 12 characters |
+| Volume left-hand paths | yes | Absolute host paths for your data folder (same path on `db` and `backend`) and separate backup folder (on `backend`). Change only the left side of each `:` mount. |
+| `FLORABASE_DB_PASSWORD` | yes | PostgreSQL password, identical in both `db` and `backend`, fixed when the database is created. Both services refuse to start while it is still `change-me`. |
+| `FLORABASE_CANONICAL_ORIGIN` | yes | The exact HTTPS origin, for example `https://florabase.example.org`, without a trailing slash or path. `backend` refuses to start while it is still the placeholder `https://florabase.example.org`. |
+| `frontend` port | no | Loopback port of the frontend, default `127.0.0.1:8080:8080`. Keep the `127.0.0.1:` prefix. |
+| `TZ` | no | IANA timezone for container logs, default `Europe/Rome` (database storage and sessions always stay in UTC). |
+| `FLORABASE_OWNER_LOGIN` | once | Uncomment on first deploy to create the first owner: 3 to 64 lowercase letters, digits, `.`, `_` or `-`, starting with a letter or digit. |
+| `FLORABASE_OWNER_PASSWORD` | once | Uncomment on first deploy: password of the first owner, at least 12 characters. |
 
 Set both owner variables or neither. Without them, the stack still starts and you create the owner
 offline with `docker compose --project-name florabase run --rm --no-deps backend python -m
@@ -198,12 +205,16 @@ upload from a permitted tailnet client, and again after a reboot.
 
 ## Upgrade
 
-1. Read the release notes and verify the new `compose.yaml` and `release-manifest.json`. A change of
-   PostgreSQL major version needs its own documented migration.
+1. Read the release notes (and optionally verify `release-manifest.json`). Note that
+   `florabase-postgres:latest` can move to a rebuilt image within PostgreSQL 18 on manager updates
+   (for example Alpine security or entrypoint guard updates), but never crosses a PostgreSQL major
+   version automatically; a PostgreSQL major upgrade needs its own documented maintenance.
 2. Take a [paired backup](#paired-backup) with the current release.
-3. Replace the stack's `compose.yaml` with the new file, keeping the same stack name, folders,
-   password and origin, and deploy it. When upgrading from `v0.1.0-beta.7`, the existing folder
-   layout and owners already match — no folder changes are needed.
+3. Pull and redeploy the stack (`docker compose --project-name florabase pull && docker compose
+   --project-name florabase up -d --wait`, or use your Compose manager's update action). When
+   upgrading from `v0.1.0-beta.7`, replace `compose.yaml` with the new file edited with your
+   existing folder paths, password and origin; existing beta.7 folder owners and modes already
+   match.
 
 Before migrating, `backend`'s guarded deploy step writes
 `florabase-<from>-to-<to>-<UTC time>.dump` to `pre-upgrade/` in the backup folder and verifies it

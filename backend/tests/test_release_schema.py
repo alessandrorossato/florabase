@@ -448,30 +448,19 @@ def test_marker_is_created_exclusively_and_a_concurrent_one_must_match(tmp_path:
     assert sorted(path.name for path in tmp_path.iterdir()) == [release_schema.MARKER_NAME]
 
 
-def test_validate_host_paths_refuses_relative_same_and_nested(tmp_path: Path) -> None:
+def test_validate_host_paths_refuses_same_inode(tmp_path: Path) -> None:
     data = tmp_path / "data"
     backup = tmp_path / "backup"
     data.mkdir()
     backup.mkdir()
-    release_schema.validate_host_paths("/volume1/data", "/volume1/backup", data, backup)
-    with pytest.raises(release_schema.SchemaError, match="FLORABASE_DATA_DIR must be an absolute"):
-        release_schema.validate_host_paths("relative/data", "/volume1/backup", data, backup)
-    with pytest.raises(
-        release_schema.SchemaError, match="FLORABASE_BACKUP_DIR must be an absolute"
-    ):
-        release_schema.validate_host_paths("/volume1/data", "/", data, backup)
+    mountinfo = tmp_path / "mountinfo"
+    mountinfo.write_text(
+        f"101 50 8:1 /srv/data {data} rw - ext4 /dev/sda1 rw\n"
+        f"102 50 8:1 /srv/backup {backup} rw - ext4 /dev/sda1 rw\n"
+    )
+    release_schema.validate_host_paths(data, backup, mountinfo_path=mountinfo)
     with pytest.raises(release_schema.SchemaError, match="same"):
-        release_schema.validate_host_paths("/volume1/data/", "/volume1/data", data, backup)
-    with pytest.raises(release_schema.SchemaError, match="same"):
-        release_schema.validate_host_paths("/volume1/data", "/volume1/backup", data, data)
-    with pytest.raises(release_schema.SchemaError, match="is inside FLORABASE_DATA_DIR"):
-        release_schema.validate_host_paths("/volume1/data", "/volume1/data/backup", data, backup)
-    with pytest.raises(release_schema.SchemaError, match="is inside FLORABASE_BACKUP_DIR"):
-        release_schema.validate_host_paths("/volume1/backup/data", "/volume1/backup/", data, backup)
-    with pytest.raises(release_schema.SchemaError, match="is inside FLORABASE_DATA_DIR"):
-        release_schema.validate_host_paths(
-            "/volume1/data", "/volume1/other/../data/./backup", data, backup
-        )
+        release_schema.validate_host_paths(data, data, mountinfo_path=mountinfo)
 
 
 def test_read_marker_refuses_symlinks_and_directories(tmp_path: Path) -> None:
@@ -642,3 +631,124 @@ def test_database_connect_args_pins_utc_and_falls_back_to_db_password(
         options="-c statement_timeout=2000",
     )
     assert args_with_timeout == {"options": "-c statement_timeout=2000 -c timezone=UTC"}
+
+
+@pytest.mark.parametrize("action", ["wait-db", "deploy", "serve"])
+@pytest.mark.parametrize(
+    ("var", "value", "expected"),
+    [
+        ("FLORABASE_DB_PASSWORD", "change-me", "placeholder 'change-me'"),
+        ("PGPASSWORD", "change-me", "placeholder 'change-me'"),
+        (
+            "FLORABASE_CANONICAL_ORIGIN",
+            "https://florabase.example.org",
+            "placeholder 'https://florabase.example.org'",
+        ),
+        (
+            "FLORABASE_CANONICAL_ORIGIN",
+            "https://florabase.example.org/",
+            "placeholder 'https://florabase.example.org'",
+        ),
+    ],
+)
+def test_refuses_placeholder_config(
+    schema: SimpleNamespace,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    action: str,
+    var: str,
+    value: str,
+    expected: str,
+) -> None:
+    monkeypatch.delenv("FLORABASE_DB_PASSWORD", raising=False)
+    monkeypatch.delenv("PGPASSWORD", raising=False)
+    monkeypatch.delenv("FLORABASE_CANONICAL_ORIGIN", raising=False)
+    monkeypatch.setenv(var, value)
+
+    assert invoke(monkeypatch, action) == 1
+
+    err = capsys.readouterr().err
+    assert expected in err
+    assert "docs/installation.md" in err
+    schema.engine.connect.assert_not_called()
+    schema.engine.begin.assert_not_called()
+    schema.exec_server.assert_not_called()
+
+
+def test_mountinfo_nesting_refuses_same_or_nested_ext4_mounts(tmp_path: Path) -> None:
+    data = Path("/var/lib/florabase/data")
+    backup = Path("/var/lib/florabase/backup")
+    cases = [
+        (
+            "101 50 8:1 /srv/florabase/data /var/lib/florabase/data rw - ext4 /dev/sda1 rw\n"
+            "102 50 8:1 /srv/florabase/data /var/lib/florabase/backup rw - ext4 /dev/sda1 rw\n",
+            "same",
+        ),
+        (
+            "101 50 8:1 /srv/florabase/data /var/lib/florabase/data rw - ext4 /dev/sda1 rw\n"
+            "102 50 8:1 /srv/florabase/data/backup /var/lib/florabase/backup rw"
+            " - ext4 /dev/sda1 rw\n",
+            "backup folder is inside the data folder",
+        ),
+        (
+            "101 50 8:1 /srv/florabase/backup/data /var/lib/florabase/data rw"
+            " - ext4 /dev/sda1 rw\n"
+            "102 50 8:1 /srv/florabase/backup /var/lib/florabase/backup rw - ext4 /dev/sda1 rw\n",
+            "data folder is inside the backup folder",
+        ),
+    ]
+    for content, pattern in cases:
+        mountinfo = tmp_path / "mountinfo"
+        mountinfo.write_text(content)
+        with pytest.raises(release_schema.SchemaError, match=pattern):
+            release_schema.check_mountinfo_nesting(data, backup, mountinfo_path=mountinfo)
+
+
+def test_mountinfo_nesting_handles_btrfs_subvolumes_and_escapes(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    data = Path("/var/lib/florabase/data")
+    backup = Path("/var/lib/florabase/backup")
+    mountinfo = tmp_path / "mountinfo"
+
+    # Distinct Synology-style btrfs subvolumes on the same device: allowed, no warning.
+    mountinfo.write_text(
+        "210 50 0:36 /@docker/florabase/data /var/lib/florabase/data rw,noatime master:1 - "
+        "btrfs /dev/vg1000/lv rw,ssd,subvolid=258,subvol=/@docker/florabase/data\n"
+        "211 50 0:37 /@backup/florabase /var/lib/florabase/backup rw,noatime master:1 - "
+        "btrfs /dev/vg1000/lv rw,ssd,subvolid=259,subvol=/@backup/florabase\n"
+    )
+    release_schema.check_mountinfo_nesting(data, backup, mountinfo_path=mountinfo)
+    assert capsys.readouterr().err == ""
+
+    # Nested btrfs paths across distinct subvolumes on the same source, with space escape.
+    mountinfo.write_text(
+        "210 50 0:36 /@docker/my\\040florabase/data /var/lib/florabase/data rw,noatime - "
+        "btrfs /dev/vg1000/lv rw,subvolid=258,subvol=/@docker\n"
+        "211 50 0:37 /@docker/my\\040florabase/data/backups /var/lib/florabase/backup rw,noatime - "
+        "btrfs /dev/vg1000/lv rw,subvolid=260,subvol=/@docker/my\\040florabase/data/backups\n"
+    )
+    with pytest.raises(release_schema.SchemaError, match="backup folder is inside the data folder"):
+        release_schema.check_mountinfo_nesting(data, backup, mountinfo_path=mountinfo)
+
+
+def test_mountinfo_nesting_warns_and_continues_when_indeterminate(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    data = Path("/var/lib/florabase/data")
+    backup = Path("/var/lib/florabase/backup")
+
+    # Missing mountinfo file.
+    release_schema.check_mountinfo_nesting(data, backup, mountinfo_path=tmp_path / "missing")
+    assert "warning:" in capsys.readouterr().err
+
+    # Mount entries absent.
+    mountinfo = tmp_path / "mountinfo"
+    mountinfo.write_text("10 1 8:1 / / rw - ext4 /dev/sda1 rw\n")
+    release_schema.check_mountinfo_nesting(data, backup, mountinfo_path=mountinfo)
+    assert "indeterminate" in capsys.readouterr().err
+
+    # Malformed line without separator.
+    mountinfo.write_text("garbage line without separator\n")
+    release_schema.check_mountinfo_nesting(data, backup, mountinfo_path=mountinfo)
+    assert "malformed mountinfo" in capsys.readouterr().err

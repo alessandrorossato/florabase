@@ -99,14 +99,16 @@ run once any user exists, including during concurrent attempts.
 
 Every image in the production `compose.yaml` runs as a dedicated non-root user (`db` `70:70`,
 `backend` `10001:10001`, `frontend` `101:101`), strips setuid/setgid binaries (backend/frontend) or
-removes `gosu` and refuses root with exit 64 (`florabase-postgres`), isolates `db` on an
-`internal: true` network shared only with `backend` (separate from the `app` network shared by
-`backend` and `frontend`, so `frontend` cannot reach PostgreSQL), and publishes only `frontend` on
-`127.0.0.1`.
+removes `gosu` and refuses root with exit 64 (`florabase-postgres`), and publishes only `frontend`
+on `127.0.0.1`.
 
-To keep `compose.yaml` flat and readable for self-hosting managers (ADR 0009), container-level
-hardening flags are omitted from the default file. What defense-in-depth is absent by default:
+To keep `compose.yaml` flat and readable for self-hosting managers (ADR 0009, ADR 0010), custom
+networks and container-level hardening flags are omitted from the default file. What
+defense-in-depth is absent by default:
 
+- **Single default bridge network:** without separate `internal: true` and `app` networks, `db`
+  and `frontend` share Docker's default project network (`db` still publishes no host port and
+  requires `FLORABASE_DB_PASSWORD`).
 - **Writable container overlay layer:** without `read_only: true`, a compromised runtime process
   can write inside its container overlay (root-owned `/app`, `/usr` and `/etc` remain non-writable
   to non-root UIDs).
@@ -115,8 +117,8 @@ hardening flags are omitted from the default file. What defense-in-depth is abse
   bounding set (non-root processes still hold an empty effective/permitted capability set, and
   setuid/setgid bits are stripped from the images).
 
-Operators who want those controls can layer a local override file alongside the attested
-`compose.yaml` (`docker compose -f compose.yaml -f compose.hardened.yaml up -d --wait`):
+Operators who want those controls can layer a local override file alongside `compose.yaml`
+(`docker compose -f compose.yaml -f compose.hardened.yaml up -d --wait`):
 
 ```yaml
 services:
@@ -125,16 +127,24 @@ services:
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
     tmpfs: ["/tmp", "/var/run/postgresql"]
+    networks: [internal]
   backend:
     read_only: true
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
     tmpfs: ["/tmp"]
+    networks: [internal, app]
   frontend:
     read_only: true
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
     tmpfs: ["/tmp"]
+    networks: [app]
+
+networks:
+  internal:
+    internal: true
+  app:
 ```
 
 ## Owner credential management
