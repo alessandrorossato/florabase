@@ -2940,6 +2940,58 @@
       "status": "implemented"
     },
     {
+      "id": "FN-02",
+      "category": "ux",
+      "description": "Sort the Seeds, Sowings and Plants directories by name and by their own date",
+      "acceptance_criteria": [
+        "Seeds, Sowings and Plants offer Default order, Name A–Z, Name Z–A, Newest date first and Oldest date first; dates are the acquisition (or harvest) date, the sowing date and the collection-entry date, compared by their known parts with undated records last",
+        "The order is applied before browser-local pagination, so it survives page changes, and it is a canonical URL and Saved View field (sort) validated by the backend saved-view contract without a migration",
+        "A component test covers each directory and unit tests cover the ordering rules"
+      ],
+      "dependencies": [
+        "SEED-001",
+        "SOWING-001",
+        "PLANT-001",
+        "VIEW-001"
+      ],
+      "priority": "P3",
+      "status": "implemented"
+    },
+    {
+      "id": "FN-04",
+      "category": "ux",
+      "description": "Searchable pickers for reference lists that can exceed 50 options",
+      "acceptance_criteria": [
+        "Every reference select that can exceed 50 options (Locations, Suppliers, Geographic places, Provenance sites, SeedLots, Botanical identities) uses the shared typeahead ReferencePicker; bounded enumerations stay native selects and Orders keep their existing server search",
+        "The picker is operable by keyboard (type to filter, arrows, Enter, Escape) and keeps stable field ids for validation focus and an optional hidden input for uncontrolled forms",
+        "Component tests cover searching and choosing in long lists"
+      ],
+      "dependencies": [
+        "SEED-001",
+        "SOWING-001",
+        "PLANT-001"
+      ],
+      "priority": "P3",
+      "status": "implemented"
+    },
+    {
+      "id": "UX-ENTRY-001",
+      "category": "ux",
+      "description": "Save and add another in the Seeds, Sowings and Plants create forms",
+      "acceptance_criteria": [
+        "Creating a seed lot, Sowing, Plant or Plant group offers Save and add another next to the primary save; it saves exactly like the primary action, refreshes the directory and keeps the create form open with a fresh draft",
+        "The fresh draft keeps only the main reference (botanical identity, or the SeedLot for a Sowing), announces success and moves focus to the first field; editing never shows the action",
+        "Component tests cover the repeat-entry flow"
+      ],
+      "dependencies": [
+        "SEED-001",
+        "SOWING-001",
+        "PLANT-001"
+      ],
+      "priority": "P3",
+      "status": "implemented"
+    },
+    {
       "id": "BRAND-01",
       "category": "frontend",
       "description": "Integrate the approved Florabase logo and application icons",
@@ -3186,58 +3238,6 @@
         "VERIFY-SPEED-001"
       ],
       "priority": "P2",
-      "status": "implemented"
-    },
-    {
-      "id": "FN-02",
-      "category": "ux",
-      "description": "Sort the Seeds, Sowings and Plants directories by name and by their own date",
-      "acceptance_criteria": [
-        "Seeds, Sowings and Plants offer Default order, Name A–Z, Name Z–A, Newest date first and Oldest date first; dates are the acquisition (or harvest) date, the sowing date and the collection-entry date, compared by their known parts with undated records last",
-        "The order is applied before browser-local pagination, so it survives page changes, and it is a canonical URL and Saved View field (sort) validated by the backend saved-view contract without a migration",
-        "A component test covers each directory and unit tests cover the ordering rules"
-      ],
-      "dependencies": [
-        "SEED-001",
-        "SOWING-001",
-        "PLANT-001",
-        "VIEW-001"
-      ],
-      "priority": "P3",
-      "status": "implemented"
-    },
-    {
-      "id": "FN-04",
-      "category": "ux",
-      "description": "Searchable pickers for reference lists that can exceed 50 options",
-      "acceptance_criteria": [
-        "Every reference select that can exceed 50 options (Locations, Suppliers, Geographic places, Provenance sites, SeedLots, Botanical identities) uses the shared typeahead ReferencePicker; bounded enumerations stay native selects and Orders keep their existing server search",
-        "The picker is operable by keyboard (type to filter, arrows, Enter, Escape) and keeps stable field ids for validation focus and an optional hidden input for uncontrolled forms",
-        "Component tests cover searching and choosing in long lists"
-      ],
-      "dependencies": [
-        "SEED-001",
-        "SOWING-001",
-        "PLANT-001"
-      ],
-      "priority": "P3",
-      "status": "implemented"
-    },
-    {
-      "id": "UX-ENTRY-001",
-      "category": "ux",
-      "description": "Save and add another in the Seeds, Sowings and Plants create forms",
-      "acceptance_criteria": [
-        "Creating a seed lot, Sowing, Plant or Plant group offers Save and add another next to the primary save; it saves exactly like the primary action, refreshes the directory and keeps the create form open with a fresh draft",
-        "The fresh draft keeps only the main reference (botanical identity, or the SeedLot for a Sowing), announces success and moves focus to the first field; editing never shows the action",
-        "Component tests cover the repeat-entry flow"
-      ],
-      "dependencies": [
-        "SEED-001",
-        "SOWING-001",
-        "PLANT-001"
-      ],
-      "priority": "P3",
       "status": "implemented"
     }
   ]

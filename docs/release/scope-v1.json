@@ -168,6 +168,9 @@
     "BOTANICAL-MATCH-1A": "internal",
     "UX-DATE-001": "certify",
     "UX-TODAY-001": "certify",
+    "FN-02": "best-effort",
+    "FN-04": "best-effort",
+    "UX-ENTRY-001": "best-effort",
     "BRAND-01": "certify",
     "DOC-03": "release-work",
     "DOC-01": "release-work",
@@ -182,9 +185,6 @@
     "WF-CLEANUP-001": "tooling",
     "DOCS-002": "best-effort",
     "RUNTIME-IDLE-001": "release-work",
-    "MOBILE-001": "post-1.0",
-    "FN-02": "best-effort",
-    "FN-04": "best-effort",
-    "UX-ENTRY-001": "best-effort"
+    "MOBILE-001": "post-1.0"
   }
 }
