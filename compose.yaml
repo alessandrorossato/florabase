@@ -1,7 +1,13 @@
 # Florabase — self-hosted deployment (linux/amd64). See docs/installation.md.
-# Create the folders and owners once with the block in docs/installation.md before the first deploy.
-# Edit the left side of the volume mounts, FLORABASE_DB_PASSWORD (must match in db and backend),
-# and FLORABASE_CANONICAL_ORIGIN before deploying.
+# ===== ONE-TIME SETUP BEFORE THE FIRST START (run as root; adjust both paths) =====
+# DATA=/volume1/docker/florabase/data; BACKUP=/volume1/docker/florabase/backup
+# mkdir -p "$DATA/postgres" "$DATA/media" "$DATA/state" "$BACKUP/pre-upgrade"
+# chmod a+rx "$DATA"; chmod a+x "$BACKUP"
+# chown 70:70 "$DATA/postgres"; chmod 0700 "$DATA/postgres"
+# chown 10001:10001 "$DATA/media" "$DATA/state" "$BACKUP/pre-upgrade"
+# chmod 0700 "$DATA/media" "$BACKUP/pre-upgrade"; chmod 0755 "$DATA/state"
+# Without these folders and owners, db and backend refuse to start (docs/installation.md, step 1).
+# Then edit the volume paths, FLORABASE_DB_PASSWORD (same in db and backend), FLORABASE_CANONICAL_ORIGIN.
 services:
   db:
     image: ghcr.io/alessandrorossato/florabase-postgres:latest

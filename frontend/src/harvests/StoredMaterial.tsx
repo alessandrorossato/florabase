@@ -1,3 +1,4 @@
+import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import {
   useContext,
   useEffect,
@@ -738,28 +739,29 @@ export function StoredMaterialDirectory({
                 <option value="">All states</option>
               </select>
             </div>
-            <div className="field stored-material-location-filter">
-              <label htmlFor={`${id}-location`}>Storage Location</label>
-              <select
+            <div className="stored-material-location-filter">
+              <ReferencePicker
                 id={`${id}-location`}
+                label="Storage Location"
+                placeholder="All Locations"
+                choices={[
+                  ...(location &&
+                  !locations.some((item) => item.id === location)
+                    ? [
+                        {
+                          id: location,
+                          label: `Unavailable Location · ${location}`,
+                        },
+                      ]
+                    : []),
+                  ...locations.map((item) => ({
+                    id: item.id,
+                    label: item.display_path,
+                  })),
+                ]}
                 value={location}
-                onChange={(event) => {
-                  setLocation(event.currentTarget.value);
-                }}
-              >
-                <option value="">All Locations</option>
-                {location &&
-                  !locations.some((item) => item.id === location) && (
-                    <option value={location}>
-                      Unavailable Location · {location}
-                    </option>
-                  )}
-                {locations.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.display_path}
-                  </option>
-                ))}
-              </select>
+                onChange={setLocation}
+              />
             </div>
             <div className="field">
               <label htmlFor={`${id}-material`}>Material</label>

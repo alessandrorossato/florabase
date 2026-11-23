@@ -6,6 +6,10 @@ import {
 } from "../history/state";
 import type { components } from "../api/schema";
 import {
+  directorySorts,
+  type DirectorySort,
+} from "../components/directorySort";
+import {
   eventKinds,
   lifecycles,
   readSearchState,
@@ -42,17 +46,20 @@ export interface DirectoryStates {
     identity_id: string;
     q: string;
     lifecycle: "active" | "history" | "all";
+    sort: DirectorySort;
   };
   sowings: {
     identity_id: string;
     q: string;
     lifecycle: "active" | "completed" | "all";
+    sort: DirectorySort;
   };
   plants: {
     identity_id: string;
     q: string;
     lifecycle: "active" | "history" | "all";
     type: "all" | "plant" | "group";
+    sort: DirectorySort;
   };
   harvests: {
     q: string;
@@ -166,9 +173,15 @@ export const defaults: DirectoryStates = {
     location_id: "",
     has_known_mother: "",
   },
-  seed_lots: { identity_id: "", q: "", lifecycle: "active" },
-  sowings: { identity_id: "", q: "", lifecycle: "active" },
-  plants: { identity_id: "", q: "", lifecycle: "active", type: "all" },
+  seed_lots: { identity_id: "", q: "", lifecycle: "active", sort: "" },
+  sowings: { identity_id: "", q: "", lifecycle: "active", sort: "" },
+  plants: {
+    identity_id: "",
+    q: "",
+    lifecycle: "active",
+    type: "all",
+    sort: "",
+  },
   harvests: { q: "", material: "", source_type: "", identity_id: "" },
   stored_material: {
     q: "",
@@ -214,11 +227,12 @@ const choices: Partial<
     scope: ["all", "living", "current", "historical"],
     mode: ["overview", "species"],
   },
-  seed_lots: { lifecycle: ["active", "history", "all"] },
-  sowings: { lifecycle: ["active", "completed", "all"] },
+  seed_lots: { lifecycle: ["active", "history", "all"], sort: directorySorts },
+  sowings: { lifecycle: ["active", "completed", "all"], sort: directorySorts },
   plants: {
     lifecycle: ["active", "history", "all"],
     type: ["all", "plant", "group"],
+    sort: directorySorts,
   },
   harvests: { material: materials, source_type: ["plant", "plant_group"] },
   stored_material: {

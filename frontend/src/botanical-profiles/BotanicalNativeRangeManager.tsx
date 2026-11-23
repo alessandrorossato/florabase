@@ -1,4 +1,5 @@
 import { ActionButton } from "../components/Action";
+import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -49,7 +50,9 @@ export function BotanicalNativeRangeManager({
   const [managing, setManaging] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [focusPlaceId, setFocusPlaceId] = useState<string | null>(null);
-  const selectorRef = useRef<HTMLSelectElement>(null);
+  const focusSelector = () => {
+    document.getElementById(`native-range-place-${identityId}`)?.focus();
+  };
   const feedbackRef = useRef<HTMLParagraphElement>(null);
   const addedButtonRef = useRef<HTMLButtonElement>(null);
   const manageTriggerRef = useRef<HTMLButtonElement>(null);
@@ -171,7 +174,7 @@ export function BotanicalNativeRangeManager({
         status: "success",
         message: `${range.geographic_place_path} was removed from the native range.`,
       });
-      requestAnimationFrame(() => selectorRef.current?.focus());
+      requestAnimationFrame(focusSelector);
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();
@@ -256,7 +259,7 @@ export function BotanicalNativeRangeManager({
               onClick={() => {
                 setManaging(true);
                 requestAnimationFrame(() => {
-                  if (availablePlaces.length > 0) selectorRef.current?.focus();
+                  if (availablePlaces.length > 0) focusSelector();
                   else doneButtonRef.current?.focus();
                 });
               }}
@@ -266,29 +269,23 @@ export function BotanicalNativeRangeManager({
           ) : (
             <>
               <div className="native-range-add">
-                <div className="field">
-                  <label htmlFor={`native-range-place-${identityId}`}>
-                    Geographic place
-                  </label>
-                  <select
-                    aria-describedby={`native-range-help-${identityId}`}
-                    id={`native-range-place-${identityId}`}
-                    ref={selectorRef}
-                    disabled={pending || availablePlaces.length === 0}
-                    value={selectedPlaceId}
-                    onChange={(event) => {
-                      setSelectedPlaceId(event.currentTarget.value);
-                      setMutation({ status: "idle" });
-                    }}
-                  >
-                    <option value="">Choose an exact named area</option>
-                    {availablePlaces.map((place) => (
-                      <option value={place.id} key={place.id}>
-                        {place.name} — {place.display_path}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <ReferencePicker
+                  id={`native-range-place-${identityId}`}
+                  label="Geographic place"
+                  describedBy={`native-range-help-${identityId}`}
+                  openOnFocus={false}
+                  placeholder="Choose an exact named area"
+                  disabled={pending || availablePlaces.length === 0}
+                  choices={availablePlaces.map((place) => ({
+                    id: place.id,
+                    label: `${place.name} — ${place.display_path}`,
+                  }))}
+                  value={selectedPlaceId}
+                  onChange={(id) => {
+                    setSelectedPlaceId(id);
+                    setMutation({ status: "idle" });
+                  }}
+                />
                 <div className="actions">
                   <ActionButton
                     variant="secondary"

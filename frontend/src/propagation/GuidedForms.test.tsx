@@ -243,7 +243,7 @@ for (const kind of ["plant", "group"] as const)
         .map((link) => link.getAttribute("href")),
     ).toEqual(["#/seeds/lot", "#/sowings/sowing"]);
     expect(screen.getByLabelText("Botanical identity")).toHaveValue(
-      identity.id,
+      identity.display_label,
     );
     expect(
       screen.getByRole("group", { name: "Resulting Sowing lifecycle" }),
