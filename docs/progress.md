@@ -1,5 +1,28 @@
 # Engineering progress
 
+## 2026-11-23 — Lower idle container CPU, probe log filter, startup banner, and settings error diagnostics (`RUNTIME-IDLE-001`)
+
+- On `feat/runtime-idle-001` (rebased onto `1d4e0ba`, writer `antigravity`).
+- Replaced the Python `/api/v1/ready` backend image `HEALTHCHECK` with busybox `wget` against
+  `/api/v1/health` (`--interval=30s --timeout=5s --start-period=60s --start-interval=2s --retries=3`),
+  moved `postgres/Dockerfile` (`18.6-alpine-florabase.5`, reproducible index
+  `sha256:8397c577...`, platform `sha256:8b9e1108...`) and `frontend/Dockerfile` to 30 s intervals
+  with `--start-interval`, keeping `compose.yaml` and `compose.dev.yaml` untouched (ADR 0009) and
+  `/api/v1/ready` unchanged. Verified `moby/moby` `v24.0.2` ignores unknown `StartInterval` in OCI
+  image configs (`image.NewFromJSON` uses `encoding/json.Unmarshal`).
+- Added `HealthProbeAccessFilter` on `uvicorn.access` (drops loopback 2xx `GET /api/v1/health` and
+  `/api/v1/ready` only), plain-ASCII ≤ 72-column startup banner as the first stdout output of
+  `release_schema wait-db` (`FLORABASE_REVISION` exposed from `ARG REVISION`), and
+  `pydantic.ValidationError` field-name reporting across all `release_schema` actions without
+  leaking input values, context, URLs, or secrets.
+- Measured on disposable `compose.yaml` stack (120 s idle cgroup CPU delta, before vs after):
+  `backend` 3,970.01 ms (3.31%) → 398.88 ms (0.33%, −90.0%), `db` 1,172.29 ms (0.98%) → 341.43 ms
+  (0.28%, −70.9%), `frontend` 425.58 ms (0.35%) → 138.13 ms (0.12%, −67.5%); backend idle access
+  logs 12 → 0; single backend probe wall time (10 runs) 340.70 ms → 63.11 ms median (−81.5%).
+- Checks: `beta_release.py postgres-identity --check` (`POSTGRES_IDENTITY_REPRODUCED`),
+  `make smoke-beta-images` (`LOCAL_BETA_CANDIDATE_PASSED`), `scripts/smoke-portable-compose.py`
+  passed, `make feature-verify AGENT_ID=antigravity` (FULL). Unresolved: none.
+
 ## 2026-11-23 — WF-CLEANUP-001 finish auto-retirement, Golden closure and review residue
 
 - On `ci/wf-cleanup-001` from `origin/main` `c4ffd63` (writer `neon`).

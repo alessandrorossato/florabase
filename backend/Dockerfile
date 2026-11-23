@@ -60,13 +60,14 @@ COPY LICENSE /usr/share/licenses/florabase/LICENSE
 ARG VERSION=0.1.0-beta.8
 ARG REVISION=unknown
 ARG SOURCE=https://github.com/alessandrorossato/florabase
+ENV FLORABASE_REVISION=$REVISION
 LABEL org.opencontainers.image.title="Florabase backend" \
     org.opencontainers.image.version=$VERSION \
     org.opencontainers.image.revision=$REVISION \
     org.opencontainers.image.source=$SOURCE \
     org.opencontainers.image.licenses="AGPL-3.0-or-later"
-HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=6 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready', timeout=3)"
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --start-interval=2s --retries=3 \
+    CMD wget -q -T 3 -O /dev/null http://127.0.0.1:8000/api/v1/health || exit 1
 RUN find /usr /bin /sbin -xdev -type f -perm /6000 -exec chmod a-s {} +
 USER florabase
 EXPOSE 8000

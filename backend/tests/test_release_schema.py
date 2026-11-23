@@ -752,3 +752,197 @@ def test_mountinfo_nesting_warns_and_continues_when_indeterminate(
     mountinfo.write_text("garbage line without separator\n")
     release_schema.check_mountinfo_nesting(data, backup, mountinfo_path=mountinfo)
     assert "malformed mountinfo" in capsys.readouterr().err
+
+
+def test_startup_banner_snapshot_width_and_ascii() -> None:
+    from florabase.core.banner import BANNER_MAX_WIDTH, render_startup_banner
+
+    rendered = render_startup_banner(
+        {
+            "FLORABASE_REVISION": "68e94499e7e1a372831f2890e65e0f41eaf62cbf",
+            "FLORABASE_CANONICAL_ORIGIN": "https://flora.example.net",
+            "FLORABASE_ENVIRONMENT": "production",
+            "FLORABASE_LOG_FORMAT": "json",
+        },
+        version="0.1.0-beta.8",
+    )
+    expected = (
+        "   _      _____ _                 _\n"
+        "  / \\    |  ___| | ___  _ __ __ _| |__   __ _ ___  ___\n"
+        " ( | )   | |_  | |/ _ \\| '__/ _` | '_ \\ / _` / __|/ _ \\\n"
+        "  \\|/    |  _| | | (_) | | | (_| | |_) | (_| \\__ \\  __/\n"
+        "   |     |_|   |_|\\___/|_|  \\__,_|_.__/ \\__,_|___/\\___|\n"
+        "\n"
+        "Florabase 0.1.0-beta.8 (68e9449)\n"
+        "Origin:      https://flora.example.net\n"
+        "Environment: production (log: json)\n"
+        "Project:     https://github.com/alessandrorossato/florabase\n"
+    )
+    assert rendered == expected
+    assert "\x1b" not in rendered
+    for line in rendered.splitlines():
+        assert len(line) <= BANNER_MAX_WIDTH
+        assert all(32 <= ord(char) <= 126 for char in line)
+
+
+def test_startup_banner_origin_revision_and_secret_safety() -> None:
+    from florabase.core.banner import BANNER_MAX_WIDTH, render_startup_banner
+
+    unset = render_startup_banner({}, version="0.1.0-beta.8")
+    assert "Florabase 0.1.0-beta.8 (unknown)" in unset
+    assert "Origin:      not set" in unset
+    assert "Environment: production (log: json)" in unset
+
+    placeholder = render_startup_banner(
+        {"FLORABASE_CANONICAL_ORIGIN": "https://florabase.example.org/"},
+        version="0.1.0-beta.8",
+    )
+    assert "Origin:      placeholder, not configured" in placeholder
+
+    stripped = render_startup_banner(
+        {
+            "FLORABASE_CANONICAL_ORIGIN": (
+                "https://user:SENTINEL_CRED"
+                + "@"
+                + "flora.example.net:8443/app?tok=SENTINEL_QUERY#frag"
+            ),
+            "FLORABASE_DATABASE_URL": "postgresql+psycopg://u:SENTINEL_DBURL@db:5432/florabase",
+            "PGPASSWORD": "SENTINEL_PGPASSWORD",
+            "FLORABASE_DB_PASSWORD": "SENTINEL_DB_PASSWORD",
+            "FLORABASE_OWNER_LOGIN": "SENTINEL_OWNER_LOGIN",
+            "FLORABASE_OWNER_PASSWORD": "SENTINEL_OWNER_PASSWORD",
+            "POSTGRES_PASSWORD": "SENTINEL_POSTGRES_PASSWORD",
+            "POSTGRES_USER": "SENTINEL_POSTGRES_USER",
+            "PGHOST": "SENTINEL_PGHOST",
+            "PGUSER": "SENTINEL_PGUSER",
+            "FLORABASE_COOKIE_MODE": "SENTINEL_COOKIE",
+            "FLORABASE_CORS_ORIGINS": '["https://SENTINEL_CORS.invalid"]',
+        },
+        version="0.1.0-beta.8",
+    )
+    assert "Origin:      https://flora.example.net:8443" in stripped
+    assert "SENTINEL_" not in stripped
+
+    malformed = render_startup_banner(
+        {"FLORABASE_CANONICAL_ORIGIN": "not-a-url-SENTINEL_RAW"},
+        version="0.1.0-beta.8",
+    )
+    assert "Origin:      invalid" in malformed
+    assert "SENTINEL_RAW" not in malformed
+
+    overlong = render_startup_banner(
+        {"FLORABASE_CANONICAL_ORIGIN": "https://" + "a" * 80 + ".example.net"},
+        version="0.1.0-beta.8",
+    )
+    for line in overlong.splitlines():
+        assert len(line) <= BANNER_MAX_WIDTH
+
+
+def test_wait_db_prints_banner_first_even_on_failure_without_secrets(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("FLORABASE_REVISION", "abcdef1234567890")
+    monkeypatch.setenv("FLORABASE_CANONICAL_ORIGIN", "https://flora.example.net")
+    monkeypatch.setenv("FLORABASE_DB_PASSWORD", "change-me")
+    monkeypatch.setenv("FLORABASE_OWNER_LOGIN", "SENTINEL_LOGIN")
+    monkeypatch.setenv("FLORABASE_OWNER_PASSWORD", "SENTINEL_OWNER_PW")
+    monkeypatch.setenv(
+        "FLORABASE_DATABASE_URL",
+        "postgresql+psycopg://florabase:SENTINEL_DB_PW@db:5432/florabase",
+    )
+    monkeypatch.delenv("PGPASSWORD", raising=False)
+
+    assert invoke(monkeypatch, "wait-db") == 1
+    captured = capsys.readouterr()
+    assert captured.out.startswith("   _      _____ _")
+    assert "Florabase " in captured.out
+    assert "(abcdef1)" in captured.out
+    assert "placeholder 'change-me'" in captured.err
+    for sentinel in ("SENTINEL_LOGIN", "SENTINEL_OWNER_PW", "SENTINEL_DB_PW"):
+        assert sentinel not in captured.out
+        assert sentinel not in captured.err
+
+
+def test_validation_error_names_failing_env_var_and_model_message_without_secret(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from florabase.core.config import get_settings
+
+    sentinel = "SENTINEL_DB_SECRET_999"
+    monkeypatch.delenv("FLORABASE_DB_PASSWORD", raising=False)
+    monkeypatch.delenv("PGPASSWORD", raising=False)
+    monkeypatch.setenv("FLORABASE_ENVIRONMENT", "production")
+    monkeypatch.setenv("FLORABASE_COOKIE_MODE", "secure")
+    monkeypatch.setenv("FLORABASE_CORS_ORIGINS", "[]")
+    monkeypatch.setenv("FLORABASE_CANONICAL_ORIGIN", "https://flora.example.net")
+    monkeypatch.setenv(
+        "FLORABASE_DATABASE_URL",
+        f"postgresql+psycopg://florabase:{sentinel}@db:badport/florabase",
+    )
+    get_settings.cache_clear()
+    try:
+        assert invoke(monkeypatch, "wait-db") == 1
+        captured = capsys.readouterr()
+        assert "FLORABASE_DATABASE_URL:" in captured.err
+        assert "Database URL is not a valid SQLAlchemy URL" in captured.err
+        assert sentinel not in captured.err
+        assert sentinel not in captured.out
+
+        # Valid DB URL with sentinel password + HTTP canonical origin in production (model-level).
+        monkeypatch.setenv(
+            "FLORABASE_DATABASE_URL",
+            f"postgresql+psycopg://florabase:{sentinel}@db:5432/florabase",
+        )
+        monkeypatch.setenv("FLORABASE_CANONICAL_ORIGIN", "http://flora.example.net")
+        get_settings.cache_clear()
+        assert invoke(monkeypatch, "wait-db") == 1
+        captured = capsys.readouterr()
+        assert "Canonical public origin must use HTTPS in production" in captured.err
+        assert "FLORABASE_:" not in captured.err
+        assert sentinel not in captured.err
+        assert sentinel not in captured.out
+    finally:
+        get_settings.cache_clear()
+
+
+@pytest.mark.parametrize(
+    "args",
+    [("wait-db",), ("deploy",), ("serve",), ("init",), ("upgrade", PREVIOUS)],
+)
+def test_all_release_schema_actions_report_validation_errors_without_input(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    args: tuple[str, ...],
+) -> None:
+    from florabase.core.config import get_settings
+    from florabase.db.session import get_readiness_engine
+
+    scripts = MagicMock()
+    scripts.get_heads.return_value = [HEAD]
+    monkeypatch.setattr(
+        "florabase.db.release_schema.ScriptDirectory.from_config", lambda _: scripts
+    )
+    monkeypatch.delenv("FLORABASE_DB_PASSWORD", raising=False)
+    monkeypatch.delenv("PGPASSWORD", raising=False)
+    monkeypatch.setenv("FLORABASE_ENVIRONMENT", "production")
+    monkeypatch.setenv("FLORABASE_CANONICAL_ORIGIN", "https://flora.example.net")
+    monkeypatch.setenv("FLORABASE_LOG_FORMAT", "SENTINEL_BAD_FORMAT")
+    monkeypatch.setenv("FLORABASE_DATABASE_URL", "postgresql+psycopg://florabase@db:5432/florabase")
+    if args[0] == "deploy":
+        monkeypatch.setattr(release_schema, "validate_host_paths", lambda *_, **__: None)
+        monkeypatch.setattr(release_schema, "_require_writable_dir", lambda *_, **__: None)
+        monkeypatch.setattr(release_schema, "check_upgrade_failed", lambda *_: None)
+        monkeypatch.setattr(release_schema, "read_marker", lambda *_: None)
+        monkeypatch.setattr(release_schema, "STATE_DIR", Path("/tmp"))
+        monkeypatch.setattr(release_schema, "MEDIA_DIR", None)
+    get_readiness_engine.cache_clear()
+    get_settings.cache_clear()
+    try:
+        assert invoke(monkeypatch, *args) == 1
+        captured = capsys.readouterr()
+        assert "FLORABASE_LOG_FORMAT:" in captured.err
+        assert "SENTINEL_BAD_FORMAT" not in captured.err
+        assert "SENTINEL_BAD_FORMAT" not in captured.out
+    finally:
+        get_readiness_engine.cache_clear()
+        get_settings.cache_clear()

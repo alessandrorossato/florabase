@@ -3151,6 +3151,23 @@
       ],
       "priority": "P2",
       "status": "implemented"
+    },
+    {
+      "id": "RUNTIME-IDLE-001",
+      "category": "infrastructure",
+      "description": "Lower idle container CPU on low-power NAS hosts, filter loopback health probe access logs, print a plain-ASCII backend startup banner, and name failing settings fields in release_schema",
+      "acceptance_criteria": [
+        "backend/Dockerfile probes /api/v1/health with busybox wget at 30s interval (--start-period=60s --start-interval=2s --retries=3), postgres/Dockerfile (18.6-alpine-florabase.5) and frontend/Dockerfile move to 30s interval with --start-interval, compose.yaml and compose.dev.yaml stay unchanged, /api/v1/ready semantics are unchanged, and Engine 24 compatibility for --start-interval is evidenced",
+        "Measured 120s idle CPU on the compose.yaml stack for backend and db containers and single-probe wall times confirm concrete before-vs-after reduction",
+        "HealthProbeAccessFilter on uvicorn.access drops 2xx GET /api/v1/health and /api/v1/ready only for loopback clients (127.0.0.1 / ::1) while keeping non-loopback probes, non-2xx responses, other paths, and auth query-string scrubbing",
+        "release_schema wait-db prints a plain-ASCII <=72-column startup banner (version, FLORABASE_REVISION short SHA, sanitized origin, environment, log format, project URL; no secrets) as its first stdout output even on failure",
+        "release_schema.main catches pydantic.ValidationError across all actions and prints each failing FLORABASE_* env var name and message (or model-level message) without input, ctx, url, or secrets"
+      ],
+      "dependencies": [
+        "INSTALL-003"
+      ],
+      "priority": "P1",
+      "status": "verified"
     }
   ]
 }
