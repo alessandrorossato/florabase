@@ -90,6 +90,7 @@ operator can close them with a one-line acceptance record.
 | PERF-001 | `verified` | 1.0 baseline | progress.md:3275 | Depends on unverified: UX-006. |
 | SECURITY-001 | `verified` | 1.0 baseline | progress.md mentions only (1) |  |
 | SECURITY-002 | `verified` | 1.0 baseline | progress.md mentions only (1) |  |
+| ENG-03 | `implemented` | best-effort (not certified) | `backend/scripts/check_api_routes.py`, `backend/tests/test_infrastructure.py` | Confirmed `best-effort` by operator decision on 2026-11-22 (added after the 156-entry baseline). |
 | DOMAIN-001 | `verified` | 1.0 baseline | progress.md mentions only (1) |  |
 | DATABASE-001 | `verified` | 1.0 baseline | progress.md mentions only (1) |  |
 | BACKEND-001 | `verified` | 1.0 baseline | progress.md mentions only (1) |  |
@@ -209,9 +210,9 @@ operator can close them with a one-line acceptance record.
 | BETA-IMAGE-001 | `in_progress` | PRE-1.0 release work | progress.md:7439, 7492, 7501 · `beta-image-001-qa-corrections.md`; `beta-image-001.md` | Legacy reference: a genuine beta.1 milestone; text left unchanged. Images are published through beta.5; its pipeline feeds G-DIST. |
 | beta-postgres-repro-001 | `in_progress` | PRE-1.0 release work | progress.md:412 | Hosted reproduction pending at the feature record. Feeds G-DIST. |
 | BETA-SECURITY-001 | `in_progress` | PRE-1.0 release work | progress.md:7508, 7533, 7579 · `beta-security-001-lookup-correction.md`; `beta-security-001.md` | PostgreSQL scan findings and approvals recorded as open at the feature record. Feeds G-SEC. |
-| BETA-RUNTIME-001 | `in_progress` | best-effort (not certified) | progress.md:7546, 7555, 7568, 7579 · `beta-runtime-001-qa-handoff.md`; `beta-runtime-001.md` | Controller runtime, withdrawn by ADR 0008 with INSTALL-001; its class and status await an operator disposition. |
+| BETA-RUNTIME-001 | `implemented` | historical record | progress.md:7546, 7555, 7568, 7579 · `beta-runtime-001-qa-handoff.md`; `beta-runtime-001.md` | Digest-pinned Dockhand controller runtime was withdrawn by ADR 0008 (INSTALL-001) and ADR 0010 (INSTALL-003, `:latest` deployable `compose.yaml`); closed as historical record by operator decision on 2026-11-22. Real-host gates moved to BETA-ACCEPTANCE-001. |
 | BETA-DATA-001 | `in_progress` | PRE-1.0 release work | progress.md:8276, 8304 · `beta-data-001.md`; `beta-data-001-templates.md` · 7665df3#159 | Real source inventory, published bundle and Synology acceptance outstanding. Feeds G-SOAK. |
-| BETA-ACCEPTANCE-001 | `planned` | PRE-1.0 release work | no progress.md record | Legacy reference: beta admission for v0.1.0-beta.1 with a proposed seven-day soak; text left unchanged. It does not satisfy or shorten G-SOAK (14 days on a release candidate, decision 8). |
+| BETA-ACCEPTANCE-001 | `planned` | PRE-1.0 release work | no progress.md record | Legacy reference: beta admission for v0.1.0-beta.1 with a proposed seven-day soak; real-host persistence, paired backup/restore, HTTPS/origin/CSRF and failure-recovery gates from BETA-RUNTIME-001 folded in on 2026-11-22 for the current `compose.yaml`. It does not satisfy or shorten G-SOAK (14 days on a release candidate, decision 8). |
 | WORKFLOW-RETIRE-AUTH-001 | `implemented` | tooling (not a release deliverable) | progress.md:229 | Delivered in #167; QA findings resolved; no canonical receipt recorded. |
 | TEST-DATA-002 | `implemented` | tooling (not a release deliverable) | progress.md:7461, 7477 · `test-data-002-design.md` · 1e44c3f#141 | "Delta QA pending" at the feature record; Golden DEV runs on this profile. |
 | UI-DESIGN-001 | `verified` | 1.0 baseline | progress.md:7587, 7594 · d94f275#145 | Depends on unverified: UI-POLISH-001, RELEASE-VISUAL-AUDIT-001. |

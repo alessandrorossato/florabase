@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Fixtures exercise operator-only finish even when an agent runs the enclosing canonical gate.
-unset AGENT_ID
+unset AGENT_ID KEEP_WORKTREE
 
 readonly repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly feature_start="${repository_root}/scripts/feature-start.sh"
@@ -184,8 +184,12 @@ expect_failure env -C "${linked}" PATH="${mock_bin}:${PATH}" MOCK_PR_STATE=MERGE
 git -C "${work}" diff --cached --quiet && fail "primary staged work was lost"
 [[ "$(git -C "${linked}" branch --show-current)" == "feat/finish" ]] || fail "failed finish detached feature"
 git -C "${work}" restore --staged --worktree tracked.txt
-env -C "${linked}" PATH="${mock_bin}:${PATH}" MOCK_PR_STATE=MERGED \
-  MOCK_HEAD_OID="${feature_oid}" MOCK_MERGE_OID="${merge_oid}" "${feature_finish}" >/dev/null
+finish_output="$(
+  env -C "${linked}" PATH="${mock_bin}:${PATH}" MOCK_PR_STATE=MERGED \
+    MOCK_HEAD_OID="${feature_oid}" MOCK_MERGE_OID="${merge_oid}" "${feature_finish}"
+)"
+[[ "${finish_output##*$'\n'}" == "WORKTREE: RETAINED ${linked} (provider-managed)" ]] ||
+  fail "linked finish did not emit expected WORKTREE line: ${finish_output}"
 [[ "$(git -C "${work}" branch --show-current)" == "main" ]] || fail "primary did not retain main"
 [[ "$(git -C "${work}" rev-parse HEAD)" == "${merge_oid}" ]] || fail "primary main not fast-forwarded"
 [[ -z "$(git -C "${work}" status --porcelain)" ]] || fail "primary index/worktree mismatch after finish"

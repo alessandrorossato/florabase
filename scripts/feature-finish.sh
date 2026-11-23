@@ -12,7 +12,9 @@ branch="$(git branch --show-current)"
 [[ -z "$(git status --porcelain)" ]] || fail "working tree is not clean"
 git remote get-url origin >/dev/null 2>&1 || fail "origin remote is required"
 command -v gh >/dev/null 2>&1 || fail "GitHub CLI is required to verify the squash-merged PR"
-helper="$(dirname "${BASH_SOURCE[0]}")/feature_worktree.py"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+helper="${script_dir}/feature_worktree.py"
+resources_helper="${script_dir}/workflow_resources.py"
 python3 "${helper}" require-operator || fail "operator ownership check failed"
 
 branch_oid="$(git rev-parse HEAD)"
@@ -44,27 +46,45 @@ if [[ "${git_dir}" != "${common_dir}" ]]; then
   # The main worktree is the first NUL-delimited record. Never reconstruct paths from .git.
   IFS= read -r -d '' first_record < <(git worktree list --porcelain -z) || true
   primary="${first_record#worktree }"
+  worktree_path="$(git rev-parse --show-toplevel)"
   [[ "$(git -C "${primary}" branch --show-current)" == "main" ]] ||
     fail "primary checkout ${primary} must be on main; resolve its branch deliberately"
   [[ -z "$(git -C "${primary}" status --porcelain)" ]] ||
     fail "primary checkout ${primary} has staged or working changes; preserve/resolve them before finish"
-  # All Git/merge/primary safety checks passed; retire this worktree before detaching.
-  python3 "$(dirname "${BASH_SOURCE[0]}")/workflow_resources.py" quality-clean ||
+  # All Git/merge/primary safety checks passed; retire this worktree's Quality before detaching.
+  python3 "${resources_helper}" quality-clean ||
     fail "Quality retirement failed; branch retained. Inspect make workflow-resources"
   # Fast-forward uses Git's normal index/worktree update, never a raw main ref write.
   git -C "${primary}" merge --ff-only origin/main
   git switch --detach "${branch_oid}"
-  printf 'Linked feature worktree retained at %s; retire it with make feature-retire from the primary checkout, or through the agent tool that created it\n' "$(git rev-parse --show-toplevel)"
+  # Proof for guarded retirement; clears writer/handoff state now that no feature remains.
+  python3 "${helper}" mark-finished --branch "${branch}" --sha "${branch_oid}" --merge "${merge_oid}"
+  # A squash-merged branch is not an ancestor of main. GitHub state and both exact OIDs were checked
+  # above, so delete the unchanged local ref atomically without using force-delete.
+  git -C "${primary}" update-ref -d "refs/heads/${branch}" "${branch_oid}"
+  git -C "${primary}" fetch --prune origin
+  git -C "${primary}" status --short --branch
+  if [[ "${KEEP_WORKTREE:-}" == "1" ]]; then
+    printf 'Linked feature worktree retained at %s; retire it with make feature-retire from the primary checkout, or through the agent tool that created it\n' "${worktree_path}"
+    printf 'WORKTREE: RETAINED %s (KEEP_WORKTREE=1)\n' "${worktree_path}"
+    exit 0
+  fi
+  retire_helper="${primary}/scripts/feature_worktree.py"
+  if [[ ! -f "${retire_helper}" ]]; then
+    retire_helper="${helper}"
+  fi
+  cd "${primary}"
+  exec python3 "${retire_helper}" retire-finished --path "${worktree_path}"
 else
-  python3 "$(dirname "${BASH_SOURCE[0]}")/workflow_resources.py" quality-clean ||
+  python3 "${resources_helper}" quality-clean ||
     fail "Quality retirement failed; branch retained. Inspect make workflow-resources"
   git switch main
   git merge --ff-only origin/main
+  # Proof for guarded retirement; clears writer/handoff state now that no feature remains.
+  python3 "${helper}" mark-finished --branch "${branch}" --sha "${branch_oid}" --merge "${merge_oid}"
+  # A squash-merged branch is not an ancestor of main. GitHub state and both exact OIDs were checked
+  # above, so delete the unchanged local ref atomically without using force-delete.
+  git update-ref -d "refs/heads/${branch}" "${branch_oid}"
+  git fetch --prune origin
+  git status --short --branch
 fi
-# Proof for guarded retirement; clears writer/handoff state now that no feature remains.
-python3 "${helper}" mark-finished --branch "${branch}" --sha "${branch_oid}" --merge "${merge_oid}"
-# A squash-merged branch is not an ancestor of main. GitHub state and both exact OIDs were checked
-# above, so delete the unchanged local ref atomically without using force-delete.
-git update-ref -d "refs/heads/${branch}" "${branch_oid}"
-git fetch --prune origin
-git status --short --branch

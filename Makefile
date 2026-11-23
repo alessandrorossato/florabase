@@ -262,7 +262,8 @@ smoke-workflow-resources: ## Prove retirement and protected-project isolation on
 feature-deliver: ## Push the verified committed feature and wait for protected squash auto-merge
 	@./scripts/feature-deliver.py
 
-feature-finish: ## Remove the current local branch after its GitHub PR was merged
+feature-finish: export KEEP_WORKTREE := $(KEEP_WORKTREE)
+feature-finish: ## Remove merged local branch and auto-retire managed worktree when safe (KEEP_WORKTREE=1 to keep)
 	@./scripts/feature-finish.sh
 
 .PHONY: feature-batch-plan feature-batch-prepare feature-batch-review feature-batch-finish smoke-feature-batch
@@ -275,7 +276,8 @@ feature-batch-prepare: ## Merge pinned source tips in the claimed integration wo
 feature-batch-review: ## Record independent approval of the exact committed batch
 	@PYTHONDONTWRITEBYTECODE=1 python3 scripts/feature_batch.py review "$(REVIEW)"
 
-feature-batch-finish: ## Finish proven batch sources from primary main after operator approval
+feature-batch-finish: export KEEP_WORKTREE := $(KEEP_WORKTREE)
+feature-batch-finish: ## Finish proven batch sources and auto-retire managed worktrees when safe (KEEP_WORKTREE=1 to keep)
 	@PYTHONDONTWRITEBYTECODE=1 python3 scripts/feature_batch.py finish "$(PR)" $(if $(SOURCE),--source "$(SOURCE)",)
 
 smoke-feature-batch: ## Exercise real Git, Docker ownership and retirement on disposable batch worktrees

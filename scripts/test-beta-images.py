@@ -742,7 +742,8 @@ class ReleaseTests(unittest.TestCase):
                 "if sys.argv[1:] == ['--help']:\n"
                 "    print('--release-candidate')\n"
                 "else:\n"
-                "    assert sys.argv[1:] == ['--release-candidate']\n"
+                "    if sys.argv[1:] != ['--release-candidate']:\n"
+                "        sys.exit(2)\n"
                 "    sys.exit(3)\n"
             )
             with self.assertRaises(subprocess.CalledProcessError) as error:
@@ -2767,6 +2768,39 @@ class SharedPublicationTests(unittest.TestCase):
             self.assertNotIn("PROMOTE", state["stages"])
             self.assertEqual(state["promoted"], {})
             self.assertEqual(state["promoted_latest"], {})
+
+    def test_runtime_dev_tool_check_survives_python_optimize(self) -> None:
+        smoke_path = Path(__file__).with_name("smoke-beta-images.py")
+        tree = ast.parse(smoke_path.read_text(encoding="utf-8"))
+        snippet: str | None = None
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Assign)
+                and len(node.targets) == 1
+                and isinstance(node.targets[0], ast.Name)
+                and node.targets[0].id == "runtime_check"
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str)
+            ):
+                snippet = node.value.value
+                break
+        self.assertIsNotNone(snippet)
+        assert snippet is not None
+        parsed = ast.parse(snippet)
+        self.assertFalse(any(isinstance(node, ast.Assert) for node in ast.walk(parsed)))
+        with tempfile.TemporaryDirectory() as temporary:
+            fake_site = Path(temporary)
+            (fake_site / "florabase.py").write_text("__version__ = '0.1.0-beta.8'\n")
+            (fake_site / "pytest.py").write_text("# forbidden dev tool\n")
+            result = subprocess.run(
+                [sys.executable, "-O", "-c", snippet],
+                env={**os.environ, "PYTHONPATH": str(fake_site), "PYTHONOPTIMIZE": "1"},
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("dev tools in runtime image: pytest", result.stderr)
 
 
 if __name__ == "__main__":

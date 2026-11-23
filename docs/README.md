@@ -30,7 +30,8 @@ handoffs, design notes, reviews and evidence are archived under [`archive/`](arc
 - [UI Foundation v0.1 contract](ui-contract.md) and [six-variant token matrix](themes-001-token-matrix.md)
 - [Engineering progress](progress.md) — recent milestones (`v0.1.0-beta.7` onward)
 - [Feature backlog](features.json) — machine-readable feature graph and statuses
-- [Contributing](../CONTRIBUTING.md) and [Agent guide](../AGENTS.md)
+- [Contributing](../CONTRIBUTING.md), [Agent guide](../AGENTS.md), and
+  [Agent prompt template](agent-prompt-template.md)
 
 ## Architecture & domain
 

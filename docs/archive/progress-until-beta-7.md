@@ -23,7 +23,9 @@
   by tests and the smoke. Compose 5.7.1 was observed to stop and remove the previous backend before
   starting the recreated `migrate`; the guide asks other managers to stop the stack first.
   Residual: attestation inputs check the compose.yaml asset name, and the publisher compares its
-  bytes with the rendered file. The backend dependency group from Dependabot PR #201 (FastAPI
+  bytes with the rendered file. (Resolved 2026-11-22 by INSTALL-003: the rendered asset was removed
+  and the release manifest binds the tracked `compose.yaml` by SHA-256 via `compose_template()`.)
+  The backend dependency group from Dependabot PR #201 (FastAPI
   0.163.2, psycopg 3.3.9, pwdlib 0.4.2, pydantic-settings 2.16.3, python-multipart 0.0.34,
   SQLAlchemy 2.0.58, pip-tools 7.7.0, Ruff 0.17.5) is folded in with regenerated hash locks.
   The documentation handoff to Antigravity Neon was not taken up; on the operator's explicit
