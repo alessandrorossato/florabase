@@ -180,6 +180,7 @@
     "WF-SCOPE-001": "tooling",
     "VERIFY-SPEED-001": "tooling",
     "WF-CLEANUP-001": "tooling",
-    "DOCS-002": "best-effort"
+    "DOCS-002": "best-effort",
+    "RUNTIME-IDLE-001": "release-work"
   }
 }

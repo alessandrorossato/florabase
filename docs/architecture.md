@@ -143,9 +143,15 @@ HttpOnly, SameSite=Strict cookie; state changes additionally require exact-Origi
 CSRF validation. Reverse-proxy headers never assert identity. See
 [ADR 0005](decisions/0005-authentication-and-sessions.md) and [security.md](security.md).
 
-Application logs go to stdout. Production defaults to JSON. `/api/v1/health` is liveness;
-`/api/v1/ready` executes a database readiness check. `make health` reaches both through the frontend
-proxy.
+Application logs go to stdout. Production defaults to JSON. At container start,
+`release_schema wait-db` prints a plain-ASCII startup banner (version, image revision, scheme and
+authority of `FLORABASE_CANONICAL_ORIGIN`, environment, log format, and project URL; never secrets)
+directly to stdout before connecting to PostgreSQL. `/api/v1/health` is liveness and is what the
+backend image `HEALTHCHECK` probes (the `release_schema serve` guard already proves database
+connectivity and exact schema head before `uvicorn` listens); `/api/v1/ready` executes a database
+readiness check for operators and `make health`, which reaches both through the frontend proxy.
+Loopback 2xx `GET` probes to `/api/v1/health` and `/api/v1/ready` are filtered from
+`uvicorn.access`; probes from other hosts and non-2xx responses stay logged.
 
 ## Deliberately deferred
 
