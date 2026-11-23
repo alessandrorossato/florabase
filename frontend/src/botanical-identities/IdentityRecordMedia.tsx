@@ -122,19 +122,26 @@ export function IdentityRecordMedia({
         </div>
       ) : null}
       {result?.images.length === 0 && !result.failed && !result.legacy && (
-        <p className="identity-media-empty">
-          No images are attached to these linked records yet. Add photos from
-          the source record.
-        </p>
+        <div className="identity-media-empty">
+          <p>No photos on the records of this species yet. Add one to:</p>
+          <ul className="identity-media-records">
+            {records.slice(0, 12).map((r) => (
+              <li key={`${r.kind}:${r.id}`}>
+                <a href={r.href}>{r.label}</a>
+                <small>{r.kind}</small>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       {result?.legacy ? (
         <p>
           Some older photo entries can be viewed in their linked source records.
         </p>
       ) : null}
-      <div className="identity-thumbnail-gallery">
+      <ul className="identity-thumbnail-grid">
         {result?.images.map(({ asset, caption, owner }) => (
-          <figure key={`${owner.target}:${owner.id}:${asset.id}`}>
+          <li key={`${owner.target}:${owner.id}:${asset.id}`}>
             <a
               className="identity-thumbnail-link"
               href={`#/media/${asset.id}`}
@@ -142,26 +149,15 @@ export function IdentityRecordMedia({
             >
               <MediaPreview asset={asset} />
             </a>
-            <figcaption>
-              <small>
-                {asset.kind === "local"
-                  ? "Uploaded image"
-                  : asset.content_url
-                    ? "External image · saved copy"
-                    : "External reference"}
-              </small>
-              <p>
-                {caption ??
-                  asset.title ??
-                  asset.original_filename ??
-                  "Untitled image"}
-              </p>
-              <a href={owner.href}>{owner.label}</a>
-              <small>{owner.kind}</small>
-              {asset.attribution && <small>{asset.attribution}</small>}
-              {asset.licence_label && (
-                <small>
-                  {asset.licence_url ? (
+            <a className="identity-thumbnail-owner" href={owner.href}>
+              {owner.kind} · {owner.label}
+            </a>
+            {(asset.attribution ?? asset.licence_label ?? asset.source_url) && (
+              <small className="identity-thumbnail-credit">
+                {asset.attribution}
+                {asset.attribution && asset.licence_label && " · "}
+                {asset.licence_label &&
+                  (asset.licence_url ? (
                     <a
                       href={asset.licence_url}
                       target="_blank"
@@ -171,18 +167,20 @@ export function IdentityRecordMedia({
                     </a>
                   ) : (
                     asset.licence_label
-                  )}
-                </small>
-              )}
-              {asset.source_url && (
-                <a href={asset.source_url} target="_blank" rel="noreferrer">
-                  Image source
-                </a>
-              )}
-            </figcaption>
-          </figure>
+                  ))}
+                {asset.source_url && (
+                  <>
+                    {(asset.attribution ?? asset.licence_label) && " · "}
+                    <a href={asset.source_url} target="_blank" rel="noreferrer">
+                      Image source
+                    </a>
+                  </>
+                )}
+              </small>
+            )}
+          </li>
         ))}
-      </div>
+      </ul>
       {records.length > limit && (
         <button
           className="button--secondary"
@@ -192,15 +190,8 @@ export function IdentityRecordMedia({
             setLimit((n) => n + 6);
           }}
         >
-          Show images from more linked records
+          Show photos from more records
         </button>
-      )}
-      {records.length > 0 && (
-        <p className="field-help">
-          Checked {Math.min(limit, records.length)} of {records.length} linked
-          records. External references without a saved copy open in Media; no
-          remote image is loaded here.
-        </p>
       )}
     </>
   );

@@ -137,6 +137,7 @@
     "SCHEDULE-UX-001": "baseline",
     "UI-POLISH-001": "certify",
     "UI-REVIEW-001": "best-effort",
+    "UI-REVIEW-002": "best-effort",
     "TEST-DATA-001": "tooling",
     "BETA-FOUNDATION-001": "record",
     "BETA-IMAGE-001": "release-work",

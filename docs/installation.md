@@ -373,10 +373,33 @@ from a protected pipe; keep the password out of arguments, environment variables
 
 ## Optional botanical reference datasets
 
-Florabase runs without them. The production `compose.yaml` of this release mounts no reference
-dataset folder, so WFO and WCVP v16 index lookups are unavailable there. Only indexes built by
-Florabase's own builders from the pinned official archives are ever supported
+Florabase runs without them: WFO and WCVP v16 index lookups then report themselves unavailable.
+Only indexes built by Florabase's own builders from the pinned official archives are ever supported
 ([SQLite reference indexes](security/beta-distribution-001/sqlite-reference-indexes.md)).
+
+To enable them, put the built files in a separate host folder, for example
+`/volume1/docker/florabase/reference/`, keeping each index next to its `.sha256` seal:
+
+```text
+reference/wfo-2026-06.sqlite
+reference/wfo-2026-06.sha256
+reference/wcvp-v16/index.sqlite
+reference/wcvp-v16/index.sha256
+```
+
+The files must be readable by the backend container user. In `compose.yaml`, add these lines to the
+`backend` service, keeping the existing entries, then redeploy:
+
+```yaml
+    environment:
+      - FLORABASE_WFO_SNAPSHOT_PATH=/var/lib/florabase/reference/wfo-2026-06.sqlite
+      - FLORABASE_WCVP_V16_SNAPSHOT_PATH=/var/lib/florabase/reference/wcvp-v16/index.sqlite
+    volumes:
+      - /volume1/docker/florabase/reference:/var/lib/florabase/reference:ro
+```
+
+Leave out the line for any index you do not have. A missing or unreadable file never stops the
+stack: the matching lookups stay unavailable.
 
 ## Troubleshooting
 
