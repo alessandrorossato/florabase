@@ -17,6 +17,7 @@ from pathlib import Path
 from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
+from pydantic import ValidationError
 from sqlalchemy import Connection, select, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import DBAPIError
@@ -26,6 +27,7 @@ from alembic import command
 from florabase.auth.model import User
 from florabase.auth.security import normalize_login_name, validate_password
 from florabase.auth.service import bootstrap_owner, lock_bootstrap
+from florabase.core.banner import print_startup_banner
 from florabase.core.config import get_settings
 from florabase.db.session import get_engine, get_readiness_engine
 
@@ -551,6 +553,20 @@ def create_first_owner(owner: tuple[str, str] | None) -> None:
     )
 
 
+def _format_validation_errors(error: ValidationError) -> list[str]:
+    """Format Pydantic settings errors by env var name without input, ctx or url."""
+    formatted: list[str] = []
+    for item in error.errors(include_url=False, include_context=False, include_input=False):
+        loc = item["loc"]
+        msg = item["msg"]
+        if loc:
+            name = "FLORABASE_" + "_".join(str(part) for part in loc).upper()
+            formatted.append(f"{name}: {msg}")
+        else:
+            formatted.append(msg)
+    return formatted
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     actions = parser.add_subparsers(dest="action", required=True)
@@ -563,6 +579,7 @@ def main() -> int:
     args = parser.parse_args()
     try:
         if args.action == "wait-db":
+            print_startup_banner(os.environ)
             reject_placeholder_config(os.environ)
             wait_for_database()
             return 0
@@ -590,6 +607,11 @@ def main() -> int:
             maintain(config, scripts, head, previous)
     except SchemaError as error:
         sys.stderr.write(f"schema-guard: {error}\n")
+        return 1
+    except ValidationError as error:
+        sys.stderr.write(f"schema-guard: {args.action} failed: invalid configuration\n")
+        for detail in _format_validation_errors(error):
+            sys.stderr.write(f"schema-guard:   {detail}\n")
         return 1
     except Exception as error:
         # Settings and driver exceptions can include submitted credentials.

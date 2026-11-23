@@ -5,6 +5,32 @@ Notable changes to Florabase, newest first. Versions follow the
 [docs/progress.md](docs/progress.md); this file lists what an operator of an installation needs
 to know.
 
+## Unreleased
+
+### Added
+
+- Plain-ASCII startup banner printed once per container start as the first output of
+  `release_schema wait-db`, showing Florabase version, image revision (`FLORABASE_REVISION`),
+  sanitized origin, environment, log format, and project URL without printing secrets
+  (`RUNTIME-IDLE-001`).
+- `release_schema` configuration validation errors now name each failing `FLORABASE_*` environment
+  variable (and model-level message) without printing input values, context or URLs
+  (`RUNTIME-IDLE-001`).
+
+### Changed
+
+- Lowered idle container CPU on low-power hosts (`RUNTIME-IDLE-001`):
+  - Backend image `HEALTHCHECK` now uses busybox `wget` against `/api/v1/health` (liveness) on a
+    30 s interval (`--start-period=60s --start-interval=2s --retries=3`) instead of spawning Python
+    against `/api/v1/ready` every 10 s; `/api/v1/ready` remains unchanged for operators and
+    `make health`.
+  - PostgreSQL (`18.6-alpine-florabase.5`) and frontend image health checks move to a 30 s interval
+    with short `--start-interval` (`1s` / `2s`), which Docker Engine 25+ honours and Engine 24
+    safely ignores (cold start on Engine 24 may take up to one 30 s interval per service in the
+    startup chain).
+  - Successful (2xx) loopback `GET` probes to `/api/v1/health` and `/api/v1/ready` are filtered out
+    of `uvicorn.access`; non-loopback probes and non-2xx responses stay logged.
+
 ## v0.1.0-beta.8 — 2026-11-22
 
 Prerelease of the private beta series: changes since `v0.1.0-beta.7`. The installation is now a

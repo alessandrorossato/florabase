@@ -37,7 +37,7 @@ LABEL org.opencontainers.image.title="Florabase frontend" \
     org.opencontainers.image.revision=$REVISION \
     org.opencontainers.image.source=$SOURCE \
     org.opencontainers.image.licenses="AGPL-3.0-or-later"
-HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=6 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --start-interval=2s --retries=6 \
     CMD wget --quiet --tries=1 --spider http://127.0.0.1:8080/healthz
 USER root
 # Alpine fixes for musl CVE-2026-107891 (now carried by the base) and zlib CVE-2026-85091 (base has

@@ -4,8 +4,10 @@ from pathlib import Path
 from typing import Self
 from urllib.parse import urlsplit
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine import make_url
+from sqlalchemy.exc import ArgumentError
 
 
 class Environment(StrEnum):
@@ -56,6 +58,15 @@ class Settings(BaseSettings):
     wcvp_v16_require_seal: bool = False
     wfo_snapshot_path: Path | None = None
     attachment_max_bytes: int = Field(default=25 * 1024 * 1024, ge=1, le=25 * 1024 * 1024)
+
+    @field_validator("database_url")
+    @classmethod
+    def validate_database_url(cls, value: str) -> str:
+        try:
+            make_url(value)
+        except ArgumentError, ValueError:
+            raise ValueError("Database URL is not a valid SQLAlchemy URL") from None
+        return value
 
     @model_validator(mode="after")
     def validate_secure_production_settings(self) -> Self:

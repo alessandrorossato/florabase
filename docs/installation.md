@@ -23,7 +23,7 @@ and defines three non-root services. No container runs as root:
 
 | Service | Container | Role |
 | --- | --- | --- |
-| `db` | `florabase-db` (`70:70`) | PostgreSQL 18 (`florabase-postgres:latest`, currently `18.6-alpine-florabase.4`). Refuses the `change-me` placeholder password, validates folder owners, modes, empty-folder rules, marker and cluster identity before PostgreSQL starts; pins session `timezone` to `UTC`. |
+| `db` | `florabase-db` (`70:70`) | PostgreSQL 18 (`florabase-postgres:latest`, currently `18.6-alpine-florabase.5`). Refuses the `change-me` placeholder password, validates folder owners, modes, empty-folder rules, marker and cluster identity before PostgreSQL starts; pins session `timezone` to `UTC`. |
 | `backend` | `florabase-backend` (`10001:10001`) | Runs `florabase-start`: refuses `change-me`, waits for `db`, runs the guarded deploy step (mount separation via `stat` and `/proc/self/mountinfo`, backup checks, advisory lock, init/keep/verified pre-upgrade dump and upgrade, atomic marker, one-time first owner), scrubs owner variables, then `exec`s the exact-head API server (`release_schema serve`). |
 | `frontend` | `florabase-frontend` (`101:101`) | The web app and the only published port, bound to `127.0.0.1:8080`. |
 
@@ -121,6 +121,14 @@ installation and creates the owner. If it fails, for example because of a wrong 
 correct the variable and deploy again: the pending installation is resumed without emptying the
 folder (`db` keeps `postgres/installation.pending` until `state/installation.env` is written, and
 `backend` keeps `state/installation.pending` across initial schema creation).
+
+On each start, `backend` prints a plain-ASCII startup banner as its first stdout lines (version,
+image revision, scheme and authority of `FLORABASE_CANONICAL_ORIGIN`, environment, log format, and
+project URL; passwords, database URLs and owner variables are never printed). Container image health
+checks run every 30 s once healthy (`backend` probes `/api/v1/health`; `/api/v1/ready` stays the
+operator database readiness endpoint). Docker Engine 25+ honours the shorter `start-interval`
+(`1s`–`2s`) during startup; Engine 24 ignores `start-interval`, so a cold start on Engine 24 can
+take up to one 30 s interval per service in the `db` → `backend` → `frontend` chain.
 
 ### 4. Sign in as the owner
 

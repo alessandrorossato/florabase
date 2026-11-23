@@ -25,7 +25,12 @@ from florabase.auth.dependencies import AuthenticatedActor, require_authenticate
 from florabase.auth.model import AuthSession
 from florabase.auth.service import InvalidCredentialsError
 from florabase.core.config import CookieMode, Environment, LogFormat, Settings, get_settings
-from florabase.core.logging import JsonFormatter, configure_logging
+from florabase.core.logging import (
+    AuthAccessFilter,
+    HealthProbeAccessFilter,
+    JsonFormatter,
+    configure_logging,
+)
 from florabase.db.session import (
     READINESS_CONNECT_TIMEOUT_SECONDS,
     check_database,
@@ -72,17 +77,85 @@ def test_json_formatter_includes_exception() -> None:
 
 def test_configure_logging_supports_json_and_text() -> None:
     root = logging.getLogger()
+    access = logging.getLogger("uvicorn.access")
     original_handlers = root.handlers.copy()
     original_level = root.level
+    original_filters = access.filters.copy()
     try:
+        access.filters.clear()
         configure_logging(settings())
         assert isinstance(root.handlers[0].formatter, JsonFormatter)
 
         configure_logging(settings(log_format=LogFormat.TEXT))
         assert not isinstance(root.handlers[0].formatter, JsonFormatter)
+        assert sum(isinstance(item, AuthAccessFilter) for item in access.filters) == 1
+        assert sum(isinstance(item, HealthProbeAccessFilter) for item in access.filters) == 1
     finally:
         root.handlers = original_handlers
         root.setLevel(original_level)
+        access.filters = original_filters
+
+
+def _access_record(client: str, method: str, path: str, status: int) -> logging.LogRecord:
+    return logging.LogRecord(
+        "uvicorn.access",
+        logging.INFO,
+        "",
+        0,
+        '%s - "%s %s HTTP/%s" %d',
+        (client, method, path, "1.1", status),
+        None,
+    )
+
+
+@pytest.mark.parametrize(
+    "client",
+    ["127.0.0.1", "127.0.0.1:54321", "::1", "::1:8080", "::1:54321", "[::1]:54321"],
+)
+@pytest.mark.parametrize("path", ["/api/v1/health", "/api/v1/ready"])
+def test_health_probe_filter_drops_loopback_2xx(client: str, path: str) -> None:
+    probe_filter = HealthProbeAccessFilter()
+    assert not probe_filter.filter(_access_record(client, "GET", path, 200))
+
+
+@pytest.mark.parametrize(
+    ("client", "method", "path", "status"),
+    [
+        ("127.0.0.1:54321", "GET", "/api/v1/ready", 503),
+        ("127.0.0.1:54321", "GET", "/api/v1/health", 500),
+        ("::1:54321", "GET", "/api/v1/ready", 503),
+        ("198.51.100.3:54321", "GET", "/api/v1/health", 200),
+        ("198.51.100.3:54321", "GET", "/api/v1/ready", 200),
+        ("203.0.113.5:1234", "GET", "/api/v1/ready", 200),
+        ("2001:db8::1:443", "GET", "/api/v1/health", 200),
+        ("127.0.0.1:54321", "GET", "/api/v1/plants", 200),
+        ("127.0.0.1:54321", "POST", "/api/v1/health", 200),
+        ("127.0.0.1:54321", "GET", "/api/v1/health?check=1", 200),
+        ("127.0.0.1:notaport", "GET", "/api/v1/health", 200),
+    ],
+)
+def test_health_probe_filter_keeps_non_loopback_errors_and_other_requests(
+    client: str, method: str, path: str, status: int
+) -> None:
+    probe_filter = HealthProbeAccessFilter()
+    assert probe_filter.filter(_access_record(client, method, path, status))
+
+
+def test_health_probe_filter_coexists_with_auth_query_scrubbing() -> None:
+    auth_filter = AuthAccessFilter()
+    probe_filter = HealthProbeAccessFilter()
+
+    auth_record = _access_record(
+        "127.0.0.1:54321", "POST", "/api/v1/auth/password?token=canary", 400
+    )
+    assert auth_filter.filter(auth_record)
+    assert probe_filter.filter(auth_record)
+    assert "canary" not in auth_record.getMessage()
+    assert "/api/v1/auth/password" in auth_record.getMessage()
+
+    probe_record = _access_record("127.0.0.1:54321", "GET", "/api/v1/health", 200)
+    assert auth_filter.filter(probe_record)
+    assert not probe_filter.filter(probe_record)
 
 
 def test_database_check_executes_probe() -> None:

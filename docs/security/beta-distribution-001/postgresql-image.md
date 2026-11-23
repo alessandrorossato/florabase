@@ -1,5 +1,21 @@
 # Florabase PostgreSQL image (`florabase-postgres`)
 
+## `18.6-alpine-florabase.5` (2026-11-23, RUNTIME-IDLE-001)
+
+`18.6-alpine-florabase.5` keeps the exact same upstream `postgres:18.6-alpine` base digest, Alpine
+security package pins, `gosu` removal, `USER 70:70`, `ENV`, `CMD`, and entrypoint guards as `.4`,
+changing only the image `HEALTHCHECK` cadence to reduce idle container exec overhead on low-power
+hosts:
+
+- `HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --start-interval=1s --retries=4`
+  (effective failure tolerance `4 × 30s = 120s`, `150s` with start period, ≥ previous `24 × 5s`;
+  Docker Engine 24 safely ignores `StartInterval` in OCI image configs and polls every `30s`).
+- Reproducible identity (`beta_release.py postgres-identity --check`, two fresh `--no-cache`
+  `moby/buildkit:v0.34.2` builds):
+  - index digest: `sha256:8397c577a71bd78dc3240a0b34f7d90e05039d474b438c0f46d9cf646df329ad`
+  - platform digest: `sha256:8b9e11085ae6949e9020958704ca478e7c6e5309bc016814ffb77acdc46adfe4`
+- Cluster data compatibility: identical PostgreSQL 18.6 binary and `postgres/18/docker` layout.
+
 ## `18.6-alpine-florabase.4` (2026-11-22, INSTALL-002 / ADR 0009)
 
 `18.6-alpine-florabase.4` keeps the exact same upstream `postgres:18.6-alpine` base digest, Alpine
