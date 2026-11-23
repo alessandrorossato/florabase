@@ -1,5 +1,18 @@
 # Engineering progress
 
+## 2026-11-23 — Batch 12 integration (WF-BATCH-PROGRESS-001, DOCS-003, FN-02/FN-04/UX-ENTRY-001, UI-REVIEW-002)
+
+- `ci/batch-12` from `origin/main` `ddf5a14` (writer `claude-batch-12`) merges, in order,
+  `ci/wf-batch-progress-001` `ea607ee`, `docs/docs-003-install-guide` `a2b5035`,
+  `feat/fn-02-fn-04-list-ux` `66fec2f` and `fix/plants-list-reference-mount` `2c03a67`;
+  `docs/progress.md` resolved additively; the `compose.yaml` line limit in
+  `scripts/test-beta-runtime.py` is raised from 50 to 60 at the operator's request. Evidence:
+  [wf-04-batch-12.md](release/evidence/wf-04-batch-12.md).
+- Focused checks: `check-features.py`, `check-doc-links.py`, `test-doc-links.py`,
+  `test-check-features.py`, `workflow-check` (incl. `test-beta-runtime`, 50-line `compose.yaml`) on
+  the integrated tree; `test-agent-workflow` (81 OK, 3 skipped) and `workflow-check` on the
+  WF-BATCH-PROGRESS-001 tip. Canonical FULL follows the recorded exact-head review.
+
 ## 2026-11-23 — Batch additive progress merge below the shared heading (`WF-BATCH-PROGRESS-001`)
 
 - On `ci/wf-batch-progress-001` from `origin/main` `ddf5a14` (writer `claude-batch-progress-header`).
