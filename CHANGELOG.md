@@ -30,6 +30,18 @@ to know.
     startup chain).
   - Successful (2xx) loopback `GET` probes to `/api/v1/health` and `/api/v1/ready` are filtered out
     of `uvicorn.access`; non-loopback probes and non-2xx responses stay logged.
+- Installation and backup/restore documentation (`DOCS-003`):
+  - Added a "Before you start" callout at the top of [docs/installation.md](docs/installation.md)
+    and a prominent reminder in [README.md](README.md) that the one-time folder setup block in § 1
+    must be run on the host before the first deploy.
+  - Updated [docs/installation.md](docs/installation.md) and
+    [docs/backup-restore.md](docs/backup-restore.md) for the minimal `:latest` `compose.yaml`
+    rehearsal findings: paired backup runs over SSH in the stack folder (`docker compose ls`),
+    archives `release-manifest.json` only when present, removes stale `.env`,
+    `FLORABASE_HTTP_PORT`, `FLORABASE_DATA_DIR` and `FLORABASE_BACKUP_DIR` instruction placeholders,
+    aligns Synology NAS paths with `compose.yaml` (`/volume1/docker/florabase/backup`), adds
+    `ports: !override` and HTTPS/`sudo` notes for isolated restore drills, and clarifies that
+    automatic pre-upgrade dumps run only when the database Alembic revision changes.
 
 ## v0.1.0-beta.8 — 2026-11-22
 

@@ -3187,6 +3187,23 @@
       ],
       "priority": "P2",
       "status": "implemented"
+    },
+    {
+      "id": "DOCS-003",
+      "category": "documentation",
+      "description": "Installation guide accuracy fixes from operator rehearsal, prominent one-time folder setup callout, and v0.1.0-beta.8 publication record",
+      "acceptance_criteria": [
+        "docs/installation.md and docs/backup-restore.md align with the 40-line production compose.yaml: paired backup runs over SSH in the stack folder without .env, tolerates an absent release-manifest.json, replaces FLORABASE_HTTP_PORT with the frontend host port (and ports: !override in restore-override.yaml on the same host), replaces FLORABASE_DATA_DIR/FLORABASE_BACKUP_DIR action placeholders with mount descriptions, aligns Synology paths with compose.yaml, notes HTTPS origin and sudo chown for restore drills on another host, and states that automatic pre-upgrade dumps are written only when the database revision changes",
+        "README.md and docs/installation.md highlight the one-time folder setup block before the first deploy",
+        "docs/release/evidence/beta-8-publication.md records the v0.1.0-beta.8 workflow run, tag object, commit c4ffd63, release assets and SHA-256 digests, image references and digests from release-manifest.json, and verified gh attestation verify outputs, and is linked from docs/release/scope-v1.md as the current upgrade baseline"
+      ],
+      "dependencies": [
+        "DOC-01",
+        "INSTALL-003",
+        "DOCS-002"
+      ],
+      "priority": "P1",
+      "status": "implemented"
     }
   ]
 }
