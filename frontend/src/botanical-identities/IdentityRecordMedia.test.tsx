@@ -69,6 +69,10 @@ test("real linked images retain captions, actual asset rights and source ownersh
     screen.getByRole("link", { name: "Open media details for Young leaves" }),
   ).toHaveAttribute("href", "#/media/asset");
   expect(screen.getByText(/Photographer/)).toBeVisible();
+  expect(screen.getByRole("link", { name: "Image source" })).toHaveAttribute(
+    "href",
+    "https://example.org/image",
+  );
   expect(screen.getByRole("link", { name: "CC BY 3.0" })).toHaveAttribute(
     "href",
     "https://creativecommons.org/licenses/by/3.0/",

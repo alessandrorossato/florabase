@@ -23,3 +23,8 @@
   frontend typecheck, ESLint, Prettier and Vitest on `botanical-identities`, `media`, `photos`,
   `taxonomy`, `UX001`, `UX004` (30 files, 190 tests). Before/after screenshots at 1440 and 390 px
   (and dark mode) were captured against mocked APIs and attached to the review thread, not committed.
+- Follow-up after review and operator feedback: at 1440 × 900 both the identity Media tab and an
+  unsaved external media asset page fit one screen (document height 900 px): smaller cover and
+  thumbnails, Local copy above Details in the side column, Linked records and Covers side by side
+  and a one-row delete section. Invalid image URLs no longer throw in the Local copy text, WFO
+  suggestions follow a form reset, and thumbnails keep their Image source link.

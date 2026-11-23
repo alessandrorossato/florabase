@@ -152,7 +152,7 @@ export function IdentityRecordMedia({
             <a className="identity-thumbnail-owner" href={owner.href}>
               {owner.kind} · {owner.label}
             </a>
-            {(asset.attribution ?? asset.licence_label) && (
+            {(asset.attribution ?? asset.licence_label ?? asset.source_url) && (
               <small className="identity-thumbnail-credit">
                 {asset.attribution}
                 {asset.attribution && asset.licence_label && " · "}
@@ -168,6 +168,14 @@ export function IdentityRecordMedia({
                   ) : (
                     asset.licence_label
                   ))}
+                {asset.source_url && (
+                  <>
+                    {(asset.attribution ?? asset.licence_label) && " · "}
+                    <a href={asset.source_url} target="_blank" rel="noreferrer">
+                      Image source
+                    </a>
+                  </>
+                )}
               </small>
             )}
           </li>

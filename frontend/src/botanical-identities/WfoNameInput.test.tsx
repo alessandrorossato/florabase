@@ -1,10 +1,11 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 import { acquireTestAuth } from "../test/auth";
 import { WfoNameInput } from "./WfoNameInput";
 
 afterEach(() => {
+  cleanup();
   vi.restoreAllMocks();
 });
 
@@ -58,4 +59,32 @@ test("suggests unique WFO names for a two-character prefix and survives an unava
     ).toHaveLength(0);
   });
   expect(input).toHaveValue("Fic");
+});
+
+test("a form reset clears suggestions that no longer match the field", async () => {
+  const { capability } = await acquireTestAuth();
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    new Response(
+      JSON.stringify([{ taxon: taxon("Ficus carica"), classification: [] }]),
+      { headers: { "Content-Type": "application/json" } },
+    ),
+  );
+  const { container } = render(
+    <form>
+      <WfoNameInput id="name" name="scientific_name" capability={capability} />
+    </form>,
+  );
+  const user = userEvent.setup();
+  await user.type(screen.getByRole("combobox"), "Fi");
+  await waitFor(() => {
+    expect(
+      document.querySelectorAll("#name-wfo-suggestions option"),
+    ).toHaveLength(1);
+  });
+  container.querySelector("form")?.reset();
+  await waitFor(() => {
+    expect(
+      document.querySelectorAll("#name-wfo-suggestions option"),
+    ).toHaveLength(0);
+  });
 });

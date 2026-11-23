@@ -1,4 +1,4 @@
-import { useEffect, useState, type InputHTMLAttributes } from "react";
+import { useEffect, useRef, useState, type InputHTMLAttributes } from "react";
 import type { ProtectedRequestCapability } from "../auth/api";
 import { searchNames } from "../taxonomy/api";
 
@@ -10,7 +10,24 @@ export function WfoNameInput({
   id: string;
   capability: ProtectedRequestCapability;
 }) {
-  const [query, setQuery] = useState("");
+  const field = useRef<HTMLInputElement>(null);
+  const [query, setQuery] = useState(
+    typeof input.defaultValue === "string" ? input.defaultValue : "",
+  );
+  // A form reset changes the value without an input event; follow it.
+  useEffect(() => {
+    const form = field.current?.form;
+    if (!form) return;
+    const follow = () => {
+      window.setTimeout(() => {
+        setQuery(field.current?.value ?? "");
+      });
+    };
+    form.addEventListener("reset", follow);
+    return () => {
+      form.removeEventListener("reset", follow);
+    };
+  }, []);
   const [found, setFound] = useState({ prefix: "", names: [] as string[] });
   const prefix = query.trim();
   useEffect(() => {
@@ -43,6 +60,7 @@ export function WfoNameInput({
     <>
       <input
         {...input}
+        ref={field}
         list={listId}
         autoComplete="off"
         onChange={(event) => {

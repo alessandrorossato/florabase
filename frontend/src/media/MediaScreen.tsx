@@ -69,6 +69,13 @@ function title(asset: MediaAsset): string {
     "External image"
   );
 }
+function hostname(url: string | null): string | null {
+  try {
+    return url ? new URL(url).hostname : null;
+  } catch {
+    return null;
+  }
+}
 function Metadata({ asset }: { asset: MediaAsset }) {
   return (
     <dl className="media-facts">
@@ -408,7 +415,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
       {!d.content_url && (
         <p>
           Only a link is stored. Saving downloads the image once from{" "}
-          {d.image_url ? new URL(d.image_url).hostname : "its source"}.
+          {hostname(d.image_url) ?? "its source"}.
         </p>
       )}
       <div className="actions">
@@ -700,9 +707,6 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                 </button>
               }
             />
-            {detail.kind === "external" &&
-              !detail.content_url &&
-              localCopy(detail)}
             <div
               className={`media-detail-overview${detail.kind === "external" && !detail.content_url ? " media-detail-overview--reference" : ""}`}
             >
@@ -713,6 +717,9 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                 allowExternal
               />
               <section aria-label="Shared asset metadata">
+                {detail.kind === "external" &&
+                  !detail.content_url &&
+                  localCopy(detail)}
                 <h3>Details</h3>
                 <Metadata asset={detail} />
                 {detail.content_url && !detail.deletion_pending && (
@@ -743,120 +750,126 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
             {detail.kind === "external" &&
               detail.content_url &&
               localCopy(detail)}
-            <section className="media-links-section">
-              <h3>Linked records</h3>
-              {detail.links.length === 0 ? (
-                <p>
-                  No record links. This asset remains available in the Gallery.
-                </p>
-              ) : (
-                <ul className="media-link-list">
-                  {detail.links.map((link) => (
-                    <li key={link.id}>
-                      <div>
-                        <a href={link.target_url}>{link.target_label}</a>
-                        <span className="record-preview__type">
-                          {
-                            mediaTargets.find(
-                              (type) => type.id === link.target_type,
-                            )?.label
-                          }
-                          {link.is_primary && " · Primary image"}
-                        </span>
-                        {link.caption && <p>{link.caption}</p>}
-                        <p>Display order: {link.display_order}</p>
-                      </div>
-                      <div className="actions">
-                        <ActionButton
-                          icon="edit"
-                          type="button"
-                          className="button--secondary"
-                          disabled={pending || detail.deletion_pending}
-                          onClick={() => {
-                            setEditingLink(link);
-                          }}
-                        >
-                          Edit link details
-                        </ActionButton>
-                        {(link.target_type === "seed_lot" ||
-                          link.target_type === "plant" ||
-                          link.target_type === "plant_group" ||
-                          link.target_type === "harvest" ||
-                          link.target_type === "supplier") && (
-                          <button
+            <div className="media-detail-references">
+              <section className="media-links-section">
+                <h3>Linked records</h3>
+                {detail.links.length === 0 ? (
+                  <p>
+                    No record links. This asset remains available in the
+                    Gallery.
+                  </p>
+                ) : (
+                  <ul className="media-link-list">
+                    {detail.links.map((link) => (
+                      <li key={link.id}>
+                        <div>
+                          <a href={link.target_url}>{link.target_label}</a>
+                          <span className="record-preview__type">
+                            {
+                              mediaTargets.find(
+                                (type) => type.id === link.target_type,
+                              )?.label
+                            }
+                            {link.is_primary && " · Primary image"}
+                          </span>
+                          {link.caption && <p>{link.caption}</p>}
+                          <p>Display order: {link.display_order}</p>
+                        </div>
+                        <div className="actions">
+                          <ActionButton
+                            icon="edit"
                             type="button"
                             className="button--secondary"
                             disabled={pending || detail.deletion_pending}
                             onClick={() => {
-                              const type = link.target_type;
-                              if (
-                                type !== "seed_lot" &&
-                                type !== "plant" &&
-                                type !== "plant_group" &&
-                                type !== "harvest" &&
-                                type !== "supplier"
-                              )
-                                return;
-                              void action(
-                                async () => {
-                                  if (link.is_primary)
-                                    await clearPrimaryPhoto(
-                                      type,
-                                      link.target_id,
-                                      token,
-                                      capability,
-                                    );
-                                  else
-                                    await setPrimaryPhoto(
-                                      type,
-                                      link.target_id,
-                                      { kind: detail.kind, photo_id: link.id },
-                                      token,
-                                      capability,
-                                    );
-                                },
-                                link.is_primary
-                                  ? "Primary designation cleared."
-                                  : "Primary image selected for this record.",
-                              );
+                              setEditingLink(link);
                             }}
                           >
-                            {link.is_primary
-                              ? "Clear primary"
-                              : "Set as primary"}
+                            Edit link details
+                          </ActionButton>
+                          {(link.target_type === "seed_lot" ||
+                            link.target_type === "plant" ||
+                            link.target_type === "plant_group" ||
+                            link.target_type === "harvest" ||
+                            link.target_type === "supplier") && (
+                            <button
+                              type="button"
+                              className="button--secondary"
+                              disabled={pending || detail.deletion_pending}
+                              onClick={() => {
+                                const type = link.target_type;
+                                if (
+                                  type !== "seed_lot" &&
+                                  type !== "plant" &&
+                                  type !== "plant_group" &&
+                                  type !== "harvest" &&
+                                  type !== "supplier"
+                                )
+                                  return;
+                                void action(
+                                  async () => {
+                                    if (link.is_primary)
+                                      await clearPrimaryPhoto(
+                                        type,
+                                        link.target_id,
+                                        token,
+                                        capability,
+                                      );
+                                    else
+                                      await setPrimaryPhoto(
+                                        type,
+                                        link.target_id,
+                                        {
+                                          kind: detail.kind,
+                                          photo_id: link.id,
+                                        },
+                                        token,
+                                        capability,
+                                      );
+                                  },
+                                  link.is_primary
+                                    ? "Primary designation cleared."
+                                    : "Primary image selected for this record.",
+                                );
+                              }}
+                            >
+                              {link.is_primary
+                                ? "Clear primary"
+                                : "Set as primary"}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="button--danger"
+                            disabled={pending}
+                            onClick={() => {
+                              setError(null);
+                              setRemoving(link);
+                            }}
+                          >
+                            Unlink from this record
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          className="button--danger"
-                          disabled={pending}
-                          onClick={() => {
-                            setError(null);
-                            setRemoving(link);
-                          }}
-                        >
-                          Unlink from this record
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-            <section className="media-links-section">
-              <h3>Covers</h3>
-              {detail.covers.length === 0 ? (
-                <p>No cover references.</p>
-              ) : (
-                <ul>
-                  {detail.covers.map((cover) => (
-                    <li key={cover.id}>
-                      <a href={cover.url}>{cover.label}</a>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+              <section className="media-links-section">
+                <h3>Covers</h3>
+                {detail.covers.length === 0 ? (
+                  <p>No cover references.</p>
+                ) : (
+                  <ul>
+                    {detail.covers.map((cover) => (
+                      <li key={cover.id}>
+                        <a href={cover.url}>{cover.label}</a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            </div>
             <section className="media-delete-section">
               <h3>Delete media asset</h3>
               <p>

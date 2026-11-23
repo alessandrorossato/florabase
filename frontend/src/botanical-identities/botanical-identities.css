@@ -1515,13 +1515,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 12rem;
-  max-height: 26.25rem;
+  min-height: 8rem;
+  max-height: 15rem;
   color: var(--text-muted);
 }
 .identity-media-gallery .identity-cover-feature__image img {
   max-width: 100%;
-  max-height: 26.25rem;
+  max-height: 15rem;
   width: auto;
   height: auto;
   object-fit: contain;
@@ -1569,7 +1569,7 @@
 }
 .identity-thumbnail-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 10rem), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 8rem), 9rem));
   gap: var(--space-3);
   margin: var(--space-3) 0;
   padding: 0;
@@ -1582,7 +1582,7 @@
 }
 .identity-thumbnail-grid .identity-thumbnail-link {
   height: auto;
-  aspect-ratio: 1;
+  aspect-ratio: 4 / 3;
 }
 .identity-thumbnail-grid .identity-thumbnail-link .media-image {
   width: 100%;
