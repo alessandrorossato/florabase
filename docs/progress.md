@@ -1,5 +1,16 @@
 # Engineering progress
 
+## 2026-11-23 — Batch additive progress merge below the shared heading (`WF-BATCH-PROGRESS-001`)
+
+- On `ci/wf-batch-progress-001` from `origin/main` `ddf5a14` (writer `claude-batch-progress-header`).
+- `scripts/feature_batch.py` `additive_progress()` now sets aside the line prefix shared by the
+  merge base and both sides (the `# Engineering progress` heading added by DOCS-002) before applying
+  the unchanged additive rules, so two sources inserting milestones below the heading merge; edits to
+  existing entries still refuse. Registered `WF-BATCH-PROGRESS-001` (`implemented`, proposed class
+  `tooling`). Evidence: [wf-batch-progress-001.md](release/evidence/wf-batch-progress-001.md).
+- Checks: the two additive progress tests in `scripts/test-agent-workflow.py`, a replay on the real
+  Batch 12 revisions, `scripts/check-features.py`. Canonical FULL runs with Batch 12.
+
 ## 2026-11-23 — MOBILE-001 Capacitor Android shell spike (PWA preserved)
 
 - On `feat/mobile-001-capacitor-spike` from `origin/main` `68e9449` (writer `neon-mobile-001`).

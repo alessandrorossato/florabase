@@ -3135,6 +3135,21 @@
       "status": "implemented"
     },
     {
+      "id": "WF-BATCH-PROGRESS-001",
+      "category": "infrastructure",
+      "description": "Batch preparation merges additive docs/progress.md entries that two sources insert below the shared top-level heading",
+      "acceptance_criteria": [
+        "scripts/feature_batch.py additive_progress() sets aside the longest line prefix shared by the merge base, integration side and incoming source (at least one base line stays in the remainder), applies the existing additive rules to the remainders and restores the prefix, so entries inserted below '# Engineering progress' by two sources are both retained newest-merged first",
+        "scripts/test-agent-workflow.py covers the shared-heading merge and still refuses an incoming source that edits the shared remainder; the existing main-tail additive progress test keeps passing"
+      ],
+      "dependencies": [
+        "AGENT-WORKFLOW-001",
+        "DOCS-002"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "DOCS-002",
       "category": "documentation",
       "description": "Root community docs, AGPL/DCO/third-party licensing notices, docs/ archive tidy-up, progress.md split and cheap doc-only verification paths",
