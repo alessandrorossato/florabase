@@ -7,6 +7,7 @@ import argparse
 import fcntl
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -23,6 +24,7 @@ from feature_worktree import (
     require_no_running_mounts,
     require_operator_identity,
     require_writer,
+    retire_finished_worktree,
     worktrees,
     write_finished_proof,
 )
@@ -804,7 +806,7 @@ def finish_target(repo: Repository, branch: str, tip: str, proof: dict[str, Any]
     return matches[0]
 
 
-def finish_source(repo: Repository, item: dict[str, Any], proof: dict[str, Any]) -> None:
+def finish_source(repo: Repository, item: dict[str, Any], proof: dict[str, Any]) -> Path:
     require_operator_identity()
     branch, tip = item["branch"], oid(item["tip"])
     source = finish_target(repo, branch, tip, proof)
@@ -837,6 +839,7 @@ def finish_source(repo: Repository, item: dict[str, Any], proof: dict[str, Any])
         if local_tip:
             source.git("update-ref", "-d", ref, tip)
         state.path.unlink(missing_ok=True)
+    return source.source
 
 
 def validate_finished_source(repo: Repository, pr: int, branch: str, tip: str, merge: str) -> None:
@@ -865,15 +868,35 @@ def finish(repo: Repository, pr: int, source_branch: str | None) -> int:
     selected = [item for item in sources_from(batch) if source_branch in (None, item["branch"])]
     require(selected, "requested source is omitted from the verified batch")
     repo.git("merge", "--ff-only", "origin/main")
+    keep_worktree = os.environ.get("KEEP_WORKTREE") == "1"
+    current_cwd = Path.cwd().resolve()
     failed = False
     for item in selected:
         try:
-            finish_source(repo, item, proof)
+            source_path = finish_source(repo, item, proof)
         except (WorkflowError, ResourceError, OSError) as error:
             print(f"UNFINISHED {item['branch']}: {error}", file=sys.stderr)
             failed = True
         else:
-            print(f"FINISHED {item['branch']} at {item['tip']}; detached worktree retained")
+            if keep_worktree:
+                print(
+                    f"FINISHED {item['branch']} at {item['tip']}; "
+                    f"RETAINED {source_path} (KEEP_WORKTREE=1)"
+                )
+            elif current_cwd.is_relative_to(source_path.resolve()):
+                print(
+                    f"FINISHED {item['branch']} at {item['tip']}; "
+                    f"RETAINED {source_path} (current working directory)"
+                )
+            else:
+                retired, reason = retire_finished_worktree(repo, source_path)
+                if retired:
+                    print(f"FINISHED {item['branch']} at {item['tip']}; RETIRED {source_path}")
+                else:
+                    print(
+                        f"FINISHED {item['branch']} at {item['tip']}; "
+                        f"RETAINED {source_path} ({reason})"
+                    )
     return int(failed)
 
 

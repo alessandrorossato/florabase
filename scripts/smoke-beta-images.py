@@ -223,8 +223,10 @@ def smoke(
             release_version = manifest["version"]
             package_version = release_version.replace("-beta.", "b").replace("-rc.", "rc")
             runtime_check = (
-                "import importlib.util; import florabase; from importlib.metadata import version; "
-                "assert all(importlib.util.find_spec(p) is None for p in ('pytest', 'ruff', 'mypy', 'pip')); "
+                "import importlib.util, sys; import florabase; from importlib.metadata import version; "
+                "bad = [p for p in ('pytest', 'ruff', 'mypy', 'pip') "
+                "if importlib.util.find_spec(p) is not None]; "
+                "bad and sys.exit('dev tools in runtime image: ' + ', '.join(bad)); "
                 "print(florabase.__version__); print(version('florabase-backend'))"
             )
             installed = compose(

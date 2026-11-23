@@ -109,6 +109,7 @@ when this was written; the corrections follow the findings as relayed by the orc
 
 1. **Optional class of ENG-03, ENG-04, ENG-06 and FN-07.** The operator ruled on ENG-02, FN-02,
    FN-04 and DOC-06. These four are classed optional on the audit's recommendation; confirm.
+   *ENG-03 resolved 2026-11-22: confirmed optional (`best-effort`) by operator decision.*
 2. **Promotion candidates.** Record operator acceptance for GERMINATION-001 (visual review) and
    MULTIBRANCH-UAT-001 (operator UAT), or leave them for the release certification?
 3. **ENG-05.** Which branch: the two-session regression, or a documented risk disposition?

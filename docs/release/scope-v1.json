@@ -142,7 +142,7 @@
     "BETA-IMAGE-001": "release-work",
     "beta-postgres-repro-001": "release-work",
     "BETA-SECURITY-001": "release-work",
-    "BETA-RUNTIME-001": "best-effort",
+    "BETA-RUNTIME-001": "record",
     "BETA-DATA-001": "release-work",
     "BETA-ACCEPTANCE-001": "release-work",
     "WORKFLOW-RETIRE-AUTH-001": "tooling",
@@ -178,6 +178,7 @@
     "CERT-04": "tooling",
     "CERT-05": "tooling",
     "WF-SCOPE-001": "tooling",
-    "VERIFY-SPEED-001": "tooling"
+    "VERIFY-SPEED-001": "tooling",
+    "WF-CLEANUP-001": "tooling"
   }
 }

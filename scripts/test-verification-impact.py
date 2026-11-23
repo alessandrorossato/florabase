@@ -256,6 +256,8 @@ class SelectionTests(unittest.TestCase):
             "backend/src/florabase/db/session.py",
             "backend/src/florabase/api/router.py",
             "backend/src/florabase/main.py",
+            "backend/scripts/check_api_routes.py",
+            "backend/scripts/test_check_api_routes.py",
             "backend/tests/test_health.py",
         ]
         full_reference = checks_for(self.plan("scripts/feature-verify.sh"))
@@ -280,7 +282,7 @@ class SelectionTests(unittest.TestCase):
                 self.assertEqual(plan["escalation_reasons"], [])
                 self.assertEqual(plan["product_reasons"], [f"shared product path: {path}"])
                 expected_checks = list(full_product_checks)
-                if path.startswith("backend/src/florabase/"):
+                if path.startswith(("backend/src/florabase/", "backend/scripts/")):
                     self.assertTrue(plan["golden_dataset"])
                     expected_checks.append(
                         {"id": "golden-dataset", "command": ["make", "golden-dataset-check"]}
@@ -962,6 +964,42 @@ class SelectionTests(unittest.TestCase):
         ):
             with self.subTest(invalid_golden=invalid), self.assertRaises(ValueError):
                 checks_for(invalid)
+
+    def test_golden_closure_covers_alembic_ini_backend_scripts_and_postgres(self) -> None:
+        golden_check = {"id": "golden-dataset", "command": ["make", "golden-dataset-check"]}
+        for path, expected_tier in (
+            ("backend/alembic.ini", "full"),
+            ("backend/scripts/export_openapi.py", "full"),
+            ("backend/scripts/botanical_match_qualify.py", "affected"),
+            ("postgres/florabase-postgres-entrypoint.sh", "full"),
+        ):
+            with self.subTest(path=path):
+                plan = self.plan(path)
+                self.assertEqual(plan_tier(plan), expected_tier)
+                self.assertTrue(plan["golden_dataset"])
+                self.assertIn(golden_check, checks_for(plan))
+                self.assertIn(golden_check, CI.ci_checks_for(plan, "integration"))
+
+    def test_check_api_routes_pair_selects_product_backend_and_golden(self) -> None:
+        golden_check = {"id": "golden-dataset", "command": ["make", "golden-dataset-check"]}
+        for path in (
+            "backend/scripts/check_api_routes.py",
+            "backend/scripts/test_check_api_routes.py",
+        ):
+            with self.subTest(path=path):
+                plan = self.plan(path)
+                self.assertEqual(plan_tier(plan), "product")
+                self.assertEqual(plan["mode"], "product")
+                self.assertEqual(plan["backend"], ["ALL"])
+                self.assertEqual(plan["integration"], ["ALL"])
+                self.assertEqual(plan["workflow"], [])
+                self.assertEqual(plan["migration"], "skip")
+                self.assertEqual(plan["escalation_reasons"], [])
+                for static_check in ("format-check", "lint", "typecheck"):
+                    self.assertIn(static_check, plan["static"])
+                self.assertTrue(plan["golden_dataset"])
+                self.assertIn(golden_check, checks_for(plan))
+                self.assertIn(golden_check, CI.ci_checks_for(plan, "integration"))
 
     def test_make_check_runs_static_and_api_drift_before_unit_suites(self) -> None:
         line = next(

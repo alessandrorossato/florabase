@@ -144,7 +144,16 @@ never block, and release on any exit including SIGKILL. Children do not inherit 
 stages may briefly outlive the released lock; use the failed run's recovery command as described below.
 Remote CI and direct `make ci` take no lock. Parallel Review ports are deliberately not provided.
 
-**Retirement.** After `make feature-finish` from the primary checkout run:
+**Retirement.** After a linked finish succeeds, `make feature-finish` (and `make feature-batch-finish`
+for each finished batch source) automatically attempts best-effort retirement of a managed worktree
+directly under `florabase-worktrees/` by reusing the exact same retirement checks below, confirmed
+implicitly by the finish proof just written. Pass `KEEP_WORKTREE=1` to skip auto-retirement and keep
+the detached worktree. Provider-managed worktrees (without the managed marker or outside
+`florabase-worktrees/`) are never touched and are retained for their provider tool. If any safety
+guard refuses (owned Review/UAT/Preview resources, running bind mount, Docker unavailable, ignored
+`.env` or backups, locks, etc.), finish still succeeds and prints the refusal reason, follow-up
+command, and final `WORKTREE: RETAINED <path> (<reason>)` line; resolve the condition and then from
+the primary checkout run:
 
 ```bash
 make feature-retire FEATURE=example-001 CONFIRM_RETIRE=example-001
@@ -198,6 +207,20 @@ that base. Unsupported states receive a refusal rather than a reset, stash or br
 Manual development can still use `make feature-start BRANCH=feat/example`. In a primary checkout it
 fetches, fast-forwards clean `main`, then creates the branch as before. In a linked worktree it fetches
 and delegates to initialization in that worktree, without attempting to switch shared `main`.
+
+**After delivery: remove your worktree.** Florabase never deletes provider-managed worktrees:
+
+1. Stop at `READY_FOR_DELIVERY`; the operator runs `make feature-deliver` and `make feature-finish`
+   (or `make feature-batch-finish`).
+2. When the operator tells the agent the PR is merged and finished, from a directory **outside** the
+   worktree verify `git -C <worktree> status --porcelain` is empty and
+   `git -C <worktree> branch --show-current` is empty (detached after finish), and verify
+   `make feature-context` / `make workflow-resources` from that worktree show no owned Review/UAT
+   resources, then remove the worktree **through the agent's own tool** (Antigravity: its
+   worktree/workspace removal; plain fallback: `git worktree remove <path>` without `--force`). Never
+   use `--force`, never `rm -rf`, and never remove a worktree that is dirty, still on a branch, owns
+   Review/UAT resources, or belongs to another agent.
+3. If anything refuses, report the path and reason to the operator and stop.
 
 ## Configuration
 
@@ -927,10 +950,18 @@ checks; it never moves a checkout or upgrades databases. Missing `gh`, authentic
 API and PR identity failures have explicit diagnostics. Protected squash auto-merge is unchanged.
 
 After a proven merge, `make feature-finish` from a linked feature worktree requires a clean primary
-checkout on `main`, fast-forwards it through Git's normal index/worktree update, detaches the retained
-feature worktree at its reviewed SHA, records its proof for retirement and deletes only the proven
-merged feature branch. `make feature-retire` or the agent tool that created it removes the worktree. A dirty/staged primary or unexpected primary branch receives an actionable
-refusal with feature source retained. Single-checkout manual finish still switches to updated `main`.
+checkout on `main`, fast-forwards it through Git's normal index/worktree update, detaches the
+feature worktree at its reviewed SHA, records its finish proof, deletes only the proven merged
+feature branch, fetches and prints primary status, and then runs best-effort retirement from the
+primary checkout using the primary's helper. Managed worktrees under `florabase-worktrees/` are
+retired automatically when every retirement guard passes (`FEATURE WORKTREE RETIRED: <path>`,
+`Your shell is in a removed directory: cd <primary>`, `WORKTREE: RETIRED <path>`). If any guard
+refuses (including owned Review/UAT/Preview resources or Docker unavailable), finish still exits 0
+and retains the worktree with the exact refusal reason, follow-up command, and final
+`WORKTREE: RETAINED <path> (<reason>)` line. Pass `KEEP_WORKTREE=1` to keep the detached worktree
+without attempting retirement; provider-managed worktrees are always retained for the tool that
+created them. A dirty/staged primary or unexpected primary branch receives an actionable refusal
+with feature source retained. Single-checkout manual finish still switches to updated `main`.
 
 ## Batch integration (WF-04)
 
@@ -986,14 +1017,17 @@ fresh FULL, supply `EXPECTED_PR=<number>` and `EXPECTED_HEAD=<corrected-sha>` to
 
 
 After the operator authorizes finish, run the usual `make feature-finish` from the integration
-branch for that branch's own merged PR. This fast-forwards clean primary `main` and installs
-the new batch command on the first delivery. Then run
+branch for that branch's own merged PR. This fast-forwards clean primary `main`, installs the
+updated helpers, and auto-retires the managed integration worktree when safe. Then run
 `make feature-batch-finish PR=<number> AGENT_ID=operator` from clean primary `main`.
 It verifies the PR again and processes only its listed source tips;
 `SOURCE=feat/example` limits finish to one. Moved tips, missing proof and protected resources
-refuse, and the output identifies any unfinished source. Managed source worktrees can then use
-the existing exact `feature-retire` confirmations. Provider-managed worktrees remain with
-their provider and any Preview owner remains subject to its existing lifecycle rules.
+refuse, and the output identifies any unfinished source. For each finished source, batch finish
+applies the same best-effort managed-only retirement (`FINISHED <branch> at <tip>; RETIRED <path>`
+or `FINISHED <branch> at <tip>; RETAINED <path> (<reason>)`); retention does not fail the command,
+and `KEEP_WORKTREE=1` opts out. Retained managed worktrees can still use the explicit
+`make feature-retire` confirmation later. Provider-managed worktrees remain with their provider and
+any Preview/UAT owner remains subject to its existing lifecycle rules.
 
 ## Troubleshooting and acceptance evidence
 

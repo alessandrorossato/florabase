@@ -100,11 +100,30 @@ stage only intentional files, inspect the staged diff, and create the reviewed l
 task boundary is `READY_FOR_DELIVERY`, do not push or create a PR: the operator runs deterministic
 `make feature-deliver`. It pushes normally, reuses or creates the PR, and waits for protected squash
 auto-merge without bypassing checks. Never force-push, rewrite shared history, manually force a
-merge, or commit feature work directly to `main`. After delivery reports a merged PR, use `make
-feature-finish` for conservative local cleanup (linked finish requires clean primary `main` and
-retains the detached worktree), then use `make dev-upgrade` only when delivery reported a migration.
-Delivery, finish and `make feature-retire` require explicit operator authorization; they refuse an
-agent `AGENT_ID`, and retirement only removes finished worktrees under `florabase-worktrees/`.
+merge, or commit feature work directly to `main`. After delivery reports a merged PR, use `make feature-finish` for conservative local cleanup
+(linked finish requires clean primary `main`, fast-forwards it, detaches the feature worktree,
+writes finish proof, deletes the merged branch, and automatically retires a managed worktree under
+`florabase-worktrees/` when safe, or retains it with the exact reason and manual follow-up command;
+pass `KEEP_WORKTREE=1` to keep it detached, while provider-managed worktrees stay with their
+provider), then use `make dev-upgrade` only when delivery reported a migration. Delivery, finish
+and `make feature-retire` require explicit operator authorization; they refuse an agent `AGENT_ID`,
+and retirement only removes finished worktrees under `florabase-worktrees/`.
+
+### After delivery: remove your worktree
+
+1. Stop at `READY_FOR_DELIVERY`; the operator runs `make feature-deliver` and `make feature-finish`
+   (or `make feature-batch-finish`).
+2. When the operator tells you the PR is merged and finished, from a directory **outside** your
+   worktree verify `git -C <worktree> status --porcelain` is empty and
+   `git -C <worktree> branch --show-current` is empty (detached after finish), confirm
+   `make feature-context` / `make workflow-resources` from that worktree show no owned Review/UAT
+   resources, then remove the worktree **through your own tool** (Antigravity: its worktree or
+   workspace removal; plain fallback: `git worktree remove <path>` without `--force`). Never use
+   `--force`, never `rm -rf`, and never remove a worktree that is dirty, still on a branch, owns
+   Review/UAT resources, or belongs to another agent.
+3. If anything refuses, report the path and reason to the operator and stop.
+
+See [docs/agent-prompt-template.md](docs/agent-prompt-template.md) for the reusable prompt snippet.
 
 Before finishing, run relevant formatting, lint, typing, tests, integration, API drift, migration,
 build, and health checks proportional to the change. Report environmental limits exactly and never
