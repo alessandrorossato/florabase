@@ -146,6 +146,21 @@ def test_candidates_and_write_routes_map_missing_and_unavailable(
     assert raised.value.status_code == 404
 
 
+def test_name_candidates_need_no_identity_and_map_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wfo = source()
+    candidate = cast(WfoCandidate, object())
+    monkeypatch.setattr(wfo, "search", lambda query: [candidate] if query == "Fi" else [])
+    assert api.name_candidates(actor(), wfo, "Fi") == [candidate]
+    monkeypatch.setattr(
+        wfo, "search", lambda _query: (_ for _ in ()).throw(SourceUnavailableError("offline"))
+    )
+    with pytest.raises(HTTPException) as raised:
+        api.name_candidates(actor(), wfo, "Fi")
+    assert raised.value.status_code == 503
+
+
 def test_candidates_uses_botanical_identity_lookup(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[object] = []
 
@@ -172,8 +187,11 @@ def test_candidates_uses_botanical_identity_lookup(monkeypatch: pytest.MonkeyPat
         ("x" * 201, 422, None),
     ],
 )
+@pytest.mark.parametrize(
+    "path", [f"/botanical-identities/{uuid7()}/taxonomy/candidates", "/explore/taxonomy/candidates"]
+)
 def test_candidate_prefix_is_trimmed_before_length_validation(
-    query: str, status: int, normalized: str | None
+    query: str, status: int, normalized: str | None, path: str
 ) -> None:
     searches: list[str] = []
 
@@ -187,9 +205,7 @@ def test_candidate_prefix_is_trimmed_before_length_validation(
     application.dependency_overrides[require_authenticated_actor] = actor
     application.dependency_overrides[get_database_session] = session
     application.dependency_overrides[api.source_dependency] = lambda: wfo
-    response = TestClient(application).get(
-        f"/botanical-identities/{uuid7()}/taxonomy/candidates", params={"q": query}
-    )
+    response = TestClient(application).get(path, params={"q": query})
     assert response.status_code == status
     assert searches == ([] if normalized is None else [normalized])
 

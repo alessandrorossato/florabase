@@ -124,3 +124,15 @@
     display: none;
   }
 }
+/* An unsaved external reference stays compact; saving it is the primary action above. */
+.media-workspace .media-detail-overview--reference .media-image {
+  height: 15rem;
+}
+.media-status-badge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-small);
+  background: var(--surface-subtle);
+  font: var(--type-small);
+  color: var(--text-muted);
+}

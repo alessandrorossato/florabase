@@ -62,7 +62,12 @@ import { MediaLinker } from "./MediaLinker";
 import { mediaTargets } from "./targets";
 
 function title(asset: MediaAsset): string {
-  return asset.title ?? asset.original_filename ?? "External image reference";
+  return (
+    asset.title ??
+    asset.original_filename ??
+    asset.attribution ??
+    "External image"
+  );
 }
 function Metadata({ asset }: { asset: MediaAsset }) {
   return (
@@ -397,6 +402,60 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
       );
     }, "Record link details saved.");
   }
+  const localCopy = (d: MediaDetail) => (
+    <section aria-label="Local copy" className="media-links-section">
+      <h3>Local copy</h3>
+      {!d.content_url && (
+        <p>
+          Only a link is stored. Saving downloads the image once from{" "}
+          {d.image_url ? new URL(d.image_url).hostname : "its source"}.
+        </p>
+      )}
+      <div className="actions">
+        <button
+          type="button"
+          disabled={pending || d.deletion_pending}
+          onClick={() => {
+            void action(
+              async () => {
+                await (d.content_url ? refreshLocalCopy : saveLocalCopy)(
+                  d.id,
+                  token,
+                  capability,
+                );
+              },
+              d.content_url ? "Local copy refreshed." : "Local copy saved.",
+            );
+          }}
+        >
+          {pending
+            ? "Saving local copy…"
+            : d.content_url
+              ? "Refresh local copy"
+              : "Save local copy"}
+        </button>
+        {(d.content_url !== null || d.local_copy_cleanup_pending) && (
+          <button
+            type="button"
+            className="button--secondary"
+            disabled={pending || d.deletion_pending}
+            onClick={() => {
+              setRemoving("copy");
+            }}
+          >
+            Remove local copy
+          </button>
+        )}
+      </div>
+      {d.local_copy_cleanup_pending && (
+        <p role="status">
+          Previous local copy cleanup is pending. Retry Remove local copy to
+          complete it.
+        </p>
+      )}
+    </section>
+  );
+
   return (
     <section
       className="media-workspace"
@@ -612,9 +671,13 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
               eyebrow="Media asset"
               title={title(detail)}
               secondary={
-                detail.kind === "local"
-                  ? "Managed local image"
-                  : "External image reference"
+                <span className="media-status-badge">
+                  {detail.kind === "local"
+                    ? "Local image"
+                    : detail.content_url
+                      ? "External reference · saved locally"
+                      : "External reference · not saved locally"}
+                </span>
               }
               onEdit={() => {
                 setEditor(detail);
@@ -623,6 +686,11 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
               primaryActions={
                 <button
                   type="button"
+                  className={
+                    detail.kind === "external" && !detail.content_url
+                      ? "button--secondary"
+                      : undefined
+                  }
                   disabled={detail.deletion_pending}
                   onClick={() => {
                     setLinking(true);
@@ -632,7 +700,12 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                 </button>
               }
             />
-            <div className="media-detail-overview">
+            {detail.kind === "external" &&
+              !detail.content_url &&
+              localCopy(detail)}
+            <div
+              className={`media-detail-overview${detail.kind === "external" && !detail.content_url ? " media-detail-overview--reference" : ""}`}
+            >
               <MediaPreview
                 key={`${detail.id}:${detail.content_url ?? "remote"}`}
                 asset={detail}
@@ -640,12 +713,8 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                 allowExternal
               />
               <section aria-label="Shared asset metadata">
-                <h3>Shared asset metadata</h3>
+                <h3>Details</h3>
                 <Metadata asset={detail} />
-                <p className="field-help">
-                  Title, attribution and licence belong to this reusable asset.
-                  Captions and display order belong to each record link.
-                </p>
                 {detail.content_url && !detail.deletion_pending && (
                   <div className="actions">
                     <button
@@ -671,67 +740,11 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                 )}
               </section>
             </div>
-            {detail.kind === "external" && (
-              <section aria-label="Local copy" className="media-links-section">
-                <h3>Local copy</h3>
-                <p>
-                  {detail.content_url
-                    ? "This saved image is stored in Florabase. Refresh contacts the canonical external source again."
-                    : "Save the image in Florabase to use it throughout your collection. This explicitly contacts the external source."}
-                </p>
-                <div className="actions">
-                  <button
-                    type="button"
-                    disabled={pending || detail.deletion_pending}
-                    onClick={() => {
-                      void action(
-                        async () => {
-                          await (
-                            detail.content_url
-                              ? refreshLocalCopy
-                              : saveLocalCopy
-                          )(detail.id, token, capability);
-                        },
-                        detail.content_url
-                          ? "Local copy refreshed."
-                          : "Local copy saved.",
-                      );
-                    }}
-                  >
-                    {pending
-                      ? "Saving local copy…"
-                      : detail.content_url
-                        ? "Refresh local copy"
-                        : "Save local copy"}
-                  </button>
-                  {(detail.content_url !== null ||
-                    detail.local_copy_cleanup_pending) && (
-                    <button
-                      type="button"
-                      className="button--secondary"
-                      disabled={pending || detail.deletion_pending}
-                      onClick={() => {
-                        setRemoving("copy");
-                      }}
-                    >
-                      Remove local copy
-                    </button>
-                  )}
-                </div>
-                {detail.local_copy_cleanup_pending && (
-                  <p role="status">
-                    Previous local copy cleanup is pending. Retry Remove local
-                    copy to complete it.
-                  </p>
-                )}
-              </section>
-            )}
+            {detail.kind === "external" &&
+              detail.content_url &&
+              localCopy(detail)}
             <section className="media-links-section">
               <h3>Linked records</h3>
-              <p>
-                Each link has its own caption, display order and primary
-                designation.
-              </p>
               {detail.links.length === 0 ? (
                 <p>
                   No record links. This asset remains available in the Gallery.
@@ -831,23 +844,18 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
               )}
             </section>
             <section className="media-links-section">
-              <h3>BotanicalIdentity cover references</h3>
+              <h3>Covers</h3>
               {detail.covers.length === 0 ? (
                 <p>No cover references.</p>
               ) : (
                 <ul>
                   {detail.covers.map((cover) => (
                     <li key={cover.id}>
-                      <a href={cover.url}>{cover.label}</a> · Current
-                      representative cover
+                      <a href={cover.url}>{cover.label}</a>
                     </li>
                   ))}
                 </ul>
               )}
-              <p>
-                Cover references are separate from record links and also block
-                asset deletion.
-              </p>
             </section>
             <section className="media-delete-section">
               <h3>Delete media asset</h3>

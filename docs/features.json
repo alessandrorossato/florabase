@@ -2380,6 +2380,24 @@
       "status": "verified"
     },
     {
+      "id": "UI-REVIEW-002",
+      "category": "ux",
+      "description": "Post-beta.8 review fixes: single-record directory cards, WFO name suggestions on identity creation, optional reference-index mount and a clearer media layout",
+      "acceptance_criteria": [
+        "A gallery directory with one or two records keeps card-sized tracks instead of stretching a card across the page",
+        "Creating a botanical identity suggests scientific names from the local WFO index through a read-only GET /api/v1/explore/taxonomy/candidates; free text stays valid and an unavailable index only removes suggestions",
+        "The production compose.yaml carries a commented, read-only WFO/WCVP v16 reference mount and paths, documented in docs/installation.md; the default deployment is unchanged",
+        "The identity Media tab shows a large cover with a compact caption and visible Change cover, Save local copy (for unsaved external covers) and Open media record actions, then record photos as a thumbnail grid without technical paragraphs",
+        "An external identity cover saves a local copy by default; the media asset page puts Save local copy first for unsaved references and shows a compact preview",
+        "Focused backend and frontend tests cover the new endpoint, suggestions, cover local copy and media layout; no migration"
+      ],
+      "dependencies": [
+        "UI-REVIEW-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "TEST-DATA-001",
       "category": "testing",
       "description": "Deterministic synthetic golden dataset with independent copies for Feature Review, UAT and performance testing",
