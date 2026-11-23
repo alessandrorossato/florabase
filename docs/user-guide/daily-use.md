@@ -30,16 +30,16 @@ The **Journal** records observations and care events on an individual **Plant** 
    <!-- TODO(DOC-04 after batch 12): Once the Plants directory card-height layout fix lands, check whether any directory view note is needed. -->
 2. On the record's detail page, select the **Journal** tab.
 3. Click **Add entry** (or **Add the first entry** if the journal is empty).
-   > **Shortcut:** You can also click **Record** in the left rail (or on **Today**) and choose **Add
-   > Journal entry** to pick a **Plant** or **Plant group** and open its **Add entry** dialog from
+   > **Shortcut:** You can also click **Record** in the left rail (or on **Today**) and choose **Add Journal entry** to pick a **Plant** or **Plant group** and open its **Add entry** dialog from
    > anywhere.
 4. Select an **Entry type**:
    - `Observation`, `Movement`, `Repotting`, `Flowering`, `Fruiting`, `Pruning`, `Treatment`,
      `Harvest`, `Transfer`, `Death`, `Loss`, `Discarded`, `Measurement` (for an individual
      **Plant**), or `Other`.
 5. Under **When did it happen?**, choose one of the three date options:
-   - **Today, YYYY-MM-DD** — **preselected by default** every time you open **Add entry**. If the
-     event happened today, you do not need to touch the date controls at all.
+   - **Today** (shown with today's `YYYY-MM-DD` date) — preselected by default every time you open
+     **Add entry**. If the event happened today, you do not need to touch the date controls at all.
+     <!-- TODO(DOC-04 verify): OccurrenceDateChoice builds the Today option label dynamically as `Today, ${today}` (`frontend/src/events/OccurrenceDateChoice.tsx:52`). -->
    - **Another date** — select this to record an event from the past (or a specific date). An
      **Occurrence date** box appears where you can choose **Precision** as `Complete date`
      (**Year**, **Month**, **Day**), `Year and month` (**Year**, **Month**), or `Year` (**Year**).
@@ -56,7 +56,7 @@ The **Journal** records observations and care events on an individual **Plant** 
 
 Try recording three entries in a row on the same plant or group:
 
-1. An `Observation` keeping **Today, YYYY-MM-DD** preselected.
+1. An `Observation` keeping **Today** preselected.
 2. A `Repotting` or `Flowering` entry choosing **Another date** (with a complete or partial date).
 3. An `Observation` or `Pruning` entry choosing **Date unknown**.
 
@@ -92,7 +92,7 @@ header and directory card):
    media**), choose an **Image file** (JPEG, PNG, or WebP), add an optional **Caption**, and click
    **Save**. (You can also click **Link existing** / **Link existing media** to attach an image that
    is already in your Florabase media library.)
-3. To make a photo the record's main image, open the **`⋯`** (**Actions for ...**) menu on that
+3. To make a photo the record's main image, open the `⋯` (`Actions for` photo) menu on that
    photo card (or find the action buttons on the card) and click **Set as primary**.
 
 The photo card displays a **Primary** badge, and the image immediately appears at the top of the
@@ -197,7 +197,7 @@ individual plants and plant groups), and **Harvests** → **Stored material**.
 6. Review the preview table:
    - Florabase shows how many records **Will move** and whether any are **Already at this
      Location**.
-7. Click **Apply move (N)** to confirm.
+7. Click **Apply move** to confirm. <!-- TODO(DOC-04 verify): BulkLocation builds the confirm button label dynamically as `Apply move (${String(willMove)})` (`frontend/src/bulk/BulkLocation.tsx:314`). -->
 
 Every moved record now shows the new **Location** on its overview and directory card. When you move
 **Plants** or **Plant groups**, Florabase also records a `Movement` entry in each moved specimen's

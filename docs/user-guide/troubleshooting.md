@@ -24,13 +24,16 @@ instead.)
 
 ## "Nothing saved" or a server / connection error appears
 
-If your home network drops or the Florabase server restarts while you click a save button:
+If your home network drops or the Florabase server is unreachable while you click a save button:
 
-- Florabase shows a clear error banner in the form or dialog explaining that the change could not be
-  saved.
-- Your typed notes, dates, and selections stay on screen so you do not have to retype them.
-- Nothing is half-saved or silently duplicated.
-- Once your network connection or server is back, click the form's save button again. If you are
+- Florabase shows a red error notice inside the form or dialog — for example, `Florabase could not
+  save or refresh this record. Check the connection and try again.` (on **Plants**), `Florabase
+  could not save or refresh this seed lot. Check the connection and try again.` (on **Seeds**), or
+  `Florabase could not save or refresh this entry. Check the connection and try again.` (in the
+  **Journal**).
+- The form or dialog stays open and keeps the text, dates, and selections you entered on screen so
+  you do not lose your draft.
+- Once your network connection or server is back, click the form's save button to retry. If you are
   unsure whether a save completed right before a disconnection, open the directory or record in
   another tab to check before saving a second time.
 
@@ -59,14 +62,15 @@ If you open **Seeds**, **Sowings**, **Cuttings**, **Plants**, **Harvests**, or *
 not see a record you know you created, check the active search and filters:
 
 1. **Check the search box**: clear any text in the search field at the top of the directory.
-2. **Check active filter chips**: look right below the toolbar for active filter chips (such as
-   `Lifecycle: Active`, `State: Active`, or a specific location or botanical identity).
+2. **Check active filter chips**: look right below the toolbar for active filter chips rendered as
+   `<Filter>: <Value>` (where **Lifecycle** or **State** is the filter label and `Active` is the
+   selected value, or a specific location or botanical identity is selected). <!-- TODO(DOC-04 verify): DirectoryTools renders active filter chips dynamically as `{filter.label}: {filter.value}` (`frontend/src/components/DirectoryTools.tsx:88`). -->
 3. **Check whether the record moved to History**:
-   - By default, collection directories show **Active** records so completed sowings, exhausted seed
+   - By default, collection directories show `Active` records so completed sowings, exhausted seed
      lots, depleted stored material, reintegrated plants, and reversed records stay out of your way.
-   - To see historical records, click **Filters**, change **Lifecycle** (or **State**) to `All` (or
-     to the specific historical status such as `Exhausted`, `Completed`, `Depleted`, `Reintegrated`,
-     or `Reversed`), and click **Done** (or click **Reset** in the **Filters** drawer).
+   - To see historical records, click **Filters**, change **Lifecycle** to `History` or `All` (or in
+     **Stored material**, change **State** to `Depleted material` or `All states`), and click
+     **Done** (or click **Reset filters** in the **Filters** dialog).
 
 ## Using Florabase on a phone or tablet
 

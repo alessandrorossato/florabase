@@ -49,14 +49,14 @@ envelope, drying tray, or freezer to keep in stock, you promote that line to **S
    `Not tracked as stored material`) and click **Track stored material**.
 3. In the **Track stored material** dialog:
    - Under **Remaining now**, confirm what is going into storage:
-     - Set **Remaining now precision** to `Exact`, `Approximate`, or `Unknown`.
-     - If `Exact` or `Approximate` is selected, choose **Quantity dimension** (`Item count` or
-       `Weight`), enter **Amount**, and (for weight) select **Unit** (`mg`, `g`, or `kg`).
+     - Choose `Exact`, `Approximate`, or `Unknown` (`Remaining now precision` is built from the
+       **Remaining now** fieldset label). <!-- TODO(DOC-04 verify): InventoryDialog QuantityFields builds `${label} precision`, `${label} dimension`, `${label} amount`, and `${label} unit` dynamically from `label="Remaining now"` (`frontend/src/harvests/InventoryDialog.tsx:67-128`). -->
+     - If `Exact` or `Approximate` is selected, choose `Item count` or `Weight`, enter the amount,
+       and (for weight) select `mg`, `g`, or `kg`.
        > **Tip for seed saving:** If you plan to convert stored seeds by weight into a **Seed lot**,
        > record the weight in `g` or `mg` (`Seed lot` inventory uses `seeds`, `g`, or `mg`).
    - Under **Storage Location** (optional), select a location that has the **Stored material**
-     scope enabled (or leave it `Unassigned`).
-   - Optionally add **Inventory notes**.
+     scope enabled (or leave it blank, which displays as `Not recorded` under **Storage**).
 4. Click **Track stored material**.
 
 The line is now `Active` in your stored inventory. You can view and manage all stored harvest items
@@ -65,11 +65,13 @@ material** in the left navigation panel.
 
 <!-- TODO(DOC-04 screenshot): Harvest detail page Stored material section with an active tracked Seeds line, highlight Track stored material / Edit stored material and Create Seed lot buttons -->
 
-> **Recording uses or disposal of stored material:** Whenever you consume, share, or discard part of
-> a stored line without creating a seed lot, click **Record disposition** on that line, choose
-> **Kind** (`Consumed / used`, `Given away / shared`, `Discarded`, `Lost / spoiled`, or `Other`),
-> choose whether the line stays `Active` or becomes `Depleted` or `Disposed`, update **Remaining
-> now**, and click **Record disposition**.
+> **Recording uses or disposal of stored material:** Whenever you consume, process, gift, or discard
+> part of a stored line without creating a seed lot, click **Record disposition** on that line. In
+> the **Record disposition** dialog, choose **Disposition** (`Consumed`, `Processed`, `Discarded`,
+> `Gifted`, or `Used for propagation`), choose **Material leaving stock** (`Partial amount` to keep
+> the line `Active`, or `Use all remaining` to mark it `Depleted`), enter **Amount used** (and
+> **Confirmed remaining now** when the balance is approximate), optionally set **Disposition date**
+> and **Notes**, and click **Record disposition**.
 
 ## 3. Convert stored seeds into a new Seed lot
 
@@ -91,13 +93,13 @@ of it into a new **Seed lot** ready for sowing:
        viability until** date, and **Seed lot notes**.
    - **Conversion quantities**:
      - Under **Seed lot quantity**, choose `Unknown`, `Exact`, or `Approximate`. If you choose
-       `Exact` or `Approximate`, select `Seed count` or `Weight`, enter the **Amount**, and (for
-       weight) choose `g` or `mg`.
-     - If you chose **Partial amount** from an approximate or unknown stored line, confirm what stays
-       behind under **Confirmed remaining now**.
+       `Exact` or `Approximate`, select `Item count` (for seed count) or `Weight`, enter the amount,
+       and (for weight) choose `g` or `mg`.
+     - If you chose **Partial amount** from an approximate stored line, confirm what stays behind
+       under **Confirmed remaining now**.
 3. Click **Create Seed lot**.
-4. In the confirmation banner that appears, click **Open Seed lot** (or open the new lot from
-   **Collection** → **Seeds**).
+4. In the confirmation banner that appears (`Seed lot created.`), click **Open Seed lot** (or open
+   the new lot from **Collection** → **Seeds**).
 
 The new **Seed lot** has its **Source** automatically set to `Produced from my collection` and its
 **Harvest date** populated from the harvest's occurrence date.
@@ -109,8 +111,8 @@ The new **Seed lot** has its **Source** automatically set to `Produced from my c
 If you converted the wrong amount or chose the wrong stored line:
 
 1. On the new **Seed lot** detail page (under **Harvested seed origin**) or on the **Harvest** detail
-   page (under **Stored material** → **Show Seed lot conversions**), click **Undo Seed lot
-   creation**.
+   page (under **Stored material**, after clicking `Show` `Seed lot conversions`), click **Undo Seed
+   lot creation**. <!-- TODO(DOC-04 verify): ConversionHistory builds the toggle button label dynamically as `{open ? "Hide" : "Show"} Seed lot conversions` (`frontend/src/harvests/ConversionHistory.tsx:126`). -->
 2. In the **Undo Seed lot creation** dialog, click **Confirm undo**.
 
 As long as no sowings have been started from the converted seed lot yet, Florabase marks the seed
@@ -123,8 +125,8 @@ Now that you have converted harvested seeds into a new **Seed lot**, you can ins
 multi-generation chain (`Seed lot` → `Sowing` → `Plant` / `Plant group` → harvested new `Seed lot`):
 
 1. Open your newly converted **Seed lot** detail page.
-2. On the **Overview** tab, look at the **Harvested seed origin** section: it links directly to the
-   **Harvest**, the **Harvest source** (`Plant` or `Plant group`), and the **Stored material line**.
+2. On the **Overview** tab, look at the **Harvested seed origin** section: it shows the transferred
+   quantity and an **Open originating Harvest and stored material** link back to the harvest.
 3. Select the **Lineage** tab on the **Seed lot** detail page:
    - Under **Recorded upstream path**, Florabase displays the step-by-step chain leading to this
      seed lot, showing each ancestor record and the relationship between them (for example,
@@ -133,9 +135,9 @@ multi-generation chain (`Seed lot` → `Sowing` → `Plant` / `Plant group` → 
 4. For the full interactive graph across generations, click **Explore material ancestry** in the
    **Lineage** tab (or select **Explore** → **Lineage** in the left rail and pick your new **Seed
    lot**):
-   - You can see the **Current record**, **Generation 1** (the producing plant or group), and
-     **Generation 2** (the sowing and original seed lot), with the harvest and conversion evidence
-     shown on the connecting edge.
+   - You can see the **Current record**, `Generation` `1` (the producing plant or group), and
+     `Generation` `2` (the sowing and original seed lot), with the harvest and conversion evidence
+     shown on the connecting edge. <!-- TODO(DOC-04 verify): AncestryExplorer builds generation column headings dynamically as `Generation ${String(generation.depth)}` (`frontend/src/lineage/AncestryExplorer.tsx:480`). -->
    - Click any record in the chain to jump straight to it.
 
 <!-- TODO(DOC-04 screenshot): Seed lot Lineage tab or Explore Lineage view showing the multi-step chain from original Seed lot through Sowing and Plant/Plant group to the converted Seed lot -->

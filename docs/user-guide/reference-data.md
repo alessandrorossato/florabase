@@ -9,7 +9,7 @@ local reference snapshots or enable external lookups.
 Every core feature in Florabase works out of the box on a fresh installation without any optional
 reference files:
 
-- Creating and editing **Botanical identities**, writing **Botanical profiles**, and recording
+- Creating and editing **Botanical identities**, writing a **Botanical profile**, and recording
   manual **Native ranges** (using the built-in world countries and regions or your own local
   places).
 - Managing **Suppliers**, **Orders**, **Seed lots**, **Sowings**, **Cuttings**, **Plants**, **Plant
@@ -24,12 +24,12 @@ reference files:
 When optional reference sources are available, they enrich **Botanical identities** and the pages
 under **Explore**:
 
-- **World Flora Online (WFO) local snapshot**: enables local taxonomy matching, accepted names, and
+- **World Flora Online (WFO)** local snapshot: enables local taxonomy matching, accepted names, and
   classification browsing in **Explore** → **Taxonomy** and on the **Taxonomy** tab of a
   **Botanical identity**.
-- **Kew WCVP local native-range index**: provides reviewable native-range proposals on a
+- **Kew WCVP** local native-range index: provides reviewable native-range proposals on a
   **Botanical identity** and in **Explore** → **Geography** → **Native ranges**.
-- **GBIF online lookup**: lets you explicitly search and confirm a GBIF reference link on a
+- **GBIF** online lookup: lets you explicitly search and confirm a GBIF reference link on a
   **Botanical identity** and load occurrence density evidence for one species at a time in
   **Explore** → **Geography** → **Species distribution**.
 - **OpenStreetMap tiles**: adds an optional street-level basemap when zooming in on provenance sites

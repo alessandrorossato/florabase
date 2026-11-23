@@ -50,7 +50,7 @@ when bringing in a new collection:
 4. Click **CSV file** and select a `.csv` file from your computer (such as the **Example CSV** you
    just downloaded, or your own edited spreadsheet).
 5. Click **Validate and preview**.
-6. Inspect the **Preview: \<filename\>** panel below:
+6. Inspect the `Preview:` panel below (showing the uploaded file name): <!-- TODO(DOC-04 verify): ImportExportScreen builds the preview heading dynamically as `Preview: ${preview.filename}` (`frontend/src/import-export/ImportExportScreen.tsx:664`). -->
    - The summary counters show how many rows are **Ready** and how many **Needs attention** (you can
      filter the table by clicking **All**, **Ready**, or **Needs attention**).
    - If a row matches an existing record or has an ambiguous reference, Florabase explains the issue

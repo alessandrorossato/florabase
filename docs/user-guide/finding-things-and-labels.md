@@ -69,9 +69,9 @@ or in any directory — you can save it as a named **Saved view**:
 You can reopen a saved view in three ways:
 
 - **From the left navigation panel**: saved views appear automatically as indented links directly
-  underneath their section in the navigation panel (up to 5 per section, with a **Show all N saved
-  views** link when you have more). Click any saved view name in the panel to open that section with
-  your exact filters applied.
+  underneath their section in the navigation panel (up to 5 per section, with a `Show all` link
+  when you have more). Click any saved view name in the panel to open that section with your exact
+  filters applied. <!-- TODO(DOC-04 verify): WorkbenchShell builds the overflow link dynamically as `Show all ${String(itemSavedViews.length)} saved views` (`frontend/src/shell/WorkbenchShell.tsx:582`). -->
 - **From the toolbar**: on **Today** or in the directory, click **Saved views**, then click **Open**
   next to the view you want.
 - **From Search and commands**: press `Ctrl K` / `⌘K`, type the view's name, and select it.
@@ -81,8 +81,8 @@ saved view with your currently active filters), **Rename**, or **Delete**.
 
 ## 3. Prepare and print physical labels
 
-Florabase can print weather-resistant pot stakes, packet labels, and storage tags with QR codes for
-any **Seed lot**, **Plant**, **Plant group**, or **Stored material** item.
+Florabase can print pot stakes, packet labels and storage tags with QR codes for any **Seed lot**,
+**Plant**, **Plant group**, or **Stored material** item.
 
 ### Configure your QR destination (one-time setup)
 
@@ -99,7 +99,7 @@ or browser uses to reach your Florabase instance:
 
 ### Add records to a label batch and inspect Print preview
 
-You can open a single record directly in the label preview by clicking the **`⋯`** menu (or header
+You can open a single record directly in the label preview by clicking the `⋯` menu (or header
 actions) on a **Seed lot**, **Plant**, **Plant group**, or **Stored material** row and clicking
 **Print label**, or you can build a multi-label batch in **Settings** → **Labels**:
 

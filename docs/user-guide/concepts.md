@@ -31,8 +31,8 @@ over the years:
   collected, or harvested from your own plants.
 - **Sowings** (`Collection` → `Sowings`): a specific sowing batch started from a seed lot (or
   recorded directly), where you track substrate, conditions, germination checks, and outcome.
-- **Cuttings** (`Collection` → `Cuttings`): a **Vegetative material lot** (cuttings, divisions,
-  scions, offsets, or layers) and the **Rooting attempts** started from it.
+- **Cuttings** (`Collection` → `Cuttings`): a **Vegetative lot** (stem, leaf, or root cuttings) and
+  the **Rooting attempts** started from it.
 - **Plants** (`Collection` → `Plants`): a single, individually tracked living specimen (such as a
   specimen tree, a mother plant, or a potted plant you observe on its own).
 - **Plant groups** (`Collection` → `Plants` → `Plant groups`): a stand, flat, row, or bed of plants
@@ -43,7 +43,7 @@ over the years:
   be tracked in storage as **Stored material**, and stored seeds can be converted into a new
   **Seed lot**.
 - **Locations** (`Collection` → `Locations`): the places on your property where your material is kept
-  (for example, `Greenhouse > Bench 2` or `Seed Fridge > Top Drawer`). Each location lists which
+  (for example, `Greenhouse → Bench 2` or `Seed Fridge → Top Drawer`). Each location lists which
   record types it is **Used for** (`Plants`, `Sowings`, `Seed lots`, `Stored material`,
   `Vegetative lots`, `Rooting attempts`).
 
@@ -85,8 +85,8 @@ Under **Activity** (and on individual records), Florabase keeps three distinct t
 
 Or for vegetative propagation:
 
-Mother `Plant` (or `Plant group`) → `Vegetative material lot` → `Rooting attempt` → new `Plant` (or
-`Plant group`)
+Mother `Plant` (or `Plant group`) → `Vegetative lot` → `Rooting attempt` → new `Plant` (or `Plant
+group`)
 
 Florabase only shows lineage links that you explicitly recorded. Two plants that merely share the
 same **Botanical identity** are never assumed to be parent and offspring unless they are connected by
@@ -130,8 +130,8 @@ Quantity fields across Florabase distinguish between `"zero"`, `"approximate"`, 
 - **Sowings**: choose **Quantity sown** as **Unknown**, **Seed count**, or **Weight** (`g` or `mg`),
   and tick **Approximate** when estimating.
 - **Plant groups**: choose **Quantity** as **Unknown**, **Exact count**, or **Approximate count**.
-- **Harvest materials and Stored material**: choose whether a quantity is **Not recorded** /
-  **Unknown**, an **Exact** count or weight, or an **Approximate** count or weight.
+- **Harvests** and **Stored material**: choose whether a quantity is `Not recorded` / `Unknown`, an
+  `Exact` count or weight, or an `Approximate` count or weight.
 
 ## Explore vs. a record's own tabs
 

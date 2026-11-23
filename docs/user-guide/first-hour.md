@@ -54,13 +54,14 @@ Florabase opens the new identity's detail page on the **Overview** tab.
 To store cultivation notes and reference details on this identity:
 
 1. On the botanical identity's detail page, select the **Reference** tab.
-2. In the **Botanical profile** panel, click **Add profile**.
-3. Use the three section tabs in the **Add botanical profile** dialog to enter as much or as little
-   as you need:
+2. In the **Botanical profile** panel, click **Add profile** (this opens the **Edit botanical
+   identity** editor on the **Reference** tab, showing the **Add profile** form).
+3. Use the three section tabs in the **Add profile** form to enter as much or as little as you need:
    - **Description & origin**: **Description** and **Origin & distribution**.
    - **Cultivation**: **Cultivation** notes (soil, light, hardiness, watering).
    - **Uses & warnings**: **Uses** and **Warnings** (such as toxicity or thorns).
-4. Click **Save profile**.
+4. Click **Save profile** (then click **Close editor** if you want to return to the read-only detail
+   tabs).
 
 ### Record a manual native range
 
@@ -198,22 +199,22 @@ Once seedlings are ready to pot on or plant out, you can promote them into an in
 **Plant group**, or both:
 
 1. On the **Sowing** detail page, click **Create Plant**.
-2. In the **Create Plant from Sowing** dialog:
+2. On the **Create Plant** page (showing `From <sowing>` under the heading):
    - On **Essentials**, **Botanical identity** is prefilled from the sowing. Optionally enter a
      **Label** (for example, `Specimen #1`) and pick a **Current location**.
    - On **Origin**, optionally set the **Collection-entry date**.
    - On **Lifecycle & notes**, optionally add **Notes**.
-   - Under **Sowing after creation**, keep **Keep active** selected so you can also create a plant
+   - On **Sowing after creation**, keep **Keep active** selected so you can also create a plant
      group from the remaining seedlings.
    - Click **Create Plant**.
-3. Use the breadcrumb or the **Original Sowing** link on the plant's **Overview** tab to return to
-   your **Sowing** detail page.
+3. On the new plant's detail page, click the sowing link next to **Source sowing** in the header
+   summary (or in the header lineage strip) to return to your **Sowing** detail page.
 4. Click **Create Plant group**.
-5. In the **Create Plant group from Sowing** dialog:
+5. On the **Create Plant group** page (showing `From <sowing>` under the heading):
    - On **Essentials**, optionally enter a **Label** (for example, `Bed A row`), set **Quantity** to
      `Exact count` (or `Approximate count` / `Unknown`) and enter a **Count** (for example, `6`).
-   - Under **Sowing after creation**, choose **Keep active** (if more seedlings remain in the tray)
-     or **Complete Sowing** (if you have potted up everything from this sowing).
+   - On **Sowing after creation**, choose **Keep active** (if more seedlings remain in the tray) or
+     **Complete Sowing** (if you have potted up everything from this sowing).
    - Click **Create Plant group**.
 
 ### Extract an individual Plant from the Plant group
@@ -252,20 +253,20 @@ Here are the supported reversals in the product and how to run one right now:
      `Active` state back.
 - **Undo a Plant or Plant group created from a Sowing**:
   1. Open the **Plant** or **Plant group** that was created from a sowing.
-  2. Click the **`⋯`** (**More record actions**) button in the top right of the detail header and
+  2. Click the `⋯` (**More record actions**) button in the top right of the detail header and
      choose **Undo creation**.
-  3. In the **Undo plant creation** (or **Undo plant group creation**) dialog, click **Undo plant
-     creation** (or **Undo plant group creation**). The sowing is restored to its pre-creation
-     state, and the reversed plant or group remains in history as `Reversed`.
+  3. In the `Undo plant creation` (or `Undo plant group creation`) dialog, click the confirm button
+     (`Undo plant creation` or `Undo plant group creation`). The sowing is restored to its
+     pre-creation state, and the reversed plant or group remains in history as `Reversed`.
+     <!-- TODO(DOC-04 verify): CreationReversal builds the dialog title and confirm button dynamically as `Undo ${labels[kind]} creation` where `labels` maps to `"sowing"`, `"plant"`, and `"plant group"` (`frontend/src/propagation/CreationReversal.tsx:33,204,211,348`). -->
 - **Undo a Sowing started from a Seed lot**:
   1. If the sowing has any active descendant plants or plant groups, undo their creation first
      (newest first).
   2. On the **Sowing** detail page, click **Undo creation** in the top action bar, then confirm
-     **Undo sowing creation** in the dialog. The source **Seed lot** gets its previous quantity and
+     `Undo sowing creation` in the dialog. The source **Seed lot** gets its previous quantity and
      `Active` status back.
 
-> **Note:** Two other workflows also support one-click reversal in the same way: **Undo Seed lot
-> creation** on a seed lot converted from stored harvest seeds (covered in [Harvest and seed
+> **Note:** Two other workflows also support one-click reversal in the same way: **Undo Seed lot creation** on a seed lot converted from stored harvest seeds (covered in [Harvest and seed
 > saving](harvest-and-seed-saving.md)) and **Undo starting attempt** / **Undo establishment** on
 > cuttings (covered in [Cuttings and vegetative propagation](cuttings.md)).
 
