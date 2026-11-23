@@ -142,6 +142,7 @@ configuration and secrets still need a separate protected backup.
 
 - [Documentation index](docs/README.md)
 - [v1.0.0 release scope](docs/release/scope-v1.md)
+- [End-user guide](docs/user-guide/README.md)
 - [Installation, upgrade, backup and restore](docs/installation.md)
 - [Source-build deployment and upgrades](docs/deployment.md) (development)
 - [Development guide](docs/development.md)

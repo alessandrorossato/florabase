@@ -9,6 +9,7 @@ to know.
 
 ### Added
 
+- End-user guide (`docs/user-guide/`).
 - Plain-ASCII startup banner printed once per container start as the first output of
   `release_schema wait-db`, showing Florabase version, image revision (`FLORABASE_REVISION`),
   sanitized origin, environment, log format, and project URL without printing secrets

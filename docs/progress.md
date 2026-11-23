@@ -1,5 +1,32 @@
 # Engineering progress
 
+## 2026-11-23 — DOC-04 End-user guide and unassisted G-CORE trial template
+
+- On `docs/doc-04-user-guide` from `origin/main` `ddf5a14` (writer `argon-doc-04`).
+- Published the ten-page end-user guide under [`docs/user-guide/`](user-guide/README.md)
+  ([`README.md`](user-guide/README.md), [`concepts.md`](user-guide/concepts.md),
+  [`first-hour.md`](user-guide/first-hour.md), [`daily-use.md`](user-guide/daily-use.md),
+  [`harvest-and-seed-saving.md`](user-guide/harvest-and-seed-saving.md),
+  [`cuttings.md`](user-guide/cuttings.md),
+  [`finding-things-and-labels.md`](user-guide/finding-things-and-labels.md),
+  [`your-data.md`](user-guide/your-data.md),
+  [`reference-data.md`](user-guide/reference-data.md),
+  [`troubleshooting.md`](user-guide/troubleshooting.md)) covering `G-CORE` steps 1–9 end-to-end for a
+  non-developer user on a freshly installed instance, plus step 12 (Cuttings), using exact UI
+  navigation and form labels from `frontend/src/` and placing `TODO(DOC-04 screenshot)` and
+  `TODO(DOC-04 after batch 12)` markers for candidate screenshots and batch-12 overlap areas.
+- Added the unassisted trial record template at
+  [`docs/release/evidence/doc-04-trial-template.md`](release/evidence/doc-04-trial-template.md) and
+  the archived handoff (coverage map, marker index, doc-vs-code discrepancies, and source label
+  provenance) at [`docs/archive/DOC-04/handoff.md`](archive/DOC-04/handoff.md).
+- Linked the user guide from [`docs/README.md`](README.md), root [`README.md`](../README.md), and
+  [`CHANGELOG.md`](../CHANGELOG.md), and registered `DOC-04` (`in_progress`, proposed release class
+  `release-work` pending the unassisted release-candidate trial) in [`docs/features.json`](features.json)
+  and [`docs/release/scope-v1.json`](release/scope-v1.json).
+- Verified `python3 scripts/check-features.py`, `python3 scripts/check-doc-links.py`,
+  `make verification-plan FORMAT=json` (`"tier": "docs"`), and canonical
+  `make feature-verify AGENT_ID=argon-doc-04` (`docs` tier).
+
 ## 2026-11-23 — MOBILE-001 Capacitor Android shell spike (PWA preserved)
 
 - On `feat/mobile-001-capacitor-spike` from `origin/main` `68e9449` (writer `neon-mobile-001`).
