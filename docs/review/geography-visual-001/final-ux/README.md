@@ -5,7 +5,7 @@ Overview, persistent tabs, rectangular Places and middle-map layout.
 [This phase's handoff](handoff.md) is preserved.
 
 [Open isolated review](http://localhost:15276/#/geography/overview) ·
-[Current handoff](../../../geography-visual-001-handoff.md).
+[Current handoff](../../../archive/GEOGRAPHY-VISUAL-001/geography-visual-001-handoff.md).
 Source: `/home/alessandro/.codex/worktrees/5430/florabase`, `feat/geography-visual-001`.
 Base and freshly fetched `origin/main`: `e7ade78559803a35b738a669085799f55eb76258`.
 The accepted six-view IA and single global Geography entry are preserved.

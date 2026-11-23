@@ -11,7 +11,7 @@ botanical reference information separate from the material and plants in a colle
 preserving explicit provenance through real collection workflows.
 
 Florabase is under active pre-release development. The current application is usable for one local
-owner, but no stable public release has been published yet. The private beta series
+owner, but no stable public release has been published yet. The public pre-release (beta) series
 (`v0.1.0-beta.N`) leads to release candidates (`v1.0.0-rc.N`) and then v1.0.0, the first
 public stable release.
 The [v1.0.0 release scope](docs/release/scope-v1.md) defines what that release contains, its
@@ -19,30 +19,43 @@ gates and its exclusions.
 
 ## What works today
 
-- Botanical identities, incomplete-friendly operator-authored profiles, structured native ranges,
+- **Today** (operational dashboard): current holdings, due work, recent activity, global search, and
+  saved operator views
+- **Collection → Seeds & Sowings**: seed lots with source, partial dates, quantity, storage,
+  lifecycle and optional producer lineage; sowings with cultivation details and dated germination
+  observations
+- **Collection → Cuttings**: vegetative propagation lots and rooting observations (delivered and
+  being finished and certified for v1.0.0)
+- **Collection → Plants & Plant groups**: individually tracked plants and quantity-aware plant
+  groups, with extraction, height measurements and explicit transfers
+- **Collection → Harvests & Stored material**: structured harvests collected from a plant or plant
+  group, stored material inventory, and explicit conversion to new seed lots (see the
+  [Harvest guide](docs/harvests.md))
+- **Collection → Locations**: scoped hierarchical collection locations with atomic bulk moves
+- **Activity → Journal & History**: plant and plant-group journal events (including phenology
+  observations) and read-only cross-domain operational history
+- **Activity → Schedule & Calendar (planned work)**: concrete planned work in list and month
+  calendar views
+- **Explore → Botanical identities**: incomplete-friendly operator-authored profiles, structured
+  native ranges, accepted-name correction with retained name history and synonyms, optional covers,
   and explicit links to external GBIF references
-- Supplier, scoped hierarchical collection Location, GeographicPlace, and ProvenanceSite directories
-- Seed lots with source, partial dates, quantity, storage, lifecycle, and optional producer lineage
-- Sowings with partial dates, quantities, cultivation details, and simple germination totals
-- Individually tracked Plants and quantity-aware PlantGroups
-- Plant and PlantGroup Journal Events and read-only cross-domain operational History
-- Operational Dashboard and concrete planned work in Schedule List and Month Calendar
-- Global search, saved operator views, atomic bulk Location moves and purchase Orders
-- Guided CSV import/export, dated germination observations and printable labels with authenticated QR lookup
-- Collection-aware occurrence/native-range Maps, reviewed native-range enrichment and a classification Taxonomy tree
-- Explicit lineage through `SeedLot → Sowing → Plant / PlantGroup`, PlantGroup extraction, and
-  collection-produced seed lots, with receipt-proven reversal for supported authoritative operations
-- A collection provenance map for coordinate-bearing ProvenanceSites
-- [Shared media library](docs/media-library.md): reusable local/external images, per-record captions
-  and order, explicit primary selection, protected thumbnails, retained unlinked assets and guarded deletion.
-- Collection-photo galleries and optional BotanicalIdentity covers; layered contextual form help
-- Local owner authentication with server-side sessions and CSRF protection
-- Structured Harvests of material collected from a Plant or Plant group, with stored material and
-  explicit conversion to new seed lots; see the [Harvest guide](docs/harvests.md)
-- A material ancestry explorer, accepted-name correction with retained name history and synonyms,
-  Plant height measurements and phenology observations in the Journal
-- Cuttings (vegetative propagation); delivered and still being finished and certified for v1.0.0
-- Installation as a web app ([PWA](docs/pwa.md)); installation on physical phones is not yet verified
+- **Explore → Taxonomy & Lineage**: classification taxonomy tree backed by a local reviewed WFO
+  snapshot, plus explicit material and identity lineage (`SeedLot → Sowing → Plant / PlantGroup`,
+  extraction, collection-produced seed lots) with receipt-proven reversal for supported operations
+- **Explore → Media**: [shared media library](docs/media-library.md) with reusable local/external
+  images, per-record captions and order, explicit primary selection, collection-photo galleries,
+  protected thumbnails, retained unlinked assets and guarded deletion
+- **Explore → Geography**: local places and provenance sites, **Collection origins** provenance map,
+  **Species distribution** (on-demand GBIF occurrence density), and **Native ranges** map with
+  reviewed WCVP enrichment
+- **Sourcing → Suppliers & Orders**: supplier directory and purchase orders linking received
+  material
+- **Settings → Account, Theme, Labels, Import / Export, Data sources & Help**: local owner
+  authentication with server-side sessions and CSRF protection, multi-theme light/dark appearances,
+  printable labels with authenticated QR lookup, guided CSV import/export, transparent data-source
+  attribution and layered contextual help
+- **Installable web app ([PWA](docs/pwa.md))**: installable as a progressive web app (installation
+  on physical phones is not yet verified)
 
 Each increment's implementation and verification status is in the
 [feature backlog](docs/features.json) and its
@@ -74,17 +87,14 @@ network via the optional hardened override in [docs/security.md](docs/security.m
 ## Requirements
 
 Repository development requires Docker Engine with Docker Compose **2.24.4 or newer**, GNU Make,
-Python 3 and `curl`. The development overlay uses Compose's `!override` tag. Host Node.js is optional.
-[Docker Compose merge rules](https://docs.docker.com/reference/compose-file/merge/)
+Python 3 and `curl`. The development overlay uses Compose's `!override` tag (see
+[Docker Compose merge rules](https://docs.docker.com/reference/compose-file/merge/)). Host Node.js
+is optional.
 
-For self-hosting, [install Florabase](docs/installation.md) with `compose.yaml` from the latest
-release tag (`https://github.com/alessandrorossato/florabase/blob/<latest-tag>/compose.yaml`;
-`main` may be ahead of the published `:latest` images): create the data and backup folders with
-their owners once, edit the host folder paths, database password and canonical origin in
-`compose.yaml`, and deploy in a Compose manager such as Dockhand or with `docker compose up -d`.
-No container runs as root; it initializes a new installation, backs up before every upgrade, and
-supports the Compose 2.20 baseline. It requires an HTTPS reverse proxy (or Tailscale Serve) and
-the exact public HTTPS origin.
+For self-hosting, follow [Install Florabase](docs/installation.md) using `compose.yaml` from the
+latest release tag (Compose 2.20 baseline; no container runs as root). The single Compose stack
+initializes a fresh installation automatically and writes a verified backup before upgrades. Put it
+behind an HTTPS reverse proxy (or Tailscale Serve) with your exact canonical HTTPS origin.
 
 [Building from a source checkout](docs/deployment.md) is for development only.
 
@@ -130,6 +140,7 @@ configuration and secrets still need a separate protected backup.
 
 ## Project information
 
+- [Documentation index](docs/README.md)
 - [v1.0.0 release scope](docs/release/scope-v1.md)
 - [Installation, upgrade, backup and restore](docs/installation.md)
 - [Source-build deployment and upgrades](docs/deployment.md) (development)
@@ -139,6 +150,7 @@ configuration and secrets still need a separate protected backup.
 - [Security architecture](docs/security.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
+- [Third-party notices](THIRD-PARTY-NOTICES.md)
 - [Changelog](CHANGELOG.md)
 - [Versioning and compatibility](docs/versioning.md)
 - [Product roadmap](docs/product-roadmap.md)
@@ -146,9 +158,12 @@ configuration and secrets still need a separate protected backup.
 
 ## License
 
+Copyright (C) 2026 Alessandro Rossato
+
 Florabase is free and open-source software licensed under the
 GNU Affero General Public License v3.0 or later.
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 
-See [LICENSE](LICENSE) for the full license text.
+See [LICENSE](LICENSE) for the full license text. Bundled assets and external data sources keep
+their own licences; see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

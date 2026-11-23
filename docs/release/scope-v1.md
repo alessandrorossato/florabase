@@ -309,4 +309,4 @@ functional batch, with these requirements:
 The roadmap that preceded this scope, including the PRE-0.1 freeze path, the v0.1.0 release gates
 and the beta framing, is kept with its text unchanged at
 [history/product-roadmap-2026-11-11.md](history/product-roadmap-2026-11-11.md). The beta
-acceptance contract remains at [beta-foundation-001.md](../beta-foundation-001.md).
+acceptance contract remains at [beta-foundation-001.md](../archive/BETA-FOUNDATION-001/beta-foundation-001.md).

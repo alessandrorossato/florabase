@@ -103,7 +103,7 @@ Record lookup is batched per selected kind, with no per-record reference/provena
 Preview reads the Location tree once. SeedLot, Sowing and inventory assignment loops do not refetch
 unrelated references; Plant/Group writes deliberately retain the existing per-record Event service.
 The maximum is 100 and all preview/error rows are bounded accordingly. Query regression evidence is
-recorded in [the handoff](bulk-001-handoff.md); there is no caching or background processing.
+recorded in [the handoff](archive/BULK-001/bulk-001-handoff.md); there is no caching or background processing.
 
 ## Navigation and later work
 

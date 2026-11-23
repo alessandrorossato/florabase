@@ -6,7 +6,7 @@
 # Florabase product and release roadmap
 
 The **v0.1.0-beta.1 private self-hosted beta** now has a separate evidence-based
-[foundation audit and acceptance contract](../../beta-foundation-001.md). It compares current source at
+[foundation audit and acceptance contract](../../archive/BETA-FOUNDATION-001/beta-foundation-001.md). It compares current source at
 `af2372c` with the older snapshots below and defines BETA-IMAGE-001, BETA-RUNTIME-001, actual-data
 onboarding and beta admission in `features.json`. Existing feature statuses and the stable v0.1.0
 release gate are retained; this proposal is not release approval.
@@ -82,15 +82,15 @@ recorded as `implemented`.
 | Botanical identities/profiles, suppliers, collection Locations and geographic provenance         | Core identity/profile/supplier/location features are `verified`; GEOGRAPHY-002/003, LOCATION-002/003 and MAP-001 remain `implemented`; [domain](../../domain-model.md), [Location aggregation](../../location-descendant-aggregation.md).                               |
 | Seed lots, Sowings, dated germination observations, Plants and Plant groups                      | SEED-001–004, SOWING-001–003 and PLANT-001–006 are `verified`; GERMINATION-001 remains `implemented`. Unknown quantity/date precision is retained.                                                                                                          |
 | Explicit material ancestry, propagation, extraction and supported guarded reversals              | LINEAGE-001/002 and PROPAGATION-001–003 are `verified`; [integrity audit](../../lineage-integrity.md). LINEAGE-003 [ancestry explorer](../../lineage-explorer.md) is `implemented`.                                                                                      |
-| Journal and read-only cross-domain History                                                       | EVENT-001/002 and HISTORY-001 are `verified`; [History contract](../../operational-history.md), [handoff](../../history-001-handoff.md). Product pass remains required.                                                                                                 |
+| Journal and read-only cross-domain History                                                       | EVENT-001/002 and HISTORY-001 are `verified`; [History contract](../../operational-history.md), [handoff](../../archive/HISTORY-001/history-001-handoff.md). Product pass remains required.                                                                                                 |
 | Harvests, stored material and explicit harvested-seed conversion                                 | HARVEST-001 remains `implemented`; HARVEST-002/003 are `verified`; [Harvests](../../harvests.md), [inventory](../../harvest-inventory.md), [conversion](../../harvest-seed-conversion.md).                                                                                    |
-| Shared media, collection photos and primary imagery                                              | ATTACHMENT-002 and SUPPLIER-003 are `verified`; ATTACHMENT-003/004/005 remain `implemented`; [Media library](../../media-library.md), [Supplier handoff](../../supplier-003-handoff.md).                                                                                |
+| Shared media, collection photos and primary imagery                                              | ATTACHMENT-002 and SUPPLIER-003 are `verified`; ATTACHMENT-003/004/005 remain `implemented`; [Media library](../../media-library.md), [Supplier handoff](../../archive/SUPPLIER-003/supplier-003-handoff.md).                                                                                |
 | Global search, Saved Views, atomic bulk Location moves, Orders and CSV import/export             | SEARCH-002, VIEW-001, BULK-001 and ORDER-001 are `verified`; SEARCH-001 and IMPORT-001 remain `implemented`; [Saved Views](../../saved-views.md), [Orders](../../orders.md), [CSV](../../import-export.md).                                                                   |
 | Explore occurrence maps, native ranges, reviewed native-range enrichment and classification tree | MAP-002, EXPLORE-001/002, ENRICHMENT-001 and TAXONOMY-003 are `verified`; [Maps](../../native-ranges-explore.md), [Taxonomy](../../collection-taxonomy.md). Classification is not phylogeny.                                                                            |
-| Printable physical labels with exact authenticated QR lookup                                     | LABEL-001 is `verified`; [workflow](../../labels.md), [review and outstanding physical checks](../../label-001-review.md). Mobile quick capture remains planned.                                                                                                        |
-| UI Foundation and operational Dashboard                                                          | DASHBOARD-001 is `verified`, delivered in PR #101; [handoff](../../dashboard-001-handoff.md), [UI contract](../../ui-contract.md). Older UX-002–006 remain `implemented`; global normalization is pending.                                                              |
-| Concrete future work in Schedule List and Month Calendar                                         | SCHEDULE-001/002 are `verified`; Calendar delivered in PR #105; [Schedule](../../schedule.md), [Calendar handoff](../../schedule-002-handoff.md). No recurrence/reminder implementation is implied.                                                                     |
-| Persistent synthetic UAT and measured performance baseline                                       | PREVIEW-001 and PERF-001 are `verified`; INFRA-MAINT-001 landed in PR #106 but remains `implemented`; [infrastructure handoff](../../infra-maint-001-handoff.md), [performance evidence](../../performance/PERF-001.md). Measurements predate later product increments. |
+| Printable physical labels with exact authenticated QR lookup                                     | LABEL-001 is `verified`; [workflow](../../labels.md), [review and outstanding physical checks](../../archive/LABEL-001/label-001-review.md). Mobile quick capture remains planned.                                                                                                        |
+| UI Foundation and operational Dashboard                                                          | DASHBOARD-001 is `verified`, delivered in PR #101; [handoff](../../archive/DASHBOARD-001/dashboard-001-handoff.md), [UI contract](../../ui-contract.md). Older UX-002–006 remain `implemented`; global normalization is pending.                                                              |
+| Concrete future work in Schedule List and Month Calendar                                         | SCHEDULE-001/002 are `verified`; Calendar delivered in PR #105; [Schedule](../../schedule.md), [Calendar handoff](../../archive/SCHEDULE-002/schedule-002-handoff.md). No recurrence/reminder implementation is implied.                                                                     |
+| Persistent synthetic UAT and measured performance baseline                                       | PREVIEW-001 and PERF-001 are `verified`; INFRA-MAINT-001 landed in PR #106 but remains `implemented`; [infrastructure handoff](../../archive/INFRA-MAINT-001/infra-maint-001-handoff.md), [performance evidence](../../performance/PERF-001.md). Measurements predate later product increments. |
 
 ## Immediate PRE-0.1 product freeze path
 
@@ -118,7 +118,7 @@ baseline inputs to UAT and page review, not new implementation increments in thi
 
 ### Journal / History product pass
 
-The bounded implementation candidate is ACTIVITY-001; see its [semantic audit and QA handoff](../../journal-history-product-pass-handoff.md). Independent acceptance remains pending.
+The bounded implementation candidate is ACTIVITY-001; see its [semantic audit and QA handoff](../../archive/ACTIVITY-001/journal-history-product-pass-handoff.md). Independent acceptance remains pending.
 
 - **Journal:** recording hub plus operator notebook. Delivered structured actions open their canonical
   workflows; observations and notes reuse the Plant/PlantGroup Journal. Future observation domains
@@ -157,7 +157,7 @@ applying or persisting a theme. Location labels, arbitrary design, PDF generatio
 QR capture remain deferred. The candidate is **implemented**, pending independent visual acceptance
 and canonical QA; the small settings migration requires normal explicit deployment. Printer/stock
 alignment and system print-dialog acceptance remain with the operator. See
-[Labels/navigation handoff](../../labels-navigation-ia-handoff.md).
+[Labels/navigation handoff](../../archive/IA-FREEZE-001/labels-navigation-ia-handoff.md).
 
 The final IA is Overview → Collection → Activity → Explore (with a non-actionable Maps subgroup)
 → Sourcing, shared by desktop/mobile with stable URLs. Tools remains accessible through Settings. Plant groups stay within Plants;
@@ -167,14 +167,14 @@ added. This establishes **FUNCTIONAL_IA_FREEZE_READY** for workflow/structure, n
 ### Global page-by-page visual review and normalization
 
 GLOBAL-VISUAL-001 was delivered through PR #111; its accepted SeedLot family is the Collection
-reference where semantics match. [Its handoff](../../global-visual-001-handoff.md) records the review and
+reference where semantics match. [Its handoff](../../archive/GLOBAL-VISUAL-001/global-visual-001-handoff.md) records the review and
 explicit actual-zoom limitation. COLLECTION-VISUAL-001 applies that grammar to Sowings and Plants;
-[the candidate handoff](../../collection-visual-001-handoff.md) records focused checks and live isolated
+[the candidate handoff](../../archive/COLLECTION-VISUAL-001/collection-visual-001-handoff.md) records focused checks and live isolated
 Feature Review evidence. Operator acceptance and later canonical verification remain separate gates.
 
 COLLECTION-VISUAL-002 extends the accepted Collection grammar to historical Harvests and hierarchical
 Locations. It preserves collected-versus-remaining material, explicit conversion, nested Locations and
-direct/inclusive active/total record counts. The [visual handoff](../../collection-visual-002-handoff.md)
+direct/inclusive active/total record counts. The [visual handoff](../../archive/COLLECTION-VISUAL-002/collection-visual-002-handoff.md)
 records its isolated Review fixture, focused checks and responsive evidence. The candidate remains
 `implemented` until operator acceptance and independent canonical verification.
 
@@ -300,7 +300,7 @@ media does not prove ancestry. This is neither taxonomic lineage nor phylogeny.
 
 Acceptance direction: branching/generational navigation stays authorized and usable at realistic
 sizes; each edge identifies its owning evidence. Clonal edges follow the
-[CUTTING-001 decision](../../cutting-001-design.md) and use the existing lineage integrity and receipts.
+[CUTTING-001 decision](../../archive/CUTTING-001/cutting-001-design.md) and use the existing lineage integrity and receipts.
 
 ### 2–3. Taxonomy reconciliation and botanical name history
 
@@ -353,7 +353,7 @@ Mother Plant → vegetative material / cutting batch
 ```
 
 CUTTING-001 uses **VegetativeLot + PropagationAttempt**, with a separate RootingObservation
-for rooting checks. The [architecture decision](../../cutting-001-design.md) records the alternatives
+for rooting checks. The [architecture decision](../../archive/CUTTING-001/cutting-001-design.md) records the alternatives
 and compares the original design with the shipped implementation.
 
 The domain contract preserves:

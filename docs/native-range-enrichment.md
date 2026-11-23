@@ -3,7 +3,7 @@
 The optional trusted-source panel in BotanicalIdentity → Native ranges uses the reviewed
 **Kew WCVP version 16** archive by default (updated from v15 by `WCVP-DEFAULT-001`), while retaining
 explicit **version 15** support, historical links, proposals, and applications.
-[WCVP-VERSION-001](wcvp-version-001.md) documents both pinned releases and crosswalks. [Exact source approval](native-range-enrichment-source-v15.md)
+[WCVP-VERSION-001](archive/WCVP-VERSION-001/wcvp-version-001.md) documents both pinned releases and crosswalks. [Exact source approval](archive/ENRICHMENT-001/native-range-enrichment-source-v15.md)
 records its schema, licence, attribution, complete inspection and checksum. Only explicit Apply
 writes canonical `BotanicalProfileNativeRange` relationships. Opening, searching, confirming a
 source link and retrieving proposals never create a profile or change recorded ranges or text.
@@ -295,6 +295,6 @@ The default setting is absent. No production/DEV/Stable Preview source cache was
 For the original ENRICHMENT-001 synthetic UAT, the existing source bind contains the ignored
 `backend/src/.source-cache/wcvp-v15.sqlite`; `compose.uat.yaml` selects that optional path.
 `.gitignore` and the backend Docker exclusion keep it out of Git and images. The official audit
-archive remains outside the repository. The [handoff](enrichment-001-handoff.md) records validation
+archive remains outside the repository. The [handoff](archive/ENRICHMENT-001/enrichment-001-handoff.md) records validation
 and operator scenarios. ENRICHMENT-002 automatic refresh remains planned; BOTANY-003 text enrichment
 and the deferred broad product/visual review retain their independent ownership.

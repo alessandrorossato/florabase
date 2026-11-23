@@ -8,7 +8,7 @@ fixture v4/80, revision `20261013_0042`. Existing owner/credential and saved pre
 All botanical relationships in these captures are synthetic acceptance examples, not botanical evidence.
 
 This pass supersedes the [previous live layout](../live/README.md). The existing architectural and
-scientific contracts remain; see [the updated handoff](../../../maps-foundation-001-handoff.md).
+scientific contracts remain; see [the updated handoff](../../../archive/MAPS-FOUNDATION-001/maps-foundation-001-handoff.md).
 
 ## Layout and selection
 

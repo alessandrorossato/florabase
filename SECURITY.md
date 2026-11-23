@@ -5,8 +5,8 @@
 | Version | Supported |
 | --- | --- |
 | Latest 1.x release | Yes, once v1.0.0 is published |
-| `main` | Fixes are made here and released in the next version |
-| Betas, release candidates and earlier releases | No |
+| Latest published beta | Best-effort fixes on `main`, released in the next beta |
+| Older betas, release candidates and earlier releases | No |
 
 No stable release is published yet. See the [versioning policy](docs/versioning.md).
 

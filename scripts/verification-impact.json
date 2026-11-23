@@ -6,7 +6,6 @@
     "compose",
     "Makefile",
     "AGENTS.md",
-    "LICENSE",
     "postgres/",
     "release/",
     "backend/Dockerfile",
@@ -135,7 +134,11 @@
   ],
   "documentation_paths": [
     "README.md",
-    "CONTRIBUTING.md"
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CHANGELOG.md",
+    "THIRD-PARTY-NOTICES.md",
+    "LICENSE"
   ],
   "generated_paths": [
     "backend/openapi.json",

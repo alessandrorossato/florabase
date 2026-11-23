@@ -378,4 +378,4 @@ duplicate-link/primary uniqueness and exact link/primary composite FKs. It updat
 guard for current targets; no assets, files or pre-existing links change and there is no backfill.
 Downgrade checks both Supplier links and designations before any DDL and refuses populated history.
 Explicit unlink retains MediaAssets; after Supplier state is empty downgrade/re-upgrade preserves
-existing collection links. See [handoff and acceptance evidence](supplier-003-handoff.md).
+existing collection links. See [handoff and acceptance evidence](archive/SUPPLIER-003/supplier-003-handoff.md).

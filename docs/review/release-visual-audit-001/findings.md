@@ -25,7 +25,7 @@ No P0 was established in the observed scope. This is not proof that no P0 exists
 
 These are missing checks or environment conditions, not inferred product bugs:
 
-- WFO is not configured. Current captures prove local-identity fallback in List and Tree modes, not a placed tree, graph fullscreen, source lookup or real graph performance. Delivered [Taxonomy evidence](../../taxonomy-visual-001-handoff.md) is historical comparison only; a follow-up on the same delivered source with the approved snapshot is required.
+- WFO is not configured. Current captures prove local-identity fallback in List and Tree modes, not a placed tree, graph fullscreen, source lookup or real graph performance. Delivered [Taxonomy evidence](../../archive/TAXONOMY-VISUAL-001/taxonomy-visual-001-handoff.md) is historical comparison only; a follow-up on the same delivered source with the approved snapshot is required.
 - QR destination is unset. A selected physical 50×30mm label/A4 batch is captured with truthful “QR not configured” and disabled Print. No setting was changed to manufacture a successful QR state. Native print dialog, QR decoding and real paper remain open.
 - Actual Ctrl+Plus did not change layout, DPR or visual scale. 125%/150% browser zoom, 320px reflow, screen readers, physical touch/soft keyboard, forced colors and reduced motion need manual acceptance.
 - No safely supported throttling/failure-injection capability was exposed by the browser. Natural loaders, empty results, record-not-found, source-unavailable, unconfigured printing and session expiry are captured; generic network-down recovery was not injected by stopping a protected/shared service.

@@ -512,7 +512,7 @@ change. Every record reads existing endpoints.
 | Mobile directory header density | **Carried as a required item before final visual acceptance.** Not addressed in M4, which is about record detail. It is listed under Outstanding below so it cannot drop out of the plan. |
 
 UX-TODAY-001 supersedes the Data quality row on Today: the six counts are an always-visible
-**To review** panel ([layout reversal](../../dashboard-001-handoff.md#layout-reversal--ux-today-001)).
+**To review** panel ([layout reversal](../../archive/DASHBOARD-001/dashboard-001-handoff.md#layout-reversal--ux-today-001)).
 
 ### Record identity header (all ten record types)
 

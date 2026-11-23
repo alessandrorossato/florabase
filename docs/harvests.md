@@ -229,7 +229,7 @@ Creation uses the full-page Collection canvas and source/category history parent
 retains the complete aggregate in guarded Details/Materials/Notes tabs; direct Edit URLs use the page fallback.
 The one-page full-width detail separates Materials collected, Stored material, Notes, related history
 and the shared Photos mini-gallery. Conversion is explicit and retains its atomic endpoint and guards.
-See the [candidate handoff](collection-visual-002-handoff.md) for evidence and acceptance limits.
+See the [candidate handoff](archive/COLLECTION-VISUAL-002/collection-visual-002-handoff.md) for evidence and acceptance limits.
 
 The second refinement keeps compact collected rows distinct from stored remainder, state and storage
 facts. Eligible seed conversion has an intrinsic-width important action, disposition is secondary, and

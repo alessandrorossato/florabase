@@ -1,8 +1,8 @@
 # Geography operator corrections — final review evidence
 
 [Open review](http://localhost:15276/#/geography/overview) ·
-[Current handoff](../../../geography-visual-001-handoff.md) ·
-[Shared breadcrumb audit and follow-up](../../../geography-breadcrumb-audit.md).
+[Current handoff](../../../archive/GEOGRAPHY-VISUAL-001/geography-visual-001-handoff.md) ·
+[Shared breadcrumb audit and follow-up](../../../archive/GEOGRAPHY-VISUAL-001/geography-breadcrumb-audit.md).
 
 Source `/home/alessandro/.codex/worktrees/5430/florabase`, `feat/geography-visual-001`, base `e7ade78`.
 Latest inspected main `5778da7` includes Botanical Identities #121 and is integrated into this
@@ -122,7 +122,7 @@ TypeScript, ESLint, formatting, feature graph and production build are reported 
 integration, schema/API regeneration and canonical FULL were not run: this increment changes only UI
 and docs. Earlier interrupted/edit-invalidated runs are not counted as final passing evidence.
 
-The [breadcrumb audit](../../../geography-breadcrumb-audit.md) identifies contextual task/module
+The [breadcrumb audit](../../../archive/GEOGRAPHY-VISUAL-001/geography-breadcrumb-audit.md) identifies contextual task/module
 follow-ups and main #121 reconciliation before delivery. Sidebar ownership is unchanged; Geography
 remains the single geographic entry. No other worktree or protected dataset was modified.
 The operator has approved the current implementation for a local commit. Independent QA and the

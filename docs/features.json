@@ -3102,7 +3102,7 @@
         "scripts/verification-impact.json declares validated golden_prefixes; the gate adds golden-dataset only when changed paths intersect the closure or cannot be classified fail-closed, main push CI always includes golden-dataset, and REUSABLE_STAGES stays quality and integration",
         "frontend/vite.config.ts enables fileParallelism with pool forks and bounded overridable maxWorkers (default 3 via VITEST_MAX_WORKERS in compose_stacks.py) and make test-frontend passes 5 consecutive times locally without retries",
         "Makefile workflow-check consolidates all backend Ruff and mypy checks into one container run with shared file-list variables, a worktree-owned disposable mypy cache and run-all failure reporting",
-        "Retired deploy/ prefix is removed from full_prefixes, scripts/test-beta-lifecycle.py has a manual probe target and doc note, scripts/test-stage-evidence.py is profiled, and docs/verify-speed-001.md records the two-lane gate design note without implementing parallel lanes"
+        "Retired deploy/ prefix is removed from full_prefixes, scripts/test-beta-lifecycle.py has a manual probe target and doc note, scripts/test-stage-evidence.py is profiled, and docs/archive/VERIFY-SPEED-001/verify-speed-001.md records the two-lane gate design note without implementing parallel lanes"
       ],
       "dependencies": [
         "VERIFICATION-FAST-001",
@@ -3110,6 +3110,24 @@
         "WF-SCOPE-001"
       ],
       "priority": "P1",
+      "status": "implemented"
+    },
+    {
+      "id": "DOCS-002",
+      "category": "documentation",
+      "description": "Root community docs, AGPL/DCO/third-party licensing notices, docs/ archive tidy-up, progress.md split and cheap doc-only verification paths",
+      "acceptance_criteria": [
+        "README.md describes implemented capabilities using UI navigation names from frontend/src/shell/navigation.ts, folds the Docker Compose merge rules link into Requirements, shortens self-hosting to point to docs/installation.md, states the public pre-release (beta) series, and adds copyright, THIRD-PARTY-NOTICES.md and docs/README.md links",
+        "CONTRIBUTING.md adds an external-contributor section (issue first, focused PRs, AGPL-3.0-or-later inbound=outbound, DCO git commit -s, respectful conduct without a separate CoC, SECURITY.md) above the preserved maintainer/agent workflow, .github/pull_request_template.md adds a DCO checkbox, SECURITY.md covers best-effort fixes for the latest published beta while keeping GitHub private vulnerability reporting and the 1.x row, and backend/pyproject.toml and frontend/package.json name Alessandro Rossato without changing LICENSE",
+        "THIRD-PARTY-NOTICES.md summarizes bundled assets, operator-installed snapshots and optional runtime data sources from repository notices and DataSourcesScreen.tsx, plus dependency licensing compatibility",
+        "docs/README.md indexes living guides and marks historical evidence directories, finished increment artefacts are archived via git mv under docs/archive/<FEATURE-ID>/ without moving living guides or script/test-referenced files, all relative Markdown links and features.json paths are updated, docs/progress.md is split verbatim at v0.1.0-beta.7 into docs/archive/progress-until-beta-7.md, AGENTS.md and docs/development-workflow.md record the ongoing documentation conventions, and the offline Markdown link checker is wired into make check and passes",
+        "scripts/verification-impact.json classifies SECURITY.md, CHANGELOG.md, THIRD-PARTY-NOTICES.md and LICENSE under documentation_paths (removing LICENSE from full_prefixes) with matching scripts/test-verification-impact.py regressions"
+      ],
+      "dependencies": [
+        "DOC-05",
+        "WF-SCOPE-001"
+      ],
+      "priority": "P2",
       "status": "implemented"
     }
   ]

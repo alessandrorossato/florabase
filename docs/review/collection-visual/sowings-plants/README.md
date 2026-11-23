@@ -7,7 +7,7 @@ Live authenticated **Feature Review**, source `ef73`, branch `feat/collection-vi
 `20261013_0042`, synthetic fixture **v4 / ready / 66 records**. No operator collection records were
 created or changed during the browser walkthrough. Normal local authentication/session activity occurs.
 
-[Audit](audit.md) · [Handoff](../../../collection-visual-001-handoff.md) ·
+[Audit](audit.md) · [Handoff](../../../archive/COLLECTION-VISUAL-001/collection-visual-001-handoff.md) ·
 [Measured matrix](responsive-matrix.json) · [check summary and source hashes](checks.json)
 
 ## Representative captures

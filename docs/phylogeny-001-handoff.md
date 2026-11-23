@@ -91,7 +91,7 @@ disabled, tmpfs scratch, no database/application volume. Feature graph **98 vali
 No new parser/mapping/tree/frontend/integration suite exists at the stopped source gate.
 Pinned Prettier reports all seven changed documentation files formatted; `git diff --check` and
 feature-graph checks pass. Results from the subsequent independent canonical gate are recorded in
-the current [progress milestone](progress.md#2026-10-09--phylogeny-001-source-audit-blocked-before-implementation).
+the current [progress milestone](archive/progress-until-beta-7.md#2026-10-09--phylogeny-001-source-audit-blocked-before-implementation).
 At the source-gate stop, canonical verification, staging, commit and delivery had not yet run. The
 subsequent independent verification and protected-delivery outcome belong to this audit's final
 delivery report; they do not change the source-gate decision or feature status.

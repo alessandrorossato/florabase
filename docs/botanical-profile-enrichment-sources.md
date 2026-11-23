@@ -90,7 +90,7 @@ published/extracted **6 January 2026**. Fixed official archive:
   wcvp_distribution.csv (141,066,449 bytes). No filesystem extraction.
 - Names schema: strict UTF-8, pipe-delimited, no quoting, 31 exact columns. A fresh complete scan
   checked row widths for all **1,441,152** names records. Prior complete uniqueness and distribution
-  validation belongs to [the exact v15 audit](native-range-enrichment-source-v15.md).
+  validation belongs to [the exact v15 audit](archive/ENRICHMENT-001/native-range-enrichment-source-v15.md).
 - Exact field: **wcvp_names.csv.geographic_area**, a separate provider distribution statement.
   Never fabricate it by joining structured ranges, geography names or EXPLORE geometry.
 - Exact source taxon identifier: opaque **plant_name_id**, separately confirmed by the operator.

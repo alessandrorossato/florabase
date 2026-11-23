@@ -163,7 +163,7 @@ prefers-reduced-motion. Long labels wrap, numbers never clip, content remains av
 Review at 1440×844, 1024×844 and 390×844. Dashboard uses four metrics on desktop, two at ≤64rem;
 attention/recent columns become one at ≤48rem. Supporting sections reflow to one at ≤64rem.
 UX-TODAY-001 supersedes that Today arrangement and every later photo-bench statement in this
-document: see [Today, work first](dashboard-001-handoff.md#layout-reversal--ux-today-001).
+document: see [Today, work first](archive/DASHBOARD-001/dashboard-001-handoff.md#layout-reversal--ux-today-001).
 Dashboard uses document scrolling and the available workspace width; no independently trapped
 content panels. Its sidebar remains sticky on desktop. The toolbar orders flexible Search,
 Filters, Saved views, Quick add and wraps on mobile. Quick add reuses OverflowMenu; SavedViews
@@ -239,7 +239,7 @@ and compact previews. One browser-local store synchronizes both footer controls,
 authentication transitions, operating-system changes and other tabs. There is no backend write.
 CONTROLS-001 supplies one local SVG vocabulary, shared action adapters and accessible Tooltip.
 Settings uses horizontal sliders, distinct from the funnel Filters and monitor/sun/moon Appearance.
-See [THEMES handoff](themes-001-handoff.md) and [Controls handoff](controls-001-handoff.md).
+See [THEMES handoff](archive/THEMES-001/themes-001-handoff.md) and [Controls handoff](archive/CONTROLS-001/controls-001-handoff.md).
 
 Secondary icon buttons keep explicit accessible names and concise hover/focus descriptions. Labels
 return at phone/tablet widths and on coarse/no-hover devices; mobile Appearance is always labelled.
@@ -253,7 +253,7 @@ pointer transfer, and dismisses on activation, blur/leave or Escape without movi
 the trigger name through `aria-describedby`; it is not a menu or essential-only help. Manual popovers
 and dialog-local fixed hosts avoid clipping; placement flips/shifts within the visual viewport.
 Escape dismisses Tooltip, then menu, then dialog. No motion or additional keyboard stop is introduced.
-See [Controls contract](controls-001-design-contract.md) for the canonical action matrix and exclusions.
+See [Controls contract](archive/CONTROLS-001/controls-001-design-contract.md) for the canonical action matrix and exclusions.
 
 ## Directory and task normalization
 
