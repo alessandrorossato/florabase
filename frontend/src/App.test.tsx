@@ -1,3 +1,4 @@
+import { pickReference } from "./test/referencePicker";
 import { browserBack, browserForward } from "./test/history";
 import { selectDirectoryFilter } from "./test/directoryFilters";
 import { emptyOverview } from "./collection/dashboardFixtures";
@@ -1582,6 +1583,7 @@ test("structured native ranges distinguish paths and support add and remove with
   ).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Manage native range" }));
   const selector = screen.getByLabelText("Geographic place");
+  await user.click(selector);
   expect(
     screen.getByRole("option", {
       name: "Georgia — World → North America → United States → Georgia",
@@ -1591,7 +1593,11 @@ test("structured native ranges distinguish paths and support add and remove with
     screen.getByRole("option", { name: "Georgia — World → Asia → Georgia" }),
   ).toBeInTheDocument();
 
-  await user.selectOptions(selector, georgiaUs.id);
+  await user.click(
+    screen.getByRole("button", {
+      name: "Georgia — World → North America → United States → Georgia",
+    }),
+  );
   await user.click(screen.getByRole("button", { name: "Add place" }));
   expect(
     await within(
@@ -2115,10 +2121,10 @@ test("primary navigation opens an empty accessible location directory", async ()
     screen.getByLabelText("Name", { selector: "#new-location-name" }),
   ).toHaveFocus();
   expect(screen.getByLabelText("Name")).toBeRequired();
-  expect(screen.getByLabelText("Parent location").tagName).toBe("SELECT");
-  expect(
-    screen.getByRole("option", { name: "No parent (root location)" }),
-  ).toBeInTheDocument();
+  expect(screen.getByLabelText("Parent location")).toHaveAttribute(
+    "placeholder",
+    "No parent (root location)",
+  );
   const newLocation = screen.getByRole("button", { name: "New location" });
   await user.click(screen.getByRole("button", { name: "Cancel" }));
   expect(
@@ -2412,7 +2418,7 @@ test("location creation supports roots and the selected create-child shortcut", 
     screen.getByLabelText("Parent location", {
       selector: "#new-location-parent",
     }),
-  ).toHaveValue(houseLocation.id);
+  ).toHaveValue(houseLocation.display_path);
   await user.type(
     screen.getByLabelText("Name", { selector: "#new-location-name" }),
     "Seed cabinet{Enter}",
@@ -2893,11 +2899,12 @@ test("local geography creation supports Thailand to Chiang Mai to Doi Suthep and
   });
   await user.clear(editName);
   await user.type(editName, "Chiang Mai Province");
-  await user.selectOptions(
+  await pickReference(
+    user,
     screen.getByLabelText("Parent geographic place", {
       selector: "#edit-geographic-place-parent",
     }),
-    worldPlace.id,
+    worldPlace.display_path,
   );
   await user.click(screen.getByRole("button", { name: "Save local place" }));
   expect(
@@ -2970,9 +2977,10 @@ test("geography loading, failure, validation, authorization, and session expiry 
   await user.click(
     await screen.findByRole("button", { name: "New local place" }),
   );
-  await user.selectOptions(
+  await pickReference(
+    user,
     await screen.findByLabelText("Parent geographic place"),
-    worldPlace.id,
+    worldPlace.display_path,
   );
   await user.type(screen.getByLabelText("Name"), " {Enter}");
   expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -4115,7 +4123,7 @@ test.each(["backdrop", "Escape", "Cancel"])(
     await user.click(trigger);
     const dialog = screen.getByRole("dialog", { name: "New local place" });
     expect(screen.getByLabelText("Parent geographic place")).toHaveValue(
-      worldPlace.id,
+      worldPlace.display_path,
     );
     await user.click(
       within(dialog).getByRole("heading", { name: "Create a local place" }),
@@ -4150,9 +4158,10 @@ test("all New local place dismissal paths protect changes and retain the draft w
     within(dialog).getByRole("combobox", { name: "Local place type" }),
     "locality",
   );
-  await user.selectOptions(
+  await pickReference(
+    user,
     within(dialog).getByRole("combobox", { name: "Parent geographic place" }),
-    worldPlace.id,
+    worldPlace.display_path,
   );
   const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
   fireEvent.click(dialog, { clientX: -10, clientY: -10 });
@@ -4186,9 +4195,10 @@ test("submitting New local place retains the dialog and blocks every dismissal w
     within(dialog).getByRole("textbox", { name: "Name" }),
     "Pending locality",
   );
-  await user.selectOptions(
+  await pickReference(
+    user,
     within(dialog).getByRole("combobox", { name: "Parent geographic place" }),
-    worldPlace.id,
+    worldPlace.display_path,
   );
   await user.click(
     within(dialog).getByRole("button", { name: "Create local place" }),

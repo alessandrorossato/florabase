@@ -37,10 +37,10 @@ describe("fetchReleaseFingerprint", () => {
   it("reads the unauthenticated release identity without credentials or caching", async () => {
     const fetchImpl = vi
       .fn()
-      .mockResolvedValue(releaseResponse("0.1.0-beta.6"));
+      .mockResolvedValue(releaseResponse("0.1.0-beta.8"));
 
     await expect(fetchReleaseFingerprint(fetchImpl)).resolves.toBe(
-      "0.1.0-beta.6+abc123",
+      "0.1.0-beta.8+abc123",
     );
     expect(fetchImpl).toHaveBeenCalledWith(RELEASE_URL, {
       cache: "no-store",
@@ -72,7 +72,7 @@ describe("fetchReleaseFingerprint", () => {
 
 describe("watchForNewRelease", () => {
   it("announces once when the server release changes after the app becomes visible", async () => {
-    let served = "0.1.0-beta.6";
+    let served = "0.1.0-beta.8";
     const fetchImpl = vi.fn(() => Promise.resolve(releaseResponse(served)));
     const onUpdateAvailable = vi.fn();
     const stop = watchForNewRelease({ onUpdateAvailable, fetchImpl });
@@ -82,7 +82,7 @@ describe("watchForNewRelease", () => {
     await flush();
     expect(onUpdateAvailable).not.toHaveBeenCalled();
 
-    served = "0.1.0-beta.7";
+    served = "0.1.0-beta.9";
     setVisibility("hidden");
     await flush();
     setVisibility("visible");
@@ -98,7 +98,7 @@ describe("watchForNewRelease", () => {
   it("detects a rebuilt image with the same version but a new revision", async () => {
     let revision = "aaa111";
     const fetchImpl = vi.fn(() =>
-      Promise.resolve(releaseResponse("0.1.0-beta.6", revision)),
+      Promise.resolve(releaseResponse("0.1.0-beta.8", revision)),
     );
     const onUpdateAvailable = vi.fn();
     const stop = watchForNewRelease({ onUpdateAvailable, fetchImpl });
@@ -115,7 +115,7 @@ describe("watchForNewRelease", () => {
     const fetchImpl = vi
       .fn()
       .mockRejectedValueOnce(new TypeError("offline"))
-      .mockResolvedValue(releaseResponse("0.1.0-beta.6"));
+      .mockResolvedValue(releaseResponse("0.1.0-beta.8"));
     const onUpdateAvailable = vi.fn();
     const stop = watchForNewRelease({ onUpdateAvailable, fetchImpl });
     await flush();
@@ -132,7 +132,7 @@ describe("watchForNewRelease", () => {
   it("checks periodically only while visible and stops cleanly", async () => {
     vi.useFakeTimers();
     const fetchImpl = vi.fn(() =>
-      Promise.resolve(releaseResponse("0.1.0-beta.6")),
+      Promise.resolve(releaseResponse("0.1.0-beta.8")),
     );
     const stop = watchForNewRelease({
       onUpdateAvailable: vi.fn(),

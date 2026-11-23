@@ -1,5 +1,30 @@
 # Engineering progress
 
+## 2026-11-23 — Directory sort, searchable pickers and Save and add another (`FN-02`, `FN-04`, `UX-ENTRY-001`)
+
+- On `feat/fn-02-fn-04-list-ux` from `origin/main` `ddf5a14` (writer `claude-pkg-b`). No migration,
+  no OpenAPI drift, PWA behaviour unchanged; upgrade and backup paths untouched.
+- FN-02: Seeds, Sowings and Plants gain a `Sort by` toolbar select (default, name A–Z/Z–A,
+  newest/oldest by acquisition-or-harvest, sowing and collection-entry date; undated last). Sorting
+  precedes browser pagination and `sort` is a canonical URL and Saved View field (frontend state
+  and backend `saved_views/state.py`).
+- FN-04: 13 reference selects over user data now use the shared keyboard-operable
+  `ReferencePicker` (Plant, Sowing, Journal movement, descendant identity, Provenance site, native
+  range, Geography parent, Location parent, Stored material location filter); the picker gains
+  optional `id`, `name` and `describedBy`. Bounded enumerations stay native selects.
+- UX-ENTRY-001: Save and add another in the Seeds, Sowings and Plants create forms keeps the form
+  open with a fresh draft that retains only the identity (or SeedLot).
+- `compose.yaml` header carries the one-time folder setup block; `UpdateNotice.test.tsx` fixtures
+  moved to `0.1.0-beta.8`/`beta.9`. Registered FN-02, FN-04, UX-ENTRY-001 (`implemented`, proposed
+  class `best-effort`). Evidence:
+  [fn-02-fn-04-ux-entry-001.md](release/evidence/fn-02-fn-04-ux-entry-001.md).
+- Focused checks in the Quality container: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`,
+  full `pnpm vitest run` (134 files, 1448 tests passed); backend `pytest tests/test_saved_views*.py`
+  (94 passed), `ruff check`, `ruff format --check`, `mypy`; `export_openapi.py` without drift;
+  `scripts/test-beta-runtime.py StackContract` (16 passed); `scripts/check-features.py`.
+  Canonical FULL not yet run; independent review pending. Not checked: real-browser visual review
+  of the new toolbar select and pickers.
+
 ## 2026-11-23 — MOBILE-001 Capacitor Android shell spike (PWA preserved)
 
 - On `feat/mobile-001-capacitor-spike` from `origin/main` `68e9449` (writer `neon-mobile-001`).

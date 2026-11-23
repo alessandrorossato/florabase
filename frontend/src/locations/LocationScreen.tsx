@@ -316,31 +316,20 @@ function ParentField({
       </div>
     );
   return (
-    <div className="field">
-      <label htmlFor={id}>Parent location</label>
-      <select
-        id={id}
-        name="parent_id"
-        disabled={disabled}
-        value={value}
-        defaultValue={onChange ? undefined : ""}
-        onChange={
-          onChange
-            ? (event) => {
-                onChange(event.currentTarget.value);
-              }
-            : undefined
-        }
-      >
-        <option value="">No parent (root location)</option>
-        {candidates.map((location) => (
-          <option value={location.id} key={location.id}>
-            {location.display_path}
-            {location.retired_at ? " (retired)" : ""}
-          </option>
-        ))}
-      </select>
-    </div>
+    <ReferencePicker
+      id={id}
+      name="parent_id"
+      label="Parent location"
+      openOnFocus={false}
+      placeholder="No parent (root location)"
+      choices={candidates.map((location) => ({
+        id: location.id,
+        label: location.display_path,
+      }))}
+      value={value ?? ""}
+      onChange={(next) => onChange?.(next)}
+      disabled={disabled}
+    />
   );
 }
 
