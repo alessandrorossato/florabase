@@ -27,13 +27,10 @@ services:
       # Optional one-time first owner (remove after first sign-in):
       # - FLORABASE_OWNER_LOGIN=owner
       # - FLORABASE_OWNER_PASSWORD=change-me-at-least-12-chars
-      # Optional WFO/WCVP reference indexes (docs/installation.md); also uncomment the mount below:
-      # - FLORABASE_WFO_SNAPSHOT_PATH=/var/lib/florabase/reference/wfo-2026-06.sqlite
-      # - FLORABASE_WCVP_V16_SNAPSHOT_PATH=/var/lib/florabase/reference/wcvp-v16/index.sqlite
+      # Optional WFO/WCVP reference indexes: see docs/installation.md
     volumes:
       - /volume1/docker/florabase/data:/var/lib/florabase/data      # same data folder as db
       - /volume1/docker/florabase/backup:/var/lib/florabase/backup  # separate backup folder
-      # - /volume1/docker/florabase/reference:/var/lib/florabase/reference:ro  # optional indexes
 
   frontend:
     image: ghcr.io/alessandrorossato/florabase-frontend:latest

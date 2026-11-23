@@ -5,7 +5,7 @@
 - On `fix/plants-list-reference-mount` from `origin/main` `ddf5a14` (writer `claude-batch13-impl`),
   a fourth Batch 12 source. Gallery directories keep card-sized tracks for one or two records; the
   identity create form suggests WFO names through read-only `GET /api/v1/explore/taxonomy/candidates`;
-  `compose.yaml` carries a commented read-only WFO/WCVP v16 mount documented in installation; the
+  `compose.yaml` points to the read-only WFO/WCVP v16 mount snippet in installation; the
   identity Media tab and media asset page are simplified and external covers save a local copy by
   default. Evidence: [ui-review-002.md](release/evidence/ui-review-002.md).
 - Checks: focused backend taxonomy tests, ruff, mypy; frontend typecheck, ESLint, Prettier and Vitest

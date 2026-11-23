@@ -9,10 +9,11 @@
   `WfoSource.search` without an identity; the create form's scientific-name input offers the names
   through a native `datalist`, debounced, from two characters. OpenAPI and TypeScript declarations
   regenerated.
-- Reference indexes: `compose.yaml` gains commented `FLORABASE_WFO_SNAPSHOT_PATH`,
-  `FLORABASE_WCVP_V16_SNAPSHOT_PATH` and a `:ro` mount of the host `reference` folder at
-  `/var/lib/florabase/reference` (47 lines, within the 50-line contract); `docs/installation.md`
-  explains how to enable them. `docker compose config` passes both commented and uncommented.
+- Reference indexes: `compose.yaml` gains one comment pointing to `docs/installation.md`, which
+  holds the `FLORABASE_WFO_SNAPSHOT_PATH`, `FLORABASE_WCVP_V16_SNAPSHOT_PATH` and `:ro` mount of the
+  host `reference` folder at `/var/lib/florabase/reference` (one line net, so the batch merge with
+  FN-02 stays within the 50-line ADR 0009 contract). `docker compose config` passes with the snippet
+  applied.
 - Media: the identity Media tab shows the cover with a compact caption and visible actions, and record
   photos as a thumbnail grid with owner chips; the empty state links to the records. External covers
   default to saving a local copy (the identity cover form was the path without that choice), and an
