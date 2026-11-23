@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     session_idle_seconds: int = Field(default=86_400, ge=900, le=86_400)
     session_absolute_seconds: int = Field(default=2_592_000, ge=86_400, le=2_592_000)
     session_touch_interval_seconds: int = Field(default=300, ge=60, le=3_600)
+    device_session_idle_seconds: int = Field(default=2_592_000, ge=86_400, le=15_552_000)
+    device_session_absolute_seconds: int = Field(default=15_552_000, ge=86_400, le=31_536_000)
+    device_session_max_active: int = Field(default=20, ge=1, le=100)
+    min_client_version: str = Field(default="0.1.0-beta.8", min_length=1, max_length=64)
     login_failure_threshold: int = Field(default=5, ge=3, le=10)
     login_backoff_base_seconds: int = Field(default=5, ge=1, le=60)
     login_backoff_max_seconds: int = Field(default=900, ge=60, le=3_600)
@@ -81,6 +85,10 @@ class Settings(BaseSettings):
 
         if self.session_absolute_seconds <= self.session_idle_seconds:
             raise ValueError("Absolute session lifetime must exceed idle session lifetime")
+        if self.device_session_absolute_seconds <= self.device_session_idle_seconds:
+            raise ValueError(
+                "Absolute device session lifetime must exceed idle device session lifetime"
+            )
 
         if self.canonical_origin is not None:
             parsed = urlsplit(self.canonical_origin)

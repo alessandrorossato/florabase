@@ -30,6 +30,12 @@ import {
   useAuth,
 } from "./auth/context";
 import { LoginForm } from "./auth/LoginForm";
+import {
+  buildTransportFetchInit,
+  canChangeServer,
+  resolveApiUrl,
+  triggerChangeServer,
+} from "./auth/transport";
 import { FieldLabel } from "./components/FieldLabel";
 import { TaskDialog } from "./components/TaskDialog";
 import { WorkspaceBoundary } from "./components/WorkspaceBoundary";
@@ -485,7 +491,13 @@ function ApplicationShell({
 
   useEffect(() => {
     const controller = new AbortController();
-    void fetch("/api/v1/health", { signal: controller.signal })
+    void fetch(
+      resolveApiUrl("/api/v1/health"),
+      buildTransportFetchInit(
+        { signal: controller.signal },
+        { includeBearer: false },
+      ),
+    )
       .then(async (response) => {
         if (!response.ok) throw new Error("Health request failed");
         const payload = (await response.json()) as HealthResponse;
@@ -949,14 +961,27 @@ function AuthenticatedApplication() {
         <h1 id="page-title">Florabase</h1>
         <div className="notice notice--error" role="alert">
           <p>{state.message}</p>
-          <button
-            type="button"
-            onClick={() => {
-              auth.retryRestoration();
-            }}
-          >
-            Retry session restoration
-          </button>
+          <div className="actions">
+            <button
+              type="button"
+              onClick={() => {
+                auth.retryRestoration();
+              }}
+            >
+              Retry session restoration
+            </button>
+            {canChangeServer() && (
+              <button
+                type="button"
+                className="button--secondary"
+                onClick={() => {
+                  triggerChangeServer();
+                }}
+              >
+                Change server
+              </button>
+            )}
+          </div>
         </div>
       </section>
     );

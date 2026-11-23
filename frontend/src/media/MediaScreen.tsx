@@ -18,6 +18,7 @@ import {
   activeCsrfToken,
   ApiError,
   isExpectedAuthCancellation,
+  NativeFileActionUnavailableError,
   openProtectedTab,
   ProtectedTabBlockedError,
 } from "../auth/api";
@@ -335,7 +336,10 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
         sessionExpired();
         return;
       }
-      if (caught instanceof ProtectedTabBlockedError) {
+      if (
+        caught instanceof ProtectedTabBlockedError ||
+        caught instanceof NativeFileActionUnavailableError
+      ) {
         setOriginalError(caught.message);
         return;
       }

@@ -2,6 +2,7 @@ import logging
 import secrets
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from typing import Literal
 from uuid import UUID
 
 from sqlalchemy import delete, or_, select, text
@@ -59,12 +60,35 @@ class SessionCsrfError(Exception):
     pass
 
 
+class InvalidDeviceLabelError(Exception):
+    pass
+
+
+SessionTransport = Literal["cookie", "bearer"]
+
+
 @dataclass(frozen=True)
 class NewSession:
     user: User
     session: AuthSession
     session_token: str = field(repr=False)
     csrf_token: str = field(repr=False)
+
+
+@dataclass(frozen=True)
+class NewDeviceSession:
+    user: User
+    session: AuthSession
+    token: str = field(repr=False)
+
+
+def normalize_device_label(raw: str) -> str:
+    cleaned = raw.strip()
+    if not cleaned or len(cleaned) > 120:
+        raise InvalidDeviceLabelError("Device label must be between 1 and 120 characters")
+    if any(ord(char) < 0x20 or ord(char) == 0x7F for char in cleaned):
+        raise InvalidDeviceLabelError("Device label contains invalid control characters")
+    return cleaned
 
 
 def utc_now() -> datetime:
@@ -204,6 +228,8 @@ def _issue_session(database: Session, user: User, settings: Settings, now: datet
     absolute_expiry = now + timedelta(seconds=settings.session_absolute_seconds)
     session = AuthSession(
         user_id=user.id,
+        transport="cookie",
+        device_label=None,
         token_digest=token_digest(raw_session),
         csrf_digest=token_digest(raw_csrf),
         created_at=now,
@@ -216,9 +242,67 @@ def _issue_session(database: Session, user: User, settings: Settings, now: datet
     return NewSession(user=user, session=session, session_token=raw_session, csrf_token=raw_csrf)
 
 
-def authenticate(
+def _issue_device_session(
+    database: Session,
+    user: User,
+    device_label: str,
+    settings: Settings,
+    now: datetime,
+) -> NewDeviceSession:
+    # Lock existing active Bearer sessions in deterministic id order (matching
+    # _locked_user_sessions) to avoid lock-order deadlocks with password changes
+    # while enforcing device_session_max_active.
+    existing = list(
+        database.scalars(
+            select(AuthSession)
+            .where(
+                AuthSession.user_id == user.id,
+                AuthSession.transport == "bearer",
+                AuthSession.revoked_at.is_(None),
+            )
+            .order_by(AuthSession.id)
+            .with_for_update(of=AuthSession)
+            .execution_options(populate_existing=True)
+        ).all()
+    )
+    active_existing: list[AuthSession] = []
+    for row in existing:
+        if _active_session(row, now):
+            active_existing.append(row)
+        else:
+            row.revoked_at = now
+    overflow = len(active_existing) - (settings.device_session_max_active - 1)
+    if overflow > 0:
+        oldest_first = sorted(
+            active_existing,
+            key=lambda row: (row.last_seen_at, row.created_at, row.id),
+        )
+        for victim in oldest_first[:overflow]:
+            victim.revoked_at = now
+
+    raw_token = new_token()
+    absolute_expiry = now + timedelta(seconds=settings.device_session_absolute_seconds)
+    session = AuthSession(
+        user_id=user.id,
+        transport="bearer",
+        device_label=device_label,
+        token_digest=token_digest(raw_token),
+        csrf_digest=None,
+        created_at=now,
+        last_seen_at=now,
+        idle_expires_at=min(
+            now + timedelta(seconds=settings.device_session_idle_seconds), absolute_expiry
+        ),
+        absolute_expires_at=absolute_expiry,
+    )
+    database.add(session)
+    database.flush()
+    return NewDeviceSession(user=user, session=session, token=raw_token)
+
+
+def _verify_login_credentials(
     database: Session, login_name: str, password: str, settings: Settings
-) -> NewSession:
+) -> tuple[User, str, datetime]:
     try:
         normalized = normalize_login_name(login_name)
     except ValueError:
@@ -246,6 +330,27 @@ def authenticate(
         now = utc_now()
     if throttle is not None:
         database.delete(throttle)
+    return user, normalized, now
+
+
+def authenticate_device(
+    database: Session,
+    login_name: str,
+    password: str,
+    device_label: str,
+    settings: Settings,
+) -> NewDeviceSession:
+    normalized_label = normalize_device_label(device_label)
+    user, normalized, now = _verify_login_credentials(database, login_name, password, settings)
+    result = _issue_device_session(database, user, normalized_label, settings, now)
+    _prune_login_throttles(database, normalized, now)
+    return result
+
+
+def authenticate(
+    database: Session, login_name: str, password: str, settings: Settings
+) -> NewSession:
+    user, normalized, now = _verify_login_credentials(database, login_name, password, settings)
     result = _issue_session(database, user, settings, now)
     _prune_login_throttles(database, normalized, now)
     return result
@@ -261,9 +366,14 @@ def _active_session(session: AuthSession, now: datetime) -> bool:
 
 def _touch_session(session: AuthSession, settings: Settings, now: datetime) -> None:
     if session.last_seen_at <= now - timedelta(seconds=settings.session_touch_interval_seconds):
+        idle_seconds = (
+            settings.device_session_idle_seconds
+            if session.transport == "bearer"
+            else settings.session_idle_seconds
+        )
         session.last_seen_at = now
         session.idle_expires_at = min(
-            now + timedelta(seconds=settings.session_idle_seconds), session.absolute_expires_at
+            now + timedelta(seconds=idle_seconds), session.absolute_expires_at
         )
 
 
@@ -380,7 +490,11 @@ def reset_owner_password(database: Session, login: str, password: str) -> None:
 
 
 def resolve_session(
-    database: Session, raw_token: str, settings: Settings
+    database: Session,
+    raw_token: str,
+    settings: Settings,
+    *,
+    expected_transport: SessionTransport = "cookie",
 ) -> tuple[User, AuthSession]:
     now = utc_now()
     auth_session = database.scalars(
@@ -388,6 +502,7 @@ def resolve_session(
     ).one_or_none()
     if (
         auth_session is None
+        or auth_session.transport != expected_transport
         or not _active_session(auth_session, now)
         or not auth_session.user.enabled
     ):
@@ -397,15 +512,85 @@ def resolve_session(
 
 
 def verify_csrf(auth_session: AuthSession, raw_csrf: str) -> bool:
+    if auth_session.csrf_digest is None:
+        return False
     return secrets.compare_digest(auth_session.csrf_digest, token_digest(raw_csrf))
 
 
 def rotate_csrf(auth_session: AuthSession, settings: Settings | None = None) -> str:
+    if auth_session.transport != "cookie":
+        raise SessionCsrfError
     if settings is not None:
         _touch_session(auth_session, settings, utc_now())
     raw_csrf = new_token()
     auth_session.csrf_digest = token_digest(raw_csrf)
     return raw_csrf
+
+
+def list_active_device_sessions(
+    database: Session, user_id: UUID, now: datetime | None = None
+) -> list[AuthSession]:
+    current = now or utc_now()
+    return list(
+        database.scalars(
+            select(AuthSession)
+            .where(
+                AuthSession.user_id == user_id,
+                AuthSession.transport == "bearer",
+                AuthSession.revoked_at.is_(None),
+                AuthSession.idle_expires_at > current,
+                AuthSession.absolute_expires_at > current,
+            )
+            .order_by(
+                AuthSession.last_seen_at.desc(),
+                AuthSession.created_at.desc(),
+                AuthSession.id.desc(),
+            )
+        ).all()
+    )
+
+
+def revoke_device_session_by_id(
+    database: Session, user_id: UUID, session_id: UUID, now: datetime | None = None
+) -> bool:
+    set_auth_timeouts(database)
+    session = database.scalars(
+        select(AuthSession)
+        .where(
+            AuthSession.id == session_id,
+            AuthSession.user_id == user_id,
+            AuthSession.transport == "bearer",
+            AuthSession.revoked_at.is_(None),
+        )
+        .with_for_update(of=AuthSession)
+        .execution_options(populate_existing=True)
+    ).one_or_none()
+    if session is None:
+        return False
+    session.revoked_at = now or utc_now()
+    return True
+
+
+def revoke_all_device_sessions(
+    database: Session, user_id: UUID, now: datetime | None = None
+) -> int:
+    set_auth_timeouts(database)
+    sessions = list(
+        database.scalars(
+            select(AuthSession)
+            .where(
+                AuthSession.user_id == user_id,
+                AuthSession.transport == "bearer",
+                AuthSession.revoked_at.is_(None),
+            )
+            .order_by(AuthSession.id)
+            .with_for_update(of=AuthSession)
+            .execution_options(populate_existing=True)
+        ).all()
+    )
+    current = now or utc_now()
+    _revoke_sessions(sessions, current)
+    return len(sessions)
 
 
 def revoke_session(

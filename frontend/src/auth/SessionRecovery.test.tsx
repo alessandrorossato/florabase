@@ -2177,11 +2177,13 @@ test("P2.3: gate attachment and capability issuance are lexically private to Aut
   const expectedPublicApiExports = [
     "ApiError",
     "AuthRequestLockedError",
+    "NativeFileActionUnavailableError",
     "ProtectedTabBlockedError",
     "StaleAuthEpochError",
     "activeCsrfToken",
     "changePassword",
     "classifyResourceUrl",
+    "createDeviceSession",
     "downloadProtectedFile",
     "getProtectedAuthEpoch",
     "getProtectedWorkspaceGeneration",
@@ -2190,6 +2192,7 @@ test("P2.3: gate attachment and capability issuance are lexically private to Aut
     "isPresentationRetainedState",
     "isProtectedRequestAuthorized",
     "isReauthenticationState",
+    "listDeviceSessions",
     "login",
     "logout",
     "openProtectedTab",
@@ -2197,6 +2200,9 @@ test("P2.3: gate attachment and capability issuance are lexically private to Aut
     "recoverCsrf",
     "requestJson",
     "requestProtectedBlob",
+    "revokeAllDeviceSessions",
+    "revokeCurrentDeviceSession",
+    "revokeDeviceSession",
     "subscribeAuthInvalidation",
   ];
   expect(apiExports).toEqual(expectedPublicApiExports);

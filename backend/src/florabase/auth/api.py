@@ -1,13 +1,19 @@
+from datetime import datetime
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StrictStr
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 
 from florabase.auth.dependencies import (
+    BEARER_CHALLENGE,
     AuthenticatedActor,
     require_authenticated_actor,
+    require_bearer_actor,
+    require_cookie_actor,
+    require_cookie_csrf,
     require_csrf,
     require_origin,
     require_owner,
@@ -18,14 +24,19 @@ from florabase.auth.security import require_utf8
 from florabase.auth.service import (
     InvalidCredentialsError,
     InvalidCurrentPasswordError,
+    InvalidDeviceLabelError,
     InvalidNewPasswordError,
     LoginThrottledError,
     NewSession,
     PasswordUnchangedError,
     SessionCsrfError,
     authenticate,
+    authenticate_device,
     change_password,
+    list_active_device_sessions,
     lock_presenting_session,
+    revoke_all_device_sessions,
+    revoke_device_session_by_id,
     revoke_session,
     rotate_csrf,
 )
@@ -37,7 +48,11 @@ credentials = APIRouter(route_class=CredentialRoute)
 Database = Annotated[Session, Depends(get_database_session, scope="function")]
 AuthSettings = Annotated[Settings, Depends(get_settings)]
 CsrfActor = Annotated[AuthenticatedActor, Depends(require_csrf)]
+CookieCsrfActor = Annotated[AuthenticatedActor, Depends(require_cookie_csrf)]
+CookieActor = Annotated[AuthenticatedActor, Depends(require_cookie_actor)]
+BearerActor = Annotated[AuthenticatedActor, Depends(require_bearer_actor)]
 SessionActor = Annotated[AuthenticatedActor, Depends(require_authenticated_actor)]
+OwnerActor = Annotated[AuthenticatedActor, Depends(require_owner)]
 CsrfHeader = Annotated[str, Header(alias="X-CSRF-Token")]
 Utf8String = Annotated[StrictStr, AfterValidator(require_utf8)]
 
@@ -46,6 +61,40 @@ class LoginRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     login_name: Utf8String = Field(min_length=1, max_length=128)
     password: Utf8String = Field(min_length=1, max_length=1_024, repr=False)
+
+
+class DeviceSessionCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    login_name: Utf8String = Field(min_length=1, max_length=128)
+    password: Utf8String = Field(min_length=1, max_length=1_024, repr=False)
+    device_label: Utf8String = Field(min_length=1, max_length=120)
+
+
+class DeviceSessionCreateResponse(BaseModel):
+    session_id: UUID
+    token: str = Field(repr=False)
+    device_label: str
+    created_at: datetime
+    idle_expires_at: datetime
+    absolute_expires_at: datetime
+
+
+class DeviceSessionItem(BaseModel):
+    id: UUID
+    device_label: str
+    created_at: datetime
+    last_seen_at: datetime
+    idle_expires_at: datetime
+    absolute_expires_at: datetime
+    current: bool
+
+
+class DeviceSessionListResponse(BaseModel):
+    items: list[DeviceSessionItem]
+
+
+class DeviceSessionRevokeAllResponse(BaseModel):
+    revoked_count: int
 
 
 class ChangePasswordRequest(BaseModel):
@@ -126,6 +175,138 @@ def login(
 
 
 @credentials.post(
+    "/device-sessions",
+    response_model=DeviceSessionCreateResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="createDeviceSession",
+)
+def create_device_session(
+    payload: DeviceSessionCreateRequest,
+    request: Request,
+    response: Response,
+    database: Database,
+    settings: AuthSettings,
+) -> DeviceSessionCreateResponse | JSONResponse:
+    # No Origin check here: this endpoint creates a Bearer-only device session with no cookie
+    # side-effects and requires Content-Type: application/json (415 otherwise), so browser form
+    # CSRF cannot reach it. Reject if a browser session cookie is also attached.
+    if request.cookies.get(session_cookie_name(settings)) is not None:
+        return JSONResponse(
+            {"detail": "Ambiguous authentication credentials"},
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            headers={"Cache-Control": "no-store", **BEARER_CHALLENGE},
+        )
+    try:
+        result = authenticate_device(
+            database,
+            payload.login_name,
+            payload.password,
+            payload.device_label,
+            settings,
+        )
+    except InvalidDeviceLabelError:
+        return auth_error(422, "Check the login name, password, and device label.")
+    except LoginThrottledError as error:
+        return _backoff(error, "Too many login attempts")
+    except InvalidCredentialsError:
+        return auth_error(401, "Invalid login credentials")
+
+    response.headers["Cache-Control"] = "no-store"
+    assert result.session.device_label is not None
+    return DeviceSessionCreateResponse(
+        session_id=result.session.id,
+        token=result.token,
+        device_label=result.session.device_label,
+        created_at=result.session.created_at,
+        idle_expires_at=result.session.idle_expires_at,
+        absolute_expires_at=result.session.absolute_expires_at,
+    )
+
+
+@router.get(
+    "/device-sessions",
+    response_model=DeviceSessionListResponse,
+    operation_id="listDeviceSessions",
+)
+def list_device_sessions(
+    response: Response,
+    actor: OwnerActor,
+    database: Database,
+) -> DeviceSessionListResponse:
+    rows = list_active_device_sessions(database, actor.user_id)
+    response.headers["Cache-Control"] = "no-store"
+    return DeviceSessionListResponse(
+        items=[
+            DeviceSessionItem(
+                id=row.id,
+                device_label=row.device_label or "",
+                created_at=row.created_at,
+                last_seen_at=row.last_seen_at,
+                idle_expires_at=row.idle_expires_at,
+                absolute_expires_at=row.absolute_expires_at,
+                current=actor.transport == "bearer" and row.id == actor.session.id,
+            )
+            for row in rows
+        ]
+    )
+
+
+@router.delete(
+    "/device-sessions/current",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="revokeCurrentDeviceSession",
+)
+def revoke_current_device_session(
+    actor: BearerActor,
+    database: Database,
+) -> Response:
+    require_owner(actor)
+    try:
+        session = lock_presenting_session(database, actor.session)
+    except InvalidCredentialsError:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            "Authentication required",
+            headers=BEARER_CHALLENGE,
+        ) from None
+    revoke_session(database, session)
+    return Response(status_code=status.HTTP_204_NO_CONTENT, headers={"Cache-Control": "no-store"})
+
+
+@router.delete(
+    "/device-sessions/{session_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="revokeDeviceSession",
+)
+def revoke_device_session(
+    session_id: UUID,
+    actor: CsrfActor,
+    database: Database,
+) -> Response:
+    require_owner(actor)
+    revoked = revoke_device_session_by_id(database, actor.user_id, session_id)
+    if not revoked:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Device session not found")
+    return Response(status_code=status.HTTP_204_NO_CONTENT, headers={"Cache-Control": "no-store"})
+
+
+@router.delete(
+    "/device-sessions",
+    response_model=DeviceSessionRevokeAllResponse,
+    operation_id="revokeAllDeviceSessions",
+)
+def revoke_all_owner_device_sessions(
+    response: Response,
+    actor: CsrfActor,
+    database: Database,
+) -> DeviceSessionRevokeAllResponse:
+    require_owner(actor)
+    count = revoke_all_device_sessions(database, actor.user_id)
+    response.headers["Cache-Control"] = "no-store"
+    return DeviceSessionRevokeAllResponse(revoked_count=count)
+
+
+@credentials.post(
     "/password",
     response_model=LoginResponse,
     operation_id="changePassword",
@@ -146,12 +327,14 @@ def login(
 def change_owner_password(
     payload: ChangePasswordRequest,
     response: Response,
-    actor: CsrfActor,
+    actor: CookieCsrfActor,
     database: Database,
     settings: AuthSettings,
-    csrf_token: CsrfHeader,
+    csrf_token: Annotated[str | None, Header(alias="X-CSRF-Token")] = None,
 ) -> LoginResponse | JSONResponse:
     require_owner(actor)
+    if csrf_token is None:
+        raise HTTPException(403, "Request forbidden")
     try:
         result = change_password(
             database,
@@ -198,7 +381,7 @@ def get_session(response: Response, actor: SessionActor, settings: AuthSettings)
 def recover_csrf(
     request: Request,
     response: Response,
-    actor: SessionActor,
+    actor: CookieActor,
     settings: AuthSettings,
     database: Database,
 ) -> CsrfResponse:
@@ -215,11 +398,13 @@ def recover_csrf(
 @router.post("/logout", response_model=LogoutResponse, operation_id="logout")
 def logout(
     response: Response,
-    actor: CsrfActor,
+    actor: CookieCsrfActor,
     database: Database,
     settings: AuthSettings,
-    csrf_token: CsrfHeader,
+    csrf_token: Annotated[str | None, Header(alias="X-CSRF-Token")] = None,
 ) -> LogoutResponse:
+    if csrf_token is None:
+        raise HTTPException(403, "Request forbidden")
     try:
         session = lock_presenting_session(database, actor.session, csrf_token)
     except InvalidCredentialsError:

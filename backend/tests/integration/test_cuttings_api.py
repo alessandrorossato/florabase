@@ -414,8 +414,9 @@ def test_populated_downgrade_refuses_and_empty_schema_round_trips(
 
     config = Config("alembic.ini")
     config.attributes["connection"] = database_connection
-    assert ScriptDirectory.from_config(config).get_heads() == ["20261110_0047"]
-    assert MigrationContext.configure(database_connection).get_current_heads() == ("20261110_0047",)
+    head = ScriptDirectory.from_config(config).get_current_head()
+    assert head is not None
+    assert MigrationContext.configure(database_connection).get_current_heads() == (head,)
     with database_connection.begin_nested():
         command.downgrade(config, "20261110_0046")
         assert MigrationContext.configure(database_connection).get_current_heads() == (
@@ -423,9 +424,7 @@ def test_populated_downgrade_refuses_and_empty_schema_round_trips(
         )
         database_connection.execute(text("SELECT phenophase FROM events LIMIT 0"))
         command.upgrade(config, "head")
-        assert MigrationContext.configure(database_connection).get_current_heads() == (
-            "20261110_0047",
-        )
+        assert MigrationContext.configure(database_connection).get_current_heads() == (head,)
         context = MigrationContext.configure(
             database_connection,
             opts={
@@ -456,7 +455,7 @@ def test_populated_downgrade_refuses_and_empty_schema_round_trips(
         pytest.raises(DBAPIError, match="Cannot downgrade CUTTING-001"),
         database_connection.begin_nested(),
     ):
-        command.downgrade(config, "-1")
+        command.downgrade(config, "20261110_0046")
 
 
 def test_stale_lot_edit_does_not_restore_consumed_stock(

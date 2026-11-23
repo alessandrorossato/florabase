@@ -182,6 +182,7 @@
     "WF-CLEANUP-001": "tooling",
     "DOCS-002": "best-effort",
     "RUNTIME-IDLE-001": "release-work",
-    "MOBILE-001": "post-1.0"
+    "MOBILE-001": "post-1.0",
+    "MOBILE-002": "post-1.0"
   }
 }
