@@ -174,7 +174,7 @@ then start/seed/status from `857e` and perform the requested synthetic UAT scena
 
 The graph already owns TAXONOMY-001 reconciliation and TAXONOMY-002 name history. The new
 **planned TAXONOMY-003** represents the collection-aware taxonomy tree without repurposing them.
-[Future contract](collection-taxonomy-plan.md) records collection scopes, family/genus/identity
+[Future contract](archive/TAXONOMY-003/collection-taxonomy-plan.md) records collection scopes, family/genus/identity
 navigation, distinct counts, WFO static-source candidate and unresolved parent/rank/synonym/link/
 version/index questions. Use Taxonomy; collection Lineage retains its existing meaning.
 

@@ -1,10 +1,30 @@
 # Contributing to Florabase
 
+## Contributing as an external contributor
+
+- **Discuss non-trivial changes first**: open an issue before starting a non-trivial pull request so
+  scope, design and fit with the [v1.0.0 release scope](docs/release/scope-v1.md) are aligned.
+- **One focused change per pull request**: keep each PR scoped to one clear fix or increment, and
+  state what is intentionally out of scope.
+- **Licence (inbound = outbound)**: contributions are accepted under the project's licence,
+  GNU Affero General Public License v3.0 or later (`AGPL-3.0-or-later`; see [LICENSE](LICENSE)).
+  No Contributor License Agreement (CLA) is required.
+- **Developer Certificate of Origin (DCO)**: every commit must carry a `Signed-off-by` DCO
+  sign-off trailer added with `git commit -s`. By signing off, you certify the terms of the
+  [Developer Certificate of Origin](https://developercertificate.org/).
+- **Conduct**: be respectful and constructive in issues, pull requests and reviews. The project has
+  no separate code of conduct document, by operator choice.
+- **Security vulnerabilities**: report vulnerabilities privately by following
+  [SECURITY.md](SECURITY.md) — never open a public issue with exploit details, secrets or private
+  data.
+
+## Maintainer and agent workflow
+
 Florabase is developed as small, dependency-aware increments. Start with the
 [development workflow](docs/development-workflow.md), then choose or discuss one item from
 [`docs/features.json`](docs/features.json).
 
-## Workflow
+### Workflow
 
 1. Choose the scoped increment. From the primary checkout run `make feature-worktree
    BRANCH=feat/event-001` to create a sibling worktree. In a worktree provided by an agent tool run

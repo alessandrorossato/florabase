@@ -749,7 +749,7 @@ unapproved. See [the separate audit](botanical-knowledge-source-audit.md). These
 The full 95-record graph already assigns TAXONOMY-001 to identity reconciliation and TAXONOMY-002
 to synonyms/name history; neither owns collection taxonomy browsing. The new planned collection
 tree therefore uses **TAXONOMY-003**, preserving both existing IDs. PHYLOGENY-001 and BOTANY-004
-record separate future discovery, with no implementation. See [future contract](collection-taxonomy-plan.md).
+record separate future discovery, with no implementation. See [future contract](archive/TAXONOMY-003/collection-taxonomy-plan.md).
 
 Focused existing-behavior baseline: **72 backend unit tests passed**. Documentation/graph/whitespace
 checks are recorded in the handoff. No text parser, migration, API, UI, PostgreSQL text-enrichment

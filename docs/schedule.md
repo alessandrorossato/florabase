@@ -122,7 +122,7 @@ Repeating seed preserves operator edits and dates; time passing naturally change
 Operator review should create from Schedule and Plant/Sowing/SeedLot detail, reschedule, complete
 without Event, explicitly record actual repotting or movement, retry the same completion through the
 API, inspect Journal/History boundaries, cancel, reopen terminal evidence and use 390×844 mobile.
-See [handoff](schedule-001-handoff.md) for checks and visual-review readiness.
+See [handoff](archive/SCHEDULE-001/schedule-001-handoff.md) for checks and visual-review readiness.
 
 Recurrence, notifications/reminders, assignees/teams, subtasks, priority matrices, attachments,
 workflow engines, kanban and broad visual redesign remain outside this increment.
@@ -152,7 +152,7 @@ local `today` across pages and the screen refreshes at midnight. PartialDate is 
 
 Explicit synthetic seed adds seven Calendar examples (including five same-day activities, month
 end and next month) once, preserving original Schedule examples and operator edits. The independent
-review handoff and focused evidence are in [SCHEDULE-002 handoff](schedule-002-handoff.md).
+review handoff and focused evidence are in [SCHEDULE-002 handoff](archive/SCHEDULE-002/schedule-002-handoff.md).
 Week, drag/drop, recurrence, reminders, assignments, priorities, external sync/export, Schedule
 Saved Views and global visual migration remain deferred.
 

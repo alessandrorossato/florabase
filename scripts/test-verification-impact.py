@@ -142,6 +142,11 @@ class SelectionTests(unittest.TestCase):
         plan = self.plan(
             "docs/schedule.md",
             "README.md",
+            "CONTRIBUTING.md",
+            "SECURITY.md",
+            "CHANGELOG.md",
+            "THIRD-PARTY-NOTICES.md",
+            "LICENSE",
             "docs/features.json",
             "docs/review/new/evidence.PNG",
             "docs/design/new/prototype.css",
@@ -381,7 +386,6 @@ class SelectionTests(unittest.TestCase):
             "postgres/init.sql",
             "release/manifest.json",
             "AGENTS.md",
-            "LICENSE",
             "unknown.config",
             "backend/src/florabase/newcapability/service.py",
             "frontend/src/newcapability/Screen.tsx",
@@ -395,7 +399,8 @@ class SelectionTests(unittest.TestCase):
                 self.assertEqual(plan["workflow"], WORKFLOW)
                 self.assertEqual(plan["migration"], "full-cycle")
         self.assertNotIn("deploy/", load_map()["full_prefixes"])
-        self.assertEqual(self.plan("LICENSE")["builds"], ["backend", "frontend"])
+        self.assertNotIn("LICENSE", load_map()["full_prefixes"])
+        self.assertEqual(self.plan("AGENTS.md")["builds"], ["backend", "frontend"])
         self.assertEqual(self.plan("backend/alembic/versions/new.py")["migration"], "full-cycle")
         self.assertEqual(self.plan("scripts/verify-migration-cycle.sh")["migration"], "full-cycle")
 
@@ -1040,7 +1045,7 @@ class SelectionTests(unittest.TestCase):
         )
         self.assertEqual(
             line.split("##")[0].split(":", 1)[1].split(),
-            ["format-check", "lint", "typecheck", "api-check", "test"],
+            ["doc-links", "format-check", "lint", "typecheck", "api-check", "test"],
         )
 
     def test_stages_get_noninteractive_stdin_even_from_a_terminal(self) -> None:
@@ -1435,9 +1440,22 @@ class RemoteHistoryTests(unittest.TestCase):
                         self.assertEqual(output.strip(), "skip=false")
                         self.assertNotIn("REHEARSE_SKIPPED", result.stdout)
 
-                # LICENSE change is never docs-only and requires full rehearsal.
-                _, license_env = make_pr_merge("docs/license-update", "LICENSE", "new license\n")
-                result, output = run_scope(license_env)
+                # Root community and licence docs stay docs-only and skip rehearsal.
+                for idx, doc_path in enumerate(
+                    ("LICENSE", "SECURITY.md", "CHANGELOG.md", "THIRD-PARTY-NOTICES.md")
+                ):
+                    with self.subTest(doc_path=doc_path):
+                        _, doc_env = make_pr_merge(
+                            f"docs/doc-only-{idx}", doc_path, f"updated {doc_path}\n"
+                        )
+                        result, output = run_scope(doc_env)
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        self.assertIn("REHEARSE_SKIPPED", result.stdout)
+                        self.assertEqual(output.strip(), "skip=true")
+
+                # Full-prefix changes such as AGENTS.md are never docs-only and require rehearsal.
+                _, agents_env = make_pr_merge("docs/agents-update", "AGENTS.md", "new rule\n")
+                result, output = run_scope(agents_env)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertIn("REHEARSE_REQUIRED: tier=full", result.stdout)
                 self.assertEqual(output.strip(), "skip=false")

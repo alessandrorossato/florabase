@@ -6,7 +6,7 @@ phylogeny, genetic distance, evolutionary branch lengths or divergence ages.
 
 ## Source and explicit association
 
-[Source GO and schema](taxonomy-003-source.md) pin official World Flora Online Plant List **2026-06**,
+[Source GO and schema](archive/TAXONOMY-003/taxonomy-003-source.md) pin official World Flora Online Plant List **2026-06**,
 CC0, its archive SHA-256 and an independently reviewed biological-root boundary. Provision explicitly:
 
 ```bash
@@ -121,6 +121,6 @@ Migration `20261009_0040` follows `0039`, adds only `wfo_links`. Empty downgrade
 other domain state. Downgrade takes an exclusive writer lock and refuses if confirmed links exist,
 preventing loss of operator review evidence. No migration occurs at app startup.
 
-[Implementation and UAT evidence](taxonomy-003-handoff.md). Broad cross-application product/visual
+[Implementation and UAT evidence](archive/TAXONOMY-003/taxonomy-003-handoff.md). Broad cross-application product/visual
 review remains a future operator checkpoint. TAXONOMY-001/002, PHYLOGENY-001, BOTANY-003/004 and
 ENRICHMENT-002 keep their separate planned ownership.

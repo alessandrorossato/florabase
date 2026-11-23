@@ -203,8 +203,8 @@ No new tiles, geolocation, provider calls, geocoding or geographic precision are
 Earth attribution remains beside the canvas. Loading, failure, no-range, missing/excluded identity,
 unsupported/custom place and authentication boundaries remain explicit. Actual screen-reader,
 physical-touch and true browser-zoom certification remain operator acceptance items.
-See the [design](maps-foundation-001-design.md), [current spatial evidence](review/maps-foundation-001/spatial/README.md)
-and [handoff](maps-foundation-001-handoff.md). Acceptance and canonical verification remain separate.
+See the [design](archive/MAPS-FOUNDATION-001/maps-foundation-001-design.md), [current spatial evidence](review/maps-foundation-001/spatial/README.md)
+and [handoff](archive/MAPS-FOUNDATION-001/maps-foundation-001-handoff.md). Acceptance and canonical verification remain separate.
 
 ## Operator UAT refinement: comparison and record categories
 
@@ -244,4 +244,4 @@ Geography stays outside Maps because it manages GeographicPlace and ProvenanceSi
 Mobile retains the same destinations in a flat menu. Routes and SavedView identifiers are unchanged.
 
 Future provider-backed native ranges and the later whole-application review are planning only;
-see [the official Kew candidate audit](native-range-enrichment-audit.md) and [roadmap](product-roadmap.md).
+see [the official Kew candidate audit](archive/ENRICHMENT-001/native-range-enrichment-audit.md) and [roadmap](product-roadmap.md).

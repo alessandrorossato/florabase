@@ -51,7 +51,7 @@ sources stay where they are:
 - [`frontend/src/styles/tokens.css`](../../../frontend/src/styles/tokens.css): the single token source (six themes).
 - [UI System v1 overview](../../design/ui-system-v1/README.md) and the [Gate B composition contract](../../design/ui-system-v1/gate-b/implementation.md).
 - [Wave 3 consolidation](../../design/ui-system-v1/consolidation/README.md), [final interaction correction](../../design/ui-system-v1/consolidation/final-interaction-correction/README.md) and [Details/cover closure matrix](../../design/ui-system-v1/consolidation/details-cover/README.md) (UI-DETAIL-001, UI-FLICKER-001, QA-1 to QA-10).
-- [UI-POLISH-001 review](../../ui-polish-001-review.md) and [RELEASE-VISUAL-AUDIT-001](../release-visual-audit-001/README.md) (F01–F09).
+- [UI-POLISH-001 review](../../archive/UI-POLISH-001/ui-polish-001-review.md) and [RELEASE-VISUAL-AUDIT-001](../release-visual-audit-001/README.md) (F01–F09).
 
 The design artifact's token file mirrors `tokens.css` exactly for review purposes. It is not a second
 token source, and the proposed tokens in it are not in the product.

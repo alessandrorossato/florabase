@@ -2,7 +2,7 @@
 
 Current candidate `ef73`, `feat/collection-visual-001`, HEAD/base `1e3df6a` plus unstaged source.
 Operator visual acceptance is pending. Prior passes are historical, not current-source verification.
-[Handoff](../../../../collection-visual-001-handoff.md) · [checks and source hashes](checks.json).
+[Handoff](../../../../archive/COLLECTION-VISUAL-001/collection-visual-001-handoff.md) · [checks and source hashes](checks.json).
 
 [Feature Review](http://localhost:15174) is healthy with the same owner, DB/code `20261013_0042` and
 v4 / ready / 66 records. On resumption the frontend/backend were stopped; supported

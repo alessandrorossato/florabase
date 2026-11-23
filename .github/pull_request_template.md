@@ -9,6 +9,7 @@ Backlog ID, purpose, and preserved acceptance criteria:
 
 ## Verification
 
+- [ ] Every commit carries a DCO sign-off (`git commit -s`, [Developer Certificate of Origin](https://developercertificate.org/))
 - [ ] Focused tests/checks are listed below
 - [ ] `make check`
 - [ ] PostgreSQL integration tests, if applicable
