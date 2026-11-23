@@ -7,7 +7,7 @@ Reviewed SMOKE baseline: `7398e0dc2235679a8edf121528cbfc39fe395970a446a26ecf2ae9
 ## Result of this increment
 
 The SMOKE profile generates, validates and retires isolated synthetic copies from source. STRESS is
-declared in the manifest and refuses until reviewed. [TEST-DATA-002](test-data-002-design.md) later made
+declared in the manifest and refuses until reviewed. [TEST-DATA-002](archive/TEST-DATA-002/test-data-002-design.md) later made
 COMPREHENSIVE executable and resolved some gaps listed below. No environment lifecycle or restore
 workflow changed, and no Review, UAT, Sourcing, Preview, DEV or production command can reach this code.
 Later, [MULTIBRANCH-UAT-001](development-workflow.md#uat-instances-parallel-per-worktree) added exactly one

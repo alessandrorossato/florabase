@@ -9,7 +9,7 @@ sidebar descriptions are superseded by the current handoff and refinement galler
 Candidate source: `/home/alessandro/.codex/worktrees/5430/florabase`.
 Review: <http://localhost:15276/#/geography/overview>. Login `geography-review`;
 password is in `/tmp/geography-5430-owner-password` (mode 0600), outside repository evidence.
-See [the handoff](../../geography-visual-001-handoff.md) for ownership, scope and limitations.
+See [the handoff](../../archive/GEOGRAPHY-VISUAL-001/geography-visual-001-handoff.md) for ownership, scope and limitations.
 
 All ordinary captures show authenticated, API-created **synthetic** review data in the separately
 owned Geography database. The synthetic native-range link is a UI fixture, not a botanical claim.

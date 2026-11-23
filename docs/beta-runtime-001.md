@@ -8,7 +8,7 @@ baseline (Engine 24.0.2, Compose 2.20.1, Python 3.8). It
 does **not** deploy to Synology or any persistent host, approve a host, publish images or admit real
 collection use. Real-host installation stays an explicit operator action (see
 [Outstanding operator evidence](#outstanding-operator-evidence)). The contract it implements is the
-[foundation runtime contract](beta-foundation-001.md#smallest-beta-deployment-architecture).
+[foundation runtime contract](archive/BETA-FOUNDATION-001/beta-foundation-001.md#smallest-beta-deployment-architecture).
 
 ## What ships
 

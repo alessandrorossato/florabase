@@ -375,7 +375,7 @@ Its explicit additive fixture extension confirms five real source IDs and adds a
 packet (44 manifest records): basil/Holy basil share genus, basil/sage share family, Aloe and radish
 exercise distinct families/higher ancestors; lavender remains unlinked. Repeat seeding preserves
 operator link edits. Interrupted extensions remain `building` and require the guarded reset.
-Mobile retains all destinations. See [taxonomy UAT handoff](taxonomy-003-handoff.md).
+Mobile retains all destinations. See [taxonomy UAT handoff](archive/TAXONOMY-003/taxonomy-003-handoff.md).
 
 The current manual-review fixture keeps version 4 and evolves through validated additive markers.
 `dashboard_extension=1` adds a purchased packet without an Order link and unknown/zero germination
@@ -472,7 +472,7 @@ Preservation is the normal lifecycle. `uat-preview-remove` and `uat-preview-rese
 destructive, with exact project confirmation and individually proved resource identities. Use them
 only when intentionally discarding the synthetic collection, edits and media; they are unnecessary
 for finish or later delivered-main updates. A different feature worktree cannot adopt persisted UAT.
-See the [INFRA-MAINT-001 handoff](infra-maint-001-handoff.md) for proof, smoke and recovery evidence.
+See the [INFRA-MAINT-001 handoff](archive/INFRA-MAINT-001/infra-maint-001-handoff.md) for proof, smoke and recovery evidence.
 
 ## UAT instances (parallel, per worktree)
 
@@ -532,7 +532,7 @@ containers, network and three volumes, never `down -v`. Remove also deletes the 
 `<project>-backend/frontend-development` tags unless still in use. `feature-retire` refuses a
 worktree whose source still owns instance volumes, so remove the instance first.
 
-Limits: synthetic WFO/WCVP indexes built during generation are not provisioned for the running app (see the [TEST-DATA-002 decisions](test-data-002-design.md#next-step-separately-review-and-uat)). Browsers share `localhost` cookies across ports, so signing in to a second instance in the
+Limits: synthetic WFO/WCVP indexes built during generation are not provisioned for the running app (see the [TEST-DATA-002 decisions](archive/TEST-DATA-002/test-data-002-design.md#next-step-separately-review-and-uat)). Browsers share `localhost` cookies across ports, so signing in to a second instance in the
 same browser profile signs out the first (use separate profiles). An instance whose source worktree
 was deleted cannot be retired by these commands; `make uat-instance-list` marks it as MISSING SOURCE
 for operator cleanup. A leftover `dev-state-init` one-off is refused, not removed; inspect it manually. The workstation golden reference running production images is a separate
@@ -680,7 +680,7 @@ same disposable workflow; its copies exist only beside disposable test PostgreSQ
 integration suite skips that module; the verification gate adds the `golden-dataset` stage only when
 changed paths intersect `golden_prefixes` in `scripts/verification-impact.json` or cannot be
 classified (fail-closed), while `main` push CI always runs it.
-`make golden-dataset-comprehensive-check` runs the [TEST-DATA-002 profile](test-data-002-design.md) the same
+`make golden-dataset-comprehensive-check` runs the [TEST-DATA-002 profile](archive/TEST-DATA-002/test-data-002-design.md) the same
 way. It is manual: the default integration suite skips that module, so CI and the canonical gate do not run it.
 
 `make up`, `build`, `migrate`, `down`, `backup`, and `restore` use the explicit `florabase-prod` project.
@@ -709,6 +709,17 @@ Independent review seeks objective correctness defects. It does not reopen opera
 choices without a correctness/accessibility reason. Visual acceptance does not redefine established
 domain contracts.
 
+### Documentation and review-artifact placement
+
+- **Living guides only in `docs/` root:** add a new top-level file under `docs/` only for a living,
+  user- or maintainer-facing guide (indexed in [`docs/README.md`](README.md)).
+- **Per-increment artefacts in `docs/archive/<FEATURE-ID>/`:** place per-increment handoffs, design
+  notes, audits, reviews and evidence JSON directly in `docs/archive/<FEATURE-ID>/` from the start.
+- **No committed review screenshots:** review screenshots and visual-audit captures are **not
+  committed** to Git; attach them to the pull request or keep them in the local project folder. Only
+  curated public images under `docs/assets/` are committed. Existing directories under `docs/review/`
+  and `docs/release/evidence/` are preserved as historical evidence.
+
 Local verification distinguishes five policy tiers (`docs`, `affected`, `product-frontend`,
 `product`, and `full`), grouped across developer iteration and canonical gating:
 
@@ -718,9 +729,11 @@ Local verification distinguishes five policy tiers (`docs`, `affected`, `product
 - **Canonical (`make feature-verify` / `make verify-affected`):** derives the safe tier automatically
   from the exact base and complete committed/index/dirty/untracked feature tree, then writes the
   exact completed-plan receipt:
-  - **`docs`:** docs-only static changes run `feature-graph` and the three whitespace checks with no
-    Docker/product suites or image builds. (`LICENSE` is in `full_prefixes`, not docs, because all
-    three Dockerfiles copy it into container images.)
+  - **`docs`:** docs-only static changes (including `docs/` static files and root `README.md`,
+    `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `THIRD-PARTY-NOTICES.md`, and `LICENSE`)
+    run `feature-graph`, `doc-links`, `test-doc-links`, and the three whitespace checks with no
+    Docker/product suites or image builds. (Container image licences live in `backend/LICENSE`,
+    `frontend/LICENSE`, and `postgres/LICENSE`, not root `LICENSE`.)
   - **`affected`:** module-scoped product changes run explicit affected suites, global product
     static checks, selected independent production builds, and skip workflow suites and migration
     cycling.
@@ -784,10 +797,10 @@ summary (passed, failed, interrupted or not run, with elapsed time) at the end o
 keeps the latest run's timings in `<git-dir>/info/florabase-verification-last-run.json`, which is
 diagnostics only and never evidence. Because source-state checks run first, the closing
 frozen-state comparison covers the working tree, the index and HEAD. See
-[VERIFICATION-FAST-001](verification-fast-001-handoff.md).
+[VERIFICATION-FAST-001](archive/VERIFICATION-FAST-001/verification-fast-001-handoff.md).
 
 Stage evidence is opt-in and local
-([VERIFICATION-EVIDENCE-001](verification-evidence-001-handoff.md)).
+([VERIFICATION-EVIDENCE-001](archive/VERIFICATION-EVIDENCE-001/verification-evidence-001-handoff.md)).
 
 - `make feature-verify REUSE=1` may skip **only** Quality and integration. It skips them when a
   record in this worktree's Git metadata proves that their complete input closure is unchanged.
@@ -848,7 +861,7 @@ metadata falls back to full (while `ci/batch-*` still requires exact parent proo
 validation before using `make_plan(base)`). Depth-two checkout retains the merge and both exact
 parents. No local receipt or client impact metadata is trusted. Missing/invalid policy fails
 `quality`/`integration`/`build` and falls back to full in `rehearse`. `make ci` remains exhaustive.
-See the [CI-004 handoff/evidence](ci-004-verification-efficiency-handoff.md).
+See the [CI-004 handoff/evidence](archive/CI-004/ci-004-verification-efficiency-handoff.md).
 
 The implementing agent runs focused tests, relevant static/build checks and records uncovered risks.
 A different agent or session performs independent QA: it reviews behavior/code, runs focused regressions for uncovered risks, fixes

@@ -118,7 +118,7 @@ filtered-out records and true absence; failed tiles have an explicit warning and
 locations, hover cell facts, native status or multi-species comparison are manufactured from pixels.
 Comparable occurrence overlays remain future work requiring comparable provider data and scales.
 
-See [the visual-review handoff](maps-distribution-001-handoff.md) for current checks, responsive
+See [the visual-review handoff](archive/MAPS-DISTRIBUTION-001/maps-distribution-001-handoff.md) for current checks, responsive
 browser evidence, Review ownership and operator acceptance items.
 
 ## Durable evidence cache (2026-10-21 refinement)
@@ -159,4 +159,4 @@ currency. Summaries are in ordinary DB backups. The standard media archive conta
 only, so raster cache files survive restart but are excluded from that archive. Operators needing
 restored offline raster evidence must preserve the cache directory with the matching DB backup;
 otherwise missing tiles remain explicit until a requested refresh. Raw records and bulk downloads
-remain a separate decision. See [the audit and storage/licensing design](maps-distribution-001-cache-design.md).
+remain a separate decision. See [the audit and storage/licensing design](archive/MAPS-DISTRIBUTION-001/maps-distribution-001-cache-design.md).

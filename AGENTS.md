@@ -48,7 +48,12 @@ VERIFY → OPERATOR DELIVERY → FINISH.
   [ADR 0009](docs/decisions/0009-minimal-production-compose.md)).
 - `backend/tests/`: unit tests and clearly isolated PostgreSQL integration tests.
 - `frontend/src/`: accessible React UI and generated API declarations.
-- `docs/`: architecture, operations, domain model, backlog, progress, and ADRs.
+- `docs/`: living architecture, operations, domain model, feature guides, backlog, progress, and
+  ADRs (see `docs/README.md`). Root `docs/` gets a new file only for a living, user- or
+  maintainer-facing guide; per-increment handoff, design and evidence files go in
+  `docs/archive/<FEATURE-ID>/` from the start. Review screenshots and visual-audit captures are
+  **not committed** (attach them to the PR or keep them in the project folder); only curated images
+  under `docs/assets/` are committed.
 - `scripts/`: guarded operational and verification scripts.
 - `compose.yaml`: the only production Compose (self-initializing, ADR 0008); `compose.dev.yaml`: the
   only development Compose. Workflow stacks are derived from it at run time by

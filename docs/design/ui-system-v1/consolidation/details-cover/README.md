@@ -251,7 +251,7 @@ has been completed.
 
 ## UI-POLISH-001 follow-up — 2 November 2026
 
-The [focused audit and review candidate](../../../../ui-polish-001-review.md) checks the three
+The [focused audit and review candidate](../../../../archive/UI-POLISH-001/ui-polish-001-review.md) checks the three
 historical P2 findings against current main and implements bounded missing-Seed, Plant/Group history
 and six-family focus corrections. The historical matrix above is retained as evidence, not rewritten
 as new QA. C5 and the separate repeated-metric content decision remain open; no broader visual

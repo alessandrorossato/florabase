@@ -63,7 +63,7 @@ and independent production builds are selected by the versioned fail-closed impa
 workflow, foundational, dependency and migration changes escalate full. Remote product suites and
 both builds remain exhaustive. Docs-only PRs run graph/whitespace checks in every required job;
 affected product PRs omit workflow helpers. Main stays exhaustive. See
-[CI-004 evidence and recovery](ci-004-verification-efficiency-handoff.md).
+[CI-004 evidence and recovery](archive/CI-004/ci-004-verification-efficiency-handoff.md).
 Version 3 receipts prove both the exact source tree and selected completed checks; focused iteration
 never writes delivery evidence. See [the canonical contract](development-workflow.md#review-profiles-and-verification-timing).
 

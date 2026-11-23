@@ -122,7 +122,15 @@ api-generate: ## Regenerate OpenAPI and TypeScript API declarations
 api-check: ## Verify generated API artifacts are current
 	./scripts/check-api-generated.sh
 
-check: format-check lint typecheck api-check test ## Run the main non-destructive verification suite (cheap static checks first)
+.PHONY: doc-links license-check
+doc-links: ## Verify relative Markdown links across the repository
+	@python3 ./scripts/check-doc-links.py
+
+license-check: ## List installed PyPI/npm dependency licences and fail on AGPL-incompatible terms
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts/license_check.py:/tmp/license_check.py:ro" backend python3 /tmp/license_check.py --pypi
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts/license_check_npm.mjs:/tmp/license_check_npm.mjs:ro" frontend node /tmp/license_check_npm.mjs node_modules
+
+check: doc-links format-check lint typecheck api-check test ## Run the main non-destructive verification suite (cheap static checks first)
 
 ci: test-verification-impact test-workflow-resources test-workflow-helpers test-agent-workflow test-feature-workflow test-preview-workflow test-environment-workflow test-uat-preview test-ui-page workflow-check check test-integration ## Run the complete local equivalent of pull-request CI
 	$(MAKE) verify-build SERVICES='backend frontend'
@@ -383,7 +391,8 @@ WORKFLOW_RUFF_FILES := \
 	/workflow/test-release-tools-lock.py \
 	/workflow/release-tools.py \
 	/workflow/test-beta-lifecycle.py \
-	/workflow/smoke-portable-compose.py
+	/workflow/smoke-portable-compose.py \
+	/workflow/license_check.py
 
 WORKFLOW_MYPY_STRICT_FILES := \
 	/workflow/workflow_resources.py \
@@ -426,7 +435,8 @@ WORKFLOW_MYPY_STRICT_FILES := \
 	/workflow/test-release-tools-lock.py \
 	/workflow/release-tools.py \
 	/workflow/test-beta-lifecycle.py \
-	/workflow/smoke-portable-compose.py
+	/workflow/smoke-portable-compose.py \
+	/workflow/license_check.py
 
 WORKFLOW_RUNTIME_CLIENT_FILES := \
 	/repo/scripts/smoke_beta_runtime_client.py \

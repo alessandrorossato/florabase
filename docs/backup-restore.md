@@ -117,7 +117,7 @@ restore.
 ## Isolated restore drill
 
 This existing example validates only the database portion. It does **not** prove complete collection
-recovery. The [beta runtime acceptance contract](beta-foundation-001.md) requires a separate isolated
+recovery. The [beta runtime acceptance contract](archive/BETA-FOUNDATION-001/beta-foundation-001.md) requires a separate isolated
 restore of both DB and original media, digest/relationship checks and authenticated application use;
 the [image-only beta smoke](beta-runtime-001.md#disposable-verification) exercises that separate runtime.
 

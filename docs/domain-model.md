@@ -219,7 +219,7 @@ checksum, identity revision or hierarchy requires operator review. Read-only ide
 Related in my collection describe classification, without evolutionary-distance claims. Taxonomy is
 separate from recorded collection **Lineage** and planned **PHYLOGENY-001**. TAXONOMY-001/002 and
 BOTANY-003/004 remain planned. See [collection taxonomy](collection-taxonomy.md) and
-[exact source decision](taxonomy-003-source.md).
+[exact source decision](archive/TAXONOMY-003/taxonomy-003-source.md).
 
 ### Collection phylogeny source gate
 
@@ -413,7 +413,7 @@ source, and original and remaining count of stem, leaf or root cuttings. Rooting
 their own starting count, recorded rooted count, cultivation setup and dated rooting checks. A
 recorded zero and an unknown count remain distinct. Failed and abandoned attempts remain readable.
 The [cuttings contract](cuttings.md) describes stock use, clonal lineage and reversal. The
-[architecture decision](cutting-001-design.md) records the alternatives and implementation differences.
+[architecture decision](archive/CUTTING-001/cutting-001-design.md) records the alternatives and implementation differences.
 
 ### Explicit propagation transitions
 

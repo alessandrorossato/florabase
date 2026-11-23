@@ -119,7 +119,7 @@ this terminal planning fact does not establish the actual work date. Its source 
 and a bounded related link recovers the target when present. Planned/overdue/cancelled work is excluded.
 An explicitly created compatible Event remains a separate Journal occurrence at its chosen actual date.
 Schedule shows whether that occurrence is linked and recovers its Journal context.
-See [Schedule](schedule.md) and the [product-pass handoff](journal-history-product-pass-handoff.md).
+See [Schedule](schedule.md) and the [product-pass handoff](archive/ACTIVITY-001/journal-history-product-pass-handoff.md).
 
 An ordinary Journal Event visible on both surfaces is one owning record, not two facts. Structured
 Harvest backing Events and operation-owned Events stay visible in the contextual record Journal
