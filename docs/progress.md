@@ -14,13 +14,16 @@
     archiving and checksumming `release-manifest.json` conditional on its presence while keeping
     `set -e`.
   - Replaced `FLORABASE_HTTP_PORT` with the host port of the `frontend` mapping (default `8080`),
-    added `ports: !override` (`127.0.0.1:8081:8080`) to `restore-override.yaml` when restoring on
-    the same host, and noted that a restore drill on another Linux host needs `sudo` for `chown`
-    and an `https://` `FLORABASE_CANONICAL_ORIGIN` (pointing to § Tailscale and HTTPS).
-  - Replaced action placeholders `<FLORABASE_DATA_DIR>` / `FLORABASE_BACKUP_DIR` with explicit
-    mount-path descriptions (`your data folder (the left side of the /var/lib/florabase/data mount)`
-    and `your backup folder (the left side of the /var/lib/florabase/backup mount)`), keeping
-    literal variable names only when quoting historical log messages.
+    made editing the `frontend` port directly in the restore copy of `compose.yaml` the primary
+    instruction when restoring on the same host (with `ports: !override` in `restore-override.yaml`
+    noted as an option for Compose 2.24.4 or later), and noted that a restore drill on another Linux
+    host needs `sudo` for `chown` and an `https://` `FLORABASE_CANONICAL_ORIGIN` (pointing to §
+    Tailscale and HTTPS).
+  - Replaced `<FLORABASE_DATA_DIR>` / `FLORABASE_BACKUP_DIR` placeholders with explicit mount-path
+    descriptions (`your data folder (the left side of the /var/lib/florabase/data mount)` and `your
+    backup folder (the left side of the /var/lib/florabase/backup mount)`), quoting only the exact
+    `release_schema.py` mount-separation messages (`the data and backup folders are the same`,
+    `the data folder is inside the backup folder`, `the backup folder is inside the data folder`).
   - Aligned § Synology NAS example paths with `compose.yaml` (`/volume1/docker/florabase/data` and
     `/volume1/docker/florabase/backup`) and noted that backups, restores and offline password
     resets need SSH access with the `docker compose` CLI on the NAS.

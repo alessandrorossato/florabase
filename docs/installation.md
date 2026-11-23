@@ -301,10 +301,11 @@ drill on another host needs an HTTPS origin too (see [Tailscale and HTTPS](#tail
 
 Because `compose.yaml` sets fixed `container_name: florabase-<role>` names and binds the default
 loopback port `127.0.0.1:8080:8080`, create a temporary local override file next to the restore
-stack's `compose.yaml` so the restore containers and host port do not collide with the live stack
-when restoring on the **same** host (the `ports: !override` mapping is not needed when restoring on
-a different host; with Compose 2.20.1 on the same host, edit the port directly in the restore copy
-of `compose.yaml` if `!override` is unavailable):
+stack's `compose.yaml` so the restore containers do not collide with the live stack. When restoring
+on the **same** host, edit the `frontend` port directly in the restore copy of `compose.yaml` (for
+example `"127.0.0.1:8081:8080"`), or on Compose 2.24.4 or later add `ports: !override` to
+`restore-override.yaml` as shown in the optional comment below (on a different host, the default
+port needs no change):
 
 ```yaml
 # restore-override.yaml (local only, never committed)
@@ -315,8 +316,10 @@ services:
     container_name: florabase-restore-backend
   frontend:
     container_name: florabase-restore-frontend
-    ports: !override
-      - "127.0.0.1:8081:8080"
+    # Optional on Compose 2.24.4 or later when restoring on the same host
+    # (instead of editing compose.yaml directly):
+    # ports: !override
+    #   - "127.0.0.1:8081:8080"
 ```
 
 1. Deploy the restore stack with its own prepared empty data folder, a backup folder, a distinct
@@ -387,7 +390,7 @@ Read the `db` or `backend` log: every refusal says why, and nothing was changed.
 | `the installation marker exists but its database folder is missing or empty` | The database files are gone or the wrong folder is mounted. Fix the mount or restore from a backup. |
 | `the installation uses PostgreSQL N, this image M` | A PostgreSQL major-version change needs its own migration. Deploy the previous release. |
 | `the database folder belongs to another PostgreSQL cluster` | The marker and the database files come from different installations. Restore the matching pair. |
-| `the data and backup folders are the same` / `the backup folder is inside the data folder` (or `FLORABASE_BACKUP_DIR is inside FLORABASE_DATA_DIR`) | Use a backup folder (the left side of the `/var/lib/florabase/backup` mount) outside your data folder (the left side of the `/var/lib/florabase/data` mount). |
+| `the data and backup folders are the same` / `the data folder is inside the backup folder` / `the backup folder is inside the data folder` | Use a backup folder (the left side of the `/var/lib/florabase/backup` mount) outside your data folder (the left side of the `/var/lib/florabase/data` mount). |
 | `set both FLORABASE_OWNER_LOGIN and FLORABASE_OWNER_PASSWORD, or neither` / `first owner refused` | Fix the owner variables and deploy again. |
 | `pre-upgrade backup failed` / `backup directory ... is missing or not writable` | Fix your backup folder (the left side of the `/var/lib/florabase/backup` mount) or free space and deploy again. Nothing was migrated. |
 | `previous upgrade from ... to ... failed ... remove state/upgrade-failed.env before redeploying` | A prior upgrade failed after writing a verified pre-upgrade dump. Inspect the earlier log, resolve the database issue or restore, remove `state/upgrade-failed.env` inside your data folder (the left side of the `/var/lib/florabase/data` mount), and deploy again. |

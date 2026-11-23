@@ -39,8 +39,9 @@ to know.
     rehearsal findings: paired backup runs over SSH in the stack folder (`docker compose ls`),
     archives `release-manifest.json` only when present, removes stale `.env`,
     `FLORABASE_HTTP_PORT`, `FLORABASE_DATA_DIR` and `FLORABASE_BACKUP_DIR` instruction placeholders,
-    aligns Synology NAS paths with `compose.yaml` (`/volume1/docker/florabase/backup`), adds
-    `ports: !override` and HTTPS/`sudo` notes for isolated restore drills, and clarifies that
+    aligns Synology NAS paths with `compose.yaml` (`/volume1/docker/florabase/backup`), documents
+    same-host port selection (editing the restore copy of `compose.yaml` or `ports: !override` on
+    Compose 2.24.4+) and HTTPS/`sudo` notes for isolated restore drills, and clarifies that
     automatic pre-upgrade dumps run only when the database Alembic revision changes.
 
 ## v0.1.0-beta.8 — 2026-11-22

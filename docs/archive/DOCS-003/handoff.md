@@ -36,7 +36,7 @@
   ```
 - Explained that `release-manifest.json` is downloaded from the release assets of the deployed tag next to `compose.yaml`, and preserved `set -e` semantics for all commands while not failing when `release-manifest.json` is absent.
 
-### 3. `FLORABASE_HTTP_PORT` removal and `restore-override.yaml` (`docs/installation.md:148-152, 300-322`)
+### 3. `FLORABASE_HTTP_PORT` removal and `restore-override.yaml` (`docs/installation.md:148-152, 302-327`)
 
 - **Before (`docs/installation.md:144`):**
   > Forward your HTTPS hostname to `http://127.0.0.1:<FLORABASE_HTTP_PORT>` on the same host.
@@ -44,10 +44,10 @@
   > Forward your HTTPS hostname to `http://127.0.0.1:<port>` on the same host, where `<port>` is the host port of the `frontend` mapping (default `8080`).
 - **Before (`docs/installation.md:281-300`):**
   `restore-override.yaml` only set `container_name`, and step 1 said `a distinct FLORABASE_HTTP_PORT`.
-- **After (`docs/installation.md:300-322`):**
-  Added `ports: !override` with `"127.0.0.1:8081:8080"` on `frontend` in `restore-override.yaml` (matching the `!override` syntax documented in `README.md:90` and `docs/deployment.md:19`), noted that overriding the port is needed only when restoring on the **same** host (and not needed on a different host, or can be edited directly in the restore copy of `compose.yaml` on Compose 2.20.1), and replaced `FLORABASE_HTTP_PORT` in step 1 with `a distinct host port for the frontend mapping (default 8080; needed only when restoring on the same host)`.
+- **After (`docs/installation.md:302-327`):**
+  Made editing the `frontend` port directly in the restore copy of `compose.yaml` the primary instruction when restoring on the **same** host, and presented `ports: !override` (`"127.0.0.1:8081:8080"`) in `restore-override.yaml` as an option for Compose 2.24.4 or later (matching `README.md:90` and `docs/deployment.md:19`; not needed when restoring on a different host). Kept the `container_name` override as is, and replaced `FLORABASE_HTTP_PORT` in step 1 with `a distinct host port for the frontend mapping (default 8080; needed only when restoring on the same host)`.
 
-### 4. Data/backup folder names (`docs/installation.md:244-245, 390-393, 408-410`)
+### 4. Data/backup folder names (`docs/installation.md:244-245, 392-395, 410-412`)
 
 - **Before:**
   - `docs/installation.md:235`: `remove <FLORABASE_DATA_DIR>/state/upgrade-failed.env`
@@ -57,10 +57,10 @@
   - `docs/installation.md:382`: `florabase-backend mounts FLORABASE_BACKUP_DIR read-write`
 - **After:**
   - `docs/installation.md:244-245`: `remove state/upgrade-failed.env inside your data folder (the left side of the /var/lib/florabase/data mount)`
-  - `docs/installation.md:390`: `| the data and backup folders are the same / the backup folder is inside the data folder (or FLORABASE_BACKUP_DIR is inside FLORABASE_DATA_DIR) | Use a backup folder (the left side of the /var/lib/florabase/backup mount) outside your data folder (the left side of the /var/lib/florabase/data mount). |`
-  - `docs/installation.md:392`: `Fix your backup folder (the left side of the /var/lib/florabase/backup mount) or free space and deploy again.`
-  - `docs/installation.md:393`: `remove state/upgrade-failed.env inside your data folder (the left side of the /var/lib/florabase/data mount), and deploy again.`
-  - `docs/installation.md:408-410`: `florabase-backend mounts your backup folder (the left side of the /var/lib/florabase/backup mount) read-write so its guarded start step can write pre-upgrade dumps without a separate migrate container`
+  - `docs/installation.md:392`: `| the data and backup folders are the same / the data folder is inside the backup folder / the backup folder is inside the data folder | Use a backup folder (the left side of the /var/lib/florabase/backup mount) outside your data folder (the left side of the /var/lib/florabase/data mount). |` (quoting only the three messages from `backend/src/florabase/db/release_schema.py:295-300`)
+  - `docs/installation.md:394`: `Fix your backup folder (the left side of the /var/lib/florabase/backup mount) or free space and deploy again.`
+  - `docs/installation.md:395`: `remove state/upgrade-failed.env inside your data folder (the left side of the /var/lib/florabase/data mount), and deploy again.`
+  - `docs/installation.md:410-412`: `florabase-backend mounts your backup folder (the left side of the /var/lib/florabase/backup mount) read-write so its guarded start step can write pre-upgrade dumps without a separate migrate container`
 
 ### 5. § Synology NAS (`docs/installation.md:187-202`)
 
