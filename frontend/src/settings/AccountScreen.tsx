@@ -118,13 +118,12 @@ export function AccountScreen({
   const [revokingAll, setRevokingAll] = useState(false);
   const [devicesReload, setDevicesReload] = useState(0);
 
-  const authenticatedOwner =
-    state.status === "authenticated" && state.session.owner;
-  const devicesLoading =
-    authenticatedOwner && devicesLoadedKey !== devicesReload;
+  const isAuthenticated = state.status === "authenticated";
+  const authenticatedOwner = isAuthenticated && state.session.owner;
+  const devicesLoading = isAuthenticated && devicesLoadedKey !== devicesReload;
 
   useEffect(() => {
-    if (!authenticatedOwner || !capability.isAuthorized()) return;
+    if (!isAuthenticated || !capability.isAuthorized()) return;
     const controller = new AbortController();
     const requestKey = devicesReload;
     void listDeviceSessions(capability, controller.signal)
@@ -156,7 +155,7 @@ export function AccountScreen({
     return () => {
       controller.abort();
     };
-  }, [authenticatedOwner, capability, devicesReload, sessionExpired]);
+  }, [capability, devicesReload, isAuthenticated, sessionExpired]);
   const canLeave = useCallback(() => {
     if (submitting.current) return false;
     if (dirty.current && !window.confirm("Discard the entered passwords?"))
@@ -355,175 +354,173 @@ export function AccountScreen({
       />
       <div className="settings-content">
         {authenticatedOwner && (
-          <>
-            <section
-              className="settings-panel"
-              aria-labelledby="change-password-heading"
-            >
-              <h3 id="change-password-heading">Change password</h3>
-              {nativeMode ? (
-                <p>Change your password in the web app.</p>
-              ) : (
-                <>
-                  <p>
-                    Other browser sessions and connected devices will need to
-                    sign in again.
-                  </p>
-                  <form
-                    aria-labelledby="change-password-heading"
-                    aria-busy={pending}
-                    noValidate
-                    onSubmit={(event) => void submit(event)}
-                    onChange={() => {
-                      dirty.current = [
-                        currentInput,
-                        newInput,
-                        confirmInput,
-                      ].some((input) => Boolean(input.current?.value));
-                      setHasInput(dirty.current);
-                    }}
-                  >
-                    {(
+          <section
+            className="settings-panel"
+            aria-labelledby="change-password-heading"
+          >
+            <h3 id="change-password-heading">Change password</h3>
+            {nativeMode ? (
+              <p>Change your password in the web app.</p>
+            ) : (
+              <>
+                <p>
+                  Other browser sessions and connected devices will need to sign
+                  in again.
+                </p>
+                <form
+                  aria-labelledby="change-password-heading"
+                  aria-busy={pending}
+                  noValidate
+                  onSubmit={(event) => void submit(event)}
+                  onChange={() => {
+                    dirty.current = [currentInput, newInput, confirmInput].some(
+                      (input) => Boolean(input.current?.value),
+                    );
+                    setHasInput(dirty.current);
+                  }}
+                >
+                  {(
+                    [
                       [
-                        [
-                          "current",
-                          "Current password",
-                          currentInput,
-                          "current-password",
-                        ],
-                        ["new", "New password", newInput, "new-password"],
-                        [
-                          "confirm",
-                          "Confirm new password",
-                          confirmInput,
-                          "new-password",
-                        ],
-                      ] as const
-                    ).map(([field, label, ref, autoComplete]) => (
-                      <div className="field" key={field}>
-                        <FieldLabel
-                          required
-                          htmlFor={`account-password-${field}`}
-                        >
-                          {label}
-                        </FieldLabel>
-                        <input
-                          id={`account-password-${field}`}
-                          ref={ref}
-                          name={`account-password-${field}`}
-                          type="password"
-                          autoComplete={autoComplete}
-                          disabled={pending}
-                          required
-                          aria-invalid={error?.field === field || undefined}
-                          aria-describedby={
-                            [
-                              field === "new" ? "account-password-policy" : "",
-                              error?.field === field
-                                ? "account-password-error"
-                                : "",
-                            ]
-                              .filter(Boolean)
-                              .join(" ") || undefined
-                          }
-                        />
-                        {field === "new" && (
-                          <p id="account-password-policy">
-                            12 to 1024 characters.
-                          </p>
+                        "current",
+                        "Current password",
+                        currentInput,
+                        "current-password",
+                      ],
+                      ["new", "New password", newInput, "new-password"],
+                      [
+                        "confirm",
+                        "Confirm new password",
+                        confirmInput,
+                        "new-password",
+                      ],
+                    ] as const
+                  ).map(([field, label, ref, autoComplete]) => (
+                    <div className="field" key={field}>
+                      <FieldLabel
+                        required
+                        htmlFor={`account-password-${field}`}
+                      >
+                        {label}
+                      </FieldLabel>
+                      <input
+                        id={`account-password-${field}`}
+                        ref={ref}
+                        name={`account-password-${field}`}
+                        type="password"
+                        autoComplete={autoComplete}
+                        disabled={pending}
+                        required
+                        aria-invalid={error?.field === field || undefined}
+                        aria-describedby={
+                          [
+                            field === "new" ? "account-password-policy" : "",
+                            error?.field === field
+                              ? "account-password-error"
+                              : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ") || undefined
+                        }
+                      />
+                      {field === "new" && (
+                        <p id="account-password-policy">
+                          12 to 1024 characters.
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                  {error && (
+                    <p
+                      id="account-password-error"
+                      className="notice notice--error"
+                      role="alert"
+                      ref={notice}
+                      tabIndex={-1}
+                    >
+                      {error.message}
+                    </p>
+                  )}
+                  {success && <p role="status">Password changed.</p>}
+                  <button type="submit" disabled={pending}>
+                    {pending ? "Changing password…" : "Change password"}
+                  </button>
+                </form>
+              </>
+            )}
+          </section>
+        )}
+
+        {isAuthenticated && (
+          <section
+            className="settings-panel"
+            aria-labelledby="connected-devices-heading"
+          >
+            <div className="device-sessions-header">
+              <h3 id="connected-devices-heading">Connected devices</h3>
+              {devices.length > 0 && (
+                <button
+                  type="button"
+                  className="button--secondary"
+                  disabled={revokingAll || revokingId !== null}
+                  onClick={() => {
+                    void handleRevokeAllDevices();
+                  }}
+                >
+                  {revokingAll ? "Revoking…" : "Revoke all devices"}
+                </button>
+              )}
+            </div>
+            <p>
+              Signed-in Android app sessions. Revoking a device signs it out
+              immediately.
+            </p>
+            {devicesError && (
+              <p className="notice notice--error" role="alert">
+                {devicesError}
+              </p>
+            )}
+            {devicesStatus && <p role="status">{devicesStatus}</p>}
+            {devicesLoading ? (
+              <p aria-live="polite">Loading connected devices…</p>
+            ) : devices.length === 0 ? (
+              <p className="device-sessions-empty">
+                No mobile devices are currently signed in.
+              </p>
+            ) : (
+              <ul className="device-sessions-list">
+                {devices.map((item) => (
+                  <li key={item.id} className="device-sessions-item">
+                    <div className="device-sessions-meta">
+                      <div className="device-sessions-title">
+                        <strong>{item.device_label}</strong>
+                        {item.current && (
+                          <span className="device-sessions-badge">
+                            This device
+                          </span>
                         )}
                       </div>
-                    ))}
-                    {error && (
-                      <p
-                        id="account-password-error"
-                        className="notice notice--error"
-                        role="alert"
-                        ref={notice}
-                        tabIndex={-1}
-                      >
-                        {error.message}
-                      </p>
-                    )}
-                    {success && <p role="status">Password changed.</p>}
-                    <button type="submit" disabled={pending}>
-                      {pending ? "Changing password…" : "Change password"}
+                      <span className="device-sessions-dates">
+                        Signed in {formatDeviceTimestamp(item.created_at)} ·
+                        Last seen {formatDeviceTimestamp(item.last_seen_at)}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="button--secondary"
+                      disabled={revokingAll || revokingId !== null}
+                      aria-label={`Revoke ${item.device_label}`}
+                      onClick={() => {
+                        void handleRevokeDevice(item);
+                      }}
+                    >
+                      {revokingId === item.id ? "Revoking…" : "Revoke"}
                     </button>
-                  </form>
-                </>
-              )}
-            </section>
-
-            <section
-              className="settings-panel"
-              aria-labelledby="connected-devices-heading"
-            >
-              <div className="device-sessions-header">
-                <h3 id="connected-devices-heading">Connected devices</h3>
-                {devices.length > 0 && (
-                  <button
-                    type="button"
-                    className="button--secondary"
-                    disabled={revokingAll || revokingId !== null}
-                    onClick={() => {
-                      void handleRevokeAllDevices();
-                    }}
-                  >
-                    {revokingAll ? "Revoking…" : "Revoke all devices"}
-                  </button>
-                )}
-              </div>
-              <p>
-                Signed-in Android app sessions. Revoking a device signs it out
-                immediately.
-              </p>
-              {devicesError && (
-                <p className="notice notice--error" role="alert">
-                  {devicesError}
-                </p>
-              )}
-              {devicesStatus && <p role="status">{devicesStatus}</p>}
-              {devicesLoading ? (
-                <p aria-live="polite">Loading connected devices…</p>
-              ) : devices.length === 0 ? (
-                <p className="device-sessions-empty">
-                  No mobile devices are currently signed in.
-                </p>
-              ) : (
-                <ul className="device-sessions-list">
-                  {devices.map((item) => (
-                    <li key={item.id} className="device-sessions-item">
-                      <div className="device-sessions-meta">
-                        <div className="device-sessions-title">
-                          <strong>{item.device_label}</strong>
-                          {item.current && (
-                            <span className="device-sessions-badge">
-                              This device
-                            </span>
-                          )}
-                        </div>
-                        <span className="device-sessions-dates">
-                          Signed in {formatDeviceTimestamp(item.created_at)} ·
-                          Last seen {formatDeviceTimestamp(item.last_seen_at)}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        className="button--secondary"
-                        disabled={revokingAll || revokingId !== null}
-                        aria-label={`Revoke ${item.device_label}`}
-                        onClick={() => {
-                          void handleRevokeDevice(item);
-                        }}
-                      >
-                        {revokingId === item.id ? "Revoking…" : "Revoke"}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          </>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         )}
       </div>
     </Page>

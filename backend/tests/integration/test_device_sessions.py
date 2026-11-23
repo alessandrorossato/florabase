@@ -467,6 +467,260 @@ def test_device_session_shares_login_throttle_and_validates_label(
     assert throttled_browser.status_code == 429
 
 
+def test_non_owner_device_session_endpoints_and_cross_user_404(
+    device_auth_client: TestClient,
+    database_engine: Engine,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from starlette.requests import Request
+
+    from florabase.auth.dependencies import (
+        AuthenticatedActor,
+        require_authenticated_actor,
+        session_cookie_name,
+    )
+    from florabase.auth.security import password_hasher
+    from florabase.auth.service import (
+        InvalidCredentialsError,
+        _issue_device_session,
+        _issue_session,
+        resolve_session,
+        utc_now,
+    )
+
+    owner_device = _create_device(device_auth_client, label="Owner Phone")
+    owner_session_id = owner_device["session_id"]
+    _, owner_csrf_headers = _login_browser(device_auth_client)
+
+    settings = _settings(device_session_max_active=5)
+    now = utc_now()
+    with Session(database_engine) as database, database.begin():
+        member = User(
+            login_name="member",
+            display_name="Member User",
+            password_hash=password_hasher().hash(PASSWORD),
+            enabled=True,
+            owner=True,  # users table currently has ck_users_initial_owner_only (owner = TRUE)
+        )
+        database.add(member)
+        database.flush()
+        member_id = member.id
+        member_cookie = _issue_session(database, member, settings, now)
+        m1 = _issue_device_session(database, member, "Member Phone 1", settings, now)
+        m2 = _issue_device_session(database, member, "Member Phone 2", settings, now)
+        m1_id, m1_token = str(m1.session.id), m1.token
+        m2_id, m2_token = str(m2.session.id), m2.token
+        member_cookie_token = member_cookie.session_token
+        member_csrf_token = member_cookie.csrf_token
+
+    # Override require_authenticated_actor on the app so that "member" resolves with owner=False,
+    # proving the 4 device-session endpoints work for a non-owner actor (owner=False) over HTTP
+    # while cross-user access between "owner" and "member" returns 404.
+    original_require = require_authenticated_actor
+
+    def resolve_with_non_owner_member(
+        request: Request,
+        database: Session,
+        app_settings: Settings,
+    ) -> AuthenticatedActor:
+        actor = original_require(request, database, app_settings)
+        if actor.user_id == member_id:
+            return AuthenticatedActor(
+                user_id=actor.user_id,
+                login_name=actor.login_name,
+                display_name=actor.display_name,
+                owner=False,
+                session=actor.session,
+                transport=actor.transport,
+            )
+        return actor
+
+    # Confirm the wrapper returns owner=False for member via FastAPI's dependency override:
+    from typing import Annotated, cast
+
+    from fastapi import Depends, FastAPI
+
+    from florabase.db.session import get_database_session
+
+    def override_actor(
+        request: Request,
+        database: Annotated[Session, Depends(get_database_session, scope="function")],
+        app_settings: Annotated[Settings, Depends(get_settings)],
+    ) -> AuthenticatedActor:
+        return resolve_with_non_owner_member(request, database, app_settings)
+
+    app = cast(FastAPI, device_auth_client.app)
+    app.dependency_overrides[require_authenticated_actor] = override_actor
+    try:
+        # Owner cannot revoke member's device session (returns 404, not 403/204).
+        cross_from_owner = device_auth_client.delete(
+            f"/api/v1/auth/device-sessions/{m1_id}",
+            headers=owner_csrf_headers,
+        )
+        assert cross_from_owner.status_code == 404
+
+        # Switch client to member's browser cookie session (where actor.owner is False).
+        device_auth_client.cookies.clear()
+        device_auth_client.cookies.set(session_cookie_name(settings), member_cookie_token)
+        member_csrf_headers = {"Origin": WEB_ORIGIN, "X-CSRF-Token": member_csrf_token}
+
+        session_probe = device_auth_client.get("/api/v1/auth/session")
+        assert session_probe.status_code == 200
+        assert session_probe.json()["owner"] is False
+
+        # Member lists only their own device sessions (m1, m2), never owner's device session.
+        member_list = device_auth_client.get("/api/v1/auth/device-sessions")
+        assert member_list.status_code == 200
+        member_ids = {item["id"] for item in member_list.json()["items"]}
+        assert member_ids == {m1_id, m2_id}
+        assert owner_session_id not in member_ids
+
+        # Member attempting to revoke owner's device session gets 404 (and owner's stays active).
+        cross_from_member = device_auth_client.delete(
+            f"/api/v1/auth/device-sessions/{owner_session_id}",
+            headers=member_csrf_headers,
+        )
+        assert cross_from_member.status_code == 404
+
+        # Member revokes one of their own devices (m1) via cookie + CSRF.
+        revoke_m1 = device_auth_client.delete(
+            f"/api/v1/auth/device-sessions/{m1_id}",
+            headers=member_csrf_headers,
+        )
+        assert revoke_m1.status_code == 204
+
+        # Clear cookies to test member Bearer calls.
+        device_auth_client.cookies.clear()
+
+        # Revoked m1 token is now rejected with 401.
+        with pytest.raises(InvalidCredentialsError), Session(database_engine) as database:
+            resolve_session(database, m1_token, settings, expected_transport="bearer")
+        assert (
+            device_auth_client.get(
+                "/api/v1/auth/session",
+                headers={"Authorization": f"Bearer {m1_token}"},
+            ).status_code
+            == 401
+        )
+
+        # Active m2 Bearer token lists member's remaining device with current=True.
+        m2_headers = {"Authorization": f"Bearer {m2_token}", "Origin": NATIVE_ORIGIN}
+        m2_list = device_auth_client.get("/api/v1/auth/device-sessions", headers=m2_headers)
+        assert m2_list.status_code == 200
+        assert [item["id"] for item in m2_list.json()["items"]] == [m2_id]
+        assert m2_list.json()["items"][0]["current"] is True
+
+        # Member revokes current device session (m2) via DELETE /device-sessions/current.
+        revoke_current = device_auth_client.delete(
+            "/api/v1/auth/device-sessions/current",
+            headers=m2_headers,
+        )
+        assert revoke_current.status_code == 204
+        assert device_auth_client.get("/api/v1/auth/session", headers=m2_headers).status_code == 401
+
+        # Issue two more devices for member (m3, m4) and test member revoke-all.
+        with Session(database_engine) as database, database.begin():
+            member_row = database.scalars(select(User).where(User.login_name == "member")).one()
+            m3 = _issue_device_session(database, member_row, "Member Phone 3", settings, utc_now())
+            m4 = _issue_device_session(database, member_row, "Member Phone 4", settings, utc_now())
+            m3_token, m4_token = m3.token, m4.token
+
+        revoke_all = device_auth_client.delete(
+            "/api/v1/auth/device-sessions",
+            headers={"Authorization": f"Bearer {m3_token}", "Origin": NATIVE_ORIGIN},
+        )
+        assert revoke_all.status_code == 200
+        assert revoke_all.json() == {"revoked_count": 2}
+
+        for tok in (m3_token, m4_token):
+            assert (
+                device_auth_client.get(
+                    "/api/v1/auth/session",
+                    headers={"Authorization": f"Bearer {tok}"},
+                ).status_code
+                == 401
+            )
+
+        # Owner's device session is completely untouched and still active.
+        owner_ok = device_auth_client.get(
+            "/api/v1/auth/session",
+            headers={"Authorization": f"Bearer {owner_device['token']}"},
+        )
+        assert owner_ok.status_code == 200
+        assert owner_ok.json()["login_name"] == "owner"
+    finally:
+        app.dependency_overrides.pop(require_authenticated_actor, None)
+        del monkeypatch
+
+
+def test_concurrent_device_session_issuance_serializes_on_user_lock_and_enforces_cap(
+    database_engine: Engine,
+) -> None:
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+
+    from florabase.auth.service import _issue_device_session, utc_now
+
+    with database_engine.begin() as connection:
+        connection.execute(delete(User))
+        connection.execute(delete(LoginThrottle))
+
+    settings = _settings(device_session_max_active=3)
+    try:
+        with Session(database_engine) as database, database.begin():
+            owner = bootstrap_owner(database, "owner", PASSWORD, "Florabase Owner")
+            owner_id = owner.id
+            base_now = utc_now()
+            for idx in range(3):
+                _issue_device_session(
+                    database,
+                    owner,
+                    f"Initial {idx}",
+                    settings,
+                    base_now + timedelta(seconds=idx),
+                )
+
+        barrier = Barrier(2)
+
+        def issue_concurrent(idx: int) -> str:
+            with Session(database_engine) as session, session.begin():
+                user = session.get(User, owner_id)
+                assert user is not None
+                barrier.wait(timeout=10)
+                issued = _issue_device_session(
+                    session,
+                    user,
+                    f"Concurrent {idx}",
+                    settings,
+                    utc_now() + timedelta(minutes=1, seconds=idx),
+                )
+                return issued.token
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            futures = [pool.submit(issue_concurrent, 1), pool.submit(issue_concurrent, 2)]
+            tokens = [future.result(timeout=15) for future in futures]
+        assert len(tokens) == 2
+
+        with Session(database_engine) as database:
+            active_rows = list(
+                database.scalars(
+                    select(AuthSession).where(
+                        AuthSession.user_id == owner_id,
+                        AuthSession.transport == "bearer",
+                        AuthSession.revoked_at.is_(None),
+                    )
+                ).all()
+            )
+            assert len(active_rows) == 3
+            active_labels = {row.device_label for row in active_rows}
+            assert "Concurrent 1" in active_labels
+            assert "Concurrent 2" in active_labels
+    finally:
+        with database_engine.begin() as connection:
+            connection.execute(delete(User))
+            connection.execute(delete(LoginThrottle))
+
+
 def test_device_sessions_migration_upgrade_downgrade_roundtrip(
     database_engine: Engine,
 ) -> None:

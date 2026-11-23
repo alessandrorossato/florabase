@@ -310,6 +310,7 @@ def test_device_session_service_and_dependency_unit_paths() -> None:
         user=owner,
     )
     db_auth = MagicMock()
+    db_auth.scalars.return_value.one_or_none.return_value = owner
     db_auth.scalars.return_value.all.return_value = [older_session, bearer_session]
     with patch(
         "florabase.auth.service._verify_login_credentials",
@@ -319,6 +320,47 @@ def test_device_session_service_and_dependency_unit_paths() -> None:
     assert issued.session.transport == "bearer"
     assert issued.session.device_label == "New Phone"
     assert older_session.revoked_at == now
+
+    # Deterministic lock-order check on _issue_device_session:
+    # 1. users row FOR NO KEY UPDATE via _locked_user
+    # 2. auth_sessions rows ORDER BY AuthSession.id FOR UPDATE
+    from sqlalchemy import Select
+    from sqlalchemy.dialects import postgresql
+
+    from florabase.auth.service import _issue_device_session
+
+    executed_sql: list[str] = []
+
+    def capture_scalars(stmt: Select[tuple[object]]) -> MagicMock:
+        compiled = str(
+            stmt.compile(
+                dialect=postgresql.dialect(),
+                compile_kwargs={"literal_binds": False},
+            )
+        )
+        executed_sql.append(compiled)
+        result = MagicMock()
+        if "FROM users" in compiled:
+            result.one_or_none.return_value = owner
+        else:
+            result.all.return_value = []
+        return result
+
+    db_lock_order = MagicMock()
+    db_lock_order.scalars.side_effect = capture_scalars
+    _issue_device_session(db_lock_order, owner, "Lock Order Phone", app_settings, now)
+    assert len(executed_sql) == 2
+    assert "FROM users" in executed_sql[0]
+    assert "FOR NO KEY UPDATE OF users" in executed_sql[0]
+    assert "FROM auth_sessions" in executed_sql[1]
+    assert "ORDER BY auth_sessions.id" in executed_sql[1]
+    assert "FOR UPDATE OF auth_sessions" in executed_sql[1]
+
+    # Disabled/missing user on _locked_user raises InvalidCredentialsError
+    db_missing_user = MagicMock()
+    db_missing_user.scalars.return_value.one_or_none.return_value = None
+    with pytest.raises(InvalidCredentialsError):
+        _issue_device_session(db_missing_user, owner, "Disabled Phone", app_settings, now)
 
     # Dependency transport isolation
     bearer_actor = AuthenticatedActor(
@@ -417,16 +459,10 @@ def test_device_session_service_and_dependency_unit_paths() -> None:
     assert len(listed.items) == 1
     assert listed.items[0].current is True
 
-    with (
-        patch("florabase.auth.api.lock_presenting_session", return_value=bearer_session),
-        patch("florabase.auth.api.revoke_session"),
-    ):
+    with patch("florabase.auth.api.revoke_device_session_by_id", return_value=True):
         assert revoke_current_device_session(bearer_actor, db).status_code == 204
     with (
-        patch(
-            "florabase.auth.api.lock_presenting_session",
-            side_effect=InvalidCredentialsError,
-        ),
+        patch("florabase.auth.api.revoke_device_session_by_id", return_value=False),
         pytest.raises(HTTPException) as exc_401,
     ):
         revoke_current_device_session(bearer_actor, db)
@@ -441,3 +477,30 @@ def test_device_session_service_and_dependency_unit_paths() -> None:
     assert exc_404.value.status_code == 404
     with patch("florabase.auth.api.revoke_all_device_sessions", return_value=2):
         assert revoke_all_owner_device_sessions(Response(), bearer_actor, db).revoked_count == 2
+
+    # Non-owner authenticated actors can also list, revoke current, revoke one, and revoke all
+    member_id = uuid7()
+    member_session = AuthSession(
+        id=uuid7(),
+        user_id=member_id,
+        transport="bearer",
+        device_label="Member Phone",
+        token_digest=b"m" * 32,
+        csrf_digest=None,
+        created_at=now,
+        last_seen_at=now,
+        idle_expires_at=now + timedelta(days=30),
+        absolute_expires_at=now + timedelta(days=180),
+    )
+    member_actor = AuthenticatedActor(
+        member_id, "member", "Member", False, member_session, transport="bearer"
+    )
+    with patch("florabase.auth.api.list_active_device_sessions", return_value=[member_session]):
+        member_listed = list_device_sessions(Response(), member_actor, db)
+    assert len(member_listed.items) == 1
+    assert member_listed.items[0].id == member_session.id
+    with patch("florabase.auth.api.revoke_device_session_by_id", return_value=True):
+        assert revoke_current_device_session(member_actor, db).status_code == 204
+        assert revoke_device_session(member_session.id, member_actor, db).status_code == 204
+    with patch("florabase.auth.api.revoke_all_device_sessions", return_value=1):
+        assert revoke_all_owner_device_sessions(Response(), member_actor, db).revoked_count == 1

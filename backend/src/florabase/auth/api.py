@@ -52,7 +52,6 @@ CookieCsrfActor = Annotated[AuthenticatedActor, Depends(require_cookie_csrf)]
 CookieActor = Annotated[AuthenticatedActor, Depends(require_cookie_actor)]
 BearerActor = Annotated[AuthenticatedActor, Depends(require_bearer_actor)]
 SessionActor = Annotated[AuthenticatedActor, Depends(require_authenticated_actor)]
-OwnerActor = Annotated[AuthenticatedActor, Depends(require_owner)]
 CsrfHeader = Annotated[str, Header(alias="X-CSRF-Token")]
 Utf8String = Annotated[StrictStr, AfterValidator(require_utf8)]
 
@@ -230,7 +229,7 @@ def create_device_session(
 )
 def list_device_sessions(
     response: Response,
-    actor: OwnerActor,
+    actor: SessionActor,
     database: Database,
 ) -> DeviceSessionListResponse:
     rows = list_active_device_sessions(database, actor.user_id)
@@ -260,16 +259,12 @@ def revoke_current_device_session(
     actor: BearerActor,
     database: Database,
 ) -> Response:
-    require_owner(actor)
-    try:
-        session = lock_presenting_session(database, actor.session)
-    except InvalidCredentialsError:
+    if not revoke_device_session_by_id(database, actor.user_id, actor.session.id):
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED,
             "Authentication required",
             headers=BEARER_CHALLENGE,
-        ) from None
-    revoke_session(database, session)
+        )
     return Response(status_code=status.HTTP_204_NO_CONTENT, headers={"Cache-Control": "no-store"})
 
 
@@ -283,7 +278,6 @@ def revoke_device_session(
     actor: CsrfActor,
     database: Database,
 ) -> Response:
-    require_owner(actor)
     revoked = revoke_device_session_by_id(database, actor.user_id, session_id)
     if not revoked:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Device session not found")
@@ -300,7 +294,6 @@ def revoke_all_owner_device_sessions(
     actor: CsrfActor,
     database: Database,
 ) -> DeviceSessionRevokeAllResponse:
-    require_owner(actor)
     count = revoke_all_device_sessions(database, actor.user_id)
     response.headers["Cache-Control"] = "no-store"
     return DeviceSessionRevokeAllResponse(revoked_count=count)

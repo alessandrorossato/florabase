@@ -249,14 +249,20 @@ def _issue_device_session(
     settings: Settings,
     now: datetime,
 ) -> NewDeviceSession:
-    # Lock existing active Bearer sessions in deterministic id order (matching
-    # _locked_user_sessions) to avoid lock-order deadlocks with password changes
-    # while enforcing device_session_max_active.
+    # Lock order (matching change_password / reset_owner_password):
+    #   1. users row FOR NO KEY UPDATE via _locked_user — serializes concurrent
+    #      device logins and password changes for the same user so the active
+    #      device-session cap (device_session_max_active) can never be exceeded.
+    #   2. auth_sessions rows ORDER BY AuthSession.id FOR UPDATE — deterministic
+    #      row lock order preventing deadlocks.
+    locked = _locked_user(database, user_id=user.id)
+    if locked is None or not locked.enabled:
+        raise InvalidCredentialsError
     existing = list(
         database.scalars(
             select(AuthSession)
             .where(
-                AuthSession.user_id == user.id,
+                AuthSession.user_id == locked.id,
                 AuthSession.transport == "bearer",
                 AuthSession.revoked_at.is_(None),
             )

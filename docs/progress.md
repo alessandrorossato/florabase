@@ -7,9 +7,11 @@
   Alembic migration `20261123_0048_device_sessions.py` with `transport`, `device_label`, nullable
   `csrf_digest`, and `ix_auth_sessions_user_transport`): `POST /api/v1/auth/device-sessions`
   (strict `application/json` 415 guard, shared Argon2id/`LoginThrottle`, 30d idle / 180d absolute,
-  20 active session cap evicting oldest-seen), `GET /api/v1/auth/device-sessions`,
+  20 active session cap serialized under `_locked_user` `FOR NO KEY UPDATE` before `auth_sessions`
+  `ORDER BY id FOR UPDATE` and evicting oldest-seen), `GET /api/v1/auth/device-sessions`,
   `DELETE /api/v1/auth/device-sessions/current` (Bearer-only),
-  `DELETE /api/v1/auth/device-sessions/{session_id}`, and `DELETE /api/v1/auth/device-sessions`.
+  `DELETE /api/v1/auth/device-sessions/{session_id}`, and `DELETE /api/v1/auth/device-sessions`
+  (available to any authenticated user for their own sessions, returning `404` cross-user).
   Enforced strict transport isolation (cookie+Bearer rejected `401` + `WWW-Authenticate: Bearer`;
   cookie-only `/auth/password`, `/auth/csrf`, `/auth/logout` reject Bearer `403`; password change
   revokes all browser + device sessions; browser cookie/CSRF/`require_origin` unchanged).

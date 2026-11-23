@@ -56,13 +56,17 @@ store secrets in WebView storage, or add deprecated/third-party Android security
 - Device sessions have a **30-day idle timeout** (`2,592,000` seconds) and a **180-day absolute
   lifetime** (`15,552,000` seconds). Browser cookie lifetimes remain unchanged (24h idle / 30d
   absolute).
-- Active Bearer device sessions are capped at **20 per user** (`device_session_max_active = 20`). On
-  overflow, the oldest-seen active Bearer session is evicted atomically inside the user's
-  deterministic session lock order (`ORDER BY auth_sessions.id`).
+- Active Bearer device sessions are capped at **20 per user** (`device_session_max_active = 20`). To
+  serialize concurrent device logins for the same user and prevent race conditions from exceeding the
+  cap, `_issue_device_session` acquires the per-user lock first (`users` row `FOR NO KEY UPDATE` via
+  `_locked_user`, matching `change_password`) before locking active Bearer rows in deterministic
+  order (`ORDER BY auth_sessions.id FOR UPDATE`) and evicting the oldest-seen active session.
 - Settings → Account lists active device sessions (`GET /api/v1/auth/device-sessions`) in both the
-  PWA and the Android app, showing device label, created timestamp, last-seen timestamp, and a
-  "This device" badge when applicable, with per-device revocation
-  (`DELETE /api/v1/auth/device-sessions/{session_id}`) and revoke-all
+  PWA and the Android app for any authenticated user (scoped to `actor.user_id`; cross-user session
+  IDs return `404`), showing device label, created timestamp, last-seen timestamp, and a "This
+  device" badge when applicable, with per-device revocation
+  (`DELETE /api/v1/auth/device-sessions/{session_id}`), current-device sign-out
+  (`DELETE /api/v1/auth/device-sessions/current`), and revoke-all
   (`DELETE /api/v1/auth/device-sessions`).
 - Changing the owner password (browser-cookie-only in `MOBILE-002`) revokes **all** sessions for the
   user — both browser sessions and all active mobile device sessions.

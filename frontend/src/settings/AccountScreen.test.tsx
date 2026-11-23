@@ -298,3 +298,55 @@ test("Account lists connected devices and revokes one or all with CSRF", async (
     ),
   ).toHaveLength(2);
 });
+
+test("Account shows Connected devices for a non-owner user without showing Change password", async () => {
+  window.history.replaceState(null, "", "#/account");
+  const memberSession = {
+    ...session,
+    user_id: "01900000-0000-7000-8000-000000000002",
+    login_name: "member",
+    owner: false,
+    display_name: "Member",
+  };
+  let devices = [
+    {
+      id: "01900000-0000-7000-8000-000000000021",
+      device_label: "Member Phone",
+      created_at: "2026-11-22T10:00:00Z",
+      last_seen_at: "2026-11-23T09:00:00Z",
+      idle_expires_at: "2026-12-23T09:00:00Z",
+      absolute_expires_at: "2027-05-21T10:00:00Z",
+      current: false,
+    },
+  ];
+  vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+    const path = pathname(input);
+    if (path.endsWith("/session")) return Promise.resolve(json(memberSession));
+    if (path.endsWith("/csrf"))
+      return Promise.resolve(json({ csrf_token: "csrf-member" }));
+    if (
+      path.endsWith("/device-sessions") &&
+      (!init?.method || init.method === "GET")
+    ) {
+      return Promise.resolve(json({ items: devices }));
+    }
+    if (path.includes("/device-sessions/") && init?.method === "DELETE") {
+      expect(new Headers(init.headers).get("X-CSRF-Token")).toBe("csrf-member");
+      devices = [];
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    return Promise.resolve(json([]));
+  });
+
+  const user = userEvent.setup();
+  render(<App />);
+  expect(await screen.findByText("Member Phone")).toBeVisible();
+  expect(
+    screen.queryByRole("heading", { name: "Change password" }),
+  ).not.toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "Revoke Member Phone" }));
+  expect(
+    await screen.findByText("No mobile devices are currently signed in."),
+  ).toBeVisible();
+});
