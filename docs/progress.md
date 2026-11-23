@@ -11,6 +11,51 @@
 - Checks: the two additive progress tests in `scripts/test-agent-workflow.py`, a replay on the real
   Batch 12 revisions, `scripts/check-features.py`. Canonical FULL runs with Batch 12.
 
+## 2026-11-23 — DOCS-003 installation guide accuracy fixes and v0.1.0-beta.8 publication record
+
+- On `docs/docs-003-install-guide` from `origin/main` `ddf5a14` (writer `antigravity-docs-003`).
+- Updated [docs/installation.md](installation.md), [docs/backup-restore.md](backup-restore.md),
+  [README.md](../README.md) and [CHANGELOG.md](../CHANGELOG.md) (`Unreleased`) from the 2026-11-23
+  operator rehearsal findings against the 40-line production `compose.yaml`:
+  - Added a "Before you start" callout at the top of `docs/installation.md` and a bold sentence in
+    `README.md`'s self-hosting paragraph pointing to the one-time folder setup block in § 1 before
+    the first deploy.
+  - Updated § Paired backup to state it runs over SSH in the folder holding the stack's
+    `compose.yaml` (`docker compose ls`; Dockhand keeps its own copy), removed `.env`, and made
+    archiving and checksumming `release-manifest.json` conditional on its presence while keeping
+    `set -e`.
+  - Replaced `FLORABASE_HTTP_PORT` with the host port of the `frontend` mapping (default `8080`),
+    made editing the `frontend` port directly in the restore copy of `compose.yaml` the primary
+    instruction when restoring on the same host (with `ports: !override` in `restore-override.yaml`
+    noted as an option for Compose 2.24.4 or later), and noted that a restore drill on another Linux
+    host needs `sudo` for `chown` and an `https://` `FLORABASE_CANONICAL_ORIGIN` (pointing to §
+    Tailscale and HTTPS).
+  - Replaced `<FLORABASE_DATA_DIR>` / `FLORABASE_BACKUP_DIR` placeholders with explicit mount-path
+    descriptions (`your data folder (the left side of the /var/lib/florabase/data mount)` and `your
+    backup folder (the left side of the /var/lib/florabase/backup mount)`), quoting only the exact
+    `release_schema.py` mount-separation messages (`the data and backup folders are the same`,
+    `the data folder is inside the backup folder`, `the backup folder is inside the data folder`).
+  - Aligned § Synology NAS example paths with `compose.yaml` (`/volume1/docker/florabase/data` and
+    `/volume1/docker/florabase/backup`) and noted that backups, restores and offline password
+    resets need SSH access with the `docker compose` CLI on the NAS.
+  - Stated in § Upgrade (and `docs/backup-restore.md`) that the automatic pre-upgrade dump is
+    written only when the database Alembic revision changes (`release_schema.py` `upgrade`
+    condition); image-only updates at the same head write none.
+- Recorded [v0.1.0-beta.8 publication evidence](release/evidence/beta-8-publication.md) (workflow
+  run `45124950700` attempt 1, annotated tag `3a6dc331ed0770cf24b171b4af650dbadda0585f` on commit
+  `c4ffd63004bf4448af902ffb9a012f5d53f965bd`, Release asset SHA-256 digests, image index/platform
+  digests from `release-manifest.json`, and verified `gh attestation verify` results for
+  `release-manifest.json` and the three OCI images) and updated
+  [docs/release/scope-v1.md](release/scope-v1.md) § Upgrade baseline.
+- Registered `DOCS-003` (`implemented`, proposed release class `release-work`) in
+  `docs/features.json` and `docs/release/scope-v1.json`, and wrote the handoff in
+  [docs/archive/DOCS-003/handoff.md](archive/DOCS-003/handoff.md).
+- Checks: `make verification-plan FORMAT=json` (`tier: docs`), `python3 scripts/check-features.py`,
+  `python3 scripts/check-doc-links.py`, `python3 scripts/test-doc-links.py`, and canonical
+  `make feature-verify AGENT_ID=antigravity-docs-003` (`docs` tier). Unresolved: none (`compose.yaml`
+  header comment and `frontend/src/pwa/UpdateNotice.test.tsx` beta.7 fixture deferred to next
+  product batch to keep `docs` tier).
+
 ## 2026-11-23 — MOBILE-001 Capacitor Android shell spike (PWA preserved)
 
 - On `feat/mobile-001-capacitor-spike` from `origin/main` `68e9449` (writer `neon-mobile-001`).

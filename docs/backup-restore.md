@@ -2,8 +2,10 @@
 
 This page covers the source-build installation (`make backup`/`make restore`). A release
 installation uses the [paired backup and isolated restore](installation.md#paired-backup) of the
-installation guide, and its `compose.yaml` also writes a verified dump before every upgrade
-([ADR 0008](decisions/0008-self-initializing-single-compose.md)).
+installation guide (run over SSH in the folder holding the stack's `compose.yaml`), and its
+`compose.yaml` also writes a verified dump before every schema upgrade when the database revision
+changes ([ADR 0008](decisions/0008-self-initializing-single-compose.md); image-only updates at the
+same Alembic head write none, so the paired backup remains the required recovery point).
 
 ## Coordinated database and attachment backup
 
