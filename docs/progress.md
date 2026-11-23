@@ -1,5 +1,38 @@
 # Engineering progress
 
+## 2026-11-23 — MOBILE-001 Capacitor Android shell spike (PWA preserved)
+
+- On `feat/mobile-001-capacitor-spike` from `origin/main` `68e9449` (writer `neon-mobile-001`).
+- Added Capacitor 8 Android shell under `mobile/` (`@capacitor/{core,android,cli}@8.6.2`,
+  `@capacitor/preferences@8.0.1`, `@capacitor/app@8.1.2`, `pnpm@11.19.0`, Node `24.x`, Android
+  platform only, `com.google.gms:google-services` removed for F-Droid cleanliness) consuming
+  `../frontend/dist` with zero backend, auth, CORS, CSP, or PWA changes.
+- Added runtime native detection (`frontend/src/mobile/runtime.ts`, reading Capacitor's injected
+  `window.Capacitor.isNativePlatform()` with zero `@capacitor/*` imports in `frontend/package.json`
+  or the web bundle) and gated `frontend/src/main.tsx` so native builds skip
+  `registerServiceWorker()` and `<UpdateNotice />` and lazy-load `NativeServerOnboarding`
+  (web entry delta: `+584 B` raw / `+194 B` gzip; `index-*.css` `+0 B`; `/sw.js` preserved).
+- Added native Server URL onboarding (`frontend/src/mobile/`): `https://` required in release,
+  `http://10.0.2.2` and private LAN allowed only in debug builds, `GET /api/v1/health` + optional
+  `/release.json` probe via native `CapacitorHttp`, URL persistence via Capacitor Preferences,
+  distinct error states (invalid URL, unreachable, TLS CA, cleartext, non-Florabase), and the
+  `MOBILE-002` sign-in placeholder.
+- Added `mobile/android/app/src/main/res/xml/network_security_config.xml` (release: no cleartext,
+  trusts `system` + `user` CAs) and `src/debug/res/xml/network_security_config.xml` (debug local
+  HTTP overlay), root and Android `.gitignore` rules for APKs/keystores/Gradle/`local.properties`,
+  and `make mobile-sync` / `make mobile-android-debug` targets in `Makefile`.
+- Classified `mobile/` and `frontend/src/mobile/` under non-FULL, non-golden `mobile` scope in
+  `scripts/verification-impact.json` with regressions in `scripts/test-verification-impact.py`,
+  permitted the standard `10.0.2.2` emulator loopback alias in `scripts/test-beta-runtime.py`,
+  documented setup and architecture in [docs/mobile.md](mobile.md) and
+  [docs/mobile-001-adr.md](mobile-001-adr.md), and registered `MOBILE-001` (`implemented`,
+  proposed release class `post-1.0`) in `docs/features.json` and `docs/release/scope-v1.json`.
+- Verified `make mobile-android-debug` (`app-debug.apk`, 6.5 MB) and live Android 16 AOSP emulator
+  (`florabase_api36`): zero service-worker registrations, distinct invalid/unreachable/non-Florabase
+  errors, `http://10.0.2.2:5173` `/api/v1/health` OK, Preferences persistence across force-stop
+  restart, and observed WebView `fetch` / `Origin` / `SameSite=Strict` / CORS login blockers.
+  Canonical `make feature-verify AGENT_ID=neon-mobile-001` runs on the frozen committed tree.
+
 ## 2026-11-23 — Lower idle container CPU, probe log filter, startup banner, and settings error diagnostics (`RUNTIME-IDLE-001`)
 
 - On `feat/runtime-idle-001` (rebased onto `1d4e0ba`, writer `antigravity`).

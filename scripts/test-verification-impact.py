@@ -219,6 +219,37 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(plan["builds"], ["frontend"])
         self.assertIn("frontend/src/taxonomy/TaxonomyScreen.test.tsx", plan["frontend"])
 
+    def test_mobile_only_changes_are_affected_and_skip_full_and_golden(self) -> None:
+        plan = self.plan(
+            "mobile/capacitor.config.ts",
+            "mobile/package.json",
+            "mobile/android/app/src/main/res/xml/network_security_config.xml",
+        )
+        self.assertEqual(plan_tier(plan), "affected")
+        self.assertEqual(plan["tier"], "affected")
+        self.assertEqual(plan["mode"], "affected")
+        self.assertFalse(plan["docs_only"])
+        self.assertFalse(plan["golden_dataset"])
+        self.assertEqual(plan["changed_scopes"], ["mobile"])
+        self.assertEqual(plan["affected_scopes"], ["mobile"])
+        self.assertEqual(plan["escalation_reasons"], [])
+        self.assertEqual(plan["backend"], [])
+        self.assertEqual(plan["integration"], [])
+        self.assertEqual(plan["workflow"], [])
+        self.assertEqual(plan["migration"], "skip")
+        self.assertEqual(plan["builds"], ["frontend"])
+        self.assertIn("frontend/src/mobile/runtime.test.ts", plan["frontend"])
+        selected_ids = [check["id"] for check in checks_for(plan)]
+        self.assertNotIn("golden-dataset", selected_ids)
+        self.assertNotIn("migration-cycle", selected_ids)
+        self.assertNotIn("workflow-check", selected_ids)
+
+        # Shared frontend entrypoint and PWA changes keep their existing product-frontend tier.
+        main_plan = self.plan("frontend/src/main.tsx")
+        self.assertEqual(plan_tier(main_plan), "product-frontend")
+        pwa_plan = self.plan("frontend/src/pwa/registerServiceWorker.ts")
+        self.assertEqual(plan_tier(pwa_plan), "product-frontend")
+
     def test_backend_only_builds_backend_with_frontend_regression_tests(self) -> None:
         plan = self.plan("backend/src/florabase/taxonomy/schemas.py")
         # Independent build contexts: frontend regressions run but unchanged assets need no build.
