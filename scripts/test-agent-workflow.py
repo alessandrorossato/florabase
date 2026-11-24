@@ -552,6 +552,33 @@ class AgentWorkflowTests(unittest.TestCase):
                 Repository(batch), head, self.git(edited, "rev-parse", "HEAD")
             )
 
+    def test_batch_additive_progress_keeps_shared_heading_above_both_sources(self) -> None:
+        (self.primary / "docs").mkdir()
+        heading, common = "# Engineering progress\n\n", "## Entry 0\n\n- Line 1\n"
+        progress = self.primary / "docs/progress.md"
+        progress.write_text(heading + common)
+        self.git(self.primary, "add", ".")
+        self.git(self.primary, "commit", "-m", "seed progress")
+        tips = []
+        for number in (1, 2):
+            self.git(self.primary, "checkout", "-q", "-b", f"progress-{number}", "main")
+            progress.write_text(heading + f"## Entry {number}\n\n" + common)
+            self.git(self.primary, "commit", "-qam", f"entry {number}")
+            tips.append(self.git(self.primary, "rev-parse", "HEAD"))
+        self.git(self.primary, "checkout", "-q", "main")
+        self.assertEqual(
+            feature_batch.additive_progress(Repository(self.primary), *tips),
+            (heading + "## Entry 1\n\n## Entry 2\n\n" + common).encode(),
+        )
+        # Negative: an edit inside the shared remainder still refuses.
+        self.git(self.primary, "checkout", "-q", "progress-2")
+        progress.write_text(heading + "## Entry 2\n\n" + common.replace("Line 1", "Edited"))
+        self.git(self.primary, "commit", "-qam", "edit common")
+        edited = self.git(self.primary, "rev-parse", "HEAD")
+        self.git(self.primary, "checkout", "-q", "main")
+        with self.assertRaisesRegex(workflow_environment.WorkflowError, "progress conflict"):
+            feature_batch.additive_progress(Repository(self.primary), tips[0], edited)
+
     def advance_main(self) -> str:
         seed = self.root / "seed"
         if not seed.exists():

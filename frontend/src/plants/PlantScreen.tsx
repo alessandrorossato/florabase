@@ -44,6 +44,8 @@ import { OverflowMenu } from "../components/ReferenceUI";
 import { useRecordDetailFocus } from "../components/useRecordDetailFocus";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { DirectorySortSelect } from "../components/DirectorySort";
+import { sortDirectory } from "../components/directorySort";
 import { useEditRoute } from "../components/useEditRoute";
 import { LifecycleStatus, StatusBadge } from "../components/WorkspaceUI";
 import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
@@ -83,7 +85,6 @@ import {
   SpecimenPlate,
   type SpecimenRow,
 } from "../components/CollectionUI";
-import { FieldHelp } from "../components/ContextualHelp";
 import {
   closeCollectionPage,
   collectionPageParent,
@@ -963,6 +964,7 @@ export function PlantScreen({
   const [creationKind, setCreationKind] = useState<RecordKind | null>(null);
   const [form, setForm] = useState<FormState>(blankForm);
   const formElement = useRef<HTMLFormElement>(null);
+  const addAnother = useRef(false);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [extractionSource, setExtractionSource] =
     useState<PlantGroupResponse | null>(null);
@@ -1514,10 +1516,16 @@ export function PlantScreen({
     typeFilter,
   ]);
 
-  const pagination = useDirectoryPagination(
+  const ordered = sortDirectory(
     filtered,
+    view.state.sort,
+    (record) => recordName(record.value, ""),
+    (record) => record.value.collection_entry_date,
+  );
+  const pagination = useDirectoryPagination(
+    ordered,
     JSON.stringify(view.state) +
-      filtered.map((record) => recordKey(record)).join(","),
+      ordered.map((record) => recordKey(record)).join(","),
   );
   const visible = pagination.visible;
   const bulkChoices = visible.map((record) => ({
@@ -1962,6 +1970,8 @@ export function PlantScreen({
 
   async function submit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
+    const another = addAnother.current;
+    addAnother.current = false;
     if (pending || !formKind || !csrfToken) return;
     const errors = [
       ...validate(),
@@ -2073,6 +2083,21 @@ export function PlantScreen({
           ...groups.map((value): PlantRecord => ({ kind: "group", value })),
         ],
       });
+      if (wasCreating && another) {
+        // Stay in the same create form; keep only the botanical identity.
+        const nextForm: FormState = {
+          ...blankForm(),
+          botanicalIdentityId: form.botanicalIdentityId,
+        };
+        creationBaseline.current = JSON.stringify(nextForm);
+        setForm(nextForm);
+        setSave({
+          status: "success",
+          message: `${formKind === "plant" ? "Plant" : "Plant group"} was added to the collection. Add the next one.`,
+        });
+        window.setTimeout(focusCreation, 0);
+        return;
+      }
       setSelectedKey(recordKey(authoritative));
       setDetail({ status: "ready", record: authoritative });
       if (edit.modal) edit.close(true);
@@ -2507,100 +2532,52 @@ export function PlantScreen({
                                 />
                               </div>
                             )}
-                            <div className="field">
-                              <label htmlFor="plant-supplier">Supplier </label>
-                              <select
-                                aria-describedby="plant-supplier-help"
-                                id="plant-supplier"
-                                value={form.supplierId}
-                                disabled={pending}
-                                onChange={(event) => {
-                                  updateForm(
-                                    "supplierId",
-                                    event.currentTarget.value,
-                                  );
-                                }}
-                              >
-                                <option value="">Not recorded</option>
-                                {references.suppliers.map((supplier) => (
-                                  <option
-                                    key={supplier.id}
-                                    value={supplier.id}
-                                    disabled={
-                                      Boolean(supplier.retired_at) &&
-                                      supplier.id !== form.supplierId
-                                    }
-                                  >
-                                    {supplier.name}
-                                    {supplier.retired_at ? " (retired)" : ""}
-                                  </option>
-                                ))}
-                              </select>
-                              <FieldHelp id="plant-supplier-help">
-                                Supplier does not establish biological origin.
-                              </FieldHelp>
-                            </div>
-                            <div className="field">
-                              <label htmlFor="plant-provenance">
-                                Material provenance{" "}
-                              </label>
-                              <select
-                                aria-describedby="plant-provenance-help"
-                                id="plant-provenance"
-                                value={form.provenanceId}
-                                disabled={pending}
-                                onChange={(event) => {
-                                  updateForm(
-                                    "provenanceId",
-                                    event.currentTarget.value,
-                                  );
-                                }}
-                              >
-                                <option value="">Not recorded</option>
-                                {references.places.map((place) => (
-                                  <option
-                                    key={place.id}
-                                    value={place.id}
-                                    disabled={
-                                      Boolean(place.retired_at) &&
-                                      place.id !== form.provenanceId
-                                    }
-                                  >
-                                    {place.display_path}
-                                    {place.retired_at ? " (retired)" : ""}
-                                  </option>
-                                ))}
-                              </select>
-                              <FieldHelp id="plant-provenance-help">
-                                Where the material originated or was collected.
-                              </FieldHelp>
-                            </div>
-                            <div className="field">
-                              <label htmlFor="plant-provenance-site">
-                                Precise provenance site{" "}
-                              </label>
-                              <select
-                                id="plant-provenance-site"
-                                value={form.provenanceSiteId}
-                                disabled={pending}
-                                onChange={(event) => {
-                                  updateForm(
-                                    "provenanceSiteId",
-                                    event.currentTarget.value,
-                                  );
-                                }}
-                              >
-                                <option value="">Not recorded</option>
-                                {references.sites.map((site) => (
-                                  <option key={site.id} value={site.id}>
-                                    {site.geographic_place_path
-                                      ? `${site.geographic_place_path} → `
-                                      : ""}
-                                    {site.name}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
+                            <ReferencePicker
+                              id="plant-supplier"
+                              label="Supplier"
+                              help="Supplier does not establish biological origin."
+                              placeholder="Not recorded"
+                              disabled={pending}
+                              choices={references.suppliers.map((supplier) => ({
+                                id: supplier.id,
+                                label: supplier.name,
+                                retired: Boolean(supplier.retired_at),
+                              }))}
+                              value={form.supplierId}
+                              onChange={(id) => {
+                                updateForm("supplierId", id);
+                              }}
+                            />
+                            <ReferencePicker
+                              id="plant-provenance"
+                              label="Material provenance"
+                              help="Where the material originated or was collected."
+                              placeholder="Not recorded"
+                              disabled={pending}
+                              choices={references.places.map((place) => ({
+                                id: place.id,
+                                label: place.display_path,
+                                retired: Boolean(place.retired_at),
+                              }))}
+                              value={form.provenanceId}
+                              onChange={(id) => {
+                                updateForm("provenanceId", id);
+                              }}
+                            />
+                            <ReferencePicker
+                              id="plant-provenance-site"
+                              label="Precise provenance site"
+                              placeholder="Not recorded"
+                              disabled={pending}
+                              choices={references.sites.map((site) => ({
+                                id: site.id,
+                                label: `${site.geographic_place_path ? `${site.geographic_place_path} → ` : ""}${site.name}`,
+                              }))}
+                              value={form.provenanceSiteId}
+                              onChange={(id) => {
+                                updateForm("provenanceSiteId", id);
+                              }}
+                            />
                           </>
                         )}
                       </>
@@ -2684,22 +2661,36 @@ export function PlantScreen({
               },
             ]}
             submit={
-              <button
-                type="submit"
-                disabled={
-                  pending ||
-                  (extractionSource !== null &&
-                    extractionSource.lifecycle !== "active")
-                }
-              >
-                {pending
-                  ? "Saving…"
-                  : extractionSource
-                    ? "Extract plant"
-                    : selected
-                      ? "Save changes"
-                      : `Record ${formKind === "plant" ? "Plant" : "Plant group"}`}
-              </button>
+              <>
+                <button
+                  type="submit"
+                  disabled={
+                    pending ||
+                    (extractionSource !== null &&
+                      extractionSource.lifecycle !== "active")
+                  }
+                >
+                  {pending
+                    ? "Saving…"
+                    : extractionSource
+                      ? "Extract plant"
+                      : selected
+                        ? "Save changes"
+                        : `Record ${formKind === "plant" ? "Plant" : "Plant group"}`}
+                </button>
+                {!selected && !extractionSource && (
+                  <button
+                    type="submit"
+                    className="button--secondary"
+                    disabled={pending}
+                    onClick={() => {
+                      addAnother.current = true;
+                    }}
+                  >
+                    Save and add another
+                  </button>
+                )}
+              </>
             }
             cancel={
               <button
@@ -2838,6 +2829,15 @@ export function PlantScreen({
                       <DirectoryViewSwitcher
                         value={presentation.view}
                         onChange={presentation.select}
+                      />
+                    }
+                    sort={
+                      <DirectorySortSelect
+                        value={view.state.sort}
+                        dateLabel="collection-entry date"
+                        onChange={(value) => {
+                          view.update("sort", value);
+                        }}
                       />
                     }
                     savedViews={

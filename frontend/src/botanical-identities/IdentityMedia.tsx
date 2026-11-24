@@ -4,6 +4,7 @@ import {
   type IdentityMediaRecord,
 } from "./IdentityRecordMedia";
 import { BotanicalIdentityCover } from "../photos/BotanicalIdentityCover";
+import { InfoDisclosure } from "../components/ContextualHelp";
 import type { BotanicalIdentityResponse } from "./api";
 import type { BotanicalIdentityCollectionResponse } from "../collection/api";
 
@@ -61,13 +62,7 @@ export function IdentityMedia({
   );
   return (
     <div className="identity-media-page">
-      <header>
-        <h3>Identity media</h3>
-        <p>
-          The featured image represents this identity. Collection images below
-          stay with their own records.
-        </p>
-      </header>
+      <h3 className="sr-only">Identity media</h3>
       <div className="identity-media-gallery">
         <BotanicalIdentityCover
           featured
@@ -77,39 +72,24 @@ export function IdentityMedia({
           csrfToken={csrfToken}
         />
       </div>
-      <section aria-label="Collection record media">
-        <h3>Images on collection records</h3>
-        <p>
-          Actual images attached to linked packets, Sowings, Plants, Plant
-          groups and Harvests. These remain collection-record media, not
-          identity covers.
-        </p>
-        {collection && <IdentityRecordMedia records={records} />}
-        <details className="identity-media-owner-links">
-          <summary>Open linked record photo sections</summary>
-          {records.length ? (
-            <ul className="identity-media-records">
-              {records.slice(0, 12).map((r) => (
-                <li key={`${r.kind}:${r.id}`}>
-                  <a href={r.href}>{r.label}</a>
-                  <small>{r.kind}</small>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            collection && <p>No linked collection records.</p>
-          )}
-          {records.length > 12 && (
+      <section aria-labelledby="identity-record-photos">
+        <div className="identity-media-heading">
+          <h3 id="identity-record-photos">Collection record photos</h3>
+          <InfoDisclosure label="About collection record photos">
             <p>
-              Showing 12 record links. Use the collection footprint on Overview
-              for complete filtered directories.
+              Photos stay with their own seed lots, sowings, plants, groups and
+              harvests. The cover above is the only identity-level image.
             </p>
-          )}
-        </details>
-        <p className="field-help">
-          The current identity-level media contract supports one cover, not
-          arbitrary direct attachments.
-        </p>
+          </InfoDisclosure>
+        </div>
+        {collection &&
+          (records.length ? (
+            <IdentityRecordMedia records={records} />
+          ) : (
+            <p className="identity-media-empty">
+              No collection records use this identity yet.
+            </p>
+          ))}
       </section>
     </div>
   );

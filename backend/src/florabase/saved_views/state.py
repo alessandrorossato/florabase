@@ -72,14 +72,20 @@ class NativeRangesState(TextState):
     with_range: StrictBool = Field(default=False, alias="withRange")
 
 
+# Directory order (FN-02); absent keeps each directory's default order.
+DirectorySort = Literal["name", "name_desc", "newest", "oldest"]
+
+
 class SeedLotState(TextState):
     identity_id: UUID | None = None
     lifecycle: Literal["active", "history", "all"] = "active"
+    sort: DirectorySort | None = None
 
 
 class SowingState(TextState):
     identity_id: UUID | None = None
     lifecycle: Literal["active", "completed", "all"] = "active"
+    sort: DirectorySort | None = None
 
 
 class CuttingsState(TextState):

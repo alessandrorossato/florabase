@@ -1,4 +1,5 @@
 import { SiteSourceRecords } from "../geography/SiteSourceRecords";
+import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import "../geography/geography.css";
 import { ActionButton } from "../components/Action";
 import { FieldLabel } from "../components/FieldLabel";
@@ -607,31 +608,21 @@ export function ProvenanceSiteManager({
                           or was collected, not its current collection Location.
                         </FieldHelp>
                       </div>
-                      <div className="field">
-                        <label htmlFor="site-place">Geographic place</label>
-                        <select
-                          id="site-place"
-                          disabled={pending}
-                          value={form.geographicPlaceId}
-                          onChange={(event) => {
-                            setForm({
-                              ...form,
-                              geographicPlaceId: event.currentTarget.value,
-                            });
-                          }}
-                        >
-                          <option value="">Not recorded</option>
-                          {places.map((place) => (
-                            <option
-                              key={place.id}
-                              value={place.id}
-                              disabled={Boolean(place.retired_at)}
-                            >
-                              {place.display_path}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      <ReferencePicker
+                        id="site-place"
+                        label="Geographic place"
+                        placeholder="Not recorded"
+                        disabled={pending}
+                        choices={places.map((place) => ({
+                          id: place.id,
+                          label: place.display_path,
+                          retired: Boolean(place.retired_at),
+                        }))}
+                        value={form.geographicPlaceId}
+                        onChange={(geographicPlaceId) => {
+                          setForm({ ...form, geographicPlaceId });
+                        }}
+                      />
                     </>
                   ),
                 },

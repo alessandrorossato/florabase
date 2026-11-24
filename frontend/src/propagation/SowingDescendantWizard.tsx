@@ -1,9 +1,9 @@
 import "../components/collection-page.css";
+import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import {
   closeCollectionPage,
   setRecordRoute,
 } from "../components/recordNavigation";
-import { FieldLabel } from "../components/FieldLabel";
 import "../components/collection-visual.css";
 import { firstValidationField } from "../components/formValidation";
 import { useMemo } from "react";
@@ -31,7 +31,6 @@ import {
   invalidDateControls,
   invalidDateErrorField,
 } from "../seed-lots/dateControls";
-import { FieldHelp } from "../components/ContextualHelp";
 import {
   listBotanicalIdentities,
   type BotanicalIdentityResponse,
@@ -390,30 +389,19 @@ export function SowingDescendantWizard({
               label: "Essentials",
               content: (
                 <>
-                  <div className="field">
-                    <FieldLabel htmlFor="descendant-identity" required>
-                      Botanical identity
-                    </FieldLabel>
-                    <select
-                      aria-describedby="descendant-identity-help"
-                      id="descendant-identity"
-                      aria-required="true"
-                      value={identityId}
-                      onChange={(event) => {
-                        setIdentityId(event.currentTarget.value);
-                      }}
-                    >
-                      {identities.map((identity) => (
-                        <option key={identity.id} value={identity.id}>
-                          {identity.display_label}
-                        </option>
-                      ))}
-                    </select>
-                    <FieldHelp id="descendant-identity-help">
-                      Preselected from the Sowing; another valid identity may be
-                      chosen.
-                    </FieldHelp>
-                  </div>
+                  <ReferencePicker
+                    id="descendant-identity"
+                    label="Botanical identity"
+                    required
+                    help="Preselected from the Sowing; another valid identity may be chosen."
+                    choices={identities.map((identity) => ({
+                      id: identity.id,
+                      label: identity.display_label,
+                      scientificName: identity.scientific_name,
+                    }))}
+                    value={identityId}
+                    onChange={setIdentityId}
+                  />
                   <PlantEssentialsFields
                     form={form}
                     updateForm={updateForm}
