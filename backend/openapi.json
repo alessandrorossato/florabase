@@ -9565,6 +9565,141 @@
         "title": "PlantGroupEventTarget",
         "type": "object"
       },
+      "PlantGroupExtractBatchCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "botanical_identity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Botanical Identity Id"
+          },
+          "collection_entry_date": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "count": {
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "counter_padding": {
+            "anyOf": [
+              {
+                "maximum": 255.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Counter Padding"
+          },
+          "counter_start": {
+            "default": 1,
+            "maximum": 1000000.0,
+            "minimum": 0.0,
+            "title": "Counter Start",
+            "type": "integer"
+          },
+          "expected_plant_group_updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Plant Group Updated At"
+          },
+          "label_pattern": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label Pattern"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "required": [
+          "count"
+        ],
+        "title": "PlantGroupExtractBatchCreate",
+        "type": "object"
+      },
+      "PlantGroupExtractBatchResponse": {
+        "properties": {
+          "event_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Event Ids",
+            "type": "array"
+          },
+          "plant_group": {
+            "$ref": "#/components/schemas/PlantGroupResponse"
+          },
+          "plants": {
+            "items": {
+              "$ref": "#/components/schemas/PlantResponse"
+            },
+            "title": "Plants",
+            "type": "array"
+          }
+        },
+        "required": [
+          "plant_group",
+          "plants",
+          "event_ids"
+        ],
+        "title": "PlantGroupExtractBatchResponse",
+        "type": "object"
+      },
       "PlantGroupFromSowingCreate": {
         "additionalProperties": false,
         "properties": {
@@ -16311,6 +16446,134 @@
           "sowing"
         ],
         "title": "SowingPlantTransitionResponse",
+        "type": "object"
+      },
+      "SowingPotOnCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "botanical_identity_id": {
+            "format": "uuid",
+            "title": "Botanical Identity Id",
+            "type": "string"
+          },
+          "collection_entry_date": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "count": {
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "counter_padding": {
+            "anyOf": [
+              {
+                "maximum": 255.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Counter Padding"
+          },
+          "counter_start": {
+            "default": 1,
+            "maximum": 1000000.0,
+            "minimum": 0.0,
+            "title": "Counter Start",
+            "type": "integer"
+          },
+          "expected_sowing_updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Sowing Updated At"
+          },
+          "label_pattern": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label Pattern"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "plant_lifecycle": {
+            "$ref": "#/components/schemas/PlantLifecycle",
+            "default": "active"
+          },
+          "resulting_sowing_lifecycle": {
+            "$ref": "#/components/schemas/SowingLifecycle"
+          }
+        },
+        "required": [
+          "count",
+          "botanical_identity_id",
+          "resulting_sowing_lifecycle"
+        ],
+        "title": "SowingPotOnCreate",
+        "type": "object"
+      },
+      "SowingPotOnResponse": {
+        "properties": {
+          "plants": {
+            "items": {
+              "$ref": "#/components/schemas/PlantResponse"
+            },
+            "title": "Plants",
+            "type": "array"
+          },
+          "sowing": {
+            "$ref": "#/components/schemas/SowingResponse"
+          }
+        },
+        "required": [
+          "sowing",
+          "plants"
+        ],
+        "title": "SowingPotOnResponse",
         "type": "object"
       },
       "SowingPropagationSummary": {
@@ -29664,6 +29927,75 @@
         ]
       }
     },
+    "/api/v1/plant-groups/{plant_group_id}/extract-batch": {
+      "post": {
+        "operationId": "extractPlantsFromGroup",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plant_group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plant Group Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlantGroupExtractBatchCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantGroupExtractBatchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Extract Plants Batch Route",
+        "tags": [
+          "plant-groups"
+        ]
+      }
+    },
     "/api/v1/plant-groups/{plant_group_id}/extract-plant": {
       "post": {
         "operationId": "extractPlantFromGroup",
@@ -33928,6 +34260,75 @@
         "summary": "Edit Germination Observation",
         "tags": [
           "sowings"
+        ]
+      }
+    },
+    "/api/v1/sowings/{sowing_id}/pot-on": {
+      "post": {
+        "operationId": "potOnSowing",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sowing_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sowing Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SowingPotOnCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SowingPotOnResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pot On Sowing",
+        "tags": [
+          "propagation"
         ]
       }
     },

@@ -1955,6 +1955,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/plant-groups/{plant_group_id}/extract-batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Extract Plants Batch Route */
+        post: operations["extractPlantsFromGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plant-groups/{plant_group_id}/extract-plant": {
         parameters: {
             query?: never;
@@ -2800,6 +2817,23 @@ export interface paths {
         post?: never;
         /** Remove Germination Observation */
         delete: operations["deleteGerminationObservation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sowings/{sowing_id}/pot-on": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pot On Sowing */
+        post: operations["potOnSowing"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -6041,6 +6075,37 @@ export interface components {
              */
             type: "plant_group";
         };
+        /** PlantGroupExtractBatchCreate */
+        PlantGroupExtractBatchCreate: {
+            /** Botanical Identity Id */
+            botanical_identity_id?: string | null;
+            collection_entry_date?: components["schemas"]["PartialDate"] | null;
+            /** Count */
+            count: number;
+            /** Counter Padding */
+            counter_padding?: number | null;
+            /**
+             * Counter Start
+             * @default 1
+             */
+            counter_start: number;
+            /** Expected Plant Group Updated At */
+            expected_plant_group_updated_at?: string | null;
+            /** Label Pattern */
+            label_pattern?: string | null;
+            /** Location Id */
+            location_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** PlantGroupExtractBatchResponse */
+        PlantGroupExtractBatchResponse: {
+            /** Event Ids */
+            event_ids: string[];
+            plant_group: components["schemas"]["PlantGroupResponse"];
+            /** Plants */
+            plants: components["schemas"]["PlantResponse"][];
+        };
         /** PlantGroupFromSowingCreate */
         PlantGroupFromSowingCreate: {
             /**
@@ -8016,6 +8081,41 @@ export interface components {
         /** SowingPlantTransitionResponse */
         SowingPlantTransitionResponse: {
             plant: components["schemas"]["PlantResponse"];
+            sowing: components["schemas"]["SowingResponse"];
+        };
+        /** SowingPotOnCreate */
+        SowingPotOnCreate: {
+            /**
+             * Botanical Identity Id
+             * Format: uuid
+             */
+            botanical_identity_id: string;
+            collection_entry_date?: components["schemas"]["PartialDate"] | null;
+            /** Count */
+            count: number;
+            /** Counter Padding */
+            counter_padding?: number | null;
+            /**
+             * Counter Start
+             * @default 1
+             */
+            counter_start: number;
+            /** Expected Sowing Updated At */
+            expected_sowing_updated_at?: string | null;
+            /** Label Pattern */
+            label_pattern?: string | null;
+            /** Location Id */
+            location_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** @default active */
+            plant_lifecycle: components["schemas"]["PlantLifecycle"];
+            resulting_sowing_lifecycle: components["schemas"]["SowingLifecycle"];
+        };
+        /** SowingPotOnResponse */
+        SowingPotOnResponse: {
+            /** Plants */
+            plants: components["schemas"]["PlantResponse"][];
             sowing: components["schemas"]["SowingResponse"];
         };
         /** SowingPropagationSummary */
@@ -14582,6 +14682,43 @@ export interface operations {
             };
         };
     };
+    extractPlantsFromGroup: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                plant_group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlantGroupExtractBatchCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantGroupExtractBatchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     extractPlantFromGroup: {
         parameters: {
             query?: never;
@@ -16792,6 +16929,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SowingGerminationDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    potOnSowing: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                sowing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SowingPotOnCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SowingPotOnResponse"];
                 };
             };
             /** @description Validation Error */

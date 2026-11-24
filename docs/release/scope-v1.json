@@ -79,6 +79,7 @@
     "REVERSAL-001": "baseline",
     "PLANT-006": "baseline",
     "PROPAGATION-003": "baseline",
+    "PROPAGATION-BATCH-001": "best-effort",
     "UX-003": "certify",
     "UX-004": "certify",
     "UX-005": "certify",
