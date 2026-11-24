@@ -1,5 +1,18 @@
 # Engineering progress
 
+## 2026-11-24 — v0.1.0-beta.9 release preparation
+
+- On `docs/release-beta-9` from `origin/main` `1a78476` (writer `claude-release-beta-9`). Version
+  surfaces move to `0.1.0-beta.9` (`release/inputs.json`, backend package and module, frontend and
+  mobile packages, both Dockerfiles, OpenAPI `info.version`). The Unreleased CHANGELOG section
+  becomes the `v0.1.0-beta.9` entry: `FN-02`, `FN-04`, `UX-ENTRY-001`, `UI-REVIEW-002`,
+  `RUNTIME-IDLE-001`, `DOCS-002` and `DOCS-003`, with beta.8 upgrade notes. PostgreSQL moves to
+  `18.6-alpine-florabase.5` (same PostgreSQL 18.6 layout), no database migrations since beta.8, and
+  `compose.yaml` changes are comments only. `docs/beta-data-001.md` names beta.9. `MOBILE-001` and
+  workflow-only increments are not operator-facing and stay out of the CHANGELOG.
+- No feature status changes. Tag, protected publication and publication evidence remain operator
+  actions.
+
 ## 2026-11-23 — Batch 12 integration (WF-BATCH-PROGRESS-001, DOCS-003, FN-02/FN-04/UX-ENTRY-001, UI-REVIEW-002)
 
 - `ci/batch-12` from `origin/main` `ddf5a14` (writer `claude-batch-12`) merges, in order,
