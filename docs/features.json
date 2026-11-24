@@ -1564,6 +1564,22 @@
       "status": "implemented"
     },
     {
+      "id": "IMPORT-002",
+      "category": "transfer",
+      "description": "Add a single-sheet CSV and XLSX import wizard with column mapping, grouped reference review, preview, and atomic apply",
+      "acceptance_criteria": [
+        "Inspect, preview, and apply accept bounded UTF-8 CSV or XLSX uploads (<=2 MiB, <=2,000 data rows, <=60 columns, one sheet, zip-bomb and DTD/entity guards, cached formula values only) and keep IMPORT-001 byte-identical",
+        "EN/IT header suggestions map one sheet to Plants, Plant groups, or Seed lots with optional unmapped-columns-to-notes, grouped review of identities, locations, and suppliers (including explicit skip), and a 15-minute session-bound HMAC confirmation",
+        "Apply revalidates against live database state after creating missing identities, suppliers, and locations in one atomic transaction, rolling back completely on any conflict or row error",
+        "An accessible multi-step wizard in Tools -> Import / Export imports each sample CSV and XLSX end to end with the same resulting records while keeping IMPORT-001 unchanged under Advanced"
+      ],
+      "dependencies": [
+        "IMPORT-001"
+      ],
+      "priority": "P0",
+      "status": "in_progress"
+    },
+    {
       "id": "LINEAGE-003",
       "category": "lineage",
       "description": "Add visual lineage navigation",

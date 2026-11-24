@@ -93,6 +93,7 @@
     "SUPPLIER-002": "baseline",
     "SUPPLIER-003": "baseline",
     "IMPORT-001": "certify",
+    "IMPORT-002": "best-effort",
     "LINEAGE-003": "certify",
     "LINEAGE-004": "best-effort",
     "ENRICHMENT-001": "baseline",

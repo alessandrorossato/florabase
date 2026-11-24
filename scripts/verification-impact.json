@@ -853,10 +853,12 @@
       ],
       "backend": [
         "backend/tests/test_import_export.py",
-        "backend/tests/test_import_export_api.py"
+        "backend/tests/test_import_export_api.py",
+        "backend/tests/test_import_wizard.py"
       ],
       "integration": [
-        "backend/tests/integration/test_import_export_api.py"
+        "backend/tests/integration/test_import_export_api.py",
+        "backend/tests/integration/test_import_wizard_api.py"
       ],
       "frontend": [],
       "affects": [
@@ -1378,6 +1380,16 @@
     },
     {
       "prefix": "backend/src/florabase/import_export/",
+      "scope": "import-export",
+      "layer": "backend"
+    },
+    {
+      "prefix": "backend/src/florabase/import_wizard/",
+      "scope": "import-export",
+      "layer": "backend"
+    },
+    {
+      "prefix": "backend/tests/fixtures/sheet/",
       "scope": "import-export",
       "layer": "backend"
     },
