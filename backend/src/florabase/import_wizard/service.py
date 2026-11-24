@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
+import hmac
+import json
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -1179,14 +1182,58 @@ def preview_response_from_plan(
     )
 
 
+def preview_state_digest(plan: SheetImportPlan) -> str:
+    """Deterministic SHA-256 digest of the confirmed preview decision state."""
+    payload = {
+        "identities": [
+            {
+                "key": g.key,
+                "action": g.action,
+                "matched_id": str(g.matched_id) if g.matched_id is not None else None,
+            }
+            for g in plan.identities
+        ],
+        "locations": [
+            {
+                "key": g.key,
+                "action": g.action,
+                "matched_id": str(g.matched_id) if g.matched_id is not None else None,
+            }
+            for g in plan.locations
+        ],
+        "suppliers": [
+            {
+                "key": g.key,
+                "action": g.action,
+                "matched_id": str(g.matched_id) if g.matched_id is not None else None,
+            }
+            for g in plan.suppliers
+        ],
+        "row_count": len(plan.rows),
+        "row_outcomes": [[row.row_number, row.outcome] for row in plan.rows],
+    }
+    encoded = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def apply_sheet(
     database: Session,
     data: bytes,
     options: SheetImportOptions,
     *,
     filename: str | None = None,
+    expected_preview_digest: str | None = None,
 ) -> SheetImportApplyResponse:
     plan = build_preview_plan(database, data, options, filename=filename)
+    if expected_preview_digest is not None and not hmac.compare_digest(
+        preview_state_digest(plan), expected_preview_digest
+    ):
+        raise SheetImportConflictError("Collection state changed since preview; validate again")
     if not plan.can_apply:
         raise SheetImportConflictError("Spreadsheet needs attention; run preview again")
 

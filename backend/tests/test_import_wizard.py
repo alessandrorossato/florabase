@@ -45,6 +45,7 @@ from florabase.import_wizard.service import (
     build_preview_plan,
     inspect_sheet,
     preview_response_from_plan,
+    preview_state_digest,
 )
 from florabase.import_wizard.sheet import (
     MAX_BYTES,
@@ -543,7 +544,34 @@ def test_pending_references_and_skip_choices_and_near_matches() -> None:
     assert response.rows[1].outcome == "conflict"
 
 
-def test_confirmation_token_binds_session_file_options_and_ttl(
+def test_xlsx_formatted_trailing_blank_rows_at_50000_allowed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """M2: formatted empty cells far down the sheet must not fail MAX_ROWS or bloat scanning."""
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    assert ws is not None
+    ws.append(["Species", "Label"])
+    ws.append(["Hoya kerrii", "HOY-1"])
+    ws.append(["Haworthia attenuata", "HAW-1"])
+    ws["A50000"].font = openpyxl.styles.Font(bold=True)
+    buf = io.BytesIO()
+    wb.save(buf)
+    data = buf.getvalue()
+
+    parsed = parse_sheet(data, filename="formatted-trailing.xlsx")
+    assert parsed.header_row == 1
+    assert [row.row_number for row in parsed.rows] == [2, 3]
+    assert parsed.rows[0].cells["col_0"].text == "Hoya kerrii"
+    assert parsed.rows[1].cells["col_1"].text == "HAW-1"
+
+    # Hard scan cap still rejects sheets exceeding MAX_SCANNED_ROWS.
+    monkeypatch.setattr("florabase.import_wizard.sheet.MAX_SCANNED_ROWS", 100)
+    with pytest.raises(SheetFormatError, match="exceeds 100 rows"):
+        parse_sheet(data, filename="formatted-trailing.xlsx")
+
+
+def test_confirmation_token_binds_session_file_options_preview_digest_and_ttl(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     actor = _actor()
@@ -560,16 +588,20 @@ def test_confirmation_token_binds_session_file_options_and_ttl(
             append_unmapped_to_notes=True,
         ),
     )
+    digest = "a" * 64
+    other_digest = "b" * 64
     monkeypatch.setattr("florabase.import_wizard.api.time.time", lambda: 1_800_000_000)
-    token = wizard_api._confirmation_token(actor, data, options)
-    assert wizard_api._verify_confirmation_token(actor, data, options, token)
-    assert not wizard_api._verify_confirmation_token(other, data, options, token)
-    assert not wizard_api._verify_confirmation_token(actor, data + b" ", options, token)
-    assert not wizard_api._verify_confirmation_token(actor, data, changed_options, token)
-    assert not wizard_api._verify_confirmation_token(actor, data, options, "malformed")
+    token = wizard_api._confirmation_token(actor, data, options, digest)
+    assert wizard_api._verify_confirmation_token(actor, data, options, token) == digest
+    assert wizard_api._verify_confirmation_token(other, data, options, token) is None
+    assert wizard_api._verify_confirmation_token(actor, data + b" ", options, token) is None
+    assert wizard_api._verify_confirmation_token(actor, data, changed_options, token) is None
+    assert wizard_api._verify_confirmation_token(actor, data, options, "malformed") is None
+    tampered = f"{token.split('.')[0]}.{other_digest}.{token.split('.')[2]}"
+    assert wizard_api._verify_confirmation_token(actor, data, options, tampered) is None
 
     monkeypatch.setattr("florabase.import_wizard.api.time.time", lambda: 1_800_000_901)
-    assert not wizard_api._verify_confirmation_token(actor, data, options, token)
+    assert wizard_api._verify_confirmation_token(actor, data, options, token) is None
 
 
 def test_upload_size_limit_and_invalid_options_errors() -> None:
@@ -947,20 +979,60 @@ def test_apply_sheet_unit_paths_and_api_handlers(monkeypatch: pytest.MonkeyPatch
             )
         assert bad_inspect.value.status_code == 422
 
+        # Preview on fresh_db, verify apply succeeds on matching state, and fails with 409
+        # when collection state changes after preview (M1).
+        fresh_db = _FakeDatabase()
         resp_preview = await wizard_api.preview_sheet_import(
             file=UploadFile(file=io.BytesIO(data), filename="plants.csv"),
             options=options_json,
             actor=actor,
-            database=_session(db),
+            database=_session(fresh_db),
         )
         assert resp_preview.can_apply is True
+
+        # Mutate DB state by inserting a matching Location before apply -> 409, nothing created.
+        drifted_db = _FakeDatabase(
+            locations=[
+                Location(
+                    id=uuid4(),
+                    name="Windowsill",
+                    parent_id=None,
+                    supports_plants=True,
+                    supports_sowings=True,
+                    supports_seed_lots=True,
+                )
+            ]
+        )
+        with pytest.raises(HTTPException) as drift_exc:
+            await wizard_api.apply_sheet_import(
+                file=UploadFile(file=io.BytesIO(data), filename="plants.csv"),
+                options=options_json,
+                actor=actor,
+                database=_session(drifted_db),
+                confirmation_token=resp_preview.confirmation_token,
+            )
+        assert drift_exc.value.status_code == 409
+        assert "validate again" in str(drift_exc.value.detail)
+        assert drifted_db.rolled_back is True
+        assert len(drifted_db._identities) == 0
+
+        # Also verify direct preview_state_digest check inside apply_sheet.
+        plan_empty = build_preview_plan(_session(fresh_db), data, options, filename="plants.csv")
+        with pytest.raises(SheetImportConflictError, match="validate again"):
+            apply_sheet(
+                _session(drifted_db),
+                data,
+                options,
+                filename="plants.csv",
+                expected_preview_digest=preview_state_digest(plan_empty),
+            )
 
         with pytest.raises(HTTPException) as bad_preview:
             await wizard_api.preview_sheet_import(
                 file=UploadFile(file=io.BytesIO(b""), filename="empty.csv"),
                 options=options_json,
                 actor=actor,
-                database=_session(db),
+                database=_session(fresh_db),
             )
         assert bad_preview.value.status_code == 422
 
@@ -970,13 +1042,12 @@ def test_apply_sheet_unit_paths_and_api_handlers(monkeypatch: pytest.MonkeyPatch
                 file=UploadFile(file=io.BytesIO(data), filename="plants.csv"),
                 options=options_json,
                 actor=actor,
-                database=_session(db),
+                database=_session(fresh_db),
                 confirmation_token="invalid",
             )
         assert bad_token.value.status_code == 409
 
-        # Successful apply commits DB
-        fresh_db = _FakeDatabase()
+        # Successful apply against matching state commits DB
         resp_apply = await wizard_api.apply_sheet_import(
             file=UploadFile(file=io.BytesIO(data), filename="plants.csv"),
             options=options_json,

@@ -17,7 +17,7 @@ MAX_BYTES = 2 * 1024 * 1024
 MAX_ROWS = 2000
 MAX_COLUMNS = 60
 MAX_HEADER_ROW = 10
-MAX_SCANNED_ROWS = 10_000
+MAX_SCANNED_ROWS = 200_000
 MAX_UNCOMPRESSED_BYTES = 30 * 1024 * 1024
 MAX_COMPRESSION_RATIO = 100
 _CHUNK_SIZE = 64 * 1024
@@ -265,9 +265,11 @@ def _parse_csv_sheet(data: bytes, header_row: int | None) -> ParsedSheet:
                 if any(cell.strip() for cell in cells[MAX_COLUMNS:]):
                     raise SheetFormatError(f"Spreadsheet exceeds {MAX_COLUMNS} columns")
                 cells = cells[:MAX_COLUMNS]
+            if not any(cell.strip() for cell in cells):
+                continue
             sheet_cells = [SheetCell(text=cell) for cell in cells]
             raw_rows.append((row_number, sheet_cells))
-            if row_number > (header_row or 1) and any(cell.strip() for cell in cells):
+            if row_number > (header_row or 1):
                 nonblank_after_header_floor += 1
                 if nonblank_after_header_floor > MAX_ROWS + MAX_HEADER_ROW:
                     raise SheetFormatError(f"Spreadsheet exceeds {MAX_ROWS} nonblank rows")
@@ -298,8 +300,8 @@ def _parse_xlsx_sheet(data: bytes, sheet_name: str | None, header_row: int | Non
             raise SheetFormatError(f'Worksheet "{selected}" was not found')
 
         worksheet = values_wb[selected]
-        value_rows: list[tuple[int, list[object]]] = []
-        max_row_seen = 0
+        value_rows_by_number: dict[int, list[object]] = {}
+        last_nonblank_row = 0
         max_col_seen = 0
         nonblank_count = 0
 
@@ -316,25 +318,26 @@ def _parse_xlsx_sheet(data: bytes, sheet_name: str | None, header_row: int | Non
             ):
                 raise SheetFormatError(f"Spreadsheet exceeds {MAX_COLUMNS} columns")
             row_values = list(raw_tuple[:MAX_COLUMNS])
-            max_row_seen = row_number
             row_last_nonempty = 0
             for idx, val in enumerate(row_values):
                 if val is not None and (not isinstance(val, str) or val.strip()):
                     row_last_nonempty = idx + 1
+            if row_last_nonempty == 0:
+                continue
             if row_last_nonempty > max_col_seen:
                 max_col_seen = row_last_nonempty
-            if row_last_nonempty > 0:
-                nonblank_count += 1
-                if nonblank_count > MAX_ROWS + MAX_HEADER_ROW:
-                    raise SheetFormatError(f"Spreadsheet exceeds {MAX_ROWS} nonblank rows")
-            value_rows.append((row_number, row_values))
+            last_nonblank_row = row_number
+            nonblank_count += 1
+            if nonblank_count > MAX_ROWS + MAX_HEADER_ROW:
+                raise SheetFormatError(f"Spreadsheet exceeds {MAX_ROWS} nonblank rows")
+            value_rows_by_number[row_number] = row_values[:row_last_nonempty]
     finally:
         values_wb.close()
 
-    # Second bounded read-only pass (data_only=False) on the single selected sheet to detect
-    # formula cells that have no cached value (which appear as None in data_only=True).
+    # Second bounded read-only pass (data_only=False) on the single selected sheet, bounded by
+    # the last nonblank row, to detect formula cells without cached values.
     formula_coords: set[tuple[int, int]] = set()
-    if max_row_seen > 0:
+    if last_nonblank_row > 0:
         try:
             formula_wb = openpyxl.load_workbook(io.BytesIO(data), read_only=True, data_only=False)
         except Exception as error:
@@ -344,7 +347,7 @@ def _parse_xlsx_sheet(data: bytes, sheet_name: str | None, header_row: int | Non
             for row_number, cell_tuple in enumerate(
                 formula_ws.iter_rows(
                     min_row=1,
-                    max_row=max_row_seen,
+                    max_row=last_nonblank_row,
                     max_col=MAX_COLUMNS + 1,
                     values_only=False,
                 ),
@@ -362,8 +365,10 @@ def _parse_xlsx_sheet(data: bytes, sheet_name: str | None, header_row: int | Non
         finally:
             formula_wb.close()
 
+    row_numbers = sorted(value_rows_by_number.keys() | {f_row for f_row, _ in formula_coords})
     raw_rows: list[tuple[int, list[SheetCell]]] = []
-    for row_number, row_values in value_rows:
+    for row_number in row_numbers:
+        row_values = value_rows_by_number.get(row_number, [])
         width = max(len(row_values), max_col_seen)
         # Include any column where an uncached formula appeared on this row.
         for f_row, f_col in formula_coords:

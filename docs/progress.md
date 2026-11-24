@@ -32,15 +32,28 @@
   `scripts/verification-impact.json`, extended `docs/import-export.md`, and registered `IMPORT-002`
   (`in_progress` in `docs/features.json`, `best-effort` in `docs/release/scope-v1.json`, both right
   after `IMPORT-001`).
+- Backend review fixes (`M1`, `M2`):
+  - **M1 (confirmed preview state digest)**: added `preview_state_digest(plan)` over per-group
+    `(key, action, matched_id)` for identities, locations, and suppliers plus `row_count` and
+    per-row outcomes; bound it inside the HMAC confirmation token (`issued.preview_digest.sig`)
+    and verified it inside `apply_sheet` before creating any entity (returning `409` `"validate
+    again"` with zero writes when e.g. a Location with the same path is created between preview
+    and apply).
+  - **M2 (formatted blank XLSX rows)**: raised `MAX_SCANNED_ROWS` to `200_000`, enforced
+    `MAX_ROWS` strictly on nonblank rows, stopped storing trailing/empty rows during CSV/XLSX
+    scanning, and bounded the `data_only=False` formula pass by `last_nonblank_row` (verified on
+    a 2-data-row XLSX with a formatted empty cell at `A50000`).
 - Checks passed: `make check` (`doc-links` 364 docs, `format-check` 447 backend + Prettier, `lint`
   Ruff + ESLint, `typecheck` strict mypy 392 files + tsc, `api-check` zero drift, `test-backend`
   1356 passed / 3 skipped / 90.55% coverage, `test-frontend` 133 files / 1437 passed),
-  `./scripts/test-integration.sh` on `test_import_export_api.py` + `test_import_wizard_api.py`
-  (19 passed), `scripts/test_check_api_routes.py` (27 passed), `make license-check` (PyPI + 290
-  npm packages, 0 forbidden), `scripts/check-features.py` (181 valid), and
-  `scripts/test-verification-impact.py` (46 OK). Not yet run: frontend wizard UI (pending batch 12
-  and `MOBILE-002` on `main`) and final canonical FULL `make feature-verify` (deferred until the
-  frontend pass completes the feature).
+  re-verified after M1/M2 fixes with `ruff format --check`, `ruff check`, strict `mypy` (392
+  files), `make api-check`, focused unit suite (`test_import_export.py`, `test_import_export_api.py`,
+  `test_import_wizard.py`: 51 passed), and `./scripts/test-integration.sh` on
+  `test_import_export_api.py` + `test_import_wizard_api.py` (20 passed), plus earlier
+  `scripts/test_check_api_routes.py` (27 passed), `make license-check` (PyPI + 290 npm packages,
+  0 forbidden), `scripts/check-features.py` (181 valid), and `scripts/test-verification-impact.py`
+  (46 OK). Not yet run: frontend wizard UI (pending batch 12 + `MOBILE-002` merge into this branch)
+  and final canonical FULL `make feature-verify`.
 
 ## 2026-11-23 — MOBILE-001 Capacitor Android shell spike (PWA preserved)
 

@@ -512,3 +512,64 @@ def test_auth_csrf_confirmation_mismatch_and_atomic_rollback(
 
     _ = SheetImportConflictError
     asyncio.run(scenario())
+
+
+def test_apply_returns_409_and_creates_nothing_when_location_added_after_preview(
+    configured_app: None, database_connection: Connection
+) -> None:
+    """M1: preview -> create Location directly -> apply returns 409 and creates nothing."""
+    data = (FIXTURES / "plants.csv").read_bytes()
+
+    async def scenario() -> None:
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url=ORIGIN) as client:
+            csrf = await _login(client, "owner")
+            inspected = await client.post(
+                "/api/v1/sheet-imports/inspect",
+                files={"file": ("plants.csv", data, "text/csv")},
+                data={"record_type": "plants"},
+            )
+            assert inspected.status_code == 200
+            mapping = {col["key"]: col["suggested_field"] for col in inspected.json()["columns"]}
+            options = json.dumps({"record_type": "plants", "mapping": {"columns": mapping}})
+
+            previewed = await client.post(
+                "/api/v1/sheet-imports/preview",
+                files={"file": ("plants.csv", data, "text/csv")},
+                data={"options": options},
+            )
+            assert previewed.status_code == 200
+            pbody = previewed.json()
+            assert pbody["can_apply"] is True
+            assert any(
+                loc["raw_value"] == "Windowsill" and loc["action"] == "create"
+                for loc in pbody["locations"]
+            )
+            token = pbody["confirmation_token"]
+
+            # Directly create a Location with the same path after preview.
+            with Session(bind=database_connection, join_transaction_mode="create_savepoint") as db:
+                create_location(db, LocationCreate(name="Windowsill"))
+                db.commit()
+
+            # Apply must fail with 409 ("validate again") and create nothing.
+            applied = await client.post(
+                "/api/v1/sheet-imports/apply",
+                files={"file": ("plants.csv", data, "text/csv")},
+                data={"options": options},
+                headers={
+                    "Origin": ORIGIN,
+                    "X-CSRF-Token": csrf,
+                    "X-Import-Confirmation": token,
+                },
+            )
+            assert applied.status_code == 409
+            assert "validate again" in applied.json()["detail"].lower()
+
+            with Session(bind=database_connection, join_transaction_mode="create_savepoint") as db:
+                assert db.scalar(select(func.count()).select_from(BotanicalIdentity)) == 0
+                assert db.scalar(select(func.count()).select_from(Supplier)) == 0
+                assert db.scalar(select(func.count()).select_from(Plant)) == 0
+                assert db.scalar(select(func.count()).select_from(Location)) == 1
+
+    asyncio.run(scenario())

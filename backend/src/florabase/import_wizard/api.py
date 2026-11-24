@@ -34,6 +34,7 @@ from florabase.import_wizard.service import (
     build_preview_plan,
     inspect_sheet,
     preview_response_from_plan,
+    preview_state_digest,
 )
 from florabase.import_wizard.sheet import MAX_BYTES, SheetFormatError
 from florabase.lineage.service import LineageCycleError
@@ -74,30 +75,44 @@ def _canonical_options(options: SheetImportOptions) -> bytes:
 
 
 def _signature(
-    actor: AuthenticatedActor, data: bytes, options: SheetImportOptions, issued: int
+    actor: AuthenticatedActor,
+    data: bytes,
+    options: SheetImportOptions,
+    preview_digest: str,
+    issued: int,
 ) -> str:
     file_digest = hashlib.sha256(data).hexdigest()
     options_digest = hashlib.sha256(_canonical_options(options)).hexdigest()
-    message = f"{actor.session.id}:sheet-import:{file_digest}:{options_digest}:{issued}".encode()
+    message = (
+        f"{actor.session.id}:sheet-import:{file_digest}:{options_digest}:{preview_digest}:{issued}"
+    ).encode()
     return hmac.new(actor.session.token_digest, message, hashlib.sha256).hexdigest()
 
 
-def _confirmation_token(actor: AuthenticatedActor, data: bytes, options: SheetImportOptions) -> str:
+def _confirmation_token(
+    actor: AuthenticatedActor,
+    data: bytes,
+    options: SheetImportOptions,
+    preview_digest: str,
+) -> str:
     issued = int(time.time())
-    return f"{issued}.{_signature(actor, data, options, issued)}"
+    return f"{issued}.{preview_digest}.{_signature(actor, data, options, preview_digest, issued)}"
 
 
 def _verify_confirmation_token(
     actor: AuthenticatedActor, data: bytes, options: SheetImportOptions, token: str
-) -> bool:
+) -> str | None:
     parts = token.split(".")
-    if len(parts) != 2 or not parts[0].isdigit():
-        return False
+    if len(parts) != 3 or not parts[0].isdigit() or len(parts[1]) != 64:
+        return None
     issued = int(parts[0])
+    preview_digest = parts[1]
     now = int(time.time())
-    return now - _TOKEN_TTL_SECONDS <= issued <= now and hmac.compare_digest(
-        parts[1], _signature(actor, data, options, issued)
-    )
+    if not (now - _TOKEN_TTL_SECONDS <= issued <= now):
+        return None
+    if not hmac.compare_digest(parts[2], _signature(actor, data, options, preview_digest, issued)):
+        return None
+    return preview_digest
 
 
 def _parse_options(raw_options: str) -> SheetImportOptions:
@@ -153,7 +168,7 @@ async def preview_sheet_import(
         plan = build_preview_plan(database, data, parsed_options, filename=file.filename)
     except SheetFormatError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
-    token = _confirmation_token(actor, data, parsed_options)
+    token = _confirmation_token(actor, data, parsed_options, preview_state_digest(plan))
     return preview_response_from_plan(plan, token)
 
 
@@ -172,15 +187,24 @@ async def apply_sheet_import(
     require_owner(actor)
     data = await _read_upload(file)
     parsed_options = _parse_options(options)
-    if confirmation_token is None or not _verify_confirmation_token(
-        actor, data, parsed_options, confirmation_token
-    ):
+    confirmed_digest = (
+        _verify_confirmation_token(actor, data, parsed_options, confirmation_token)
+        if confirmation_token is not None
+        else None
+    )
+    if confirmed_digest is None:
         raise HTTPException(
             status_code=409,
             detail="Preview expired or spreadsheet/options changed; validate again",
         )
     try:
-        result = apply_sheet(database, data, parsed_options, filename=file.filename)
+        result = apply_sheet(
+            database,
+            data,
+            parsed_options,
+            filename=file.filename,
+            expected_preview_digest=confirmed_digest,
+        )
         database.commit()
     except SheetFormatError as error:
         database.rollback()
