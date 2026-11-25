@@ -92,7 +92,7 @@ def test_media_defaults_are_normalized_and_required() -> None:
     ("field", "value"),
     [
         ("media_default_licence_url", "http://creativecommons.org/licenses/by/4.0/"),
-        ("media_default_licence_url", "https://user:pw@licence.example/"),
+        ("media_default_licence_url", "https://licence.example:99999/"),
         ("media_default_licence_url", "creativecommons.org"),
         ("media_default_attribution", "x" * 2001),
         ("media_default_attribution", "bad\x00credit"),
