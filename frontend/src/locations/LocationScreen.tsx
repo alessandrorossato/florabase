@@ -41,6 +41,8 @@ import {
 } from "../components/ReferenceUI";
 import { TaskDialog } from "../components/TaskDialog";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
+import { BulkCareDialog, BulkCareSuccessNotice } from "../bulk/BulkCare";
+import type { BulkCareApplyResponse } from "../bulk/careApi";
 import {
   createLocation,
   deleteLocation,
@@ -483,6 +485,11 @@ export function LocationScreen({
         "tab",
       ) === "edit",
   );
+  const [careDialogForId, setCareDialogForId] = useState<string | null>(null);
+  const [careResult, setCareResult] = useState<{
+    locationId: string;
+    response: BulkCareApplyResponse;
+  } | null>(null);
   const view = useDirectoryView("locations", () => {
     setSelectedId(null);
   });
@@ -1036,18 +1043,31 @@ export function LocationScreen({
                   }
                   primaryActions={
                     !selected.retired_at ? (
-                      <button
-                        type="button"
-                        disabled={pending}
-                        onClick={() => {
-                          setCreateParentId(selected.id);
-                          setSave({ status: "idle" });
-                          if (creationExpanded) createName.current?.focus();
-                          else openCreation();
-                        }}
-                      >
-                        Create child
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          className="button--secondary"
+                          disabled={pending}
+                          onClick={() => {
+                            setCareResult(null);
+                            setCareDialogForId(selected.id);
+                          }}
+                        >
+                          Log care for everything here…
+                        </button>
+                        <button
+                          type="button"
+                          disabled={pending}
+                          onClick={() => {
+                            setCreateParentId(selected.id);
+                            setSave({ status: "idle" });
+                            if (creationExpanded) createName.current?.focus();
+                            else openCreation();
+                          }}
+                        >
+                          Create child
+                        </button>
+                      </>
                     ) : undefined
                   }
                   editLabel="Edit location"
@@ -1097,6 +1117,14 @@ export function LocationScreen({
                   <p className="record-empty">
                     Retired location remains available for historical records.
                   </p>
+                )}
+                {careResult?.locationId === selected.id && (
+                  <BulkCareSuccessNotice
+                    result={careResult.response}
+                    onDismiss={() => {
+                      setCareResult(null);
+                    }}
+                  />
                 )}
                 <div className="record-detail-grid location-overview-grid">
                   <section
@@ -1207,6 +1235,22 @@ export function LocationScreen({
           </div>
         )}
       </div>
+      {selected && !selected.retired_at && careDialogForId === selected.id && (
+        <BulkCareDialog
+          targets={{
+            mode: "location",
+            locationId: selected.id,
+            locationLabel: selected.display_path,
+          }}
+          onClose={() => {
+            setCareDialogForId(null);
+          }}
+          onSuccess={(result) => {
+            setCareDialogForId(null);
+            setCareResult({ locationId: selected.id, response: result });
+          }}
+        />
+      )}
       {editing && selected && (
         <TaskDialog
           title="Edit location"

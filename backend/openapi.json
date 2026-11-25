@@ -1971,6 +1971,494 @@
         "title": "BotanicalProfileResponse",
         "type": "object"
       },
+      "BulkCareApplyRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "watering",
+              "feeding",
+              "treatment",
+              "repotting",
+              "pruning",
+              "observation",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "occurred_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "target_signature": {
+            "maxLength": 128,
+            "minLength": 16,
+            "title": "Target Signature",
+            "type": "string"
+          },
+          "targets": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BulkCareRecordTargets"
+              },
+              {
+                "$ref": "#/components/schemas/BulkCareLocationTargets"
+              }
+            ],
+            "title": "Targets"
+          }
+        },
+        "required": [
+          "targets",
+          "kind",
+          "target_signature"
+        ],
+        "title": "BulkCareApplyRequest",
+        "type": "object"
+      },
+      "BulkCareApplyResponse": {
+        "properties": {
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "watering",
+              "feeding",
+              "treatment",
+              "repotting",
+              "pruning",
+              "observation",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "logged_count": {
+            "title": "Logged Count",
+            "type": "integer"
+          },
+          "plant_count": {
+            "title": "Plant Count",
+            "type": "integer"
+          },
+          "plant_group_count": {
+            "title": "Plant Group Count",
+            "type": "integer"
+          },
+          "skipped_count": {
+            "title": "Skipped Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "batch_id",
+          "kind",
+          "logged_count",
+          "plant_count",
+          "plant_group_count",
+          "skipped_count"
+        ],
+        "title": "BulkCareApplyResponse",
+        "type": "object"
+      },
+      "BulkCareKeptEvent": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "target_id": {
+            "format": "uuid",
+            "title": "Target Id",
+            "type": "string"
+          },
+          "target_kind": {
+            "enum": [
+              "plant",
+              "plant_group"
+            ],
+            "title": "Target Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "target_kind",
+          "target_id",
+          "label",
+          "reason"
+        ],
+        "title": "BulkCareKeptEvent",
+        "type": "object"
+      },
+      "BulkCareLocationTargets": {
+        "additionalProperties": false,
+        "properties": {
+          "include_sublocations": {
+            "default": true,
+            "title": "Include Sublocations",
+            "type": "boolean"
+          },
+          "location_id": {
+            "format": "uuid",
+            "title": "Location Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "location_id"
+        ],
+        "title": "BulkCareLocationTargets",
+        "type": "object"
+      },
+      "BulkCarePreviewRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "watering",
+              "feeding",
+              "treatment",
+              "repotting",
+              "pruning",
+              "observation",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "occurred_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "targets": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BulkCareRecordTargets"
+              },
+              {
+                "$ref": "#/components/schemas/BulkCareLocationTargets"
+              }
+            ],
+            "title": "Targets"
+          }
+        },
+        "required": [
+          "targets",
+          "kind"
+        ],
+        "title": "BulkCarePreviewRequest",
+        "type": "object"
+      },
+      "BulkCarePreviewResponse": {
+        "properties": {
+          "can_apply": {
+            "title": "Can Apply",
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "watering",
+              "feeding",
+              "treatment",
+              "repotting",
+              "pruning",
+              "observation",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "location_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Label"
+          },
+          "log_count": {
+            "title": "Log Count",
+            "type": "integer"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "occurred_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "plant_count": {
+            "title": "Plant Count",
+            "type": "integer"
+          },
+          "plant_group_count": {
+            "title": "Plant Group Count",
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/BulkCareRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "skipped_count": {
+            "title": "Skipped Count",
+            "type": "integer"
+          },
+          "sublocation_count": {
+            "default": 0,
+            "title": "Sublocation Count",
+            "type": "integer"
+          },
+          "target_signature": {
+            "title": "Target Signature",
+            "type": "string"
+          },
+          "total_count": {
+            "title": "Total Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "occurred_on",
+          "notes",
+          "total_count",
+          "log_count",
+          "plant_count",
+          "plant_group_count",
+          "skipped_count",
+          "can_apply",
+          "target_signature",
+          "rows"
+        ],
+        "title": "BulkCarePreviewResponse",
+        "type": "object"
+      },
+      "BulkCareRecordReference": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "plant",
+              "plant_group"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id"
+        ],
+        "title": "BulkCareRecordReference",
+        "type": "object"
+      },
+      "BulkCareRecordTargets": {
+        "additionalProperties": false,
+        "properties": {
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/BulkCareRecordReference"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Records",
+            "type": "array"
+          }
+        },
+        "required": [
+          "records"
+        ],
+        "title": "BulkCareRecordTargets",
+        "type": "object"
+      },
+      "BulkCareRow": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "plant",
+              "plant_group"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "lifecycle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lifecycle"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "scientific_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scientific Name"
+          },
+          "status": {
+            "enum": [
+              "log",
+              "skipped"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "label",
+          "status"
+        ],
+        "title": "BulkCareRow",
+        "type": "object"
+      },
+      "BulkCareUndoResponse": {
+        "properties": {
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "deleted_count": {
+            "title": "Deleted Count",
+            "type": "integer"
+          },
+          "kept": {
+            "items": {
+              "$ref": "#/components/schemas/BulkCareKeptEvent"
+            },
+            "title": "Kept",
+            "type": "array"
+          },
+          "kept_count": {
+            "title": "Kept Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "batch_id",
+          "deleted_count",
+          "kept_count",
+          "kept"
+        ],
+        "title": "BulkCareUndoResponse",
+        "type": "object"
+      },
       "BulkLocationApplyRequest": {
         "additionalProperties": false,
         "properties": {
@@ -3703,6 +4191,8 @@
           "loss",
           "discarded",
           "measurement",
+          "watering",
+          "feeding",
           "other"
         ],
         "title": "EventKind",
@@ -13535,7 +14025,9 @@
               "observation",
               "flowering",
               "fruiting",
-              "measurement"
+              "measurement",
+              "watering",
+              "feeding"
             ],
             "title": "Kind",
             "type": "string"
@@ -23467,6 +23959,183 @@
         "summary": "Confirm",
         "tags": [
           "taxonomy"
+        ]
+      }
+    },
+    "/api/v1/bulk/care/apply": {
+      "post": {
+        "operationId": "applyBulkCare",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkCareApplyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkCareApplyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apply",
+        "tags": [
+          "bulk care"
+        ]
+      }
+    },
+    "/api/v1/bulk/care/batches/{batch_id}": {
+      "delete": {
+        "operationId": "undoBulkCare",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Batch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkCareUndoResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Undo",
+        "tags": [
+          "bulk care"
+        ]
+      }
+    },
+    "/api/v1/bulk/care/preview": {
+      "post": {
+        "operationId": "previewBulkCare",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkCarePreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkCarePreviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview",
+        "tags": [
+          "bulk care"
         ]
       }
     },

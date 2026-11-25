@@ -736,6 +736,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/bulk/care/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply */
+        post: operations["applyBulkCare"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bulk/care/batches/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Undo */
+        delete: operations["undoBulkCare"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bulk/care/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview */
+        post: operations["previewBulkCare"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/bulk/location/apply": {
         parameters: {
             query?: never;
@@ -3595,6 +3646,184 @@ export interface components {
             /** Warnings */
             warnings: string | null;
         };
+        /** BulkCareApplyRequest */
+        BulkCareApplyRequest: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "watering" | "feeding" | "treatment" | "repotting" | "pruning" | "observation" | "other";
+            /** Notes */
+            notes?: string | null;
+            occurred_on?: components["schemas"]["PartialDate"] | null;
+            /** Target Signature */
+            target_signature: string;
+            /** Targets */
+            targets: components["schemas"]["BulkCareRecordTargets"] | components["schemas"]["BulkCareLocationTargets"];
+        };
+        /** BulkCareApplyResponse */
+        BulkCareApplyResponse: {
+            /**
+             * Batch Id
+             * Format: uuid
+             */
+            batch_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "watering" | "feeding" | "treatment" | "repotting" | "pruning" | "observation" | "other";
+            /** Logged Count */
+            logged_count: number;
+            /** Plant Count */
+            plant_count: number;
+            /** Plant Group Count */
+            plant_group_count: number;
+            /** Skipped Count */
+            skipped_count: number;
+        };
+        /** BulkCareKeptEvent */
+        BulkCareKeptEvent: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string;
+            /** Reason */
+            reason: string;
+            /**
+             * Target Id
+             * Format: uuid
+             */
+            target_id: string;
+            /**
+             * Target Kind
+             * @enum {string}
+             */
+            target_kind: "plant" | "plant_group";
+        };
+        /** BulkCareLocationTargets */
+        BulkCareLocationTargets: {
+            /**
+             * Include Sublocations
+             * @default true
+             */
+            include_sublocations: boolean;
+            /**
+             * Location Id
+             * Format: uuid
+             */
+            location_id: string;
+        };
+        /** BulkCarePreviewRequest */
+        BulkCarePreviewRequest: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "watering" | "feeding" | "treatment" | "repotting" | "pruning" | "observation" | "other";
+            /** Notes */
+            notes?: string | null;
+            occurred_on?: components["schemas"]["PartialDate"] | null;
+            /** Targets */
+            targets: components["schemas"]["BulkCareRecordTargets"] | components["schemas"]["BulkCareLocationTargets"];
+        };
+        /** BulkCarePreviewResponse */
+        BulkCarePreviewResponse: {
+            /** Can Apply */
+            can_apply: boolean;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "watering" | "feeding" | "treatment" | "repotting" | "pruning" | "observation" | "other";
+            /** Location Label */
+            location_label?: string | null;
+            /** Log Count */
+            log_count: number;
+            /** Notes */
+            notes: string | null;
+            occurred_on: components["schemas"]["PartialDate"] | null;
+            /** Plant Count */
+            plant_count: number;
+            /** Plant Group Count */
+            plant_group_count: number;
+            /** Rows */
+            rows: components["schemas"]["BulkCareRow"][];
+            /** Skipped Count */
+            skipped_count: number;
+            /**
+             * Sublocation Count
+             * @default 0
+             */
+            sublocation_count: number;
+            /** Target Signature */
+            target_signature: string;
+            /** Total Count */
+            total_count: number;
+        };
+        /** BulkCareRecordReference */
+        BulkCareRecordReference: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "plant" | "plant_group";
+        };
+        /** BulkCareRecordTargets */
+        BulkCareRecordTargets: {
+            /** Records */
+            records: components["schemas"]["BulkCareRecordReference"][];
+        };
+        /** BulkCareRow */
+        BulkCareRow: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "plant" | "plant_group";
+            /** Label */
+            label: string;
+            /** Lifecycle */
+            lifecycle?: string | null;
+            /** Location */
+            location?: string | null;
+            /** Reason */
+            reason?: string | null;
+            /** Scientific Name */
+            scientific_name?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "log" | "skipped";
+        };
+        /** BulkCareUndoResponse */
+        BulkCareUndoResponse: {
+            /**
+             * Batch Id
+             * Format: uuid
+             */
+            batch_id: string;
+            /** Deleted Count */
+            deleted_count: number;
+            /** Kept */
+            kept: components["schemas"]["BulkCareKeptEvent"][];
+            /** Kept Count */
+            kept_count: number;
+        };
         /** BulkLocationApplyRequest */
         BulkLocationApplyRequest: {
             /**
@@ -4228,7 +4457,7 @@ export interface components {
          * EventKind
          * @enum {string}
          */
-        EventKind: "observation" | "movement" | "repotting" | "flowering" | "fruiting" | "pruning" | "treatment" | "harvest" | "extraction" | "reintegration" | "transfer" | "death" | "loss" | "discarded" | "measurement" | "other";
+        EventKind: "observation" | "movement" | "repotting" | "flowering" | "fruiting" | "pruning" | "treatment" | "harvest" | "extraction" | "reintegration" | "transfer" | "death" | "loss" | "discarded" | "measurement" | "watering" | "feeding" | "other";
         /** EventResponse */
         EventResponse: {
             /**
@@ -7317,7 +7546,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "observation" | "flowering" | "fruiting" | "measurement";
+            kind: "observation" | "flowering" | "fruiting" | "measurement" | "watering" | "feeding";
             /** Notes */
             notes: string | null;
             occurred_on: components["schemas"]["PartialDate"] | null;
@@ -11502,6 +11731,109 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    applyBulkCare: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkCareApplyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkCareApplyResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    undoBulkCare: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkCareUndoResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    previewBulkCare: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkCarePreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkCarePreviewResponse"];
+                };
             };
             /** @description Validation Error */
             422: {

@@ -15,6 +15,7 @@ from sqlalchemy import (
     String,
     Text,
     Uuid,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -41,6 +42,8 @@ class EventKind(StrEnum):
     LOSS = "loss"
     DISCARDED = "discarded"
     MEASUREMENT = "measurement"
+    WATERING = "watering"
+    FEEDING = "feeding"
     OTHER = "other"
 
 
@@ -107,7 +110,7 @@ class Event(Base):
             "kind IN ('observation', 'movement', 'repotting', 'flowering', 'fruiting', "
             "'pruning', 'treatment', 'harvest', 'extraction', 'reintegration', 'transfer', "
             "'death', 'loss', "
-            "'discarded', 'other', 'measurement')",
+            "'discarded', 'other', 'measurement', 'watering', 'feeding')",
             name="ck_events_kind",
         ),
         CheckConstraint(
@@ -203,6 +206,7 @@ class Event(Base):
     measurement_is_approximate: Mapped[bool | None] = mapped_column(Boolean(), nullable=True)
     phenophase: Mapped[str | None] = mapped_column(String(24), nullable=True)
     phenophase_date_is_approximate: Mapped[bool | None] = mapped_column(Boolean(), nullable=True)
+    batch_id: Mapped[UUID | None] = mapped_column(Uuid(), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now
@@ -229,6 +233,7 @@ Index(
 )
 Index("ix_events_destination_location_id", Event.destination_location_id)
 Index("ix_events_resulting_plant_id", Event.resulting_plant_id)
+Index("ix_events_batch_id", Event.batch_id, postgresql_where=text("batch_id IS NOT NULL"))
 
 MEASUREMENT_CORRECTION_VALUE = (
     "(quantity = 'height' AND unit IN ('mm', 'cm', 'm') AND value > 0 "

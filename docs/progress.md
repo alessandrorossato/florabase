@@ -1,5 +1,48 @@
 # Engineering progress
 
+## 2026-11-25 — CARE-BULK-001 + FN-03 bulk care logging, batch undo, and Watering/Feeding Journal kinds
+
+- On `feat/care-bulk-001` from `origin/main` `b632c5c` (writer `neon`), scoped cleanly for Batch 13
+  alongside `feat/propagation-batch-001` and `docs/docs-004-batch12-followups`.
+- Added linear Alembic migration `20261125_0049_event_care_kinds.py` (`down_revision =
+  "20261123_0048"`): acquires `LOCK TABLE events IN ACCESS EXCLUSIVE MODE`, recreates
+  `ck_events_kind` with `watering` and `feeding` (`FN-03`), adds nullable `batch_id uuid`, and
+  creates partial index `ix_events_batch_id WHERE batch_id IS NOT NULL`; downgrade refuses with an
+  explicit error when watering or feeding events exist before removing the index/column and
+  restoring the prior constraint.
+- Extended `events/model.py` (`EventKind.WATERING`, `EventKind.FEEDING`, `batch_id`) and
+  `events/service.py` (`create_event(..., batch_id: UUID | None = None)` with matching
+  `created_at`/`updated_at` at creation and strictly advancing `updated_at` on edits). Marked
+  `watering` and `feeding` as informational retainable observations for propagation creation
+  reversal (`propagation/reversal.py`) and PlantGroup reintegration (`plants/service.py`,
+  `plants/schemas.py`).
+- Added bulk care backend modules `bulk/care_schemas.py`, `bulk/care_service.py`, and
+  `bulk/care_api.py` (wired in `api/router.py` without touching BULK-001):
+  `POST /api/v1/bulk/care/preview`, `POST /api/v1/bulk/care/apply`, and
+  `DELETE /api/v1/bulk/care/batches/{batch_id}` (owner + CSRF, allowed kinds
+  `watering`/`feeding`/`treatment`/`repotting`/`pruning`/`observation`/`other`, max 500 targets,
+  selection or Location subtree CTE with ordered locking, SHA-256 `target_signature` → `409
+  stale_preview`, empty/all-skipped → `422 nothing_to_log`, undo deleting only unedited events and
+  returning kept edited ones). Regenerated `backend/openapi.json` and `frontend/src/api/schema.d.ts`
+  (`make api-check` clean).
+- Added frontend `bulk/careApi.ts` and `bulk/BulkCare.tsx` (`BulkCareDialog` with Today preselected
+  via `OccurrenceDateChoice`, preview summary + skipped list, stale-preview refresh, and
+  `BulkCareSuccessNotice` with **Undo**), wired `"Log care…"` in `BulkToolbar`
+  (`bulk/BulkLocation.tsx`, shown only when every selected record is a Plant or PlantGroup), wired
+  `"Log care for everything here…"` on active Locations (`locations/LocationScreen.tsx`), and added
+  Watering/Feeding + the **Care** filter group to `events/eventData.ts` and
+  `events/EventJournal.tsx`. With operator approval (2026-11-25), extended `events.category` in
+  `frontend/src/saved-views/state.ts` and `backend/src/florabase/saved_views/state.py` to accept
+  `"care"` (`max_length=4`) while preserving existing three-category Saved Views unchanged.
+  Optional stretch (global Journal batch collapsing) was intentionally skipped to stay within the
+  file boundary.
+- Updated `docs/domain-model.md`, `docs/bulk-operations.md`, `docs/features.json` (`FN-03` and
+  `CARE-BULK-001` placed right after `EVENT-002`, status `implemented`), `docs/release/scope-v1.json`
+  (both `best-effort` right after `EVENT-002`), `docs/release/scope-v1.md`, and
+  [`docs/release/evidence/care-bulk-001.md`](release/evidence/care-bulk-001.md). Verified desktop
+  (`1280×800`) and phone (`390×844`) dialog captures with zero horizontal overflow; canonical FULL
+  `make feature-verify AGENT_ID=neon` runs on the frozen committed tree.
+
 ## 2026-11-23 — MOBILE-002 device sign-in, Keystore plugin, and compatibility contract (PWA preserved)
 
 - On `feat/mobile-002-device-auth` from `origin/main` `ddf5a14` (writer `neon-mobile-002`).

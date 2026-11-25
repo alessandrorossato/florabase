@@ -264,7 +264,7 @@ class ReintegrationReason(BaseModel):
 
 class RetainedObservation(BaseModel):
     id: UUID
-    kind: Literal["observation", "flowering", "fruiting", "measurement"]
+    kind: Literal["observation", "flowering", "fruiting", "measurement", "watering", "feeding"]
     occurred_on: PartialDate | None
     notes: str | None
 

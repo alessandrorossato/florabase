@@ -76,7 +76,7 @@ export interface DirectoryStates {
   };
   events: {
     q: string;
-    category: ("observations" | "cultivation" | "status")[];
+    category: ("care" | "observations" | "cultivation" | "status")[];
   };
   media: {
     q: string;
@@ -239,7 +239,9 @@ const choices: Partial<
     state: ["active", "depleted", "all"],
     material: materials,
   },
-  events: { category: ["all", "observations", "cultivation", "status"] },
+  events: {
+    category: ["all", "care", "observations", "cultivation", "status"],
+  },
   media: {
     kind: ["local", "external"],
     association: ["all", "linked", "unlinked"],
@@ -302,9 +304,9 @@ function fieldValue(
   if (surface === "events" && key === "category") {
     const values =
       value === "all" ? [] : typeof value === "string" ? [value] : value;
-    const ordered = ["observations", "cultivation", "status"];
+    const ordered = ["care", "observations", "cultivation", "status"];
     return Array.isArray(values) &&
-      values.length <= 3 &&
+      values.length <= 4 &&
       values.every((item) => ordered.includes(item as string))
       ? ordered.filter((item) => values.includes(item))
       : null;

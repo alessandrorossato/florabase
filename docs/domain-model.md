@@ -495,10 +495,10 @@ confirmation nor Event deletion may override a database or numerical invariant.
 
 `PLANT-006` compensates only the recorded extraction of a Plant back into its immutable originating
 PlantGroup, never arbitrary group membership. Eligibility is proven by the applied extraction
-receipt and is safe, confirmation-required, or blocked. Retainable observation, flowering, and
-fruiting Events require confirmation and remain on the historical Plant; lifecycle, identity,
-Location, transfer, produced SeedLot, lineage, later group operation, or source-group snapshot
-changes block restoration rather than being overwritten.
+receipt and is safe, confirmation-required, or blocked. Retainable observation, watering, feeding,
+flowering, and fruiting Events require confirmation and remain on the historical Plant; lifecycle,
+identity, Location, transfer, produced SeedLot, lineage, later group operation, or source-group
+snapshot changes block restoration rather than being overwritten.
 
 Successful reintegration restores the receipt's exact captured PlantGroup before-state, including
 lifecycle and exact, approximate, or unknown count representation, without inverse arithmetic. The
@@ -556,9 +556,16 @@ authorization. Sowing, Event, BotanicalIdentity, and reference records are not l
 
 An Event is an explicitly recorded historical occurrence for exactly one Plant or PlantGroup. It
 has a UUIDv7 identity, a controlled kind, an optional year/month/day-precision occurrence date,
-optional notes, and exact UTC creation/update timestamps. The initial vocabulary is observation,
-movement, repotting, flowering, fruiting, pruning, treatment, harvest, extraction, transfer, death,
-loss, discarded, reintegration, measurement, and other. Collection observations remain separate from
+optional notes, an optional nullable `batch_id` linking per-target Events created by one bulk care
+operation (no separate batch entity), and exact UTC creation/update timestamps. The controlled
+vocabulary is observation, watering, feeding, movement, repotting, flowering, fruiting, pruning,
+treatment, harvest, extraction, transfer, death, loss, discarded, reintegration, measurement, and
+other. Watering and feeding (`FN-03`) are non-state-changing care kinds usable on both single
+Journal entries and bulk care operations (`CARE-BULK-001`), and count as informational retainable
+events for propagation reversal and PlantGroup reintegration (confirmation-required rather than
+blocking). Undoing a bulk care batch (`DELETE /api/v1/bulk/care/batches/{batch_id}`) deletes only
+events in that batch that have not been edited since creation (`updated_at == created_at`); edited
+events are kept and listed in the response. Collection observations remain separate from
 BotanicalProfile reference knowledge.
 
 A measurement Event (MEASUREMENT-001) records one Plant height as an exact positive decimal with its
@@ -602,9 +609,9 @@ Event, and marks the receipt reversed in one transaction. Other operation receip
 
 Plant and PlantGroup detail pages expose the same protected Event journal. Desktop presents the
 API-ordered history as a vertical timeline, while narrow screens use compact wrapping cards. The UI
-supports All, Observations (observation, flowering, fruiting), Cultivation (movement, repotting,
-pruning, treatment, harvest, extraction, reintegration), and Status (transfer, death, loss,
-discarded) filters;
+supports All, Care (watering, feeding), Observations (observation, flowering, fruiting), Cultivation
+(movement, repotting, pruning, treatment, harvest, extraction, reintegration), and Status (transfer,
+death, loss, discarded) filters;
 `other` remains in All.
 Creation explains current-state effects, and correction/deletion explains the non-event-sourced
 boundary. A protected global Event read endpoint uses the same deterministic ordering and includes

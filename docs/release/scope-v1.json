@@ -51,6 +51,8 @@
     "LINEAGE-002": "baseline",
     "EVENT-001": "baseline",
     "EVENT-002": "baseline",
+    "FN-03": "best-effort",
+    "CARE-BULK-001": "best-effort",
     "ATTACHMENT-002": "baseline",
     "ATTACHMENT-003": "certify",
     "ATTACHMENT-004": "baseline",
