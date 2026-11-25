@@ -39,6 +39,21 @@ By default, collection directories show your **Active** records first so histori
 records do not clutter daily work. To inspect historical records in a directory, open **Filters** and
 change **Lifecycle** (or **State**) to `All` or to the specific historical state you want.
 
+### Sort Seeds, Sowings and Plants
+
+The **Seeds**, **Sowings** and **Plants** directories have a sort list in the toolbar (it shows `Default order`
+until you change it; screen readers announce it as **Sort by**). Choose `Default order`, `Name A–Z`, `Name Z–A`, or newest or oldest first by the record's
+main date:
+
+- **Seeds**: `Newest acquisition or harvest date first` / `Oldest acquisition or harvest date first`.
+- **Sowings**: `Newest sowing date first` / `Oldest sowing date first`.
+- **Plants**: `Newest collection-entry date first` / `Oldest collection-entry date first`.
+  <!-- TODO(DOC-04 verify): DirectorySortSelect builds the date options dynamically as `Newest ${dateLabel} first` / `Oldest ${dateLabel} first` (`frontend/src/components/DirectorySort.tsx:31-32`), with `dateLabel` set in `SeedLotScreen.tsx`, `SowingScreen.tsx` and `PlantScreen.tsx`. -->
+
+Records without a date always come last. The order is applied before the list is split into pages,
+so it stays the same as you move between pages, and it is kept when you save the view as a
+**Saved view**.
+
 ### Jump anywhere with Search and commands
 
 From any screen in Florabase, click **Search** in the left rail (or press `Ctrl K` / `⌘K`, or press

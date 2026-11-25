@@ -42,7 +42,10 @@ Every packet of seeds or living plant in your collection refers to a **Botanical
    - **Cultivar** (optional): enter a cultivar name without quotation marks, for example
      `San Marzano`.
    - **Common name** (optional): enter an everyday name, for example `Plum tomato`.
-   <!-- TODO(DOC-04 after batch 12): Note the local WFO name suggestion step in the Create a botanical identity form once batch 12 lands. -->
+   > **Tip:** If the person who runs your server has installed the optional botanical reference data
+   > (see [Optional reference data](reference-data.md)), typing at least two letters in
+   > **Scientific name** shows matching names as suggestions. Pick one to fill in the
+   > field, or keep typing your own name: any name is accepted, with or without a suggestion.
 3. Click **Create botanical identity**.
 
 Florabase opens the new identity's detail page on the **Overview** tab.
@@ -145,6 +148,12 @@ From the saved **Order** detail page, you can create a linked seed lot directly:
      - On **Seed details**, you can set a partial or complete **Harvest date** and
        **Expected viability until** date, plus **Notes**.
 3. Click **Add seed lot**.
+
+   > **Tip:** To enter several packets in a row, click **Save and add another** instead. Florabase
+   > saves the seed lot and keeps the form open with a fresh draft that keeps only the **Botanical
+   > identity**. The **Sowings**, **Plants** and **Plant groups** creation forms have the same
+   > button (a new sowing keeps its **SeedLot**; a new plant or group keeps its **Botanical
+   > identity**).
 
 <!-- TODO(DOC-04 screenshot): Add seed lot dialog on Inventory or Acquisition tab, showing Approximately quantity and partial Acquisition date -->
 

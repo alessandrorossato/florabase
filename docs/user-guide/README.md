@@ -73,6 +73,11 @@ Florabase uses a workspace layout called the **Workbench**:
   - **+ New** (at the top of the section panel): creates a **New seed lot**, **New sowing**,
     **New plant**, **New plant group**, **Record harvest**, **New botanical identity**,
     **New supplier**, **New location**, or **New local place** from anywhere.
+- **Fields that point to your own records** (such as **Botanical identity**, **Supplier**,
+  **SeedLot**, **Current location** or **Geographic place**) are searchable lists: click the field
+  and start typing to narrow the list, use the arrow keys and Enter to pick an entry, or press
+  Escape to close the list. Short fixed choices (such as **Kind** or **Precision**) stay ordinary
+  drop-down lists.
 
 <!-- TODO(DOC-04 screenshot): Workbench on Today, desktop layout, highlight left workspace rail, section panel with + New, Record button, and Search -->
 
