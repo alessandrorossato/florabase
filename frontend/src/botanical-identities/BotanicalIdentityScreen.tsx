@@ -29,6 +29,7 @@ import { IdentityMedia } from "./IdentityMedia";
 import { IdentityReferenceSummary } from "./IdentityReferenceSummary";
 import { IdentitySourceAction } from "./IdentitySourceAction";
 import { IdentityTaskLink } from "./IdentityTaskLink";
+import { WfoNameInput } from "./WfoNameInput";
 import "./botanical-identities.css";
 import { identityDirectory } from "./identityNavigation";
 import {
@@ -1851,7 +1852,8 @@ export function BotanicalIdentityScreen({
                       <FieldLabel required htmlFor="scientific-name">
                         Scientific name
                       </FieldLabel>
-                      <input
+                      <WfoNameInput
+                        capability={capability}
                         aria-describedby={
                           fieldError("Scientific name")
                             ? "new-identity-help scientific-name-error"

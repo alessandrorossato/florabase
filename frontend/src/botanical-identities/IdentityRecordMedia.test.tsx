@@ -62,14 +62,17 @@ test("real linked images retain captions, actual asset rights and source ownersh
     auth.capability,
     expect.any(AbortSignal),
   );
-  expect(screen.getByRole("link", { name: "Mother plant" })).toHaveAttribute(
-    "href",
-    records[0].href,
-  );
+  expect(
+    screen.getByRole("link", { name: "Plant · Mother plant" }),
+  ).toHaveAttribute("href", records[0].href);
   expect(
     screen.getByRole("link", { name: "Open media details for Young leaves" }),
   ).toHaveAttribute("href", "#/media/asset");
-  expect(screen.getByText("Photographer")).toBeVisible();
+  expect(screen.getByText(/Photographer/)).toBeVisible();
+  expect(screen.getByRole("link", { name: "Image source" })).toHaveAttribute(
+    "href",
+    "https://example.org/image",
+  );
   expect(screen.getByRole("link", { name: "CC BY 3.0" })).toHaveAttribute(
     "href",
     "https://creativecommons.org/licenses/by/3.0/",
@@ -111,12 +114,12 @@ test("empty and bounded record batches do not invent images or load the whole co
       <IdentityRecordMedia records={many} />
     </AuthContext.Provider>,
   );
-  expect(await screen.findByText(/No images are attached/)).toBeVisible();
+  expect(await screen.findByText(/No photos on the records/)).toBeVisible();
   expect(listPhotos).toHaveBeenCalledTimes(6);
   expect(getMedia).not.toHaveBeenCalled();
   await user.click(
     screen.getByRole("button", {
-      name: "Show images from more linked records",
+      name: "Show photos from more records",
     }),
   );
   await waitFor(() => {
@@ -140,6 +143,6 @@ test("older photos with no asset reference remain source-record evidence rather 
     </AuthContext.Provider>,
   );
   expect(await screen.findByText(/Some older photo entries/)).toBeVisible();
-  expect(screen.queryByText(/No images are attached/)).toBeNull();
+  expect(screen.queryByText(/No photos on the records/)).toBeNull();
   expect(getMedia).not.toHaveBeenCalled();
 });

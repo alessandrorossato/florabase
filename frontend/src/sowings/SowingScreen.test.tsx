@@ -1,3 +1,4 @@
+import { pickReference } from "../test/referencePicker";
 import { browserBack, browserForward } from "../test/history";
 import { openFormSection } from "../test/formSections";
 import { createMediaQueryList } from "../test/mediaQuery";
@@ -372,6 +373,37 @@ test("list failure is explicit and retryable", async () => {
   expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
 });
 
+test("FN-02 Sowings sort by name and sowing date", async () => {
+  mockApi(
+    sowingHandler([
+      sowing({ id: "b", label: "Tray B", sowing_date: null }),
+      sowing({
+        id: "c",
+        label: "Tray C",
+        sowing_date: { precision: "year", year: 2024 },
+      }),
+      sowing({
+        id: "a",
+        label: "Tray A",
+        sowing_date: { precision: "day", year: 2026, month: 3, day: 1 },
+      }),
+    ]),
+  );
+  const user = await openSowings();
+  await screen.findByText("Tray B");
+  const labels = () =>
+    screen.getAllByText(/^Tray [ABC]$/).map((node) => node.textContent);
+  expect(labels()).toEqual(["Tray B", "Tray C", "Tray A"]);
+  const sort = screen.getByRole("combobox", { name: "Sort by" });
+  await user.selectOptions(sort, "name");
+  expect(labels()).toEqual(["Tray A", "Tray B", "Tray C"]);
+  await user.selectOptions(sort, "newest");
+  expect(labels()).toEqual(["Tray A", "Tray C", "Tray B"]);
+  await user.selectOptions(sort, "oldest");
+  expect(labels()).toEqual(["Tray C", "Tray A", "Tray B"]);
+  expect(window.location.hash).toContain("sort=oldest");
+});
+
 test("compact summaries, search fields, lifecycle views, selection, detail, and Back are accessible", async () => {
   const completed = sowing({
     id: "history",
@@ -583,6 +615,59 @@ test("detail loading and failure have semantic states", async () => {
   ).toBeInTheDocument();
 });
 
+test("UX-ENTRY-001 Save and add another keeps the SeedLot for the next Sowing", async () => {
+  const payloads: Record<string, unknown>[] = [];
+  let records: unknown[] = [];
+  mockApi(
+    sowingHandler(records, (path, init) => {
+      if (path === "/api/v1/sowings" && init?.method === "POST") {
+        payloads.push(body(init));
+        const created = sowing({
+          ...payloads.at(-1),
+          id: `created-${String(payloads.length)}`,
+        });
+        records = [...records, created];
+        return json(created, 201);
+      }
+      if (
+        path === "/api/v1/sowings" &&
+        (!init?.method || init.method === "GET")
+      )
+        return json(records);
+      return undefined;
+    }),
+  );
+  const user = await openSowings();
+  await user.click(await screen.findByRole("button", { name: "New sowing" }));
+  await pickReference(
+    user,
+    screen.getByLabelText("SeedLot"),
+    /Clitoria ternatea · Blue packet/,
+  );
+  await openFormSection(user, "Essentials");
+  await user.type(screen.getByLabelText("Sowing label"), "Tray 1");
+  await openFormSection(user, "Notes");
+  await user.click(
+    screen.getByRole("button", { name: "Save and add another" }),
+  );
+  expect(
+    await screen.findByText("Sowing was recorded. Add the next one."),
+  ).toBeInTheDocument();
+  expect(screen.getByLabelText("SeedLot")).toHaveValue(
+    "Clitoria ternatea · Blue packet",
+  );
+  await openFormSection(user, "Essentials");
+  expect(screen.getByLabelText("Sowing label")).toHaveValue("");
+  await user.type(screen.getByLabelText("Sowing label"), "Tray 2");
+  await openFormSection(user, "Notes");
+  await user.click(screen.getByRole("button", { name: "Record Sowing" }));
+  expect(await screen.findByText("Sowing was recorded.")).toBeInTheDocument();
+  expect(payloads.map((item) => [item.seed_lot_id, item.label])).toEqual([
+    [seedLotId, "Tray 1"],
+    [seedLotId, "Tray 2"],
+  ]);
+});
+
 test("minimal creation requires only an understandable SeedLot choice", async () => {
   const payloads: Record<string, unknown>[] = [];
   let records: unknown[] = [];
@@ -612,17 +697,18 @@ test("minimal creation requires only an understandable SeedLot choice", async ()
     screen.queryByRole("button", { name: "New sowing" }),
   ).not.toBeInTheDocument();
   const selector = screen.getByLabelText("SeedLot");
+  await user.click(selector);
   expect(
-    within(selector).getByRole("option", {
+    screen.getByRole("option", {
       name: /Clitoria ternatea · Blue packet/,
     }),
   ).toBeInTheDocument();
   expect(
-    within(selector).getByRole("option", {
+    screen.getByRole("option", {
       name: /Archive packet · discarded/,
     }),
   ).toBeInTheDocument();
-  await user.selectOptions(selector, seedLotId);
+  await pickReference(user, selector, /Clitoria ternatea · Blue packet/);
   await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Record Sowing" }));
   expect(await screen.findByText("Sowing was recorded.")).toBeInTheDocument();
@@ -686,7 +772,11 @@ test("full creation preserves partial dates, quantity kinds, germination, locati
   const user = await openSowings();
   await user.click(await screen.findByRole("button", { name: "New sowing" }));
   await openFormSection(user, "Essentials");
-  await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
+  await pickReference(
+    user,
+    screen.getByLabelText("SeedLot"),
+    /Clitoria ternatea · Blue packet/,
+  );
   await openFormSection(user, "Essentials");
   await user.type(screen.getByLabelText("Sowing label"), "Heat mat");
   await openFormSection(user, "Essentials");
@@ -713,9 +803,10 @@ test("full creation preserves partial dates, quantity kinds, germination, locati
   await openFormSection(user, "Outcome & status");
   await user.type(screen.getByLabelText("Germinated count"), "12");
   await openFormSection(user, "Material & location");
-  await user.selectOptions(
+  await pickReference(
+    user,
     screen.getByLabelText("Current location"),
-    locationId,
+    location.display_path,
   );
   await openFormSection(user, "Cultivation");
   await user.type(screen.getByLabelText("Substrate"), "Sand");
@@ -785,7 +876,11 @@ test.each([
     const user = await openSowings();
     await user.click(await screen.findByRole("button", { name: "New sowing" }));
     await openFormSection(user, "Essentials");
-    await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
+    await pickReference(
+      user,
+      screen.getByLabelText("SeedLot"),
+      /Clitoria ternatea · Blue packet/,
+    );
     await openFormSection(user, "Essentials");
     await user.selectOptions(
       screen.getByLabelText("Sowing date precision"),
@@ -827,7 +922,11 @@ test("germination and temperature validation applies only to trustworthy bounds"
   const user = await openSowings();
   await user.click(await screen.findByRole("button", { name: "New sowing" }));
   await openFormSection(user, "Essentials");
-  await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
+  await pickReference(
+    user,
+    screen.getByLabelText("SeedLot"),
+    /Clitoria ternatea · Blue packet/,
+  );
   await openFormSection(user, "Material & location");
   await user.selectOptions(
     screen.getByLabelText("Quantity sown kind"),
@@ -880,7 +979,11 @@ test("germination and temperature validation applies only to trustworthy bounds"
     await screen.findByRole("button", { name: "New sowing" }),
   );
   await openFormSection(weightUser, "Essentials");
-  await weightUser.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
+  await pickReference(
+    weightUser,
+    screen.getByLabelText("SeedLot"),
+    /Clitoria ternatea · Blue packet/,
+  );
   await openFormSection(weightUser, "Material & location");
   await weightUser.selectOptions(
     screen.getByLabelText("Quantity sown kind"),
@@ -979,7 +1082,11 @@ test("validation, forbidden, and expired-session API failures remain explicit", 
   const user = await openSowings();
   await user.click(await screen.findByRole("button", { name: "New sowing" }));
   await openFormSection(user, "Essentials");
-  await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
+  await pickReference(
+    user,
+    screen.getByLabelText("SeedLot"),
+    /Clitoria ternatea · Blue packet/,
+  );
   await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Record Sowing" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -1643,7 +1750,11 @@ test("an incomplete Sowing date is refused and never posted", async () => {
   const user = await openSowings();
   await user.click(await screen.findByRole("button", { name: "New sowing" }));
   await openFormSection(user, "Essentials");
-  await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
+  await pickReference(
+    user,
+    screen.getByLabelText("SeedLot"),
+    /Clitoria ternatea · Blue packet/,
+  );
   await openFormSection(user, "Essentials");
   await user.selectOptions(
     screen.getByLabelText("Sowing date precision"),

@@ -126,6 +126,24 @@ def read(
         fail(error)
 
 
+CandidateQuery = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=2, max_length=200), Query()
+]
+
+
+@router.get(
+    "/explore/taxonomy/candidates",
+    response_model=list[WfoCandidate],
+    operation_id="searchWfoNames",
+)
+def name_candidates(_actor: Reader, source: Source, q: CandidateQuery) -> list[WfoCandidate]:
+    """Search the local WFO index by name prefix before a botanical identity exists."""
+    try:
+        return source.search(q)
+    except SourceUnavailableError as error:
+        fail(error)
+
+
 @router.get(
     "/botanical-identities/{identity_id}/taxonomy/candidates",
     response_model=list[WfoCandidate],
@@ -136,9 +154,7 @@ def candidates(
     database: Database,
     _actor: Reader,
     source: Source,
-    q: Annotated[
-        str, StringConstraints(strip_whitespace=True, min_length=2, max_length=200), Query()
-    ],
+    q: CandidateQuery,
 ) -> list[WfoCandidate]:
     from florabase.botanical_identities.model import BotanicalIdentity
 

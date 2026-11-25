@@ -439,7 +439,16 @@ def test_engine_uses_central_settings() -> None:
 def test_app_applies_cors_and_lifespan_logging() -> None:
     with patch("florabase.main.get_settings", return_value=settings()):
         application = create_app()
-    assert application.user_middleware[0].kwargs["allow_origins"] == ["http://localhost:5173"]
+    assert (
+        getattr(application.user_middleware[0].cls, "__name__", None) == "NativeAppCorsMiddleware"
+    )
+    cors_middlewares = [
+        m
+        for m in application.user_middleware
+        if getattr(m.cls, "__name__", None) == "CORSMiddleware"
+    ]
+    assert len(cors_middlewares) == 1
+    assert cors_middlewares[0].kwargs["allow_origins"] == ["http://localhost:5173"]
 
     async def enter_lifespan() -> None:
         with (

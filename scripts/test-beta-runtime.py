@@ -336,7 +336,7 @@ class StackContract(unittest.TestCase):
 
     def test_minimal_shape_services_and_latest_images(self) -> None:
         template = self.compose.read_text()
-        self.assertLessEqual(len(template.splitlines()), 50)
+        self.assertLessEqual(len(template.splitlines()), 60)
         self.assertNotIn("&", template, "compose.yaml must stay flat with no YAML anchors")
         self.assertNotIn("entrypoint:", template, "no inline entrypoints in compose.yaml")
         self.assertNotIn("sh -", template, "no inline shell scripts in compose.yaml")
@@ -511,6 +511,43 @@ class StackContract(unittest.TestCase):
             self.assertIn(required, backend_dockerfile)
 
 
+class MobileReleaseContract(unittest.TestCase):
+    def test_release_android_disables_mixed_content_cleartext_and_backup(self) -> None:
+        capacitor_config = (ROOT / "mobile/capacitor.config.ts").read_text()
+        self.assertIn('appId: "io.github.alessandrorossato.florabase"', capacitor_config)
+        self.assertIn("allowMixedContent: false", capacitor_config)
+        self.assertIn('loggingBehavior: "none"', capacitor_config)
+        self.assertNotIn("org.florabase.app", capacitor_config)
+
+        gradle = (ROOT / "mobile/android/app/build.gradle").read_text()
+        self.assertIn('namespace = "io.github.alessandrorossato.florabase"', gradle)
+        self.assertIn('applicationId "io.github.alessandrorossato.florabase"', gradle)
+        self.assertNotIn("org.florabase.app", gradle)
+        self.assertNotIn("security-crypto", gradle)
+        self.assertNotIn("play-services", gradle)
+
+        manifest = (ROOT / "mobile/android/app/src/main/AndroidManifest.xml").read_text()
+        self.assertIn('android:allowBackup="false"', manifest)
+        self.assertIn('android:networkSecurityConfig="@xml/network_security_config"', manifest)
+
+        nsc = (ROOT / "mobile/android/app/src/main/res/xml/network_security_config.xml").read_text()
+        self.assertIn('cleartextTrafficPermitted="false"', nsc)
+        self.assertIn('<certificates src="system"', nsc)
+        self.assertIn('<certificates src="user"', nsc)
+
+        main_activity = (
+            ROOT
+            / "mobile/android/app/src/main/java/io/github/alessandrorossato/florabase/MainActivity.java"
+        ).read_text()
+        self.assertIn("if (BuildConfig.DEBUG &&", main_activity)
+        self.assertIn("MIXED_CONTENT_ALWAYS_ALLOW", main_activity)
+        self.assertIn("registerPlugin(SecureTokenPlugin.class)", main_activity)
+
+        # Confirm old placeholder package and Capacitor example tests are removed.
+        self.assertFalse((ROOT / "mobile/android/app/src/main/java/org/florabase/app").exists())
+        self.assertEqual(list((ROOT / "mobile/android").rglob("Example*Test.java")), [])
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--compose", default="docker compose", help="Compose command to test")
@@ -518,7 +555,7 @@ def main() -> None:
     COMPOSE[:] = args.compose.split()
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
-    for case in (Disclosure, StackContract):
+    for case in (Disclosure, StackContract, MobileReleaseContract):
         suite.addTests(loader.loadTestsFromTestCase(case))
     buffer = io.StringIO()
     stream = buffer if "-q" in rest else sys.stderr

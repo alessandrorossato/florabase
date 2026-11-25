@@ -1,4 +1,5 @@
 import { FieldLabel } from "../components/FieldLabel";
+import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import { FieldHelp } from "../components/ContextualHelp";
 import { locationsForScope, type LocationResponse } from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
@@ -88,36 +89,22 @@ export function PlantEssentialsFields({
           </FieldHelp>
         </fieldset>
       )}
-      <div className="field">
-        <label htmlFor="plant-location">Current location</label>
-        <select
-          aria-describedby="plant-location-help"
-          id="plant-location"
-          value={form.locationId}
-          disabled={pending}
-          onChange={(event) => {
-            updateForm("locationId", event.currentTarget.value);
-          }}
-        >
-          <option value="">Not recorded</option>
-          {locationsForScope(locations, "plants").map((location) => (
-            <option
-              key={location.id}
-              value={location.id}
-              disabled={
-                Boolean(location.retired_at) && location.id !== form.locationId
-              }
-            >
-              {location.display_path}
-              {location.retired_at ? " (retired)" : ""}
-            </option>
-          ))}
-        </select>
-        <FieldHelp id="plant-location-help">
-          Current collection position; record movements in Journal to keep their
-          history.
-        </FieldHelp>
-      </div>
+      <ReferencePicker
+        id="plant-location"
+        label="Current location"
+        help="Current collection position; record movements in Journal to keep their history."
+        placeholder="Not recorded"
+        disabled={pending}
+        choices={locationsForScope(locations, "plants").map((location) => ({
+          id: location.id,
+          label: location.display_path,
+          retired: Boolean(location.retired_at),
+        }))}
+        value={form.locationId}
+        onChange={(id) => {
+          updateForm("locationId", id);
+        }}
+      />
     </>
   );
 }

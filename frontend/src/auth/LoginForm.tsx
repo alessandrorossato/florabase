@@ -2,14 +2,35 @@ import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
 import { useAuth } from "./context";
+import {
+  canChangeServer,
+  getConfiguredServerUrl,
+  isNativeBearerTransport,
+  loadDefaultDeviceLabel,
+  triggerChangeServer,
+} from "./transport";
 
 export function LoginForm() {
   const auth = useAuth();
+  const nativeMode = isNativeBearerTransport();
+  const serverUrl = getConfiguredServerUrl();
   const [password, setPassword] = useState("");
+  const [deviceLabel, setDeviceLabel] = useState("");
   const errorRef = useRef<HTMLParagraphElement>(null);
   const submitting = auth.state.status === "submitting-login";
   const message =
     auth.state.status === "unauthenticated" ? auth.state.message : undefined;
+
+  useEffect(() => {
+    if (!nativeMode) return;
+    let active = true;
+    void loadDefaultDeviceLabel().then((label) => {
+      if (active) setDeviceLabel((current) => (current ? current : label));
+    });
+    return () => {
+      active = false;
+    };
+  }, [nativeMode]);
 
   useEffect(() => {
     if (message) errorRef.current?.focus();
@@ -22,6 +43,15 @@ export function LoginForm() {
     const loginName = typeof loginNameValue === "string" ? loginNameValue : "";
     const submittedPassword = password;
     setPassword("");
+    if (nativeMode) {
+      const trimmedLabel = deviceLabel.trim().slice(0, 120);
+      await auth.logIn({
+        login_name: loginName,
+        password: submittedPassword,
+        device_label: trimmedLabel || undefined,
+      });
+      return;
+    }
     await auth.logIn({ login_name: loginName, password: submittedPassword });
   }
 
@@ -32,6 +62,11 @@ export function LoginForm() {
         void submit(event);
       }}
     >
+      {nativeMode && serverUrl && (
+        <p className="intro">
+          Server: <strong>{serverUrl}</strong>
+        </p>
+      )}
       <div className="field">
         <FieldLabel required htmlFor="login-name">
           Login name
@@ -61,6 +96,24 @@ export function LoginForm() {
           }}
         />
       </div>
+      {nativeMode && (
+        <div className="field">
+          <FieldLabel required htmlFor="device-label">
+            Device name
+          </FieldLabel>
+          <input
+            id="device-label"
+            name="device_label"
+            maxLength={120}
+            required
+            disabled={submitting}
+            value={deviceLabel}
+            onChange={(event) => {
+              setDeviceLabel(event.currentTarget.value);
+            }}
+          />
+        </div>
+      )}
       {message && (
         <p
           className="notice notice--error"
@@ -71,9 +124,23 @@ export function LoginForm() {
           {message}
         </p>
       )}
-      <button type="submit" disabled={submitting}>
-        {submitting ? "Signing in…" : "Sign in"}
-      </button>
+      <div className="actions">
+        <button type="submit" disabled={submitting}>
+          {submitting ? "Signing in…" : "Sign in"}
+        </button>
+        {nativeMode && canChangeServer() && (
+          <button
+            type="button"
+            className="button--secondary"
+            disabled={submitting}
+            onClick={() => {
+              triggerChangeServer();
+            }}
+          >
+            Change server
+          </button>
+        )}
+      </div>
     </form>
   );
 }

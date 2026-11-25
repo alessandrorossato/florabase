@@ -318,7 +318,6 @@ test("Reference is textual, contextual editing returns correctly, and Maps stays
   );
   await user.keyboard("{Escape}");
   await user.click(screen.getByRole("tab", { name: "Media" }));
-  await user.click(await screen.findByText("Add cover", { exact: true }));
   await screen.findByRole("button", { name: "Set cover image" });
   await user.click(screen.getByRole("button", { name: "Set cover image" }));
   expect(screen.getByRole("dialog")).toHaveTextContent("Upload image");

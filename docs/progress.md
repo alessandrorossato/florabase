@@ -55,6 +55,172 @@
   (46 OK). Not yet run: frontend wizard UI (pending batch 12 + `MOBILE-002` merge into this branch)
   and final canonical FULL `make feature-verify`.
 
+## 2026-11-23 — MOBILE-002 device sign-in, Keystore plugin, and compatibility contract (PWA preserved)
+
+- On `feat/mobile-002-device-auth` from `origin/main` `ddf5a14` (writer `neon-mobile-002`).
+- Added opaque 256-bit Bearer device sessions in PostgreSQL (`auth_sessions` extended via reversible
+  Alembic migration `20261123_0048_device_sessions.py` with `transport`, `device_label`, nullable
+  `csrf_digest`, and `ix_auth_sessions_user_transport`): `POST /api/v1/auth/device-sessions`
+  (strict `application/json` 415 guard, shared Argon2id/`LoginThrottle`, 30d idle / 180d absolute,
+  20 active session cap serialized under `_locked_user` `FOR NO KEY UPDATE` before `auth_sessions`
+  `ORDER BY id FOR UPDATE` and evicting oldest-seen), `GET /api/v1/auth/device-sessions`,
+  `DELETE /api/v1/auth/device-sessions/current` (Bearer-only),
+  `DELETE /api/v1/auth/device-sessions/{session_id}`, and `DELETE /api/v1/auth/device-sessions`
+  (available to any authenticated user for their own sessions, returning `404` cross-user).
+  Enforced strict transport isolation (cookie+Bearer rejected `401` + `WWW-Authenticate: Bearer`;
+  cookie-only `/auth/password`, `/auth/csrf`, `/auth/logout` reject Bearer `403`; password change
+  revokes all browser + device sessions; browser cookie/CSRF/`require_origin` unchanged).
+- Added automatic scoped native CORS (`NativeAppCorsMiddleware` in `backend/src/florabase/core/cors.py`):
+  exact origins `https://localhost` and `capacitor://localhost` only, `allow_credentials=False`,
+  active in `Environment.PRODUCTION` without relaxing the generic `FLORABASE_CORS_ORIGINS` guard.
+- Added unauthenticated `GET /api/v1/system/info` (`server_version`, `api_version: 1`,
+  `min_client_version: "0.1.0-beta.8"`, `capabilities: ["device-auth"]`) while keeping
+  `GET /api/v1/health` untouched, and regenerated `backend/openapi.json` + `frontend/src/api/schema.d.ts`.
+- Permanently renamed Android `applicationId`/namespace/package from `org.florabase.app` to
+  `io.github.alessandrorossato.florabase`, removed Capacitor's `Example*Test.java`, set
+  `loggingBehavior: "none"` in `mobile/capacitor.config.ts` so `SecureToken.set` never prints tokens
+  to `logcat`, gated debug mixed-content strictly under `BuildConfig.DEBUG` in `MainActivity.java`,
+  and added in-repo `SecureTokenPlugin.java` using direct `AndroidKeyStore` AES-256-GCM + app-private
+  `SharedPreferences` (`allowBackup=false`, self-healing clear on decryption failure, `Build.MODEL`
+  device-label prefill).
+- Added frontend Bearer transport (`frontend/src/auth/transport.ts`), strict SemVer pre-release
+  comparator (`frontend/src/mobile/semver.ts`), `NativeApp` compatibility + Keystore boot shell,
+  `.catch` startup fallback in `frontend/src/main.tsx`, `NativeFileActionUnavailableError` for
+  `downloadProtectedFile`/`openProtectedTab` (inline protected images via `useProtectedImage`
+  working over Bearer), and **Connected devices** management in `Settings -> Account` (hiding the
+  password form on native). Web bundle delta vs `ddf5a14`: `index-*.js` `+1,233 B` raw / `+339 B`
+  gzip (`301,721 B -> 302,954 B`, `91,795 B -> 92,134 B`), `index-*.css` `+0 B`, zero `@capacitor/*`
+  dependencies in `frontend/package.json`.
+- Documented [ADR 0011](decisions/0011-mobile-device-sessions.md) (amending
+  [ADR 0005](decisions/0005-authentication-and-sessions.md)), updated [docs/mobile.md](mobile.md),
+  added `MobileReleaseContract` to `scripts/test-beta-runtime.py`, and registered `MOBILE-002`
+  (`implemented`, proposed class `post-1.0`) in `docs/features.json` and `docs/release/scope-v1.json`.
+- Verified `make mobile-android-debug` (`app-debug.apk`, 6.5 MB) and full 13-step live Android 16
+  AOSP emulator (`florabase_api36`) end-to-end acceptance against an isolated worktree UAT instance
+  (removed cleanly afterward): zero SW registrations, `/api/v1/system/info` check, `Build.MODEL`
+  prefill, Keystore encrypted storage + zero token in WebView storage/Preferences/logcat, 3 inline
+  protected blob images loaded, Bearer `POST`/`PUT` mutations, force-stop persistence, PWA device
+  revocation, PWA password-change revocation, and explicit app sign-out. Canonical FULL
+  `make feature-verify AGENT_ID=neon-mobile-002` runs on the frozen committed tree.
+
+## 2026-11-24 — v0.1.0-beta.9 release preparation
+
+- On `docs/release-beta-9` from `origin/main` `1a78476` (writer `claude-release-beta-9`). Version
+  surfaces move to `0.1.0-beta.9` (`release/inputs.json`, backend package and module, frontend and
+  mobile packages, both Dockerfiles, OpenAPI `info.version`). The Unreleased CHANGELOG section
+  becomes the `v0.1.0-beta.9` entry: `FN-02`, `FN-04`, `UX-ENTRY-001`, `UI-REVIEW-002`,
+  `RUNTIME-IDLE-001`, `DOCS-002` and `DOCS-003`, with beta.8 upgrade notes. PostgreSQL moves to
+  `18.6-alpine-florabase.5` (same PostgreSQL 18.6 layout), no database migrations since beta.8, and
+  `compose.yaml` changes are comments only. `docs/beta-data-001.md` names beta.9. `MOBILE-001` and
+  workflow-only increments are not operator-facing and stay out of the CHANGELOG.
+- No feature status changes. Tag, protected publication and publication evidence remain operator
+  actions.
+
+## 2026-11-23 — Batch 12 integration (WF-BATCH-PROGRESS-001, DOCS-003, FN-02/FN-04/UX-ENTRY-001, UI-REVIEW-002)
+
+- `ci/batch-12` from `origin/main` `ddf5a14` (writer `claude-batch-12`) merges, in order,
+  `ci/wf-batch-progress-001` `ea607ee`, `docs/docs-003-install-guide` `a2b5035`,
+  `feat/fn-02-fn-04-list-ux` `66fec2f` and `fix/plants-list-reference-mount` `2c03a67`;
+  `docs/progress.md` resolved additively; the `compose.yaml` line limit in
+  `scripts/test-beta-runtime.py` is raised from 50 to 60 at the operator's request. Evidence:
+  [wf-04-batch-12.md](release/evidence/wf-04-batch-12.md).
+- Focused checks: `check-features.py`, `check-doc-links.py`, `test-doc-links.py`,
+  `test-check-features.py`, `workflow-check` (incl. `test-beta-runtime`, 50-line `compose.yaml`) on
+  the integrated tree; `test-agent-workflow` (81 OK, 3 skipped) and `workflow-check` on the
+  WF-BATCH-PROGRESS-001 tip. Canonical FULL follows the recorded exact-head review.
+
+## 2026-11-23 — Batch additive progress merge below the shared heading (`WF-BATCH-PROGRESS-001`)
+
+- On `ci/wf-batch-progress-001` from `origin/main` `ddf5a14` (writer `claude-batch-progress-header`).
+- `scripts/feature_batch.py` `additive_progress()` now sets aside the line prefix shared by the
+  merge base and both sides (the `# Engineering progress` heading added by DOCS-002) before applying
+  the unchanged additive rules, so two sources inserting milestones below the heading merge; edits to
+  existing entries still refuse. Registered `WF-BATCH-PROGRESS-001` (`implemented`, proposed class
+  `tooling`). Evidence: [wf-batch-progress-001.md](release/evidence/wf-batch-progress-001.md).
+- Checks: the two additive progress tests in `scripts/test-agent-workflow.py`, a replay on the real
+  Batch 12 revisions, `scripts/check-features.py`. Canonical FULL runs with Batch 12.
+
+## 2026-11-23 — DOCS-003 installation guide accuracy fixes and v0.1.0-beta.8 publication record
+
+- On `docs/docs-003-install-guide` from `origin/main` `ddf5a14` (writer `antigravity-docs-003`).
+- Updated [docs/installation.md](installation.md), [docs/backup-restore.md](backup-restore.md),
+  [README.md](../README.md) and [CHANGELOG.md](../CHANGELOG.md) (`Unreleased`) from the 2026-11-23
+  operator rehearsal findings against the 40-line production `compose.yaml`:
+  - Added a "Before you start" callout at the top of `docs/installation.md` and a bold sentence in
+    `README.md`'s self-hosting paragraph pointing to the one-time folder setup block in § 1 before
+    the first deploy.
+  - Updated § Paired backup to state it runs over SSH in the folder holding the stack's
+    `compose.yaml` (`docker compose ls`; Dockhand keeps its own copy), removed `.env`, and made
+    archiving and checksumming `release-manifest.json` conditional on its presence while keeping
+    `set -e`.
+  - Replaced `FLORABASE_HTTP_PORT` with the host port of the `frontend` mapping (default `8080`),
+    made editing the `frontend` port directly in the restore copy of `compose.yaml` the primary
+    instruction when restoring on the same host (with `ports: !override` in `restore-override.yaml`
+    noted as an option for Compose 2.24.4 or later), and noted that a restore drill on another Linux
+    host needs `sudo` for `chown` and an `https://` `FLORABASE_CANONICAL_ORIGIN` (pointing to §
+    Tailscale and HTTPS).
+  - Replaced `<FLORABASE_DATA_DIR>` / `FLORABASE_BACKUP_DIR` placeholders with explicit mount-path
+    descriptions (`your data folder (the left side of the /var/lib/florabase/data mount)` and `your
+    backup folder (the left side of the /var/lib/florabase/backup mount)`), quoting only the exact
+    `release_schema.py` mount-separation messages (`the data and backup folders are the same`,
+    `the data folder is inside the backup folder`, `the backup folder is inside the data folder`).
+  - Aligned § Synology NAS example paths with `compose.yaml` (`/volume1/docker/florabase/data` and
+    `/volume1/docker/florabase/backup`) and noted that backups, restores and offline password
+    resets need SSH access with the `docker compose` CLI on the NAS.
+  - Stated in § Upgrade (and `docs/backup-restore.md`) that the automatic pre-upgrade dump is
+    written only when the database Alembic revision changes (`release_schema.py` `upgrade`
+    condition); image-only updates at the same head write none.
+- Recorded [v0.1.0-beta.8 publication evidence](release/evidence/beta-8-publication.md) (workflow
+  run `45124950700` attempt 1, annotated tag `3a6dc331ed0770cf24b171b4af650dbadda0585f` on commit
+  `c4ffd63004bf4448af902ffb9a012f5d53f965bd`, Release asset SHA-256 digests, image index/platform
+  digests from `release-manifest.json`, and verified `gh attestation verify` results for
+  `release-manifest.json` and the three OCI images) and updated
+  [docs/release/scope-v1.md](release/scope-v1.md) § Upgrade baseline.
+- Registered `DOCS-003` (`implemented`, proposed release class `release-work`) in
+  `docs/features.json` and `docs/release/scope-v1.json`, and wrote the handoff in
+  [docs/archive/DOCS-003/handoff.md](archive/DOCS-003/handoff.md).
+- Checks: `make verification-plan FORMAT=json` (`tier: docs`), `python3 scripts/check-features.py`,
+  `python3 scripts/check-doc-links.py`, `python3 scripts/test-doc-links.py`, and canonical
+  `make feature-verify AGENT_ID=antigravity-docs-003` (`docs` tier). Unresolved: none (`compose.yaml`
+  header comment and `frontend/src/pwa/UpdateNotice.test.tsx` beta.7 fixture deferred to next
+  product batch to keep `docs` tier).
+
+## 2026-11-23 — Directory sort, searchable pickers and Save and add another (`FN-02`, `FN-04`, `UX-ENTRY-001`)
+
+- On `feat/fn-02-fn-04-list-ux` from `origin/main` `ddf5a14` (writer `claude-pkg-b`). No migration,
+  no OpenAPI drift, PWA behaviour unchanged; upgrade and backup paths untouched.
+- FN-02: Seeds, Sowings and Plants gain a `Sort by` toolbar select (default, name A–Z/Z–A,
+  newest/oldest by acquisition-or-harvest, sowing and collection-entry date; undated last). Sorting
+  precedes browser pagination and `sort` is a canonical URL and Saved View field (frontend state
+  and backend `saved_views/state.py`).
+- FN-04: 13 reference selects over user data now use the shared keyboard-operable
+  `ReferencePicker` (Plant, Sowing, Journal movement, descendant identity, Provenance site, native
+  range, Geography parent, Location parent, Stored material location filter); the picker gains
+  optional `id`, `name` and `describedBy`. Bounded enumerations stay native selects.
+- UX-ENTRY-001: Save and add another in the Seeds, Sowings and Plants create forms keeps the form
+  open with a fresh draft that retains only the identity (or SeedLot).
+- `compose.yaml` header carries the one-time folder setup block; `UpdateNotice.test.tsx` fixtures
+  moved to `0.1.0-beta.8`/`beta.9`. Registered FN-02, FN-04, UX-ENTRY-001 (`implemented`, proposed
+  class `best-effort`). Evidence:
+  [fn-02-fn-04-ux-entry-001.md](release/evidence/fn-02-fn-04-ux-entry-001.md).
+- Focused checks in the Quality container: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`,
+  full `pnpm vitest run` (134 files, 1448 tests passed); backend `pytest tests/test_saved_views*.py`
+  (94 passed), `ruff check`, `ruff format --check`, `mypy`; `export_openapi.py` without drift;
+  `scripts/test-beta-runtime.py StackContract` (16 passed); `scripts/check-features.py`.
+  Canonical FULL not yet run; independent review pending. Not checked: real-browser visual review
+  of the new toolbar select and pickers.
+
+## 2026-11-23 — Post-beta.8 review fixes: directory cards, WFO suggestions, reference mount, media layout (`UI-REVIEW-002`)
+
+- On `fix/plants-list-reference-mount` from `origin/main` `ddf5a14` (writer `claude-batch13-impl`),
+  a fourth Batch 12 source. Gallery directories keep card-sized tracks for one or two records; the
+  identity create form suggests WFO names through read-only `GET /api/v1/explore/taxonomy/candidates`;
+  `compose.yaml` points to the read-only WFO/WCVP v16 mount snippet in installation; the
+  identity Media tab and media asset page are simplified and external covers save a local copy by
+  default. Evidence: [ui-review-002.md](release/evidence/ui-review-002.md).
+- Checks: focused backend taxonomy tests, ruff, mypy; frontend typecheck, ESLint, Prettier and Vitest
+  on the touched areas. Canonical FULL runs with Batch 12; layout pending operator approval.
+
 ## 2026-11-23 — MOBILE-001 Capacitor Android shell spike (PWA preserved)
 
 - On `feat/mobile-001-capacitor-spike` from `origin/main` `68e9449` (writer `neon-mobile-001`).

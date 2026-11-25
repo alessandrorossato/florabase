@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID, uuid7
 
 from sqlalchemy import (
@@ -53,7 +54,14 @@ class AuthSession(Base):
     __tablename__ = "auth_sessions"
     __table_args__ = (
         CheckConstraint("octet_length(token_digest) = 32", name="ck_auth_sessions_token_digest"),
-        CheckConstraint("octet_length(csrf_digest) = 32", name="ck_auth_sessions_csrf_digest"),
+        CheckConstraint("transport IN ('cookie', 'bearer')", name="ck_auth_sessions_transport"),
+        CheckConstraint(
+            "(transport = 'cookie' AND csrf_digest IS NOT NULL "
+            "AND octet_length(csrf_digest) = 32 AND device_label IS NULL) OR "
+            "(transport = 'bearer' AND csrf_digest IS NULL "
+            "AND device_label IS NOT NULL AND char_length(device_label) BETWEEN 1 AND 120)",
+            name="ck_auth_sessions_transport_fields",
+        ),
         CheckConstraint("last_seen_at >= created_at", name="ck_auth_sessions_seen_after_create"),
         CheckConstraint(
             "idle_expires_at <= absolute_expires_at", name="ck_auth_sessions_idle_limit"
@@ -64,8 +72,10 @@ class AuthSession(Base):
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
+    transport: Mapped[str] = mapped_column(String(16), default="cookie", server_default="cookie")
+    device_label: Mapped[str | None] = mapped_column(String(120), nullable=True)
     token_digest: Mapped[bytes] = mapped_column(LargeBinary(32), unique=True)
-    csrf_digest: Mapped[bytes] = mapped_column(LargeBinary(32))
+    csrf_digest: Mapped[bytes | None] = mapped_column(LargeBinary(32), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     idle_expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
@@ -73,8 +83,18 @@ class AuthSession(Base):
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     user: Mapped[User] = relationship(back_populates="sessions")
 
+    def __init__(self, **kwargs: Any) -> None:
+        kwargs.setdefault("transport", "cookie")
+        super().__init__(**kwargs)
+
 
 Index("ix_auth_sessions_user_id", AuthSession.user_id)
+Index(
+    "ix_auth_sessions_user_transport",
+    AuthSession.user_id,
+    AuthSession.transport,
+    AuthSession.revoked_at,
+)
 Index("ix_auth_sessions_expiry", AuthSession.absolute_expires_at, AuthSession.idle_expires_at)
 Index("ix_auth_sessions_revoked_at", AuthSession.revoked_at)
 

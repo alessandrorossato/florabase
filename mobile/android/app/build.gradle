@@ -1,10 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "org.florabase.app"
+    namespace = "io.github.alessandrorossato.florabase"
     compileSdk = rootProject.ext.compileSdkVersion
+    buildFeatures {
+        buildConfig = true
+    }
     defaultConfig {
-        applicationId "org.florabase.app"
+        applicationId "io.github.alessandrorossato.florabase"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

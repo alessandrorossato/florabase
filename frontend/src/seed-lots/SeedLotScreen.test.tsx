@@ -349,6 +349,56 @@ test("inventory preserves API ordering and composes active/history/all with usef
   ).toBeInTheDocument();
 });
 
+test("FN-02 Seeds sort by name and date survives pagination and the URL", async () => {
+  // 25 lots in scrambled API order; lot n is acquired in 2000 + n, lot 7 undated.
+  const order = [
+    7, 3, 25, 12, 1, 18, 9, 22, 5, 14, 2, 20, 11, 24, 6, 16, 8, 23, 4, 13, 10,
+    19, 15, 21, 17,
+  ];
+  mockApi(
+    directoryHandler(
+      order.map((n) =>
+        lot({
+          id: `01900000-0000-7000-8000-${String(n).padStart(12, "0")}`,
+          label: `Lot ${String(n).padStart(2, "0")}`,
+          acquisition_date:
+            n === 7 ? null : { precision: "year", year: 2000 + n },
+        }),
+      ),
+    ),
+  );
+  const user = await openSeeds();
+  const list = await screen.findByRole("list", { name: "Seed inventory" });
+  const first = () =>
+    within(screen.getByRole("list", { name: "Seed inventory" })).getAllByRole(
+      "listitem",
+    )[0];
+  expect(first()).toHaveTextContent("Lot 07");
+  expect(list).toBeInTheDocument();
+
+  const sort = screen.getByRole("combobox", { name: "Sort by" });
+  await user.selectOptions(sort, "name_desc");
+  expect(window.location.hash).toContain("sort=name_desc");
+  expect(first()).toHaveTextContent("Lot 25");
+  await user.click(screen.getByRole("button", { name: "Next page" }));
+  expect(first()).toHaveTextContent("Lot 05");
+
+  await user.selectOptions(sort, "newest");
+  expect(first()).toHaveTextContent("Lot 25");
+  await user.click(screen.getByRole("button", { name: "Next page" }));
+  // Undated lots stay last in either direction.
+  expect(
+    within(screen.getByRole("list", { name: "Seed inventory" }))
+      .getAllByRole("listitem")
+      .at(-1),
+  ).toHaveTextContent("Lot 07");
+
+  await user.selectOptions(sort, "oldest");
+  expect(first()).toHaveTextContent("Lot 01");
+  await user.selectOptions(sort, "name");
+  expect(first()).toHaveTextContent("Lot 01");
+});
+
 test("reselecting Seeds clears selection, search and lifecycle filter without reloading", async () => {
   mockApi(directoryHandler([lot()]));
   const user = await openSeeds();
@@ -827,6 +877,63 @@ test("minimal fast entry submits only known user information and uses authoritat
       { name: "Seeds" },
     ),
   ).toHaveAttribute("href", "#/seeds");
+});
+
+test("UX-ENTRY-001 Save and add another keeps the create form open with the identity", async () => {
+  const submitted: Record<string, unknown>[] = [];
+  let lots: unknown[] = [];
+  mockApi(
+    directoryHandler(lots, (path, init) => {
+      if (path === "/api/v1/seed-lots" && init?.method === "POST") {
+        const body = JSON.parse(requestBody(init)) as Record<string, unknown>;
+        submitted.push(body);
+        const created = lot({
+          id: `01900000-0000-7000-8000-00000000060${String(submitted.length)}`,
+          label: body.label,
+        });
+        lots = [...lots, created];
+        return json(created, 201);
+      }
+      if (
+        path === "/api/v1/seed-lots" &&
+        (!init?.method || init.method === "GET")
+      )
+        return json(lots);
+      return undefined;
+    }),
+  );
+  const user = await openSeeds();
+  await user.click(await screen.findByRole("button", { name: "New seed lot" }));
+  await chooseReference(user, "Botanical identity", "Clitoria ternatea");
+  await user.type(screen.getByLabelText("Lot label"), "First packet");
+  await user.click(
+    screen.getByRole("button", { name: "Save and add another" }),
+  );
+  expect(
+    await screen.findByText(
+      "Seed lot was added to the collection. Add the next one.",
+    ),
+  ).toHaveAttribute("role", "status");
+  expect(screen.getByRole("heading", { name: "Add seed lot" })).toBeVisible();
+  expect(screen.getByLabelText("Lot label")).toHaveValue("");
+  const identityPicker = screen.getByRole("combobox", {
+    name: "Botanical identity",
+  });
+  expect(identityPicker).toHaveValue(identity.display_label);
+  await waitFor(() => {
+    expect(identityPicker).toHaveFocus();
+  });
+  await user.type(screen.getByLabelText("Lot label"), "Second packet");
+  await user.click(screen.getByRole("button", { name: "Add seed lot" }));
+  await screen.findByText("Seed lot was added to the collection.");
+  expect(submitted.map((body) => body.label)).toEqual([
+    "First packet",
+    "Second packet",
+  ]);
+  expect(submitted[1]).toMatchObject({ botanical_identity_id: identity.id });
+  expect(
+    screen.queryByRole("button", { name: "Save and add another" }),
+  ).not.toBeInTheDocument();
 });
 
 test("full entry maps count, approximate g/mg quantity, Other source, references, and every date precision", async () => {

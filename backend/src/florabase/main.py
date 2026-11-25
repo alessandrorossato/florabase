@@ -9,6 +9,7 @@ from florabase.api.router import api_router
 from florabase.attachments.storage import AttachmentStorage
 from florabase.auth.http_safety import AuthSafetyMiddleware
 from florabase.core.config import Environment, get_settings
+from florabase.core.cors import NativeAppCorsMiddleware
 from florabase.core.logging import configure_logging
 
 
@@ -40,6 +41,7 @@ def create_app() -> FastAPI:
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
             allow_headers=["Content-Type", "X-CSRF-Token"],
         )
+    application.add_middleware(NativeAppCorsMiddleware)
     application.include_router(api_router)
     return application
 

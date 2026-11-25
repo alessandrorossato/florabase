@@ -25,6 +25,9 @@ from florabase.saved_views.state import SavedViewSurface, canonical_state
         ),
         ("seed_lots", {"q": " basil ", "lifecycle": "active"}, {"q": "basil"}),
         ("sowings", {"lifecycle": "completed"}, {"lifecycle": "completed"}),
+        ("seed_lots", {"sort": "newest"}, {"sort": "newest"}),
+        ("sowings", {"sort": "oldest", "q": "x"}, {"sort": "oldest", "q": "x"}),
+        ("plants", {"sort": "name_desc"}, {"sort": "name_desc"}),
         (
             "plants",
             {"q": "basil", "lifecycle": "history", "type": "group"},
@@ -108,6 +111,8 @@ def test_each_surface_rejects_unknown_transient_keys(surface: SavedViewSurface) 
         ("seed_lots", {"lifecycle": "completed"}),
         ("sowings", {"lifecycle": "history"}),
         ("plants", {"type": "plant_group"}),
+        ("plants", {"sort": "created"}),
+        ("seed_lots", {"sort": ""}),
         ("harvests", {"source_type": "seed_lot"}),
         ("harvests", {"material": "cutting"}),
         ("stored_material", {"state": "unknown"}),
