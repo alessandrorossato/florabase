@@ -37,8 +37,11 @@ Two causes: no `User-Agent`, and a file description page (HTML) instead of the i
   - A final `200` `text/html` response raises `external_fetch_failed` with "This address is a web
     page, not an image. Use the image's own address." (no destination details).
 - `backend/src/florabase/media/schemas.py`: `ExternalAssetCreate.image_url` runs the rewrite after
-  HTTPS validation. That covers `POST /media-assets/external` and both collection-photo creation
-  paths. `source_url` is a separate, required field that keeps the operator's page URL. The metadata
+  HTTPS validation (`POST /media-assets/external`).
+- `backend/src/florabase/collection_photos/schemas.py`: `ExternalImageWrite.image_url` (record photo
+  create and update) and `ExternalCoverWrite.image_url` (identity cover) run the same rewrite after
+  their existing URL validation, so the stored `image_url` and the external preview use the image
+  address on every create/edit path (independent review fix). `source_url` is a separate, required field that keeps the operator's page URL. The metadata
   edit path (`AssetMetadataWrite`) cannot change `image_url`, so there is no edit path to cover.
 - Docs: `docs/media-library.md` (one paragraph), `docs/progress.md`, `docs/features.json`,
   `docs/release/scope-v1.json`.
@@ -53,6 +56,8 @@ Two causes: no `User-Agent`, and a file description page (HTML) instead of the i
 - `test_non_wikimedia_file_pages_pass_through` (`Special:FilePath`, `upload.wikimedia.org`, article
   pages, empty name, look-alike hosts, explicit port, `index.php?title=`, non-URLs)
 - `test_external_reference_stores_file_path_and_keeps_source_page`
+- `test_record_photo_stores_file_path_and_keeps_source_page` (create and update)
+- `test_identity_cover_stores_file_path_and_keeps_source_page`
 - The existing safety tests are unchanged and still pass: private and reserved addresses, a
   redirect to a private address, too many redirects, wrong types, size, encoding, timeout.
 
@@ -62,7 +67,8 @@ stubs.
 ## Verification
 
 - Focused (dev quality container): `pytest tests/test_media_fetch.py tests/test_media.py
-  tests/test_media_copies.py tests/test_collection_photos.py` gave 99 passed. `ruff check`,
+  tests/test_media_copies.py tests/test_collection_photos.py tests/test_identity_covers.py
+  tests/test_primary_photo.py` gave 122 passed. `ruff check`,
   `ruff format --check` and `mypy` were clean.
 - Canonical gate: `make feature-verify` on the frozen tree, run by the operator (the agent's
   Remote Control mode blocks it). The receipt is recorded in the delivery report.

@@ -7,6 +7,11 @@ from unittest.mock import MagicMock
 import pytest
 
 import florabase
+from florabase.collection_photos.schemas import (
+    ExternalCoverWrite,
+    ExternalImageCreate,
+    ExternalImageUpdate,
+)
 from florabase.media import fetch
 from florabase.media.schemas import ExternalAssetCreate
 
@@ -290,3 +295,22 @@ def test_external_reference_stores_file_path_and_keeps_source_page() -> None:
         "https://it.wikipedia.org/wiki/Special:FilePath/Unk_desert_flower_2.jpg"
     )
     assert created.source_url == page
+
+
+@pytest.mark.parametrize("model", [ExternalImageCreate, ExternalImageUpdate])
+def test_record_photo_stores_file_path_and_keeps_source_page(
+    model: type[ExternalImageCreate] | type[ExternalImageUpdate],
+) -> None:
+    page = "https://commons.wikimedia.org/wiki/File:Rosa%20canina.jpg"
+    photo = model(image_url=page, source_url=page, attribution="Unknown")
+    assert photo.image_url == "https://commons.wikimedia.org/wiki/Special:FilePath/Rosa_canina.jpg"
+    assert photo.source_url == page
+
+
+def test_identity_cover_stores_file_path_and_keeps_source_page() -> None:
+    page = "https://it.wikipedia.org/wiki/Immagine:Fiore.png"
+    cover = ExternalCoverWrite(
+        image_url=page, source_url=page, attribution="Unknown", privacy_acknowledged=True
+    )
+    assert cover.image_url == "https://it.wikipedia.org/wiki/Special:FilePath/Fiore.png"
+    assert cover.source_url == page
