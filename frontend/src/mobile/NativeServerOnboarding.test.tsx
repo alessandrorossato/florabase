@@ -29,17 +29,23 @@ describe("NativeServerOnboarding", () => {
     cleanup();
   });
 
-  it("checks /api/v1/health, persists URL, displays version and MOBILE-002 placeholder", async () => {
+  it("checks /api/v1/health and /api/v1/system/info, persists URL, and calls onConnected", async () => {
     const user = userEvent.setup();
     const store = createMemoryStore();
+    const onConnected = vi.fn();
     const httpGet = vi.fn<HttpGetFn>((url) => {
       if (url === "http://10.0.2.2:5173/api/v1/health") {
         return Promise.resolve({ status: 200, data: { status: "ok" } });
       }
-      if (url === "http://10.0.2.2:5173/release.json") {
+      if (url === "http://10.0.2.2:5173/api/v1/system/info") {
         return Promise.resolve({
           status: 200,
-          data: { version: "0.1.0-beta.7", revision: "d7e056b" },
+          data: {
+            server_version: "0.1.0-beta.8",
+            api_version: 1,
+            min_client_version: "0.1.0-beta.8",
+            capabilities: ["device-auth"],
+          },
         });
       }
       return Promise.resolve({ status: 404, data: "" });
@@ -50,33 +56,38 @@ describe("NativeServerOnboarding", () => {
         allowDebugHttp={true}
         store={store}
         httpGet={httpGet}
+        appVersion="0.1.0-beta.8"
+        onConnected={onConnected}
       />,
     );
 
     const input = await screen.findByLabelText(/server url/i);
     await user.type(input, "http://10.0.2.2:5173/");
-    await user.click(screen.getByRole("button", { name: /check server/i }));
+    await user.click(screen.getByRole("button", { name: /^connect$/i }));
 
-    expect(await screen.findByText(/server reachable/i)).toBeInTheDocument();
-    expect(screen.getByText(/ok \(HTTP 200\)/i)).toBeInTheDocument();
-    expect(screen.getByText("0.1.0-beta.7 (d7e056b)")).toBeInTheDocument();
-    expect(
-      screen.getByText("Sign-in for the app arrives in MOBILE-002."),
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(onConnected).toHaveBeenCalledWith("http://10.0.2.2:5173", {
+        serverVersion: "0.1.0-beta.8",
+        apiVersion: 1,
+        minClientVersion: "0.1.0-beta.8",
+        capabilities: ["device-auth"],
+      });
+    });
     expect(store.current()).toBe("http://10.0.2.2:5173");
   });
 
-  it("handles dev servers where /api/v1/health has no version and /release.json is absent", async () => {
+  it("refuses sign-in when server lacks /api/v1/system/info or app version is below min_client_version", async () => {
     const user = userEvent.setup();
     const store = createMemoryStore();
+    const onConnected = vi.fn();
     const httpGet = vi.fn<HttpGetFn>((url) => {
       if (url.endsWith("/api/v1/health")) {
         return Promise.resolve({ status: 200, data: { status: "ok" } });
       }
-      return Promise.resolve({
-        status: 200,
-        data: "<!doctype html><html></html>",
-      });
+      if (url.endsWith("/api/v1/system/info")) {
+        return Promise.resolve({ status: 404, data: { detail: "Not Found" } });
+      }
+      return Promise.resolve({ status: 404, data: "" });
     });
 
     render(
@@ -84,19 +95,46 @@ describe("NativeServerOnboarding", () => {
         allowDebugHttp={true}
         store={store}
         httpGet={httpGet}
+        appVersion="0.1.0-beta.8"
+        onConnected={onConnected}
       />,
     );
 
     const input = await screen.findByLabelText(/server url/i);
     await user.type(input, "http://10.0.2.2:5173");
-    await user.click(screen.getByRole("button", { name: /check server/i }));
+    await user.click(screen.getByRole("button", { name: /^connect$/i }));
 
-    expect(
-      await screen.findByText(/not reported by \/api\/v1\/health/i),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("Sign-in for the app arrives in MOBILE-002."),
-    ).toBeInTheDocument();
+    let alert = await screen.findByRole("alert");
+    expect(alert).toHaveAttribute("data-error-category", "incompatible-server");
+    expect(alert).toHaveTextContent(/does not support mobile device sign-in/i);
+    expect(onConnected).not.toHaveBeenCalled();
+    expect(store.current()).toBeNull();
+
+    // Now return a server requiring beta.10 while app is beta.8
+    httpGet.mockImplementation((url) => {
+      if (url.endsWith("/api/v1/health")) {
+        return Promise.resolve({ status: 200, data: { status: "ok" } });
+      }
+      if (url.endsWith("/api/v1/system/info")) {
+        return Promise.resolve({
+          status: 200,
+          data: {
+            server_version: "0.1.0-beta.10",
+            api_version: 1,
+            min_client_version: "0.1.0-beta.10",
+            capabilities: ["device-auth"],
+          },
+        });
+      }
+      return Promise.resolve({ status: 404, data: "" });
+    });
+
+    await user.click(screen.getByRole("button", { name: /^connect$/i }));
+    alert = await screen.findByRole("alert");
+    expect(alert).toHaveAttribute("data-error-category", "incompatible-client");
+    expect(alert).toHaveTextContent(/0\.1\.0-beta\.8.*0\.1\.0-beta\.10/i);
+    expect(onConnected).not.toHaveBeenCalled();
+    expect(store.current()).toBeNull();
   });
 
   it("shows distinct errors for invalid URL, unreachable host, TLS error, and non-Florabase response", async () => {
@@ -109,11 +147,12 @@ describe("NativeServerOnboarding", () => {
         allowDebugHttp={false}
         store={store}
         httpGet={httpGet}
+        appVersion="0.1.0-beta.8"
       />,
     );
 
     const input = await screen.findByLabelText(/server url/i);
-    const submit = screen.getByRole("button", { name: /check server/i });
+    const submit = screen.getByRole("button", { name: /^connect$/i });
 
     // 1. Invalid URL (HTTP rejected in release build)
     await user.type(input, "http://10.0.2.2:5173");
@@ -162,6 +201,7 @@ describe("NativeServerOnboarding", () => {
         allowDebugHttp={false}
         store={store}
         httpGet={vi.fn()}
+        appVersion="0.1.0-beta.8"
       />,
     );
 

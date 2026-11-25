@@ -15,13 +15,33 @@ import {
   PasswordChangeContext,
   type AuthContextValue,
   type AuthState,
+  type LoginSubmission,
   type RetainedOwnerIdentity,
 } from "./context";
+import {
+  buildTransportFetchInit,
+  clearNativeBearerToken,
+  getConfiguredServerUrl,
+  hasNativeBearerToken,
+  isNativeBearerTransport,
+  loadDefaultDeviceLabel,
+  persistNativeBearerToken,
+  resolveApiUrl,
+} from "./transport";
 
 export type LoginRequest = components["schemas"]["LoginRequest"];
 export type LoginResponse = components["schemas"]["LoginResponse"];
 export type SessionResponse = components["schemas"]["SessionResponse"];
 export type CsrfResponse = components["schemas"]["CsrfResponse"];
+export type DeviceSessionCreateRequest =
+  components["schemas"]["DeviceSessionCreateRequest"];
+export type DeviceSessionCreateResponse =
+  components["schemas"]["DeviceSessionCreateResponse"];
+export type DeviceSessionItem = components["schemas"]["DeviceSessionItem"];
+export type DeviceSessionListResponse =
+  components["schemas"]["DeviceSessionListResponse"];
+export type DeviceSessionRevokeAllResponse =
+  components["schemas"]["DeviceSessionRevokeAllResponse"];
 
 export type ReauthenticationAuthState = Extract<
   AuthState,
@@ -100,6 +120,15 @@ export class ProtectedTabBlockedError extends Error {
       "Pop-up blocked by browser. Allow pop-ups for Florabase to open this file.",
     );
     this.name = "ProtectedTabBlockedError";
+  }
+}
+
+export class NativeFileActionUnavailableError extends Error {
+  constructor() {
+    super(
+      "Opening/downloading files is not yet available in the app — coming soon.",
+    );
+    this.name = "NativeFileActionUnavailableError";
   }
 }
 
@@ -546,6 +575,21 @@ export function classifyResourceUrl(
     }
     return { kind: "protected-api", url: sameOriginUrl };
   }
+  const configuredServerUrl = getConfiguredServerUrl();
+  if (configuredServerUrl !== null) {
+    try {
+      const configuredOrigin = new URL(configuredServerUrl).origin;
+      if (parsed.origin === configuredOrigin) {
+        const relativePath = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+        if (parsed.pathname === "/api/v1/health") {
+          return { kind: "public-local", url: relativePath };
+        }
+        return { kind: "protected-api", url: relativePath };
+      }
+    } catch {
+      // Ignore malformed server URL configuration.
+    }
+  }
   if (parsed.protocol === "https:") {
     return { kind: "external-https", url: parsed.href };
   }
@@ -589,14 +633,17 @@ export function parseContentDispositionFilename(
   return sanitize(fallback);
 }
 
-async function fetchJson<T>(path: string, init: RequestInit = {}): Promise<T> {
+async function fetchJson<T>(
+  path: string,
+  init: RequestInit = {},
+  { includeBearer = true }: { includeBearer?: boolean } = {},
+): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
-  const response = await fetch(path, {
-    ...init,
-    credentials: "same-origin",
-    headers,
-  });
+  const response = await fetch(
+    resolveApiUrl(path),
+    buildTransportFetchInit({ ...init, headers }, { includeBearer }),
+  );
   if (!response.ok) {
     let body: unknown;
     try {
@@ -658,12 +705,14 @@ async function executeProtectedFetch<T>(
     if (!headers.has("Accept")) {
       headers.set("Accept", defaultAccept);
     }
-    const response = await fetch(path, {
-      ...requestInit,
-      credentials: "same-origin",
-      headers,
-      signal: epochController.signal,
-    });
+    const response = await fetch(
+      resolveApiUrl(path),
+      buildTransportFetchInit({
+        ...requestInit,
+        headers,
+        signal: epochController.signal,
+      }),
+    );
     if (externalSignal?.aborted) {
       throw new DOMException("The operation was aborted.", "AbortError");
     }
@@ -749,6 +798,9 @@ export async function downloadProtectedFile({
   accept?: string;
   signal?: AbortSignal;
 }): Promise<string> {
+  if (isNativeBearerTransport()) {
+    throw new NativeFileActionUnavailableError();
+  }
   const { blob, contentDisposition } = await requestProtectedBlob(path, {
     capability,
     signal,
@@ -802,6 +854,9 @@ export async function openProtectedTab({
   capability: ProtectedRequestCapability;
   accept?: string;
 }): Promise<void> {
+  if (isNativeBearerTransport()) {
+    throw new NativeFileActionUnavailableError();
+  }
   validateCapability(capability);
   // Open synchronously on user click without "noopener" feature token so we keep
   // a handle to close the popup on cancellation/failure; sever opener right away.
@@ -924,6 +979,70 @@ export function changePassword(
   });
 }
 
+export function createDeviceSession(
+  payload: DeviceSessionCreateRequest,
+  signal?: AbortSignal,
+): Promise<DeviceSessionCreateResponse> {
+  return fetchJson(
+    "/api/v1/auth/device-sessions",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal,
+    },
+    { includeBearer: false },
+  );
+}
+
+export async function revokeCurrentDeviceSession(): Promise<void> {
+  await fetchJson("/api/v1/auth/device-sessions/current", {
+    method: "DELETE",
+  });
+}
+
+export function listDeviceSessions(
+  capability: ProtectedRequestCapability,
+  signal?: AbortSignal,
+): Promise<DeviceSessionListResponse> {
+  return requestJson<DeviceSessionListResponse>(
+    "/api/v1/auth/device-sessions",
+    {
+      capability,
+      signal,
+    },
+  );
+}
+
+export async function revokeDeviceSession(
+  sessionId: string,
+  csrfToken: string,
+  capability: ProtectedRequestCapability,
+): Promise<void> {
+  await requestJson<undefined>(
+    `/api/v1/auth/device-sessions/${encodeURIComponent(sessionId)}`,
+    {
+      method: "DELETE",
+      headers: csrfToken ? { "X-CSRF-Token": csrfToken } : undefined,
+      capability,
+    },
+  );
+}
+
+export function revokeAllDeviceSessions(
+  csrfToken: string,
+  capability: ProtectedRequestCapability,
+): Promise<DeviceSessionRevokeAllResponse> {
+  return requestJson<DeviceSessionRevokeAllResponse>(
+    "/api/v1/auth/device-sessions",
+    {
+      method: "DELETE",
+      headers: csrfToken ? { "X-CSRF-Token": csrfToken } : undefined,
+      capability,
+    },
+  );
+}
+
 function serviceFailureMessage(): string {
   return "Florabase could not reach the authentication service. Please try again.";
 }
@@ -1027,6 +1146,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       generation.current += 1;
+      if (isNativeBearerTransport()) {
+        void clearNativeBearerToken();
+      }
       authEpochRef.current = gateController.syncGate({
         locked: true,
         advanceEpoch: true,
@@ -1093,16 +1215,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
+        if (isNativeBearerTransport() && !hasNativeBearerToken()) {
+          authEpochRef.current = capturedGate.invalidateWorkspace();
+          retireWorkspaceCapability();
+          commitState({ status: "unauthenticated" });
+          return;
+        }
         const session = await getSession(controller.signal);
         if (attempt !== generation.current || !isActiveProvider(capturedGate)) {
           return;
         }
-        // CSRF recovery rotates server-side session CSRF state; once dispatched,
-        // it must settle inside the lifecycle queue barrier even if this provider
-        // unmounts so replacement restoration cannot race a late server rotation.
-        const csrf = await recoverCsrf();
-        if (attempt !== generation.current || !isActiveProvider(capturedGate)) {
-          return;
+        let csrfToken = "";
+        if (!isNativeBearerTransport()) {
+          // CSRF recovery rotates server-side session CSRF state; once dispatched,
+          // it must settle inside the lifecycle queue barrier even if this provider
+          // unmounts so replacement restoration cannot race a late server rotation.
+          const csrf = await recoverCsrf();
+          if (
+            attempt !== generation.current ||
+            !isActiveProvider(capturedGate)
+          ) {
+            return;
+          }
+          csrfToken = csrf.csrf_token;
         }
         authEpochRef.current = capturedGate.syncGate({
           locked: false,
@@ -1113,7 +1248,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         commitState({
           status: "authenticated",
           session,
-          csrfToken: csrf.csrf_token,
+          csrfToken,
         });
       } catch (error: unknown) {
         if (attempt !== generation.current || !isActiveProvider(capturedGate)) {
@@ -1122,6 +1257,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authEpochRef.current = capturedGate.invalidateWorkspace();
         retireWorkspaceCapability();
         if (error instanceof ApiError && error.status === 401) {
+          if (isNativeBearerTransport()) {
+            await clearNativeBearerToken();
+          }
           commitState({ status: "unauthenticated" });
           return;
         }
@@ -1145,7 +1283,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ]);
 
   const logIn = useCallback(
-    (payload: LoginRequest) => {
+    (payload: LoginSubmission) => {
       const capturedGate = providerGateRef.current;
       if (!isActiveProvider(capturedGate) || !capturedGate) {
         return Promise.resolve();
@@ -1156,16 +1294,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authEpochRef.current = capturedGate.invalidateWorkspace();
         retireWorkspaceCapability();
         commitState({ status: "submitting-login" });
-        let csrfToken: string;
+        let csrfToken = "";
         try {
-          const csrf = await login(payload);
-          if (
-            attempt !== generation.current ||
-            !isActiveProvider(capturedGate)
-          ) {
-            return;
+          if (isNativeBearerTransport()) {
+            const trimmedLabel = payload.device_label?.trim() ?? "";
+            const rawLabel =
+              trimmedLabel !== ""
+                ? trimmedLabel
+                : await loadDefaultDeviceLabel();
+            const deviceLabel = rawLabel.slice(0, 120) || "Android device";
+            const created = await createDeviceSession({
+              login_name: payload.login_name,
+              password: payload.password,
+              device_label: deviceLabel,
+            });
+            await persistNativeBearerToken(created.token);
+            if (
+              attempt !== generation.current ||
+              !isActiveProvider(capturedGate)
+            ) {
+              return;
+            }
+          } else {
+            const csrf = await login({
+              login_name: payload.login_name,
+              password: payload.password,
+            });
+            if (
+              attempt !== generation.current ||
+              !isActiveProvider(capturedGate)
+            ) {
+              return;
+            }
+            csrfToken = csrf.csrf_token;
           }
-          csrfToken = csrf.csrf_token;
         } catch (error: unknown) {
           if (
             attempt !== generation.current ||
@@ -1225,7 +1387,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const reauthenticate = useCallback(
-    (payload: LoginRequest) => {
+    (payload: LoginSubmission) => {
       const capturedGate = providerGateRef.current;
       if (!isActiveProvider(capturedGate) || !capturedGate) {
         return Promise.resolve();
@@ -1249,16 +1411,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           retainedIdentity,
         });
 
-        let csrfToken: string;
+        let csrfToken = "";
         try {
-          const csrf = await login(payload);
-          if (
-            attempt !== generation.current ||
-            !isActiveProvider(capturedGate)
-          ) {
-            return;
+          if (isNativeBearerTransport()) {
+            const trimmedLabel = payload.device_label?.trim() ?? "";
+            const rawLabel =
+              trimmedLabel !== ""
+                ? trimmedLabel
+                : await loadDefaultDeviceLabel();
+            const deviceLabel = rawLabel.slice(0, 120) || "Android device";
+            const created = await createDeviceSession({
+              login_name: payload.login_name,
+              password: payload.password,
+              device_label: deviceLabel,
+            });
+            await persistNativeBearerToken(created.token);
+            if (
+              attempt !== generation.current ||
+              !isActiveProvider(capturedGate)
+            ) {
+              return;
+            }
+          } else {
+            const csrf = await login({
+              login_name: payload.login_name,
+              password: payload.password,
+            });
+            if (
+              attempt !== generation.current ||
+              !isActiveProvider(capturedGate)
+            ) {
+              return;
+            }
+            csrfToken = csrf.csrf_token;
           }
-          csrfToken = csrf.csrf_token;
         } catch (error: unknown) {
           if (
             attempt !== generation.current ||
@@ -1392,57 +1578,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       commitState({ status: "logging-out", session, csrfToken });
       try {
-        try {
-          await logout(csrfToken);
-        } catch (error: unknown) {
-          if (
-            attempt !== generation.current ||
-            !isActiveProvider(capturedGate)
-          ) {
-            return;
-          }
-          if (
-            !(error instanceof ApiError) ||
-            (error.status !== 401 && error.status !== 403)
-          ) {
-            throw error;
-          }
-          let live;
+        if (isNativeBearerTransport()) {
           try {
-            live = await getSession();
-          } catch (probeError: unknown) {
+            await revokeCurrentDeviceSession();
+          } catch (error: unknown) {
             if (
               attempt !== generation.current ||
               !isActiveProvider(capturedGate)
             ) {
               return;
             }
-            if (probeError instanceof ApiError && probeError.status === 401) {
-              authEpochRef.current = capturedGate.invalidateWorkspace();
-              retireWorkspaceCapability();
-              setWorkspaceKey((value) => value + 1);
-              commitState({ status: "unauthenticated" });
+            if (!(error instanceof ApiError && error.status === 401)) {
+              throw error;
+            }
+          }
+          await clearNativeBearerToken();
+        } else {
+          try {
+            await logout(csrfToken);
+          } catch (error: unknown) {
+            if (
+              attempt !== generation.current ||
+              !isActiveProvider(capturedGate)
+            ) {
               return;
             }
-            throw probeError;
+            if (
+              !(error instanceof ApiError) ||
+              (error.status !== 401 && error.status !== 403)
+            ) {
+              throw error;
+            }
+            let live;
+            try {
+              live = await getSession();
+            } catch (probeError: unknown) {
+              if (
+                attempt !== generation.current ||
+                !isActiveProvider(capturedGate)
+              ) {
+                return;
+              }
+              if (probeError instanceof ApiError && probeError.status === 401) {
+                authEpochRef.current = capturedGate.invalidateWorkspace();
+                retireWorkspaceCapability();
+                setWorkspaceKey((value) => value + 1);
+                commitState({ status: "unauthenticated" });
+                return;
+              }
+              throw probeError;
+            }
+            if (
+              attempt !== generation.current ||
+              !isActiveProvider(capturedGate)
+            ) {
+              return;
+            }
+            if (!live.owner || live.user_id !== session.user_id) {
+              throw error;
+            }
+            csrfToken = (await recoverCsrf()).csrf_token;
+            if (
+              attempt !== generation.current ||
+              !isActiveProvider(capturedGate)
+            ) {
+              return;
+            }
+            await logout(csrfToken);
           }
-          if (
-            attempt !== generation.current ||
-            !isActiveProvider(capturedGate)
-          ) {
-            return;
-          }
-          if (!live.owner || live.user_id !== session.user_id) {
-            throw error;
-          }
-          csrfToken = (await recoverCsrf()).csrf_token;
-          if (
-            attempt !== generation.current ||
-            !isActiveProvider(capturedGate)
-          ) {
-            return;
-          }
-          await logout(csrfToken);
         }
         if (attempt === generation.current && isActiveProvider(capturedGate)) {
           authEpochRef.current = capturedGate.invalidateWorkspace();
@@ -1470,6 +1673,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const capturedGate = providerGateRef.current;
       const initialState = stateRef.current;
       if (
+        isNativeBearerTransport() ||
         !isActiveProvider(capturedGate) ||
         !capturedGate ||
         initialState.status !== "authenticated" ||

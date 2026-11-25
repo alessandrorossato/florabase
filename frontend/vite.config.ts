@@ -1,5 +1,15 @@
+import { readFileSync } from "node:fs";
+
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
+
+const packageJson = JSON.parse(
+  readFileSync(new URL("./package.json", import.meta.url), "utf8"),
+) as { version?: string };
+const appVersion =
+  typeof packageJson.version === "string" && packageJson.version.trim() !== ""
+    ? packageJson.version.trim()
+    : "0.0.0";
 
 const parsedMaxWorkers = Number.parseInt(
   process.env.VITEST_MAX_WORKERS ?? "",
@@ -12,6 +22,9 @@ const maxWorkers =
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __FLORABASE_APP_VERSION__: JSON.stringify(appVersion),
+  },
   server: {
     port: 5173,
     proxy: {

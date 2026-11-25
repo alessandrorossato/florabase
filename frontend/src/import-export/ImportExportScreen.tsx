@@ -7,6 +7,7 @@ import {
   ApiError,
   downloadProtectedFile,
   isExpectedAuthCancellation,
+  NativeFileActionUnavailableError,
 } from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
@@ -123,6 +124,10 @@ export function ImportExportScreen() {
       if (isExpectedAuthCancellation(caught)) return;
       if (caught instanceof ApiError && caught.status === 401) {
         sessionExpired();
+        return;
+      }
+      if (caught instanceof NativeFileActionUnavailableError) {
+        setDownloadError(caught.message);
         return;
       }
       setDownloadError("Could not download the requested CSV file. Try again.");

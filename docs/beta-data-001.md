@@ -10,7 +10,7 @@ published release and the Synology checks below are accepted.
 
 Main contains the source and release packaging for the release `compose.yaml`. Before an
 installation, verify that the authorized GitHub Release actually has the
-attested assets and that its pinned images are available. The beta.8 version
+attested assets and that its pinned images are available. The beta.9 version
 in source, a tag or a rehearsal artifact does not establish publication.
 
 | Path | Installation and maintenance authority |

@@ -3306,6 +3306,26 @@
       ],
       "priority": "P1",
       "status": "implemented"
+    },
+    {
+      "id": "MOBILE-002",
+      "category": "mobile",
+      "description": "Opaque Bearer device sessions, scoped automatic native CORS, /api/v1/system/info compatibility contract, Android Keystore token plugin, permanent io.github.alessandrorossato.florabase ID, and Settings device revocation while preserving browser/PWA authentication unchanged",
+      "acceptance_criteria": [
+        "POST /api/v1/auth/device-sessions issues opaque 256-bit Bearer tokens (SHA-256 digest only in PostgreSQL, 30d idle / 180d absolute, 20 active session cap evicting oldest-seen, strict application/json 415 enforcement, shared LoginThrottle), with strict transport isolation (cookie+Bearer rejected, invalid/expired Bearer returns 401 with WWW-Authenticate: Bearer, browser cookie/CSRF/require_origin unchanged)",
+        "Automatic NativeAppCorsMiddleware allows only https://localhost and capacitor://localhost with allow_credentials=False in all environments including Environment.PRODUCTION while keeping the generic FLORABASE_CORS_ORIGINS production guard intact",
+        "Unauthenticated GET /api/v1/system/info exposes server_version, api_version, min_client_version (0.1.0-beta.8), and capabilities ([device-auth]) without altering /api/v1/health; app compares SemVer including pre-release ordering and refuses incompatible servers cleanly",
+        "In-repo Android SecureTokenPlugin encrypts the Bearer token directly with a non-exportable AndroidKeyStore AES-256-GCM key in app-private SharedPreferences (allowBackup=false, self-healing clear on decryption failure, no localStorage/Preferences/third-party plugins), prefills Build.MODEL, and permanently renames applicationId/namespace to io.github.alessandrorossato.florabase",
+        "Settings -> Account lists active connected devices with per-device and revoke-all actions in both PWA and Android app; password change stays browser-cookie-only and revokes all device sessions; inline protected images work via Bearer while downloadProtectedFile/openProtectedTab show a clear coming-soon notice on native",
+        "ADR 0011 (amending ADR 0005), docs/mobile.md, release mixed-content/cleartext checks, backend/frontend tests, and live Android 16 emulator end-to-end verification pass with PWA untouched"
+      ],
+      "dependencies": [
+        "MOBILE-001",
+        "SECURITY-001",
+        "ENG-01"
+      ],
+      "priority": "P2",
+      "status": "implemented"
     }
   ]
 }

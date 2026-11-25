@@ -118,7 +118,8 @@
     "backend/tests/test_health.py",
     "backend/tests/test_infrastructure.py",
     "backend/tests/test_readiness.py",
-    "backend/tests/test_reference_index.py"
+    "backend/tests/test_reference_index.py",
+    "backend/tests/test_system_info.py"
   ],
   "product_frontend_tests": [
     "frontend/src/Propagation002.test.tsx",
@@ -974,7 +975,8 @@
         "backend/tests/test_auth_service.py"
       ],
       "integration": [
-        "backend/tests/integration/test_authentication.py"
+        "backend/tests/integration/test_authentication.py",
+        "backend/tests/integration/test_device_sessions.py"
       ],
       "frontend": [
         "frontend/src/settings/AccountScreen.test.tsx"

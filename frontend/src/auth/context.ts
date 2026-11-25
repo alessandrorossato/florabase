@@ -38,12 +38,16 @@ export type AuthState =
       csrfToken: string;
     };
 
+export type LoginSubmission = LoginRequest & {
+  device_label?: string;
+};
+
 export interface AuthContextValue {
   state: AuthState;
   capability: ProtectedRequestCapability;
   workspaceKey?: number;
-  logIn(payload: LoginRequest): Promise<void>;
-  reauthenticate?: (payload: LoginRequest) => Promise<void>;
+  logIn(payload: LoginSubmission): Promise<void>;
+  reauthenticate?: (payload: LoginSubmission) => Promise<void>;
   discardRetainedSession?: () => Promise<void>;
   logOut(): Promise<void>;
   sessionExpired: () => void;

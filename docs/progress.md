@@ -21,6 +21,67 @@
   (`tier: docs`), and canonical `make feature-verify AGENT_ID=antigravity-neon` (`docs` tier) on the
   frozen tip.
 
+## 2026-11-23 — MOBILE-002 device sign-in, Keystore plugin, and compatibility contract (PWA preserved)
+
+- On `feat/mobile-002-device-auth` from `origin/main` `ddf5a14` (writer `neon-mobile-002`).
+- Added opaque 256-bit Bearer device sessions in PostgreSQL (`auth_sessions` extended via reversible
+  Alembic migration `20261123_0048_device_sessions.py` with `transport`, `device_label`, nullable
+  `csrf_digest`, and `ix_auth_sessions_user_transport`): `POST /api/v1/auth/device-sessions`
+  (strict `application/json` 415 guard, shared Argon2id/`LoginThrottle`, 30d idle / 180d absolute,
+  20 active session cap serialized under `_locked_user` `FOR NO KEY UPDATE` before `auth_sessions`
+  `ORDER BY id FOR UPDATE` and evicting oldest-seen), `GET /api/v1/auth/device-sessions`,
+  `DELETE /api/v1/auth/device-sessions/current` (Bearer-only),
+  `DELETE /api/v1/auth/device-sessions/{session_id}`, and `DELETE /api/v1/auth/device-sessions`
+  (available to any authenticated user for their own sessions, returning `404` cross-user).
+  Enforced strict transport isolation (cookie+Bearer rejected `401` + `WWW-Authenticate: Bearer`;
+  cookie-only `/auth/password`, `/auth/csrf`, `/auth/logout` reject Bearer `403`; password change
+  revokes all browser + device sessions; browser cookie/CSRF/`require_origin` unchanged).
+- Added automatic scoped native CORS (`NativeAppCorsMiddleware` in `backend/src/florabase/core/cors.py`):
+  exact origins `https://localhost` and `capacitor://localhost` only, `allow_credentials=False`,
+  active in `Environment.PRODUCTION` without relaxing the generic `FLORABASE_CORS_ORIGINS` guard.
+- Added unauthenticated `GET /api/v1/system/info` (`server_version`, `api_version: 1`,
+  `min_client_version: "0.1.0-beta.8"`, `capabilities: ["device-auth"]`) while keeping
+  `GET /api/v1/health` untouched, and regenerated `backend/openapi.json` + `frontend/src/api/schema.d.ts`.
+- Permanently renamed Android `applicationId`/namespace/package from `org.florabase.app` to
+  `io.github.alessandrorossato.florabase`, removed Capacitor's `Example*Test.java`, set
+  `loggingBehavior: "none"` in `mobile/capacitor.config.ts` so `SecureToken.set` never prints tokens
+  to `logcat`, gated debug mixed-content strictly under `BuildConfig.DEBUG` in `MainActivity.java`,
+  and added in-repo `SecureTokenPlugin.java` using direct `AndroidKeyStore` AES-256-GCM + app-private
+  `SharedPreferences` (`allowBackup=false`, self-healing clear on decryption failure, `Build.MODEL`
+  device-label prefill).
+- Added frontend Bearer transport (`frontend/src/auth/transport.ts`), strict SemVer pre-release
+  comparator (`frontend/src/mobile/semver.ts`), `NativeApp` compatibility + Keystore boot shell,
+  `.catch` startup fallback in `frontend/src/main.tsx`, `NativeFileActionUnavailableError` for
+  `downloadProtectedFile`/`openProtectedTab` (inline protected images via `useProtectedImage`
+  working over Bearer), and **Connected devices** management in `Settings -> Account` (hiding the
+  password form on native). Web bundle delta vs `ddf5a14`: `index-*.js` `+1,233 B` raw / `+339 B`
+  gzip (`301,721 B -> 302,954 B`, `91,795 B -> 92,134 B`), `index-*.css` `+0 B`, zero `@capacitor/*`
+  dependencies in `frontend/package.json`.
+- Documented [ADR 0011](decisions/0011-mobile-device-sessions.md) (amending
+  [ADR 0005](decisions/0005-authentication-and-sessions.md)), updated [docs/mobile.md](mobile.md),
+  added `MobileReleaseContract` to `scripts/test-beta-runtime.py`, and registered `MOBILE-002`
+  (`implemented`, proposed class `post-1.0`) in `docs/features.json` and `docs/release/scope-v1.json`.
+- Verified `make mobile-android-debug` (`app-debug.apk`, 6.5 MB) and full 13-step live Android 16
+  AOSP emulator (`florabase_api36`) end-to-end acceptance against an isolated worktree UAT instance
+  (removed cleanly afterward): zero SW registrations, `/api/v1/system/info` check, `Build.MODEL`
+  prefill, Keystore encrypted storage + zero token in WebView storage/Preferences/logcat, 3 inline
+  protected blob images loaded, Bearer `POST`/`PUT` mutations, force-stop persistence, PWA device
+  revocation, PWA password-change revocation, and explicit app sign-out. Canonical FULL
+  `make feature-verify AGENT_ID=neon-mobile-002` runs on the frozen committed tree.
+
+## 2026-11-24 — v0.1.0-beta.9 release preparation
+
+- On `docs/release-beta-9` from `origin/main` `1a78476` (writer `claude-release-beta-9`). Version
+  surfaces move to `0.1.0-beta.9` (`release/inputs.json`, backend package and module, frontend and
+  mobile packages, both Dockerfiles, OpenAPI `info.version`). The Unreleased CHANGELOG section
+  becomes the `v0.1.0-beta.9` entry: `FN-02`, `FN-04`, `UX-ENTRY-001`, `UI-REVIEW-002`,
+  `RUNTIME-IDLE-001`, `DOCS-002` and `DOCS-003`, with beta.8 upgrade notes. PostgreSQL moves to
+  `18.6-alpine-florabase.5` (same PostgreSQL 18.6 layout), no database migrations since beta.8, and
+  `compose.yaml` changes are comments only. `docs/beta-data-001.md` names beta.9. `MOBILE-001` and
+  workflow-only increments are not operator-facing and stay out of the CHANGELOG.
+- No feature status changes. Tag, protected publication and publication evidence remain operator
+  actions.
+
 ## 2026-11-23 — Batch 12 integration (WF-BATCH-PROGRESS-001, DOCS-003, FN-02/FN-04/UX-ENTRY-001, UI-REVIEW-002)
 
 - `ci/batch-12` from `origin/main` `ddf5a14` (writer `claude-batch-12`) merges, in order,
