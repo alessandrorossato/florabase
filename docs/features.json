@@ -3209,7 +3209,7 @@
       "category": "infrastructure",
       "description": "Batch preparation merges additive docs/progress.md entries that two sources insert below the shared top-level heading",
       "acceptance_criteria": [
-        "scripts/feature_batch.py additive_progress() sets aside the longest line prefix shared by the merge base, integration side and incoming source (at least one base line stays in the remainder), applies the existing additive rules to the remainders and restores the prefix, so entries inserted below '# Engineering progress' by two sources are both retained newest-merged first",
+        "scripts/feature_batch.py additive_progress() sets aside the longest line prefix shared by the merge base, integration side and incoming source (at least one base line stays in the remainder), applies the existing additive rules to the remainders and restores the prefix, so entries inserted below '# Engineering progress' by two sources are both retained in merge order below the heading",
         "scripts/test-agent-workflow.py covers the shared-heading merge and still refuses an incoming source that edits the shared remainder; the existing main-tail additive progress test keeps passing"
       ],
       "dependencies": [
@@ -3269,6 +3269,23 @@
         "PWA-001",
         "WF-SCOPE-001",
         "VERIFY-SPEED-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "DOCS-004",
+      "category": "documentation",
+      "description": "Batch 12 documentation follow-ups: fix WF-BATCH-PROGRESS-001 merge-order wording and prevent duplicate YAML keys in the reference-index installation snippet",
+      "acceptance_criteria": [
+        "docs/features.json entry WF-BATCH-PROGRESS-001 states that entries inserted below '# Engineering progress' by two sources are both retained in merge order below the heading, matching scripts/feature_batch.py additive_progress(), with docs/development-workflow.md and docs/progress.md checked and historic manifests under docs/release/evidence/batches/ untouched",
+        "docs/installation.md optional botanical reference datasets section instructs adding the two environment lines and the volumes line to the existing lists of the backend service without repeating environment: or volumes: keys, keeping the exact paths and environment variable names",
+        "make doc-links, python3 ./scripts/check-features.py and the policy-selected verification gate pass on the frozen branch with evidence committed in docs/release/evidence/docs-004.md"
+      ],
+      "dependencies": [
+        "WF-BATCH-PROGRESS-001",
+        "DOCS-003",
+        "UI-REVIEW-002"
       ],
       "priority": "P2",
       "status": "implemented"

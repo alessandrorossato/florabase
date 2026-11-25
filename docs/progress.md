@@ -1,5 +1,26 @@
 # Engineering progress
 
+## 2026-11-24 — Batch 12 documentation follow-ups (`DOCS-004`)
+
+- On `docs/docs-004-batch12-followups` from `origin/main` `1a78476` (writer `antigravity-neon`),
+  docs-only third source for Batch 13.
+- Updated [docs/features.json](features.json) entry `WF-BATCH-PROGRESS-001` so the first acceptance
+  criterion states that entries inserted below `# Engineering progress` by two sources are both
+  retained in merge order below the heading (matching `scripts/feature_batch.py`
+  `additive_progress()`); checked `docs/development-workflow.md` and `docs/progress.md` (neither
+  contained the wrong wording) and left historic manifests under `docs/release/evidence/batches/`
+  untouched.
+- Rewrote the optional botanical reference datasets snippet and intro sentence in
+  [docs/installation.md](installation.md) so operators add the two `environment` list items and the
+  `volumes` list item to the existing `backend` service lists without duplicating `environment:` or
+  `volumes:` keys, keeping exact paths and environment variable names.
+- Registered `DOCS-004` (`implemented`, proposed release class `best-effort`) next to `DOCS-003`
+  (not at the tail) in `docs/features.json` and `docs/release/scope-v1.json`. Evidence:
+  [docs-004.md](release/evidence/docs-004.md).
+- Checks: `make doc-links`, `python3 ./scripts/check-features.py`, `make verification-plan FORMAT=json`
+  (`tier: docs`), and canonical `make feature-verify AGENT_ID=antigravity-neon` (`docs` tier) on the
+  frozen tip.
+
 ## 2026-11-23 — MOBILE-002 device sign-in, Keystore plugin, and compatibility contract (PWA preserved)
 
 - On `feat/mobile-002-device-auth` from `origin/main` `ddf5a14` (writer `neon-mobile-002`).
