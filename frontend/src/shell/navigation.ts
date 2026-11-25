@@ -184,7 +184,7 @@ export const workspaces: Workspace[] = [
     label: "Settings",
     icon: "gear",
     summary:
-      "Theme, printed labels, data transfer, data sources, help and release information.",
+      "Theme, media defaults, printed labels, data transfer, data sources, help and release information.",
     destinations: [
       destination("account", "Account"),
       destination("settings", "Theme"),
