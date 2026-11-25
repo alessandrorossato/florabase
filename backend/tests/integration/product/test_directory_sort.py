@@ -7,6 +7,8 @@ from unittest.mock import MagicMock
 from uuid import UUID, uuid7
 
 import pytest
+from integration.test_seed_lot_api import authenticated_browser as authenticated_browser
+from integration.test_seed_lot_api import request
 from sqlalchemy import Connection
 from sqlalchemy.orm import Session
 
@@ -19,8 +21,6 @@ from florabase.db.ordering import DirectorySort
 from florabase.media import service as media
 from florabase.orders import service as orders
 from florabase.orders.schemas import OrderCreate
-from integration.test_seed_lot_api import authenticated_browser as authenticated_browser
-from integration.test_seed_lot_api import request
 
 pytestmark = pytest.mark.integration
 SORTS: tuple[DirectorySort, ...] = ("name", "name_desc", "newest", "oldest")
