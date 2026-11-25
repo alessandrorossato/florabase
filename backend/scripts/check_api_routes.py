@@ -27,9 +27,11 @@ from florabase.core.config import Environment, get_settings
 # Reviewed against docs/release/acceptance-v1.md and the G-SEC release scope.
 PUBLIC_OPERATIONS = frozenset(
     {
-        ("POST", "/api/v1/auth/login"),  # Establishes the session.
+        ("POST", "/api/v1/auth/login"),  # Establishes the browser session.
+        ("POST", "/api/v1/auth/device-sessions"),  # Establishes a mobile Bearer device session.
         ("GET", "/api/v1/health"),  # Liveness probe.
         ("GET", "/api/v1/ready"),  # Readiness probe.
+        ("GET", "/api/v1/system/info"),  # Unauthenticated client/server compatibility contract.
     }
 )
 

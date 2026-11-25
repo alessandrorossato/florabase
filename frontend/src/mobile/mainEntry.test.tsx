@@ -8,8 +8,8 @@ vi.mock("../pwa/registerServiceWorker", () => ({
   registerServiceWorker: registerServiceWorkerMock,
 }));
 
-vi.mock("./NativeServerOnboarding", () => ({
-  NativeServerOnboarding: () => null,
+vi.mock("./NativeApp", () => ({
+  NativeApp: () => null,
 }));
 
 vi.mock("react-dom/client", () => ({
@@ -51,7 +51,7 @@ describe("main entrypoint native vs web bootstrap", () => {
     expect(createRootRenderMock).toHaveBeenCalledOnce();
   });
 
-  it("skips registerServiceWorker and UpdateNotice and mounts NativeServerOnboarding in Capacitor native contexts", async () => {
+  it("skips registerServiceWorker and UpdateNotice and mounts NativeApp in Capacitor native contexts", async () => {
     (globalThis as { Capacitor?: unknown }).Capacitor = {
       isNativePlatform: () => true,
       getPlatform: () => "android",
@@ -64,5 +64,25 @@ describe("main entrypoint native vs web bootstrap", () => {
 
     expect(registerServiceWorkerMock).not.toHaveBeenCalled();
     expect(createRootMock).toHaveBeenCalledOnce();
+  });
+
+  it("renders an accessible fallback if the native chunk fails to load", async () => {
+    vi.doMock("./NativeApp", () => {
+      throw new Error("Chunk load failed");
+    });
+    (globalThis as { Capacitor?: unknown }).Capacitor = {
+      isNativePlatform: () => true,
+      getPlatform: () => "android",
+    };
+
+    await import("../main");
+    await vi.waitFor(() => {
+      expect(createRootRenderMock).toHaveBeenCalledOnce();
+    });
+
+    expect(registerServiceWorkerMock).not.toHaveBeenCalled();
+    const rendered = createRootRenderMock.mock.calls[0]?.[0] as
+      { props?: { role?: string } } | undefined;
+    expect(rendered?.props?.role).toBe("alert");
   });
 });

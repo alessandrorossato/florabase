@@ -44,6 +44,8 @@ import {
 import { useRecordDetailFocus } from "../components/useRecordDetailFocus";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { DirectorySortSelect } from "../components/DirectorySort";
+import { sortDirectory } from "../components/directorySort";
 import { useEditRoute } from "../components/useEditRoute";
 import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
 import { ConversionHistory } from "../harvests/ConversionHistory";
@@ -797,6 +799,7 @@ export function SeedLotScreen({
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<FormState>(blankForm);
   const formElement = useRef<HTMLFormElement>(null);
+  const addAnother = useRef(false);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [context, setContext] = useState<{
     kind: ContextKind;
@@ -1064,9 +1067,15 @@ export function SeedLotScreen({
     });
   }, [identityFilter, filter, lots, search]);
 
-  const pagination = useDirectoryPagination(
+  const ordered = sortDirectory(
     filtered,
-    JSON.stringify(view.state) + filtered.map((record) => record.id).join(","),
+    view.state.sort,
+    (lot) => recordName(lot, ""),
+    (lot) => lot.acquisition_date ?? lot.harvest_date,
+  );
+  const pagination = useDirectoryPagination(
+    ordered,
+    JSON.stringify(view.state) + ordered.map((record) => record.id).join(","),
   );
   const visible = pagination.visible;
   const bulkChoices = visible.map((lot) => ({
@@ -1218,6 +1227,8 @@ export function SeedLotScreen({
 
   async function submit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
+    const another = addAnother.current;
+    addAnother.current = false;
     if (pending) return;
     const quantity = Number(form.quantityValue);
     const errors: string[] = [];
@@ -1279,6 +1290,22 @@ export function SeedLotScreen({
             )
           : await createSeedLot(payload, csrfToken, capability);
       await refreshLots(lot);
+      if (wasCreating && another) {
+        // Stay in the create form; keep only the botanical identity for the next lot.
+        setSelectedId(null);
+        setPurchaseConfirmation(null);
+        setCandidateOrderId("");
+        setForm({
+          ...blankForm(),
+          botanicalIdentityId: form.botanicalIdentityId,
+        });
+        setSave({
+          status: "success",
+          message: "Seed lot was added to the collection. Add the next one.",
+        });
+        window.setTimeout(focusCreation, 0);
+        return;
+      }
       if (edit.modal) edit.close(true);
       else {
         setEditing(false);
@@ -1997,9 +2024,27 @@ export function SeedLotScreen({
             },
           ]}
           submit={
-            <button type="submit" disabled={pending}>
-              {pending ? "Saving…" : selected ? "Save changes" : "Add seed lot"}
-            </button>
+            <>
+              <button type="submit" disabled={pending}>
+                {pending
+                  ? "Saving…"
+                  : selected
+                    ? "Save changes"
+                    : "Add seed lot"}
+              </button>
+              {!selected && (
+                <button
+                  type="submit"
+                  className="button--secondary"
+                  disabled={pending}
+                  onClick={() => {
+                    addAnother.current = true;
+                  }}
+                >
+                  Save and add another
+                </button>
+              )}
+            </>
           }
           cancel={
             <button
@@ -2074,6 +2119,15 @@ export function SeedLotScreen({
                       <DirectoryViewSwitcher
                         value={presentation.view}
                         onChange={presentation.select}
+                      />
+                    }
+                    sort={
+                      <DirectorySortSelect
+                        value={view.state.sort}
+                        dateLabel="acquisition or harvest date"
+                        onChange={(value) => {
+                          view.update("sort", value);
+                        }}
                       />
                     }
                     savedViews={

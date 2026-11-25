@@ -1,3 +1,4 @@
+import { pickReference } from "../test/referencePicker";
 import type { ComponentProps } from "react";
 import {
   cleanup,
@@ -152,7 +153,11 @@ test("creates, edits, and deletes a path-aware ProvenanceSite", async () => {
     "Monte Pellegrino",
   );
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
-  await user.selectOptions(screen.getByLabelText("Geographic place"), world.id);
+  await pickReference(
+    user,
+    screen.getByLabelText("Geographic place"),
+    world.display_path,
+  );
   await user.click(screen.getByRole("tab", { name: "Coordinates" }));
   await user.type(
     screen.getByLabelText("Latitude (WGS84 decimal)"),

@@ -15,6 +15,7 @@ export function DirectoryTools({
   name,
   search,
   presentation,
+  sort,
   savedViews,
   actions,
   filters,
@@ -27,6 +28,7 @@ export function DirectoryTools({
   name: string;
   search?: ReactNode;
   presentation?: ReactNode;
+  sort?: ReactNode;
   savedViews?: ReactNode;
   actions?: ReactNode;
   filters?: ReactNode;
@@ -48,6 +50,7 @@ export function DirectoryTools({
       >
         {search}
         {presentation}
+        {sort}
         {filters && (
           <ActionButton
             icon="filter"

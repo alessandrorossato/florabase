@@ -171,6 +171,25 @@ test.each([
   expect(savedViewHash("global_search", 1, state)).toBeNull();
 });
 
+test("directory sort is a canonical URL and Saved View field (FN-02)", () => {
+  expect(readDirectoryState("plants", "#/plants?sort=newest").sort).toBe(
+    "newest",
+  );
+  expect(readDirectoryState("sowings", "#/sowings?sort=created").sort).toBe("");
+  expect(
+    saveDirectoryState("seed_lots", {
+      identity_id: "",
+      q: "",
+      lifecycle: "active",
+      sort: "name_desc",
+    }),
+  ).toEqual({ sort: "name_desc" });
+  expect(savedViewHash("sowings", 1, { sort: "oldest" })).toBe(
+    "#/sowings?sort=oldest",
+  );
+  expect(savedViewHash("plants", 1, { sort: "created" })).toBeNull();
+});
+
 test("stale UUIDs stay exact, UI defaults do not store presentation noise", () => {
   expect(savedViewHash("harvests", 1, { identity_id: missing })).toBe(
     `#/harvests?identity_id=${missing.toLowerCase()}`,
@@ -181,6 +200,7 @@ test("stale UUIDs stay exact, UI defaults do not store presentation noise", () =
       q: "  basil  ",
       lifecycle: "active",
       type: "all",
+      sort: "",
     }),
   ).toEqual({ q: "basil" });
   expect(

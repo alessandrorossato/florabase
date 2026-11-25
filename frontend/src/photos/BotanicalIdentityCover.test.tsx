@@ -109,7 +109,15 @@ test("requires explicit privacy approval then automatically renders an external 
   expect(
     within(dialog).getByText(/confirm the external-image privacy notice/i),
   ).toBeVisible();
-  await user.click(within(dialog).getByRole("checkbox"));
+  await user.click(
+    within(dialog).getByRole("checkbox", { name: /contact that image host/ }),
+  );
+  // This test keeps the reference-only path; the local-copy default is covered below.
+  await user.click(
+    within(dialog).getByRole("checkbox", {
+      name: "Save a local copy in Florabase",
+    }),
+  );
   fireEvent.submit(form);
 
   const image = await screen.findByRole("img", {
@@ -311,4 +319,61 @@ test("cover draft dismissal and source switching require explicit discard while 
   discard.mockReturnValue(true);
   await user.click(screen.getByRole("button", { name: "Cancel" }));
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+
+test("featured cover saves an external image locally by default and offers the copy when missing", async () => {
+  const assetId = "01900000-0000-7000-8000-000000000603";
+  const saved = { ...external, media_asset_id: assetId, content_url: null };
+  const calls: string[] = [];
+  vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+    const url = typeof input === "string" ? input : (input as Request).url;
+    calls.push(`${init?.method ?? "GET"} ${url}`);
+    if (url.endsWith("/save-local-copy")) return Promise.resolve(json({}, 502));
+    if (url.endsWith("/cover-image/external"))
+      return Promise.resolve(json(saved));
+    if (url.endsWith("/cover-image")) return Promise.resolve(json(null));
+    return Promise.resolve(new Response(new Blob(["img"]), { status: 200 }));
+  });
+  const user = userEvent.setup();
+  render(
+    <AuthContext.Provider value={auth}>
+      <BotanicalIdentityCover
+        featured
+        csrfToken="csrf-test"
+        identityId={identityId}
+        identityLabel="Passiflora edulis"
+      />
+    </AuthContext.Provider>,
+  );
+  await user.click(
+    await screen.findByRole("button", { name: "Set cover image" }),
+  );
+  await user.click(screen.getByRole("button", { name: "Use external image" }));
+  const dialog = screen.getByRole("dialog", { name: "Set identity cover" });
+  expect(
+    within(dialog).getByRole("checkbox", {
+      name: "Save a local copy in Florabase",
+    }),
+  ).toBeChecked();
+  await user.type(within(dialog).getByLabelText("Image URL"), saved.image_url);
+  await user.type(
+    within(dialog).getByLabelText("Source/page URL"),
+    saved.source_url,
+  );
+  await user.type(within(dialog).getByLabelText("Attribution"), "Ada");
+  await user.click(
+    within(dialog).getByRole("checkbox", { name: /contact that image host/ }),
+  );
+  await user.click(within(dialog).getByRole("button", { name: "Save cover" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    /saved as an external reference/,
+  );
+  expect(calls).toContain(
+    `POST /api/v1/media-assets/${assetId}/save-local-copy`,
+  );
+  expect(screen.getByText("Not saved locally")).toBeVisible();
+  expect(screen.getByRole("button", { name: "Save local copy" })).toBeEnabled();
+  expect(
+    screen.getByRole("link", { name: "Open media record" }),
+  ).toHaveAttribute("href", `#/media/${assetId}`);
 });

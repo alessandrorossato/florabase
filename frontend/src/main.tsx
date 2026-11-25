@@ -33,15 +33,26 @@ if (root === null) {
 
 trackInputModality();
 if (isNativeShell()) {
-  void import("./mobile/NativeServerOnboarding").then(
-    ({ NativeServerOnboarding }) => {
-      createRoot(root).render(
+  const reactRoot = createRoot(root);
+  void import("./mobile/NativeApp")
+    .then(({ NativeApp }) => {
+      reactRoot.render(
         <StrictMode>
-          <NativeServerOnboarding />
+          <NativeApp />
         </StrictMode>,
       );
-    },
-  );
+    })
+    .catch(() => {
+      reactRoot.render(
+        <main className="card" role="alert">
+          <h1>Florabase failed to start</h1>
+          <p>
+            Close and reopen the app. If the problem persists, reinstall the
+            latest Florabase APK.
+          </p>
+        </main>,
+      );
+    });
 } else {
   void registerServiceWorker();
   createRoot(root).render(

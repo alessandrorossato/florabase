@@ -65,3 +65,13 @@ export function unlink(
     { capability, method: "DELETE", headers: { "X-CSRF-Token": csrf } },
   );
 }
+export function searchNames(
+  q: string,
+  capability: ProtectedRequestCapability,
+  signal: AbortSignal,
+): Promise<Candidate[]> {
+  return requestJson(
+    `/api/v1/explore/taxonomy/candidates?${new URLSearchParams({ q })}`,
+    { capability, signal },
+  );
+}

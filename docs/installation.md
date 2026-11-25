@@ -16,6 +16,10 @@ This guide applies from `v0.1.0-beta.8` (and upgrades `v0.1.0-beta.7` installati
 the documentation at the `v0.1.0-beta.6` tag for that release's manual procedure.
 [Florabase releases](https://github.com/alessandrorossato/florabase/releases)
 
+> **Before you start:** Run the one-time
+> [folder setup block](#1-create-the-folders-and-set-owners-once) on the Docker host **before** the
+> first deploy. If the folders or their owners are missing, `db` and `backend` refuse to start.
+
 ## What you install
 
 `compose.yaml` references three linux/amd64 `:latest` images (`ghcr.io/alessandrorossato/florabase-*`)
@@ -141,10 +145,11 @@ user exists and say so in the `backend` log. A restored database never gets a ne
 
 ### 5. Put Florabase behind HTTPS and check readiness
 
-Forward your HTTPS hostname to `http://127.0.0.1:<FLORABASE_HTTP_PORT>` on the same host. The proxy
-must terminate TLS for exactly `FLORABASE_CANONICAL_ORIGIN` at the root path, pass the original
-`Host` header, allow request bodies of at least **32 MiB**, and replace any forwarding headers sent
-by clients. Florabase never derives its origin, scheme or user identity from forwarded headers.
+Forward your HTTPS hostname to `http://127.0.0.1:<port>` on the same host, where `<port>` is the
+host port of the `frontend` mapping (default `8080`). The proxy must terminate TLS for exactly
+`FLORABASE_CANONICAL_ORIGIN` at the root path, pass the original `Host` header, allow request
+bodies of at least **32 MiB**, and replace any forwarding headers sent by clients. Florabase never
+derives its origin, scheme or user identity from forwarded headers.
 
 ```nginx
 server {
@@ -182,11 +187,12 @@ Once Florabase answers on its HTTPS origin, browsers can install it as an online
 ## Synology NAS
 
 The DS224+ is an amd64 target with Container Manager. Check the Engine and Compose versions it
-actually installs; Engine 24.0.2 and Compose 2.20.1 are the baseline.
+actually installs; Engine 24.0.2 and Compose 2.20.1 are the baseline. Backups, restores and the
+offline password reset need SSH access with the `docker compose` CLI on the NAS.
 
 1. Run the [folder setup block](#1-create-the-folders-and-set-owners-once) inside a local Btrfs or
    ext4 shared folder, for example `/volume1/docker/florabase/data` and
-   `/volume1/docker/backup/florabase`. Keep them out of SMB and NFS exports and avoid recursive ACL
+   `/volume1/docker/florabase/backup`. Keep them out of SMB and NFS exports and avoid recursive ACL
    or ownership resets on them.
 2. Deploy `compose.yaml` with Dockhand or Container Manager using the variables above.
 3. Set up HTTPS with [Tailscale Serve](#tailscale-and-https) or the DSM reverse proxy, verify that
@@ -226,13 +232,16 @@ upload from a permitted tailnet client, and again after a reboot.
 
 Before migrating, `backend`'s guarded deploy step writes
 `florabase-<from>-to-<to>-<UTC time>.dump` to `pre-upgrade/` in the backup folder and verifies it
-with `pg_restore --list`. If the backup folder is missing or unwritable, or the dump cannot be
-written or verified, nothing is migrated. Deleting old dumps is your decision.
+with `pg_restore --list`. This automatic pre-upgrade dump is written only when the database
+revision changes; an image-only update (same Alembic head) writes none, so the paired backup in
+step 2 is the only recovery point. If the backup folder is missing or unwritable, or the dump
+cannot be written or verified, nothing is migrated. Deleting old dumps is your decision.
 
 The upgrade runs in one PostgreSQL transaction. If it fails, the database stays at the previous
 release, `backend` writes `state/upgrade-failed.env` (recording the revisions and dump filename)
 and refuses to start or write duplicate dumps on subsequent restarts. Fix the cause (or restore
-from backup), remove `<FLORABASE_DATA_DIR>/state/upgrade-failed.env`, and deploy again. A database
+from backup), remove `state/upgrade-failed.env` inside your data folder (the left side of the
+`/var/lib/florabase/data` mount), and deploy again. A database
 from a newer or unknown release is refused and nothing starts. To go back after a successful
 upgrade, restore the pre-upgrade backup into a new data folder with the previous release. For
 `v0.1.0-beta.6`, which has no self-initializing layout, follow that tag's documentation; the
@@ -241,9 +250,13 @@ pre-upgrade dump holds the database only, so restore it together with the paired
 ## Paired backup
 
 The automatic pre-upgrade dump protects against a failed migration; the paired database and media
-backup remains the recovery procedure. Take both together while the application is stopped. In a
-Bash shell, from the folder with `compose.yaml` and `.env` (the same values the manager uses), set
-`project` to the stack name and run this as a block:
+backup remains the recovery procedure. Take both together while the application is stopped. Over
+SSH in a Bash shell, run this block in the folder that holds the stack's `compose.yaml`
+(`docker compose ls` shows the stack's project name and config file path; Dockhand keeps its own
+copy of `compose.yaml`). If you want `release-manifest.json` archived with the backup, download it
+from the release assets of the deployed tag next to `compose.yaml` first; the block includes it
+when present and continues without error when it is absent. Set `project` to the stack name and run
+this as a block:
 
 ```bash
 project=florabase
@@ -261,9 +274,14 @@ backup='/absolute/path/to/a/new/backup-directory'
   dc run --rm --no-deps -T backend python /app/scripts/attachment_artifacts.py verify
   dc run --rm --no-deps -T backend python /app/scripts/attachment_artifacts.py archive \
     > "$backup/media.tar"
-  cp compose.yaml release-manifest.json "$backup/"
+  files=(database.dump media.tar compose.yaml)
+  cp compose.yaml "$backup/"
+  if [ -f release-manifest.json ]; then
+    cp release-manifest.json "$backup/"
+    files+=(release-manifest.json)
+  fi
   cd "$backup"
-  sha256sum database.dump media.tar compose.yaml release-manifest.json > SHA256SUMS
+  sha256sum "${files[@]}" > SHA256SUMS
 )
 dc up -d --wait
 ```
@@ -276,11 +294,18 @@ and store the credentials separately. A restore drill is part of validating a ba
 Restore into a **new, empty data folder** (prepared with the
 [folder setup block](#1-create-the-folders-and-set-owners-once)) under a distinct stack name,
 never over the live one. This is also how a `v0.1.0-beta.6` installation moves to this layout:
-take its paired backup with the beta.6 procedure, then restore it here.
+take its paired backup with the beta.6 procedure, then restore it here. On a normal Linux host (for
+example when running a restore drill on a laptop), the folder setup block needs `sudo` for `chown`,
+and because the production backend refuses a non-`https://` `FLORABASE_CANONICAL_ORIGIN`, a restore
+drill on another host needs an HTTPS origin too (see [Tailscale and HTTPS](#tailscale-and-https)).
 
-Because `compose.yaml` sets fixed `container_name: florabase-<role>` names for the primary stack,
-create a temporary local override file next to the restore stack's `compose.yaml` so the restore
-containers do not collide with the live stack:
+Because `compose.yaml` sets fixed `container_name: florabase-<role>` names and binds the default
+loopback port `127.0.0.1:8080:8080`, create a temporary local override file next to the restore
+stack's `compose.yaml` so the restore containers do not collide with the live stack. When restoring
+on the **same** host, edit the `frontend` port directly in the restore copy of `compose.yaml` (for
+example `"127.0.0.1:8081:8080"`), or on Compose 2.24.4 or later add `ports: !override` to
+`restore-override.yaml` as shown in the optional comment below (on a different host, the default
+port needs no change):
 
 ```yaml
 # restore-override.yaml (local only, never committed)
@@ -291,11 +316,16 @@ services:
     container_name: florabase-restore-backend
   frontend:
     container_name: florabase-restore-frontend
+    # Optional on Compose 2.24.4 or later when restoring on the same host
+    # (instead of editing compose.yaml directly):
+    # ports: !override
+    #   - "127.0.0.1:8081:8080"
 ```
 
 1. Deploy the restore stack with its own prepared empty data folder, a backup folder, a distinct
-   `FLORABASE_HTTP_PORT`, and a new database password, **without** the owner variables, and wait
-   until it is healthy:
+   host port for the `frontend` mapping (default `8080`; needed only when restoring on the same
+   host), and a new database password, **without** the owner variables, and wait until it is
+   healthy:
 
    ```bash
    project=florabase-restore
@@ -343,10 +373,33 @@ from a protected pipe; keep the password out of arguments, environment variables
 
 ## Optional botanical reference datasets
 
-Florabase runs without them. The production `compose.yaml` of this release mounts no reference
-dataset folder, so WFO and WCVP v16 index lookups are unavailable there. Only indexes built by
-Florabase's own builders from the pinned official archives are ever supported
+Florabase runs without them: WFO and WCVP v16 index lookups then report themselves unavailable.
+Only indexes built by Florabase's own builders from the pinned official archives are ever supported
 ([SQLite reference indexes](security/beta-distribution-001/sqlite-reference-indexes.md)).
+
+To enable them, put the built files in a separate host folder, for example
+`/volume1/docker/florabase/reference/`, keeping each index next to its `.sha256` seal:
+
+```text
+reference/wfo-2026-06.sqlite
+reference/wfo-2026-06.sha256
+reference/wcvp-v16/index.sqlite
+reference/wcvp-v16/index.sha256
+```
+
+The files must be readable by the backend container user. In `compose.yaml`, add these lines to the
+`backend` service, keeping the existing entries, then redeploy:
+
+```yaml
+    environment:
+      - FLORABASE_WFO_SNAPSHOT_PATH=/var/lib/florabase/reference/wfo-2026-06.sqlite
+      - FLORABASE_WCVP_V16_SNAPSHOT_PATH=/var/lib/florabase/reference/wcvp-v16/index.sqlite
+    volumes:
+      - /volume1/docker/florabase/reference:/var/lib/florabase/reference:ro
+```
+
+Leave out the line for any index you do not have. A missing or unreadable file never stops the
+stack: the matching lookups stay unavailable.
 
 ## Troubleshooting
 
@@ -360,10 +413,10 @@ Read the `db` or `backend` log: every refusal says why, and nothing was changed.
 | `the installation marker exists but its database folder is missing or empty` | The database files are gone or the wrong folder is mounted. Fix the mount or restore from a backup. |
 | `the installation uses PostgreSQL N, this image M` | A PostgreSQL major-version change needs its own migration. Deploy the previous release. |
 | `the database folder belongs to another PostgreSQL cluster` | The marker and the database files come from different installations. Restore the matching pair. |
-| `FLORABASE_BACKUP_DIR is inside FLORABASE_DATA_DIR` (or the reverse, or `the same`) | Use a backup folder outside the data folder. |
+| `the data and backup folders are the same` / `the data folder is inside the backup folder` / `the backup folder is inside the data folder` | Use a backup folder (the left side of the `/var/lib/florabase/backup` mount) outside your data folder (the left side of the `/var/lib/florabase/data` mount). |
 | `set both FLORABASE_OWNER_LOGIN and FLORABASE_OWNER_PASSWORD, or neither` / `first owner refused` | Fix the owner variables and deploy again. |
-| `pre-upgrade backup failed` / `backup directory ... is missing or not writable` | Fix the backup folder or free space and deploy again. Nothing was migrated. |
-| `previous upgrade from ... to ... failed ... remove state/upgrade-failed.env before redeploying` | A prior upgrade failed after writing a verified pre-upgrade dump. Inspect the earlier log, resolve the database issue or restore, remove `<FLORABASE_DATA_DIR>/state/upgrade-failed.env`, and deploy again. |
+| `pre-upgrade backup failed` / `backup directory ... is missing or not writable` | Fix your backup folder (the left side of the `/var/lib/florabase/backup` mount) or free space and deploy again. Nothing was migrated. |
+| `previous upgrade from ... to ... failed ... remove state/upgrade-failed.env before redeploying` | A prior upgrade failed after writing a verified pre-upgrade dump. Inspect the earlier log, resolve the database issue or restore, remove `state/upgrade-failed.env` inside your data folder (the left side of the `/var/lib/florabase/data` mount), and deploy again. |
 | `database revision ... is neither image head ... nor the previous release head` | The database comes from a newer, older or unknown release. Deploy the matching release or restore. |
 | `differs from image head` (`release_schema serve`) | The schema does not match the backend image; the guarded deploy step did not complete. Read the `backend` log. |
 
@@ -380,6 +433,6 @@ folder stay as they are. Delete them only after verifying an off-host backup.
 - The first owner password stays in the stack environment (and `florabase-backend`'s container
   configuration) until you remove it; `florabase-start` scrubs it from the `uvicorn` process
   environment before serving requests.
-- `florabase-backend` mounts `FLORABASE_BACKUP_DIR` read-write so its guarded start step can write
-  pre-upgrade dumps without a separate `migrate` container; keep off-host encrypted copies of
-  paired backups.
+- `florabase-backend` mounts your backup folder (the left side of the `/var/lib/florabase/backup`
+  mount) read-write so its guarded start step can write pre-upgrade dumps without a separate
+  `migrate` container; keep off-host encrypted copies of paired backups.

@@ -136,6 +136,7 @@ def test_authenticate_unknown_failure_and_success_paths() -> None:
     assert owner.password_hash == "upgraded"
     assert result.user is owner
     assert len(result.session.token_digest) == 32
+    assert result.session.csrf_digest is not None
     assert len(result.session.csrf_digest) == 32
     database.delete.assert_called_once_with(state)
     database.add.assert_called_once_with(result.session)

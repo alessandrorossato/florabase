@@ -264,6 +264,20 @@ def progress_bytes(repo: Repository, sha: str) -> bytes:
 def additive_progress(repo: Repository, previous: str, tip: str) -> bytes:
     common = progress_bytes(repo, repo.git("merge-base", previous, tip))
     ours, theirs = progress_bytes(repo, previous), progress_bytes(repo, tip)
+    # Both sides usually insert below the shared "# Engineering progress" heading: set aside the
+    # longest line prefix all three versions share, merge the remainders, then restore it.
+    lines = [text.splitlines(keepends=True) for text in (common, ours, theirs)]
+    shared = 0
+    while shared < len(lines[0]) - 1 and all(
+        shared < len(side) and side[shared] == lines[0][shared] for side in lines[1:]
+    ):
+        shared += 1
+    header = b"".join(lines[0][:shared])
+    size = len(header)
+    return header + _additive_progress(common[size:], ours[size:], theirs[size:])
+
+
+def _additive_progress(common: bytes, ours: bytes, theirs: bytes) -> bytes:
     require(
         bool(common),
         "progress conflict cannot be resolved by retaining both sets of additions",

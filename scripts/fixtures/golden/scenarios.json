@@ -72,7 +72,7 @@
           "provenance.without_coordinates": 1
         },
         "baseline": {
-          "schema_revision": "20261110_0047",
+          "schema_revision": "20261123_0048",
           "volume": 12,
           "plan_sha256": "5afd6ffe46fce10ac62b1ef1233c9944d8c206bef9d407ce4396b5e6ce64b0d7",
           "canonical_sha256": "d0a9b3fc1a935458a3544ce51d9f6697411f6111037b086c02736cc1ed8be167",
@@ -385,7 +385,7 @@
           "taxonomy.unresolved": 84
         },
         "baseline": {
-          "schema_revision": "20261110_0047",
+          "schema_revision": "20261123_0048",
           "volume": 420,
           "plan_sha256": "8a1da67623c1f9c77071cf39e9bd0346a72483fa2a71cf5f1438877eb81c8c3f",
           "canonical_sha256": "5f59cc7ff3829517a5957c9b0972957d17c6eb2825fc023ba0be455ae047dfd0",

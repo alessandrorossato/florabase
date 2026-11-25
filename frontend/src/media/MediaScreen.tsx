@@ -18,6 +18,7 @@ import {
   activeCsrfToken,
   ApiError,
   isExpectedAuthCancellation,
+  NativeFileActionUnavailableError,
   openProtectedTab,
   ProtectedTabBlockedError,
 } from "../auth/api";
@@ -62,7 +63,19 @@ import { MediaLinker } from "./MediaLinker";
 import { mediaTargets } from "./targets";
 
 function title(asset: MediaAsset): string {
-  return asset.title ?? asset.original_filename ?? "External image reference";
+  return (
+    asset.title ??
+    asset.original_filename ??
+    asset.attribution ??
+    "External image"
+  );
+}
+function hostname(url: string | null): string | null {
+  try {
+    return url ? new URL(url).hostname : null;
+  } catch {
+    return null;
+  }
 }
 function Metadata({ asset }: { asset: MediaAsset }) {
   return (
@@ -335,7 +348,10 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
         sessionExpired();
         return;
       }
-      if (caught instanceof ProtectedTabBlockedError) {
+      if (
+        caught instanceof ProtectedTabBlockedError ||
+        caught instanceof NativeFileActionUnavailableError
+      ) {
         setOriginalError(caught.message);
         return;
       }
@@ -397,6 +413,60 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
       );
     }, "Record link details saved.");
   }
+  const localCopy = (d: MediaDetail) => (
+    <section aria-label="Local copy" className="media-links-section">
+      <h3>Local copy</h3>
+      {!d.content_url && (
+        <p>
+          Only a link is stored. Saving downloads the image once from{" "}
+          {hostname(d.image_url) ?? "its source"}.
+        </p>
+      )}
+      <div className="actions">
+        <button
+          type="button"
+          disabled={pending || d.deletion_pending}
+          onClick={() => {
+            void action(
+              async () => {
+                await (d.content_url ? refreshLocalCopy : saveLocalCopy)(
+                  d.id,
+                  token,
+                  capability,
+                );
+              },
+              d.content_url ? "Local copy refreshed." : "Local copy saved.",
+            );
+          }}
+        >
+          {pending
+            ? "Saving local copy…"
+            : d.content_url
+              ? "Refresh local copy"
+              : "Save local copy"}
+        </button>
+        {(d.content_url !== null || d.local_copy_cleanup_pending) && (
+          <button
+            type="button"
+            className="button--secondary"
+            disabled={pending || d.deletion_pending}
+            onClick={() => {
+              setRemoving("copy");
+            }}
+          >
+            Remove local copy
+          </button>
+        )}
+      </div>
+      {d.local_copy_cleanup_pending && (
+        <p role="status">
+          Previous local copy cleanup is pending. Retry Remove local copy to
+          complete it.
+        </p>
+      )}
+    </section>
+  );
+
   return (
     <section
       className="media-workspace"
@@ -612,9 +682,13 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
               eyebrow="Media asset"
               title={title(detail)}
               secondary={
-                detail.kind === "local"
-                  ? "Managed local image"
-                  : "External image reference"
+                <span className="media-status-badge">
+                  {detail.kind === "local"
+                    ? "Local image"
+                    : detail.content_url
+                      ? "External reference · saved locally"
+                      : "External reference · not saved locally"}
+                </span>
               }
               onEdit={() => {
                 setEditor(detail);
@@ -623,6 +697,11 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
               primaryActions={
                 <button
                   type="button"
+                  className={
+                    detail.kind === "external" && !detail.content_url
+                      ? "button--secondary"
+                      : undefined
+                  }
                   disabled={detail.deletion_pending}
                   onClick={() => {
                     setLinking(true);
@@ -632,7 +711,9 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                 </button>
               }
             />
-            <div className="media-detail-overview">
+            <div
+              className={`media-detail-overview${detail.kind === "external" && !detail.content_url ? " media-detail-overview--reference" : ""}`}
+            >
               <MediaPreview
                 key={`${detail.id}:${detail.content_url ?? "remote"}`}
                 asset={detail}
@@ -640,12 +721,11 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                 allowExternal
               />
               <section aria-label="Shared asset metadata">
-                <h3>Shared asset metadata</h3>
+                {detail.kind === "external" &&
+                  !detail.content_url &&
+                  localCopy(detail)}
+                <h3>Details</h3>
                 <Metadata asset={detail} />
-                <p className="field-help">
-                  Title, attribution and licence belong to this reusable asset.
-                  Captions and display order belong to each record link.
-                </p>
                 {detail.content_url && !detail.deletion_pending && (
                   <div className="actions">
                     <button
@@ -671,184 +751,129 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                 )}
               </section>
             </div>
-            {detail.kind === "external" && (
-              <section aria-label="Local copy" className="media-links-section">
-                <h3>Local copy</h3>
-                <p>
-                  {detail.content_url
-                    ? "This saved image is stored in Florabase. Refresh contacts the canonical external source again."
-                    : "Save the image in Florabase to use it throughout your collection. This explicitly contacts the external source."}
-                </p>
-                <div className="actions">
-                  <button
-                    type="button"
-                    disabled={pending || detail.deletion_pending}
-                    onClick={() => {
-                      void action(
-                        async () => {
-                          await (
-                            detail.content_url
-                              ? refreshLocalCopy
-                              : saveLocalCopy
-                          )(detail.id, token, capability);
-                        },
-                        detail.content_url
-                          ? "Local copy refreshed."
-                          : "Local copy saved.",
-                      );
-                    }}
-                  >
-                    {pending
-                      ? "Saving local copy…"
-                      : detail.content_url
-                        ? "Refresh local copy"
-                        : "Save local copy"}
-                  </button>
-                  {(detail.content_url !== null ||
-                    detail.local_copy_cleanup_pending) && (
-                    <button
-                      type="button"
-                      className="button--secondary"
-                      disabled={pending || detail.deletion_pending}
-                      onClick={() => {
-                        setRemoving("copy");
-                      }}
-                    >
-                      Remove local copy
-                    </button>
-                  )}
-                </div>
-                {detail.local_copy_cleanup_pending && (
-                  <p role="status">
-                    Previous local copy cleanup is pending. Retry Remove local
-                    copy to complete it.
+            {detail.kind === "external" &&
+              detail.content_url &&
+              localCopy(detail)}
+            <div className="media-detail-references">
+              <section className="media-links-section">
+                <h3>Linked records</h3>
+                {detail.links.length === 0 ? (
+                  <p>
+                    No record links. This asset remains available in the
+                    Gallery.
                   </p>
-                )}
-              </section>
-            )}
-            <section className="media-links-section">
-              <h3>Linked records</h3>
-              <p>
-                Each link has its own caption, display order and primary
-                designation.
-              </p>
-              {detail.links.length === 0 ? (
-                <p>
-                  No record links. This asset remains available in the Gallery.
-                </p>
-              ) : (
-                <ul className="media-link-list">
-                  {detail.links.map((link) => (
-                    <li key={link.id}>
-                      <div>
-                        <a href={link.target_url}>{link.target_label}</a>
-                        <span className="record-preview__type">
-                          {
-                            mediaTargets.find(
-                              (type) => type.id === link.target_type,
-                            )?.label
-                          }
-                          {link.is_primary && " · Primary image"}
-                        </span>
-                        {link.caption && <p>{link.caption}</p>}
-                        <p>Display order: {link.display_order}</p>
-                      </div>
-                      <div className="actions">
-                        <ActionButton
-                          icon="edit"
-                          type="button"
-                          className="button--secondary"
-                          disabled={pending || detail.deletion_pending}
-                          onClick={() => {
-                            setEditingLink(link);
-                          }}
-                        >
-                          Edit link details
-                        </ActionButton>
-                        {(link.target_type === "seed_lot" ||
-                          link.target_type === "plant" ||
-                          link.target_type === "plant_group" ||
-                          link.target_type === "harvest" ||
-                          link.target_type === "supplier") && (
-                          <button
+                ) : (
+                  <ul className="media-link-list">
+                    {detail.links.map((link) => (
+                      <li key={link.id}>
+                        <div>
+                          <a href={link.target_url}>{link.target_label}</a>
+                          <span className="record-preview__type">
+                            {
+                              mediaTargets.find(
+                                (type) => type.id === link.target_type,
+                              )?.label
+                            }
+                            {link.is_primary && " · Primary image"}
+                          </span>
+                          {link.caption && <p>{link.caption}</p>}
+                          <p>Display order: {link.display_order}</p>
+                        </div>
+                        <div className="actions">
+                          <ActionButton
+                            icon="edit"
                             type="button"
                             className="button--secondary"
                             disabled={pending || detail.deletion_pending}
                             onClick={() => {
-                              const type = link.target_type;
-                              if (
-                                type !== "seed_lot" &&
-                                type !== "plant" &&
-                                type !== "plant_group" &&
-                                type !== "harvest" &&
-                                type !== "supplier"
-                              )
-                                return;
-                              void action(
-                                async () => {
-                                  if (link.is_primary)
-                                    await clearPrimaryPhoto(
-                                      type,
-                                      link.target_id,
-                                      token,
-                                      capability,
-                                    );
-                                  else
-                                    await setPrimaryPhoto(
-                                      type,
-                                      link.target_id,
-                                      { kind: detail.kind, photo_id: link.id },
-                                      token,
-                                      capability,
-                                    );
-                                },
-                                link.is_primary
-                                  ? "Primary designation cleared."
-                                  : "Primary image selected for this record.",
-                              );
+                              setEditingLink(link);
                             }}
                           >
-                            {link.is_primary
-                              ? "Clear primary"
-                              : "Set as primary"}
+                            Edit link details
+                          </ActionButton>
+                          {(link.target_type === "seed_lot" ||
+                            link.target_type === "plant" ||
+                            link.target_type === "plant_group" ||
+                            link.target_type === "harvest" ||
+                            link.target_type === "supplier") && (
+                            <button
+                              type="button"
+                              className="button--secondary"
+                              disabled={pending || detail.deletion_pending}
+                              onClick={() => {
+                                const type = link.target_type;
+                                if (
+                                  type !== "seed_lot" &&
+                                  type !== "plant" &&
+                                  type !== "plant_group" &&
+                                  type !== "harvest" &&
+                                  type !== "supplier"
+                                )
+                                  return;
+                                void action(
+                                  async () => {
+                                    if (link.is_primary)
+                                      await clearPrimaryPhoto(
+                                        type,
+                                        link.target_id,
+                                        token,
+                                        capability,
+                                      );
+                                    else
+                                      await setPrimaryPhoto(
+                                        type,
+                                        link.target_id,
+                                        {
+                                          kind: detail.kind,
+                                          photo_id: link.id,
+                                        },
+                                        token,
+                                        capability,
+                                      );
+                                  },
+                                  link.is_primary
+                                    ? "Primary designation cleared."
+                                    : "Primary image selected for this record.",
+                                );
+                              }}
+                            >
+                              {link.is_primary
+                                ? "Clear primary"
+                                : "Set as primary"}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="button--danger"
+                            disabled={pending}
+                            onClick={() => {
+                              setError(null);
+                              setRemoving(link);
+                            }}
+                          >
+                            Unlink from this record
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          className="button--danger"
-                          disabled={pending}
-                          onClick={() => {
-                            setError(null);
-                            setRemoving(link);
-                          }}
-                        >
-                          Unlink from this record
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-            <section className="media-links-section">
-              <h3>BotanicalIdentity cover references</h3>
-              {detail.covers.length === 0 ? (
-                <p>No cover references.</p>
-              ) : (
-                <ul>
-                  {detail.covers.map((cover) => (
-                    <li key={cover.id}>
-                      <a href={cover.url}>{cover.label}</a> · Current
-                      representative cover
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <p>
-                Cover references are separate from record links and also block
-                asset deletion.
-              </p>
-            </section>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+              <section className="media-links-section">
+                <h3>Covers</h3>
+                {detail.covers.length === 0 ? (
+                  <p>No cover references.</p>
+                ) : (
+                  <ul>
+                    {detail.covers.map((cover) => (
+                      <li key={cover.id}>
+                        <a href={cover.url}>{cover.label}</a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            </div>
             <section className="media-delete-section">
               <h3>Delete media asset</h3>
               <p>

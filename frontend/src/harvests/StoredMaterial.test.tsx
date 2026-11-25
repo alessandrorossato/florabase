@@ -1,3 +1,4 @@
+import { pickReference } from "../test/referencePicker";
 import {
   cleanup,
   render,
@@ -466,9 +467,10 @@ it("filters stored material by exact source identity with state, material, Locat
     screen.getByText("No stored material matches these filters."),
   ).toBeVisible();
   await user.selectOptions(screen.getByLabelText("Material"), "seed");
-  await user.selectOptions(
+  await pickReference(
+    user,
     screen.getByLabelText("Storage Location"),
-    "storage",
+    "Fridge → Long seed drawer",
   );
   await user.click(screen.getByRole("button", { name: "Done" }));
   await user.type(screen.getByLabelText("Search stored material"), "missing");

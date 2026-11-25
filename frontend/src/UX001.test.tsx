@@ -283,6 +283,11 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
         },
         404,
       );
+    if (
+      path.startsWith("/api/v1/collection-records/") &&
+      path.endsWith("/photos")
+    )
+      return json([]);
     throw new Error(`Unexpected request: ${path}`);
   });
   const user = userEvent.setup();

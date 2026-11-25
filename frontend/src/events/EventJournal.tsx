@@ -1,4 +1,5 @@
 import { ActionButton } from "../components/Action";
+import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import { FieldLabel } from "../components/FieldLabel";
 import {
   useEffect,
@@ -998,37 +999,28 @@ export function EventJournal({
               </label>
             )}
             {form.kind === "movement" && (
-              <div className="field">
-                <FieldLabel required htmlFor={`event-destination-${targetId}`}>
-                  Destination Location
-                </FieldLabel>
-                <select
-                  id={`event-destination-${targetId}`}
-                  required
-                  value={form.destinationLocationId}
-                  disabled={pending}
-                  onChange={(event) => {
-                    const destinationLocationId = event.currentTarget.value;
-                    setForm((current) => ({
-                      ...current,
-                      destinationLocationId,
-                    }));
-                    setMutation({ status: "idle" });
-                  }}
-                >
-                  <option value="">Choose a Location</option>
-                  {locationsForScope(locations, "plants").map((location) => (
-                    <option
-                      value={location.id}
-                      key={location.id}
-                      disabled={Boolean(location.retired_at)}
-                    >
-                      {location.display_path}
-                      {location.retired_at ? " (retired)" : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <ReferencePicker
+                id={`event-destination-${targetId}`}
+                label="Destination Location"
+                required
+                placeholder="Choose a Location"
+                disabled={pending}
+                choices={locationsForScope(locations, "plants").map(
+                  (location) => ({
+                    id: location.id,
+                    label: location.display_path,
+                    retired: Boolean(location.retired_at),
+                  }),
+                )}
+                value={form.destinationLocationId}
+                onChange={(destinationLocationId) => {
+                  setForm((current) => ({
+                    ...current,
+                    destinationLocationId,
+                  }));
+                  setMutation({ status: "idle" });
+                }}
+              />
             )}
             {form.kind === "measurement" && (
               <fieldset className="field">

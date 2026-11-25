@@ -12,7 +12,7 @@ vi.mock("./IdentityRecordMedia", () => ({
   IdentityRecordMedia: () => <p>Actual linked image gallery</p>,
 }));
 afterEach(cleanup);
-test("identity cover and related-record photo destinations retain separate ownership without claiming photos exist", () => {
+test("identity media shows the cover and record photos without technical explanations", () => {
   const identity = {
     id: "identity",
     display_label: "Salvia officinalis",
@@ -20,13 +20,13 @@ test("identity cover and related-record photo destinations retain separate owner
   const collection = {
     identity,
     seed_lots: [{ id: "lot", label: "Packet" }],
-    sowings: [{ id: "tray", label: "Tray" }],
-    plants: [{ id: "plant", label: "Mother" }],
-    plant_groups: [{ id: "group", label: "Seedlings" }],
-    harvests: [{ id: "harvest", display_title: "Collected leaves" }],
+    sowings: [],
+    plants: [],
+    plant_groups: [],
+    harvests: [],
     events: [],
   } as unknown as BotanicalIdentityCollectionResponse;
-  render(
+  const { rerender } = render(
     <IdentityMedia
       identity={identity}
       csrfToken="csrf"
@@ -34,18 +34,20 @@ test("identity cover and related-record photo destinations retain separate owner
     />,
   );
   expect(screen.getByText("Cover for identity")).toBeVisible();
-  for (const [name, href] of [
-    ["Packet", "#/seeds/lot?tab=photos"],
-    ["Tray", "#/sowings/tray?tab=photos"],
-    ["Mother", "#/plants/plant?tab=photos"],
-    ["Seedlings", "#/plant-groups/group?tab=photos"],
-    ["Collected leaves", "#/harvests/harvest"],
-  ])
-    expect(screen.getByRole("link", { name })).toHaveAttribute("href", href);
+  expect(screen.getByText("Actual linked image gallery")).toBeVisible();
   expect(
-    screen.getByText(/These remain collection-record media/),
+    screen.getByRole("heading", { name: "Collection record photos" }),
   ).toBeVisible();
+  expect(screen.queryByText(/identity-level media contract/)).toBeNull();
+  rerender(
+    <IdentityMedia
+      identity={identity}
+      csrfToken="csrf"
+      collection={{ ...collection, seed_lots: [] }}
+    />,
+  );
   expect(
-    screen.getByText(/one cover, not arbitrary direct attachments/),
+    screen.getByText("No collection records use this identity yet."),
   ).toBeVisible();
+  expect(screen.queryByText("Actual linked image gallery")).toBeNull();
 });

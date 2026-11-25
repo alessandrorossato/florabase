@@ -10,6 +10,30 @@ to know.
 ### Added
 
 - End-user guide (`docs/user-guide/`).
+
+## v0.1.0-beta.9 — 2026-11-24
+
+Prerelease of the private beta series: changes since `v0.1.0-beta.8`. No database migrations
+(Alembic head unchanged); PostgreSQL moves to `18.6-alpine-florabase.5` (same PostgreSQL 18.6
+cluster layout), and `compose.yaml` changes are comments only. Take `compose.yaml` from the
+`v0.1.0-beta.9` tag, not from `main`.
+
+**Upgrading from `v0.1.0-beta.8`:** take a paired backup, then run an update (pull and redeploy)
+in your Compose manager; it pulls the new `:latest` `backend`, `frontend` and `florabase-postgres`
+images. Your existing `compose.yaml` keeps working unchanged.
+
+### Added
+
+- **Directories:** Seeds, Sowings and Plants gain a `Sort by` select (name, newest/oldest date;
+  undated last), applied before pagination and kept in the URL and saved views (`FN-02`).
+- **Reference pickers:** selects over your own records (plant, sowing, identity, site, location,
+  geography and similar) are now searchable, keyboard-operable pickers (`FN-04`).
+- **Save and add another** in the Seeds, Sowings and Plants create forms keeps the form open with a
+  fresh draft that retains the identity or seed lot (`UX-ENTRY-001`).
+- **Scientific name suggestions:** creating an identity suggests names from the local WFO index
+  when it is mounted. The optional read-only WFO/WCVP v16 reference index mount is documented in
+  [docs/installation.md](docs/installation.md#optional-botanical-reference-datasets); `compose.yaml`
+  only carries a comment pointing to it (`UI-REVIEW-002`).
 - Plain-ASCII startup banner printed once per container start as the first output of
   `release_schema wait-db`, showing Florabase version, image revision (`FLORABASE_REVISION`),
   sanitized origin, environment, log format, and project URL without printing secrets
@@ -31,6 +55,30 @@ to know.
     startup chain).
   - Successful (2xx) loopback `GET` probes to `/api/v1/health` and `/api/v1/ready` are filtered out
     of `uvicorn.access`; non-loopback probes and non-2xx responses stay logged.
+- Installation and backup/restore documentation (`DOCS-003`):
+  - Added a "Before you start" callout at the top of [docs/installation.md](docs/installation.md)
+    and a prominent reminder in [README.md](README.md) that the one-time folder setup block in § 1
+    must be run on the host before the first deploy.
+  - Updated [docs/installation.md](docs/installation.md) and
+    [docs/backup-restore.md](docs/backup-restore.md) for the minimal `:latest` `compose.yaml`
+    rehearsal findings: paired backup runs over SSH in the stack folder (`docker compose ls`),
+    archives `release-manifest.json` only when present, removes stale `.env`,
+    `FLORABASE_HTTP_PORT`, `FLORABASE_DATA_DIR` and `FLORABASE_BACKUP_DIR` instruction placeholders,
+    aligns Synology NAS paths with `compose.yaml` (`/volume1/docker/florabase/backup`), documents
+    same-host port selection (editing the restore copy of `compose.yaml` or `ports: !override` on
+    Compose 2.24.4+) and HTTPS/`sudo` notes for isolated restore drills, and clarifies that
+    automatic pre-upgrade dumps run only when the database Alembic revision changes.
+- Root community documentation (`DOCS-002`): README "What works today", contributor guide with
+  DCO sign-off, updated supported versions in `SECURITY.md`, and a root
+  [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md); finished increment records moved to
+  `docs/archive/`, with [docs/README.md](docs/README.md) as the documentation index.
+
+### Fixed
+
+- Operator review after beta.8 (`UI-REVIEW-002`): gallery directories such as Plants keep
+  card-sized tiles, so a single record no longer spans the whole page; the identity Media tab and
+  media asset page are redesigned to fit one desktop screen, and external covers save a local copy
+  by default.
 
 ## v0.1.0-beta.8 — 2026-11-22
 

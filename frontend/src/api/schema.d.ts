@@ -91,6 +91,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/device-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Device Sessions */
+        get: operations["listDeviceSessions"];
+        put?: never;
+        /** Create Device Session */
+        post: operations["createDeviceSession"];
+        /** Revoke All Owner Device Sessions */
+        delete: operations["revokeAllDeviceSessions"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/device-sessions/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke Current Device Session */
+        delete: operations["revokeCurrentDeviceSession"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/device-sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke Device Session */
+        delete: operations["revokeDeviceSession"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -1056,6 +1109,26 @@ export interface paths {
         };
         /** Read */
         get: operations["getRepresentedIdentity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/explore/taxonomy/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Name Candidates
+         * @description Search the local WFO index by name prefix before a botanical identity exists.
+         */
+        get: operations["searchWfoNames"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2872,6 +2945,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** System Info */
+        get: operations["getSystemInfo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/vegetative-lots": {
         parameters: {
             query?: never;
@@ -3886,6 +3976,84 @@ export interface components {
             photos?: components["schemas"]["DashboardPhoto"][];
             /** Recent Events */
             recent_events: components["schemas"]["EventResponse"][];
+        };
+        /** DeviceSessionCreateRequest */
+        DeviceSessionCreateRequest: {
+            /** Device Label */
+            device_label: string;
+            /** Login Name */
+            login_name: string;
+            /** Password */
+            password: string;
+        };
+        /** DeviceSessionCreateResponse */
+        DeviceSessionCreateResponse: {
+            /**
+             * Absolute Expires At
+             * Format: date-time
+             */
+            absolute_expires_at: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Device Label */
+            device_label: string;
+            /**
+             * Idle Expires At
+             * Format: date-time
+             */
+            idle_expires_at: string;
+            /**
+             * Session Id
+             * Format: uuid
+             */
+            session_id: string;
+            /** Token */
+            token: string;
+        };
+        /** DeviceSessionItem */
+        DeviceSessionItem: {
+            /**
+             * Absolute Expires At
+             * Format: date-time
+             */
+            absolute_expires_at: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Current */
+            current: boolean;
+            /** Device Label */
+            device_label: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Idle Expires At
+             * Format: date-time
+             */
+            idle_expires_at: string;
+            /**
+             * Last Seen At
+             * Format: date-time
+             */
+            last_seen_at: string;
+        };
+        /** DeviceSessionListResponse */
+        DeviceSessionListResponse: {
+            /** Items */
+            items: components["schemas"]["DeviceSessionItem"][];
+        };
+        /** DeviceSessionRevokeAllResponse */
+        DeviceSessionRevokeAllResponse: {
+            /** Revoked Count */
+            revoked_count: number;
         };
         /**
          * DirectOriginKind
@@ -8373,6 +8541,17 @@ export interface components {
             /** Seed Lots Total */
             seed_lots_total: number;
         };
+        /** SystemInfoResponse */
+        SystemInfoResponse: {
+            /** Api Version */
+            api_version: number;
+            /** Capabilities */
+            capabilities: string[];
+            /** Min Client Version */
+            min_client_version: string;
+            /** Server Version */
+            server_version: string;
+        };
         /** TargetChoiceResponse */
         TargetChoiceResponse: {
             /**
@@ -9276,6 +9455,139 @@ export interface operations {
             };
         };
     };
+    listDeviceSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceSessionListResponse"];
+                };
+            };
+        };
+    };
+    createDeviceSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeviceSessionCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceSessionCreateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revokeAllDeviceSessions: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceSessionRevokeAllResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revokeCurrentDeviceSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    revokeDeviceSession: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     login: {
         parameters: {
             query?: never;
@@ -9312,8 +9624,8 @@ export interface operations {
     logout: {
         parameters: {
             query?: never;
-            header: {
-                "X-CSRF-Token": string;
+            header?: {
+                "X-CSRF-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9343,8 +9655,8 @@ export interface operations {
     changePassword: {
         parameters: {
             query?: never;
-            header: {
-                "X-CSRF-Token": string;
+            header?: {
+                "X-CSRF-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12164,6 +12476,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RepresentedIdentity"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    searchWfoNames: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WfoCandidate"][];
                 };
             };
             /** @description Validation Error */
@@ -16970,6 +17313,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getSystemInfo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemInfoResponse"];
                 };
             };
         };

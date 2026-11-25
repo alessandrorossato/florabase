@@ -36,6 +36,9 @@ export function ReferencePicker({
   help,
   placeholder,
   openOnFocus = true,
+  id,
+  name,
+  describedBy: externalDescription,
 }: {
   label: string;
   choices: ReferenceChoice[];
@@ -49,8 +52,15 @@ export function ReferencePicker({
   placeholder?: string;
   /** Keep dialogs from opening a menu merely because they focused this field. */
   openOnFocus?: boolean;
+  /** Stable input id for validation focus and existing labels. */
+  id?: string;
+  /** Submits the chosen id in uncontrolled forms. */
+  name?: string;
+  /** Help rendered outside the picker. */
+  describedBy?: string;
 }) {
-  const inputId = useId();
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
   const listId = useId();
   const helpId = useId();
   const retiredId = useId();
@@ -222,6 +232,7 @@ export function ReferencePicker({
         {label}
       </FieldLabel>
       <div className="reference-control">
+        {name && <input type="hidden" name={name} value={value} />}
         <input
           id={inputId}
           ref={input}
@@ -233,6 +244,7 @@ export function ReferencePicker({
               ? helpId
               : undefined,
             selected?.retired && retiredId,
+            externalDescription,
           )}
           aria-expanded={open}
           aria-activedescendant={

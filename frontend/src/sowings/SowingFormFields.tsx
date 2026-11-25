@@ -1,4 +1,5 @@
 import { FieldLabel } from "../components/FieldLabel";
+import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import type { ReactNode } from "react";
 import type { FormPanel } from "../components/FormSections";
 import { FieldHelp } from "../components/ContextualHelp";
@@ -181,37 +182,24 @@ export function sowingFormPanels({
             </FieldHelp>
           </fieldset>
 
-          <div className="field">
-            <label htmlFor="sowing-location">Current location</label>
-            <select
-              aria-describedby="sowing-location-help"
-              id="sowing-location"
-              value={form.locationId}
-              disabled={pending}
-              onChange={(event) => {
-                updateForm("locationId", event.currentTarget.value);
-              }}
-            >
-              <option value="">Not recorded</option>
-              {locationsForScope(locations, "sowings").map((location) => (
-                <option
-                  key={location.id}
-                  value={location.id}
-                  disabled={
-                    Boolean(location.retired_at) &&
-                    location.id !== form.locationId
-                  }
-                >
-                  {location.display_path}
-                  {location.retired_at ? " (retired)" : ""}
-                </option>
-              ))}
-            </select>
-            <FieldHelp id="sowing-location-help">
-              Where this Sowing is currently kept in your collection, not where
-              its biological material originated.
-            </FieldHelp>
-          </div>
+          <ReferencePicker
+            id="sowing-location"
+            label="Current location"
+            help="Where this Sowing is currently kept in your collection, not where its biological material originated."
+            placeholder="Not recorded"
+            disabled={pending}
+            choices={locationsForScope(locations, "sowings").map(
+              (location) => ({
+                id: location.id,
+                label: location.display_path,
+                retired: Boolean(location.retired_at),
+              }),
+            )}
+            value={form.locationId}
+            onChange={(id) => {
+              updateForm("locationId", id);
+            }}
+          />
         </>
       ),
     },

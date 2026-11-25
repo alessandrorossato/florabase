@@ -16,10 +16,13 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 logger = logging.getLogger(__name__)
 
 AUTH_MUTATIONS = frozenset(
-    f"/api/v1/auth/{action}" for action in ("login", "password", "csrf", "logout")
+    f"/api/v1/auth/{action}"
+    for action in ("login", "password", "csrf", "logout", "device-sessions")
 )
 MAX_PASSWORD_BODY = 32 * 1024
 PASSWORD_PATH = "/api/v1/auth/password"
+DEVICE_SESSIONS_PATH = "/api/v1/auth/device-sessions"
+STRICT_JSON_PATHS = frozenset({PASSWORD_PATH, DEVICE_SESSIONS_PATH})
 
 
 def auth_error(status_code: int, detail: str | dict[str, str]) -> JSONResponse:
@@ -49,6 +52,10 @@ class CredentialRoute(APIRoute):
                     raise FastAPIHTTPException(
                         422,
                         password_error("invalid_password_request", "Check the password fields."),
+                    ) from None
+                if request.url.path == DEVICE_SESSIONS_PATH:
+                    raise FastAPIHTTPException(
+                        422, "Check the login name, password, and device label."
                     ) from None
                 raise FastAPIHTTPException(422, "Check the login name and password.") from None
             except HTTPException as error:
@@ -97,7 +104,7 @@ class AuthSafetyMiddleware:
             await send(message)
 
         try:
-            if path == PASSWORD_PATH:
+            if path in STRICT_JSON_PATHS:
                 request = Request(scope, receive)
                 media_type = request.headers.get("content-type", "").split(";")
                 encoding = request.headers.get("content-encoding", "identity").lower()
@@ -117,12 +124,22 @@ class AuthSafetyMiddleware:
                 # JSON never contains a raw NUL. Reject it before the downstream JSON
                 # parser can auto-detect a UTF-16/32 byte stream as a different encoding.
                 if b"\0" in body:
-                    await invalid_password_request()(scope, receive, send)
+                    if path == PASSWORD_PATH:
+                        await invalid_password_request()(scope, receive, send)
+                    else:
+                        await auth_error(422, "Check the login name, password, and device label.")(
+                            scope, receive, send
+                        )
                     return
                 try:
                     body.decode("utf-8")
                 except UnicodeDecodeError:
-                    await invalid_password_request()(scope, receive, send)
+                    if path == PASSWORD_PATH:
+                        await invalid_password_request()(scope, receive, send)
+                    else:
+                        await auth_error(422, "Check the login name, password, and device label.")(
+                            scope, receive, send
+                        )
                     return
 
                 buffered = True
