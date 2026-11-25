@@ -7,6 +7,7 @@ import {
   DirectorySearch,
   DirectoryFilterSelect,
 } from "./DirectoryTools";
+import { DirectorySortSelect } from "./DirectorySort";
 
 function DirectoryHarness() {
   const [search, setSearch] = useState("basil");
@@ -113,4 +114,34 @@ test("live directory filters count dimensions, dismiss safely, reset together an
     "basil",
   );
   expect(screen.getByRole("button", { name: "Filters" })).toHaveFocus();
+});
+
+test("DirectorySortSelect hides date options in name-only mode and keeps Default order first", () => {
+  const { rerender } = render(
+    <DirectorySortSelect value="" onChange={() => undefined} />,
+  );
+  const nameOnlyOptions = within(
+    screen.getByRole("combobox", { name: "Sort by" }),
+  )
+    .getAllByRole("option")
+    .map((option) => option.textContent);
+  expect(nameOnlyOptions).toEqual(["Default order", "Name A–Z", "Name Z–A"]);
+
+  rerender(
+    <DirectorySortSelect
+      value=""
+      dateLabel="harvest date"
+      onChange={() => undefined}
+    />,
+  );
+  const datedOptions = within(screen.getByRole("combobox", { name: "Sort by" }))
+    .getAllByRole("option")
+    .map((option) => option.textContent);
+  expect(datedOptions).toEqual([
+    "Default order",
+    "Name A–Z",
+    "Name Z–A",
+    "Newest harvest date first",
+    "Oldest harvest date first",
+  ]);
 });

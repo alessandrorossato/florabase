@@ -6,7 +6,9 @@ import {
 } from "../history/state";
 import type { components } from "../api/schema";
 import {
+  directoryNameSorts,
   directorySorts,
+  type DirectoryNameSort,
   type DirectorySort,
 } from "../components/directorySort";
 import {
@@ -66,8 +68,10 @@ export interface DirectoryStates {
     material: string;
     source_type: string;
     identity_id: string;
+    sort: DirectorySort;
   };
   stored_material: {
+    sort: DirectoryNameSort;
     q: string;
     state: string;
     material: string;
@@ -108,8 +112,8 @@ export interface DirectoryStates {
     record: RecordCategory[];
     withRange: boolean;
   };
-  botanical_identities: { q: string };
-  suppliers: { q: string };
+  botanical_identities: { q: string; sort: DirectoryNameSort };
+  suppliers: { q: string; sort: DirectoryNameSort };
   orders: { q: string; supplier_id: string };
   locations: {
     q: string;
@@ -182,8 +186,15 @@ export const defaults: DirectoryStates = {
     type: "all",
     sort: "",
   },
-  harvests: { q: "", material: "", source_type: "", identity_id: "" },
+  harvests: {
+    q: "",
+    material: "",
+    source_type: "",
+    identity_id: "",
+    sort: "",
+  },
   stored_material: {
+    sort: "",
     q: "",
     state: "active",
     material: "",
@@ -201,8 +212,8 @@ export const defaults: DirectoryStates = {
     record: [],
     withRange: false,
   },
-  botanical_identities: { q: "" },
-  suppliers: { q: "" },
+  botanical_identities: { q: "", sort: "" },
+  suppliers: { q: "", sort: "" },
   orders: { q: "", supplier_id: "" },
   locations: { q: "", state: "active", scope: "all" },
   geography: { q: "", mode: "places" },
@@ -234,8 +245,13 @@ const choices: Partial<
     type: ["all", "plant", "group"],
     sort: directorySorts,
   },
-  harvests: { material: materials, source_type: ["plant", "plant_group"] },
+  harvests: {
+    material: materials,
+    source_type: ["plant", "plant_group"],
+    sort: directorySorts,
+  },
   stored_material: {
+    sort: directoryNameSorts,
     state: ["active", "depleted", "all"],
     material: materials,
   },
@@ -294,6 +310,8 @@ const choices: Partial<
     ],
   },
   geography: { mode: ["places", "sites", "map"] },
+  botanical_identities: { sort: directoryNameSorts },
+  suppliers: { sort: directoryNameSorts },
 };
 
 function fieldValue(

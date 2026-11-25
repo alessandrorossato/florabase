@@ -603,6 +603,7 @@ it("uses complete media, identity and metric columns with grouped tools and remo
           document.querySelector(`label[for="${element.id}"]`)?.textContent,
       ),
   ).toEqual([
+    "Sort by",
     "Botanical identity",
     "State",
     "Storage Location",
@@ -757,4 +758,66 @@ it("directory Edit opens the exact inventory's existing editor and returns focus
     expect(document.getElementById("inventory-second-inventory")).toHaveFocus();
   });
   expect(api.saveInventory).not.toHaveBeenCalled();
+});
+
+it("sorts Stored material by name before pagination and round-trips URL state (UX-SORT-001)", async () => {
+  const rows: Inventory[] = [
+    {
+      ...inventory,
+      id: "inv-07",
+      harvest_item_id: "item-07",
+      harvest_title: "Batch 07",
+    },
+    ...Array.from({ length: 25 }, (_, i) => i + 1)
+      .filter((n) => n !== 7)
+      .map((n) => ({
+        ...inventory,
+        id: `inv-${String(n).padStart(2, "0")}`,
+        harvest_item_id: `item-${String(n).padStart(2, "0")}`,
+        harvest_title: `Batch ${String(n).padStart(2, "0")}`,
+      })),
+  ];
+  vi.mocked(api.inventoryList).mockResolvedValue(rows);
+  window.history.replaceState(null, "", "#/harvests?tab=stored-material");
+  const user = userEvent.setup();
+  const { unmount } = wrap(<StoredMaterialDirectory />);
+
+  const list = () =>
+    screen.getByRole("list", { name: "Stored material directory" });
+  const first = () => within(list()).getAllByRole("listitem")[0];
+
+  await screen.findByRole("list", { name: "Stored material directory" });
+  expect(first()).toHaveTextContent("Batch 07");
+
+  const sort = screen.getByRole("combobox", { name: "Sort by" });
+  expect(
+    within(sort)
+      .getAllByRole("option")
+      .map((option) => option.textContent),
+  ).toEqual(["Default order", "Name A–Z", "Name Z–A"]);
+
+  await user.selectOptions(sort, "name_desc");
+  expect(window.location.hash).toContain("sort=name_desc");
+  expect(first()).toHaveTextContent("Batch 25");
+
+  await user.click(screen.getByRole("button", { name: "Next page" }));
+  expect(first()).toHaveTextContent("Batch 05");
+
+  await user.selectOptions(sort, "name");
+  expect(window.location.hash).toContain("sort=name");
+  expect(first()).toHaveTextContent("Batch 01");
+
+  // URL round-trip
+  unmount();
+  window.history.replaceState(
+    null,
+    "",
+    "#/harvests?tab=stored-material&sort=name_desc",
+  );
+  wrap(<StoredMaterialDirectory />);
+  await screen.findByRole("list", { name: "Stored material directory" });
+  expect(screen.getByRole("combobox", { name: "Sort by" })).toHaveValue(
+    "name_desc",
+  );
+  expect(first()).toHaveTextContent("Batch 25");
 });

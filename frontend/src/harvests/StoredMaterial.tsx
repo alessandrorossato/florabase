@@ -32,6 +32,8 @@ import { TaskDialog } from "../components/TaskDialog";
 import { LifecycleStatus, StatusBadge } from "../components/WorkspaceUI";
 import { RecordIdentities } from "../components/recordPresentation";
 import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { DirectorySortSelect } from "../components/DirectorySort";
+import { sortDirectory } from "../components/directorySort";
 import { formatPartialDate } from "../events/eventData";
 import { labelComposerHref } from "../labels/labelData";
 import { RecordVisual } from "../photos/RecordVisual";
@@ -552,6 +554,7 @@ export function StoredMaterialDirectory({
     location,
     identity,
     state,
+    view.state.sort,
   ]);
 
   useEffect(() => {
@@ -586,9 +589,15 @@ export function StoredMaterialDirectory({
         .includes(query.trim().toLocaleLowerCase()),
   );
   const matching = filtered ?? [];
-  const pagination = useDirectoryPagination(matching, pageFilterKey);
+  const ordered = sortDirectory(
+    matching,
+    view.state.sort,
+    (row) =>
+      `${materials.find((m) => m.id === row.material_kind)?.label ?? row.material_kind} · ${row.harvest_title}`,
+  );
+  const pagination = useDirectoryPagination(ordered, pageFilterKey);
   const { visible: pageRows } = pagination;
-  const bulkChoices = (filtered ?? []).map((row) => ({
+  const bulkChoices = ordered.map((row) => ({
     kind: "harvest_inventory" as const,
     id: row.id,
     label: `Stored ${row.material_kind} · ${row.harvest_title} · ${row.source.botanical_identity.display_label}`,
@@ -648,6 +657,14 @@ export function StoredMaterialDirectory({
             placeholder="Harvest, source or botanical identity"
             value={query}
             onChange={setQuery}
+          />
+        }
+        sort={
+          <DirectorySortSelect
+            value={view.state.sort}
+            onChange={(value) => {
+              view.update("sort", value);
+            }}
           />
         }
         savedViews={
