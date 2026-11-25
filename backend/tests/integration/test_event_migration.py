@@ -122,6 +122,8 @@ def test_event_database_invariants_and_restrictive_references(
         "death",
         "loss",
         "discarded",
+        "watering",
+        "feeding",
         "other",
     ):
         _insert(database_connection, plant_id=plant_id, kind=kind)
@@ -144,7 +146,7 @@ def test_event_database_invariants_and_restrictive_references(
         _insert(database_connection, plant_id=plant_id, **date_values)
     _reject(database_connection)
     _reject(database_connection, plant_id=plant_id, plant_group_id=uuid7())
-    _reject(database_connection, plant_id=plant_id, kind="watering")
+    _reject(database_connection, plant_id=plant_id, kind="misting")
     _reject(database_connection, plant_id=plant_id, kind="movement")
     _reject(database_connection, plant_id=plant_id, destination_location_id=location_id)
     _reject(database_connection, plant_id=plant_id, occurred_on_month=5)

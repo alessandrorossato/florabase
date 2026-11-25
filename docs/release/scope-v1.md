@@ -125,7 +125,7 @@ recommendation and await an explicit ruling.
 | ENG-04 | Request identifier logging and an unhandled-error log | |
 | ENG-06 | A real-browser smoke test on the production images | |
 | FN-02 | Sorting in the Seeds, Sowings and Plants directories | |
-| FN-03 | Watering and feeding Journal kinds | Decision 5: dropped if they threaten the release |
+| FN-03 | Watering and feeding Journal kinds | Delivered with `CARE-BULK-001` (migration `20261125_0049_event_care_kinds.py`; evidence in [`care-bulk-001.md`](evidence/care-bulk-001.md)) |
 | FN-04 | Searchable pickers for large reference lists | |
 | FN-07 | PWA installation verified on physical devices | Otherwise labelled experimental |
 | DOC-06 | Documentation reorganisation and archive | |

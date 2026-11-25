@@ -2,8 +2,9 @@
 
 - **Branch:** `feat/ux-sort-002` from `feat/fn-05-directory-sort`
   `760283a6ed05f9b65111b5c25720dfd6bb13c02c` (UX-SORT-001, carried by batch 13 and not yet on
-  `main`). It reuses that branch's `DirectorySortSelect`, `DirectorySort` types and saved-view sort
-  fields, so it delivers after batch 13 merges.
+  `main` then). It reuses that branch's `DirectorySortSelect`, `DirectorySort` types and saved-view
+  sort fields. After batch 13 landed as `08ff2f9` (#227) the branch merged `origin/main`; conflicts
+  were additive (saved-view state, features/scope registers, `progress.md` kept both).
 - **Writer:** `claude-ux-sort-002`
 - **Feature:** `UX-SORT-002` (`implemented`; proposed release class `best-effort` in
   [`docs/release/scope-v1.json`](../scope-v1.json), next to `UX-SORT-001`)

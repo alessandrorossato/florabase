@@ -122,10 +122,11 @@ class StoredMaterialState(TextState):
     location_id: UUID | None = None
 
 
+EventCategory = Literal["care", "observations", "cultivation", "status"]
+
+
 class EventState(TextState):
-    category: list[Literal["observations", "cultivation", "status"]] = Field(
-        default_factory=list, max_length=3
-    )
+    category: list[EventCategory] = Field(default_factory=list, max_length=4)
 
     @field_validator("category", mode="before")
     @classmethod
@@ -134,10 +135,8 @@ class EventState(TextState):
 
     @field_validator("category")
     @classmethod
-    def ordered_entries(
-        cls, value: list[Literal["observations", "cultivation", "status"]]
-    ) -> list[Literal["observations", "cultivation", "status"]]:
-        return [item for item in ("observations", "cultivation", "status") if item in value]
+    def ordered_entries(cls, value: list[EventCategory]) -> list[EventCategory]:
+        return [item for item in ("care", "observations", "cultivation", "status") if item in value]
 
 
 class HistoryState(TextState):

@@ -2,8 +2,8 @@
 
 ## 2026-11-25 — UX-SORT-002 server-side Sort by for Orders, Media and Cuttings
 
-- On `feat/ux-sort-002` from `feat/fn-05-directory-sort` `760283a` (UX-SORT-001, batch 13, not yet
-  on `main`); delivers after batch 13 merges. Writer `claude-ux-sort-002`.
+- On `feat/ux-sort-002` from `feat/fn-05-directory-sort` `760283a` (UX-SORT-001), realigned by
+  merging `origin/main` `08ff2f9` (batch 13, #227). Writer `claude-ux-sort-002`.
 - Added `backend/src/florabase/db/ordering.py` (`DirectorySort`, `directory_order()`) and an optional
   whitelisted `sort` (`name`, `name_desc`, `newest`, `oldest`; anything else 422) on
   `/api/v1/orders`, `/api/v1/media-assets`, `/api/v1/vegetative-lots` and
@@ -19,8 +19,125 @@
 - Focused checks: ruff/mypy, pnpm format/lint/typecheck, vitest (orders, media, cuttings, saved views,
   components), backend unit tests, `make api-check`, and PostgreSQL integration for
   `test_directory_sort.py` plus the orders, cuttings API, shared media and saved-view suites (68
-  passed). The
-  canonical `make feature-verify` is run by the operator.
+  passed). The canonical `make feature-verify` is run by the operator.
+
+## 2026-11-25 — Batch 13 integration (DOCS-004, PROPAGATION-BATCH-001, CARE-BULK-001/FN-03, UX-SORT-001, MEDIA-FETCH-001)
+
+- `ci/batch-13` from `origin/main` `b632c5c` (writer `claude-batch-13`) merges, in order,
+  `docs/docs-004-batch12-followups` `40e204b`, `feat/propagation-batch-001` `7022f8e`,
+  `feat/care-bulk-001` `3490d18`, `feat/fn-05-directory-sort` `760283a` and
+  `fix/media-fetch-001` `d2321c1`; only `docs/progress.md` conflicted and was resolved additively.
+  The PROPAGATION-BATCH-001 milestone (source based on older `1a78476`) is moved back into merge
+  order. Single Alembic head `20261125_0049` on `20261123_0048`. Evidence:
+  [wf-04-batch-13.md](release/evidence/wf-04-batch-13.md).
+- Checks on the integrated tree: `make api-generate` (no drift), `check-features.py` and
+  `make check`. Canonical FULL follows the recorded exact-head review.
+
+## 2026-11-24 — Batch 12 documentation follow-ups (`DOCS-004`)
+
+- On `docs/docs-004-batch12-followups` from `origin/main` `1a78476` (writer `antigravity-neon`),
+  docs-only third source for Batch 13.
+- Updated [docs/features.json](features.json) entry `WF-BATCH-PROGRESS-001` so the first acceptance
+  criterion states that entries inserted below `# Engineering progress` by two sources are both
+  retained in merge order below the heading (matching `scripts/feature_batch.py`
+  `additive_progress()`); checked `docs/development-workflow.md` and `docs/progress.md` (neither
+  contained the wrong wording) and left historic manifests under `docs/release/evidence/batches/`
+  untouched.
+- Rewrote the optional botanical reference datasets snippet and intro sentence in
+  [docs/installation.md](installation.md) so operators add the two `environment` list items and the
+  `volumes` list item to the existing `backend` service lists without duplicating `environment:` or
+  `volumes:` keys, keeping exact paths and environment variable names.
+- Registered `DOCS-004` (`implemented`, proposed release class `best-effort`) next to `DOCS-003`
+  (not at the tail) in `docs/features.json` and `docs/release/scope-v1.json`. Evidence:
+  [docs-004.md](release/evidence/docs-004.md).
+- Checks: `make doc-links`, `python3 ./scripts/check-features.py`, `make verification-plan FORMAT=json`
+  (`tier: docs`), and canonical `make feature-verify AGENT_ID=antigravity-neon` (`docs` tier) on the
+  frozen tip.
+
+## 2026-11-24 — Batch pot-on and PlantGroup split (`PROPAGATION-BATCH-001`)
+
+- On `feat/propagation-batch-001` from `origin/main` `1a78476` (writer `neon-propagation-batch-001`).
+  No database migration, no new receipt kind or grouping ID, and `propagation/reversal.py` and
+  `SowingDescendantWizard.tsx` remain untouched.
+- Backend: added pure label-pattern module `backend/src/florabase/propagation/labels.py` (single-line
+  normalization, `{n}` expansion with `counter_start`/`counter_padding`, 1–200 count limit, ≤255-char
+  expanded-label validation); `POST /api/v1/sowings/{sowing_id}/pot-on` (`potOnSowing`) in
+  `propagation/api.py` backed by `create_plants_from_sowing_batch` at the end of
+  `propagation/service.py` (locks sowing once, checks `expected_sowing_updated_at` → 409
+  `stale_preview`, rejects inactive/reversed sowings with 409, writes one existing `SOWING_TO_PLANT`
+  receipt per created Plant in a single transaction, and applies `resulting_sowing_lifecycle` only on
+  the Nth iteration so `REVERSAL-001` newest-first reversal restores Sowing and SeedLot);
+  `POST /api/v1/plant-groups/{plant_group_id}/extract-batch` (`extractPlantsFromGroup`) in
+  `plants/api.py` backed by `PlantGroupExtractBatchCreate`/`PlantGroupExtractBatchResponse` and
+  `extract_plants_batch` appended at the end of `plants/schemas.py` and `plants/service.py` (loops
+  existing `extract_plant`, caps exact-quantity groups at current quantity, allows approximate/unknown
+  groups up to 200, preserves `PLANT-006` newest-first reintegration, rolls back atomically on
+  mid-batch failure). Regenerated `backend/openapi.json` and `frontend/src/api/schema.d.ts`.
+- Frontend: added `frontend/src/propagation/api.ts` and `frontend/src/propagation/PotOnDialog.tsx`
+  with Sowing mode (N individual Plants via `potOnSowing` or one PlantGroup of N via existing
+  `createPlantGroupFromSowing`), germinated hint, live `{n}` preview (first 3 + last), no-`{n}`
+  warning, `ReferencePicker` identity/location selectors, smart Completed default when N ≥ germinated,
+  explicit preview/confirm sentence, 409 `stale_preview` refresh, and links to created records;
+  added minimal launchers in `sowings/SowingScreen.tsx` ("Pot on seedlings…") and
+  `plants/PlantScreen.tsx` ("Split into plants…").
+- Docs & manifests: updated `docs/domain-model.md`, registered `PROPAGATION-BATCH-001` (`implemented`,
+  proposed class `best-effort`) right after `PROPAGATION-003` in `docs/features.json` and
+  `docs/release/scope-v1.json`, and committed evidence in
+  [propagation-batch-001.md](release/evidence/propagation-batch-001.md).
+- Focused checks: `ruff format --check`, `ruff check`, `mypy` (0 issues), backend unit suite
+  `backend/tests/propagation/test_propagation_batch.py` (8 passed) and `test_propagation.py` (16
+  passed), `scripts/test_check_api_routes.py` (27 passed), PostgreSQL integration
+  `backend/tests/integration/propagation/test_propagation_batch_api.py` (4 passed, incl. 12-plant
+  pot-on + newest-first full reversal back to SeedLot, 5-plant exact split + newest-first
+  reintegration, approximate split, mid-batch rollback, owner/CSRF), `make api-check` (no drift),
+  frontend `pnpm typecheck`, `pnpm lint`, Prettier, Vitest (`PotOnDialog`, `GuidedForms`,
+  `SowingScreen`, `PlantScreen` — 4 files, 135 passed), `scripts/check-features.py` (187 valid),
+  `scripts/check-doc-links.py`, and headless Chromium visual checks at 1440×900 and 375×812 (zero
+  overflow). Canonical `make feature-verify AGENT_ID=neon-propagation-batch-001` (`affected` tier)
+  runs on the frozen committed tip.
+
+## 2026-11-25 — CARE-BULK-001 + FN-03 bulk care logging, batch undo, and Watering/Feeding Journal kinds
+
+- On `feat/care-bulk-001` from `origin/main` `b632c5c` (writer `neon`), scoped cleanly for Batch 13
+  alongside `feat/propagation-batch-001` and `docs/docs-004-batch12-followups`.
+- Added linear Alembic migration `20261125_0049_event_care_kinds.py` (`down_revision =
+  "20261123_0048"`): acquires `LOCK TABLE events IN ACCESS EXCLUSIVE MODE`, recreates
+  `ck_events_kind` with `watering` and `feeding` (`FN-03`), adds nullable `batch_id uuid`, and
+  creates partial index `ix_events_batch_id WHERE batch_id IS NOT NULL`; downgrade refuses with an
+  explicit error when watering or feeding events exist before removing the index/column and
+  restoring the prior constraint.
+- Extended `events/model.py` (`EventKind.WATERING`, `EventKind.FEEDING`, `batch_id`) and
+  `events/service.py` (`create_event(..., batch_id: UUID | None = None)` with matching
+  `created_at`/`updated_at` at creation and strictly advancing `updated_at` on edits). Marked
+  `watering` and `feeding` as informational retainable observations for propagation creation
+  reversal (`propagation/reversal.py`) and PlantGroup reintegration (`plants/service.py`,
+  `plants/schemas.py`).
+- Added bulk care backend modules `bulk/care_schemas.py`, `bulk/care_service.py`, and
+  `bulk/care_api.py` (wired in `api/router.py` without touching BULK-001):
+  `POST /api/v1/bulk/care/preview`, `POST /api/v1/bulk/care/apply`, and
+  `DELETE /api/v1/bulk/care/batches/{batch_id}` (owner + CSRF, allowed kinds
+  `watering`/`feeding`/`treatment`/`repotting`/`pruning`/`observation`/`other`, max 500 targets,
+  selection or Location subtree CTE with ordered locking, SHA-256 `target_signature` → `409
+  stale_preview`, empty/all-skipped → `422 nothing_to_log`, undo deleting only unedited events and
+  returning kept edited ones). Regenerated `backend/openapi.json` and `frontend/src/api/schema.d.ts`
+  (`make api-check` clean).
+- Added frontend `bulk/careApi.ts` and `bulk/BulkCare.tsx` (`BulkCareDialog` with Today preselected
+  via `OccurrenceDateChoice`, preview summary + skipped list, stale-preview refresh, and
+  `BulkCareSuccessNotice` with **Undo**), wired `"Log care…"` in `BulkToolbar`
+  (`bulk/BulkLocation.tsx`, shown only when every selected record is a Plant or PlantGroup), wired
+  `"Log care for everything here…"` on active Locations (`locations/LocationScreen.tsx`), and added
+  Watering/Feeding + the **Care** filter group to `events/eventData.ts` and
+  `events/EventJournal.tsx`. With operator approval (2026-11-25), extended `events.category` in
+  `frontend/src/saved-views/state.ts` and `backend/src/florabase/saved_views/state.py` to accept
+  `"care"` (`max_length=4`) while preserving existing three-category Saved Views unchanged.
+  Optional stretch (global Journal batch collapsing) was intentionally skipped to stay within the
+  file boundary.
+- Updated `docs/domain-model.md`, `docs/bulk-operations.md`, `docs/features.json` (`FN-03` and
+  `CARE-BULK-001` placed right after `EVENT-002`, status `implemented`), `docs/release/scope-v1.json`
+  (both `best-effort` right after `EVENT-002`), `docs/release/scope-v1.md`, and
+  [`docs/release/evidence/care-bulk-001.md`](release/evidence/care-bulk-001.md). Verified desktop
+  (`1280×800`) and phone (`390×844`) dialog captures with zero horizontal overflow; canonical FULL
+  `make feature-verify AGENT_ID=neon` runs on the frozen committed tree.
 
 ## 2026-11-25 — UX-SORT-001 directory sort toolbar alignment and directory rollout
 
@@ -49,6 +166,21 @@
   takeover) because `FN-05` is already the release task for Journal Today preselection with its own
   record in `docs/release/evidence/fn-05.md`; that record is unchanged. Evidence:
   [ux-sort-001.md](release/evidence/ux-sort-001.md).
+
+## 2026-11-25 — MEDIA-FETCH-001 Wikipedia/Wikimedia local copies
+
+- On `fix/media-fetch-001` from `origin/main` `b632c5c` (writer `claude-media-fetch`). No migration,
+  no OpenAPI change.
+- `media/fetch.py` now sends `Florabase/<__version__> media-copy (+https://github.com/alessandrorossato/florabase)`
+  on every request and redirect, rewrites Wikipedia/Wikimedia `/wiki/File:` pages (canonical and
+  localized namespaces) to `Special:FilePath` before fetching, and reports a 200 `text/html` page with
+  a direct-address message. `ExternalAssetCreate`, record-photo `ExternalImageWrite` (create and
+  update) and identity-cover `ExternalCoverWrite` store the rewritten `image_url` and keep the
+  operator's `source_url`; Media metadata edits cannot change `image_url`.
+- Focused: `tests/test_media_fetch.py`, `test_media.py`, `test_media_copies.py`,
+  `test_collection_photos.py`, `test_identity_covers.py`, `test_primary_photo.py` (122 passed),
+  ruff, ruff format, mypy. Evidence:
+  `docs/release/evidence/media-fetch-001.md`.
 
 ## 2026-11-23 — MOBILE-002 device sign-in, Keystore plugin, and compatibility contract (PWA preserved)
 
