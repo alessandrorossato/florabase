@@ -4,10 +4,11 @@ from enum import StrEnum
 from typing import Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from florabase.collection_photos.schemas import PrimaryPhotoResponse
 from florabase.plants.model import DirectOriginKind, PlantGroupLifecycle, PlantLifecycle
+from florabase.propagation.labels import MAX_BATCH_COUNT, expand_label_pattern
 from florabase.provenance_sites.schemas import ProvenanceSiteSummary
 from florabase.seed_lots.model import PartialDatePrecision
 from florabase.seed_lots.schemas import PartialDate
@@ -264,7 +265,7 @@ class ReintegrationReason(BaseModel):
 
 class RetainedObservation(BaseModel):
     id: UUID
-    kind: Literal["observation", "flowering", "fruiting", "measurement"]
+    kind: Literal["observation", "flowering", "fruiting", "measurement", "watering", "feeding"]
     occurred_on: PartialDate | None
     notes: str | None
 
@@ -295,3 +296,47 @@ class PlantGroupResponse(PlantCommonResponse):
 
 
 assert {item.value for item in PartialDatePrecision} == {"year", "month", "day"}
+
+
+class PlantGroupExtractBatchCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    count: int = Field(ge=1, le=MAX_BATCH_COUNT)
+    label_pattern: str | None = Field(default=None, max_length=255)
+    counter_start: int = Field(default=1, ge=0, le=1_000_000)
+    counter_padding: int | None = Field(default=None, ge=0, le=255)
+    botanical_identity_id: UUID | None = None
+    location_id: UUID | None = None
+    collection_entry_date: PartialDate | None = None
+    notes: str | None = Field(default=None, max_length=20_000)
+    expected_plant_group_updated_at: AwareDatetime | None = None
+
+    @field_validator("label_pattern", mode="before")
+    @classmethod
+    def normalize_batch_label_pattern(cls, value: object) -> object:
+        if value is not None and not isinstance(value, str):
+            return value
+        return _single_line(value)
+
+    @field_validator("notes", mode="before")
+    @classmethod
+    def normalize_batch_extraction_notes(cls, value: object) -> object:
+        if value is not None and not isinstance(value, str):
+            return value
+        return _notes(value)
+
+    @model_validator(mode="after")
+    def validate_batch_labels(self) -> Self:
+        expand_label_pattern(
+            self.label_pattern,
+            count=self.count,
+            counter_start=self.counter_start,
+            counter_padding=self.counter_padding,
+        )
+        return self
+
+
+class PlantGroupExtractBatchResponse(BaseModel):
+    plant_group: PlantGroupResponse
+    plants: list[PlantResponse]
+    event_ids: list[UUID]

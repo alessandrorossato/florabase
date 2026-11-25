@@ -5,12 +5,6 @@ Notable changes to Florabase, newest first. Versions follow the
 [docs/progress.md](docs/progress.md); this file lists what an operator of an installation needs
 to know.
 
-## Unreleased
-
-### Added
-
-- End-user guide (`docs/user-guide/`).
-
 ## v0.1.0-beta.9 — 2026-11-24
 
 Prerelease of the private beta series: changes since `v0.1.0-beta.8`. No database migrations

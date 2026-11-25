@@ -21,6 +21,8 @@ from florabase.events.schemas import EventCreate, EventUpdate
         "death",
         "loss",
         "discarded",
+        "watering",
+        "feeding",
         "other",
     ],
 )
@@ -54,7 +56,7 @@ def test_movement_destination_is_whole_payload_invariant() -> None:
     with pytest.raises(ValidationError):
         EventUpdate(kind="observation", destination_location_id=location_id)
     with pytest.raises(ValidationError):
-        EventCreate.model_validate({"kind": "watering"})
+        EventCreate.model_validate({"kind": "misting"})
     with pytest.raises(ValidationError):
         EventCreate.model_validate({"kind": "observation", "plant_id": str(uuid7())})
 

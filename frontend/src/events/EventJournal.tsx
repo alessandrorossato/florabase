@@ -53,7 +53,7 @@ type TimelineState =
   | { status: "loading" }
   | { status: "ready"; events: EventResponse[] }
   | { status: "error" };
-type EventFilter = "all" | "observations" | "cultivation" | "status";
+type EventFilter = "all" | "care" | "observations" | "cultivation" | "status";
 type MutationState =
   | { status: "idle" }
   | { status: "pending" }
@@ -87,6 +87,8 @@ const kindOfPhase = (phase: Phenophase) =>
 
 const eventKindLabels: Record<EventKind, string> = {
   observation: "Observation",
+  watering: "Watering",
+  feeding: "Feeding",
   movement: "Movement",
   repotting: "Repotting",
   flowering: "Flowering",
@@ -105,6 +107,7 @@ const eventKindLabels: Record<EventKind, string> = {
 };
 
 const filterKinds: Record<Exclude<EventFilter, "all">, EventKind[]> = {
+  care: ["watering", "feeding"],
   observations: ["observation", "flowering", "fruiting", "measurement"],
   cultivation: [
     "movement",
@@ -576,26 +579,28 @@ export function EventJournal({
         <>
           <fieldset className="lifecycle-filter event-filters">
             <legend>Filter Journal entries</legend>
-            {(["all", "observations", "cultivation", "status"] as const).map(
-              (item) => (
-                <button
-                  key={item}
-                  type="button"
-                  aria-pressed={filter === item}
-                  onClick={() => {
-                    setFilter(item);
-                  }}
-                >
-                  {item === "all"
-                    ? "All"
+            {(
+              ["all", "care", "observations", "cultivation", "status"] as const
+            ).map((item) => (
+              <button
+                key={item}
+                type="button"
+                aria-pressed={filter === item}
+                onClick={() => {
+                  setFilter(item);
+                }}
+              >
+                {item === "all"
+                  ? "All"
+                  : item === "care"
+                    ? "Care"
                     : item === "observations"
                       ? "Observations"
                       : item === "cultivation"
                         ? "Cultivation"
                         : "Status"}
-                </button>
-              ),
-            )}
+              </button>
+            ))}
           </fieldset>
           <HeightHistory events={visible} />
           {(filter === "all" || filter === "observations") && (

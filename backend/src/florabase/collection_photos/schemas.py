@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from florabase.media.fetch import wikimedia_file_url
+
 
 def normalize_text(value: str | None) -> str | None:
     if value is None:
@@ -96,6 +98,11 @@ class ExternalImageWrite(PhotoMetadataWrite):
             return value
         return validate_https_url(value)
 
+    @field_validator("image_url")
+    @classmethod
+    def direct_image_url(cls, value: str) -> str:
+        return wikimedia_file_url(value)
+
     @field_validator("attribution", mode="before")
     @classmethod
     def require_attribution(cls, value: object) -> object:
@@ -131,6 +138,11 @@ class ExternalCoverWrite(BaseModel):
         if not isinstance(value, str):
             return value
         return validate_external_cover_url(value)
+
+    @field_validator("image_url")
+    @classmethod
+    def direct_image_url(cls, value: str) -> str:
+        return wikimedia_file_url(value)
 
     @field_validator("licence_url", mode="before")
     @classmethod

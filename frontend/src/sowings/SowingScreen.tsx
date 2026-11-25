@@ -51,6 +51,7 @@ import { LifecycleStatus, StatusBadge } from "../components/WorkspaceUI";
 import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
 import { RecordVisual } from "../photos/RecordVisual";
 import { CreationReversal } from "../propagation/CreationReversal";
+import { PotOnLauncher } from "../propagation/PotOnDialog";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { RecordTimeline } from "../timeline/RecordTimeline";
@@ -316,12 +317,14 @@ function Detail({
   onEdit,
   initialTab,
   reversalAction,
+  potOnAction,
 }: {
   sowing: SowingResponse;
   headingRef: RefObject<HTMLHeadingElement | null>;
   onEdit: (trigger: HTMLButtonElement) => void;
   initialTab?: string;
   reversalAction?: ReactNode;
+  potOnAction?: ReactNode;
 }) {
   const recordName = useRecordName();
   const auth = useAuth();
@@ -496,6 +499,7 @@ function Detail({
               >
                 Create Plant
               </a>
+              {potOnAction}
               <a
                 className="button-link button--secondary"
                 href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=group`}
@@ -2075,6 +2079,26 @@ export function SowingScreen({
                       key={selected.id}
                       sowing={selected}
                       headingRef={detailHeading}
+                      potOnAction={
+                        <PotOnLauncher
+                          source={{ kind: "sowing", sowing: selected }}
+                          locations={references.locations}
+                          fallbackFocusTo={detailHeading}
+                          onSowingUpdated={(updated) => {
+                            setDetail({ status: "ready", sowing: updated });
+                            setCollection((current) =>
+                              current.status === "ready"
+                                ? {
+                                    ...current,
+                                    sowings: current.sowings.map((value) =>
+                                      value.id === updated.id ? updated : value,
+                                    ),
+                                  }
+                                : current,
+                            );
+                          }}
+                        />
+                      }
                       reversalAction={
                         <CreationReversal
                           inMoreMenu

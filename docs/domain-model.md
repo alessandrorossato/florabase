@@ -442,6 +442,23 @@ a descendant never completes a Sowing automatically. `germinated_count` remains 
 operator-entered current observation and is neither rewritten nor required to equal materialized
 descendants.
 
+Batch pot-on (`PROPAGATION-BATCH-001`) extends this workflow to create 1–200 individual Plants from
+an active Sowing (or split 1–200 individual Plants from an active PlantGroup) in one database
+transaction without introducing a new receipt kind or grouping identifier. For a Sowing batch, the
+Sowing row is locked once, optimistic concurrency rejects a stale `expected_sowing_updated_at`
+snapshot (`stale_preview`), and one existing `SOWING_TO_PLANT` receipt is written per created Plant.
+Iterations 1 through N−1 leave the Sowing lifecycle unchanged (`before_lifecycle == after_lifecycle`);
+only the Nth iteration applies `resulting_sowing_lifecycle`. Reversal therefore remains
+`REVERSAL-001` newest-first per source: reversing the newest created Plant restores the Sowing's
+prior lifecycle, and reversing every created Plant newest-first returns the Sowing (and, once
+reversed, its SeedLot) to the original state. There is no whole-batch reversal operation.
+`germinated_count` remains an advisory UI hint and is never enforced as a backend cap. For an active
+PlantGroup batch split, the locked group loops the existing single-Plant extraction (one extraction
+Event and one `PLANT_GROUP_EXTRACTION` receipt per Plant), capping exact-quantity groups at their
+current exact count while allowing approximate or unknown groups up to 200 without modifying group
+quantity; `PLANT-006` newest-first reintegration remains unchanged. Any failure mid-batch rolls back
+the entire transaction.
+
 The protected Sowing propagation summary derives descendants only from stored immediate Sowing and
 PlantGroup-extraction links. Every Plant with that explicit ancestry contributes exactly one tracked
 individual. An exact PlantGroup contributes its current exact quantity; approximate and unknown
@@ -495,10 +512,10 @@ confirmation nor Event deletion may override a database or numerical invariant.
 
 `PLANT-006` compensates only the recorded extraction of a Plant back into its immutable originating
 PlantGroup, never arbitrary group membership. Eligibility is proven by the applied extraction
-receipt and is safe, confirmation-required, or blocked. Retainable observation, flowering, and
-fruiting Events require confirmation and remain on the historical Plant; lifecycle, identity,
-Location, transfer, produced SeedLot, lineage, later group operation, or source-group snapshot
-changes block restoration rather than being overwritten.
+receipt and is safe, confirmation-required, or blocked. Retainable observation, watering, feeding,
+flowering, and fruiting Events require confirmation and remain on the historical Plant; lifecycle,
+identity, Location, transfer, produced SeedLot, lineage, later group operation, or source-group
+snapshot changes block restoration rather than being overwritten.
 
 Successful reintegration restores the receipt's exact captured PlantGroup before-state, including
 lifecycle and exact, approximate, or unknown count representation, without inverse arithmetic. The
@@ -556,10 +573,19 @@ authorization. Sowing, Event, BotanicalIdentity, and reference records are not l
 
 An Event is an explicitly recorded historical occurrence for exactly one Plant or PlantGroup. It
 has a UUIDv7 identity, a controlled kind, an optional year/month/day-precision occurrence date,
-optional notes, and exact UTC creation/update timestamps. The initial vocabulary is observation,
-movement, repotting, flowering, fruiting, pruning, treatment, harvest, extraction, transfer, death,
-loss, discarded, reintegration, measurement, and other. Collection observations remain separate from
-BotanicalProfile reference knowledge.
+optional notes, an optional nullable `batch_id` linking per-target Events created by one bulk care
+operation (no separate batch entity), and exact UTC creation/update timestamps. The controlled
+vocabulary is observation, watering, feeding, movement, repotting, flowering, fruiting, pruning,
+treatment, harvest, extraction, transfer, death, loss, discarded, reintegration, measurement, and
+other. Watering and feeding (`FN-03`) are non-state-changing care kinds usable on both single
+Journal entries and bulk care operations (`CARE-BULK-001`), and count as informational retainable
+events for propagation reversal and PlantGroup reintegration (confirmation-required rather than
+blocking). Undoing a bulk care batch (`DELETE /api/v1/bulk/care/batches/{batch_id}`) enforces the same
+per-event deletion guards as single Event deletion (attached photos, linked scheduled activities,
+operation ownership, harvest ownership) and deletes only unedited, unguarded events in the batch
+(`updated_at == created_at`); kept events are listed with their structured reason (`edited`,
+`has_photos`, `linked_to_schedule`, `operation_owned`, or `harvest_owned`). Collection observations
+remain separate from BotanicalProfile reference knowledge.
 
 A measurement Event (MEASUREMENT-001) records one Plant height as an exact positive decimal with its
 recorded unit (`mm`, `cm` or `m`), an approximation flag and a required PartialDate. It never
@@ -602,9 +628,9 @@ Event, and marks the receipt reversed in one transaction. Other operation receip
 
 Plant and PlantGroup detail pages expose the same protected Event journal. Desktop presents the
 API-ordered history as a vertical timeline, while narrow screens use compact wrapping cards. The UI
-supports All, Observations (observation, flowering, fruiting), Cultivation (movement, repotting,
-pruning, treatment, harvest, extraction, reintegration), and Status (transfer, death, loss,
-discarded) filters;
+supports All, Care (watering, feeding), Observations (observation, flowering, fruiting), Cultivation
+(movement, repotting, pruning, treatment, harvest, extraction, reintegration), and Status (transfer,
+death, loss, discarded) filters;
 `other` remains in All.
 Creation explains current-state effects, and correction/deletion explains the non-event-sourced
 boundary. A protected global Event read endpoint uses the same deterministic ordering and includes
