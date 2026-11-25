@@ -100,8 +100,17 @@ are unchanged: metadata, release, the WFO format version and the WFO seal.
   this is ordinary base maintenance.
 - A file with the exact expected schema but crafted B-tree contents still reaches SQLite's core
   parser. That is SQLite's documented corrupt-database threat model, mitigated by defensive mode
-  and `cell_size_check`. Building the index yourself (provenance) remains the primary control; see
-  the [installation guide](../../installation.md#optional-botanical-reference-datasets).
-- A writer that ignores SQLite locking and rewrites the file in place while it is open would need
-  write access to the root-owned, read-only-mounted `reference/` directory, which is host-root
-  level.
+  and `cell_size_check`. Provenance remains the primary control: either building the index yourself
+  or letting `FLORABASE_REFERENCES_SETUP=auto` (`REF-SETUP-001`) build it in-container with
+  Florabase's own builders from pinned official archives whose SHA-256 checksums, member lists and
+  sizes are verified before any parsing; see the
+  [installation guide](../../installation.md#optional-botanical-reference-datasets).
+- **Managed directory trade-off (`REF-SETUP-001`):** Under `FLORABASE_REFERENCES_SETUP=auto`, the
+  managed directory `/var/lib/florabase/data/state/reference/` is owned by the backend container
+  user (`10001:10001`, mode `0700`, writable) rather than a root-owned read-only mount. A
+  compromised backend process could therefore modify files inside `state/reference/` (which
+  previously required host-root write access). Mitigations: mandatory `.sha256` seal verification
+  for both WFO and managed WCVP v16 (`require_seal=True` unconditionally for managed paths), the
+  exact `sqlite_schema` contract and hardened read-only connection checks on every open, and
+  retained support for manual root-owned `:ro` mounts (`FLORABASE_WFO_SNAPSHOT_PATH` /
+  `FLORABASE_WCVP_V16_SNAPSHOT_PATH`) for operators who prefer strict read-only separation.

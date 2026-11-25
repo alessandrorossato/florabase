@@ -9,15 +9,16 @@ import json
 import os
 import sqlite3
 import tempfile
-import time
 from collections.abc import Iterable, Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 from zipfile import ZipFile
 
-import httpx
-
-from florabase.core.reference_index import open_reference_index
+from florabase.core.reference_index import (
+    DEFAULT_DOWNLOAD_MAX_SECONDS,
+    download_archive,
+    open_reference_index,
+)
 from florabase.native_range_enrichment.source import (
     DEFAULT_VERSION,
     RELEASES,
@@ -224,30 +225,24 @@ def install_archive(
         )
 
 
-def download(destination: Path, version: WcvpVersion = DEFAULT_VERSION) -> None:
+def download(
+    destination: Path,
+    version: WcvpVersion = DEFAULT_VERSION,
+    *,
+    staging_dir: Path | None = None,
+    max_seconds: float = DEFAULT_DOWNLOAD_MAX_SECONDS,
+) -> None:
     release = reviewed_release(version)
-    with tempfile.TemporaryDirectory(prefix="florabase-wcvp-") as directory:
+    with tempfile.TemporaryDirectory(prefix="florabase-wcvp-", dir=staging_dir) as directory:
         archive = Path(directory) / "wcvp.zip"
-        size = 0
-        started = time.monotonic()
-        with (
-            httpx.Client(timeout=httpx.Timeout(60, connect=10), follow_redirects=False) as client,
-            client.stream(
-                "GET", release.archive_url, headers={"Accept": "application/zip"}
-            ) as response,
-        ):
-            response.raise_for_status()
-            if response.headers.get("content-type", "").split(";")[0] not in {
-                "application/zip",
-                "application/octet-stream",
-            }:
-                raise ValueError("Unexpected archive content type")
-            with archive.open("wb") as output:
-                for chunk in response.iter_bytes():
-                    size += len(chunk)
-                    if size > MAX_ARCHIVE_BYTES or time.monotonic() - started > 240:
-                        raise ValueError("WCVP download exceeds size bound")
-                    output.write(chunk)
+        download_archive(
+            release.archive_url,
+            archive,
+            max_bytes=MAX_ARCHIVE_BYTES,
+            max_seconds=max_seconds,
+            accept="application/zip",
+            label="WCVP",
+        )
         install_archive(archive, destination, datetime.now(UTC).isoformat(), version)
 
 

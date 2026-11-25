@@ -373,12 +373,55 @@ from a protected pipe; keep the password out of arguments, environment variables
 
 ## Optional botanical reference datasets
 
-Florabase runs without them: WFO and WCVP v16 index lookups then report themselves unavailable.
-Only indexes built by Florabase's own builders from the pinned official archives are ever supported
-([SQLite reference indexes](security/beta-distribution-001/sqlite-reference-indexes.md)).
+Florabase uses two local SQLite reference indexes built by Florabase's own builders from pinned
+official archives ([SQLite reference indexes](security/beta-distribution-001/sqlite-reference-indexes.md)):
+**WFO 2026-06** (taxonomy) and **Kew WCVP v16** (native-range proposals). WCVP v15 stays
+manual-only.
 
-To enable them, put the built files in a separate host folder, for example
-`/volume1/docker/florabase/reference/`, keeping each index next to its `.sha256` seal:
+### Automatic background setup (default in `compose.yaml`)
+
+The shipped `compose.yaml` sets:
+
+```yaml
+    environment:
+      - FLORABASE_REFERENCES_SETUP=auto
+```
+
+Start-up never waits for indexes: the stack becomes healthy and usable immediately while WFO and
+WCVP v16 lookups report that reference data is being prepared. Once `backend` is serving, a
+low-priority background worker downloads each pinned official archive in turn (WFO first, then
+WCVP v16), verifies its exact SHA-256 checksum before parsing, builds and seals the SQLite index
+in a temporary directory inside `/var/lib/florabase/data/state/reference/` (mode `0700`, owned by
+the backend user `10001:10001`), atomically moves the sealed index into place, and deletes the
+downloaded archive. No extra host folder or mount is required.
+
+- **Disk and time:** Allow at least **3 GiB** free on the data volume (`~1.27 GiB` steady state:
+  `394 MiB` WFO + `909 MiB` WCVP v16; `~1.7 GiB` fresh build peak). On a low-power NAS (for example
+  a Synology DS224+), expect roughly **15–30 minutes** on first start. If free space is below the
+  pre-check threshold, download is skipped and the index reports `failed: disk`.
+- **Offline or transient errors:** The app stays healthy, logs one summary line per failure
+  (`network`, `checksum`, `size`, `build`, or `disk`), leaves no partial files, and retries on the
+  next restart or at most once every 6 hours while running. Once both indexes are `ready`, no
+  background task keeps running and no outbound reference requests are made.
+- **Status:** Open **Settings → Data sources** to view the read-only status of each index (`off`,
+  `preparing`, `ready`, `ready (setup off)`, `failed: <reason>`, or `manual`).
+- **Backups and upgrades:** `state/reference/` is excluded from pre-upgrade database dumps and from
+  paired media backups (indexes can always be rebuilt from the pinned official archives).
+
+**Upgrading an existing `compose.yaml`:** Existing stacks without `FLORABASE_REFERENCES_SETUP=auto`
+stay in `off` mode (no outbound reference requests) until you add
+`- FLORABASE_REFERENCES_SETUP=auto` to `backend`'s `environment:` and redeploy. No new host folders
+or commands are needed.
+
+**Turning automatic setup off:** Set `- FLORABASE_REFERENCES_SETUP=off` (or remove the line) and
+redeploy. Florabase makes zero outbound requests for reference indexes. If sealed managed indexes
+were already built earlier under `auto`, Florabase keeps using them and reports `ready (setup off)`;
+if they are absent, lookups stay unavailable and report `off`.
+
+### Manual read-only mode
+
+To keep reference indexes on a separate read-only host folder (for example
+`/volume1/docker/florabase/reference/`), keep each index next to its `.sha256` seal:
 
 ```text
 reference/wfo-2026-06.sqlite
@@ -387,8 +430,8 @@ reference/wcvp-v16/index.sqlite
 reference/wcvp-v16/index.sha256
 ```
 
-The files must be readable by the backend container user. In `compose.yaml`, add these lines to the
-`backend` service, keeping the existing entries, then redeploy:
+The files must be readable by the backend container user (`10001`). In `compose.yaml`, add these
+lines to the `backend` service, keeping the existing entries, then redeploy:
 
 ```yaml
     environment:
@@ -398,7 +441,9 @@ The files must be readable by the backend container user. In `compose.yaml`, add
       - /volume1/docker/florabase/reference:/var/lib/florabase/reference:ro
 ```
 
-Leave out the line for any index you do not have. A missing or unreadable file never stops the
+Automatic setup skips any index whose configured path is outside `/var/lib/florabase/data/state/reference/`,
+never writes to manual paths, and reports that index as `manual`. Leave out the line for any index
+you want provisioned automatically (or do not want). A missing or unreadable file never stops the
 stack: the matching lookups stay unavailable.
 
 ## Troubleshooting

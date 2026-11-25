@@ -480,6 +480,10 @@ class StackContract(unittest.TestCase):
             services["backend"]["environment"]["FLORABASE_CANONICAL_ORIGIN"],
             "https://florabase.example.org",
         )
+        self.assertEqual(
+            services["backend"]["environment"]["FLORABASE_REFERENCES_SETUP"],
+            "auto",
+        )
         for name in ("db", "backend", "frontend"):
             self.assertNotIn("FLORABASE_OWNER_LOGIN", services[name].get("environment", {}))
             self.assertNotIn("FLORABASE_OWNER_PASSWORD", services[name].get("environment", {}))

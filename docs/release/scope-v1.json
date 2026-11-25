@@ -99,6 +99,7 @@
     "WCVP-VERSION-001": "certify",
     "WCVP-DEFAULT-001": "certify",
     "WGSRPD-CROSSWALK-V2": "certify",
+    "REF-SETUP-001": "best-effort",
     "ENRICHMENT-002": "post-1.0",
     "TAXONOMY-001": "baseline",
     "TAXONOMY-002": "certify",

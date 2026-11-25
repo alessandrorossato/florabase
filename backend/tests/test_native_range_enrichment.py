@@ -281,7 +281,7 @@ def test_fixed_download_failure_preserves_previous_index(
     if failure == "oversize":
         monkeypatch.setattr(snapshot, "MAX_ARCHIVE_BYTES", 1)
     if failure == "elapsed":
-        times = iter([0.0, 241.0])
+        times = iter([0.0, 1801.0])
         monkeypatch.setattr(time, "monotonic", lambda: next(times))
     with pytest.raises((httpx.HTTPError, ValueError)):
         snapshot.download(destination)

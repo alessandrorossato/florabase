@@ -4,7 +4,9 @@ from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel
 
 from florabase import __version__
+from florabase.auth.dependencies import AuthenticatedActor, require_authenticated_actor
 from florabase.core.config import Settings, get_settings
+from florabase.reference_setup.state import SystemReferencesResponse, get_runtime_status
 
 router = APIRouter(prefix="/system", tags=["system"])
 
@@ -31,3 +33,17 @@ async def system_info(
         min_client_version=settings.min_client_version,
         capabilities=list(SERVER_CAPABILITIES),
     )
+
+
+@router.get(
+    "/references",
+    response_model=SystemReferencesResponse,
+    operation_id="getSystemReferences",
+)
+def system_references(
+    response: Response,
+    _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> SystemReferencesResponse:
+    response.headers["Cache-Control"] = "no-store"
+    return get_runtime_status(settings)

@@ -1663,6 +1663,25 @@
       "status": "implemented"
     },
     {
+      "id": "REF-SETUP-001",
+      "category": "enrichment",
+      "description": "Automatically provision pinned WFO 2026-06 and Kew WCVP v16 SQLite reference indexes in the background when enabled",
+      "acceptance_criteria": [
+        "Fresh installs with FLORABASE_REFERENCES_SETUP=auto in compose.yaml download pinned official WFO 2026-06 and Kew WCVP v16 archives in a low-priority background worker after serve is up, verify exact checksums before parsing, build and seal SQLite indexes atomically under state/reference/ (0700), and turn on lookups without blocking startup or health",
+        "When FLORABASE_REFERENCES_SETUP is unset or off, zero outbound reference requests are made; existing valid sealed managed indexes keep working and report ready (setup off), while missing managed indexes report off",
+        "Manual read-only mounts configured via FLORABASE_WFO_SNAPSHOT_PATH or FLORABASE_WCVP_V16_SNAPSHOT_PATH are never written, skipped by auto-setup, and reported as manual",
+        "Offline, checksum, size, build or insufficient free-space failures log one sanitized summary line, leave no partial files, preserve valid sealed indexes, report failed: <reason>, retry on restart or at most every 6 hours while running, and stop cleanly on SIGTERM",
+        "Authenticated read-only GET /api/v1/system/references and Settings -> Data sources expose per-index status without changing unauthenticated GET /api/v1/system/info, and pre-upgrade dumps, paired media backups and deploy guards ignore state/reference/"
+      ],
+      "dependencies": [
+        "TAXONOMY-003",
+        "WCVP-DEFAULT-001",
+        "INSTALL-003"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "ENRICHMENT-002",
       "category": "enrichment",
       "description": "Automate refresh of approved source-scoped enrichment",

@@ -949,3 +949,21 @@ test("logout-failed retains loaded taxonomy tree without issuing new protected r
     screen.getByRole("navigation", { name: "Source classification" }),
   ).toBeVisible();
 });
+
+test("displays preparing message when WFO reference data is being prepared in the background", async () => {
+  vi.mocked(getTree).mockResolvedValue({
+    ...tree,
+    source_available: false,
+    source: null,
+    nodes: [],
+    message: "Reference data is being prepared in the background.",
+  });
+  render(<TaxonomyScreen />);
+  expect(await screen.findByText("WFO source preparing…")).toBeVisible();
+  expect(screen.getByText("Reference data is being prepared…")).toBeVisible();
+  expect(
+    screen.getByText(
+      "Retry checks whether background preparation has finished.",
+    ),
+  ).toBeVisible();
+});

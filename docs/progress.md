@@ -1,5 +1,55 @@
 # Engineering progress
 
+## 2026-11-25 — REF-SETUP-001 automatic background reference index provisioning
+
+- On `feat/ref-setup-001` from `origin/main` `b632c5c` (writer `neon-ref-setup-001`), targeting
+  Batch 14 alongside `IMPORT-002` with zero edits to `import_export/`, `import_wizard/`, or
+  frontend import screens.
+- Added `FLORABASE_REFERENCES_SETUP` (`off` default when unset | `auto`) and
+  `FLORABASE_REFERENCES_STATE_DIR` (default `/var/lib/florabase/data/state/reference`) in
+  `backend/src/florabase/core/config.py`, enabled `- FLORABASE_REFERENCES_SETUP=auto` in
+  `compose.yaml` (50 lines, keeping ADR 0009/0010 contract), and updated
+  `scripts/test-beta-runtime.py`.
+- Centralized pinned archive streaming in `backend/src/florabase/core/reference_index.py`
+  (`download_archive()` with configurable `max_seconds=1800`, `follow_redirects=False`,
+  `Content-Length`/streaming byte bounds, and multi-header `content-type` validation for Zenodo's
+  duplicate `application/octet-stream` headers), added `taxonomy/snapshot.py::download()`
+  (`Accept: */*`, exact 132,643,291-byte check, checksum before ZIP parse), and reused it in
+  `native_range_enrichment/snapshot.py::download()`.
+- Added `backend/src/florabase/reference_setup/` (`state.py`, `lock.py`, `worker.py`, `runner.py`):
+  FastAPI `lifespan()` starts a lightweight coordinator only in `auto` mode when managed indexes
+  are missing, spawning sequential `os.nice(10)` worker subprocesses holding an inter-process
+  `fcntl` lock in `state/reference/` (`0700`), cleaning stale `.staging-*` directories on start,
+  running a `(archive + expected_index) * 1.2` free-space pre-check (`failed: disk`), staging
+  with `TMPDIR`/`SQLITE_TMPDIR` inside `state/reference/`, atomically publishing sealed indexes,
+  deleting downloaded archives, terminating cleanly on `SIGTERM` with zero partial publish,
+  logging one sanitized warning line per failure (`network`/`checksum`/`size`/`build`/`disk`),
+  retrying at most once every 6 hours while not ready, and exiting with zero idle work once ready.
+  Managed WCVP v16 enforces `require_seal=True`; `off` mode keeps using existing valid sealed
+  managed indexes (`ready (setup off)`) with zero outbound requests; manual paths are skipped,
+  never written, and reported as `manual`.
+- Kept unauthenticated `GET /api/v1/system/info` unchanged, added authenticated read-only
+  `GET /api/v1/system/references` (`SystemReferencesResponse`, `ReferenceSetupIndexStatus`),
+  regenerated `backend/openapi.json` and `frontend/src/api/schema.d.ts`, added a read-only
+  **Reference index status** block in **Settings → Data sources**, and updated unavailable notices
+  in Taxonomy and Native Range panels for background preparation.
+- Updated `docs/installation.md`, `docs/dev-references.md`,
+  `docs/security/beta-distribution-001/sqlite-reference-indexes.md`, `CHANGELOG.md` (`Unreleased`
+  upgrade note), `docs/features.json` (`REF-SETUP-001`, `implemented`, next to WCVP/taxonomy),
+  `docs/release/scope-v1.json` (`"best-effort"`), and recorded Phase 1 design and Phase 2 evidence
+  (including live real-archive worker run: WFO `126.78 s` / `166.4 MiB` RSS / `413,069,312` B;
+  WCVP v16 `87.90 s` / `67.2 MiB` RSS / `952,799,232` B) in
+  [ref-setup-001-design.md](release/evidence/ref-setup-001-design.md) and
+  [ref-setup-001.md](release/evidence/ref-setup-001.md).
+- Verified focused backend unit tests (`test_reference_setup.py`, 17 passed), PostgreSQL
+  integration tests (`tests/integration/test_reference_setup.py`, 3 passed), frontend checks
+  (`HelpAndSources.test.tsx`, `TaxonomyScreen.test.tsx`, `NativeRangeEnrichmentPanel.test.tsx`,
+  34 passed), `scripts/test-beta-runtime.py` (17 passed), `scripts/check-features.py`, `doc-links`,
+  `api-check`, and `git merge-tree` against `feat/import-002-sheet-wizard` (`7dcbfd8`: clean
+  auto-merge on all code, `openapi.json`, `schema.d.ts`, `features.json`, and `scope-v1.json`;
+  expected additive-only conflict in `docs/progress.md`). Canonical FULL
+  `make feature-verify AGENT_ID=neon-ref-setup-001` runs on the frozen committed tree.
+
 ## 2026-11-23 — MOBILE-002 device sign-in, Keystore plugin, and compatibility contract (PWA preserved)
 
 - On `feat/mobile-002-device-auth` from `origin/main` `ddf5a14` (writer `neon-mobile-002`).

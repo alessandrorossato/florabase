@@ -201,6 +201,11 @@ export function IdentityTaxonomyPanel({
       </ol>
     </nav>
   );
+  const preparingSource = Boolean(
+    data &&
+    !data.source_available &&
+    data.message?.toLowerCase().includes("being prepared"),
+  );
   if (summary)
     return (
       <section className="taxonomy-panel" aria-label="Taxonomy">
@@ -209,7 +214,11 @@ export function IdentityTaxonomyPanel({
         {current?.failed && <p role="alert">Taxonomy status could not load.</p>}
         {data && !link && <p>No WFO classification confirmed.</p>}
         {data && !data.source_available && (
-          <p className="field-help">Local taxonomy source unavailable.</p>
+          <p className="field-help">
+            {preparingSource
+              ? "Reference data is being prepared…"
+              : "Local taxonomy source unavailable."}
+          </p>
         )}
         {breadcrumb}
         <a href={linkUrl}>
@@ -291,7 +300,11 @@ export function IdentityTaxonomyPanel({
       {data && (
         <>
           {!data.source_available && (
-            <p>Taxonomy source unavailable. {data.message}</p>
+            <p>
+              {preparingSource
+                ? `Reference data is being prepared… ${data.message ?? ""}`.trim()
+                : `Taxonomy source unavailable. ${data.message ?? ""}`.trim()}
+            </p>
           )}
           {data.source && (
             <p>

@@ -2,6 +2,18 @@ import type { components } from "../api/schema";
 import { requestJson, type ProtectedRequestCapability } from "../auth/api";
 export type ApplicationSettings =
   components["schemas"]["ApplicationSettingsValue"];
+export type SystemReferences =
+  components["schemas"]["SystemReferencesResponse"];
+export type ReferenceSetupIndexStatus =
+  components["schemas"]["ReferenceSetupIndexStatus"];
+
+export function getSystemReferences(
+  capability: ProtectedRequestCapability,
+  signal?: AbortSignal,
+): Promise<SystemReferences> {
+  return requestJson("/api/v1/system/references", { capability, signal });
+}
+
 export function getApplicationSettings(
   capability: ProtectedRequestCapability,
   signal?: AbortSignal,

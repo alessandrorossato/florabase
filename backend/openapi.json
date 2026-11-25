@@ -13327,6 +13327,63 @@
         "title": "RecordedRangePlace",
         "type": "object"
       },
+      "ReferenceSetupIndexStatus": {
+        "additionalProperties": false,
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "network",
+                  "checksum",
+                  "size",
+                  "build",
+                  "disk"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "state": {
+            "enum": [
+              "off",
+              "preparing",
+              "ready",
+              "failed",
+              "manual"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "status",
+          "available"
+        ],
+        "title": "ReferenceSetupIndexStatus",
+        "type": "object"
+      },
+      "ReferencesSetupMode": {
+        "enum": [
+          "off",
+          "auto"
+        ],
+        "title": "ReferencesSetupMode",
+        "type": "string"
+      },
       "ReintegrationEligibilityStatus": {
         "enum": [
           "safe",
@@ -17806,6 +17863,27 @@
           "capabilities"
         ],
         "title": "SystemInfoResponse",
+        "type": "object"
+      },
+      "SystemReferencesResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/ReferencesSetupMode"
+          },
+          "wcvp_v16": {
+            "$ref": "#/components/schemas/ReferenceSetupIndexStatus"
+          },
+          "wfo": {
+            "$ref": "#/components/schemas/ReferenceSetupIndexStatus"
+          }
+        },
+        "required": [
+          "mode",
+          "wfo",
+          "wcvp_v16"
+        ],
+        "title": "SystemReferencesResponse",
         "type": "object"
       },
       "TargetChoiceResponse": {
@@ -34667,6 +34745,27 @@
           }
         },
         "summary": "System Info",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/api/v1/system/references": {
+      "get": {
+        "operationId": "getSystemReferences",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemReferencesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "System References",
         "tags": [
           "system"
         ]

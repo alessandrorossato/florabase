@@ -21,6 +21,11 @@ from florabase.core.reference_index import (
     UnsupportedIndexError,
     open_reference_index,
 )
+from florabase.reference_setup.state import (
+    PREPARING_UNAVAILABLE_MESSAGE,
+    is_index_preparing,
+    resolve_wcvp_v16_target,
+)
 
 ARCHIVE_URL = "https://sftp.kew.org/pub/data-repositories/WCVP/Archive/wcvp_v15.zip"
 ARCHIVE_SHA256 = "693e05b31ea6ce724c88ccf38bb964db2f22424b396f7ed1fd04fdb203af7e81"
@@ -251,23 +256,29 @@ class WcvpSource:
         version: WcvpVersion = DEFAULT_VERSION,
         *,
         require_seal: bool = False,
+        managed: bool = False,
     ):
         self.path = path
         self.release = reviewed_release(version)
         self.require_seal = require_seal
+        self.managed = managed
 
     @classmethod
     def from_settings(cls, settings: Settings, version: WcvpVersion = DEFAULT_VERSION) -> Self:
         if version == "16":
+            path, managed, require_seal = resolve_wcvp_v16_target(settings)
             return cls(
-                settings.wcvp_v16_snapshot_path,
+                path,
                 version,
-                require_seal=settings.wcvp_v16_require_seal,
+                require_seal=require_seal,
+                managed=managed,
             )
         return cls(settings.wcvp_snapshot_path, version)
 
     def _connect(self) -> sqlite3.Connection:
         if self.path is None or not self.path.is_file() or self.path.stat().st_size > 2_000_000_000:
+            if self.managed and self.release.version == "16" and is_index_preparing("wcvp_v16"):
+                raise SourceUnavailableError(PREPARING_UNAVAILABLE_MESSAGE)
             raise SourceUnavailableError("The reviewed WCVP snapshot is not installed.")
         if self.require_seal:
             try:
