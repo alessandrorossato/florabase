@@ -1,5 +1,21 @@
 # Engineering progress
 
+## 2026-11-25 — ABOUT-001 Settings → About page and official data-source links
+
+- On `feat/about-001` from `origin/main` `b632c5c` (writer `claude-about-001`), targeting Batch 14.
+  Frontend only: no backend, OpenAPI, migration or Compose change.
+- Added Settings → About (`#/about`, `frontend/src/settings/AboutScreen.tsx`): version and short
+  image revision from the image's `/release.json` (exported `fetchReleaseInfo`, now shared with the
+  update watcher), project link, the tag's `CHANGELOG.md` and release notes, and the bundled
+  `/LICENSE` and `/THIRD_PARTY_NOTICES.txt`.
+- Settings → Data sources gains an "Official site" column (WFO, Kew WCVP, GBIF, Natural Earth,
+  OpenStreetMap; dataset links for WFO 2026-06 on Zenodo and the Kew WCVP repository).
+- Checks: Vitest `src/settings src/shell src/pwa src/App.test.tsx src/App.lazy.test.tsx` (251 tests),
+  `pnpm typecheck`, `pnpm lint`, `prettier --check src`. Evidence:
+  [docs/release/evidence/about-001.md](release/evidence/about-001.md).
+- Unresolved: canonical `make feature-verify` not yet run; `docs/progress.md`, `docs/features.json`
+  and `DataSourcesScreen.tsx` also change on `feat/ref-setup-001` (see evidence for merge check).
+
 ## 2026-11-23 — MOBILE-002 device sign-in, Keystore plugin, and compatibility contract (PWA preserved)
 
 - On `feat/mobile-002-device-auth` from `origin/main` `ddf5a14` (writer `neon-mobile-002`).

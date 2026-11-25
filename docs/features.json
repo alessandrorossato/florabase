@@ -2398,6 +2398,23 @@
       "status": "implemented"
     },
     {
+      "id": "ABOUT-001",
+      "category": "ui",
+      "description": "Settings → About page with the running release (version, image revision, project source), changelog and release-note links, licence and third-party notices, plus official-site and dataset links for each external source on Settings → Data sources",
+      "acceptance_criteria": [
+        "Settings → About (#/about) shows Florabase version and short image revision read from the image's /release.json (same short form as the startup banner), falling back to the build version and a 'Development build' note when release metadata is absent",
+        "About links the running tag's CHANGELOG.md and GitHub release notes, the bundled /LICENSE (AGPL-3.0-or-later) and /THIRD_PARTY_NOTICES.txt, and the project repository; only an https source from release metadata replaces the canonical project URL",
+        "Settings → Data sources links WFO, Kew WCVP, GBIF, Natural Earth and OpenStreetMap to their official sites (and WFO/WCVP to their dataset releases) in a new tab with rel=noopener noreferrer; the CSV row has no external link",
+        "Frontend tests cover release metadata, fallback, non-https source rejection and the data-source links; typecheck, ESLint and Prettier pass"
+      ],
+      "dependencies": [
+        "UI-REVIEW-002",
+        "RUNTIME-IDLE-001"
+      ],
+      "priority": "P3",
+      "status": "implemented"
+    },
+    {
       "id": "TEST-DATA-001",
       "category": "testing",
       "description": "Deterministic synthetic golden dataset with independent copies for Feature Review, UAT and performance testing",

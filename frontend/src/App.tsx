@@ -156,6 +156,13 @@ const DataSourcesScreen = lazy(() =>
   }),
 );
 
+const AboutScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./settings/AboutScreen");
+    return { default: module.AboutScreen };
+  }),
+);
+
 const LabelsScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./labels/LabelsScreen");
@@ -375,6 +382,7 @@ function currentRoute(): Route {
     "settings",
     "help",
     "data-sources",
+    "about",
     "account",
     "media",
   ];
@@ -721,6 +729,8 @@ function ApplicationShell({
                 <HelpScreen />
               ) : route.section === "data-sources" ? (
                 <DataSourcesScreen />
+              ) : route.section === "about" ? (
+                <AboutScreen />
               ) : route.section === "labels" ? (
                 <LabelsScreen
                   key={`${route.labelKind ?? ""}:${route.labelRecord ?? ""}`}

@@ -117,6 +117,7 @@ test("the navigation model lists every former destination and Settings tool exac
       "import-export",
       "data-sources",
       "help",
+      "about",
     ].sort(),
   );
   const hrefs = allDestinations().map((item) => item.href);

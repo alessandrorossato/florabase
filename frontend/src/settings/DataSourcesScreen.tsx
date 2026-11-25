@@ -10,6 +10,8 @@ const sources = [
       "Local reviewed snapshot installed by the operator; never fetched at run time",
     licence: "CC0",
     where: "#/taxonomy",
+    website: "https://www.worldfloraonline.org/",
+    dataset: "https://doi.org/10.5281/zenodo.20782718",
   },
   {
     name: "Kew WCVP",
@@ -17,6 +19,8 @@ const sources = [
     access: "Local sealed index installed by the operator",
     licence: "CC BY 3.0",
     where: "#/native-ranges",
+    website: "https://powo.science.kew.org/about-wcvp",
+    dataset: "https://sftp.kew.org/pub/data-repositories/WCVP/",
   },
   {
     name: "GBIF",
@@ -25,6 +29,7 @@ const sources = [
       "Online, only when you search, confirm or refresh a GBIF link, or press Load on a confirmed link",
     licence: "Per dataset",
     where: "#/species-distribution",
+    website: "https://www.gbif.org/",
   },
   {
     name: "Natural Earth",
@@ -32,6 +37,7 @@ const sources = [
     access: "Bundled with Florabase, works offline",
     licence: "Public domain",
     where: "#/map",
+    website: "https://www.naturalearthdata.com/",
   },
   {
     name: "OpenStreetMap tiles",
@@ -39,6 +45,7 @@ const sources = [
     access: "Off unless the operator enables it in runtime-config.js",
     licence: "ODbL, provider policy applies",
     where: "#/map",
+    website: "https://www.openstreetmap.org/copyright",
   },
   {
     name: "Your own data (CSV)",
@@ -70,6 +77,7 @@ export function DataSourcesScreen() {
                   <th scope="col">Used for</th>
                   <th scope="col">How it is reached</th>
                   <th scope="col">Licence</th>
+                  <th scope="col">Official site</th>
                 </tr>
               </thead>
               <tbody>
@@ -81,6 +89,31 @@ export function DataSourcesScreen() {
                     <td>{source.use}</td>
                     <td>{source.access}</td>
                     <td>{source.licence}</td>
+                    <td>
+                      {"website" in source && (
+                        <a
+                          href={source.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${source.name} website`}
+                        >
+                          Website
+                        </a>
+                      )}
+                      {"dataset" in source && (
+                        <>
+                          {" · "}
+                          <a
+                            href={source.dataset}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`${source.name} dataset release`}
+                          >
+                            Dataset
+                          </a>
+                        </>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
