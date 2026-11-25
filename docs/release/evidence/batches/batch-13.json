@@ -1,0 +1,113 @@
+{
+  "base": "b632c5c734fdab55e62230cdee99938ae34ece7e",
+  "bootstrap": "b632c5c734fdab55e62230cdee99938ae34ece7e",
+  "bootstrap_commits": [],
+  "branch": "ci/batch-13",
+  "reconciliation": {
+    "docs/progress.md": "Retain all source milestones below the heading, move the PROPAGATION-BATCH-001 milestone (older base) back into merge order, and prepend the Batch 13 integration milestone.",
+    "docs/release/evidence/wf-04-batch-13.md": "Record Batch 13 source provenance, conflict resolution, shared-file and migration notes and proposed release classes."
+  },
+  "sources": [
+    {
+      "base": "b632c5c734fdab55e62230cdee99938ae34ece7e",
+      "branch": "docs/docs-004-batch12-followups",
+      "claim": "ee99428dcc9a",
+      "commits": [
+        "ae69dc4e1a4fefad06d356d72fabdee31e1c0c04",
+        "10acf3b7be0cb3970f801dfc86d9508ed7783845",
+        "69b5547042bfd0a96c7dd49e2792466ff50e3c8f",
+        "40e204bf058d16261f55189f8b301e02bd941632"
+      ],
+      "evidence": [
+        "docs/release/evidence/docs-004.md"
+      ],
+      "id": "DOCS-004",
+      "merge": "7dbc40b469ad9b9d5c3fea68f9a383ef68f645d0",
+      "resolutions": [],
+      "reviewer": "claude-docs004-source-qa",
+      "tip": "40e204bf058d16261f55189f8b301e02bd941632",
+      "writer": "claude-batch13"
+    },
+    {
+      "base": "1a7847612d3d77a292ab0dd841ee85371308f268",
+      "branch": "feat/propagation-batch-001",
+      "claim": "d96deaa475d9",
+      "commits": [
+        "7022f8e504d670eed300840d1a98ad897aaf28ff"
+      ],
+      "evidence": [
+        "docs/release/evidence/propagation-batch-001.md"
+      ],
+      "id": "PROPAGATION-BATCH-001",
+      "merge": "a237e0c90854d0de59687cc3038a3f7d32ae24dc",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-propagation-batch001-source-qa",
+      "tip": "7022f8e504d670eed300840d1a98ad897aaf28ff",
+      "writer": "neon-propagation-batch-001"
+    },
+    {
+      "base": "b632c5c734fdab55e62230cdee99938ae34ece7e",
+      "branch": "feat/care-bulk-001",
+      "claim": "a6149096bc1f",
+      "commits": [
+        "e9e8cd50f988714e575e6ea602d2de5f4d163320",
+        "3490d18ff3fd8c9b4f86af3625ed8611e41d646f"
+      ],
+      "evidence": [
+        "docs/release/evidence/care-bulk-001.md"
+      ],
+      "id": "CARE-BULK-001",
+      "merge": "43d3fc7a8d1754937bf446a86bacc25059c82933",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-care-bulk001-source-qa",
+      "tip": "3490d18ff3fd8c9b4f86af3625ed8611e41d646f",
+      "writer": "neon"
+    },
+    {
+      "base": "b632c5c734fdab55e62230cdee99938ae34ece7e",
+      "branch": "feat/fn-05-directory-sort",
+      "claim": "ef01db39f971",
+      "commits": [
+        "440c32899d744bab1ef0b2573e72072297e2622c",
+        "760283a6ed05f9b65111b5c25720dfd6bb13c02c"
+      ],
+      "evidence": [
+        "docs/release/evidence/ux-sort-001.md"
+      ],
+      "id": "UX-SORT-001",
+      "merge": "4f15c47bd8d8dccdfeb7f9f29dd10f4c7123d8ba",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-ux-sort001-source-qa",
+      "tip": "760283a6ed05f9b65111b5c25720dfd6bb13c02c",
+      "writer": "claude-batch13"
+    },
+    {
+      "base": "b632c5c734fdab55e62230cdee99938ae34ece7e",
+      "branch": "fix/media-fetch-001",
+      "claim": "20fb3dcee8d7",
+      "commits": [
+        "c6c7f74e33921303aee5075ed5133c2f277d0265",
+        "d2321c17814a1c98159c40e08b441fb2ee5c79da"
+      ],
+      "evidence": [
+        "docs/release/evidence/media-fetch-001.md"
+      ],
+      "id": "MEDIA-FETCH-001",
+      "merge": "a30c9aed787519dc1c3c4b8811d75081ac21cd16",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-media-fetch001-source-qa",
+      "tip": "d2321c17814a1c98159c40e08b441fb2ee5c79da",
+      "writer": "claude-media-fetch"
+    }
+  ],
+  "summary": "Tray potting, bulk watering and feeding, directory sort, Wikipedia fix",
+  "version": 1
+}

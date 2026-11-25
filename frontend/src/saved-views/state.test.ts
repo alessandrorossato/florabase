@@ -190,6 +190,39 @@ test("directory sort is a canonical URL and Saved View field (FN-02)", () => {
   expect(savedViewHash("plants", 1, { sort: "created" })).toBeNull();
 });
 
+test("UX-SORT-001 directory sort round-trips for Harvests (dated) and name-only directories", () => {
+  expect(readDirectoryState("harvests", "#/harvests?sort=newest").sort).toBe(
+    "newest",
+  );
+  expect(readDirectoryState("harvests", "#/harvests?sort=oldest").sort).toBe(
+    "oldest",
+  );
+  expect(savedViewHash("harvests", 1, { sort: "oldest" })).toBe(
+    "#/harvests?sort=oldest",
+  );
+  expect(savedViewHash("harvests", 1, { sort: "created" })).toBeNull();
+
+  for (const [surface, route] of [
+    ["botanical_identities", "#/identities"],
+    ["stored_material", "#/harvests?tab=stored-material"],
+    ["suppliers", "#/suppliers"],
+  ] as const) {
+    const sep = route.includes("?") ? "&" : "?";
+    expect(
+      readDirectoryState(surface, `${route}${sep}sort=name_desc`).sort,
+    ).toBe("name_desc");
+    expect(readDirectoryState(surface, `${route}${sep}sort=newest`).sort).toBe(
+      "",
+    );
+    expect(savedViewHash(surface, 1, { sort: "name" })).toBe(
+      `${route}${sep}sort=name`,
+    );
+    expect(savedViewHash(surface, 1, { sort: "newest" })).toBeNull();
+    expect(savedViewHash(surface, 1, { sort: "oldest" })).toBeNull();
+    expect(savedViewHash(surface, 1, { sort: "created" })).toBeNull();
+  }
+});
+
 test("stale UUIDs stay exact, UI defaults do not store presentation noise", () => {
   expect(savedViewHash("harvests", 1, { identity_id: missing })).toBe(
     `#/harvests?identity_id=${missing.toLowerCase()}`,

@@ -72,10 +72,10 @@
           "provenance.without_coordinates": 1
         },
         "baseline": {
-          "schema_revision": "20261123_0048",
+          "schema_revision": "20261125_0049",
           "volume": 12,
           "plan_sha256": "5afd6ffe46fce10ac62b1ef1233c9944d8c206bef9d407ce4396b5e6ce64b0d7",
-          "canonical_sha256": "d0a9b3fc1a935458a3544ce51d9f6697411f6111037b086c02736cc1ed8be167",
+          "canonical_sha256": "2a0557747c691e10e9fa9ed4e81737b826e29369948d69b4466acab538ba7ea3",
           "media_files": 3,
           "media_sha256": "d3583210516d857e6f7c8c8c78a2c3e051d8fe31d001bb0f420c226bc5b39f6e",
           "scenario_keys_sha256": "e7d0d666d58604b23a8d3a8d8cd661b839265743501ad742225c3998a9ec7ffa",
@@ -122,7 +122,7 @@
             },
             "events": {
               "rows": 20,
-              "sha256": "6933e7dab26ddbf5100b95500c0adf4efc9c95665506401ee0e8479bc4ad55db"
+              "sha256": "3e0fccab6e723b5ea295bb34b12202d3aaac621a7b27f4593fa871655e93671d"
             },
             "external_provider_cache": {
               "rows": 1,
@@ -385,10 +385,10 @@
           "taxonomy.unresolved": 84
         },
         "baseline": {
-          "schema_revision": "20261123_0048",
+          "schema_revision": "20261125_0049",
           "volume": 420,
           "plan_sha256": "8a1da67623c1f9c77071cf39e9bd0346a72483fa2a71cf5f1438877eb81c8c3f",
-          "canonical_sha256": "5f59cc7ff3829517a5957c9b0972957d17c6eb2825fc023ba0be455ae047dfd0",
+          "canonical_sha256": "86fadc8e3581d4ee63a6feb520a688aa8b76d7fbd70e3078aa0cdbaf6b129fe7",
           "media_files": 34,
           "media_sha256": "50894e8a2283bf88349875824e1d3615d70d15be2ff43f708038c72a715afb93",
           "scenario_keys_sha256": "f72fe62a3ec0bc139a4f6d18ba730e5218467d8a8fc98699214b38cfc5001971",
@@ -435,7 +435,7 @@
             },
             "events": {
               "rows": 851,
-              "sha256": "74bcf7bed5d95a609d3626424f2a4f9c56726e9acd2b5e5d33d4d44ce87a7807"
+              "sha256": "b306d61aad04ba783f0524849b5fc7556de6bf40903af2ab2c46dac0e08ea6e9"
             },
             "external_provider_cache": {
               "rows": 7,

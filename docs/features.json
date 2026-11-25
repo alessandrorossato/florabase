@@ -801,6 +801,38 @@
       "status": "verified"
     },
     {
+      "id": "FN-03",
+      "category": "event",
+      "description": "Add Watering and Feeding Journal event kinds and a Care filter group",
+      "acceptance_criteria": [
+        "Events accept watering and feeding kinds via an Alembic migration (20261125_0049) that upgrades cleanly with existing events present and refuses downgrade when watering or feeding events exist",
+        "Single Plant and PlantGroup Journal composers offer Watering and Feeding and filters group them under Care",
+        "Watering and feeding are informational retainable events for propagation creation reversal and PlantGroup reintegration (confirmation-required, not blocking)"
+      ],
+      "dependencies": [
+        "EVENT-002"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "CARE-BULK-001",
+      "category": "bulk",
+      "description": "Log one care entry on selected Plants/PlantGroups or everything in a Location with batch undo",
+      "acceptance_criteria": [
+        "Owner can preview and atomically log an allowed care Event (watering, feeding, treatment, repotting, pruning, observation, other; max 500 targets) across selected Plants/PlantGroups or an active Location with optional sub-locations, skipping inactive records and rejecting stale previews or empty scopes",
+        "Created per-target Events share a nullable batch_id (no batch entity), and batch undo deletes only events not edited since creation while keeping and listing edited ones",
+        "Plants/PlantGroups selection toolbar (only when all selected items are Plants or PlantGroups) and Location detail launch the preview-then-confirm care dialog with Today preselected and an Undo notice on success"
+      ],
+      "dependencies": [
+        "BULK-001",
+        "FN-03",
+        "UX-DATE-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "ATTACHMENT-002",
       "category": "attachment",
       "description": "Implement guarded local attachment storage",
@@ -1308,6 +1340,23 @@
       ],
       "priority": "P1",
       "status": "verified"
+    },
+    {
+      "id": "PROPAGATION-BATCH-001",
+      "category": "workflow",
+      "description": "Pot on a whole Sowing tray into N Plants (or one PlantGroup) and split an active PlantGroup into N Plants in one step",
+      "acceptance_criteria": [
+        "POST /api/v1/sowings/{sowing_id}/pot-on creates 1-200 Plants in one database transaction with one existing SOWING_TO_PLANT receipt per Plant, applying resulting_sowing_lifecycle only on the last iteration so newest-first REVERSAL-001 reversal restores the Sowing and SeedLot without schema or reversal changes",
+        "POST /api/v1/plant-groups/{plant_group_id}/extract-batch loops existing PlantGroup extraction (one extraction Event and receipt each), enforces exact current quantity caps, allows approximate/unknown groups up to 200 with UI warning, preserves PLANT-006 reintegration, and rolls back atomically on any failure",
+        "Sowing detail and active PlantGroup detail expose a preview-and-confirm dialog with searchable ReferencePicker identity/location controls, live {n} label-pattern preview (first 3 + last), smart Sowing completion defaults, 409 stale-preview handling, and links to created records"
+      ],
+      "dependencies": [
+        "PROPAGATION-003",
+        "PLANT-006",
+        "FN-04"
+      ],
+      "priority": "P1",
+      "status": "implemented"
     },
     {
       "id": "UX-003",
@@ -2225,6 +2274,22 @@
       "status": "implemented"
     },
     {
+      "id": "MEDIA-FETCH-001",
+      "category": "attachment",
+      "description": "Fix Save local copy for Wikipedia and Wikimedia images by sending a fixed User-Agent, converting Wikipedia/Commons file description pages to their direct image address, and explaining when an address is a web page",
+      "acceptance_criteria": [
+        "Every external image request, including each redirect, sends the fixed non-identifying User-Agent Florabase/<package version> media-copy with no new cookies, credentials or other headers, while pinned public addresses, redirect, size, type, encoding and deadline checks are unchanged",
+        "Wikipedia and Wikimedia /wiki/File: pages, including localized file namespaces, are stored on creation as the same host's Special:FilePath image address and are converted before fetching for already saved references, while every other address passes through unchanged",
+        "A 200 text/html response fails as external_fetch_failed with a message asking for the image's own address and no destination details",
+        "Focused unit tests cover the rewrite, the User-Agent on first and redirected requests, the HTML message and the existing safety refusals without network access"
+      ],
+      "dependencies": [
+        "ATTACHMENT-005"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "RELEASE-VISUAL-AUDIT-001",
       "category": "ux",
       "description": "Audit the delivered v0.1 interface through real synthetic Review captures and propose bounded UI Foundation consolidation before implementation",
@@ -2993,6 +3058,23 @@
       "status": "implemented"
     },
     {
+      "id": "UX-SORT-001",
+      "category": "ux",
+      "description": "Align the Sort by toolbar select across desktop and phone widths and extend browser-local sorting to Botanical identities, Harvests, Stored material and Suppliers",
+      "acceptance_criteria": [
+        "DirectorySortSelect removes inherited .field block margin, matches var(--control-height), border, radius, font and vertical alignment of neighbouring toolbar controls in light and dark themes, and stays non-full-width on the phone tools row unless it does not fit",
+        "DirectorySortSelect supports name-only mode (Default order, Name A–Z, Name Z–A) without altering the existing Seeds, Sowings and Plants options or labels",
+        "Harvests adds dated sorting (harvest date, undated last) and Botanical identities, Stored material and Suppliers add name-only sorting applied before pagination with canonical URL and Saved View state validated by saved_views/state.py without a database migration; server-paginated (Cuttings, Orders, Media, History), tree/map/analysis (Locations, Geography, Taxonomy, Species distribution, Native ranges, Collection origins) and chronological feed (Journal, Schedule) screens are explicitly skipped",
+        "Unit tests cover name-only sortDirectory and DirectorySortSelect, CSS regression tests cover toolbar alignment, backend tests validate accepted and rejected sort values, and component tests cover Botanical identities, Harvests, Stored material and Suppliers across pagination and URL round-trip"
+      ],
+      "dependencies": [
+        "FN-02",
+        "VIEW-001"
+      ],
+      "priority": "P3",
+      "status": "implemented"
+    },
+    {
       "id": "UX-ENTRY-001",
       "category": "ux",
       "description": "Save and add another in the Seeds, Sowings and Plants create forms",
@@ -3209,7 +3291,7 @@
       "category": "infrastructure",
       "description": "Batch preparation merges additive docs/progress.md entries that two sources insert below the shared top-level heading",
       "acceptance_criteria": [
-        "scripts/feature_batch.py additive_progress() sets aside the longest line prefix shared by the merge base, integration side and incoming source (at least one base line stays in the remainder), applies the existing additive rules to the remainders and restores the prefix, so entries inserted below '# Engineering progress' by two sources are both retained newest-merged first",
+        "scripts/feature_batch.py additive_progress() sets aside the longest line prefix shared by the merge base, integration side and incoming source (at least one base line stays in the remainder), applies the existing additive rules to the remainders and restores the prefix, so entries inserted below '# Engineering progress' by two sources are both retained in merge order below the heading",
         "scripts/test-agent-workflow.py covers the shared-heading merge and still refuses an incoming source that edits the shared remainder; the existing main-tail additive progress test keeps passing"
       ],
       "dependencies": [
@@ -3269,6 +3351,23 @@
         "PWA-001",
         "WF-SCOPE-001",
         "VERIFY-SPEED-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "DOCS-004",
+      "category": "documentation",
+      "description": "Batch 12 documentation follow-ups: fix WF-BATCH-PROGRESS-001 merge-order wording and prevent duplicate YAML keys in the reference-index installation snippet",
+      "acceptance_criteria": [
+        "docs/features.json entry WF-BATCH-PROGRESS-001 states that entries inserted below '# Engineering progress' by two sources are both retained in merge order below the heading, matching scripts/feature_batch.py additive_progress(), with docs/development-workflow.md and docs/progress.md checked and historic manifests under docs/release/evidence/batches/ untouched",
+        "docs/installation.md optional botanical reference datasets section instructs adding the two environment lines and the volumes line to the existing lists of the backend service without repeating environment: or volumes: keys, keeping the exact paths and environment variable names",
+        "make doc-links, python3 ./scripts/check-features.py and the policy-selected verification gate pass on the frozen branch with evidence committed in docs/release/evidence/docs-004.md"
+      ],
+      "dependencies": [
+        "WF-BATCH-PROGRESS-001",
+        "DOCS-003",
+        "UI-REVIEW-002"
       ],
       "priority": "P2",
       "status": "implemented"

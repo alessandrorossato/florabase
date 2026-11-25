@@ -706,3 +706,64 @@ test("Supplier Details focuses its title and reconnects focus to the returning r
     expect(screen.getByRole("button", { name: supplier.name })).toHaveFocus();
   });
 });
+
+test("Suppliers directory sorts by name before pagination and round-trips URL state (UX-SORT-001)", async () => {
+  const rows = [
+    {
+      ...supplier,
+      id: "01900000-0000-7000-8000-000000000907",
+      name: "Nursery 07",
+      primary_photo: null,
+    },
+    ...Array.from({ length: 25 }, (_, i) => i + 1)
+      .filter((n) => n !== 7)
+      .map((n) => ({
+        ...supplier,
+        id: `01900000-0000-7000-8000-0000000009${String(n).padStart(2, "0")}`,
+        name: `Nursery ${String(n).padStart(2, "0")}`,
+        primary_photo: null,
+      })),
+  ];
+  vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    if (requestUrl(input).includes("/api/v1/saved-views"))
+      return Promise.resolve(json([]));
+    return Promise.resolve(json(rows));
+  });
+  window.history.replaceState(null, "", "#/suppliers");
+  const user = userEvent.setup();
+  const { unmount } = mount();
+
+  const list = () => screen.getByRole("list", { name: "Suppliers" });
+  const first = () => within(list()).getAllByRole("listitem")[0];
+
+  await screen.findByRole("list", { name: "Suppliers" });
+  expect(first()).toHaveTextContent("Nursery 07");
+
+  const sort = screen.getByRole("combobox", { name: "Sort by" });
+  expect(
+    within(sort)
+      .getAllByRole("option")
+      .map((option) => option.textContent),
+  ).toEqual(["Default order", "Name A–Z", "Name Z–A"]);
+
+  await user.selectOptions(sort, "name_desc");
+  expect(window.location.hash).toContain("sort=name_desc");
+  expect(first()).toHaveTextContent("Nursery 25");
+
+  await user.click(screen.getByRole("button", { name: "Next page" }));
+  expect(first()).toHaveTextContent("Nursery 05");
+
+  await user.selectOptions(sort, "name");
+  expect(window.location.hash).toContain("sort=name");
+  expect(first()).toHaveTextContent("Nursery 01");
+
+  // URL round-trip
+  unmount();
+  window.history.replaceState(null, "", "#/suppliers?sort=name_desc");
+  mount();
+  await screen.findByRole("list", { name: "Suppliers" });
+  expect(screen.getByRole("combobox", { name: "Sort by" })).toHaveValue(
+    "name_desc",
+  );
+  expect(first()).toHaveTextContent("Nursery 25");
+});

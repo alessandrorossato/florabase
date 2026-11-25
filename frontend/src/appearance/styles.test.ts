@@ -332,3 +332,24 @@ test("mobile directory shells align rows to top and summaryless composed rows av
   expect(cuttingsMobile).not.toContain("grid-column: 2;");
   expect(cuttingsMobile).toContain("margin-block-start: 0;");
 });
+
+test("directory sort select aligns vertically with sibling toolbar controls at desktop and phone widths (UX-SORT-001)", () => {
+  const normalizationCss = readFileSync("src/styles/normalization.css", "utf8");
+  const systemCss = readFileSync("src/styles/directory-system.css", "utf8");
+
+  expect(normalizationCss).toMatch(
+    /\.directory-tools\s+\.directory-sort\s*\{[^}]*flex:\s*0 1 auto;[^}]*margin:\s*0;/,
+  );
+  expect(normalizationCss).toMatch(
+    /\.directory-tools\s+\.directory-sort\s+select\s*\{[^}]*height:\s*var\(--control-height\);[^}]*font:\s*var\(--type-body\);[^}]*border:\s*1px solid var\(--border-strong\);[^}]*border-radius:\s*var\(--radius-small\);/,
+  );
+  expect(systemCss).toMatch(
+    /\.app-content\s+\.directory-tools\s*>\s*\.directory-sort\s*\{[^}]*margin-block:\s*0;/,
+  );
+  expect(systemCss).toMatch(
+    /@media\s*\(max-width:\s*40rem\)\s*\{[\s\S]*?\.page-header--directory\s+\.directory-sort\s*\{[^}]*flex:\s*0 1 auto;[^}]*margin:\s*0;/,
+  );
+  expect(systemCss).not.toMatch(
+    /\.page-header--directory\s+\.directory-sort\s*\{[^}]*flex:\s*1 1 100%;/,
+  );
+});
