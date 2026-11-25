@@ -301,20 +301,19 @@ def _parse_xlsx_sheet(data: bytes, sheet_name: str | None, header_row: int | Non
 
         worksheet = values_wb[selected]
         value_rows_by_number: dict[int, list[object]] = {}
-        last_nonblank_row = 0
+        max_row_seen = 0
         max_col_seen = 0
         nonblank_count = 0
 
         for row_number, raw_tuple in enumerate(
-            worksheet.iter_rows(min_row=1, max_col=MAX_COLUMNS + 1, values_only=True),
+            worksheet.iter_rows(min_row=1, values_only=True),
             start=1,
         ):
             if row_number > MAX_SCANNED_ROWS:
                 raise SheetFormatError(f"Spreadsheet exceeds {MAX_SCANNED_ROWS} rows")
-            if (
-                len(raw_tuple) > MAX_COLUMNS
-                and raw_tuple[MAX_COLUMNS] is not None
-                and str(raw_tuple[MAX_COLUMNS]).strip()
+            max_row_seen = row_number
+            if len(raw_tuple) > MAX_COLUMNS and any(
+                extra is not None and str(extra).strip() for extra in raw_tuple[MAX_COLUMNS:]
             ):
                 raise SheetFormatError(f"Spreadsheet exceeds {MAX_COLUMNS} columns")
             row_values = list(raw_tuple[:MAX_COLUMNS])
@@ -326,7 +325,6 @@ def _parse_xlsx_sheet(data: bytes, sheet_name: str | None, header_row: int | Non
                 continue
             if row_last_nonempty > max_col_seen:
                 max_col_seen = row_last_nonempty
-            last_nonblank_row = row_number
             nonblank_count += 1
             if nonblank_count > MAX_ROWS + MAX_HEADER_ROW:
                 raise SheetFormatError(f"Spreadsheet exceeds {MAX_ROWS} nonblank rows")
@@ -335,9 +333,10 @@ def _parse_xlsx_sheet(data: bytes, sheet_name: str | None, header_row: int | Non
         values_wb.close()
 
     # Second bounded read-only pass (data_only=False) on the single selected sheet, bounded by
-    # the last nonblank row, to detect formula cells without cached values.
-    formula_coords: set[tuple[int, int]] = set()
-    if last_nonblank_row > 0:
+    # max_row_seen (<= MAX_SCANNED_ROWS), to detect formula cells without cached values including
+    # trailing formula-only rows.
+    formula_by_row: dict[int, set[int]] = {}
+    if max_row_seen > 0:
         try:
             formula_wb = openpyxl.load_workbook(io.BytesIO(data), read_only=True, data_only=False)
         except Exception as error:
@@ -347,37 +346,40 @@ def _parse_xlsx_sheet(data: bytes, sheet_name: str | None, header_row: int | Non
             for row_number, cell_tuple in enumerate(
                 formula_ws.iter_rows(
                     min_row=1,
-                    max_row=last_nonblank_row,
-                    max_col=MAX_COLUMNS + 1,
+                    max_row=max_row_seen,
                     values_only=False,
                 ),
                 start=1,
             ):
-                if len(cell_tuple) > MAX_COLUMNS:
-                    extra = cell_tuple[MAX_COLUMNS]
-                    if getattr(extra, "data_type", None) == "f" or (
-                        extra.value is not None and str(extra.value).strip()
-                    ):
-                        raise SheetFormatError(f"Spreadsheet exceeds {MAX_COLUMNS} columns")
+                if len(cell_tuple) > MAX_COLUMNS and any(
+                    getattr(extra, "data_type", None) == "f"
+                    or (extra.value is not None and str(extra.value).strip())
+                    for extra in cell_tuple[MAX_COLUMNS:]
+                ):
+                    raise SheetFormatError(f"Spreadsheet exceeds {MAX_COLUMNS} columns")
+                row_formulas: set[int] = set()
                 for col_idx, cell in enumerate(cell_tuple[:MAX_COLUMNS]):
                     if getattr(cell, "data_type", None) == "f":
-                        formula_coords.add((row_number, col_idx))
+                        row_formulas.add(col_idx)
+                if row_formulas:
+                    formula_by_row[row_number] = row_formulas
+                    if row_number not in value_rows_by_number:
+                        nonblank_count += 1
+                        if nonblank_count > MAX_ROWS + MAX_HEADER_ROW:
+                            raise SheetFormatError(f"Spreadsheet exceeds {MAX_ROWS} nonblank rows")
         finally:
             formula_wb.close()
 
-    row_numbers = sorted(value_rows_by_number.keys() | {f_row for f_row, _ in formula_coords})
+    row_numbers = sorted(value_rows_by_number.keys() | formula_by_row.keys())
     raw_rows: list[tuple[int, list[SheetCell]]] = []
     for row_number in row_numbers:
         row_values = value_rows_by_number.get(row_number, [])
-        width = max(len(row_values), max_col_seen)
-        # Include any column where an uncached formula appeared on this row.
-        for f_row, f_col in formula_coords:
-            if f_row == row_number and f_col + 1 > width:
-                width = f_col + 1
+        row_formulas = formula_by_row.get(row_number, set())
+        width = max(len(row_values), max_col_seen, (max(row_formulas) + 1) if row_formulas else 0)
         cells: list[SheetCell] = []
         for col_idx in range(width):
             val = row_values[col_idx] if col_idx < len(row_values) else None
-            if val is None and (row_number, col_idx) in formula_coords:
+            if val is None and col_idx in row_formulas:
                 cells.append(SheetCell(text="", uncached_formula=True))
             else:
                 cells.append(SheetCell(text=_format_xlsx_value(val)))

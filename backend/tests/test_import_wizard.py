@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import io
 import zipfile
+from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -110,12 +111,12 @@ def _actor(*, owner: bool = True, token_digest: bytes = b"k" * 32) -> Authentica
     )
 
 
-def _make_xlsx(rows: list[list[object]], *, merged: str | None = None) -> bytes:
+def _make_xlsx(rows: Sequence[Sequence[object]], *, merged: str | None = None) -> bytes:
     wb = openpyxl.Workbook()
     ws = wb.active
     assert ws is not None
     for row in rows:
-        ws.append(row)
+        ws.append(list(row))
     if merged:
         ws.merge_cells(merged)
     buf = io.BytesIO()
@@ -569,6 +570,47 @@ def test_xlsx_formatted_trailing_blank_rows_at_50000_allowed(
     monkeypatch.setattr("florabase.import_wizard.sheet.MAX_SCANNED_ROWS", 100)
     with pytest.raises(SheetFormatError, match="exceeds 100 rows"):
         parse_sheet(data, filename="formatted-trailing.xlsx")
+
+
+def test_xlsx_trailing_formula_only_row_detected_and_counted(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """L1/L2: trailing formula-only rows are not dropped and count toward MAX_ROWS early."""
+    # L1: last data row has ONLY an uncached formula in Species.
+    trailing_formula_xlsx = _make_xlsx(
+        [
+            ["Species", "Label"],
+            ["Hoya kerrii", "HOY-1"],
+            ['=CONCAT("Hoya ", "bella")', None],
+        ]
+    )
+    parsed = parse_sheet(trailing_formula_xlsx, filename="trailing-formula.xlsx")
+    assert [row.row_number for row in parsed.rows] == [2, 3]
+    assert parsed.rows[1].cells["col_0"].uncached_formula is True
+    assert parsed.rows[1].cells["col_1"].text == ""
+
+    # Preview reports that trailing formula-only row as invalid when mapped.
+    db = _FakeDatabase()
+    options = SheetImportOptions(
+        record_type="plants",
+        mapping=SheetImportMapping(
+            columns={"col_0": SheetImportField.SCIENTIFIC_NAME, "col_1": SheetImportField.LABEL}
+        ),
+    )
+    plan = build_preview_plan(
+        _session(db), trailing_formula_xlsx, options, filename="trailing-formula.xlsx"
+    )
+    assert plan.can_apply is False
+    assert plan.rows[0].outcome == "ready"
+    assert plan.rows[1].outcome == "invalid"
+    assert any("formula without a cached value" in msg for msg in plan.rows[1].messages)
+
+    # L2: crafted sheet exceeding MAX_ROWS using formula-only rows fails early in pass 2.
+    monkeypatch.setattr("florabase.import_wizard.sheet.MAX_ROWS", 5)
+    monkeypatch.setattr("florabase.import_wizard.sheet.MAX_HEADER_ROW", 2)
+    many_formulas = _make_xlsx([["Species"], *[["=1+1"] for _ in range(8)]])
+    with pytest.raises(SheetFormatError, match="exceeds 5 nonblank rows"):
+        parse_sheet(many_formulas, filename="many-formulas.xlsx")
 
 
 def test_confirmation_token_binds_session_file_options_preview_digest_and_ttl(
