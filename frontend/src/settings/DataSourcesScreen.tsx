@@ -30,6 +30,7 @@ const sources = [
     licence: "Per dataset",
     where: "#/species-distribution",
     website: "https://www.gbif.org/",
+    dataset: "https://techdocs.gbif.org/en/openapi/",
   },
   {
     name: "Natural Earth",
@@ -38,6 +39,8 @@ const sources = [
     licence: "Public domain",
     where: "#/map",
     website: "https://www.naturalearthdata.com/",
+    dataset:
+      "https://www.naturalearthdata.com/downloads/110m-cultural-vectors/110m-admin-0-details/",
   },
   {
     name: "OpenStreetMap tiles",
@@ -46,6 +49,7 @@ const sources = [
     licence: "ODbL, provider policy applies",
     where: "#/map",
     website: "https://www.openstreetmap.org/copyright",
+    dataset: "https://operations.osmfoundation.org/policies/tiles/",
   },
   {
     name: "Your own data (CSV)",
@@ -77,7 +81,7 @@ export function DataSourcesScreen() {
                   <th scope="col">Used for</th>
                   <th scope="col">How it is reached</th>
                   <th scope="col">Licence</th>
-                  <th scope="col">Official site</th>
+                  <th scope="col">Links</th>
                 </tr>
               </thead>
               <tbody>
@@ -107,9 +111,9 @@ export function DataSourcesScreen() {
                             href={source.dataset}
                             target="_blank"
                             rel="noopener noreferrer"
-                            aria-label={`${source.name} dataset release`}
+                            aria-label={`${source.name} data source`}
                           >
-                            Dataset
+                            Data source
                           </a>
                         </>
                       )}

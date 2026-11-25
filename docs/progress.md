@@ -8,8 +8,9 @@
   image revision from the image's `/release.json` (exported `fetchReleaseInfo`, now shared with the
   update watcher), project link, the tag's `CHANGELOG.md` and release notes, and the bundled
   `/LICENSE` and `/THIRD_PARTY_NOTICES.txt`.
-- Settings → Data sources gains an "Official site" column (WFO, Kew WCVP, GBIF, Natural Earth,
-  OpenStreetMap; dataset links for WFO 2026-06 on Zenodo and the Kew WCVP repository).
+- Settings → Data sources gains a "Links" column: official site and data-source page for WFO
+  (2026-06 on Zenodo), Kew WCVP, GBIF (API docs), Natural Earth (download page) and OpenStreetMap
+  (tile usage policy).
 - Checks: Vitest `src/settings src/shell src/pwa src/App.test.tsx src/App.lazy.test.tsx` (251 tests),
   `pnpm typecheck`, `pnpm lint`, `prettier --check src`. Evidence:
   [docs/release/evidence/about-001.md](release/evidence/about-001.md).

@@ -15,12 +15,15 @@
   `/THIRD_PARTY_NOTICES.txt` that nginx already serves in the production frontend image. External links
   open in a new tab with `rel="noopener noreferrer"`. The changelog is linked, not bundled: the
   frontend build context is `frontend/`, which does not contain the root `CHANGELOG.md`.
-- Settings → Data sources: new "Official site" column. URLs are the ones the repository already
-  cites: WFO `https://www.worldfloraonline.org/` and its 2026-06 release
-  `https://doi.org/10.5281/zenodo.20782718`; Kew WCVP `https://powo.science.kew.org/about-wcvp` and
-  `https://sftp.kew.org/pub/data-repositories/WCVP/`; GBIF `https://www.gbif.org/`; Natural Earth
-  `https://www.naturalearthdata.com/`; OpenStreetMap `https://www.openstreetmap.org/copyright`
-  (attribution and ODbL page). The CSV row keeps only its in-app link.
+- Settings → Data sources: new "Links" column with each source's official site ("Website") and the
+  page where its data is obtained ("Data source"). URLs are ones the repository already cites,
+  each answering HTTP 200 on 2026-11-25: WFO `https://www.worldfloraonline.org/` and its 2026-06
+  release `https://doi.org/10.5281/zenodo.20782718`; Kew WCVP
+  `https://powo.science.kew.org/about-wcvp` and `https://sftp.kew.org/pub/data-repositories/WCVP/`;
+  GBIF `https://www.gbif.org/` and its API documentation `https://techdocs.gbif.org/en/openapi/`;
+  Natural Earth `https://www.naturalearthdata.com/` and the 1:110m Admin 0 download page;
+  OpenStreetMap `https://www.openstreetmap.org/copyright` and the OSMF tile usage policy
+  `https://operations.osmfoundation.org/policies/tiles/`. The CSV row keeps only its in-app link.
 - Navigation: `about` section, Settings destination after Help (icon `monitor`), lazy chunk in
   `App.tsx`; the shell destination test lists it.
 - Checks: Vitest `src/settings src/shell src/pwa src/App.test.tsx src/App.lazy.test.tsx` (15 files,

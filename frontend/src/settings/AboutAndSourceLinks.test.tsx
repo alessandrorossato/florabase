@@ -83,23 +83,32 @@ test("About ignores a non-https source from release metadata", async () => {
   ).toHaveAttribute("href", `${PROJECT_URL}/blob/v1.2.3/CHANGELOG.md`);
 });
 
-test("Data sources link each external source to its official site in a new tab", () => {
+test("Data sources link each external source to its official site and data source in a new tab", () => {
   render(<DataSourcesScreen />);
   const table = screen.getByRole("table");
   const expected: [string, string][] = [
     ["World Flora Online (WFO) website", "https://www.worldfloraonline.org/"],
     [
-      "World Flora Online (WFO) dataset release",
+      "World Flora Online (WFO) data source",
       "https://doi.org/10.5281/zenodo.20782718",
     ],
     ["Kew WCVP website", "https://powo.science.kew.org/about-wcvp"],
     [
-      "Kew WCVP dataset release",
+      "Kew WCVP data source",
       "https://sftp.kew.org/pub/data-repositories/WCVP/",
     ],
     ["GBIF website", "https://www.gbif.org/"],
+    ["GBIF data source", "https://techdocs.gbif.org/en/openapi/"],
     ["Natural Earth website", "https://www.naturalearthdata.com/"],
+    [
+      "Natural Earth data source",
+      "https://www.naturalearthdata.com/downloads/110m-cultural-vectors/110m-admin-0-details/",
+    ],
     ["OpenStreetMap tiles website", "https://www.openstreetmap.org/copyright"],
+    [
+      "OpenStreetMap tiles data source",
+      "https://operations.osmfoundation.org/policies/tiles/",
+    ],
   ];
   for (const [name, href] of expected) {
     const link = within(table).getByRole("link", { name });
