@@ -61,7 +61,7 @@ change counts or filters.
 
 | Criterion | Evidence |
 | --- | --- |
-| Whitelisted optional `sort`, 422 otherwise, default unchanged | `backend/tests/integration/test_directory_sort.py::test_sort_parameter_is_whitelisted` (four endpoints × four values = 200; `created`, `id`, `name;drop`, empty = 422); each ordering test asserts `None` equals the previous default |
+| Whitelisted optional `sort`, 422 otherwise, default unchanged | `backend/tests/integration/product/test_directory_sort.py::test_sort_parameter_is_whitelisted` (under the owned `product` integration scope) (four endpoints × four values = 200; `created`, `id`, `name;drop`, empty = 422); each ordering test asserts `None` equals the previous default |
 | Server order before pagination, nulls last, stable ties | `test_orders_sort_by_reference_and_partial_order_date`, `test_media_sort_by_displayed_title_and_date_added`, `test_cutting_lots_and_attempts_sort_by_record_name_and_date`: exact order for every sort, case-insensitive name ties and same-date ties resolved by id, and a one-record page walk equal to the full order |
 | UI, first-page reset, record-type switch, URL and Saved View state | `frontend/src/orders/OrderScreen.test.tsx`, `frontend/src/media/MediaScreen.test.tsx`, `frontend/src/ui-pages/Cuttings/Cuttings.test.tsx` (UX-SORT-002 tests); `frontend/src/saved-views/state.test.ts`; `backend/tests/test_saved_views.py` accepted/rejected cases |
 | Generated contract | `make api-generate`, then `make api-check` passes |
@@ -74,7 +74,7 @@ change counts or filters.
   pass.
 - `pytest -m "not integration"` on saved views, media, orders and cuttings unit tests: 200 passed
   (the coverage threshold only applies to the full suite).
-- `./scripts/test-integration.sh` on `test_directory_sort.py`, `test_orders.py`,
+- `./scripts/test-integration.sh` on `product/test_directory_sort.py`, `test_orders.py`,
   `test_cuttings_api.py`, `test_shared_media.py`, `test_saved_views.py`,
   `test_history_saved_views.py`: 68 passed.
 - `make api-check`: pass.

@@ -18,7 +18,7 @@
   natural numeric compare (`Batch 10` before `Batch 9`).
 - Focused checks: ruff/mypy, pnpm format/lint/typecheck, vitest (orders, media, cuttings, saved views,
   components), backend unit tests, `make api-check`, and PostgreSQL integration for
-  `test_directory_sort.py` plus the orders, cuttings API, shared media and saved-view suites (68
+  `product/test_directory_sort.py` plus the orders, cuttings API, shared media and saved-view suites (68
   passed). The canonical `make feature-verify` is run by the operator.
 
 ## 2026-11-25 — Batch 13 integration (DOCS-004, PROPAGATION-BATCH-001, CARE-BULK-001/FN-03, UX-SORT-001, MEDIA-FETCH-001)
