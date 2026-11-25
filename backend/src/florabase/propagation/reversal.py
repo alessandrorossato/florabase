@@ -49,7 +49,7 @@ CUTTING_RESULTS: dict[
     "plant": (Plant, OperationKind.PROPAGATION_ATTEMPT_TO_PLANT),
     "plant_group": (PlantGroup, OperationKind.PROPAGATION_ATTEMPT_TO_PLANT_GROUP),
 }
-RETAINABLE = {"observation", "flowering", "fruiting", "measurement"}
+RETAINABLE = {"observation", "flowering", "fruiting", "measurement", "watering", "feeding"}
 
 
 @dataclass(frozen=True)

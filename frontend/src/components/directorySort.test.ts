@@ -36,3 +36,18 @@ test("partial dates order by known parts and undated records stay last", () => {
   expect(names("newest")).toEqual(["alpha 9", "beta", "Gamma", "Alpha 10"]);
   expect(names("oldest")).toEqual(["Gamma", "beta", "alpha 9", "Alpha 10"]);
 });
+
+test("name-only mode sorts by name and leaves input order unchanged for date sorts", () => {
+  expect(
+    sortDirectory(rows, "name", (row) => row.name).map((row) => row.name),
+  ).toEqual(["alpha 9", "Alpha 10", "beta", "Gamma"]);
+  expect(
+    sortDirectory(rows, "name_desc", (row) => row.name).map((row) => row.name),
+  ).toEqual(["Gamma", "beta", "Alpha 10", "alpha 9"]);
+  expect(
+    sortDirectory(rows, "newest", (row) => row.name).map((row) => row.name),
+  ).toEqual(["beta", "Alpha 10", "alpha 9", "Gamma"]);
+  expect(
+    sortDirectory(rows, "oldest", (row) => row.name).map((row) => row.name),
+  ).toEqual(["beta", "Alpha 10", "alpha 9", "Gamma"]);
+});

@@ -44,6 +44,7 @@ from florabase.plants.schemas import (
     PlantCreate,
     PlantExtractionCreate,
     PlantGroupCreate,
+    PlantGroupExtractBatchCreate,
     PlantGroupQuantity,
     PlantGroupResponse,
     PlantGroupUpdate,
@@ -53,6 +54,7 @@ from florabase.plants.schemas import (
     ReintegrationReason,
     SupplierSummary,
 )
+from florabase.propagation.labels import expand_label_pattern
 from florabase.provenance_sites.model import ProvenanceSite
 from florabase.provenance_sites.schemas import ProvenanceSiteResponse, ProvenanceSiteSummary
 from florabase.provenance_sites.service import responses as provenance_site_responses
@@ -387,6 +389,8 @@ _RETAINABLE_OBSERVATION_KINDS = {
     EventKind.FLOWERING.value,
     EventKind.FRUITING.value,
     EventKind.MEASUREMENT.value,
+    EventKind.WATERING.value,
+    EventKind.FEEDING.value,
 }
 
 
@@ -1127,3 +1131,80 @@ def _lock_forward_sowing(database: Session, sowing_id: UUID | None) -> None:
         raise PlantDomainConflictError(
             "reversed_sowing_is_historical", "A reversed Sowing cannot acquire new descendants"
         )
+
+
+def _batch_timestamps_match(actual: datetime, expected: datetime) -> bool:
+    actual_utc = actual.replace(tzinfo=UTC) if actual.tzinfo is None else actual.astimezone(UTC)
+    expected_utc = (
+        expected.replace(tzinfo=UTC) if expected.tzinfo is None else expected.astimezone(UTC)
+    )
+    return actual_utc == expected_utc
+
+
+def extract_plants_batch(
+    database: Session,
+    plant_group_id: UUID,
+    payload: PlantGroupExtractBatchCreate,
+) -> tuple[list[Plant], PlantGroup, list[Event]]:
+    lock_lineage_writes(database)
+    plant_group = database.scalar(
+        select(PlantGroup)
+        .where(PlantGroup.id == plant_group_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if plant_group is None:
+        raise PlantReferenceNotFoundError("plant_group_not_found", "PlantGroup not found")
+    if payload.expected_plant_group_updated_at is not None and not _batch_timestamps_match(
+        plant_group.updated_at, payload.expected_plant_group_updated_at
+    ):
+        raise PlantDomainConflictError(
+            "stale_preview",
+            "The PlantGroup changed before confirmation. Refresh and review again.",
+        )
+    if plant_group.lifecycle != "active":
+        raise PlantDomainConflictError(
+            "plant_group_not_active",
+            "Only an active PlantGroup can have Plants extracted",
+        )
+    if (
+        plant_group.quantity_value is not None
+        and plant_group.quantity_is_approximate is False
+        and payload.count > plant_group.quantity_value
+    ):
+        raise PlantDomainConflictError(
+            "plant_group_quantity_exceeded",
+            "Cannot extract more Plants than the exact quantity available in the PlantGroup",
+        )
+    labels = expand_label_pattern(
+        payload.label_pattern,
+        count=payload.count,
+        counter_start=payload.counter_start,
+        counter_padding=payload.counter_padding,
+    )
+    include_location = "location_id" in payload.model_fields_set
+    plants: list[Plant] = []
+    events: list[Event] = []
+    last_receipt_tick: datetime | None = None
+    with database.begin_nested():
+        for label in labels:
+            if last_receipt_tick is not None:
+                while datetime.now(UTC) <= last_receipt_tick:
+                    pass
+            item_data: dict[str, object] = {
+                "botanical_identity_id": payload.botanical_identity_id,
+                "label": label,
+                "collection_entry_date": payload.collection_entry_date,
+                "notes": payload.notes,
+            }
+            if include_location:
+                item_data["location_id"] = payload.location_id
+            plant, plant_group, event = extract_plant(
+                database,
+                plant_group.id,
+                PlantExtractionCreate.model_validate(item_data),
+            )
+            last_receipt_tick = datetime.now(UTC)
+            plants.append(plant)
+            events.append(event)
+    return plants, plant_group, events

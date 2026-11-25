@@ -51,6 +51,7 @@ import { LifecycleStatus, StatusBadge } from "../components/WorkspaceUI";
 import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
 import { labelComposerHref } from "../labels/labelData";
 import { CreationReversal } from "../propagation/CreationReversal";
+import { PotOnLauncher } from "../propagation/PotOnDialog";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { RecordTimeline } from "../timeline/RecordTimeline";
@@ -3301,6 +3302,50 @@ export function PlantScreen({
                                     Extract plant
                                   </button>
                                 )}
+                              {selected.kind === "group" && (
+                                <PotOnLauncher
+                                  source={{
+                                    kind: "group",
+                                    group: selected.value,
+                                  }}
+                                  identities={references.identities}
+                                  locations={references.locations}
+                                  fallbackFocusTo={detailHeading}
+                                  onGroupUpdated={(updatedGroup, created) => {
+                                    const authoritative: PlantRecord = {
+                                      kind: "group",
+                                      value: updatedGroup,
+                                    };
+                                    setDetail({
+                                      status: "ready",
+                                      record: authoritative,
+                                    });
+                                    setCollection((current) =>
+                                      current.status === "ready"
+                                        ? {
+                                            ...current,
+                                            records: [
+                                              ...created.map(
+                                                (plant): PlantRecord => ({
+                                                  kind: "plant",
+                                                  value: plant,
+                                                }),
+                                              ),
+                                              ...current.records.map(
+                                                (record) =>
+                                                  recordKey(record) ===
+                                                  recordKey(authoritative)
+                                                    ? authoritative
+                                                    : record,
+                                              ),
+                                            ],
+                                          }
+                                        : current,
+                                    );
+                                    setReversalRevision((value) => value + 1);
+                                  }}
+                                />
+                              )}
                             </>
                           }
                           moreActions={maintenanceActions}

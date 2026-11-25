@@ -2,7 +2,7 @@ import unicodedata
 from typing import Annotated, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from florabase.plants.model import PlantGroupLifecycle, PlantLifecycle
 from florabase.plants.schemas import (
@@ -10,6 +10,7 @@ from florabase.plants.schemas import (
     PlantGroupResponse,
     PlantResponse,
 )
+from florabase.propagation.labels import MAX_BATCH_COUNT, expand_label_pattern
 from florabase.seed_lots.schemas import PartialDate, SeedLotResponse, SeedQuantity
 from florabase.sowings.model import SowingLifecycle
 from florabase.sowings.schemas import SowingDetails, SowingResponse
@@ -196,3 +197,48 @@ class SowingPropagationSummary(BaseModel):
     exact_descendant_count: int
     approximate_plant_group_count: int
     unknown_plant_group_count: int
+
+
+class SowingPotOnCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    count: int = Field(ge=1, le=MAX_BATCH_COUNT)
+    label_pattern: str | None = Field(default=None, max_length=255)
+    counter_start: int = Field(default=1, ge=0, le=1_000_000)
+    counter_padding: int | None = Field(default=None, ge=0, le=255)
+    botanical_identity_id: UUID
+    location_id: UUID | None = None
+    collection_entry_date: PartialDate | None = None
+    notes: str | None = Field(default=None, max_length=20_000)
+    plant_lifecycle: PlantLifecycle = PlantLifecycle.ACTIVE
+    resulting_sowing_lifecycle: SowingLifecycle
+    expected_sowing_updated_at: AwareDatetime | None = None
+
+    @field_validator("label_pattern", mode="before")
+    @classmethod
+    def normalize_label_pattern(cls, value: object) -> object:
+        return _single_line(value) if value is None or isinstance(value, str) else value
+
+    @field_validator("notes", mode="before")
+    @classmethod
+    def normalize_pot_on_notes(cls, value: object) -> object:
+        return _notes(value) if value is None or isinstance(value, str) else value
+
+    @model_validator(mode="after")
+    def validate_pot_on(self) -> Self:
+        if self.plant_lifecycle in {PlantLifecycle.REVERSED, PlantLifecycle.REINTEGRATED}:
+            raise ValueError("Historical operation lifecycles cannot be assigned at creation")
+        if self.resulting_sowing_lifecycle == SowingLifecycle.REVERSED:
+            raise ValueError("Reversed is assigned only by propagation reversal")
+        expand_label_pattern(
+            self.label_pattern,
+            count=self.count,
+            counter_start=self.counter_start,
+            counter_padding=self.counter_padding,
+        )
+        return self
+
+
+class SowingPotOnResponse(BaseModel):
+    sowing: SowingResponse
+    plants: list[PlantResponse]

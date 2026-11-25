@@ -109,6 +109,10 @@ Quick Preview offers **Save local copy** only for an external reference without 
 The action tells the operator it contacts the source, uses the existing authenticated copy endpoint,
 and updates the open preview and gallery without discarding the selected asset or directory state.
 Saved and ordinary local assets do not show that action; Refresh and Remove remain in detail.
+Wikipedia and Wikimedia Commons file pages (`/wiki/File:...`, including localized file namespaces)
+are accepted as the image address and converted to the direct image address; copies send a fixed
+`Florabase/<version> media-copy` User-Agent, and any other web page is refused with a request for
+the image's own address.
 
 Record Photos offers **Add new media**, **Add external image** and **Link existing media**. Choose
 one asset, supply record-specific caption/order, then explicitly designate primary if desired.
