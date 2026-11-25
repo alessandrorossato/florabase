@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
@@ -13,6 +13,12 @@ from florabase.auth.dependencies import (
 )
 from florabase.db.session import get_database_session
 from florabase.plants.api import _plant_group_response, _plant_response
+from florabase.plants.service import (
+    PlantDomainConflictError,
+    PlantReferenceNotFoundError,
+    get_plant,
+    plant_responses,
+)
 from florabase.propagation.reversal import Evaluation, ResultType, evaluate, reverse
 from florabase.propagation.reversal_schemas import (
     PlantCreationReversalResponse,
@@ -21,7 +27,12 @@ from florabase.propagation.reversal_schemas import (
     PropagationReversalEligibility,
     SowingCreationReversalResponse,
 )
-from florabase.propagation.service import PropagationConflictError, PropagationNotFoundError
+from florabase.propagation.schemas import SowingPotOnCreate, SowingPotOnResponse
+from florabase.propagation.service import (
+    PropagationConflictError,
+    PropagationNotFoundError,
+    create_plants_from_sowing_batch,
+)
 from florabase.seed_lots.api import _response as seed_lot_response
 from florabase.sowings.api import _response as sowing_response
 
@@ -158,4 +169,49 @@ def reverse_plant_group_creation(
         plant_group=_plant_group_response(database, result_id),
         sowing=sowing_response(database, evaluation.source.id),
         operation_receipt_id=evaluation.receipt.id,
+    )
+
+
+@router.post(
+    "/sowings/{sowing_id}/pot-on",
+    response_model=SowingPotOnResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="potOnSowing",
+)
+def pot_on_sowing(
+    sowing_id: UUID,
+    payload: SowingPotOnCreate,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
+) -> SowingPotOnResponse:
+    require_owner(actor)
+    try:
+        plants, sowing = create_plants_from_sowing_batch(database, sowing_id, payload)
+    except PropagationNotFoundError as error:
+        raise HTTPException(404, detail={"code": error.code, "message": error.message}) from error
+    except PropagationConflictError as error:
+        raise HTTPException(409, detail={"code": error.code, "message": error.message}) from error
+    except PlantReferenceNotFoundError as error:
+        raise HTTPException(404, detail={"code": error.code, "message": error.message}) from error
+    except PlantDomainConflictError as error:
+        raise HTTPException(409, detail={"code": error.code, "message": error.message}) from error
+    except OperationalError as error:
+        if getattr(error.orig, "sqlstate", None) not in {"40001", "40P01", "55P03"}:
+            raise
+        raise HTTPException(
+            409,
+            detail={
+                "code": "propagation_concurrency_conflict",
+                "message": "Concurrent work conflicted. Refresh and retry.",
+            },
+        ) from error
+    projections = []
+    for plant in plants:
+        projection = get_plant(database, plant.id)
+        if projection is None:
+            raise RuntimeError("Created Plant could not be projected")
+        projections.append(projection)
+    return SowingPotOnResponse(
+        sowing=sowing_response(database, sowing.id),
+        plants=plant_responses(database, projections),
     )

@@ -177,6 +177,31 @@ input:is([type="checkbox"], [type="radio"]) {
   margin: 0;
   max-width: none;
 }
+.directory-tools .directory-sort {
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+}
+.directory-tools .directory-sort select {
+  box-sizing: border-box;
+  width: auto;
+  max-width: 100%;
+  height: var(--control-height);
+  min-height: var(--control-height);
+  margin: 0;
+  padding: 0 var(--space-3);
+  font: var(--type-body);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-small);
+  vertical-align: middle;
+}
+.directory-tools .directory-sort select:not(:disabled):hover {
+  background: var(--surface-hover);
+}
 .directory-tools .saved-views,
 .directory-tools .saved-views__controls {
   margin: 0;

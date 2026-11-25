@@ -10,6 +10,7 @@ from florabase.lineage.service import lock_lineage_writes
 from florabase.plants.model import Plant, PlantGroup
 from florabase.plants.schemas import PlantCreate, PlantGroupCreate, PlantGroupQuantity
 from florabase.plants.service import create_plant, create_plant_group
+from florabase.propagation.labels import expand_label_pattern
 from florabase.propagation.schemas import (
     PartialSourceAdjustment,
     PlantFromSowingCreate,
@@ -17,6 +18,7 @@ from florabase.propagation.schemas import (
     PropagationPlantGroupSummary,
     PropagationPlantSummary,
     SeedLotSowingTransitionCreate,
+    SowingPotOnCreate,
     SowingPropagationSummary,
 )
 from florabase.propagation.snapshots import propagation_snapshot
@@ -363,3 +365,59 @@ def propagation_summary(database: Session, sowing_id: UUID) -> SowingPropagation
             group.quantity_value is None and group.lifecycle != "reversed" for group in groups
         ),
     )
+
+
+def _timestamps_match(actual: datetime, expected: datetime) -> bool:
+    actual_utc = actual.replace(tzinfo=UTC) if actual.tzinfo is None else actual.astimezone(UTC)
+    expected_utc = (
+        expected.replace(tzinfo=UTC) if expected.tzinfo is None else expected.astimezone(UTC)
+    )
+    return actual_utc == expected_utc
+
+
+def create_plants_from_sowing_batch(
+    database: Session,
+    sowing_id: UUID,
+    payload: SowingPotOnCreate,
+) -> tuple[list[Plant], Sowing]:
+    sowing = _lock_sowing(database, sowing_id)
+    if payload.expected_sowing_updated_at is not None and not _timestamps_match(
+        sowing.updated_at, payload.expected_sowing_updated_at
+    ):
+        raise PropagationConflictError(
+            "stale_preview",
+            "The Sowing changed before confirmation. Refresh and review again.",
+        )
+    if sowing.lifecycle != "active":
+        raise PropagationConflictError(
+            "sowing_not_active",
+            "Only an active Sowing can be potted on in a batch",
+        )
+    labels = expand_label_pattern(
+        payload.label_pattern,
+        count=payload.count,
+        counter_start=payload.counter_start,
+        counter_padding=payload.counter_padding,
+    )
+    created: list[Plant] = []
+    with database.begin_nested():
+        for index, label in enumerate(labels):
+            is_last = index == len(labels) - 1
+            step_lifecycle = (
+                payload.resulting_sowing_lifecycle.value if is_last else sowing.lifecycle
+            )
+            plant, sowing = create_plant_from_sowing(
+                database,
+                sowing.id,
+                PlantFromSowingCreate(
+                    botanical_identity_id=payload.botanical_identity_id,
+                    label=label,
+                    collection_entry_date=payload.collection_entry_date,
+                    location_id=payload.location_id,
+                    notes=payload.notes,
+                    lifecycle=payload.plant_lifecycle,
+                ),
+                step_lifecycle,
+            )
+            created.append(plant)
+    return created, sowing

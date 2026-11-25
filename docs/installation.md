@@ -434,14 +434,19 @@ reference/wcvp-v16/index.sqlite
 reference/wcvp-v16/index.sha256
 ```
 
-The files must be readable by the backend container user (`10001`). In `compose.yaml`, add these
-lines to the `backend` service, keeping the existing entries, then redeploy:
+The files must be readable by the backend container user (`10001`). In `compose.yaml`, add the two
+`environment` lines and the `volumes` line to the existing lists of the `backend` service (do not
+add a second `environment:` or `volumes:` key), then redeploy:
 
 ```yaml
+  backend:
+    # ...
     environment:
+      # ...existing entries stay...
       - FLORABASE_WFO_SNAPSHOT_PATH=/var/lib/florabase/reference/wfo-2026-06.sqlite
       - FLORABASE_WCVP_V16_SNAPSHOT_PATH=/var/lib/florabase/reference/wcvp-v16/index.sqlite
     volumes:
+      # ...existing entries stay...
       - /volume1/docker/florabase/reference:/var/lib/florabase/reference:ro
 ```
 

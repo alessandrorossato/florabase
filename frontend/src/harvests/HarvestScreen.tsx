@@ -42,6 +42,8 @@ import { RecordIdentities } from "../components/recordPresentation";
 import { useRecordDetailFocus } from "../components/useRecordDetailFocus";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { DirectorySortSelect } from "../components/DirectorySort";
+import { sortDirectory } from "../components/directorySort";
 import { useEditRoute } from "../components/useEditRoute";
 import { formatPartialDate } from "../events/eventData";
 import { PhotosSection } from "../photos/PhotosSection";
@@ -221,9 +223,21 @@ export function HarvestScreen({
         .includes(query.trim().toLocaleLowerCase()),
   );
   const matching = filtered ?? [];
-  const pageFilterKey = JSON.stringify([query, identity, type, material]);
+  const ordered = sortDirectory(
+    matching,
+    view.state.sort,
+    (record) => record.display_title,
+    (record) => record.occurred_on,
+  );
+  const pageFilterKey = JSON.stringify([
+    query,
+    identity,
+    type,
+    material,
+    view.state.sort,
+  ]);
 
-  const pagination = useDirectoryPagination(matching, pageFilterKey);
+  const pagination = useDirectoryPagination(ordered, pageFilterKey);
   const { visible: pageRecords } = pagination;
   useCollectionPageReturnFocus(Boolean(records) && !creating && !initialId);
   const [backgroundId, setBackgroundId] = useState<string | undefined>(
@@ -410,6 +424,15 @@ export function HarvestScreen({
               value={query}
               onChange={setQuery}
               placeholder="Source, title or botanical identity"
+            />
+          }
+          sort={
+            <DirectorySortSelect
+              value={view.state.sort}
+              dateLabel="harvest date"
+              onChange={(value) => {
+                view.update("sort", value);
+              }}
             />
           }
           savedViews={
