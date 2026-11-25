@@ -146,12 +146,28 @@ def test_csv_and_xlsx_fixture_equivalence(stem: str) -> None:
         assert csv_row.cells == xlsx_row.cells
 
 
+def test_xlsx_default_sheet_reports_first_error_when_no_sheet_has_data() -> None:
+    wb = openpyxl.Workbook()
+    first = wb.active
+    assert first is not None
+    first.append(["Species"])
+    wb.create_sheet("Empty")
+    buf = io.BytesIO()
+    wb.save(buf)
+    with pytest.raises(SheetFormatError, match="no data rows"):
+        parse_sheet(buf.getvalue(), filename="empty.xlsx")
+
+
 def test_it_edge_cases_xlsx_sheets_header_dates_formula_and_notes() -> None:
     data = (FIXTURES / "it-edge-cases.xlsx").read_bytes()
 
-    # Default first sheet ("Info") has only one row and no data rows.
+    # The first sheet ("Info") has no data rows, so the default opens "Piante" instead.
+    default = inspect_sheet(data, filename="it-edge-cases.xlsx", record_type="plants")
+    assert default.selected_sheet == "Piante"
+    assert default.sheets == ["Info", "Piante"]
+    # An explicit choice of the empty sheet still reports it.
     with pytest.raises(SheetFormatError, match="no data rows"):
-        inspect_sheet(data, filename="it-edge-cases.xlsx", record_type="plants")
+        inspect_sheet(data, filename="it-edge-cases.xlsx", sheet_name="Info", record_type="plants")
 
     inspected = inspect_sheet(
         data, filename="it-edge-cases.xlsx", sheet_name="Piante", record_type="plants"

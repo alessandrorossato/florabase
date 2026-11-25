@@ -1,5 +1,22 @@
 # Engineering progress
 
+## 2026-11-25 — IMPORT-002 spreadsheet wizard frontend pass
+
+- On `feat/import-002-sheet-wizard` (writer `claude-import-002`), after merging `origin/main`
+  `b632c5c` (MOBILE-002; only `docs/progress.md` conflicted). Review notes L1/L2 were already fixed
+  in `7dcbfd8` (`neon`) and are covered by `test_xlsx_trailing_formula_only_row_detected_and_counted`.
+- Added `frontend/src/import-export/SheetImportWizard.tsx` (six steps: upload with sheet and header
+  row, row type, column mapping with browser-remembered mapping, grouped review of species,
+  locations and suppliers with `WfoNameInput` reuse, rows with "Only problems", import result with
+  links) and `sheetApi.ts`; launcher in `ImportExportScreen.tsx`, the per-type import marked
+  Advanced and otherwise unchanged.
+- Fixed a dead end found in the UI run: an empty first XLSX sheet made inspect fail before the sheet
+  picker appeared; without an explicit sheet the parser now opens the first sheet with data.
+- Checks: backend ruff, mypy, import unit suites (53 passed), IMPORT-001 + IMPORT-002 integration
+  (20 passed); frontend Prettier, tsc, ESLint, Vitest `src/import-export` (8 passed); manual UI run of
+  all seven samples on a UAT instance. Evidence: [import-002.md](release/evidence/import-002.md).
+  Canonical FULL pending (operator).
+
 ## 2026-11-24 — IMPORT-002 single-sheet CSV/XLSX import wizard (backend pass)
 
 - On `feat/import-002-sheet-wizard` from `origin/main` `ddf5a14` (writer `neon`); backend-only pass

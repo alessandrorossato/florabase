@@ -239,3 +239,24 @@ creating one collection record type per sheet (**Plants**, **Plant groups**, or 
   all collection records in a single transaction—rolling back everything on any error or state
   change. Collection records remain create-only; no events, photos, lineage, or server-side drafts
   are created.
+- **Sheet choice**: without an explicit choice the first sheet that has data opens, so a leading
+  cover or instructions sheet does not block the upload; the wizard then offers every sheet.
+
+### Using the wizard
+
+Settings → Import / Export → **Import a spreadsheet** opens six steps; the per-type CSV import stays
+below it, marked **Advanced**.
+
+1. **Upload** a `.csv` or `.xlsx` file; pick the sheet and the header row when needed.
+2. **Row type**: Plant, Plant group or Seed lot.
+3. **Columns**: each column shows sample values and a Florabase field (or Ignore). Scientific name is
+   required and a field can be used once. The last mapping for the same headers and row type is
+   remembered in this browser only.
+4. **Names and places**: species, locations and suppliers are listed once per distinct value. New
+   scientific names can be edited (with local WFO suggestions when that index is installed);
+   locations and suppliers can use an existing record, be created (a new location under a chosen
+   parent, a new supplier with a kind) or be left empty.
+5. **Rows**: counts of ready rows and rows needing attention, with an "Only problems" filter and the
+   per-row messages of the shared preview vocabulary. Import stays disabled until every row is ready.
+6. **Import** creates everything in one transaction and lists the created records with links. If the
+   collection changed since the preview, nothing is created and the wizard returns to step 4.

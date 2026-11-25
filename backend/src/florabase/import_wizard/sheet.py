@@ -31,6 +31,14 @@ class SheetFormatError(ValueError):
     """Raised when an uploaded spreadsheet violates format, size, or safety limits."""
 
 
+class EmptySheetError(SheetFormatError):
+    """Raised when the selected sheet has no header or data rows; carries all sheet names."""
+
+    def __init__(self, message: str, sheets: list[str]) -> None:
+        super().__init__(message)
+        self.sheets = sheets
+
+
 @dataclass(frozen=True)
 class SheetCell:
     text: str
@@ -173,7 +181,7 @@ def _finalize_grid(
             detected_header_row = row_number
             break
     if detected_header_row is None:
-        raise SheetFormatError(f"No header row found in the first {MAX_HEADER_ROW} rows")
+        raise EmptySheetError(f"No header row found in the first {MAX_HEADER_ROW} rows", sheets)
 
     effective_header_row = header_row if header_row is not None else detected_header_row
     header_cells = by_number.get(effective_header_row, [])
@@ -190,7 +198,7 @@ def _finalize_grid(
                 raise SheetFormatError(f"Spreadsheet exceeds {MAX_ROWS} nonblank rows")
 
     if not data_raw:
-        raise SheetFormatError("Spreadsheet contains no data rows")
+        raise EmptySheetError("Spreadsheet contains no data rows", sheets)
 
     width = len(header_cells)
     for _, cells in data_raw:
@@ -405,7 +413,19 @@ def parse_sheet(
         raise SheetFormatError("Spreadsheet must be nonempty and at most 2 MiB")
     fmt = _detect_format(data, filename)
     if fmt == "xlsx":
-        return _parse_xlsx_sheet(data, sheet_name=sheet_name, header_row=header_row)
+        if sheet_name is not None:
+            return _parse_xlsx_sheet(data, sheet_name=sheet_name, header_row=header_row)
+        # Without an explicit choice, open the first sheet that has data (a leading cover or
+        # instructions sheet is common) so the inspect response can offer the sheet picker.
+        try:
+            return _parse_xlsx_sheet(data, sheet_name=None, header_row=header_row)
+        except EmptySheetError as first_error:
+            for name in first_error.sheets[1:]:
+                try:
+                    return _parse_xlsx_sheet(data, sheet_name=name, header_row=header_row)
+                except EmptySheetError:
+                    continue
+            raise first_error from None
     if sheet_name is not None:
         raise SheetFormatError("Worksheet selection applies only to XLSX files")
     return _parse_csv_sheet(data, header_row=header_row)

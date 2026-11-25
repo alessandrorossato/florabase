@@ -1,6 +1,7 @@
 import { ActionButton } from "../components/Action";
 import { useState } from "react";
 import { PageHeader } from "../components/ReferenceUI";
+import { SheetImportWizard } from "./SheetImportWizard";
 
 import {
   activeCsrfToken,
@@ -80,6 +81,7 @@ export function ImportExportScreen() {
     Record<string, Record<string, string> | undefined>
   >({});
   const [guideOpen, setGuideOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [guide, setGuide] = useState<FieldGuideItem[] | null>(null);
   const [guideBusy, setGuideBusy] = useState(false);
   const [guideError, setGuideError] = useState<string | null>(null);
@@ -237,11 +239,42 @@ export function ImportExportScreen() {
         titleId="import-title"
         description="Exchange collection data using Florabase's supported CSV workflows."
       />
+      {sheetOpen ? (
+        <SheetImportWizard
+          onClose={() => {
+            setSheetOpen(false);
+          }}
+        />
+      ) : (
+        <section
+          className="card import-workspace__primary"
+          aria-labelledby="sheet-launch-heading"
+        >
+          <h3 id="sheet-launch-heading">Import a spreadsheet</h3>
+          <p>
+            Bring in your own CSV or Excel sheet: one row per Plant, Plant group
+            or Seed lot. Florabase maps the columns and creates missing species,
+            locations and suppliers in one step.
+          </p>
+          <div className="actions">
+            <button
+              type="button"
+              disabled={!owner || !authorized}
+              onClick={() => {
+                setSheetOpen(true);
+              }}
+            >
+              Import a spreadsheet
+            </button>
+          </div>
+        </section>
+      )}
       <div className="import-workspace__grid">
         <section
           className="card import-workspace__primary"
           aria-labelledby="import-heading"
         >
+          <p className="eyebrow">Advanced</p>
           <h3 id="import-heading">Import CSV</h3>
           <ol className="import-progress" aria-label="Import steps">
             {(["Template", "Upload", "Preview", "Import"] as const).map(
