@@ -1,0 +1,94 @@
+{
+  "base": "ddf5a1431453df6c6644fb1f2e9feeec6b120e16",
+  "bootstrap": "ddf5a1431453df6c6644fb1f2e9feeec6b120e16",
+  "bootstrap_commits": [],
+  "branch": "ci/batch-12",
+  "reconciliation": {
+    "docs/progress.md": "Retain all source milestones in merge order below the heading and prepend the Batch 12 integration milestone.",
+    "docs/release/evidence/wf-04-batch-12.md": "Record Batch 12 source provenance, the progress-heading fix rationale, the Compose line budget, conflict resolution and proposed release classes.",
+    "scripts/test-beta-runtime.py": "Raise the production compose.yaml line limit from 50 to 60 at the operator's request (2026-11-23) so the merged file keeps headroom; all other minimal-Compose assertions unchanged."
+  },
+  "sources": [
+    {
+      "base": "ddf5a1431453df6c6644fb1f2e9feeec6b120e16",
+      "branch": "ci/wf-batch-progress-001",
+      "claim": "619f6ea6551d",
+      "commits": [
+        "ea607ee444d6f7add330164f38f7e839a0c55c0b"
+      ],
+      "evidence": [
+        "docs/release/evidence/wf-batch-progress-001.md"
+      ],
+      "id": "WF-BATCH-PROGRESS-001",
+      "merge": "c342de3655f4b7ebb8b42a8e0c74d468287beb76",
+      "resolutions": [],
+      "reviewer": "claude-wf-batch-progress-qa",
+      "tip": "ea607ee444d6f7add330164f38f7e839a0c55c0b",
+      "writer": "claude-batch-progress-header"
+    },
+    {
+      "base": "ddf5a1431453df6c6644fb1f2e9feeec6b120e16",
+      "branch": "docs/docs-003-install-guide",
+      "claim": "efef090f502a",
+      "commits": [
+        "55994c7e0e14023b468c107e293fd2d918cfc6f0",
+        "a2b50350a5d718e9385cc251c7dcf2fcaa4d1ecb"
+      ],
+      "evidence": [
+        "docs/release/evidence/beta-8-publication.md",
+        "docs/archive/DOCS-003/handoff.md"
+      ],
+      "id": "DOCS-003",
+      "merge": "7fe6a401e123a787e6540b02bd3a4e486b37c146",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-docs003-source-qa",
+      "tip": "a2b50350a5d718e9385cc251c7dcf2fcaa4d1ecb",
+      "writer": "antigravity-docs-003"
+    },
+    {
+      "base": "ddf5a1431453df6c6644fb1f2e9feeec6b120e16",
+      "branch": "feat/fn-02-fn-04-list-ux",
+      "claim": "ff1db8ec17e5",
+      "commits": [
+        "aedc2d5099632eb7ba4279051a03061d90399c8a",
+        "66fec2f9ae13c67a33090a18a38d5b334377762b"
+      ],
+      "evidence": [
+        "docs/release/evidence/fn-02-fn-04-ux-entry-001.md"
+      ],
+      "id": "FN-02",
+      "merge": "f618733b8724e424cff2e8d6e55bd691c81f4fc6",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-pkgb-source-qa",
+      "tip": "66fec2f9ae13c67a33090a18a38d5b334377762b",
+      "writer": "claude-pkg-b"
+    },
+    {
+      "base": "ddf5a1431453df6c6644fb1f2e9feeec6b120e16",
+      "branch": "fix/plants-list-reference-mount",
+      "claim": "7ee98ce77935",
+      "commits": [
+        "3504dca49d2739b942352cdd018240975ad99b5c",
+        "cceaf3c6ebe163d61bed7c9fa161e41be5de41c6",
+        "2c03a67c763b7f776767b8459c2743230d37f979"
+      ],
+      "evidence": [
+        "docs/release/evidence/ui-review-002.md"
+      ],
+      "id": "UI-REVIEW-002",
+      "merge": "5d0916bee7e96672ae0e9b05e3831a96c937223a",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-batch13-source-qa",
+      "tip": "2c03a67c763b7f776767b8459c2743230d37f979",
+      "writer": "claude-batch13-impl"
+    }
+  ],
+  "summary": "Install guide, list usability, plants list fixes and batch merge",
+  "version": 1
+}

@@ -1,4 +1,5 @@
 import { HierarchyRow } from "../components/HierarchyRow";
+import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import {
   useCallback,
   useEffect,
@@ -56,6 +57,34 @@ type SaveState =
   | { status: "saving" }
   | { status: "success"; message: string }
   | { status: "error"; message: string };
+
+function ParentPlacePicker({
+  initial,
+  options,
+  disabled,
+}: {
+  initial: string;
+  options: { id: string; display_path: string }[];
+  disabled: boolean;
+}) {
+  const [value, setValue] = useState(initial);
+  return (
+    <ReferencePicker
+      id="edit-geographic-place-parent"
+      name="parent_id"
+      label="Parent geographic place"
+      required
+      help="This place and its descendants are excluded to prevent cycles."
+      disabled={disabled}
+      choices={options.map((place) => ({
+        id: place.id,
+        label: place.display_path,
+      }))}
+      value={value}
+      onChange={setValue}
+    />
+  );
+}
 
 function formString(data: FormData, name: string): string {
   const value = data.get(name);
@@ -1053,31 +1082,12 @@ export function GeographyScreen({
                                 </option>
                               </select>
                             </div>
-                            <div className="field">
-                              <FieldLabel
-                                required
-                                htmlFor="edit-geographic-place-parent"
-                              >
-                                Parent geographic place
-                              </FieldLabel>
-                              <select
-                                id="edit-geographic-place-parent"
-                                name="parent_id"
-                                required
-                                defaultValue={selected.parent_id ?? ""}
-                                disabled={pending}
-                              >
-                                {parentOptions.map((place) => (
-                                  <option value={place.id} key={place.id}>
-                                    {place.display_path}
-                                  </option>
-                                ))}
-                              </select>
-                              <small>
-                                This place and its descendants are excluded to
-                                prevent cycles.
-                              </small>
-                            </div>
+                            <ParentPlacePicker
+                              key={selected.id}
+                              initial={selected.parent_id ?? ""}
+                              options={parentOptions}
+                              disabled={pending}
+                            />
                             {save.status === "error" && (
                               <div
                                 className="notice notice--error"
@@ -1193,29 +1203,22 @@ export function GeographyScreen({
                       <option value="other_named_area">Other named area</option>
                     </select>
                   </div>
-                  <div className="field">
-                    <FieldLabel required htmlFor="new-geographic-place-parent">
-                      Parent geographic place
-                    </FieldLabel>
-                    <select
-                      id="new-geographic-place-parent"
-                      required
-                      disabled={pending}
-                      value={createParentId}
-                      onChange={(event) => {
-                        setCreateParentId(event.currentTarget.value);
-                      }}
-                    >
-                      <option value="">Choose a parent</option>
-                      {places
-                        .filter((place) => !place.retired_at)
-                        .map((place) => (
-                          <option value={place.id} key={place.id}>
-                            {place.display_path}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
+                  <ReferencePicker
+                    id="new-geographic-place-parent"
+                    label="Parent geographic place"
+                    required
+                    openOnFocus={false}
+                    placeholder="Choose a parent"
+                    disabled={pending}
+                    choices={places
+                      .filter((place) => !place.retired_at)
+                      .map((place) => ({
+                        id: place.id,
+                        label: place.display_path,
+                      }))}
+                    value={createParentId}
+                    onChange={setCreateParentId}
+                  />
                   {save.status === "error" && (
                     <div
                       className="notice notice--error"

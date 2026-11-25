@@ -1,3 +1,4 @@
+import { clearReference, pickReference } from "../test/referencePicker";
 import { browserBack, browserForward } from "../test/history";
 import { openFormSection } from "../test/formSections";
 import { createMediaQueryList } from "../test/mediaQuery";
@@ -527,6 +528,44 @@ test("Plants navigation exposes loading, empty, missing-identity, and failure st
   expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
 });
 
+test("FN-02 Plants sort by name and collection-entry date", async () => {
+  mockApi(
+    plantHandler(
+      [
+        plant({ id: "p-b", label: "Bay", collection_entry_date: null }),
+        plant({
+          id: "p-c",
+          label: "Cedar",
+          collection_entry_date: { precision: "year", year: 2020 },
+        }),
+      ],
+      [
+        group({
+          id: "g-a",
+          label: "Apple seedlings",
+          lifecycle: "active",
+          collection_entry_date: { precision: "month", year: 2026, month: 2 },
+        }),
+      ],
+    ),
+  );
+  const user = await openPlants();
+  await screen.findByText("Cedar");
+  const labels = () =>
+    screen
+      .getAllByText(/^(Bay|Cedar|Apple seedlings)$/)
+      .map((node) => node.textContent);
+  const sort = screen.getByRole("combobox", { name: "Sort by" });
+  await user.selectOptions(sort, "name");
+  expect(labels()).toEqual(["Apple seedlings", "Bay", "Cedar"]);
+  await user.selectOptions(sort, "name_desc");
+  expect(labels()).toEqual(["Cedar", "Bay", "Apple seedlings"]);
+  await user.selectOptions(sort, "newest");
+  expect(labels()).toEqual(["Apple seedlings", "Cedar", "Bay"]);
+  await user.selectOptions(sort, "oldest");
+  expect(labels()).toEqual(["Cedar", "Apple seedlings", "Bay"]);
+});
+
 test("unified rows, search, lifecycle and type filters, detail, and Back remain accessible", async () => {
   mockApi(plantHandler([plant()], [group()]));
   const user = await openPlants();
@@ -660,6 +699,99 @@ test("one New disclosure chooses type and supports BotanicalIdentity-only Plant 
   expect(
     screen.getByRole("button", { name: "New plant or group" }),
   ).toHaveAttribute("aria-expanded", "false");
+});
+
+test("UX-ENTRY-001 Save and add another keeps the Plant form and identity", async () => {
+  const payloads: Record<string, unknown>[] = [];
+  let plants: unknown[] = [];
+  mockApi(
+    plantHandler(plants, [], (path, init) => {
+      if (path === "/api/v1/plants" && init?.method === "POST") {
+        const payload = body(init);
+        payloads.push(payload);
+        const created = plant({
+          ...payload,
+          id: `created-plant-${String(payloads.length)}`,
+          supplier: null,
+          material_provenance: null,
+          location: null,
+        });
+        plants = [...plants, created];
+        return json(created, 201);
+      }
+      if (path === "/api/v1/plants" && (!init?.method || init.method === "GET"))
+        return json(plants);
+      return undefined;
+    }),
+  );
+  const user = await openPlants();
+  await user.click(
+    await screen.findByRole("button", { name: "New plant or group" }),
+  );
+  await user.click(
+    screen.getByRole("button", { name: /Plant.*One individually/s }),
+  );
+  await chooseReference(user, "Botanical identity", "Persea americana");
+  await openFormSection(user, "Essentials");
+  await user.type(screen.getByLabelText("Label"), "Avocado A");
+  await openFormSection(user, "Lifecycle & notes");
+  await user.click(
+    screen.getByRole("button", { name: "Save and add another" }),
+  );
+  expect(
+    await screen.findByText(
+      "Plant was added to the collection. Add the next one.",
+    ),
+  ).toBeInTheDocument();
+  await openFormSection(user, "Essentials");
+  expect(screen.getByLabelText("Label")).toHaveValue("");
+  expect(
+    screen.getByRole("combobox", { name: "Botanical identity" }),
+  ).toHaveValue("Persea americana");
+  await user.type(screen.getByLabelText("Label"), "Avocado B");
+  await openFormSection(user, "Lifecycle & notes");
+  await user.click(screen.getByRole("button", { name: "Record Plant" }));
+  expect(
+    await screen.findByText("Plant was added to the collection."),
+  ).toBeInTheDocument();
+  expect(
+    payloads.map((item) => [item.botanical_identity_id, item.label]),
+  ).toEqual([
+    [identityId, "Avocado A"],
+    [identityId, "Avocado B"],
+  ]);
+});
+
+test("FN-04 a long Supplier list is searchable by typing and keyboard", async () => {
+  const suppliers = Array.from({ length: 60 }, (_, index) => ({
+    ...supplier,
+    id: `supplier-${String(index)}`,
+    name: `Nursery ${String(index).padStart(2, "0")}`,
+  }));
+  mockApi(
+    plantHandler([], [], (path) =>
+      path === "/api/v1/suppliers" ? json(suppliers) : undefined,
+    ),
+  );
+  const user = await openPlants();
+  await user.click(
+    await screen.findByRole("button", { name: "New plant or group" }),
+  );
+  await user.click(
+    screen.getByRole("button", { name: /Plant.*One individually/s }),
+  );
+  await openFormSection(user, "Origin");
+  await user.selectOptions(screen.getByLabelText("Direct origin"), "purchased");
+  await openFormSection(user, "Origin");
+  const picker = screen.getByRole("combobox", { name: "Supplier" });
+  await user.click(picker);
+  const menu = () => within(screen.getByRole("listbox")).getAllByRole("option");
+  expect(menu()).toHaveLength(60);
+  await user.type(picker, "nursery 4");
+  expect(menu()).toHaveLength(10);
+  await user.keyboard("{ArrowDown}{ArrowDown}{Enter}");
+  expect(picker).toHaveValue("Nursery 42");
+  expect(picker).toHaveAttribute("aria-expanded", "false");
 });
 
 test("minimal group creation keeps quantity unknown", async () => {
@@ -806,16 +938,18 @@ test("direct origin, references, partial date, Location, lifecycle, notes, and s
     screen.queryByLabelText("Other origin detail"),
   ).not.toBeInTheDocument();
   await openFormSection(user, "Origin");
-  await user.selectOptions(screen.getByLabelText("Supplier"), supplierId);
+  await pickReference(user, screen.getByLabelText("Supplier"), supplier.name);
   await openFormSection(user, "Origin");
-  await user.selectOptions(
+  await pickReference(
+    user,
     screen.getByLabelText("Material provenance"),
-    placeId,
+    place.display_path,
   );
   await openFormSection(user, "Essentials");
-  await user.selectOptions(
+  await pickReference(
+    user,
     screen.getByLabelText("Current location"),
-    locationId,
+    location.display_path,
   );
   await openFormSection(user, "Origin");
   await user.selectOptions(
@@ -890,7 +1024,7 @@ test("known Sowing clears direct provenance and preserves an independently chose
   await openFormSection(user, "Origin");
   await user.selectOptions(screen.getByLabelText("Direct origin"), "purchased");
   await openFormSection(user, "Origin");
-  await user.selectOptions(screen.getByLabelText("Supplier"), supplierId);
+  await pickReference(user, screen.getByLabelText("Supplier"), supplier.name);
   await openFormSection(user, "Origin");
   await user.click(screen.getByLabelText("Known Sowing"));
   expect(screen.queryByLabelText("Direct origin")).not.toBeInTheDocument();
@@ -1068,7 +1202,7 @@ test("full Plant and group PUT edits preserve form state on failure and apply co
   await user.clear(label);
   await user.type(label, "Corrected plant");
   await openFormSection(user, "Essentials");
-  await user.selectOptions(screen.getByLabelText("Current location"), "");
+  await clearReference(user, screen.getByLabelText("Current location"));
   await openFormSection(user, "Lifecycle & notes");
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   expect(await screen.findByRole("alert")).toHaveTextContent("could not save");
@@ -1261,7 +1395,9 @@ test("active group extraction is focused, updates exact quantity, opens the Plan
   expect(
     screen.getByRole("combobox", { name: "Botanical identity" }),
   ).toHaveValue("Cyphomandra betacea");
-  expect(screen.getByLabelText("Current location")).toHaveValue(locationId);
+  expect(screen.getByLabelText("Current location")).toHaveValue(
+    location.display_path,
+  );
   const extractionIdentity = screen.getByRole("combobox", {
     name: "Botanical identity",
   });
@@ -1269,7 +1405,7 @@ test("active group extraction is focused, updates exact quantity, opens the Plan
   await user.type(extractionIdentity, "Persea");
   await user.click(screen.getByRole("button", { name: "Persea americana" }));
   await openFormSection(user, "Essentials");
-  await user.selectOptions(screen.getByLabelText("Current location"), "");
+  await clearReference(user, screen.getByLabelText("Current location"));
   await openFormSection(user, "Essentials");
   await user.type(screen.getByLabelText("Label"), "Chosen one");
   await openFormSection(user, "Origin");
@@ -2084,9 +2220,10 @@ test("Event creation validates movement, explains side effects and authoritative
   expect(screen.getByRole("alert")).toHaveTextContent(
     "Choose the destination Location",
   );
-  await user.selectOptions(
+  await pickReference(
+    user,
     screen.getByLabelText("Destination Location"),
-    locationId,
+    location.display_path,
   );
   await user.click(screen.getByRole("radio", { name: "Another date" }));
   await user.selectOptions(screen.getByLabelText("Precision"), "month");
@@ -2353,9 +2490,10 @@ test.each(["plant", "group"] as const)(
       }),
     ).toHaveFocus();
     await chooseReference(user, "Botanical identity", "Persea americana");
-    await user.selectOptions(
+    await pickReference(
+      user,
       screen.getByRole("combobox", { name: "Current location" }),
-      locationId,
+      location.display_path,
     );
     expect(screen.queryByRole("textbox", { name: "Notes" })).toBeVisible();
     if (kind === "plant")
@@ -2628,7 +2766,7 @@ test("server validation focuses the visible error and preserves field values", a
   await chooseReference(user, "Botanical identity", "Persea americana");
   await openFormSection(user, "Origin");
   await openFormSection(user, "Origin");
-  await user.selectOptions(screen.getByLabelText("Supplier"), supplierId);
+  await pickReference(user, screen.getByLabelText("Supplier"), supplier.name);
   await openFormSection(user, "Essentials");
   await openFormSection(user, "Lifecycle & notes");
   await user.click(screen.getByRole("button", { name: "Record Plant" }));
@@ -2639,7 +2777,7 @@ test("server validation focuses the visible error and preserves field values", a
   });
   expect(screen.getByRole("region", { name: "Origin" })).toBeVisible();
   expect(screen.getByRole("combobox", { name: "Supplier" })).toHaveValue(
-    supplierId,
+    supplier.name,
   );
 });
 

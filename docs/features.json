@@ -2380,6 +2380,24 @@
       "status": "verified"
     },
     {
+      "id": "UI-REVIEW-002",
+      "category": "ux",
+      "description": "Post-beta.8 review fixes: single-record directory cards, WFO name suggestions on identity creation, optional reference-index mount and a clearer media layout",
+      "acceptance_criteria": [
+        "A gallery directory with one or two records keeps card-sized tracks instead of stretching a card across the page",
+        "Creating a botanical identity suggests scientific names from the local WFO index through a read-only GET /api/v1/explore/taxonomy/candidates; free text stays valid and an unavailable index only removes suggestions",
+        "docs/installation.md documents the read-only WFO/WCVP v16 reference mount and paths, and the production compose.yaml points to it in one comment line; the default deployment is unchanged",
+        "The identity Media tab shows a large cover with a compact caption and visible Change cover, Save local copy (for unsaved external covers) and Open media record actions, then record photos as a thumbnail grid without technical paragraphs",
+        "An external identity cover saves a local copy by default; the media asset page puts Save local copy first for unsaved references and shows a compact preview",
+        "Focused backend and frontend tests cover the new endpoint, suggestions, cover local copy and media layout; no migration"
+      ],
+      "dependencies": [
+        "UI-REVIEW-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "TEST-DATA-001",
       "category": "testing",
       "description": "Deterministic synthetic golden dataset with independent copies for Feature Review, UAT and performance testing",
@@ -2940,6 +2958,58 @@
       "status": "implemented"
     },
     {
+      "id": "FN-02",
+      "category": "ux",
+      "description": "Sort the Seeds, Sowings and Plants directories by name and by their own date",
+      "acceptance_criteria": [
+        "Seeds, Sowings and Plants offer Default order, Name A–Z, Name Z–A, Newest date first and Oldest date first; dates are the acquisition (or harvest) date, the sowing date and the collection-entry date, compared by their known parts with undated records last",
+        "The order is applied before browser-local pagination, so it survives page changes, and it is a canonical URL and Saved View field (sort) validated by the backend saved-view contract without a migration",
+        "A component test covers each directory and unit tests cover the ordering rules"
+      ],
+      "dependencies": [
+        "SEED-001",
+        "SOWING-001",
+        "PLANT-001",
+        "VIEW-001"
+      ],
+      "priority": "P3",
+      "status": "implemented"
+    },
+    {
+      "id": "FN-04",
+      "category": "ux",
+      "description": "Searchable pickers for reference lists that can exceed 50 options",
+      "acceptance_criteria": [
+        "Every reference select that can exceed 50 options (Locations, Suppliers, Geographic places, Provenance sites, SeedLots, Botanical identities) uses the shared typeahead ReferencePicker; bounded enumerations stay native selects and Orders keep their existing server search",
+        "The picker is operable by keyboard (type to filter, arrows, Enter, Escape) and keeps stable field ids for validation focus and an optional hidden input for uncontrolled forms",
+        "Component tests cover searching and choosing in long lists"
+      ],
+      "dependencies": [
+        "SEED-001",
+        "SOWING-001",
+        "PLANT-001"
+      ],
+      "priority": "P3",
+      "status": "implemented"
+    },
+    {
+      "id": "UX-ENTRY-001",
+      "category": "ux",
+      "description": "Save and add another in the Seeds, Sowings and Plants create forms",
+      "acceptance_criteria": [
+        "Creating a seed lot, Sowing, Plant or Plant group offers Save and add another next to the primary save; it saves exactly like the primary action, refreshes the directory and keeps the create form open with a fresh draft",
+        "The fresh draft keeps only the main reference (botanical identity, or the SeedLot for a Sowing), announces success and moves focus to the first field; editing never shows the action",
+        "Component tests cover the repeat-entry flow"
+      ],
+      "dependencies": [
+        "SEED-001",
+        "SOWING-001",
+        "PLANT-001"
+      ],
+      "priority": "P3",
+      "status": "implemented"
+    },
+    {
       "id": "BRAND-01",
       "category": "frontend",
       "description": "Integrate the approved Florabase logo and application icons",
@@ -3135,6 +3205,21 @@
       "status": "implemented"
     },
     {
+      "id": "WF-BATCH-PROGRESS-001",
+      "category": "infrastructure",
+      "description": "Batch preparation merges additive docs/progress.md entries that two sources insert below the shared top-level heading",
+      "acceptance_criteria": [
+        "scripts/feature_batch.py additive_progress() sets aside the longest line prefix shared by the merge base, integration side and incoming source (at least one base line stays in the remainder), applies the existing additive rules to the remainders and restores the prefix, so entries inserted below '# Engineering progress' by two sources are both retained newest-merged first",
+        "scripts/test-agent-workflow.py covers the shared-heading merge and still refuses an incoming source that edits the shared remainder; the existing main-tail additive progress test keeps passing"
+      ],
+      "dependencies": [
+        "AGENT-WORKFLOW-001",
+        "DOCS-002"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "DOCS-002",
       "category": "documentation",
       "description": "Root community docs, AGPL/DCO/third-party licensing notices, docs/ archive tidy-up, progress.md split and cheap doc-only verification paths",
@@ -3186,6 +3271,23 @@
         "VERIFY-SPEED-001"
       ],
       "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "DOCS-003",
+      "category": "documentation",
+      "description": "Installation guide accuracy fixes from operator rehearsal, prominent one-time folder setup callout, and v0.1.0-beta.8 publication record",
+      "acceptance_criteria": [
+        "docs/installation.md and docs/backup-restore.md align with the 40-line production compose.yaml: paired backup runs over SSH in the stack folder without .env, tolerates an absent release-manifest.json, replaces FLORABASE_HTTP_PORT with the frontend host port (editing the restore copy of compose.yaml on the same host, with ports: !override noted as an option for Compose 2.24.4+), replaces FLORABASE_DATA_DIR/FLORABASE_BACKUP_DIR placeholders with mount descriptions and exact release_schema.py messages, aligns Synology paths with compose.yaml, notes HTTPS origin and sudo chown for restore drills on another host, and states that automatic pre-upgrade dumps are written only when the database revision changes",
+        "README.md and docs/installation.md highlight the one-time folder setup block before the first deploy",
+        "docs/release/evidence/beta-8-publication.md records the v0.1.0-beta.8 workflow run, tag object, commit c4ffd63, release assets and SHA-256 digests, image references and digests from release-manifest.json, and verified gh attestation verify outputs, and is linked from docs/release/scope-v1.md as the current upgrade baseline"
+      ],
+      "dependencies": [
+        "DOC-01",
+        "INSTALL-003",
+        "DOCS-002"
+      ],
+      "priority": "P1",
       "status": "implemented"
     },
     {

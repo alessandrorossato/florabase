@@ -92,9 +92,11 @@ Python 3 and `curl`. The development overlay uses Compose's `!override` tag (see
 is optional.
 
 For self-hosting, follow [Install Florabase](docs/installation.md) using `compose.yaml` from the
-latest release tag (Compose 2.20 baseline; no container runs as root). The single Compose stack
-initializes a fresh installation automatically and writes a verified backup before upgrades. Put it
-behind an HTTPS reverse proxy (or Tailscale Serve) with your exact canonical HTTPS origin.
+latest release tag (Compose 2.20 baseline; no container runs as root). **Run the one-time
+[folder setup block](docs/installation.md#1-create-the-folders-and-set-owners-once) on the host
+before the first deploy.** The single Compose stack initializes a fresh installation automatically
+and writes a verified backup before schema upgrades. Put it behind an HTTPS reverse proxy (or
+Tailscale Serve) with your exact canonical HTTPS origin.
 
 [Building from a source checkout](docs/deployment.md) is for development only.
 

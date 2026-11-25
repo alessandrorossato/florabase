@@ -19985,7 +19985,7 @@
   },
   "info": {
     "title": "Florabase API",
-    "version": "0.1.0-beta.8"
+    "version": "0.1.0-beta.9"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -25576,6 +25576,55 @@
         "summary": "Read",
         "tags": [
           "explore"
+        ]
+      }
+    },
+    "/api/v1/explore/taxonomy/candidates": {
+      "get": {
+        "description": "Search the local WFO index by name prefix before a botanical identity exists.",
+        "operationId": "searchWfoNames",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 2,
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WfoCandidate"
+                  },
+                  "title": "Response Searchwfonames",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Name Candidates",
+        "tags": [
+          "taxonomy"
         ]
       }
     },

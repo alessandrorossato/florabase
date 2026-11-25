@@ -336,7 +336,7 @@ class StackContract(unittest.TestCase):
 
     def test_minimal_shape_services_and_latest_images(self) -> None:
         template = self.compose.read_text()
-        self.assertLessEqual(len(template.splitlines()), 50)
+        self.assertLessEqual(len(template.splitlines()), 60)
         self.assertNotIn("&", template, "compose.yaml must stay flat with no YAML anchors")
         self.assertNotIn("entrypoint:", template, "no inline entrypoints in compose.yaml")
         self.assertNotIn("sh -", template, "no inline shell scripts in compose.yaml")

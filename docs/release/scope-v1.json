@@ -137,6 +137,7 @@
     "SCHEDULE-UX-001": "baseline",
     "UI-POLISH-001": "certify",
     "UI-REVIEW-001": "best-effort",
+    "UI-REVIEW-002": "best-effort",
     "TEST-DATA-001": "tooling",
     "BETA-FOUNDATION-001": "record",
     "BETA-IMAGE-001": "release-work",
@@ -168,6 +169,9 @@
     "BOTANICAL-MATCH-1A": "internal",
     "UX-DATE-001": "certify",
     "UX-TODAY-001": "certify",
+    "FN-02": "best-effort",
+    "FN-04": "best-effort",
+    "UX-ENTRY-001": "best-effort",
     "BRAND-01": "certify",
     "DOC-03": "release-work",
     "DOC-01": "release-work",
@@ -180,9 +184,11 @@
     "WF-SCOPE-001": "tooling",
     "VERIFY-SPEED-001": "tooling",
     "WF-CLEANUP-001": "tooling",
+    "WF-BATCH-PROGRESS-001": "tooling",
     "DOCS-002": "best-effort",
     "RUNTIME-IDLE-001": "release-work",
     "MOBILE-001": "post-1.0",
+    "DOCS-003": "release-work",
     "MOBILE-002": "post-1.0"
   }
 }

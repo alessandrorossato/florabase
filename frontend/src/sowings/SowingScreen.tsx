@@ -1,3 +1,4 @@
+import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import {
   useContext,
   useEffect,
@@ -33,7 +34,6 @@ import {
   DirectoryTools,
 } from "../components/DirectoryTools";
 import { EditWorkspace } from "../components/EditWorkspace";
-import { FieldLabel } from "../components/FieldLabel";
 import { FormSections } from "../components/FormSections";
 import { firstValidationField } from "../components/formValidation";
 import {
@@ -44,6 +44,8 @@ import { BotanicalName } from "../components/ReferenceUI";
 import { useRecordDetailFocus } from "../components/useRecordDetailFocus";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { DirectorySortSelect } from "../components/DirectorySort";
+import { sortDirectory } from "../components/directorySort";
 import { useEditRoute } from "../components/useEditRoute";
 import { LifecycleStatus, StatusBadge } from "../components/WorkspaceUI";
 import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
@@ -74,7 +76,6 @@ import {
   SpecimenLabel,
   SpecimenPlate,
 } from "../components/CollectionUI";
-import { FieldHelp } from "../components/ContextualHelp";
 import {
   closeCollectionPage,
   openCollectionPage,
@@ -923,6 +924,7 @@ export function SowingScreen({
   }, [initialId, selectedId, edit.modal]);
   const [form, setForm] = useState<FormState>(blankForm);
   const formElement = useRef<HTMLFormElement>(null);
+  const addAnother = useRef(false);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const feedback = useRef<HTMLDivElement>(null);
   const detailHeading = useRef<HTMLHeadingElement>(null);
@@ -1053,9 +1055,15 @@ export function SowingScreen({
     });
   }, [identityFilter, filter, search, sowings]);
 
-  const pagination = useDirectoryPagination(
+  const ordered = sortDirectory(
     filtered,
-    JSON.stringify(view.state) + filtered.map((record) => record.id).join(","),
+    view.state.sort,
+    (sowing) => recordName(sowing, ""),
+    (sowing) => sowing.sowing_date,
+  );
+  const pagination = useDirectoryPagination(
+    ordered,
+    JSON.stringify(view.state) + ordered.map((record) => record.id).join(","),
   );
   const visible = pagination.visible;
   const bulkChoices = visible.map((sowing) => ({
@@ -1264,6 +1272,8 @@ export function SowingScreen({
 
   async function submit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
+    const another = addAnother.current;
+    addAnother.current = false;
     if (pending) return;
     const errors = [
       ...validate(),
@@ -1299,6 +1309,16 @@ export function SowingScreen({
       });
       const refreshed = await listSowings(capability);
       setCollection({ status: "ready", sowings: refreshed });
+      if (wasCreating && another) {
+        // Stay in the create form; keep the SeedLot for the next Sowing from it.
+        setForm({ ...blankForm(), seedLotId: form.seedLotId });
+        setSave({
+          status: "success",
+          message: "Sowing was recorded. Add the next one.",
+        });
+        window.setTimeout(focusCreation, 0);
+        return;
+      }
       setSelectedId(authoritative.id);
       setDetail({ status: "ready", sowing: authoritative });
       if (edit.modal) edit.close(true);
@@ -1453,44 +1473,24 @@ export function SowingScreen({
               locations: references.locations,
               pending,
               source: (
-                <div className="field">
-                  <FieldLabel required htmlFor="sowing-seed-lot">
-                    SeedLot
-                  </FieldLabel>
-                  <select
-                    aria-describedby="sowing-seed-lot-help"
-                    id="sowing-seed-lot"
-                    required
-                    value={form.seedLotId}
-                    disabled={pending}
-                    onChange={(event) => {
-                      updateForm("seedLotId", event.currentTarget.value);
-                    }}
-                  >
-                    <option value="">Choose a SeedLot</option>
-                    {activeSeedLots.length > 0 && (
-                      <optgroup label="Active SeedLots">
-                        {activeSeedLots.map((lot) => (
-                          <option key={lot.id} value={lot.id}>
-                            {seedLotLabel(lot)}
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
-                    {inactiveSeedLots.length > 0 && (
-                      <optgroup label="Historical SeedLots">
-                        {inactiveSeedLots.map((lot) => (
-                          <option key={lot.id} value={lot.id}>
-                            {seedLotLabel(lot)}
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
-                  </select>
-                  <FieldHelp id="sowing-seed-lot-help">
-                    One source SeedLot; historical lots remain available.
-                  </FieldHelp>
-                </div>
+                <ReferencePicker
+                  id="sowing-seed-lot"
+                  label="SeedLot"
+                  required
+                  help="One source SeedLot; historical lots remain available."
+                  placeholder="Choose a SeedLot"
+                  disabled={pending}
+                  choices={[...activeSeedLots, ...inactiveSeedLots].map(
+                    (lot) => ({
+                      id: lot.id,
+                      label: seedLotLabel(lot),
+                    }),
+                  )}
+                  value={form.seedLotId}
+                  onChange={(id) => {
+                    updateForm("seedLotId", id);
+                  }}
+                />
               ),
               outcome: (
                 <>
@@ -1586,13 +1586,27 @@ export function SowingScreen({
               ),
             })}
             submit={
-              <button type="submit" disabled={pending}>
-                {pending
-                  ? "Saving…"
-                  : selected
-                    ? "Save changes"
-                    : "Record Sowing"}
-              </button>
+              <>
+                <button type="submit" disabled={pending}>
+                  {pending
+                    ? "Saving…"
+                    : selected
+                      ? "Save changes"
+                      : "Record Sowing"}
+                </button>
+                {!selected && (
+                  <button
+                    type="submit"
+                    className="button--secondary"
+                    disabled={pending}
+                    onClick={() => {
+                      addAnother.current = true;
+                    }}
+                  >
+                    Save and add another
+                  </button>
+                )}
+              </>
             }
             cancel={
               <button
@@ -1712,6 +1726,15 @@ export function SowingScreen({
                     placeholder="Search sowings, seed lots or location"
                     value={search}
                     onChange={setSearch}
+                  />
+                }
+                sort={
+                  <DirectorySortSelect
+                    value={view.state.sort}
+                    dateLabel="sowing date"
+                    onChange={(value) => {
+                      view.update("sort", value);
+                    }}
                   />
                 }
                 savedViews={

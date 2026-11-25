@@ -124,3 +124,45 @@
     display: none;
   }
 }
+/* An unsaved external reference stays compact; saving it is the primary action above. */
+.media-workspace .media-detail-overview--reference .media-image {
+  height: 12rem;
+}
+/* Detail fits one desktop screen: references side by side, deletion as one compact row. */
+.media-workspace .media-detail-overview .media-links-section {
+  margin: 0 0 var(--space-4);
+  padding: 0 0 var(--space-4);
+}
+.media-workspace .media-detail-references {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
+}
+.media-workspace .media-detail-references > .media-links-section {
+  margin-top: 0;
+}
+.media-workspace .media-delete-section {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+.media-workspace .media-delete-section > * {
+  margin: 0;
+}
+.media-workspace .media-delete-section > p {
+  flex: 1 1 20rem;
+}
+@media (max-width: 48rem) {
+  .media-workspace .media-detail-references {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.media-status-badge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-small);
+  background: var(--surface-subtle);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
