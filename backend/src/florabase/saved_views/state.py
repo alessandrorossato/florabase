@@ -72,8 +72,13 @@ class NativeRangesState(TextState):
     with_range: StrictBool = Field(default=False, alias="withRange")
 
 
-# Directory order (FN-02); absent keeps each directory's default order.
+# Directory order (FN-02, FN-05); absent keeps each directory's default order.
 DirectorySort = Literal["name", "name_desc", "newest", "oldest"]
+DirectoryNameSort = Literal["name", "name_desc"]
+
+
+class NameSortedTextState(TextState):
+    sort: DirectoryNameSort | None = None
 
 
 class SeedLotState(TextState):
@@ -105,9 +110,11 @@ class HarvestState(TextState):
     material: MaterialKind | None = None
     source_type: Literal["plant", "plant_group"] | None = None
     identity_id: UUID | None = None
+    sort: DirectorySort | None = None
 
 
 class StoredMaterialState(TextState):
+    sort: DirectoryNameSort | None = None
     state: Literal["active", "depleted", "all"] = "active"
     material: MaterialKind | None = None
     identity_id: UUID | None = None
@@ -192,8 +199,8 @@ STATE_MODELS: dict[SavedViewSurface, type[BaseModel]] = {
     SavedViewSurface.EVENTS: EventState,
     SavedViewSurface.HISTORY: HistoryState,
     SavedViewSurface.MEDIA: MediaState,
-    SavedViewSurface.BOTANICAL_IDENTITIES: TextState,
-    SavedViewSurface.SUPPLIERS: TextState,
+    SavedViewSurface.BOTANICAL_IDENTITIES: NameSortedTextState,
+    SavedViewSurface.SUPPLIERS: NameSortedTextState,
     SavedViewSurface.ORDERS: OrderState,
     SavedViewSurface.LOCATIONS: LocationState,
     SavedViewSurface.GEOGRAPHY: GeographyState,

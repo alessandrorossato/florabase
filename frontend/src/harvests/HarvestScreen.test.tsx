@@ -821,3 +821,77 @@ it("Harvest Details focuses its title and reconnects focus to the returning row"
     ).toHaveFocus();
   });
 });
+
+it("sorts Harvests by name and harvest date before pagination with undated last and URL round-trip (FN-05)", async () => {
+  const rows: Harvest[] = [
+    {
+      ...harvest,
+      id: "harvest-07",
+      display_title: "Harvest 07",
+      occurred_on: null,
+    },
+    ...Array.from({ length: 25 }, (_, i) => i + 1)
+      .filter((n) => n !== 7)
+      .map((n) => ({
+        ...harvest,
+        id: `harvest-${String(n).padStart(2, "0")}`,
+        display_title: `Harvest ${String(n).padStart(2, "0")}`,
+        occurred_on: { precision: "year" as const, year: 2000 + n },
+      })),
+  ];
+  vi.mocked(api.listHarvests).mockResolvedValue(rows);
+  window.history.replaceState(null, "", "#/harvests");
+  const user = userEvent.setup();
+  const { unmount } = wrap(<HarvestScreen />);
+
+  const list = () => screen.getByRole("list", { name: "Harvest directory" });
+  const first = () => within(list()).getAllByRole("listitem")[0];
+
+  await screen.findByRole("list", { name: "Harvest directory" });
+  expect(first()).toHaveTextContent("Harvest 07");
+
+  const sort = screen.getByRole("combobox", { name: "Sort by" });
+  expect(
+    within(sort)
+      .getAllByRole("option")
+      .map((option) => option.textContent),
+  ).toEqual([
+    "Default order",
+    "Name A–Z",
+    "Name Z–A",
+    "Newest harvest date first",
+    "Oldest harvest date first",
+  ]);
+
+  await user.selectOptions(sort, "name_desc");
+  expect(window.location.hash).toContain("sort=name_desc");
+  expect(first()).toHaveTextContent("Harvest 25");
+  await user.click(screen.getByRole("button", { name: "Next page" }));
+  expect(first()).toHaveTextContent("Harvest 05");
+
+  await user.selectOptions(sort, "newest");
+  expect(window.location.hash).toContain("sort=newest");
+  expect(first()).toHaveTextContent("Harvest 25");
+  await user.click(screen.getByRole("button", { name: "Next page" }));
+  expect(within(list()).getAllByRole("listitem").at(-1)).toHaveTextContent(
+    "Harvest 07",
+  );
+
+  await user.selectOptions(sort, "oldest");
+  expect(window.location.hash).toContain("sort=oldest");
+  expect(first()).toHaveTextContent("Harvest 01");
+  await user.click(screen.getByRole("button", { name: "Next page" }));
+  expect(within(list()).getAllByRole("listitem").at(-1)).toHaveTextContent(
+    "Harvest 07",
+  );
+
+  // URL round-trip
+  unmount();
+  window.history.replaceState(null, "", "#/harvests?sort=newest");
+  wrap(<HarvestScreen />);
+  await screen.findByRole("list", { name: "Harvest directory" });
+  expect(screen.getByRole("combobox", { name: "Sort by" })).toHaveValue(
+    "newest",
+  );
+  expect(first()).toHaveTextContent("Harvest 25");
+});

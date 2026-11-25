@@ -2993,6 +2993,23 @@
       "status": "implemented"
     },
     {
+      "id": "FN-05",
+      "category": "ux",
+      "description": "Align the Sort by toolbar select across desktop and phone widths and extend browser-local sorting to Botanical identities, Harvests, Stored material and Suppliers",
+      "acceptance_criteria": [
+        "DirectorySortSelect removes inherited .field block margin, matches var(--control-height), border, radius, font and vertical alignment of neighbouring toolbar controls in light and dark themes, and stays non-full-width on the phone tools row unless it does not fit",
+        "DirectorySortSelect supports name-only mode (Default order, Name A–Z, Name Z–A) without altering the existing Seeds, Sowings and Plants options or labels",
+        "Harvests adds dated sorting (harvest date, undated last) and Botanical identities, Stored material and Suppliers add name-only sorting applied before pagination with canonical URL and Saved View state validated by saved_views/state.py without a database migration; server-paginated (Cuttings, Orders, Media, History), tree/map/analysis (Locations, Geography, Taxonomy, Species distribution, Native ranges, Collection origins) and chronological feed (Journal, Schedule) screens are explicitly skipped",
+        "Unit tests cover name-only sortDirectory and DirectorySortSelect, CSS regression tests cover toolbar alignment, backend tests validate accepted and rejected sort values, and component tests cover Botanical identities, Harvests, Stored material and Suppliers across pagination and URL round-trip"
+      ],
+      "dependencies": [
+        "FN-02",
+        "VIEW-001"
+      ],
+      "priority": "P3",
+      "status": "implemented"
+    },
+    {
       "id": "UX-ENTRY-001",
       "category": "ux",
       "description": "Save and add another in the Seeds, Sowings and Plants create forms",

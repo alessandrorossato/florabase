@@ -1,5 +1,29 @@
 # Engineering progress
 
+## 2026-11-25 — FN-05 directory sort toolbar alignment and directory rollout
+
+- On `feat/fn-05-directory-sort` from `origin/main` `b632c5c` (writer `neon-fn-05`).
+- Fixed `.directory-tools .directory-sort` alignment in `frontend/src/styles/normalization.css` and
+  `frontend/src/styles/directory-system.css`: cleared `.field`'s inherited `margin-bottom`, sized
+  the `<select>` to `var(--control-height)` with matching `1px solid var(--border-strong)`,
+  `var(--radius-small)`, `var(--type-body)`, and hover surface in light/dark themes, and kept it
+  non-full-width (`flex: 0 1 auto; max-width: 100%`) on the phone tools row.
+- Extended `sortDirectory` (`frontend/src/components/directorySort.ts`) and `DirectorySortSelect`
+  (`frontend/src/components/DirectorySort.tsx`) with an optional name-only mode (`DirectoryNameSort`:
+  `"" | "name" | "name_desc"`), preserving existing Seeds, Sowings and Plants behavior and labels.
+- Rolled out `Sort by` before pagination with canonical URL and Saved View state (no migration, no
+  OpenAPI change) to **Harvests** (dated by `occurred_on`, `dateLabel="harvest date"`), **Botanical
+  identities** (name-only by `display_label`), **Stored material** (name-only by visible material +
+  harvest title, keeping bulk selection aligned with sorted rows), and **Suppliers** (name-only by
+  `name`), with matching `backend/src/florabase/saved_views/state.py` validation (`HarvestState`,
+  `StoredMaterialState`, `NameSortedTextState`). Server-paginated directories (Cuttings, Orders,
+  Media, History), trees/maps/analysis views (Locations, Geography, Taxonomy, Species distribution,
+  Native ranges, Collection origins), and chronological feeds/agenda (Journal, Schedule) remain
+  intentionally unsorted.
+- Registered `FN-05` (`implemented`, `best-effort`) in `docs/features.json` and
+  `docs/release/scope-v1.json`. Verified with unit, CSS regression, backend saved-view, and
+  component tests plus canonical `make feature-verify AGENT_ID=neon-fn-05`.
+
 ## 2026-11-23 — MOBILE-002 device sign-in, Keystore plugin, and compatibility contract (PWA preserved)
 
 - On `feat/mobile-002-device-auth` from `origin/main` `ddf5a14` (writer `neon-mobile-002`).

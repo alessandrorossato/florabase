@@ -1,17 +1,38 @@
 import { useId } from "react";
-import type { DirectorySort } from "./directorySort";
+import type { DirectoryNameSort, DirectorySort } from "./directorySort";
+
+type DirectorySortSelectProps =
+  | {
+      value: DirectorySort;
+      onChange: (value: DirectorySort) => void;
+      /** Which date "newest/oldest" uses, e.g. "sowing date". Omit for name-only directories. */
+      dateLabel: string;
+    }
+  | {
+      value: DirectoryNameSort;
+      onChange: (value: DirectoryNameSort) => void;
+      dateLabel?: undefined;
+    };
 
 export function DirectorySortSelect({
   value,
   onChange,
   dateLabel,
-}: {
-  value: DirectorySort;
-  onChange: (value: DirectorySort) => void;
-  /** Which date "newest/oldest" uses, e.g. "sowing date". */
-  dateLabel: string;
-}) {
+}: DirectorySortSelectProps) {
   const id = useId();
+  const options = dateLabel
+    ? [
+        { value: "", label: "Default order" },
+        { value: "name", label: "Name A–Z" },
+        { value: "name_desc", label: "Name Z–A" },
+        { value: "newest", label: `Newest ${dateLabel} first` },
+        { value: "oldest", label: `Oldest ${dateLabel} first` },
+      ]
+    : [
+        { value: "", label: "Default order" },
+        { value: "name", label: "Name A–Z" },
+        { value: "name_desc", label: "Name Z–A" },
+      ];
   return (
     <div className="field directory-sort">
       <label className="sr-only" htmlFor={id}>
@@ -21,16 +42,12 @@ export function DirectorySortSelect({
         id={id}
         value={value}
         onChange={(event) => {
-          onChange(event.currentTarget.value as DirectorySort);
+          (onChange as (value: DirectorySort) => void)(
+            event.currentTarget.value as DirectorySort,
+          );
         }}
       >
-        {[
-          { value: "", label: "Default order" },
-          { value: "name", label: "Name A–Z" },
-          { value: "name_desc", label: "Name Z–A" },
-          { value: "newest", label: `Newest ${dateLabel} first` },
-          { value: "oldest", label: `Oldest ${dateLabel} first` },
-        ].map((option) => (
+        {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>

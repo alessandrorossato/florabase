@@ -33,6 +33,8 @@ import { FormSections } from "../components/FormSections";
 import { useRecordDetailFocus } from "../components/useRecordDetailFocus";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { DirectorySortSelect } from "../components/DirectorySort";
+import { sortDirectory } from "../components/directorySort";
 import { useEditRoute } from "../components/useEditRoute";
 import { LifecycleStatus, StatusBadge } from "../components/WorkspaceUI";
 import { SavedViews } from "../saved-views/SavedViews";
@@ -878,7 +880,15 @@ export function SupplierScreen({
     );
   }, [filter, suppliers]);
 
-  const pagination = useDirectoryPagination(visible, filter);
+  const ordered = sortDirectory(
+    visible,
+    view.state.sort,
+    (supplier) => supplier.name,
+  );
+  const pagination = useDirectoryPagination(
+    ordered,
+    JSON.stringify([filter, view.state.sort]),
+  );
   const { visible: pageVisible } = pagination;
 
   useEffect(() => {
@@ -1361,6 +1371,14 @@ export function SupplierScreen({
                         value={filter}
                         onChange={setFilter}
                         disabled={directory.status !== "ready"}
+                      />
+                    }
+                    sort={
+                      <DirectorySortSelect
+                        value={view.state.sort}
+                        onChange={(value) => {
+                          view.update("sort", value);
+                        }}
                       />
                     }
                     savedViews={
