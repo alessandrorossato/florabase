@@ -3153,6 +3153,21 @@
       "status": "implemented"
     },
     {
+      "id": "DOC-04",
+      "category": "documentation",
+      "description": "Publish an end-user guide and unassisted G-CORE 1-9 trial record template for non-developer users",
+      "acceptance_criteria": [
+        "A person who did not develop Florabase, given only the published user guide (docs/user-guide/) and a freshly installed instance, completes G-CORE steps 1-9 without help from the author or from any agent",
+        "The trial record names the tester's role, the date, the candidate commit, the result of each step and every point where the tester stopped, using docs/release/evidence/doc-04-trial-template.md",
+        "Pass requires all nine steps completed and every stopping point either fixed in the guide or dispositioned"
+      ],
+      "dependencies": [
+        "RELEASE-SCOPE-001"
+      ],
+      "priority": "P0",
+      "status": "in_progress"
+    },
+    {
       "id": "CERT-05",
       "category": "documentation",
       "description": "Reconcile release evidence for delivered beta distribution entries",
@@ -3408,21 +3423,6 @@
       ],
       "priority": "P2",
       "status": "implemented"
-    },
-    {
-      "id": "DOC-04",
-      "category": "documentation",
-      "description": "Publish an end-user guide and unassisted G-CORE 1-9 trial record template for non-developer users",
-      "acceptance_criteria": [
-        "A person who did not develop Florabase, given only the published user guide (docs/user-guide/) and a freshly installed instance, completes G-CORE steps 1-9 without help from the author or from any agent",
-        "The trial record names the tester's role, the date, the candidate commit, the result of each step and every point where the tester stopped, using docs/release/evidence/doc-04-trial-template.md",
-        "Pass requires all nine steps completed and every stopping point either fixed in the guide or dispositioned"
-      ],
-      "dependencies": [
-        "RELEASE-SCOPE-001"
-      ],
-      "priority": "P0",
-      "status": "in_progress"
     }
   ]
 }
