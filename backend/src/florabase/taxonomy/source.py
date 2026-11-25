@@ -91,6 +91,10 @@ class SourceUnavailableError(Exception):
     pass
 
 
+class SourcePreparingError(SourceUnavailableError):
+    """The managed index is missing because background setup is still preparing it."""
+
+
 class WfoMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
     provider: Literal["wfo"] = "wfo"
@@ -166,7 +170,7 @@ class WfoSource:
     def connect(self) -> sqlite3.Connection:
         if self.path is None or not self.path.is_file() or self.path.stat().st_size > 1_000_000_000:
             if self.managed and is_index_preparing("wfo"):
-                raise SourceUnavailableError(PREPARING_UNAVAILABLE_MESSAGE)
+                raise SourcePreparingError(PREPARING_UNAVAILABLE_MESSAGE)
             raise SourceUnavailableError("The reviewed WFO taxonomy source is not installed.")
         try:
             stat = self.path.stat()

@@ -109,8 +109,10 @@ are unchanged: metadata, release, the WFO format version and the WFO seal.
   managed directory `/var/lib/florabase/data/state/reference/` is owned by the backend container
   user (`10001:10001`, mode `0700`, writable) rather than a root-owned read-only mount. A
   compromised backend process could therefore modify files inside `state/reference/` (which
-  previously required host-root write access). Mitigations: mandatory `.sha256` seal verification
-  for both WFO and managed WCVP v16 (`require_seal=True` unconditionally for managed paths), the
-  exact `sqlite_schema` contract and hardened read-only connection checks on every open, and
-  retained support for manual root-owned `:ro` mounts (`FLORABASE_WFO_SNAPSHOT_PATH` /
-  `FLORABASE_WCVP_V16_SNAPSHOT_PATH`) for operators who prefer strict read-only separation.
+  previously required host-root write access). The mandatory `.sha256` seal for both WFO and
+  managed WCVP v16 (`require_seal=True` unconditionally for managed paths) detects corruption and
+  partial writes only; it is not a control against a compromised backend, which can rewrite the
+  seal together with the index. What still bounds such an index is the exact `sqlite_schema`
+  contract and the hardened read-only connection checks on every open. Operators who need strict
+  read-only separation keep using manual root-owned `:ro` mounts (`FLORABASE_WFO_SNAPSHOT_PATH` /
+  `FLORABASE_WCVP_V16_SNAPSHOT_PATH`).

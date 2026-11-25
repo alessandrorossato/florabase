@@ -5095,6 +5095,11 @@ export interface components {
             source?: components["schemas"]["WfoMetadata"] | null;
             /** Source Available */
             source_available: boolean;
+            /**
+             * Source Preparing
+             * @default false
+             */
+            source_preparing: boolean;
         };
         /** ImportDecisionOption */
         ImportDecisionOption: {
@@ -8020,6 +8025,11 @@ export interface components {
             link?: components["schemas"]["WcvpLinkResponse"] | null;
             /** Message */
             message?: string | null;
+            /**
+             * Preparing
+             * @default false
+             */
+            preparing: boolean;
             source?: components["schemas"]["SourceMetadata"] | null;
         };
         /** SourceTaxonomicAssessmentResponse */
@@ -8852,6 +8862,11 @@ export interface components {
             source?: components["schemas"]["WfoMetadata"] | null;
             /** Source Available */
             source_available: boolean;
+            /**
+             * Source Preparing
+             * @default false
+             */
+            source_preparing: boolean;
             /** Unresolved */
             unresolved: number;
         };

@@ -526,6 +526,7 @@ test("preparing WCVP v16 source displays background preparation notice without m
       return Promise.resolve(
         json({
           available: false,
+          preparing: true,
           source: null,
           link: null,
           message: "Reference data is being prepared in the background.",

@@ -123,6 +123,10 @@ class SourceUnavailableError(Exception):
     pass
 
 
+class SourcePreparingError(SourceUnavailableError):
+    """The managed index is missing because background setup is still preparing it."""
+
+
 class Taxon(BaseModel):
     model_config = ConfigDict(extra="forbid")
     external_id: str
@@ -278,7 +282,7 @@ class WcvpSource:
     def _connect(self) -> sqlite3.Connection:
         if self.path is None or not self.path.is_file() or self.path.stat().st_size > 2_000_000_000:
             if self.managed and self.release.version == "16" and is_index_preparing("wcvp_v16"):
-                raise SourceUnavailableError(PREPARING_UNAVAILABLE_MESSAGE)
+                raise SourcePreparingError(PREPARING_UNAVAILABLE_MESSAGE)
             raise SourceUnavailableError("The reviewed WCVP snapshot is not installed.")
         if self.require_seal:
             try:

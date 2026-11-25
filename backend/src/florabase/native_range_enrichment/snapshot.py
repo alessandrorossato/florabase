@@ -265,7 +265,8 @@ def main() -> None:
             parser.error("--archive requires the actual --retrieved-at timestamp")
         install_archive(args.archive, args.destination, args.retrieved_at, args.version)
     else:
-        download(args.destination, args.version)
+        # The DEV CLI keeps its historical 240 s bound; the background worker passes its own.
+        download(args.destination, args.version, max_seconds=240)
 
 
 if __name__ == "__main__":

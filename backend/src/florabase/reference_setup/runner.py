@@ -26,7 +26,7 @@ from florabase.reference_setup.state import (
     resolve_wcvp_v16_target,
     resolve_wfo_target,
 )
-from florabase.reference_setup.worker import ProvisionOutcome
+from florabase.reference_setup.worker import ProvisionOutcome, worker_staging_dir
 
 logger = logging.getLogger(__name__)
 
@@ -51,8 +51,13 @@ _SHUTDOWN_GRACE_SECONDS: Final[float] = 5.0
 WorkerRunner = Callable[[ReferenceIndexKey, Path, float], Awaitable[ProvisionOutcome]]
 
 
-def _worker_environment() -> dict[str, str]:
-    return {k: v for k, v in os.environ.items() if k not in _SCRUBBED_WORKER_ENV}
+def _worker_environment(staging_dir: Path) -> dict[str, str]:
+    environment = {k: v for k, v in os.environ.items() if k not in _SCRUBBED_WORKER_ENV}
+    # SQLite and tempfile read these once per process: set them before the worker starts so
+    # sort and temp files always land in staging, inside the disk pre-check.
+    environment["TMPDIR"] = str(staging_dir)
+    environment["SQLITE_TMPDIR"] = str(staging_dir)
+    return environment
 
 
 def _parse_worker_outcome(returncode: int, stdout: bytes) -> ProvisionOutcome:
@@ -93,8 +98,11 @@ class ReferenceSetupCoordinator:
         self._stop_event = asyncio.Event()
         self._task: asyncio.Task[None] | None = None
         self._active_process: asyncio.subprocess.Process | None = None
+        # Pinned upstream content changed: retrying cannot help until a restart.
+        self._no_retry: set[ReferenceIndexKey] = set()
 
     def _pending_managed_targets(self) -> list[tuple[ReferenceIndexKey, Path]]:
+        """Blocking: may hash whole indexes, so call it only through ``asyncio.to_thread``."""
         pending: list[tuple[ReferenceIndexKey, Path]] = []
         wfo_path, wfo_managed = resolve_wfo_target(self._settings)
         if wfo_managed and not is_index_ready("wfo", wfo_path, require_seal=True):
@@ -104,18 +112,14 @@ class ReferenceSetupCoordinator:
             "wcvp_v16", wcvp_path, require_seal=wcvp_require_seal
         ):
             pending.append(("wcvp_v16", wcvp_path))
-        return pending
+        return [target for target in pending if target[0] not in self._no_retry]
 
     def start(self) -> None:
-        """Start the background loop only when ``auto`` is active and work remains."""
+        """Start the background loop in ``auto`` mode; does no I/O so start-up never waits."""
         reset_runtime_state()
         if self._settings.references_setup is not ReferencesSetupMode.AUTO:
             return
-        pending = self._pending_managed_targets()
-        if not pending:
-            return
-        for key, _path in pending:
-            mark_index_preparing(key)
+        self._no_retry.clear()
         self._stop_event.clear()
         self._task = asyncio.create_task(self._run_loop(), name="florabase-reference-setup")
 
@@ -159,7 +163,7 @@ class ReferenceSetupCoordinator:
             str(max_seconds),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            env=_worker_environment(),
+            env=_worker_environment(worker_staging_dir(state_dir, key)),
         )
         self._active_process = process
         try:
@@ -187,13 +191,22 @@ class ReferenceSetupCoordinator:
         if self._stop_event.is_set():
             return False
 
-        if outcome.status == "ready" and is_index_ready(key, target_path, require_seal=True):
+        if outcome.status == "ready" and await asyncio.to_thread(
+            is_index_ready, key, target_path, require_seal=True
+        ):
             mark_index_ready(key)
             logger.info("Reference index %s is ready", key)
             return True
 
         reason: ReferenceSetupFailureReason = outcome.reason or "build"
         mark_index_failed(key, reason)
+        if reason == "checksum":
+            self._no_retry.add(key)
+            logger.warning(
+                "Reference index %s provisioning failed (checksum); not retrying until restart",
+                key,
+            )
+            return False
         retry_hours = max(1, round(self._retry_interval_seconds / 3600.0))
         logger.warning(
             "Reference index %s provisioning failed (%s); will retry in %d h",
@@ -205,17 +218,19 @@ class ReferenceSetupCoordinator:
 
     async def _run_loop(self) -> None:
         while not self._stop_event.is_set():
-            pending = self._pending_managed_targets()
-            if not pending:
+            pending = await asyncio.to_thread(self._pending_managed_targets)
+            if not pending or self._stop_event.is_set():
                 return
-            all_ready = True
+            for key, _path in pending:
+                mark_index_preparing(key)
+            retry_needed = False
             for key, target_path in pending:
                 if self._stop_event.is_set():
                     return
                 ok = await self._provision_one(key, target_path)
-                if not ok:
-                    all_ready = False
-            if all_ready or self._stop_event.is_set():
+                if not ok and key not in self._no_retry:
+                    retry_needed = True
+            if not retry_needed or self._stop_event.is_set():
                 return
             try:
                 await asyncio.wait_for(

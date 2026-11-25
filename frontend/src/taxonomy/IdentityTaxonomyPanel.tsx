@@ -202,9 +202,7 @@ export function IdentityTaxonomyPanel({
     </nav>
   );
   const preparingSource = Boolean(
-    data &&
-    !data.source_available &&
-    data.message?.toLowerCase().includes("being prepared"),
+    data && !data.source_available && data.source_preparing,
   );
   if (summary)
     return (
@@ -302,7 +300,7 @@ export function IdentityTaxonomyPanel({
           {!data.source_available && (
             <p>
               {preparingSource
-                ? `Reference data is being prepared… ${data.message ?? ""}`.trim()
+                ? "Reference data is being prepared…"
                 : `Taxonomy source unavailable. ${data.message ?? ""}`.trim()}
             </p>
           )}

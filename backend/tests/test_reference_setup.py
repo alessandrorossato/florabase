@@ -43,6 +43,7 @@ from florabase.db import release_schema
 from florabase.main import create_app
 from florabase.native_range_enrichment import snapshot as wcvp_snapshot
 from florabase.native_range_enrichment import source as wcvp_source
+from florabase.reference_setup import runner as runner_module
 from florabase.reference_setup.lock import (
     LOCK_FILENAME,
     STAGING_PREFIX,
@@ -775,6 +776,79 @@ def test_coordinator_off_retry_logging_and_stop(
     assert final.wcvp_v16.state == "ready"
 
 
+def test_coordinator_start_does_no_io_and_readiness_checks_run_off_the_event_loop(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    reset_runtime_state()
+    settings = _settings(tmp_path, references_setup=ReferencesSetupMode.AUTO)
+    on_loop_thread: list[bool] = []
+
+    def slow_is_index_ready(_key: str, _path: Path, *, require_seal: bool = True) -> bool:
+        on_loop_thread.append(threading.current_thread() is threading.main_thread())
+        time.sleep(0.2)  # Stands in for hashing a large index.
+        return len(on_loop_thread) > 2  # Both pending, then ready after the worker.
+
+    monkeypatch.setattr(runner_module, "is_index_ready", slow_is_index_ready)
+
+    async def fake_worker(_key: str, _state_dir: Path, _max_seconds: float) -> ProvisionOutcome:
+        return ProvisionOutcome(status="ready")
+
+    async def run() -> None:
+        coordinator = ReferenceSetupCoordinator(settings, worker_runner=fake_worker)
+        started = time.monotonic()
+        coordinator.start()
+        assert time.monotonic() - started < 0.1
+        assert on_loop_thread == []  # start() did no readiness I/O.
+        # The loop keeps serving while slow checks run in worker threads.
+        for _ in range(10):
+            tick = time.monotonic()
+            await asyncio.sleep(0.01)
+            assert time.monotonic() - tick < 0.15
+        deadline = time.monotonic() + 5.0
+        while coordinator.is_running and time.monotonic() < deadline:
+            await asyncio.sleep(0.02)
+        assert coordinator.is_running is False
+        await coordinator.stop()
+
+    asyncio.run(run())
+    assert len(on_loop_thread) >= 4
+    assert not any(on_loop_thread)
+    reset_runtime_state()
+
+
+def test_coordinator_checksum_failure_is_not_retried_until_restart(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    reset_runtime_state()
+    settings = _settings(tmp_path, references_setup=ReferencesSetupMode.AUTO)
+    _build_valid_wfo(managed_wfo_path(settings.references_state_dir))
+    attempts: list[str] = []
+
+    async def checksum_worker(key: str, _state_dir: Path, _max_seconds: float) -> ProvisionOutcome:
+        attempts.append(key)
+        return ProvisionOutcome(status="failed", reason="checksum")
+
+    async def run() -> None:
+        coordinator = ReferenceSetupCoordinator(
+            settings, retry_interval_seconds=0.01, worker_runner=checksum_worker
+        )
+        coordinator.start()
+        deadline = time.monotonic() + 5.0
+        while coordinator.is_running and time.monotonic() < deadline:
+            await asyncio.sleep(0.02)
+        assert coordinator.is_running is False  # No periodic retry loop left running.
+        await coordinator.stop()
+
+    with caplog.at_level(logging.WARNING, logger="florabase.reference_setup.runner"):
+        asyncio.run(run())
+
+    assert attempts == ["wcvp_v16"]
+    assert any("not retrying until restart" in r.getMessage() for r in caplog.records)
+    status = get_runtime_status(settings).wcvp_v16
+    assert (status.state, status.status) == ("failed", "failed: checksum")
+    reset_runtime_state()
+
+
 def test_system_references_api_requires_auth_and_keeps_system_info_unchanged(
     tmp_path: Path,
 ) -> None:
@@ -833,9 +907,9 @@ def test_preparing_state_changes_unavailable_messages(tmp_path: Path) -> None:
     settings = _settings(tmp_path, references_setup=ReferencesSetupMode.AUTO)
     mark_index_preparing("wfo")
     mark_index_preparing("wcvp_v16")
-    with pytest.raises(wfo_source.SourceUnavailableError, match=PREPARING_UNAVAILABLE_MESSAGE):
+    with pytest.raises(wfo_source.SourcePreparingError, match=PREPARING_UNAVAILABLE_MESSAGE):
         wfo_source.WfoSource.from_settings(settings).metadata()
-    with pytest.raises(wcvp_source.SourceUnavailableError, match=PREPARING_UNAVAILABLE_MESSAGE):
+    with pytest.raises(wcvp_source.SourcePreparingError, match=PREPARING_UNAVAILABLE_MESSAGE):
         wcvp_source.WcvpSource.from_settings(settings, "16").metadata()
     reset_runtime_state()
 
@@ -876,7 +950,10 @@ def test_worker_cli_env_scrubbing_and_coordinator_stop_terminates_child(
     monkeypatch.setenv("PGPASSWORD", "super-secret")
     monkeypatch.setenv("FLORABASE_OWNER_PASSWORD", "owner-secret")
     monkeypatch.setenv("FLORABASE_DATABASE_URL", "postgresql://u:p@db/db")
-    scrubbed = _worker_environment()
+    staging = tmp_path / "state" / "reference" / f"{STAGING_PREFIX}wfo"
+    scrubbed = _worker_environment(staging)
+    assert scrubbed["TMPDIR"] == str(staging)
+    assert scrubbed["SQLITE_TMPDIR"] == str(staging)
     assert "FLORABASE_DB_PASSWORD" not in scrubbed
     assert "PGPASSWORD" not in scrubbed
     assert "FLORABASE_OWNER_PASSWORD" not in scrubbed

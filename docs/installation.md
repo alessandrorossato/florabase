@@ -401,7 +401,11 @@ downloaded archive. No extra host folder or mount is required.
   pre-check threshold, download is skipped and the index reports `failed: disk`.
 - **Offline or transient errors:** The app stays healthy, logs one summary line per failure
   (`network`, `checksum`, `size`, `build`, or `disk`), leaves no partial files, and retries on the
-  next restart or at most once every 6 hours while running. Once both indexes are `ready`, no
+  next restart or at most once every 6 hours while running.
+- **`failed: checksum`:** The downloaded archive is not the pinned release Florabase was reviewed
+  against, which usually means upstream no longer serves that release. Florabase does not retry it
+  while running (only on the next restart); a newer Florabase release that pins the new archive is
+  needed, or provide the index in [manual read-only mode](#manual-read-only-mode). Once both indexes are `ready`, no
   background task keeps running and no outbound reference requests are made.
 - **Status:** Open **Settings → Data sources** to view the read-only status of each index (`off`,
   `preparing`, `ready`, `ready (setup off)`, `failed: <reason>`, or `manual`).
@@ -441,8 +445,9 @@ lines to the `backend` service, keeping the existing entries, then redeploy:
       - /volume1/docker/florabase/reference:/var/lib/florabase/reference:ro
 ```
 
-Automatic setup skips any index whose configured path is outside `/var/lib/florabase/data/state/reference/`,
-never writes to manual paths, and reports that index as `manual`. Leave out the line for any index
+Automatic setup skips any index whose configured path differs from its managed path under
+`/var/lib/florabase/data/state/reference/` (a path equal to the managed path is treated as
+managed), never writes to manual paths, and reports that index as `manual`. Leave out the line for any index
 you want provisioned automatically (or do not want). A missing or unreadable file never stops the
 stack: the matching lookups stay unavailable.
 

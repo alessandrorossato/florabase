@@ -17,8 +17,8 @@
   (`Accept: */*`, exact 132,643,291-byte check, checksum before ZIP parse), and reused it in
   `native_range_enrichment/snapshot.py::download()`.
 - Added `backend/src/florabase/reference_setup/` (`state.py`, `lock.py`, `worker.py`, `runner.py`):
-  FastAPI `lifespan()` starts a lightweight coordinator only in `auto` mode when managed indexes
-  are missing, spawning sequential `os.nice(10)` worker subprocesses holding an inter-process
+  FastAPI `lifespan()` starts a lightweight coordinator task only in `auto` mode (no I/O in
+  start-up; every seal/readiness check runs in a worker thread), spawning sequential `os.nice(10)` worker subprocesses holding an inter-process
   `fcntl` lock in `state/reference/` (`0700`), cleaning stale `.staging-*` directories on start,
   running a `(archive + expected_index) * 1.2` free-space pre-check (`failed: disk`), staging
   with `TMPDIR`/`SQLITE_TMPDIR` inside `state/reference/`, atomically publishing sealed indexes,
@@ -49,6 +49,19 @@
   auto-merge on all code, `openapi.json`, `schema.d.ts`, `features.json`, and `scope-v1.json`;
   expected additive-only conflict in `docs/progress.md`). Canonical FULL
   `make feature-verify AGENT_ID=neon-ref-setup-001` runs on the frozen committed tree.
+- Review fixes (writer `claude-ref-setup`, takeover of `neon-ref-setup-001`): M1 coordinator
+  `start()` only creates the task and all `is_index_ready()` calls run via `asyncio.to_thread`, so
+  seal hashing (~1.37 GB) never blocks the lifespan or `/api/v1/health`; S1 the runner passes
+  `TMPDIR`/`SQLITE_TMPDIR` in the worker environment pointing at a fixed per-index
+  `.staging-<index>` directory created under the lock; S2 a `checksum` failure is not retried until
+  restart (pinned release no longer served upstream, documented in `installation.md`); S3 the
+  WCVP DEV CLI keeps its 240 s bound; S4/S5 wording on the seal (corruption, not tampering) and
+  on manual paths; S6 structured `source_preparing` (`TaxonomyTree`, `IdentityTaxonomy`) and
+  `preparing` (`SourceStatus`) flags replace frontend substring matching, without repeating the
+  server sentence. Focused checks: `test_reference_setup.py` (19 passed), native range and
+  taxonomy backend tests, integration `test_reference_setup.py` (3 passed), ruff, mypy, frontend
+  typecheck/lint/prettier and taxonomy/botanical-profiles/settings vitest (64 passed),
+  `api-generate` + `api-check`.
 
 ## 2026-11-23 — MOBILE-002 device sign-in, Keystore plugin, and compatibility contract (PWA preserved)
 

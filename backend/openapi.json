@@ -6461,6 +6461,11 @@
           "source_available": {
             "title": "Source Available",
             "type": "boolean"
+          },
+          "source_preparing": {
+            "default": false,
+            "title": "Source Preparing",
+            "type": "boolean"
           }
         },
         "required": [
@@ -15804,6 +15809,11 @@
             ],
             "title": "Message"
           },
+          "preparing": {
+            "default": false,
+            "title": "Preparing",
+            "type": "boolean"
+          },
           "source": {
             "anyOf": [
               {
@@ -18683,6 +18693,11 @@
           },
           "source_available": {
             "title": "Source Available",
+            "type": "boolean"
+          },
+          "source_preparing": {
+            "default": false,
+            "title": "Source Preparing",
             "type": "boolean"
           },
           "unresolved": {

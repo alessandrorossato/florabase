@@ -943,8 +943,7 @@ export function TaxonomyScreen() {
     });
   };
   const preparingSource =
-    !data?.source_available &&
-    Boolean(data?.message?.toLowerCase().includes("being prepared"));
+    !data?.source_available && Boolean(data?.source_preparing);
   const missingSource =
     !data?.source_available && data?.message?.includes("not installed");
   return (
@@ -1120,8 +1119,9 @@ export function TaxonomyScreen() {
                         ? "The optional WFO source is not installed."
                         : "Taxonomy source error."}
                   </strong>{" "}
-                  {data.message} Local identities and retained confirmation
-                  evidence remain accessible. Matching needs the local source.
+                  {preparingSource ? null : data.message} Local identities and
+                  retained confirmation evidence remain accessible. Matching
+                  needs the local source.
                 </p>
                 <ActionButton
                   icon="refresh"

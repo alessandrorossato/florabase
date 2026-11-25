@@ -9,9 +9,7 @@ import os
 import shutil
 import signal
 import sys
-import tempfile
-from collections.abc import Iterator
-from contextlib import contextmanager, suppress
+from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path
 from types import FrameType
@@ -49,23 +47,9 @@ class ProvisionOutcome:
     reason: ReferenceSetupFailureReason | None = None
 
 
-@contextmanager
-def _scoped_temp_env(staging_dir: Path) -> Iterator[None]:
-    previous_tmpdir = os.environ.get("TMPDIR")
-    previous_sqlite_tmpdir = os.environ.get("SQLITE_TMPDIR")
-    os.environ["TMPDIR"] = str(staging_dir)
-    os.environ["SQLITE_TMPDIR"] = str(staging_dir)
-    try:
-        yield
-    finally:
-        if previous_tmpdir is None:
-            os.environ.pop("TMPDIR", None)
-        else:
-            os.environ["TMPDIR"] = previous_tmpdir
-        if previous_sqlite_tmpdir is None:
-            os.environ.pop("SQLITE_TMPDIR", None)
-        else:
-            os.environ["SQLITE_TMPDIR"] = previous_sqlite_tmpdir
+def worker_staging_dir(state_dir: Path, key: ReferenceIndexKey) -> Path:
+    """Fixed per-index staging dir, known before start so the runner can point TMPDIR at it."""
+    return state_dir / f"{STAGING_PREFIX}{key}"
 
 
 def _write_seal_file(index_path: Path) -> Path:
@@ -135,17 +119,16 @@ def provision_index(
             if is_index_ready(key, final_path, require_seal=True):
                 return ProvisionOutcome(status="ready")
             check_free_space(state_dir, needed, disk_usage=disk_usage)
-            with tempfile.TemporaryDirectory(
-                prefix=f"{STAGING_PREFIX}{key}-",
-                dir=state_dir,
-            ) as staging_name:
-                staging_dir = Path(staging_name)
-                staging_dir.chmod(0o700)
-                with _scoped_temp_env(staging_dir):
-                    if key == "wfo":
-                        _provision_wfo_staged(state_dir, staging_dir, max_seconds)
-                    else:
-                        _provision_wcvp_v16_staged(state_dir, staging_dir, max_seconds)
+            # cleanup_stale_staging (under the lock) already removed any leftover of this dir.
+            staging_dir = worker_staging_dir(state_dir, key)
+            staging_dir.mkdir(mode=0o700)
+            try:
+                if key == "wfo":
+                    _provision_wfo_staged(state_dir, staging_dir, max_seconds)
+                else:
+                    _provision_wcvp_v16_staged(state_dir, staging_dir, max_seconds)
+            finally:
+                shutil.rmtree(staging_dir, ignore_errors=True)
             if not is_index_ready(key, final_path, require_seal=True):
                 return ProvisionOutcome(status="failed", reason="build")
             return ProvisionOutcome(status="ready")
