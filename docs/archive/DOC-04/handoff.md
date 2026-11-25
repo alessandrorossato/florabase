@@ -41,6 +41,9 @@ Trial record template:
 
 ## 3. Marker inventory (`TODO(DOC-04 ...)`)
 
+Line numbers in this section refer to `408bad0`; run `git grep -n "TODO(DOC-04" -- docs/user-guide`
+for the current positions.
+
 ### `TODO(DOC-04 verify)` markers (10)
 
 Every bold or `code` UI label in the 10 user-guide pages was mechanically checked against
@@ -61,14 +64,10 @@ a single literal string, a `<!-- TODO(DOC-04 verify): ... -->` marker was placed
 | `docs/user-guide/your-data.md:53` | CSV import preview heading `Preview: ${preview.filename}` | `frontend/src/import-export/ImportExportScreen.tsx:664` |
 | `docs/user-guide/troubleshooting.md:67` | Active directory filter chip `{filter.label}: {filter.value}` | `frontend/src/components/DirectoryTools.tsx:88` |
 
-### `TODO(DOC-04 after batch 12)` markers (4)
+### `TODO(DOC-04 after batch 12)` markers (0, all resolved)
 
-| File:line | Area | Marker text |
-| --- | --- | --- |
-| `docs/user-guide/first-hour.md:45` | Creating a botanical identity (WFO autocomplete) | `<!-- TODO(DOC-04 after batch 12): Note the local WFO name suggestion step in the Create a botanical identity form once batch 12 lands. -->` |
-| `docs/user-guide/daily-use.md:30` | Plants directory layout | `<!-- TODO(DOC-04 after batch 12): Once the Plants directory card-height layout fix lands, check whether any directory view note is needed. -->` |
-| `docs/user-guide/daily-use.md:107` | Botanical identity Media tab & Explore Media library | `<!-- TODO(DOC-04 after batch 12): Expand the botanical identity Media tab and Explore Media asset flow once the batch 12 media redesign lands. -->` |
-| `docs/user-guide/reference-data.md:54` | Optional reference data mount in `docs/installation.md` | `<!-- TODO(DOC-04 after batch 12): Update this note once the operator setup for the WFO/WCVP reference data mount in docs/installation.md lands in batch 12. -->` |
+The four markers (WFO name suggestions, Plants card layout, identity Media tab and Explore Media,
+reference-data operator setup) were resolved after merging `v0.1.0-beta.9`; see § 7.
 
 ### `TODO(DOC-04 screenshot)` markers (27)
 
@@ -171,3 +170,40 @@ Every UI label used in the guide was taken verbatim from the read-only frontend 
 | **G-CORE 4**: Create Plant and Plant group from Sowing | `Create Plant`, `Create Plant group`, tabs `Essentials` (`Botanical identity`, `Label`, `Quantity`: `Unknown`, `Exact count`, `Approximate count`, `Count`, `Current location`), `Origin` (`Collection-entry date`), `Lifecycle & notes` (`Notes`), `Sowing after creation` (`Keep active`, `Complete Sowing`, `Mark failed`, `Abandon Sowing`), buttons `Create Plant`, `Create Plant group`, specimen fact `Source sowing` | `frontend/src/sowings/SowingScreen.tsx`<br>`frontend/src/propagation/SowingDescendantWizard.tsx`<br>`frontend/src/plants/PlantFormFields.tsx`<br>`frontend/src/plants/PlantScreen.tsx` |
 | **G-CORE 4**: Extract Plant & Supported reversals | `Extract plant`; `Original Plant group` → `Reintegrate into group` → `Reintegrate into original group?` → `Reintegrate Plant` / `Confirm and reintegrate`; `⋯` (`More record actions`) → `Undo creation` → `Undo ${labels[kind]} creation` | `frontend/src/plants/PlantScreen.tsx`<br>`frontend/src/propagation/CreationReversal.tsx` |
 | **G-CORE 12**: Cuttings lots, attempts, observations, establishment, outcome, undo | `Take or add cuttings`, `Take cuttings`, section `Source and material` (`Material type`: `Stem cutting`, `Leaf cutting`, `Root cutting`; `Source`: `From the collection`, `Purchased`, `Gift or exchange`, `Self-collected`, `Other`, `Unknown`; `Mother record type`: `Plant`, `Plant group`; `Mother specimen`; `Source detail`; `Botanical identity`; `Material lot label`; `Taken or acquired on`; `Initial lot quantity`; `Location`; `Notes`), section `Rooting setup` (`Start rooting attempt immediately`, `Use all cuttings in this attempt`, `Use the taken or acquired date`, `Confirmed remaining quantity`, `Attempt label`, `Started on`, `Starting quantity`, `Location`, `Substrate`, `Hormone treatment`, `Container`, `Environment`, `Minimum` / `Maximum` `temperature (°C)`), button `Save cuttings`; `Start rooting attempt` (`Material use`: `Use all cuttings`, `Use part of the lot`, `Leave stock unchanged`, button `Start attempt`); `Log rooting observation` → `Rooting check` (`Stage`: `Inspection`, `Callus`, `Root initials`, `Rooted`, `Loss`; `Observed on`; `Observed rooted count`; `Notes`; `Save observation`; `Correct observation`); `Establish Plant or group` → `Establish Plant or Plant group` → `Established specimen` (`Result`: `Individual Plant`, `Plant group`; `Label`; `Group quantity`; `Collection entry date`; `Location`; `Attempt after establishment`: `Keep attempt active`, `Mark completed`, `Mark abandoned`; `Notes`; `Establish`); `Edit attempt` → `Edit rooting attempt` → `Outcome` (`Status`: `Active`, `Completed`, `Failed`, `Abandoned`; `Rooted count`; `Ended on`; `Save attempt`); `Rooting outcome` (`Rooting pending`, `Rooted count unrecorded`); `Undo starting attempt`, `Undo establishment` → `Undo cutting operation` → `Confirm undo` | `frontend/src/ui-pages/Cuttings/CuttingForm.tsx`<br>`frontend/src/ui-pages/Cuttings/CuttingDetails.tsx`<br>`frontend/src/ui-pages/Cuttings/Cuttings.tsx`<br>`frontend/src/ui-pages/Cuttings/api.ts` |
+
+## 7. Update for `v0.1.0-beta.9` (writer `claude-doc-04`, 2026-11-25)
+
+Argon's writer claim `b08d09581cf1` was taken over by the operator (claim `058a9bc3273b`). The
+review-fix prompt was already applied in `408bad0` (re-review PASS), so nothing of it was redone.
+`origin/main` `b632c5c` (beta.9 and MOBILE-002) was merged with a merge commit; conflicts in
+`CHANGELOG.md` (the guide line moved to a new `Unreleased` section), `docs/progress.md` and
+`docs/features.json` kept both sides.
+
+Guide changes, each label checked with `git grep -F` in `frontend/src` (non-test):
+
+| Change | Page | Source |
+| --- | --- | --- |
+| WFO name suggestions replace the batch-12 marker | `first-hour.md` | `botanical-identities/WfoNameInput.tsx` (datalist after 2 characters, free text stays valid) |
+| **Save and add another** tip (seed lot keeps identity, sowing keeps SeedLot, plant/group keeps identity) | `first-hour.md` | `seed-lots/SeedLotScreen.tsx`, `sowings/SowingScreen.tsx`, `plants/PlantScreen.tsx` |
+| Searchable reference fields | `README.md` | `seed-lots/ReferencePicker.tsx` (typing, arrows, Enter, Escape) |
+| Sort list for Seeds, Sowings, Plants; kept across pages and in Saved views | `finding-things-and-labels.md` | `components/DirectorySort.tsx`, `directorySort.ts`, `saved-views/state.ts` |
+| Identity cover dialog and **Collection record photos** | `daily-use.md` | `photos/BotanicalIdentityCover.tsx`, `botanical-identities/IdentityMedia.tsx`, `media/ExternalCopyChoice.tsx` |
+| Explore → Media: search, filters, **Add new media**, **Open media details**, **Link to another record**, **Delete media asset** | `daily-use.md` | `media/MediaScreen.tsx`, `MediaEditor.tsx`, `MediaQuickPreview.tsx` |
+| Plants card-height marker removed (layout fix shipped, no user note needed) | `daily-use.md` | `UI-REVIEW-002` |
+| Operator setup links `installation.md#optional-botanical-reference-datasets` | `reference-data.md` | `docs/installation.md` |
+
+New markers: one `TODO(DOC-04 verify)` for the dynamically built date sort options
+(`Newest ${dateLabel} first`, `components/DirectorySort.tsx:31-32`) and one
+`TODO(DOC-04 screenshot)` for the identity Media tab. The visually hidden **Sort by** label is
+described as such.
+
+Not documented on purpose: **Connected devices** in Settings → Account (MOBILE-002) serves the
+Android app, which is not part of the user guide yet.
+
+### Follow-up after batches 13 and 14 merge
+
+Not on `main` at `b632c5c`, so not documented: tray pot-on, bulk watering/feeding, Sort by for
+more directories and the Wikipedia image fix (batch 13); the import wizard, automatic WFO/WCVP
+setup, Settings → Media and the About page (batch 14). Update `daily-use.md`, `your-data.md`,
+`reference-data.md`, `finding-things-and-labels.md` and the Settings list in `README.md` when they
+land.

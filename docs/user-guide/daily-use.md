@@ -27,7 +27,6 @@ The **Journal** records observations and care events on an individual **Plant** 
 
 1. Open a **Plant** or **Plant group** from **Collection** → **Plants** (note that **Collection** →
    **Plants** lists your specimens and groups; see **Filters** to narrow the view).
-   <!-- TODO(DOC-04 after batch 12): Once the Plants directory card-height layout fix lands, check whether any directory view note is needed. -->
 2. On the record's detail page, select the **Journal** tab.
 3. Click **Add entry** (or **Add the first entry** if the journal is empty).
    > **Shortcut:** You can also click **Record** in the left rail (or on **Today**) and choose **Add Journal entry** to pick a **Plant** or **Plant group** and open its **Add entry** dialog from
@@ -101,10 +100,45 @@ record's detail page. You can switch the primary photo to another image at any t
 
 <!-- TODO(DOC-04 screenshot): Plant Photos tab with uploaded photos, highlight Primary badge and Set as primary action in the photo card menu -->
 
-> **Note on botanical identity and shared media:** A **Botanical identity** can also have reference
-> images on its **Media** tab, and **Explore** → **Media** provides a shared media library across
-> the app.
-<!-- TODO(DOC-04 after batch 12): Expand the botanical identity Media tab and Explore Media asset flow once the batch 12 media redesign lands. -->
+### Give a botanical identity a cover image
+
+A **Botanical identity** has one cover image, its representative picture. The
+photos of your seed lots, sowings, plants, groups and harvests stay with those records; the
+**Media** tab lists them under **Collection record photos** with a link to each record.
+
+1. Open the botanical identity and select the **Media** tab.
+2. Click **Set cover image** (or **Change cover** if it already has one).
+3. In the **Set identity cover** dialog, choose where the image comes from:
+   - **Upload local image**: choose an **Image file** (JPEG, PNG, or WebP; maximum 25 MiB).
+   - **Use external image**: paste the **Image URL** (the image itself) and the **Source/page URL**
+     (the page where you found it), fill in **Attribution** (the creator or source credit), and,
+     if the source gives one, the **Licence label** and **Licence URL**. Keep **Save a local copy
+     in Florabase** ticked so Florabase keeps its own copy of the image, then tick the privacy
+     notice to confirm that showing an external image lets that image's host see your network
+     address.
+4. Click **Save cover**.
+
+To replace the image later, click **Change cover**; to drop it, click **Remove cover**. Removing a
+cover keeps the image in the shared media library. If an external cover has no local copy yet, the
+**Media** tab offers **Save local copy**.
+
+<!-- TODO(DOC-04 screenshot): Botanical identity Media tab with a cover image, highlight Change cover and Collection record photos -->
+
+### Browse the shared media library
+
+**Explore** → **Media** lists every image in your Florabase, whether it was uploaded or is an
+external reference:
+
+- Use **Search media** to find an image by title, file name or attribution, and **Filters** to
+  narrow by **Source** (`Local images` or `External references`), **Record links** (`Linked media`
+  or `Unlinked media`) or **Target** (the kind of record it is attached to).
+- Click **Add new media** to add an image to the library: under **Media source** choose `Local
+  image` (then pick an **Image file**) or `External reference` (then fill in **Image URL**,
+  **Source page URL** and **Attribution**), add an optional **Title**, and click **Save media**.
+- Click an image to preview it, then click **Open media details** to see its details page. There
+  you can click **Link to another record** to attach the same image to another record, **Set as
+  primary** for one of its linked records, or, once nothing uses it any more, **Delete media
+  asset**.
 
 ## Scheduling and completing activities
 

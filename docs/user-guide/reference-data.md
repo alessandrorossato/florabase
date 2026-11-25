@@ -49,9 +49,11 @@ its licence, open **Settings** → **Data sources** in the left rail.
 ## Where the operator sets it up
 
 Installing local reference snapshots (such as WFO and WCVP files) or enabling optional map tiles is
-configured by the operator who runs the Florabase server. See the [Installation and operations
-guide](../installation.md) for setup details.
-<!-- TODO(DOC-04 after batch 12): Update this note once the operator setup for the WFO/WCVP reference data mount in docs/installation.md lands in batch 12. -->
+configured by the operator who runs the Florabase server. See [Optional botanical reference
+datasets](../installation.md#optional-botanical-reference-datasets) in the installation guide for
+setup details. Once the local WFO data is installed, the **Scientific name** field in **Create a
+botanical identity** also suggests matching names as you type (see [Your first
+hour](first-hour.md#create-the-botanical-identity)).
 
 Next, continue to **[Troubleshooting](troubleshooting.md)** for solutions to common everyday
 questions.

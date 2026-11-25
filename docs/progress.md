@@ -1,5 +1,17 @@
 # Engineering progress
 
+## 2026-11-25 — DOC-04 guide updated for v0.1.0-beta.9
+
+- On `docs/doc-04-user-guide` (writer `claude-doc-04`, takeover of Argon's claim). Merged
+  `origin/main` `b632c5c`; conflicts in `CHANGELOG.md`, `docs/progress.md` and `docs/features.json`
+  kept both sides, with the guide line in a new `Unreleased` section.
+- Documented WFO name suggestions, **Save and add another**, searchable reference fields, the
+  Seeds/Sowings/Plants sort list, the identity cover and Explore → Media; resolved all
+  `TODO(DOC-04 after batch 12)` markers. Record in
+  [`docs/release/evidence/doc-04.md`](release/evidence/doc-04.md); details in the handoff § 7.
+- Checks: `python3 scripts/check-features.py`, `python3 scripts/check-doc-links.py`, label grep
+  against `frontend/src`. Open: batch 13/14 features, screenshots, unassisted trial.
+
 ## 2026-11-23 — DOC-04 End-user guide and unassisted G-CORE trial template
 
 - On `docs/doc-04-user-guide` from `origin/main` `ddf5a14` (writer `argon-doc-04`).
