@@ -3010,6 +3010,22 @@
       "status": "implemented"
     },
     {
+      "id": "UX-SORT-002",
+      "category": "ux",
+      "description": "Extend the directory Sort by control to the server-paginated Orders, Media and Cuttings (material lots and rooting attempts) directories with a whitelisted backend sort parameter",
+      "acceptance_criteria": [
+        "GET /api/v1/orders, /api/v1/media-assets, /api/v1/vegetative-lots and /api/v1/propagation-attempts accept an optional sort of name, name_desc, newest or oldest, reject any other value with 422, and keep their existing default order when sort is absent",
+        "Server ordering applies before limit/offset: names compare case-insensitively on the displayed record name, dates use the partial order, taken-or-acquired or start date (missing month/day as the start of the period) or the media date added, records without a name or date stay last, and the record id breaks ties so pages are stable",
+        "Orders, Media and Cuttings reuse DirectorySortSelect with dated options, reset to the first page on change, keep the choice across the Cuttings record type switch and filter reset, and round-trip sort through the canonical URL and Saved View state validated by saved_views/state.py and saved-views/state.ts without a database migration",
+        "PostgreSQL integration tests cover every sort on every endpoint including tie-break page walks and 422 rejection; backend saved-view tests cover accepted and rejected values; frontend tests cover the request parameter, first-page reset and URL round-trip on each screen; OpenAPI and generated declarations are regenerated"
+      ],
+      "dependencies": [
+        "UX-SORT-001"
+      ],
+      "priority": "P3",
+      "status": "implemented"
+    },
+    {
       "id": "UX-ENTRY-001",
       "category": "ux",
       "description": "Save and add another in the Seeds, Sowings and Plants create forms",

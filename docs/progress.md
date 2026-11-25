@@ -1,5 +1,27 @@
 # Engineering progress
 
+## 2026-11-25 — UX-SORT-002 server-side Sort by for Orders, Media and Cuttings
+
+- On `feat/ux-sort-002` from `feat/fn-05-directory-sort` `760283a` (UX-SORT-001, batch 13, not yet
+  on `main`); delivers after batch 13 merges. Writer `claude-ux-sort-002`.
+- Added `backend/src/florabase/db/ordering.py` (`DirectorySort`, `directory_order()`) and an optional
+  whitelisted `sort` (`name`, `name_desc`, `newest`, `oldest`; anything else 422) on
+  `/api/v1/orders`, `/api/v1/media-assets`, `/api/v1/vegetative-lots` and
+  `/api/v1/propagation-attempts`. Ordering runs in SQL before `limit`/`offset`, compares names
+  case-insensitively on the displayed name, orders partial dates with missing month/day at the start
+  of the period, keeps missing names/dates last and breaks ties by id. Defaults are unchanged.
+- Orders, Media and Cuttings reuse `DirectorySortSelect` (dated options), reset to the first page on
+  change and round-trip `sort` through URL and Saved View state (`OrderState`, `MediaState`,
+  `CuttingsState`; `frontend/src/saved-views/state.ts`). No migration; OpenAPI regenerated.
+- Registered `UX-SORT-002` (`implemented`, `best-effort`). Evidence:
+  [ux-sort-002.md](release/evidence/ux-sort-002.md). Known limit: SQL `lower()` is not the browser's
+  natural numeric compare (`Batch 10` before `Batch 9`).
+- Focused checks: ruff/mypy, pnpm format/lint/typecheck, vitest (orders, media, cuttings, saved views,
+  components), backend unit tests, `make api-check`, and PostgreSQL integration for
+  `test_directory_sort.py` plus the orders, cuttings API, shared media and saved-view suites (68
+  passed). The
+  canonical `make feature-verify` is run by the operator.
+
 ## 2026-11-25 — UX-SORT-001 directory sort toolbar alignment and directory rollout
 
 - On `feat/fn-05-directory-sort` from `origin/main` `b632c5c` (writer `neon-fn-05`).

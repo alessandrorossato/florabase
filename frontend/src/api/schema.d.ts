@@ -13937,6 +13937,7 @@ export interface operations {
                 target?: ("collection" | "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier" | "vegetative_lot" | "propagation_attempt") | null;
                 limit?: number;
                 offset?: number;
+                sort?: ("name" | "name_desc" | "newest" | "oldest") | null;
             };
             header?: never;
             path?: never;
@@ -14373,6 +14374,7 @@ export interface operations {
             query?: {
                 q?: string;
                 supplier_id?: string | null;
+                sort?: ("name" | "name_desc" | "newest" | "oldest") | null;
                 offset?: number;
                 limit?: number;
             };
@@ -15452,6 +15454,7 @@ export interface operations {
                 mother_plant_id?: string | null;
                 mother_plant_group_id?: string | null;
                 location_id?: string | null;
+                sort?: ("name" | "name_desc" | "newest" | "oldest") | null;
                 offset?: number;
                 limit?: number;
             };
@@ -17349,6 +17352,7 @@ export interface operations {
                 mother_plant_group_id?: string | null;
                 location_id?: string | null;
                 has_known_mother?: boolean | null;
+                sort?: ("name" | "name_desc" | "newest" | "oldest") | null;
                 offset?: number;
                 limit?: number;
             };

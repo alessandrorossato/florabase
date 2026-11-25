@@ -17,6 +17,8 @@ import {
   DirectorySearch,
   DirectoryTools,
 } from "../../components/DirectoryTools";
+import { DirectorySortSelect } from "../../components/DirectorySort";
+import type { DirectorySort } from "../../components/directorySort";
 import { PageHeader } from "../../components/ReferenceUI";
 import { Icon } from "../../components/Icon";
 import {
@@ -110,7 +112,7 @@ function CuttingsDirectory({
     setPreview(undefined);
   });
   const { state: selectedFilters } = directory;
-  const { record_type: surface, q } = selectedFilters;
+  const { record_type: surface, q, sort } = selectedFilters;
   const { view, select: setView } = useDirectoryPresentation("cuttings");
   const trigger = useRef<HTMLButtonElement | null>(null);
   const fallback = useRef<HTMLAnchorElement>(null);
@@ -121,6 +123,7 @@ function CuttingsDirectory({
     limit: String(pageSize),
     offset: String(offset),
   });
+  if (sort) params.set("sort", sort);
   if (sourceId)
     params.set(
       sourceType === "plant_group"
@@ -253,6 +256,7 @@ function CuttingsDirectory({
                           ...defaults.cuttings,
                           record_type: item,
                           q,
+                          sort,
                         });
                         setOffset(0);
                         clearPreview();
@@ -262,6 +266,19 @@ function CuttingsDirectory({
                     </button>
                   ))}
                 </div>
+              }
+              sort={
+                <DirectorySortSelect
+                  value={sort}
+                  dateLabel={
+                    surface === "lots" ? "taken or acquired date" : "start date"
+                  }
+                  onChange={(value: DirectorySort) => {
+                    directory.update("sort", value);
+                    setOffset(0);
+                    clearPreview();
+                  }}
+                />
               }
               savedViews={
                 <SavedViews
@@ -316,6 +333,7 @@ function CuttingsDirectory({
                   ...defaults.cuttings,
                   record_type: surface,
                   q,
+                  sort,
                 });
                 setOffset(0);
                 clearPreview();

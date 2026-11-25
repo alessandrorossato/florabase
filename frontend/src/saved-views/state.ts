@@ -43,6 +43,7 @@ export interface DirectoryStates {
     source_kind: string;
     location_id: string;
     has_known_mother: string;
+    sort: DirectorySort;
   };
   seed_lots: {
     identity_id: string;
@@ -98,6 +99,7 @@ export interface DirectoryStates {
       | "supplier"
       | "vegetative_lot"
       | "propagation_attempt";
+    sort: DirectorySort;
   };
   species_distribution: {
     q: string;
@@ -114,7 +116,7 @@ export interface DirectoryStates {
   };
   botanical_identities: { q: string; sort: DirectoryNameSort };
   suppliers: { q: string; sort: DirectoryNameSort };
-  orders: { q: string; supplier_id: string };
+  orders: { q: string; supplier_id: string; sort: DirectorySort };
   locations: {
     q: string;
     state: "active" | "retired" | "all";
@@ -176,6 +178,7 @@ export const defaults: DirectoryStates = {
     source_kind: "",
     location_id: "",
     has_known_mother: "",
+    sort: "",
   },
   seed_lots: { identity_id: "", q: "", lifecycle: "active", sort: "" },
   sowings: { identity_id: "", q: "", lifecycle: "active", sort: "" },
@@ -202,7 +205,7 @@ export const defaults: DirectoryStates = {
     location_id: "",
   },
   events: { q: "", category: [] },
-  media: { q: "", kind: "", association: "all", target: "" },
+  media: { q: "", kind: "", association: "all", target: "", sort: "" },
   species_distribution: { q: "", scope: "all", identity: "" },
   native_ranges: {
     q: "",
@@ -214,7 +217,7 @@ export const defaults: DirectoryStates = {
   },
   botanical_identities: { q: "", sort: "" },
   suppliers: { q: "", sort: "" },
-  orders: { q: "", supplier_id: "" },
+  orders: { q: "", supplier_id: "", sort: "" },
   locations: { q: "", state: "active", scope: "all" },
   geography: { q: "", mode: "places" },
   provenance_map: { q: "", seed_lots: true, plants: true, cuttings: true },
@@ -271,6 +274,7 @@ const choices: Partial<
       "vegetative_lot",
       "propagation_attempt",
     ],
+    sort: directorySorts,
   },
   cuttings: {
     record_type: ["lots", "attempts"],
@@ -294,6 +298,7 @@ const choices: Partial<
       "unknown",
     ],
     has_known_mother: ["true", "false"],
+    sort: directorySorts,
   },
   locations: {
     state: ["active", "retired", "all"],
@@ -310,6 +315,7 @@ const choices: Partial<
   geography: { mode: ["places", "sites", "map"] },
   botanical_identities: { sort: directoryNameSorts },
   suppliers: { sort: directoryNameSorts },
+  orders: { sort: directorySorts },
 };
 
 function fieldValue(

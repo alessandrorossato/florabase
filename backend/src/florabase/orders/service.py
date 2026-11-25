@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
 from florabase.cuttings.model import VegetativeLot
+from florabase.db.ordering import DirectorySort, directory_order
 from florabase.orders.model import Order
 from florabase.orders.schemas import (
     OrderCreate,
@@ -178,6 +179,7 @@ def list_orders(
     *,
     q: str = "",
     supplier_id: UUID | None = None,
+    sort: DirectorySort | None = None,
     offset: int = 0,
     limit: int = 50,
 ) -> OrderPage:
@@ -194,16 +196,13 @@ def list_orders(
     if supplier_id is not None:
         statement = statement.where(Order.supplier_id == supplier_id)
     total = int(database.scalar(select(func.count()).select_from(statement.subquery())) or 0)
-    rows = database.execute(
-        statement.order_by(
-            Order.ordered_on_year.desc().nulls_last(),
-            Order.ordered_on_month.desc().nulls_last(),
-            Order.ordered_on_day.desc().nulls_last(),
-            Order.id.desc(),
-        )
-        .offset(offset)
-        .limit(limit)
+    order = directory_order(
+        sort or "newest",
+        name=Order.order_reference,
+        date=(Order.ordered_on_year, Order.ordered_on_month, Order.ordered_on_day),
+        record_id=Order.id,
     )
+    rows = database.execute(statement.order_by(*order).offset(offset).limit(limit))
     return OrderPage(
         items=[response(*row) for row in rows], total=total, offset=offset, limit=limit
     )

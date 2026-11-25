@@ -386,3 +386,20 @@ test.each(["seed_lots", "sowings", "plants"] as const)(
     expect(savedViewHash(surface, 1, { identity_id: "" })).toBeNull();
   },
 );
+
+test("UX-SORT-002 server-sorted directories round-trip sort in URL and Saved Views", () => {
+  for (const [surface, route] of [
+    ["orders", "#/orders"],
+    ["media", "#/media"],
+    ["cuttings", "#/cuttings"],
+  ] as const) {
+    expect(readDirectoryState(surface, `${route}?sort=oldest`).sort).toBe(
+      "oldest",
+    );
+    expect(readDirectoryState(surface, `${route}?sort=created`).sort).toBe("");
+    expect(savedViewHash(surface, 1, { sort: "name_desc" })).toBe(
+      `${route}?sort=name_desc`,
+    );
+    expect(savedViewHash(surface, 1, { sort: "created" })).toBeNull();
+  }
+});

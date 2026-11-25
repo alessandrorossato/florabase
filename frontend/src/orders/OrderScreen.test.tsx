@@ -177,6 +177,7 @@ test("directory exposes exact price, partial date, authoritative count and a hid
       auth.capability,
       expect.any(AbortSignal),
       20,
+      "",
     );
   });
   expect(
@@ -484,6 +485,7 @@ test("opening an Orders Saved View resets pagination", async () => {
       auth.capability,
       expect.any(AbortSignal),
       20,
+      "",
     );
   });
   window.history.pushState(null, "", "#/orders?q=REF");
@@ -496,6 +498,7 @@ test("opening an Orders Saved View resets pagination", async () => {
       auth.capability,
       expect.any(AbortSignal),
       20,
+      "",
     );
   });
 });
@@ -608,6 +611,7 @@ test("Supplier filter popup stays anchored, wraps long names, and clears before 
       auth.capability,
       expect.any(AbortSignal),
       20,
+      "",
     );
   });
   await waitFor(() => {
@@ -658,6 +662,7 @@ test("typing a multi-character search query keeps focus while results are in fli
       auth.capability,
       expect.any(AbortSignal),
       20,
+      "",
     );
   });
 });
@@ -681,6 +686,7 @@ test("missing filtered Supplier remains visible as a clearable fallback option",
       auth.capability,
       expect.any(AbortSignal),
       20,
+      "",
     );
   });
   const label = `Unavailable Supplier — ${missing}`;
@@ -725,6 +731,7 @@ test("Order Details and Back preserve Supplier, query, current page and gallery"
       auth.capability,
       expect.any(AbortSignal),
       20,
+      "",
     );
   });
   await orderRow();
@@ -861,6 +868,60 @@ test("editing an Order without touching its month-precision date sends it unchan
       }),
       "csrf",
       auth.capability,
+    );
+  });
+});
+
+test("Sort by asks the server for the chosen order from the first page and round-trips the URL (UX-SORT-002)", async () => {
+  vi.mocked(listOrders).mockResolvedValue({
+    items: [detail],
+    total: 51,
+    offset: 0,
+    limit: 20,
+  });
+  const user = userEvent.setup();
+  const { unmount } = mount();
+  await user.click(await screen.findByRole("button", { name: "Next page" }));
+  const sort = screen.getByRole("combobox", { name: "Sort by" });
+  expect(
+    within(sort)
+      .getAllByRole("option")
+      .map((option) => option.textContent),
+  ).toEqual([
+    "Default order",
+    "Name A–Z",
+    "Name Z–A",
+    "Newest order date first",
+    "Oldest order date first",
+  ]);
+  await user.selectOptions(sort, "oldest");
+  expect(window.location.hash).toContain("sort=oldest");
+  await waitFor(() => {
+    expect(listOrders).toHaveBeenLastCalledWith(
+      "",
+      "",
+      0,
+      auth.capability,
+      expect.any(AbortSignal),
+      20,
+      "oldest",
+    );
+  });
+  unmount();
+  window.history.replaceState(null, "", "#/orders?sort=name_desc");
+  mount();
+  expect(await screen.findByRole("combobox", { name: "Sort by" })).toHaveValue(
+    "name_desc",
+  );
+  await waitFor(() => {
+    expect(listOrders).toHaveBeenLastCalledWith(
+      "",
+      "",
+      0,
+      auth.capability,
+      expect.any(AbortSignal),
+      20,
+      "name_desc",
     );
   });
 });
