@@ -1,5 +1,18 @@
 # Engineering progress
 
+## 2026-11-25 — MEDIA-FETCH-001 Wikipedia/Wikimedia local copies
+
+- On `fix/media-fetch-001` from `origin/main` `b632c5c` (writer `claude-media-fetch`). No migration,
+  no OpenAPI change.
+- `media/fetch.py` now sends `Florabase/<__version__> media-copy (+https://github.com/alessandrorossato/florabase)`
+  on every request and redirect, rewrites Wikipedia/Wikimedia `/wiki/File:` pages (canonical and
+  localized namespaces) to `Special:FilePath` before fetching, and reports a 200 `text/html` page with
+  a direct-address message. `ExternalAssetCreate` stores the rewritten `image_url` and keeps the
+  operator's `source_url`; metadata edits cannot change `image_url`, so there is no separate edit path.
+- Focused: `tests/test_media_fetch.py`, `test_media.py`, `test_media_copies.py`,
+  `test_collection_photos.py` (99 passed), ruff, ruff format, mypy. Evidence:
+  `docs/release/evidence/media-fetch-001.md`.
+
 ## 2026-11-23 — MOBILE-002 device sign-in, Keystore plugin, and compatibility contract (PWA preserved)
 
 - On `feat/mobile-002-device-auth` from `origin/main` `ddf5a14` (writer `neon-mobile-002`).

@@ -129,6 +129,7 @@
     "BOTANICAL-IDENTITIES-VISUAL-001": "certify",
     "TAXONOMY-VISUAL-001": "baseline",
     "MEDIA-VISUAL-001": "certify",
+    "MEDIA-FETCH-001": "best-effort",
     "RELEASE-VISUAL-AUDIT-001": "record",
     "UI-SYSTEM-001": "certify",
     "DASHBOARD-CUSTOMIZATION-001": "post-1.0",
