@@ -72,7 +72,7 @@ class NativeRangesState(TextState):
     with_range: StrictBool = Field(default=False, alias="withRange")
 
 
-# Directory order (FN-02, FN-05); absent keeps each directory's default order.
+# Directory order (FN-02, UX-SORT-001); absent keeps each directory's default order.
 DirectorySort = Literal["name", "name_desc", "newest", "oldest"]
 DirectoryNameSort = Literal["name", "name_desc"]
 

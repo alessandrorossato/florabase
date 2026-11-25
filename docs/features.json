@@ -2993,7 +2993,7 @@
       "status": "implemented"
     },
     {
-      "id": "FN-05",
+      "id": "UX-SORT-001",
       "category": "ux",
       "description": "Align the Sort by toolbar select across desktop and phone widths and extend browser-local sorting to Botanical identities, Harvests, Stored material and Suppliers",
       "acceptance_criteria": [

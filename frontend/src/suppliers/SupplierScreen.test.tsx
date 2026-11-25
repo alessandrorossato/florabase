@@ -707,7 +707,7 @@ test("Supplier Details focuses its title and reconnects focus to the returning r
   });
 });
 
-test("Suppliers directory sorts by name before pagination and round-trips URL state (FN-05)", async () => {
+test("Suppliers directory sorts by name before pagination and round-trips URL state (UX-SORT-001)", async () => {
   const rows = [
     {
       ...supplier,

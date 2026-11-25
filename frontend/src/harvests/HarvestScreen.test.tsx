@@ -822,7 +822,7 @@ it("Harvest Details focuses its title and reconnects focus to the returning row"
   });
 });
 
-it("sorts Harvests by name and harvest date before pagination with undated last and URL round-trip (FN-05)", async () => {
+it("sorts Harvests by name and harvest date before pagination with undated last and URL round-trip (UX-SORT-001)", async () => {
   const rows: Harvest[] = [
     {
       ...harvest,

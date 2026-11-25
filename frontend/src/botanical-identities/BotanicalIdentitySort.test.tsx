@@ -53,7 +53,7 @@ afterEach(() => {
   window.location.hash = "";
 });
 
-test("Botanical identities directory sorts by name before pagination and round-trips URL state (FN-05)", async () => {
+test("Botanical identities directory sorts by name before pagination and round-trips URL state (UX-SORT-001)", async () => {
   const items = [
     makeIdentity(7),
     ...Array.from({ length: 25 }, (_, i) => i + 1)

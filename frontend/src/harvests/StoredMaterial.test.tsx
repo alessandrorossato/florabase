@@ -760,7 +760,7 @@ it("directory Edit opens the exact inventory's existing editor and returns focus
   expect(api.saveInventory).not.toHaveBeenCalled();
 });
 
-it("sorts Stored material by name before pagination and round-trips URL state (FN-05)", async () => {
+it("sorts Stored material by name before pagination and round-trips URL state (UX-SORT-001)", async () => {
   const rows: Inventory[] = [
     {
       ...inventory,

@@ -1,6 +1,6 @@
 # Engineering progress
 
-## 2026-11-25 — FN-05 directory sort toolbar alignment and directory rollout
+## 2026-11-25 — UX-SORT-001 directory sort toolbar alignment and directory rollout
 
 - On `feat/fn-05-directory-sort` from `origin/main` `b632c5c` (writer `neon-fn-05`).
 - Fixed `.directory-tools .directory-sort` alignment in `frontend/src/styles/normalization.css` and
@@ -20,9 +20,13 @@
   Media, History), trees/maps/analysis views (Locations, Geography, Taxonomy, Species distribution,
   Native ranges, Collection origins), and chronological feeds/agenda (Journal, Schedule) remain
   intentionally unsorted.
-- Registered `FN-05` (`implemented`, `best-effort`) in `docs/features.json` and
+- Registered `UX-SORT-001` (`implemented`, `best-effort`) in `docs/features.json` and
   `docs/release/scope-v1.json`. Verified with unit, CSS regression, backend saved-view, and
-  component tests plus canonical `make feature-verify AGENT_ID=neon-fn-05`.
+  component tests plus canonical `make feature-verify AGENT_ID=neon-fn-05` at `440c328`.
+- Renamed the identifier from `FN-05` to `UX-SORT-001` (writer `claude-batch13` after operator
+  takeover) because `FN-05` is already the release task for Journal Today preselection with its own
+  record in `docs/release/evidence/fn-05.md`; that record is unchanged. Evidence:
+  [ux-sort-001.md](release/evidence/ux-sort-001.md).
 
 ## 2026-11-23 — MOBILE-002 device sign-in, Keystore plugin, and compatibility contract (PWA preserved)
 

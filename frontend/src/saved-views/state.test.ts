@@ -190,7 +190,7 @@ test("directory sort is a canonical URL and Saved View field (FN-02)", () => {
   expect(savedViewHash("plants", 1, { sort: "created" })).toBeNull();
 });
 
-test("FN-05 directory sort round-trips for Harvests (dated) and name-only directories", () => {
+test("UX-SORT-001 directory sort round-trips for Harvests (dated) and name-only directories", () => {
   expect(readDirectoryState("harvests", "#/harvests?sort=newest").sort).toBe(
     "newest",
   );

@@ -333,7 +333,7 @@ test("mobile directory shells align rows to top and summaryless composed rows av
   expect(cuttingsMobile).toContain("margin-block-start: 0;");
 });
 
-test("directory sort select aligns vertically with sibling toolbar controls at desktop and phone widths (FN-05)", () => {
+test("directory sort select aligns vertically with sibling toolbar controls at desktop and phone widths (UX-SORT-001)", () => {
   const normalizationCss = readFileSync("src/styles/normalization.css", "utf8");
   const systemCss = readFileSync("src/styles/directory-system.css", "utf8");
 
