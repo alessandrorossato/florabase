@@ -31,9 +31,11 @@ def endpoint() -> None:
 
 def app_with_public_baseline() -> FastAPI:
     app = FastAPI(openapi_url=None)
+    app.post("/api/v1/auth/device-sessions")(endpoint)
     app.post("/api/v1/auth/login")(endpoint)
     app.get("/api/v1/health")(endpoint)
     app.get("/api/v1/ready")(endpoint)
+    app.get("/api/v1/system/info")(endpoint)
     return app
 
 
@@ -55,7 +57,7 @@ def test_public_baseline_passes_and_output_is_deterministic(
     assert capsys.readouterr().out == first
     report = json.loads(first)
     assert report["status"] == "pass"
-    assert report["counts"] == {"total": 4, "public": 3, "authenticated": 1, "owner-restricted": 0}
+    assert report["counts"] == {"total": 6, "public": 5, "authenticated": 1, "owner-restricted": 0}
     assert report["unexpected_public"] == report["stale_allowlist"] == []
 
 
@@ -63,8 +65,10 @@ def test_stale_public_entries_include_removed_and_now_authenticated_operations(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     app = FastAPI(openapi_url=None)
+    app.post("/api/v1/auth/device-sessions")(endpoint)
     app.get("/api/v1/health")(endpoint)
     app.get("/api/v1/ready", dependencies=[Depends(require_authenticated_actor)])(endpoint)
+    app.get("/api/v1/system/info")(endpoint)
     assert run_check(lambda: app, output_format="json") == 1
     report = json.loads(capsys.readouterr().out)
     assert report["status"] == "fail"

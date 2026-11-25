@@ -2,7 +2,7 @@
 
 Florabase's Progressive Web App (PWA) remains a first-class channel. The Android app under `mobile/` wraps the **same** React/TypeScript production bundle from `frontend/` using Capacitor — there is no forked UI codebase.
 
-> **Status (`MOBILE-001` spike):** The Android shell currently proves the build toolchain, TLS/CA trust configuration, native runtime detection, and server connectivity check (`GET /api/v1/health`). App sign-in arrives in `MOBILE-002`; see [MOBILE-001 ADR](mobile-001-adr.md) for the transport design and open decisions.
+> **Status (`MOBILE-002`):** The Android app supports connecting to a self-hosted Florabase server, checking compatibility via `GET /api/v1/system/info`, signing in with an opaque Bearer device session stored in Android Keystore, browsing/editing the collection with inline photos, and managing connected devices from Settings → Account. See [ADR 0011](decisions/0011-mobile-device-sessions.md) for the device-session transport and security design.
 
 ## Prerequisites
 
@@ -101,7 +101,7 @@ curl -s http://127.0.0.1:5173/api/v1/health
 
 ```bash
 adb install -r mobile/android/app/build/outputs/apk/debug/app-debug.apk
-adb shell am start -n org.florabase.app/.MainActivity
+adb shell am start -n io.github.alessandrorossato.florabase/.MainActivity
 ```
 
 ### Reaching the host dev server: the `10.0.2.2` note
@@ -111,12 +111,17 @@ Inside the Android emulator, `localhost` and `127.0.0.1` refer to the **emulator
 - **`http://10.0.2.2:5173`** reaches `127.0.0.1:5173` on the host (Vite dev server proxying `/api` to FastAPI).
 - **`http://10.0.2.2:8000`** reaches `127.0.0.1:8000` on the host (FastAPI directly).
 
-Enter `http://10.0.2.2:5173` in the onboarding **Server URL** field and tap **Check server**.
+Enter `http://10.0.2.2:5173` in the onboarding **Server URL** field and tap **Connect**. Once `/api/v1/health` and `/api/v1/system/info` pass compatibility checks, sign in with your owner credentials and an editable device name (prefilled from `Build.MODEL`).
+
+**Token storage and revocation:**
+
+- The Bearer device token is encrypted with a non-exportable AES-256-GCM key in `AndroidKeyStore` (`SecureTokenPlugin.java`) and stored in app-private `SharedPreferences` (`android:allowBackup="false"`). It is never written to `localStorage`, `sessionStorage`, IndexedDB, or Capacitor `Preferences`.
+- Signed-in devices can be viewed and revoked individually or all at once from **Settings → Account → Connected devices** in either the web/PWA or Android app. Changing your password in the web app revokes all browser and mobile device sessions immediately.
 
 **Cleartext HTTP policy (debug vs release):**
 
-- **Debug APKs** (`make mobile-android-debug`) include `mobile/android/app/src/debug/res/xml/network_security_config.xml` and set `VITE_MOBILE_ALLOW_DEBUG_HTTP=true`, allowing plain `http://` **only** for `10.0.2.2`, loopback, and private RFC1918 / `.local` LAN hosts. Public `http://` hosts are still rejected.
-- **Release APKs** use `mobile/android/app/src/main/res/xml/network_security_config.xml`, which sets `cleartextTrafficPermitted="false"`, and build with `VITE_MOBILE_ALLOW_DEBUG_HTTP=false`. Plain `http://` is blocked by both the UI validator and Android's network security layer.
+- **Debug APKs** (`make mobile-android-debug`) include `mobile/android/app/src/debug/res/xml/network_security_config.xml`, set `VITE_MOBILE_ALLOW_DEBUG_HTTP=true`, and enable WebView mixed content strictly inside `if (BuildConfig.DEBUG)` in `MainActivity.java`, allowing plain `http://` **only** for `10.0.2.2`, loopback, and private RFC1918 / `.local` LAN hosts. Public `http://` hosts are still rejected.
+- **Release APKs** use `mobile/android/app/src/main/res/xml/network_security_config.xml` (`cleartextTrafficPermitted="false"`), set `allowMixedContent: false` in `mobile/capacitor.config.ts`, omit the debug mixed-content branch (`BuildConfig.DEBUG == false`), and build with `VITE_MOBILE_ALLOW_DEBUG_HTTP=false`. This release invariant is checked automatically by `make test-beta-runtime`.
 
 ## Trusting a self-signed or private NAS CA on Android
 
@@ -150,6 +155,7 @@ If the CA is missing or the leaf cert does not match the hostname, onboarding su
 
 ## Related documents
 
+- [ADR 0011: Mobile device sessions](decisions/0011-mobile-device-sessions.md)
 - [MOBILE-001 Architecture Decision Record](mobile-001-adr.md)
 - [ADR 0005: Authentication and sessions](decisions/0005-authentication-and-sessions.md)
 - [PWA and deployment guide](deployment.md)

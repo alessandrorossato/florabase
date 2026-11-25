@@ -1,69 +1,54 @@
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
 import { FieldLabel } from "../components/FieldLabel";
-import {
-  probeFlorabaseHealth,
-  type HealthProbeErrorKind,
-  type HttpGetFn,
-} from "./healthProbe";
+import type { HttpGetFn } from "./healthProbe";
 import { createServerUrlStore, type ServerUrlStore } from "./preferences";
 import { isNativeDebugBuild } from "./runtime";
 import { validateServerUrl } from "./serverUrl";
+import {
+  checkServerCompatibility,
+  onboardingErrorHeading,
+  type OnboardingError,
+  type SystemInfo,
+} from "./systemInfo";
 import "./native-onboarding.css";
 
 interface ConnectedServerState {
   serverUrl: string;
-  httpStatus: number;
-  status: "ok";
-  serverVersion: string | null;
-  serverRevision: string | null;
-}
-
-interface OnboardingError {
-  category: "invalid-url" | HealthProbeErrorKind;
-  heading: string;
-  message: string;
-}
-
-function errorHeading(category: OnboardingError["category"]): string {
-  switch (category) {
-    case "invalid-url":
-      return "Invalid server URL";
-    case "tls":
-      return "Certificate not trusted";
-    case "cleartext":
-      return "HTTPS required";
-    case "unreachable":
-      return "Server unreachable";
-    case "http-error":
-      return "Server error";
-    case "non-florabase":
-      return "Not a Florabase server";
-  }
+  info: SystemInfo;
 }
 
 export interface NativeServerOnboardingProps {
   allowDebugHttp?: boolean;
   store?: ServerUrlStore;
   httpGet?: HttpGetFn;
+  appVersion?: string;
+  initialServerUrl?: string | null;
+  initialError?: OnboardingError | null;
+  onConnected?: (serverUrl: string, info: SystemInfo) => void;
 }
 
 export function NativeServerOnboarding({
   allowDebugHttp = isNativeDebugBuild(),
   store,
   httpGet,
+  appVersion,
+  initialServerUrl = null,
+  initialError = null,
+  onConnected,
 }: NativeServerOnboardingProps) {
   const storeRef = useRef<ServerUrlStore>(store ?? createServerUrlStore());
   const errorRef = useRef<HTMLDivElement>(null);
 
-  const [serverUrlInput, setServerUrlInput] = useState("");
-  const [savedUrl, setSavedUrl] = useState<string | null>(null);
-  const [loadingSaved, setLoadingSaved] = useState(true);
+  const [serverUrlInput, setServerUrlInput] = useState(initialServerUrl ?? "");
+  const [savedUrl, setSavedUrl] = useState<string | null>(initialServerUrl);
+  const [loadingSaved, setLoadingSaved] = useState(initialServerUrl === null);
   const [checking, setChecking] = useState(false);
-  const [error, setError] = useState<OnboardingError | null>(null);
+  const [error, setError] = useState<OnboardingError | null>(initialError);
   const [connected, setConnected] = useState<ConnectedServerState | null>(null);
 
   useEffect(() => {
+    if (initialServerUrl !== null) return;
     let active = true;
     void storeRef.current
       .load()
@@ -80,7 +65,7 @@ export function NativeServerOnboarding({
     return () => {
       active = false;
     };
-  }, []);
+  }, [initialServerUrl]);
 
   useEffect(() => {
     if (error !== null) {
@@ -99,7 +84,7 @@ export function NativeServerOnboarding({
       setConnected(null);
       setError({
         category: "invalid-url",
-        heading: errorHeading("invalid-url"),
+        heading: onboardingErrorHeading("invalid-url"),
         message: validation.error,
       });
       return;
@@ -107,30 +92,29 @@ export function NativeServerOnboarding({
 
     setChecking(true);
     try {
-      const probe = await probeFlorabaseHealth(validation.normalizedUrl, {
+      const result = await checkServerCompatibility(validation.normalizedUrl, {
         httpGet,
         allowDebugHttp,
+        appVersion,
       });
-      if (!probe.ok) {
+      if (!result.ok) {
         setConnected(null);
         setError({
-          category: probe.kind,
-          heading: errorHeading(probe.kind),
-          message: probe.message,
+          category: result.kind,
+          heading: onboardingErrorHeading(result.kind),
+          message: result.message,
         });
         return;
       }
 
-      await storeRef.current.save(probe.serverUrl);
-      setSavedUrl(probe.serverUrl);
-      setServerUrlInput(probe.serverUrl);
+      await storeRef.current.save(result.serverUrl);
+      setSavedUrl(result.serverUrl);
+      setServerUrlInput(result.serverUrl);
       setConnected({
-        serverUrl: probe.serverUrl,
-        httpStatus: probe.httpStatus,
-        status: probe.status,
-        serverVersion: probe.serverVersion,
-        serverRevision: probe.serverRevision,
+        serverUrl: result.serverUrl,
+        info: result.info,
       });
+      onConnected?.(result.serverUrl, result.info);
     } finally {
       setChecking(false);
     }
@@ -144,21 +128,14 @@ export function NativeServerOnboarding({
     setServerUrlInput("");
   }
 
-  const versionDisplay =
-    connected?.serverVersion !== null && connected?.serverVersion !== undefined
-      ? connected.serverRevision !== null
-        ? `${connected.serverVersion} (${connected.serverRevision})`
-        : connected.serverVersion
-      : "Not reported by /api/v1/health";
-
   return (
     <main className="mobile-onboarding">
       <section aria-labelledby="mobile-onboarding-title" className="card">
-        <p className="eyebrow">Florabase Android (MOBILE-001 spike)</p>
+        <p className="eyebrow">Florabase Android</p>
         <h1 id="mobile-onboarding-title">Connect to your server</h1>
         <p className="intro">
           Enter the URL of your self-hosted Florabase server to verify
-          connectivity.
+          compatibility and sign in.
         </p>
 
         <form
@@ -214,11 +191,12 @@ export function NativeServerOnboarding({
 
           <div className="mobile-onboarding__actions">
             <button type="submit" disabled={checking || loadingSaved}>
-              {checking ? "Checking server…" : "Check server"}
+              {checking ? "Checking server…" : "Connect"}
             </button>
             {savedUrl !== null && (
               <button
                 type="button"
+                className="button--secondary"
                 disabled={checking}
                 onClick={() => {
                   void handleForgetSaved();
@@ -236,36 +214,27 @@ export function NativeServerOnboarding({
           </p>
         )}
 
-        {connected !== null && (
+        {connected !== null && onConnected === undefined && (
           <section
             aria-label="Server connection result"
             className="mobile-onboarding__result"
             role="status"
           >
-            <h2>Server reachable</h2>
+            <h2>Server compatible</h2>
             <dl className="mobile-onboarding__meta">
               <div className="mobile-onboarding__meta-row">
                 <dt>Server URL</dt>
                 <dd>{connected.serverUrl}</dd>
               </div>
               <div className="mobile-onboarding__meta-row">
-                <dt>Health check (/api/v1/health)</dt>
-                <dd>
-                  {connected.status} (HTTP {connected.httpStatus})
-                </dd>
-              </div>
-              <div className="mobile-onboarding__meta-row">
                 <dt>Server version</dt>
-                <dd>{versionDisplay}</dd>
+                <dd>{connected.info.serverVersion}</dd>
               </div>
               <div className="mobile-onboarding__meta-row">
-                <dt>Saved on device</dt>
-                <dd>Yes (Capacitor Preferences)</dd>
+                <dt>API version</dt>
+                <dd>{connected.info.apiVersion}</dd>
               </div>
             </dl>
-            <p className="mobile-onboarding__next">
-              Sign-in for the app arrives in MOBILE-002.
-            </p>
           </section>
         )}
       </section>

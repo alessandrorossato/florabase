@@ -2,7 +2,9 @@
 
 Status: accepted. The first-owner bootstrap channel is superseded in part by
 [ADR 0008](0008-self-initializing-single-compose.md): the owner may also be created once from the
-production Compose environment.
+production Compose environment. Amended by [ADR 0011](0011-mobile-device-sessions.md) to add
+opaque Bearer device sessions for the Capacitor mobile app while keeping browser cookie, CSRF, and
+origin checks unchanged.
 
 ## Context
 

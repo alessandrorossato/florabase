@@ -188,6 +188,7 @@
     "DOCS-002": "best-effort",
     "RUNTIME-IDLE-001": "release-work",
     "MOBILE-001": "post-1.0",
-    "DOCS-003": "release-work"
+    "DOCS-003": "release-work",
+    "MOBILE-002": "post-1.0"
   }
 }
