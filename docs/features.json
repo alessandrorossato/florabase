@@ -1310,6 +1310,23 @@
       "status": "verified"
     },
     {
+      "id": "PROPAGATION-BATCH-001",
+      "category": "workflow",
+      "description": "Pot on a whole Sowing tray into N Plants (or one PlantGroup) and split an active PlantGroup into N Plants in one step",
+      "acceptance_criteria": [
+        "POST /api/v1/sowings/{sowing_id}/pot-on creates 1-200 Plants in one database transaction with one existing SOWING_TO_PLANT receipt per Plant, applying resulting_sowing_lifecycle only on the last iteration so newest-first REVERSAL-001 reversal restores the Sowing and SeedLot without schema or reversal changes",
+        "POST /api/v1/plant-groups/{plant_group_id}/extract-batch loops existing PlantGroup extraction (one extraction Event and receipt each), enforces exact current quantity caps, allows approximate/unknown groups up to 200 with UI warning, preserves PLANT-006 reintegration, and rolls back atomically on any failure",
+        "Sowing detail and active PlantGroup detail expose a preview-and-confirm dialog with searchable ReferencePicker identity/location controls, live {n} label-pattern preview (first 3 + last), smart Sowing completion defaults, 409 stale-preview handling, and links to created records"
+      ],
+      "dependencies": [
+        "PROPAGATION-003",
+        "PLANT-006",
+        "FN-04"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "UX-003",
       "category": "frontend",
       "description": "Refine collection navigation and detail-page coherence from observed use",

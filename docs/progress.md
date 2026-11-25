@@ -82,6 +82,48 @@
 - No feature status changes. Tag, protected publication and publication evidence remain operator
   actions.
 
+## 2026-11-24 — Batch pot-on and PlantGroup split (`PROPAGATION-BATCH-001`)
+
+- On `feat/propagation-batch-001` from `origin/main` `1a78476` (writer `neon-propagation-batch-001`).
+  No database migration, no new receipt kind or grouping ID, and `propagation/reversal.py` and
+  `SowingDescendantWizard.tsx` remain untouched.
+- Backend: added pure label-pattern module `backend/src/florabase/propagation/labels.py` (single-line
+  normalization, `{n}` expansion with `counter_start`/`counter_padding`, 1–200 count limit, ≤255-char
+  expanded-label validation); `POST /api/v1/sowings/{sowing_id}/pot-on` (`potOnSowing`) in
+  `propagation/api.py` backed by `create_plants_from_sowing_batch` at the end of
+  `propagation/service.py` (locks sowing once, checks `expected_sowing_updated_at` → 409
+  `stale_preview`, rejects inactive/reversed sowings with 409, writes one existing `SOWING_TO_PLANT`
+  receipt per created Plant in a single transaction, and applies `resulting_sowing_lifecycle` only on
+  the Nth iteration so `REVERSAL-001` newest-first reversal restores Sowing and SeedLot);
+  `POST /api/v1/plant-groups/{plant_group_id}/extract-batch` (`extractPlantsFromGroup`) in
+  `plants/api.py` backed by `PlantGroupExtractBatchCreate`/`PlantGroupExtractBatchResponse` and
+  `extract_plants_batch` appended at the end of `plants/schemas.py` and `plants/service.py` (loops
+  existing `extract_plant`, caps exact-quantity groups at current quantity, allows approximate/unknown
+  groups up to 200, preserves `PLANT-006` newest-first reintegration, rolls back atomically on
+  mid-batch failure). Regenerated `backend/openapi.json` and `frontend/src/api/schema.d.ts`.
+- Frontend: added `frontend/src/propagation/api.ts` and `frontend/src/propagation/PotOnDialog.tsx`
+  with Sowing mode (N individual Plants via `potOnSowing` or one PlantGroup of N via existing
+  `createPlantGroupFromSowing`), germinated hint, live `{n}` preview (first 3 + last), no-`{n}`
+  warning, `ReferencePicker` identity/location selectors, smart Completed default when N ≥ germinated,
+  explicit preview/confirm sentence, 409 `stale_preview` refresh, and links to created records;
+  added minimal launchers in `sowings/SowingScreen.tsx` ("Pot on seedlings…") and
+  `plants/PlantScreen.tsx` ("Split into plants…").
+- Docs & manifests: updated `docs/domain-model.md`, registered `PROPAGATION-BATCH-001` (`implemented`,
+  proposed class `best-effort`) right after `PROPAGATION-003` in `docs/features.json` and
+  `docs/release/scope-v1.json`, and committed evidence in
+  [propagation-batch-001.md](release/evidence/propagation-batch-001.md).
+- Focused checks: `ruff format --check`, `ruff check`, `mypy` (0 issues), backend unit suite
+  `backend/tests/propagation/test_propagation_batch.py` (8 passed) and `test_propagation.py` (16
+  passed), `scripts/test_check_api_routes.py` (27 passed), PostgreSQL integration
+  `backend/tests/integration/propagation/test_propagation_batch_api.py` (4 passed, incl. 12-plant
+  pot-on + newest-first full reversal back to SeedLot, 5-plant exact split + newest-first
+  reintegration, approximate split, mid-batch rollback, owner/CSRF), `make api-check` (no drift),
+  frontend `pnpm typecheck`, `pnpm lint`, Prettier, Vitest (`PotOnDialog`, `GuidedForms`,
+  `SowingScreen`, `PlantScreen` — 4 files, 135 passed), `scripts/check-features.py` (187 valid),
+  `scripts/check-doc-links.py`, and headless Chromium visual checks at 1440×900 and 375×812 (zero
+  overflow). Canonical `make feature-verify AGENT_ID=neon-propagation-batch-001` (`affected` tier)
+  runs on the frozen committed tip.
+
 ## 2026-11-23 — Batch 12 integration (WF-BATCH-PROGRESS-001, DOCS-003, FN-02/FN-04/UX-ENTRY-001, UI-REVIEW-002)
 
 - `ci/batch-12` from `origin/main` `ddf5a14` (writer `claude-batch-12`) merges, in order,

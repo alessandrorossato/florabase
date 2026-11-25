@@ -442,6 +442,23 @@ a descendant never completes a Sowing automatically. `germinated_count` remains 
 operator-entered current observation and is neither rewritten nor required to equal materialized
 descendants.
 
+Batch pot-on (`PROPAGATION-BATCH-001`) extends this workflow to create 1–200 individual Plants from
+an active Sowing (or split 1–200 individual Plants from an active PlantGroup) in one database
+transaction without introducing a new receipt kind or grouping identifier. For a Sowing batch, the
+Sowing row is locked once, optimistic concurrency rejects a stale `expected_sowing_updated_at`
+snapshot (`stale_preview`), and one existing `SOWING_TO_PLANT` receipt is written per created Plant.
+Iterations 1 through N−1 leave the Sowing lifecycle unchanged (`before_lifecycle == after_lifecycle`);
+only the Nth iteration applies `resulting_sowing_lifecycle`. Reversal therefore remains
+`REVERSAL-001` newest-first per source: reversing the newest created Plant restores the Sowing's
+prior lifecycle, and reversing every created Plant newest-first returns the Sowing (and, once
+reversed, its SeedLot) to the original state. There is no whole-batch reversal operation.
+`germinated_count` remains an advisory UI hint and is never enforced as a backend cap. For an active
+PlantGroup batch split, the locked group loops the existing single-Plant extraction (one extraction
+Event and one `PLANT_GROUP_EXTRACTION` receipt per Plant), capping exact-quantity groups at their
+current exact count while allowing approximate or unknown groups up to 200 without modifying group
+quantity; `PLANT-006` newest-first reintegration remains unchanged. Any failure mid-batch rolls back
+the entire transaction.
+
 The protected Sowing propagation summary derives descendants only from stored immediate Sowing and
 PlantGroup-extraction links. Every Plant with that explicit ancestry contributes exactly one tracked
 individual. An exact PlantGroup contributes its current exact quantity; approximate and unknown
