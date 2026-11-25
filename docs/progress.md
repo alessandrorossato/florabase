@@ -2,7 +2,8 @@
 
 ## 2026-11-25 — Settings → Media defaults (`MEDIA-SETTINGS-001`)
 
-- On `feat/media-settings-001` from `ci/batch-13` `756a3c8` (writer `claude-media-settings`).
+- On `feat/media-settings-001` from `ci/batch-13` `756a3c8`, realigned by merging `origin/main`
+  `08ff2f9` (Batch 13, #227) (writer `claude-media-settings`).
   Migration `20261125_0050` on `20261125_0049` adds four media-default columns to
   `application_settings`; single Alembic head `20261125_0050`.
 - New Settings → Media page: the saved default only pre-selects "Save a local copy" (no automatic

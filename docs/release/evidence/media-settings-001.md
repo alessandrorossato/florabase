@@ -3,7 +3,9 @@
 - **Identifier:** `MEDIA-SETTINGS-001` (category `attachment`, P2, status `implemented`, proposed
   release class `best-effort`).
 - **Branch:** `feat/media-settings-001` from `ci/batch-13` `756a3c86e4b2de549de3eca9c6d20c9ae26654d5`
-  (Batch 13 is not yet on `main` and owns migration `20261125_0049`, which this change chains after).
+  (Batch 13 owns migration `20261125_0049`, which this change chains after), realigned on 2026-11-25
+  by merging `origin/main` `08ff2f9` (Batch 13 squash, #227); the merge changed no code, only
+  additive docs conflicts resolved by keeping both sides.
 - **Writer:** `claude-media-settings`.
 - **Operator decision (2026-11-25):** approved the design note: (1) the local-copy setting only
   pre-selects the form choice, no automatic fetch; (2) default attribution/licence prefill only the
