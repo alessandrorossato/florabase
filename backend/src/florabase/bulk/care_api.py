@@ -26,7 +26,12 @@ Database = Annotated[Session, Depends(get_database_session, scope="function")]
 Writer = Annotated[AuthenticatedActor, Depends(require_csrf)]
 
 
-def _failure(database: Session, error: Exception) -> HTTPException:
+def _failure(
+    database: Session,
+    error: Exception,
+    *,
+    concurrency_message: str = "No care entries logged. Refresh and preview again.",
+) -> HTTPException:
     database.rollback()
     if isinstance(error, care_service.BulkCareError):
         status = (
@@ -50,7 +55,7 @@ def _failure(database: Session, error: Exception) -> HTTPException:
         409,
         detail={
             "code": "concurrent_change",
-            "message": "No care entries logged. Refresh and preview again.",
+            "message": concurrency_message,
         },
     )
 
@@ -96,5 +101,14 @@ def undo(batch_id: UUID, database: Database, actor: Writer) -> BulkCareUndoRespo
         result = care_service.undo_bulk_care(database, batch_id)
         database.commit()
         return result
-    except (care_service.BulkCareError, IntegrityError, OperationalError) as error:
-        raise _failure(database, error) from error
+    except (
+        care_service.BulkCareError,
+        EventDomainConflictError,
+        IntegrityError,
+        OperationalError,
+    ) as error:
+        raise _failure(
+            database,
+            error,
+            concurrency_message="Undo did not complete. Refresh and try again.",
+        ) from error

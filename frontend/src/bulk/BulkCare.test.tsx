@@ -128,15 +128,22 @@ test("selection bulk care flow previews, logs, and undoes (with partial edit kep
   });
   vi.mocked(careApi.undoBulkCare).mockResolvedValue({
     batch_id: "batch-123",
-    deleted_count: 3,
-    kept_count: 1,
+    deleted_count: 2,
+    kept_count: 2,
     kept: [
       {
         id: "ev-1",
         target_kind: "plant",
         target_id: "p-1",
         label: "Hoya 1 · Hoya carnosa",
-        reason: "Edited after batch creation",
+        reason: "edited",
+      },
+      {
+        id: "ev-2",
+        target_kind: "plant",
+        target_id: "p-2",
+        label: "Hoya 2 · Hoya carnosa",
+        reason: "has_photos",
       },
     ],
   });
@@ -173,12 +180,13 @@ test("selection bulk care flow previews, logs, and undoes (with partial edit kep
 
   await user.click(screen.getByRole("button", { name: "Undo" }));
   expect(
-    await screen.findByText(
-      /Undone: 3 entries removed · 1 edited entry kept\./,
-    ),
+    await screen.findByText(/Undone: 2 entries removed · 2 entries kept\./),
   ).toBeVisible();
   expect(
     screen.getByText("Hoya 1 · Hoya carnosa — Edited after batch creation"),
+  ).toBeVisible();
+  expect(
+    screen.getByText("Hoya 2 · Hoya carnosa — Has attached photos"),
   ).toBeVisible();
 });
 

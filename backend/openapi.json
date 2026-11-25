@@ -2095,6 +2095,13 @@
             "type": "string"
           },
           "reason": {
+            "enum": [
+              "edited",
+              "has_photos",
+              "linked_to_schedule",
+              "operation_owned",
+              "harvest_owned"
+            ],
             "title": "Reason",
             "type": "string"
           },

@@ -563,10 +563,12 @@ treatment, harvest, extraction, transfer, death, loss, discarded, reintegration,
 other. Watering and feeding (`FN-03`) are non-state-changing care kinds usable on both single
 Journal entries and bulk care operations (`CARE-BULK-001`), and count as informational retainable
 events for propagation reversal and PlantGroup reintegration (confirmation-required rather than
-blocking). Undoing a bulk care batch (`DELETE /api/v1/bulk/care/batches/{batch_id}`) deletes only
-events in that batch that have not been edited since creation (`updated_at == created_at`); edited
-events are kept and listed in the response. Collection observations remain separate from
-BotanicalProfile reference knowledge.
+blocking). Undoing a bulk care batch (`DELETE /api/v1/bulk/care/batches/{batch_id}`) enforces the same
+per-event deletion guards as single Event deletion (attached photos, linked scheduled activities,
+operation ownership, harvest ownership) and deletes only unedited, unguarded events in the batch
+(`updated_at == created_at`); kept events are listed with their structured reason (`edited`,
+`has_photos`, `linked_to_schedule`, `operation_owned`, or `harvest_owned`). Collection observations
+remain separate from BotanicalProfile reference knowledge.
 
 A measurement Event (MEASUREMENT-001) records one Plant height as an exact positive decimal with its
 recorded unit (`mm`, `cm` or `m`), an approximation flag and a required PartialDate. It never

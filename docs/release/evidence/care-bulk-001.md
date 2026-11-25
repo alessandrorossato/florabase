@@ -36,9 +36,12 @@ Implemented on `feat/care-bulk-001` from `origin/main` at
       rejects signature mismatch with `409 stale_preview` and empty/all-skipped scopes with
       `422 nothing_to_log`, inserts all per-target Events with one shared `batch_id` in one
       transaction.
-    - `DELETE /api/v1/bulk/care/batches/{batch_id}` (`undoBulkCare`): deletes unedited events
-      (`updated_at == created_at`), keeps and lists edited events, returns `404 batch_not_found` for
-      unknown batches.
+    - `DELETE /api/v1/bulk/care/batches/{batch_id}` (`undoBulkCare`): enforces `events.service.delete_event`
+      guards per event (photos, linked scheduled activity, operation ownership, harvest ownership)
+      plus the edit check (`updated_at == created_at`), deleting eligible events in one transaction
+      and listing kept events with structured reasons (`edited`, `has_photos`,
+      `linked_to_schedule`, `operation_owned`, `harvest_owned`); returns `404 batch_not_found` for
+      unknown batches and `"Undo did not complete. Refresh and try again."` on concurrency errors.
   - Added [`frontend/src/bulk/careApi.ts`](../../../frontend/src/bulk/careApi.ts) and
     [`frontend/src/bulk/BulkCare.tsx`](../../../frontend/src/bulk/BulkCare.tsx); wired `"Log care…"`
     into `BulkToolbar` ([`frontend/src/bulk/BulkLocation.tsx`](../../../frontend/src/bulk/BulkLocation.tsx),
@@ -87,7 +90,7 @@ Tested on the frozen `feat/care-bulk-001` branch tip commit (full canonical FULL
 | --- | --- |
 | Migration `0049` upgrade with existing events, downgrade refusal when watering/feeding exist, clean downgrade/re-upgrade, single head | `backend/tests/integration/events/test_event_care_migration.py`, `backend/tests/integration/test_event_migration.py`, `backend/tests/integration/test_autogenerate_checks.py` |
 | Bulk care schema validation, 500 target cap, disallowed kinds, service preview/apply/undo, API error mapping | `backend/tests/bulk/test_bulk_care.py` |
-| Selection preview/apply/undo (3 plants + 1 group, shared `batch_id`, edited event kept), Location subtree with sub-locations & inactive skipping, empty location rejection, stale `target_signature` 409, owner/CSRF guards | `backend/tests/integration/bulk/test_bulk_care_api.py` |
+| Selection preview/apply/undo (3 plants + 1 group, shared `batch_id`, edited event kept), photo-guarded undo (batch of 3 with 1 photo → 2 deleted, 1 kept with `has_photos`), Location subtree with sub-locations & inactive skipping, empty location rejection, stale `target_signature` 409, owner/CSRF guards | `backend/tests/integration/bulk/test_bulk_care_api.py` |
 | Watering/feeding informational reversal (`confirmation_required`, not `blocked`) for Sowing-created Plant and PlantGroup-extracted Plant | `backend/tests/integration/bulk/test_bulk_care_api.py` (`test_watering_keeps_sowing_reversal_and_reintegration_confirmation_required`) |
 | Single Journal entry with Watering/Feeding & Care filter | `backend/tests/integration/bulk/test_bulk_care_api.py`, `frontend/src/bulk/BulkCare.test.tsx` |
 | Saved Views `events` category (`["care"]` + unchanged legacy three categories) | `backend/tests/bulk/test_bulk_care.py`, `frontend/src/bulk/BulkCare.test.tsx`, `backend/tests/test_saved_views.py`, `frontend/src/saved-views/state.test.ts` |
@@ -107,3 +110,18 @@ viewports (kept outside Git per `AGENTS.md`):
   wrapping and zero horizontal scroll.
 - `care-bulk-success-desktop.png` (`1280×800`): Post-apply Location detail showing the inline
   `Logged Watering for 37 records (2 skipped).` notice with **Undo** and **Dismiss**.
+
+## Review remediation (M1, N1 — 2026-11-25)
+
+- **M1**: `undo_bulk_care` now reuses `events.service.delete_event` per unedited batch event in a
+  single transaction instead of calling `database.delete()` directly. Events protected by attached
+  photos (`has_photos`), a completed scheduled activity (`linked_to_schedule`), an authoritative
+  operation (`operation_owned`), or a Harvest record (`harvest_owned`) are kept and listed alongside
+  edited events (`edited`), while unguarded events are deleted. Covered by unit tests in
+  `backend/tests/bulk/test_bulk_care.py`, PostgreSQL integration test
+  `test_bulk_care_undo_keeps_event_with_photo_and_deletes_others` in
+  `backend/tests/integration/bulk/test_bulk_care_api.py`, and frontend reason rendering in
+  `frontend/src/bulk/BulkCare.test.tsx`.
+- **N1**: `DELETE /api/v1/bulk/care/batches/{batch_id}` uses its own concurrency conflict message
+  (`"Undo did not complete. Refresh and try again."`), verified in
+  `backend/tests/bulk/test_bulk_care.py`.

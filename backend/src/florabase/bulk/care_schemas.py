@@ -115,12 +115,21 @@ class BulkCareApplyResponse(BaseModel):
     skipped_count: int
 
 
+BulkCareKeptReason = Literal[
+    "edited",
+    "has_photos",
+    "linked_to_schedule",
+    "operation_owned",
+    "harvest_owned",
+]
+
+
 class BulkCareKeptEvent(BaseModel):
     id: UUID
     target_kind: BulkCareTargetKind
     target_id: UUID
     label: str
-    reason: str
+    reason: BulkCareKeptReason
 
 
 class BulkCareUndoResponse(BaseModel):

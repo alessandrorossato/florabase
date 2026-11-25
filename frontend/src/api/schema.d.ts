@@ -3691,8 +3691,11 @@ export interface components {
             id: string;
             /** Label */
             label: string;
-            /** Reason */
-            reason: string;
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "edited" | "has_photos" | "linked_to_schedule" | "operation_owned" | "harvest_owned";
             /**
              * Target Id
              * Format: uuid

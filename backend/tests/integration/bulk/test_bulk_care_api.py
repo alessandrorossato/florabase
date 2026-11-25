@@ -212,7 +212,7 @@ def test_bulk_care_selection_apply_and_partial_undo_and_full_undo(
             assert ujson["deleted_count"] == 3
             assert ujson["kept_count"] == 1
             assert ujson["kept"][0]["id"] == edited_event_id
-            assert "Edited" in ujson["kept"][0]["reason"]
+            assert ujson["kept"][0]["reason"] == "edited"
 
     asyncio.run(scenario())
 
@@ -502,3 +502,81 @@ def test_watering_and_feeding_are_informational_for_sowing_reversal_and_reintegr
             "watering",
             "feeding",
         }
+
+
+def test_bulk_care_undo_keeps_event_with_photo_and_deletes_others(
+    configured_app: None, database_connection: Connection
+) -> None:
+    """M1: batch of 3 with 1 photo -> undo deletes 2 and keeps 1 with reason has_photos."""
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as db:
+        identity = create_botanical_identity(
+            db, BotanicalIdentityCreate(scientific_name="Philodendron hederaceum")
+        )
+        plants = [
+            create_plant(
+                db,
+                PlantCreate(botanical_identity_id=identity.id, label=f"Philo {i}"),
+            )
+            for i in range(1, 4)
+        ]
+        plant_ids = [str(p.id) for p in plants]
+        db.commit()
+
+    async def scenario() -> None:
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url=ORIGIN) as client:
+            csrf = await _login(client)
+            headers = {"Origin": ORIGIN, "X-CSRF-Token": csrf}
+            body = {
+                "targets": {"records": [{"kind": "plant", "id": pid} for pid in plant_ids]},
+                "kind": "watering",
+                "occurred_on": {"precision": "day", "year": 2026, "month": 11, "day": 25},
+                "notes": "Morning mist",
+            }
+            preview = await client.post("/api/v1/bulk/care/preview", json=body, headers=headers)
+            assert preview.status_code == 200
+            applied = await client.post(
+                "/api/v1/bulk/care/apply",
+                json={**body, "target_signature": preview.json()["target_signature"]},
+                headers=headers,
+            )
+            assert applied.status_code == 200
+            batch_id = applied.json()["batch_id"]
+
+            with Session(bind=database_connection, join_transaction_mode="create_savepoint") as db:
+                batch_event_ids = list(
+                    db.scalars(
+                        select(Event.id).where(Event.batch_id == UUID(batch_id)).order_by(Event.id)
+                    )
+                )
+            assert len(batch_event_ids) == 3
+            photo_event_id = str(batch_event_ids[0])
+
+            attached = await client.post(
+                f"/api/v1/collection-records/event/{photo_event_id}/photos/external",
+                json={
+                    "image_url": "https://images.example.test/philo-watered.jpg",
+                    "source_url": "https://example.test/source",
+                    "attribution": "Owner",
+                    "caption": "After watering",
+                },
+                headers=headers,
+            )
+            assert attached.status_code == 201
+
+            undone = await client.delete(f"/api/v1/bulk/care/batches/{batch_id}", headers=headers)
+            assert undone.status_code == 200
+            ujson = undone.json()
+            assert ujson["deleted_count"] == 2
+            assert ujson["kept_count"] == 1
+            assert len(ujson["kept"]) == 1
+            assert ujson["kept"][0]["id"] == photo_event_id
+            assert ujson["kept"][0]["reason"] == "has_photos"
+
+            with Session(bind=database_connection, join_transaction_mode="create_savepoint") as db:
+                remaining_ids = list(
+                    db.scalars(select(Event.id).where(Event.batch_id == UUID(batch_id)))
+                )
+            assert remaining_ids == [UUID(photo_event_id)]
+
+    asyncio.run(scenario())

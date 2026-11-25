@@ -324,7 +324,7 @@ def test_bulk_care_service_selection_location_stale_cap_and_undo(
         )
     assert empty_apply.value.code == "nothing_to_log"
 
-    # Undo: deletes unedited events, keeps edited ones, 404 on unknown batch.
+    # Undo: deletes unedited unguarded events, keeps edited and guarded ones, 404 on unknown batch.
     batch_id = uuid7()
     ev_unedited = Event(
         id=uuid7(),
@@ -342,13 +342,86 @@ def test_bulk_care_service_selection_location_stale_cap_and_undo(
         created_at=now,
         updated_at=now + timedelta(seconds=5),
     )
-    monkeypatch.setattr(db, "scalars", lambda _stmt: [ev_unedited, ev_edited])
+    ev_photo = Event(
+        id=uuid7(),
+        plant_id=p1.id,
+        kind="watering",
+        batch_id=batch_id,
+        created_at=now,
+        updated_at=now,
+    )
+    ev_schedule = Event(
+        id=uuid7(),
+        plant_id=p1.id,
+        kind="watering",
+        batch_id=batch_id,
+        created_at=now,
+        updated_at=now,
+    )
+    ev_operation = Event(
+        id=uuid7(),
+        plant_id=p1.id,
+        kind="watering",
+        batch_id=batch_id,
+        created_at=now,
+        updated_at=now,
+    )
+    ev_harvest = Event(
+        id=uuid7(),
+        plant_id=p1.id,
+        kind="watering",
+        batch_id=batch_id,
+        created_at=now,
+        updated_at=now,
+    )
+    conflict_by_id = {
+        ev_photo.id: EventDomainConflictError("event_has_photos", "has photo"),
+        ev_schedule.id: EventDomainConflictError("event_retained_by_schedule", "schedule"),
+        ev_operation.id: EventDomainConflictError("operation_event_requires_undo", "op"),
+        ev_harvest.id: EventDomainConflictError("harvest_event_owned", "harvest"),
+    }
+
+    def fake_delete_event(session: Session, event: Event) -> None:
+        if event.id in conflict_by_id:
+            raise conflict_by_id[event.id]
+        session.delete(event)
+
+    monkeypatch.setattr(care_service, "delete_event", fake_delete_event)
+    monkeypatch.setattr(
+        db,
+        "scalars",
+        lambda _stmt: [ev_unedited, ev_edited, ev_photo, ev_schedule, ev_operation, ev_harvest],
+    )
     undone = care_service.undo_bulk_care(_session(db), batch_id)
     assert undone.deleted_count == 1
-    assert undone.kept_count == 1
-    assert undone.kept[0].id == ev_edited.id
+    assert undone.kept_count == 5
+    assert [(item.id, item.reason) for item in undone.kept] == [
+        (ev_edited.id, "edited"),
+        (ev_photo.id, "has_photos"),
+        (ev_schedule.id, "linked_to_schedule"),
+        (ev_operation.id, "operation_owned"),
+        (ev_harvest.id, "harvest_owned"),
+    ]
     assert undone.kept[0].target_kind == "plant_group"
     assert db.deleted == [ev_unedited]
+
+    # Unexpected delete_event conflict fails closed instead of silently keeping.
+    ev_unknown = Event(
+        id=uuid7(),
+        plant_id=p1.id,
+        kind="watering",
+        batch_id=batch_id,
+        created_at=now,
+        updated_at=now,
+    )
+    monkeypatch.setattr(
+        care_service,
+        "delete_event",
+        lambda _s, _e: (_ for _ in ()).throw(EventDomainConflictError("other_conflict", "boom")),
+    )
+    monkeypatch.setattr(db, "scalars", lambda _stmt: [ev_unknown])
+    with pytest.raises(EventDomainConflictError):
+        care_service.undo_bulk_care(_session(db), batch_id)
 
     monkeypatch.setattr(db, "scalars", lambda _stmt: [])
     with pytest.raises(care_service.BulkCareError) as missing_batch:
@@ -414,6 +487,22 @@ def test_bulk_care_api_error_mapping_and_owner_guard(monkeypatch: pytest.MonkeyP
     undo_res = care_api.undo(bid, _session(fresh_undo), actor)
     assert undo_res.deleted_count == 1
     assert fresh_undo.committed is True
+
+    # Undo concurrency error uses its own message (N1), not apply's message.
+    monkeypatch.setattr(
+        care_service,
+        "undo_bulk_care",
+        lambda _db, _bid: (_ for _ in ()).throw(IntegrityError("stmt", {}, Exception("boom"))),
+    )
+    undo_err_db = _FakeDatabase()
+    with pytest.raises(HTTPException) as undo_exc:
+        care_api.undo(bid, _session(undo_err_db), actor)
+    assert undo_exc.value.status_code == 409
+    assert cast(Any, undo_exc.value.detail) == {
+        "code": "concurrent_change",
+        "message": "Undo did not complete. Refresh and try again.",
+    }
+    assert undo_err_db.rolled_back is True
 
 
 def test_events_saved_view_accepts_care_and_preserves_existing_categories() -> None:

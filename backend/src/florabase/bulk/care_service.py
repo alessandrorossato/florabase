@@ -18,6 +18,7 @@ from florabase.bulk.care_schemas import (
     BulkCareApplyRequest,
     BulkCareApplyResponse,
     BulkCareKeptEvent,
+    BulkCareKeptReason,
     BulkCareLocationTargets,
     BulkCarePreviewRequest,
     BulkCarePreviewResponse,
@@ -29,7 +30,7 @@ from florabase.bulk.care_schemas import (
 )
 from florabase.events.model import Event, EventKind
 from florabase.events.schemas import EventCreate
-from florabase.events.service import create_event
+from florabase.events.service import EventDomainConflictError, create_event, delete_event
 from florabase.locations.model import Location
 from florabase.locations.service import display_path, list_locations
 from florabase.plants.model import Plant, PlantGroup
@@ -303,6 +304,14 @@ def apply_bulk_care(database: Session, payload: BulkCareApplyRequest) -> BulkCar
     )
 
 
+_DELETE_CONFLICT_REASONS: dict[str, BulkCareKeptReason] = {
+    "event_has_photos": "has_photos",
+    "event_retained_by_schedule": "linked_to_schedule",
+    "operation_event_requires_undo": "operation_owned",
+    "harvest_event_owned": "harvest_owned",
+}
+
+
 def undo_bulk_care(database: Session, batch_id: UUID) -> BulkCareUndoResponse:
     events = list(
         database.scalars(
@@ -320,16 +329,23 @@ def undo_bulk_care(database: Session, batch_id: UUID) -> BulkCareUndoResponse:
         )
 
     deleted_count = 0
-    kept_events: list[Event] = []
+    kept_events: list[tuple[Event, BulkCareKeptReason]] = []
     for event in events:
-        if event.updated_at == event.created_at:
-            database.delete(event)
-            deleted_count += 1
+        if event.updated_at != event.created_at:
+            kept_events.append((event, "edited"))
+            continue
+        try:
+            delete_event(database, event)
+        except EventDomainConflictError as conflict:
+            reason = _DELETE_CONFLICT_REASONS.get(conflict.code)
+            if reason is None:
+                raise
+            kept_events.append((event, reason))
         else:
-            kept_events.append(event)
+            deleted_count += 1
 
     kept_refs: list[BulkCareRecordReference] = []
-    for event in kept_events:
+    for event, _ in kept_events:
         if event.plant_id is not None:
             kept_refs.append(BulkCareRecordReference(kind="plant", id=event.plant_id))
         elif event.plant_group_id is not None:
@@ -337,7 +353,7 @@ def undo_bulk_care(database: Session, batch_id: UUID) -> BulkCareUndoResponse:
     record_lookup = _fetch_records_by_refs(database, kept_refs, lock=False) if kept_refs else {}
 
     kept: list[BulkCareKeptEvent] = []
-    for event in kept_events:
+    for event, reason in kept_events:
         target_kind: BulkCareTargetKind = "plant" if event.plant_id is not None else "plant_group"
         target_id = event.plant_id if event.plant_id is not None else event.plant_group_id
         assert target_id is not None
@@ -353,7 +369,7 @@ def undo_bulk_care(database: Session, batch_id: UUID) -> BulkCareUndoResponse:
                 target_kind=target_kind,
                 target_id=target_id,
                 label=label,
-                reason="Edited after batch creation",
+                reason=reason,
             )
         )
     database.flush()

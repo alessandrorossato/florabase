@@ -15,7 +15,16 @@ export type BulkCareUndoResponse =
   components["schemas"]["BulkCareUndoResponse"];
 export type BulkCareRow = components["schemas"]["BulkCareRow"];
 export type BulkCareKeptEvent = components["schemas"]["BulkCareKeptEvent"];
+export type BulkCareKeptReason = BulkCareKeptEvent["reason"];
 export type BulkCareEventKind = BulkCarePreviewRequest["kind"];
+
+export const bulkCareKeptReasonLabels: Record<BulkCareKeptReason, string> = {
+  edited: "Edited after batch creation",
+  has_photos: "Has attached photos",
+  linked_to_schedule: "Linked to a completed scheduled activity",
+  operation_owned: "Owned by an authoritative operation",
+  harvest_owned: "Owned by a Harvest record",
+};
 
 export const bulkCareKinds: readonly {
   id: BulkCareEventKind;

@@ -13,6 +13,7 @@ import type { PartialDate } from "../seed-lots/api";
 import { hasDateDraft, invalidDateControls } from "../seed-lots/dateControls";
 import {
   applyBulkCare,
+  bulkCareKeptReasonLabels,
   bulkCareKindLabels,
   bulkCareKinds,
   formatBulkCareSummary,
@@ -457,7 +458,7 @@ export function BulkCareSuccessNotice({
             Undone: {plural(undoResult.deleted_count, "entry", "entries")}{" "}
             removed
             {undoResult.kept_count > 0
-              ? ` · ${plural(undoResult.kept_count, "edited entry", "edited entries")} kept`
+              ? ` · ${plural(undoResult.kept_count, "entry", "entries")} kept`
               : ""}
             .
           </p>
@@ -465,7 +466,7 @@ export function BulkCareSuccessNotice({
             <ul>
               {undoResult.kept.map((item) => (
                 <li key={item.id}>
-                  {item.label} — {item.reason}
+                  {item.label} — {bulkCareKeptReasonLabels[item.reason]}
                 </li>
               ))}
             </ul>

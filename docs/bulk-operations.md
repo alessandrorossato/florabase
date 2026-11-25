@@ -145,10 +145,14 @@ Origin and session CSRF checks (same contract as bulk moves):
   locations when targeting a Location), recomputes the signature, rejects mismatches with `409
   stale_preview`, rejects empty/all-skipped sets with `422 nothing_to_log`, and creates all
   per-target Events with one shared `batch_id` in a single atomic transaction.
-- `DELETE /api/v1/bulk/care/batches/{batch_id}` (`undoBulkCare`): deletes all Events in the batch
-  that have not been edited since creation (`updated_at == created_at`); edited Events are kept and
-  returned in `kept_events` alongside `deleted_count` and `kept_count`. Missing batches return
-  `404 batch_not_found`.
+- `DELETE /api/v1/bulk/care/batches/{batch_id}` (`undoBulkCare`): enforces the same per-event
+  deletion guards as `events.service.delete_event` (attached photos, linked scheduled activity,
+  operation ownership, harvest ownership) in addition to the edit check (`updated_at ==
+  created_at`). Eligible events are deleted in one transaction; kept events are returned in `kept`
+  with an explicit structured reason (`edited`, `has_photos`, `linked_to_schedule`,
+  `operation_owned`, or `harvest_owned`) alongside `deleted_count` and `kept_count`. Missing
+  batches return `404 batch_not_found`, and unexpected concurrency conflicts return `409` with
+  `"Undo did not complete. Refresh and try again."`.
 
 ### Product flow
 
