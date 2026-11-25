@@ -3309,6 +3309,25 @@
       ],
       "priority": "P2",
       "status": "implemented"
+    },
+    {
+      "id": "MOBILE-003",
+      "category": "mobile",
+      "description": "Usable Android release app: Florabase branding and deterministic asset generator, native file export/share and full-screen photo viewer, Android PrintManager label printing, server-driven map runtime config via /api/v1/system/info, native update banner, monotonic SemVer versionCode, env-only release signing, and opt-in GitHub Release APK workflow for Obtainium while keeping PWA unchanged",
+      "acceptance_criteria": [
+        "PWA remains unchanged (web file actions, sw.js, manifest.webmanifest, CSP, auth and their tests unmodified and green, zero @capacitor/* in frontend/package.json) with measured web bundle delta reported",
+        "Android launcher icons, adaptive icon (#f8f5e7 background), splash screens and theme (#153a2c) are generated deterministically from frontend/public/icons/ by scripts/generate-mobile-assets.py via make mobile-assets and verified byte-identical across repeated runs",
+        "Native file actions work end-to-end over Bearer auth via window.Capacitor.Plugins (Filesystem + Share scoped strictly to cache/shared/ with startup cleanup): CSV exports/templates/examples share cleanly, Media original photos open in a full-screen NativeImageViewer (revoking blob URLs on close/invalidation/unmount and reusing bytes for Share/Save), and Labels Print opens Android PrintManager via WebPrintPlugin.java",
+        "GET /api/v1/system/info returns optional runtime_config backed by validated FLORABASE_MAP_* backend settings (zero DB migration, offline safe default, https:// {z}/{x}/{y} validation, HTML attribution sanitizer allowing only text and safe https:// links) so native maps match server policy; NativeUpdateBanner prompts Obtainium/GitHub Releases when server_version > app version",
+        "Single-source scripts/mobile_version.py drives versionName and strictly monotonic versionCode across Gradle and CI; release signing reads only env/Gradle properties (no hardcoded secrets); make mobile-android-release rebuilds with VITE_MOBILE_ALLOW_DEBUG_HTTP=false, verifies apksigner (+ optional FLORABASE_ANDROID_CERT_SHA256 pin), and refuses unsigned release output",
+        "Opt-in .github/workflows/mobile-android-release.yml triggers only on completed successful Protected Florabase release workflow_run (head_sha) and workflow_dispatch (no push/pull_request triggers, job-only contents:write, pinned action SHAs, no secret leaks), leaves beta-images.yml untouched, and docs/mobile.md documents keystore creation, backup warning, secrets, and Obtainium setup"
+      ],
+      "dependencies": [
+        "MOBILE-002",
+        "MOBILE-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
     }
   ]
 }

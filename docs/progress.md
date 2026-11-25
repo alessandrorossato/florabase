@@ -1,5 +1,61 @@
 # Engineering progress
 
+## 2026-11-25 — MOBILE-003 usable Android release app (branding, file actions, runtime config, signed APK & Obtainium workflow)
+
+- On `feat/mobile-003-usable-app` from `origin/main` `b632c5c` (writer `neon-mobile-003`). Zero DB
+  migrations; PWA (`sw.js`, `manifest.webmanifest`, `nginx.conf`, web file actions/auth) unchanged.
+- **Branding & deterministic assets:** Added `scripts/generate-mobile-assets.py` (`make mobile-assets`,
+  using the pinned Pillow toolchain) to generate all Android `mipmap-*` launcher/round/foreground
+  icons (adaptive background `#f8f5e7`), `drawable*/splash.png`, Android 12+ `Theme.SplashScreen`,
+  and `values/colors.xml` (`#153a2c`) from `frontend/public/icons/`, removing unused Capacitor
+  template vector drawables. Determinism + zero drift against committed assets enforced in
+  `make workflow-check`.
+- **Native file actions, viewer & printing:** Added pinned FOSS `@capacitor/filesystem@8.1.5` and
+  `@capacitor/share@8.0.3` in `mobile/package.json` only (zero `@capacitor/*` in
+  `frontend/package.json`), scoped `file_paths.xml` strictly to `<cache-path name="shared" path="shared/" />`,
+  and wiped `cache/shared/` on `MainActivity.onCreate` and JS boot. Implemented lazy-loaded
+  `frontend/src/mobile/fileActions.ts` + `NativeImageViewer.tsx` (revoking blob URLs on close,
+  capability invalidation, and unmount, and reusing fetched bytes for Share/Save without refetching)
+  and in-repo AOSP `WebPrintPlugin.java` (`android.print.PrintManager` +
+  `webView.createPrintDocumentAdapter`) wired from `LabelsScreen.tsx` on native. Fixed
+  `activeCsrfToken()` in Bearer mode so domain save dialogs (such as `QrDestinationDialog`) do not
+  short-circuit on an empty CSRF string while keeping web/cookie auth identical.
+- **Runtime map config & update banner:** Extended `GET /api/v1/system/info` with optional
+  `runtime_config` (`map_online_enabled`, `map_tile_url`, `map_attribution`) backed by optional
+  `FLORABASE_MAP_*` settings in `backend/src/florabase/core/config.py` (offline default `false`,
+  strict `https://` + `{z}/{x}/{y}` validation), regenerated `backend/openapi.json` and
+  `frontend/src/api/schema.d.ts`, added HTML attribution sanitization (`sanitizeMapAttribution`
+  allowing only text and `https://` links with `rel="noopener noreferrer" target="_blank"`) in
+  `frontend/src/provenance-map/config.ts`, and added native-only `NativeUpdateBanner` in
+  `NativeApp.tsx` pointing to Obtainium / GitHub Releases when `server_version > appVersion`.
+- **Version, signing & opt-in release workflow:** Added single-source `scripts/mobile_version.py`
+  (`versionName` from `frontend/package.json`; monotonic `versionCode` formula verified across
+  alpha/beta/rc/stable + overflow/invalid-SemVer cases) used by `mobile/android/app/build.gradle`,
+  `scripts/mobile-android-release.sh` (`make mobile-android-release`), and
+  `.github/workflows/mobile-android-release.yml`. Signing reads strictly from env/Gradle properties
+  (refusing partial config or unsigned release output; optional `FLORABASE_ANDROID_CERT_SHA256`
+  pin check after `apksigner verify --print-certs`). Added opt-in
+  `.github/workflows/mobile-android-release.yml` triggered only on successful
+  `Protected Florabase release` `workflow_run` (`head_sha`) and `workflow_dispatch` (job-level
+  `contents: write`, pinned action SHAs, `beta-images.yml` untouched). Extended
+  `MobileReleaseContract` in `scripts/test-beta-runtime.py`, updated `docs/mobile.md` (keystore
+  creation, backup warning, GitHub secrets, Obtainium setup) and `docs/deployment.md`, and
+  registered `MOBILE-003` (`implemented`, `post-1.0`) in `docs/features.json` and
+  `docs/release/scope-v1.json`.
+- **Evidence:** Web bundle delta vs `b632c5c`: `index-*.js` `-1,434 B` raw / `-565 B` gzip
+  (`303,439 B -> 302,005 B`, `92,349 B -> 91,784 B`), `index-*.css` `+0 B`. Verified
+  `make mobile-android-release` with throwaway PKCS12 keystore (`florabase-0.1.0-beta.9.apk`,
+  `versionCode=100309`, `apksigner verify --print-certs` + cert-pin match & mismatch refusal +
+  missing-vars refusal + fresh install on Android 16 AOSP emulator). Verified 7-step live Android
+  16 AOSP emulator E2E against isolated worktree UAT (removed cleanly afterward): Bearer sign-in,
+  offline map default, CSV export to `cache/shared/` + Android share sheet, `NativeImageViewer`
+  original photo + zero-refetch Share/Save, Labels Print launching Android `PrintSpooler`,
+  restart `cache/shared/` wipe, and proxy-verified `NativeUpdateBanner` (`9.9.9`) + server
+  `runtime_config` Online basemap opt-in. Note: `actionlint` is not installed on this host;
+  workflow structure and security contracts are validated via `yaml.safe_load`, `bash -n`, and
+  `make workflow-check` / `MobileReleaseContract`. Canonical FULL `make feature-verify
+  AGENT_ID=neon-mobile-003` runs on the frozen tree before commit.
+
 ## 2026-11-23 — MOBILE-002 device sign-in, Keystore plugin, and compatibility contract (PWA preserved)
 
 - On `feat/mobile-002-device-auth` from `origin/main` `ddf5a14` (writer `neon-mobile-002`).

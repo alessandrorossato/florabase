@@ -1,0 +1,170 @@
+name: Mobile Android release APK
+
+on:
+  workflow_run:
+    workflows: ["Protected Florabase release"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag (e.g. v0.1.0-beta.10) whose GitHub Release will receive the signed APK
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: florabase-mobile-android-release
+  cancel-in-progress: false
+
+jobs:
+  build-and-attach-apk:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - name: Check out exact release commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || format('refs/tags/{0}', inputs.tag) }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate release tag, exact commit SHA, and GitHub Release
+        id: release_meta
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          INPUT_TAG: ${{ inputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          set +x
+          version="$(python3 scripts/mobile_version.py --version-name)"
+          version_code="$(python3 scripts/mobile_version.py --version-code)"
+          expected_tag="v${version}"
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "$INPUT_TAG" != "$expected_tag" ]; then
+              echo "Input tag '$INPUT_TAG' does not match frontend/package.json version tag '$expected_tag'." >&2
+              exit 1
+            fi
+          else
+            if [ "$(git rev-parse HEAD)" != "$WORKFLOW_RUN_SHA" ]; then
+              echo "Checked-out HEAD does not match workflow_run.head_sha." >&2
+              exit 1
+            fi
+          fi
+
+          if ! git rev-parse --verify --quiet "refs/tags/${expected_tag}^{commit}" >/dev/null; then
+            echo "Release tag '${expected_tag}' does not exist." >&2
+            exit 1
+          fi
+
+          tag_sha="$(git rev-parse "refs/tags/${expected_tag}^{commit}")"
+          head_sha="$(git rev-parse HEAD)"
+          if [ "$tag_sha" != "$head_sha" ]; then
+            echo "Release tag '${expected_tag}' points to ${tag_sha}, not checked-out commit ${head_sha}." >&2
+            exit 1
+          fi
+
+          if ! gh release view "${expected_tag}" >/dev/null; then
+            echo "GitHub Release for '${expected_tag}' does not exist yet; run Protected Florabase release first." >&2
+            exit 1
+          fi
+
+          printf 'version=%s\nversion_code=%s\ntag=%s\n' "$version" "$version_code" "$expected_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Verify signing secrets are configured
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          missing=()
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_STORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if [ -z "${!name:-}" ]; then
+              missing+=("$name")
+            fi
+          done
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "Missing required Android signing secrets: ${missing[*]}" >&2
+            echo "Configure these repository secrets per docs/mobile.md and re-run." >&2
+            exit 1
+          fi
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Node 24 and pnpm
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24.19.0"
+
+      - name: Install Android SDK Platform 36 and Build-Tools 36.0.0
+        run: |
+          set -euo pipefail
+          SDK_DIR="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          SDKMANAGER="$SDK_DIR/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Build frontend assets and sync Capacitor Android shell
+        env:
+          COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+          VITE_MOBILE_ALLOW_DEBUG_HTTP: "false"
+        run: |
+          set -euo pipefail
+          corepack enable
+          pnpm --dir frontend install --frozen-lockfile
+          pnpm --dir frontend build
+          pnpm --dir mobile install --frozen-lockfile
+          pnpm --dir mobile exec cap sync android
+
+      - name: Build, sign, and verify release APK
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          FLORABASE_ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          FLORABASE_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          FLORABASE_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          FLORABASE_ANDROID_CERT_SHA256: ${{ vars.FLORABASE_ANDROID_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          set +x
+          keystore_path="${RUNNER_TEMP}/florabase-release.keystore"
+          (
+            umask 077
+            printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$keystore_path"
+          )
+          export FLORABASE_ANDROID_KEYSTORE="$keystore_path"
+          ./scripts/mobile-android-release.sh --skip-sync
+
+      - name: Attach signed APK and SHA-256 checksum to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release_meta.outputs.tag }}
+          VERSION: ${{ steps.release_meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          set +x
+          out_dir="mobile/android/app/build/outputs/apk/release"
+          apk="${out_dir}/florabase-${VERSION}.apk"
+          sha="${out_dir}/florabase-${VERSION}.apk.sha256"
+          test -f "$apk"
+          test -f "$sha"
+          gh release upload "$TAG" "$apk" "$sha" --clobber
+
+      - name: Remove temporary signing keystore
+        if: always()
+        run: |
+          set +x
+          rm -f "${RUNNER_TEMP}/florabase-release.keystore"
