@@ -28,6 +28,7 @@ def test_event_is_focused_uuidv7_mapping_with_exact_vocabulary() -> None:
         "measurement_is_approximate",
         "phenophase",
         "phenophase_date_is_approximate",
+        "batch_id",
         "created_at",
         "updated_at",
     ]
@@ -53,6 +54,8 @@ def test_event_is_focused_uuidv7_mapping_with_exact_vocabulary() -> None:
         "loss",
         "discarded",
         "measurement",
+        "watering",
+        "feeding",
         "other",
     }
     assert "payload" not in Event.__table__.columns

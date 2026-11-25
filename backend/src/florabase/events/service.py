@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any, Literal, cast
 from uuid import UUID
 
@@ -179,6 +179,8 @@ def create_event(
     target_type: TargetType,
     target_id: UUID,
     payload: EventCreate,
+    *,
+    batch_id: UUID | None = None,
 ) -> Event:
     if payload.kind in {EventKind.EXTRACTION, EventKind.REINTEGRATION}:
         raise EventDomainConflictError(
@@ -189,9 +191,13 @@ def create_event(
     _require_destination(database, payload.destination_location_id)
     target = _lock_target(database, target_type, target_id)
     _require_measurement_subject(isinstance(target, Plant), payload)
+    now = datetime.now(UTC)
     event = Event(
         plant_id=target.id if isinstance(target, Plant) else None,
         plant_group_id=target.id if isinstance(target, PlantGroup) else None,
+        batch_id=batch_id,
+        created_at=now,
+        updated_at=now,
         **_write_values(payload),
     )
     _apply_creation_side_effect(target, payload)
@@ -283,7 +289,11 @@ def update_event(database: Session, event: Event, payload: EventUpdate) -> Event
     if values["measurement_value"] is not None:
         # Decimal("12.5") == Decimal("12.50"), so the ORM would skip a resolution-only correction.
         flag_modified(event, "measurement_value")
-    event.updated_at = datetime.now(UTC)
+    now = datetime.now(UTC)
+    created_at: datetime | None = event.created_at
+    event.updated_at = (
+        now if created_at is None or now > created_at else created_at + timedelta(microseconds=1)
+    )
     database.flush()
     return event
 

@@ -16,6 +16,8 @@ import {
   type BulkReference,
   type BulkResult,
 } from "./api";
+import { BulkCareDialog, BulkCareSuccessNotice } from "./BulkCare";
+import type { BulkCareApplyResponse, BulkCareRecordReference } from "./careApi";
 import {
   BULK_LIMIT,
   type BulkChoice,
@@ -90,6 +92,10 @@ export function BulkToolbar({
   onSuccess: (result: BulkResult) => void;
 }) {
   const [message, setMessage] = useState("");
+  const [careOpen, setCareOpen] = useState(false);
+  const [careResult, setCareResult] = useState<BulkCareApplyResponse | null>(
+    null,
+  );
   const toolbar = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!selection.active) return;
@@ -103,10 +109,25 @@ export function BulkToolbar({
     };
   }, [selection.active]);
   const eligibleCount = visible.filter((row) => row.eligible).length;
-  if (!selection.active && !message) return null;
+  const careRecords: BulkCareRecordReference[] = selection.selected.filter(
+    (row): row is BulkChoice & { kind: "plant" | "plant_group" } =>
+      row.kind === "plant" || row.kind === "plant_group",
+  );
+  const canLogCare =
+    selection.selected.length > 0 &&
+    careRecords.length === selection.selected.length;
+  if (!selection.active && !message && !careResult) return null;
   return (
     <div className="bulk-actions">
       {!selection.active && message && <p role="status">{message}</p>}
+      {!selection.active && careResult && (
+        <BulkCareSuccessNotice
+          result={careResult}
+          onDismiss={() => {
+            setCareResult(null);
+          }}
+        />
+      )}
       {selection.active && (
         <div
           className="bulk-toolbar"
@@ -144,17 +165,32 @@ export function BulkToolbar({
                 className="button--quiet"
                 onClick={() => {
                   setMessage("");
+                  setCareResult(null);
                   selection.openDialog();
                 }}
               >
                 Move to location
               </button>
+              {canLogCare && (
+                <button
+                  type="button"
+                  className="button--quiet"
+                  onClick={() => {
+                    setMessage("");
+                    setCareResult(null);
+                    setCareOpen(true);
+                  }}
+                >
+                  Log care…
+                </button>
+              )}
             </OverflowMenu>
             <button
               type="button"
               className="bulk-secondary"
               onClick={() => {
                 setMessage("");
+                setCareResult(null);
                 selection.cancel();
                 window.setTimeout(selection.focusEntry, 0);
               }}
@@ -180,6 +216,23 @@ export function BulkToolbar({
               `${String(result.moved_count)} moved${result.unchanged_count ? ` · ${String(result.unchanged_count)} already there` : ""}.`,
             );
             onSuccess(result);
+            window.setTimeout(selection.focusEntry, 0);
+          }}
+        />
+      )}
+      {careOpen && canLogCare && (
+        <BulkCareDialog
+          targets={{
+            mode: "records",
+            records: careRecords.map(({ kind, id }) => ({ kind, id })),
+          }}
+          onClose={() => {
+            setCareOpen(false);
+          }}
+          onSuccess={(result) => {
+            setCareOpen(false);
+            selection.cancel();
+            setCareResult(result);
             window.setTimeout(selection.focusEntry, 0);
           }}
         />

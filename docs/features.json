@@ -801,6 +801,38 @@
       "status": "verified"
     },
     {
+      "id": "FN-03",
+      "category": "event",
+      "description": "Add Watering and Feeding Journal event kinds and a Care filter group",
+      "acceptance_criteria": [
+        "Events accept watering and feeding kinds via an Alembic migration (20261125_0049) that upgrades cleanly with existing events present and refuses downgrade when watering or feeding events exist",
+        "Single Plant and PlantGroup Journal composers offer Watering and Feeding and filters group them under Care",
+        "Watering and feeding are informational retainable events for propagation creation reversal and PlantGroup reintegration (confirmation-required, not blocking)"
+      ],
+      "dependencies": [
+        "EVENT-002"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "CARE-BULK-001",
+      "category": "bulk",
+      "description": "Log one care entry on selected Plants/PlantGroups or everything in a Location with batch undo",
+      "acceptance_criteria": [
+        "Owner can preview and atomically log an allowed care Event (watering, feeding, treatment, repotting, pruning, observation, other; max 500 targets) across selected Plants/PlantGroups or an active Location with optional sub-locations, skipping inactive records and rejecting stale previews or empty scopes",
+        "Created per-target Events share a nullable batch_id (no batch entity), and batch undo deletes only events not edited since creation while keeping and listing edited ones",
+        "Plants/PlantGroups selection toolbar (only when all selected items are Plants or PlantGroups) and Location detail launch the preview-then-confirm care dialog with Today preselected and an Undo notice on success"
+      ],
+      "dependencies": [
+        "BULK-001",
+        "FN-03",
+        "UX-DATE-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "ATTACHMENT-002",
       "category": "attachment",
       "description": "Implement guarded local attachment storage",

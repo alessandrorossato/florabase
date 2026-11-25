@@ -389,6 +389,8 @@ _RETAINABLE_OBSERVATION_KINDS = {
     EventKind.FLOWERING.value,
     EventKind.FRUITING.value,
     EventKind.MEASUREMENT.value,
+    EventKind.WATERING.value,
+    EventKind.FEEDING.value,
 }
 
 
