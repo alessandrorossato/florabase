@@ -25,6 +25,7 @@ redeploy. No new host folders or volume mounts are required.
   read-only **Reference index status** section in **Settings → Data sources** report each index as
   `off`, `preparing`, `ready`, `ready (setup off)`, `failed: <reason>`, or `manual`. Taxonomy and
   native-range screens indicate when reference data is being prepared in the background.
+- End-user guide (`docs/user-guide/`).
 
 ## v0.1.0-beta.9 — 2026-11-24
 

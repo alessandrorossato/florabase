@@ -865,15 +865,18 @@ def test_system_references_api_requires_auth_and_keeps_system_info_unchanged(
     app.dependency_overrides[get_settings] = lambda: settings
 
     with TestClient(app, base_url="https://florabase.example") as client:
-        # /api/v1/system/info remains unauthenticated and unchanged.
+        # /api/v1/system/info stays unauthenticated; other features may add keys, but this one
+        # keeps the base contract and exposes no reference-setup state there.
         info = client.get("/api/v1/system/info")
         assert info.status_code == 200
-        assert set(info.json()) == {
+        assert {
             "server_version",
             "api_version",
             "min_client_version",
             "capabilities",
-        }
+        } <= set(info.json())
+        assert not any("reference" in key for key in info.json())
+        assert "reference" not in json.dumps(info.json()["capabilities"])
 
         # /api/v1/system/references rejects unauthenticated callers.
         unauth = client.get("/api/v1/system/references")
