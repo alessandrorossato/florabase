@@ -1,12 +1,26 @@
 # DOCS-004 evidence
 
-- **Branch:** `docs/docs-004-batch12-followups` from `origin/main` `1a7847612d3d77a292ab0dd841ee85371308f268`
-- **Writer:** `antigravity-neon`
+- **Branch:** `docs/docs-004-batch12-followups`, originally from `origin/main`
+  `1a7847612d3d77a292ab0dd841ee85371308f268`; `origin/main`
+  `b632c5c734fdab55e62230cdee99938ae34ece7e` (beta.9 and MOBILE-002) merged in with merge commit
+  `69b5547042bfd0a96c7dd49e2792466ff50e3c8f` (new base `b632c5c`).
+- **Writer:** `antigravity-neon`, taken over by the operator for `claude-batch13` to integrate the
+  new base.
 - **Feature:** `DOCS-004` (`implemented`; proposed release class `best-effort` in
   [`docs/release/scope-v1.json`](../scope-v1.json), registered next to `DOCS-003`, not at the tail)
-- **Tested commit:** `ae69dc4e1a4fefad06d356d72fabdee31e1c0c04` (doc fixes and backlog/scope
-  registration before recording this evidence and progress milestone; final frozen tip verified by
-  canonical `make feature-verify AGENT_ID=antigravity-neon`)
+- **Tested commit:** `69b5547042bfd0a96c7dd49e2792466ff50e3c8f` (merge of the new base before
+  updating this evidence; final frozen tip verified by canonical
+  `make feature-verify AGENT_ID=claude-batch13`). The original doc fixes were tested at
+  `ae69dc4e1a4fefad06d356d72fabdee31e1c0c04`.
+
+## Merge with the new base
+
+The merge conflicted in two documentation files only, resolved without other content changes:
+
+- `docs/release/scope-v1.json`: every `origin/main` entry kept (including `"MOBILE-002": "post-1.0"`
+  at the tail) plus `"DOCS-004": "best-effort"` directly above `"DOCS-003"`.
+- `docs/progress.md`: every `origin/main` milestone kept, with the DOCS-004 milestone directly below
+  the `# Engineering progress` heading.
 
 ## Changes
 
@@ -49,3 +63,14 @@ feature graph: not ready for a release candidate: RELEASE-001, BETA-IMAGE-001, b
 `"affected_scopes": ["documentation"]`). Adding this evidence file brings the checked document
 count in `make doc-links` to 370 documents; the frozen branch tip is verified with `make doc-links`,
 `python3 ./scripts/check-features.py`, and canonical `make feature-verify AGENT_ID=antigravity-neon`.
+
+On merge commit `69b5547042bfd0a96c7dd49e2792466ff50e3c8f` (new base `b632c5c`):
+
+```text
+$ python3 ./scripts/check-features.py
+feature graph: 188 features valid
+feature graph: not ready for a release candidate: RELEASE-001, BETA-IMAGE-001, beta-postgres-repro-001, BETA-SECURITY-001, BETA-DATA-001, BETA-ACCEPTANCE-001
+
+$ make doc-links
+Document links passed (371 documents)
+```
