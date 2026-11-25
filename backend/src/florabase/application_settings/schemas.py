@@ -1,7 +1,9 @@
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, ConfigDict, HttpUrl, TypeAdapter, field_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, TypeAdapter, field_validator
+
+from florabase.collection_photos.schemas import normalize_text, validate_https_url
 
 LabelPreset = Literal["small", "medium", "large"]
 
@@ -11,6 +13,25 @@ class ApplicationSettingsValue(BaseModel):
 
     public_qr_base_url: str | None
     default_label_preset: LabelPreset
+    # Pre-checks "Save a local copy"; each fetch still needs the owner's explicit save.
+    media_save_local_copy_default: bool
+    # Prefill only for the owner's own uploads; external images keep their author's credit.
+    media_default_attribution: str | None = Field(max_length=2000)
+    media_default_licence_label: str | None = Field(max_length=2000)
+    media_default_licence_url: str | None = Field(max_length=2048)
+
+    @field_validator("media_default_attribution", "media_default_licence_label", mode="before")
+    @classmethod
+    def optional_text(cls, value: object) -> object:
+        return normalize_text(value) if isinstance(value, str) else value
+
+    @field_validator("media_default_licence_url", mode="before")
+    @classmethod
+    def optional_licence_url(cls, value: object) -> object:
+        if isinstance(value, str):
+            normalized = normalize_text(value)
+            return validate_https_url(normalized) if normalized else None
+        return value
 
     @field_validator("public_qr_base_url")
     @classmethod

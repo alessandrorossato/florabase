@@ -57,6 +57,7 @@ async def call(
     browser: tuple[str, str] | None = None,
     body: dict[str, Any] | None = None,
     file: tuple[str, bytes, str] | None = None,
+    data: dict[str, str] | None = None,
     mutation_headers: bool = False,
     request_headers: dict[str, str] | None = None,
 ) -> httpx.Response:
@@ -73,7 +74,9 @@ async def call(
         files = {"file": file}
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url=ORIGIN, cookies=cookies) as client:
-        return await client.request(method, path, headers=headers, files=files, json=body)
+        return await client.request(
+            method, path, headers=headers, files=files, data=data, json=body
+        )
 
 
 def request(*args: Any, **kwargs: Any) -> httpx.Response:
@@ -854,3 +857,77 @@ def test_local_identity_cover_unlink_failure_and_missing_file_remain_retryable(
     assert (
         request("DELETE", asset_endpoint, browser=browser, mutation_headers=True).status_code == 204
     )
+
+
+def test_local_uploads_accept_licence_metadata(
+    attachment_browser: tuple[tuple[str, str], AttachmentStorage],
+    database_connection: Connection,
+) -> None:
+    browser, _storage = attachment_browser
+    licence = {
+        "attribution": "Photo: Owner",
+        "licence_label": " CC BY 4.0 ",
+        "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    }
+    uploaded = request(
+        "POST",
+        "/api/v1/media-assets/local",
+        browser=browser,
+        mutation_headers=True,
+        file=("licensed.png", png(), "image/png"),
+        data=licence,
+    )
+    assert uploaded.status_code == 201
+    body = uploaded.json()
+    assert (body["attribution"], body["licence_label"], body["licence_url"]) == (
+        "Photo: Owner",
+        "CC BY 4.0",
+        "https://creativecommons.org/licenses/by/4.0/",
+    )
+    rejected = request(
+        "POST",
+        "/api/v1/media-assets/local",
+        browser=browser,
+        mutation_headers=True,
+        file=("bad.png", png(), "image/png"),
+        data={"licence_url": "http://insecure.example/licence"},
+    )
+    assert rejected.status_code == 422
+
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        identity = BotanicalIdentity(scientific_name="Testa licentiae")
+        database.add(identity)
+        database.flush()
+        plant = Plant(
+            botanical_identity_id=identity.id, direct_origin_kind="unknown", lifecycle="active"
+        )
+        database.add(plant)
+        database.commit()
+        plant_id = plant.id
+    photo_path = f"/api/v1/collection-records/plant/{plant_id}/photos/local"
+    photo = request(
+        "POST",
+        photo_path,
+        browser=browser,
+        mutation_headers=True,
+        file=("record.png", png(), "image/png"),
+        data=licence,
+    )
+    assert photo.status_code == 201
+    asset = request(
+        "GET", f"/api/v1/media-assets/{photo.json()['media_asset_id']}", browser=browser
+    ).json()
+    assert (asset["attribution"], asset["licence_label"], asset["licence_url"]) == (
+        "Photo: Owner",
+        "CC BY 4.0",
+        "https://creativecommons.org/licenses/by/4.0/",
+    )
+    bad_photo = request(
+        "POST",
+        photo_path,
+        browser=browser,
+        mutation_headers=True,
+        file=("record.png", png(), "image/png"),
+        data={"licence_url": "not a url"},
+    )
+    assert bad_photo.status_code == 422

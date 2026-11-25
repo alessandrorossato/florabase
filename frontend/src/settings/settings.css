@@ -18,7 +18,8 @@
 .settings-panel p {
   margin: 0;
 }
-.settings-panel input:not([type="radio"]) {
+.settings-panel input:not([type="radio"], [type="checkbox"]),
+.settings-panel textarea {
   width: 100%;
   min-width: 0;
 }

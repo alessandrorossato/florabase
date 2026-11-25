@@ -1,5 +1,18 @@
 # Engineering progress
 
+## 2026-11-25 — Settings → Media defaults (`MEDIA-SETTINGS-001`)
+
+- On `feat/media-settings-001` from `ci/batch-13` `756a3c8` (writer `claude-media-settings`).
+  Migration `20261125_0050` on `20261125_0049` adds four media-default columns to
+  `application_settings`; single Alembic head `20261125_0050`.
+- New Settings → Media page: the saved default only pre-selects "Save a local copy" (no automatic
+  fetch, privacy contract unchanged); default attribution/licence prefill only the owner's own
+  uploads. Local uploads now accept `licence_label`/`licence_url`. OpenAPI regenerated; golden
+  smoke/comprehensive baselines updated for the new schema revision.
+- Checks: `make test-backend`, focused integration (settings, settings migration, attachment API),
+  `make golden-dataset-check`, `make golden-dataset-comprehensive-check`, `make test-frontend`,
+  `make lint`, `make typecheck`, `check-features.py`. Evidence: [media-settings-001.md](release/evidence/media-settings-001.md).
+
 ## 2026-11-25 — Batch 13 integration (DOCS-004, PROPAGATION-BATCH-001, CARE-BULK-001/FN-03, UX-SORT-001, MEDIA-FETCH-001)
 
 - `ci/batch-13` from `origin/main` `b632c5c` (writer `claude-batch-13`) merges, in order,

@@ -24,7 +24,9 @@
   rejects non-public addresses, pins the connection to a validated address, verifies the hostname
   for HTTPS and bounds response size, time and image decoding. It sends no user credentials or
   cookies. The resulting protected local copy is served through Florabase without contacting the
-  remote host. A failed refresh preserves the previous copy.
+  remote host. A failed refresh preserves the previous copy. The **Settings → Media** default only
+  pre-selects the "Save a local copy" choice in the form; each fetch still requires the owner to save
+  that image, and Florabase never fetches remote images automatically.
   [Media-library fetch safety](media-library.md#fetch-safety-and-snapshot-concurrency)
 - Saving an external BotanicalIdentity cover requires a separate privacy acknowledgement. For a
   cover without a saved local copy, that acknowledgement permits later automatic browser display

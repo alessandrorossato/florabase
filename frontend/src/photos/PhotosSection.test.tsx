@@ -270,6 +270,17 @@ test("supports zero-photo state and an accessible upload workflow", async () => 
   const fetch = vi
     .spyOn(globalThis, "fetch")
     .mockResolvedValueOnce(json([]))
+    .mockResolvedValueOnce(
+      json({
+        public_qr_base_url: null,
+        default_label_preset: "medium",
+        media_save_local_copy_default: true,
+        media_default_attribution: "Photo: Owner",
+        media_default_licence_label: "CC BY 4.0",
+        media_default_licence_url:
+          "https://creativecommons.org/licenses/by/4.0/",
+      }),
+    )
     .mockResolvedValueOnce(json(photos[0], 201))
     .mockResolvedValueOnce(json([photos[0]]));
   const user = userEvent.setup();
@@ -277,6 +288,11 @@ test("supports zero-photo state and an accessible upload workflow", async () => 
   expect(await screen.findByText("No photos yet.")).toBeVisible();
   await user.click(screen.getByRole("button", { name: "Add new media" }));
   const dialog = screen.getByRole("dialog", { name: "Add new media" });
+  // Settings → Media defaults prefill the owner's own upload.
+  expect(await within(dialog).findByDisplayValue("Photo: Owner")).toBeVisible();
+  expect(within(dialog).getByLabelText("Licence label")).toHaveValue(
+    "CC BY 4.0",
+  );
   const file = new File(["png"], "leaf.png", { type: "image/png" });
   await user.upload(within(dialog).getByLabelText("Image file"), file);
   await user.type(within(dialog).getByLabelText(/Caption/), "New leaf");
@@ -288,6 +304,12 @@ test("supports zero-photo state and an accessible upload workflow", async () => 
     ([, init]) => init?.method === "POST",
   );
   expect(uploadCall?.[1]?.body).toBeInstanceOf(FormData);
+  const sent = uploadCall?.[1]?.body as FormData;
+  expect(sent.get("attribution")).toBe("Photo: Owner");
+  expect(sent.get("licence_label")).toBe("CC BY 4.0");
+  expect(sent.get("licence_url")).toBe(
+    "https://creativecommons.org/licenses/by/4.0/",
+  );
   expect(uploadCall?.[1]?.headers).toBeInstanceOf(Headers);
   expect((uploadCall?.[1]?.headers as Headers).get("Content-Type")).toBeNull();
 });

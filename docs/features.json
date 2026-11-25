@@ -2290,6 +2290,24 @@
       "status": "implemented"
     },
     {
+      "id": "MEDIA-SETTINGS-001",
+      "category": "attachment",
+      "description": "Settings -> Media page with installation-wide media defaults: the initial state of the Save a local copy choice for external images, and a default attribution, licence label and licence URL prefilled on the owner's own uploads, without any automatic remote fetch",
+      "acceptance_criteria": [
+        "Alembic migration 20261125_0050 on 20261125_0049 adds media_save_local_copy_default (NOT NULL, server default true), media_default_attribution, media_default_licence_label and media_default_licence_url to the application_settings singleton, keeps existing installations at today's pre-checked behaviour, and downgrades by dropping only these preferences",
+        "GET/PUT /api/v1/application-settings exposes the four fields as required members of the full-replace contract, normalizes text, accepts only absolute HTTPS licence URLs, and preserves QR and label preferences",
+        "The Save a local copy in Florabase choice in the Media, Photos and identity cover forms starts from the saved default (built-in default while loading or on failure); the fetch still happens only when the owner saves that image with the choice selected, and docs/security.md and docs/media-library.md state that Florabase never fetches remote images automatically",
+        "Media library and record Photos uploads accept optional licence_label and licence_url form fields with the existing validation, and their forms prefill attribution and licence from the defaults only for the owner's own uploads, never for external references or edits",
+        "Settings -> Media covers loading, load failure with retry, validation failure that retains edits, and success, with backend unit/integration/migration tests, updated golden baselines, and frontend tests for saving, form prefill and the local-copy default"
+      ],
+      "dependencies": [
+        "ATTACHMENT-005",
+        "MEDIA-FETCH-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "RELEASE-VISUAL-AUDIT-001",
       "category": "ux",
       "description": "Audit the delivered v0.1 interface through real synthetic Review captures and propose bounded UI Foundation consolidation before implementation",
