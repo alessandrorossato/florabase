@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from florabase.collection_photos.schemas import normalize_text, validate_https_url
+from florabase.media.fetch import wikimedia_file_url
 
 MediaTarget = Literal[
     "seed_lot",
@@ -62,6 +63,11 @@ class ExternalAssetCreate(AssetMetadataWrite):
     @classmethod
     def required_url(cls, value: object) -> object:
         return validate_https_url(value) if isinstance(value, str) else value
+
+    @field_validator("image_url")
+    @classmethod
+    def direct_image_url(cls, value: str) -> str:
+        return wikimedia_file_url(value)
 
 
 class LinkWrite(BaseModel):

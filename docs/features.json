@@ -2274,6 +2274,22 @@
       "status": "implemented"
     },
     {
+      "id": "MEDIA-FETCH-001",
+      "category": "attachment",
+      "description": "Fix Save local copy for Wikipedia and Wikimedia images by sending a fixed User-Agent, converting Wikipedia/Commons file description pages to their direct image address, and explaining when an address is a web page",
+      "acceptance_criteria": [
+        "Every external image request, including each redirect, sends the fixed non-identifying User-Agent Florabase/<package version> media-copy with no new cookies, credentials or other headers, while pinned public addresses, redirect, size, type, encoding and deadline checks are unchanged",
+        "Wikipedia and Wikimedia /wiki/File: pages, including localized file namespaces, are stored on creation as the same host's Special:FilePath image address and are converted before fetching for already saved references, while every other address passes through unchanged",
+        "A 200 text/html response fails as external_fetch_failed with a message asking for the image's own address and no destination details",
+        "Focused unit tests cover the rewrite, the User-Agent on first and redirected requests, the HTML message and the existing safety refusals without network access"
+      ],
+      "dependencies": [
+        "ATTACHMENT-005"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "RELEASE-VISUAL-AUDIT-001",
       "category": "ux",
       "description": "Audit the delivered v0.1 interface through real synthetic Review captures and propose bounded UI Foundation consolidation before implementation",
