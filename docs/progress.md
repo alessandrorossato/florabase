@@ -1,5 +1,36 @@
 # Engineering progress
 
+## 2026-11-26 — Opt-in public read-only demo mode & guided tour (`DEMO-001`)
+
+- On `feat/demo-001-readonly-tour` from `origin/main` `08ff2f9` (writer `antigravity-demo-001`).
+  No database migration and zero impact on standard production authentication (`FLORABASE_DEMO_READONLY`
+  defaults to `false`, `G-SEC`/`ENG-03` public allowlist untouched).
+- Backend: added `demo_readonly: bool = False` (`FLORABASE_DEMO_READONLY`) and `workers: int` (`1..8`,
+  default `1`, `FLORABASE_WORKERS`) in `core/config.py`; added `auth/demo_readonly.py`
+  (`DemoReadOnlyMiddleware` rejecting all non-`GET`/`HEAD`/`OPTIONS` HTTP requests with `403`
+  `demo_read_only` + `Cache-Control: no-store`, and `resolve_demo_actor` reading the single enabled
+  owner without creating `auth_sessions` rows); wired defense-in-depth checks in
+  `auth/dependencies.py` (`require_authenticated_actor`, `require_csrf`), mounted
+  `DemoReadOnlyMiddleware` conditionally in `main.py`, advertised `"demo-readonly"` on
+  `GET /api/v1/system/info` when enabled, exposed `demo_readonly` on `SessionResponse` in
+  `auth/api.py`, and wired `uvicorn_workers_from_environment` into `db/release_schema.py` (`serve`).
+  Regenerated `backend/openapi.json` and `frontend/src/api/schema.d.ts`.
+- Frontend: skipped `POST /api/v1/auth/csrf` in `auth/AuthProvider.tsx` when `session.demo_readonly`
+  is `true` and surfaced `403` `demo_read_only` responses via `shell/demo/readonlyNotice.ts`; disabled
+  Sign out and lazy-loaded `shell/demo/DemoExperience.tsx` in `App.tsx` only when `demo_readonly` is
+  active, rendering a slim semantic-token `Read-only demo` banner, polite read-only mutation notices,
+  and a 7-step interactive guided tour (`shell/demo/tourSteps.ts`, `shell/demo/demo.css`) navigating
+  across Today, Botanical identities, Seeds, Plants, Lineage, Geography and Schedule with
+  `Escape`/Skip/Restart and `?tour=1` support.
+- Docs & manifests: added [docs/demo-mode.md](demo-mode.md), linked it in `docs/README.md`,
+  registered `DEMO-001` (`implemented`, proposed release class `best-effort`) in `docs/features.json`
+  and `docs/release/scope-v1.json`, and recorded evidence in
+  [evidence.md](archive/DEMO-001/evidence.md).
+- Checks: focused backend `ruff`, `mypy` (210 files), `pytest` (145 passed incl. `test_demo_readonly.py`
+  and `test_check_api_routes.py`), PostgreSQL integration `test_demo_readonly_api.py`, frontend
+  `vitest`, `tsc`, `eslint`, `prettier`, `check-features.py`, `check-doc-links.py`, `make api-check`,
+  and canonical `make feature-verify AGENT_ID=antigravity-demo-001`.
+
 ## 2026-11-25 — Batch 13 integration (DOCS-004, PROPAGATION-BATCH-001, CARE-BULK-001/FN-03, UX-SORT-001, MEDIA-FETCH-001)
 
 - `ci/batch-13` from `origin/main` `b632c5c` (writer `claude-batch-13`) merges, in order,

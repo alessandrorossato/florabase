@@ -10,6 +10,8 @@ handoffs, design notes, reviews and evidence are archived under [`archive/`](arc
 - [Backup and restore](backup-restore.md) — paired PostgreSQL and attachment-volume backup/restore
 - [Security baseline](security.md) — authentication, sessions, CSRF, network isolation and optional
   hardened container override
+- [Public read-only demo mode](demo-mode.md) — opt-in `FLORABASE_DEMO_READONLY` showcase mode,
+  `FLORABASE_WORKERS`, and interactive guided tour
 - [Versioning and compatibility](versioning.md) — beta, release-candidate and v1.x support policy
 - [Portable installation (v0.1.0-beta.6 tombstone)](portable-installation.md) — redirect from the
   retired `v0.1.0-beta.6` portable procedure to `installation.md`

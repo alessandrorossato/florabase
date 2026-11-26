@@ -62,6 +62,8 @@ class Settings(BaseSettings):
     wcvp_v16_require_seal: bool = False
     wfo_snapshot_path: Path | None = None
     attachment_max_bytes: int = Field(default=25 * 1024 * 1024, ge=1, le=25 * 1024 * 1024)
+    demo_readonly: bool = False
+    workers: int = Field(default=1, ge=1, le=8)
 
     @field_validator("database_url")
     @classmethod

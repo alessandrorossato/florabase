@@ -16186,6 +16186,11 @@
             ],
             "title": "Canonical Origin"
           },
+          "demo_readonly": {
+            "default": false,
+            "title": "Demo Readonly",
+            "type": "boolean"
+          },
           "display_name": {
             "anyOf": [
               {

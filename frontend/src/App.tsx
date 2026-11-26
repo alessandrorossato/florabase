@@ -44,6 +44,13 @@ import { isFreshDirectoryNavigation } from "./components/recordNavigation";
 import { WorkbenchShell } from "./shell/WorkbenchShell";
 import type { Section } from "./shell/navigation";
 
+const DemoExperience = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./shell/demo/DemoExperience");
+    return { default: module.DemoExperience };
+  }),
+);
+
 const HarvestScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./harvests/HarvestScreen");
@@ -519,6 +526,8 @@ function ApplicationShell({
   const ownerIdentity = isReauthenticationState(state)
     ? state.retainedIdentity
     : state.session;
+  const demoReadOnly =
+    !isReauthenticationState(state) && state.session.demo_readonly;
   const signedInAs = ownerIdentity.display_name ?? ownerIdentity.login_name;
 
   return (
@@ -527,8 +536,9 @@ function ApplicationShell({
       hash={window.location.hash || "#/dashboard"}
       signedInAs={signedInAs}
       signingOut={state.status === "logging-out"}
-      signOutDisabled={passwordChange?.pending}
+      signOutDisabled={Boolean(passwordChange?.pending) || demoReadOnly}
       onSignOut={() => {
+        if (demoReadOnly) return;
         if (route.section === "account" && formDeparture.current?.() === false)
           return;
         void auth.logOut();
@@ -589,6 +599,11 @@ function ApplicationShell({
             formChanged.current = true;
         }}
       >
+        {demoReadOnly && (
+          <Suspense fallback={null}>
+            <DemoExperience onNavigate={navigateTo} />
+          </Suspense>
+        )}
         <RecordPresentationProvider
           key={route.section}
           fetchIdentities={

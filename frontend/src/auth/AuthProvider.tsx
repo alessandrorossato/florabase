@@ -11,6 +11,10 @@ import {
 
 import type { components } from "../api/schema";
 import {
+  extractDemoReadOnlyMessage,
+  notifyDemoReadOnlyBlocked,
+} from "../shell/demo/readonlyNotice";
+import {
   AuthContext,
   PasswordChangeContext,
   type AuthContextValue,
@@ -728,6 +732,12 @@ async function executeProtectedFetch<T>(
       if (response.status === 401) {
         gate.onUnauthorized?.(originatingEpoch, originatingProviderId);
       }
+      if (response.status === 403) {
+        const demoMessage = extractDemoReadOnlyMessage(body);
+        if (demoMessage) {
+          notifyDemoReadOnlyBlocked(demoMessage);
+        }
+      }
       throw new ApiError(
         response.status,
         response.headers.get("Retry-After"),
@@ -1226,7 +1236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         let csrfToken = "";
-        if (!isNativeBearerTransport()) {
+        if (!isNativeBearerTransport() && !session.demo_readonly) {
           // CSRF recovery rotates server-side session CSRF state; once dispatched,
           // it must settle inside the lifecycle queue barrier even if this provider
           // unmounts so replacement restoration cannot race a late server rotation.

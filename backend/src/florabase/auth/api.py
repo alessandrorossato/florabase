@@ -129,6 +129,7 @@ class SessionResponse(BaseModel):
     display_name: str | None
     owner: bool
     canonical_origin: str | None
+    demo_readonly: bool = False
 
 
 class LogoutResponse(BaseModel):
@@ -367,6 +368,7 @@ def get_session(response: Response, actor: SessionActor, settings: AuthSettings)
         display_name=actor.display_name,
         owner=actor.owner,
         canonical_origin=settings.canonical_origin,
+        demo_readonly=settings.demo_readonly,
     )
 
 

@@ -1234,6 +1234,7 @@ test("logout-failed keeps loaded native-range workspace mounted without issuing 
             display_name: "Owner",
             owner: true,
             canonical_origin: "http://localhost:15174",
+            demo_readonly: false,
           },
           csrfToken: "csrf-stale",
           message: "Sign out failed.",

@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from florabase import __version__
 from florabase.api.router import api_router
 from florabase.attachments.storage import AttachmentStorage
+from florabase.auth.demo_readonly import DemoReadOnlyMiddleware
 from florabase.auth.http_safety import AuthSafetyMiddleware
 from florabase.core.config import Environment, get_settings
 from florabase.core.cors import NativeAppCorsMiddleware
@@ -42,6 +43,8 @@ def create_app() -> FastAPI:
             allow_headers=["Content-Type", "X-CSRF-Token"],
         )
     application.add_middleware(NativeAppCorsMiddleware)
+    if settings.demo_readonly:
+        application.add_middleware(DemoReadOnlyMiddleware)
     application.include_router(api_router)
     return application
 

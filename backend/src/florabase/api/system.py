@@ -25,9 +25,12 @@ async def system_info(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> SystemInfoResponse:
     response.headers["Cache-Control"] = "no-store"
+    capabilities = list(SERVER_CAPABILITIES)
+    if settings.demo_readonly:
+        capabilities.append("demo-readonly")
     return SystemInfoResponse(
         server_version=__version__,
         api_version=API_VERSION,
         min_client_version=settings.min_client_version,
-        capabilities=list(SERVER_CAPABILITIES),
+        capabilities=capabilities,
     )
