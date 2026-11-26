@@ -1,5 +1,17 @@
 # Engineering progress
 
+## 2026-11-26 — Workspace homes, map hover photos, Native ranges (`UI-POLISH-003`)
+
+- Same branch as `UI-POLISH-002`; Alessandro approved proposals A1, B1 and C1 for beta.10.
+- A1: `WorkspaceHome` gives Collection, Activity, Explore and Sourcing an Overview page of
+  sub-section tiles with Today-summary counts and first actions; the Today tab goes straight to
+  Today and workspace crumbs link to their home.
+- B1: "Photos on hover" switch (default off, per page, `localStorage`) on Native ranges and
+  Collection origins shows up to four primary identity images in the map tooltip.
+- C1: Native ranges opens with By place / By species, photo result cards and a one-line KPI row.
+- Checks: `tsc -b`, ESLint and Prettier clean; focused Vitest suites pass. Canonical gate not run
+  here.
+
 ## 2026-11-26 — Batch 14 UAT UI polish (`UI-POLISH-002`)
 
 - On `claude/project-thread-gz6ru6` from `origin/main` `08ff2f9`, frontend-only source for batch 14.

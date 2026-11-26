@@ -13,6 +13,8 @@ import { identityGroups, uniqueRecords } from "./model";
 import { OriginBreakdown, type Breakdown } from "./OriginBreakdown";
 import { OriginInspector } from "./OriginInspector";
 import { ProvenanceMap } from "./ProvenanceMap";
+import { HoverPhotoStrip, HoverPhotosToggle } from "../maps/HoverPhotos";
+import { useHoverPhotos } from "../maps/useHoverPhotos";
 
 type MapState =
   | { status: "loading" }
@@ -20,6 +22,7 @@ type MapState =
   | { status: "error" };
 
 export function ProvenanceMapScreen() {
+  const [hoverPhotos, setHoverPhotos] = useHoverPhotos("collection-origins");
   const auth = useAuth();
   const { capability, sessionExpired } = auth;
   const authorized =
@@ -335,6 +338,29 @@ export function ProvenanceMapScreen() {
                   sites={visibleSites}
                   selectedId={selected?.id ?? null}
                   onSelect={setSelectedId}
+                  controls={
+                    <HoverPhotosToggle
+                      checked={hoverPhotos}
+                      onChange={setHoverPhotos}
+                    />
+                  }
+                  hoverContent={
+                    hoverPhotos
+                      ? (siteId) => {
+                          const site = visibleSites.find(
+                            (item) => item.id === siteId,
+                          );
+                          const groups = site
+                            ? identityGroups(site.records)
+                            : [];
+                          return (
+                            <HoverPhotoStrip
+                              identities={groups.map((group) => group.identity)}
+                            />
+                          );
+                        }
+                      : undefined
+                  }
                 />
               </div>
             </MapWorkspace>

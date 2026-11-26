@@ -11,7 +11,8 @@ import {
   type Marker as LeafletMarker,
   type TileLayer,
 } from "leaflet";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { loadGeometry } from "../native-ranges/geometry";
 import { mapRuntimeConfig } from "./config";
 import "./origins.css";
@@ -36,6 +37,8 @@ const markerIcon = (selected: boolean, unlinked: boolean) =>
 function position(site: MapPoint): [number, number] {
   return [Number(site.latitude), Number(site.longitude)];
 }
+/** Where "Photos on hover" renders its covers inside a marker's tooltip. */
+const photoSlotClass = "origins-tooltip-photos";
 function tooltipContent(site: MapPoint): HTMLElement {
   const container = document.createElement("div");
   const title = document.createElement("strong");
@@ -49,6 +52,9 @@ function tooltipContent(site: MapPoint): HTMLElement {
         : "Stored provenance site",
     ),
   );
+  const photos = document.createElement("span");
+  photos.className = photoSlotClass;
+  container.append(photos);
   return container;
 }
 function bindMarkerInteractions(
@@ -83,11 +89,17 @@ export function ProvenanceMap({
   selectedId,
   onSelect,
   label = "Interactive collection provenance map",
+  hoverContent,
+  controls,
 }: {
   sites: MapPoint[];
   selectedId: string | null;
   onSelect: (id: string) => void;
   label?: string;
+  /** Extra tooltip content for a hovered or focused site ("Photos on hover"). */
+  hoverContent?: (siteId: string) => ReactNode;
+  /** Page-owned controls shown with the map's own (e.g. the photo switch). */
+  controls?: ReactNode;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
@@ -96,6 +108,13 @@ export function ProvenanceMap({
   const onSelectRef = useRef(onSelect);
   const lastBoundsRef = useRef("");
   const lastSelectedRef = useRef<string | null>(null);
+  const slotsRef = useRef<Map<string, HTMLElement>>(new Map());
+  // The site whose tooltip is open, and (after a short pause) the one whose photos show.
+  const [hovered, setHovered] = useState<string | null>(null);
+  const [photo, setPhoto] = useState<{
+    site: string;
+    slot: HTMLElement;
+  } | null>(null);
   const onlineRef = useRef<TileLayer | null>(null);
   const [online, setOnline] = useState(false);
   const [tileFailed, setTileFailed] = useState(false);
@@ -205,6 +224,7 @@ export function ProvenanceMap({
     for (const layer of layersRef.current) layer.remove();
     layersRef.current = [];
     markersRef.current.clear();
+    slotsRef.current.clear();
     for (const site of sites) {
       const accuracy = Number(site.coordinate_accuracy_m);
       if (
@@ -222,6 +242,9 @@ export function ProvenanceMap({
           }).addTo(map),
         );
       }
+      const tooltip = tooltipContent(site);
+      const slot = tooltip.querySelector<HTMLElement>(`.${photoSlotClass}`);
+      if (slot) slotsRef.current.set(site.id, slot);
       const marker = createMarker(position(site), {
         icon: markerIcon(false, site.usage?.total === 0),
         title: `${site.name} · ${site.geographic_place_path ?? "No named geographic place"} · ${String(site.usage?.total ?? "Unknown")} linked ${site.usage?.total === 1 ? "record" : "records"}`,
@@ -229,9 +252,15 @@ export function ProvenanceMap({
         autoPanOnFocus: false,
         riseOnHover: true,
       })
-        .bindTooltip(tooltipContent(site), { direction: "top" })
+        .bindTooltip(tooltip, { direction: "top" })
         .on("click", () => {
           onSelectRef.current(site.id);
+        })
+        .on("tooltipopen", () => {
+          setHovered(site.id);
+        })
+        .on("tooltipclose", () => {
+          setHovered((current) => (current === site.id ? null : current));
         })
         .addTo(map);
       markersRef.current.set(site.id, marker);
@@ -273,8 +302,29 @@ export function ProvenanceMap({
     // A preselected site whose marker arrives later still gets its pan.
     if (site || selectedId === null) lastSelectedRef.current = selectedId;
   }, [sites, selectedId]);
+  useEffect(() => {
+    if (!hovered || !hoverContent) return;
+    // Thumbnails load only after the pointer rests, not while it sweeps the map.
+    const timer = window.setTimeout(() => {
+      const slot = slotsRef.current.get(hovered);
+      if (slot) setPhoto({ site: hovered, slot });
+    }, 250);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [hovered, hoverContent]);
+  const shownPhoto =
+    photo && hoverContent && photo.site === hovered ? photo : null;
+  useEffect(() => {
+    // The tooltip grew: let Leaflet place it again above its marker.
+    if (shownPhoto)
+      markersRef.current.get(shownPhoto.site)?.getTooltip()?.update();
+  }, [shownPhoto]);
   return (
     <>
+      {shownPhoto &&
+        hoverContent &&
+        createPortal(hoverContent(shownPhoto.site), shownPhoto.slot)}
       <div className="origins-map-controls">
         <button
           type="button"
@@ -300,6 +350,7 @@ export function ProvenanceMap({
             Online basemap
           </label>
         )}
+        {controls}
         <span className="origins-marker-key">
           <span aria-hidden="true">●</span> Recorded site · rings show accuracy
         </span>

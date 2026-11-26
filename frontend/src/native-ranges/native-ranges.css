@@ -659,3 +659,56 @@
     content: none;
   }
 }
+
+/* UI-POLISH-003 C1: the page starts from a question. The coverage figures read as one line
+   above the map (labels and drill-downs unchanged), and matching identities are cards with
+   their cover. */
+.native-ranges .native-statistics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.app-content .native-ranges .native-metric {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: var(--space-1);
+  min-block-size: var(--control-height-compact);
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  grid-column: auto;
+}
+.native-ranges .native-metric .ui-metric__value {
+  order: -1;
+  font: var(--type-strong);
+  font-variant-numeric: tabular-nums;
+}
+.native-ranges .native-metric .native-metric-label-full,
+.native-ranges .native-metric .ui-metric__context {
+  display: none;
+}
+.native-ranges .native-metric .native-metric-label-short {
+  display: inline;
+}
+.native-ranges button.native-metric .ui-metric__label::after {
+  content: none;
+}
+.native-ranges .native-inspector-identities li {
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  column-gap: var(--space-3);
+  align-items: start;
+}
+.native-ranges .native-inspector-identities li > :not(.record-visual) {
+  grid-column: 2;
+}
+.native-ranges .native-inspector-identities .native-inspector-identity__photo {
+  grid-row: 1 / span 4;
+  border-radius: var(--radius-small);
+}
+.native-ranges .native-inspector-identities li:only-child:not(:has(a)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.native-ranges .native-map-preview:has(.hover-photos) {
+  max-width: min(15rem, calc(100% - 2rem));
+}

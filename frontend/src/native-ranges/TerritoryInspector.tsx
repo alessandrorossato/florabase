@@ -10,6 +10,7 @@ import {
   type RangeIdentity,
 } from "./api";
 import { matchingContributors } from "./comparison";
+import { RecordVisual } from "../photos/RecordVisual";
 
 export function TerritoryInspector({
   territories,
@@ -118,7 +119,7 @@ export function TerritoryInspector({
     >
       <h3>
         {scopeLabel ??
-          (comparisonIds ? "Compared species" : "Explore all identities")}
+          (comparisonIds ? "Compared species" : "Show my plants native to…")}
       </h3>
       <p className="field-help">
         {scopeLabel
@@ -209,6 +210,14 @@ export function TerritoryInspector({
             <ul className="native-inspector-identities">
               {visible?.map((identity) => (
                 <li key={identity.id}>
+                  <RecordVisual
+                    kind="identity"
+                    compact
+                    identity={identity}
+                    label={identity.display_label}
+                    allowExternalCover
+                    className="native-inspector-identity__photo"
+                  />
                   <a href={`#/identities/${identity.id}?tab=reference`}>
                     <BotanicalName
                       label={identity.display_label}
@@ -296,8 +305,8 @@ export function TerritoryInspector({
         </>
       ) : (
         <p>
-          Select one or more shaded territories, or use the territory chooser
-          below. Each click toggles one territory.
+          Click shaded territories on the map, or find one below. Each click
+          adds or removes one place.
         </p>
       )}
       <label className="native-territory-search">

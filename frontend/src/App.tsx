@@ -604,7 +604,9 @@ function ApplicationShell({
             route.section === "events" ||
             route.section === "sowings" ||
             route.section === "cuttings" ||
-            route.section === "harvests"
+            route.section === "harvests" ||
+            // Map photos and native-range results show identity covers.
+            route.section === "geography"
           }
         >
           <WorkspaceBoundary

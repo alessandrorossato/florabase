@@ -41,6 +41,7 @@ const mocks = vi.hoisted(() => {
       setIcon: ReturnType<typeof vi.fn>;
       setZIndexOffset: ReturnType<typeof vi.fn>;
       openTooltip: ReturnType<typeof vi.fn>;
+      tooltipUpdate: ReturnType<typeof vi.fn>;
     }[],
   };
 });
@@ -61,6 +62,10 @@ vi.mock("leaflet", () => ({
       setZIndexOffset: vi.fn(),
       openTooltip: vi.fn(),
       closeTooltip: vi.fn(),
+      tooltipUpdate: vi.fn(),
+      getTooltip() {
+        return { update: this.tooltipUpdate };
+      },
       remove: vi.fn(),
       getElement() {
         return this.element;
@@ -378,4 +383,36 @@ test("a site selected outside the current view is panned into view once, keeping
     <ProvenanceMap sites={[site]} selectedId="site" onSelect={vi.fn()} />,
   );
   expect(mocks.map.panTo).toHaveBeenCalledTimes(1);
+});
+
+test("page-owned hover content appears in the open tooltip only after the pointer rests", () => {
+  vi.useFakeTimers();
+  try {
+    render(
+      <ProvenanceMap
+        sites={[site]}
+        selectedId={null}
+        onSelect={vi.fn()}
+        controls={<span>Page switch</span>}
+        hoverContent={(id) => <span>Photos for {id}</span>}
+      />,
+    );
+    expect(screen.getByText("Page switch")).toBeInTheDocument();
+    const marker = mocks.markers[0];
+    act(() => {
+      marker.events.tooltipopen();
+    });
+    expect(marker.tooltip).not.toHaveTextContent("Photos for site");
+    act(() => {
+      vi.advanceTimersByTime(250);
+    });
+    expect(marker.tooltip).toHaveTextContent("Photos for site");
+    expect(marker.tooltipUpdate).toHaveBeenCalled();
+    act(() => {
+      marker.events.tooltipclose();
+    });
+    expect(marker.tooltip).not.toHaveTextContent("Photos for site");
+  } finally {
+    vi.useRealTimers();
+  }
 });

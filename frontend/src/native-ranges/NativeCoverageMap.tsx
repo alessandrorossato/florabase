@@ -1,3 +1,4 @@
+import { HoverPhotoStrip } from "../maps/HoverPhotos";
 import { ActionButton } from "../components/Action";
 import { useId, useRef, useState, type RefObject, type ReactNode } from "react";
 import { MapLegend } from "../maps/MapLegend";
@@ -33,7 +34,13 @@ export function NativeCoverageMap({
   evidenceRef,
   territorySelection,
   scopeLabel,
+  hoverPhotos = false,
+  territoryPhotos,
 }: {
+  /** "Photos on hover": identity covers in the hover preview (UI-POLISH-003 B1). */
+  hoverPhotos?: boolean;
+  /** Photos for a territory whose identities this map does not hold (overview). */
+  territoryPhotos?: (code: string) => ReactNode;
   territorySelection?: TerritorySelection;
   scopeLabel?: string;
   territories: (Territory & { identity_ids?: string[] })[];
@@ -450,6 +457,18 @@ export function NativeCoverageMap({
                   </small>
                 )}
                 <small>Drawing coverage</small>
+                {hoverPhotos &&
+                  (preview.identity_ids && identities ? (
+                    <HoverPhotoStrip
+                      identities={identities.filter((identity) =>
+                        preview.identity_ids?.includes(identity.id),
+                      )}
+                    />
+                  ) : identities?.length === 1 ? (
+                    <HoverPhotoStrip identities={identities} />
+                  ) : (
+                    territoryPhotos?.(preview.source_code)
+                  ))}
               </div>
             )}
           </div>

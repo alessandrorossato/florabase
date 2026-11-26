@@ -3043,6 +3043,24 @@
       "status": "implemented"
     },
     {
+      "id": "UI-POLISH-003",
+      "category": "ux",
+      "description": "Workspace home pages, photos on map hover and a question-first Native ranges (26/11 UAT proposals A1, B1, C1)",
+      "acceptance_criteria": [
+        "Collection, Activity, Explore and Sourcing each have an Overview home (#/collection, #/activity, #/explore, #/sourcing) with one tile per sub-section: what it holds, a count from the Today summary where one exists, direct links and its usual first action; a failed summary keeps every tile usable with a Retry counts action",
+        "The Today tab opens Today directly; another workspace's tab opens its menu and its home page; the breadcrumb workspace crumb links to that home",
+        "Native ranges and Collection origins each have a Photos on hover switch, off by default and remembered per page in this browser; when on, hovering a territory or site shows up to four primary images of the botanical identities there, with a count of the rest",
+        "Native ranges starts from a question with By place and By species modes; results for a place are photo cards; the coverage KPIs read as one compact line",
+        "Component tests cover the home tiles and their error state, the tab navigation, the hover switch and the hover photos on both maps"
+      ],
+      "dependencies": [
+        "UI-POLISH-002",
+        "DASHBOARD-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "FN-02",
       "category": "ux",
       "description": "Sort the Seeds, Sowings and Plants directories by name and by their own date",
