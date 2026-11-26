@@ -4,18 +4,10 @@ import {
   DirectoryFilterSelect,
   DirectoryTools,
 } from "../components/DirectoryTools";
-import {
-  useCallback,
-  useEffect,
-  useState,
-  useRef,
-  type ReactNode,
-  type MouseEvent,
-} from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { BotanicalName, DirectorySearch } from "../components/ReferenceUI";
-import { TaskDialog } from "../components/TaskDialog";
 import { MapWorkspace } from "../maps/MapWorkspace";
 import { OccurrenceMapPanel } from "../occurrence-map/OccurrenceMapPanel";
 import { SavedViews } from "../saved-views/SavedViews";
@@ -62,10 +54,12 @@ function Representation({ identity }: { identity: RepresentedIdentity }) {
 function SelectedIdentity({
   id,
   scope,
+  chooser,
   onClear,
 }: {
   id: string;
   scope: Scope;
+  chooser: ReactNode;
   onClear: () => void;
 }) {
   const auth = useAuth();
@@ -103,13 +97,70 @@ function SelectedIdentity({
   }, [authorized, capability, id, scope, attempt, sessionExpired]);
   if (error)
     return (
-      <div role="alert" className="notice notice--error">
+      <MapWorkspace browserLabel="Inspector" browser={chooser}>
+        <div role="alert" className="notice notice--error">
+          <p>
+            {error === "missing"
+              ? "The selected identity is missing or no longer represented in your collection."
+              : "Could not load the selected identity."}
+          </p>
+          <p className="field-help">Selected identity: {id}</p>
+          <ActionButton
+            icon="clear-selection"
+            type="button"
+            className="button--secondary"
+            onClick={onClear}
+          >
+            Clear selection
+          </ActionButton>
+          {error === "error" && (
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setAttempt((value) => value + 1);
+              }}
+            >
+              Retry selected identity
+            </button>
+          )}
+        </div>
+      </MapWorkspace>
+    );
+  if (!identity)
+    return (
+      <MapWorkspace browserLabel="Inspector" browser={chooser}>
+        <p role="status">Loading selected species…</p>
+      </MapWorkspace>
+    );
+  const inspector = (
+    <>
+      {chooser}
+      <section className="distribution-inspector" aria-label="Selected species">
+        <p className="distribution-inspector__eyebrow">Selected species</p>
+        <h3>
+          <BotanicalName
+            label={identity.display_label}
+            scientificName={identity.scientific_name}
+          />
+        </h3>
+        {identity.common_name && <p>{identity.common_name}</p>}
+        <Representation identity={identity} />
         <p>
-          {error === "missing"
-            ? "The selected identity is missing or no longer represented in your collection."
-            : "Could not load the selected identity."}
+          <a href={`#/identities/${identity.id}?tab=reference`}>
+            Botanical identity details and external taxon link
+          </a>
         </p>
-        <p className="field-help">Selected identity: {id}</p>
+
+        <p className="field-help">
+          {identity.external_taxon_id ? (
+            <>
+              Linked GBIF taxon: <code>{identity.external_taxon_id}</code>
+            </>
+          ) : (
+            eligibility[identity.occurrence_eligibility]
+          )}
+        </p>
         <ActionButton
           icon="clear-selection"
           type="button"
@@ -118,54 +169,8 @@ function SelectedIdentity({
         >
           Clear selection
         </ActionButton>
-        {error === "error" && (
-          <button
-            type="button"
-            onClick={() => {
-              setError(null);
-              setAttempt((value) => value + 1);
-            }}
-          >
-            Retry selected identity
-          </button>
-        )}
-      </div>
-    );
-  if (!identity) return <p role="status">Loading selected species…</p>;
-  const inspector = (
-    <section className="distribution-inspector" aria-label="Selected species">
-      <h3>
-        <BotanicalName
-          label={identity.display_label}
-          scientificName={identity.scientific_name}
-        />
-      </h3>
-      {identity.common_name && <p>{identity.common_name}</p>}
-      <Representation identity={identity} />
-      <p>
-        <a href={`#/identities/${identity.id}?tab=reference`}>
-          Botanical identity details and external taxon link
-        </a>
-      </p>
-
-      <p className="field-help">
-        {identity.external_taxon_id ? (
-          <>
-            Linked GBIF taxon: <code>{identity.external_taxon_id}</code>
-          </>
-        ) : (
-          eligibility[identity.occurrence_eligibility]
-        )}
-      </p>
-      <ActionButton
-        icon="clear-selection"
-        type="button"
-        className="button--secondary"
-        onClick={onClear}
-      >
-        Clear selection
-      </ActionButton>
-    </section>
+      </section>
+    </>
   );
   if (!identity.matches_scope)
     return (
@@ -218,9 +223,6 @@ export function SpeciesDistributionScreen() {
   const { capability, sessionExpired } = auth;
   const authorized =
     auth.state.status === "authenticated" && capability.isAuthorized();
-  const [chooserOpen, setChooserOpen] = useState(false);
-  const [preview, setPreview] = useState<RepresentedIdentity | null>(null);
-  const chooserTrigger = useRef<HTMLButtonElement>(null);
   const [offset, setOffset] = useState(0);
   const [navigation, setNavigation] = useState(0);
   const reset = useCallback(() => {
@@ -268,10 +270,17 @@ export function SpeciesDistributionScreen() {
       controller.abort();
     };
   }, [authorized, capability, q, scope, offset, queryKey, sessionExpired]);
-  function choose(event: MouseEvent<HTMLButtonElement>) {
-    chooserTrigger.current = event.currentTarget;
-    setChooserOpen(true);
-  }
+  // Keep the selected species visible in the scrolling list (selection from a link,
+  // a saved view or history may sit below the fold).
+  useEffect(() => {
+    if (!selectedId || !page) return;
+    const list = document.querySelector(".distribution-identities");
+    const chosen = list?.querySelector<HTMLElement>(
+      '.distribution-choice[aria-pressed="true"]',
+    );
+    if (list && chosen && typeof chosen.offsetTop === "number")
+      list.scrollTop = Math.max(0, chosen.offsetTop - list.clientHeight / 2);
+  }, [selectedId, page]);
   function search(id: string, label: string): ReactNode {
     return (
       <DirectorySearch
@@ -287,6 +296,99 @@ export function SpeciesDistributionScreen() {
       />
     );
   }
+  const chooser = (
+    <section
+      className="distribution-browser"
+      aria-labelledby="represented-title"
+    >
+      <div className="distribution-browser__heading">
+        <h3 id="represented-title">Species</h3>
+        {page && (
+          <p className="directory-results" role="status">
+            {page.total} represented · {page.occurrence_ready} occurrence-ready
+          </p>
+        )}
+      </div>
+      {failed ? (
+        <p className="field-help">
+          The species list is unavailable until the retry above succeeds.
+        </p>
+      ) : !page ? (
+        <p role="status">Loading represented identities…</p>
+      ) : !page.items.length ? (
+        <p className="empty-state">
+          No represented identities match these filters.
+        </p>
+      ) : (
+        <>
+          <ul className="distribution-identities">
+            {page.items.map((identity) => (
+              <li key={identity.id}>
+                <button
+                  type="button"
+                  className="distribution-choice"
+                  aria-pressed={selectedId === identity.id}
+                  onClick={() => {
+                    view.update("identity", identity.id);
+                  }}
+                >
+                  <span className="distribution-choice__name">
+                    <BotanicalName
+                      label={identity.display_label}
+                      scientificName={identity.scientific_name}
+                    />
+                  </span>
+                  {identity.common_name && (
+                    <span className="distribution-choice__common">
+                      {identity.common_name}
+                    </span>
+                  )}
+                  <span
+                    className="distribution-choice__readiness"
+                    data-ready={identity.occurrence_eligibility === "available"}
+                  >
+                    {eligibility[identity.occurrence_eligibility]}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          {(offset > 0 || offset + page.items.length < page.total) && (
+            <nav className="actions" aria-label="Represented identity pages">
+              <button
+                type="button"
+                className="button--secondary"
+                disabled={offset === 0}
+                onClick={() => {
+                  setOffset((value) => Math.max(0, value - 50));
+                }}
+              >
+                Previous
+              </button>
+              <span>Page {Math.floor(offset / 50) + 1}</span>
+              <button
+                type="button"
+                className="button--secondary"
+                disabled={
+                  offset + page.items.length >= page.total || offset >= 100000
+                }
+                onClick={() => {
+                  setOffset((value) => value + 50);
+                }}
+              >
+                Next
+              </button>
+            </nav>
+          )}
+        </>
+      )}
+      <p className="field-help">
+        One species at a time. Selecting does not load external evidence;
+        occurrence-ready means a confirmed GBIF link exists, not that records
+        exist.
+      </p>
+    </section>
+  );
   return (
     <section
       className="workspace species-distribution"
@@ -306,17 +408,6 @@ export function SpeciesDistributionScreen() {
                 state={view.savedState}
                 presentation="dialog"
               />
-            }
-            actions={
-              <button
-                type="button"
-                className="button--secondary"
-                aria-haspopup="dialog"
-                aria-expanded={chooserOpen}
-                onClick={choose}
-              >
-                Choose species
-              </button>
             }
             activeFilters={
               scope === "all"
@@ -359,13 +450,13 @@ export function SpeciesDistributionScreen() {
         className="distribution-overview"
         aria-label="Collection occurrence readiness"
       >
-        <button type="button" className="button--quiet" onClick={choose}>
+        <span className="distribution-overview__metric">
           <strong>{page ? page.total : "—"}</strong> Represented identities
-        </button>
-        <button type="button" className="button--quiet" onClick={choose}>
+        </span>
+        <span className="distribution-overview__metric">
           <strong>{page ? page.occurrence_ready : "—"}</strong> Eligible GBIF
           links
-        </button>
+        </span>
         <span>
           {scopes.find((item) => item.value === scope)?.label}
           {q ? ` · Matching “${q}”` : ""}
@@ -394,195 +485,22 @@ export function SpeciesDistributionScreen() {
           key={`${selectedId}:${scope}:${q}:${String(navigation)}`}
           id={selectedId}
           scope={scope}
+          chooser={chooser}
           onClear={() => {
             view.update("identity", "");
           }}
         />
       ) : (
-        <MapWorkspace
-          browserLabel="Inspector"
-          browser={
-            <section>
-              <h3>Observed occurrences</h3>
-              <p>
-                Explore one botanical identity at a time. A confirmed GBIF link
-                allows loading; it does not guarantee records.
-              </p>
-              <p>
-                No occurrence evidence has been loaded. Search and species
-                previews stay within Florabase.
-              </p>
-            </section>
-          }
-        >
+        <MapWorkspace browserLabel="Inspector" browser={chooser}>
           <div className="distribution-map-placeholder">
             <h3>Select a species</h3>
             <p>
-              Choose a represented botanical identity, then explicitly load its
-              occurrence map.
+              Choose a represented botanical identity from the Species list,
+              then explicitly load its occurrence map. No occurrence evidence
+              has been loaded, and search stays within Florabase.
             </p>
-            <button type="button" onClick={choose}>
-              Browse botanical identities
-            </button>
           </div>
         </MapWorkspace>
-      )}
-      {chooserOpen && (
-        <TaskDialog
-          title="Choose species"
-          dismissOnBackdrop
-          onClose={() => {
-            setChooserOpen(false);
-            setPreview(null);
-          }}
-          returnFocusTo={chooserTrigger}
-          className="distribution-chooser"
-        >
-          <div className="section-heading">
-            <h3>Choose one species</h3>
-            <ActionButton
-              icon="close"
-              type="button"
-              className="button--quiet"
-              onClick={() => {
-                setChooserOpen(false);
-                setPreview(null);
-              }}
-            >
-              Close
-            </ActionButton>
-          </div>
-          {search("distribution-chooser-search", "Search botanical identities")}
-          <p className="field-help">
-            One identity at a time · selecting does not load external evidence.
-          </p>
-          <div className="distribution-preview" aria-label="Species preview">
-            {preview ? (
-              <>
-                <BotanicalName
-                  label={preview.display_label}
-                  scientificName={preview.scientific_name}
-                />{" "}
-                · {eligibility[preview.occurrence_eligibility]}
-              </>
-            ) : (
-              "Hover or focus a species to preview its readiness."
-            )}
-          </div>
-          <section
-            className="distribution-browser"
-            aria-labelledby="represented-title"
-          >
-            <h3 id="represented-title">Botanical identities</h3>
-            {failed ? (
-              <div role="alert">
-                <p>Could not load represented identities.</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFailedQuery(null);
-                    setAttempt((value) => value + 1);
-                  }}
-                >
-                  Retry identities
-                </button>
-              </div>
-            ) : !page ? (
-              <p role="status">Loading represented identities…</p>
-            ) : (
-              <>
-                <p className="directory-results" role="status">
-                  {page.total} represented identities · {page.occurrence_ready}{" "}
-                  occurrence-ready
-                </p>
-                <p className="field-help">
-                  Occurrence-ready means a confirmed GBIF link exists; it does
-                  not guarantee occurrence records.
-                </p>
-                {!page.items.length ? (
-                  <p className="empty-state">
-                    No represented identities match these filters.
-                  </p>
-                ) : (
-                  <ul className="distribution-identities">
-                    {page.items.map((identity) => (
-                      <li key={identity.id}>
-                        <button
-                          type="button"
-                          className="distribution-choice button--secondary"
-                          aria-pressed={selectedId === identity.id}
-                          onMouseEnter={() => {
-                            setPreview(identity);
-                          }}
-                          onMouseLeave={() => {
-                            setPreview(null);
-                          }}
-                          onFocus={() => {
-                            setPreview(identity);
-                          }}
-                          onBlur={() => {
-                            setPreview(null);
-                          }}
-                          onClick={() => {
-                            view.update("identity", identity.id);
-                            setChooserOpen(false);
-                            setPreview(null);
-                          }}
-                        >
-                          <strong>
-                            <BotanicalName
-                              label={identity.display_label}
-                              scientificName={identity.scientific_name}
-                            />
-                          </strong>
-                          {identity.common_name && (
-                            <span>{identity.common_name}</span>
-                          )}
-                          <Representation identity={identity} />
-                          <span className="field-help">
-                            {eligibility[identity.occurrence_eligibility]}
-                            {selectedId === identity.id ? " · Selected" : ""}
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {(offset > 0 || offset + page.items.length < page.total) && (
-                  <nav
-                    className="actions"
-                    aria-label="Represented identity pages"
-                  >
-                    <button
-                      type="button"
-                      className="button--secondary"
-                      disabled={offset === 0}
-                      onClick={() => {
-                        setOffset((value) => Math.max(0, value - 50));
-                      }}
-                    >
-                      Previous
-                    </button>
-                    <span>Page {Math.floor(offset / 50) + 1}</span>
-                    <button
-                      type="button"
-                      className="button--secondary"
-                      disabled={
-                        offset + page.items.length >= page.total ||
-                        offset >= 100000
-                      }
-                      onClick={() => {
-                        setOffset((value) => value + 50);
-                      }}
-                    >
-                      Next
-                    </button>
-                  </nav>
-                )}
-              </>
-            )}
-          </section>
-        </TaskDialog>
       )}
     </section>
   );

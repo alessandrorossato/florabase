@@ -146,6 +146,12 @@ beforeEach(async () => {
   });
   vi.mocked(listSavedViews).mockResolvedValue([]);
 });
+function findMetric() {
+  return screen.findByText("Represented identities", {
+    exact: false,
+    selector: ".distribution-overview__metric",
+  });
+}
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
@@ -162,7 +168,10 @@ test("local open, scope/search/select are provider-free; explicit Load reuses MA
       "Occurrence records show observed presence and do not establish native range.",
     ),
   ).toBeVisible();
-  await screen.findByRole("button", { name: "2 Represented identities" });
+  const metric = await findMetric();
+  await waitFor(() => {
+    expect(metric).toHaveTextContent("2 Represented identities");
+  });
   expect(refreshOccurrenceEvidence).not.toHaveBeenCalled();
   await user.click(screen.getByRole("button", { name: "Filters" }));
   await user.selectOptions(
@@ -185,7 +194,6 @@ test("local open, scope/search/select are provider-free; explicit Load reuses MA
       expect.any(AbortSignal),
     );
   });
-  await user.click(screen.getByRole("button", { name: "Choose species" }));
   await user.click(
     await screen.findByRole("button", {
       name: /Ocimum basilicum ‘Long cultivar name’/,
@@ -197,6 +205,13 @@ test("local open, scope/search/select are provider-free; explicit Load reuses MA
   expect(window.location.hash).toBe(
     `#/species-distribution?q=ocimum&scope=living&identity=${id}`,
   );
+  // The species list stays inline beside the map and marks the selection.
+  expect(
+    screen.getByRole("button", {
+      name: /Ocimum basilicum ‘Long cultivar name’/,
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(refreshOccurrenceEvidence).not.toHaveBeenCalled();
   expect(
     screen.getByRole("link", { name: /Botanical identity details/ }),
@@ -214,7 +229,6 @@ test("local open, scope/search/select are provider-free; explicit Load reuses MA
   expect(
     screen.getByText(/PRESENT records with usable coordinates/),
   ).toBeVisible();
-  await user.click(screen.getByRole("button", { name: "Choose species" }));
   await user.click(screen.getByRole("button", { name: /Aloe vera/ }));
   expect(
     await screen.findByText(/Occurrence distribution is unavailable/),
@@ -249,11 +263,9 @@ test("provider failure/retry and zero eligible records keep the directory usable
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "temporarily unavailable",
   );
-  await user.click(screen.getByRole("button", { name: "Choose species" }));
   expect(
     await screen.findByRole("button", { name: /Aloe vera/ }),
   ).toBeEnabled();
-  await user.click(screen.getByRole("button", { name: "Close" }));
   await user.click(
     screen.getByRole("button", { name: "Load GBIF occurrence map" }),
   );
@@ -361,7 +373,6 @@ test("Saved View create/open restores selection and cached evidence without anot
     await screen.findByRole("button", { name: "Load GBIF occurrence map" }),
   );
   await screen.findByText("Shared density map");
-  await user.click(screen.getByRole("button", { name: "Choose species" }));
   await user.click(await screen.findByRole("button", { name: "Next" }));
   await waitFor(() => {
     expect(listRepresentedIdentities).toHaveBeenLastCalledWith(
@@ -372,7 +383,6 @@ test("Saved View create/open restores selection and cached evidence without anot
       expect.any(AbortSignal),
     );
   });
-  await user.click(screen.getByRole("button", { name: "Close" }));
   await user.click(screen.getByRole("button", { name: "Saved views" }));
   await user.click(screen.getByRole("button", { name: "Save view" }));
   await user.type(screen.getByLabelText("View name"), "Living basil");
@@ -451,19 +461,10 @@ test("chooser preview is transient and pane switching retains loaded evidence wi
   await user.click(screen.getByRole("button", { name: "Map & evidence" }));
   expect(disclosure.parentElement).toHaveAttribute("open");
   expect(screen.getByText("Shared density map")).toBe(map);
-  await user.click(screen.getByRole("button", { name: "Choose species" }));
   const aloe = await screen.findByRole("button", { name: /Aloe vera/ });
-  await user.hover(aloe);
-  expect(screen.getByLabelText("Species preview")).toHaveTextContent(
-    "External taxon not linked",
-  );
+  expect(aloe).toHaveTextContent("External taxon not linked");
+  expect(aloe).toHaveAttribute("aria-pressed", "false");
   expect(window.location.hash).toContain(id);
-  aloe.focus();
-  expect(screen.getByLabelText("Species preview")).toHaveTextContent(
-    "Aloe vera",
-  );
-  await user.keyboard("{Escape}");
-  expect(screen.getByRole("button", { name: "Choose species" })).toHaveFocus();
   expect(screen.getByText("Shared density map")).toBe(map);
   expect(refreshOccurrenceEvidence).toHaveBeenCalledTimes(1);
 });
@@ -513,7 +514,6 @@ test("unsupported local link and an empty directory never imply absence or reque
     offset: 0,
     limit: 50,
   });
-  const user = userEvent.setup();
   show();
   expect(
     await screen.findByRole("heading", {
@@ -526,47 +526,9 @@ test("unsupported local link and an empty directory never imply absence or reque
   expect(
     screen.getByRole("link", { name: "Link botanical source" }),
   ).toHaveAttribute("href", `#/identities/${id}?tab=source`);
-  await user.click(screen.getByRole("button", { name: "Choose species" }));
   expect(
     await screen.findByText("No represented identities match these filters."),
   ).toBeVisible();
-  expect(refreshOccurrenceEvidence).not.toHaveBeenCalled();
-});
-
-test("chooser dismissal restores the invoking readiness metric", async () => {
-  const user = userEvent.setup();
-  show();
-  const metric = await screen.findByRole("button", {
-    name: "2 Represented identities",
-  });
-  await user.click(metric);
-  await user.keyboard("{Escape}");
-  expect(metric).toHaveFocus();
-  expect(refreshOccurrenceEvidence).not.toHaveBeenCalled();
-});
-
-test("backdrop dismisses without changing selection, while inner controls keep the chooser open", async () => {
-  window.history.replaceState(
-    null,
-    "",
-    `#/species-distribution?identity=${id}`,
-  );
-  const user = userEvent.setup();
-  show();
-  await user.click(
-    await screen.findByRole("button", { name: "Choose species" }),
-  );
-  const dialog = screen.getByRole("dialog", { name: "Choose species" });
-  await user.click(
-    within(dialog).getByRole("heading", { name: "Choose one species" }),
-  );
-  expect(dialog).toBeVisible();
-  fireEvent.click(dialog, { clientX: -1, clientY: -1 });
-  expect(
-    screen.queryByRole("dialog", { name: "Choose species" }),
-  ).not.toBeInTheDocument();
-  expect(window.location.hash).toContain(id);
-  expect(screen.getByRole("button", { name: "Choose species" })).toHaveFocus();
   expect(refreshOccurrenceEvidence).not.toHaveBeenCalled();
 });
 
@@ -634,8 +596,11 @@ test("session expiry keeps loaded map and directory intact, ignores lock cancell
   );
   await waitFor(() => {
     expect(
-      screen.getByRole("button", { name: "2 Represented identities" }),
-    ).toBeVisible();
+      screen.getByText("Represented identities", {
+        exact: false,
+        selector: ".distribution-overview__metric",
+      }),
+    ).toHaveTextContent("2 Represented identities");
   });
   expect(
     screen.queryByText(/Could not load represented identities/),

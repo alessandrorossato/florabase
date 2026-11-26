@@ -660,36 +660,52 @@
   }
 }
 
-/* UI-POLISH-003 C1: the page starts from a question. The coverage figures read as one line
-   above the map (labels and drill-downs unchanged), and matching identities are cards with
-   their cover. */
+/* UI-POLISH-003 C1 / UI-POLISH-004: the coverage figures use the Collection origins cards
+   (maps.css): label and context above, the count below, each card a target. Matching
+   identities are cards with their cover. */
 .native-ranges .native-statistics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-2);
-  margin-bottom: var(--space-2);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 .app-content .native-ranges .native-metric {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: baseline;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
   gap: var(--space-1);
-  min-block-size: var(--control-height-compact);
-  padding: var(--space-1) var(--space-3);
-  border-radius: 999px;
   grid-column: auto;
+  min-width: 0;
+  min-block-size: 0;
+  padding: var(--space-3);
+  color: var(--text);
+  text-align: start;
+  white-space: normal;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+  font: var(--type-small);
 }
-.native-ranges .native-metric .ui-metric__value {
-  order: -1;
-  font: var(--type-strong);
-  font-variant-numeric: tabular-nums;
-}
-.native-ranges .native-metric .native-metric-label-full,
-.native-ranges .native-metric .ui-metric__context {
-  display: none;
+.native-ranges .native-metric .native-metric-label-full {
+  display: block;
+  order: 1;
+  font: var(--type-small);
 }
 .native-ranges .native-metric .native-metric-label-short {
-  display: inline;
+  display: none;
+}
+.native-ranges .native-metric .ui-metric__context {
+  display: block;
+  order: 2;
+  color: var(--text-muted);
+  font: var(--type-label);
+  font-weight: 400;
+}
+.native-ranges .native-metric .ui-metric__value {
+  order: 3;
+  font: var(--type-metric);
+  font-variant-numeric: tabular-nums;
 }
 .native-ranges button.native-metric .ui-metric__label::after {
   content: none;

@@ -158,7 +158,7 @@ test.each([
       ).toBeInTheDocument();
     if (label === "Species distribution")
       expect(
-        screen.getByRole("button", { name: "Choose species" }),
+        screen.getByRole("heading", { name: "Species" }),
       ).toBeInTheDocument();
   },
 );

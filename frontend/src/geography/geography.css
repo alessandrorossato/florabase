@@ -370,14 +370,13 @@
    never shrinks the list. */
 @media (min-width: 48.001rem) {
   .app-content .provenance-selection {
-    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(22rem, 1fr) auto;
     grid-template-areas:
       "list map"
       "list preview";
     align-items: stretch;
     flex: none;
-    height: calc(100dvh - 15rem);
-    min-height: 30rem;
+    height: max(40rem, calc(100dvh - 13rem));
   }
   .site-navigation-inspector {
     display: contents;
@@ -393,25 +392,33 @@
     min-height: 0;
     max-height: none;
   }
+  /* The preview stays compact and scrolls, so the map keeps most of the column. */
   .app-content .provenance-selection .quick-preview {
     grid-area: preview;
-    max-height: min(22rem, 40dvh);
+    max-height: min(16rem, 30dvh);
   }
   .provenance-selection .site-map-panel {
     grid-area: map;
     display: flex;
     flex-direction: column;
+    gap: var(--space-2);
     min-height: 0;
   }
-  .provenance-selection .provenance-map {
-    flex: 1;
-    min-height: 14rem;
+  .provenance-selection .site-map-panel > * {
+    flex: none;
+  }
+  .provenance-selection .site-map-panel .provenance-map {
+    flex: 1 1 auto;
+    min-height: 16rem;
     height: auto;
+  }
+  .provenance-selection .site-map-panel .origins-provider-note {
+    margin: 0;
   }
 }
 @media (min-width: 48.001rem) and (max-width: 75rem) {
   .app-content .provenance-selection {
-    height: calc(100dvh - 18rem);
+    height: max(40rem, calc(100dvh - 16rem));
   }
 }
 .app-content .provenance-selection .quick-preview:focus-visible {
