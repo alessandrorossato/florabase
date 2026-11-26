@@ -24,7 +24,6 @@ import {
   targetLabels,
 } from "../schedule/state";
 import { getDashboard, type DashboardResponse } from "./api";
-import { DashboardPhotos } from "./DashboardPhotos";
 import { useDashboardSearch } from "./DashboardSearch";
 import "./dashboard.css";
 import "./today.css";
@@ -447,8 +446,6 @@ export function DashboardOverview() {
             <a href="#/identities">Botanical identities</a>.
           </p>
         </section>
-
-        <DashboardPhotos photos={state.value.photos ?? []} />
       </div>
     </div>
   );

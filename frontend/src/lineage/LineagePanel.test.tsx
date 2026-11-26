@@ -57,13 +57,40 @@ const extracted: Response = {
   ],
 };
 
+type Ancestry = components["schemas"]["AncestryResponse"];
+type AncestryNode = components["schemas"]["AncestryNode"];
+function ancestry(items: AncestryNode[] = []): Ancestry {
+  const focus: AncestryNode = {
+    record: extracted.subject,
+    origin: null,
+    harvest_conversion: null,
+    descendant_count: items.length,
+  };
+  return {
+    ancestors: [],
+    focus,
+    children: { items, total: items.length, offset: 0, limit: 25 },
+  };
+}
+/** Serves the record lineage endpoint and the ancestry endpoint used for descendants. */
+function serve(
+  lineage: (url: string) => Promise<unknown>,
+  children: AncestryNode[] = [],
+) {
+  request.mockImplementation((url: string) =>
+    url.startsWith("/api/v1/lineage/")
+      ? Promise.resolve(ancestry(children))
+      : lineage(url),
+  );
+}
+
 afterEach(() => {
   cleanup();
   vi.resetAllMocks();
 });
 
 test("recorded ancestry keeps reversed ancestors explicit and correctly linked", async () => {
-  request.mockResolvedValue(extracted);
+  serve(() => Promise.resolve(extracted));
   renderWithAuth(<LineagePanel kind="plants" id="extracted" />);
   const path = await screen.findByRole("list", {
     name: "Recorded upstream path",
@@ -87,20 +114,17 @@ test("recorded ancestry keeps reversed ancestors explicit and correctly linked",
 test("navigation cannot show or restore a previous record's lineage during loading", async () => {
   let resolveOld!: (value: Response) => void;
   let resolveNew!: (value: Response) => void;
-  request
-    .mockResolvedValueOnce(extracted)
-    .mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          resolveOld = resolve;
-        }),
-    )
-    .mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          resolveNew = resolve;
-        }),
-    );
+  serve((url) => {
+    if (url.includes("pending-old"))
+      return new Promise((resolve) => {
+        resolveOld = resolve;
+      });
+    if (url.includes("independent"))
+      return new Promise((resolve) => {
+        resolveNew = resolve;
+      });
+    return Promise.resolve(extracted);
+  });
   const view = renderWithAuth(<LineagePanel kind="plants" id="extracted" />);
   await screen.findByRole("link", { name: /Original group/ });
   view.rerender(
@@ -136,10 +160,12 @@ test("navigation cannot show or restore a previous record's lineage during loadi
 test.each([false, true])(
   "SeedLot renders only explicit producer ancestry (producer=%s)",
   async (producer) => {
-    request.mockResolvedValue({
-      subject: { ...extracted.subject, kind: "seed_lot", id: "material" },
-      ancestors: producer ? [extracted.ancestors[0]] : [],
-    });
+    serve(() =>
+      Promise.resolve({
+        subject: { ...extracted.subject, kind: "seed_lot", id: "material" },
+        ancestors: producer ? [extracted.ancestors[0]] : [],
+      }),
+    );
     renderWithAuth(<LineagePanel kind="seed-lots" id="material" />);
     if (producer) {
       expect(
@@ -163,10 +189,12 @@ test.each([false, true])(
 test.each(["plant", "plant_group"] as const)(
   "%s material path reads SeedLot, Sowing, then this record",
   async (kind) => {
-    request.mockResolvedValue({
-      subject: { ...extracted.subject, kind, label: "Current record" },
-      ancestors: [extracted.ancestors[1], extracted.ancestors[2]],
-    });
+    serve(() =>
+      Promise.resolve({
+        subject: { ...extracted.subject, kind, label: "Current record" },
+        ancestors: [extracted.ancestors[1], extracted.ancestors[2]],
+      }),
+    );
     renderWithAuth(
       <LineagePanel
         kind={kind === "plant" ? "plants" : "plant-groups"}
@@ -191,3 +219,44 @@ test.each(["plant", "plant_group"] as const)(
     ).not.toBeInTheDocument();
   },
 );
+
+test("a Seed lot that starts its line shows what was recorded from it", async () => {
+  const sowing = (id: string, label: string, count: number): AncestryNode => ({
+    record: { kind: "sowing", id, label, lifecycle: "active" },
+    origin: null,
+    harvest_conversion: null,
+    descendant_count: count,
+  });
+  serve(
+    () =>
+      Promise.resolve({
+        subject: { ...extracted.subject, kind: "seed_lot", id: "packet" },
+        ancestors: [],
+      }),
+    [sowing("s0", "Spring tray", 2), sowing("s1", "Autumn tray", 0)],
+  );
+  renderWithAuth(<LineagePanel kind="seed-lots" id="packet" />);
+  const next = await screen.findByRole("region", {
+    name: "Recorded from this record",
+  });
+  expect(
+    screen.getByText("No recorded source: this record starts its line."),
+  ).toBeVisible();
+  expect(screen.queryByText("No recorded lineage.")).not.toBeInTheDocument();
+  const items = within(next).getAllByRole("listitem");
+  expect(items).toHaveLength(2);
+  expect(within(items[0]).getByText("sown as")).toBeVisible();
+  expect(
+    within(items[0]).getByRole("link", { name: "Spring tray" }),
+  ).toHaveAttribute("href", "#/sowings/s0?tab=lineage");
+  expect(
+    within(items[0]).getByRole("link", { name: "2 recorded from it" }),
+  ).toHaveAttribute("href", "#/lineage/sowing/s0");
+  expect(
+    within(items[1]).queryByText(/recorded from it/),
+  ).not.toBeInTheDocument();
+  expect(request).toHaveBeenCalledWith(
+    "/api/v1/lineage/seed_lot/packet?limit=25",
+    expect.objectContaining({ signal: expect.any(AbortSignal) as unknown }),
+  );
+});

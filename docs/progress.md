@@ -1,5 +1,21 @@
 # Engineering progress
 
+## 2026-11-26 — Batch 14 UAT UI polish (`UI-POLISH-002`)
+
+- On `claude/project-thread-gz6ru6` from `origin/main` `08ff2f9`, frontend-only source for batch 14.
+- Lineage tab adds "Recorded from this record" (direct descendants from the ancestry endpoint), so
+  a purchased Seed lot with sowings no longer reads "No recorded lineage". Identity lineage and the
+  ancestry explorer drop the dotted canvas and draw nested levels with elbow connectors.
+- Today drops the photo strip (`DashboardPhotos.tsx` removed; the API `photos` field is unchanged)
+  and stretches the supporting column. Sidebar no longer pins Plant groups and Stored material.
+- GBIF search button aligned; provenance-site list keeps six to seven rows and follows map
+  selection; the map pans to a list selection. Vite serves `/LICENSE` and
+  `/THIRD_PARTY_NOTICES.txt` in DEV/UAT; nginx serves `/LICENSE` as `text/plain`.
+- Checks: `tsc -b`, ESLint and Prettier on the changed areas; focused Vitest suites pass. The full
+  Vitest run in the cloud session has the same pre-existing environment failures as `main`
+  (Node 22; e.g. `IdentityRecordMedia`, `TreeExplorer`, SeedLot botanical cover) and no new ones.
+  Canonical gate not run here.
+
 ## 2026-11-25 — Batch 13 integration (DOCS-004, PROPAGATION-BATCH-001, CARE-BULK-001/FN-03, UX-SORT-001, MEDIA-FETCH-001)
 
 - `ci/batch-13` from `origin/main` `b632c5c` (writer `claude-batch-13`) merges, in order,

@@ -89,6 +89,8 @@ export function ProvenanceSiteManager({
     authState.status === "authenticated" && capability.isAuthorized();
   const [sites, setSites] = useState<ProvenanceSiteResponse[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Directory rows by site, so a site chosen on the map is scrolled into view in the list.
+  const rowRefs = useRef(new Map<string, HTMLButtonElement>());
   const [form, setForm] = useState<SiteForm>(blank);
   const [message, setMessage] = useState<string | null>(null);
   const [validationField, setValidationField] = useState<string | undefined>();
@@ -346,6 +348,10 @@ export function ProvenanceSiteManager({
                 {listed.map((site) => (
                   <li key={site.id}>
                     <button
+                      ref={(element) => {
+                        if (element) rowRefs.current.set(site.id, element);
+                        else rowRefs.current.delete(site.id);
+                      }}
                       type="button"
                       className="identity-list-item geography-directory-row"
                       aria-pressed={site.id === selectedId}
@@ -529,7 +535,18 @@ export function ProvenanceSiteManager({
                 }
                 onSelect={(id) => {
                   const site = mapped.find((item) => item.id === id);
-                  if (site) select(site);
+                  if (!site) return;
+                  select(site);
+                  const row = rowRefs.current.get(id);
+                  if (typeof row?.scrollIntoView === "function")
+                    row.scrollIntoView({
+                      block: "nearest",
+                      behavior: window.matchMedia(
+                        "(prefers-reduced-motion: reduce)",
+                      ).matches
+                        ? "auto"
+                        : "smooth",
+                    });
                 }}
                 label="Geography map of stored provenance sites"
               />

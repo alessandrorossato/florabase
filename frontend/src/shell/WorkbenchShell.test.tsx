@@ -121,14 +121,15 @@ test("the navigation model lists every former destination and Settings tool exac
   );
   const hrefs = allDestinations().map((item) => item.href);
   for (const href of [
-    "#/plants?type=group",
-    "#/harvests?tab=stored-material",
     "#/schedule?view=calendar",
     "#/map",
     "#/species-distribution",
     "#/native-ranges",
   ])
     expect(hrefs).toContain(href);
+  // Views of Plants and Harvests are reached from those pages, not from the menu.
+  expect(hrefs).not.toContain("#/plants?type=group");
+  expect(hrefs).not.toContain("#/harvests?tab=stored-material");
 });
 
 test("section links navigate through the guard; modified clicks keep native behaviour", async () => {
@@ -139,8 +140,8 @@ test("section links navigate through the guard; modified clicks keep native beha
     "aria-current",
     "page",
   );
-  await user.click(within(nav).getByRole("link", { name: "Plant groups" }));
-  expect(onNavigate).toHaveBeenCalledWith("#/plants?type=group");
+  await user.click(within(nav).getByRole("link", { name: "Plants" }));
+  expect(onNavigate).toHaveBeenCalledWith("#/plants");
   onNavigate.mockClear();
   await user.keyboard("{Control>}");
   await user.click(within(nav).getByRole("link", { name: "Sowings" }));
@@ -149,14 +150,15 @@ test("section links navigate through the guard; modified clicks keep native beha
 });
 
 test("sub-destinations, not their parent, are current on their own view", () => {
-  renderShell({ section: "plants", hash: "#/plants?type=group" });
+  renderShell({ section: "schedule", hash: "#/schedule?view=calendar" });
   const nav = screen.getByRole("navigation", { name: "Primary navigation" });
-  expect(
-    within(nav).getByRole("link", { name: "Plant groups" }),
-  ).toHaveAttribute("aria-current", "page");
-  expect(within(nav).getByRole("link", { name: "Plants" })).not.toHaveAttribute(
+  expect(within(nav).getByRole("link", { name: "Calendar" })).toHaveAttribute(
     "aria-current",
+    "page",
   );
+  expect(
+    within(nav).getByRole("link", { name: "Schedule" }),
+  ).not.toHaveAttribute("aria-current");
 });
 
 test("the New menu lists every creation route", async () => {
@@ -309,10 +311,8 @@ test("mobile workspace and account sheets navigate, theme and sign out", async (
   ).toHaveAttribute("aria-current", "true");
   await user.click(within(mobile).getByRole("button", { name: "Collection" }));
   const sheet = screen.getByRole("dialog", { name: "Collection" });
-  await user.click(
-    within(sheet).getByRole("link", { name: "Stored material" }),
-  );
-  expect(onNavigate).toHaveBeenCalledWith("#/harvests?tab=stored-material");
+  await user.click(within(sheet).getByRole("link", { name: "Harvests" }));
+  expect(onNavigate).toHaveBeenCalledWith("#/harvests");
   expect(screen.queryByRole("dialog", { name: "Collection" })).toBeNull();
 
   await user.click(

@@ -48,11 +48,53 @@
 .ancestry-tree > li::before {
   content: none;
 }
-/* Nested levels hang from the stem with a rule in the lineage colour. */
+/* Nested levels hang from their parent card on elbow connectors in the lineage colour: a rail
+   runs down past every sibling but the last, which closes it with a rounded elbow. The rail
+   starts above each item to bridge the list gap (and, for the first, the gap below the card). */
 .ancestry-tree .ancestry-tree {
+  gap: var(--space-2);
   margin-inline-start: var(--space-4);
-  padding-inline-start: var(--space-4);
-  border-inline-start: 1px solid var(--lineage);
+  padding-inline-start: 0;
+}
+.ancestry-tree .ancestry-tree > li {
+  position: relative;
+  padding-inline-start: var(--space-6);
+}
+.ancestry-tree .ancestry-tree > li::before {
+  content: "";
+  position: absolute;
+  inset-block: calc(-1 * var(--space-2)) 0;
+  inset-inline-start: 0;
+  border-inline-start: 2px solid var(--lineage);
+}
+.ancestry-tree .ancestry-tree > li::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 0.7rem;
+  inset-inline-start: 0;
+  inline-size: calc(var(--space-6) - var(--space-1));
+  border-block-start: 2px solid var(--lineage);
+}
+.ancestry-tree .ancestry-tree > li:last-child::before {
+  inset-block-end: auto;
+  block-size: calc(var(--space-2) + 0.7rem + 2px);
+  inline-size: calc(var(--space-6) - var(--space-1));
+  border-block-end: 2px solid var(--lineage);
+  border-end-start-radius: var(--radius-normal);
+}
+.ancestry-tree .ancestry-tree > li:last-child::after {
+  content: none;
+}
+/* Inside the tree the elbow already shows direction: the verb is a small label on it. */
+.ancestry-tree .ancestry-tree .ancestry-verb {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  line-height: 1.4rem;
+  background: color-mix(in srgb, var(--lineage) 14%, transparent);
+  border-radius: 999px;
+}
+.ancestry-tree .ancestry-tree .ancestry-verb::before {
+  content: none;
 }
 .ancestry-section > .ancestry-tree,
 .ancestry-section > .ancestry-chain {
@@ -126,7 +168,7 @@
   padding-inline-start: calc(var(--space-4) + 2px);
 }
 .ancestry-tree .ancestry-more {
-  margin-inline-start: calc(var(--space-8) + 1px);
+  margin-inline-start: calc(var(--space-4) + var(--space-6));
 }
 .ancestry-more {
   display: flex;
@@ -154,11 +196,17 @@
     padding-inline-start: calc(var(--space-3) + 2px);
   }
   .ancestry-tree .ancestry-more {
-    margin-inline-start: calc(var(--space-4) + 1px);
+    margin-inline-start: calc(var(--space-2) + var(--space-4));
   }
   .ancestry-tree .ancestry-tree {
-    margin-inline-start: var(--space-1);
-    padding-inline-start: var(--space-3);
+    margin-inline-start: var(--space-2);
+  }
+  .ancestry-tree .ancestry-tree > li {
+    padding-inline-start: var(--space-4);
+  }
+  .ancestry-tree .ancestry-tree > li::after,
+  .ancestry-tree .ancestry-tree > li:last-child::before {
+    inline-size: calc(var(--space-4) - var(--space-1));
   }
   .ancestry-section > .ancestry-tree,
   .ancestry-section > .ancestry-chain {

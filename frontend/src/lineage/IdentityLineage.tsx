@@ -53,14 +53,14 @@ function NodeCard({ node }: { node: GraphNode }) {
         {!node.in_identity && "botanical_identity" in record && (
           <span>{record.botanical_identity.display_label}</span>
         )}
+        <a
+          className="ancestry-node__focus"
+          href={ancestryHref(record.kind, record.id)}
+          aria-label={`Explore ancestry from ${nameOf(node)}`}
+        >
+          Ancestry
+        </a>
       </p>
-      <a
-        className="ancestry-node__focus"
-        href={ancestryHref(record.kind, record.id)}
-        aria-label={`Explore ancestry from ${nameOf(node)}`}
-      >
-        Explore ancestry
-      </a>
     </article>
   );
 }

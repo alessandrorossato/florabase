@@ -93,23 +93,10 @@ export const workspaces: Workspace[] = [
       destination("seeds", "Seeds"),
       destination("sowings", "Sowings"),
       destination("cuttings", "Cuttings"),
-      destination("plants", "Plants", [
-        {
-          label: "Plant groups",
-          href: "#/plants?type=group",
-          matches: (hash) =>
-            pathOf(hash) === "/plants" && param(hash, "type") === "group",
-        },
-      ]),
-      destination("harvests", "Harvests", [
-        {
-          label: "Stored material",
-          href: "#/harvests?tab=stored-material",
-          matches: (hash) =>
-            pathOf(hash) === "/harvests" &&
-            param(hash, "tab") === "stored-material",
-        },
-      ]),
+      // Plant groups and Stored material are views of these pages (type filter, peer tab),
+      // not separate destinations; the menu lists only the pages themselves.
+      destination("plants", "Plants"),
+      destination("harvests", "Harvests"),
       destination("locations", "Locations"),
     ],
   },

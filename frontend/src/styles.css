@@ -80,6 +80,8 @@
 
 .external-search form .field {
   flex: 1;
+  /* The button lines up with the input, so the field keeps no bottom margin here. */
+  margin-bottom: 0;
 }
 
 .external-candidates {

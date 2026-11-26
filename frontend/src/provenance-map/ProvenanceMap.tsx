@@ -95,6 +95,7 @@ export function ProvenanceMap({
   const markersRef = useRef<Map<string, LeafletMarker>>(new Map());
   const onSelectRef = useRef(onSelect);
   const lastBoundsRef = useRef("");
+  const lastSelectedRef = useRef<string | null>(null);
   const onlineRef = useRef<TileLayer | null>(null);
   const [online, setOnline] = useState(false);
   const [tileFailed, setTileFailed] = useState(false);
@@ -258,6 +259,18 @@ export function ProvenanceMap({
       marker?.setZIndexOffset(selected ? 1000 : 0);
       marker?.getElement()?.setAttribute("aria-pressed", String(selected));
     }
+    // A site chosen in the list is brought into view, without changing the zoom.
+    const map = mapRef.current;
+    const site = sites.find((item) => item.id === selectedId);
+    if (map && site && selectedId !== lastSelectedRef.current) {
+      const target = position(site);
+      if (!map.getBounds().contains(target))
+        map.panTo(target, {
+          animate: !window.matchMedia("(prefers-reduced-motion: reduce)")
+            .matches,
+        });
+    }
+    lastSelectedRef.current = selectedId;
   }, [sites, selectedId]);
   return (
     <>

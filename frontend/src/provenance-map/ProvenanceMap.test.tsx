@@ -15,6 +15,8 @@ const mocks = vi.hoisted(() => {
     createPane: vi.fn(() => ({ style: {} })),
     attributionControl: { addAttribution: vi.fn() },
     setView: vi.fn(),
+    panTo: vi.fn(),
+    getBounds: vi.fn(() => ({ contains: vi.fn(() => true) })),
   };
   map.setView.mockReturnValue(map);
   const layer = {
@@ -356,3 +358,24 @@ test.each([false, true])(
     );
   },
 );
+
+test("a site selected outside the current view is panned into view once, keeping the zoom", () => {
+  const view = render(
+    <ProvenanceMap sites={[site]} selectedId={null} onSelect={vi.fn()} />,
+  );
+  expect(mocks.map.panTo).not.toHaveBeenCalled();
+  mocks.map.getBounds.mockReturnValue({ contains: vi.fn(() => false) });
+  view.rerender(
+    <ProvenanceMap sites={[site]} selectedId="site" onSelect={vi.fn()} />,
+  );
+  expect(mocks.map.panTo).toHaveBeenCalledTimes(1);
+  expect(mocks.map.panTo).toHaveBeenCalledWith(
+    [38.166667, 13.35],
+    expect.objectContaining({ animate: expect.any(Boolean) as unknown }),
+  );
+  expect(mocks.map.setView).toHaveBeenCalledTimes(1);
+  view.rerender(
+    <ProvenanceMap sites={[site]} selectedId="site" onSelect={vi.fn()} />,
+  );
+  expect(mocks.map.panTo).toHaveBeenCalledTimes(1);
+});

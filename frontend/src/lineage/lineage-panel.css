@@ -1,0 +1,97 @@
+/* A record's Lineage tab: what was recorded from this record, below its upstream path. */
+.lineage-panel__start {
+  margin: var(--space-3) 0 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.lineage-panel__next {
+  display: grid;
+  gap: var(--space-2);
+  max-inline-size: 42rem;
+  margin-block-start: var(--space-6);
+}
+.lineage-panel__next > h3 {
+  margin: 0;
+  font: var(--type-h3);
+}
+/* Same elbow connectors as the ancestry tree: a rail past every child but the last, which
+   closes it with a rounded elbow; the verb sits on the elbow as a small label. */
+.lineage-panel__children {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0 0 0 var(--space-2);
+  padding: var(--space-2) 0 0;
+  list-style: none;
+}
+.lineage-panel__children > li {
+  position: relative;
+  display: grid;
+  gap: var(--space-1);
+  justify-items: start;
+  margin: 0;
+  padding: 0 0 0 var(--space-6);
+}
+.lineage-panel__children > li::before {
+  content: "";
+  position: absolute;
+  inset-block: calc(-1 * var(--space-2)) 0;
+  inset-inline-start: 0;
+  border-inline-start: 2px solid var(--lineage);
+}
+.lineage-panel__children > li::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 0.7rem;
+  inset-inline-start: 0;
+  inline-size: calc(var(--space-6) - var(--space-1));
+  border-block-start: 2px solid var(--lineage);
+}
+.lineage-panel__children > li:last-child::before {
+  inset-block-end: auto;
+  block-size: calc(var(--space-2) + 0.7rem + 2px);
+  inline-size: calc(var(--space-6) - var(--space-1));
+  border-block-end: 2px solid var(--lineage);
+  border-end-start-radius: var(--radius-normal);
+}
+.lineage-panel__children > li:last-child::after {
+  content: none;
+}
+.lineage-panel__verb {
+  padding: 0 var(--space-2);
+  color: var(--lineage);
+  font: var(--type-label);
+  font-weight: 500;
+  line-height: 1.4rem;
+  background: color-mix(in srgb, var(--lineage) 14%, transparent);
+  border-radius: 999px;
+}
+.lineage-panel__card {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-inline-start: 3px solid var(--lineage);
+  border-radius: var(--radius-small);
+  inline-size: min(100%, 30rem);
+  overflow-wrap: anywhere;
+}
+.lineage-panel__kind {
+  color: var(--text-muted);
+  font: var(--type-eyebrow);
+}
+.lineage-panel__card > a {
+  font: var(--type-strong);
+}
+.lineage-panel__facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  font: var(--type-small);
+}
+.lineage-panel__more {
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+}

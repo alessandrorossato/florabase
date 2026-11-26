@@ -3023,6 +3023,26 @@
       "status": "implemented"
     },
     {
+      "id": "UI-POLISH-002",
+      "category": "ux",
+      "description": "Batch 14 UAT polish (26/11): Seed lot Lineage tab shows recorded descendants, Today without the photo strip, Plant groups and Stored material no longer pinned in the sidebar, Lineage without the dotted canvas and with elbow-connector trees, aligned GBIF search, a longer provenance-site list kept in step with the map, and licence links served by the development server",
+      "acceptance_criteria": [
+        "A record's Lineage tab lists its direct recorded descendants (first 25, with verb, status and a link to each record's own descendants) below its upstream path; a record with no recorded source but with descendants no longer shows No recorded lineage",
+        "Today renders no photo section; at wide layouts the supporting column runs to the height of the work column, with To review taking the remaining space (supersedes the photos item of UX-TODAY-001)",
+        "The Collection menu lists Plants and Harvests without the fixed Plant groups and Stored material sub-links; those views stay reachable from their pages",
+        "Lineage stages have no dotted background; nested lineage levels hang from their parent card on elbow connectors with the relationship verb as a label",
+        "The Search GBIF button is aligned with the scientific-name input",
+        "Provenance sites keep at least six to seven list rows visible on desktop; choosing a site on the map scrolls it into view in the list and choosing it in the list pans the map to it when it is out of view, without changing the zoom",
+        "The Vite development server serves /LICENSE and /THIRD_PARTY_NOTICES.txt as text instead of the app; production nginx serves /LICENSE as text/plain"
+      ],
+      "dependencies": [
+        "UX-TODAY-001",
+        "LINEAGE-004"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "FN-02",
       "category": "ux",
       "description": "Sort the Seeds, Sowings and Plants directories by name and by their own date",

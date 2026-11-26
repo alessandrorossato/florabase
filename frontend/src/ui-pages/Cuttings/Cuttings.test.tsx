@@ -11,6 +11,13 @@ import { AuthContext, type AuthContextValue } from "../../auth/context";
 import { acquireTestAuth } from "../../test/auth";
 import { Cuttings } from "./Cuttings";
 
+/** The ancestry endpoint a Lineage tab reads for direct descendants: none recorded. */
+const noDescendants = {
+  ancestors: [],
+  focus: null,
+  children: { items: [], total: 0, offset: 0, limit: 25 },
+};
+
 const sessionExpired = vi.fn();
 let auth: AuthContextValue;
 beforeEach(async () => {
@@ -178,6 +185,8 @@ test.each([
         return Promise.resolve(json({ offspring: [] }));
       if (path.endsWith("/lineage"))
         return Promise.resolve(json({ ancestors: [] }));
+      if (path.startsWith("/api/v1/lineage/"))
+        return Promise.resolve(json(noDescendants));
       if (path.endsWith("/primary-photo")) return Promise.resolve(json(null));
       return Promise.resolve(json([]));
     }),
@@ -197,6 +206,8 @@ test("undo retains rooting observations only after confirmation", async () => {
       return Promise.resolve(json({ offspring: [] }));
     if (path.endsWith("/lineage"))
       return Promise.resolve(json({ ancestors: [] }));
+    if (path.startsWith("/api/v1/lineage/"))
+      return Promise.resolve(json(noDescendants));
     if (path.endsWith("/primary-photo")) return Promise.resolve(json(null));
     if (path.endsWith("/reversal"))
       return Promise.resolve(
@@ -376,6 +387,8 @@ test("lot details save corrections with the version of the displayed lot", async
     }
     if (path.endsWith("/lineage"))
       return Promise.resolve(json({ ancestors: [] }));
+    if (path.startsWith("/api/v1/lineage/"))
+      return Promise.resolve(json(noDescendants));
     if (path.endsWith("/primary-photo")) return Promise.resolve(json(null));
     return Promise.resolve(json([]));
   });
