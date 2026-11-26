@@ -1571,3 +1571,42 @@ test("Open original image streams protected blob to synchronous popup, handles b
     expect(popup.close).toHaveBeenCalled();
   });
 });
+
+test("Sort by asks the server for the chosen order and returns to the first page (UX-SORT-002)", async () => {
+  window.matchMedia = vi.fn(() => ({ matches: false }) as MediaQueryList);
+  window.history.replaceState(null, "", "#/media?offset=24");
+  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    const url = requestUrl(input);
+    if (url.endsWith("/thumbnail"))
+      return Promise.resolve(
+        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
+      );
+    return Promise.resolve(
+      json(page([asset()], 30, url.includes("offset=24") ? 24 : 0)),
+    );
+  });
+  const user = userEvent.setup();
+  mount(<MediaScreen />);
+  await screen.findByRole("button", { name: /Garden image/ });
+  const sort = screen.getByRole("combobox", { name: "Sort by" });
+  expect(
+    within(sort)
+      .getAllByRole("option")
+      .map((option) => option.textContent),
+  ).toEqual([
+    "Default order",
+    "Name A–Z",
+    "Name Z–A",
+    "Newest added first",
+    "Oldest added first",
+  ]);
+  await user.selectOptions(sort, "name");
+  await waitFor(() => {
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/v1/media-assets?limit=24&association=all&sort=name&offset=0",
+      expect.anything(),
+    );
+  });
+  expect(window.location.hash).toContain("sort=name");
+  expect(window.location.hash).not.toContain("offset=");
+});

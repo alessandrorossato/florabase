@@ -425,3 +425,53 @@ test.each([
     expect(await screen.findByText(message)).toBeVisible();
   },
 );
+
+test("cuttings Sort by asks the server from the first page and survives a record type switch (UX-SORT-002)", async () => {
+  const rows = Array.from({ length: 50 }, (_, index) => ({
+    ...lot,
+    id: `lot-${String(index)}`,
+    label: `Cuttings batch ${String(index)}`,
+    lifecycle: "active",
+  }));
+  const fetch = vi.fn((path: string) =>
+    Promise.resolve(
+      json(path.startsWith("/api/v1/vegetative-lots?") ? rows : []),
+    ),
+  );
+  vi.stubGlobal("fetch", fetch);
+  window.history.replaceState(null, "", "#/cuttings");
+  show();
+  const user = userEvent.setup();
+  await screen.findByRole("button", { name: "Quick preview Cuttings batch 0" });
+  await user.click(screen.getByRole("button", { name: "Next page" }));
+  const sort = screen.getByRole("combobox", { name: "Sort by" });
+  expect(
+    within(sort)
+      .getAllByRole("option")
+      .map((option) => option.textContent),
+  ).toEqual([
+    "Default order",
+    "Name A–Z",
+    "Name Z–A",
+    "Newest taken or acquired date first",
+    "Oldest taken or acquired date first",
+  ]);
+  await user.selectOptions(sort, "newest");
+  await waitFor(() => {
+    expect(fetch).toHaveBeenLastCalledWith(
+      "/api/v1/vegetative-lots?q=&limit=50&offset=0&sort=newest",
+      expect.any(Object),
+    );
+  });
+  expect(window.location.hash).toContain("sort=newest");
+  await user.click(screen.getByRole("button", { name: "Rooting attempts" }));
+  await waitFor(() => {
+    expect(fetch).toHaveBeenLastCalledWith(
+      "/api/v1/propagation-attempts?q=&limit=50&offset=0&sort=newest",
+      expect.any(Object),
+    );
+  });
+  expect(
+    screen.getByRole("option", { name: "Newest start date first" }),
+  ).toBeInTheDocument();
+});
