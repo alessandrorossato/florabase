@@ -23,6 +23,8 @@ Build/diagnostic logs remain in /tmp with hashes in verification-evidence.json; 
   before/after frontend scan summary for the six nginx 1.30.6 findings.
 - [PostgreSQL libxml2 2.13.9-r3 rebuild, `.3` (2026-11-20)](postgres-libxml2-2.13.9-r3/README.md):
   reproduced pinned identity and hashed before/after scan summary.
+- [PostgreSQL libxml2 2.13.9-r5 rebuild, `.6` (2026-11-26)](postgres-libxml2-2.13.9-r5/README.md):
+  `r3` withdrawn from Alpine 3.24; reproduced pinned identity.
 - [Compatibility probe](compatibility-probe.py), [test-tool wheel hashes](compatibility-test-inputs.json),
   [verification results and local diagnostic log hashes](verification-evidence.json).
 

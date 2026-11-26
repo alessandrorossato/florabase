@@ -27,7 +27,7 @@ and defines three non-root services. No container runs as root:
 
 | Service | Container | Role |
 | --- | --- | --- |
-| `db` | `florabase-db` (`70:70`) | PostgreSQL 18 (`florabase-postgres:latest`, currently `18.6-alpine-florabase.5`). Refuses the `change-me` placeholder password, validates folder owners, modes, empty-folder rules, marker and cluster identity before PostgreSQL starts; pins session `timezone` to `UTC`. |
+| `db` | `florabase-db` (`70:70`) | PostgreSQL 18 (`florabase-postgres:latest`, currently `18.6-alpine-florabase.6`). Refuses the `change-me` placeholder password, validates folder owners, modes, empty-folder rules, marker and cluster identity before PostgreSQL starts; pins session `timezone` to `UTC`. |
 | `backend` | `florabase-backend` (`10001:10001`) | Runs `florabase-start`: refuses `change-me`, waits for `db`, runs the guarded deploy step (mount separation via `stat` and `/proc/self/mountinfo`, backup checks, advisory lock, init/keep/verified pre-upgrade dump and upgrade, atomic marker, one-time first owner), scrubs owner variables, then `exec`s the exact-head API server (`release_schema serve`). |
 | `frontend` | `florabase-frontend` (`101:101`) | The web app and the only published port, bound to `127.0.0.1:8080`. |
 
