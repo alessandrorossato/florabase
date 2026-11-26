@@ -71,6 +71,11 @@ describe("NativeServerOnboarding", () => {
         apiVersion: 1,
         minClientVersion: "0.1.0-beta.8",
         capabilities: ["device-auth"],
+        runtimeConfig: {
+          mapOnlineEnabled: false,
+          mapTileUrl: undefined,
+          mapAttribution: undefined,
+        },
       });
     });
     expect(store.current()).toBe("http://10.0.2.2:5173");

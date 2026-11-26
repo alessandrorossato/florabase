@@ -1613,6 +1613,22 @@
       "status": "implemented"
     },
     {
+      "id": "IMPORT-002",
+      "category": "transfer",
+      "description": "Add a single-sheet CSV and XLSX import wizard with column mapping, grouped reference review, preview, and atomic apply",
+      "acceptance_criteria": [
+        "Inspect, preview, and apply accept bounded UTF-8 CSV or XLSX uploads (<=2 MiB, <=2,000 data rows, <=60 columns, one sheet, zip-bomb and DTD/entity guards, cached formula values only) and keep IMPORT-001 byte-identical",
+        "EN/IT header suggestions map one sheet to Plants, Plant groups, or Seed lots with optional unmapped-columns-to-notes, grouped review of identities, locations, and suppliers (including explicit skip), and a 15-minute session-bound HMAC confirmation",
+        "Apply revalidates against live database state after creating missing identities, suppliers, and locations in one atomic transaction, rolling back completely on any conflict or row error",
+        "An accessible multi-step wizard in Tools -> Import / Export imports each sample CSV and XLSX end to end with the same resulting records while keeping IMPORT-001 unchanged under Advanced"
+      ],
+      "dependencies": [
+        "IMPORT-001"
+      ],
+      "priority": "P0",
+      "status": "implemented"
+    },
+    {
       "id": "LINEAGE-003",
       "category": "lineage",
       "description": "Add visual lineage navigation",
@@ -1707,6 +1723,25 @@
       ],
       "dependencies": [
         "WCVP-DEFAULT-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
+      "id": "REF-SETUP-001",
+      "category": "enrichment",
+      "description": "Automatically provision pinned WFO 2026-06 and Kew WCVP v16 SQLite reference indexes in the background when enabled",
+      "acceptance_criteria": [
+        "Fresh installs with FLORABASE_REFERENCES_SETUP=auto in compose.yaml download pinned official WFO 2026-06 and Kew WCVP v16 archives in a low-priority background worker after serve is up, verify exact checksums before parsing, build and seal SQLite indexes atomically under state/reference/ (0700), and turn on lookups without blocking startup or health",
+        "When FLORABASE_REFERENCES_SETUP is unset or off, zero outbound reference requests are made; existing valid sealed managed indexes keep working and report ready (setup off), while missing managed indexes report off",
+        "Manual read-only mounts configured via FLORABASE_WFO_SNAPSHOT_PATH or FLORABASE_WCVP_V16_SNAPSHOT_PATH are never written, skipped by auto-setup, and reported as manual",
+        "Offline, checksum, size, build or insufficient free-space failures log one sanitized summary line, leave no partial files, preserve valid sealed indexes, report failed: <reason>, retry on restart or at most every 6 hours while running, and stop cleanly on SIGTERM",
+        "Authenticated read-only GET /api/v1/system/references and Settings -> Data sources expose per-index status without changing unauthenticated GET /api/v1/system/info, and pre-upgrade dumps, paired media backups and deploy guards ignore state/reference/"
+      ],
+      "dependencies": [
+        "TAXONOMY-003",
+        "WCVP-DEFAULT-001",
+        "INSTALL-003"
       ],
       "priority": "P1",
       "status": "implemented"
@@ -2290,6 +2325,24 @@
       "status": "implemented"
     },
     {
+      "id": "MEDIA-SETTINGS-001",
+      "category": "attachment",
+      "description": "Settings -> Media page with installation-wide media defaults: the initial state of the Save a local copy choice for external images, and a default attribution, licence label and licence URL prefilled on the owner's own uploads, without any automatic remote fetch",
+      "acceptance_criteria": [
+        "Alembic migration 20261125_0050 on 20261125_0049 adds media_save_local_copy_default (NOT NULL, server default true), media_default_attribution, media_default_licence_label and media_default_licence_url to the application_settings singleton, keeps existing installations at today's pre-checked behaviour, and downgrades by dropping only these preferences",
+        "GET/PUT /api/v1/application-settings exposes the four fields as required members of the full-replace contract, normalizes text, accepts only absolute HTTPS licence URLs, and preserves QR and label preferences",
+        "The Save a local copy in Florabase choice in the Media, Photos and identity cover forms starts from the saved default (built-in default while loading or on failure); the fetch still happens only when the owner saves that image with the choice selected, and docs/security.md and docs/media-library.md state that Florabase never fetches remote images automatically",
+        "Media library and record Photos uploads accept optional licence_label and licence_url form fields with the existing validation, and their forms prefill attribution and licence from the defaults only for the owner's own uploads, never for external references or edits",
+        "Settings -> Media covers loading, load failure with retry, validation failure that retains edits, and success, with backend unit/integration/migration tests, updated golden baselines, and frontend tests for saving, form prefill and the local-copy default"
+      ],
+      "dependencies": [
+        "ATTACHMENT-005",
+        "MEDIA-FETCH-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "RELEASE-VISUAL-AUDIT-001",
       "category": "ux",
       "description": "Audit the delivered v0.1 interface through real synthetic Review captures and propose bounded UI Foundation consolidation before implementation",
@@ -2460,6 +2513,23 @@
         "UI-REVIEW-001"
       ],
       "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "ABOUT-001",
+      "category": "ui",
+      "description": "Settings → About page with the running release (version, image revision, project source), changelog and release-note links, licence and third-party notices, plus official-site and dataset links for each external source on Settings → Data sources",
+      "acceptance_criteria": [
+        "Settings → About (#/about) shows Florabase version and short image revision read from the image's /release.json (same short form as the startup banner), falling back to the build version and a 'Development build' note when release metadata is absent",
+        "About links the running tag's CHANGELOG.md and GitHub release notes, the bundled /LICENSE (AGPL-3.0-or-later) and /THIRD_PARTY_NOTICES.txt, and the project repository; only an https source from release metadata replaces the canonical project URL",
+        "Settings → Data sources links WFO, Kew WCVP, GBIF, Natural Earth and OpenStreetMap to their official sites and to the pages where their data is obtained, in a new tab with rel=noopener noreferrer; the CSV row has no external link",
+        "Frontend tests cover release metadata, fallback, non-https source rejection and the data-source links; typecheck, ESLint and Prettier pass"
+      ],
+      "dependencies": [
+        "UI-REVIEW-002",
+        "RUNTIME-IDLE-001"
+      ],
+      "priority": "P3",
       "status": "implemented"
     },
     {
@@ -3023,6 +3093,83 @@
       "status": "implemented"
     },
     {
+      "id": "UI-POLISH-002",
+      "category": "ux",
+      "description": "Batch 14 UAT polish (26/11): Seed lot Lineage tab shows recorded descendants, Today without the photo strip, Plant groups and Stored material no longer pinned in the sidebar, Lineage without the dotted canvas and with elbow-connector trees, aligned GBIF search, a longer provenance-site list kept in step with the map, and licence links served by the development server",
+      "acceptance_criteria": [
+        "A record's Lineage tab lists its direct recorded descendants (first 25, with verb, status and a link to each record's own descendants) below its upstream path; a record with no recorded source but with descendants no longer shows No recorded lineage",
+        "Today renders no photo section; at wide layouts the supporting column runs to the height of the work column, with To review taking the remaining space (supersedes the photos item of UX-TODAY-001)",
+        "The Collection menu lists Plants and Harvests without the fixed Plant groups and Stored material sub-links; those views stay reachable from their pages",
+        "Lineage stages have no dotted background; nested lineage levels hang from their parent card on elbow connectors with the relationship verb as a label",
+        "The Search GBIF button is aligned with the scientific-name input",
+        "Provenance sites keep at least six to seven list rows visible on desktop; choosing a site on the map scrolls it into view in the list and choosing it in the list pans the map to it when it is out of view, without changing the zoom",
+        "The Vite development server serves /LICENSE and /THIRD_PARTY_NOTICES.txt as text instead of the app; production nginx serves /LICENSE as text/plain"
+      ],
+      "dependencies": [
+        "UX-TODAY-001",
+        "LINEAGE-004"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "UI-POLISH-003",
+      "category": "ux",
+      "description": "Workspace home pages, photos on map hover and a question-first Native ranges (26/11 UAT proposals A1, B1, C1)",
+      "acceptance_criteria": [
+        "Collection, Activity, Explore and Sourcing each have an Overview home (#/collection, #/activity, #/explore, #/sourcing) with one tile per sub-section: what it holds, a count from the Today summary where one exists, direct links and its usual first action; a failed summary keeps every tile usable with a Retry counts action",
+        "The Today tab opens Today directly; another workspace's tab opens its menu and its home page; the breadcrumb workspace crumb links to that home",
+        "Native ranges and Collection origins each have a Photos on hover switch, off by default and remembered per page in this browser; when on, hovering a territory or site shows up to four primary images of the botanical identities there, with a count of the rest",
+        "Native ranges starts from a question with By place and By species modes; results for a place are photo cards; the coverage KPIs read as one compact line",
+        "Component tests cover the home tiles and their error state, the tab navigation, the hover switch and the hover photos on both maps"
+      ],
+      "dependencies": [
+        "UI-POLISH-002",
+        "DASHBOARD-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "UI-POLISH-004",
+      "category": "ux",
+      "description": "Final beta.10 UI round (26/11): full-width Settings, described Help links, cross-section indicators on workspace homes, one Places/Species inspector for Native ranges, a steady collapsed rail, a full-height provenance site list and full screen for maps and diagrams",
+      "acceptance_criteria": [
+        "Settings cards span the page width; forms inside them keep a readable line length",
+        "Help gives every destination a one-line description next to its link, shared with the workspace home tiles",
+        "Collection, Activity, Explore and Sourcing homes open with indicators that combine several sections (for example species in current material, germination recorded, WFO and native-range coverage, mapped origin sites, suppliers and orders); an indicator whose source fails or whose base is zero is left out",
+        "The Native ranges map sits in a rounded, clipped frame; in both By place and By species the inspector shows a fixed, scrolling Places list first and then the plants native there or the chosen species with color, Places and remove, so choosing one never pushes the other out of view",
+        "Collapsing the side panel does not move the rail buttons; the search button appears just above Settings",
+        "On desktop the provenance site list runs the full height of its column; the map and the quick preview share the other column",
+        "Collection origins, Provenance sites, Species distribution, Native ranges, the ancestry explorer's descendants and identity lineage lines offer Full screen, left with Escape or Exit full screen"
+      ],
+      "dependencies": [
+        "UI-POLISH-003"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "UI-POLISH-005",
+      "category": "ux",
+      "description": "Last beta.10 UI round (26/11): one record mask for every Collection detail, one header layout for every list, Collection-origins-style cards in Native ranges, a taller provenance site map and an inline species list in Species distribution",
+      "acceptance_criteria": [
+        "Seed lot, Sowing, Plant, Plant group, Harvest, Vegetative lot and Rooting attempt details share one header: plate and fact label on the left; kind, name, botanical identity, status and actions (left-aligned) on the right; then the recorded-lineage strip and record tabs; the breadcrumb is the way back",
+        "Cuttings details no longer render a plain fact table: Vegetative lots have Overview, Rooting attempts, Photos and Lineage tabs; Rooting attempts have Overview, Observations, Offspring, Photos and Lineage tabs; each fact is stated once",
+        "Harvest details show the source in the fact label and the recorded lineage strip, with Overview and Photos tabs",
+        "A Cuttings directory row opens the record, like the other collection directories, with a record count and no floating preview",
+        "Media, Geography pages, Taxonomy and Lineage use the directory header: title and description, then one toolbar row whose search fills the width",
+        "Native ranges indicators are cards like Collection origins",
+        "On desktop the provenance site map takes most of its column, its provider note is never clipped and the quick preview stays compact and scrolls",
+        "Species distribution lists represented species inline beside the map (compact rows with readiness) instead of a modal of large cards; the selected species stays marked and in view"
+      ],
+      "dependencies": [
+        "UI-POLISH-004"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "FN-02",
       "category": "ux",
       "description": "Sort the Seeds, Sowings and Plants directories by name and by their own date",
@@ -3070,6 +3217,22 @@
       "dependencies": [
         "FN-02",
         "VIEW-001"
+      ],
+      "priority": "P3",
+      "status": "implemented"
+    },
+    {
+      "id": "UX-SORT-002",
+      "category": "ux",
+      "description": "Extend the directory Sort by control to the server-paginated Orders, Media and Cuttings (material lots and rooting attempts) directories with a whitelisted backend sort parameter",
+      "acceptance_criteria": [
+        "GET /api/v1/orders, /api/v1/media-assets, /api/v1/vegetative-lots and /api/v1/propagation-attempts accept an optional sort of name, name_desc, newest or oldest, reject any other value with 422, and keep their existing default order when sort is absent",
+        "Server ordering applies before limit/offset: names compare case-insensitively on the displayed record name, dates use the partial order, taken-or-acquired or start date (missing month/day as the start of the period) or the media date added, records without a name or date stay last, and the record id breaks ties so pages are stable",
+        "Orders, Media and Cuttings reuse DirectorySortSelect with dated options, reset to the first page on change, keep the choice across the Cuttings record type switch and filter reset, and round-trip sort through the canonical URL and Saved View state validated by saved_views/state.py and saved-views/state.ts without a database migration",
+        "PostgreSQL integration tests cover every sort on every endpoint including tie-break page walks and 422 rejection; backend saved-view tests cover accepted and rejected values; frontend tests cover the request parameter, first-page reset and URL round-trip on each screen; OpenAPI and generated declarations are regenerated"
+      ],
+      "dependencies": [
+        "UX-SORT-001"
       ],
       "priority": "P3",
       "status": "implemented"
@@ -3151,6 +3314,21 @@
       ],
       "priority": "P0",
       "status": "implemented"
+    },
+    {
+      "id": "DOC-04",
+      "category": "documentation",
+      "description": "Publish an end-user guide and unassisted G-CORE 1-9 trial record template for non-developer users",
+      "acceptance_criteria": [
+        "A person who did not develop Florabase, given only the published user guide (docs/user-guide/) and a freshly installed instance, completes G-CORE steps 1-9 without help from the author or from any agent",
+        "The trial record names the tester's role, the date, the candidate commit, the result of each step and every point where the tester stopped, using docs/release/evidence/doc-04-trial-template.md",
+        "Pass requires all nine steps completed and every stopping point either fixed in the guide or dispositioned"
+      ],
+      "dependencies": [
+        "RELEASE-SCOPE-001"
+      ],
+      "priority": "P0",
+      "status": "in_progress"
     },
     {
       "id": "CERT-05",
@@ -3405,6 +3583,25 @@
         "MOBILE-001",
         "SECURITY-001",
         "ENG-01"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "MOBILE-003",
+      "category": "mobile",
+      "description": "Usable Android release app: Florabase branding and deterministic asset generator, native file export/share and full-screen photo viewer, Android PrintManager label printing, server-driven map runtime config via /api/v1/system/info, native update banner, monotonic SemVer versionCode, env-only release signing, and opt-in GitHub Release APK workflow for Obtainium while keeping PWA unchanged",
+      "acceptance_criteria": [
+        "PWA remains unchanged (web file actions, sw.js, manifest.webmanifest, CSP, auth and their tests unmodified and green, zero @capacitor/* in frontend/package.json) with measured web bundle delta reported",
+        "Android launcher icons, adaptive icon (#f8f5e7 background), splash screens and theme (#153a2c) are generated deterministically from frontend/public/icons/ by scripts/generate-mobile-assets.py via make mobile-assets and verified byte-identical across repeated runs",
+        "Native file actions work end-to-end over Bearer auth via window.Capacitor.Plugins (Filesystem + Share scoped strictly to cache/shared/ with startup cleanup): CSV exports/templates/examples share cleanly, Media original photos open in a full-screen NativeImageViewer (revoking blob URLs on close/invalidation/unmount and reusing bytes for Share/Save), and Labels Print opens Android PrintManager via WebPrintPlugin.java",
+        "GET /api/v1/system/info returns optional runtime_config backed by validated FLORABASE_MAP_* backend settings (zero DB migration, offline safe default, https:// {z}/{x}/{y} validation, HTML attribution sanitizer allowing only text and safe https:// links) so native maps match server policy; NativeUpdateBanner prompts Obtainium/GitHub Releases when server_version > app version",
+        "Single-source scripts/mobile_version.py drives versionName and strictly monotonic versionCode across Gradle and CI; release signing reads only env/Gradle properties (no hardcoded secrets); make mobile-android-release rebuilds with VITE_MOBILE_ALLOW_DEBUG_HTTP=false, verifies apksigner (+ optional FLORABASE_ANDROID_CERT_SHA256 pin), and refuses unsigned release output",
+        "Opt-in .github/workflows/mobile-android-release.yml triggers only on completed successful Protected Florabase release workflow_run (head_sha) and workflow_dispatch (no push/pull_request triggers, job-only contents:write, pinned action SHAs, no secret leaks), leaves beta-images.yml untouched, and docs/mobile.md documents keystore creation, backup warning, secrets, and Obtainium setup"
+      ],
+      "dependencies": [
+        "MOBILE-002",
+        "MOBILE-001"
       ],
       "priority": "P2",
       "status": "implemented"

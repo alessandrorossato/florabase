@@ -61,6 +61,28 @@ const blank: SiteForm = {
   notes: "",
 };
 
+/**
+ * Scrolls only the site list (never the page) so a row chosen on the map is visible in it.
+ */
+function revealRow(row: HTMLElement | undefined) {
+  const list = row?.closest("ul");
+  if (!row || !list) return;
+  const top =
+    row.getBoundingClientRect().top -
+    list.getBoundingClientRect().top +
+    list.scrollTop;
+  const bottom = top + row.offsetHeight;
+  let target: number | null = null;
+  if (top < list.scrollTop) target = top;
+  else if (bottom > list.scrollTop + list.clientHeight)
+    target = bottom - list.clientHeight;
+  if (target === null) return;
+  const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (typeof list.scrollTo === "function")
+    list.scrollTo({ top: target, behavior: smooth ? "smooth" : "auto" });
+  else list.scrollTop = target;
+}
+
 export function ProvenanceSiteManager({
   places,
   csrfToken,
@@ -89,6 +111,8 @@ export function ProvenanceSiteManager({
     authState.status === "authenticated" && capability.isAuthorized();
   const [sites, setSites] = useState<ProvenanceSiteResponse[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Directory rows by site, so a site chosen on the map is scrolled into view in the list.
+  const rowRefs = useRef(new Map<string, HTMLButtonElement>());
   const [form, setForm] = useState<SiteForm>(blank);
   const [message, setMessage] = useState<string | null>(null);
   const [validationField, setValidationField] = useState<string | undefined>();
@@ -346,6 +370,10 @@ export function ProvenanceSiteManager({
                 {listed.map((site) => (
                   <li key={site.id}>
                     <button
+                      ref={(element) => {
+                        if (element) rowRefs.current.set(site.id, element);
+                        else rowRefs.current.delete(site.id);
+                      }}
                       type="button"
                       className="identity-list-item geography-directory-row"
                       aria-pressed={site.id === selectedId}
@@ -529,7 +557,9 @@ export function ProvenanceSiteManager({
                 }
                 onSelect={(id) => {
                   const site = mapped.find((item) => item.id === id);
-                  if (site) select(site);
+                  if (!site) return;
+                  select(site);
+                  revealRow(rowRefs.current.get(id));
                 }}
                 label="Geography map of stored provenance sites"
               />

@@ -4,6 +4,7 @@ import { navigationIcons } from "../components/navigationIcons";
 /** Every routable section. Hash routes are unchanged from UI Foundation. */
 export type Section =
   | "dashboard"
+  | WorkspaceHomeId
   | "seeds"
   | "sowings"
   | "cuttings"
@@ -23,12 +24,27 @@ export type Section =
   | "labels"
   | "account"
   | "settings"
+  | "media-settings"
   | "help"
   | "data-sources"
+  | "about"
   | "media";
 
 export type WorkspaceId =
   "today" | "collection" | "activity" | "explore" | "sourcing" | "settings";
+
+/** Workspaces with their own home page (#/collection …); Today is its own page. */
+export type WorkspaceHomeId =
+  "collection" | "activity" | "explore" | "sourcing";
+export const workspaceHomes: readonly WorkspaceHomeId[] = [
+  "collection",
+  "activity",
+  "explore",
+  "sourcing",
+];
+export function isWorkspaceHome(section: string): section is WorkspaceHomeId {
+  return (workspaceHomes as readonly string[]).includes(section);
+}
 
 /** A deep link to an existing view inside a section (no new route is created). */
 export interface SubDestination {
@@ -60,8 +76,15 @@ function param(hash: string, name: string) {
   return new URLSearchParams(hash.split("?", 2)[1] ?? "").get(name);
 }
 
+/** A workspace's own home page; every home shares the overview pictogram. */
+const overview = (section: WorkspaceHomeId): Destination => ({
+  section,
+  label: "Overview",
+  icon: "overview",
+});
+
 const destination = (
-  section: Section,
+  section: Exclude<Section, WorkspaceHomeId>,
   label: string,
   children?: SubDestination[],
 ): Destination => ({
@@ -90,26 +113,14 @@ export const workspaces: Workspace[] = [
     icon: "plant",
     summary: "Physical material you hold, and where it is kept.",
     destinations: [
+      overview("collection"),
       destination("seeds", "Seeds"),
       destination("sowings", "Sowings"),
       destination("cuttings", "Cuttings"),
-      destination("plants", "Plants", [
-        {
-          label: "Plant groups",
-          href: "#/plants?type=group",
-          matches: (hash) =>
-            pathOf(hash) === "/plants" && param(hash, "type") === "group",
-        },
-      ]),
-      destination("harvests", "Harvests", [
-        {
-          label: "Stored material",
-          href: "#/harvests?tab=stored-material",
-          matches: (hash) =>
-            pathOf(hash) === "/harvests" &&
-            param(hash, "tab") === "stored-material",
-        },
-      ]),
+      // Plant groups and Stored material are views of these pages (type filter, peer tab),
+      // not separate destinations; the menu lists only the pages themselves.
+      destination("plants", "Plants"),
+      destination("harvests", "Harvests"),
       destination("locations", "Locations"),
     ],
   },
@@ -119,6 +130,7 @@ export const workspaces: Workspace[] = [
     icon: "journal",
     summary: "What was recorded, what happened and what is planned.",
     destinations: [
+      overview("activity"),
       destination("events", "Journal"),
       destination("history", "History"),
       destination("schedule", "Schedule", [
@@ -137,6 +149,7 @@ export const workspaces: Workspace[] = [
     icon: "globe",
     summary: "Species, classification, lineage, media and geography.",
     destinations: [
+      overview("explore"),
       destination("identities", "Botanical identities"),
       destination("taxonomy", "Taxonomy"),
       destination("lineage", "Lineage"),
@@ -174,6 +187,7 @@ export const workspaces: Workspace[] = [
     icon: "store",
     summary: "Suppliers and the orders material arrived through.",
     destinations: [
+      overview("sourcing"),
       destination("suppliers", "Suppliers"),
       destination("orders", "Orders"),
     ],
@@ -182,14 +196,17 @@ export const workspaces: Workspace[] = [
     id: "settings",
     label: "Settings",
     icon: "gear",
-    summary: "Theme, printed labels, data transfer, data sources and help.",
+    summary:
+      "Theme, media defaults, printed labels, data transfer, data sources, help and release information.",
     destinations: [
       destination("account", "Account"),
       destination("settings", "Theme"),
+      destination("media-settings", "Media"),
       destination("labels", "Labels"),
       destination("import-export", "Import / Export"),
       destination("data-sources", "Data sources"),
       destination("help", "Help"),
+      destination("about", "About"),
     ],
   },
 ];
@@ -282,7 +299,11 @@ export function destinationOfHash(
       const path = hash.split("?", 1)[0];
       if (path === `#/${item.section}`)
         return {
-          label: item.label,
+          // Every home is labelled "Overview" in its menu; elsewhere it names its workspace.
+          label:
+            item.section === workspace.id
+              ? `${workspace.label} overview`
+              : item.label,
           href: `#/${item.section}`,
           icon: item.icon,
         };

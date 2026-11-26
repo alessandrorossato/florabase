@@ -69,7 +69,8 @@
   padding-inline: 0;
   margin-top: var(--space-2);
 }
-.origins-canvas > .notice {
+.origins-canvas > .notice,
+.origins-canvas > .provenance-map-frame > .notice {
   margin: 0;
   padding: var(--space-2) var(--space-3);
   font: var(--type-small);
@@ -297,4 +298,24 @@
 }
 .provenance-map .leaflet-tooltip-bottom::before {
   border-bottom-color: var(--border-strong);
+}
+
+/* "Photos on hover" (UI-POLISH-003 B1): covers below the site name in the marker tooltip. */
+.origins-tooltip-photos {
+  display: block;
+  margin-block-start: var(--space-2);
+  white-space: normal;
+}
+.origins-tooltip-photos:empty {
+  display: none;
+}
+
+/* Full screen (UI-POLISH-004): off, the frame adds no box; on, the map fills the window. */
+.provenance-map-frame:not(.is-fullscreen) {
+  display: contents;
+}
+.provenance-map-frame.is-fullscreen .provenance-map {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
 }

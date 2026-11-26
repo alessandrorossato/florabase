@@ -26,6 +26,10 @@ def read(actor: Reader, database: Database) -> ApplicationSettingsValue:
         {
             "public_qr_base_url": row.public_qr_base_url if row else None,
             "default_label_preset": row.default_label_preset if row else "medium",
+            "media_save_local_copy_default": (row.media_save_local_copy_default if row else True),
+            "media_default_attribution": row.media_default_attribution if row else None,
+            "media_default_licence_label": row.media_default_licence_label if row else None,
+            "media_default_licence_url": row.media_default_licence_url if row else None,
         }
     )
 

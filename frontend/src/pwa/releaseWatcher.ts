@@ -11,9 +11,16 @@
 export const RELEASE_URL = "/release.json";
 export const RELEASE_CHECK_INTERVAL_MS = 15 * 60 * 1000;
 
-export async function fetchReleaseFingerprint(
+export interface ReleaseInfo {
+  version: string;
+  revision: string;
+  source: string;
+}
+
+/** Reads `/release.json`; null on development servers or any malformed answer. */
+export async function fetchReleaseInfo(
   fetchImpl: typeof fetch = fetch,
-): Promise<string | null> {
+): Promise<ReleaseInfo | null> {
   try {
     const response = await fetchImpl(RELEASE_URL, {
       cache: "no-store",
@@ -23,12 +30,23 @@ export async function fetchReleaseFingerprint(
     if (!response.ok) return null;
     const body: unknown = await response.json();
     if (typeof body !== "object" || body === null) return null;
-    const { version, revision } = body as Record<string, unknown>;
+    const { version, revision, source } = body as Record<string, unknown>;
     if (typeof version !== "string" || version === "") return null;
-    return `${version}+${typeof revision === "string" ? revision : ""}`;
+    return {
+      version,
+      revision: typeof revision === "string" ? revision : "",
+      source: typeof source === "string" ? source : "",
+    };
   } catch {
     return null;
   }
+}
+
+export async function fetchReleaseFingerprint(
+  fetchImpl: typeof fetch = fetch,
+): Promise<string | null> {
+  const release = await fetchReleaseInfo(fetchImpl);
+  return release && `${release.version}+${release.revision}`;
 }
 
 export interface ReleaseWatcherOptions {

@@ -1,0 +1,252 @@
+{
+  "base": "08ff2f92d6f9b5496c04ed3b0ae5828451e35269",
+  "bootstrap": "08ff2f92d6f9b5496c04ed3b0ae5828451e35269",
+  "bootstrap_commits": [],
+  "branch": "ci/batch-14b",
+  "reconciliation": {
+    "docs/progress.md": "Retain all source milestones below the heading, move the IMPORT-002 milestones (older base) back into merge order, keep the UI-POLISH-005/004/003/002 milestones in merge order after DOC-04, restore the blank line before the ABOUT-001 heading, and place the BETA-SECURITY-001 milestone after them, and prepend the Batch 14b integration milestone listing all nine sources and superseding ci/batch-14 b59f659 (PR #228).",
+    "docs/release/evidence/wf-04-batch-14b.md": "Record Batch 14b source provenance (nine sources, BETA-SECURITY-001 PostgreSQL libxml2 2.13.9-r5 last, UI-POLISH at 31ef52a with UI-POLISH-005 and UX-SORT-002 merged in), conflict resolution, shared-file and migration notes, supersession of ci/batch-14 b59f659 (PR #228) and proposed release classes. Note the non-private QR base URL example in finding-things-and-labels.md.",
+    "docs/user-guide/README.md": "List Settings \u2192 Media in the workspace summary (MEDIA-SETTINGS-001 left it to integration); name the workspace Overview pages and stop listing Plant groups and Stored material as menu entries (UI-POLISH-002/003 navigation).",
+    "docs/user-guide/cuttings.md": "Name the Rooting attempt Observations, Offspring and Overview tabs, the header Log rooting observation action and the header Rooting row (UI-POLISH-005 record mask).",
+    "docs/user-guide/finding-things-and-labels.md": "Replace the private-network QR base URL example from DOC-04 with a non-private hostname so the beta-runtime disclosure gate passes.",
+    "docs/user-guide/reference-data.md": "Describe automatic background WFO/WCVP provisioning with FLORABASE_REFERENCES_SETUP=auto (REF-SETUP-001), otherwise manual installation."
+  },
+  "sources": [
+    {
+      "base": "b632c5c734fdab55e62230cdee99938ae34ece7e",
+      "branch": "feat/import-002-sheet-wizard",
+      "claim": "57a1bb7a13b4",
+      "commits": [
+        "220821e349c31c2f5af7f93b78d3e099af2039bc",
+        "e421fc6a71f92a3e2c02c2fb13ffd6298f7485e4",
+        "7dcbfd8ed77bf468df78dd0fbdbd3b86c9604e45",
+        "7647884657c6134b9fc84bd677a2bce346900697",
+        "c2a507faeac0d19d1c64a77cb25328b643188699"
+      ],
+      "evidence": [
+        "docs/release/evidence/import-002.md"
+      ],
+      "id": "IMPORT-002",
+      "merge": "f5021f35ec16744d653de73a7c59ec6f90e9b061",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-batch-14-source-qa",
+      "tip": "c2a507faeac0d19d1c64a77cb25328b643188699",
+      "writer": "claude-import-002"
+    },
+    {
+      "base": "08ff2f92d6f9b5496c04ed3b0ae5828451e35269",
+      "branch": "feat/ref-setup-001",
+      "claim": "f31fe9703860",
+      "commits": [
+        "1edf5fa143a0d784e6ef3f8d68e5eec8cec8f24e",
+        "e17a3181ac21a1644c7813182fe91d16aa15e75b",
+        "8ab2fdf3c41d5d0a41d0c268b23721b3a568ae75",
+        "5b14359fd160ea36cb85bf9f90191c6a11a673ff"
+      ],
+      "evidence": [
+        "docs/release/evidence/ref-setup-001.md",
+        "docs/release/evidence/ref-setup-001-design.md"
+      ],
+      "id": "REF-SETUP-001",
+      "merge": "143aaa691c45544dea91f58d58783fb0da22b3ff",
+      "resolutions": [],
+      "reviewer": "claude-batch-14-source-qa",
+      "tip": "5b14359fd160ea36cb85bf9f90191c6a11a673ff",
+      "writer": "claude-ref-setup"
+    },
+    {
+      "base": "08ff2f92d6f9b5496c04ed3b0ae5828451e35269",
+      "branch": "feat/about-001",
+      "claim": "e1eb2961e3b6",
+      "commits": [
+        "e517901668e7bcd2c72c521de1175f89ae9e704f",
+        "fb3acad69960ced0385f7878434c70c3baa1c7f5",
+        "4b9c22d97ed5a78d3d9bdbb0d5296ee03aead2a0",
+        "02008ae1b7ec15b0114afaba30689fef46e7d51a"
+      ],
+      "evidence": [
+        "docs/release/evidence/about-001.md"
+      ],
+      "id": "ABOUT-001",
+      "merge": "3f5979bb2f1a8b9be959ba5140701c7d64b91d01",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-batch-14-source-qa",
+      "tip": "02008ae1b7ec15b0114afaba30689fef46e7d51a",
+      "writer": "claude-about-001"
+    },
+    {
+      "base": "08ff2f92d6f9b5496c04ed3b0ae5828451e35269",
+      "branch": "feat/ux-sort-002",
+      "claim": "5c2525300a67",
+      "commits": [
+        "440c32899d744bab1ef0b2573e72072297e2622c",
+        "760283a6ed05f9b65111b5c25720dfd6bb13c02c",
+        "e32b57f3aa7524bc1408f2abea404e7523e99942",
+        "2bec73fee8266f3c42d7d2d18c8fa7ec6a81a398",
+        "8a92a840d8c43c8d40bf6c3f34c30a4a01e66f29",
+        "af617fc0749bf39e6746df2f53196ce3aa1cfeac"
+      ],
+      "evidence": [
+        "docs/release/evidence/ux-sort-002.md"
+      ],
+      "id": "UX-SORT-002",
+      "merge": "17654815612da01921d233007e1c0237aa43214b",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-batch-14-source-qa",
+      "tip": "af617fc0749bf39e6746df2f53196ce3aa1cfeac",
+      "writer": "claude-ux-sort-002"
+    },
+    {
+      "base": "08ff2f92d6f9b5496c04ed3b0ae5828451e35269",
+      "branch": "feat/media-settings-001",
+      "claim": "9df835c5d299",
+      "commits": [
+        "ae69dc4e1a4fefad06d356d72fabdee31e1c0c04",
+        "10acf3b7be0cb3970f801dfc86d9508ed7783845",
+        "69b5547042bfd0a96c7dd49e2792466ff50e3c8f",
+        "40e204bf058d16261f55189f8b301e02bd941632",
+        "7dbc40b469ad9b9d5c3fea68f9a383ef68f645d0",
+        "7022f8e504d670eed300840d1a98ad897aaf28ff",
+        "a237e0c90854d0de59687cc3038a3f7d32ae24dc",
+        "e9e8cd50f988714e575e6ea602d2de5f4d163320",
+        "3490d18ff3fd8c9b4f86af3625ed8611e41d646f",
+        "43d3fc7a8d1754937bf446a86bacc25059c82933",
+        "440c32899d744bab1ef0b2573e72072297e2622c",
+        "760283a6ed05f9b65111b5c25720dfd6bb13c02c",
+        "4f15c47bd8d8dccdfeb7f9f29dd10f4c7123d8ba",
+        "c6c7f74e33921303aee5075ed5133c2f277d0265",
+        "d2321c17814a1c98159c40e08b441fb2ee5c79da",
+        "a30c9aed787519dc1c3c4b8811d75081ac21cd16",
+        "756a3c86e4b2de549de3eca9c6d20c9ae26654d5",
+        "ce47c128cef4c06da8021bd446d1ac86eb6c987b",
+        "1492e9a75b3174f9b53282e311f1f5515d57d7fa",
+        "77f96009a638660c9919ca72dcde2c240096fdae"
+      ],
+      "evidence": [
+        "docs/release/evidence/media-settings-001.md"
+      ],
+      "id": "MEDIA-SETTINGS-001",
+      "merge": "a796936d2ad9a170e37f10a4f9fbf04de1de138d",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-batch-14-source-qa",
+      "tip": "77f96009a638660c9919ca72dcde2c240096fdae",
+      "writer": "claude-media-settings"
+    },
+    {
+      "base": "08ff2f92d6f9b5496c04ed3b0ae5828451e35269",
+      "branch": "feat/mobile-003-usable-app",
+      "claim": "f15e2a1dbff3",
+      "commits": [
+        "8359762657c3f1de27430eec09e9949e2b32aceb",
+        "b4fed54857219d251046e0d7593b7b64bbfbab04"
+      ],
+      "evidence": [
+        "docs/mobile.md",
+        "docs/progress.md"
+      ],
+      "id": "MOBILE-003",
+      "merge": "aa04c248f1c4f67c29d899d2f90e8b79a7154908",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-batch-14-source-qa",
+      "tip": "b4fed54857219d251046e0d7593b7b64bbfbab04",
+      "writer": "neon-mobile-003"
+    },
+    {
+      "base": "08ff2f92d6f9b5496c04ed3b0ae5828451e35269",
+      "branch": "docs/doc-04-user-guide",
+      "claim": "058a9bc3273b",
+      "commits": [
+        "bb7723966d2504073428241672b22b5059b569ef",
+        "408bad0518a506f74680ded623b03b9b34fc89b0",
+        "f44a20e848281e163efb38d6cbf55994fbc7f8c7",
+        "26227cebbb2e26d46ca171347c80564af9b02f46",
+        "1d80fa311d2f740f842ba7497447e6c2777215e7",
+        "807f620d1032ff471b11d5ce446523c7405b10ac",
+        "7e19d2f6014c10887bd49b6ba7655586dafc65c2"
+      ],
+      "evidence": [
+        "docs/release/evidence/doc-04.md",
+        "docs/release/evidence/doc-04-trial-template.md"
+      ],
+      "id": "DOC-04",
+      "merge": "7136aeadfb560498367cca99de127f9c57f63099",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-batch-14-source-qa",
+      "tip": "7e19d2f6014c10887bd49b6ba7655586dafc65c2",
+      "writer": "claude-doc-04"
+    },
+    {
+      "base": "08ff2f92d6f9b5496c04ed3b0ae5828451e35269",
+      "branch": "fix/ui-polish-beta10",
+      "claim": "9d1d65937777",
+      "commits": [
+        "df7442253bfc1fbca4c4beea4179f9d57f075877",
+        "9d1c068062d4aa91fe983981095b3dadef30909a",
+        "55fb0044d9ddb3a0e6fb348110b8eac74caa469e",
+        "f45f2d98dcf4f470ac4cd75a5b4dd36f7e6ed641",
+        "48dd1c0240647c64544ddfd34a65b92e9fd8984d",
+        "7854fa1ac20be0b48a9e730c807798229981808b",
+        "9d6705e2625fdea76d1fac72a3a8e59f753443e2",
+        "b503d84583874f136aaf4854be1323917a631387",
+        "06d45ec853cc7627ca44d902f2d6a635ea666911",
+        "1c07bd395da11dcace5ca7e15fc773da493f710c",
+        "6614f8091554ee8ee40fc24bca30f298ee68c21f",
+        "945898b5cd47d1034afe6ed5ddc4067c6af268e2",
+        "c7cdd1df36c7c0b8ec6a10df95452c00be6786e9",
+        "440c32899d744bab1ef0b2573e72072297e2622c",
+        "760283a6ed05f9b65111b5c25720dfd6bb13c02c",
+        "e32b57f3aa7524bc1408f2abea404e7523e99942",
+        "2bec73fee8266f3c42d7d2d18c8fa7ec6a81a398",
+        "8a92a840d8c43c8d40bf6c3f34c30a4a01e66f29",
+        "af617fc0749bf39e6746df2f53196ce3aa1cfeac",
+        "254f39b889057ff06232ed2bf21df7c19cd0ddd1",
+        "31ef52a9c94a60c22f7a8720b8178da8e35a60c5"
+      ],
+      "evidence": [
+        "docs/progress.md",
+        "docs/native-ranges-explore.md"
+      ],
+      "id": "UI-POLISH-003",
+      "merge": "4df61db043e536e1e39638261f0ac7def823a372",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-batch-14-source-qa",
+      "tip": "31ef52a9c94a60c22f7a8720b8178da8e35a60c5",
+      "writer": "claude-ui-polish"
+    },
+    {
+      "base": "08ff2f92d6f9b5496c04ed3b0ae5828451e35269",
+      "branch": "fix/postgres-libxml2-r5",
+      "claim": "c8b870d1ccb5",
+      "commits": [
+        "b8122d15b70f8d4735845fbeda846d44feb10e8e"
+      ],
+      "evidence": [
+        "docs/security/beta-security-001/postgres-libxml2-2.13.9-r5/README.md"
+      ],
+      "id": "BETA-SECURITY-001",
+      "merge": "2682d40baa0812f24675613b39729664faee6981",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-batch-14-source-qa",
+      "tip": "b8122d15b70f8d4735845fbeda846d44feb10e8e",
+      "writer": "claude-pg-pin"
+    }
+  ],
+  "summary": "Sheet import, auto reference data, media settings, Android, UI polish",
+  "version": 1
+}

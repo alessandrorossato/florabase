@@ -13,11 +13,18 @@ import { isVersionAtLeast, parseSemver } from "./semver";
 export const SUPPORTED_API_VERSION = 1;
 export const REQUIRED_CAPABILITY = "device-auth";
 
+export interface ServerRuntimeConfig {
+  mapOnlineEnabled: boolean;
+  mapTileUrl?: string;
+  mapAttribution?: string;
+}
+
 export interface SystemInfo {
   serverVersion: string;
   apiVersion: number;
   minClientVersion: string;
   capabilities: readonly string[];
+  runtimeConfig: ServerRuntimeConfig;
 }
 
 export type ServerCompatibilityErrorKind =
@@ -225,9 +232,30 @@ export async function checkServerCompatibility(
     return {
       ok: false,
       kind: "incompatible-client",
-      message: `This Florabase app (${appVersion}) is older than the minimum version required by your server (${minClientVersion}). Update the app before signing in.`,
+      message: `This Florabase app (${appVersion}) is older than the minimum version required by your server (${minClientVersion}). Update the app from Obtainium or GitHub Releases before signing in.`,
     };
   }
+
+  const rawRuntimeConfig =
+    typeof record.runtime_config === "object" &&
+    record.runtime_config !== null &&
+    !Array.isArray(record.runtime_config)
+      ? (record.runtime_config as Record<string, unknown>)
+      : null;
+
+  const runtimeConfig: ServerRuntimeConfig = {
+    mapOnlineEnabled: rawRuntimeConfig?.map_online_enabled === true,
+    mapTileUrl:
+      typeof rawRuntimeConfig?.map_tile_url === "string" &&
+      rawRuntimeConfig.map_tile_url.trim() !== ""
+        ? rawRuntimeConfig.map_tile_url.trim()
+        : undefined,
+    mapAttribution:
+      typeof rawRuntimeConfig?.map_attribution === "string" &&
+      rawRuntimeConfig.map_attribution.trim() !== ""
+        ? rawRuntimeConfig.map_attribution.trim()
+        : undefined,
+  };
 
   return {
     ok: true,
@@ -237,6 +265,7 @@ export async function checkServerCompatibility(
       apiVersion,
       minClientVersion,
       capabilities,
+      runtimeConfig,
     },
   };
 }

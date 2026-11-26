@@ -556,7 +556,7 @@ test("desktop context panel previews, hides and reopens without remounting the w
         { name: "Today" },
       ),
     ).toHaveAttribute("aria-current", "page");
-    // Previewing another workspace switches the panel without navigating.
+    // Selecting another workspace switches the panel and opens that workspace's home.
     const explore = screen.getByRole("tab", { name: /^Explore/ });
     await user.click(explore);
     expect(explore).toHaveAttribute("aria-selected", "true");
@@ -565,8 +565,12 @@ test("desktop context panel previews, hides and reopens without remounting the w
         screen.getByRole("navigation", { name: "Primary navigation" }),
       ).getByRole("link", { name: "Botanical identities" }),
     ).toHaveAttribute("href", "#/identities");
-    expect(window.location.hash).toBe("#/dashboard");
-    expect(screen.getByRole("heading", { name: "Today" })).toBe(dashboard);
+    expect(window.location.hash).toBe("#/explore");
+    const home = await screen.findByRole("heading", {
+      name: "Explore",
+      level: 2,
+    });
+    expect(dashboard).not.toBeInTheDocument();
     // Hiding the panel keeps the workspace mounted and returns focus to the tab.
     await user.click(
       within(sidebar).getByRole("button", { name: "Hide panel" }),
@@ -588,7 +592,10 @@ test("desktop context panel previews, hides and reopens without remounting the w
     // Selecting the open workspace again collapses it, like an activity bar.
     await user.click(explore);
     expect(shell).toHaveClass("wb-shell--collapsed");
-    expect(screen.getByRole("heading", { name: "Today" })).toBe(dashboard);
+    expect(window.location.hash).toBe("#/explore");
+    expect(screen.getByRole("heading", { name: "Explore", level: 2 })).toBe(
+      home,
+    );
     unmount();
     render(<App />);
     const reloadedShell = await screen.findByRole("complementary", {
@@ -3621,7 +3628,19 @@ test("Workbench workspaces, panels and mobile sheets retain every destination an
         .map((link) => link.textContent),
     );
   }
-  expect(reachable).toEqual(destinations);
+  // Each workspace but Today opens with its Overview home.
+  const panelLinks = [
+    ...destinations.slice(0, 1),
+    "Overview",
+    ...destinations.slice(1, 7),
+    "Overview",
+    ...destinations.slice(7, 10),
+    "Overview",
+    ...destinations.slice(10, 15),
+    "Overview",
+    ...destinations.slice(15),
+  ];
+  expect(reachable).toEqual(panelLinks);
   await user.click(within(sidebar).getByRole("tab", { name: /^Today/ }));
   expect(within(nav).getByRole("link", { name: "Today" })).toHaveAttribute(
     "aria-current",
@@ -3634,6 +3653,12 @@ test("Workbench workspaces, panels and mobile sheets retain every destination an
   const mobileReachable: string[] = [];
   for (const button of within(mobile).getAllByRole("button")) {
     await user.click(button);
+    // Today goes straight to Today; it has no sheet of its own.
+    if (button.textContent === "Today") {
+      expect(window.location.hash).toBe("#/dashboard");
+      mobileReachable.push("Today");
+      continue;
+    }
     const sheet = screen.getByRole("dialog", {
       name: button.textContent,
     });
@@ -3645,7 +3670,7 @@ test("Workbench workspaces, panels and mobile sheets retain every destination an
     );
     await user.click(within(sheet).getByRole("button", { name: "Close" }));
   }
-  expect(mobileReachable).toEqual(destinations);
+  expect(mobileReachable).toEqual(panelLinks);
   const routes = [
     "dashboard",
     "seeds",
@@ -4811,6 +4836,8 @@ test.each([false, true])(
     if (empty) {
       directoryEmpty = true;
       await openSection(user, "Seeds");
+      // The Collection tab opened its home before Seeds: step back over both.
+      await browserBack();
       await browserBack();
       // Preserve sidebar focus on cross-workspace history; explicitly enter the
       // loaded record before testing its directory return.

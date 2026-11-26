@@ -2770,6 +2770,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sheet-imports/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply Sheet Import */
+        post: operations["applySheetImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sheet-imports/inspect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Inspect Sheet Import */
+        post: operations["inspectSheetImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sheet-imports/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Sheet Import */
+        post: operations["previewSheetImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sowings": {
         parameters: {
             query?: never;
@@ -3047,6 +3098,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/references": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** System References */
+        get: operations["getSystemReferences"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/vegetative-lots": {
         parameters: {
             query?: never;
@@ -3267,6 +3335,14 @@ export interface components {
              * @enum {string}
              */
             default_label_preset: "small" | "medium" | "large";
+            /** Media Default Attribution */
+            media_default_attribution: string | null;
+            /** Media Default Licence Label */
+            media_default_licence_label: string | null;
+            /** Media Default Licence Url */
+            media_default_licence_url: string | null;
+            /** Media Save Local Copy Default */
+            media_save_local_copy_default: boolean;
             /** Public Qr Base Url */
             public_qr_base_url: string | null;
         };
@@ -3501,6 +3577,13 @@ export interface components {
             /** Detail */
             detail: string | components["schemas"]["PasswordError"];
         };
+        /** Body_applySheetImport */
+        Body_applySheetImport: {
+            /** File */
+            file: string;
+            /** Options */
+            options: string;
+        };
         /** Body_createAttachment */
         Body_createAttachment: {
             /**
@@ -3508,6 +3591,28 @@ export interface components {
              * @description JPEG, PNG, or WebP attachment
              */
             file: string;
+        };
+        /** Body_inspectSheetImport */
+        Body_inspectSheetImport: {
+            /** File */
+            file: string;
+            /** Header Row */
+            header_row?: number | null;
+            /**
+             * Record Type
+             * @default plants
+             * @enum {string}
+             */
+            record_type: "plants" | "plant-groups" | "seed-lots";
+            /** Sheet Name */
+            sheet_name?: string | null;
+        };
+        /** Body_previewSheetImport */
+        Body_previewSheetImport: {
+            /** File */
+            file: string;
+            /** Options */
+            options: string;
         };
         /** Body_setLocalBotanicalIdentityCoverImage */
         Body_setLocalBotanicalIdentityCoverImage: {
@@ -3528,6 +3633,10 @@ export interface components {
              * @description JPEG, PNG, or WebP collection photo
              */
             file: string;
+            /** Licence Label */
+            licence_label?: string | null;
+            /** Licence Url */
+            licence_url?: string | null;
         };
         /** Body_uploadMediaAsset */
         Body_uploadMediaAsset: {
@@ -3535,6 +3644,10 @@ export interface components {
             attribution?: string | null;
             /** File */
             file: string;
+            /** Licence Label */
+            licence_label?: string | null;
+            /** Licence Url */
+            licence_url?: string | null;
             /** Title */
             title?: string | null;
         };
@@ -5344,6 +5457,11 @@ export interface components {
             source?: components["schemas"]["WfoMetadata"] | null;
             /** Source Available */
             source_available: boolean;
+            /**
+             * Source Preparing
+             * @default false
+             */
+            source_preparing: boolean;
         };
         /** ImportDecisionOption */
         ImportDecisionOption: {
@@ -7531,6 +7649,25 @@ export interface components {
             /** Source Code Type */
             source_code_type: string | null;
         };
+        /** ReferenceSetupIndexStatus */
+        ReferenceSetupIndexStatus: {
+            /** Available */
+            available: boolean;
+            /** Reason */
+            reason?: ("network" | "checksum" | "size" | "build" | "disk") | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "off" | "preparing" | "ready" | "failed" | "manual";
+            /** Status */
+            status: string;
+        };
+        /**
+         * ReferencesSetupMode
+         * @enum {string}
+         */
+        ReferencesSetupMode: "off" | "auto";
         /**
          * ReintegrationEligibilityStatus
          * @enum {string}
@@ -7678,6 +7815,18 @@ export interface components {
              * @enum {string}
              */
             stage: "callus" | "root_initials" | "rooted" | "loss" | "inspection";
+        };
+        /** RuntimeConfigResponse */
+        RuntimeConfigResponse: {
+            /** Map Attribution */
+            map_attribution?: string | null;
+            /**
+             * Map Online Enabled
+             * @default false
+             */
+            map_online_enabled: boolean;
+            /** Map Tile Url */
+            map_tile_url?: string | null;
         };
         /** SavedViewCreate */
         SavedViewCreate: {
@@ -8199,6 +8348,239 @@ export interface components {
             /** User Id */
             user_id: string;
         };
+        /** SheetImportApplyResponse */
+        SheetImportApplyResponse: {
+            /** Created Records */
+            created_records: components["schemas"]["SheetImportCreatedRecord"][];
+            /** Identities Created */
+            identities_created: number;
+            /** Locations Created */
+            locations_created: number;
+            /**
+             * Record Type
+             * @enum {string}
+             */
+            record_type: "plants" | "plant-groups" | "seed-lots";
+            /** Records Created */
+            records_created: number;
+            /** Suppliers Created */
+            suppliers_created: number;
+        };
+        /** SheetImportCandidate */
+        SheetImportCandidate: {
+            /** Details */
+            details: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string;
+            /**
+             * Match Kind
+             * @enum {string}
+             */
+            match_kind: "exact" | "near";
+        };
+        /** SheetImportColumn */
+        SheetImportColumn: {
+            /** Header */
+            header: string;
+            /** Index */
+            index: number;
+            /** Key */
+            key: string;
+            /** Samples */
+            samples: string[];
+            suggested_field: components["schemas"]["SheetImportField"] | null;
+        };
+        /** SheetImportCreatedRecord */
+        SheetImportCreatedRecord: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Identity Label */
+            identity_label: string;
+            /** Label */
+            label: string;
+        };
+        /**
+         * SheetImportField
+         * @enum {string}
+         */
+        SheetImportField: "scientific_name" | "cultivar_name" | "common_name" | "label" | "location" | "supplier" | "collection_entry_date" | "acquisition_date" | "harvest_date" | "expected_viability_until" | "quantity_value" | "quantity_approximate" | "quantity_kind" | "quantity_unit" | "direct_origin_kind" | "direct_origin_detail" | "source_kind" | "source_detail" | "lifecycle" | "notes";
+        /** SheetImportIdentityGroup */
+        SheetImportIdentityGroup: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "use_existing" | "create";
+            /** Candidates */
+            candidates?: components["schemas"]["SheetImportCandidate"][];
+            /** Common Name */
+            common_name: string | null;
+            /** Cultivar Name */
+            cultivar_name: string | null;
+            /** Key */
+            key: string;
+            /** Matched Id */
+            matched_id?: string | null;
+            /** Matched Label */
+            matched_label?: string | null;
+            /** Messages */
+            messages?: string[];
+            /** Row Count */
+            row_count: number;
+            /** Scientific Name */
+            scientific_name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "matched" | "new" | "invalid";
+        };
+        /** SheetImportInspectResponse */
+        SheetImportInspectResponse: {
+            /** Allowed Fields */
+            allowed_fields: components["schemas"]["SheetImportField"][];
+            /** Columns */
+            columns: components["schemas"]["SheetImportColumn"][];
+            /** Detected Header Row */
+            detected_header_row: number;
+            /**
+             * Format
+             * @enum {string}
+             */
+            format: "csv" | "xlsx";
+            /** Header Row */
+            header_row: number;
+            /** Row Count */
+            row_count: number;
+            /** Sample Rows */
+            sample_rows: string[][];
+            /** Selected Sheet */
+            selected_sheet: string | null;
+            /** Sheets */
+            sheets: string[];
+        };
+        /** SheetImportLocationGroup */
+        SheetImportLocationGroup: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "use_existing" | "create" | "skip";
+            /** Candidates */
+            candidates?: components["schemas"]["SheetImportCandidate"][];
+            /** Create Name */
+            create_name?: string | null;
+            /** Key */
+            key: string;
+            /** Matched Id */
+            matched_id?: string | null;
+            /** Matched Label */
+            matched_label?: string | null;
+            /** Messages */
+            messages?: string[];
+            /** Parent Id */
+            parent_id?: string | null;
+            /** Raw Value */
+            raw_value: string;
+            /** Row Count */
+            row_count: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "matched" | "new" | "ambiguous" | "skipped" | "invalid";
+        };
+        /** SheetImportPreviewResponse */
+        SheetImportPreviewResponse: {
+            /** Can Apply */
+            can_apply: boolean;
+            /** Confirmation Token */
+            confirmation_token: string;
+            /** Identities */
+            identities: components["schemas"]["SheetImportIdentityGroup"][];
+            /** Invalid */
+            invalid: number;
+            /** Locations */
+            locations: components["schemas"]["SheetImportLocationGroup"][];
+            /** Needs Attention */
+            needs_attention: number;
+            /** Ready */
+            ready: number;
+            /**
+             * Record Type
+             * @enum {string}
+             */
+            record_type: "plants" | "plant-groups" | "seed-lots";
+            /** Rows */
+            rows: components["schemas"]["SheetImportPreviewRow"][];
+            /** Suppliers */
+            suppliers: components["schemas"]["SheetImportSupplierGroup"][];
+            /** Will Create Identities */
+            will_create_identities: number;
+            /** Will Create Locations */
+            will_create_locations: number;
+            /** Will Create Suppliers */
+            will_create_suppliers: number;
+        };
+        /** SheetImportPreviewRow */
+        SheetImportPreviewRow: {
+            /** Hard Blocker */
+            hard_blocker: boolean;
+            /** Messages */
+            messages: string[];
+            /** Normalized */
+            normalized: string[];
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "ready" | "already_exists" | "needs_choice" | "invalid" | "unresolved_reference" | "ambiguous_reference" | "conflict";
+            /** Record */
+            record: string;
+            /** References */
+            references: string[];
+            /** Row Number */
+            row_number: number;
+        };
+        /** SheetImportSupplierGroup */
+        SheetImportSupplierGroup: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "use_existing" | "create" | "skip";
+            /** Candidates */
+            candidates?: components["schemas"]["SheetImportCandidate"][];
+            /** Create Name */
+            create_name?: string | null;
+            /** Key */
+            key: string;
+            /** @default other */
+            kind: components["schemas"]["SupplierKind"];
+            /** Matched Id */
+            matched_id?: string | null;
+            /** Matched Label */
+            matched_label?: string | null;
+            /** Messages */
+            messages?: string[];
+            /** Raw Value */
+            raw_value: string;
+            /** Row Count */
+            row_count: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "matched" | "new" | "ambiguous" | "skipped" | "invalid";
+        };
         /** SourceAdjustment */
         SourceAdjustment: {
             /**
@@ -8281,6 +8663,11 @@ export interface components {
             link?: components["schemas"]["WcvpLinkResponse"] | null;
             /** Message */
             message?: string | null;
+            /**
+             * Preparing
+             * @default false
+             */
+            preparing: boolean;
             source?: components["schemas"]["SourceMetadata"] | null;
         };
         /** SourceTaxonomicAssessmentResponse */
@@ -8881,8 +9268,15 @@ export interface components {
             capabilities: string[];
             /** Min Client Version */
             min_client_version: string;
+            runtime_config: components["schemas"]["RuntimeConfigResponse"];
             /** Server Version */
             server_version: string;
+        };
+        /** SystemReferencesResponse */
+        SystemReferencesResponse: {
+            mode: components["schemas"]["ReferencesSetupMode"];
+            wcvp_v16: components["schemas"]["ReferenceSetupIndexStatus"];
+            wfo: components["schemas"]["ReferenceSetupIndexStatus"];
         };
         /** TargetChoiceResponse */
         TargetChoiceResponse: {
@@ -9142,6 +9536,11 @@ export interface components {
             source?: components["schemas"]["WfoMetadata"] | null;
             /** Source Available */
             source_available: boolean;
+            /**
+             * Source Preparing
+             * @default false
+             */
+            source_preparing: boolean;
             /** Unresolved */
             unresolved: number;
         };
@@ -14372,6 +14771,7 @@ export interface operations {
                 target?: ("collection" | "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier" | "vegetative_lot" | "propagation_attempt") | null;
                 limit?: number;
                 offset?: number;
+                sort?: ("name" | "name_desc" | "newest" | "oldest") | null;
             };
             header?: never;
             path?: never;
@@ -14808,6 +15208,7 @@ export interface operations {
             query?: {
                 q?: string;
                 supplier_id?: string | null;
+                sort?: ("name" | "name_desc" | "newest" | "oldest") | null;
                 offset?: number;
                 limit?: number;
             };
@@ -15924,6 +16325,7 @@ export interface operations {
                 mother_plant_id?: string | null;
                 mother_plant_group_id?: string | null;
                 location_id?: string | null;
+                sort?: ("name" | "name_desc" | "newest" | "oldest") | null;
                 offset?: number;
                 limit?: number;
             };
@@ -17164,6 +17566,108 @@ export interface operations {
             };
         };
     };
+    applySheetImport: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Import-Confirmation"?: string | null;
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_applySheetImport"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SheetImportApplyResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    inspectSheetImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_inspectSheetImport"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SheetImportInspectResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    previewSheetImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_previewSheetImport"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SheetImportPreviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     listSowings: {
         parameters: {
             query?: never;
@@ -17846,6 +18350,26 @@ export interface operations {
             };
         };
     };
+    getSystemReferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemReferencesResponse"];
+                };
+            };
+        };
+    };
     listVegetativeLots: {
         parameters: {
             query?: {
@@ -17858,6 +18382,7 @@ export interface operations {
                 mother_plant_group_id?: string | null;
                 location_id?: string | null;
                 has_known_mother?: boolean | null;
+                sort?: ("name" | "name_desc" | "newest" | "oldest") | null;
                 offset?: number;
                 limit?: number;
             };

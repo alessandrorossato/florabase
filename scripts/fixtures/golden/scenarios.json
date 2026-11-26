@@ -72,17 +72,17 @@
           "provenance.without_coordinates": 1
         },
         "baseline": {
-          "schema_revision": "20261125_0049",
+          "schema_revision": "20261125_0050",
           "volume": 12,
           "plan_sha256": "5afd6ffe46fce10ac62b1ef1233c9944d8c206bef9d407ce4396b5e6ce64b0d7",
-          "canonical_sha256": "2a0557747c691e10e9fa9ed4e81737b826e29369948d69b4466acab538ba7ea3",
+          "canonical_sha256": "aa02d4ca87abf6029013fd1021bd3c42cc37acdfac348b11e9aa445facd36d0d",
           "media_files": 3,
           "media_sha256": "d3583210516d857e6f7c8c8c78a2c3e051d8fe31d001bb0f420c226bc5b39f6e",
           "scenario_keys_sha256": "e7d0d666d58604b23a8d3a8d8cd661b839265743501ad742225c3998a9ec7ffa",
           "tables": {
             "application_settings": {
               "rows": 1,
-              "sha256": "b127b493476585f2fb04cf764ea0f2e9f03c5e1802d52e2488d64b3286a2c13d"
+              "sha256": "30c42aef74431a0b5948cabea9a726dbc90cd4ee624bffe1f0b5df2bb3f8821a"
             },
             "attachments": {
               "rows": 3,
@@ -385,17 +385,17 @@
           "taxonomy.unresolved": 84
         },
         "baseline": {
-          "schema_revision": "20261125_0049",
+          "schema_revision": "20261125_0050",
           "volume": 420,
           "plan_sha256": "8a1da67623c1f9c77071cf39e9bd0346a72483fa2a71cf5f1438877eb81c8c3f",
-          "canonical_sha256": "86fadc8e3581d4ee63a6feb520a688aa8b76d7fbd70e3078aa0cdbaf6b129fe7",
+          "canonical_sha256": "caba470aa86dc07e92a1d18e32f86bd3cdef68e9c47f76abf62e0584ee4320a4",
           "media_files": 34,
           "media_sha256": "50894e8a2283bf88349875824e1d3615d70d15be2ff43f708038c72a715afb93",
           "scenario_keys_sha256": "f72fe62a3ec0bc139a4f6d18ba730e5218467d8a8fc98699214b38cfc5001971",
           "tables": {
             "application_settings": {
               "rows": 1,
-              "sha256": "b127b493476585f2fb04cf764ea0f2e9f03c5e1802d52e2488d64b3286a2c13d"
+              "sha256": "30c42aef74431a0b5948cabea9a726dbc90cd4ee624bffe1f0b5df2bb3f8821a"
             },
             "attachments": {
               "rows": 32,

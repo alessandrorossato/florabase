@@ -3,6 +3,12 @@
 Living guides and reference documents live at the top level of `docs/`. Finished per-increment
 handoffs, design notes, reviews and evidence are archived under [`archive/`](archive/).
 
+## Use Florabase
+
+- [End-user guide](user-guide/README.md) — everyday collection guide for home growers and
+  small-collection keepers (concepts, first hour, daily use, harvest and seed saving, cuttings,
+  search and labels, CSV import/export, optional reference data, troubleshooting)
+
 ## Install & operate
 
 - [Install Florabase](installation.md) — self-hosting with the single `compose.yaml`, upgrades,

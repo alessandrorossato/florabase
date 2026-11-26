@@ -21,13 +21,19 @@ test.each([
   ["Labels", "Tools", "#/labels"],
   ["Import / Export", "Tools", "#/import-export"],
 ])(
-  "%s uses a group and current page without an invented group link",
+  "%s uses a group and current page; only a workspace with a home links its group",
   (title, group, hash) => {
     const items = workspaceBreadcrumbs(title, group, hash);
     if (!items) throw new Error("Expected workspace breadcrumb");
     render(<Breadcrumbs items={items} />);
     const nav = screen.getByRole("navigation", { name: "Breadcrumb" });
-    expect(within(nav).queryAllByRole("link")).toHaveLength(0);
+    const links = within(nav).queryAllByRole("link");
+    if (["Application", "Tools"].includes(group)) expect(links).toHaveLength(0);
+    else {
+      expect(links).toHaveLength(1);
+      expect(links[0]).toHaveAccessibleName(group);
+      expect(links[0]).toHaveAttribute("href", `#/${group.toLowerCase()}`);
+    }
     expect(
       within(nav)
         .getAllByRole("listitem")

@@ -240,8 +240,9 @@ export function NativeRangeEnrichmentPanel({
           </button>
           {source && !source.available && (
             <p className="notice">
-              {source.message} Recorded ranges remain usable. Ask your
-              installation operator to provision the reviewed snapshot.
+              {source.preparing
+                ? `${source.message ?? ""} Recorded ranges remain usable.`.trim()
+                : `${source.message ?? ""} Recorded ranges remain usable. Ask your installation operator to provision the reviewed snapshot.`.trim()}
             </p>
           )}
           {source?.source && (

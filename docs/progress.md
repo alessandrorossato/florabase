@@ -1,5 +1,378 @@
 # Engineering progress
 
+## 2026-11-26 — Batch 14b integration (IMPORT-002, REF-SETUP-001, ABOUT-001, UX-SORT-002, MEDIA-SETTINGS-001, MOBILE-003, DOC-04, UI-POLISH-002/003/004/005, BETA-SECURITY-001)
+
+- `ci/batch-14b` from `origin/main` `08ff2f9` (writer `claude-batch-14b`; supersedes the published
+  `ci/batch-14` `b59f659` / PR #228, whose hosted `rehearse` failed after Alpine withdrew `libxml2`
+  `2.13.9-r3`) merges, in order,
+  `feat/import-002-sheet-wizard` `c2a507f`, `feat/ref-setup-001` `5b14359`, `feat/about-001`
+  `02008ae`, `feat/ux-sort-002` `af617fc`, `feat/media-settings-001` `77f9600`,
+  `feat/mobile-003-usable-app` `b4fed54`, `docs/doc-04-user-guide` `7e19d2f` and
+  `fix/ui-polish-beta10` `31ef52a` (UI-POLISH-002, UI-POLISH-003, UI-POLISH-004 and UI-POLISH-005;
+  it already contains `af617fc`, so its UX-SORT-002 milestone merged into the single existing
+  block) and, ninth, `fix/postgres-libxml2-r5` `b8122d1` (BETA-SECURITY-001: PostgreSQL image
+  `18.6-alpine-florabase.6` with `libxml2=2.13.9-r5`); only `docs/progress.md` conflicted and was resolved additively. The IMPORT-002
+  milestones (source based on older `b632c5c`) are moved back into merge order. Single Alembic head `20261125_0050` on
+  `20261125_0049`. The sources now carry the `CHANGELOG.md` user-guide entry (REF-SETUP-001) and the
+  `README.md` Settings → Media mention (ABOUT-001); reconciliation lists Settings → Media and the
+  workspace Overview pages in the user guide and documents automatic reference provisioning there.
+  Evidence: [wf-04-batch-14b.md](release/evidence/wf-04-batch-14b.md).
+- Checks on the integrated tree: `make api-generate` (no drift), `check-features.py`,
+  `check-doc-links.py`, `make test-beta-runtime`, `make test-beta-images`, `make workflow-check`,
+  `make check` and `make test-integration`. Canonical
+  FULL follows the recorded exact-head review.
+
+## 2026-11-25 — IMPORT-002 spreadsheet wizard frontend pass
+
+- On `feat/import-002-sheet-wizard` (writer `claude-import-002`), after merging `origin/main`
+  `b632c5c` (MOBILE-002; only `docs/progress.md` conflicted). Review notes L1/L2 were already fixed
+  in `7dcbfd8` (`neon`) and are covered by `test_xlsx_trailing_formula_only_row_detected_and_counted`.
+- Added `frontend/src/import-export/SheetImportWizard.tsx` (six steps: upload with sheet and header
+  row, row type, column mapping with browser-remembered mapping, grouped review of species,
+  locations and suppliers with `WfoNameInput` reuse, rows with "Only problems", import result with
+  links) and `sheetApi.ts`; launcher in `ImportExportScreen.tsx`, the per-type import marked
+  Advanced and otherwise unchanged.
+- Fixed a dead end found in the UI run: an empty first XLSX sheet made inspect fail before the sheet
+  picker appeared; without an explicit sheet the parser now opens the first sheet with data.
+- Checks: backend ruff, mypy, import unit suites (53 passed), IMPORT-001 + IMPORT-002 integration
+  (20 passed); frontend Prettier, tsc, ESLint, Vitest `src/import-export` (8 passed); manual UI run of
+  all seven samples on a UAT instance. Evidence: [import-002.md](release/evidence/import-002.md).
+  Canonical FULL pending (operator).
+
+## 2026-11-24 — IMPORT-002 single-sheet CSV/XLSX import wizard (backend pass)
+
+- On `feat/import-002-sheet-wizard` from `origin/main` `ddf5a14` (writer `neon`); backend-only pass
+  while waiting for `ci/batch-12` and `feat/mobile-002-device-auth` to land on `main` before the
+  frontend wizard pass (which will reuse batch 12's `WfoNameInput`).
+- Narrow refactor of `backend/src/florabase/import_export/service.py`: extracted
+  `build_rows(kind, sources, refs)` from `preview(...)` and added optional `PendingReference`
+  support (`pending=None` default) on `References` so preview can validate collection rows against
+  not-yet-created identities, suppliers, and locations while keeping IMPORT-001 byte-identical.
+- Added `backend/src/florabase/import_wizard/` (`sheet.py`, `mapping.py`, `schemas.py`,
+  `service.py`, `api.py`), mounted from `import_export/api.py` under `/api/v1/sheet-imports/*`
+  (`inspect`, `preview`, `apply`; `operation_id`s `inspectSheetImport`, `previewSheetImport`,
+  `applySheetImport`) to avoid route collision with `/api/v1/imports/{kind}/*`.
+  - Pinned `openpyxl==3.1.5` (MIT, pulls `et-xmlfile==2.0.0`, MIT) in `backend/pyproject.toml` and
+    regenerated `backend/requirements.lock` and `backend/requirements-dev.lock`.
+  - Enforced 2 MiB upload, 2,000 nonblank rows, 60 columns, one sheet, header row 1–10, 30 MiB
+    uncompressed zip budget, 100:1 compression ratio, bounded `<!DOCTYPE`/`<!ENTITY` rejection,
+    `read_only=True`/`data_only=True` cached-value-only parsing, and a bounded `data_only=False`
+    second pass to flag uncached formulas as invalid if mapped and ignore them if unmapped.
+  - Added EN/IT header auto-suggestions (`quantity_value` omitted for Plants), optional
+    `append_unmapped_to_notes`, grouped identity/location/supplier review with near-match
+    suggestions and explicit `skip` visibility ("will be left empty"), 15-minute session-bound
+    HMAC-SHA256 confirmation, and single-transaction apply that creates identities → suppliers →
+    locations, rebuilds `References` from the DB to re-run `build_rows`, and rolls back with `409`
+    on any conflict or row-outcome drift.
+- Copied synthetic fixtures from `import-samples.zip` as-is into `backend/tests/fixtures/sheet/`,
+  added unit (`backend/tests/test_import_wizard.py`) and PostgreSQL integration tests
+  (`backend/tests/integration/test_import_wizard_api.py`), regenerated `backend/openapi.json` and
+  `frontend/src/api/schema.d.ts`, mapped `import_wizard/` and `fixtures/sheet/` in
+  `scripts/verification-impact.json`, extended `docs/import-export.md`, and registered `IMPORT-002`
+  (`in_progress` in `docs/features.json`, `best-effort` in `docs/release/scope-v1.json`, both right
+  after `IMPORT-001`).
+- Backend review fixes (`M1`, `M2`):
+  - **M1 (confirmed preview state digest)**: added `preview_state_digest(plan)` over per-group
+    `(key, action, matched_id)` for identities, locations, and suppliers plus `row_count` and
+    per-row outcomes; bound it inside the HMAC confirmation token (`issued.preview_digest.sig`)
+    and verified it inside `apply_sheet` before creating any entity (returning `409` `"validate
+    again"` with zero writes when e.g. a Location with the same path is created between preview
+    and apply).
+  - **M2 (formatted blank XLSX rows)**: raised `MAX_SCANNED_ROWS` to `200_000`, enforced
+    `MAX_ROWS` strictly on nonblank rows, stopped storing trailing/empty rows during CSV/XLSX
+    scanning, and bounded the `data_only=False` formula pass by `last_nonblank_row` (verified on
+    a 2-data-row XLSX with a formatted empty cell at `A50000`).
+- Checks passed: `make check` (`doc-links` 364 docs, `format-check` 447 backend + Prettier, `lint`
+  Ruff + ESLint, `typecheck` strict mypy 392 files + tsc, `api-check` zero drift, `test-backend`
+  1356 passed / 3 skipped / 90.55% coverage, `test-frontend` 133 files / 1437 passed),
+  re-verified after M1/M2 fixes with `ruff format --check`, `ruff check`, strict `mypy` (392
+  files), `make api-check`, focused unit suite (`test_import_export.py`, `test_import_export_api.py`,
+  `test_import_wizard.py`: 51 passed), and `./scripts/test-integration.sh` on
+  `test_import_export_api.py` + `test_import_wizard_api.py` (20 passed), plus earlier
+  `scripts/test_check_api_routes.py` (27 passed), `make license-check` (PyPI + 290 npm packages,
+  0 forbidden), `scripts/check-features.py` (181 valid), and `scripts/test-verification-impact.py`
+  (46 OK). Not yet run: frontend wizard UI (pending batch 12 + `MOBILE-002` merge into this branch)
+  and final canonical FULL `make feature-verify`.
+
+## 2026-11-25 — REF-SETUP-001 automatic background reference index provisioning
+
+- On `feat/ref-setup-001` from `origin/main` `b632c5c` (writer `neon-ref-setup-001`), targeting
+  Batch 14 alongside `IMPORT-002` with zero edits to `import_export/`, `import_wizard/`, or
+  frontend import screens.
+- Added `FLORABASE_REFERENCES_SETUP` (`off` default when unset | `auto`) and
+  `FLORABASE_REFERENCES_STATE_DIR` (default `/var/lib/florabase/data/state/reference`) in
+  `backend/src/florabase/core/config.py`, enabled `- FLORABASE_REFERENCES_SETUP=auto` in
+  `compose.yaml` (50 lines, keeping ADR 0009/0010 contract), and updated
+  `scripts/test-beta-runtime.py`.
+- Centralized pinned archive streaming in `backend/src/florabase/core/reference_index.py`
+  (`download_archive()` with configurable `max_seconds=1800`, `follow_redirects=False`,
+  `Content-Length`/streaming byte bounds, and multi-header `content-type` validation for Zenodo's
+  duplicate `application/octet-stream` headers), added `taxonomy/snapshot.py::download()`
+  (`Accept: */*`, exact 132,643,291-byte check, checksum before ZIP parse), and reused it in
+  `native_range_enrichment/snapshot.py::download()`.
+- Added `backend/src/florabase/reference_setup/` (`state.py`, `lock.py`, `worker.py`, `runner.py`):
+  FastAPI `lifespan()` starts a lightweight coordinator task only in `auto` mode (no I/O in
+  start-up; every seal/readiness check runs in a worker thread), spawning sequential `os.nice(10)` worker subprocesses holding an inter-process
+  `fcntl` lock in `state/reference/` (`0700`), cleaning stale `.staging-*` directories on start,
+  running a `(archive + expected_index) * 1.2` free-space pre-check (`failed: disk`), staging
+  with `TMPDIR`/`SQLITE_TMPDIR` inside `state/reference/`, atomically publishing sealed indexes,
+  deleting downloaded archives, terminating cleanly on `SIGTERM` with zero partial publish,
+  logging one sanitized warning line per failure (`network`/`checksum`/`size`/`build`/`disk`),
+  retrying at most once every 6 hours while not ready, and exiting with zero idle work once ready.
+  Managed WCVP v16 enforces `require_seal=True`; `off` mode keeps using existing valid sealed
+  managed indexes (`ready (setup off)`) with zero outbound requests; manual paths are skipped,
+  never written, and reported as `manual`.
+- Kept unauthenticated `GET /api/v1/system/info` unchanged, added authenticated read-only
+  `GET /api/v1/system/references` (`SystemReferencesResponse`, `ReferenceSetupIndexStatus`),
+  regenerated `backend/openapi.json` and `frontend/src/api/schema.d.ts`, added a read-only
+  **Reference index status** block in **Settings → Data sources**, and updated unavailable notices
+  in Taxonomy and Native Range panels for background preparation.
+- Updated `docs/installation.md`, `docs/dev-references.md`,
+  `docs/security/beta-distribution-001/sqlite-reference-indexes.md`, `CHANGELOG.md` (`Unreleased`
+  upgrade note), `docs/features.json` (`REF-SETUP-001`, `implemented`, next to WCVP/taxonomy),
+  `docs/release/scope-v1.json` (`"best-effort"`), and recorded Phase 1 design and Phase 2 evidence
+  (including live real-archive worker run: WFO `126.78 s` / `166.4 MiB` RSS / `413,069,312` B;
+  WCVP v16 `87.90 s` / `67.2 MiB` RSS / `952,799,232` B) in
+  [ref-setup-001-design.md](release/evidence/ref-setup-001-design.md) and
+  [ref-setup-001.md](release/evidence/ref-setup-001.md).
+- Verified focused backend unit tests (`test_reference_setup.py`, 17 passed), PostgreSQL
+  integration tests (`tests/integration/test_reference_setup.py`, 3 passed), frontend checks
+  (`HelpAndSources.test.tsx`, `TaxonomyScreen.test.tsx`, `NativeRangeEnrichmentPanel.test.tsx`,
+  34 passed), `scripts/test-beta-runtime.py` (17 passed), `scripts/check-features.py`, `doc-links`,
+  `api-check`, and `git merge-tree` against `feat/import-002-sheet-wizard` (`7dcbfd8`: clean
+  auto-merge on all code, `openapi.json`, `schema.d.ts`, `features.json`, and `scope-v1.json`;
+  expected additive-only conflict in `docs/progress.md`). Canonical FULL
+  `make feature-verify AGENT_ID=neon-ref-setup-001` runs on the frozen committed tree.
+- Review fixes (writer `claude-ref-setup`, takeover of `neon-ref-setup-001`): M1 coordinator
+  `start()` only creates the task and all `is_index_ready()` calls run via `asyncio.to_thread`, so
+  seal hashing (~1.37 GB) never blocks the lifespan or `/api/v1/health`; S1 the runner passes
+  `TMPDIR`/`SQLITE_TMPDIR` in the worker environment pointing at a fixed per-index
+  `.staging-<index>` directory created under the lock; S2 a `checksum` failure is not retried until
+  restart (pinned release no longer served upstream, documented in `installation.md`); S3 the
+  WCVP DEV CLI keeps its 240 s bound; S4/S5 wording on the seal (corruption, not tampering) and
+  on manual paths; S6 structured `source_preparing` (`TaxonomyTree`, `IdentityTaxonomy`) and
+  `preparing` (`SourceStatus`) flags replace frontend substring matching, without repeating the
+  server sentence. Focused checks: `test_reference_setup.py` (19 passed), native range and
+  taxonomy backend tests, integration `test_reference_setup.py` (3 passed), ruff, mypy, frontend
+  typecheck/lint/prettier and taxonomy/botanical-profiles/settings vitest (64 passed),
+  `api-generate` + `api-check`.
+
+## 2026-11-25 — ABOUT-001 Settings → About page and official data-source links
+
+- On `feat/about-001` from `origin/main` `b632c5c`, merged with `origin/main` `08ff2f9` (writer
+  `claude-about-001`), targeting Batch 14.
+  Frontend only: no backend, OpenAPI, migration or Compose change.
+- Added Settings → About (`#/about`, `frontend/src/settings/AboutScreen.tsx`): version and short
+  image revision from the image's `/release.json` (exported `fetchReleaseInfo`, now shared with the
+  update watcher), project link, the tag's `CHANGELOG.md` and release notes, and the bundled
+  `/LICENSE` and `/THIRD_PARTY_NOTICES.txt`.
+- Settings → Data sources gains a "Links" column: official site and data-source page for WFO
+  (2026-06 on Zenodo), Kew WCVP, GBIF (API docs), Natural Earth (download page) and OpenStreetMap
+  (tile usage policy).
+- Checks: Vitest `src/settings src/shell src/pwa src/App.test.tsx src/App.lazy.test.tsx` (251 tests),
+  `pnpm typecheck`, `pnpm lint`, `prettier --check src`. Evidence:
+  [docs/release/evidence/about-001.md](release/evidence/about-001.md).
+- Unresolved: canonical `make feature-verify` not yet run; `docs/progress.md`, `docs/features.json`
+  and `DataSourcesScreen.tsx` also change on `feat/ref-setup-001` (see evidence for merge check).
+
+## 2026-11-25 — UX-SORT-002 server-side Sort by for Orders, Media and Cuttings
+
+- On `feat/ux-sort-002` from `feat/fn-05-directory-sort` `760283a` (UX-SORT-001), realigned by
+  merging `origin/main` `08ff2f9` (batch 13, #227). Writer `claude-ux-sort-002`.
+- Added `backend/src/florabase/db/ordering.py` (`DirectorySort`, `directory_order()`) and an optional
+  whitelisted `sort` (`name`, `name_desc`, `newest`, `oldest`; anything else 422) on
+  `/api/v1/orders`, `/api/v1/media-assets`, `/api/v1/vegetative-lots` and
+  `/api/v1/propagation-attempts`. Ordering runs in SQL before `limit`/`offset`, compares names
+  case-insensitively on the displayed name, orders partial dates with missing month/day at the start
+  of the period, keeps missing names/dates last and breaks ties by id. Defaults are unchanged.
+- Orders, Media and Cuttings reuse `DirectorySortSelect` (dated options), reset to the first page on
+  change and round-trip `sort` through URL and Saved View state (`OrderState`, `MediaState`,
+  `CuttingsState`; `frontend/src/saved-views/state.ts`). No migration; OpenAPI regenerated.
+- Registered `UX-SORT-002` (`implemented`, `best-effort`). Evidence:
+  [ux-sort-002.md](release/evidence/ux-sort-002.md). Known limit: SQL `lower()` is not the browser's
+  natural numeric compare (`Batch 10` before `Batch 9`).
+- Focused checks: ruff/mypy, pnpm format/lint/typecheck, vitest (orders, media, cuttings, saved views,
+  components), backend unit tests, `make api-check`, and PostgreSQL integration for
+  `product/test_directory_sort.py` plus the orders, cuttings API, shared media and saved-view suites (68
+  passed). The canonical `make feature-verify` is run by the operator.
+
+## 2026-11-25 — Settings → Media defaults (`MEDIA-SETTINGS-001`)
+
+- On `feat/media-settings-001` from `ci/batch-13` `756a3c8`, realigned by merging `origin/main`
+  `08ff2f9` (Batch 13, #227) (writer `claude-media-settings`).
+  Migration `20261125_0050` on `20261125_0049` adds four media-default columns to
+  `application_settings`; single Alembic head `20261125_0050`.
+- New Settings → Media page: the saved default only pre-selects "Save a local copy" (no automatic
+  fetch, privacy contract unchanged); default attribution/licence prefill only the owner's own
+  uploads. Local uploads now accept `licence_label`/`licence_url`. OpenAPI regenerated; golden
+  smoke/comprehensive baselines updated for the new schema revision.
+- Checks: `make test-backend`, focused integration (settings, settings migration, attachment API),
+  `make golden-dataset-check`, `make golden-dataset-comprehensive-check`, `make test-frontend`,
+  `make lint`, `make typecheck`, `check-features.py`. Evidence: [media-settings-001.md](release/evidence/media-settings-001.md).
+
+## 2026-11-25 — MOBILE-003 usable Android release app (branding, file actions, runtime config, signed APK & Obtainium workflow)
+
+- On `feat/mobile-003-usable-app` from `origin/main` `b632c5c` (writer `neon-mobile-003`). Zero DB
+  migrations; PWA (`sw.js`, `manifest.webmanifest`, `nginx.conf`, web file actions/auth) unchanged.
+- **Branding & deterministic assets:** Added `scripts/generate-mobile-assets.py` (`make mobile-assets`,
+  using the pinned Pillow toolchain) to generate all Android `mipmap-*` launcher/round/foreground
+  icons (adaptive background `#f8f5e7`), `drawable*/splash.png`, Android 12+ `Theme.SplashScreen`,
+  and `values/colors.xml` (`#153a2c`) from `frontend/public/icons/`, removing unused Capacitor
+  template vector drawables. Determinism + zero drift against committed assets enforced in
+  `make workflow-check`.
+- **Native file actions, viewer & printing:** Added pinned FOSS `@capacitor/filesystem@8.1.5` and
+  `@capacitor/share@8.0.3` in `mobile/package.json` only (zero `@capacitor/*` in
+  `frontend/package.json`), scoped `file_paths.xml` strictly to `<cache-path name="shared" path="shared/" />`,
+  and wiped `cache/shared/` on `MainActivity.onCreate` and JS boot. Implemented lazy-loaded
+  `frontend/src/mobile/fileActions.ts` + `NativeImageViewer.tsx` (revoking blob URLs on close,
+  capability invalidation, and unmount, and reusing fetched bytes for Share/Save without refetching)
+  and in-repo AOSP `WebPrintPlugin.java` (`android.print.PrintManager` +
+  `webView.createPrintDocumentAdapter`) wired from `LabelsScreen.tsx` on native. Fixed
+  `activeCsrfToken()` in Bearer mode so domain save dialogs (such as `QrDestinationDialog`) do not
+  short-circuit on an empty CSRF string while keeping web/cookie auth identical.
+- **Runtime map config & update banner:** Extended `GET /api/v1/system/info` with optional
+  `runtime_config` (`map_online_enabled`, `map_tile_url`, `map_attribution`) backed by optional
+  `FLORABASE_MAP_*` settings in `backend/src/florabase/core/config.py` (offline default `false`,
+  strict `https://` + `{z}/{x}/{y}` validation), regenerated `backend/openapi.json` and
+  `frontend/src/api/schema.d.ts`, added HTML attribution sanitization (`sanitizeMapAttribution`
+  allowing only text and `https://` links with `rel="noopener noreferrer" target="_blank"`) in
+  `frontend/src/provenance-map/config.ts`, and added native-only `NativeUpdateBanner` in
+  `NativeApp.tsx` pointing to Obtainium / GitHub Releases when `server_version > appVersion`.
+- **Version, signing & opt-in release workflow:** Added single-source `scripts/mobile_version.py`
+  (`versionName` from `frontend/package.json`; monotonic `versionCode` formula verified across
+  alpha/beta/rc/stable + overflow/invalid-SemVer cases) used by `mobile/android/app/build.gradle`,
+  `scripts/mobile-android-release.sh` (`make mobile-android-release`), and
+  `.github/workflows/mobile-android-release.yml`. Signing reads strictly from env/Gradle properties
+  (refusing partial config or unsigned release output; optional `FLORABASE_ANDROID_CERT_SHA256`
+  pin check after `apksigner verify --print-certs`). Added opt-in
+  `.github/workflows/mobile-android-release.yml` triggered only on successful
+  `Protected Florabase release` `workflow_run` (`head_sha`) and `workflow_dispatch` (job-level
+  `contents: write`, pinned action SHAs, `beta-images.yml` untouched). Extended
+  `MobileReleaseContract` in `scripts/test-beta-runtime.py`, updated `docs/mobile.md` (keystore
+  creation, backup warning, GitHub secrets, Obtainium setup) and `docs/deployment.md`, and
+  registered `MOBILE-003` (`implemented`, `post-1.0`) in `docs/features.json` and
+  `docs/release/scope-v1.json`.
+- **Evidence:** Web bundle delta vs `b632c5c`: `index-*.js` `-1,434 B` raw / `-565 B` gzip
+  (`303,439 B -> 302,005 B`, `92,349 B -> 91,784 B`), `index-*.css` `+0 B`. Verified
+  `make mobile-android-release` with throwaway PKCS12 keystore (`florabase-0.1.0-beta.9.apk`,
+  `versionCode=100309`, `apksigner verify --print-certs` + cert-pin match & mismatch refusal +
+  missing-vars refusal + fresh install on Android 16 AOSP emulator). Verified 7-step live Android
+  16 AOSP emulator E2E against isolated worktree UAT (removed cleanly afterward): Bearer sign-in,
+  offline map default, CSV export to `cache/shared/` + Android share sheet, `NativeImageViewer`
+  original photo + zero-refetch Share/Save, Labels Print launching Android `PrintSpooler`,
+  restart `cache/shared/` wipe, and proxy-verified `NativeUpdateBanner` (`9.9.9`) + server
+  `runtime_config` Online basemap opt-in. Note: `actionlint` is not installed on this host;
+  workflow structure and security contracts are validated via `yaml.safe_load`, `bash -n`, and
+  `make workflow-check` / `MobileReleaseContract`. Canonical FULL `make feature-verify
+  AGENT_ID=neon-mobile-003` runs on the frozen tree before commit.
+
+## 2026-11-25 — DOC-04 guide updated for v0.1.0-beta.9
+
+- On `docs/doc-04-user-guide` (writer `claude-doc-04`, takeover of Argon's claim). Merged
+  `origin/main` `b632c5c`; conflicts in `CHANGELOG.md`, `docs/progress.md` and `docs/features.json`
+  kept both sides, with the guide line in a new `Unreleased` section.
+- Documented WFO name suggestions, **Save and add another**, searchable reference fields, the
+  Seeds/Sowings/Plants sort list, the identity cover and Explore → Media; resolved all
+  `TODO(DOC-04 after batch 12)` markers. Record in
+  [`docs/release/evidence/doc-04.md`](release/evidence/doc-04.md); details in the handoff § 7.
+- Checks: `python3 scripts/check-features.py`, `python3 scripts/check-doc-links.py`, label grep
+  against `frontend/src`. Open: batch 13/14 features, screenshots, unassisted trial.
+
+## 2026-11-23 — DOC-04 End-user guide and unassisted G-CORE trial template
+
+- On `docs/doc-04-user-guide` from `origin/main` `ddf5a14` (writer `argon-doc-04`).
+- Published the ten-page end-user guide under [`docs/user-guide/`](user-guide/README.md)
+  ([`README.md`](user-guide/README.md), [`concepts.md`](user-guide/concepts.md),
+  [`first-hour.md`](user-guide/first-hour.md), [`daily-use.md`](user-guide/daily-use.md),
+  [`harvest-and-seed-saving.md`](user-guide/harvest-and-seed-saving.md),
+  [`cuttings.md`](user-guide/cuttings.md),
+  [`finding-things-and-labels.md`](user-guide/finding-things-and-labels.md),
+  [`your-data.md`](user-guide/your-data.md),
+  [`reference-data.md`](user-guide/reference-data.md),
+  [`troubleshooting.md`](user-guide/troubleshooting.md)) covering `G-CORE` steps 1–9 end-to-end for a
+  non-developer user on a freshly installed instance, plus step 12 (Cuttings), using exact UI
+  navigation and form labels from `frontend/src/` and placing `TODO(DOC-04 screenshot)` and
+  `TODO(DOC-04 after batch 12)` markers for candidate screenshots and batch-12 overlap areas.
+- Added the unassisted trial record template at
+  [`docs/release/evidence/doc-04-trial-template.md`](release/evidence/doc-04-trial-template.md) and
+  the archived handoff (coverage map, marker index, doc-vs-code discrepancies, and source label
+  provenance) at [`docs/archive/DOC-04/handoff.md`](archive/DOC-04/handoff.md).
+- Linked the user guide from [`docs/README.md`](README.md), root [`README.md`](../README.md), and
+  [`CHANGELOG.md`](../CHANGELOG.md), and registered `DOC-04` (`in_progress`, proposed release class
+  `release-work` pending the unassisted release-candidate trial) in [`docs/features.json`](features.json)
+  and [`docs/release/scope-v1.json`](release/scope-v1.json).
+- Verified `python3 scripts/check-features.py`, `python3 scripts/check-doc-links.py`,
+  `make verification-plan FORMAT=json` (`"tier": "docs"`), and canonical
+  `make feature-verify AGENT_ID=argon-doc-04` (`docs` tier).
+
+## 2026-11-26 — One record mask and one list header (`UI-POLISH-005`)
+
+- Same branch; Alessandro chose to make every Collection detail uniform in beta.10.
+- Seed lot is the reference: Sowing, Plant and Plant group lose the extra Back/New bar on
+  detail pages and keep actions left-aligned; Sowing's identity reads like Seed lot's.
+- Harvest: source moves to the fact label and the lineage strip; Overview and Photos tabs.
+- Cuttings: `LotPage` and `AttemptPage` now use `DetailHeader` (plate, label, lineage strip)
+  and `DetailTabs`; the directory opens records on click and shows a record count.
+- Lists: Media, Geography pages, Taxonomy and Lineage use the directory header.
+- Native ranges cards follow Collection origins; provenance site map grows, preview scrolls;
+  Species distribution lists species inline instead of in a modal.
+- Checked against a local golden COMPREHENSIVE dataset (Postgres 16 + backend in the cloud
+  session) at desktop width; `tsc -b`, ESLint, Prettier, full Vitest against the baseline.
+
+## 2026-11-26 — Final beta.10 UI round (`UI-POLISH-004`)
+
+- Same branch; Alessandro's last UAT round before beta.10. Species distribution density
+  rendering is deferred to after beta.10 at his request.
+- Settings cards full width; Help and home tiles share `shell/sectionDescriptions.ts`.
+- Workspace homes add an "Across …" indicator row (`workspaces/glance.ts`); Explore reads the
+  native-range overview and provenance map, Sourcing reads suppliers and one order page.
+- Native ranges: rounded map frame; the inspector always shows Places then Plants/Species.
+- Collapsed rail keeps its buttons in place; provenance-site list is full height on desktop.
+- `useFullscreen` / `FullscreenButton` / `FullscreenStage`: an in-page overlay (not the
+  Fullscreen API, so dialogs and tooltips stay usable), Escape exits.
+- Checks: `tsc -b`, ESLint, Prettier; full Vitest compared with `main` in this cloud session.
+
+## 2026-11-26 — Workspace homes, map hover photos, Native ranges (`UI-POLISH-003`)
+
+- Same branch as `UI-POLISH-002`; Alessandro approved proposals A1, B1 and C1 for beta.10.
+- A1: `WorkspaceHome` gives Collection, Activity, Explore and Sourcing an Overview page of
+  sub-section tiles with Today-summary counts and first actions; the Today tab goes straight to
+  Today and workspace crumbs link to their home.
+- B1: "Photos on hover" switch (default off, per page, `localStorage`) on Native ranges and
+  Collection origins shows up to four primary identity images in the map tooltip.
+- C1: Native ranges opens with By place / By species, photo result cards and a one-line KPI row.
+- Checks: `tsc -b`, ESLint and Prettier clean; focused Vitest suites pass. Canonical gate not run
+  here.
+
+## 2026-11-26 — Batch 14 UAT UI polish (`UI-POLISH-002`)
+
+- On `claude/project-thread-gz6ru6` from `origin/main` `08ff2f9`, frontend-only source for batch 14.
+- Lineage tab adds "Recorded from this record" (direct descendants from the ancestry endpoint), so
+  a purchased Seed lot with sowings no longer reads "No recorded lineage". Identity lineage and the
+  ancestry explorer drop the dotted canvas and draw nested levels with elbow connectors.
+- Today drops the photo strip (`DashboardPhotos.tsx` removed; the API `photos` field is unchanged)
+  and stretches the supporting column. Sidebar no longer pins Plant groups and Stored material.
+- GBIF search button aligned; provenance-site list keeps six to seven rows and follows map
+  selection; the map pans to a list selection. Vite serves `/LICENSE` and
+  `/THIRD_PARTY_NOTICES.txt` in DEV/UAT; nginx serves `/LICENSE` as `text/plain`.
+- Checks: `tsc -b`, ESLint and Prettier on the changed areas; focused Vitest suites pass. The full
+  Vitest run in the cloud session has the same pre-existing environment failures as `main`
+  (Node 22; e.g. `IdentityRecordMedia`, `TreeExplorer`, SeedLot botanical cover) and no new ones.
+  Canonical gate not run here.
+
+## 2026-11-26 — BETA-SECURITY-001 PostgreSQL libxml2 (`.6`)
+
+- On `fix/postgres-libxml2-r5` from `origin/main` `08ff2f9` (writer `claude-pg-pin`), security
+  source for Batch 14. The PR #228 `rehearse` check failed because Alpine 3.24 withdrew
+  `libxml2` `2.13.9-r3`; `postgres/Dockerfile` pins `libxml2=2.13.9-r5` and
+  `18.6-alpine-florabase.6`, and `release/inputs.json` pins the reproduced index `fa3d7957…de9b`
+  and platform `b61292b4…1a3d`. Upstream base and other pins are unchanged.
+  [Evidence](security/beta-security-001/postgres-libxml2-2.13.9-r5/README.md).
+- Checks: two pinned-BuildKit `postgres-identity` builds (second with `--check`),
+  `make test-beta-images`, `make test-beta-runtime`, `make workflow-check`, `make doc-links`,
+  `check-features.py`.
+- Open: independent QA, canonical FULL, the hosted rehearsal and operator delivery.
+
 ## 2026-11-25 — Batch 13 integration (DOCS-004, PROPAGATION-BATCH-001, CARE-BULK-001/FN-03, UX-SORT-001, MEDIA-FETCH-001)
 
 - `ci/batch-13` from `origin/main` `b632c5c` (writer `claude-batch-13`) merges, in order,

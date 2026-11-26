@@ -2,7 +2,7 @@
 
 Florabase's Progressive Web App (PWA) remains a first-class channel. The Android app under `mobile/` wraps the **same** React/TypeScript production bundle from `frontend/` using Capacitor — there is no forked UI codebase.
 
-> **Status (`MOBILE-002`):** The Android app supports connecting to a self-hosted Florabase server, checking compatibility via `GET /api/v1/system/info`, signing in with an opaque Bearer device session stored in Android Keystore, browsing/editing the collection with inline photos, and managing connected devices from Settings → Account. See [ADR 0011](decisions/0011-mobile-device-sessions.md) for the device-session transport and security design.
+> **Status (`MOBILE-003`):** The Android app ships with Florabase branding (launcher, adaptive icon, splash), native file export/sharing via `@capacitor/filesystem` + `@capacitor/share` (scoped `FileProvider` cache), a full-screen original-photo viewer with share/save, Android `PrintManager` label printing, server-driven map runtime configuration (`GET /api/v1/system/info`), a native update banner pointing to Obtainium / GitHub Releases, deterministic SemVer-derived `versionCode`, and signed release APK builds (`make mobile-android-release` + opt-in GitHub Release workflow). See [ADR 0011](decisions/0011-mobile-device-sessions.md) for the device-session transport and security design.
 
 ## Prerequisites
 
@@ -50,7 +50,7 @@ What this target runs:
 1. `make mobile-sync MOBILE_DEBUG_HTTP=true`:
    - Builds `frontend/dist` inside the repository's quality frontend container with `VITE_MOBILE_ALLOW_DEBUG_HTTP=true` (enabling local debug HTTP URLs such as `http://10.0.2.2:5173`).
    - Runs `pnpm --dir mobile install --frozen-lockfile`.
-   - Runs `pnpm --dir mobile exec cap sync android` to copy `frontend/dist` and register Capacitor plugins (`@capacitor/app`, `@capacitor/preferences`).
+   - Runs `pnpm --dir mobile exec cap sync android` to copy `frontend/dist` and register Capacitor plugins (`@capacitor/app`, `@capacitor/filesystem`, `@capacitor/preferences`, `@capacitor/share`).
 2. Runs `./gradlew assembleDebug` inside `mobile/android/`.
 
 Output APK path (gitignored):
@@ -64,6 +64,131 @@ To sync without enabling debug local-HTTP mode (matching release JS validation):
 ```bash
 make mobile-sync
 ```
+
+## Branding assets (`make mobile-assets`)
+
+Android launcher icons, adaptive icons (`#f8f5e7` background matching the PWA maskable icon), splash screens (`#153a2c` background matching `manifest.webmanifest`), and theme colors are derived deterministically from `frontend/public/icons/florabase-maskable-512.png` and `frontend/public/icons/florabase-512.png` by `scripts/generate-mobile-assets.py`.
+
+To regenerate them reproducibly using the pinned Pillow toolchain:
+
+```bash
+make mobile-assets
+```
+
+Do not hand-edit generated Android PNGs directly; update the canonical icons under `frontend/public/icons/` and rerun `make mobile-assets`.
+
+## Version naming and `versionCode` formula
+
+`mobile/android/app/build.gradle` reads both `versionName` and `versionCode` from a single source of truth (`scripts/mobile_version.py`), which derives them from `frontend/package.json`:
+
+```text
+versionCode = major * 10_000_000 + minor * 100_000 + patch * 1_000 + stageOffset
+```
+
+- Bounds: `major` 0–209, `minor` 0–99, `patch` 0–99.
+- `stageOffset`: `-alpha.N` → `N` (`1..299`), `-beta.N` → `300 + N` (`301..599`), `-rc.N` → `600 + N` (`601..899`), stable → `900`.
+- Examples: `0.1.0-beta.9` → `100309`, `0.1.0-beta.10` → `100310`, `0.1.0-rc.1` → `100601`, `0.1.0` → `100900`, `0.1.1` → `101900`, `1.0.0-rc.1` → `10000601`, `1.0.0` → `10000900`.
+
+Invalid SemVer strings or out-of-range components fail the build immediately rather than producing a colliding `versionCode`.
+
+## Release signing, keystore setup, and GitHub Releases
+
+> **CRITICAL BACKUP WARNING:** Your Android signing keystore is the permanent cryptographic identity of `io.github.alessandrorossato.florabase`. **If you lose the keystore or its passwords, Android will reject all future APK updates and every Obtainium / sideload user will have to uninstall and reinstall the app (losing their local server link and device session).** Never commit the keystore to Git. Keep an encrypted offline backup in at least two independent locations (for example, your password manager and an encrypted offline drive).
+
+### 1. Create the release keystore once
+
+Run this once on a trusted machine outside the repository (for example in `~/.config/florabase-signing/`):
+
+```bash
+mkdir -p ~/.config/florabase-signing && chmod 700 ~/.config/florabase-signing
+keytool -genkeypair -v \
+  -keystore ~/.config/florabase-signing/florabase-release.p12 \
+  -storetype PKCS12 \
+  -keyalg RSA \
+  -keysize 4096 \
+  -validity 10000 \
+  -alias florabase-release \
+  -dname "CN=Florabase, OU=Mobile, O=Florabase"
+chmod 600 ~/.config/florabase-signing/florabase-release.p12
+```
+
+### 2. Record the signing certificate SHA-256 fingerprint
+
+Read the certificate SHA-256 fingerprint once:
+
+```bash
+keytool -list -v \
+  -keystore ~/.config/florabase-signing/florabase-release.p12 \
+  -alias florabase-release | grep -i "SHA256:"
+```
+
+Save the 64-character hex digest (colons optional) as the optional GitHub Actions **repository variable** `FLORABASE_ANDROID_CERT_SHA256` (Settings → Secrets and variables → Actions → Variables). When set, both `make mobile-android-release` and CI compare `apksigner verify --print-certs` against this fingerprint and fail if a wrong or rotated key is used.
+
+### 3. Build and verify a signed release APK locally
+
+```bash
+export FLORABASE_ANDROID_KEYSTORE="$HOME/.config/florabase-signing/florabase-release.p12"
+export FLORABASE_ANDROID_STORE_PASSWORD="<store-password>"
+export FLORABASE_ANDROID_KEY_ALIAS="florabase-release"
+export FLORABASE_ANDROID_KEY_PASSWORD="<key-password>"
+# Optional certificate pin check:
+# export FLORABASE_ANDROID_CERT_SHA256="<sha256-hex>"
+
+make mobile-android-release
+```
+
+`make mobile-android-release` always rebuilds `frontend/dist` with `VITE_MOBILE_ALLOW_DEBUG_HTTP=false` (so a previous debug build can never leak into a release APK), builds `./gradlew assembleRelease`, verifies the APK with `apksigner verify --print-certs`, checks `FLORABASE_ANDROID_CERT_SHA256` if set, and writes:
+
+```text
+mobile/android/app/build/outputs/apk/release/florabase-<version>.apk
+mobile/android/app/build/outputs/apk/release/florabase-<version>.apk.sha256
+```
+
+If any of the four signing variables are missing, `make mobile-android-release` refuses to emit a release APK and prints which variables are missing. Unsigned local `./gradlew assembleRelease` and debug `make mobile-android-debug` builds continue to work without signing variables.
+
+### 4. Configure GitHub Actions secrets for automatic release APK attachment
+
+Encode the keystore to single-line base64 without echoing it to shell history or logs:
+
+```bash
+base64 -w 0 ~/.config/florabase-signing/florabase-release.p12 | pbcopy   # or xclip / wl-copy
+```
+
+In GitHub (**Settings → Secrets and variables → Actions → Secrets**), add:
+
+| Secret | Value |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | Base64-encoded `.p12` / `.jks` keystore file |
+| `ANDROID_STORE_PASSWORD` | Keystore store password |
+| `ANDROID_KEY_ALIAS` | Key alias (e.g. `florabase-release`) |
+| `ANDROID_KEY_PASSWORD` | Key password |
+
+And optionally under **Variables**:
+
+| Variable | Value |
+| --- | --- |
+| `FLORABASE_ANDROID_CERT_SHA256` | Expected Signer #1 certificate SHA-256 fingerprint |
+
+The opt-in workflow [`.github/workflows/mobile-android-release.yml`](../.github/workflows/mobile-android-release.yml) runs automatically after **Protected Florabase release** (`beta-images.yml`) succeeds (checking out `workflow_run.head_sha`, asserting that tag `v<version>` points at that exact commit and has a published GitHub Release), or manually via `workflow_dispatch` with an existing `tag` input. It never runs on pull requests and never modifies the container image release pipeline.
+
+## Installing and updating with Obtainium
+
+[Obtainium](https://obtainium.imranr.dev/) tracks Florabase's signed GitHub Release APKs directly without Google Play Services:
+
+1. Tap **Add App** in Obtainium.
+2. **App Source URL:** `https://github.com/alessandrorossato/florabase`
+3. **Filter APKs by Regular Expression:** `^florabase-.*\.apk$`
+4. For beta releases (`v0.1.0-beta.*`), enable **Include prereleases**.
+5. Tap **Add** and install the verified APK.
+
+When your Florabase server is upgraded to a version newer than the installed APK, the app displays a non-blocking banner prompting you to update from Obtainium or GitHub Releases. If the server's `min_client_version` exceeds the app version, sign-in is blocked until you update.
+
+## Runtime map configuration and file actions in the app
+
+- **Map basemap opt-in:** The Android app reads `runtime_config` (`map_online_enabled`, `map_tile_url`, `map_attribution`) directly from `GET /api/v1/system/info` without executing remote scripts. Defaults stay strictly offline unless the server operator sets `FLORABASE_MAP_ONLINE_ENABLED=true` (and optionally `FLORABASE_MAP_TILE_URL` / `FLORABASE_MAP_ATTRIBUTION` — see [deployment guide](deployment.md#provenance-map-basemap)). Network-supplied attribution HTML is sanitized to plain text and `https://` links before Leaflet renders it.
+- **CSV exports & attachments:** Downloads are fetched with Bearer auth, written exclusively inside the app's private cache subfolder (`cache/shared/`, the only path exposed by `file_paths.xml`), and handed to the Android share sheet so you can save or send them. Ephemeral shared files are wiped automatically on the next app start.
+- **Original photos:** Tapping **Open original image** in Media opens a full-screen in-app viewer (revoking the blob URL on close, auth invalidation, and unmount) with a **Share / Save** button that reuses the already-fetched bytes without re-downloading.
+- **Label printing:** Tapping **Print** on the Labels screen invokes Android's built-in `PrintManager` (`WebPrintPlugin.java`) to open Android's Print / Save-as-PDF preview using Florabase's print stylesheet.
 
 > **Generated files:** Never commit `mobile/android/local.properties`, `*.apk`, `*.aab`, `*.keystore`, `*.jks`, or Gradle `build/` outputs. Gradle resolves the SDK via `ANDROID_HOME` without needing a checked-in `local.properties`.
 

@@ -7,14 +7,20 @@ from collections.abc import Sequence
 from contextlib import closing
 from functools import lru_cache
 from pathlib import Path
-from typing import Final, Literal
+from typing import Final, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from florabase.core.config import Settings
 from florabase.core.reference_index import (
     SchemaContract,
     UnsupportedIndexError,
     open_reference_index,
+)
+from florabase.reference_setup.state import (
+    PREPARING_UNAVAILABLE_MESSAGE,
+    is_index_preparing,
+    resolve_wfo_target,
 )
 
 VERSION: Final = "2026-06"
@@ -85,6 +91,10 @@ class SourceUnavailableError(Exception):
     pass
 
 
+class SourcePreparingError(SourceUnavailableError):
+    """The managed index is missing because background setup is still preparing it."""
+
+
 class WfoMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
     provider: Literal["wfo"] = "wfo"
@@ -148,11 +158,19 @@ def _normalize_batch_keys(names: Sequence[str]) -> list[str]:
 
 
 class WfoSource:
-    def __init__(self, path: Path | None):
+    def __init__(self, path: Path | None, *, managed: bool = False):
         self.path = path
+        self.managed = managed
+
+    @classmethod
+    def from_settings(cls, settings: Settings) -> Self:
+        path, managed = resolve_wfo_target(settings)
+        return cls(path, managed=managed)
 
     def connect(self) -> sqlite3.Connection:
         if self.path is None or not self.path.is_file() or self.path.stat().st_size > 1_000_000_000:
+            if self.managed and is_index_preparing("wfo"):
+                raise SourcePreparingError(PREPARING_UNAVAILABLE_MESSAGE)
             raise SourceUnavailableError("The reviewed WFO taxonomy source is not installed.")
         try:
             stat = self.path.stat()
