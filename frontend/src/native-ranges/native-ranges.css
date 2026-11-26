@@ -816,3 +816,24 @@
   background: none;
   max-height: none;
 }
+
+/* UI-POLISH-005 review: phones keep the compact cards (short label, no context, two per row)
+   so the map stays near the top; these follow the desktop card rules above to win. */
+@media (max-width: 48rem) {
+  .native-ranges .native-statistics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .app-content .native-ranges .native-metric {
+    padding: var(--space-2);
+  }
+  .native-ranges .native-metric .native-metric-label-full,
+  .native-ranges .native-metric .ui-metric__context {
+    display: none;
+  }
+  .native-ranges .native-metric .native-metric-label-short {
+    display: inline;
+  }
+  .native-ranges .native-metric .ui-metric__value {
+    font: var(--type-h3);
+  }
+}

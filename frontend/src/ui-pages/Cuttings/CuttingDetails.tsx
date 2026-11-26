@@ -180,14 +180,6 @@ function LotFacts({ lot }: { lot: Lot }) {
         <dt>Initial quantity</dt>
         <dd>{countLabel(lot.initial_quantity)}</dd>
       </div>
-      {lot.location_id && (
-        <div>
-          <dt>Location</dt>
-          <dd>
-            <a href={`#/locations/${lot.location_id}`}>Open holding location</a>
-          </dd>
-        </div>
-      )}
       {lot.supplier_id && (
         <div>
           <dt>Supplier</dt>
@@ -279,7 +271,12 @@ export function LotPage({ id, token }: { id: string; token: string }) {
   return (
     <Page titleId="cutting-lot-title" className="cuttings-record">
       {data.state === "loading" && (
-        <LoadingState>Loading vegetative lot…</LoadingState>
+        <>
+          <h2 id="cutting-lot-title" className="sr-only">
+            Vegetative lot
+          </h2>
+          <LoadingState>Loading vegetative lot…</LoadingState>
+        </>
       )}
       {data.state === "error" && (
         <>
@@ -443,7 +440,7 @@ function LotRecord({
           className="detail-tab-panel"
         >
           <section aria-labelledby="cutting-lot-facts">
-            <h4 id="cutting-lot-facts">Material and source</h4>
+            <h3 id="cutting-lot-facts">Material and source</h3>
             <LotFacts lot={lot} />
           </section>
         </div>
@@ -456,7 +453,7 @@ function LotRecord({
           className="detail-tab-panel"
         >
           <section aria-labelledby="cutting-lot-attempts">
-            <h4 id="cutting-lot-attempts">Rooting attempts</h4>
+            <h3 id="cutting-lot-attempts">Rooting attempts</h3>
             {lot.attempts.length ? (
               <ul className="lineage-list">
                 {lot.attempts.map((attempt) => (
@@ -503,7 +500,7 @@ function LotRecord({
           className="detail-tab-panel"
         >
           <section aria-labelledby="cutting-lot-lineage">
-            <h4 id="cutting-lot-lineage">Maternal lineage</h4>
+            <h3 id="cutting-lot-lineage">Maternal lineage</h3>
             <LineagePanel kind="vegetative-lots" id={id} />
           </section>
         </div>
@@ -1256,7 +1253,7 @@ function AttemptRecord({
           className="detail-tab-panel"
         >
           <section aria-labelledby="rooting-lineage">
-            <h4 id="rooting-lineage">Maternal lineage</h4>
+            <h3 id="rooting-lineage">Maternal lineage</h3>
             <LineagePanel kind="propagation-attempts" id={id} />
           </section>
         </div>
@@ -1299,7 +1296,12 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
   return (
     <Page titleId="cutting-attempt-title" className="cuttings-record">
       {data.state === "loading" && (
-        <LoadingState>Loading rooting attempt…</LoadingState>
+        <>
+          <h2 id="cutting-attempt-title" className="sr-only">
+            Rooting attempt
+          </h2>
+          <LoadingState>Loading rooting attempt…</LoadingState>
+        </>
       )}
       {data.state === "error" && (
         <>
@@ -1362,9 +1364,9 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
               className="detail-tab-panel"
             >
               <section aria-labelledby="rooting-overview">
-                <h4 id="rooting-overview" ref={overview} tabIndex={-1}>
+                <h3 id="rooting-overview" ref={overview} tabIndex={-1}>
                   Rooting overview
-                </h4>
+                </h3>
                 <dl className="record-facts">
                   {attempt.ended_on && (
                     <div>
@@ -1439,7 +1441,7 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
               className="detail-tab-panel"
             >
               <section aria-labelledby="rooting-timeline">
-                <h4 id="rooting-timeline">Rooting observations</h4>
+                <h3 id="rooting-timeline">Rooting observations</h3>
                 {attempt.observations.length ? (
                   <ol className="lineage-list">
                     {attempt.observations.map((item) => (
@@ -1478,7 +1480,7 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
               className="detail-tab-panel"
             >
               <section aria-labelledby="rooting-offspring">
-                <h4 id="rooting-offspring">Established offspring</h4>
+                <h3 id="rooting-offspring">Established offspring</h3>
                 {summary.state === "loading" && (
                   <LoadingState>Loading offspring…</LoadingState>
                 )}

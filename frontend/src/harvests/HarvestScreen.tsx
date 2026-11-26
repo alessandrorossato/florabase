@@ -273,9 +273,15 @@ export function HarvestScreen({
     }
   }
   const displayId = editor && edit.modal ? backgroundId : initialId;
-  const [detailTab, setDetailTab] = useState<"overview" | "photos">(
-    initialTab === "photos" ? "photos" : "overview",
-  );
+  const routeTab = initialTab === "photos" ? "photos" : "overview";
+  const [detailTab, setDetailTab] = useState<"overview" | "photos">(routeTab);
+  // Each record opens on the tab its route names (a new record or a later ?tab= change).
+  const tabRoute = `${initialId ?? ""}:${routeTab}`;
+  const [lastTabRoute, setLastTabRoute] = useState(tabRoute);
+  if (lastTabRoute !== tabRoute) {
+    setLastTabRoute(tabRoute);
+    setDetailTab(routeTab);
+  }
   useRecordDetailFocus({
     recordKey: displayId ?? null,
     detailReady: Boolean(detail && detail.id === displayId),

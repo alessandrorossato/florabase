@@ -205,12 +205,19 @@ test("local open, scope/search/select are provider-free; explicit Load reuses MA
   expect(window.location.hash).toBe(
     `#/species-distribution?q=ocimum&scope=living&identity=${id}`,
   );
-  // The species list stays inline beside the map and marks the selection.
-  expect(
-    screen.getByRole("button", {
-      name: /Ocimum basilicum ‘Long cultivar name’/,
-    }),
-  ).toHaveAttribute("aria-pressed", "true");
+  // The species list stays inline beside the map, marks the selection and keeps focus on
+  // it although the inspector remounts while the selection loads.
+  const chosen = screen.getByRole("button", {
+    name: /Ocimum basilicum ‘Long cultivar name’/,
+  });
+  expect(chosen).toHaveAttribute("aria-pressed", "true");
+  await waitFor(() => {
+    expect(
+      screen.getByRole("button", {
+        name: /Ocimum basilicum ‘Long cultivar name’/,
+      }),
+    ).toHaveFocus();
+  });
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(refreshOccurrenceEvidence).not.toHaveBeenCalled();
   expect(

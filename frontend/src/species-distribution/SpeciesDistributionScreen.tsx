@@ -4,7 +4,13 @@ import {
   DirectoryFilterSelect,
   DirectoryTools,
 } from "../components/DirectoryTools";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { BotanicalName, DirectorySearch } from "../components/ReferenceUI";
@@ -270,17 +276,24 @@ export function SpeciesDistributionScreen() {
       controller.abort();
     };
   }, [authorized, capability, q, scope, offset, queryKey, sessionExpired]);
-  // Keep the selected species visible in the scrolling list (selection from a link,
-  // a saved view or history may sit below the fold).
-  useEffect(() => {
-    if (!selectedId || !page) return;
-    const list = document.querySelector(".distribution-identities");
-    const chosen = list?.querySelector<HTMLElement>(
+  // The inspector (and this list with it) remounts while a selection loads, so the list
+  // scrolls its selected species into view, and returns focus to it after a keyboard or
+  // pointer choice, every time it mounts or its page changes.
+  const focusAfterChoice = useRef<string | null>(null);
+  const placeSelection = useCallback((list: HTMLUListElement | null) => {
+    if (!list) return;
+    const chosen = list.querySelector<HTMLButtonElement>(
       '.distribution-choice[aria-pressed="true"]',
     );
-    if (list && chosen && typeof chosen.offsetTop === "number")
-      list.scrollTop = Math.max(0, chosen.offsetTop - list.clientHeight / 2);
-  }, [selectedId, page]);
+    if (!chosen) return;
+    list.scrollTop = Math.max(0, chosen.offsetTop - list.clientHeight / 2);
+    const active = document.activeElement;
+    if (
+      focusAfterChoice.current === chosen.dataset.identityId &&
+      (!active || active === document.body || !active.isConnected)
+    )
+      chosen.focus({ preventScroll: true });
+  }, []);
   function search(id: string, label: string): ReactNode {
     return (
       <DirectorySearch
@@ -321,14 +334,20 @@ export function SpeciesDistributionScreen() {
         </p>
       ) : (
         <>
-          <ul className="distribution-identities">
+          <ul
+            className="distribution-identities"
+            ref={placeSelection}
+            key={`${String(offset)}:${selectedId}`}
+          >
             {page.items.map((identity) => (
               <li key={identity.id}>
                 <button
                   type="button"
                   className="distribution-choice"
                   aria-pressed={selectedId === identity.id}
+                  data-identity-id={identity.id}
                   onClick={() => {
+                    focusAfterChoice.current = identity.id;
                     view.update("identity", identity.id);
                   }}
                 >

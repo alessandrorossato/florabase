@@ -101,7 +101,8 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.app-content .ui-detail-page .detail-tab-panel h4 {
+.app-content .ui-detail-page .detail-tab-panel h4,
+.app-content .ui-detail-page.cutting-detail .detail-tab-panel h3 {
   font: var(--type-h3);
 }
 .app-content .ui-detail-page .detail-tabs {

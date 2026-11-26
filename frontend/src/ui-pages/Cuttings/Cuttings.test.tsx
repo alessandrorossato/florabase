@@ -433,3 +433,71 @@ test.each([
     expect(await screen.findByText(message)).toBeVisible();
   },
 );
+
+test("cutting records use the shared record mask: header, tabs restored from and kept in the route", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((path: string) => {
+      if (path === "/api/v1/vegetative-lots/lot")
+        return Promise.resolve(
+          json({
+            ...lot,
+            attempts: [{ ...attempt, vegetative_lot: undefined }],
+          }),
+        );
+      if (path === "/api/v1/propagation-attempts/attempt")
+        return Promise.resolve(json(attempt));
+      if (path.endsWith("/propagation-summary"))
+        return Promise.resolve(json({ offspring: [] }));
+      if (path.endsWith("/lineage"))
+        return Promise.resolve(json({ ancestors: [] }));
+      if (path.startsWith("/api/v1/lineage/"))
+        return Promise.resolve(json(noDescendants));
+      if (path.endsWith("/primary-photo")) return Promise.resolve(json(null));
+      return Promise.resolve(json([]));
+    }),
+  );
+  window.history.replaceState(null, "", "#/cuttings/lots/lot?tab=attempts");
+  show({ route: "lots", id: "lot" });
+  const user = userEvent.setup();
+  expect(
+    await screen.findByRole("heading", { level: 2, name: "Bench cuttings" }),
+  ).toBeVisible();
+  expect(screen.getByText("Exhausted")).toBeVisible();
+  expect(screen.getByRole("tab", { name: "Rooting attempts" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  expect(
+    screen.getByRole("heading", { level: 3, name: "Rooting attempts" }),
+  ).toBeVisible();
+  expect(screen.getByRole("link", { name: "Perlite trial" })).toHaveAttribute(
+    "href",
+    "#/cuttings/attempts/attempt",
+  );
+  await user.click(screen.getByRole("tab", { name: "Lineage" }));
+  expect(window.location.hash).toBe("#/cuttings/lots/lot?tab=lineage");
+  expect(
+    screen.getByRole("heading", { level: 3, name: "Maternal lineage" }),
+  ).toBeVisible();
+  await user.click(screen.getByRole("tab", { name: "Overview" }));
+  expect(window.location.hash).toBe("#/cuttings/lots/lot");
+  cleanup();
+
+  window.history.replaceState(null, "", "#/cuttings/attempts/attempt");
+  show({ route: "attempts", id: "attempt" });
+  expect(
+    await screen.findByRole("heading", { level: 2, name: "Perlite trial" }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole("button", { name: "Log rooting observation" }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole("heading", { level: 3, name: "Rooting overview" }),
+  ).toBeVisible();
+  await user.click(screen.getByRole("tab", { name: "Observations" }));
+  expect(window.location.hash).toBe(
+    "#/cuttings/attempts/attempt?tab=observations",
+  );
+  expect(screen.getByText("No rooting observations recorded.")).toBeVisible();
+});
