@@ -20,7 +20,7 @@ export function GeographyHeader({
     <>
       <Breadcrumbs
         items={[
-          { label: "Explore" },
+          { label: "Explore", href: "#/explore" },
           { label: "Geography", href: geographyHref("overview") },
           { label },
         ]}

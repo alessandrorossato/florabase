@@ -26,5 +26,12 @@ export function workspaceBreadcrumbs(
     new URLSearchParams(query).has("action")
   )
     return null;
-  return [{ label: group }, { label: title }];
+  return [{ label: group, href: workspaceHomeHref(group) }, { label: title }];
+}
+
+/** A workspace group with its own home page links there (#/collection …). */
+export function workspaceHomeHref(group: string): string | undefined {
+  return ["Collection", "Activity", "Explore", "Sourcing"].includes(group)
+    ? `#/${group.toLowerCase()}`
+    : undefined;
 }

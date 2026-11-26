@@ -19,6 +19,7 @@ import {
   createActions,
   currentLink,
   destinationOfHash,
+  isWorkspaceHome,
   primaryWorkspaces,
   sectionOfHash,
   workspaceOf,
@@ -453,13 +454,24 @@ export function WorkbenchShell({
     onNavigate(href);
   }
 
+  /**
+   * Today opens the Today page itself. Another workspace's tab opens its panel and, when the
+   * current page belongs elsewhere, that workspace's home; a second click on an open panel
+   * still collapses it.
+   */
   function selectTab(id: WorkspaceId) {
+    if (id === "today" && section !== "dashboard") {
+      setCollapsed(false);
+      onNavigate("#/dashboard");
+      return;
+    }
     if (id === panelId && !collapsed) {
       setCollapsed(true);
       return;
     }
     setPanelId(id);
     setCollapsed(false);
+    if (id !== routeWorkspace.id && isWorkspaceHome(id)) onNavigate(`#/${id}`);
   }
 
   function tabKeys(event: KeyboardEvent<HTMLButtonElement>, index: number) {
@@ -713,7 +725,8 @@ export function WorkbenchShell({
               workspace.id === routeWorkspace.id ? "true" : undefined
             }
             onClick={() => {
-              setSheet(workspace.id);
+              if (workspace.id === "today") onNavigate("#/dashboard");
+              else setSheet(workspace.id);
             }}
           >
             <Icon name={workspace.icon} shell />

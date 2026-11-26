@@ -467,7 +467,7 @@ export function AncestryExplorer({
     <section className="ancestry-explorer" aria-labelledby={titleId}>
       <Breadcrumbs
         items={[
-          { label: "Explore" },
+          { label: "Explore", href: "#/explore" },
           { label: "Lineage", href: "#/lineage" },
           { label: nameOf(focus) },
         ]}

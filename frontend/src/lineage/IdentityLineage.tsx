@@ -184,7 +184,7 @@ export function IdentityLineage({ identityId }: { identityId: string }) {
     <section className="ancestry-explorer" aria-labelledby={titleId}>
       <Breadcrumbs
         items={[
-          { label: "Explore" },
+          { label: "Explore", href: "#/explore" },
           { label: "Lineage", href: "#/lineage" },
           { label: identity.display_label },
         ]}
