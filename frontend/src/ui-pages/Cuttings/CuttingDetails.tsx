@@ -1,19 +1,28 @@
 import { useRef, useState, type ReactNode } from "react";
 import type { components } from "../../api/schema";
-import { SpecimenPlate } from "../../components/CollectionUI";
+import {
+  Breadcrumbs,
+  DetailHeader,
+  DetailPage,
+  DetailTabs,
+  SpecimenLabel,
+  SpecimenPlate,
+} from "../../components/CollectionUI";
 import { setRecordRoute } from "../../components/recordNavigation";
 import {
   FormActions,
   FormSection,
-  PageHeader,
+  OverflowMenu,
 } from "../../components/ReferenceUI";
 import { TaskDialog } from "../../components/TaskDialog";
 import {
   EmptyState,
   ErrorState,
+  LifecycleStatus,
   LoadingState,
   Page,
 } from "../../components/WorkspaceUI";
+import { LineageStrip } from "../../lineage/LineageStrip";
 import { formatPartialDate } from "../../events/eventData";
 import { LineagePanel } from "../../lineage/LineagePanel";
 import { RecordVisual } from "../../photos/RecordVisual";
@@ -58,17 +67,8 @@ type DialogMode =
   | { type: "observe"; observation?: RootingObservation }
   | { type: "undo"; receipt: string };
 
-function CuttingPhotos({
-  target,
-  id,
-  label,
-  lot,
-}: {
-  target: DetailTarget;
-  id: string;
-  label: string;
-  lot: Lot;
-}) {
+/** The record's own primary photo, with the lot's and the mother's as inherited fallbacks. */
+function useCuttingPhotos(target: DetailTarget, id: string, lot: Lot) {
   const [primary, reloadPhoto] = useCuttingData<PrimaryPhoto | null>(
     `/api/v1/collection-records/${target}/${id}/primary-photo`,
   );
@@ -84,43 +84,71 @@ function CuttingPhotos({
       ? `/api/v1/collection-records/${motherKind}/${motherId}/primary-photo`
       : "",
   );
-  const own = primary.state === "ready" ? primary.value : null;
-  const inherited = [
-    lotPhoto.state === "ready" ? lotPhoto.value : null,
-    motherPhoto.state === "ready" ? motherPhoto.value : null,
-  ];
+  return {
+    own: primary.state === "ready" ? primary.value : null,
+    inherited: [
+      lotPhoto.state === "ready" ? lotPhoto.value : null,
+      motherPhoto.state === "ready" ? motherPhoto.value : null,
+    ],
+    reloadPhoto,
+  };
+}
+
+function CuttingPlate({
+  photos,
+  label,
+  lot,
+}: {
+  photos: ReturnType<typeof useCuttingPhotos>;
+  label: string;
+  lot: Lot;
+}) {
   return (
-    <>
-      <SpecimenPlate>
-        <RecordVisual
-          photo={own}
-          fallbackPhotos={inherited}
-          showSource
-          kind="cutting"
-          label={label}
-          identity={{ id: lot.botanical_identity_id, display_label: label }}
-        />
-      </SpecimenPlate>
-      <PhotosSection
-        target={target}
-        targetId={id}
-        targetLabel={label}
-        primaryPhoto={own}
-        onPrimaryChanged={reloadPhoto}
+    <SpecimenPlate>
+      <RecordVisual
+        photo={photos.own}
+        fallbackPhotos={photos.inherited}
+        showSource
+        kind="cutting"
+        label={label}
+        identity={{ id: lot.botanical_identity_id, display_label: label }}
       />
-    </>
+    </SpecimenPlate>
   );
 }
 
-function DetailNavigation({ children }: { children?: ReactNode }) {
+const lifecycleLabels: Record<string, string> = {
+  active: "Active",
+  exhausted: "Exhausted",
+  completed: "Completed",
+  failed: "Failed",
+  abandoned: "Abandoned",
+  reversed: "Reversed",
+};
+function lifecycleLabel(state: string) {
   return (
-    <div className="actions">
-      <a className="button-link button--secondary" href="#/cuttings">
-        All cuttings
-      </a>
-      {children}
-    </div>
+    lifecycleLabels[state] ??
+    state.charAt(0).toUpperCase() + state.slice(1).replaceAll("_", " ")
   );
+}
+
+/** Pages within a cutting record, kept in the route like the other collection details. */
+function useRecordTab<T extends string>(base: string, tabs: readonly T[]) {
+  const initial = new URLSearchParams(
+    window.location.hash.split("?", 2)[1] ?? "",
+  ).get("tab");
+  const [tab, setTab] = useState<T>(
+    tabs.find((item) => item === initial) ?? tabs[0],
+  );
+  function select(next: T) {
+    setTab(next);
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${base}${next === tabs[0] ? "" : `?tab=${next}`}`,
+    );
+  }
+  return [tab, select] as const;
 }
 
 function PlanLink({ kind, id }: { kind: DetailTarget; id: string }) {
@@ -142,16 +170,6 @@ function LotFacts({ lot }: { lot: Lot }) {
   return (
     <dl className="record-facts">
       <div>
-        <dt>Botanical identity</dt>
-        <dd>
-          <IdentityLink id={lot.botanical_identity_id} />
-        </dd>
-      </div>
-      <div>
-        <dt>Material</dt>
-        <dd>{materialLabels[lot.material_type]}</dd>
-      </div>
-      <div>
         <dt>Source</dt>
         <dd>
           {sourceLabels[lot.source_kind]}
@@ -159,20 +177,8 @@ function LotFacts({ lot }: { lot: Lot }) {
         </dd>
       </div>
       <div>
-        <dt>Taken or acquired on</dt>
-        <dd>{formatPartialDate(lot.taken_on ?? null)}</dd>
-      </div>
-      <div>
         <dt>Initial quantity</dt>
         <dd>{countLabel(lot.initial_quantity)}</dd>
-      </div>
-      <div>
-        <dt>Remaining quantity</dt>
-        <dd>{countLabel(lot.quantity)}</dd>
-      </div>
-      <div>
-        <dt>Status</dt>
-        <dd>{lot.lifecycle}</dd>
       </div>
       {lot.location_id && (
         <div>
@@ -271,57 +277,186 @@ export function LotPage({ id, token }: { id: string; token: string }) {
   );
   const lot = data.state === "ready" ? data.value : undefined;
   return (
-    <Page titleId="cutting-lot-title">
-      <PageHeader
-        titleId="cutting-lot-title"
-        title={lot?.label ?? "Vegetative lot"}
-        eyebrow="Cuttings"
-        actions={
-          <DetailNavigation>
-            {lot && lot.lifecycle !== "reversed" && (
-              <button
-                type="button"
-                onClick={() => {
-                  setDialog("edit");
-                }}
-              >
-                Edit vegetative lot
-              </button>
-            )}
-            {lot?.lifecycle === "active" && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDialog("start");
-                  }}
-                >
-                  Start rooting attempt
-                </button>
-                <PlanLink kind="vegetative_lot" id={id} />
-              </>
-            )}
-          </DetailNavigation>
-        }
-      />
+    <Page titleId="cutting-lot-title" className="cuttings-record">
       {data.state === "loading" && (
         <LoadingState>Loading vegetative lot…</LoadingState>
       )}
       {data.state === "error" && (
-        <ErrorState onRetry={retry}>{cuttingError(data.error)}</ErrorState>
+        <>
+          <h2 id="cutting-lot-title">Vegetative lot</h2>
+          <ErrorState onRetry={retry}>{cuttingError(data.error)}</ErrorState>
+        </>
       )}
       {lot && (
-        <>
+        <LotRecord
+          lot={lot}
+          id={id}
+          onEdit={() => {
+            setDialog("edit");
+          }}
+          onStart={() => {
+            setDialog("start");
+          }}
+        />
+      )}
+      {lot && dialog === "edit" && lot.lifecycle !== "reversed" && (
+        <LotEditDialog
+          lot={lot}
+          lifecycle={lot.lifecycle}
+          token={token}
+          close={() => {
+            clearEditRequest();
+            setDialog(undefined);
+          }}
+          refresh={retry}
+        />
+      )}
+      {lot && dialog === "start" && (
+        <StartDialog
+          lot={lot}
+          token={token}
+          close={() => {
+            setDialog(undefined);
+          }}
+        />
+      )}
+    </Page>
+  );
+}
+
+const lotTabs = ["overview", "attempts", "photos", "lineage"] as const;
+
+function LotRecord({
+  lot,
+  id,
+  onEdit,
+  onStart,
+}: {
+  lot: LotDetail;
+  id: string;
+  onEdit: () => void;
+  onStart: () => void;
+}) {
+  const [tab, setTab] = useRecordTab(`#/cuttings/lots/${id}`, lotTabs);
+  const label = lot.label ?? "Unlabelled vegetative lot";
+  const photos = useCuttingPhotos("vegetative_lot", id, lot);
+  return (
+    <DetailPage as="div" className="cutting-detail">
+      <Breadcrumbs
+        items={[
+          { label: "Collection", href: "#/dashboard" },
+          { label: "Cuttings", href: "#/cuttings" },
+          { label },
+        ]}
+      />
+      <DetailHeader
+        headingLevel={2}
+        titleId="cutting-lot-title"
+        eyebrow="Vegetative lot"
+        title={label}
+        plate={<CuttingPlate photos={photos} label={label} lot={lot} />}
+        label={
+          <SpecimenLabel
+            kind="Cuttings"
+            name="Current material"
+            rows={[
+              {
+                label: "Remaining",
+                value: countLabel(lot.quantity),
+                emphasis: true,
+              },
+              { label: "Material", value: materialLabels[lot.material_type] },
+              {
+                label: "Taken on",
+                value: formatPartialDate(lot.taken_on ?? null),
+              },
+              {
+                label: "Location",
+                wide: true,
+                value: lot.location_id ? (
+                  <a href={`#/locations/${lot.location_id}`}>
+                    Open holding location
+                  </a>
+                ) : (
+                  "Not recorded"
+                ),
+              },
+            ]}
+          />
+        }
+        secondary={<IdentityLink id={lot.botanical_identity_id} />}
+        status={
+          <LifecycleStatus state={lot.lifecycle}>
+            {lifecycleLabel(lot.lifecycle)}
+          </LifecycleStatus>
+        }
+        lineage={
+          <LineageStrip
+            key={lot.updated_at}
+            kind="vegetative-lots"
+            id={id}
+            current="This Vegetative lot"
+            currentKind="vegetative_lot"
+            fullHref={
+              tab === "lineage"
+                ? undefined
+                : `#/cuttings/lots/${id}?tab=lineage`
+            }
+            onFull={(event) => {
+              event.preventDefault();
+              setTab("lineage");
+            }}
+          />
+        }
+        primaryActions={
+          lot.lifecycle === "active" ? (
+            <button type="button" onClick={onStart}>
+              Start rooting attempt
+            </button>
+          ) : undefined
+        }
+        editLabel="Edit vegetative lot"
+        onEdit={lot.lifecycle !== "reversed" ? onEdit : undefined}
+        overflow={
+          lot.lifecycle === "active" ? (
+            <OverflowMenu ariaLabel="More vegetative lot actions">
+              <PlanLink kind="vegetative_lot" id={id} />
+            </OverflowMenu>
+          ) : undefined
+        }
+      />
+      <DetailTabs
+        tabs={[
+          { id: "overview", label: "Overview" },
+          { id: "attempts", label: "Rooting attempts" },
+          { id: "photos", label: "Photos" },
+          { id: "lineage", label: "Lineage" },
+        ]}
+        selected={tab}
+        onSelect={setTab}
+      />
+      {tab === "overview" && (
+        <div
+          id="panel-overview"
+          role="tabpanel"
+          aria-labelledby="tab-overview"
+          className="detail-tab-panel"
+        >
           <section aria-labelledby="cutting-lot-facts">
-            <h3 id="cutting-lot-facts">Material and source</h3>
+            <h4 id="cutting-lot-facts">Material and source</h4>
             <LotFacts lot={lot} />
           </section>
-          <section aria-labelledby="cutting-lot-lineage">
-            <h3 id="cutting-lot-lineage">Maternal lineage</h3>
-            <LineagePanel kind="vegetative-lots" id={id} />
-          </section>
+        </div>
+      )}
+      {tab === "attempts" && (
+        <div
+          id="panel-attempts"
+          role="tabpanel"
+          aria-labelledby="tab-attempts"
+          className="detail-tab-panel"
+        >
           <section aria-labelledby="cutting-lot-attempts">
-            <h3 id="cutting-lot-attempts">Rooting attempts</h3>
+            <h4 id="cutting-lot-attempts">Rooting attempts</h4>
             {lot.attempts.length ? (
               <ul className="lineage-list">
                 {lot.attempts.map((attempt) => (
@@ -329,7 +464,9 @@ export function LotPage({ id, token }: { id: string; token: string }) {
                     <a href={`#/cuttings/attempts/${attempt.id}`}>
                       {displayAttempt(attempt)}
                     </a>{" "}
-                    <span className="record-state">{attempt.lifecycle}</span>{" "}
+                    <LifecycleStatus state={attempt.lifecycle}>
+                      {lifecycleLabel(attempt.lifecycle)}
+                    </LifecycleStatus>{" "}
                     {rootingLabel(attempt)}
                   </li>
                 ))}
@@ -340,36 +477,38 @@ export function LotPage({ id, token }: { id: string; token: string }) {
               </EmptyState>
             )}
           </section>
-          <CuttingPhotos
-            target="vegetative_lot"
-            lot={lot}
-            id={id}
-            label={lot.label ?? "vegetative lot"}
-          />
-          {dialog === "edit" && lot.lifecycle !== "reversed" && (
-            <LotEditDialog
-              lot={lot}
-              lifecycle={lot.lifecycle}
-              token={token}
-              close={() => {
-                clearEditRequest();
-                setDialog(undefined);
-              }}
-              refresh={retry}
-            />
-          )}
-          {dialog === "start" && (
-            <StartDialog
-              lot={lot}
-              token={token}
-              close={() => {
-                setDialog(undefined);
-              }}
-            />
-          )}
-        </>
+        </div>
       )}
-    </Page>
+      {tab === "photos" && (
+        <div
+          id="panel-photos"
+          role="tabpanel"
+          aria-labelledby="tab-photos"
+          className="detail-tab-panel"
+        >
+          <PhotosSection
+            target="vegetative_lot"
+            targetId={id}
+            targetLabel={label}
+            primaryPhoto={photos.own}
+            onPrimaryChanged={photos.reloadPhoto}
+          />
+        </div>
+      )}
+      {tab === "lineage" && (
+        <div
+          id="panel-lineage"
+          role="tabpanel"
+          aria-labelledby="tab-lineage"
+          className="detail-tab-panel"
+        >
+          <section aria-labelledby="cutting-lot-lineage">
+            <h4 id="cutting-lot-lineage">Maternal lineage</h4>
+            <LineagePanel kind="vegetative-lots" id={id} />
+          </section>
+        </div>
+      )}
+    </DetailPage>
   );
 }
 
@@ -975,6 +1114,157 @@ function UndoDialog({
   );
 }
 
+const attemptTabs = [
+  "overview",
+  "observations",
+  "offspring",
+  "photos",
+  "lineage",
+] as const;
+type AttemptTab = (typeof attemptTabs)[number];
+
+function AttemptRecord({
+  attempt,
+  id,
+  label,
+  tab,
+  setTab,
+  primaryActions,
+  secondaryActions,
+  onEdit,
+  overflow,
+  children,
+}: {
+  attempt: AttemptDetail;
+  id: string;
+  label: string;
+  tab: AttemptTab;
+  setTab: (tab: AttemptTab) => void;
+  primaryActions?: ReactNode;
+  secondaryActions?: ReactNode;
+  onEdit?: () => void;
+  overflow?: ReactNode;
+  children: ReactNode;
+}) {
+  const lot = attempt.vegetative_lot;
+  const photos = useCuttingPhotos("propagation_attempt", id, lot);
+  return (
+    <DetailPage as="div" className="cutting-detail">
+      <Breadcrumbs
+        items={[
+          { label: "Collection", href: "#/dashboard" },
+          { label: "Cuttings", href: "#/cuttings" },
+          { label },
+        ]}
+      />
+      <DetailHeader
+        headingLevel={2}
+        titleId="cutting-attempt-title"
+        eyebrow="Rooting attempt"
+        title={label}
+        plate={<CuttingPlate photos={photos} label={label} lot={lot} />}
+        label={
+          <SpecimenLabel
+            kind="Rooting attempt"
+            name="Current rooting state"
+            rows={[
+              {
+                label: "Rooting",
+                value: rootingLabel(attempt),
+                emphasis: true,
+              },
+              { label: "Started with", value: countLabel(attempt.quantity) },
+              {
+                label: "Started on",
+                value: formatPartialDate(attempt.started_on ?? null),
+              },
+              {
+                label: "Material lot",
+                wide: true,
+                value: (
+                  <a href={`#/cuttings/lots/${attempt.vegetative_lot_id}`}>
+                    {lot.label ?? materialLabels[lot.material_type]}
+                  </a>
+                ),
+              },
+            ]}
+          />
+        }
+        secondary={<IdentityLink id={lot.botanical_identity_id} />}
+        status={
+          <LifecycleStatus state={attempt.lifecycle}>
+            {lifecycleLabel(attempt.lifecycle)}
+          </LifecycleStatus>
+        }
+        lineage={
+          <LineageStrip
+            key={attempt.updated_at}
+            kind="propagation-attempts"
+            id={id}
+            current="This Rooting attempt"
+            currentKind="propagation_attempt"
+            fullHref={
+              tab === "lineage"
+                ? undefined
+                : `#/cuttings/attempts/${id}?tab=lineage`
+            }
+            onFull={(event) => {
+              event.preventDefault();
+              setTab("lineage");
+            }}
+          />
+        }
+        primaryActions={primaryActions}
+        secondaryActions={secondaryActions}
+        editLabel="Edit attempt"
+        onEdit={onEdit}
+        overflow={overflow}
+      />
+      <DetailTabs
+        tabs={[
+          { id: "overview", label: "Overview" },
+          { id: "observations", label: "Observations" },
+          { id: "offspring", label: "Offspring" },
+          { id: "photos", label: "Photos" },
+          { id: "lineage", label: "Lineage" },
+        ]}
+        selected={tab}
+        onSelect={setTab}
+      />
+      {children}
+      {tab === "photos" && (
+        <div
+          id="panel-photos"
+          role="tabpanel"
+          aria-labelledby="tab-photos"
+          className="detail-tab-panel"
+        >
+          <PhotosSection
+            target="propagation_attempt"
+            targetId={id}
+            targetLabel={label}
+            primaryPhoto={photos.own}
+            onPrimaryChanged={photos.reloadPhoto}
+          />
+        </div>
+      )}
+      {tab === "lineage" && (
+        <div
+          id="panel-lineage"
+          role="tabpanel"
+          aria-labelledby="tab-lineage"
+          className="detail-tab-panel"
+        >
+          <section aria-labelledby="rooting-lineage">
+            <h4 id="rooting-lineage">Maternal lineage</h4>
+            <LineagePanel kind="propagation-attempts" id={id} />
+          </section>
+        </div>
+      )}
+    </DetailPage>
+  );
+}
+
 export function AttemptPage({ id, token }: { id: string; token: string }) {
   const [data, retry] = useCuttingData<AttemptDetail>(
     `${attempts}/${id}`,
@@ -987,6 +1277,7 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
     editRequested() ? { type: "edit" } : undefined,
   );
   const overview = useRef<HTMLHeadingElement>(null);
+  const [tab, setTab] = useRecordTab(`#/cuttings/attempts/${id}`, attemptTabs);
   const attempt = data.state === "ready" ? data.value : undefined;
   const editable = attempt && attempt.lifecycle !== "reversed";
   const active = attempt?.lifecycle === "active";
@@ -1000,162 +1291,43 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
   }
   function refreshAfterTransition() {
     refresh();
+    setTab("overview");
     requestAnimationFrame(() => overview.current?.focus());
   }
 
+  const label = attempt ? displayAttempt(attempt) : "Rooting attempt";
   return (
-    <Page titleId="cutting-attempt-title">
-      <PageHeader
-        titleId="cutting-attempt-title"
-        title={attempt ? displayAttempt(attempt) : "Rooting attempt"}
-        eyebrow="Cuttings"
-        actions={
-          <DetailNavigation>
-            {active && (
-              <>
-                {attempt.rooted_count !== 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDialog({ type: "establish" });
-                    }}
-                  >
-                    Establish Plant or group
-                  </button>
-                )}
-                <PlanLink kind="propagation_attempt" id={id} />
-              </>
-            )}
-            {editable && (
-              <button
-                type="button"
-                className="button--secondary"
-                onClick={() => {
-                  setDialog({ type: "edit" });
-                }}
-              >
-                Edit attempt
-              </button>
-            )}
-          </DetailNavigation>
-        }
-      />
+    <Page titleId="cutting-attempt-title" className="cuttings-record">
       {data.state === "loading" && (
         <LoadingState>Loading rooting attempt…</LoadingState>
       )}
       {data.state === "error" && (
-        <ErrorState onRetry={retry}>{cuttingError(data.error)}</ErrorState>
+        <>
+          <h2 id="cutting-attempt-title">Rooting attempt</h2>
+          <ErrorState onRetry={retry}>{cuttingError(data.error)}</ErrorState>
+        </>
       )}
       {attempt && (
-        <>
-          <section aria-labelledby="rooting-overview">
-            <h3 id="rooting-overview" ref={overview} tabIndex={-1}>
-              Rooting overview
-            </h3>
-            <dl className="record-facts">
-              <div>
-                <dt>Status</dt>
-                <dd>{attempt.lifecycle}</dd>
-              </div>
-              <div>
-                <dt>Rooting outcome</dt>
-                <dd>{rootingLabel(attempt)}</dd>
-              </div>
-              <div>
-                <dt>Starting quantity</dt>
-                <dd>{countLabel(attempt.quantity)}</dd>
-              </div>
-              <div>
-                <dt>Material lot</dt>
-                <dd>
-                  <a href={`#/cuttings/lots/${attempt.vegetative_lot_id}`}>
-                    {attempt.vegetative_lot.label ??
-                      materialLabels[attempt.vegetative_lot.material_type]}
-                  </a>
-                </dd>
-              </div>
-              <div>
-                <dt>Botanical identity</dt>
-                <dd>
-                  <IdentityLink
-                    id={attempt.vegetative_lot.botanical_identity_id}
-                  />
-                </dd>
-              </div>
-              <div>
-                <dt>Started on</dt>
-                <dd>{formatPartialDate(attempt.started_on ?? null)}</dd>
-              </div>
-              {attempt.ended_on && (
-                <div>
-                  <dt>Ended on</dt>
-                  <dd>{formatPartialDate(attempt.ended_on)}</dd>
-                </div>
-              )}
-              {attempt.substrate && (
-                <div>
-                  <dt>Substrate</dt>
-                  <dd>{attempt.substrate}</dd>
-                </div>
-              )}
-              {attempt.hormone_treatment && (
-                <div>
-                  <dt>Hormone treatment</dt>
-                  <dd>{attempt.hormone_treatment}</dd>
-                </div>
-              )}
-              {attempt.container && (
-                <div>
-                  <dt>Container</dt>
-                  <dd>{attempt.container}</dd>
-                </div>
-              )}
-              {attempt.environment && (
-                <div>
-                  <dt>Environment</dt>
-                  <dd>{attempt.environment}</dd>
-                </div>
-              )}
-              {attempt.location_id && (
-                <div>
-                  <dt>Location</dt>
-                  <dd>
-                    <a href={`#/locations/${attempt.location_id}`}>
-                      Open rooting location
-                    </a>
-                  </dd>
-                </div>
-              )}
-              {attempt.notes && (
-                <div>
-                  <dt>Notes</dt>
-                  <dd>{attempt.notes}</dd>
-                </div>
-              )}
-            </dl>
-            {editable && attempt.operation_receipt_id && (
+        <AttemptRecord
+          attempt={attempt}
+          id={id}
+          label={label}
+          tab={tab}
+          setTab={setTab}
+          primaryActions={
+            active && attempt.rooted_count !== 0 ? (
               <button
                 type="button"
-                className="button--secondary"
                 onClick={() => {
-                  if (attempt.operation_receipt_id)
-                    setDialog({
-                      type: "undo",
-                      receipt: attempt.operation_receipt_id,
-                    });
+                  setDialog({ type: "establish" });
                 }}
               >
-                Undo starting attempt
+                Establish Plant or group
               </button>
-            )}
-          </section>
-          <section aria-labelledby="rooting-lineage">
-            <h3 id="rooting-lineage">Maternal lineage</h3>
-            <LineagePanel kind="propagation-attempts" id={id} />
-          </section>
-          <section aria-labelledby="rooting-timeline">
-            <h3 id="rooting-timeline">Rooting observations</h3>
-            {editable && (
+            ) : undefined
+          }
+          secondaryActions={
+            editable ? (
               <button
                 type="button"
                 className="button--secondary"
@@ -1165,86 +1337,197 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
               >
                 Log rooting observation
               </button>
-            )}
-            {attempt.observations.length ? (
-              <ol className="lineage-list">
-                {attempt.observations.map((item) => (
-                  <li key={item.id}>
-                    <strong>{item.stage.replaceAll("_", " ")}</strong>
-                    {" · "}
-                    {formatPartialDate(item.observed_on ?? null)}
-                    {item.rooted_count != null &&
-                      ` · ${String(item.rooted_count)} rooted`}
-                    {item.notes && <p>{item.notes}</p>}
-                    {editable && (
-                      <button
-                        type="button"
-                        className="button--quiet"
-                        onClick={() => {
-                          setDialog({ type: "observe", observation: item });
-                        }}
-                      >
-                        Correct observation
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <EmptyState>No rooting observations recorded.</EmptyState>
-            )}
-          </section>
-          <section aria-labelledby="rooting-offspring">
-            <h3 id="rooting-offspring">Established offspring</h3>
-            {summary.state === "loading" && (
-              <LoadingState>Loading offspring…</LoadingState>
-            )}
-            {summary.state === "error" && (
-              <ErrorState onRetry={retrySummary}>
-                Could not load offspring.
-              </ErrorState>
-            )}
-            {summary.state === "ready" &&
-              (summary.value.offspring.length ? (
-                <ul className="lineage-list">
-                  {summary.value.offspring.map((item) => (
-                    <li key={item.id}>
-                      <a
-                        href={`#/${item.kind === "plant" ? "plants" : "plant-groups"}/${item.id}`}
-                      >
-                        {item.label ??
-                          (item.kind === "plant" ? "Plant" : "Plant group")}
-                      </a>{" "}
-                      <span className="record-state">{item.lifecycle}</span>{" "}
-                      {item.lifecycle !== "reversed" &&
-                        item.operation_receipt_id && (
+            ) : undefined
+          }
+          onEdit={
+            editable
+              ? () => {
+                  setDialog({ type: "edit" });
+                }
+              : undefined
+          }
+          overflow={
+            active ? (
+              <OverflowMenu ariaLabel="More rooting attempt actions">
+                <PlanLink kind="propagation_attempt" id={id} />
+              </OverflowMenu>
+            ) : undefined
+          }
+        >
+          {tab === "overview" && (
+            <div
+              id="panel-overview"
+              role="tabpanel"
+              aria-labelledby="tab-overview"
+              className="detail-tab-panel"
+            >
+              <section aria-labelledby="rooting-overview">
+                <h4 id="rooting-overview" ref={overview} tabIndex={-1}>
+                  Rooting overview
+                </h4>
+                <dl className="record-facts">
+                  {attempt.ended_on && (
+                    <div>
+                      <dt>Ended on</dt>
+                      <dd>{formatPartialDate(attempt.ended_on)}</dd>
+                    </div>
+                  )}
+                  {attempt.substrate && (
+                    <div>
+                      <dt>Substrate</dt>
+                      <dd>{attempt.substrate}</dd>
+                    </div>
+                  )}
+                  {attempt.hormone_treatment && (
+                    <div>
+                      <dt>Hormone treatment</dt>
+                      <dd>{attempt.hormone_treatment}</dd>
+                    </div>
+                  )}
+                  {attempt.container && (
+                    <div>
+                      <dt>Container</dt>
+                      <dd>{attempt.container}</dd>
+                    </div>
+                  )}
+                  {attempt.environment && (
+                    <div>
+                      <dt>Environment</dt>
+                      <dd>{attempt.environment}</dd>
+                    </div>
+                  )}
+                  {attempt.location_id && (
+                    <div>
+                      <dt>Location</dt>
+                      <dd>
+                        <a href={`#/locations/${attempt.location_id}`}>
+                          Open rooting location
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                  {attempt.notes && (
+                    <div>
+                      <dt>Notes</dt>
+                      <dd>{attempt.notes}</dd>
+                    </div>
+                  )}
+                </dl>
+                {editable && attempt.operation_receipt_id && (
+                  <button
+                    type="button"
+                    className="button--secondary"
+                    onClick={() => {
+                      if (attempt.operation_receipt_id)
+                        setDialog({
+                          type: "undo",
+                          receipt: attempt.operation_receipt_id,
+                        });
+                    }}
+                  >
+                    Undo starting attempt
+                  </button>
+                )}
+              </section>
+            </div>
+          )}
+          {tab === "observations" && (
+            <div
+              id="panel-observations"
+              role="tabpanel"
+              aria-labelledby="tab-observations"
+              className="detail-tab-panel"
+            >
+              <section aria-labelledby="rooting-timeline">
+                <h4 id="rooting-timeline">Rooting observations</h4>
+                {attempt.observations.length ? (
+                  <ol className="lineage-list">
+                    {attempt.observations.map((item) => (
+                      <li key={item.id}>
+                        <strong>{item.stage.replaceAll("_", " ")}</strong>
+                        {" · "}
+                        {formatPartialDate(item.observed_on ?? null)}
+                        {item.rooted_count != null &&
+                          ` · ${String(item.rooted_count)} rooted`}
+                        {item.notes && <p>{item.notes}</p>}
+                        {editable && (
                           <button
                             type="button"
-                            className="button--secondary"
+                            className="button--quiet"
                             onClick={() => {
-                              if (item.operation_receipt_id)
-                                setDialog({
-                                  type: "undo",
-                                  receipt: item.operation_receipt_id,
-                                });
+                              setDialog({ type: "observe", observation: item });
                             }}
                           >
-                            Undo establishment
+                            Correct observation
                           </button>
                         )}
-                    </li>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <EmptyState>No rooting observations recorded.</EmptyState>
+                )}
+              </section>
+            </div>
+          )}
+          {tab === "offspring" && (
+            <div
+              id="panel-offspring"
+              role="tabpanel"
+              aria-labelledby="tab-offspring"
+              className="detail-tab-panel"
+            >
+              <section aria-labelledby="rooting-offspring">
+                <h4 id="rooting-offspring">Established offspring</h4>
+                {summary.state === "loading" && (
+                  <LoadingState>Loading offspring…</LoadingState>
+                )}
+                {summary.state === "error" && (
+                  <ErrorState onRetry={retrySummary}>
+                    Could not load offspring.
+                  </ErrorState>
+                )}
+                {summary.state === "ready" &&
+                  (summary.value.offspring.length ? (
+                    <ul className="lineage-list">
+                      {summary.value.offspring.map((item) => (
+                        <li key={item.id}>
+                          <a
+                            href={`#/${item.kind === "plant" ? "plants" : "plant-groups"}/${item.id}`}
+                          >
+                            {item.label ??
+                              (item.kind === "plant" ? "Plant" : "Plant group")}
+                          </a>{" "}
+                          <span className="record-state">{item.lifecycle}</span>{" "}
+                          {item.lifecycle !== "reversed" &&
+                            item.operation_receipt_id && (
+                              <button
+                                type="button"
+                                className="button--secondary"
+                                onClick={() => {
+                                  if (item.operation_receipt_id)
+                                    setDialog({
+                                      type: "undo",
+                                      receipt: item.operation_receipt_id,
+                                    });
+                                }}
+                              >
+                                Undo establishment
+                              </button>
+                            )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <EmptyState>No established offspring.</EmptyState>
                   ))}
-                </ul>
-              ) : (
-                <EmptyState>No established offspring.</EmptyState>
-              ))}
-          </section>
-          <CuttingPhotos
-            target="propagation_attempt"
-            lot={attempt.vegetative_lot}
-            id={id}
-            label={displayAttempt(attempt)}
-          />
+              </section>
+            </div>
+          )}
+        </AttemptRecord>
+      )}
+      {attempt && (
+        <>
           {dialog?.type === "edit" && editable && (
             <AttemptEditDialog
               attempt={attempt}

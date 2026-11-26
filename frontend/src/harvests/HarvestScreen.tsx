@@ -8,7 +8,7 @@ import { useAuth } from "../auth/context";
 import { ActionButton } from "../components/Action";
 import {
   Breadcrumbs,
-  DetailContext,
+  DetailTabs,
   DetailHeader,
   WorkspaceIntro,
   DetailLoading,
@@ -46,6 +46,7 @@ import { DirectorySortSelect } from "../components/DirectorySort";
 import { sortDirectory } from "../components/directorySort";
 import { useEditRoute } from "../components/useEditRoute";
 import { formatPartialDate } from "../events/eventData";
+import { LineageStrip } from "../lineage/LineageStrip";
 import { PhotosSection } from "../photos/PhotosSection";
 import { RecordVisual } from "../photos/RecordVisual";
 import { SavedViews } from "../saved-views/SavedViews";
@@ -272,6 +273,9 @@ export function HarvestScreen({
     }
   }
   const displayId = editor && edit.modal ? backgroundId : initialId;
+  const [detailTab, setDetailTab] = useState<"overview" | "photos">(
+    initialTab === "photos" ? "photos" : "overview",
+  );
   useRecordDetailFocus({
     recordKey: displayId ?? null,
     detailReady: Boolean(detail && detail.id === displayId),
@@ -560,6 +564,7 @@ export function HarvestScreen({
           <DetailPage className="harvest-detail">
             <Breadcrumbs
               items={[
+                { label: "Collection", href: "#/dashboard" },
                 { label: "Harvests", href: "#/harvests" },
                 { label: detail.display_title },
               ]}
@@ -575,6 +580,15 @@ export function HarvestScreen({
                       value: formatPartialDate(detail.occurred_on),
                     },
                     { label: "Materials", value: materialSummary(detail) },
+                    {
+                      label: "Source",
+                      wide: true,
+                      value: (
+                        <a href={sourceHref(detail)}>
+                          {detail.source.display_name}
+                        </a>
+                      ),
+                    },
                   ]}
                 />
               }
@@ -587,36 +601,27 @@ export function HarvestScreen({
                 </SpecimenPlate>
               }
               secondary={
-                <DetailContext
-                  items={[
-                    {
-                      label: "Source",
-                      value: (
-                        <a href={sourceHref(detail)}>
-                          {detail.source.display_name}
-                        </a>
-                      ),
-                    },
-                    {
-                      label: "Botanical identity",
-                      value: (
-                        <a
-                          href={`#/identities/${detail.source.botanical_identity.id}?tab=harvests`}
-                        >
-                          <BotanicalName
-                            label={
-                              detail.source.botanical_identity.display_label
-                            }
-                            scientificName={
-                              recordIdentities.get(
-                                detail.source.botanical_identity.id,
-                              )?.scientific_name
-                            }
-                          />
-                        </a>
-                      ),
-                    },
-                  ]}
+                <a
+                  href={`#/identities/${detail.source.botanical_identity.id}?tab=harvests`}
+                >
+                  <BotanicalName
+                    label={detail.source.botanical_identity.display_label}
+                    scientificName={
+                      recordIdentities.get(detail.source.botanical_identity.id)
+                        ?.scientific_name
+                    }
+                  />
+                </a>
+              }
+              lineage={
+                <LineageStrip
+                  key={detail.updated_at}
+                  kind={
+                    detail.source.type === "plant" ? "plants" : "plant-groups"
+                  }
+                  id={detail.source.id}
+                  includeSubject
+                  current="This Harvest"
                 />
               }
               onEdit={() => {
@@ -640,52 +645,85 @@ export function HarvestScreen({
                 </OverflowMenu>
               }
             />
-            <section
-              className="record-section"
-              aria-label="Materials collected"
-            >
-              <h4>Materials collected</h4>
-              <Items harvest={detail} />
-            </section>
-            <StoredMaterialSection harvest={detail} />
-            <div className="record-detail-grid harvest-context-grid">
-              <section className="record-section">
-                <h4>Notes</h4>
-                <p
-                  className={
-                    detail.notes ? "preserve-lines" : "detail-empty-state"
-                  }
-                >
-                  {detail.notes ?? "No notes recorded."}
-                </p>
-              </section>
-              <section className="record-section">
-                <h4>Related history</h4>
-                <p>
-                  <a
-                    href={`${sourceHref(detail)}?tab=events&event=${detail.event_id}`}
-                  >
-                    View owned harvest Event in source history
-                  </a>
-                </p>
-                <p>
-                  <a href="#/events">Journal</a> ·{" "}
-                  <a href="#/history">History</a>
-                </p>
-              </section>
-            </div>
-            <PhotosSection
-              key={detail.id}
-              target="harvest"
-              targetId={detail.id}
-              targetLabel={detail.display_title}
-              primaryPhoto={detail.primary_photo}
-              onPrimaryChanged={(photo) => {
-                setDetail((current) =>
-                  current ? { ...current, primary_photo: photo } : current,
+            <DetailTabs
+              tabs={[
+                { id: "overview", label: "Overview" },
+                { id: "photos", label: "Photos" },
+              ]}
+              selected={detailTab}
+              onSelect={(next) => {
+                setDetailTab(next);
+                window.history.replaceState(
+                  null,
+                  "",
+                  `#/harvests/${detail.id}${next === "overview" ? "" : `?tab=${next}`}`,
                 );
               }}
             />
+            {detailTab === "overview" && (
+              <div
+                id="panel-overview"
+                role="tabpanel"
+                aria-labelledby="tab-overview"
+                className="detail-tab-panel"
+              >
+                <section
+                  className="record-section"
+                  aria-label="Materials collected"
+                >
+                  <h4>Materials collected</h4>
+                  <Items harvest={detail} />
+                </section>
+                <StoredMaterialSection harvest={detail} />
+                <div className="record-detail-grid harvest-context-grid">
+                  <section className="record-section">
+                    <h4>Notes</h4>
+                    <p
+                      className={
+                        detail.notes ? "preserve-lines" : "detail-empty-state"
+                      }
+                    >
+                      {detail.notes ?? "No notes recorded."}
+                    </p>
+                  </section>
+                  <section className="record-section">
+                    <h4>Related history</h4>
+                    <p>
+                      <a
+                        href={`${sourceHref(detail)}?tab=events&event=${detail.event_id}`}
+                      >
+                        View owned harvest Event in source history
+                      </a>
+                    </p>
+                    <p>
+                      <a href="#/events">Journal</a> ·{" "}
+                      <a href="#/history">History</a>
+                    </p>
+                  </section>
+                </div>
+              </div>
+            )}
+            {detailTab === "photos" && (
+              <div
+                id="panel-photos"
+                role="tabpanel"
+                aria-labelledby="tab-photos"
+                className="detail-tab-panel"
+              >
+                <PhotosSection
+                  key={detail.id}
+                  target="harvest"
+                  targetId={detail.id}
+                  targetLabel={detail.display_title}
+                  primaryPhoto={detail.primary_photo}
+                  onPrimaryChanged={(photo) => {
+                    setDetail((current) =>
+                      current ? { ...current, primary_photo: photo } : current,
+                    );
+                  }}
+                />
+              </div>
+            )}
           </DetailPage>
         ) : (
           !error && (

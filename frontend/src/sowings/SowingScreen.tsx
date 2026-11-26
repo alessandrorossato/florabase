@@ -452,20 +452,11 @@ function Detail({
         }
         title={recordName(sowing, "Unlabelled sowing")}
         secondary={
-          <DetailContext
-            items={[
-              {
-                label: "Botanical identity",
-                value: (
-                  <a
-                    href={`#/identities/${sowing.seed_lot.botanical_identity_id}`}
-                  >
-                    {sowing.seed_lot.botanical_identity_display_label}
-                  </a>
-                ),
-              },
-            ]}
-          />
+          <a href={`#/identities/${sowing.seed_lot.botanical_identity_id}`}>
+            <BotanicalName
+              label={sowing.seed_lot.botanical_identity_display_label}
+            />
+          </a>
         }
         status={
           <LifecycleStatus state={sowing.lifecycle}>

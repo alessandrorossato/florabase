@@ -240,3 +240,14 @@
     border-block-start: 1px solid var(--border);
   }
 }
+
+/* UI-POLISH-005: one record mask for every collection detail. The breadcrumb is the way
+   back, as on Seed lots; the list-level "Back" and "New" bar stays on the directory. */
+.app-content
+  :is(.sowings-workspace, .plants-workspace):has(.collection-detail)
+  .workspace-context-actions {
+  display: none;
+}
+.app-content .ui-detail-page .detail-header--specimen .detail-actions {
+  justify-content: flex-start;
+}

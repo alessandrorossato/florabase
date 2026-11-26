@@ -319,7 +319,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
+  /* UI-POLISH-005: actions sit under the record name on every collection detail. */
+  justify-content: flex-start;
   gap: var(--space-2);
   max-width: 100%;
 }
