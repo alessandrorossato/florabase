@@ -942,6 +942,8 @@ export function TaxonomyScreen() {
       identity: undefined,
     });
   };
+  const preparingSource =
+    !data?.source_available && Boolean(data?.source_preparing);
   const missingSource =
     !data?.source_available && data?.message?.includes("not installed");
   return (
@@ -1026,9 +1028,11 @@ export function TaxonomyScreen() {
                 ? "Checking WFO source…"
                 : data.source_available
                   ? "WFO source available"
-                  : missingSource
-                    ? "WFO source not installed"
-                    : "WFO source unavailable"}
+                  : preparingSource
+                    ? "WFO source preparing…"
+                    : missingSource
+                      ? "WFO source not installed"
+                      : "WFO source unavailable"}
             </span>
             {data?.source && (
               <details>
@@ -1109,12 +1113,15 @@ export function TaxonomyScreen() {
               <div className="taxonomy-source-notice">
                 <p>
                   <strong>
-                    {missingSource
-                      ? "The optional WFO source is not installed."
-                      : "Taxonomy source error."}
+                    {preparingSource
+                      ? "Reference data is being prepared…"
+                      : missingSource
+                        ? "The optional WFO source is not installed."
+                        : "Taxonomy source error."}
                   </strong>{" "}
-                  {data.message} Local identities and retained confirmation
-                  evidence remain accessible. Matching needs the local source.
+                  {preparingSource ? null : data.message} Local identities and
+                  retained confirmation evidence remain accessible. Matching
+                  needs the local source.
                 </p>
                 <ActionButton
                   icon="refresh"
@@ -1126,7 +1133,9 @@ export function TaxonomyScreen() {
                   Retry source
                 </ActionButton>
                 <span className="taxonomy-meta">
-                  Retry rechecks the configured source; it does not install WFO.
+                  {preparingSource
+                    ? "Retry checks whether background preparation has finished."
+                    : "Retry rechecks the configured source; it does not install WFO."}
                 </span>
               </div>
             )}

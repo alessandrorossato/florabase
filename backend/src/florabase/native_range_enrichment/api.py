@@ -26,6 +26,7 @@ from florabase.native_range_enrichment.schemas import (
 )
 from florabase.native_range_enrichment.source import (
     DEFAULT_VERSION,
+    SourcePreparingError,
     SourceUnavailableError,
     Taxon,
     WcvpSource,
@@ -95,7 +96,12 @@ def source_status(
             linked.stale = True
         return SourceStatus(available=True, source=metadata, link=linked)
     except SourceUnavailableError as error:
-        return SourceStatus(available=False, message=str(error), link=linked)
+        return SourceStatus(
+            available=False,
+            preparing=isinstance(error, SourcePreparingError),
+            message=str(error),
+            link=linked,
+        )
 
 
 @router.get("/taxa", response_model=list[Taxon], operation_id="searchWcvpTaxa")

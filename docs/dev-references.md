@@ -17,9 +17,12 @@ integrity within that trusted cache. Obtain indexes through Florabase's approved
 
 Development overlays resolve the paths within their own source bind. A linked UAT worktree
 has its own cache and database. Production uses the baseline Compose file and has no DEV
-reference settings or source bind. Startup never provisions indexes. The app stays healthy with
-missing files, and source-dependent requests report unavailability. The DEV backend also
-reports v16 unavailable if its local seal is missing or fails checksum validation.
+reference settings or source bind. Start-up never waits for indexes; with
+`FLORABASE_REFERENCES_SETUP=auto` they are provisioned in the background after the server is up
+(when unset or `off`, zero outbound reference requests are made). The app stays healthy with
+missing files, and source-dependent requests report unavailability (or background preparation).
+The DEV backend also reports v16 unavailable if its local seal is missing or fails checksum
+validation.
 Native-range review opens on v15. Select **16** explicitly to use the installed v16 source.
 
 ## Activate after merge
