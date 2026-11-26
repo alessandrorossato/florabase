@@ -294,7 +294,11 @@ export function destinationOfHash(
       const path = hash.split("?", 1)[0];
       if (path === `#/${item.section}`)
         return {
-          label: item.label,
+          // Every home is labelled "Overview" in its menu; elsewhere it names its workspace.
+          label:
+            item.section === workspace.id
+              ? `${workspace.label} overview`
+              : item.label,
           href: `#/${item.section}`,
           icon: item.icon,
         };

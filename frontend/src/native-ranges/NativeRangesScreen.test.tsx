@@ -207,6 +207,11 @@ beforeEach(async () => {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  try {
+    window.localStorage.clear();
+  } catch {
+    // Storage may be unavailable; nothing to reset.
+  }
 });
 
 test("overview exposes distinct coverage, exact places, meaning and local-only scope/search/filter", async () => {
@@ -1241,4 +1246,17 @@ test("logout-failed keeps loaded native-range workspace mounted without issuing 
   expect(
     screen.getByRole("group", { name: /Collection recorded/ }),
   ).toBeInTheDocument();
+});
+
+test("Photos on hover starts off and reads no territory photos until switched on", async () => {
+  const user = userEvent.setup();
+  show();
+  const toggle = await screen.findByRole("switch", { name: "Photos on hover" });
+  expect(toggle).not.toBeChecked();
+  const calls = vi.mocked(listTerritoryIdentities).mock.calls.length;
+  await user.click(toggle);
+  expect(toggle).toBeChecked();
+  expect(vi.mocked(listTerritoryIdentities).mock.calls.length).toBe(calls);
+  await user.click(toggle);
+  expect(toggle).not.toBeChecked();
 });

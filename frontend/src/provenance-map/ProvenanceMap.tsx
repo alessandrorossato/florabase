@@ -225,6 +225,8 @@ export function ProvenanceMap({
     layersRef.current = [];
     markersRef.current.clear();
     slotsRef.current.clear();
+    // Old tooltip slots are detached now; the next rest on a marker finds the new one.
+    setPhoto(null);
     for (const site of sites) {
       const accuracy = Number(site.coordinate_accuracy_m);
       if (
@@ -316,10 +318,9 @@ export function ProvenanceMap({
   const shownPhoto =
     photo && hoverContent && photo.site === hovered ? photo : null;
   useEffect(() => {
-    // The tooltip grew: let Leaflet place it again above its marker.
-    if (shownPhoto)
-      markersRef.current.get(shownPhoto.site)?.getTooltip()?.update();
-  }, [shownPhoto]);
+    // The tooltip grew or shrank: let Leaflet place it again above its marker.
+    if (hovered) markersRef.current.get(hovered)?.getTooltip()?.update();
+  }, [hovered, shownPhoto]);
   return (
     <>
       {shownPhoto &&
