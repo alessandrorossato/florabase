@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     device_session_absolute_seconds: int = Field(default=15_552_000, ge=86_400, le=31_536_000)
     device_session_max_active: int = Field(default=20, ge=1, le=100)
     min_client_version: str = Field(default="0.1.0-beta.8", min_length=1, max_length=64)
+    map_online_enabled: bool = False
+    map_tile_url: str | None = None
+    map_attribution: str | None = None
     login_failure_threshold: int = Field(default=5, ge=3, le=10)
     login_backoff_base_seconds: int = Field(default=5, ge=1, le=60)
     login_backoff_max_seconds: int = Field(default=900, ge=60, le=3_600)
@@ -78,6 +81,40 @@ class Settings(BaseSettings):
         except ArgumentError, ValueError:
             raise ValueError("Database URL is not a valid SQLAlchemy URL") from None
         return value
+
+    @field_validator("map_tile_url")
+    @classmethod
+    def validate_map_tile_url(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        if not trimmed:
+            return None
+        if any(ch.isspace() for ch in trimmed):
+            raise ValueError("Map tile URL must not contain whitespace")
+        parsed = urlsplit(trimmed)
+        if (
+            parsed.scheme != "https"
+            or not parsed.netloc
+            or parsed.username is not None
+            or parsed.password is not None
+        ):
+            raise ValueError("Map tile URL must be a valid https:// URL without credentials")
+        if "{z}/{x}/{y}" not in parsed.path:
+            raise ValueError("Map tile URL must include a {z}/{x}/{y} path template")
+        return trimmed
+
+    @field_validator("map_attribution")
+    @classmethod
+    def validate_map_attribution(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        if not trimmed:
+            return None
+        if len(trimmed) > 500:
+            raise ValueError("Map attribution must be 500 characters or fewer")
+        return trimmed
 
     @model_validator(mode="after")
     def validate_secure_production_settings(self) -> Self:

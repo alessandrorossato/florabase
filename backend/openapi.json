@@ -14652,6 +14652,39 @@
         "title": "RootingObservationWrite",
         "type": "object"
       },
+      "RuntimeConfigResponse": {
+        "properties": {
+          "map_attribution": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Map Attribution"
+          },
+          "map_online_enabled": {
+            "default": false,
+            "title": "Map Online Enabled",
+            "type": "boolean"
+          },
+          "map_tile_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Map Tile Url"
+          }
+        },
+        "title": "RuntimeConfigResponse",
+        "type": "object"
+      },
       "SavedViewCreate": {
         "additionalProperties": false,
         "properties": {
@@ -19507,6 +19540,9 @@
             "title": "Min Client Version",
             "type": "string"
           },
+          "runtime_config": {
+            "$ref": "#/components/schemas/RuntimeConfigResponse"
+          },
           "server_version": {
             "title": "Server Version",
             "type": "string"
@@ -19516,7 +19552,8 @@
           "server_version",
           "api_version",
           "min_client_version",
-          "capabilities"
+          "capabilities",
+          "runtime_config"
         ],
         "title": "SystemInfoResponse",
         "type": "object"

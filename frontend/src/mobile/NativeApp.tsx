@@ -6,14 +6,26 @@ import {
   configureNativeBearerTransport,
   resetAuthTransport,
 } from "../auth/transport";
+import {
+  applyMapRuntimeConfig,
+  resetMapRuntimeConfig,
+} from "../provenance-map/config";
+import {
+  cleanupNativeSharedCache,
+  registerNativeImageViewerHandler,
+  type NativeImageViewerRequest,
+} from "./fileActions";
 import type { HttpGetFn } from "./healthProbe";
+import { NativeImageViewer } from "./NativeImageViewer";
 import { NativeServerOnboarding } from "./NativeServerOnboarding";
+import { NativeUpdateBanner } from "./NativeUpdateBanner";
 import { createServerUrlStore, type ServerUrlStore } from "./preferences";
 import { isNativeDebugBuild } from "./runtime";
 import { createSecureTokenStore, type SecureTokenStore } from "./secureToken";
 import { validateServerUrl } from "./serverUrl";
 import {
   checkServerCompatibility,
+  getAppVersion,
   onboardingErrorHeading,
   type OnboardingError,
   type SystemInfo,
@@ -59,10 +71,29 @@ export function NativeApp({
   const [shellState, setShellState] = useState<NativeShellState>({
     status: "booting",
   });
+  const [viewerRequest, setViewerRequest] =
+    useState<NativeImageViewerRequest | null>(null);
   const activeServerUrlRef = useRef<string | null>(null);
+  const resolvedAppVersion = appVersion ?? getAppVersion();
+
+  const closeImageViewer = useCallback(() => {
+    setViewerRequest(null);
+  }, []);
+
+  useEffect(() => {
+    void cleanupNativeSharedCache();
+    registerNativeImageViewerHandler((request) => {
+      setViewerRequest(request);
+    });
+    return () => {
+      registerNativeImageViewerHandler(null);
+    };
+  }, []);
 
   const handleChangeServer = useCallback((currentUrl: string) => {
     void clearNativeBearerToken().finally(() => {
+      setViewerRequest(null);
+      resetMapRuntimeConfig();
       resetAuthTransport();
       setShellState({
         status: "onboarding",
@@ -82,6 +113,7 @@ export function NativeApp({
       }
       activeServerUrlRef.current = serverUrl;
       const storedToken = await resolvedTokenStore.get();
+      applyMapRuntimeConfig(info.runtimeConfig);
       configureNativeBearerTransport({
         serverUrl,
         initialToken: storedToken,
@@ -160,6 +192,7 @@ export function NativeApp({
     void boot();
     return () => {
       controller.abort();
+      resetMapRuntimeConfig();
       resetAuthTransport();
     };
   }, [activateServer, allowDebugHttp, appVersion, httpGet, resolvedUrlStore]);
@@ -195,6 +228,16 @@ export function NativeApp({
   }
 
   return (
-    <App key={`${shellState.serverUrl}#${String(shellState.sessionKey)}`} />
+    <>
+      <App key={`${shellState.serverUrl}#${String(shellState.sessionKey)}`} />
+      <NativeUpdateBanner
+        key={shellState.info.serverVersion}
+        serverVersion={shellState.info.serverVersion}
+        appVersion={resolvedAppVersion}
+      />
+      {viewerRequest !== null && (
+        <NativeImageViewer request={viewerRequest} onClose={closeImageViewer} />
+      )}
+    </>
   );
 }

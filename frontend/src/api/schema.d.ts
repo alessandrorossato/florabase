@@ -7816,6 +7816,18 @@ export interface components {
              */
             stage: "callus" | "root_initials" | "rooted" | "loss" | "inspection";
         };
+        /** RuntimeConfigResponse */
+        RuntimeConfigResponse: {
+            /** Map Attribution */
+            map_attribution?: string | null;
+            /**
+             * Map Online Enabled
+             * @default false
+             */
+            map_online_enabled: boolean;
+            /** Map Tile Url */
+            map_tile_url?: string | null;
+        };
         /** SavedViewCreate */
         SavedViewCreate: {
             /** Name */
@@ -9256,6 +9268,7 @@ export interface components {
             capabilities: string[];
             /** Min Client Version */
             min_client_version: string;
+            runtime_config: components["schemas"]["RuntimeConfigResponse"];
             /** Server Version */
             server_version: string;
         };

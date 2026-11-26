@@ -37,10 +37,93 @@ def test_system_info_returns_compatibility_contract_without_secrets() -> None:
         "api_version": 1,
         "min_client_version": "0.1.0-beta.8",
         "capabilities": ["device-auth"],
+        "runtime_config": {
+            "map_online_enabled": False,
+            "map_tile_url": None,
+            "map_attribution": None,
+        },
     }
     serialized = response.text.lower()
     for forbidden in ("postgresql", "database", "secret", "origin", "password"):
         assert forbidden not in serialized
+
+
+def test_system_info_returns_configured_map_runtime_config() -> None:
+    configured_settings = Settings.model_validate(
+        {
+            "environment": Environment.TEST,
+            "database_url": "postgresql+psycopg://unused",
+            "canonical_origin": "https://florabase.example",
+            "cookie_mode": CookieMode.SECURE,
+            "map_online_enabled": True,
+            "map_tile_url": "  https://tiles.example.org/{z}/{x}/{y}.png  ",
+            "map_attribution": '  &copy; <a href="https://tiles.example.org">Example Tiles</a>  ',
+        }
+    )
+    app = create_app()
+    app.dependency_overrides[get_settings] = lambda: configured_settings
+    with TestClient(app, base_url="https://florabase.example") as client:
+        response = client.get("/api/v1/system/info")
+
+    assert response.status_code == 200
+    assert response.json()["runtime_config"] == {
+        "map_online_enabled": True,
+        "map_tile_url": "https://tiles.example.org/{z}/{x}/{y}.png",
+        "map_attribution": '&copy; <a href="https://tiles.example.org">Example Tiles</a>',
+    }
+
+
+@pytest.mark.parametrize(
+    "bad_tile_url",
+    [
+        "http://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "javascript:alert(1)/{z}/{x}/{y}",
+        "https://tile.openstreetmap.org/static.png",
+        "https://tile.openstreetmap.org/{z}/{y}.png",
+        "https://user:pass@localhost/{z}/{x}/{y}.png",
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png bad",
+    ],
+)
+def test_map_tile_url_validation_rejects_unsafe_or_incomplete_templates(
+    bad_tile_url: str,
+) -> None:
+    with pytest.raises(ValidationError, match="Map tile URL"):
+        Settings.model_validate(
+            {
+                "environment": Environment.TEST,
+                "database_url": "postgresql+psycopg://unused",
+                "canonical_origin": "https://florabase.example",
+                "cookie_mode": CookieMode.SECURE,
+                "map_tile_url": bad_tile_url,
+            }
+        )
+
+
+def test_map_runtime_config_blank_values_normalize_to_none() -> None:
+    settings = Settings.model_validate(
+        {
+            "environment": Environment.TEST,
+            "database_url": "postgresql+psycopg://unused",
+            "canonical_origin": "https://florabase.example",
+            "cookie_mode": CookieMode.SECURE,
+            "map_tile_url": "   ",
+            "map_attribution": "   ",
+        }
+    )
+    assert settings.map_online_enabled is False
+    assert settings.map_tile_url is None
+    assert settings.map_attribution is None
+
+    with pytest.raises(ValidationError, match="Map attribution"):
+        Settings.model_validate(
+            {
+                "environment": Environment.TEST,
+                "database_url": "postgresql+psycopg://unused",
+                "canonical_origin": "https://florabase.example",
+                "cookie_mode": CookieMode.SECURE,
+                "map_attribution": "x" * 501,
+            }
+        )
 
 
 @pytest.mark.parametrize("origin", ["https://localhost", "capacitor://localhost"])
