@@ -1,6 +1,5 @@
 # Engineering progress
 
-<<<<<<< HEAD
 ## 2026-11-26 — One record mask and one list header (`UI-POLISH-005`)
 
 - Same branch; Alessandro chose to make every Collection detail uniform in beta.10.
@@ -55,7 +54,7 @@
   Vitest run in the cloud session has the same pre-existing environment failures as `main`
   (Node 22; e.g. `IdentityRecordMedia`, `TreeExplorer`, SeedLot botanical cover) and no new ones.
   Canonical gate not run here.
-=======
+
 ## 2026-11-25 — UX-SORT-002 server-side Sort by for Orders, Media and Cuttings
 
 - On `feat/ux-sort-002` from `feat/fn-05-directory-sort` `760283a` (UX-SORT-001), realigned by
@@ -76,7 +75,6 @@
   components), backend unit tests, `make api-check`, and PostgreSQL integration for
   `product/test_directory_sort.py` plus the orders, cuttings API, shared media and saved-view suites (68
   passed). The canonical `make feature-verify` is run by the operator.
->>>>>>> af617fc0749bf39e6746df2f53196ce3aa1cfeac
 
 ## 2026-11-25 — Batch 13 integration (DOCS-004, PROPAGATION-BATCH-001, CARE-BULK-001/FN-03, UX-SORT-001, MEDIA-FETCH-001)
 
