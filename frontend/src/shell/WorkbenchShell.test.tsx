@@ -113,6 +113,7 @@ test("the navigation model lists every former destination and Settings tool exac
       "orders",
       "account",
       "settings",
+      "media-settings",
       "labels",
       "import-export",
       "data-sources",

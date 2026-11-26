@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
-from typing import Literal, cast
+from typing import TYPE_CHECKING, Literal, cast
 from uuid import UUID, uuid7
 
 from fastapi import UploadFile
@@ -39,6 +39,9 @@ from florabase.plants.model import Plant, PlantGroup
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import Sowing
 from florabase.suppliers.model import Supplier
+
+if TYPE_CHECKING:
+    from florabase.media.schemas import AssetMetadataWrite
 
 TargetType = Literal[
     "seed_lot",
@@ -154,6 +157,7 @@ async def upload_local_photo(
     target_id: UUID,
     upload: UploadFile,
     metadata: PhotoMetadataWrite,
+    asset_metadata: AssetMetadataWrite | None = None,
 ) -> LocalPhotoResponse:
     from florabase.media.schemas import AssetMetadataWrite
     from florabase.media.service import upload_asset
@@ -163,7 +167,7 @@ async def upload_local_photo(
             database,
             storage,
             upload,
-            AssetMetadataWrite(attribution=metadata.attribution),
+            asset_metadata or AssetMetadataWrite(attribution=metadata.attribution),
             target=target_type,
             target_id=target_id,
             caption=metadata.caption,

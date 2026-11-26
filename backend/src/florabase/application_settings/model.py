@@ -1,4 +1,4 @@
-from sqlalchemy import CheckConstraint, SmallInteger, String
+from sqlalchemy import Boolean, CheckConstraint, SmallInteger, String, true
 from sqlalchemy.orm import Mapped, mapped_column
 
 from florabase.db.base import Base
@@ -18,3 +18,7 @@ class ApplicationSettings(Base):
     id: Mapped[int] = mapped_column(SmallInteger(), primary_key=True)
     public_qr_base_url: Mapped[str | None] = mapped_column(String(200))
     default_label_preset: Mapped[str] = mapped_column(String(16))
+    media_save_local_copy_default: Mapped[bool] = mapped_column(Boolean(), server_default=true())
+    media_default_attribution: Mapped[str | None] = mapped_column(String(2000))
+    media_default_licence_label: Mapped[str | None] = mapped_column(String(2000))
+    media_default_licence_url: Mapped[str | None] = mapped_column(String(2048))

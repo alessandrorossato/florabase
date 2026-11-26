@@ -26,6 +26,14 @@ def test_application_settings_upgrade_downgrade_reupgrade_and_metadata(
                     "SELECT id, public_qr_base_url, default_label_preset FROM application_settings"
                 )
             ).one() == (1, None, "medium")
+            # MEDIA-SETTINGS-001: existing installations keep today's pre-checked local copy.
+            assert conn.execute(
+                text(
+                    "SELECT media_save_local_copy_default, media_default_attribution, "
+                    "media_default_licence_label, media_default_licence_url "
+                    "FROM application_settings"
+                )
+            ).one() == (True, None, None, None)
             conn.execute(
                 text(
                     "UPDATE application_settings SET public_qr_base_url='https://flora.example', "

@@ -533,6 +533,46 @@
             "title": "Default Label Preset",
             "type": "string"
           },
+          "media_default_attribution": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Default Attribution"
+          },
+          "media_default_licence_label": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Default Licence Label"
+          },
+          "media_default_licence_url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Default Licence Url"
+          },
+          "media_save_local_copy_default": {
+            "title": "Media Save Local Copy Default",
+            "type": "boolean"
+          },
           "public_qr_base_url": {
             "anyOf": [
               {
@@ -547,7 +587,11 @@
         },
         "required": [
           "public_qr_base_url",
-          "default_label_preset"
+          "default_label_preset",
+          "media_save_local_copy_default",
+          "media_default_attribution",
+          "media_default_licence_label",
+          "media_default_licence_url"
         ],
         "title": "ApplicationSettingsValue",
         "type": "object"
@@ -1535,6 +1579,30 @@
             "description": "JPEG, PNG, or WebP collection photo",
             "title": "File",
             "type": "string"
+          },
+          "licence_label": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Licence Label"
+          },
+          "licence_url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Licence Url"
           }
         },
         "required": [
@@ -1561,6 +1629,30 @@
             "contentMediaType": "application/octet-stream",
             "title": "File",
             "type": "string"
+          },
+          "licence_label": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Licence Label"
+          },
+          "licence_url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Licence Url"
           },
           "title": {
             "anyOf": [

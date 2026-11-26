@@ -375,20 +375,29 @@ async def upload_collection_photo(
     file: Annotated[UploadFile, File(description="JPEG, PNG, or WebP collection photo")],
     caption: Annotated[str | None, Form(max_length=2000)] = None,
     attribution: Annotated[str | None, Form(max_length=2000)] = None,
+    licence_label: Annotated[str | None, Form(max_length=2000)] = None,
+    licence_url: Annotated[str | None, Form(max_length=2048)] = None,
 ) -> LocalPhotoResponse:
+    from florabase.media.schemas import AssetMetadataWrite
+
     require_owner(actor)
     try:
         metadata = PhotoMetadataWrite(caption=caption, attribution=attribution)
+        asset_metadata = AssetMetadataWrite(
+            attribution=metadata.attribution, licence_label=licence_label, licence_url=licence_url
+        )
     except ValidationError as error:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail={
                 "code": "invalid_photo_metadata",
-                "message": "Check the photo caption and attribution",
+                "message": "Check the photo caption, attribution and licence",
             },
         ) from error
     try:
-        result = await upload_local_photo(database, storage, target_type, target_id, file, metadata)
+        result = await upload_local_photo(
+            database, storage, target_type, target_id, file, metadata, asset_metadata
+        )
     except AttachmentStorageError as error:
         raise attachment_http_error(error) from error
     except CollectionPhotoError as error:

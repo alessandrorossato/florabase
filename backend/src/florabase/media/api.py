@@ -131,10 +131,17 @@ async def upload_media(
     file: Annotated[UploadFile, File()],
     title: Annotated[str | None, Form(max_length=2000)] = None,
     attribution: Annotated[str | None, Form(max_length=2000)] = None,
+    licence_label: Annotated[str | None, Form(max_length=2000)] = None,
+    licence_url: Annotated[str | None, Form(max_length=2048)] = None,
 ) -> AssetResponse:
     require_owner(actor)
     try:
-        metadata = AssetMetadataWrite(title=title, attribution=attribution)
+        metadata = AssetMetadataWrite(
+            title=title,
+            attribution=attribution,
+            licence_label=licence_label,
+            licence_url=licence_url,
+        )
         asset = await service.upload_asset(database, storage, file, metadata)
         return service.read_asset(database, asset.id)
     except ValidationError as error:
@@ -142,7 +149,7 @@ async def upload_media(
             status_code=422,
             detail={
                 "code": "invalid_media_metadata",
-                "message": "Check the media title and attribution.",
+                "message": "Check the media title, attribution and licence.",
             },
         ) from error
     except AttachmentStorageError as error:

@@ -71,15 +71,19 @@ function mutation(
 }
 export function uploadMedia(
   file: File,
-  title: string,
-  attribution: string,
+  metadata: {
+    title: string;
+    attribution: string;
+    licence_label: string;
+    licence_url: string;
+  },
   token: string,
   capability: ProtectedRequestCapability,
 ): Promise<MediaAsset> {
   const body = new FormData();
   body.set("file", file);
-  if (title.trim()) body.set("title", title);
-  if (attribution.trim()) body.set("attribution", attribution);
+  for (const [key, value] of Object.entries(metadata))
+    if (value.trim()) body.set(key, value);
   return requestJson("/api/v1/media-assets/local", {
     capability,
     method: "POST",

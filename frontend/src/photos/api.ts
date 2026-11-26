@@ -79,15 +79,19 @@ export function uploadPhoto(
   target: PhotoTarget,
   id: string,
   file: File,
-  caption: string,
-  attribution: string,
+  metadata: {
+    caption: string;
+    attribution: string;
+    licence_label: string;
+    licence_url: string;
+  },
   csrfToken: string,
   capability: ProtectedRequestCapability,
 ): Promise<LocalPhoto> {
   const body = new FormData();
   body.set("file", file);
-  if (caption.trim()) body.set("caption", caption);
-  if (attribution.trim()) body.set("attribution", attribution);
+  for (const [key, value] of Object.entries(metadata))
+    if (value.trim()) body.set(key, value);
   return requestJson(`${targetPath(target, id)}/local`, {
     capability,
     method: "POST",
