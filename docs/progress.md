@@ -62,6 +62,24 @@
   taxonomy backend tests, integration `test_reference_setup.py` (3 passed), ruff, mypy, frontend
   typecheck/lint/prettier and taxonomy/botanical-profiles/settings vitest (64 passed),
   `api-generate` + `api-check`.
+## 2026-11-25 — ABOUT-001 Settings → About page and official data-source links
+
+- On `feat/about-001` from `origin/main` `b632c5c`, merged with `origin/main` `08ff2f9` (writer
+  `claude-about-001`), targeting Batch 14.
+  Frontend only: no backend, OpenAPI, migration or Compose change.
+- Added Settings → About (`#/about`, `frontend/src/settings/AboutScreen.tsx`): version and short
+  image revision from the image's `/release.json` (exported `fetchReleaseInfo`, now shared with the
+  update watcher), project link, the tag's `CHANGELOG.md` and release notes, and the bundled
+  `/LICENSE` and `/THIRD_PARTY_NOTICES.txt`.
+- Settings → Data sources gains a "Links" column: official site and data-source page for WFO
+  (2026-06 on Zenodo), Kew WCVP, GBIF (API docs), Natural Earth (download page) and OpenStreetMap
+  (tile usage policy).
+- Checks: Vitest `src/settings src/shell src/pwa src/App.test.tsx src/App.lazy.test.tsx` (251 tests),
+  `pnpm typecheck`, `pnpm lint`, `prettier --check src`. Evidence:
+  [docs/release/evidence/about-001.md](release/evidence/about-001.md).
+- Unresolved: canonical `make feature-verify` not yet run; `docs/progress.md`, `docs/features.json`
+  and `DataSourcesScreen.tsx` also change on `feat/ref-setup-001` (see evidence for merge check).
+
 ## 2026-11-25 — Batch 13 integration (DOCS-004, PROPAGATION-BATCH-001, CARE-BULK-001/FN-03, UX-SORT-001, MEDIA-FETCH-001)
 
 - `ci/batch-13` from `origin/main` `b632c5c` (writer `claude-batch-13`) merges, in order,

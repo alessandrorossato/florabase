@@ -25,4 +25,5 @@ export const navigationIcons = {
   settings: "gear",
   "data-sources": "layers",
   help: "document",
+  about: "monitor",
 } as const satisfies Record<string, IconName>;
