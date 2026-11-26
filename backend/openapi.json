@@ -1388,6 +1388,25 @@
         "title": "AuthErrorResponse",
         "type": "object"
       },
+      "Body_applySheetImport": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "options": {
+            "title": "Options",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file",
+          "options"
+        ],
+        "title": "Body_applySheetImport",
+        "type": "object"
+      },
       "Body_createAttachment": {
         "properties": {
           "file": {
@@ -1401,6 +1420,73 @@
           "file"
         ],
         "title": "Body_createAttachment",
+        "type": "object"
+      },
+      "Body_inspectSheetImport": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "header_row": {
+            "anyOf": [
+              {
+                "maximum": 10.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Header Row"
+          },
+          "record_type": {
+            "default": "plants",
+            "enum": [
+              "plants",
+              "plant-groups",
+              "seed-lots"
+            ],
+            "title": "Record Type",
+            "type": "string"
+          },
+          "sheet_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sheet Name"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_inspectSheetImport",
+        "type": "object"
+      },
+      "Body_previewSheetImport": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "options": {
+            "title": "Options",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file",
+          "options"
+        ],
+        "title": "Body_previewSheetImport",
         "type": "object"
       },
       "Body_setLocalBotanicalIdentityCoverImage": {
@@ -16218,6 +16304,712 @@
           "canonical_origin"
         ],
         "title": "SessionResponse",
+        "type": "object"
+      },
+      "SheetImportApplyResponse": {
+        "properties": {
+          "created_records": {
+            "items": {
+              "$ref": "#/components/schemas/SheetImportCreatedRecord"
+            },
+            "title": "Created Records",
+            "type": "array"
+          },
+          "identities_created": {
+            "title": "Identities Created",
+            "type": "integer"
+          },
+          "locations_created": {
+            "title": "Locations Created",
+            "type": "integer"
+          },
+          "record_type": {
+            "enum": [
+              "plants",
+              "plant-groups",
+              "seed-lots"
+            ],
+            "title": "Record Type",
+            "type": "string"
+          },
+          "records_created": {
+            "title": "Records Created",
+            "type": "integer"
+          },
+          "suppliers_created": {
+            "title": "Suppliers Created",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "record_type",
+          "records_created",
+          "identities_created",
+          "locations_created",
+          "suppliers_created",
+          "created_records"
+        ],
+        "title": "SheetImportApplyResponse",
+        "type": "object"
+      },
+      "SheetImportCandidate": {
+        "properties": {
+          "details": {
+            "title": "Details",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "match_kind": {
+            "enum": [
+              "exact",
+              "near"
+            ],
+            "title": "Match Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "details",
+          "match_kind"
+        ],
+        "title": "SheetImportCandidate",
+        "type": "object"
+      },
+      "SheetImportColumn": {
+        "properties": {
+          "header": {
+            "title": "Header",
+            "type": "string"
+          },
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "samples": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Samples",
+            "type": "array"
+          },
+          "suggested_field": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SheetImportField"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "index",
+          "key",
+          "header",
+          "samples",
+          "suggested_field"
+        ],
+        "title": "SheetImportColumn",
+        "type": "object"
+      },
+      "SheetImportCreatedRecord": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "identity_label": {
+            "title": "Identity Label",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "identity_label"
+        ],
+        "title": "SheetImportCreatedRecord",
+        "type": "object"
+      },
+      "SheetImportField": {
+        "enum": [
+          "scientific_name",
+          "cultivar_name",
+          "common_name",
+          "label",
+          "location",
+          "supplier",
+          "collection_entry_date",
+          "acquisition_date",
+          "harvest_date",
+          "expected_viability_until",
+          "quantity_value",
+          "quantity_approximate",
+          "quantity_kind",
+          "quantity_unit",
+          "direct_origin_kind",
+          "direct_origin_detail",
+          "source_kind",
+          "source_detail",
+          "lifecycle",
+          "notes"
+        ],
+        "title": "SheetImportField",
+        "type": "string"
+      },
+      "SheetImportIdentityGroup": {
+        "properties": {
+          "action": {
+            "enum": [
+              "use_existing",
+              "create"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/SheetImportCandidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "common_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Common Name"
+          },
+          "cultivar_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cultivar Name"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "matched_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched Id"
+          },
+          "matched_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched Label"
+          },
+          "messages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "scientific_name": {
+            "title": "Scientific Name",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "matched",
+              "new",
+              "invalid"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "scientific_name",
+          "cultivar_name",
+          "common_name",
+          "row_count",
+          "status",
+          "action"
+        ],
+        "title": "SheetImportIdentityGroup",
+        "type": "object"
+      },
+      "SheetImportInspectResponse": {
+        "properties": {
+          "allowed_fields": {
+            "items": {
+              "$ref": "#/components/schemas/SheetImportField"
+            },
+            "title": "Allowed Fields",
+            "type": "array"
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/SheetImportColumn"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "detected_header_row": {
+            "title": "Detected Header Row",
+            "type": "integer"
+          },
+          "format": {
+            "enum": [
+              "csv",
+              "xlsx"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "header_row": {
+            "title": "Header Row",
+            "type": "integer"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "sample_rows": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Sample Rows",
+            "type": "array"
+          },
+          "selected_sheet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Sheet"
+          },
+          "sheets": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sheets",
+            "type": "array"
+          }
+        },
+        "required": [
+          "format",
+          "sheets",
+          "selected_sheet",
+          "detected_header_row",
+          "header_row",
+          "row_count",
+          "columns",
+          "sample_rows",
+          "allowed_fields"
+        ],
+        "title": "SheetImportInspectResponse",
+        "type": "object"
+      },
+      "SheetImportLocationGroup": {
+        "properties": {
+          "action": {
+            "enum": [
+              "use_existing",
+              "create",
+              "skip"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/SheetImportCandidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "create_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Create Name"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "matched_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched Id"
+          },
+          "matched_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched Label"
+          },
+          "messages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "raw_value": {
+            "title": "Raw Value",
+            "type": "string"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "matched",
+              "new",
+              "ambiguous",
+              "skipped",
+              "invalid"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "raw_value",
+          "row_count",
+          "status",
+          "action"
+        ],
+        "title": "SheetImportLocationGroup",
+        "type": "object"
+      },
+      "SheetImportPreviewResponse": {
+        "properties": {
+          "can_apply": {
+            "title": "Can Apply",
+            "type": "boolean"
+          },
+          "confirmation_token": {
+            "title": "Confirmation Token",
+            "type": "string"
+          },
+          "identities": {
+            "items": {
+              "$ref": "#/components/schemas/SheetImportIdentityGroup"
+            },
+            "title": "Identities",
+            "type": "array"
+          },
+          "invalid": {
+            "title": "Invalid",
+            "type": "integer"
+          },
+          "locations": {
+            "items": {
+              "$ref": "#/components/schemas/SheetImportLocationGroup"
+            },
+            "title": "Locations",
+            "type": "array"
+          },
+          "needs_attention": {
+            "title": "Needs Attention",
+            "type": "integer"
+          },
+          "ready": {
+            "title": "Ready",
+            "type": "integer"
+          },
+          "record_type": {
+            "enum": [
+              "plants",
+              "plant-groups",
+              "seed-lots"
+            ],
+            "title": "Record Type",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/SheetImportPreviewRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "suppliers": {
+            "items": {
+              "$ref": "#/components/schemas/SheetImportSupplierGroup"
+            },
+            "title": "Suppliers",
+            "type": "array"
+          },
+          "will_create_identities": {
+            "title": "Will Create Identities",
+            "type": "integer"
+          },
+          "will_create_locations": {
+            "title": "Will Create Locations",
+            "type": "integer"
+          },
+          "will_create_suppliers": {
+            "title": "Will Create Suppliers",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "record_type",
+          "identities",
+          "locations",
+          "suppliers",
+          "rows",
+          "ready",
+          "needs_attention",
+          "invalid",
+          "will_create_identities",
+          "will_create_locations",
+          "will_create_suppliers",
+          "can_apply",
+          "confirmation_token"
+        ],
+        "title": "SheetImportPreviewResponse",
+        "type": "object"
+      },
+      "SheetImportPreviewRow": {
+        "properties": {
+          "hard_blocker": {
+            "title": "Hard Blocker",
+            "type": "boolean"
+          },
+          "messages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "normalized": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Normalized",
+            "type": "array"
+          },
+          "outcome": {
+            "enum": [
+              "ready",
+              "already_exists",
+              "needs_choice",
+              "invalid",
+              "unresolved_reference",
+              "ambiguous_reference",
+              "conflict"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "record": {
+            "title": "Record",
+            "type": "string"
+          },
+          "references": {
+            "items": {
+              "type": "string"
+            },
+            "title": "References",
+            "type": "array"
+          },
+          "row_number": {
+            "title": "Row Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "row_number",
+          "record",
+          "outcome",
+          "messages",
+          "references",
+          "normalized",
+          "hard_blocker"
+        ],
+        "title": "SheetImportPreviewRow",
+        "type": "object"
+      },
+      "SheetImportSupplierGroup": {
+        "properties": {
+          "action": {
+            "enum": [
+              "use_existing",
+              "create",
+              "skip"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/SheetImportCandidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "create_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Create Name"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SupplierKind",
+            "default": "other"
+          },
+          "matched_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched Id"
+          },
+          "matched_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched Label"
+          },
+          "messages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "raw_value": {
+            "title": "Raw Value",
+            "type": "string"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "matched",
+              "new",
+              "ambiguous",
+              "skipped",
+              "invalid"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "raw_value",
+          "row_count",
+          "status",
+          "action"
+        ],
+        "title": "SheetImportSupplierGroup",
         "type": "object"
       },
       "SourceAdjustment": {
@@ -34603,6 +35395,166 @@
         "summary": "Read Lineage",
         "tags": [
           "seed-lots"
+        ]
+      }
+    },
+    "/api/v1/sheet-imports/apply": {
+      "post": {
+        "operationId": "applySheetImport",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Import-Confirmation",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Import-Confirmation"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_applySheetImport"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SheetImportApplyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apply Sheet Import",
+        "tags": [
+          "import-export",
+          "import-export"
+        ]
+      }
+    },
+    "/api/v1/sheet-imports/inspect": {
+      "post": {
+        "operationId": "inspectSheetImport",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_inspectSheetImport"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SheetImportInspectResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Inspect Sheet Import",
+        "tags": [
+          "import-export",
+          "import-export"
+        ]
+      }
+    },
+    "/api/v1/sheet-imports/preview": {
+      "post": {
+        "operationId": "previewSheetImport",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_previewSheetImport"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SheetImportPreviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Sheet Import",
+        "tags": [
+          "import-export",
+          "import-export"
         ]
       }
     },

@@ -161,6 +161,78 @@
   ruff, ruff format, mypy. Evidence:
   `docs/release/evidence/media-fetch-001.md`.
 
+## 2026-11-25 — IMPORT-002 spreadsheet wizard frontend pass
+
+- On `feat/import-002-sheet-wizard` (writer `claude-import-002`), after merging `origin/main`
+  `b632c5c` (MOBILE-002; only `docs/progress.md` conflicted). Review notes L1/L2 were already fixed
+  in `7dcbfd8` (`neon`) and are covered by `test_xlsx_trailing_formula_only_row_detected_and_counted`.
+- Added `frontend/src/import-export/SheetImportWizard.tsx` (six steps: upload with sheet and header
+  row, row type, column mapping with browser-remembered mapping, grouped review of species,
+  locations and suppliers with `WfoNameInput` reuse, rows with "Only problems", import result with
+  links) and `sheetApi.ts`; launcher in `ImportExportScreen.tsx`, the per-type import marked
+  Advanced and otherwise unchanged.
+- Fixed a dead end found in the UI run: an empty first XLSX sheet made inspect fail before the sheet
+  picker appeared; without an explicit sheet the parser now opens the first sheet with data.
+- Checks: backend ruff, mypy, import unit suites (53 passed), IMPORT-001 + IMPORT-002 integration
+  (20 passed); frontend Prettier, tsc, ESLint, Vitest `src/import-export` (8 passed); manual UI run of
+  all seven samples on a UAT instance. Evidence: [import-002.md](release/evidence/import-002.md).
+  Canonical FULL pending (operator).
+
+## 2026-11-24 — IMPORT-002 single-sheet CSV/XLSX import wizard (backend pass)
+
+- On `feat/import-002-sheet-wizard` from `origin/main` `ddf5a14` (writer `neon`); backend-only pass
+  while waiting for `ci/batch-12` and `feat/mobile-002-device-auth` to land on `main` before the
+  frontend wizard pass (which will reuse batch 12's `WfoNameInput`).
+- Narrow refactor of `backend/src/florabase/import_export/service.py`: extracted
+  `build_rows(kind, sources, refs)` from `preview(...)` and added optional `PendingReference`
+  support (`pending=None` default) on `References` so preview can validate collection rows against
+  not-yet-created identities, suppliers, and locations while keeping IMPORT-001 byte-identical.
+- Added `backend/src/florabase/import_wizard/` (`sheet.py`, `mapping.py`, `schemas.py`,
+  `service.py`, `api.py`), mounted from `import_export/api.py` under `/api/v1/sheet-imports/*`
+  (`inspect`, `preview`, `apply`; `operation_id`s `inspectSheetImport`, `previewSheetImport`,
+  `applySheetImport`) to avoid route collision with `/api/v1/imports/{kind}/*`.
+  - Pinned `openpyxl==3.1.5` (MIT, pulls `et-xmlfile==2.0.0`, MIT) in `backend/pyproject.toml` and
+    regenerated `backend/requirements.lock` and `backend/requirements-dev.lock`.
+  - Enforced 2 MiB upload, 2,000 nonblank rows, 60 columns, one sheet, header row 1–10, 30 MiB
+    uncompressed zip budget, 100:1 compression ratio, bounded `<!DOCTYPE`/`<!ENTITY` rejection,
+    `read_only=True`/`data_only=True` cached-value-only parsing, and a bounded `data_only=False`
+    second pass to flag uncached formulas as invalid if mapped and ignore them if unmapped.
+  - Added EN/IT header auto-suggestions (`quantity_value` omitted for Plants), optional
+    `append_unmapped_to_notes`, grouped identity/location/supplier review with near-match
+    suggestions and explicit `skip` visibility ("will be left empty"), 15-minute session-bound
+    HMAC-SHA256 confirmation, and single-transaction apply that creates identities → suppliers →
+    locations, rebuilds `References` from the DB to re-run `build_rows`, and rolls back with `409`
+    on any conflict or row-outcome drift.
+- Copied synthetic fixtures from `import-samples.zip` as-is into `backend/tests/fixtures/sheet/`,
+  added unit (`backend/tests/test_import_wizard.py`) and PostgreSQL integration tests
+  (`backend/tests/integration/test_import_wizard_api.py`), regenerated `backend/openapi.json` and
+  `frontend/src/api/schema.d.ts`, mapped `import_wizard/` and `fixtures/sheet/` in
+  `scripts/verification-impact.json`, extended `docs/import-export.md`, and registered `IMPORT-002`
+  (`in_progress` in `docs/features.json`, `best-effort` in `docs/release/scope-v1.json`, both right
+  after `IMPORT-001`).
+- Backend review fixes (`M1`, `M2`):
+  - **M1 (confirmed preview state digest)**: added `preview_state_digest(plan)` over per-group
+    `(key, action, matched_id)` for identities, locations, and suppliers plus `row_count` and
+    per-row outcomes; bound it inside the HMAC confirmation token (`issued.preview_digest.sig`)
+    and verified it inside `apply_sheet` before creating any entity (returning `409` `"validate
+    again"` with zero writes when e.g. a Location with the same path is created between preview
+    and apply).
+  - **M2 (formatted blank XLSX rows)**: raised `MAX_SCANNED_ROWS` to `200_000`, enforced
+    `MAX_ROWS` strictly on nonblank rows, stopped storing trailing/empty rows during CSV/XLSX
+    scanning, and bounded the `data_only=False` formula pass by `last_nonblank_row` (verified on
+    a 2-data-row XLSX with a formatted empty cell at `A50000`).
+- Checks passed: `make check` (`doc-links` 364 docs, `format-check` 447 backend + Prettier, `lint`
+  Ruff + ESLint, `typecheck` strict mypy 392 files + tsc, `api-check` zero drift, `test-backend`
+  1356 passed / 3 skipped / 90.55% coverage, `test-frontend` 133 files / 1437 passed),
+  re-verified after M1/M2 fixes with `ruff format --check`, `ruff check`, strict `mypy` (392
+  files), `make api-check`, focused unit suite (`test_import_export.py`, `test_import_export_api.py`,
+  `test_import_wizard.py`: 51 passed), and `./scripts/test-integration.sh` on
+  `test_import_export_api.py` + `test_import_wizard_api.py` (20 passed), plus earlier
+  `scripts/test_check_api_routes.py` (27 passed), `make license-check` (PyPI + 290 npm packages,
+  0 forbidden), `scripts/check-features.py` (181 valid), and `scripts/test-verification-impact.py`
+  (46 OK). Not yet run: frontend wizard UI (pending batch 12 + `MOBILE-002` merge into this branch)
+  and final canonical FULL `make feature-verify`.
+
 ## 2026-11-23 — MOBILE-002 device sign-in, Keystore plugin, and compatibility contract (PWA preserved)
 
 - On `feat/mobile-002-device-auth` from `origin/main` `ddf5a14` (writer `neon-mobile-002`).

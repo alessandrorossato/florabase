@@ -204,3 +204,59 @@ binaries or secret material.
 
 For source mapping, batch reconciliation and the manual workflows needed for
 first collection entry, see the [onboarding runbook](beta-data-001.md).
+
+## Spreadsheet wizard (single-sheet CSV and XLSX)
+
+In addition to the six per-type CSV workflows above (which remain unchanged as the canonical
+round-trip import contract), Florabase provides a single-sheet spreadsheet import wizard for
+creating one collection record type per sheet (**Plants**, **Plant groups**, or **Seed lots**):
+
+- **Endpoints**: `POST /api/v1/sheet-imports/inspect`, `POST /api/v1/sheet-imports/preview`, and
+  `POST /api/v1/sheet-imports/apply` (distinct from `/api/v1/imports/{kind}/*`). All three require
+  owner authentication; apply also requires CSRF protection and the `X-Import-Confirmation` header.
+- **Bounds and safety**: uploads are capped at **2 MiB**, **2,000 nonblank data rows**, **60
+  columns**, and **one sheet** per import. Header row selection defaults to the first nonblank row
+  and may be adjusted within rows 1–10. Before opening `.xlsx` files with `openpyxl`
+  (`read_only=True`, `data_only=True`), the server rejects archives whose uncompressed member sizes
+  exceed **30 MiB**, whose member compression ratio exceeds **100:1**, or whose XML members contain
+  `<!DOCTYPE` or `<!ENTITY` declarations. Formulas are never evaluated: cached values are read as
+  stored, and formula cells without a cached value are reported invalid if mapped and ignored if
+  unmapped.
+- **Types and dates**: real Excel date cells normalize to day-precision `YYYY-MM-DD`; integer-valued
+  numbers normalize to whole-number strings; text dates such as `2023` or `2023-05` preserve their
+  partial precision.
+- **Mapping and grouped review**: EN and IT header synonyms suggest column mappings for the chosen
+  record type (for example `Species`/`Nome scientifico`, `Location`/`Posizione`,
+  `Supplier`/`Fornitore`, `Bought`/`Data acquisto`, `Quantity`/`Quantità`, `Notes`/`Note`);
+  `quantity_value` is not suggested for individual Plants. Unmapped columns may optionally be
+  appended to `notes` as `Column: value` lines. New botanical identities, locations (never
+  auto-split on `/` or `→`), and suppliers (default kind `other`) are reviewed once per distinct
+  value rather than per row, with exact matches, near-match suggestions, or explicit **skip**
+  (which visibly records that the location or supplier will be left empty).
+- **Atomic apply**: confirmation tokens bind the session, file bytes, and options for 15 minutes
+  via HMAC-SHA256. Apply creates missing identities, suppliers, and locations first, rebuilds
+  references from the database to revalidate every row against the confirmed preview, and creates
+  all collection records in a single transaction—rolling back everything on any error or state
+  change. Collection records remain create-only; no events, photos, lineage, or server-side drafts
+  are created.
+- **Sheet choice**: without an explicit choice the first sheet that has data opens, so a leading
+  cover or instructions sheet does not block the upload; the wizard then offers every sheet.
+
+### Using the wizard
+
+Settings → Import / Export → **Import a spreadsheet** opens six steps; the per-type CSV import stays
+below it, marked **Advanced**.
+
+1. **Upload** a `.csv` or `.xlsx` file; pick the sheet and the header row when needed.
+2. **Row type**: Plant, Plant group or Seed lot.
+3. **Columns**: each column shows sample values and a Florabase field (or Ignore). Scientific name is
+   required and a field can be used once. The last mapping for the same headers and row type is
+   remembered in this browser only.
+4. **Names and places**: species, locations and suppliers are listed once per distinct value. New
+   scientific names can be edited (with local WFO suggestions when that index is installed);
+   locations and suppliers can use an existing record, be created (a new location under a chosen
+   parent, a new supplier with a kind) or be left empty.
+5. **Rows**: counts of ready rows and rows needing attention, with an "Only problems" filter and the
+   per-row messages of the shared preview vocabulary. Import stays disabled until every row is ready.
+6. **Import** creates everything in one transaction and lists the created records with links. If the
+   collection changed since the preview, nothing is created and the wizard returns to step 4.

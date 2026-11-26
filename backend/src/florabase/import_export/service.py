@@ -753,11 +753,28 @@ def _display_item(
     return str(getattr(item, "name", None) or getattr(item, "label", None) or item.id)
 
 
+@dataclass(frozen=True)
+class PendingReference:
+    id: str
+    label: str
+    supports_plants: bool = True
+    supports_seed_lots: bool = True
+
+
 class References:
     def __init__(
-        self, database: Session, selections: dict[tuple[int, str], DecisionOption] | None = None
+        self,
+        database: Session,
+        selections: dict[tuple[int, str], DecisionOption] | None = None,
+        *,
+        pending: dict[str, dict[str, PendingReference]] | None = None,
     ) -> None:
         self.selections = selections or {}
+        self.pending: dict[str, dict[str, PendingReference]] = pending or {}
+        self.pending_by_id: dict[str, dict[str, PendingReference]] = {
+            category: {entry.id: entry for entry in entries.values()}
+            for category, entries in self.pending.items()
+        }
         self.identities = list(
             database.scalars(
                 select(BotanicalIdentity).where(BotanicalIdentity.merged_into_id.is_(None))
@@ -839,6 +856,11 @@ class References:
             detail = _candidate_details(resolved, category)
             row.references.append(f"{category}: {display_value} → {label} ({detail})")
             return str(resolved.id)
+        if not matches:
+            pending_ref = self.pending.get(category, {}).get(key)
+            if pending_ref is not None:
+                row.references.append(f"{category}: {pending_ref.label} (will create)")
+                return pending_ref.id
         row.issue(
             "ambiguous_reference" if len(matches) > 1 else "unresolved_reference",
             f"{category}: {'ambiguous' if len(matches) > 1 else 'not found'}: {display_value}",
@@ -1251,7 +1273,10 @@ def _build_row(kind: str, source: dict[str, str], row: PreviewRow, refs: Referen
                     "Existing collection records are never updated or silently skipped by import",
                 )
         if location_id:
-            item = refs.ids["location"][location_id]
+            item = refs.ids["location"].get(location_id) or refs.pending_by_id.get(
+                "location", {}
+            ).get(location_id)
+            assert item is not None
             supported = item.supports_seed_lots if kind == "seed-lots" else item.supports_plants
             if not supported:
                 row.issue("conflict", f"Location does not support {kind} assignments")
@@ -1264,14 +1289,11 @@ def identity_label_from_payload(payload: dict[str, Any]) -> str:
     return str(payload["scientific_name"]) + (f"|{cultivar}" if cultivar else "")
 
 
-def preview(
-    database: Session,
+def build_rows(
     kind: str,
-    data: bytes,
-    selections: dict[tuple[int, str], DecisionOption] | None = None,
+    sources: list[tuple[int, dict[str, str]]],
+    refs: References,
 ) -> list[PreviewRow]:
-    sources = parse_csv(data, kind)
-    refs = References(database, selections)
     rows: list[PreviewRow] = []
     for number, source in sources:
         result = PreviewRow(
@@ -1361,6 +1383,17 @@ def preview(
             ):
                 row.issue("conflict", "Parent Location row needs attention")
     return rows
+
+
+def preview(
+    database: Session,
+    kind: str,
+    data: bytes,
+    selections: dict[tuple[int, str], DecisionOption] | None = None,
+) -> list[PreviewRow]:
+    sources = parse_csv(data, kind)
+    refs = References(database, selections)
+    return build_rows(kind, sources, refs)
 
 
 def apply(
