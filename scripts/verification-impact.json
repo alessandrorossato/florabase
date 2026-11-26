@@ -101,6 +101,7 @@
     "frontend/src/ui-pages/",
     "frontend/src/ui-lab/",
     "frontend/src/shell/",
+    "frontend/src/workspaces/",
     "frontend/src/timeline/",
     "frontend/src/settings/",
     "frontend/src/focusModality.ts"
