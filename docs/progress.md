@@ -1,5 +1,18 @@
 # Engineering progress
 
+## 2026-11-26 — BETA-SECURITY-001 PostgreSQL libxml2 (`.6`)
+
+- On `fix/postgres-libxml2-r5` from `origin/main` `08ff2f9` (writer `claude-pg-pin`), security
+  source for Batch 14. The PR #228 `rehearse` check failed because Alpine 3.24 withdrew
+  `libxml2` `2.13.9-r3`; `postgres/Dockerfile` pins `libxml2=2.13.9-r5` and
+  `18.6-alpine-florabase.6`, and `release/inputs.json` pins the reproduced index `fa3d7957…de9b`
+  and platform `b61292b4…1a3d`. Upstream base and other pins are unchanged.
+  [Evidence](security/beta-security-001/postgres-libxml2-2.13.9-r5/README.md).
+- Checks: two pinned-BuildKit `postgres-identity` builds (second with `--check`),
+  `make test-beta-images`, `make test-beta-runtime`, `make workflow-check`, `make doc-links`,
+  `check-features.py`.
+- Open: independent QA, canonical FULL, the hosted rehearsal and operator delivery.
+
 ## 2026-11-25 — Batch 13 integration (DOCS-004, PROPAGATION-BATCH-001, CARE-BULK-001/FN-03, UX-SORT-001, MEDIA-FETCH-001)
 
 - `ci/batch-13` from `origin/main` `b632c5c` (writer `claude-batch-13`) merges, in order,
