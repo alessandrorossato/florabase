@@ -28,6 +28,7 @@ from florabase.auth.dependencies import (
     require_owner,
 )
 from florabase.collection_photos.service import TARGET_MODELS
+from florabase.db.ordering import DirectorySort
 from florabase.db.session import get_database_session
 from florabase.media import service
 from florabase.media.schemas import (
@@ -77,6 +78,7 @@ def list_media(
     target: MediaTargetFilter | None = None,
     limit: int = Query(default=24, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    sort: DirectorySort | None = None,
 ) -> AssetPageResponse:
     return service.list_assets(
         database,
@@ -84,6 +86,7 @@ def list_media(
         kind=kind,
         association=association,
         target=target,
+        sort=sort,
         limit=limit,
         offset=offset,
     )

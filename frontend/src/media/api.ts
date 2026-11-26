@@ -20,6 +20,7 @@ export interface MediaFilters {
   kind?: string;
   association?: string;
   target?: MediaTargetFilter | "";
+  sort?: string;
   offset?: number;
 }
 
@@ -34,6 +35,7 @@ export function listMedia(
     "kind",
     "association",
     "target",
+    "sort",
     "offset",
   ] as const) {
     const value = filters[key];

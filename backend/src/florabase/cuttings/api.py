@@ -47,6 +47,7 @@ from florabase.cuttings.schemas import (
     VegetativeLotResponse,
     VegetativeLotUpdate,
 )
+from florabase.db.ordering import DirectorySort, directory_order
 from florabase.db.session import get_database_session
 from florabase.lineage.schemas import LineageResponse
 from florabase.lineage.service import LineageCycleError, lineage
@@ -128,10 +129,13 @@ def list_lots(
     mother_plant_group_id: UUID | None = None,
     location_id: UUID | None = None,
     has_known_mother: bool | None = None,
+    sort: DirectorySort | None = None,
     offset: Offset = 0,
     limit: Limit = 50,
 ) -> list[VegetativeLotResponse]:
-    statement = select(VegetativeLot)
+    statement = select(VegetativeLot).join(
+        BotanicalIdentity, BotanicalIdentity.id == VegetativeLot.botanical_identity_id
+    )
     for column, value in (
         (VegetativeLot.material_type, material_type),
         (VegetativeLot.source_kind, source_kind),
@@ -153,10 +157,7 @@ def list_lots(
         mother, group = aliased(Plant), aliased(PlantGroup)
         needle = q.strip()
         statement = (
-            statement.join(
-                BotanicalIdentity, BotanicalIdentity.id == VegetativeLot.botanical_identity_id
-            )
-            .outerjoin(mother, mother.id == VegetativeLot.mother_plant_id)
+            statement.outerjoin(mother, mother.id == VegetativeLot.mother_plant_id)
             .outerjoin(group, group.id == VegetativeLot.mother_plant_group_id)
             .where(
                 or_(
@@ -177,7 +178,28 @@ def list_lots(
     return [
         service.lot_response(row)
         for row in database.scalars(
-            statement.order_by(VegetativeLot.id.desc()).offset(offset).limit(limit)
+            statement.order_by(
+                *directory_order(
+                    sort,
+                    # Mirrors the directory's record name: label, then the identity's names.
+                    name=func.coalesce(
+                        VegetativeLot.label,
+                        BotanicalIdentity.common_name,
+                        BotanicalIdentity.cultivar_name,
+                        BotanicalIdentity.scientific_name,
+                    ),
+                    date=(
+                        VegetativeLot.taken_on_year,
+                        VegetativeLot.taken_on_month,
+                        VegetativeLot.taken_on_day,
+                    ),
+                    record_id=VegetativeLot.id,
+                )
+                if sort
+                else [VegetativeLot.id.desc()]
+            )
+            .offset(offset)
+            .limit(limit)
         )
     ]
 
@@ -193,6 +215,7 @@ def list_attempts(
     mother_plant_id: UUID | None = None,
     mother_plant_group_id: UUID | None = None,
     location_id: UUID | None = None,
+    sort: DirectorySort | None = None,
     offset: Offset = 0,
     limit: Limit = 50,
 ) -> list[PropagationAttemptListItem]:
@@ -237,7 +260,28 @@ def list_attempts(
             ),
         )
         for attempt, identity in database.execute(
-            statement.order_by(PropagationAttempt.id.desc()).offset(offset).limit(limit)
+            statement.order_by(
+                *directory_order(
+                    sort,
+                    # Mirrors the directory's record name: label, then the botanical label.
+                    name=func.coalesce(
+                        PropagationAttempt.label,
+                        func.concat_ws(
+                            " ", BotanicalIdentity.scientific_name, BotanicalIdentity.cultivar_name
+                        ),
+                    ),
+                    date=(
+                        PropagationAttempt.started_on_year,
+                        PropagationAttempt.started_on_month,
+                        PropagationAttempt.started_on_day,
+                    ),
+                    record_id=PropagationAttempt.id,
+                )
+                if sort
+                else [PropagationAttempt.id.desc()]
+            )
+            .offset(offset)
+            .limit(limit)
         )
     ]
 

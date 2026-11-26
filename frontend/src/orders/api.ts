@@ -16,6 +16,7 @@ export function listOrders(
   capability: ProtectedRequestCapability,
   signal?: AbortSignal,
   limit = 50,
+  sort = "",
 ): Promise<OrderPage> {
   const params = new URLSearchParams({
     offset: String(offset),
@@ -23,6 +24,7 @@ export function listOrders(
   });
   if (q.trim()) params.set("q", q.trim());
   if (supplierId) params.set("supplier_id", supplierId);
+  if (sort) params.set("sort", sort);
   return requestJson(`/api/v1/orders?${params}`, { capability, signal });
 }
 export function getOrder(

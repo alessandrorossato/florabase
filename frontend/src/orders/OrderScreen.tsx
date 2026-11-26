@@ -43,6 +43,7 @@ import {
 import { DetailEmptyState } from "../components/DetailEmptyState";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { DirectoryTools } from "../components/DirectoryTools";
+import { DirectorySortSelect } from "../components/DirectorySort";
 import { EditWorkspace } from "../components/EditWorkspace";
 import { FieldLabel } from "../components/FieldLabel";
 import { DirectorySearch } from "../components/ReferenceUI";
@@ -679,7 +680,7 @@ export function OrderScreen({
   });
   const lotOffset =
     lotOffsetState.id === (initialId ?? "") ? lotOffsetState.offset : 0;
-  const pageRequestKey = `${view.state.q}:${view.state.supplier_id}:${String(
+  const pageRequestKey = `${view.state.q}:${view.state.supplier_id}:${view.state.sort}:${String(
     offset,
   )}:${pageSize}:${String(attempt)}`;
   const detailRequestKey = `${initialId ?? ""}:${String(lotOffset)}:${String(
@@ -754,6 +755,7 @@ export function OrderScreen({
       capability,
       controller.signal,
       limit,
+      view.state.sort,
     )
       .then(async (firstPage) => {
         if (controller.signal.aborted || pageSize !== "all") return firstPage;
@@ -767,6 +769,7 @@ export function OrderScreen({
               capability,
               controller.signal,
               limit,
+              view.state.sort,
             ),
           ),
         );
@@ -808,6 +811,7 @@ export function OrderScreen({
     pageRequestKey,
     view.state.q,
     view.state.supplier_id,
+    view.state.sort,
   ]);
 
   useEffect(() => {
@@ -1320,6 +1324,16 @@ export function OrderScreen({
                       value={view.state.q}
                       onChange={(value) => {
                         view.update("q", value);
+                        setOffset(0);
+                      }}
+                    />
+                  }
+                  sort={
+                    <DirectorySortSelect
+                      value={view.state.sort}
+                      dateLabel="order date"
+                      onChange={(value) => {
+                        view.update("sort", value);
                         setOffset(0);
                       }}
                     />
