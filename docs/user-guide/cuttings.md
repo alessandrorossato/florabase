@@ -89,8 +89,8 @@ Florabase opens the new **Rooting attempt** detail page.
 
 While an attempt is rooting, you can log periodic checks without having to establish a plant yet:
 
-1. On the **Rooting attempt** detail page, under **Rooting observations**, click **Log rooting
-   observation**.
+1. On the **Rooting attempt** detail page, click **Log rooting observation** in the top action
+   bar.
 2. In the **Log rooting observation** dialog, under **Rooting check**:
    - Choose the **Stage**:
      - `Inspection` (general check)
@@ -105,8 +105,8 @@ While an attempt is rooting, you can log periodic checks without having to estab
    - Optionally enter **Notes**.
 3. Click **Save observation**.
 
-If you need to fix a typo in an observation later, click **Correct observation** next to that entry
-in the **Rooting observations** list.
+If you need to fix a typo in an observation later, open the attempt's **Observations** tab and click
+**Correct observation** next to that entry in the **Rooting observations** list.
 
 <!-- TODO(DOC-04 screenshot): Rooting attempt detail page with Rooting observations and Log rooting observation dialog -->
 
@@ -132,8 +132,8 @@ Once one or more cuttings have rooted and you pot them up as living collection s
 3. Click **Establish**.
 
 The newly established **Plant** or **Plant group** appears under **Established offspring** on the
-rooting attempt page. When you open that plant or group and check its **Lineage** tab, you will see
-the full vegetative chain:
+rooting attempt's **Offspring** tab. When you open that plant or group and check its **Lineage**
+tab, you will see the full vegetative chain:
 
 Mother `Plant` (or `Plant group`) → *Taken as vegetative material* → `Vegetative lot` → *Started
 rooting attempt* → `Rooting attempt` → *Established from rooting attempt* → new `Plant` (or `Plant
@@ -146,8 +146,8 @@ group`).
 Not every batch of cuttings roots, and you do not always know the exact rooted count:
 
 - **Attempts where the rooted count is still unknown**: leave **Observed rooted count** (in **Log
-  rooting observation**) and **Rooted count** (in **Edit rooting attempt**) empty. Under **Rooting
-  overview**, **Rooting outcome** displays `Rooting pending` while the attempt is active (or
+  rooting observation**) and **Rooted count** (in **Edit rooting attempt**) empty. In the attempt's
+  header, **Rooting** displays `Rooting pending` while the attempt is active (or
   `Rooted count unrecorded` once ended), and you can still click **Establish Plant or group**
   whenever at least one cutting is ready.
 - **Failed or abandoned attempts**: if none of the cuttings survived:
@@ -165,11 +165,11 @@ Not every batch of cuttings roots, and you do not always know the exact rooted c
 Just like seed propagation, guided cutting transitions can be reversed if you made a mistake:
 
 - To undo establishing a plant or group from a rooting attempt, open the **Rooting attempt** detail
-  page, find the offspring under **Established offspring**, click **Undo establishment**, and in the
-  **Undo cutting operation** dialog click **Confirm undo**.
+  page, open its **Offspring** tab, find the offspring under **Established offspring**, click
+  **Undo establishment**, and in the **Undo cutting operation** dialog click **Confirm undo**.
 - To undo starting a rooting attempt from a material lot (once any established offspring have been
-  undone first), click **Undo starting attempt** under **Rooting overview** on the attempt page, and
-  click **Confirm undo**.
+  undone first), click **Undo starting attempt** under **Rooting overview** on the attempt's
+  **Overview** tab, and click **Confirm undo**.
 
 Next, continue to **[Finding things and printing labels](finding-things-and-labels.md)** to learn how
 to search, filter, save custom views, print QR labels, and scan or paste a label link.

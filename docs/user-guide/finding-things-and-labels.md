@@ -108,7 +108,7 @@ or browser uses to reach your Florabase instance:
    top right, then **Labels**).
 2. In the **QR destination** banner, click **Edit QR destination**.
 3. In the **QR destination** dialog, enter your installation's address in **Public / QR base URL**
-   (for example, `https://flora.example.org` or `http://192.168.1.50:8080` — use the `http://` or
+   (for example, `https://flora.example.org` or `http://florabase.local:8080` — use the `http://` or
    `https://` origin without a trailing path).
 4. Click **Save**.
 

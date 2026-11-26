@@ -31,15 +31,16 @@ click **Sign out** in the bottom-left panel footer (or in **Account and settings
 Florabase uses a workspace layout called the **Workbench**:
 
 - **Workspace rail (left side on desktop, bottom bar on phones and compact screens)**: switches
-  between the main areas of the app:
+  between the main areas of the app. Choosing **Collection**, **Activity**, **Explore** or
+  **Sourcing** opens its **Overview** page, with one tile per section, counts and first actions:
   - **Today** — your daily overview, global collection search, planned work due soon, recent
     activity, and review prompts.
   - **Collection** — your physical material and where it lives:
     - **Seeds** (seed lots)
     - **Sowings**
     - **Cuttings** (vegetative material lots and rooting attempts)
-    - **Plants** and **Plant groups**
-    - **Harvests** and **Stored material**
+    - **Plants** (open **Plant groups** from the Plants page)
+    - **Harvests** (open **Stored material** from the Harvests page)
     - **Locations** (your shelves, benches, beds, and storage boxes)
   - **Activity** — dated observations and planned work across your collection:
     - **Journal** (observations, movements, repotting, flowering, fruiting, measurements, and
@@ -60,6 +61,7 @@ Florabase uses a workspace layout called the **Workbench**:
     **Account and settings** button at the top right on mobile):
     - **Account** (change your password)
     - **Theme** (light, dark, or system appearance)
+    - **Media** (defaults for saving local copies and for attribution and licence on your uploads)
     - **Labels** (printable plant and seed labels with QR codes)
     - **Import / Export** (CSV export and guided CSV import)
     - **Data sources** (status of optional external botanical references)

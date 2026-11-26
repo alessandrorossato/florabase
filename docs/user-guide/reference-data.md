@@ -48,7 +48,10 @@ its licence, open **Settings** → **Data sources** in the left rail.
 
 ## Where the operator sets it up
 
-Installing local reference snapshots (such as WFO and WCVP files) or enabling optional map tiles is
+When the operator's `compose.yaml` sets `FLORABASE_REFERENCES_SETUP=auto` (as the shipped one
+does), Florabase downloads and prepares the WFO and WCVP indexes automatically in the background
+after start-up; **Settings** → **Data sources** shows their status while they are being prepared.
+Otherwise the operator installs these snapshots manually. Enabling optional map tiles is also
 configured by the operator who runs the Florabase server. See [Optional botanical reference
 datasets](../installation.md#optional-botanical-reference-datasets) in the installation guide for
 setup details. Once the local WFO data is installed, the **Scientific name** field in **Create a
