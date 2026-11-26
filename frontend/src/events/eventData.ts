@@ -1,12 +1,14 @@
 import type { EventResponse } from "../collection/api";
 
 export const entryLabels = {
+  care: "Care",
   observations: "Observations",
   cultivation: "Cultivation",
   status: "Lifecycle",
 } as const;
 export type EntryCategory = keyof typeof entryLabels;
-export type EventFilter = "all" | "observations" | "cultivation" | "status";
+export type EventFilter =
+  "all" | "care" | "observations" | "cultivation" | "status";
 
 export function eventSourceLabel(event: EventResponse): string {
   return event.harvest_id
@@ -33,10 +35,13 @@ export const eventLabels: Record<EventResponse["kind"], string> = {
   loss: "Loss",
   discarded: "Discarded",
   measurement: "Measurement",
+  watering: "Watering",
+  feeding: "Feeding",
   other: "Other",
 };
 
 const groups: Record<Exclude<EventFilter, "all">, EventResponse["kind"][]> = {
+  care: ["watering", "feeding"],
   observations: ["observation", "flowering", "fruiting", "measurement"],
   cultivation: [
     "movement",

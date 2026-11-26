@@ -105,6 +105,64 @@ unrelated references; Plant/Group writes deliberately retain the existing per-re
 The maximum is 100 and all preview/error rows are bounded accordingly. Query regression evidence is
 recorded in [the handoff](archive/BULK-001/bulk-001-handoff.md); there is no caching or background processing.
 
+## Safe bulk care logging — CARE-BULK-001 (with FN-03)
+
+CARE-BULK-001 adds one-action care logging for many Plants and PlantGroups at once, together with
+the `watering` and `feeding` Journal kinds (`FN-03`, migration `20261125_0049_event_care_kinds.py`).
+Per-target Events stay the data model: no batch entity is introduced. Every Event created by one
+bulk care apply shares a generated `batch_id` (`events.batch_id uuid NULL`, indexed partially via
+`ix_events_batch_id WHERE batch_id IS NOT NULL`).
+
+### Scope and allowed kinds
+
+- **Eligible targets**: active Plants and active PlantGroups only. Inactive records (dead, lost,
+  discarded, transferred, reintegrated) are reported as `skipped` with an explicit reason and never
+  receive an Event.
+- **Target sources**:
+  - Explicit transient selection from the Plants/PlantGroups directory (`BulkToolbar` → **Log
+    care…**, visible only when every selected record is a Plant or PlantGroup).
+  - Location detail (`Log care for everything here…` on active Locations), optionally including
+    descendant sub-locations (`include_sublocations`, default on, reusing the Location containment
+    CTE).
+- **Allowed kinds**: `watering`, `feeding`, `treatment`, `repotting`, `pruning`, `observation`,
+  `other`. State-changing, structured, operation, or terminal kinds (`movement`, `measurement`,
+  phenology stages, `harvest`, `extraction`, `reintegration`, `transfer`, `death`, `loss`,
+  `discarded`) are rejected. Notes carry free-text product/dose details (no structured care payload).
+- **Cap**: maximum **500** targets per preview/apply (`422 too_many_targets`).
+
+### Preview, apply, and undo API
+
+All three endpoints live under `/api/v1/bulk/care` and require owner authentication plus exact
+Origin and session CSRF checks (same contract as bulk moves):
+
+- `POST /api/v1/bulk/care/preview` (`previewBulkCare`): accepts either
+  `{records: [{kind, id}]}` or `{location_id, include_sublocations}`, plus `kind`, optional partial
+  `occurred_on`, and optional `notes`. Returns per-target rows (`log` or `skipped` with reason),
+  plant/group/sub-location counts, `can_apply`, and a SHA-256 `target_signature` over the sorted
+  resolved target IDs and their `updated_at` timestamps.
+- `POST /api/v1/bulk/care/apply` (`applyBulkCare`): accepts the same target/event fields plus
+  `target_signature`. Re-resolves and locks targets in deterministic UUID order (and subtree
+  locations when targeting a Location), recomputes the signature, rejects mismatches with `409
+  stale_preview`, rejects empty/all-skipped sets with `422 nothing_to_log`, and creates all
+  per-target Events with one shared `batch_id` in a single atomic transaction.
+- `DELETE /api/v1/bulk/care/batches/{batch_id}` (`undoBulkCare`): enforces the same per-event
+  deletion guards as `events.service.delete_event` (attached photos, linked scheduled activity,
+  operation ownership, harvest ownership) in addition to the edit check (`updated_at ==
+  created_at`). Eligible events are deleted in one transaction; kept events are returned in `kept`
+  with an explicit structured reason (`edited`, `has_photos`, `linked_to_schedule`,
+  `operation_owned`, or `harvest_owned`) alongside `deleted_count` and `kept_count`. Missing
+  batches return `404 batch_not_found`, and unexpected concurrency conflicts return `409` with
+  `"Undo did not complete. Refresh and try again."`.
+
+### Product flow
+
+The dialog preselects Today (with the existing partial/unknown date controls from `FN-05`), accepts
+notes, previews the exact summary (for example,
+`"Watering on 37 records (31 plants, 6 groups) in Greenhouse → Bench 2 and 2 sub-locations"` with
+skipped records listed), and requires explicit confirmation before apply. On success, an inline
+notice exposes **Undo** for the batch and reports any edited Events kept if the batch was partially
+edited before undo.
+
 ## Navigation and later work
 
 Desktop and conceptual mobile order: Overview (Dashboard); Collection (Seeds, Sowings, Plants,

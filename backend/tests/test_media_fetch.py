@@ -6,7 +6,14 @@ from unittest.mock import MagicMock
 
 import pytest
 
+import florabase
+from florabase.collection_photos.schemas import (
+    ExternalCoverWrite,
+    ExternalImageCreate,
+    ExternalImageUpdate,
+)
 from florabase.media import fetch
+from florabase.media.schemas import ExternalAssetCreate
 
 PUBLIC_IP = "93.184.216.34"
 
@@ -182,3 +189,128 @@ def test_socket_connect_pins_ip_but_tls_checks_hostname(monkeypatch: pytest.Monk
     connection.expire()
     context.wrap_socket.return_value.shutdown.assert_called_once_with(socket.SHUT_RDWR)
     connection.close()
+
+
+def test_user_agent_is_sent_on_first_request_and_after_redirect(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    factory = transport(
+        monkeypatch,
+        [response(status=302, headers={"Location": "/new.png"}), response(b"png")],
+    )
+    fetch.fetch_image("https://example.test/original.png", 1024)
+    requests = factory.return_value.request.call_args_list
+    assert len(requests) == 2
+    for call in requests:
+        assert call.kwargs["headers"] == {
+            "Accept": "image/jpeg,image/png,image/webp",
+            "User-Agent": fetch.USER_AGENT,
+        }
+    assert fetch.USER_AGENT.startswith(f"Florabase/{florabase.__version__} media-copy (+https://")
+
+
+def test_html_page_has_direct_address_message(monkeypatch: pytest.MonkeyPatch) -> None:
+    transport(monkeypatch, [response(b"<html>", "text/html; charset=UTF-8")])
+    with pytest.raises(fetch.ExternalFetchError, match="web page, not an image") as error:
+        fetch.fetch_image("https://example.test/page", 1024)
+    assert "example.test" not in str(error.value)
+
+
+def test_wikimedia_file_page_is_fetched_through_file_path(monkeypatch: pytest.MonkeyPatch) -> None:
+    factory = transport(monkeypatch, [response(b"png")])
+    fetch.fetch_image("https://it.wikipedia.org/wiki/File:Unk_desert_flower_2.jpg", 1024)
+    assert factory.call_args.args[0] == "it.wikipedia.org"
+    assert factory.return_value.request.call_args.args[1] == (
+        "/wiki/Special:FilePath/Unk_desert_flower_2.jpg"
+    )
+
+
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        (
+            "https://it.wikipedia.org/wiki/File:Unk_desert_flower_2.jpg",
+            "https://it.wikipedia.org/wiki/Special:FilePath/Unk_desert_flower_2.jpg",
+        ),
+        (
+            "https://en.wikipedia.org/wiki/Image:Rosa%20canina.jpg?uselang=en#top",
+            "https://en.wikipedia.org/wiki/Special:FilePath/Rosa_canina.jpg",
+        ),
+        (
+            "https://commons.wikimedia.org/wiki/File:Aloe_vera_(flower).JPG",
+            "https://commons.wikimedia.org/wiki/Special:FilePath/Aloe_vera_(flower).JPG",
+        ),
+        (
+            "https://it.m.wikipedia.org/wiki/Immagine:Fiore.png",
+            "https://it.m.wikipedia.org/wiki/Special:FilePath/Fiore.png",
+        ),
+        (
+            "https://de.wikipedia.org/wiki/Datei:K%C3%B6nigskerze_%26_Co.jpg",
+            "https://de.wikipedia.org/wiki/Special:FilePath/K%C3%B6nigskerze_%26_Co.jpg",
+        ),
+        (
+            "https://fr.wikipedia.org/wiki/fichier:Rose.jpg",
+            "https://fr.wikipedia.org/wiki/Special:FilePath/Rose.jpg",
+        ),
+        (
+            "https://nl.wikipedia.org/wiki/Bestand:Tulp 1.jpg",
+            "https://nl.wikipedia.org/wiki/Special:FilePath/Tulp_1.jpg",
+        ),
+        (
+            "https://es.wikipedia.org/wiki/Archivo:Flor.jpg",
+            "https://es.wikipedia.org/wiki/Special:FilePath/Flor.jpg",
+        ),
+        (
+            "https://pt.wikipedia.org/wiki/Ficheiro:Flor%2Fa.jpg",
+            "https://pt.wikipedia.org/wiki/Special:FilePath/Flor%2Fa.jpg",
+        ),
+    ],
+)
+def test_wikimedia_file_pages_rewrite_to_file_path(url: str, expected: str) -> None:
+    assert fetch.wikimedia_file_url(url) == expected
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Rose.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/a/ab/Rose.jpg",
+        "https://it.wikipedia.org/wiki/Rosa_canina",
+        "https://it.wikipedia.org/wiki/File:",
+        "https://wikipedia.org.example.test/wiki/File:Rose.jpg",
+        "https://example.test/wiki/File:Rose.jpg",
+        "https://it.wikipedia.org:8443/wiki/File:Rose.jpg",
+        "https://it.wikipedia.org/w/index.php?title=File:Rose.jpg",
+        "not a url",
+    ],
+)
+def test_non_wikimedia_file_pages_pass_through(url: str) -> None:
+    assert fetch.wikimedia_file_url(url) == url
+
+
+def test_external_reference_stores_file_path_and_keeps_source_page() -> None:
+    page = "https://it.wikipedia.org/wiki/File:Unk_desert_flower_2.jpg"
+    created = ExternalAssetCreate(image_url=page, source_url=page, attribution="Unknown")
+    assert created.image_url == (
+        "https://it.wikipedia.org/wiki/Special:FilePath/Unk_desert_flower_2.jpg"
+    )
+    assert created.source_url == page
+
+
+@pytest.mark.parametrize("model", [ExternalImageCreate, ExternalImageUpdate])
+def test_record_photo_stores_file_path_and_keeps_source_page(
+    model: type[ExternalImageCreate] | type[ExternalImageUpdate],
+) -> None:
+    page = "https://commons.wikimedia.org/wiki/File:Rosa%20canina.jpg"
+    photo = model(image_url=page, source_url=page, attribution="Unknown")
+    assert photo.image_url == "https://commons.wikimedia.org/wiki/Special:FilePath/Rosa_canina.jpg"
+    assert photo.source_url == page
+
+
+def test_identity_cover_stores_file_path_and_keeps_source_page() -> None:
+    page = "https://it.wikipedia.org/wiki/Immagine:Fiore.png"
+    cover = ExternalCoverWrite(
+        image_url=page, source_url=page, attribution="Unknown", privacy_acknowledged=True
+    )
+    assert cover.image_url == "https://it.wikipedia.org/wiki/Special:FilePath/Fiore.png"
+    assert cover.source_url == page

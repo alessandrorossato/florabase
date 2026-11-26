@@ -21,6 +21,8 @@ import { Icon } from "../components/Icon";
 import "../components/collection-directory.css";
 import { usePublishRecordIdentities } from "../components/recordPresentation";
 import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { DirectorySortSelect } from "../components/DirectorySort";
+import { sortDirectory } from "../components/directorySort";
 import { useEditRoute } from "../components/useEditRoute";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
@@ -1390,7 +1392,15 @@ export function BotanicalIdentityScreen({
       ].some((value) => value?.toLocaleLowerCase().includes(query)),
     );
   }, [directory, filter]);
-  const pagination = useDirectoryPagination(filteredIdentities, filter);
+  const orderedIdentities = sortDirectory(
+    filteredIdentities,
+    view.state.sort,
+    (identity) => identity.display_label,
+  );
+  const pagination = useDirectoryPagination(
+    orderedIdentities,
+    JSON.stringify(view.state),
+  );
   const { visible: pageIdentities } = pagination;
 
   if (!isPresentationRetainedState(auth.state)) return null;
@@ -1638,6 +1648,14 @@ export function BotanicalIdentityScreen({
                   directory.status !== "ready" ||
                   directory.identities.length === 0
                 }
+              />
+            }
+            sort={
+              <DirectorySortSelect
+                value={view.state.sort}
+                onChange={(value) => {
+                  view.update("sort", value);
+                }}
               />
             }
             savedViews={

@@ -72,8 +72,13 @@ class NativeRangesState(TextState):
     with_range: StrictBool = Field(default=False, alias="withRange")
 
 
-# Directory order (FN-02); absent keeps each directory's default order.
+# Directory order (FN-02, UX-SORT-001); absent keeps each directory's default order.
 DirectorySort = Literal["name", "name_desc", "newest", "oldest"]
+DirectoryNameSort = Literal["name", "name_desc"]
+
+
+class NameSortedTextState(TextState):
+    sort: DirectoryNameSort | None = None
 
 
 class SeedLotState(TextState):
@@ -105,19 +110,22 @@ class HarvestState(TextState):
     material: MaterialKind | None = None
     source_type: Literal["plant", "plant_group"] | None = None
     identity_id: UUID | None = None
+    sort: DirectorySort | None = None
 
 
 class StoredMaterialState(TextState):
+    sort: DirectoryNameSort | None = None
     state: Literal["active", "depleted", "all"] = "active"
     material: MaterialKind | None = None
     identity_id: UUID | None = None
     location_id: UUID | None = None
 
 
+EventCategory = Literal["care", "observations", "cultivation", "status"]
+
+
 class EventState(TextState):
-    category: list[Literal["observations", "cultivation", "status"]] = Field(
-        default_factory=list, max_length=3
-    )
+    category: list[EventCategory] = Field(default_factory=list, max_length=4)
 
     @field_validator("category", mode="before")
     @classmethod
@@ -126,10 +134,8 @@ class EventState(TextState):
 
     @field_validator("category")
     @classmethod
-    def ordered_entries(
-        cls, value: list[Literal["observations", "cultivation", "status"]]
-    ) -> list[Literal["observations", "cultivation", "status"]]:
-        return [item for item in ("observations", "cultivation", "status") if item in value]
+    def ordered_entries(cls, value: list[EventCategory]) -> list[EventCategory]:
+        return [item for item in ("care", "observations", "cultivation", "status") if item in value]
 
 
 class HistoryState(TextState):
@@ -192,8 +198,8 @@ STATE_MODELS: dict[SavedViewSurface, type[BaseModel]] = {
     SavedViewSurface.EVENTS: EventState,
     SavedViewSurface.HISTORY: HistoryState,
     SavedViewSurface.MEDIA: MediaState,
-    SavedViewSurface.BOTANICAL_IDENTITIES: TextState,
-    SavedViewSurface.SUPPLIERS: TextState,
+    SavedViewSurface.BOTANICAL_IDENTITIES: NameSortedTextState,
+    SavedViewSurface.SUPPLIERS: NameSortedTextState,
     SavedViewSurface.ORDERS: OrderState,
     SavedViewSurface.LOCATIONS: LocationState,
     SavedViewSurface.GEOGRAPHY: GeographyState,

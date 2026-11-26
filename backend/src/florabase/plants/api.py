@@ -2,6 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from florabase.auth.dependencies import (
@@ -32,6 +33,8 @@ from florabase.plants.schemas import (
     PlantCreate,
     PlantExtractionCreate,
     PlantGroupCreate,
+    PlantGroupExtractBatchCreate,
+    PlantGroupExtractBatchResponse,
     PlantGroupResponse,
     PlantGroupUpdate,
     PlantReintegrationCreate,
@@ -49,6 +52,7 @@ from florabase.plants.service import (
     create_plant_group,
     evaluate_reintegration,
     extract_plant,
+    extract_plants_batch,
     get_plant,
     get_plant_group,
     list_plant_groups,
@@ -423,4 +427,41 @@ def transfer_one_plant_group(
     return PlantGroupTransferResponse(
         plant_group=_plant_group_response(database, plant_group_id),
         event=_event_response(database, event.id),
+    )
+
+
+@plant_groups_router.post(
+    "/{plant_group_id}/extract-batch",
+    response_model=PlantGroupExtractBatchResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="extractPlantsFromGroup",
+)
+def extract_plants_batch_route(
+    plant_group_id: UUID,
+    payload: PlantGroupExtractBatchCreate,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
+) -> PlantGroupExtractBatchResponse:
+    require_owner(actor)
+    try:
+        plants, plant_group, events = extract_plants_batch(database, plant_group_id, payload)
+    except PlantDomainConflictError as error:
+        raise _domain_conflict(error) from error
+    except PlantReferenceNotFoundError as error:
+        raise _reference_not_found(error) from error
+    except OperationalError as error:
+        if getattr(error.orig, "sqlstate", None) not in {"40001", "40P01", "55P03"}:
+            raise
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "propagation_concurrency_conflict",
+                "message": "Concurrent work conflicted. Refresh and retry.",
+            },
+        ) from error
+    projections = [_require_plant(database, plant.id) for plant in plants]
+    return PlantGroupExtractBatchResponse(
+        plant_group=_plant_group_response(database, plant_group.id),
+        plants=plant_responses(database, projections),
+        event_ids=[event.id for event in events],
     )

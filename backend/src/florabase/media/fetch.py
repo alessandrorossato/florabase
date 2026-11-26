@@ -9,17 +9,50 @@ from contextlib import suppress
 from http.client import HTTPConnection, HTTPException
 from io import BytesIO
 from threading import Timer
-from urllib.parse import quote, urljoin, urlsplit
+from urllib.parse import quote, unquote, urljoin, urlsplit
 
+from florabase import __version__
 from florabase.attachments.model import SUPPORTED_MEDIA_TYPES
 
 FETCH_TIMEOUT = 15.0
 MAX_REDIRECTS = 3
+# Fixed and non-identifying; Wikimedia and other hosts refuse requests without one.
+USER_AGENT = f"Florabase/{__version__} media-copy (+https://github.com/alessandrorossato/florabase)"
+# Canonical and common localized MediaWiki file namespaces, compared case-insensitively.
+_FILE_NAMESPACES = frozenset(
+    {"file", "image", "immagine", "datei", "fichier", "archivo", "ficheiro", "arquivo", "bestand"}
+)
 _DNS = ThreadPoolExecutor(max_workers=4, thread_name_prefix="media-dns")
 
 
 class ExternalFetchError(Exception):
     """Deliberately contains no destination, resolver or connection details."""
+
+
+def wikimedia_file_url(url: str) -> str:
+    """Rewrite a Wikipedia/Wikimedia `/wiki/File:Name` page to its `Special:FilePath` image.
+
+    Anything else, including an existing `Special:FilePath` address, is returned unchanged.
+    """
+    try:
+        parsed = urlsplit(url)
+        host = (parsed.hostname or "").lower()
+        port = parsed.port
+    except ValueError:
+        return url
+    if (
+        parsed.scheme not in {"http", "https"}
+        or port is not None
+        or parsed.username is not None
+        or not host.endswith((".wikipedia.org", ".wikimedia.org"))
+        or not parsed.path.startswith("/wiki/")
+    ):
+        return url
+    namespace, separator, name = unquote(parsed.path[len("/wiki/") :]).partition(":")
+    name = name.strip().replace(" ", "_")
+    if not separator or namespace.strip().lower() not in _FILE_NAMESPACES or not name:
+        return url
+    return f"https://{host}/wiki/Special:FilePath/{quote(name, safe='()')}"
 
 
 def _remaining(deadline: float) -> float:
@@ -110,6 +143,7 @@ class _PinnedConnection(HTTPConnection):
 def fetch_image(url: str, max_bytes: int) -> tuple[bytes, str]:
     """No proxy environment, cookies, credentials, automatic redirects or retries."""
     deadline = time.monotonic() + FETCH_TIMEOUT
+    url = wikimedia_file_url(url)
     try:
         for redirect in range(MAX_REDIRECTS + 1):
             host, port, address, scheme = _destination(url, deadline)
@@ -123,7 +157,9 @@ def fetch_image(url: str, max_bytes: int) -> tuple[bytes, str]:
                 if parsed.query:
                     path += "?" + quote(parsed.query, safe="/%?:@!$&'()*+,;=-._~")
                 connection.request(
-                    "GET", path, headers={"Accept": "image/jpeg,image/png,image/webp"}
+                    "GET",
+                    path,
+                    headers={"Accept": "image/jpeg,image/png,image/webp", "User-Agent": USER_AGENT},
                 )
                 response = connection.getresponse()
                 if response.status in {301, 302, 303, 307, 308}:
@@ -137,6 +173,10 @@ def fetch_image(url: str, max_bytes: int) -> tuple[bytes, str]:
                 media_type = (
                     (response.getheader("Content-Type") or "").split(";", 1)[0].strip().lower()
                 )
+                if media_type == "text/html":
+                    raise ExternalFetchError(
+                        "This address is a web page, not an image. Use the image's own address."
+                    )
                 if media_type not in SUPPORTED_MEDIA_TYPES:
                     raise ExternalFetchError("Only JPEG, PNG, and WebP images can be saved.")
                 if response.getheader("Content-Encoding", "identity") != "identity":
