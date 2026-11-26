@@ -546,10 +546,178 @@ class MobileReleaseContract(unittest.TestCase):
         self.assertIn("if (BuildConfig.DEBUG &&", main_activity)
         self.assertIn("MIXED_CONTENT_ALWAYS_ALLOW", main_activity)
         self.assertIn("registerPlugin(SecureTokenPlugin.class)", main_activity)
+        self.assertIn("registerPlugin(WebPrintPlugin.class)", main_activity)
+        self.assertIn('new File(getCacheDir(), "shared")', main_activity)
+
+        web_print = (
+            ROOT
+            / "mobile/android/app/src/main/java/io/github/alessandrorossato/florabase/WebPrintPlugin.java"
+        ).read_text()
+        self.assertIn("android.print.PrintManager", web_print)
+        self.assertIn("createPrintDocumentAdapter", web_print)
+        self.assertNotIn("com.google", web_print)
+
+        # FileProvider exposes only the dedicated cache/shared/ subfolder.
+        file_paths = (ROOT / "mobile/android/app/src/main/res/xml/file_paths.xml").read_text()
+        self.assertIn('<cache-path name="shared" path="shared/" />', file_paths)
+        self.assertNotIn("external-path", file_paths)
+        self.assertNotIn('path="."', file_paths)
+
+        # Branding colors and splash theme are wired to Florabase tokens.
+        ic_bg = (
+            ROOT / "mobile/android/app/src/main/res/values/ic_launcher_background.xml"
+        ).read_text()
+        self.assertIn("#F8F5E7", ic_bg)
+        colors = (ROOT / "mobile/android/app/src/main/res/values/colors.xml").read_text()
+        self.assertIn("#153A2C", colors)
+        styles = (ROOT / "mobile/android/app/src/main/res/values/styles.xml").read_text()
+        self.assertIn("windowSplashScreenBackground", styles)
+        self.assertIn("@color/splash_background", styles)
+        self.assertFalse(
+            (ROOT / "mobile/android/app/src/main/res/drawable/ic_launcher_background.xml").exists()
+        )
 
         # Confirm old placeholder package and Capacitor example tests are removed.
         self.assertFalse((ROOT / "mobile/android/app/src/main/java/org/florabase/app").exists())
         self.assertEqual(list((ROOT / "mobile/android").rglob("Example*Test.java")), [])
+
+        # Confirm zero @capacitor/* packages in frontend/package.json and FOSS-only plugins in mobile.
+        frontend_pkg = json.loads((ROOT / "frontend/package.json").read_text())
+        for section in ("dependencies", "devDependencies"):
+            for dep in frontend_pkg.get(section, {}):
+                self.assertFalse(
+                    dep.startswith("@capacitor/"),
+                    f"frontend/package.json must not depend on {dep}",
+                )
+        mobile_pkg = json.loads((ROOT / "mobile/package.json").read_text())
+        mobile_deps = mobile_pkg.get("dependencies", {})
+        self.assertIn("@capacitor/filesystem", mobile_deps)
+        self.assertIn("@capacitor/share", mobile_deps)
+
+    def test_release_signing_gradle_has_no_hardcoded_secrets_and_uses_version_helper(self) -> None:
+        gradle = (ROOT / "mobile/android/app/build.gradle").read_text()
+        self.assertIn("scripts/mobile_version.py", gradle)
+        for env_name in (
+            "FLORABASE_ANDROID_KEYSTORE",
+            "FLORABASE_ANDROID_STORE_PASSWORD",
+            "FLORABASE_ANDROID_KEY_ALIAS",
+            "FLORABASE_ANDROID_KEY_PASSWORD",
+        ):
+            self.assertIn(env_name, gradle)
+        self.assertNotRegex(gradle, r"""storePassword\s+['"][^'"]+['"]""")
+        self.assertNotRegex(gradle, r"""keyPassword\s+['"][^'"]+['"]""")
+        self.assertNotRegex(gradle, r"""keyAlias\s+['"][^'"]+['"]""")
+        self.assertNotRegex(gradle, r"""storeFile\s+file\(['"][^'"]+['"]\)""")
+        for forbidden in ("firebase", "mlkit", "com.google.gms"):
+            self.assertNotIn(forbidden, gradle.lower())
+
+        # Release script must refuse to run without signing env vars and never leak values.
+        release_script = (ROOT / "scripts/mobile-android-release.sh").read_text()
+        self.assertIn("set +x", release_script)
+        self.assertIn("FLORABASE_ANDROID_CERT_SHA256", release_script)
+        self.assertIn("apksigner", release_script)
+        clean_env = {k: v for k, v in os.environ.items() if not k.startswith("FLORABASE_ANDROID_")}
+        proc = subprocess.run(
+            ["bash", str(ROOT / "scripts/mobile-android-release.sh")],
+            cwd=ROOT,
+            env=clean_env,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("FLORABASE_ANDROID_KEYSTORE", proc.stderr)
+        self.assertIn("docs/mobile.md", proc.stderr)
+
+    def test_mobile_version_code_helper_examples_and_bounds(self) -> None:
+        sys.path.insert(0, str(ROOT / "scripts"))
+        try:
+            import mobile_version
+        finally:
+            sys.path.pop(0)
+
+        expected_pairs = [
+            ("0.1.0-alpha.1", 100_001),
+            ("0.1.0-beta.8", 100_308),
+            ("0.1.0-beta.9", 100_309),
+            ("0.1.0-beta.10", 100_310),
+            ("0.1.0-rc.1", 100_601),
+            ("0.1.0", 100_900),
+            ("0.1.1", 101_900),
+            ("1.0.0-rc.1", 10_000_601),
+            ("1.0.0", 10_000_900),
+            ("1.0.1", 10_001_900),
+        ]
+        codes = [mobile_version.compute_version_code(ver) for ver, _ in expected_pairs]
+        self.assertEqual(codes, [code for _, code in expected_pairs])
+        self.assertEqual(codes, sorted(codes))
+        self.assertEqual(len(codes), len(set(codes)))
+
+        for bad in (
+            "",
+            "v0.1.0",
+            "1.0",
+            "0.1.0-beta.0",
+            "0.1.0-beta.01",
+            "0.1.0-dev.1",
+            "0.1.0-beta.300",
+            "210.0.0",
+            "0.100.0",
+            "0.0.100",
+        ):
+            with self.assertRaises(ValueError, msg=f"expected failure for {bad!r}"):
+                mobile_version.compute_version_code(bad)
+
+        # CLI matches frontend/package.json.
+        cli = subprocess.run(
+            [sys.executable, str(ROOT / "scripts/mobile_version.py"), "--json"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        parsed = json.loads(cli.stdout)
+        frontend_version = json.loads((ROOT / "frontend/package.json").read_text())["version"]
+        self.assertEqual(parsed["versionName"], frontend_version)
+        self.assertEqual(
+            parsed["versionCode"], mobile_version.compute_version_code(frontend_version)
+        )
+
+    def test_mobile_release_workflow_contract(self) -> None:
+        workflow = (ROOT / ".github/workflows/mobile-android-release.yml").read_text()
+        self.assertIn("workflow_run:", workflow)
+        self.assertIn('workflows: ["Protected Florabase release"]', workflow)
+        self.assertIn("types: [completed]", workflow)
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("github.event.workflow_run.conclusion == 'success'", workflow)
+        self.assertIn("github.event.workflow_run.head_sha", workflow)
+        self.assertNotIn("pull_request", workflow)
+        self.assertNotRegex(workflow, r"(?m)^\s+push:\s*$")
+        self.assertIn("permissions:\n  contents: read", workflow)
+        self.assertEqual(workflow.count("contents: write"), 1)
+        self.assertIn("scripts/mobile_version.py", workflow)
+        self.assertIn("scripts/mobile-android-release.sh --skip-sync", workflow)
+        self.assertIn("FLORABASE_ANDROID_CERT_SHA256", workflow)
+        self.assertIn('gh release upload "$TAG" "$apk" "$sha" --clobber', workflow)
+        self.assertIn("set +x", workflow)
+        self.assertIn("if: always()", workflow)
+        self.assertIn('rm -f "${RUNNER_TEMP}/florabase-release.keystore"', workflow)
+
+        # Every GitHub Action must be pinned to a full 40-char commit SHA.
+        uses_refs = re.findall(r"^\s*(?:-\s+)?uses:\s*([^\s#]+)", workflow, re.M)
+        self.assertGreaterEqual(len(uses_refs), 3)
+        for ref in uses_refs:
+            self.assertRegex(
+                ref,
+                r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+@[0-9a-f]{40}$",
+                f"unpinned workflow action: {ref}",
+            )
+
+        # No secret variable may ever be echoed to stdout/stderr.
+        self.assertNotRegex(
+            workflow,
+            r"(?i)(echo|printf)\s+[^\n]*(ANDROID_STORE_PASSWORD|ANDROID_KEY_PASSWORD|ANDROID_KEY_ALIAS)",
+        )
 
 
 def main() -> None:

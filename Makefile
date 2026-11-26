@@ -392,7 +392,9 @@ WORKFLOW_RUFF_FILES := \
 	/workflow/release-tools.py \
 	/workflow/test-beta-lifecycle.py \
 	/workflow/smoke-portable-compose.py \
-	/workflow/license_check.py
+	/workflow/license_check.py \
+	/workflow/mobile_version.py \
+	/workflow/generate-mobile-assets.py
 
 WORKFLOW_MYPY_STRICT_FILES := \
 	/workflow/workflow_resources.py \
@@ -436,7 +438,9 @@ WORKFLOW_MYPY_STRICT_FILES := \
 	/workflow/release-tools.py \
 	/workflow/test-beta-lifecycle.py \
 	/workflow/smoke-portable-compose.py \
-	/workflow/license_check.py
+	/workflow/license_check.py \
+	/workflow/mobile_version.py \
+	/workflow/generate-mobile-assets.py
 
 WORKFLOW_RUNTIME_CLIENT_FILES := \
 	/repo/scripts/smoke_beta_runtime_client.py \
@@ -473,6 +477,7 @@ workflow-check: test-dependabot-policy test-beta-images test-beta-runtime ## Lin
 			run_step "ruff-format-runtime-client" ruff format --no-cache --isolated --line-length 100 --check $(WORKFLOW_RUNTIME_CLIENT_FILES); \
 			run_step "mypy-runtime-client" mypy --cache-dir /tmp/florabase-mypy-workflow/runtime-client --strict $(WORKFLOW_RUNTIME_CLIENT_FILES); \
 			run_step "mypy-app-scripts" env MYPYPATH=/app/src:/app/scripts:/workflow mypy --cache-dir /tmp/florabase-mypy-workflow/app-scripts --strict --follow-imports=skip $(WORKFLOW_APP_MYPY_FILES); \
+			run_step "mobile-assets-determinism" python /repo/scripts/generate-mobile-assets.py --root /repo --res-dir /repo/mobile/android/app/src/main/res --verify-committed; \
 			if [ -n "$$failed" ]; then \
 				printf "workflow-check failed: %s\n" "$$failed" >&2; \
 				exit 1; \
@@ -612,7 +617,10 @@ release-preflight-local: ## Rehearse protected release preparation and promotion
 
 MOBILE_DEBUG_HTTP ?= false
 
-.PHONY: mobile-sync mobile-android-debug
+.PHONY: mobile-assets mobile-sync mobile-android-debug mobile-android-release
+mobile-assets: ## Deterministically regenerate Android launcher icons, adaptive icon, and splash assets
+	$(DEV_COMPOSE) run --rm --no-deps -T -v "$(CURDIR):/repo" backend python /repo/scripts/generate-mobile-assets.py --root /repo --res-dir /repo/mobile/android/app/src/main/res
+
 mobile-sync: ## Build frontend assets and sync Capacitor Android shell
 	$(DEV_COMPOSE) run --rm --no-deps -T -e VITE_MOBILE_ALLOW_DEBUG_HTTP=$(MOBILE_DEBUG_HTTP) frontend pnpm build
 	pnpm --dir mobile install --frozen-lockfile
@@ -630,3 +638,6 @@ mobile-android-debug: ## Build a debug Android APK into mobile/android/app/build
 	export ANDROID_SDK_ROOT="$$sdk"; \
 	cd mobile/android && ./gradlew assembleDebug; \
 	echo "Debug APK: mobile/android/app/build/outputs/apk/debug/app-debug.apk"
+
+mobile-android-release: ## Build, sign, and verify the release Android APK (requires signing env vars; see docs/mobile.md)
+	@./scripts/mobile-android-release.sh

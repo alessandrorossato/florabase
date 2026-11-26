@@ -14,11 +14,18 @@ API_VERSION = 1
 SERVER_CAPABILITIES: tuple[str, ...] = ("device-auth",)
 
 
+class RuntimeConfigResponse(BaseModel):
+    map_online_enabled: bool = False
+    map_tile_url: str | None = None
+    map_attribution: str | None = None
+
+
 class SystemInfoResponse(BaseModel):
     server_version: str
     api_version: int
     min_client_version: str
     capabilities: list[str]
+    runtime_config: RuntimeConfigResponse
 
 
 @router.get("/info", response_model=SystemInfoResponse, operation_id="getSystemInfo")
@@ -32,6 +39,11 @@ async def system_info(
         api_version=API_VERSION,
         min_client_version=settings.min_client_version,
         capabilities=list(SERVER_CAPABILITIES),
+        runtime_config=RuntimeConfigResponse(
+            map_online_enabled=settings.map_online_enabled,
+            map_tile_url=settings.map_tile_url,
+            map_attribution=settings.map_attribution,
+        ),
     )
 
 

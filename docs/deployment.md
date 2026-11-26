@@ -82,6 +82,20 @@ provider's attribution. The canonical public OSM endpoint is
 [tile usage policy](https://operations.osmfoundation.org/policies/tiles/) applies. No bulk acquisition,
 prefetch, host rotation, custom User-Agent, proxy impersonation or cache bypass is implemented.
 
+For the **Android app** (which bundles the UI and does not load `/runtime-config.js`), configure the
+matching optional backend environment variables so `GET /api/v1/system/info` exposes the same map
+policy to native clients:
+
+- `FLORABASE_MAP_ONLINE_ENABLED=true` (defaults to `false`; unset always stays offline)
+- `FLORABASE_MAP_TILE_URL=https://tile.openstreetmap.org/{z}/{x}/{y}.png` (optional; must be an
+  `https://` URL containing a `{z}/{x}/{y}` path template, or the backend refuses to start)
+- `FLORABASE_MAP_ATTRIBUTION='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'` (optional; sanitized to plain text and `https://` links in the app)
+
+**Caveat:** Operators who enable online map tiles for the web by replacing or bind-mounting
+`runtime-config.js` must also set these `FLORABASE_MAP_*` variables on the `backend` container for
+the Android app to offer the same online basemap. The web/PWA path continues reading
+`/runtime-config.js` unchanged.
+
 Tiles go directly from the browser to the provider, disclosing IP, viewed tile area and the app
 origin. Cross-origin Referer uses `strict-origin-when-cross-origin`; record paths, hashes, queries,
 identity names and notes are not sent. Suppressing Referer violates public OSM policy. Choose a

@@ -3,12 +3,16 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  activeCsrfToken,
   downloadProtectedFile,
-  NativeFileActionUnavailableError,
   openProtectedTab,
   type ProtectedRequestCapability,
 } from "../auth/api";
 import { resetAuthTransport } from "../auth/transport";
+import {
+  mapRuntimeConfig,
+  resetMapRuntimeConfig,
+} from "../provenance-map/config";
 import type { HttpGetFn } from "./healthProbe";
 import { NativeApp } from "./NativeApp";
 import type { ServerUrlStore } from "./preferences";
@@ -76,6 +80,7 @@ describe("NativeApp device sign-in and Keystore lifecycle", () => {
   afterEach(() => {
     cleanup();
     resetAuthTransport();
+    resetMapRuntimeConfig();
     window.history.replaceState(null, "", "/");
     vi.restoreAllMocks();
   });
@@ -207,7 +212,19 @@ describe("NativeApp device sign-in and Keystore lifecycle", () => {
     );
     expect(csrfCalls).toHaveLength(0);
 
-    // File download and tab open are explicitly disabled on native with a clear notice.
+    // In Bearer mode, authenticated state yields a non-empty token sentinel so
+    // domain save handlers do not short-circuit on `if (!token) return;`, while
+    // cookie mode keeps returning "" when csrfToken is empty.
+    expect(
+      activeCsrfToken({
+        status: "authenticated",
+        session: ownerSession,
+        csrfToken: "",
+      }),
+    ).toBe("bearer");
+    expect(activeCsrfToken({ status: "unauthenticated" })).toBe("");
+
+    // Forged/unregistered capability is rejected before touching native file actions.
     const fakeCap = {} as ProtectedRequestCapability;
     await expect(
       downloadProtectedFile({
@@ -215,13 +232,132 @@ describe("NativeApp device sign-in and Keystore lifecycle", () => {
         capability: fakeCap,
         fallbackFilename: "plants.csv",
       }),
-    ).rejects.toThrow(NativeFileActionUnavailableError);
+    ).rejects.toThrow();
     await expect(
       openProtectedTab({
         path: "/api/v1/attachments/1/content",
         capability: fakeCap,
       }),
-    ).rejects.toThrow(NativeFileActionUnavailableError);
+    ).rejects.toThrow();
+  });
+
+  it("shows native update banner when server_version is newer and applies sanitised runtime_config", async () => {
+    const user = userEvent.setup();
+    const urlStore = createMemoryUrlStore("https://nas.example.com");
+    const tokenStore = createMemoryTokenStore("valid-token", "Pixel 9");
+    const httpGet = vi.fn<HttpGetFn>((url) => {
+      if (url.endsWith("/api/v1/health")) {
+        return Promise.resolve({ status: 200, data: { status: "ok" } });
+      }
+      if (url.endsWith("/api/v1/system/info")) {
+        return Promise.resolve({
+          status: 200,
+          data: {
+            server_version: "0.1.0-beta.10",
+            api_version: 1,
+            min_client_version: "0.1.0-beta.8",
+            capabilities: ["device-auth"],
+            runtime_config: {
+              map_online_enabled: true,
+              map_tile_url: "https://tiles.example.org/{z}/{x}/{y}.png",
+              map_attribution:
+                '&copy; <a href="https://tiles.example.org">Tiles</a><script>evil()</script>',
+            },
+          },
+        });
+      }
+      return Promise.resolve({ status: 404, data: "" });
+    });
+
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = requestUrl(input);
+      if (url.endsWith("/api/v1/auth/session")) {
+        return Promise.resolve(jsonResponse(ownerSession));
+      }
+      if (url.endsWith("/api/v1/health")) {
+        return Promise.resolve(jsonResponse({ status: "ok" }));
+      }
+      return Promise.resolve(jsonResponse([]));
+    });
+
+    render(
+      <NativeApp
+        allowDebugHttp={false}
+        urlStore={urlStore}
+        tokenStore={tokenStore}
+        httpGet={httpGet}
+        appVersion="0.1.0-beta.9"
+      />,
+    );
+
+    const banner = await screen.findByRole("complementary", {
+      name: /florabase app update/i,
+    });
+    expect(banner).toBeVisible();
+    expect(banner).toHaveTextContent(/0\.1\.0-beta\.10/);
+    expect(banner).toHaveTextContent(/Obtainium/i);
+
+    expect(mapRuntimeConfig).toEqual({
+      onlineConfigured: true,
+      tileUrl: "https://tiles.example.org/{z}/{x}/{y}.png",
+      attribution:
+        '© <a href="https://tiles.example.org/" rel="noopener noreferrer" target="_blank">Tiles</a>',
+    });
+
+    await user.click(screen.getByRole("button", { name: /^later$/i }));
+    expect(
+      screen.queryByRole("complementary", { name: /florabase app update/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("hides native update banner when app matches server_version and defaults maps offline", async () => {
+    const urlStore = createMemoryUrlStore("https://nas.example.com");
+    const tokenStore = createMemoryTokenStore("valid-token", "Pixel 9");
+    const httpGet = vi.fn<HttpGetFn>((url) => {
+      if (url.endsWith("/api/v1/health")) {
+        return Promise.resolve({ status: 200, data: { status: "ok" } });
+      }
+      if (url.endsWith("/api/v1/system/info")) {
+        return Promise.resolve({
+          status: 200,
+          data: {
+            server_version: "0.1.0-beta.9",
+            api_version: 1,
+            min_client_version: "0.1.0-beta.8",
+            capabilities: ["device-auth"],
+          },
+        });
+      }
+      return Promise.resolve({ status: 404, data: "" });
+    });
+
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = requestUrl(input);
+      if (url.endsWith("/api/v1/auth/session")) {
+        return Promise.resolve(jsonResponse(ownerSession));
+      }
+      if (url.endsWith("/api/v1/health")) {
+        return Promise.resolve(jsonResponse({ status: "ok" }));
+      }
+      return Promise.resolve(jsonResponse([]));
+    });
+
+    render(
+      <NativeApp
+        allowDebugHttp={false}
+        urlStore={urlStore}
+        tokenStore={tokenStore}
+        httpGet={httpGet}
+        appVersion="0.1.0-beta.9"
+      />,
+    );
+
+    await waitFor(() => {
+      expect(mapRuntimeConfig.onlineConfigured).toBe(false);
+    });
+    expect(
+      screen.queryByRole("complementary", { name: /florabase app update/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("clears Keystore token when a stored Bearer token receives 401 on boot", async () => {
