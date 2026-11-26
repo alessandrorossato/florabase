@@ -15,7 +15,6 @@ export function FullscreenButton({
     <button
       type="button"
       className="button--secondary fullscreen-toggle"
-      aria-pressed={active}
       aria-label={active ? `Exit full screen ${label}` : `Full screen ${label}`}
       title={active ? "Exit full screen (Esc)" : "Full screen"}
       onClick={toggle}

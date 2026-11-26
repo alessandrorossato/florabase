@@ -9,14 +9,17 @@ afterEach(cleanup);
 test("full screen enlarges the stage and Escape or the toggle leaves it", async () => {
   const user = userEvent.setup();
   render(
-    <FullscreenStage
-      className="lineage-stage"
-      title="Recorded lines"
-      titleId="lines"
-      label="recorded lines"
-    >
-      <p>Diagram</p>
-    </FullscreenStage>,
+    <>
+      <button type="button">Outside</button>
+      <FullscreenStage
+        className="lineage-stage"
+        title="Recorded lines"
+        titleId="lines"
+        label="recorded lines"
+      >
+        <p>Diagram</p>
+      </FullscreenStage>
+    </>,
   );
   const stage = screen.getByRole("region", { name: "Recorded lines" });
   expect(stage).not.toHaveClass("is-fullscreen");
@@ -25,9 +28,12 @@ test("full screen enlarges the stage and Escape or the toggle leaves it", async 
   );
   expect(stage).toHaveClass("is-fullscreen");
   expect(document.documentElement).toHaveClass("has-fullscreen-frame");
+  // The rest of the page is inert while the stage covers it.
+  expect(screen.getByText("Outside")).toHaveAttribute("inert");
   await user.keyboard("{Escape}");
   expect(stage).not.toHaveClass("is-fullscreen");
   expect(document.documentElement).not.toHaveClass("has-fullscreen-frame");
+  expect(screen.getByText("Outside")).not.toHaveAttribute("inert");
   await user.click(
     screen.getByRole("button", { name: "Full screen recorded lines" }),
   );

@@ -317,7 +317,12 @@ export function ProvenanceMap({
       window.clearTimeout(timer);
     };
   }, [hovered, hoverContent]);
-  const fullscreen = useFullscreen();
+  const {
+    active: fullscreenActive,
+    toggle: toggleFullscreen,
+    setFrame,
+    frameClass,
+  } = useFullscreen<HTMLDivElement>();
   const shownPhoto =
     photo && hoverContent && photo.site === hovered ? photo : null;
   useEffect(() => {
@@ -325,7 +330,7 @@ export function ProvenanceMap({
     if (hovered) markersRef.current.get(hovered)?.getTooltip()?.update();
   }, [hovered, shownPhoto]);
   return (
-    <div className={`provenance-map-frame${fullscreen.frameClass}`}>
+    <div ref={setFrame} className={`provenance-map-frame${frameClass}`}>
       {shownPhoto &&
         hoverContent &&
         createPortal(hoverContent(shownPhoto.site), shownPhoto.slot)}
@@ -341,8 +346,8 @@ export function ProvenanceMap({
           Fit visible sites
         </button>
         <FullscreenButton
-          active={fullscreen.active}
-          toggle={fullscreen.toggle}
+          active={fullscreenActive}
+          toggle={toggleFullscreen}
           label={label}
         />
         {/* Not offered at all unless the operator enabled a provider (docs/deployment.md). */}

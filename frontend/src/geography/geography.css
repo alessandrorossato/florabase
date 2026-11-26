@@ -395,7 +395,7 @@
   }
   .app-content .provenance-selection .quick-preview {
     grid-area: preview;
-    max-height: min(14rem, 32dvh);
+    max-height: min(22rem, 40dvh);
   }
   .provenance-selection .site-map-panel {
     grid-area: map;

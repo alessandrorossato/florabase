@@ -318,6 +318,8 @@ export function ProvenanceMapScreen() {
                 className="origins-canvas"
                 onKeyDown={(event) => {
                   if (event.key === "Escape" && selectedId) {
+                    // Clearing the selection uses this Escape; full screen stays.
+                    event.preventDefault();
                     setSelectedId(null);
                   }
                 }}

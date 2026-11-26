@@ -525,17 +525,6 @@ export function WorkbenchShell({
           </h1>
           <button
             type="button"
-            ref={railSearch}
-            className="wb-rail__search"
-            aria-label="Search and commands"
-            onClick={() => {
-              openPalette(railSearch.current);
-            }}
-          >
-            <Icon name="search" shell />
-          </button>
-          <button
-            type="button"
             className="wb-rail__record"
             aria-haspopup="dialog"
             onClick={(event) => {
@@ -585,6 +574,18 @@ export function WorkbenchShell({
               );
             })}
           </div>
+          {/* After the tabs in reading order; drawn just above Settings (workbench.css). */}
+          <button
+            type="button"
+            ref={railSearch}
+            className="wb-rail__search"
+            aria-label="Search and commands"
+            onClick={() => {
+              openPalette(railSearch.current);
+            }}
+          >
+            <Icon name="search" shell />
+          </button>
           <div className="wb-mobilebar">
             <button
               type="button"

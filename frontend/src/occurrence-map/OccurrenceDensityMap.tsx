@@ -155,12 +155,17 @@ export function OccurrenceDensityMap({
       setBasemapErrors(0);
     };
   }, [online, identityId]);
-  const fullscreen = useFullscreen();
+  const {
+    active: fullscreenActive,
+    toggle: toggleFullscreen,
+    setFrame,
+    frameClass,
+  } = useFullscreen<HTMLDivElement>();
   return (
-    <div className={`occurrence-map-frame${fullscreen.frameClass}`}>
+    <div ref={setFrame} className={`occurrence-map-frame${frameClass}`}>
       <FullscreenButton
-        active={fullscreen.active}
-        toggle={fullscreen.toggle}
+        active={fullscreenActive}
+        toggle={toggleFullscreen}
         label="occurrence density map"
       />
       <div className="occurrence-layer-status" aria-live="polite">

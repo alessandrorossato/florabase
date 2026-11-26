@@ -18,17 +18,23 @@ export function FullscreenStage({
   label: string;
   children: ReactNode;
 }) {
-  const fullscreen = useFullscreen();
+  const {
+    active: fullscreenActive,
+    toggle: toggleFullscreen,
+    setFrame,
+    frameClass,
+  } = useFullscreen();
   return (
     <section
-      className={`${className}${fullscreen.frameClass}`}
+      ref={setFrame}
+      className={`${className}${frameClass}`}
       aria-labelledby={titleId}
     >
       <div className="fullscreen-stage__header">
         <h3 id={titleId}>{title}</h3>
         <FullscreenButton
-          active={fullscreen.active}
-          toggle={fullscreen.toggle}
+          active={fullscreenActive}
+          toggle={toggleFullscreen}
           label={label}
         />
       </div>

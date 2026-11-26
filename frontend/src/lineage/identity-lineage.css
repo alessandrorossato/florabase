@@ -84,9 +84,13 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-large);
 }
-.lineage-stage > h3 {
+.lineage-stage > h3,
+.lineage-stage > .fullscreen-stage__header > h3 {
   margin: 0 0 var(--space-3);
   font: var(--type-h3);
+}
+.lineage-stage > .fullscreen-stage__header > h3 {
+  margin: 0;
 }
 .lineage-gallery {
   display: grid;

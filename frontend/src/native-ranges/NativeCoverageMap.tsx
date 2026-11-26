@@ -65,7 +65,12 @@ export function NativeCoverageMap({
   const inspectedCodes = territorySelection?.codes ?? localCodes;
   const setInspectedCodes = territorySelection?.onChange ?? setLocalCodes;
   const [aboutOpen, setAboutOpen] = useState(false);
-  const fullscreen = useFullscreen();
+  const {
+    active: fullscreenActive,
+    toggle: toggleFullscreen,
+    setFrame,
+    frameClass,
+  } = useFullscreen<HTMLDivElement>();
   const [mobilePane, setMobilePane] = useState<"map" | "inspector">("map");
   function toggle(code: string) {
     setInspectedCodes(
@@ -205,7 +210,8 @@ export function NativeCoverageMap({
           .join(", ") || "none"}
       </span>
       <div
-        className={`native-spatial-workspace${fullscreen.frameClass}`}
+        ref={setFrame}
+        className={`native-spatial-workspace${frameClass}`}
         data-mobile-pane={mobilePane}
       >
         <figure id={`${id}-map-pane`} className="native-map">
@@ -218,8 +224,8 @@ export function NativeCoverageMap({
           )}
           <div className="native-map-canvas">
             <FullscreenButton
-              active={fullscreen.active}
-              toggle={fullscreen.toggle}
+              active={fullscreenActive}
+              toggle={toggleFullscreen}
               label="native-range map"
             />
             <svg
@@ -355,6 +361,8 @@ export function NativeCoverageMap({
                       }}
                       onKeyDown={(event) => {
                         if (event.key === "Escape") {
+                          // Dismissing the preview uses this Escape; full screen stays.
+                          if (preview) event.preventDefault();
                           setPreviewDismissed(true);
                           return;
                         }
