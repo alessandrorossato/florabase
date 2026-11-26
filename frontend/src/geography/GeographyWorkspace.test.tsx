@@ -154,11 +154,11 @@ test.each([
     ).toBeInTheDocument();
     if (label === "Native ranges")
       expect(
-        screen.getByRole("button", { name: "Compare species (0)" }),
+        screen.getByRole("button", { name: "By species (0)" }),
       ).toBeInTheDocument();
     if (label === "Species distribution")
       expect(
-        screen.getByRole("button", { name: "Choose species" }),
+        screen.getByRole("heading", { name: "Species" }),
       ).toBeInTheDocument();
   },
 );
@@ -181,7 +181,7 @@ test("internal map navigation uses canonical anchors and history restores the co
   );
   await screen.findByRole("heading", { name: "Geographic overview" });
   await user.click(screen.getByRole("link", { name: "Explore native ranges" }));
-  await screen.findByRole("button", { name: "Compare species (0)" });
+  await screen.findByRole("button", { name: "By species (0)" });
   expect(window.location.hash).toBe("#/geography/native-ranges");
   act(() => {
     window.history.replaceState(

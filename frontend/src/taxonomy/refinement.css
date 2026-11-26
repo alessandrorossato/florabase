@@ -32,12 +32,12 @@
 }
 .taxonomy-refined .directory-tools {
   width: 100%;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
+/* UI-POLISH-005: the directory header's search fills the toolbar, as on every list. */
 .taxonomy-screen.taxonomy-refined .directory-search {
   flex: 1 1 15rem;
   min-width: 10rem;
-  max-width: 24rem;
 }
 .taxonomy-refined .taxonomy-view-switch {
   flex-shrink: 0;

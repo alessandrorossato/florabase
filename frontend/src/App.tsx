@@ -43,6 +43,7 @@ import { loadWorkspaceChunk } from "./components/workspaceChunk";
 import { isFreshDirectoryNavigation } from "./components/recordNavigation";
 import { WorkbenchShell } from "./shell/WorkbenchShell";
 import type { Section } from "./shell/navigation";
+import { isWorkspaceHome, workspaceHomes } from "./shell/navigation";
 
 const HarvestScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
@@ -91,6 +92,12 @@ const DashboardScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./collection/DashboardScreen");
     return { default: module.DashboardScreen };
+  }),
+);
+const WorkspaceHome = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./workspaces/WorkspaceHome");
+    return { default: module.WorkspaceHome };
   }),
 );
 
@@ -372,6 +379,7 @@ function currentRoute(): Route {
   }
   const valid: Section[] = [
     "dashboard",
+    ...workspaceHomes,
     "seeds",
     "sowings",
     "harvests",
@@ -612,7 +620,9 @@ function ApplicationShell({
             route.section === "events" ||
             route.section === "sowings" ||
             route.section === "cuttings" ||
-            route.section === "harvests"
+            route.section === "harvests" ||
+            // Map photos and native-range results show identity covers.
+            route.section === "geography"
           }
         >
           <WorkspaceBoundary
@@ -648,6 +658,8 @@ function ApplicationShell({
                 />
               ) : route.section === "dashboard" ? (
                 <DashboardScreen />
+              ) : isWorkspaceHome(route.section) ? (
+                <WorkspaceHome id={route.section} />
               ) : route.section === "harvests" ? (
                 <HarvestScreen
                   initialId={route.recordId}

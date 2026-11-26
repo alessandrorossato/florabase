@@ -302,8 +302,9 @@
   padding: 0;
   gap: var(--space-2);
 }
+/* Phones and narrow layouts: a few rows stay visible and the preview stays within reach. */
 .provenance-selection .site-directory-column > .identity-list {
-  max-height: 11rem;
+  max-height: min(20rem, 45dvh);
   overflow-y: auto;
   scrollbar-width: thin;
 }
@@ -364,33 +365,60 @@
 /* Breadcrumb geometry is owned by components/breadcrumbs.css; a lazily loaded copy here
    used to override the directory breadcrumb gap app-wide after any Geography visit. */
 
+/* UI-POLISH-004 desktop layout: the site list runs the full height of the left column (well
+   over six rows); the map and the quick preview share the right column, so selecting a site
+   never shrinks the list. */
 @media (min-width: 48.001rem) {
-  .site-navigation-inspector,
-  .provenance-selection .site-map-panel {
-    height: calc(100dvh - 15rem);
-  }
-  .site-navigation-inspector > .site-directory-column {
+  .app-content .provenance-selection {
+    grid-template-rows: minmax(22rem, 1fr) auto;
+    grid-template-areas:
+      "list map"
+      "list preview";
+    align-items: stretch;
     flex: none;
+    height: max(40rem, calc(100dvh - 13rem));
   }
-  .app-content .provenance-selection .quick-preview {
-    flex: 1;
+  .site-navigation-inspector {
+    display: contents;
+  }
+  .provenance-selection .site-directory-column {
+    grid-area: list;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .provenance-selection .site-directory-column > .identity-list {
+    flex: 1 1 auto;
     min-height: 0;
     max-height: none;
   }
+  /* The preview stays compact and scrolls, so the map keeps most of the column. */
+  .app-content .provenance-selection .quick-preview {
+    grid-area: preview;
+    max-height: min(16rem, 30dvh);
+  }
   .provenance-selection .site-map-panel {
+    grid-area: map;
     display: flex;
     flex-direction: column;
+    gap: var(--space-2);
+    min-height: 0;
   }
-  .provenance-selection .provenance-map {
-    flex: 1;
+  .provenance-selection .site-map-panel > * {
+    flex: none;
+  }
+  .provenance-selection .site-map-panel .provenance-map {
+    flex: 1 1 auto;
     min-height: 16rem;
     height: auto;
   }
+  .provenance-selection .site-map-panel .origins-provider-note {
+    margin: 0;
+  }
 }
 @media (min-width: 48.001rem) and (max-width: 75rem) {
-  .site-navigation-inspector,
-  .provenance-selection .site-map-panel {
-    height: calc(100dvh - 18rem);
+  .app-content .provenance-selection {
+    height: max(40rem, calc(100dvh - 16rem));
   }
 }
 .app-content .provenance-selection .quick-preview:focus-visible {

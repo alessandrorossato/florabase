@@ -18,6 +18,12 @@ test("Help explains key ideas and links every workspace destination", () => {
   expect(
     within(explore).getByRole("link", { name: "Lineage" }),
   ).toHaveAttribute("href", "#/lineage");
+  // Every destination carries a one-line description beside its link.
+  expect(
+    within(explore).getByText(
+      "Recorded ancestry, from seed lot to plant and back.",
+    ),
+  ).toBeVisible();
   expect(screen.getByText("Botanical identity")).toBeInTheDocument();
 });
 

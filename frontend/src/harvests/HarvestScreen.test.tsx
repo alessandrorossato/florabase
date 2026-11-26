@@ -184,6 +184,8 @@ describe("Harvest directory and detail", () => {
     expect(screen.getByText("Picked ripe fruit")).toBeVisible();
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
     expect(screen.getByText("Harvest image placeholder")).toBeVisible();
+    // Photos live in their own record tab, like every collection detail.
+    await user.click(screen.getByRole("tab", { name: "Photos" }));
     await user.click(
       screen.getByRole("button", { name: "Set primary test image" }),
     );

@@ -516,6 +516,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
           title="Media"
           titleId={headingId}
           description="Photographs and image references from your collection."
+          directory
           tools={
             <DirectoryTools
               onReset={() => {

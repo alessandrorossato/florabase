@@ -11,6 +11,9 @@ import { AuthContext, type AuthContextValue } from "../../auth/context";
 import { acquireTestAuth } from "../../test/auth";
 import { Cuttings } from "./Cuttings";
 
+/** The ancestry endpoint a Lineage tab reads for direct descendants: none recorded. */
+const noDescendants = { items: [], total: 0, offset: 0, limit: 25 };
+
 const sessionExpired = vi.fn();
 let auth: AuthContextValue;
 beforeEach(async () => {
@@ -178,6 +181,8 @@ test.each([
         return Promise.resolve(json({ offspring: [] }));
       if (path.endsWith("/lineage"))
         return Promise.resolve(json({ ancestors: [] }));
+      if (path.startsWith("/api/v1/lineage/"))
+        return Promise.resolve(json(noDescendants));
       if (path.endsWith("/primary-photo")) return Promise.resolve(json(null));
       return Promise.resolve(json([]));
     }),
@@ -197,6 +202,8 @@ test("undo retains rooting observations only after confirmation", async () => {
       return Promise.resolve(json({ offspring: [] }));
     if (path.endsWith("/lineage"))
       return Promise.resolve(json({ ancestors: [] }));
+    if (path.startsWith("/api/v1/lineage/"))
+      return Promise.resolve(json(noDescendants));
     if (path.endsWith("/primary-photo")) return Promise.resolve(json(null));
     if (path.endsWith("/reversal"))
       return Promise.resolve(
@@ -283,7 +290,7 @@ test("cuttings directory keeps statuses, long labels, views, and preview usable"
   show();
   const user = userEvent.setup();
   const lotPreview = await screen.findByRole("button", {
-    name: `Quick preview ${longName}`,
+    name: new RegExp(`^${longName}`),
   });
   expect(
     screen.getByRole("heading", { level: 2, name: "Cuttings" }),
@@ -301,11 +308,10 @@ test("cuttings directory keeps statuses, long labels, views, and preview usable"
   expect(
     screen.getByRole("button", { name: `Open details ${longName}` }),
   ).toBeVisible();
-  lotPreview.focus();
-  await user.keyboard("{Enter}");
-  expect(screen.getByRole("button", { name: "Close preview" })).toHaveFocus();
-  await user.click(screen.getByRole("button", { name: "Close preview" }));
-  expect(lotPreview).toHaveFocus();
+  // Like the other collection directories, a row opens the record itself.
+  await user.click(lotPreview);
+  expect(window.location.hash).toBe(`#/cuttings/lots/${lot.id}`);
+  window.history.replaceState(null, "", "#/cuttings");
 
   await user.click(screen.getByRole("button", { name: "Gallery" }));
   expect(screen.getByRole("list", { name: "Material lots" })).toHaveClass(
@@ -313,7 +319,7 @@ test("cuttings directory keeps statuses, long labels, views, and preview usable"
   );
   await user.click(screen.getByRole("button", { name: "Rooting attempts" }));
   const attemptPreview = await screen.findByRole("button", {
-    name: "Quick preview Long label rooting trial in coarse perlite and pumice",
+    name: /^Long label rooting trial in coarse perlite and pumice/,
   });
   expect(attemptPreview).toBeVisible();
   expect(attemptPreview.querySelector(".ui-record-summary")).toBeNull();
@@ -345,13 +351,13 @@ test("cuttings directory pagination advances and returns to the prior page", asy
   const user = userEvent.setup();
   expect(
     await screen.findByRole("button", {
-      name: "Quick preview Cuttings batch 0",
+      name: /^Cuttings batch 0(?!\d)/,
     }),
   ).toBeVisible();
   await user.click(screen.getByRole("button", { name: "Next page" }));
   expect(
     await screen.findByRole("button", {
-      name: "Quick preview Cuttings batch 50",
+      name: /^Cuttings batch 50(?!\d)/,
     }),
   ).toBeVisible();
   expect(fetch).toHaveBeenCalledWith(
@@ -361,7 +367,7 @@ test("cuttings directory pagination advances and returns to the prior page", asy
   await user.click(screen.getByRole("button", { name: "Previous page" }));
   expect(
     await screen.findByRole("button", {
-      name: "Quick preview Cuttings batch 0",
+      name: /^Cuttings batch 0(?!\d)/,
     }),
   ).toBeVisible();
 });
@@ -376,6 +382,8 @@ test("lot details save corrections with the version of the displayed lot", async
     }
     if (path.endsWith("/lineage"))
       return Promise.resolve(json({ ancestors: [] }));
+    if (path.startsWith("/api/v1/lineage/"))
+      return Promise.resolve(json(noDescendants));
     if (path.endsWith("/primary-photo")) return Promise.resolve(json(null));
     return Promise.resolve(json([]));
   });
@@ -426,6 +434,74 @@ test.each([
   },
 );
 
+test("cutting records use the shared record mask: header, tabs restored from and kept in the route", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((path: string) => {
+      if (path === "/api/v1/vegetative-lots/lot")
+        return Promise.resolve(
+          json({
+            ...lot,
+            attempts: [{ ...attempt, vegetative_lot: undefined }],
+          }),
+        );
+      if (path === "/api/v1/propagation-attempts/attempt")
+        return Promise.resolve(json(attempt));
+      if (path.endsWith("/propagation-summary"))
+        return Promise.resolve(json({ offspring: [] }));
+      if (path.endsWith("/lineage"))
+        return Promise.resolve(json({ ancestors: [] }));
+      if (path.startsWith("/api/v1/lineage/"))
+        return Promise.resolve(json(noDescendants));
+      if (path.endsWith("/primary-photo")) return Promise.resolve(json(null));
+      return Promise.resolve(json([]));
+    }),
+  );
+  window.history.replaceState(null, "", "#/cuttings/lots/lot?tab=attempts");
+  show({ route: "lots", id: "lot" });
+  const user = userEvent.setup();
+  expect(
+    await screen.findByRole("heading", { level: 2, name: "Bench cuttings" }),
+  ).toBeVisible();
+  expect(screen.getByText("Exhausted")).toBeVisible();
+  expect(screen.getByRole("tab", { name: "Rooting attempts" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  expect(
+    screen.getByRole("heading", { level: 3, name: "Rooting attempts" }),
+  ).toBeVisible();
+  expect(screen.getByRole("link", { name: "Perlite trial" })).toHaveAttribute(
+    "href",
+    "#/cuttings/attempts/attempt",
+  );
+  await user.click(screen.getByRole("tab", { name: "Lineage" }));
+  expect(window.location.hash).toBe("#/cuttings/lots/lot?tab=lineage");
+  expect(
+    screen.getByRole("heading", { level: 3, name: "Maternal lineage" }),
+  ).toBeVisible();
+  await user.click(screen.getByRole("tab", { name: "Overview" }));
+  expect(window.location.hash).toBe("#/cuttings/lots/lot");
+  cleanup();
+
+  window.history.replaceState(null, "", "#/cuttings/attempts/attempt");
+  show({ route: "attempts", id: "attempt" });
+  expect(
+    await screen.findByRole("heading", { level: 2, name: "Perlite trial" }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole("button", { name: "Log rooting observation" }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole("heading", { level: 3, name: "Rooting overview" }),
+  ).toBeVisible();
+  await user.click(screen.getByRole("tab", { name: "Observations" }));
+  expect(window.location.hash).toBe(
+    "#/cuttings/attempts/attempt?tab=observations",
+  );
+  expect(screen.getByText("No rooting observations recorded.")).toBeVisible();
+});
+
 test("cuttings Sort by asks the server from the first page and survives a record type switch (UX-SORT-002)", async () => {
   const rows = Array.from({ length: 50 }, (_, index) => ({
     ...lot,
@@ -442,7 +518,7 @@ test("cuttings Sort by asks the server from the first page and survives a record
   window.history.replaceState(null, "", "#/cuttings");
   show();
   const user = userEvent.setup();
-  await screen.findByRole("button", { name: "Quick preview Cuttings batch 0" });
+  await screen.findByRole("button", { name: /^Cuttings batch 0(?!\d)/ });
   await user.click(screen.getByRole("button", { name: "Next page" }));
   const sort = screen.getByRole("combobox", { name: "Sort by" });
   expect(

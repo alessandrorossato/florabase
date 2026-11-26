@@ -21,12 +21,20 @@ vi.mock("./ProvenanceMap", () => ({
     sites,
     onSelect,
     selectedId,
+    controls,
+    hoverContent,
   }: {
     sites: ProvenanceMapSite[];
     selectedId: string | null;
     onSelect: (id: string) => void;
+    controls?: React.ReactNode;
+    hoverContent?: (id: string) => React.ReactNode;
   }) => (
     <div aria-label="Interactive collection provenance map">
+      {controls}
+      {hoverContent && sites[0] && (
+        <div data-testid="hover-tooltip">{hoverContent(sites[0].id)}</div>
+      )}
       {sites.map((site) => (
         <button
           key={site.id}
@@ -138,6 +146,28 @@ afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   window.history.replaceState(null, "", "#/map");
+  try {
+    window.localStorage.clear();
+  } catch {
+    // Storage may be unavailable; nothing to reset.
+  }
+});
+
+test("Photos on hover is off by default and, once on, gives markers the site's identity photos", async () => {
+  renderMap(dataset());
+  const user = userEvent.setup();
+  const toggle = await screen.findByRole("switch", { name: "Photos on hover" });
+  expect(toggle).not.toBeChecked();
+  expect(screen.queryByTestId("hover-tooltip")).toBeNull();
+  await user.click(toggle);
+  expect(toggle).toBeChecked();
+  const tooltip = await screen.findByTestId("hover-tooltip");
+  expect(tooltip.querySelector(".hover-photos")).not.toBeNull();
+  expect(
+    window.localStorage.getItem(
+      "florabase.map-hover-photos.collection-origins.v1",
+    ),
+  ).not.toBeNull();
 });
 
 test("filters records deterministically and hides a site with no matching records", () => {

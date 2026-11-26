@@ -77,7 +77,7 @@ operator-authored botanical facts to Natural Earth.
 
 ## Workspace and evidence semantics
 
-`#/native-ranges` has one Explore all / Compare species workspace. It uses
+`#/native-ranges` has one By place / By species workspace (UI-POLISH-003). It uses
 the EXPLORE-001 All represented, Living, Current and Historical scopes and literal
 scientific/common/cultivar text search. A small optional With native range only filter
 never changes representation rules. Reference-only identities are excluded; represented
@@ -159,8 +159,8 @@ Native ranges title, short subtitle, and a wide scientific/common/cultivar searc
 Saved views and Choose species. Search uses the same durable collection query and never removes
 explicitly chosen IDs. The chooser is paged and allows five color layers; deselection stays available.
 
-Explore all shows the complete filtered representation scope, independent of the comparison set.
-Compare species uses only the explicitly chosen IDs that match those same filters. Compact overview
+By place shows the complete filtered representation scope, independent of the comparison set.
+By species uses only the explicitly chosen IDs that match those same filters. Compact overview
 KPIs open the chooser, focus the territory inspector, or open exact-place evidence. The no-range KPI
 remains informational; no inverse filter or artificial destination is invented.
 
@@ -181,8 +181,8 @@ range evidence. Back/Forward, Saved View navigation and reload clear this transi
 Territory IDs, union/intersection choice, panel, preview and scroll do not extend Saved View v1.
 
 The inspector defaults to the distinct union of identities covering any chosen territory. Its explicit
-Any/All control offers intersection over the same canonical coverage relation. Explore all reads the
-whole filtered collection; Compare passes the explicit selection as an additional bound. Results show
+Any/All control offers intersection over the same canonical coverage relation. By place reads the
+whole filtered collection; By species passes the explicit selection as an additional bound. Results show
 matched territories and distinguish explicit country records from drawing coverage inherited from
 broad recorded places. Broad and exact links may both be displayed without double-counting. The
 inspector search filters the labelled current page; Next/Previous retain the server-side scope.

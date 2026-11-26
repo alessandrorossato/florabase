@@ -95,6 +95,10 @@ test("the navigation model lists every former destination and Settings tool exac
   expect([...sections].sort()).toEqual(
     [
       "dashboard",
+      "collection",
+      "activity",
+      "explore",
+      "sourcing",
       "seeds",
       "sowings",
       "cuttings",
@@ -123,14 +127,15 @@ test("the navigation model lists every former destination and Settings tool exac
   );
   const hrefs = allDestinations().map((item) => item.href);
   for (const href of [
-    "#/plants?type=group",
-    "#/harvests?tab=stored-material",
     "#/schedule?view=calendar",
     "#/map",
     "#/species-distribution",
     "#/native-ranges",
   ])
     expect(hrefs).toContain(href);
+  // Views of Plants and Harvests are reached from those pages, not from the menu.
+  expect(hrefs).not.toContain("#/plants?type=group");
+  expect(hrefs).not.toContain("#/harvests?tab=stored-material");
 });
 
 test("section links navigate through the guard; modified clicks keep native behaviour", async () => {
@@ -141,8 +146,8 @@ test("section links navigate through the guard; modified clicks keep native beha
     "aria-current",
     "page",
   );
-  await user.click(within(nav).getByRole("link", { name: "Plant groups" }));
-  expect(onNavigate).toHaveBeenCalledWith("#/plants?type=group");
+  await user.click(within(nav).getByRole("link", { name: "Plants" }));
+  expect(onNavigate).toHaveBeenCalledWith("#/plants");
   onNavigate.mockClear();
   await user.keyboard("{Control>}");
   await user.click(within(nav).getByRole("link", { name: "Sowings" }));
@@ -151,14 +156,15 @@ test("section links navigate through the guard; modified clicks keep native beha
 });
 
 test("sub-destinations, not their parent, are current on their own view", () => {
-  renderShell({ section: "plants", hash: "#/plants?type=group" });
+  renderShell({ section: "schedule", hash: "#/schedule?view=calendar" });
   const nav = screen.getByRole("navigation", { name: "Primary navigation" });
-  expect(
-    within(nav).getByRole("link", { name: "Plant groups" }),
-  ).toHaveAttribute("aria-current", "page");
-  expect(within(nav).getByRole("link", { name: "Plants" })).not.toHaveAttribute(
+  expect(within(nav).getByRole("link", { name: "Calendar" })).toHaveAttribute(
     "aria-current",
+    "page",
   );
+  expect(
+    within(nav).getByRole("link", { name: "Schedule" }),
+  ).not.toHaveAttribute("aria-current");
 });
 
 test("the New menu lists every creation route", async () => {
@@ -311,10 +317,8 @@ test("mobile workspace and account sheets navigate, theme and sign out", async (
   ).toHaveAttribute("aria-current", "true");
   await user.click(within(mobile).getByRole("button", { name: "Collection" }));
   const sheet = screen.getByRole("dialog", { name: "Collection" });
-  await user.click(
-    within(sheet).getByRole("link", { name: "Stored material" }),
-  );
-  expect(onNavigate).toHaveBeenCalledWith("#/harvests?tab=stored-material");
+  await user.click(within(sheet).getByRole("link", { name: "Harvests" }));
+  expect(onNavigate).toHaveBeenCalledWith("#/harvests");
   expect(screen.queryByRole("dialog", { name: "Collection" })).toBeNull();
 
   await user.click(
@@ -389,6 +393,7 @@ test("supported Saved Views are sub-items of their owning section and open as or
   await user.click(within(saved).getByRole("link", { name: /Basil lots/ }));
   expect(onNavigate).toHaveBeenCalledWith("#/seeds?q=basil");
   await user.click(screen.getByRole("tab", { name: /^Sourcing/ }));
+  expect(onNavigate).toHaveBeenLastCalledWith("#/sourcing");
   expect(screen.queryByRole("link", { name: /Basil lots/ })).toBeNull();
   await user.keyboard("{Control>}k{/Control}");
   expect(
@@ -734,4 +739,38 @@ test("a desktop side rail is not published as a pinned top header", () => {
   } finally {
     vi.restoreAllMocks();
   }
+});
+
+test("Today's tab opens Today; another workspace's tab opens its home, but not from inside it", async () => {
+  vi.stubGlobal("fetch", savedViewsFetch([]));
+  const user = userEvent.setup();
+  const { onNavigate } = renderShell({ section: "seeds", hash: "#/seeds" });
+  await user.click(screen.getByRole("tab", { name: /^Today/ }));
+  expect(onNavigate).toHaveBeenCalledWith("#/dashboard");
+  onNavigate.mockClear();
+  await user.click(screen.getByRole("tab", { name: /^Explore/ }));
+  expect(onNavigate).toHaveBeenCalledWith("#/explore");
+  expect(
+    within(screen.getByRole("tabpanel", { hidden: true })).getByRole("link", {
+      name: "Overview",
+    }),
+  ).toHaveAttribute("href", "#/explore");
+  onNavigate.mockClear();
+  // Back to the workspace of the current page: the panel opens, the page stays.
+  await user.click(screen.getByRole("tab", { name: /^Collection/ }));
+  expect(onNavigate).not.toHaveBeenCalled();
+  // Arrow keys move between panels without navigating.
+  await user.keyboard("{ArrowDown}");
+  expect(onNavigate).not.toHaveBeenCalled();
+});
+
+test("the mobile Today button opens Today directly instead of a one-link sheet", async () => {
+  const user = userEvent.setup();
+  const { onNavigate } = renderShell({ section: "seeds", hash: "#/seeds" });
+  const mobile = screen.getByRole("navigation", {
+    name: "Mobile primary navigation",
+  });
+  await user.click(within(mobile).getByRole("button", { name: "Today" }));
+  expect(onNavigate).toHaveBeenCalledWith("#/dashboard");
+  expect(screen.queryByRole("dialog", { name: "Today" })).toBeNull();
 });

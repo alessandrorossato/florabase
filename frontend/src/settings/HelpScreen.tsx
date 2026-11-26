@@ -1,6 +1,7 @@
 import { PageHeader } from "../components/ReferenceUI";
 import { Page } from "../components/WorkspaceUI";
 import { workspaces } from "../shell/navigation";
+import { sectionDescriptions } from "../shell/sectionDescriptions";
 import "./settings.css";
 
 /** Settings → Help: what each workspace and page is for, built from the navigation itself. */
@@ -54,19 +55,24 @@ export function HelpScreen() {
           >
             <h3 id={`help-${workspace.id}`}>{workspace.label}</h3>
             <p>{workspace.summary}</p>
-            <ul className="help-links">
+            <dl className="help-sections">
               {workspace.destinations.map((item) => (
-                <li key={item.section}>
-                  <a href={`#/${item.section}`}>{item.label}</a>
-                  {item.children?.map((child) => (
-                    <span key={child.href}>
-                      {" · "}
-                      <a href={child.href}>{child.label}</a>
-                    </span>
-                  ))}
-                </li>
+                <div key={item.section}>
+                  <dt>
+                    <a href={`#/${item.section}`}>{item.label}</a>
+                    {item.children?.map((child) => (
+                      <span key={child.href}>
+                        {" · "}
+                        <a href={child.href}>{child.label}</a>
+                      </span>
+                    ))}
+                  </dt>
+                  {sectionDescriptions[item.section] && (
+                    <dd>{sectionDescriptions[item.section]}</dd>
+                  )}
+                </div>
               ))}
-            </ul>
+            </dl>
           </section>
         ))}
       </div>

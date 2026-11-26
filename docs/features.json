@@ -3093,6 +3093,83 @@
       "status": "implemented"
     },
     {
+      "id": "UI-POLISH-002",
+      "category": "ux",
+      "description": "Batch 14 UAT polish (26/11): Seed lot Lineage tab shows recorded descendants, Today without the photo strip, Plant groups and Stored material no longer pinned in the sidebar, Lineage without the dotted canvas and with elbow-connector trees, aligned GBIF search, a longer provenance-site list kept in step with the map, and licence links served by the development server",
+      "acceptance_criteria": [
+        "A record's Lineage tab lists its direct recorded descendants (first 25, with verb, status and a link to each record's own descendants) below its upstream path; a record with no recorded source but with descendants no longer shows No recorded lineage",
+        "Today renders no photo section; at wide layouts the supporting column runs to the height of the work column, with To review taking the remaining space (supersedes the photos item of UX-TODAY-001)",
+        "The Collection menu lists Plants and Harvests without the fixed Plant groups and Stored material sub-links; those views stay reachable from their pages",
+        "Lineage stages have no dotted background; nested lineage levels hang from their parent card on elbow connectors with the relationship verb as a label",
+        "The Search GBIF button is aligned with the scientific-name input",
+        "Provenance sites keep at least six to seven list rows visible on desktop; choosing a site on the map scrolls it into view in the list and choosing it in the list pans the map to it when it is out of view, without changing the zoom",
+        "The Vite development server serves /LICENSE and /THIRD_PARTY_NOTICES.txt as text instead of the app; production nginx serves /LICENSE as text/plain"
+      ],
+      "dependencies": [
+        "UX-TODAY-001",
+        "LINEAGE-004"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "UI-POLISH-003",
+      "category": "ux",
+      "description": "Workspace home pages, photos on map hover and a question-first Native ranges (26/11 UAT proposals A1, B1, C1)",
+      "acceptance_criteria": [
+        "Collection, Activity, Explore and Sourcing each have an Overview home (#/collection, #/activity, #/explore, #/sourcing) with one tile per sub-section: what it holds, a count from the Today summary where one exists, direct links and its usual first action; a failed summary keeps every tile usable with a Retry counts action",
+        "The Today tab opens Today directly; another workspace's tab opens its menu and its home page; the breadcrumb workspace crumb links to that home",
+        "Native ranges and Collection origins each have a Photos on hover switch, off by default and remembered per page in this browser; when on, hovering a territory or site shows up to four primary images of the botanical identities there, with a count of the rest",
+        "Native ranges starts from a question with By place and By species modes; results for a place are photo cards; the coverage KPIs read as one compact line",
+        "Component tests cover the home tiles and their error state, the tab navigation, the hover switch and the hover photos on both maps"
+      ],
+      "dependencies": [
+        "UI-POLISH-002",
+        "DASHBOARD-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "UI-POLISH-004",
+      "category": "ux",
+      "description": "Final beta.10 UI round (26/11): full-width Settings, described Help links, cross-section indicators on workspace homes, one Places/Species inspector for Native ranges, a steady collapsed rail, a full-height provenance site list and full screen for maps and diagrams",
+      "acceptance_criteria": [
+        "Settings cards span the page width; forms inside them keep a readable line length",
+        "Help gives every destination a one-line description next to its link, shared with the workspace home tiles",
+        "Collection, Activity, Explore and Sourcing homes open with indicators that combine several sections (for example species in current material, germination recorded, WFO and native-range coverage, mapped origin sites, suppliers and orders); an indicator whose source fails or whose base is zero is left out",
+        "The Native ranges map sits in a rounded, clipped frame; in both By place and By species the inspector shows a fixed, scrolling Places list first and then the plants native there or the chosen species with color, Places and remove, so choosing one never pushes the other out of view",
+        "Collapsing the side panel does not move the rail buttons; the search button appears just above Settings",
+        "On desktop the provenance site list runs the full height of its column; the map and the quick preview share the other column",
+        "Collection origins, Provenance sites, Species distribution, Native ranges, the ancestry explorer's descendants and identity lineage lines offer Full screen, left with Escape or Exit full screen"
+      ],
+      "dependencies": [
+        "UI-POLISH-003"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "UI-POLISH-005",
+      "category": "ux",
+      "description": "Last beta.10 UI round (26/11): one record mask for every Collection detail, one header layout for every list, Collection-origins-style cards in Native ranges, a taller provenance site map and an inline species list in Species distribution",
+      "acceptance_criteria": [
+        "Seed lot, Sowing, Plant, Plant group, Harvest, Vegetative lot and Rooting attempt details share one header: plate and fact label on the left; kind, name, botanical identity, status and actions (left-aligned) on the right; then the recorded-lineage strip and record tabs; the breadcrumb is the way back",
+        "Cuttings details no longer render a plain fact table: Vegetative lots have Overview, Rooting attempts, Photos and Lineage tabs; Rooting attempts have Overview, Observations, Offspring, Photos and Lineage tabs; each fact is stated once",
+        "Harvest details show the source in the fact label and the recorded lineage strip, with Overview and Photos tabs",
+        "A Cuttings directory row opens the record, like the other collection directories, with a record count and no floating preview",
+        "Media, Geography pages, Taxonomy and Lineage use the directory header: title and description, then one toolbar row whose search fills the width",
+        "Native ranges indicators are cards like Collection origins",
+        "On desktop the provenance site map takes most of its column, its provider note is never clipped and the quick preview stays compact and scrolls",
+        "Species distribution lists represented species inline beside the map (compact rows with readiness) instead of a modal of large cards; the selected species stays marked and in view"
+      ],
+      "dependencies": [
+        "UI-POLISH-004"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "FN-02",
       "category": "ux",
       "description": "Sort the Seeds, Sowings and Plants directories by name and by their own date",
