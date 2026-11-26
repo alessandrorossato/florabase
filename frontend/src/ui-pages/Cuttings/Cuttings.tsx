@@ -16,6 +16,8 @@ import {
   DirectorySearch,
   DirectoryTools,
 } from "../../components/DirectoryTools";
+import { DirectorySortSelect } from "../../components/DirectorySort";
+import type { DirectorySort } from "../../components/directorySort";
 import { PageHeader } from "../../components/ReferenceUI";
 import { Icon } from "../../components/Icon";
 import { DirectoryResults } from "../../components/DirectoryResults";
@@ -108,7 +110,7 @@ function CuttingsDirectory({
     setOffset(0);
   });
   const { state: selectedFilters } = directory;
-  const { record_type: surface, q } = selectedFilters;
+  const { record_type: surface, q, sort } = selectedFilters;
   const { view, select: setView } = useDirectoryPresentation("cuttings");
   const fallback = useRef<HTMLAnchorElement>(null);
   const recordName = useRecordName();
@@ -118,6 +120,7 @@ function CuttingsDirectory({
     limit: String(pageSize),
     offset: String(offset),
   });
+  if (sort) params.set("sort", sort);
   if (sourceId)
     params.set(
       sourceType === "plant_group"
@@ -244,6 +247,7 @@ function CuttingsDirectory({
                           ...defaults.cuttings,
                           record_type: item,
                           q,
+                          sort,
                         });
                         setOffset(0);
                       }}
@@ -252,6 +256,18 @@ function CuttingsDirectory({
                     </button>
                   ))}
                 </div>
+              }
+              sort={
+                <DirectorySortSelect
+                  value={sort}
+                  dateLabel={
+                    surface === "lots" ? "taken or acquired date" : "start date"
+                  }
+                  onChange={(value: DirectorySort) => {
+                    directory.update("sort", value);
+                    setOffset(0);
+                  }}
+                />
               }
               savedViews={
                 <SavedViews
@@ -306,6 +322,7 @@ function CuttingsDirectory({
                   ...defaults.cuttings,
                   record_type: surface,
                   q,
+                  sort,
                 });
                 setOffset(0);
               }}

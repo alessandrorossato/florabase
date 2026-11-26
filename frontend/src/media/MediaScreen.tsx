@@ -2,6 +2,7 @@ import "./media.css";
 import { ActionButton } from "../components/Action";
 import { FieldLabel } from "../components/FieldLabel";
 import { DirectoryTools } from "../components/DirectoryTools";
+import { DirectorySortSelect } from "../components/DirectorySort";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
@@ -205,7 +206,15 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
     view.update("target", value);
   };
 
-  const pageKey = JSON.stringify([query, kind, association, target, offset]);
+  const sort = view.state.sort;
+  const pageKey = JSON.stringify([
+    query,
+    kind,
+    association,
+    target,
+    sort,
+    offset,
+  ]);
   const page =
     !initialId && pageResult?.key === pageKey ? pageResult.value : null;
 
@@ -247,7 +256,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
         });
     } else {
       void listMedia(
-        { query, kind, association, target, offset },
+        { query, kind, association, target, sort, offset },
         capability,
         controller.signal,
       )
@@ -296,6 +305,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
     kind,
     association,
     target,
+    sort,
     offset,
     attempt,
     pageKey,
@@ -528,6 +538,16 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                   value={query}
                   onChange={(value) => {
                     setQuery(value);
+                    changeFilters();
+                  }}
+                />
+              }
+              sort={
+                <DirectorySortSelect
+                  value={sort}
+                  dateLabel="added"
+                  onChange={(value) => {
+                    view.update("sort", value);
                     changeFilters();
                   }}
                 />

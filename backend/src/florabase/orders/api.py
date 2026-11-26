@@ -10,6 +10,7 @@ from florabase.auth.dependencies import (
     require_csrf,
     require_owner,
 )
+from florabase.db.ordering import DirectorySort
 from florabase.db.session import get_database_session
 from florabase.orders import reconciliation, service
 from florabase.orders.purchase_schemas import (
@@ -49,11 +50,12 @@ def list_all(
     database: Database,
     q: Annotated[str, Query(max_length=200)] = "",
     supplier_id: UUID | None = None,
+    sort: DirectorySort | None = None,
     offset: Offset = 0,
     limit: Limit = 50,
 ) -> OrderPage:
     return service.list_orders(
-        database, q=q.strip(), supplier_id=supplier_id, offset=offset, limit=limit
+        database, q=q.strip(), supplier_id=supplier_id, sort=sort, offset=offset, limit=limit
     )
 
 

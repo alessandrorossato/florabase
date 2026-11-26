@@ -7,6 +7,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, StrictBool, field_validator
 
 from florabase.cuttings.model import AttemptLifecycle, LotLifecycle, MaterialType, SourceKind
+from florabase.db.ordering import DirectorySort
 from florabase.explore.schemas import CollectionRecordCategory, RepresentationScope
 from florabase.harvests.model import MaterialKind
 from florabase.history.schemas import HistoryCategory, HistorySubjectKind
@@ -72,8 +73,7 @@ class NativeRangesState(TextState):
     with_range: StrictBool = Field(default=False, alias="withRange")
 
 
-# Directory order (FN-02, UX-SORT-001); absent keeps each directory's default order.
-DirectorySort = Literal["name", "name_desc", "newest", "oldest"]
+# Directory order (FN-02, UX-SORT-001/002); absent keeps each directory's default order.
 DirectoryNameSort = Literal["name", "name_desc"]
 
 
@@ -100,6 +100,7 @@ class CuttingsState(TextState):
     source_kind: SourceKind | None = None
     location_id: UUID | None = None
     has_known_mother: Literal["true", "false"] | None = None
+    sort: DirectorySort | None = None
 
 
 class PlantState(SeedLotState):
@@ -164,10 +165,12 @@ class MediaState(TextState):
     kind: Literal["local", "external"] | None = None
     association: Literal["all", "linked", "unlinked"] = "all"
     target: MediaTargetFilter | None = None
+    sort: DirectorySort | None = None
 
 
 class OrderState(TextState):
     supplier_id: UUID | None = None
+    sort: DirectorySort | None = None
 
 
 class LocationState(TextState):
