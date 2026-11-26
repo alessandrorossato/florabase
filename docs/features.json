@@ -3061,6 +3061,25 @@
       "status": "implemented"
     },
     {
+      "id": "UI-POLISH-004",
+      "category": "ux",
+      "description": "Final beta.10 UI round (26/11): full-width Settings, described Help links, cross-section indicators on workspace homes, one Places/Species inspector for Native ranges, a steady collapsed rail, a full-height provenance site list and full screen for maps and diagrams",
+      "acceptance_criteria": [
+        "Settings cards span the page width; forms inside them keep a readable line length",
+        "Help gives every destination a one-line description next to its link, shared with the workspace home tiles",
+        "Collection, Activity, Explore and Sourcing homes open with indicators that combine several sections (for example species in current material, germination recorded, WFO and native-range coverage, mapped origin sites, suppliers and orders); an indicator whose source fails or whose base is zero is left out",
+        "The Native ranges map sits in a rounded, clipped frame; in both By place and By species the inspector shows a fixed, scrolling Places list first and then the plants native there or the chosen species with color, Places and remove, so choosing one never pushes the other out of view",
+        "Collapsing the side panel does not move the rail buttons; the search button appears just above Settings",
+        "On desktop the provenance site list runs the full height of its column; the map and the quick preview share the other column",
+        "Collection origins, Provenance sites, Species distribution, Native ranges, the ancestry explorer's descendants and identity lineage lines offer Full screen, left with Escape or Exit full screen"
+      ],
+      "dependencies": [
+        "UI-POLISH-003"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "FN-02",
       "category": "ux",
       "description": "Sort the Seeds, Sowings and Plants directories by name and by their own date",

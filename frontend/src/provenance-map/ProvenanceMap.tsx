@@ -16,6 +16,8 @@ import { createPortal } from "react-dom";
 import { loadGeometry } from "../native-ranges/geometry";
 import { mapRuntimeConfig } from "./config";
 import "./origins.css";
+import { FullscreenButton } from "../components/FullscreenButton";
+import { useFullscreen } from "../components/useFullscreen";
 
 export interface MapPoint {
   id: string;
@@ -315,6 +317,7 @@ export function ProvenanceMap({
       window.clearTimeout(timer);
     };
   }, [hovered, hoverContent]);
+  const fullscreen = useFullscreen();
   const shownPhoto =
     photo && hoverContent && photo.site === hovered ? photo : null;
   useEffect(() => {
@@ -322,7 +325,7 @@ export function ProvenanceMap({
     if (hovered) markersRef.current.get(hovered)?.getTooltip()?.update();
   }, [hovered, shownPhoto]);
   return (
-    <>
+    <div className={`provenance-map-frame${fullscreen.frameClass}`}>
       {shownPhoto &&
         hoverContent &&
         createPortal(hoverContent(shownPhoto.site), shownPhoto.slot)}
@@ -337,6 +340,11 @@ export function ProvenanceMap({
         >
           Fit visible sites
         </button>
+        <FullscreenButton
+          active={fullscreen.active}
+          toggle={fullscreen.toggle}
+          label={label}
+        />
         {/* Not offered at all unless the operator enabled a provider (docs/deployment.md). */}
         {mapRuntimeConfig.onlineConfigured && (
           <label>
@@ -380,6 +388,6 @@ export function ProvenanceMap({
           ? "Online tiles disclose the viewed area, app origin and client network information to the configured provider; no Florabase names, IDs or botanical metadata are sent."
           : `Local overview · generalized 1:110m geography, not street-level detail. Markers retain exact recorded coordinates.${mapRuntimeConfig.onlineConfigured ? " Online detail is optional." : " Online detail is not enabled for this deployment."}`}
       </p>
-    </>
+    </div>
   );
 }

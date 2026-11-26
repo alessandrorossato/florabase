@@ -1,5 +1,18 @@
 # Engineering progress
 
+## 2026-11-26 — Final beta.10 UI round (`UI-POLISH-004`)
+
+- Same branch; Alessandro's last UAT round before beta.10. Species distribution density
+  rendering is deferred to after beta.10 at his request.
+- Settings cards full width; Help and home tiles share `shell/sectionDescriptions.ts`.
+- Workspace homes add an "Across …" indicator row (`workspaces/glance.ts`); Explore reads the
+  native-range overview and provenance map, Sourcing reads suppliers and one order page.
+- Native ranges: rounded map frame; the inspector always shows Places then Plants/Species.
+- Collapsed rail keeps its buttons in place; provenance-site list is full height on desktop.
+- `useFullscreen` / `FullscreenButton` / `FullscreenStage`: an in-page overlay (not the
+  Fullscreen API, so dialogs and tooltips stay usable), Escape exits.
+- Checks: `tsc -b`, ESLint, Prettier; full Vitest compared with `main` in this cloud session.
+
 ## 2026-11-26 — Workspace homes, map hover photos, Native ranges (`UI-POLISH-003`)
 
 - Same branch as `UI-POLISH-002`; Alessandro approved proposals A1, B1 and C1 for beta.10.

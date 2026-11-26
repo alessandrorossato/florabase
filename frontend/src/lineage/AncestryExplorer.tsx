@@ -1,3 +1,4 @@
+import { FullscreenStage } from "../components/FullscreenStage";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import type { components } from "../api/schema";
@@ -538,11 +539,12 @@ export function AncestryExplorer({
         </ol>
       </section>
 
-      <section
+      <FullscreenStage
         className="ancestry-section"
-        aria-labelledby={`${titleId}-descendants`}
+        titleId={`${titleId}-descendants`}
+        title="Recorded descendants"
+        label="recorded descendants"
       >
-        <h3 id={`${titleId}-descendants`}>Recorded descendants</h3>
         {children.total === 0 ? (
           <DetailEmptyState>No recorded descendants.</DetailEmptyState>
         ) : (
@@ -552,7 +554,7 @@ export function AncestryExplorer({
             generation={focusGeneration}
           />
         )}
-      </section>
+      </FullscreenStage>
     </section>
   );
 }

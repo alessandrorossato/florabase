@@ -1,0 +1,68 @@
+/* useFullscreen frames (UI-POLISH-004). Off, a frame lays out exactly as before. */
+.fullscreen-frame.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  inline-size: 100vw;
+  block-size: 100dvh;
+  max-inline-size: none;
+  max-block-size: none;
+  margin: 0;
+  padding: var(--space-3);
+  overflow: auto;
+  background: var(--background);
+  border-radius: 0;
+}
+html.has-fullscreen-frame,
+html.has-fullscreen-frame body {
+  overflow: hidden;
+}
+.fullscreen-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  white-space: nowrap;
+}
+.fullscreen-toggle svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+@media (max-width: 48rem) {
+  .fullscreen-toggle > span {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+.fullscreen-stage__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-block-end: var(--space-3);
+}
+.fullscreen-stage__header > h3 {
+  margin: 0;
+}
+/* Leaflet map frames: off, they add no box; on, the map takes the remaining height. */
+.occurrence-map-frame:not(.is-fullscreen) {
+  display: contents;
+}
+.occurrence-map-frame > .fullscreen-toggle {
+  display: flex;
+  inline-size: fit-content;
+  margin-inline-start: auto;
+  margin-block-end: var(--space-2);
+}
+.occurrence-map-frame.is-fullscreen .occurrence-density-map {
+  flex: 1 1 auto;
+  block-size: auto;
+  min-block-size: 0;
+}

@@ -10,9 +10,21 @@ import { WorkspaceHome } from "./WorkspaceHome";
 
 const get = vi.hoisted(() => vi.fn());
 vi.mock("../collection/api", () => ({ getDashboard: get }));
+const native = vi.hoisted(() => vi.fn());
+const origins = vi.hoisted(() => vi.fn());
+const suppliers = vi.hoisted(() => vi.fn());
+const orders = vi.hoisted(() => vi.fn());
+vi.mock("../native-ranges/api", () => ({ getNativeOverview: native }));
+vi.mock("../provenance-map/api", () => ({
+  getCollectionProvenanceMap: origins,
+}));
+vi.mock("../suppliers/api", () => ({ listSuppliers: suppliers }));
+vi.mock("../orders/api", () => ({ listOrders: orders }));
 let auth: AuthContextValue;
 beforeEach(async () => {
   auth = (await acquireTestAuth()).auth;
+  for (const read of [native, origins, suppliers, orders])
+    read.mockRejectedValue(new Error("not under test"));
 });
 afterEach(() => {
   cleanup();
@@ -95,8 +107,12 @@ test("Collection lists every sub-section once with grounded counts, views and fi
 
 test("Activity and Explore read their counts from the same summary", async () => {
   get.mockResolvedValue(summary);
+  native.mockRejectedValue(new Error("offline"));
+  origins.mockRejectedValue(new Error("offline"));
   const view = show("activity");
-  expect(await screen.findByText("230")).toBeVisible();
+  expect(
+    await within(await screen.findByRole("list")).findByText("230"),
+  ).toBeVisible();
   expect(
     within(tile("Schedule")).getByText("1 overdue · 4 in the next 7 days"),
   ).toBeVisible();
@@ -111,6 +127,54 @@ test("Activity and Explore read their counts from the same summary", async () =>
   expect(
     within(tile("Geography")).getByRole("link", { name: "Native ranges" }),
   ).toHaveAttribute("href", "#/native-ranges");
+});
+
+test("each home leads with indicators that combine its sections", async () => {
+  get.mockResolvedValue({
+    ...summary,
+    overview: {
+      ...summary.overview,
+      sowings_with_germination: 15,
+      identities_with_profile: 2,
+      purchase_packets_without_order: 3,
+    },
+  });
+  native.mockResolvedValue({
+    represented: 8,
+    with_range: 6,
+    without_range: 2,
+    territories: [{}, {}, {}],
+    places: [],
+    places_total: 0,
+    offset: 0,
+    limit: 50,
+  });
+  origins.mockRejectedValue(new Error("offline"));
+  suppliers.mockResolvedValue([{}, {}]);
+  orders.mockResolvedValue({ items: [], total: 7, offset: 0, limit: 1 });
+  const glance = async (name: string) =>
+    screen.findByRole("region", { name: `Across ${name}` });
+  let view = show("collection");
+  let region = await glance("Collection");
+  expect(region).toHaveTextContent("Active records70");
+  expect(region).toHaveTextContent("Germination recorded75%");
+  expect(native).not.toHaveBeenCalled();
+  view.unmount();
+  view = show("explore");
+  region = await glance("Explore");
+  expect(region).toHaveTextContent("WFO confirmed38%");
+  expect(await within(region).findByText("75%")).toBeVisible();
+  expect(
+    within(region).getByRole("link", { name: "Native range recorded" }),
+  ).toHaveAttribute("href", "#/native-ranges");
+  // A failed optional read leaves its indicator out.
+  expect(within(region).queryByText("Origin sites mapped")).toBeNull();
+  view.unmount();
+  show("sourcing");
+  region = await glance("Sourcing");
+  expect(await within(region).findByText("7")).toBeVisible();
+  expect(region).toHaveTextContent("Suppliers2");
+  expect(region).toHaveTextContent("Lots without an order3");
 });
 
 test("a failed summary keeps every section usable and can be retried", async () => {

@@ -365,19 +365,28 @@
 /* Breadcrumb geometry is owned by components/breadcrumbs.css; a lazily loaded copy here
    used to override the directory breadcrumb gap app-wide after any Geography visit. */
 
+/* UI-POLISH-004 desktop layout: the site list runs the full height of the left column (well
+   over six rows); the map and the quick preview share the right column, so selecting a site
+   never shrinks the list. */
 @media (min-width: 48.001rem) {
-  .site-navigation-inspector,
-  .provenance-selection .site-map-panel {
+  .app-content .provenance-selection {
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "list map"
+      "list preview";
+    align-items: stretch;
+    flex: none;
     height: calc(100dvh - 15rem);
+    min-height: 30rem;
   }
-  /* The site list is the primary navigation: it keeps at least six to seven rows and shares
-     the rest of the column with the preview, which scrolls on its own. With nothing selected
-     the preview collapses to its hint and the list takes the column. */
-  .site-navigation-inspector > .site-directory-column {
+  .site-navigation-inspector {
+    display: contents;
+  }
+  .provenance-selection .site-directory-column {
+    grid-area: list;
     display: flex;
-    flex: 1 1 0;
     flex-direction: column;
-    min-height: min(28rem, 62%);
+    min-height: 0;
   }
   .provenance-selection .site-directory-column > .identity-list {
     flex: 1 1 auto;
@@ -385,27 +394,23 @@
     max-height: none;
   }
   .app-content .provenance-selection .quick-preview {
-    flex: 1 1 0;
-    min-height: 9rem;
-    max-height: none;
-  }
-  .app-content .provenance-selection .quick-preview:has(.preview-empty) {
-    flex: 0 0 auto;
-    min-height: 0;
+    grid-area: preview;
+    max-height: min(14rem, 32dvh);
   }
   .provenance-selection .site-map-panel {
+    grid-area: map;
     display: flex;
     flex-direction: column;
+    min-height: 0;
   }
   .provenance-selection .provenance-map {
     flex: 1;
-    min-height: 16rem;
+    min-height: 14rem;
     height: auto;
   }
 }
 @media (min-width: 48.001rem) and (max-width: 75rem) {
-  .site-navigation-inspector,
-  .provenance-selection .site-map-panel {
+  .app-content .provenance-selection {
     height: calc(100dvh - 18rem);
   }
 }

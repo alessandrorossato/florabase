@@ -4,7 +4,11 @@
 .settings-content {
   display: grid;
   gap: var(--space-4);
-  width: min(100%, 58rem);
+  width: 100%;
+}
+/* Cards span the page; forms keep a readable line length inside them. */
+.settings-panel form {
+  max-inline-size: 44rem;
 }
 .settings-panel {
   display: grid;
@@ -158,11 +162,23 @@
   margin: 0;
   color: var(--text-muted);
 }
-.help-links {
+.help-sections {
   display: grid;
-  gap: var(--space-1);
+  gap: var(--space-2);
   margin: 0;
-  padding-inline-start: var(--space-4);
+}
+.help-sections > div {
+  display: grid;
+  grid-template-columns: minmax(9rem, 14rem) minmax(0, 1fr);
+  gap: var(--space-1) var(--space-4);
+  align-items: baseline;
+}
+.help-sections dt {
+  font: var(--type-strong);
+}
+.help-sections dd {
+  margin: 0;
+  color: var(--text-muted);
 }
 .data-sources-table {
   overflow-x: auto;
@@ -179,6 +195,7 @@
   border-block-end: 1px solid var(--border);
 }
 @media (max-width: 40rem) {
+  .help-sections > div,
   .help-concepts {
     grid-template-columns: minmax(0, 1fr);
   }

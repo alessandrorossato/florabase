@@ -109,6 +109,22 @@ html:has(.wb-shell) {
 .wb-shell--collapsed .wb-rail__search {
   display: flex;
 }
+/* UI-POLISH-004: collapsing the panel must not move the rail. The search button floats in
+   the free space just above Settings (always the last tab, 3.5rem tall) instead of being
+   inserted above Record. */
+@media (min-width: 48.0625rem) {
+  .wb-shell .wb-rail {
+    position: relative;
+  }
+  .wb-shell--collapsed .wb-rail__search {
+    position: absolute;
+    inset-inline: var(--space-2);
+    inset-block-end: calc(var(--space-3) + 3.5rem + var(--space-1));
+  }
+  .wb-shell .wb-tab--utility {
+    block-size: 3.5rem;
+  }
+}
 .wb-shell .wb-rail__search:hover,
 .wb-shell .wb-tab:hover,
 .wb-shell .wb-icon-button:hover {

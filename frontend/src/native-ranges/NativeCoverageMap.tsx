@@ -5,6 +5,8 @@ import { MapLegend } from "../maps/MapLegend";
 import { TaskDialog } from "../components/TaskDialog";
 import { BotanicalName } from "../components/ReferenceUI";
 import { TerritoryInspector } from "./TerritoryInspector";
+import { FullscreenButton } from "../components/FullscreenButton";
+import { useFullscreen } from "../components/useFullscreen";
 import type { Filters, RangeIdentity, Territory } from "./api";
 import { coverageScale } from "./coverageScale";
 import { mapCoverage, type Geometry } from "./geometry";
@@ -63,6 +65,7 @@ export function NativeCoverageMap({
   const inspectedCodes = territorySelection?.codes ?? localCodes;
   const setInspectedCodes = territorySelection?.onChange ?? setLocalCodes;
   const [aboutOpen, setAboutOpen] = useState(false);
+  const fullscreen = useFullscreen();
   const [mobilePane, setMobilePane] = useState<"map" | "inspector">("map");
   function toggle(code: string) {
     setInspectedCodes(
@@ -201,7 +204,10 @@ export function NativeCoverageMap({
           )
           .join(", ") || "none"}
       </span>
-      <div className="native-spatial-workspace" data-mobile-pane={mobilePane}>
+      <div
+        className={`native-spatial-workspace${fullscreen.frameClass}`}
+        data-mobile-pane={mobilePane}
+      >
         <figure id={`${id}-map-pane`} className="native-map">
           {!available.length && (
             <p role="status" className="notice">
@@ -211,6 +217,11 @@ export function NativeCoverageMap({
             </p>
           )}
           <div className="native-map-canvas">
+            <FullscreenButton
+              active={fullscreen.active}
+              toggle={fullscreen.toggle}
+              label="native-range map"
+            />
             <svg
               viewBox={data.viewBox}
               role="group"
@@ -473,60 +484,6 @@ export function NativeCoverageMap({
             )}
           </div>
           <figcaption>
-            {identities && (
-              <ul
-                className="native-comparison-legend"
-                aria-label="Comparison species and colors"
-              >
-                {identities.map((identity) => (
-                  <li key={identity.id}>
-                    {colorLayers && (
-                      <span
-                        className="native-color-key"
-                        style={{ background: colors?.[identity.id] }}
-                        aria-hidden="true"
-                      />
-                    )}
-                    <span>
-                      <BotanicalName
-                        label={identity.display_label}
-                        scientificName={identity.scientific_name}
-                      />
-                      {!identity.matches_filters ? (
-                        <small>Excluded by active filters</small>
-                      ) : !identity.native_range_count ? (
-                        <small>No structured native range recorded</small>
-                      ) : null}
-                    </span>
-                    {showEvidence && (
-                      <button
-                        type="button"
-                        className="button--quiet"
-                        onClick={() => {
-                          showEvidence(identity.id);
-                        }}
-                        aria-label={`Recorded places for ${identity.display_label}`}
-                      >
-                        Places
-                      </button>
-                    )}
-                    {remove && (
-                      <button
-                        type="button"
-                        className="button--quiet"
-                        onClick={() => {
-                          remove(identity.id);
-                        }}
-                        aria-label={`Remove ${identity.display_label}`}
-                      >
-                        ×
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-
             {colorLayers ? (
               <p className="field-help native-overlap-key">
                 <span className="native-overlap-swatch" aria-hidden="true" />
@@ -603,6 +560,61 @@ export function NativeCoverageMap({
             identities={identities}
             comparisonIds={comparisonIds}
             evidence={showEvidence}
+            species={
+              identities && (
+                <ul
+                  className="native-comparison-legend"
+                  aria-label="Comparison species and colors"
+                >
+                  {identities.map((identity) => (
+                    <li key={identity.id}>
+                      {colorLayers && (
+                        <span
+                          className="native-color-key"
+                          style={{ background: colors?.[identity.id] }}
+                          aria-hidden="true"
+                        />
+                      )}
+                      <span>
+                        <BotanicalName
+                          label={identity.display_label}
+                          scientificName={identity.scientific_name}
+                        />
+                        {!identity.matches_filters ? (
+                          <small>Excluded by active filters</small>
+                        ) : !identity.native_range_count ? (
+                          <small>No structured native range recorded</small>
+                        ) : null}
+                      </span>
+                      {showEvidence && (
+                        <button
+                          type="button"
+                          className="button--quiet"
+                          onClick={() => {
+                            showEvidence(identity.id);
+                          }}
+                          aria-label={`Recorded places for ${identity.display_label}`}
+                        >
+                          Places
+                        </button>
+                      )}
+                      {remove && (
+                        <button
+                          type="button"
+                          className="button--quiet"
+                          onClick={() => {
+                            remove(identity.id);
+                          }}
+                          aria-label={`Remove ${identity.display_label}`}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )
+            }
           />
         </div>
       </div>

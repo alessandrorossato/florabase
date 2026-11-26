@@ -12,6 +12,12 @@ import {
   type Section,
   type WorkspaceHomeId,
 } from "../shell/navigation";
+import { sectionDescriptions } from "../shell/sectionDescriptions";
+import { getNativeOverview } from "../native-ranges/api";
+import { getCollectionProvenanceMap } from "../provenance-map/api";
+import { listSuppliers } from "../suppliers/api";
+import { listOrders } from "../orders/api";
+import { glanceKpis, type GlanceExtras } from "./glance";
 import "./workspace-home.css";
 
 type Counts =
@@ -26,7 +32,6 @@ interface TileLink {
 
 /** What a sub-section tile says. Counts come only from the Today summary; none is inferred. */
 interface Tile {
-  description: string;
   count?: (value: DashboardResponse) => { value: number; unit: string };
   detail?: (value: DashboardResponse) => string | null;
   links?: TileLink[];
@@ -38,7 +43,6 @@ const plural = (count: number, one: string, many: string) =>
 
 const tiles: Partial<Record<Section, Tile>> = {
   seeds: {
-    description: "Seed lots you hold, from purchase, harvest or exchange.",
     count: (value) => ({
       value: value.counts.active_seed_lots,
       unit: "active seed lots",
@@ -50,7 +54,6 @@ const tiles: Partial<Record<Section, Tile>> = {
     action: { label: "New seed lot", href: "#/seeds?action=create" },
   },
   sowings: {
-    description: "Sowings in progress and their germination.",
     count: (value) => ({
       value: value.counts.active_sowings,
       unit: "active sowings",
@@ -61,11 +64,8 @@ const tiles: Partial<Record<Section, Tile>> = {
         : null,
     action: { label: "New sowing", href: "#/sowings?action=create" },
   },
-  cuttings: {
-    description: "Vegetative lots and their rooting attempts.",
-  },
+  cuttings: {},
   plants: {
-    description: "Individual Plants and Plant groups.",
     count: (value) => ({
       value: value.counts.active_plants,
       unit: "active Plants",
@@ -76,25 +76,19 @@ const tiles: Partial<Record<Section, Tile>> = {
     action: { label: "New plant", href: "#/plants?action=create&kind=plant" },
   },
   harvests: {
-    description: "Harvests and the material stored from them.",
     links: [
       { label: "Stored material", href: "#/harvests?tab=stored-material" },
     ],
     action: { label: "Record harvest", href: "#/harvests?action=create" },
   },
   locations: {
-    description: "Where material is kept: beds, greenhouses, trays.",
     action: { label: "New location", href: "#/locations?action=create" },
   },
   events: {
-    description: "Care and observations recorded in the Journal.",
     count: (value) => ({ value: value.counts.events, unit: "recorded events" }),
   },
-  history: {
-    description: "What happened to each record, derived from its changes.",
-  },
+  history: {},
   schedule: {
-    description: "Planned work and its calendar.",
     count: (value) => ({
       value: value.overview.due_today,
       unit: "due today",
@@ -105,7 +99,6 @@ const tiles: Partial<Record<Section, Tile>> = {
     action: { label: "Plan work", href: "#/schedule?action=create" },
   },
   identities: {
-    description: "Species and cultivars, with profiles and references.",
     count: (value) => ({
       value: value.overview.current_identities,
       unit: "in current material",
@@ -117,17 +110,10 @@ const tiles: Partial<Record<Section, Tile>> = {
       href: "#/identities?action=create",
     },
   },
-  taxonomy: {
-    description: "Families and genera represented in the collection.",
-  },
-  lineage: {
-    description: "Recorded ancestry, from seed lot to plant and back.",
-  },
-  media: {
-    description: "Photos and reference images.",
-  },
+  taxonomy: {},
+  lineage: {},
+  media: {},
   geography: {
-    description: "Where material comes from and where species are native.",
     links: [
       { label: "Collection origins", href: "#/map" },
       { label: "Species distribution", href: "#/species-distribution" },
@@ -135,11 +121,9 @@ const tiles: Partial<Record<Section, Tile>> = {
     ],
   },
   suppliers: {
-    description: "Nurseries, seed banks and people you get material from.",
     action: { label: "New supplier", href: "#/suppliers?action=create" },
   },
   orders: {
-    description: "Orders and the seed lots and plants they brought.",
     action: { label: "New order", href: "#/orders?action=create" },
   },
 };
@@ -184,6 +168,57 @@ function useTodaySummary(): [Counts, () => void] {
 }
 
 /**
+ * Optional reads behind Explore and Sourcing indicators. Each settles on its own; a failed
+ * one only leaves its indicator out, and nothing is read for Collection or Activity.
+ */
+function useGlanceExtras(id: WorkspaceHomeId): GlanceExtras {
+  const auth = useAuth();
+  const { capability } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
+  const [extras, setExtras] = useState<{ id: WorkspaceHomeId } & GlanceExtras>({
+    id,
+  });
+  useEffect(() => {
+    if (!authorized || (id !== "explore" && id !== "sourcing")) return;
+    const controller = new AbortController();
+    const { signal } = controller;
+    const settle = (patch: GlanceExtras) => {
+      if (!signal.aborted)
+        setExtras((value) => ({
+          ...(value.id === id ? value : { id }),
+          ...patch,
+        }));
+    };
+    const ignore = () => undefined;
+    if (id === "explore") {
+      getNativeOverview(
+        { q: "", scope: "all", withRange: false, record: [] },
+        0,
+        capability,
+        signal,
+      ).then((native) => {
+        settle({ native });
+      }, ignore);
+      getCollectionProvenanceMap(capability, signal).then((origins) => {
+        settle({ origins });
+      }, ignore);
+    } else {
+      listSuppliers(capability, signal).then((items) => {
+        settle({ suppliers: items.length });
+      }, ignore);
+      listOrders("", "", 0, capability, signal, 1).then((page) => {
+        settle({ orders: page.total });
+      }, ignore);
+    }
+    return () => {
+      controller.abort();
+    };
+  }, [authorized, capability, id]);
+  return extras.id === id ? extras : {};
+}
+
+/**
  * A workspace's home: one tile per sub-section with what it holds, a count where the Today
  * summary already has one, direct links to its views and its usual first action.
  */
@@ -191,7 +226,11 @@ export function WorkspaceHome({ id }: { id: WorkspaceHomeId }) {
   const titleId = useId();
   const workspace = workspaces.find((item) => item.id === id);
   const [counts, retry] = useTodaySummary();
+  const extras = useGlanceExtras(id);
+  const glanceId = useId();
   if (!workspace) return null;
+  const kpis =
+    counts.status === "ready" ? glanceKpis(id, counts.value, extras) : [];
   const sections = workspace.destinations.filter((item) => item.section !== id);
   return (
     <Page titleId={titleId} className="workspace-home">
@@ -209,12 +248,30 @@ export function WorkspaceHome({ id }: { id: WorkspaceHomeId }) {
           </button>
         </p>
       )}
+      {kpis.length > 0 && (
+        <section className="workspace-home__glance" aria-labelledby={glanceId}>
+          <h3 id={glanceId}>Across {workspace.label}</h3>
+          <dl>
+            {kpis.map((kpi) => (
+              <div key={kpi.label}>
+                <dt>
+                  {kpi.href ? <a href={kpi.href}>{kpi.label}</a> : kpi.label}
+                </dt>
+                <dd>
+                  <strong>{kpi.value}</strong>
+                  {kpi.hint && <span>{kpi.hint}</span>}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
       <ul
         className="workspace-home__tiles"
         aria-label={`${workspace.label} sections`}
       >
         {sections.map((item) => {
-          const tile = tiles[item.section] ?? { description: "" };
+          const tile = tiles[item.section] ?? {};
           const ready = counts.status === "ready" ? counts.value : null;
           const count = ready && tile.count ? tile.count(ready) : null;
           const detail = ready && tile.detail ? tile.detail(ready) : null;
@@ -243,7 +300,9 @@ export function WorkspaceHome({ id }: { id: WorkspaceHomeId }) {
                   )}
                 </p>
               )}
-              <p className="workspace-home__description">{tile.description}</p>
+              <p className="workspace-home__description">
+                {sectionDescriptions[item.section]}
+              </p>
               {detail && <p className="workspace-home__detail">{detail}</p>}
               {(tile.links ?? tile.action) && (
                 <p className="workspace-home__links">

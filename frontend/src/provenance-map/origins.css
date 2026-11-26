@@ -308,3 +308,13 @@
 .origins-tooltip-photos:empty {
   display: none;
 }
+
+/* Full screen (UI-POLISH-004): off, the frame adds no box; on, the map fills the window. */
+.provenance-map-frame:not(.is-fullscreen) {
+  display: contents;
+}
+.provenance-map-frame.is-fullscreen .provenance-map {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}

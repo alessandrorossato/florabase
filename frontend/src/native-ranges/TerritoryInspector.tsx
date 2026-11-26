@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { BotanicalName, DirectorySearch } from "../components/ReferenceUI";
@@ -23,7 +23,10 @@ export function TerritoryInspector({
   evidence,
   unavailableCodes = [],
   scopeLabel,
+  species,
 }: {
+  /** The chosen species (legend, Places, remove), shown at the top of the plants section. */
+  species?: ReactNode;
   unavailableCodes?: string[];
   scopeLabel?: string;
   territories: (Territory & { identity_ids?: string[] })[];
@@ -35,6 +38,7 @@ export function TerritoryInspector({
   comparisonIds?: string[];
   evidence?: (id: string) => void;
 }) {
+  const headingId = useId();
   const [search, setSearch] = useState("");
   const [territorySearch, setTerritorySearch] = useState("");
   const [match, setMatch] = useState<"any" | "all">("any");
@@ -128,228 +132,254 @@ export function TerritoryInspector({
             ? "Within the chosen comparison and active filters."
             : "Within the active collection scope and filters."}
       </p>
-      {selected.length ? (
-        <>
-          <div
-            className="native-territory-chips"
-            aria-label="Selected territories"
-          >
-            {selected.map((unit) => (
-              <button
-                className="button--secondary"
-                type="button"
-                key={unit.source_code}
-                aria-label={`Remove territory ${unit.name}`}
-                onClick={() => {
-                  changeSelection(unit.source_code);
-                }}
-              >
-                {unit.name} ×
-              </button>
-            ))}
-            <button
-              type="button"
-              className="button--quiet"
-              onClick={() => {
-                setOffset(0);
-                clear();
-              }}
-            >
-              Clear territories
-            </button>
-          </div>
-          {codes.length > 1 && (
-            <label className="native-match">
-              Match territories
-              <select
-                aria-label="Match territories"
-                value={match}
-                onChange={(event) => {
-                  setMatch(event.currentTarget.value as "any" | "all");
-                  setOffset(0);
-                }}
-              >
-                <option value="any">Present in any selected territory</option>
-                <option value="all">Present in all selected territories</option>
-              </select>
-            </label>
-          )}
-          <p role="status" aria-live="polite">
-            {selected.map((unit) => unit.name).join(", ")} ·{" "}
-            {filters && !data
-              ? "Checking identities…"
-              : `${String(data?.total ?? local.length)} distinct Botanical Identities`}{" "}
-            · {match === "any" ? "union" : "intersection"}
-          </p>
-          <p className="field-help">
-            Drawing coverage may derive from a broad recorded region; it is not
-            a new exact-country assertion.
-          </p>
-          <DirectorySearch
-            id="native-inspector-search"
-            label="Find matching identities on this page"
-            value={search}
-            onChange={setSearch}
-            placeholder="Filter these results"
+      {/* One mask for both modes: places first in a fixed, scrolling list, then the plants
+          (By place) or the chosen species (By species), so neither pushes the other away. */}
+      <section
+        className="native-inspector-section"
+        aria-labelledby={`${headingId}-places`}
+      >
+        <h4 id={`${headingId}-places`}>Places</h4>
+        <label className="native-territory-search">
+          Find a territory
+          <input
+            type="search"
+            value={territorySearch}
+            onChange={(event) => {
+              setTerritorySearch(event.currentTarget.value);
+            }}
           />
-          {current?.failed ? (
-            <div role="alert">
-              <p>Could not load territory identities.</p>
+        </label>
+        <ul className="native-territory-options" aria-label="Territory chooser">
+          {territories
+            .filter((unit) =>
+              unit.name
+                .toLocaleLowerCase()
+                .includes(territorySearch.toLocaleLowerCase()),
+            )
+            .map((unit) => (
+              <li key={unit.source_code}>
+                <button
+                  type="button"
+                  className="button--secondary native-territory-choice"
+                  aria-pressed={codes.includes(unit.source_code)}
+                  onClick={() => {
+                    changeSelection(unit.source_code);
+                  }}
+                >
+                  <span>
+                    {unit.name}
+                    {unavailableCodes.includes(unit.source_code) && (
+                      <small> · boundary unavailable</small>
+                    )}
+                  </span>
+                  <strong>
+                    {unit.identity_count}{" "}
+                    {unit.identity_count === 1 ? "identity" : "identities"}
+                  </strong>
+                </button>
+              </li>
+            ))}
+        </ul>
+        {selected.length > 0 && (
+          <>
+            <div
+              className="native-territory-chips"
+              aria-label="Selected territories"
+            >
+              {selected.map((unit) => (
+                <button
+                  className="button--secondary"
+                  type="button"
+                  key={unit.source_code}
+                  aria-label={`Remove territory ${unit.name}`}
+                  onClick={() => {
+                    changeSelection(unit.source_code);
+                  }}
+                >
+                  {unit.name} ×
+                </button>
+              ))}
               <button
                 type="button"
+                className="button--quiet"
                 onClick={() => {
-                  setAttempt((value) => value + 1);
+                  setOffset(0);
+                  clear();
                 }}
               >
-                Retry territory identities
+                Clear territories
               </button>
             </div>
-          ) : !items ? (
-            <p>Loading matching identities…</p>
-          ) : (
-            <ul className="native-inspector-identities">
-              {visible?.map((identity) => (
-                <li key={identity.id}>
-                  <RecordVisual
-                    kind="identity"
-                    compact
-                    identity={identity}
-                    label={identity.display_label}
-                    allowExternalCover
-                    className="native-inspector-identity__photo"
-                  />
-                  <a href={`#/identities/${identity.id}?tab=reference`}>
-                    <BotanicalName
+            {codes.length > 1 && (
+              <label className="native-match">
+                Match territories
+                <select
+                  aria-label="Match territories"
+                  value={match}
+                  onChange={(event) => {
+                    setMatch(event.currentTarget.value as "any" | "all");
+                    setOffset(0);
+                  }}
+                >
+                  <option value="any">Present in any selected territory</option>
+                  <option value="all">
+                    Present in all selected territories
+                  </option>
+                </select>
+              </label>
+            )}
+          </>
+        )}
+      </section>
+      <section
+        className="native-inspector-section native-inspector-section--plants"
+        aria-labelledby={`${headingId}-plants`}
+      >
+        <h4 id={`${headingId}-plants`}>
+          {comparisonIds || scopeLabel ? "Species" : "Plants native there"}
+        </h4>
+        {species}
+        {selected.length ? (
+          <>
+            <p role="status" aria-live="polite">
+              {selected.map((unit) => unit.name).join(", ")} ·{" "}
+              {filters && !data
+                ? "Checking identities…"
+                : `${String(data?.total ?? local.length)} distinct Botanical Identities`}{" "}
+              · {match === "any" ? "union" : "intersection"}
+            </p>
+            <p className="field-help">
+              Drawing coverage may derive from a broad recorded region; it is
+              not a new exact-country assertion.
+            </p>
+            <DirectorySearch
+              id="native-inspector-search"
+              label="Find matching identities on this page"
+              value={search}
+              onChange={setSearch}
+              placeholder="Filter these results"
+            />
+            {current?.failed ? (
+              <div role="alert">
+                <p>Could not load territory identities.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAttempt((value) => value + 1);
+                  }}
+                >
+                  Retry territory identities
+                </button>
+              </div>
+            ) : !items ? (
+              <p>Loading matching identities…</p>
+            ) : (
+              <ul className="native-inspector-identities">
+                {visible?.map((identity) => (
+                  <li key={identity.id}>
+                    <RecordVisual
+                      kind="identity"
+                      compact
+                      identity={identity}
                       label={identity.display_label}
-                      scientificName={identity.scientific_name}
+                      allowExternalCover
+                      className="native-inspector-identity__photo"
                     />
-                  </a>
-                  {identity.common_name && <span>{identity.common_name}</span>}
-                  <small>
-                    {identity.representation === "living"
-                      ? "Living"
-                      : identity.representation === "current"
-                        ? "Current"
-                        : "Historical"}{" "}
-                    collection records
-                  </small>
-                  {data ? (
-                    (
-                      data.items.find((item) => item.id === identity.id)
-                        ?.matching_territories ?? []
-                    ).map((unit) => (
-                      <small key={unit.source_code}>
-                        {unit.name}:{" "}
-                        {unit.exact_recorded
-                          ? "explicit country/territory record"
-                          : "drawing coverage only"}
-                        {unit.broad_recorded_places.length > 0 &&
-                          ` · broad record: ${unit.broad_recorded_places.join(", ")}`}
-                      </small>
-                    ))
-                  ) : (
+                    <a href={`#/identities/${identity.id}?tab=reference`}>
+                      <BotanicalName
+                        label={identity.display_label}
+                        scientificName={identity.scientific_name}
+                      />
+                    </a>
+                    {identity.common_name && (
+                      <span>{identity.common_name}</span>
+                    )}
                     <small>
-                      {selected
-                        .filter((unit) =>
-                          unit.identity_ids?.includes(identity.id),
-                        )
-                        .map((unit) => unit.name)
-                        .join(", ")}{" "}
-                      · drawing coverage
+                      {identity.representation === "living"
+                        ? "Living"
+                        : identity.representation === "current"
+                          ? "Current"
+                          : "Historical"}{" "}
+                      collection records
                     </small>
-                  )}
-                  {evidence && (
-                    <button
-                      type="button"
-                      className="button--quiet"
-                      onClick={() => {
-                        evidence(identity.id);
-                      }}
-                    >
-                      Recorded places for {identity.display_label}
-                    </button>
-                  )}
-                </li>
-              ))}
-              {visible?.length === 0 && (
-                <li>
-                  No matching identities in these results. No species absence is
-                  established.
-                </li>
-              )}
-            </ul>
-          )}
-          {data && data.total > 50 && (
-            <nav className="actions" aria-label="Territory identity pages">
-              <button
-                type="button"
-                disabled={!offset}
-                onClick={() => {
-                  setOffset(offset - 50);
-                }}
-              >
-                Previous
-              </button>
-              <span>Page {offset / 50 + 1}</span>
-              <button
-                type="button"
-                disabled={offset + 50 >= data.total || offset >= 100000}
-                onClick={() => {
-                  setOffset(offset + 50);
-                }}
-              >
-                Next
-              </button>
-            </nav>
-          )}
-        </>
-      ) : (
-        <p>
-          Click shaded territories on the map, or find one below. Each click
-          adds or removes one place.
-        </p>
-      )}
-      <label className="native-territory-search">
-        Find a territory
-        <input
-          type="search"
-          value={territorySearch}
-          onChange={(event) => {
-            setTerritorySearch(event.currentTarget.value);
-          }}
-        />
-      </label>
-      <ul className="native-territory-options" aria-label="Territory chooser">
-        {territories
-          .filter((unit) =>
-            unit.name
-              .toLocaleLowerCase()
-              .includes(territorySearch.toLocaleLowerCase()),
-          )
-          .map((unit) => (
-            <li key={unit.source_code}>
-              <button
-                type="button"
-                className="button--secondary native-territory-choice"
-                aria-pressed={codes.includes(unit.source_code)}
-                onClick={() => {
-                  changeSelection(unit.source_code);
-                }}
-              >
-                <span>
-                  {unit.name}
-                  {unavailableCodes.includes(unit.source_code) && (
-                    <small> · boundary unavailable</small>
-                  )}
-                </span>
-                <strong>
-                  {unit.identity_count}{" "}
-                  {unit.identity_count === 1 ? "identity" : "identities"}
-                </strong>
-              </button>
-            </li>
-          ))}
-      </ul>
+                    {data ? (
+                      (
+                        data.items.find((item) => item.id === identity.id)
+                          ?.matching_territories ?? []
+                      ).map((unit) => (
+                        <small key={unit.source_code}>
+                          {unit.name}:{" "}
+                          {unit.exact_recorded
+                            ? "explicit country/territory record"
+                            : "drawing coverage only"}
+                          {unit.broad_recorded_places.length > 0 &&
+                            ` · broad record: ${unit.broad_recorded_places.join(", ")}`}
+                        </small>
+                      ))
+                    ) : (
+                      <small>
+                        {selected
+                          .filter((unit) =>
+                            unit.identity_ids?.includes(identity.id),
+                          )
+                          .map((unit) => unit.name)
+                          .join(", ")}{" "}
+                        · drawing coverage
+                      </small>
+                    )}
+                    {evidence && (
+                      <button
+                        type="button"
+                        className="button--quiet"
+                        onClick={() => {
+                          evidence(identity.id);
+                        }}
+                      >
+                        Recorded places for {identity.display_label}
+                      </button>
+                    )}
+                  </li>
+                ))}
+                {visible?.length === 0 && (
+                  <li>
+                    No matching identities in these results. No species absence
+                    is established.
+                  </li>
+                )}
+              </ul>
+            )}
+            {data && data.total > 50 && (
+              <nav className="actions" aria-label="Territory identity pages">
+                <button
+                  type="button"
+                  disabled={!offset}
+                  onClick={() => {
+                    setOffset(offset - 50);
+                  }}
+                >
+                  Previous
+                </button>
+                <span>Page {offset / 50 + 1}</span>
+                <button
+                  type="button"
+                  disabled={offset + 50 >= data.total || offset >= 100000}
+                  onClick={() => {
+                    setOffset(offset + 50);
+                  }}
+                >
+                  Next
+                </button>
+              </nav>
+            )}
+          </>
+        ) : (
+          <p className="field-help">
+            {comparisonIds || scopeLabel
+              ? "Choose places above or on the map to see which of these species are native there."
+              : "Click shaded territories on the map, or choose places above. Each click adds or removes one place."}
+          </p>
+        )}
+      </section>
     </aside>
   );
 }
