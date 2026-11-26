@@ -364,7 +364,7 @@ test("a site selected outside the current view is panned into view once, keeping
     <ProvenanceMap sites={[site]} selectedId={null} onSelect={vi.fn()} />,
   );
   expect(mocks.map.panTo).not.toHaveBeenCalled();
-  mocks.map.getBounds.mockReturnValue({ contains: vi.fn(() => false) });
+  mocks.map.getBounds.mockReturnValueOnce({ contains: vi.fn(() => false) });
   view.rerender(
     <ProvenanceMap sites={[site]} selectedId="site" onSelect={vi.fn()} />,
   );

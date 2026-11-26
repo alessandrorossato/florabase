@@ -270,7 +270,8 @@ export function ProvenanceMap({
             .matches,
         });
     }
-    lastSelectedRef.current = selectedId;
+    // A preselected site whose marker arrives later still gets its pan.
+    if (site || selectedId === null) lastSelectedRef.current = selectedId;
   }, [sites, selectedId]);
   return (
     <>

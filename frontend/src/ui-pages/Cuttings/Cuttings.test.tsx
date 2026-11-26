@@ -12,11 +12,7 @@ import { acquireTestAuth } from "../../test/auth";
 import { Cuttings } from "./Cuttings";
 
 /** The ancestry endpoint a Lineage tab reads for direct descendants: none recorded. */
-const noDescendants = {
-  ancestors: [],
-  focus: null,
-  children: { items: [], total: 0, offset: 0, limit: 25 },
-};
+const noDescendants = { items: [], total: 0, offset: 0, limit: 25 };
 
 const sessionExpired = vi.fn();
 let auth: AuthContextValue;

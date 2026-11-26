@@ -10,7 +10,7 @@
   max-inline-size: 42rem;
   margin-block-start: var(--space-6);
 }
-.lineage-panel__next > h3 {
+.lineage-panel__next > h4 {
   margin: 0;
   font: var(--type-h3);
 }
@@ -19,8 +19,10 @@
 .lineage-panel__children {
   display: grid;
   gap: var(--space-2);
-  margin: 0 0 0 var(--space-2);
-  padding: var(--space-2) 0 0;
+  margin: 0;
+  margin-inline-start: var(--space-2);
+  padding: 0;
+  padding-block-start: var(--space-2);
   list-style: none;
 }
 .lineage-panel__children > li {
@@ -29,7 +31,8 @@
   gap: var(--space-1);
   justify-items: start;
   margin: 0;
-  padding: 0 0 0 var(--space-6);
+  padding: 0;
+  padding-inline-start: var(--space-6);
 }
 .lineage-panel__children > li::before {
   content: "";
@@ -94,4 +97,13 @@
   margin: 0;
   color: var(--text-muted);
   font: var(--type-small);
+}
+@media (max-width: 40rem) {
+  .lineage-panel__children > li {
+    padding-inline-start: var(--space-4);
+  }
+  .lineage-panel__children > li::after,
+  .lineage-panel__children > li:last-child::before {
+    inline-size: calc(var(--space-4) - var(--space-1));
+  }
 }

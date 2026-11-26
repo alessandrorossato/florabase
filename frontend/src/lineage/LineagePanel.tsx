@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 
 import type { components } from "../api/schema";
 import { ApiError, isExpectedAuthCancellation, requestJson } from "../auth/api";
@@ -20,7 +20,6 @@ import {
 } from "./useRecordedLineage";
 import "./lineage-panel.css";
 
-type AncestryResponse = components["schemas"]["AncestryResponse"];
 type AncestryChildren = components["schemas"]["AncestryChildren"];
 type Descendants =
   | { status: "loading" }
@@ -38,7 +37,7 @@ const ancestryKinds = {
 
 /**
  * Direct recorded descendants of one record (first page), read from the ancestry explorer's
- * endpoint; stale responses for another record are ignored.
+ * children endpoint (no upstream walk); stale responses for another record are ignored.
  */
 function useDirectDescendants(
   kind: LineageEndpoint,
@@ -56,13 +55,13 @@ function useDirectDescendants(
   useEffect(() => {
     if (!authorized) return;
     const controller = new AbortController();
-    void requestJson<AncestryResponse>(
-      `/api/v1/lineage/${ancestryKinds[kind]}/${id}?limit=${String(DESCENDANT_PAGE)}`,
+    void requestJson<AncestryChildren>(
+      `/api/v1/lineage/${ancestryKinds[kind]}/${id}/children?offset=0&limit=${String(DESCENDANT_PAGE)}`,
       { capability, signal: controller.signal },
     )
       .then((value) => {
         if (!controller.signal.aborted)
-          setState({ status: "ready", key, attempt, value: value.children });
+          setState({ status: "ready", key, attempt, value });
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted || isExpectedAuthCancellation(error))
@@ -103,41 +102,45 @@ export function LineagePanel({
   let body;
   if (upstream.status === "loading" || descendants.status === "loading")
     body = <p role="status">Loading recorded lineage…</p>;
-  else if (upstream.status === "error" || descendants.status === "error")
-    body = (
-      <div className="notice notice--error" role="alert">
-        <p>Florabase could not load recorded lineage.</p>
-        <button
-          type="button"
-          onClick={() => {
-            if (upstream.status === "error") retryUpstream();
-            if (descendants.status === "error") retryDescendants();
-          }}
-        >
-          Retry lineage
-        </button>
-      </div>
-    );
   else if (
+    upstream.status === "ready" &&
+    descendants.status === "ready" &&
     upstream.value.ancestors.length === 0 &&
     descendants.value.total === 0
   )
     body = <DetailEmptyState>No recorded lineage.</DetailEmptyState>;
   else
+    // Each half fails on its own, so a loaded upstream path is never hidden by the other.
     body = (
       <>
-        {upstream.value.ancestors.length > 0 ? (
+        {upstream.status === "error" ? (
+          <div className="notice notice--error" role="alert">
+            <p>Florabase could not load the recorded upstream path.</p>
+            <button type="button" onClick={retryUpstream}>
+              Retry lineage
+            </button>
+          </div>
+        ) : upstream.value.ancestors.length > 0 ? (
           <RecordedUpstream kind={kind} value={upstream.value} />
         ) : (
           <p className="lineage-panel__start">
             No recorded source: this record starts its line.
           </p>
         )}
-        <RecordedDescendants
-          parentKind={ancestryKinds[kind]}
-          value={descendants.value}
-          explorer={explorer}
-        />
+        {descendants.status === "error" ? (
+          <div className="notice notice--error" role="alert">
+            <p>Florabase could not load what was recorded from this record.</p>
+            <button type="button" onClick={retryDescendants}>
+              Retry recorded descendants
+            </button>
+          </div>
+        ) : (
+          <RecordedDescendants
+            parentKind={ancestryKinds[kind]}
+            value={descendants.value}
+            explorer={explorer}
+          />
+        )}
       </>
     );
   return (
@@ -159,16 +162,14 @@ function RecordedDescendants({
   value: AncestryChildren;
   explorer: string;
 }) {
+  const headingId = useId();
   if (value.total === 0)
     return (
       <p className="lineage-panel__start">Nothing recorded from it yet.</p>
     );
   return (
-    <section
-      className="lineage-panel__next"
-      aria-label="Recorded from this record"
-    >
-      <h3>Recorded from this record</h3>
+    <section className="lineage-panel__next" aria-labelledby={headingId}>
+      <h4 id={headingId}>Recorded from this record</h4>
       <ul className="lineage-panel__children">
         {value.items.map(({ record, descendant_count }) => (
           <li key={`${record.kind}:${record.id}`}>

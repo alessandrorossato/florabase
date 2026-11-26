@@ -302,12 +302,11 @@
   padding: 0;
   gap: var(--space-2);
 }
-/* Phones and narrow layouts: about seven rows stay visible before the list scrolls. */
+/* Phones and narrow layouts: a few rows stay visible and the preview stays within reach. */
 .provenance-selection .site-directory-column > .identity-list {
-  max-height: 30rem;
+  max-height: min(20rem, 45dvh);
   overflow-y: auto;
   scrollbar-width: thin;
-  overscroll-behavior: contain;
 }
 .app-content .provenance-selection .quick-preview {
   display: block;

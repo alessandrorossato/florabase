@@ -57,29 +57,21 @@ const extracted: Response = {
   ],
 };
 
-type Ancestry = components["schemas"]["AncestryResponse"];
 type AncestryNode = components["schemas"]["AncestryNode"];
-function ancestry(items: AncestryNode[] = []): Ancestry {
-  const focus: AncestryNode = {
-    record: extracted.subject,
-    origin: null,
-    harvest_conversion: null,
-    descendant_count: items.length,
-  };
-  return {
-    ancestors: [],
-    focus,
-    children: { items, total: items.length, offset: 0, limit: 25 },
-  };
+type Children = components["schemas"]["AncestryChildren"];
+function page(items: AncestryNode[] = [], total = items.length): Children {
+  return { items, total, offset: 0, limit: 25 };
 }
 /** Serves the record lineage endpoint and the ancestry endpoint used for descendants. */
 function serve(
   lineage: (url: string) => Promise<unknown>,
-  children: AncestryNode[] = [],
+  children: AncestryNode[] | (() => Promise<Children>) = [],
 ) {
   request.mockImplementation((url: string) =>
     url.startsWith("/api/v1/lineage/")
-      ? Promise.resolve(ancestry(children))
+      ? typeof children === "function"
+        ? children()
+        : Promise.resolve(page(children))
       : lineage(url),
   );
 }
@@ -240,6 +232,12 @@ test("a Seed lot that starts its line shows what was recorded from it", async ()
     name: "Recorded from this record",
   });
   expect(
+    within(next).getByRole("heading", {
+      level: 4,
+      name: "Recorded from this record",
+    }),
+  ).toBeVisible();
+  expect(
     screen.getByText("No recorded source: this record starts its line."),
   ).toBeVisible();
   expect(screen.queryByText("No recorded lineage.")).not.toBeInTheDocument();
@@ -256,7 +254,62 @@ test("a Seed lot that starts its line shows what was recorded from it", async ()
     within(items[1]).queryByText(/recorded from it/),
   ).not.toBeInTheDocument();
   expect(request).toHaveBeenCalledWith(
-    "/api/v1/lineage/seed_lot/packet?limit=25",
+    "/api/v1/lineage/seed_lot/packet/children?offset=0&limit=25",
     expect.objectContaining({ signal: expect.any(AbortSignal) as unknown }),
   );
+});
+
+const sowingNode = (index: number): AncestryNode => ({
+  record: {
+    kind: "sowing",
+    id: `s${String(index)}`,
+    label: `Tray ${String(index)}`,
+    lifecycle: "active",
+  },
+  origin: null,
+  harvest_conversion: null,
+  descendant_count: 0,
+});
+
+test("a failed descendants request keeps the loaded upstream path and retries on its own", async () => {
+  let fail = true;
+  serve(
+    () => Promise.resolve(extracted),
+    () =>
+      fail
+        ? Promise.reject(new Error("offline"))
+        : Promise.resolve(page([sowingNode(1)])),
+  );
+  renderWithAuth(<LineagePanel kind="plants" id="extracted" />);
+  expect(
+    await screen.findByRole("list", { name: "Recorded upstream path" }),
+  ).toBeVisible();
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "could not load what was recorded from this record",
+  );
+  fail = false;
+  screen.getByRole("button", { name: "Retry recorded descendants" }).click();
+  expect(await screen.findByRole("link", { name: "Tray 1" })).toBeVisible();
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("list", { name: "Recorded upstream path" }),
+  ).toBeVisible();
+});
+
+test("more descendants than the first page point to the explorer", async () => {
+  serve(
+    () => Promise.resolve({ ...extracted, ancestors: [] }),
+    () =>
+      Promise.resolve(
+        page(
+          Array.from({ length: 25 }, (_, index) => sowingNode(index)),
+          31,
+        ),
+      ),
+  );
+  renderWithAuth(<LineagePanel kind="plants" id="extracted" />);
+  expect(await screen.findByText(/Showing 25 of 31/)).toBeVisible();
+  expect(
+    screen.getAllByRole("link", { name: "Explore material ancestry" })[1],
+  ).toHaveAttribute("href", "#/lineage/plant/extracted");
 });

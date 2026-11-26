@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execFile } from "node:child_process";
 import { readFileSync } from "node:fs";
 
 import react from "@vitejs/plugin-react";
@@ -28,37 +28,59 @@ const maxWorkers =
  * page's licence links serve the same texts in DEV and UAT. Notices are generated once, lazily.
  */
 function licenceFiles(): Plugin {
-  let notices: string | undefined;
+  let notices: Promise<string> | undefined;
+  const buildNotices = () =>
+    new Promise<string>((resolve, reject) => {
+      execFile(
+        process.execPath,
+        ["build-notices.mjs"],
+        {
+          cwd: new URL(".", import.meta.url),
+          encoding: "utf8",
+          maxBuffer: 64 * 1024 * 1024,
+        },
+        (error, stdout) => {
+          if (error)
+            reject(
+              new Error("Could not build third-party notices", {
+                cause: error,
+              }),
+            );
+          else resolve(stdout);
+        },
+      );
+    });
   return {
     name: "florabase-licence-files",
     apply: "serve",
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
         const path = (request.url ?? "").split("?", 1)[0];
-        let body: string;
-        try {
-          if (path === "/LICENSE")
-            body = readFileSync(new URL("./LICENSE", import.meta.url), "utf8");
-          else if (path === "/THIRD_PARTY_NOTICES.txt")
-            body = notices ??= execFileSync(
-              process.execPath,
-              ["build-notices.mjs"],
-              {
-                cwd: new URL(".", import.meta.url),
-                encoding: "utf8",
-                maxBuffer: 64 * 1024 * 1024,
-              },
-            );
-          else {
-            next();
-            return;
-          }
-        } catch (error) {
-          next(error);
+        let body: Promise<string>;
+        if (path === "/LICENSE")
+          body = Promise.resolve(
+            readFileSync(new URL("./LICENSE", import.meta.url), "utf8"),
+          );
+        else if (path === "/THIRD_PARTY_NOTICES.txt") {
+          notices ??= buildNotices();
+          // A failed build is not cached, so the next request retries it.
+          notices.catch(() => {
+            notices = undefined;
+          });
+          body = notices;
+        } else {
+          next();
           return;
         }
-        response.setHeader("Content-Type", "text/plain; charset=utf-8");
-        response.end(body);
+        body.then(
+          (text) => {
+            response.setHeader("Content-Type", "text/plain; charset=utf-8");
+            response.end(text);
+          },
+          (error: unknown) => {
+            next(error);
+          },
+        );
       });
     },
   };

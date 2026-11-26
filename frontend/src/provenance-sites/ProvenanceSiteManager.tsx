@@ -61,6 +61,28 @@ const blank: SiteForm = {
   notes: "",
 };
 
+/**
+ * Scrolls only the site list (never the page) so a row chosen on the map is visible in it.
+ */
+function revealRow(row: HTMLElement | undefined) {
+  const list = row?.closest("ul");
+  if (!row || !list) return;
+  const top =
+    row.getBoundingClientRect().top -
+    list.getBoundingClientRect().top +
+    list.scrollTop;
+  const bottom = top + row.offsetHeight;
+  let target: number | null = null;
+  if (top < list.scrollTop) target = top;
+  else if (bottom > list.scrollTop + list.clientHeight)
+    target = bottom - list.clientHeight;
+  if (target === null) return;
+  const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (typeof list.scrollTo === "function")
+    list.scrollTo({ top: target, behavior: smooth ? "smooth" : "auto" });
+  else list.scrollTop = target;
+}
+
 export function ProvenanceSiteManager({
   places,
   csrfToken,
@@ -537,16 +559,7 @@ export function ProvenanceSiteManager({
                   const site = mapped.find((item) => item.id === id);
                   if (!site) return;
                   select(site);
-                  const row = rowRefs.current.get(id);
-                  if (typeof row?.scrollIntoView === "function")
-                    row.scrollIntoView({
-                      block: "nearest",
-                      behavior: window.matchMedia(
-                        "(prefers-reduced-motion: reduce)",
-                      ).matches
-                        ? "auto"
-                        : "smooth",
-                    });
+                  revealRow(rowRefs.current.get(id));
                 }}
                 label="Geography map of stored provenance sites"
               />

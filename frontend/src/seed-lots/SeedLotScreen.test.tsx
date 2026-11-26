@@ -2554,11 +2554,7 @@ test("Details empty Sowings and Lineage are plain messages while Photos retains 
           ancestors: [],
         });
       if (path.startsWith("/api/v1/lineage/"))
-        return json({
-          ancestors: [],
-          focus: null,
-          children: { items: [], total: 0, offset: 0, limit: 25 },
-        });
+        return json({ items: [], total: 0, offset: 0, limit: 25 });
       return undefined;
     }),
   );
