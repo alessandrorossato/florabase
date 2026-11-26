@@ -4953,6 +4953,35 @@ button:disabled {
   margin-top: 0.5rem;
   color: var(--primary);
 }
+.import-progress--sheet {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.sheet-import__group {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.sheet-import__group p {
+  margin: 0 0 var(--space-2);
+}
+.sheet-import > .actions {
+  margin-top: var(--space-4);
+}
+.sheet-import__check {
+  display: flex;
+  flex: none;
+  white-space: nowrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.sheet-import__created {
+  max-height: 24rem;
+  overflow: auto;
+}
+.sheet-import__table {
+  max-height: 38rem;
+  overflow: auto;
+}
 @media (max-width: 1100px) {
   .import-workspace__grid {
     grid-template-columns: minmax(0, 1fr);
@@ -4963,6 +4992,31 @@ button:disabled {
   .import-preview,
   .import-field-guide {
     padding: 1rem;
+  }
+  .import-progress--sheet {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  /* Phone: one stacked block per column instead of a three-column table. */
+  .sheet-import__table {
+    max-height: none;
+  }
+  .sheet-import__table :is(table, tbody, tr, th, td) {
+    display: block;
+  }
+  .sheet-import__table thead {
+    display: none;
+  }
+  .sheet-import__table tr {
+    padding: var(--space-3) 0;
+    border-top: 1px solid var(--border);
+  }
+  .sheet-import__table :is(th, td) {
+    padding: var(--space-1) 0;
+    width: auto;
+    border: 0;
+  }
+  .sheet-import__table td:first-of-type {
+    color: var(--text-muted);
   }
   .import-progress li {
     flex-direction: column;

@@ -33,6 +33,7 @@ from florabase.import_export.service import (
     preview,
     template_csv,
 )
+from florabase.import_wizard.api import router as sheet_import_router
 from florabase.lineage.service import LineageCycleError
 from florabase.locations.service import (
     LocationHierarchyError,
@@ -43,6 +44,7 @@ from florabase.plants.service import PlantDomainConflictError, PlantReferenceNot
 from florabase.seed_lots.service import SeedLotDomainConflictError, SeedLotReferenceNotFoundError
 
 router = APIRouter(tags=["import-export"])
+router.include_router(sheet_import_router)
 ImportKind = Literal[
     "botanical-identities", "suppliers", "locations", "seed-lots", "plants", "plant-groups"
 ]
