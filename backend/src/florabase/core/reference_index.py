@@ -11,9 +11,12 @@ transaction, so a cooperating writer cannot change the schema in between.
 
 import logging
 import sqlite3
+import time
 from collections import Counter
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal
+
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -32,10 +35,123 @@ _CONNECTION_HARDENING: Final = (
     (sqlite3.SQLITE_DBCONFIG_WRITABLE_SCHEMA, False),
 )
 _MAX_REPORTED_OBJECTS: Final = 10
+DEFAULT_DOWNLOAD_MAX_SECONDS: Final[float] = 1800.0
+ALLOWED_ARCHIVE_CONTENT_TYPES: Final[frozenset[str]] = frozenset(
+    {"application/zip", "application/octet-stream"}
+)
 
 
 class UnsupportedIndexError(ValueError):
     """The file is not an index in the layout the supported builder writes."""
+
+
+class ReferenceDownloadError(ValueError):
+    """A pinned reference archive download failed validation or timed out."""
+
+    category: Literal["network", "size"] = "network"
+
+
+class ReferenceDownloadSizeError(ReferenceDownloadError):
+    """Archive exceeded or did not match the expected byte bound."""
+
+    category: Literal["network", "size"] = "size"
+
+
+class ReferenceDownloadTimeoutError(ReferenceDownloadError):
+    """Archive download exceeded the configured wall-clock cap."""
+
+    category: Literal["network", "size"] = "network"
+
+
+class ReferenceDownloadContentTypeError(ReferenceDownloadError):
+    """Archive response carried an unexpected Content-Type."""
+
+    category: Literal["network", "size"] = "network"
+
+
+def _validate_archive_content_type(
+    headers: httpx.Headers,
+    allowed: frozenset[str],
+    label: str,
+) -> None:
+    # Zenodo emits duplicate `content-type: application/octet-stream` headers on GET.
+    raw_values = headers.get_list("content-type")
+    media_types = [
+        part.split(";", 1)[0].strip().lower()
+        for value in raw_values
+        for part in value.split(",")
+        if part.strip()
+    ]
+    if not media_types or any(media not in allowed for media in media_types):
+        raise ReferenceDownloadContentTypeError(f"Unexpected {label} archive content type")
+
+
+def _validate_content_length(
+    headers: httpx.Headers,
+    *,
+    max_bytes: int,
+    exact_bytes: int | None,
+    label: str,
+) -> None:
+    raw_lengths = headers.get_list("content-length")
+    if not raw_lengths:
+        return
+    if len(raw_lengths) != 1:
+        raise ReferenceDownloadSizeError(f"Ambiguous {label} archive Content-Length header")
+    raw = raw_lengths[0].strip()
+    if not raw.isdigit():
+        raise ReferenceDownloadSizeError(f"Invalid {label} archive Content-Length header")
+    declared = int(raw)
+    if declared > max_bytes or (exact_bytes is not None and declared != exact_bytes):
+        raise ReferenceDownloadSizeError(f"{label} download exceeds size bound")
+
+
+def download_archive(
+    url: str,
+    destination: Path,
+    *,
+    max_bytes: int,
+    exact_bytes: int | None = None,
+    max_seconds: float = DEFAULT_DOWNLOAD_MAX_SECONDS,
+    connect_timeout: float = 10.0,
+    read_timeout: float = 60.0,
+    accept: str = "*/*",
+    allowed_content_types: frozenset[str] = ALLOWED_ARCHIVE_CONTENT_TYPES,
+    label: str = "Reference",
+) -> int:
+    """Stream a pinned official archive to ``destination`` with strict HTTP, size & time bounds."""
+    if max_seconds <= 0:
+        raise ValueError("max_seconds must be positive")
+    if max_bytes <= 0:
+        raise ValueError("max_bytes must be positive")
+    size = 0
+    started = time.monotonic()
+    with (
+        httpx.Client(
+            timeout=httpx.Timeout(read_timeout, connect=connect_timeout),
+            follow_redirects=False,
+        ) as client,
+        client.stream("GET", url, headers={"Accept": accept}) as response,
+    ):
+        response.raise_for_status()
+        _validate_archive_content_type(response.headers, allowed_content_types, label)
+        _validate_content_length(
+            response.headers,
+            max_bytes=max_bytes,
+            exact_bytes=exact_bytes,
+            label=label,
+        )
+        with destination.open("wb") as output:
+            for chunk in response.iter_bytes():
+                size += len(chunk)
+                if size > max_bytes:
+                    raise ReferenceDownloadSizeError(f"{label} download exceeds size bound")
+                if time.monotonic() - started > max_seconds:
+                    raise ReferenceDownloadTimeoutError(f"{label} download timed out")
+                output.write(chunk)
+    if exact_bytes is not None and size != exact_bytes:
+        raise ReferenceDownloadSizeError(f"Unexpected {label} archive size")
+    return size
 
 
 def _describe(objects: set[SchemaObject]) -> str:

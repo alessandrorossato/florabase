@@ -65,6 +65,7 @@ class TaxonomyNode(BaseModel):
 class TaxonomyTree(BaseModel):
     source: WfoMetadata | None = None
     source_available: bool
+    source_preparing: bool = False
     message: str | None = None
     identities: list[TaxonomyIdentity]
     nodes: list[TaxonomyNode]
@@ -85,6 +86,7 @@ class TaxonomyRelated(BaseModel):
 
 class IdentityTaxonomy(BaseModel):
     source_available: bool
+    source_preparing: bool = False
     source: WfoMetadata | None = None
     message: str | None = None
     link: TaxonomyLink | None = None

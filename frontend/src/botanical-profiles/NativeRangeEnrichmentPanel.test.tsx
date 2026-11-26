@@ -518,3 +518,32 @@ test("missing default v16 keeps frozen v15 history inspectable without silent fa
     screen.queryByRole("button", { name: "Apply reviewed changes" }),
   ).not.toBeInTheDocument();
 });
+
+test("preparing WCVP v16 source displays background preparation notice without manual operator prompt", async () => {
+  vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    const url = new URL(requestUrl(input), "http://localhost");
+    if (url.pathname.endsWith("/source"))
+      return Promise.resolve(
+        json({
+          available: false,
+          preparing: true,
+          source: null,
+          link: null,
+          message: "Reference data is being prepared in the background.",
+        }),
+      );
+    if (url.pathname.endsWith("/proposals")) return Promise.resolve(json([]));
+    throw new Error(`Unexpected ${url.href}`);
+  });
+  const user = userEvent.setup();
+  renderPanel({ identityId, onApplied: vi.fn() });
+  await user.click(
+    screen.getByRole("button", { name: "Check trusted source" }),
+  );
+  const notice = await screen.findByText(
+    /Reference data is being prepared in the background/,
+  );
+  expect(notice).toBeVisible();
+  expect(notice).toHaveTextContent(/Recorded ranges remain usable/);
+  expect(notice).not.toHaveTextContent(/Ask your installation operator/);
+});

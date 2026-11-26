@@ -3098,6 +3098,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/references": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** System References */
+        get: operations["getSystemReferences"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/vegetative-lots": {
         parameters: {
             query?: never;
@@ -5424,6 +5441,11 @@ export interface components {
             source?: components["schemas"]["WfoMetadata"] | null;
             /** Source Available */
             source_available: boolean;
+            /**
+             * Source Preparing
+             * @default false
+             */
+            source_preparing: boolean;
         };
         /** ImportDecisionOption */
         ImportDecisionOption: {
@@ -7611,6 +7633,25 @@ export interface components {
             /** Source Code Type */
             source_code_type: string | null;
         };
+        /** ReferenceSetupIndexStatus */
+        ReferenceSetupIndexStatus: {
+            /** Available */
+            available: boolean;
+            /** Reason */
+            reason?: ("network" | "checksum" | "size" | "build" | "disk") | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "off" | "preparing" | "ready" | "failed" | "manual";
+            /** Status */
+            status: string;
+        };
+        /**
+         * ReferencesSetupMode
+         * @enum {string}
+         */
+        ReferencesSetupMode: "off" | "auto";
         /**
          * ReintegrationEligibilityStatus
          * @enum {string}
@@ -8594,6 +8635,11 @@ export interface components {
             link?: components["schemas"]["WcvpLinkResponse"] | null;
             /** Message */
             message?: string | null;
+            /**
+             * Preparing
+             * @default false
+             */
+            preparing: boolean;
             source?: components["schemas"]["SourceMetadata"] | null;
         };
         /** SourceTaxonomicAssessmentResponse */
@@ -9197,6 +9243,12 @@ export interface components {
             /** Server Version */
             server_version: string;
         };
+        /** SystemReferencesResponse */
+        SystemReferencesResponse: {
+            mode: components["schemas"]["ReferencesSetupMode"];
+            wcvp_v16: components["schemas"]["ReferenceSetupIndexStatus"];
+            wfo: components["schemas"]["ReferenceSetupIndexStatus"];
+        };
         /** TargetChoiceResponse */
         TargetChoiceResponse: {
             /**
@@ -9455,6 +9507,11 @@ export interface components {
             source?: components["schemas"]["WfoMetadata"] | null;
             /** Source Available */
             source_available: boolean;
+            /**
+             * Source Preparing
+             * @default false
+             */
+            source_preparing: boolean;
             /** Unresolved */
             unresolved: number;
         };
@@ -18257,6 +18314,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SystemInfoResponse"];
+                };
+            };
+        };
+    };
+    getSystemReferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemReferencesResponse"];
                 };
             };
         };

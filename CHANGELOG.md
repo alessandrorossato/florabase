@@ -5,6 +5,28 @@ Notable changes to Florabase, newest first. Versions follow the
 [docs/progress.md](docs/progress.md); this file lists what an operator of an installation needs
 to know.
 
+## Unreleased
+
+**Upgrading from `v0.1.0-beta.9`:** existing `compose.yaml` files without
+`FLORABASE_REFERENCES_SETUP=auto` keep automatic reference provisioning **off** (zero outbound
+reference requests) until you add `- FLORABASE_REFERENCES_SETUP=auto` to `backend.environment` and
+redeploy. No new host folders or volume mounts are required.
+
+### Added
+
+- **Automatic botanical reference provisioning (`REF-SETUP-001`):** fresh installs using the
+  shipped `compose.yaml` (`FLORABASE_REFERENCES_SETUP=auto`) download the pinned official WFO
+  2026-06 and Kew WCVP v16 archives in a low-priority background worker after start-up, verify
+  exact SHA-256 checksums before parsing, build and seal SQLite indexes atomically under
+  `/var/lib/florabase/data/state/reference/` (`0700`, excluded from pre-upgrade dumps and paired
+  backups), and enable taxonomy and native-range lookups without manual copying. Start-up and
+  health checks never wait for provisioning.
+- **Read-only reference status diagnostics:** authenticated `GET /api/v1/system/references` and a
+  read-only **Reference index status** section in **Settings → Data sources** report each index as
+  `off`, `preparing`, `ready`, `ready (setup off)`, `failed: <reason>`, or `manual`. Taxonomy and
+  native-range screens indicate when reference data is being prepared in the background.
+- End-user guide (`docs/user-guide/`).
+
 ## v0.1.0-beta.9 — 2026-11-24
 
 Prerelease of the private beta series: changes since `v0.1.0-beta.8`. No database migrations

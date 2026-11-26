@@ -291,15 +291,23 @@ def test_version_path_selection_defaults_to_v16_without_fallback(
 ) -> None:
     from pathlib import Path
 
+    from florabase.reference_setup.state import managed_wcvp_v16_path
+
     settings = Settings(
         wcvp_snapshot_path=Path("/v15.sqlite") if "15" in installed else None,
         wcvp_v16_snapshot_path=Path("/v16.sqlite") if "16" in installed else None,
     )
+    expected_v16 = (
+        settings.wcvp_v16_snapshot_path
+        if settings.wcvp_v16_snapshot_path is not None
+        else managed_wcvp_v16_path(settings.references_state_dir)
+    )
     assert api.source_dependency(settings).release.version == "16"
-    assert api.source_dependency(settings).path == settings.wcvp_v16_snapshot_path
+    assert api.source_dependency(settings).path == expected_v16
+    assert api.source_dependency(settings).path != settings.wcvp_snapshot_path
     assert api.source_dependency(settings, "15").release.version == "15"
     assert api.source_dependency(settings, "15").path == settings.wcvp_snapshot_path
-    assert api.source_dependency(settings, "16").path == settings.wcvp_v16_snapshot_path
+    assert api.source_dependency(settings, "16").path == expected_v16
     assert api.source_dependency(settings, "16").release.version == "16"
 
 

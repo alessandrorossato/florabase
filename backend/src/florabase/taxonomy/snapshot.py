@@ -10,12 +10,19 @@ import re
 import sqlite3
 import tempfile
 from collections.abc import Iterable, Iterator
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Final
 from zipfile import ZipFile
 
-from florabase.core.reference_index import open_reference_index
-from florabase.taxonomy.source import CHECKSUM, CODE, RANKS, ROOT, SCHEMA, WfoMetadata
+from florabase.core.reference_index import (
+    DEFAULT_DOWNLOAD_MAX_SECONDS,
+    download_archive,
+    open_reference_index,
+)
+from florabase.taxonomy.source import ARCHIVE_URL, CHECKSUM, CODE, RANKS, ROOT, SCHEMA, WfoMetadata
+
+ARCHIVE_BYTES: Final = 132_643_291
 
 FIELDS = {
     "name.tsv": [
@@ -189,16 +196,25 @@ def build_index(
         temporary.chmod(0o600)
         with temporary.open("rb") as stream:
             digest = hashlib.file_digest(stream, "sha256").hexdigest()
+        seal_fd, seal_tmp_name = tempfile.mkstemp(dir=destination.parent, suffix=".sha256")
+        seal_tmp = Path(seal_tmp_name)
+        try:
+            with os.fdopen(seal_fd, "w", encoding="ascii") as seal_stream:
+                seal_stream.write(digest + "\n")
+                seal_stream.flush()
+                os.fsync(seal_stream.fileno())
+            seal_tmp.chmod(0o600)
+            os.replace(seal_tmp, destination.with_suffix(".sha256"))
+        except BaseException:
+            seal_tmp.unlink(missing_ok=True)
+            raise
         os.replace(temporary, destination)
-        seal = destination.with_suffix(".sha256")
-        seal.write_text(digest + "\n")
-        seal.chmod(0o600)
     finally:
         temporary.unlink(missing_ok=True)
 
 
 def install(archive_path: Path, destination: Path, retrieved_at: str) -> None:
-    if archive_path.stat().st_size != 132643291:
+    if archive_path.stat().st_size != ARCHIVE_BYTES:
         raise ValueError("Unexpected WFO archive size")
     with archive_path.open("rb") as stream:
         if hashlib.file_digest(stream, "sha256").hexdigest() != CHECKSUM:
@@ -223,6 +239,27 @@ def install(archive_path: Path, destination: Path, retrieved_at: str) -> None:
             rows(archive, "synonym.tsv"),
             WfoMetadata(retrieved_at=retrieved_at),
         )
+
+
+def download(
+    destination: Path,
+    *,
+    staging_dir: Path | None = None,
+    max_seconds: float = DEFAULT_DOWNLOAD_MAX_SECONDS,
+) -> None:
+    """Download the pinned WFO release archive, verify it, and build ``destination``."""
+    with tempfile.TemporaryDirectory(prefix="florabase-wfo-", dir=staging_dir) as directory:
+        archive = Path(directory) / "wfo.zip"
+        download_archive(
+            ARCHIVE_URL,
+            archive,
+            max_bytes=ARCHIVE_BYTES,
+            exact_bytes=ARCHIVE_BYTES,
+            max_seconds=max_seconds,
+            accept="*/*",
+            label="WFO",
+        )
+        install(archive, destination, datetime.now(UTC).isoformat())
 
 
 def main() -> None:

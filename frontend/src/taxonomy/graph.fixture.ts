@@ -36,6 +36,7 @@ export const ids = {
 };
 export const sample: Tree = {
   source_available: true,
+  source_preparing: false,
   source: {
     provider: "wfo",
     version: "2026-06",

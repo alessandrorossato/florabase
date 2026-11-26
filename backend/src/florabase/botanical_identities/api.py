@@ -63,7 +63,7 @@ router = APIRouter(prefix="/botanical-identities", tags=["botanical identities"]
 
 
 def wfo_source_dependency(settings: Annotated[Settings, Depends(get_settings)]) -> WfoSource:
-    return WfoSource(settings.wfo_snapshot_path)
+    return WfoSource.from_settings(settings)
 
 
 def wcvp_v15_source_dependency(
