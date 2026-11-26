@@ -3,7 +3,6 @@ import { activeCsrfToken, isPresentationRetainedState } from "../../auth/api";
 import { useAuth } from "../../auth/context";
 import {
   DirectoryCard,
-  DirectoryInspector,
   DirectoryPage,
   DirectoryRecords,
   DirectoryRow,
@@ -21,6 +20,8 @@ import { DirectorySortSelect } from "../../components/DirectorySort";
 import type { DirectorySort } from "../../components/directorySort";
 import { PageHeader } from "../../components/ReferenceUI";
 import { Icon } from "../../components/Icon";
+import { DirectoryResults } from "../../components/DirectoryResults";
+import { setRecordRoute } from "../../components/recordNavigation";
 import {
   EmptyState,
   ErrorState,
@@ -30,7 +31,6 @@ import {
 import { useDirectoryPresentation } from "../../components/directoryPresentation";
 import { useCollectionPageReturnFocus } from "../../components/useCollectionPageReturnFocus";
 import { useRecordName } from "../../components/recordPresentation";
-import { formatPartialDate } from "../../events/eventData";
 import type { LocationResponse } from "../../locations/api";
 import { SavedViews } from "../../saved-views/SavedViews";
 import { defaults } from "../../saved-views/state";
@@ -106,15 +106,12 @@ function CuttingsDirectory({
   sourceType?: "plant" | "plant_group";
 }) {
   const [offset, setOffset] = useState(0);
-  const [preview, setPreview] = useState<string>();
   const directory = useDirectoryView("cuttings", () => {
     setOffset(0);
-    setPreview(undefined);
   });
   const { state: selectedFilters } = directory;
   const { record_type: surface, q, sort } = selectedFilters;
   const { view, select: setView } = useDirectoryPresentation("cuttings");
-  const trigger = useRef<HTMLButtonElement | null>(null);
   const fallback = useRef<HTMLAnchorElement>(null);
   const recordName = useRecordName();
   const [locations] = useCuttingData<LocationResponse[]>("/api/v1/locations");
@@ -149,7 +146,6 @@ function CuttingsDirectory({
   );
   useCollectionPageReturnFocus(data.state !== "loading");
   const rows = data.state === "ready" ? data.value : [];
-  const record = rows.find((item) => item.id === preview);
   const isLot = (item: Lot | AttemptListItem): item is Lot =>
     "material_type" in item;
   function label(item: Lot | AttemptListItem) {
@@ -162,13 +158,9 @@ function CuttingsDirectory({
       ? `${materialLabels[item.material_type]} · ${sourceLabels[item.source_kind]} · ${countLabel(item.quantity)} remaining`
       : rootingLabel(item);
   }
-  function clearPreview() {
-    setPreview(undefined);
-  }
   function setFilter(name: Filter, value: string) {
     directory.update(name, value);
     setOffset(0);
-    clearPreview();
   }
   const choices = {
     lifecycle:
@@ -231,7 +223,6 @@ function CuttingsDirectory({
                   onChange={(value) => {
                     directory.update("q", value);
                     setOffset(0);
-                    clearPreview();
                   }}
                 />
               }
@@ -259,7 +250,6 @@ function CuttingsDirectory({
                           sort,
                         });
                         setOffset(0);
-                        clearPreview();
                       }}
                     >
                       {item === "lots" ? "Material lots" : "Rooting attempts"}
@@ -276,7 +266,6 @@ function CuttingsDirectory({
                   onChange={(value: DirectorySort) => {
                     directory.update("sort", value);
                     setOffset(0);
-                    clearPreview();
                   }}
                 />
               }
@@ -336,7 +325,6 @@ function CuttingsDirectory({
                   sort,
                 });
                 setOffset(0);
-                clearPreview();
               }}
             />
           }
@@ -360,108 +348,80 @@ function CuttingsDirectory({
                     : "No rooting attempts yet. Start one from a material lot."}
               </EmptyState>
             ) : (
-              <DirectoryRecords
-                view={view}
-                label={
-                  surface === "lots" ? "Material lots" : "Rooting attempts"
-                }
-              >
-                {rows.map((item) =>
-                  view === "list" ? (
-                    <DirectoryRow key={item.id} selected={preview === item.id}>
-                      <DirectoryTrigger
-                        ref={preview === item.id ? trigger : undefined}
-                        aria-label={`Quick preview ${label(item)}`}
-                        aria-pressed={preview === item.id}
-                        onClick={(event) => {
-                          trigger.current = event.currentTarget;
-                          setPreview(item.id);
-                        }}
-                      >
-                        <DirectoryRecordContent
-                          visual={<Icon name="cutting" />}
-                          name={label(item)}
-                          secondary={detail(item)}
-                          status={<LifecycleStatus state={item.lifecycle} />}
+              <>
+                <DirectoryResults
+                  count={rows.length}
+                  loadedOnly={offset > 0 || rows.length === pageSize}
+                />
+                <DirectoryRecords
+                  view={view}
+                  label={
+                    surface === "lots" ? "Material lots" : "Rooting attempts"
+                  }
+                >
+                  {rows.map((item) =>
+                    view === "list" ? (
+                      <DirectoryRow key={item.id}>
+                        <DirectoryTrigger
+                          onClick={() => {
+                            setRecordRoute(`#/cuttings/${surface}/${item.id}`);
+                          }}
+                        >
+                          <DirectoryRecordContent
+                            visual={<Icon name="cutting" />}
+                            name={label(item)}
+                            secondary={detail(item)}
+                            status={<LifecycleStatus state={item.lifecycle} />}
+                          />
+                        </DirectoryTrigger>
+                        <DirectoryRecordActions
+                          label={label(item)}
+                          onDetails={() => {
+                            window.location.assign(
+                              `#/cuttings/${surface}/${item.id}`,
+                            );
+                          }}
+                          onEdit={() => {
+                            window.location.assign(
+                              `#/cuttings/${surface}/${item.id}?action=edit`,
+                            );
+                          }}
                         />
-                      </DirectoryTrigger>
-                      <DirectoryRecordActions
-                        label={label(item)}
-                        onDetails={() => {
-                          window.location.assign(
-                            `#/cuttings/${surface}/${item.id}`,
-                          );
-                        }}
-                        onEdit={() => {
-                          window.location.assign(
-                            `#/cuttings/${surface}/${item.id}?action=edit`,
-                          );
-                        }}
-                      />
-                    </DirectoryRow>
-                  ) : (
-                    <DirectoryCard key={item.id} selected={preview === item.id}>
-                      <DirectoryTrigger
-                        ref={preview === item.id ? trigger : undefined}
-                        aria-label={`Quick preview ${label(item)}`}
-                        aria-pressed={preview === item.id}
-                        onClick={(event) => {
-                          trigger.current = event.currentTarget;
-                          setPreview(item.id);
-                        }}
-                      >
-                        <DirectoryRecordContent
-                          visual={<Icon name="cutting" />}
-                          name={label(item)}
-                          secondary={detail(item)}
-                          status={<LifecycleStatus state={item.lifecycle} />}
+                      </DirectoryRow>
+                    ) : (
+                      <DirectoryCard key={item.id}>
+                        <DirectoryTrigger
+                          onClick={() => {
+                            setRecordRoute(`#/cuttings/${surface}/${item.id}`);
+                          }}
+                        >
+                          <DirectoryRecordContent
+                            visual={<Icon name="cutting" />}
+                            name={label(item)}
+                            secondary={detail(item)}
+                            status={<LifecycleStatus state={item.lifecycle} />}
+                          />
+                        </DirectoryTrigger>
+                        <DirectoryRecordActions
+                          label={label(item)}
+                          onDetails={() => {
+                            window.location.assign(
+                              `#/cuttings/${surface}/${item.id}`,
+                            );
+                          }}
+                          onEdit={() => {
+                            window.location.assign(
+                              `#/cuttings/${surface}/${item.id}?action=edit`,
+                            );
+                          }}
                         />
-                      </DirectoryTrigger>
-                      <DirectoryRecordActions
-                        label={label(item)}
-                        onDetails={() => {
-                          window.location.assign(
-                            `#/cuttings/${surface}/${item.id}`,
-                          );
-                        }}
-                        onEdit={() => {
-                          window.location.assign(
-                            `#/cuttings/${surface}/${item.id}?action=edit`,
-                          );
-                        }}
-                      />
-                    </DirectoryCard>
-                  ),
-                )}
-              </DirectoryRecords>
+                      </DirectoryCard>
+                    ),
+                  )}
+                </DirectoryRecords>
+              </>
             ))}
         </>
-      }
-      inspector={
-        record && (
-          <DirectoryInspector
-            title={label(record)}
-            onClose={clearPreview}
-            returnFocusTo={trigger}
-            fallbackFocusTo={fallback}
-          >
-            <p>{detail(record)}</p>
-            <p>
-              {formatPartialDate(
-                isLot(record)
-                  ? (record.taken_on ?? null)
-                  : (record.started_on ?? null),
-              )}
-            </p>
-            {record.notes && <p>{record.notes}</p>}
-            <a
-              className="button-link button--secondary"
-              href={`#/cuttings/${surface}/${record.id}`}
-            >
-              Open details
-            </a>
-          </DirectoryInspector>
-        )
       }
       pagination={
         (offset > 0 || rows.length === pageSize) && (
@@ -471,7 +431,6 @@ function CuttingsDirectory({
               className="button--secondary"
               disabled={offset === 0}
               onClick={() => {
-                clearPreview();
                 setOffset(offset - pageSize);
               }}
             >
@@ -482,7 +441,6 @@ function CuttingsDirectory({
               className="button--secondary"
               disabled={rows.length !== pageSize}
               onClick={() => {
-                clearPreview();
                 setOffset(offset + pageSize);
               }}
             >

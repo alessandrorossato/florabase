@@ -31,43 +31,108 @@
 .distribution-inspector code {
   overflow-wrap: anywhere;
 }
+/* UI-POLISH-005: the species chooser lives inline at the top of the inspector, like the
+   Places list in Native ranges, instead of a modal of large cards. */
+.distribution-browser {
+  display: grid;
+  gap: var(--space-2);
+  padding-block-end: var(--space-3);
+  margin-block-end: var(--space-3);
+  border-block-end: 1px solid var(--border);
+}
+.distribution-browser > * {
+  margin: 0;
+}
+.distribution-browser__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+}
+.species-distribution .distribution-browser__heading > h3 {
+  margin: 0;
+  font: var(--type-h3);
+}
+.distribution-browser__heading > .directory-results {
+  margin: 0;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
 .distribution-identities {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: var(--space-2);
+  position: relative;
+  max-block-size: 18rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+  background: var(--surface);
+}
+.distribution-identities > li + li {
+  border-block-start: 1px solid var(--border);
 }
 .distribution-choice {
-  width: 100%;
+  inline-size: 100%;
+  min-block-size: 2.75rem;
   display: grid;
-  gap: var(--space-1);
-  text-align: left;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: start;
   white-space: normal;
+  font: var(--type-small);
+}
+.distribution-choice__name {
+  font: var(--type-body);
+  overflow-wrap: anywhere;
+}
+.distribution-choice__common {
+  grid-column: 1;
+  color: var(--text-muted);
+}
+.distribution-choice__readiness {
+  grid-column: 2;
+  grid-row: 1;
+  color: var(--text-muted);
+  font: var(--type-small);
+  text-align: end;
+}
+.distribution-choice__readiness[data-ready="true"] {
+  color: var(--primary);
 }
 .distribution-choice[aria-pressed="true"] {
-  outline: 2px solid var(--primary);
-  outline-offset: -2px;
+  background: var(--surface-selected, var(--surface-subtle));
+  box-shadow: inset 3px 0 0 var(--primary);
 }
 .distribution-choice:hover,
 .distribution-choice:focus-visible {
   background: var(--surface-hover);
 }
-.distribution-context {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-3);
+.distribution-browser > .actions {
+  justify-content: space-between;
+  align-items: center;
+}
+.distribution-browser > .field-help {
   font: var(--type-small);
 }
-.distribution-chooser {
-  width: min(42rem, calc(100vw - 2 * var(--space-4)));
+.distribution-inspector__eyebrow {
+  font: var(--type-label, var(--type-small));
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
 }
-.distribution-preview {
-  padding: var(--space-3);
-  border-inline-start: 3px solid var(--focus-ring);
-  background: var(--surface-subtle);
-  font: var(--type-small);
-  min-height: 3rem;
+.distribution-overview__metric strong {
+  font: var(--type-strong);
 }
 .species-distribution .occurrence-density-map {
   min-height: 24rem;
@@ -141,8 +206,8 @@
   margin: 0 0 var(--space-2);
   font: var(--type-h3);
 }
-.species-distribution .maps-workspace__browser > section > h3 {
-  margin-block: var(--space-4) var(--space-2);
+.species-distribution .maps-workspace__browser > .distribution-inspector > h3 {
+  margin-block: 0;
 }
 .species-distribution .detail-list {
   gap: var(--space-3);
@@ -182,10 +247,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-1) var(--space-2);
   }
-  .distribution-overview button {
-    padding-inline: 0;
-    text-align: start;
-    white-space: normal;
+  .distribution-overview__metric {
     font: var(--type-small);
   }
   .distribution-overview > span {
@@ -223,4 +285,10 @@
     scrollbar-gutter: stable;
     padding-inline-end: var(--space-2);
   }
+}
+.distribution-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  font: var(--type-small);
 }

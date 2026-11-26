@@ -1,13 +1,19 @@
 /* Media composes the shared header without inheriting column-axis flex bases. */
-.app-content .media-workspace > .page-header {
+.app-content .media-workspace > .page-header:not(.page-header--directory) {
   flex-direction: row;
   align-items: center;
   margin-bottom: 0;
 }
-.app-content .media-workspace > .page-header > .page-identity {
+.app-content
+  .media-workspace
+  > .page-header:not(.page-header--directory)
+  > .page-identity {
   flex: 1 1 14rem;
 }
-.app-content .media-workspace > .page-header > .page-tools {
+.app-content
+  .media-workspace
+  > .page-header:not(.page-header--directory)
+  > .page-tools {
   flex: 2 1 34rem;
 }
 .media-workspace .media-directory-layout {

@@ -80,6 +80,61 @@
 - Unresolved: canonical `make feature-verify` not yet run; `docs/progress.md`, `docs/features.json`
   and `DataSourcesScreen.tsx` also change on `feat/ref-setup-001` (see evidence for merge check).
 
+## 2026-11-26 — One record mask and one list header (`UI-POLISH-005`)
+
+- Same branch; Alessandro chose to make every Collection detail uniform in beta.10.
+- Seed lot is the reference: Sowing, Plant and Plant group lose the extra Back/New bar on
+  detail pages and keep actions left-aligned; Sowing's identity reads like Seed lot's.
+- Harvest: source moves to the fact label and the lineage strip; Overview and Photos tabs.
+- Cuttings: `LotPage` and `AttemptPage` now use `DetailHeader` (plate, label, lineage strip)
+  and `DetailTabs`; the directory opens records on click and shows a record count.
+- Lists: Media, Geography pages, Taxonomy and Lineage use the directory header.
+- Native ranges cards follow Collection origins; provenance site map grows, preview scrolls;
+  Species distribution lists species inline instead of in a modal.
+- Checked against a local golden COMPREHENSIVE dataset (Postgres 16 + backend in the cloud
+  session) at desktop width; `tsc -b`, ESLint, Prettier, full Vitest against the baseline.
+
+## 2026-11-26 — Final beta.10 UI round (`UI-POLISH-004`)
+
+- Same branch; Alessandro's last UAT round before beta.10. Species distribution density
+  rendering is deferred to after beta.10 at his request.
+- Settings cards full width; Help and home tiles share `shell/sectionDescriptions.ts`.
+- Workspace homes add an "Across …" indicator row (`workspaces/glance.ts`); Explore reads the
+  native-range overview and provenance map, Sourcing reads suppliers and one order page.
+- Native ranges: rounded map frame; the inspector always shows Places then Plants/Species.
+- Collapsed rail keeps its buttons in place; provenance-site list is full height on desktop.
+- `useFullscreen` / `FullscreenButton` / `FullscreenStage`: an in-page overlay (not the
+  Fullscreen API, so dialogs and tooltips stay usable), Escape exits.
+- Checks: `tsc -b`, ESLint, Prettier; full Vitest compared with `main` in this cloud session.
+
+## 2026-11-26 — Workspace homes, map hover photos, Native ranges (`UI-POLISH-003`)
+
+- Same branch as `UI-POLISH-002`; Alessandro approved proposals A1, B1 and C1 for beta.10.
+- A1: `WorkspaceHome` gives Collection, Activity, Explore and Sourcing an Overview page of
+  sub-section tiles with Today-summary counts and first actions; the Today tab goes straight to
+  Today and workspace crumbs link to their home.
+- B1: "Photos on hover" switch (default off, per page, `localStorage`) on Native ranges and
+  Collection origins shows up to four primary identity images in the map tooltip.
+- C1: Native ranges opens with By place / By species, photo result cards and a one-line KPI row.
+- Checks: `tsc -b`, ESLint and Prettier clean; focused Vitest suites pass. Canonical gate not run
+  here.
+
+## 2026-11-26 — Batch 14 UAT UI polish (`UI-POLISH-002`)
+
+- On `claude/project-thread-gz6ru6` from `origin/main` `08ff2f9`, frontend-only source for batch 14.
+- Lineage tab adds "Recorded from this record" (direct descendants from the ancestry endpoint), so
+  a purchased Seed lot with sowings no longer reads "No recorded lineage". Identity lineage and the
+  ancestry explorer drop the dotted canvas and draw nested levels with elbow connectors.
+- Today drops the photo strip (`DashboardPhotos.tsx` removed; the API `photos` field is unchanged)
+  and stretches the supporting column. Sidebar no longer pins Plant groups and Stored material.
+- GBIF search button aligned; provenance-site list keeps six to seven rows and follows map
+  selection; the map pans to a list selection. Vite serves `/LICENSE` and
+  `/THIRD_PARTY_NOTICES.txt` in DEV/UAT; nginx serves `/LICENSE` as `text/plain`.
+- Checks: `tsc -b`, ESLint and Prettier on the changed areas; focused Vitest suites pass. The full
+  Vitest run in the cloud session has the same pre-existing environment failures as `main`
+  (Node 22; e.g. `IdentityRecordMedia`, `TreeExplorer`, SeedLot botanical cover) and no new ones.
+  Canonical gate not run here.
+
 ## 2026-11-25 — UX-SORT-002 server-side Sort by for Orders, Media and Cuttings
 
 - On `feat/ux-sort-002` from `feat/fn-05-directory-sort` `760283a` (UX-SORT-001), realigned by

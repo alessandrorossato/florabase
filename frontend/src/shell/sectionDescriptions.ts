@@ -1,0 +1,35 @@
+/**
+ * One line on what each destination holds, shared by the workspace homes and Help so both
+ * describe a section the same way. A destination without an entry simply shows no line.
+ */
+export const sectionDescriptions: Partial<Record<string, string>> = {
+  dashboard: "Due work, what to review and recent activity, in one place.",
+  collection: "Every collection section with its counts and first actions.",
+  activity: "Journal, History and Schedule side by side, with what is due.",
+  explore: "Cross-collection views of species, lineage, media and geography.",
+  sourcing: "Suppliers and orders, and the material they brought.",
+  seeds: "Seed lots you hold, from purchase, harvest or exchange.",
+  sowings: "Sowings in progress and their germination.",
+  cuttings: "Vegetative lots and their rooting attempts.",
+  plants: "Individual Plants and Plant groups.",
+  harvests: "Harvests and the material stored from them.",
+  locations: "Where material is kept: beds, greenhouses, trays.",
+  events: "Care and observations recorded in the Journal.",
+  history: "What happened to each record, derived from its changes.",
+  schedule: "Planned work and its calendar.",
+  identities: "Species and cultivars, with profiles and references.",
+  taxonomy: "Families and genera represented in the collection.",
+  lineage: "Recorded ancestry, from seed lot to plant and back.",
+  media: "Photos and reference images.",
+  geography: "Where material comes from and where species are native.",
+  suppliers: "Nurseries, seed banks and people you get material from.",
+  orders: "Orders and the seed lots and plants they brought.",
+  account: "Your password and the devices signed in to Florabase.",
+  settings: "Light or dark theme and display preferences for this browser.",
+  "media-settings": "Defaults for photos and reference images.",
+  labels: "Printed labels and QR codes for your records.",
+  "import-export": "Bring records in from CSV and export them back out.",
+  "data-sources": "External references Florabase can consult, and their terms.",
+  help: "Key ideas and a map of every section.",
+  about: "Version, licence and third-party notices.",
+};

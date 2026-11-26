@@ -1,0 +1,141 @@
+/* Workspace home: one tile per sub-section (UI-POLISH-003 A1). Tokens only. */
+.workspace-home__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.workspace-home__tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+}
+.workspace-home__tile::before {
+  content: none;
+}
+.workspace-home__tile:hover {
+  border-color: var(--border-strong);
+}
+.workspace-home__tile h3 {
+  margin: 0;
+  font: var(--type-h3);
+}
+.workspace-home__tile h3 a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text);
+  text-decoration: none;
+}
+.workspace-home__tile h3 a:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+.workspace-home__tile h3 svg {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  color: var(--primary);
+}
+.workspace-home__tile p {
+  margin: 0;
+}
+.workspace-home__count {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.workspace-home__count strong {
+  margin-inline-end: var(--space-1);
+  color: var(--primary);
+  font: 500 1.75rem/1.1 var(--font-editorial);
+  font-variant-numeric: tabular-nums;
+}
+.workspace-home__placeholder {
+  color: var(--text-muted);
+}
+.workspace-home__description {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.workspace-home__detail {
+  color: var(--text);
+  font: var(--type-small);
+}
+.workspace-home__tile .workspace-home__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin-block-start: auto;
+  padding-block-start: var(--space-2);
+  font: var(--type-small);
+}
+.workspace-home__action {
+  font-weight: 600;
+}
+.workspace-home__notice {
+  margin-block-end: var(--space-4);
+}
+@media (max-width: 48rem), (any-pointer: coarse) {
+  .workspace-home__links a,
+  .workspace-home__tile h3 a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--control-height-touch, 2.75rem);
+  }
+}
+
+/* Cross-section indicators above the tiles (UI-POLISH-004). */
+.workspace-home__glance {
+  margin-block-end: var(--space-5, 1.5rem);
+}
+.workspace-home__glance > h3 {
+  margin: 0 0 var(--space-2);
+  color: var(--text-muted);
+  font: var(--type-label);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.workspace-home__glance dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+.workspace-home__glance dl > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-inline-size: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+}
+.workspace-home__glance dt {
+  font: var(--type-small);
+  font-weight: 600;
+}
+.workspace-home__glance dt a {
+  color: var(--text);
+}
+.workspace-home__glance dd {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+}
+.workspace-home__glance dd strong {
+  color: var(--primary);
+  font: 500 2rem/1.1 var(--font-editorial);
+  font-variant-numeric: tabular-nums;
+}
+.workspace-home__glance dd span {
+  color: var(--text-muted);
+  font: var(--type-small);
+}

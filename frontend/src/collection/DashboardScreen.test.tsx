@@ -1,6 +1,5 @@
 import {
   cleanup,
-  fireEvent,
   render,
   screen,
   waitFor,
@@ -193,8 +192,7 @@ function storedPhoto(index: number) {
   } satisfies NonNullable<DashboardResponse["photos"]>[number];
 }
 
-test("authoritative KPI units and at most four distinct protected photographs retain Plant destinations and attribution", async () => {
-  const photos = Array.from({ length: 8 }, (_, index) => storedPhoto(index));
+test("authoritative KPI units retain their destinations and Today shows no photo section", async () => {
   get.mockResolvedValue({
     ...empty,
     counts: {
@@ -204,7 +202,7 @@ test("authoritative KPI units and at most four distinct protected photographs re
       active_seed_lots: 40,
       active_sowings: 12,
     },
-    photos,
+    photos: [storedPhoto(1)],
   });
   mountOverview();
   expect(
@@ -218,124 +216,11 @@ test("authoritative KPI units and at most four distinct protected photographs re
     "href",
     "#/seeds",
   );
-  const grid = screen.getByRole("list", { name: "Selected individual Plants" });
-  const images = await within(grid).findAllByRole("img");
-  expect(images).toHaveLength(4);
-  expect(new Set(images.map((image) => image.getAttribute("src"))).size).toBe(
-    4,
-  );
-  for (const photo of photos.slice(0, 4)) {
-    expect(
-      within(grid).getByRole("link", { name: photo.title }),
-    ).toHaveAttribute("href", `#/plants/${photo.id}`);
-    expect(
-      within(grid).getByRole("img", { name: photo.title }),
-    ).toHaveAttribute("loading", "eager");
-  }
-  await userEvent.click(screen.getByText("Image attribution"));
-  expect(screen.getByText(/Creator 0/)).toBeVisible();
-  expect(screen.getAllByRole("link", { name: "CC BY 4.0" })).toHaveLength(4);
-  expect(screen.queryByText(/Creator 4/)).not.toBeInTheDocument();
-});
-
-test("fewer images are not duplicated, and unavailable images are never drawn as placeholders or loaded remotely", async () => {
-  const fetch = vi
-    .spyOn(globalThis, "fetch")
-    .mockImplementation(() =>
-      Promise.resolve(
-        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
-      ),
-    );
-  const photo = storedPhoto(1);
-  get.mockResolvedValue({
-    ...empty,
-    photos: [
-      photo,
-      {
-        ...storedPhoto(2),
-        image: null,
-        reference_image: {
-          ...storedPhoto(2).image,
-          thumbnail_url: "https://external.invalid/do-not-load.jpg",
-        },
-      },
-    ],
-  });
-  mountOverview();
-  const image = await screen.findByRole("img", { name: photo.title });
-  expect(screen.getAllByRole("img")).toHaveLength(1);
-  expect(image.getAttribute("src")).toMatch(/^blob:/);
-  expect(fetch).toHaveBeenCalledWith(
-    photo.image.thumbnail_url,
-    expect.objectContaining({ credentials: "same-origin" }),
-  );
-  expect(
-    within(
-      screen.getByRole("list", { name: "Selected individual Plants" }),
-    ).getAllByRole("listitem"),
-  ).toHaveLength(1);
-  expect(screen.queryByText("No photograph")).not.toBeInTheDocument();
-  fireEvent.error(image);
   expect(screen.queryByRole("img")).not.toBeInTheDocument();
   expect(
-    screen.queryByRole("list", { name: "Selected individual Plants" }),
+    screen.queryByRole("heading", { name: "Plants in your collection" }),
   ).not.toBeInTheDocument();
-  expect(screen.queryByText("No photograph")).not.toBeInTheDocument();
-  expect(
-    screen.getByText(
-      /None of the sampled Plants has a photo that can be shown yet/,
-    ),
-  ).toBeInTheDocument();
-  expect(
-    screen.getByRole("link", { name: "Add photos in Plants" }),
-  ).toHaveAttribute("href", "#/plants");
-});
-
-test("Plant visit sample stays stable through rerenders, and broken primary falls back to a labelled identity reference", async () => {
-  const fetch = vi
-    .spyOn(globalThis, "fetch")
-    .mockImplementation(() =>
-      Promise.resolve(
-        new Response(new Blob(["img"], { type: "image/png" }), { status: 200 }),
-      ),
-    );
-  const original = storedPhoto(1);
-  const plant: NonNullable<DashboardResponse["photos"]>[number] = {
-    ...original,
-    reference_image: {
-      ...original.image,
-      thumbnail_url: "/api/v1/media-assets/reference/thumbnail",
-      attribution: "Reference creator",
-    },
-  };
-  get.mockResolvedValue({ ...empty, photos: [plant] });
-  const rendered = renderWithAuth(<DashboardOverview />);
-  const image = await screen.findByRole("img", { name: plant.title });
-  expect(image.getAttribute("src")).toMatch(/^blob:/);
-  expect(fetch).toHaveBeenLastCalledWith(
-    original.image.thumbnail_url,
-    expect.objectContaining({ credentials: "same-origin" }),
-  );
-  rendered.rerender(<DashboardOverview />);
-  expect(get).toHaveBeenCalledTimes(1);
-  expect(screen.getByRole("link", { name: plant.title })).toHaveAttribute(
-    "href",
-    `#/plants/${plant.id}`,
-  );
-  fireEvent.error(image);
-  const fallback = await screen.findByRole("img", { name: plant.title });
-  expect(fallback.getAttribute("src")).toMatch(/^blob:/);
-  expect(fetch).toHaveBeenLastCalledWith(
-    "/api/v1/media-assets/reference/thumbnail",
-    expect.objectContaining({ credentials: "same-origin" }),
-  );
-  expect(screen.getByText("Identity reference", { exact: true })).toBeVisible();
-  fireEvent.error(screen.getByRole("img", { name: plant.title }));
-  expect(screen.queryByRole("img")).toBeNull();
-  expect(screen.queryByRole("link", { name: plant.title })).toBeNull();
-  expect(
-    screen.getByRole("link", { name: "Add photos in Plants" }),
-  ).toBeVisible();
+  expect(screen.queryByText(/Add photos in Plants/)).not.toBeInTheDocument();
 });
 
 test("Today composes its summary only from returned counts and states every source", async () => {
@@ -424,7 +309,6 @@ test("sections follow the work-first order in the DOM, which is also the visual 
   get.mockResolvedValue({ ...empty, photos: [storedPhoto(1)] });
   const { container } = renderWithAuth(<DashboardOverview />);
   await screen.findByRole("heading", { name: "Next work" });
-  await screen.findByRole("heading", { name: "Plants in your collection" });
   expect(
     screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent),
   ).toEqual([
@@ -433,7 +317,6 @@ test("sections follow the work-first order in the DOM, which is also the visual 
     "Record",
     "Collection snapshot",
     "To review",
-    "Plants in your collection",
   ]);
   expect(container.querySelector(".today")?.firstElementChild).toHaveClass(
     "today-lede",
@@ -513,36 +396,6 @@ test("planned work beyond the three windows is acknowledged, not shown as an emp
     await screen.findByText(/Later planned work is in Schedule/),
   ).toBeInTheDocument();
   expect(screen.queryByText("Work far")).toBeNull();
-});
-
-test("no usable image means one line and no photo strip; one image means a one-item strip", async () => {
-  get.mockResolvedValue({
-    ...empty,
-    photos: [{ ...storedPhoto(1), image: null }],
-  });
-  const first = renderWithAuth(<DashboardOverview />);
-  expect(
-    await screen.findByText(
-      /None of the sampled Plants has a photo that can be shown yet/,
-    ),
-  ).toBeInTheDocument();
-  expect(screen.queryByRole("img")).toBeNull();
-  expect(
-    screen.queryByRole("heading", { name: "Plants in your collection" }),
-  ).toBeNull();
-  first.unmount();
-  get.mockResolvedValue({
-    ...empty,
-    photos: [{ ...storedPhoto(1), image: null }, storedPhoto(2)],
-  });
-  mountOverview();
-  expect(await screen.findAllByRole("img")).toHaveLength(1);
-  expect(
-    within(
-      screen.getByRole("list", { name: "Selected individual Plants" }),
-    ).getAllByRole("listitem"),
-  ).toHaveLength(1);
-  expect(screen.queryByText(/photo that can be shown yet/)).toBeNull();
 });
 
 test("Record reuses the launcher's workflow links and adds Journal and Schedule entry points", async () => {

@@ -1,3 +1,4 @@
+import { FullscreenStage } from "../components/FullscreenStage";
 import { useCallback, useEffect, useId, useState } from "react";
 
 import { ApiError, isExpectedAuthCancellation, requestJson } from "../auth/api";
@@ -53,14 +54,14 @@ function NodeCard({ node }: { node: GraphNode }) {
         {!node.in_identity && "botanical_identity" in record && (
           <span>{record.botanical_identity.display_label}</span>
         )}
+        <a
+          className="ancestry-node__focus"
+          href={ancestryHref(record.kind, record.id)}
+          aria-label={`Explore ancestry from ${nameOf(node)}`}
+        >
+          Ancestry
+        </a>
       </p>
-      <a
-        className="ancestry-node__focus"
-        href={ancestryHref(record.kind, record.id)}
-        aria-label={`Explore ancestry from ${nameOf(node)}`}
-      >
-        Explore ancestry
-      </a>
     </article>
   );
 }
@@ -184,7 +185,7 @@ export function IdentityLineage({ identityId }: { identityId: string }) {
     <section className="ancestry-explorer" aria-labelledby={titleId}>
       <Breadcrumbs
         items={[
-          { label: "Explore" },
+          { label: "Explore", href: "#/explore" },
           { label: "Lineage", href: "#/lineage" },
           { label: identity.display_label },
         ]}
@@ -238,11 +239,12 @@ export function IdentityLineage({ identityId }: { identityId: string }) {
         </span>
       </div>
       {lineItems.length > 0 && (
-        <section
+        <FullscreenStage
           className="ancestry-section lineage-stage"
-          aria-labelledby={`${titleId}-lines`}
+          titleId={`${titleId}-lines`}
+          title="Recorded lines"
+          label="recorded lines"
         >
-          <h3 id={`${titleId}-lines`}>Recorded lines</h3>
           <ul className="identity-lineage__roots">
             {lineItems.map((line) => (
               <li key={nodeKey(line.node)} className="identity-lineage__line">
@@ -253,7 +255,7 @@ export function IdentityLineage({ identityId }: { identityId: string }) {
               </li>
             ))}
           </ul>
-        </section>
+        </FullscreenStage>
       )}
 
       {forest.independent.length > 0 && (

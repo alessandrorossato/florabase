@@ -129,8 +129,8 @@ test("Dashboard is the default workspace with Workbench workspaces and mobile wo
   }
   expect(screen.getByText(/Strong new growth\./)).toBeInTheDocument();
 
-  // Workbench: a rail of workspace tabs switches the context panel without
-  // navigating; the panel lists the selected workspace's sections.
+  // Workbench: a rail of workspace tabs switches the context panel and opens the
+  // workspace's home; the panel lists the selected workspace's sections.
   const workspaceTabs = screen.getByRole("tablist", { name: "Workspaces" });
   expect(
     within(workspaceTabs)
@@ -160,8 +160,10 @@ test("Dashboard is the default workspace with Workbench workspaces and mobile wo
       screen.getByRole("navigation", { name: "Primary navigation" }),
     ).getByRole("link", { name: "Botanical identities" }),
   ).toBeInTheDocument();
+  // Another workspace's tab also opens that workspace's home page.
+  expect(window.location.hash).toBe("#/explore");
   expect(
-    screen.getByRole("heading", { name: "Today", level: 2 }),
+    await screen.findByRole("heading", { name: "Explore", level: 2 }),
   ).toBeInTheDocument();
   const mobile = screen.getByRole("navigation", {
     name: "Mobile primary navigation",

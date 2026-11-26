@@ -255,86 +255,16 @@
   text-align: end;
 }
 
-/* Photos: last, and only for Plants whose image loads. */
-.today-photo-line {
-  margin: 0;
-  padding: var(--space-3) var(--space-4);
-  color: var(--text-muted);
-  font: var(--type-small);
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--radius-normal);
-}
-.today-plates {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
-  gap: var(--space-3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.today-plates a {
-  display: grid;
-  gap: 2px;
-  color: var(--text);
-  text-decoration: none;
-}
-.today-plate__frame {
-  position: relative;
-  display: grid;
-  place-items: center;
-  aspect-ratio: 1 / 1;
-  overflow: hidden;
-  background: var(--surface-subtle);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-small);
-}
-.today-plates a:hover .today-plate__frame {
-  border-color: var(--border-strong);
-}
-/* Uncropped, never enlarged: the API thumbnail stays at or below its own size. */
-.today-plate__frame img {
-  display: block;
-  max-inline-size: 100%;
-  max-block-size: 100%;
-  object-fit: contain;
-}
-.today-plate__source {
-  position: absolute;
-  inset-inline-start: var(--space-1);
-  inset-block-end: var(--space-1);
-  padding: 1px var(--space-2);
-  color: var(--text-muted);
-  background: color-mix(in srgb, var(--surface) 90%, transparent);
-  border-radius: 4px;
-  font: var(--type-label);
-  font-weight: 400;
-}
-.today-plate__title {
-  margin-block-start: var(--space-1);
-  overflow: hidden;
-  font: var(--type-small);
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.today-plate__name {
-  color: var(--text-muted);
-  font-size: 0.875rem;
-}
-.today-credits {
-  margin-block-start: var(--space-4);
-  color: var(--text-muted);
-  font: var(--type-small);
-}
-.today-credits ul {
-  padding-inline-start: var(--space-4);
-}
-
 /* Wide: work and activity beside a fixed supporting column, both in DOM order. */
 @media (min-width: 75rem) {
   .today {
     grid-template-columns: minmax(0, 1fr) 21rem;
-    align-items: start;
+    align-items: stretch;
+  }
+  /* The supporting column runs as long as the work column; "To review" takes the rest. */
+  .today-side {
+    grid-template-rows: auto auto minmax(0, 1fr);
+    align-content: stretch;
   }
   .today-lede {
     grid-column: 1 / -1;

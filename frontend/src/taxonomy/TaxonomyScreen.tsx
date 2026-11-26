@@ -957,13 +957,19 @@ export function TaxonomyScreen() {
         onClose={leaveFullscreen}
         className={`taxonomy-stage${fullscreen ? " taxonomy-stage--fullscreen" : ""}`}
       >
-        <Breadcrumbs items={[{ label: "Explore" }, { label: "Taxonomy" }]} />
+        <Breadcrumbs
+          items={[
+            { label: "Explore", href: "#/explore" },
+            { label: "Taxonomy" },
+          ]}
+        />
         <PageHeader
           eyebrow=""
           title="Taxonomy"
           titleId="taxonomy-title"
           description="Classification of the botanical identities in your collection."
-          actions={
+          directory
+          tools={
             <DirectoryTools
               name="Taxonomy"
               search={
