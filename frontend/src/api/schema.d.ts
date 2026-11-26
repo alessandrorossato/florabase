@@ -3335,6 +3335,14 @@ export interface components {
              * @enum {string}
              */
             default_label_preset: "small" | "medium" | "large";
+            /** Media Default Attribution */
+            media_default_attribution: string | null;
+            /** Media Default Licence Label */
+            media_default_licence_label: string | null;
+            /** Media Default Licence Url */
+            media_default_licence_url: string | null;
+            /** Media Save Local Copy Default */
+            media_save_local_copy_default: boolean;
             /** Public Qr Base Url */
             public_qr_base_url: string | null;
         };
@@ -3625,6 +3633,10 @@ export interface components {
              * @description JPEG, PNG, or WebP collection photo
              */
             file: string;
+            /** Licence Label */
+            licence_label?: string | null;
+            /** Licence Url */
+            licence_url?: string | null;
         };
         /** Body_uploadMediaAsset */
         Body_uploadMediaAsset: {
@@ -3632,6 +3644,10 @@ export interface components {
             attribution?: string | null;
             /** File */
             file: string;
+            /** Licence Label */
+            licence_label?: string | null;
+            /** Licence Url */
+            licence_url?: string | null;
             /** Title */
             title?: string | null;
         };

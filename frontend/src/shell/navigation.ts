@@ -23,6 +23,7 @@ export type Section =
   | "labels"
   | "account"
   | "settings"
+  | "media-settings"
   | "help"
   | "data-sources"
   | "about"
@@ -188,6 +189,7 @@ export const workspaces: Workspace[] = [
     destinations: [
       destination("account", "Account"),
       destination("settings", "Theme"),
+      destination("media-settings", "Media"),
       destination("labels", "Labels"),
       destination("import-export", "Import / Export"),
       destination("data-sources", "Data sources"),

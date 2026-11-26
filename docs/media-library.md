@@ -135,6 +135,15 @@ of saved bytes only and retains URL, attribution, links, captions/order, primary
 An absent copy returns to the existing external opt-in policy. BotanicalIdentity's acknowledged
 Botany cover permission remains separate and never authorizes automatic remote loads in Collection.
 
+**Settings → Media** (`MEDIA-SETTINGS-001`) stores installation-wide defaults in the
+`application_settings` singleton. *Pre-select "Save a local copy"* (default on, as before) only sets
+the initial state of the **Save a local copy in Florabase** choice in the Media, Photos and identity
+cover forms; the fetch still happens only when the owner saves that image with the choice selected,
+and Florabase never fetches remote images on its own, in the background or on import. Default
+attribution, licence label and licence URL prefill only the owner's own uploads (Media library and
+record Photos, which now also accept `licence_label`/`licence_url` form fields); external references
+keep their author's credit and are never prefilled. Every prefilled value stays editable per upload.
+
 ### Fetch safety and snapshot concurrency
 
 The backend fetches only for explicit Save/Refresh; metadata writes, reads and migrations never

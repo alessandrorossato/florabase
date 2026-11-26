@@ -1,6 +1,7 @@
 import { FieldLabel } from "../components/FieldLabel";
 import { useRef, useState, type SyntheticEvent } from "react";
 import { ExternalCopyChoice } from "./ExternalCopyChoice";
+import { useMediaDefaults } from "./useMediaDefaults";
 import { PhotoDialog } from "../photos/PhotosSection";
 import { useAuth } from "../auth/context";
 import {
@@ -38,6 +39,12 @@ export function MediaEditor({
   );
   const [error, setError] = useState<string | null>(null);
   const token = activeCsrfToken(auth.state);
+  const defaults = useMediaDefaults(!asset);
+  // Settings → Media defaults prefill only the owner's own new uploads, never external credit.
+  const ownUpload = !asset && kind === "local";
+  const prefill = (value: string | null | undefined) =>
+    (ownUpload ? value : null) ?? "";
+  const prefillKey = `${kind}:${defaults ? "configured" : "built-in"}`;
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
@@ -78,8 +85,12 @@ export function MediaEditor({
         }
         result = await uploadMedia(
           file,
-          text("title"),
-          text("attribution"),
+          {
+            title: text("title"),
+            attribution: text("attribution"),
+            licence_label: text("licence_label"),
+            licence_url: text("licence_url"),
+          },
           token,
           capability,
         );
@@ -246,39 +257,45 @@ export function MediaEditor({
             Attribution
           </FieldLabel>
           <textarea
+            key={prefillKey}
             id="media-attribution"
             name="attribution"
             maxLength={2000}
             required={kind === "external"}
-            defaultValue={asset?.attribution ?? ""}
+            defaultValue={
+              asset?.attribution ?? prefill(defaults?.media_default_attribution)
+            }
             disabled={pending}
           />
         </div>
-        {(asset !== undefined || kind === "external") && (
-          <>
-            <div className="field">
-              <label htmlFor="media-licence">Licence label</label>
-              <input
-                id="media-licence"
-                name="licence_label"
-                maxLength={2000}
-                defaultValue={asset?.licence_label ?? ""}
-                disabled={pending}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="media-licence-url">Licence URL</label>
-              <input
-                id="media-licence-url"
-                name="licence_url"
-                type="url"
-                maxLength={2048}
-                defaultValue={asset?.licence_url ?? ""}
-                disabled={pending}
-              />
-            </div>
-          </>
-        )}
+        <div className="field">
+          <label htmlFor="media-licence">Licence label</label>
+          <input
+            key={prefillKey}
+            id="media-licence"
+            name="licence_label"
+            maxLength={2000}
+            defaultValue={
+              asset?.licence_label ??
+              prefill(defaults?.media_default_licence_label)
+            }
+            disabled={pending}
+          />
+        </div>
+        <div className="field">
+          <label htmlFor="media-licence-url">Licence URL</label>
+          <input
+            key={prefillKey}
+            id="media-licence-url"
+            name="licence_url"
+            type="url"
+            maxLength={2048}
+            defaultValue={
+              asset?.licence_url ?? prefill(defaults?.media_default_licence_url)
+            }
+            disabled={pending}
+          />
+        </div>
         {asset && (
           <p>
             Asset details apply everywhere this media is used. Captions and

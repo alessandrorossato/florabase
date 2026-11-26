@@ -142,6 +142,13 @@ const SettingsScreen = lazy(() =>
   }),
 );
 
+const MediaSettingsScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./settings/MediaSettingsScreen");
+    return { default: module.MediaSettingsScreen };
+  }),
+);
+
 const HelpScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./settings/HelpScreen");
@@ -380,6 +387,7 @@ function currentRoute(): Route {
     "import-export",
     "labels",
     "settings",
+    "media-settings",
     "help",
     "data-sources",
     "about",
@@ -725,6 +733,8 @@ function ApplicationShell({
                 />
               ) : route.section === "settings" ? (
                 <SettingsScreen />
+              ) : route.section === "media-settings" ? (
+                <MediaSettingsScreen />
               ) : route.section === "help" ? (
                 <HelpScreen />
               ) : route.section === "data-sources" ? (
