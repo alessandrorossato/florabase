@@ -1,5 +1,19 @@
 # Engineering progress
 
+## 2026-11-26 — One record mask and one list header (`UI-POLISH-005`)
+
+- Same branch; Alessandro chose to make every Collection detail uniform in beta.10.
+- Seed lot is the reference: Sowing, Plant and Plant group lose the extra Back/New bar on
+  detail pages and keep actions left-aligned; Sowing's identity reads like Seed lot's.
+- Harvest: source moves to the fact label and the lineage strip; Overview and Photos tabs.
+- Cuttings: `LotPage` and `AttemptPage` now use `DetailHeader` (plate, label, lineage strip)
+  and `DetailTabs`; the directory opens records on click and shows a record count.
+- Lists: Media, Geography pages, Taxonomy and Lineage use the directory header.
+- Native ranges cards follow Collection origins; provenance site map grows, preview scrolls;
+  Species distribution lists species inline instead of in a modal.
+- Checked against a local golden COMPREHENSIVE dataset (Postgres 16 + backend in the cloud
+  session) at desktop width; `tsc -b`, ESLint, Prettier, full Vitest against the baseline.
+
 ## 2026-11-26 — Final beta.10 UI round (`UI-POLISH-004`)
 
 - Same branch; Alessandro's last UAT round before beta.10. Species distribution density

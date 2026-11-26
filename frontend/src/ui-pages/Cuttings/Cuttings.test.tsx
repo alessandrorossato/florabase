@@ -290,7 +290,7 @@ test("cuttings directory keeps statuses, long labels, views, and preview usable"
   show();
   const user = userEvent.setup();
   const lotPreview = await screen.findByRole("button", {
-    name: `Quick preview ${longName}`,
+    name: new RegExp(`^${longName}`),
   });
   expect(
     screen.getByRole("heading", { level: 2, name: "Cuttings" }),
@@ -308,11 +308,10 @@ test("cuttings directory keeps statuses, long labels, views, and preview usable"
   expect(
     screen.getByRole("button", { name: `Open details ${longName}` }),
   ).toBeVisible();
-  lotPreview.focus();
-  await user.keyboard("{Enter}");
-  expect(screen.getByRole("button", { name: "Close preview" })).toHaveFocus();
-  await user.click(screen.getByRole("button", { name: "Close preview" }));
-  expect(lotPreview).toHaveFocus();
+  // Like the other collection directories, a row opens the record itself.
+  await user.click(lotPreview);
+  expect(window.location.hash).toBe(`#/cuttings/lots/${lot.id}`);
+  window.history.replaceState(null, "", "#/cuttings");
 
   await user.click(screen.getByRole("button", { name: "Gallery" }));
   expect(screen.getByRole("list", { name: "Material lots" })).toHaveClass(
@@ -320,7 +319,7 @@ test("cuttings directory keeps statuses, long labels, views, and preview usable"
   );
   await user.click(screen.getByRole("button", { name: "Rooting attempts" }));
   const attemptPreview = await screen.findByRole("button", {
-    name: "Quick preview Long label rooting trial in coarse perlite and pumice",
+    name: /^Long label rooting trial in coarse perlite and pumice/,
   });
   expect(attemptPreview).toBeVisible();
   expect(attemptPreview.querySelector(".ui-record-summary")).toBeNull();
@@ -352,13 +351,13 @@ test("cuttings directory pagination advances and returns to the prior page", asy
   const user = userEvent.setup();
   expect(
     await screen.findByRole("button", {
-      name: "Quick preview Cuttings batch 0",
+      name: /^Cuttings batch 0(?!\d)/,
     }),
   ).toBeVisible();
   await user.click(screen.getByRole("button", { name: "Next page" }));
   expect(
     await screen.findByRole("button", {
-      name: "Quick preview Cuttings batch 50",
+      name: /^Cuttings batch 50(?!\d)/,
     }),
   ).toBeVisible();
   expect(fetch).toHaveBeenCalledWith(
@@ -368,7 +367,7 @@ test("cuttings directory pagination advances and returns to the prior page", asy
   await user.click(screen.getByRole("button", { name: "Previous page" }));
   expect(
     await screen.findByRole("button", {
-      name: "Quick preview Cuttings batch 0",
+      name: /^Cuttings batch 0(?!\d)/,
     }),
   ).toBeVisible();
 });

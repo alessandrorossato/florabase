@@ -966,7 +966,8 @@ export function TaxonomyScreen() {
           title="Taxonomy"
           titleId="taxonomy-title"
           description="Classification of the botanical identities in your collection."
-          actions={
+          directory
+          tools={
             <DirectoryTools
               name="Taxonomy"
               search={

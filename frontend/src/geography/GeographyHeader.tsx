@@ -35,6 +35,8 @@ export function GeographyHeader({
         description={description}
         tools={tools}
         actions={actions}
+        // Same header as every directory: title, then one toolbar row (UI-POLISH-005).
+        directory={Boolean(tools)}
       />
       {view === "overview" && (
         <h3 className="sr-only" id={`geography-${view}-title`}>

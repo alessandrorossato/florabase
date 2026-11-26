@@ -3080,6 +3080,26 @@
       "status": "implemented"
     },
     {
+      "id": "UI-POLISH-005",
+      "category": "ux",
+      "description": "Last beta.10 UI round (26/11): one record mask for every Collection detail, one header layout for every list, Collection-origins-style cards in Native ranges, a taller provenance site map and an inline species list in Species distribution",
+      "acceptance_criteria": [
+        "Seed lot, Sowing, Plant, Plant group, Harvest, Vegetative lot and Rooting attempt details share one header: plate and fact label on the left; kind, name, botanical identity, status and actions (left-aligned) on the right; then the recorded-lineage strip and record tabs; the breadcrumb is the way back",
+        "Cuttings details no longer render a plain fact table: Vegetative lots have Overview, Rooting attempts, Photos and Lineage tabs; Rooting attempts have Overview, Observations, Offspring, Photos and Lineage tabs; each fact is stated once",
+        "Harvest details show the source in the fact label and the recorded lineage strip, with Overview and Photos tabs",
+        "A Cuttings directory row opens the record, like the other collection directories, with a record count and no floating preview",
+        "Media, Geography pages, Taxonomy and Lineage use the directory header: title and description, then one toolbar row whose search fills the width",
+        "Native ranges indicators are cards like Collection origins",
+        "On desktop the provenance site map takes most of its column, its provider note is never clipped and the quick preview stays compact and scrolls",
+        "Species distribution lists represented species inline beside the map (compact rows with readiness) instead of a modal of large cards; the selected species stays marked and in view"
+      ],
+      "dependencies": [
+        "UI-POLISH-004"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "FN-02",
       "category": "ux",
       "description": "Sort the Seeds, Sowings and Plants directories by name and by their own date",

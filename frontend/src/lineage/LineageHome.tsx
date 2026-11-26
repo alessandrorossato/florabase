@@ -186,6 +186,7 @@ export function LineageHome() {
         title="Lineage"
         titleId={titleId}
         description="Follow recorded material relationships for one record or across a whole botanical identity."
+        directory
         tools={
           <DirectorySearch
             id={inputId}
