@@ -156,7 +156,13 @@ function useTodaySummary(): [Counts, () => void] {
     const controller = new AbortController();
     getDashboard(capability, controller.signal, localDay())
       .then((value) => {
-        if (!controller.signal.aborted) setState({ status: "ready", value });
+        if (controller.signal.aborted) return;
+        // Tiles read both blocks; a summary without them counts as unavailable, not a crash.
+        const complete =
+          typeof value === "object" &&
+          (value as Partial<DashboardResponse>).counts != null &&
+          (value as Partial<DashboardResponse>).overview != null;
+        setState(complete ? { status: "ready", value } : { status: "error" });
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted || isExpectedAuthCancellation(error))
