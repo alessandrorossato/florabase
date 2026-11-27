@@ -125,10 +125,10 @@ jobs:
         run: |
           set -euo pipefail
           corepack enable
-          pnpm --dir frontend install --frozen-lockfile
-          pnpm --dir frontend build
-          pnpm --dir mobile install --frozen-lockfile
-          pnpm --dir mobile exec cap sync android
+          # Run pnpm from each package directory so Corepack resolves the pinned
+          # packageManager version (there is no root package.json).
+          (cd frontend && pnpm install --frozen-lockfile && pnpm build)
+          (cd mobile && pnpm install --frozen-lockfile && pnpm exec cap sync android)
 
       - name: Build, sign, and verify release APK
         env:

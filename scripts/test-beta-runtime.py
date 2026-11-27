@@ -702,6 +702,10 @@ class MobileReleaseContract(unittest.TestCase):
         self.assertIn("set +x", workflow)
         self.assertIn("if: always()", workflow)
         self.assertIn('rm -f "${RUNNER_TEMP}/florabase-release.keystore"', workflow)
+        # Corepack resolves pnpm from the cwd package.json; --dir from the root picks its default.
+        self.assertNotIn("pnpm --dir", workflow)
+        self.assertIn("(cd frontend && pnpm install --frozen-lockfile", workflow)
+        self.assertIn("(cd mobile && pnpm install --frozen-lockfile", workflow)
 
         # Every GitHub Action must be pinned to a full 40-char commit SHA.
         uses_refs = re.findall(r"^\s*(?:-\s+)?uses:\s*([^\s#]+)", workflow, re.M)

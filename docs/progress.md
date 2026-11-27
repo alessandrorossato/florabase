@@ -1,5 +1,14 @@
 # Engineering progress
 
+## 2026-11-27 — Android release APK: Corepack pnpm version (MOBILE-003)
+
+- `mobile-android-release.yml` failed for `v0.1.0-beta.10` (run 45965802666) with
+  `ERR_PNPM_BAD_PM_VERSION`: `corepack enable` plus `pnpm --dir frontend` from the repository root
+  (no root `package.json`) made Corepack fetch its default pnpm 12 instead of the pinned
+  `pnpm@11.19.0`. The build step now runs pnpm from `frontend/` and `mobile/`; the workflow contract
+  test rejects `pnpm --dir`. Re-dispatch with `tag=v0.1.0-beta.10` attaches the APK to the existing
+  release; images and the release itself are unchanged.
+
 ## 2026-11-27 — v0.1.0-beta.10 release preparation
 
 - On `docs/release-beta-10` from `origin/main` `7b667a4` (writer `claude-release-beta10`). Version
