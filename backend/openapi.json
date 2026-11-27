@@ -2652,6 +2652,16 @@
             "title": "Expected Target Updated At",
             "type": "string"
           },
+          "occurred_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "records": {
             "items": {
               "$ref": "#/components/schemas/BulkPrecondition"
@@ -13923,6 +13933,239 @@
           "limit"
         ],
         "title": "PurchaseSeedPage",
+        "type": "object"
+      },
+      "QuickAddIdentity": {
+        "additionalProperties": false,
+        "description": "Exactly one of an existing identity or a new one (reused when it already exists).",
+        "properties": {
+          "existing_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existing Id"
+          },
+          "new": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QuickAddNewIdentity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "QuickAddIdentity",
+        "type": "object"
+      },
+      "QuickAddNewIdentity": {
+        "additionalProperties": false,
+        "properties": {
+          "common_name": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Common Name"
+          },
+          "cultivar_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cultivar Name"
+          },
+          "scientific_name": {
+            "maxLength": 255,
+            "title": "Scientific Name",
+            "type": "string"
+          },
+          "wfo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QuickAddWfoChoice"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "scientific_name"
+        ],
+        "title": "QuickAddNewIdentity",
+        "type": "object"
+      },
+      "QuickAddRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "collection_entry_date": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "direct_origin_kind": {
+            "$ref": "#/components/schemas/DirectOriginKind",
+            "default": "unknown"
+          },
+          "identity": {
+            "$ref": "#/components/schemas/QuickAddIdentity"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "material": {
+            "default": "plant",
+            "enum": [
+              "plant",
+              "plant_group"
+            ],
+            "title": "Material",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlantGroupQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id"
+          }
+        },
+        "required": [
+          "identity"
+        ],
+        "title": "QuickAddRequest",
+        "type": "object"
+      },
+      "QuickAddResponse": {
+        "properties": {
+          "identity_created": {
+            "title": "Identity Created",
+            "type": "boolean"
+          },
+          "identity_display_label": {
+            "title": "Identity Display Label",
+            "type": "string"
+          },
+          "identity_id": {
+            "format": "uuid",
+            "title": "Identity Id",
+            "type": "string"
+          },
+          "record_id": {
+            "format": "uuid",
+            "title": "Record Id",
+            "type": "string"
+          },
+          "record_kind": {
+            "enum": [
+              "plant",
+              "plant_group"
+            ],
+            "title": "Record Kind",
+            "type": "string"
+          },
+          "wfo_linked": {
+            "title": "Wfo Linked",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "record_kind",
+          "record_id",
+          "identity_id",
+          "identity_display_label",
+          "identity_created",
+          "wfo_linked"
+        ],
+        "title": "QuickAddResponse",
+        "type": "object"
+      },
+      "QuickAddWfoChoice": {
+        "additionalProperties": false,
+        "description": "A WFO name picked from the local index suggestions for a new identity.",
+        "properties": {
+          "source_taxon_id": {
+            "pattern": "^wfo-[0-9]{10}$",
+            "title": "Source Taxon Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_taxon_id"
+        ],
+        "title": "QuickAddWfoChoice",
         "type": "object"
       },
       "RangeChoice": {
@@ -34101,6 +34344,68 @@
         "summary": "Update",
         "tags": [
           "provenance-sites"
+        ]
+      }
+    },
+    "/api/v1/quick-add/plant": {
+      "post": {
+        "description": "Add a Plant or PlantGroup, creating its identity and WFO link when needed, atomically.",
+        "operationId": "quickAddPlant",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuickAddRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuickAddResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Botanical identity, Location or Supplier not found"
+          },
+          "409": {
+            "description": "Identity, link or record changed meanwhile"
+          },
+          "422": {
+            "description": "Invalid request, or the picked WFO name no longer matches"
+          },
+          "503": {
+            "description": "WFO index unavailable for a picked WFO name"
+          }
+        },
+        "summary": "Quick Add Plant",
+        "tags": [
+          "quick add"
         ]
       }
     },

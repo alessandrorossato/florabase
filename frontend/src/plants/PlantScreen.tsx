@@ -86,6 +86,7 @@ import {
   listBotanicalIdentities,
   type BotanicalIdentityResponse,
 } from "../botanical-identities/api";
+import { IdentityCreateDialog } from "../botanical-identities/IdentityCreateDialog";
 import {
   Breadcrumbs,
   DetailContext,
@@ -1124,6 +1125,7 @@ export function PlantScreen({
     status: "loading",
   });
   const [references, setReferences] = useState<References | null>(null);
+  const [identityDraft, setIdentityDraft] = useState<string | null>(null);
   const scientificNames = useMemo(
     () =>
       new Map<string, string>(
@@ -2594,7 +2596,35 @@ export function PlantScreen({
                         label: identity.display_label,
                         scientificName: identity.scientific_name,
                       }))}
+                      onCreate={(query) => {
+                        setIdentityDraft(query);
+                      }}
+                      createLabel="Create identity"
                     />
+                    {identityDraft !== null && (
+                      <IdentityCreateDialog
+                        initialName={identityDraft}
+                        onClose={() => {
+                          setIdentityDraft(null);
+                        }}
+                        onCreated={(identity) => {
+                          setReferences(
+                            (current) =>
+                              current && {
+                                ...current,
+                                identities: [
+                                  ...current.identities.filter(
+                                    (item) => item.id !== identity.id,
+                                  ),
+                                  identity,
+                                ],
+                              },
+                          );
+                          updateForm("botanicalIdentityId", identity.id);
+                          setIdentityDraft(null);
+                        }}
+                      />
+                    )}
                     <PlantEssentialsFields
                       form={form}
                       updateForm={(key, value) => {

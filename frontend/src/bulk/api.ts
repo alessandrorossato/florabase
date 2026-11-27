@@ -18,10 +18,12 @@ export function previewLocation(
     signal,
   });
 }
+export type BulkMoveDate = components["schemas"]["PartialDate"] | null;
 export function applyLocation(
   preview: BulkPreview,
   token: string,
   capability: ProtectedRequestCapability,
+  occurredOn: BulkMoveDate = null,
 ): Promise<BulkResult> {
   return requestJson("/api/v1/bulk/location/apply", {
     capability,
@@ -30,6 +32,7 @@ export function applyLocation(
     body: JSON.stringify({
       target_location_id: preview.target_location_id,
       expected_target_updated_at: preview.target_updated_at,
+      occurred_on: occurredOn,
       records: preview.rows.map((row) => ({
         kind: row.kind,
         id: row.id,

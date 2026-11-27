@@ -817,6 +817,30 @@
         "security-regression"
       ]
     },
+    "quick-add": {
+      "backend_dirs": [
+        "backend/tests/quick_add/"
+      ],
+      "integration_dirs": [
+        "backend/tests/integration/quick_add/"
+      ],
+      "frontend_dirs": [
+        "frontend/src/quick-add/"
+      ],
+      "backend": [
+        "backend/tests/test_quick_add.py"
+      ],
+      "integration": [
+        "backend/tests/integration/test_quick_add.py"
+      ],
+      "frontend": [],
+      "affects": [
+        "plants-regression",
+        "identity-regression",
+        "taxonomy-regression",
+        "security-regression"
+      ]
+    },
     "saved-views": {
       "backend_dirs": [
         "backend/tests/saved_views/"
@@ -1103,6 +1127,10 @@
       "suite_scope": "bulk",
       "affects": []
     },
+    "quick-add-regression": {
+      "suite_scope": "quick-add",
+      "affects": []
+    },
     "saved-views-regression": {
       "suite_scope": "saved-views",
       "affects": []
@@ -1370,8 +1398,18 @@
       "layer": "backend"
     },
     {
+      "prefix": "backend/src/florabase/quick_add/",
+      "scope": "quick-add",
+      "layer": "backend"
+    },
+    {
       "prefix": "frontend/src/bulk/",
       "scope": "bulk",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "frontend/src/quick-add/",
+      "scope": "quick-add",
       "layer": "frontend"
     },
     {

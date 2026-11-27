@@ -35,6 +35,7 @@ import {
   listBotanicalIdentities,
   type BotanicalIdentityResponse,
 } from "../botanical-identities/api";
+import { IdentityCreateDialog } from "../botanical-identities/IdentityCreateDialog";
 import { listLocations, type LocationResponse } from "../locations/api";
 import {
   createPlantFromSowing,
@@ -79,6 +80,7 @@ export function SowingDescendantWizard({
       }
   >({ status: "loading" });
   const [identityId, setIdentityId] = useState("");
+  const [identityDraft, setIdentityDraft] = useState<string | null>(null);
   const [form, setForm] = useState<PlantFieldsState>({
     label: "",
     locationId: "",
@@ -401,7 +403,36 @@ export function SowingDescendantWizard({
                     }))}
                     value={identityId}
                     onChange={setIdentityId}
+                    onCreate={(query) => {
+                      setIdentityDraft(query);
+                    }}
+                    createLabel="Create identity"
                   />
+                  {identityDraft !== null && (
+                    <IdentityCreateDialog
+                      initialName={identityDraft}
+                      onClose={() => {
+                        setIdentityDraft(null);
+                      }}
+                      onCreated={(identity) => {
+                        setData((current) =>
+                          current.status === "ready"
+                            ? {
+                                ...current,
+                                identities: [
+                                  ...current.identities.filter(
+                                    (item) => item.id !== identity.id,
+                                  ),
+                                  identity,
+                                ],
+                              }
+                            : current,
+                        );
+                        setIdentityId(identity.id);
+                        setIdentityDraft(null);
+                      }}
+                    />
+                  )}
                   <PlantEssentialsFields
                     form={form}
                     updateForm={updateForm}

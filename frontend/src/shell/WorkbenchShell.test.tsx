@@ -172,7 +172,10 @@ test("the New menu lists every creation route", async () => {
   const { onNavigate } = renderShell();
   await user.click(screen.getByRole("button", { name: "New record" }));
   const create = screen.getByRole("navigation", { name: "Create" });
-  expect(within(create).getAllByRole("link")).toHaveLength(9);
+  expect(within(create).getAllByRole("link")).toHaveLength(10);
+  expect(
+    within(create).getByRole("link", { name: "Quick add plant" }),
+  ).toHaveAttribute("href", "#/quick-add");
   await user.click(within(create).getByRole("link", { name: "New sowing" }));
   expect(onNavigate).toHaveBeenCalledWith("#/sowings?action=create");
 });

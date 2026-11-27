@@ -18,6 +18,7 @@ import {
   listBotanicalIdentities,
   type BotanicalIdentityResponse,
 } from "../botanical-identities/api";
+import { IdentityCreateDialog } from "../botanical-identities/IdentityCreateDialog";
 import { FieldHelp } from "../components/ContextualHelp";
 import { FieldLabel } from "../components/FieldLabel";
 import { useRecordName } from "../components/recordPresentation";
@@ -232,17 +233,35 @@ export function PotOnDialog({
         locations: LocationResponse[];
       }
   >({ status: "loading" });
-  const references = useMemo(
-    () =>
+  // Identities created from the picker here (UX-ENTRY-002) join whichever list is in use.
+  const [createdIdentities, setCreatedIdentities] = useState<
+    BotanicalIdentityResponse[]
+  >([]);
+  const [identityDraft, setIdentityDraft] = useState<string | null>(null);
+  const references = useMemo(() => {
+    const base =
       providedIdentities && providedLocations
         ? {
             status: "ready" as const,
             identities: providedIdentities,
             locations: providedLocations,
           }
-        : fetchedReferences,
-    [fetchedReferences, providedIdentities, providedLocations],
-  );
+        : fetchedReferences;
+    if (base.status !== "ready" || createdIdentities.length === 0) return base;
+    const created = new Set(createdIdentities.map((item) => item.id));
+    return {
+      ...base,
+      identities: [
+        ...base.identities.filter((item) => !created.has(item.id)),
+        ...createdIdentities,
+      ],
+    };
+  }, [
+    fetchedReferences,
+    providedIdentities,
+    providedLocations,
+    createdIdentities,
+  ]);
   const [refAttempt, setRefAttempt] = useState(0);
 
   const [mode, setMode] = useState<PotOnMode>("plants");
@@ -1169,7 +1188,27 @@ export function PotOnDialog({
             }))}
             value={identityId}
             onChange={setIdentityId}
+            onCreate={(query) => {
+              setIdentityDraft(query);
+            }}
+            createLabel="Create identity"
           />
+          {identityDraft !== null && (
+            <IdentityCreateDialog
+              initialName={identityDraft}
+              onClose={() => {
+                setIdentityDraft(null);
+              }}
+              onCreated={(identity) => {
+                setCreatedIdentities((current) => [
+                  ...current.filter((item) => item.id !== identity.id),
+                  identity,
+                ]);
+                setIdentityId(identity.id);
+                setIdentityDraft(null);
+              }}
+            />
+          )}
 
           <ReferencePicker
             label="Current location"

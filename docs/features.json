@@ -833,6 +833,22 @@
       "status": "implemented"
     },
     {
+      "id": "BULK-002",
+      "category": "bulk",
+      "description": "Date Plant and PlantGroup bulk moves (Today by default) instead of recording undated Movement Events",
+      "acceptance_criteria": [
+        "POST /api/v1/bulk/location/apply accepts optional occurred_on (the Journal PartialDate contract); Plant and PlantGroup Movement Events take it, null or an omitted field keeps them undated, and SeedLot, Sowing and Stored material moves are unchanged",
+        "The Move to location dialog asks When did it happen? only when the selection includes Plants or PlantGroups, preselects Today, offers Another date and Date unknown, and blocks apply on an unfinished date without calling the server",
+        "Unit, PostgreSQL integration and component tests cover dated, undated and seed-only moves; no migration"
+      ],
+      "dependencies": [
+        "BULK-001",
+        "UX-DATE-001"
+      ],
+      "priority": "P3",
+      "status": "implemented"
+    },
+    {
       "id": "ATTACHMENT-002",
       "category": "attachment",
       "description": "Implement guarded local attachment storage",
@@ -3289,6 +3305,41 @@
         "PLANT-001"
       ],
       "priority": "P3",
+      "status": "implemented"
+    },
+    {
+      "id": "UX-ENTRY-002",
+      "category": "ux",
+      "description": "Create a botanical identity from inside the Plant form, Sowing-to-Plant wizard and pot-on identity pickers",
+      "acceptance_criteria": [
+        "The identity pickers of the Plant/PlantGroup create and edit form, the Sowing descendant wizard and the pot-on/split dialog offer Create identity for the typed text, opening a shared dialog with WFO name suggestions, cultivar and common name",
+        "Creating selects the new identity in the form that opened it without submitting or losing that form; an exact duplicate selects the existing identity instead of failing",
+        "Component tests cover creation, duplicate reuse, validation errors and pot-on into a newly created identity"
+      ],
+      "dependencies": [
+        "UX-ENTRY-001",
+        "FN-04",
+        "UI-REVIEW-002"
+      ],
+      "priority": "P3",
+      "status": "implemented"
+    },
+    {
+      "id": "QUICK-ADD-001",
+      "category": "ux",
+      "description": "Quick add a Plant or PlantGroup with WFO name autocomplete, creating its botanical identity and WFO link in the same transaction",
+      "acceptance_criteria": [
+        "POST /api/v1/quick-add/plant creates or reuses the botanical identity (an exact duplicate is reused and never relinked), confirms a picked WFO taxon through the existing TAXONOMY-001 link only when its name still matches, and creates one Plant or a PlantGroup with a count, all in one transaction that leaves nothing behind on any failure",
+        "The Quick add plant page (Today, the New menu and Record) suggests your identities and local WFO names, says whether the result reuses an identity, links it to WFO or saves free text, works without the WFO index, and offers Add and open or Add and add another keeping place, supplier, origin and date",
+        "Schema, PostgreSQL integration and component tests cover WFO linking, reuse, groups, rollback, CSRF and an unavailable index; no migration"
+      ],
+      "dependencies": [
+        "PLANT-002",
+        "TAXONOMY-001",
+        "REF-SETUP-001",
+        "UI-REVIEW-002"
+      ],
+      "priority": "P2",
       "status": "implemented"
     },
     {

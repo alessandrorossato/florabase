@@ -233,7 +233,11 @@ def apply(database: Session, payload: BulkLocationApplyRequest) -> BulkLocationR
                 database,
                 "plant" if isinstance(record, Plant) else "plant_group",
                 record.id,
-                EventCreate(kind=EventKind.MOVEMENT, destination_location_id=target.id),
+                EventCreate(
+                    kind=EventKind.MOVEMENT,
+                    destination_location_id=target.id,
+                    occurred_on=payload.occurred_on,
+                ),
             )
     database.flush()
     return BulkLocationResult(moved_count=result.move_count, unchanged_count=result.unchanged_count)
