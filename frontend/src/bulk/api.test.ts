@@ -53,11 +53,17 @@ test("bulk requests send only exact typed references and validated preview preco
       },
     ],
   } as BulkPreview;
-  await applyLocation(preview, "csrf", capability);
+  await applyLocation(preview, "csrf", capability, {
+    precision: "day",
+    year: 2026,
+    month: 11,
+    day: 27,
+  });
   expect(fetch.mock.calls[1][0]).toBe("/api/v1/bulk/location/apply");
   expect(requestBody(fetch.mock.calls[1][1])).toEqual({
     target_location_id: "location",
     expected_target_updated_at: "2026-10-06T00:00:00Z",
+    occurred_on: { precision: "day", year: 2026, month: 11, day: 27 },
     records: [
       {
         kind: "plant",

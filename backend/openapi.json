@@ -2652,6 +2652,16 @@
             "title": "Expected Target Updated At",
             "type": "string"
           },
+          "occurred_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "records": {
             "items": {
               "$ref": "#/components/schemas/BulkPrecondition"

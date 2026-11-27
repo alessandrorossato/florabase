@@ -3981,6 +3981,7 @@ export interface components {
              * Format: date-time
              */
             expected_target_updated_at: string;
+            occurred_on?: components["schemas"]["PartialDate"] | null;
             /** Records */
             records: components["schemas"]["BulkPrecondition"][];
             /**

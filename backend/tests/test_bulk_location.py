@@ -137,6 +137,43 @@ def test_preview_and_domain_dispatch(monkeypatch: pytest.MonkeyPatch, kind: str)
     db.flush.assert_called_once()
 
 
+@pytest.mark.parametrize("kind", ["plant", "plant_group"])
+def test_apply_dates_plant_movement_events(monkeypatch: pytest.MonkeyPatch, kind: str) -> None:
+    db, row, target, _request = fixture(monkeypatch, kind=kind)
+    event = MagicMock()
+    monkeypatch.setattr(service, "create_event", event)
+    service.apply(
+        cast(Session, db),
+        BulkLocationApplyRequest.model_validate(
+            {
+                "records": [{"kind": kind, "id": str(row.id), "expected_updated_at": NOW}],
+                "target_location_id": str(target.id),
+                "expected_target_updated_at": NOW,
+                "occurred_on": {"precision": "day", "year": 2026, "month": 11, "day": 27},
+            }
+        ),
+    )
+    occurred = event.call_args.args[3].occurred_on
+    assert (occurred.precision, occurred.year, occurred.month, occurred.day) == (
+        "day",
+        2026,
+        11,
+        27,
+    )
+
+
+def test_apply_rejects_malformed_occurrence_date() -> None:
+    with pytest.raises(ValidationError):
+        BulkLocationApplyRequest.model_validate(
+            {
+                "records": [{"kind": "plant", "id": str(uuid7()), "expected_updated_at": NOW}],
+                "target_location_id": str(uuid7()),
+                "expected_target_updated_at": NOW,
+                "occurred_on": {"precision": "day", "year": 2026, "month": 2, "day": 30},
+            }
+        )
+
+
 @pytest.mark.parametrize("kind", list(service.MODELS))
 def test_preview_inactive_and_scope_conflicts(monkeypatch: pytest.MonkeyPatch, kind: str) -> None:
     db, row, target, request = fixture(
