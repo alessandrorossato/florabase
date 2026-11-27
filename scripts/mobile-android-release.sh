@@ -85,9 +85,10 @@ echo "Verifying APK signature with $APKSIGNER..."
 VERIFY_OUTPUT="$("$APKSIGNER" verify --print-certs "$SIGNED_RAW_APK")"
 printf '%s\n' "$VERIFY_OUTPUT"
 
-CERT_SHA256="$(printf '%s\n' "$VERIFY_OUTPUT" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/ {print tolower($2); exit}' | tr -d '[:space:]:')"
+# apksigner <= 36 prints "Signer #1 certificate ...", newer versions "V2 Signer: certificate ...".
+CERT_SHA256="$(printf '%s\n' "$VERIFY_OUTPUT" | awk -F': ' '/^(Signer #1|V[0-9]+ Signer:) certificate SHA-256 digest:/ {print tolower($NF); exit}' | tr -d '[:space:]:')"
 if [ -z "$CERT_SHA256" ]; then
-  echo "Could not parse Signer #1 certificate SHA-256 digest from apksigner output." >&2
+  echo "Could not parse the first signer certificate SHA-256 digest from apksigner output." >&2
   exit 1
 fi
 
