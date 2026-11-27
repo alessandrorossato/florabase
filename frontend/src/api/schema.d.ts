@@ -16993,14 +16993,33 @@ export interface operations {
                     "application/json": components["schemas"]["QuickAddResponse"];
                 };
             };
-            /** @description Validation Error */
+            /** @description Botanical identity, Location or Supplier not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Identity, link or record changed meanwhile */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request, or the picked WFO name no longer matches */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                content?: never;
+            };
+            /** @description WFO index unavailable for a picked WFO name */
+            503: {
+                headers: {
+                    [name: string]: unknown;
                 };
+                content?: never;
             };
         };
     };

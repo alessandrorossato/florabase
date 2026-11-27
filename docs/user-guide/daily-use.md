@@ -26,10 +26,12 @@ short form, even when its botanical identity does not exist yet.
 
 1. Type the **Scientific name**. After two letters Florabase suggests the identities you already
    have (**In your collection**) and names from the local WFO index (**WFO · accepted** or
-   **synonym**, with the family).
+   **synonym**, with the family). Names that WFO leaves unplaced are not offered, because they
+   cannot be linked. Use the arrow keys to move through the list; **Enter** picks only the
+   highlighted suggestion.
 2. Pick a suggestion or keep what you typed. The line under the field says what will happen:
-   **Uses your identity …**, **New identity linked to WFO …**, or **New identity saved as typed,
-   without a WFO link**. Typing after picking a WFO name drops the link, so the name and the link
+   **Uses your identity …**, **Linked to WFO …**, or **New identity saved as typed, without a
+   WFO link**. Typing after picking a WFO name drops the link, so the name and the link
    always match. Without the WFO index you can still save the name as typed.
 3. Choose **One plant** or **A group of plants** (with **How many** and, if you estimated it,
    **Approximate count**), then optionally a **Label**, **Location**, **Supplier** (which sets
@@ -38,7 +40,9 @@ short form, even when its botanical identity does not exist yet.
    supplier, origin and date for the next plant.
 
 Everything is saved together: if anything fails, nothing is created. If the identity already
-exists, Florabase reuses it and leaves its WFO link as it is.
+exists, Florabase reuses it. A picked WFO name links it only when it has no WFO link yet; an
+existing link is never replaced. The confirmation says whether the identity is new or existing and
+whether it is linked to WFO.
 
 The identity pickers in **New plant or group**, **Create Plant** from a Sowing and **Pot on
 seedlings…** also offer **Create identity “…”** for a name that is not in the list yet.

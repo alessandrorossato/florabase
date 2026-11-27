@@ -48,7 +48,7 @@ function apiMessage(failure: unknown): string {
       if (typeof message === "string" && message) return message;
     }
     if (Array.isArray(detail))
-      return "Check the highlighted details and try again.";
+      return "Florabase could not accept these details. Check the name, count and date, then try again.";
   }
   return "Florabase could not add the plant. Your details are still here.";
 }
@@ -243,7 +243,9 @@ export function QuickAddScreen() {
                 ? added.wfo_linked
                   ? " · new identity linked to WFO"
                   : " · new identity, not linked to WFO"
-                : ""}
+                : added.wfo_linked
+                  ? " · existing identity, linked to WFO"
+                  : " · existing identity, not linked to WFO"}
               .
             </p>
           )}
@@ -257,6 +259,11 @@ export function QuickAddScreen() {
               onChange={(value, next) => {
                 setName(value);
                 setChoice(next);
+                if (next.kind === "existing") {
+                  // Hidden for an existing identity: never send stale text with it.
+                  setCultivar("");
+                  setCommonName("");
+                }
               }}
             />
           </div>

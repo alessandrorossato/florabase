@@ -26,7 +26,7 @@ from florabase.quick_add.schemas import QuickAddNewIdentity, QuickAddRequest, Qu
 from florabase.taxonomy import service as taxonomy
 from florabase.taxonomy.model import WfoLink
 from florabase.taxonomy.schemas import TaxonomyLinkWrite
-from florabase.taxonomy.source import WfoSource
+from florabase.taxonomy.source import WfoSource, WfoTaxon, path
 
 
 @dataclass(frozen=True)
@@ -40,44 +40,73 @@ def _name_key(value: str) -> str:
     return " ".join(value.split()).casefold()
 
 
-def _identity(
-    database: Session, new: QuickAddNewIdentity, source: WfoSource
-) -> tuple[BotanicalIdentity, bool, bool]:
-    """Create the identity (or reuse its exact duplicate) and confirm the picked WFO name."""
-    payload = BotanicalIdentityCreate.model_validate(new.model_dump(exclude={"wfo"}))
-    try:
-        identity = create_botanical_identity(database, payload)
-    except BotanicalIdentityConflictError as error:
-        existing = database.get(BotanicalIdentity, error.existing_id) if error.existing_id else None
-        if existing is None:
-            raise QuickAddError(
-                409, "identity_conflict", "That identity changed meanwhile. Try again."
-            ) from error
-        # An existing identity keeps its own taxonomy link: quick add never relinks it.
-        return existing, False, database.get(WfoLink, existing.id) is not None
+def _picked_taxon(new: QuickAddNewIdentity, source: WfoSource) -> WfoTaxon | None:
+    """The picked WFO taxon, refused unless it is classified and its name matches."""
     if new.wfo is None:
-        return identity, True, False
+        return None
     nodes = source.hierarchy([new.wfo.source_taxon_id])
     taxon = nodes.get(new.wfo.source_taxon_id)
-    if taxon is None or _name_key(taxon.scientific_name) != _name_key(identity.scientific_name):
+    if taxon is None or _name_key(taxon.scientific_name) != _name_key(new.scientific_name):
         raise QuickAddError(
             422,
             "wfo_name_mismatch",
             "The scientific name no longer matches the WFO name you picked. Pick it again.",
         )
+    if not path(nodes, taxon.source_taxon_id):
+        raise QuickAddError(
+            422,
+            "wfo_not_linkable",
+            "This WFO name is unplaced in the WFO classification and cannot be linked. "
+            "Save it without the WFO link or pick another name.",
+        )
+    return taxon
+
+
+def _link(
+    database: Session, identity: BotanicalIdentity, taxon: WfoTaxon, source: WfoSource
+) -> None:
     taxonomy.confirm(
         database,
         identity.id,
         TaxonomyLinkWrite(
             source_taxon_id=taxon.source_taxon_id,
-            # The suggestion came from this same local index moments ago.
+            # The suggestion came from this same local index moments ago; the name check above
+            # guards against an index swapped in between.
             checksum=source.metadata().checksum,
             expected_version=None,
             identity_updated_at=identity.updated_at,
         ),
         source,
     )
-    return identity, True, True
+
+
+def _identity(
+    database: Session, new: QuickAddNewIdentity, source: WfoSource
+) -> tuple[BotanicalIdentity, bool, bool]:
+    """Create the identity (or reuse its exact duplicate) and confirm the picked WFO name."""
+    taxon = _picked_taxon(new, source)
+    fields = new.model_dump(exclude={"wfo"})
+    if taxon is not None:
+        # Store the WFO spelling of the name the user picked.
+        fields["scientific_name"] = taxon.scientific_name
+    payload = BotanicalIdentityCreate.model_validate(fields)
+    try:
+        identity = create_botanical_identity(database, payload)
+        created = True
+    except BotanicalIdentityConflictError as error:
+        existing = database.get(BotanicalIdentity, error.existing_id) if error.existing_id else None
+        if existing is None:
+            raise QuickAddError(
+                409, "identity_conflict", "That identity changed meanwhile. Try again."
+            ) from error
+        identity, created = existing, False
+    linked = database.get(WfoLink, identity.id) is not None
+    # A new identity, or an existing one without any link, takes the picked name; an existing
+    # link is never replaced.
+    if taxon is not None and not linked:
+        _link(database, identity, taxon, source)
+        linked = True
+    return identity, created, linked
 
 
 def quick_add(database: Session, payload: QuickAddRequest, source: WfoSource) -> QuickAddResponse:

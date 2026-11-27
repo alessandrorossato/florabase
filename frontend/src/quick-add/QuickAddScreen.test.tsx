@@ -121,9 +121,7 @@ test("a picked WFO name creates the identity, its link and the plant in one requ
   expect(option).toHaveTextContent("WFO · accepted · Apocynaceae");
   await user.click(option);
   expect(name).toHaveValue("Hoya kerrii");
-  expect(
-    screen.getByText(/New identity linked to WFO Hoya kerrii/),
-  ).toBeVisible();
+  expect(screen.getByText(/Linked to WFO Hoya kerrii Schltr\./)).toBeVisible();
   await user.click(screen.getByRole("combobox", { name: "Supplier" }));
   await user.click(await screen.findByRole("button", { name: "Hoya nursery" }));
   expect(screen.getByLabelText("Origin")).toHaveValue("purchased");
@@ -240,4 +238,30 @@ test("free text without suggestions and a server refusal keep the form", async (
   });
   expect(name).toHaveValue("Mystery plant");
   expect(window.location.hash).toBe("#/quick-add");
+});
+
+test("unplaced WFO names are not offered and Enter never picks an unhighlighted suggestion", async () => {
+  vi.mocked(searchNames).mockResolvedValue([
+    taxon("wfo-0000000001", "Hoya kerrii"),
+    { ...taxon("wfo-0000000009", "Hoya kerrii unplaced"), classification: [] },
+  ]);
+  renderScreen();
+  const user = userEvent.setup();
+  const name = await screen.findByRole("combobox", { name: /Scientific name/ });
+  await user.type(name, "Hoya");
+  expect(
+    await screen.findByRole("option", { name: /Hoya kerrii Schltr\./ }),
+  ).toBeVisible();
+  expect(
+    screen.queryByRole("option", { name: /unplaced/ }),
+  ).not.toBeInTheDocument();
+  expect(name).not.toHaveAttribute("aria-activedescendant");
+  await user.keyboard("{Enter}");
+  // Enter submitted the form with the typed text instead of picking a suggestion.
+  await waitFor(() => {
+    expect(quickAddPlant).toHaveBeenCalled();
+  });
+  expect(vi.mocked(quickAddPlant).mock.calls[0]?.[0].identity).toMatchObject({
+    new: { scientific_name: "Hoya", wfo: null },
+  });
 });

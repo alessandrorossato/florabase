@@ -1,4 +1,4 @@
-import { useId, useState, type SyntheticEvent } from "react";
+import { useId, useRef, useState, type SyntheticEvent } from "react";
 import { createPortal } from "react-dom";
 import {
   activeCsrfToken,
@@ -39,6 +39,14 @@ export function IdentityCreateDialog({
     common: useId(),
     error: useId(),
   };
+  // The picker's Create button unmounts when the menu closes; return focus to its input.
+  const picker = useRef<HTMLElement | null>(
+    document.activeElement instanceof HTMLElement
+      ? (document.activeElement
+          .closest(".reference-picker")
+          ?.querySelector<HTMLElement>("input") ?? null)
+      : null,
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -104,6 +112,7 @@ export function IdentityCreateDialog({
     <TaskDialog
       title="Create botanical identity"
       className="seed-context-dialog identity-create-dialog"
+      returnFocusTo={picker}
       onClose={() => {
         if (!saving) onClose();
       }}

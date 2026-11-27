@@ -623,6 +623,10 @@ describe("PotOnDialog", () => {
         screen.queryByRole("dialog", { name: "Create botanical identity" }),
       ).not.toBeInTheDocument();
     });
+    // Focus returns to the identity picker, not the page body.
+    expect(
+      screen.getByRole("combobox", { name: /Botanical identity/ }),
+    ).toHaveFocus();
     expect(posts[0]).toMatchObject({
       path: "/api/v1/botanical-identities",
       body: { scientific_name: "Hoya kerrii" },

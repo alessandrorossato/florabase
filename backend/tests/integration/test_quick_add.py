@@ -7,7 +7,7 @@ from uuid import uuid7
 import pytest
 from sqlalchemy import Connection, func, select
 from sqlalchemy.orm import Session
-from test_taxonomy import META, SPECIES, SYNONYM, data
+from test_taxonomy import META, SECOND, SPECIES, SYNONYM, UNPLACED, data
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.main import app
@@ -222,3 +222,58 @@ def test_unavailable_index_refuses_wfo_choice_but_not_free_text(
         )
     finally:
         app.dependency_overrides.pop(source_dependency, None)
+
+
+def test_wfo_pick_links_an_unlinked_existing_identity_and_refuses_unplaced(
+    database_connection: Connection, authenticated_browser: tuple[str, str], source: None
+) -> None:
+    # Free text first: the identity exists without a link.
+    first = post(authenticated_browser, {"identity": {"new": {"scientific_name": "genus SECOND"}}})
+    assert first[0] == 201
+    assert not first[2]["wfo_linked"]
+    status, _, body = post(
+        authenticated_browser,
+        {
+            "identity": {
+                "new": {"scientific_name": "Genus second", "wfo": {"source_taxon_id": SECOND}}
+            }
+        },
+    )
+    assert status == 201, body
+    assert body["identity_id"] == first[2]["identity_id"]
+    assert not body["identity_created"]
+    assert body["wfo_linked"]
+    with Session(bind=database_connection) as db:
+        link = db.get(WfoLink, body["identity_id"])
+        assert link is not None
+        assert link.external_id == SECOND
+    before = counts(database_connection)
+    status, _, body = post(
+        authenticated_browser,
+        {
+            "identity": {
+                "new": {"scientific_name": "Unplaced species", "wfo": {"source_taxon_id": UNPLACED}}
+            }
+        },
+    )
+    assert status == 422
+    assert body["detail"]["code"] == "wfo_not_linkable"
+    assert counts(database_connection) == before
+
+
+def test_wfo_pick_stores_the_wfo_spelling(
+    database_connection: Connection, authenticated_browser: tuple[str, str], source: None
+) -> None:
+    status, _, body = post(
+        authenticated_browser,
+        {
+            "identity": {
+                "new": {"scientific_name": "old  SPECIES", "wfo": {"source_taxon_id": SYNONYM}}
+            }
+        },
+    )
+    assert status == 201, body
+    with Session(bind=database_connection) as db:
+        identity = db.get(BotanicalIdentity, body["identity_id"])
+        assert identity is not None
+        assert identity.scientific_name == "Old species"

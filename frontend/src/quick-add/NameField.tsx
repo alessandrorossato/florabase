@@ -79,7 +79,8 @@ export function QuickAddNameField({
   const listId = useId();
   const statusId = useId();
   const [open, setOpen] = useState(false);
-  const [active, setActive] = useState(0);
+  // -1: nothing is highlighted until the user moves into the list.
+  const [active, setActive] = useState(-1);
   const prefix = value.trim();
   const wfo = useWfoNames(prefix, capability);
   const query = fold(value);
@@ -98,15 +99,9 @@ export function QuickAddNameField({
           )
           .slice(0, 6)
           .map((identity) => ({ kind: "existing", identity }));
-  const linkedNames = new Set(
-    existing.map((option) =>
-      option.kind === "existing" ? fold(option.identity.scientific_name) : "",
-    ),
-  );
   const names: Option[] = (wfo?.names ?? [])
-    .filter(
-      (candidate) => !linkedNames.has(fold(candidate.taxon.scientific_name)),
-    )
+    // Unplaced names have no classification and cannot be linked (TAXONOMY-001).
+    .filter((candidate) => candidate.classification.length > 0)
     .slice(0, 8)
     .map((candidate) => ({ kind: "wfo", candidate }));
   const options = [...existing, ...names];
@@ -123,12 +118,12 @@ export function QuickAddNameField({
     if (event.key === "ArrowDown" && options.length) {
       event.preventDefault();
       setOpen(true);
-      setActive((current) => (current + 1) % options.length);
+      setActive((current) => (current + 1 >= options.length ? 0 : current + 1));
     } else if (event.key === "ArrowUp" && options.length) {
       event.preventDefault();
       setOpen(true);
-      setActive((current) => (current - 1 + options.length) % options.length);
-    } else if (event.key === "Enter" && shown) {
+      setActive((current) => (current <= 0 ? options.length - 1 : current - 1));
+    } else if (event.key === "Enter" && shown && active >= 0) {
       event.preventDefault();
       pick(options[Math.min(active, options.length - 1)]);
     } else if (event.key === "Escape" && shown) {
@@ -142,7 +137,7 @@ export function QuickAddNameField({
     choice.kind === "existing"
       ? `Uses your identity ${choice.identity.display_label}.`
       : choice.kind === "wfo"
-        ? `New identity linked to WFO ${choice.candidate.taxon.scientific_name} ${choice.candidate.taxon.authorship} (${choice.candidate.taxon.taxonomic_status}).`
+        ? `Linked to WFO ${choice.candidate.taxon.scientific_name} ${choice.candidate.taxon.authorship} (${choice.candidate.taxon.taxonomic_status}). An identity you already have with this name is reused.`
         : prefix
           ? wfo?.unavailable
             ? "WFO suggestions are unavailable. The name is saved as typed, without a WFO link."
@@ -161,7 +156,9 @@ export function QuickAddNameField({
         aria-expanded={shown}
         aria-controls={listId}
         aria-activedescendant={
-          shown && options[active] ? `${listId}-${String(active)}` : undefined
+          shown && active >= 0 && active < options.length
+            ? `${listId}-${String(active)}`
+            : undefined
         }
         aria-describedby={statusId}
         autoComplete="off"
@@ -170,7 +167,7 @@ export function QuickAddNameField({
         value={value}
         onChange={(event) => {
           setOpen(true);
-          setActive(0);
+          setActive(-1);
           onChange(event.currentTarget.value, { kind: "text" });
         }}
         onFocus={() => {

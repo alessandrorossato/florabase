@@ -22,6 +22,12 @@ Writer = Annotated[AuthenticatedActor, Depends(require_csrf)]
     response_model=QuickAddResponse,
     status_code=status.HTTP_201_CREATED,
     operation_id="quickAddPlant",
+    responses={
+        404: {"description": "Botanical identity, Location or Supplier not found"},
+        409: {"description": "Identity, link or record changed meanwhile"},
+        422: {"description": "Invalid request, or the picked WFO name no longer matches"},
+        503: {"description": "WFO index unavailable for a picked WFO name"},
+    },
 )
 def quick_add_plant(
     payload: QuickAddRequest,
@@ -48,8 +54,18 @@ def quick_add_plant(
                 "message": "The WFO index is not available. Save without the WFO link.",
             },
         ) from error
-    except (TaxonomyConflictError, TaxonomyNotFoundError) as error:
-        raise HTTPException(409, {"code": "taxonomy_conflict", "message": str(error)}) from error
+    except TaxonomyNotFoundError as error:
+        raise HTTPException(
+            404, {"code": "botanical_identity_not_found", "message": str(error)}
+        ) from error
+    except TaxonomyConflictError as error:
+        raise HTTPException(
+            409,
+            {
+                "code": "taxonomy_conflict",
+                "message": "The identity or its WFO link changed meanwhile. Try again.",
+            },
+        ) from error
     prefix = "plants" if result.record_kind == "plant" else "plant-groups"
     response.headers["Location"] = f"/api/v1/{prefix}/{result.record_id}"
     return result

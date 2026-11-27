@@ -34390,15 +34390,17 @@
             },
             "description": "Successful Response"
           },
+          "404": {
+            "description": "Botanical identity, Location or Supplier not found"
+          },
+          "409": {
+            "description": "Identity, link or record changed meanwhile"
+          },
           "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
+            "description": "Invalid request, or the picked WFO name no longer matches"
+          },
+          "503": {
+            "description": "WFO index unavailable for a picked WFO name"
           }
         },
         "summary": "Quick Add Plant",

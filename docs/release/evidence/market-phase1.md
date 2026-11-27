@@ -12,10 +12,15 @@ QR quick actions (O-19a, `MOBILE-005`) are deferred. No migration.
 
 - `POST /api/v1/quick-add/plant` (`quickAddPlant`, `backend/src/florabase/quick_add/`): `identity`
   is exactly one of `existing_id` or `new` (scientific name, cultivar, common name, optional
-  `wfo.source_taxon_id`). A new identity goes through `create_botanical_identity`; an exact
-  duplicate is reused and its taxonomy link is never changed. A picked WFO taxon is confirmed with
-  the existing `taxonomy.service.confirm` only when its WFO name still equals the identity's
-  scientific name (`422 wfo_name_mismatch` otherwise); the checksum is the local index's own.
+  `wfo.source_taxon_id`). A picked WFO taxon is checked before anything is written: its name must
+  still equal the typed name, ignoring case and spacing (`422 wfo_name_mismatch`), and it must be
+  classified (`422 wfo_not_linkable` for unplaced names, which TAXONOMY-001 cannot link). The
+  identity then stores the WFO spelling. A new identity goes through `create_botanical_identity`;
+  an exact duplicate is reused. The picked taxon is confirmed through the existing
+  `taxonomy.service.confirm` for a new identity or for an existing one without a link; an existing
+  link is never replaced. The confirm checksum is the local index's own, because the suggestion
+  came from that index moments earlier; the name check guards against an index swapped in
+  between, and the stored evidence records the index actually used.
   The Plant or PlantGroup (count required, at least 1) is built through `PlantCreate` /
   `PlantGroupCreate` and the existing create services. Everything runs in the request's single
   transaction, so a missing Location or Supplier, an unavailable index (`503
@@ -30,7 +35,9 @@ QR quick actions (O-19a, `MOBILE-005`) are deferred. No migration.
 
 - Shared `frontend/src/botanical-identities/IdentityCreateDialog.tsx` (WFO name suggestions,
   portalled so it never nests in the opening form; a 409 duplicate resolves to the existing
-  identity). Wired into the Plant form, `SowingDescendantWizard` and `PotOnDialog`. The empty
+  identity; focus returns to the picker input). Wired into the Plant form,
+  `SowingDescendantWizard` and `PotOnDialog`. `TaskDialog` now ignores a `cancel` event re-dispatched
+  by React from a nested portalled dialog, so Android back closes only the inner dialog. The empty
   Plants directory still requires an identity first (Quick add covers that case).
 - Tests: `IdentityCreateDialog.test.tsx`, a pot-on test that creates an identity then pots on into it.
 
@@ -41,6 +48,15 @@ QR quick actions (O-19a, `MOBILE-005`) are deferred. No migration.
   selections. `docs/bulk-operations.md` and the user guide describe it.
 - Tests: unit and PostgreSQL integration (`tests/test_bulk_location.py`,
   `tests/integration/test_bulk_location.py`), `BulkLocation.test.tsx`, `api.test.ts`.
+
+## Independent review
+
+`/mnt/project-files/batch-15/market-phase1-review.md` (PASS WITH FIXES). Fixed: unplaced WFO
+names (filtered in the UI, `422 wfo_not_linkable` on the server), the first suggestion being
+active before any arrow key (Enter now picks only a highlighted suggestion), a WFO pick dropped
+for an existing unlinked identity (now linked; the notice reports new or existing and the link
+state), the nested dialog `cancel`, focus return, `404` for a missing identity during linking, and
+OpenAPI error responses.
 
 ## Checks run in the cloud session
 
