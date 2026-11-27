@@ -1049,7 +1049,7 @@ export function LocationScreen({
                   eyebrow="Location"
                   keyFacts={[
                     {
-                      label: "active plants here",
+                      label: "active plant records here",
                       value: String(
                         (selected.direct_usage.plants?.active ?? 0) +
                           (selected.direct_usage.plant_groups?.active ?? 0),

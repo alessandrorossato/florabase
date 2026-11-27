@@ -120,6 +120,7 @@ export function NextUp({
   today,
   scheduleHref,
   scheduleLabel = "Schedule activity",
+  emptyText = "Nothing planned",
   loading = false,
 }: {
   item?: {
@@ -131,13 +132,15 @@ export function NextUp({
   today?: string;
   scheduleHref?: string | null;
   scheduleLabel?: string;
+  emptyText?: string;
   loading?: boolean;
 }) {
   return (
     <p className="record-timeline__next">
       <span className="record-timeline__next-label">Next up</span>{" "}
       {loading ? (
-        <span role="status">Loading…</span>
+        // The Planned lane below announces loading; this line stays quiet.
+        <span>Loading…</span>
       ) : item && today ? (
         <>
           {/* Plain text: the Planned list below links the same activity. */}
@@ -155,7 +158,7 @@ export function NextUp({
         </>
       ) : (
         <>
-          Nothing planned
+          {emptyText}
           {scheduleHref && (
             <>
               <span aria-hidden="true"> · </span>

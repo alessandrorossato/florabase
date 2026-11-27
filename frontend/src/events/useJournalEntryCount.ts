@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import type { EventTargetKind } from "./api";
-import { useJournalReader } from "./journalReader";
+import { JournalScopeContext, useJournalReader } from "./journalReader";
 
 /**
  * A record's Journal entry count, read through the surrounding JournalScope so it shares the
@@ -12,6 +12,17 @@ export function useJournalEntryCount(
   id: string,
 ): number | null {
   const reader = useJournalReader();
+  const scope = useContext(JournalScopeContext);
+  // A new or edited Journal entry invalidates the scope; read the count again then.
+  const [revision, setRevision] = useState(0);
+  useEffect(
+    () =>
+      scope?.subscribe?.((kind, changedId) => {
+        if (kind === target && changedId === id)
+          setRevision((value) => value + 1);
+      }),
+    [id, scope, target],
+  );
   const key = `${target}:${id}`;
   const [result, setResult] = useState<{ key: string; count: number } | null>(
     null,
@@ -30,6 +41,6 @@ export function useJournalEntryCount(
     return () => {
       controller.abort();
     };
-  }, [id, key, reader, target]);
+  }, [id, key, reader, revision, target]);
   return result?.key === key ? result.count : null;
 }

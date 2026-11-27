@@ -434,14 +434,26 @@
   display: none;
 }
 @media (max-width: 40rem) {
+  /* Phones: the empty plate is shorter than a photo's 4:5 frame and holds only the link. */
   .app-content .ui-detail-page .specimen-plate:has(.record-visual[data-empty]) {
-    aspect-ratio: 4 / 5;
-    padding: var(--space-2);
+    grid-template-rows: minmax(0, 1fr);
+    place-items: center;
+    aspect-ratio: 1 / 1;
+    padding: var(--space-1);
+  }
+  .app-content
+    .ui-detail-page
+    .specimen-plate:has(.record-visual[data-empty])
+    > .record-visual {
+    display: none;
   }
   .app-content .ui-detail-page .specimen-plate .specimen-plate__add {
     min-block-size: 0;
-    padding: var(--space-1) var(--space-2);
-    font-size: 0.8125rem;
+    padding: var(--space-1);
+    font-size: 0.75rem;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
   }
   .app-content .ui-detail-page .specimen-main .detail-key-facts {
     grid-column: 1 / -1;

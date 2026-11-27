@@ -512,7 +512,7 @@ function Detail({
           <SpecimenPlate
             addPhoto={{
               href: `#/sowings/${sowing.id}?tab=photos`,
-              onClick: () => {
+              onSelect: () => {
                 setTab("photos");
               },
             }}

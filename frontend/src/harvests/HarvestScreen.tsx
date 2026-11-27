@@ -79,6 +79,7 @@ import {
   type Harvest,
 } from "./api";
 import { listConversions, type Conversion } from "./conversionApi";
+import { countedConversions, uniqueConversions } from "./harvestConversions";
 import "./collection-visual.css";
 import "./directory.css";
 import {
@@ -343,13 +344,10 @@ export function HarvestScreen({
       ),
     ).then((batches) => {
       if (!controller.signal.aborted) {
-        const seen = new Set<string>();
-        const rows = batches.flat().filter((conv) => {
-          if (seen.has(conv.seed_lot_id)) return false;
-          seen.add(conv.seed_lot_id);
-          return true;
+        setConversionsState({
+          key: conversionKey,
+          rows: uniqueConversions(batches.flat()),
         });
-        setConversionsState({ key: conversionKey, rows });
       }
     });
     return () => {
@@ -382,9 +380,12 @@ export function HarvestScreen({
     })),
   };
   // Reversed conversions stay visible in the Lineage tab but are not counted as descendants.
-  const activeConversions = harvestConversions.filter(
-    (conv) => conv.status !== "reversed",
-  );
+  const activeConversions = countedConversions(harvestConversions);
+  // Conversions load after the stored material; until then the count is not known.
+  const conversionsReady =
+    harvestInventories !== null &&
+    (!harvestInventories.some((inv) => inv.has_dispositions) ||
+      conversionsState?.key === conversionKey);
   const harvestDescendantsSummary = activeConversions.length
     ? `${String(activeConversions.length)} ${activeConversions.length === 1 ? "seed lot" : "seed lots"}`
     : null;
@@ -741,7 +742,7 @@ export function HarvestScreen({
                     activeConversions.length === 1
                       ? "seed lot converted"
                       : "seed lots converted",
-                  value: harvestInventories
+                  value: conversionsReady
                     ? String(activeConversions.length)
                     : "…",
                 },
@@ -750,14 +751,8 @@ export function HarvestScreen({
                 <SpecimenPlate
                   addPhoto={{
                     href: `#/harvests/${detail.id}?tab=photos`,
-                    onClick: (event) => {
-                      event.preventDefault();
+                    onSelect: () => {
                       setDetailTab("photos");
-                      window.history.replaceState(
-                        null,
-                        "",
-                        `#/harvests/${detail.id}?tab=photos`,
-                      );
                     },
                   }}
                 >

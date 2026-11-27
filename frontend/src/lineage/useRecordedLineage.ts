@@ -218,13 +218,17 @@ export function useRecordedLineage(
 export function useDirectDescendants(
   kind: AncestryKind | null,
   id: string | null,
+  /** The record's updated_at: a new value reads the children again. */
+  revision = "",
 ): [DirectDescendants, () => void] {
   const auth = useAuth();
   const { capability, sessionExpired } = auth;
   const authorized =
     auth.state.status === "authenticated" && capability.isAuthorized();
   const enabled = Boolean(kind && id);
-  const key = enabled ? `${String(kind)}:${String(id)}` : "disabled";
+  const key = enabled
+    ? `${String(kind)}:${String(id)}:${revision}`
+    : "disabled";
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<
     { key: string; attempt: number } & DirectDescendants

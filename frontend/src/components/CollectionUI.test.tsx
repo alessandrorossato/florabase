@@ -251,14 +251,19 @@ test("UI-POLISH-006 B2: tab counts are visible badges and the tab keeps its name
   expect(onSelect).toHaveBeenCalledWith("sowings");
 });
 
-test("UI-POLISH-006 B2: an empty plate offers Add photo, which opens the Photos tab", async () => {
-  const onClick = vi.fn((event: { preventDefault: () => void }) => {
-    event.preventDefault();
-  });
+test("UI-POLISH-006 B2: an empty plate offers Add photo, which opens the Photos tab in place", async () => {
+  window.history.replaceState(null, "", "#/seeds/lot");
+  const before = window.history.length;
+  const onSelect = vi.fn();
   render(
-    <SpecimenPlate addPhoto={{ href: "#/seeds/lot?tab=photos", onClick }}>
-      <RecordVisual kind="seed" label="Basil" />
-    </SpecimenPlate>,
+    <>
+      <SpecimenPlate addPhoto={{ href: "#/seeds/lot?tab=photos", onSelect }}>
+        <RecordVisual kind="seed" label="Basil" />
+      </SpecimenPlate>
+      <button type="button" id="tab-photos" role="tab">
+        Photos
+      </button>
+    </>,
   );
   expect(document.querySelector(".record-visual")).toHaveAttribute(
     "data-empty",
@@ -266,5 +271,11 @@ test("UI-POLISH-006 B2: an empty plate offers Add photo, which opens the Photos 
   const add = screen.getByRole("link", { name: "Add photo" });
   expect(add).toHaveAttribute("href", "#/seeds/lot?tab=photos");
   await userEvent.click(add);
-  expect(onClick).toHaveBeenCalledOnce();
+  expect(onSelect).toHaveBeenCalledOnce();
+  // Like a tab click: the route is replaced, not pushed, and focus lands on the tab.
+  expect(window.location.hash).toBe("#/seeds/lot?tab=photos");
+  expect(window.history.length).toBe(before);
+  await vi.waitFor(() => {
+    expect(screen.getByRole("tab", { name: "Photos" })).toHaveFocus();
+  });
 });

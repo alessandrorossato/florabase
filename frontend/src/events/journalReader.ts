@@ -11,6 +11,10 @@ export interface JournalScopeValue {
     capability: ProtectedRequestCapability,
   ) => Promise<EventResponse[]>;
   invalidate: (kind: EventTargetKind, id: string) => void;
+  /** Called after `invalidate`, so summaries (counts) can read the Journal again. */
+  subscribe?: (
+    listener: (kind: EventTargetKind, id: string) => void,
+  ) => () => void;
 }
 
 export interface BoundJournalReader {
@@ -24,6 +28,7 @@ export const JournalScopeContext = createContext<JournalScopeValue | null>(
 
 export function createJournalScope(version: string): JournalScopeValue {
   const revisions = new Map<string, number>();
+  const listeners = new Set<(kind: EventTargetKind, id: string) => void>();
   const byCapability = new WeakMap<
     ProtectedRequestCapability,
     Map<string, Promise<EventResponse[]>>
@@ -51,6 +56,13 @@ export function createJournalScope(version: string): JournalScopeValue {
     invalidate(kind, id) {
       const targetKey = `${kind}:${id}`;
       revisions.set(targetKey, (revisions.get(targetKey) ?? 0) + 1);
+      for (const listener of listeners) listener(kind, id);
+    },
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
     },
   };
 }

@@ -62,7 +62,8 @@ export function RecordAlmanac(props: RecordAlmanacProps) {
       <h4 id={titleId}>Almanac</h4>
       <NextUp
         scheduleHref={props.sourceScheduleHref ?? "#/schedule"}
-        scheduleLabel="Plan on the source in Schedule"
+        emptyText="Plans are kept on the source record"
+        scheduleLabel="Open in Schedule"
       />
       <div className="record-timeline__lanes">
         <section

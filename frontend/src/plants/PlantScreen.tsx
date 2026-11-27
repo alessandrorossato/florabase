@@ -59,11 +59,13 @@ import { JournalScope } from "../events/JournalScope";
 import { JournalEntryCount } from "../events/JournalEntryCount";
 import { useJournalEntryCount } from "../events/useJournalEntryCount";
 import { usePhotoCount } from "../photos/usePhotoCount";
+import { harvestsHref } from "./plantDescendants";
 import { daysLabel, daysSince } from "../components/keyFactValues";
 import { LineageStrip } from "../lineage/LineageStrip";
 import {
   ancestryKinds,
   descendantCounts,
+  descendantSummaryLabel,
   useDirectDescendants,
 } from "../lineage/useRecordedLineage";
 import {
@@ -487,10 +489,18 @@ function Detail({
   ]);
   // Recorded descendants come from the same children endpoint as the lineage strip, so the
   // Overview line and the strip always count the same records.
+  // One read, shared with the lineage strip below, so both always show the same counts.
   const [descendants] = useDirectDescendants(
     ancestryKinds[record.kind === "plant" ? "plants" : "plant-groups"],
     value.id,
+    value.updated_at,
   );
+  const descendantKinds =
+    descendants.status !== "ready"
+      ? []
+      : descendants.value.items.length < descendants.value.total
+        ? null
+        : descendantCounts(descendants.value);
   const counts = harvestCounts?.key === offspringKey ? harvestCounts : null;
   const originatingGroup =
     record.kind === "plant" ? record.value.originating_plant_group : null;
@@ -718,7 +728,7 @@ function Detail({
             <SpecimenPlate
               addPhoto={{
                 href: `#/${route}/${value.id}?tab=photos`,
-                onClick: () => {
+                onSelect: () => {
                   setTab("photos");
                 },
               }}
@@ -769,6 +779,11 @@ function Detail({
               }
               fullHref={`#/${route}/${value.id}?tab=lineage`}
               onLineageTab={tab === "lineage"}
+              descendantsSummary={
+                descendants.status === "ready"
+                  ? descendantSummaryLabel(descendants.value)
+                  : null
+              }
               onFull={() => {
                 setTab("lineage");
               }}
@@ -869,8 +884,20 @@ function Detail({
                             },
                           ]
                         : []),
-                      ...(descendants.status === "ready"
-                        ? descendantCounts(descendants.value)
+                      ...(descendantKinds === null &&
+                      descendants.status === "ready"
+                        ? [
+                            {
+                              label: `${String(descendants.value.total)} recorded from this`,
+                              href: `#/${route}/${value.id}?tab=lineage`,
+                              onClick: () => {
+                                setTab("lineage");
+                              },
+                            },
+                          ]
+                        : []),
+                      ...(descendantKinds
+                        ? descendantKinds
                             .filter(
                               ({ kind }) =>
                                 record.kind !== "group" || kind !== "plant",
@@ -895,11 +922,10 @@ function Detail({
                               label: `${String(counts.harvests)} ${counts.harvests === 1 ? "harvest" : "harvests"}`,
                               // No filtered Harvest list exists: one harvest opens directly,
                               // several open the identity's Harvests, none is plain text.
-                              href: counts.singleHarvestId
-                                ? `#/harvests/${counts.singleHarvestId}`
-                                : counts.harvests > 1
-                                  ? `#/identities/${value.botanical_identity_id}?tab=harvests`
-                                  : undefined,
+                              href: harvestsHref(
+                                counts,
+                                value.botanical_identity_id,
+                              ),
                             },
                           ]
                         : []),

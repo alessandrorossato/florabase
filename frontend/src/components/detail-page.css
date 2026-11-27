@@ -500,7 +500,6 @@
 }
 .app-content .ui-detail-page .detail-key-facts dd.detail-key-facts__unknown {
   color: var(--text-muted);
-  font-size: 1.0625rem;
   font-weight: 400;
 }
 .app-content .ui-detail-page .detail-key-facts dt {

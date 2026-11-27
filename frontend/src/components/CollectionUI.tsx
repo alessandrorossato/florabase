@@ -115,7 +115,8 @@ export function SpecimenPlate({
   addPhoto,
 }: {
   children: ReactNode;
-  addPhoto?: { href: string; onClick?: MouseEventHandler<HTMLAnchorElement> };
+  /** Opens the record's Photos tab; the link replaces the route like a tab click. */
+  addPhoto?: { href: string; onSelect: () => void };
 }) {
   return (
     <figure className="specimen-plate">
@@ -124,7 +125,27 @@ export function SpecimenPlate({
         <a
           className="button-link button--secondary specimen-plate__add"
           href={addPhoto.href}
-          onClick={addPhoto.onClick}
+          onClick={(event) => {
+            if (
+              event.metaKey ||
+              event.ctrlKey ||
+              event.shiftKey ||
+              event.altKey ||
+              event.button !== 0
+            )
+              return;
+            event.preventDefault();
+            addPhoto.onSelect();
+            window.history.replaceState(
+              window.history.state,
+              "",
+              addPhoto.href,
+            );
+            // Land on the Photos tab, as a tab click would.
+            window.requestAnimationFrame(() => {
+              document.getElementById("tab-photos")?.focus();
+            });
+          }}
         >
           Add photo
         </a>

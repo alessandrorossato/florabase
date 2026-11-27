@@ -114,13 +114,7 @@ function CuttingPlate({
 }) {
   return (
     <SpecimenPlate
-      addPhoto={{
-        href: photosHref,
-        onClick: (event) => {
-          event.preventDefault();
-          onAddPhoto();
-        },
-      }}
+      addPhoto={{ href: photosHref, onSelect: onAddPhoto }}
     >
       <RecordVisual
         photo={photos.own}
