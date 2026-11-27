@@ -49,8 +49,7 @@ What this target runs:
 
 1. `make mobile-sync MOBILE_DEBUG_HTTP=true`:
    - Builds `frontend/dist` inside the repository's quality frontend container with `VITE_MOBILE_ALLOW_DEBUG_HTTP=true` (enabling local debug HTTP URLs such as `http://10.0.2.2:5173`).
-   - Runs `pnpm --dir mobile install --frozen-lockfile`.
-   - Runs `pnpm --dir mobile exec cap sync android` to copy `frontend/dist` and register Capacitor plugins (`@capacitor/app`, `@capacitor/filesystem`, `@capacitor/preferences`, `@capacitor/share`).
+   - Runs `cd mobile && pnpm install --frozen-lockfile && pnpm exec cap sync android` from the `mobile/` package directory (so Corepack resolves the pinned `pnpm@11.19.0` from `mobile/package.json`) to copy `frontend/dist` and register Capacitor plugins (`@capacitor/app`, `@capacitor/filesystem`, `@capacitor/preferences`, `@capacitor/share`).
 2. Runs `./gradlew assembleDebug` inside `mobile/android/`.
 
 Output APK path (gitignored):

@@ -1,6 +1,6 @@
 # Engineering progress
 
-## 2026-11-27 — UAT-INSTANCE-002 stale launch handling on rebuilt branches
+## 2026-11-27 — UAT-INSTANCE-002 stale launch handling on rebuilt branches (also: mobile-sync pnpm fix, follow-up of #231)
 
 - On `ci/uat-instance-002` from `origin/main` `c83d8163` (writer `antigravity-neon-uat-instance-002`;
   registered right after `MULTIBRANCH-UAT-001` in `docs/features.json` as `implemented` and in
