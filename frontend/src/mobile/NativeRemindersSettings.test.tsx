@@ -42,6 +42,7 @@ function renderWithAuth(ui: React.ReactNode) {
         display_name: "Owner",
         owner: true,
         canonical_origin: null,
+        demo_readonly: false,
       },
       csrfToken: "bearer",
     },
