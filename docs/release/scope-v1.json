@@ -163,6 +163,7 @@
     "INSTALL-GUIDE-001": "best-effort",
     "SETUP-SAFETY-001": "tooling",
     "MULTIBRANCH-UAT-001": "tooling",
+    "UAT-INSTANCE-002": "best-effort",
     "DEV-GOLDEN-001": "tooling",
     "DEV-REFERENCES-001": "tooling",
     "DEMO-001": "best-effort",
@@ -207,6 +208,7 @@
     "DOCS-004": "best-effort",
     "DOCS-003": "release-work",
     "MOBILE-002": "post-1.0",
-    "MOBILE-003": "post-1.0"
+    "MOBILE-003": "post-1.0",
+    "MOBILE-004": "post-1.0"
   }
 }

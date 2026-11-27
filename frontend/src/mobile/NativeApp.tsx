@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { App } from "../App";
+import { useAuth } from "../auth/context";
 import {
   clearNativeBearerToken,
   configureNativeBearerTransport,
@@ -10,6 +11,7 @@ import {
   applyMapRuntimeConfig,
   resetMapRuntimeConfig,
 } from "../provenance-map/config";
+import { onScheduleChanged } from "../schedule/changes";
 import {
   cleanupNativeSharedCache,
   registerNativeImageViewerHandler,
@@ -20,6 +22,14 @@ import { NativeImageViewer } from "./NativeImageViewer";
 import { NativeServerOnboarding } from "./NativeServerOnboarding";
 import { NativeUpdateBanner } from "./NativeUpdateBanner";
 import { createServerUrlStore, type ServerUrlStore } from "./preferences";
+import {
+  createReminderCoordinator,
+  registerActiveReminderCoordinator,
+  subscribeAppResume,
+  subscribeNotificationTap,
+  type ReminderCoordinator,
+} from "./reminders";
+import { getDeviceTimeZone } from "./remindersPlan";
 import { isNativeDebugBuild } from "./runtime";
 import { createSecureTokenStore, type SecureTokenStore } from "./secureToken";
 import { validateServerUrl } from "./serverUrl";
@@ -51,6 +61,53 @@ export interface NativeAppProps {
   tokenStore?: SecureTokenStore;
   httpGet?: HttpGetFn;
   appVersion?: string;
+  reminderCoordinator?: ReminderCoordinator;
+}
+
+function applyDeepLinkRoute(route: string): void {
+  if (window.location.hash === route) {
+    window.dispatchEvent(new Event("hashchange"));
+    return;
+  }
+  window.location.hash = route;
+}
+
+function NativeReminderBridge({
+  coordinator,
+}: {
+  coordinator: ReminderCoordinator;
+}) {
+  const { state, capability } = useAuth();
+  const authorized =
+    state.status === "authenticated" && capability.isAuthorized();
+  const lastTimeZoneRef = useRef<string>(getDeviceTimeZone());
+
+  useEffect(() => {
+    if (!authorized) return;
+
+    const triggerSync = () => {
+      const currentTimeZone = getDeviceTimeZone();
+      lastTimeZoneRef.current = currentTimeZone;
+      void coordinator.syncNow(capability, { timeZone: currentTimeZone });
+    };
+
+    triggerSync();
+    const unsubSchedule = onScheduleChanged(triggerSync);
+    const unsubResume = subscribeAppResume(() => {
+      const nextTimeZone = getDeviceTimeZone();
+      if (nextTimeZone !== lastTimeZoneRef.current) {
+        lastTimeZoneRef.current = nextTimeZone;
+      }
+      void coordinator.syncNow(capability, { timeZone: nextTimeZone });
+    });
+
+    return () => {
+      unsubSchedule();
+      unsubResume();
+    };
+  }, [authorized, capability, coordinator]);
+
+  return null;
 }
 
 export function NativeApp({
@@ -59,6 +116,7 @@ export function NativeApp({
   tokenStore,
   httpGet,
   appVersion,
+  reminderCoordinator,
 }: NativeAppProps) {
   const resolvedUrlStore = useMemo<ServerUrlStore>(
     () => urlStore ?? createServerUrlStore(),
@@ -68,12 +126,18 @@ export function NativeApp({
     () => tokenStore ?? createSecureTokenStore(),
     [tokenStore],
   );
+  const resolvedReminderCoordinator = useMemo<ReminderCoordinator>(
+    () => reminderCoordinator ?? createReminderCoordinator(),
+    [reminderCoordinator],
+  );
   const [shellState, setShellState] = useState<NativeShellState>({
     status: "booting",
   });
   const [viewerRequest, setViewerRequest] =
     useState<NativeImageViewerRequest | null>(null);
   const activeServerUrlRef = useRef<string | null>(null);
+  const shellReadyRef = useRef(false);
+  const pendingDeepLinkRef = useRef<string | null>(null);
   const resolvedAppVersion = appVersion ?? getAppVersion();
 
   const closeImageViewer = useCallback(() => {
@@ -81,14 +145,33 @@ export function NativeApp({
   }, []);
 
   useEffect(() => {
+    shellReadyRef.current = shellState.status === "ready";
+    if (shellState.status === "ready" && pendingDeepLinkRef.current !== null) {
+      const pending = pendingDeepLinkRef.current;
+      pendingDeepLinkRef.current = null;
+      applyDeepLinkRoute(pending);
+    }
+  }, [shellState.status]);
+
+  useEffect(() => {
     void cleanupNativeSharedCache();
+    registerActiveReminderCoordinator(resolvedReminderCoordinator);
     registerNativeImageViewerHandler((request) => {
       setViewerRequest(request);
     });
+    const unsubTap = subscribeNotificationTap((route) => {
+      if (shellReadyRef.current) {
+        applyDeepLinkRoute(route);
+      } else {
+        pendingDeepLinkRef.current = route;
+      }
+    });
     return () => {
+      unsubTap();
       registerNativeImageViewerHandler(null);
+      registerActiveReminderCoordinator(null);
     };
-  }, []);
+  }, [resolvedReminderCoordinator]);
 
   const handleChangeServer = useCallback((currentUrl: string) => {
     void clearNativeBearerToken().finally(() => {
@@ -110,6 +193,7 @@ export function NativeApp({
         activeServerUrlRef.current !== serverUrl
       ) {
         await resolvedTokenStore.clear();
+        await resolvedReminderCoordinator.clearOnTrustLoss();
       }
       activeServerUrlRef.current = serverUrl;
       const storedToken = await resolvedTokenStore.get();
@@ -123,6 +207,7 @@ export function NativeApp({
         onChangeServer: () => {
           handleChangeServer(serverUrl);
         },
+        onTrustLost: () => resolvedReminderCoordinator.clearOnTrustLoss(),
       });
       setShellState((previous) => ({
         status: "ready",
@@ -131,7 +216,7 @@ export function NativeApp({
         sessionKey: previous.status === "ready" ? previous.sessionKey + 1 : 1,
       }));
     },
-    [handleChangeServer, resolvedTokenStore],
+    [handleChangeServer, resolvedReminderCoordinator, resolvedTokenStore],
   );
 
   useEffect(() => {
@@ -142,6 +227,8 @@ export function NativeApp({
       if (isAborted()) return;
       activeServerUrlRef.current = saved;
       if (saved === null) {
+        await resolvedReminderCoordinator.clearOnTrustLoss();
+        if (isAborted()) return;
         setShellState({
           status: "onboarding",
           initialServerUrl: null,
@@ -152,6 +239,8 @@ export function NativeApp({
 
       const validation = validateServerUrl(saved, { allowDebugHttp });
       if (!validation.ok) {
+        await resolvedReminderCoordinator.clearOnTrustLoss();
+        if (isAborted()) return;
         setShellState({
           status: "onboarding",
           initialServerUrl: saved,
@@ -174,6 +263,10 @@ export function NativeApp({
       );
       if (isAborted()) return;
       if (!compatibility.ok) {
+        if (compatibility.kind !== "unreachable") {
+          await resolvedReminderCoordinator.clearOnTrustLoss();
+          if (isAborted()) return;
+        }
         setShellState({
           status: "onboarding",
           initialServerUrl: validation.normalizedUrl,
@@ -195,7 +288,14 @@ export function NativeApp({
       resetMapRuntimeConfig();
       resetAuthTransport();
     };
-  }, [activateServer, allowDebugHttp, appVersion, httpGet, resolvedUrlStore]);
+  }, [
+    activateServer,
+    allowDebugHttp,
+    appVersion,
+    httpGet,
+    resolvedReminderCoordinator,
+    resolvedUrlStore,
+  ]);
 
   if (shellState.status === "booting") {
     return (
@@ -223,13 +323,21 @@ export function NativeApp({
         onConnected={(serverUrl, info) => {
           void activateServer(serverUrl, info);
         }}
+        onForgetServer={() => {
+          void resolvedReminderCoordinator.clearOnTrustLoss();
+        }}
       />
     );
   }
 
   return (
     <>
-      <App key={`${shellState.serverUrl}#${String(shellState.sessionKey)}`} />
+      <App
+        key={`${shellState.serverUrl}#${String(shellState.sessionKey)}`}
+        nativeChildren={
+          <NativeReminderBridge coordinator={resolvedReminderCoordinator} />
+        }
+      />
       <NativeUpdateBanner
         key={shellState.info.serverVersion}
         serverVersion={shellState.info.serverVersion}

@@ -2838,6 +2838,23 @@
       "status": "implemented"
     },
     {
+      "id": "UAT-INSTANCE-002",
+      "category": "infrastructure",
+      "description": "Allow attached per-worktree UAT instances to detect and recover safely from stale launches after branch history rewrites without manual container deletion",
+      "acceptance_criteria": [
+        "Only attached UATInstance worktrees treat a non-ancestor io.florabase.sha as a stale launch, proved only when all container, volume, network, mount, port, environment and volume-user identity checks pass and the 40-hex commit exists locally in this worktree's HEAD or branch reflog; singleton UAT Preview and detached owners keep the unchanged delivered() path",
+        "Attached UATInstance identity checks never call gh api; wherever delivered() still runs, gh lookup failures raise a single clear WorkflowError naming the short SHA and next command instead of a raw 422 or traceback",
+        "On a stale launch, status reports 'launched HEAD: <sha> (stale: not in current history)' with the rebuild/reset next step, stop/remove/reset/up succeed without manual docker rm, up preserves migration safety via require_upgradeable with a guarded reset hint and never auto-resets, and seed/validate refuse until up rebuilds from HEAD",
+        "An unknown 40-hex SHA outside this worktree's reflog is refused by status, stop, up, seed and validate, and accepted only by confirm-guarded reset/remove when all other identity checks pass; malformed SHAs and foreign identities remain refused everywhere",
+        "Offline regressions and real disposable Docker smoke (rebuilt branch history through status, seed/validate refusal, stop, up relabeling and guarded reset) plus canonical FULL pass before operator delivery"
+      ],
+      "dependencies": [
+        "MULTIBRANCH-UAT-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "DEV-GOLDEN-001",
       "category": "infrastructure",
       "description": "Persistent comprehensive synthetic Golden collection in primary main DEV",
@@ -3622,6 +3639,25 @@
         "Opt-in .github/workflows/mobile-android-release.yml triggers only on completed successful Protected Florabase release workflow_run (head_sha) and workflow_dispatch (no push/pull_request triggers, job-only contents:write, pinned action SHAs, no secret leaks), leaves beta-images.yml untouched, and docs/mobile.md documents keystore creation, backup warning, secrets, and Obtainium setup"
       ],
       "dependencies": [
+        "MOBILE-002",
+        "MOBILE-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "MOBILE-004",
+      "category": "mobile",
+      "description": "Opt-in local Schedule reminder digests in the Capacitor Android app via @capacitor/local-notifications (F-Droid clean, zero push/Google Play Services, zero DB migration or backend changes) while keeping the PWA unchanged",
+      "acceptance_criteria": [
+        "PWA remains unchanged (web build, sw.js, manifest.webmanifest, CSP, auth, and Account screen without Reminders section; zero @capacitor/* in frontend/package.json; measured web bundle delta reported)",
+        "Native-only Reminders panel in Settings -> Account (below Connected devices) defaults off with 08:00 local time and include-overdue on, persists per device in Capacitor Preferences, requests POST_NOTIFICATIONS only on opt-in, and handles denied or later-revoked permission without re-prompting",
+        "Deterministic serialized plan builder schedules at most one inexact allowWhileIdle daily digest per active day over the next 14 local calendar days using GET /api/v1/schedule (handling DST transitions, nonexistent/ambiguous times, overdue-only today, single-activity deep links, overflow pages, and owned ID range 41000..41099)",
+        "Lock-screen privacy uses VISIBILITY_PRIVATE channel with count-only collapsed text and <=5 sanitized <=60-char titles in expanded inboxList only (no targets, locations, notes, server URL, or tokens; Preferences plan summary stores counts only), and cancels pending + delivered owned notifications on switch-off, logout, 401/revocation, server change/forget, and min_client_version failure",
+        "Tapping a notification deep-links into Schedule on cold start, warm start, and across expired-session login; alarms survive reboot and APK update (MY_PACKAGE_REPLACED on LocalNotificationRestoreReceiver, exported=false); MobileReleaseContract enforces permission allowlist (SCHEDULE_EXACT_ALARM removed), zero Google/Firebase deps, and monochrome ic_stat_florabase asset determinism; debug and signed release APKs build and emulator evidence is recorded"
+      ],
+      "dependencies": [
+        "MOBILE-003",
         "MOBILE-002",
         "MOBILE-001"
       ],

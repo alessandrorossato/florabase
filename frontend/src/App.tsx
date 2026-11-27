@@ -14,6 +14,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type ReactNode,
   type RefObject,
   type SyntheticEvent,
 } from "react";
@@ -1077,11 +1078,16 @@ function AuthenticatedApplication() {
   );
 }
 
-export function App() {
+export function App({
+  nativeChildren,
+}: {
+  nativeChildren?: ReactNode;
+} = {}) {
   return (
     <main>
       <AuthProvider>
         <AuthenticatedApplication />
+        {nativeChildren}
       </AuthProvider>
     </main>
   );

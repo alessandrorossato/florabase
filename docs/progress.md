@@ -36,6 +36,74 @@
   focused unit & PostgreSQL integration suites (`test_demo_readonly.py`, `test_demo_readonly_api.py`,
   `DemoExperience.test.tsx`), and canonical FULL gate (`make verify-full AGENT_ID=antigravity-demo-001`).
 
+## 2026-11-27 — MOBILE-004 Android local Schedule reminders (PWA preserved)
+
+- On `feat/mobile-004-notifications` from `origin/main` `c83d8163` (`v0.1.0-beta.10`, writer
+  `neon-mobile-004`). Zero database migrations, zero backend changes, zero OpenAPI drift, and zero
+  `@capacitor/*` packages in `frontend/package.json`.
+- Pinned `@capacitor/local-notifications@8.3.1` in `mobile/package.json` (`mobile/pnpm-lock.yaml`),
+  verified zero Google Play Services / Firebase / FCM / ML Kit in the resolved Gradle
+  `releaseRuntimeClasspath`, stripped `SCHEDULE_EXACT_ALARM` (`tools:node="remove"`), and added
+  `MY_PACKAGE_REPLACED` (`android:exported="false"`) on `LocalNotificationRestoreReceiver` in
+  `mobile/android/app/src/main/AndroidManifest.xml` so pending alarms survive both reboots and
+  Obtainium/APK updates. Extended `scripts/generate-mobile-assets.py` to generate deterministic
+  monochrome status-bar icons (`drawable-{mdpi..xxxhdpi}/ic_stat_florabase.png`, wired in
+  `mobile/capacitor.config.ts` with `iconColor: "#153A2C"`).
+- Added pure DST/time-zone-aware reminder plan builder (`frontend/src/mobile/remindersPlan.ts`),
+  serialized coalescing coordinator and Preferences/bridge adapters
+  (`frontend/src/mobile/reminders.ts`), and lazy native-only `NativeRemindersSettings` panel
+  (`frontend/src/mobile/NativeRemindersSettings.tsx`) mounted in `Settings → Account` below
+  **Connected devices** strictly behind `isNativeShell()` (`frontend/src/settings/AccountScreen.tsx`).
+  Schedules at most one inexact `allowWhileIdle` daily digest over the next 14 local calendar days
+  (`GET /api/v1/schedule?status=planned&due_from=<today>&due_to=<today+13>&today=<today>&limit=100`,
+  owned IDs `41000..41099`), uses `VISIBILITY_PRIVATE` channel `schedule-reminders` with count-only
+  collapsed text and ≤5 sanitized ≤60-char titles in expanded `inboxList` only, persists only
+  `updatedAt`/`timeZone`/per-day counts in `florabase.reminders.plan`, deep-links cold/warm/expired-session
+  taps into Schedule (`#/schedule?window=today|overdue` or `#/schedule/<id>`), recomputes serially on
+  auth start, foreground resume (incl. time-zone change), Schedule mutations (`changes.ts`), and
+  settings edits, and cancels pending + delivered owned notifications on switch-off, logout, 401,
+  server change/forget, and `min_client_version` failure.
+- Web bundle delta vs `origin/main`: `index-*.js` `+109 B` raw / `+63 B` gzip (`300,950 B ->
+  301,059 B`, `91,662 B -> 91,725 B`), `index-*.css` `+0 B`.
+- Extended `MobileReleaseContract` (`scripts/test-beta-runtime.py`) for manifest permission
+  allowlist, `MY_PACKAGE_REPLACED` receiver, `ic_stat_florabase` assets, and zero Google/Firebase
+  dependencies; updated `docs/mobile.md` ("Reminders"), registered `MOBILE-004` (`implemented`,
+  `post-1.0`) in `docs/features.json` and `docs/release/scope-v1.json`, and recorded full emulator
+  and test evidence in [docs/archive/MOBILE-004/evidence.md](archive/MOBILE-004/evidence.md).
+- Verified `make mobile-android-debug` and signed `make mobile-android-release` (throwaway keystore,
+  `v0.1.0-beta.10` / `versionCode 100310`), focused Vitest (17 files, 127 tests), `make workflow-check`,
+  and live Android 16 AOSP emulator E2E (startup isolation, permission-denied recovery, inexact
+  delivery latency +55 s to +90 s, lock-screen `VISIBILITY_PRIVATE`, warm tap, completion recompute,
+  cold-start tap, expired-session 401 cleanup + post-login deep link, APK update survival, reboot
+  survival, and logout cleanup). Canonical FULL `make feature-verify AGENT_ID=neon-mobile-004` runs
+  on the frozen committed HEAD.
+
+## 2026-11-27 — UAT-INSTANCE-002 stale launch handling on rebuilt branches (also: mobile-sync pnpm fix, follow-up of #231)
+
+- On `ci/uat-instance-002` from `origin/main` `c83d8163` (writer `antigravity-neon-uat-instance-002`;
+  registered right after `MULTIBRANCH-UAT-001` in `docs/features.json` as `implemented` and in
+  `docs/release/scope-v1.json` as `best-effort`). Tooling only: no product code, no migration.
+- Added local reflog proof `in_worktree_reflog()` and hardened `delivered()` error handling in
+  `scripts/uat_source.py`; extracted `verify_launched_sha()` and `check_upgradeable()` hooks in
+  `scripts/uat_preview.py` (deferring launched-SHA checks until after all container/volume/network/
+  mount/port/env/foreign-user checks pass, while keeping singleton UAT Preview and detached-owner
+  `delivered()` unchanged); overrode them in `scripts/uat_instance.py` so attached UAT instances
+  never call `gh api`, report stale launches in `status`, allow `stop`/`up`/guarded `reset`/guarded
+  `remove` without manual `docker rm`, keep `require_upgradeable` safety with a guarded reset hint
+  on `up`, refuse `seed`/`validate` while stale, and accept expired 40-hex SHAs only in
+  confirm-guarded `reset`/`remove` when all other identity checks pass. Added a one-line stale-launch
+  hint in `scripts/feature_batch.py` `prepare()` when the batch worktree owns a UAT instance.
+- Documented the rebuilt-branch / stale-launch contract in `docs/development-workflow.md` and
+  archived reproduction, open-check answers and smoke evidence in
+  [uat-instance-002-handoff.md](archive/UAT-INSTANCE-002/uat-instance-002-handoff.md).
+- Checks: `make test-uat-preview` (60 passed: preview 20, source 18, instance 22),
+  `make workflow-check`, `make test-agent-workflow` (81 passed, 3 skipped),
+  `make test-feature-workflow`, `make test-environment-workflow` (51 passed), `make doc-links`
+  (398 docs), `scripts/check-features.py` (205 features valid), real disposable Docker
+  `make smoke-uat-instance` (including branch-rewrite stale launch through `status`/`stop`/`up`/
+  guarded `reset` and before/after `io.florabase.sha` labels) and `make smoke-uat-preview`.
+  Canonical FULL via `make feature-verify` follows tree freeze.
+
 ## 2026-11-27 — Android release APK: apksigner output format (MOBILE-003)
 
 - Second `v0.1.0-beta.10` APK run (45981312380) built and signed the APK but

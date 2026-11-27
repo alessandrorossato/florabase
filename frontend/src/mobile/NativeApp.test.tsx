@@ -13,9 +13,16 @@ import {
   mapRuntimeConfig,
   resetMapRuntimeConfig,
 } from "../provenance-map/config";
+import { notifyScheduleChanged } from "../schedule/changes";
 import type { HttpGetFn } from "./healthProbe";
 import { NativeApp } from "./NativeApp";
 import type { ServerUrlStore } from "./preferences";
+import type { ReminderCoordinator } from "./reminders";
+import { DEFAULT_REMINDER_SETTINGS } from "./remindersPlan";
+import type {
+  CapacitorAppState,
+  CapacitorLocalNotificationActionPerformed,
+} from "./runtime";
 import type { SecureTokenStore } from "./secureToken";
 
 function createMemoryUrlStore(initial: string | null = null): ServerUrlStore {
@@ -404,5 +411,333 @@ describe("NativeApp device sign-in and Keystore lifecycle", () => {
     await waitFor(() => {
       expect(tokenStore.current()).toBeNull();
     });
+  });
+
+  it("cancels reminders on 401, min_client_version failure, and server change, while preserving on unreachable", async () => {
+    const makeSpyCoordinator = (): ReminderCoordinator => ({
+      getSnapshot: () => ({
+        settings: { ...DEFAULT_REMINDER_SETTINGS, enabled: true },
+        permission: "granted",
+        plan: null,
+        syncing: false,
+        error: null,
+      }),
+      subscribe: () => () => undefined,
+      refreshState: vi.fn(() =>
+        Promise.resolve({
+          settings: { ...DEFAULT_REMINDER_SETTINGS, enabled: true },
+          permission: "granted" as const,
+          plan: null,
+          syncing: false,
+          error: null,
+        }),
+      ),
+      syncNow: vi.fn(() =>
+        Promise.resolve({ status: "scheduled" as const, scheduledCount: 1 }),
+      ),
+      enableWithPermission: vi.fn(() =>
+        Promise.resolve({ granted: true, permission: "granted" as const }),
+      ),
+      disable: vi.fn(() => Promise.resolve()),
+      updateSettings: vi.fn(() =>
+        Promise.resolve({ status: "scheduled" as const, scheduledCount: 1 }),
+      ),
+      clearOnTrustLoss: vi.fn(() => Promise.resolve()),
+    });
+
+    // 1. min_client_version failure -> clearOnTrustLoss called
+    const minVersionCoordinator = makeSpyCoordinator();
+    const minVersionHttpGet = vi.fn<HttpGetFn>((url) => {
+      if (url.endsWith("/api/v1/health")) {
+        return Promise.resolve({ status: 200, data: { status: "ok" } });
+      }
+      return Promise.resolve({
+        status: 200,
+        data: {
+          server_version: "1.0.0",
+          api_version: 1,
+          min_client_version: "0.2.0",
+          capabilities: ["device-auth"],
+        },
+      });
+    });
+
+    const { unmount: unmountMin } = render(
+      <NativeApp
+        allowDebugHttp={false}
+        urlStore={createMemoryUrlStore("https://nas.example.com")}
+        tokenStore={createMemoryTokenStore("tok")}
+        httpGet={minVersionHttpGet}
+        appVersion="0.1.0-beta.9"
+        reminderCoordinator={minVersionCoordinator}
+      />,
+    );
+    expect(await screen.findByText(/App update required/i)).toBeVisible();
+    expect(minVersionCoordinator.clearOnTrustLoss).toHaveBeenCalled();
+    unmountMin();
+
+    // 2. Transient unreachable failure -> reminders preserved
+    const offlineCoordinator = makeSpyCoordinator();
+    const offlineHttpGet = vi.fn<HttpGetFn>(() =>
+      Promise.reject(new Error("Network down")),
+    );
+    const { unmount: unmountOffline } = render(
+      <NativeApp
+        allowDebugHttp={false}
+        urlStore={createMemoryUrlStore("https://nas.example.com")}
+        tokenStore={createMemoryTokenStore("tok")}
+        httpGet={offlineHttpGet}
+        appVersion="0.1.0-beta.9"
+        reminderCoordinator={offlineCoordinator}
+      />,
+    );
+    expect(await screen.findByText(/Server unreachable/i)).toBeVisible();
+    expect(offlineCoordinator.clearOnTrustLoss).not.toHaveBeenCalled();
+    unmountOffline();
+
+    // 3. 401 on boot -> clearOnTrustLoss called via clearNativeBearerToken
+    const revokedCoordinator = makeSpyCoordinator();
+    const okHttpGet = vi.fn<HttpGetFn>((url) => {
+      if (url.endsWith("/api/v1/health")) {
+        return Promise.resolve({ status: 200, data: { status: "ok" } });
+      }
+      return Promise.resolve({
+        status: 200,
+        data: {
+          server_version: "0.1.0-beta.9",
+          api_version: 1,
+          min_client_version: "0.1.0-beta.8",
+          capabilities: ["device-auth"],
+        },
+      });
+    });
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = requestUrl(input);
+      if (url.endsWith("/api/v1/auth/session")) {
+        return Promise.resolve(jsonResponse({ detail: "Unauthorized" }, 401));
+      }
+      return Promise.resolve(jsonResponse({ status: "ok" }));
+    });
+    render(
+      <NativeApp
+        allowDebugHttp={false}
+        urlStore={createMemoryUrlStore("https://nas.example.com")}
+        tokenStore={createMemoryTokenStore("revoked-token")}
+        httpGet={okHttpGet}
+        appVersion="0.1.0-beta.9"
+        reminderCoordinator={revokedCoordinator}
+      />,
+    );
+    expect(await screen.findByLabelText(/login name/i)).toBeVisible();
+    await waitFor(() => {
+      expect(revokedCoordinator.clearOnTrustLoss).toHaveBeenCalled();
+    });
+  });
+
+  it("routes notification taps (including across expired session login) and recomputes on start, resume, and Schedule mutations", async () => {
+    const user = userEvent.setup();
+    window.location.hash = "#/dashboard";
+    let tapListener:
+      ((action: CapacitorLocalNotificationActionPerformed) => void) | null =
+      null;
+    let resumeListener: ((state: CapacitorAppState) => void) | null = null;
+
+    (globalThis as { Capacitor?: unknown }).Capacitor = {
+      isNativePlatform: () => true,
+      Plugins: {
+        LocalNotifications: {
+          addListener: vi.fn(
+            (
+              _event: string,
+              cb: (action: CapacitorLocalNotificationActionPerformed) => void,
+            ) => {
+              tapListener = cb;
+              // Simulate a cold-start retained tap firing immediately upon listener attachment
+              cb({
+                actionId: "tap",
+                notification: {
+                  id: 41000,
+                  extra: { route: "#/schedule?window=today", v: 1 },
+                },
+              });
+              return Promise.resolve({
+                remove: vi.fn(() => Promise.resolve()),
+              });
+            },
+          ),
+        },
+        App: {
+          addListener: vi.fn(
+            (_event: string, cb: (state: CapacitorAppState) => void) => {
+              resumeListener = cb;
+              return Promise.resolve({
+                remove: vi.fn(() => Promise.resolve()),
+              });
+            },
+          ),
+        },
+      },
+    };
+
+    try {
+      const coordinator: ReminderCoordinator = {
+        getSnapshot: () => ({
+          settings: { ...DEFAULT_REMINDER_SETTINGS, enabled: true },
+          permission: "granted",
+          plan: null,
+          syncing: false,
+          error: null,
+        }),
+        subscribe: () => () => undefined,
+        refreshState: vi.fn(() =>
+          Promise.resolve({
+            settings: { ...DEFAULT_REMINDER_SETTINGS, enabled: true },
+            permission: "granted" as const,
+            plan: null,
+            syncing: false,
+            error: null,
+          }),
+        ),
+        syncNow: vi.fn(() =>
+          Promise.resolve({ status: "scheduled" as const, scheduledCount: 1 }),
+        ),
+        enableWithPermission: vi.fn(() =>
+          Promise.resolve({ granted: true, permission: "granted" as const }),
+        ),
+        disable: vi.fn(() => Promise.resolve()),
+        updateSettings: vi.fn(() =>
+          Promise.resolve({ status: "scheduled" as const, scheduledCount: 1 }),
+        ),
+        clearOnTrustLoss: vi.fn(() => Promise.resolve()),
+      };
+
+      let authenticated = false;
+      const httpGet = vi.fn<HttpGetFn>((url) => {
+        if (url.endsWith("/api/v1/health")) {
+          return Promise.resolve({ status: 200, data: { status: "ok" } });
+        }
+        return Promise.resolve({
+          status: 200,
+          data: {
+            server_version: "0.1.0-beta.9",
+            api_version: 1,
+            min_client_version: "0.1.0-beta.8",
+            capabilities: ["device-auth"],
+          },
+        });
+      });
+
+      vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+        const url = requestUrl(input);
+        if (url.endsWith("/api/v1/auth/session")) {
+          return Promise.resolve(
+            authenticated
+              ? jsonResponse(ownerSession)
+              : jsonResponse({ detail: "Unauthorized" }, 401),
+          );
+        }
+        if (
+          url.endsWith("/api/v1/auth/device-sessions") &&
+          init?.method === "POST"
+        ) {
+          authenticated = true;
+          return Promise.resolve(
+            jsonResponse(
+              {
+                token: "fresh-token",
+                session_id: "01900000-0000-7000-8000-000000000099",
+                device_label: "Pixel 9",
+                idle_expires_at: "2026-12-23T09:00:00Z",
+                absolute_expires_at: "2027-05-21T10:00:00Z",
+                session: ownerSession,
+              },
+              201,
+            ),
+          );
+        }
+        if (url.includes("/api/v1/schedule")) {
+          return Promise.resolve(
+            jsonResponse({
+              items: [],
+              total: 0,
+              offset: 0,
+              limit: 50,
+              today: "2026-05-01",
+              overdue_count: 0,
+              today_count: 0,
+            }),
+          );
+        }
+        if (url.endsWith("/api/v1/health")) {
+          return Promise.resolve(jsonResponse({ status: "ok" }));
+        }
+        return Promise.resolve(jsonResponse([]));
+      });
+
+      render(
+        <NativeApp
+          allowDebugHttp={false}
+          urlStore={createMemoryUrlStore("https://nas.example.com")}
+          tokenStore={createMemoryTokenStore("expired-token", "Pixel 9")}
+          httpGet={httpGet}
+          appVersion="0.1.0-beta.9"
+          reminderCoordinator={coordinator}
+        />,
+      );
+
+      // Session expired: lands on login, and cold-start route is preserved in hash
+      const loginInput = await screen.findByLabelText(/login name/i);
+      expect(window.location.hash).toBe("#/schedule?window=today");
+
+      // Sign in -> continues directly to #/schedule?window=today and triggers initial syncNow
+      await user.type(loginInput, "owner");
+      await user.type(
+        screen.getByLabelText(/^password/i),
+        "correct-password-123",
+      );
+      await user.click(screen.getByRole("button", { name: /sign in/i }));
+
+      await waitFor(() => {
+        expect(coordinator.syncNow).toHaveBeenCalledTimes(1);
+      });
+      expect(window.location.hash).toBe("#/schedule?window=today");
+
+      // Schedule mutation triggers recompute
+      notifyScheduleChanged();
+      await waitFor(() => {
+        expect(coordinator.syncNow).toHaveBeenCalledTimes(2);
+      });
+
+      // Foreground resume triggers recompute
+      expect(resumeListener).not.toBeNull();
+      (resumeListener as ((state: CapacitorAppState) => void) | null)?.({
+        isActive: true,
+      });
+      await waitFor(() => {
+        expect(coordinator.syncNow).toHaveBeenCalledTimes(3);
+      });
+
+      // Warm notification tap navigates to a single-activity route
+      expect(tapListener).not.toBeNull();
+      (
+        tapListener as
+          ((action: CapacitorLocalNotificationActionPerformed) => void) | null
+      )?.({
+        actionId: "tap",
+        notification: {
+          id: 41001,
+          extra: {
+            route: "#/schedule/12345678-1234-4123-8123-1234567890ab",
+            v: 1,
+          },
+        },
+      });
+      expect(window.location.hash).toBe(
+        "#/schedule/12345678-1234-4123-8123-1234567890ab",
+      );
+    } finally {
+      delete (globalThis as { Capacitor?: unknown }).Capacitor;
+      window.location.hash = "";
+    }
   });
 });
