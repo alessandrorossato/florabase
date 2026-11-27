@@ -5,13 +5,14 @@ from __future__ import annotations
 
 import hashlib
 import http.cookiejar
+import io
 import json
 import shutil
 import socket
 import subprocess
 import tempfile
 import uuid
-from contextlib import ExitStack
+from contextlib import ExitStack, redirect_stdout
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError
@@ -139,6 +140,35 @@ def resources(project: str) -> dict[str, list[str]]:
             if run(["docker", "image", "ls", "-q", tag], capture=True)
         ]
     }
+
+
+def container_shas(instance: UATInstance) -> dict[str, str]:
+    return {
+        item["Config"]["Labels"]["com.docker.compose.service"]: item["Config"]["Labels"][
+            "io.florabase.sha"
+        ]
+        for item in instance.containers()
+    }
+
+
+def git_commit_in(path: Path, message: str) -> str:
+    run(["git", "-C", str(path), "add", "-A"])
+    run(
+        [
+            "git",
+            "-C",
+            str(path),
+            "-c",
+            "user.name=Florabase Smoke",
+            "-c",
+            "user.email=smoke" + "@" + "example.invalid",
+            "commit",
+            "--allow-empty",
+            "-m",
+            message,
+        ]
+    )
+    return run(["git", "-C", str(path), "rev-parse", "HEAD"], capture=True)
 
 
 def unchanged(before: dict[str, Any], after: dict[str, Any], context: str) -> None:
@@ -284,6 +314,64 @@ def main() -> None:
         # Rebuilt images must not hide the manifest (status and detached owners read it).
         require(a.require_marker()[LEDGER]["profile"] == "smoke", "A's manifest after restart")
         login(a)
+
+        # 6. Rewriting branch A (as feature-batch-prepare does) produces a stale launch that
+        # status, stop, up and guarded reset handle without manual docker rm; seed/validate refuse.
+        stale_digest = database_digest(a)
+        smoke_base = git_commit_in(paths["a"], "smoke stale-launch base")
+        old_tip = git_commit_in(paths["a"], "smoke old branch tip")
+        a.up()
+        before_labels = container_shas(a)
+        print(f"STALE SMOKE before rewrite labels: {json.dumps(before_labels, sort_keys=True)}")
+        require(
+            {"db", "backend", "frontend"} <= set(before_labels)
+            and set(before_labels.values()) == {old_tip},
+            f"A containers launched at old_tip {old_tip}: {before_labels}",
+        )
+        run(["git", "-C", str(paths["a"]), "reset", "--hard", smoke_base])
+        rebuilt_tip = git_commit_in(paths["a"], "smoke rebuilt branch tip")
+        require(rebuilt_tip != old_tip, "rebuilt tip differs from old tip")
+        stale_status = io.StringIO()
+        with redirect_stdout(stale_status):
+            a.status()
+        stale_output = stale_status.getvalue()
+        print(stale_output, end="")
+        require(
+            f"launched HEAD: {old_tip} (stale: not in current history)" in stale_output
+            and "make uat-instance-up" in stale_output,
+            "status reports stale launch and rebuild hint",
+        )
+        refused(a.seed, "run make uat-instance-up first")
+        refused(a.validate_dataset, "run make uat-instance-up first")
+        a.stop()
+        require(not http_ok(a), "stop works on a stale launch")
+        a.up()
+        after_up_labels = container_shas(a)
+        print(f"STALE SMOKE after up labels: {json.dumps(after_up_labels, sort_keys=True)}")
+        require(
+            {"db", "backend", "frontend"} <= set(after_up_labels)
+            and set(after_up_labels.values()) == {rebuilt_tip},
+            f"up relabeled containers to rebuilt_tip {rebuilt_tip}: {after_up_labels}",
+        )
+        require(database_digest(a) == stale_digest, "stale-launch up preserved A's database")
+        require(a.validate_dataset() == 0 and http_ok(a), "A healthy and verified after stale up")
+
+        # Second rewrite: guarded reset recovers a stale launch cleanly without manual docker rm.
+        run(["git", "-C", str(paths["a"]), "reset", "--hard", smoke_base])
+        rebuilt_tip_2 = git_commit_in(paths["a"], "smoke second rebuilt branch tip")
+        require(rebuilt_tip_2 not in {old_tip, rebuilt_tip}, "second rebuilt tip is distinct")
+        a.reset(a.project)
+        after_reset_labels = container_shas(a)
+        print(f"STALE SMOKE after reset labels: {json.dumps(after_reset_labels, sort_keys=True)}")
+        require(
+            {"db", "backend", "frontend"} <= set(after_reset_labels)
+            and set(after_reset_labels.values()) == {rebuilt_tip_2},
+            f"reset relabeled containers to rebuilt_tip_2 {rebuilt_tip_2}: {after_reset_labels}",
+        )
+        require(
+            a.validate_dataset() == 0 and http_ok(a),
+            "A healthy and verified after stale guarded reset",
+        )
     for project in (a.project, b.project, c.project):
         require(
             resources(project) == {"containers": [], "networks": [], "volumes": [], "images": []},
@@ -294,8 +382,9 @@ def main() -> None:
         "REAL UAT INSTANCE SMOKE PASSED: two linked sources coexist on distinct ports/projects/"
         "volumes; golden SMOKE and COMPREHENSIVE seeded, repeated and baseline-verified; real "
         "login; capacity/ownership/port/confirmation refusals changed nothing; writes stay in their "
-        "instance; stop A keeps B; remove B keeps A exactly; zero residual state; persistent "
-        "environments unchanged"
+        "instance; stop A keeps B; remove B keeps A exactly; rebuilt branch stale launch handled "
+        "by status/stop/up/guarded reset with seed/validate refused and labels updated; zero "
+        "residual state; persistent environments unchanged"
     )
 
 

@@ -532,6 +532,23 @@ containers, network and three volumes, never `down -v`. Remove also deletes the 
 `<project>-backend/frontend-development` tags unless still in use. `feature-retire` refuses a
 worktree whose source still owns instance volumes, so remove the instance first.
 
+**Rebuilt branch / stale launch.** Rebuilding an attached feature or batch branch from scratch (for
+example with `git reset --hard` or `make feature-batch-prepare`) leaves existing instance
+containers carrying a launched `io.florabase.sha` that is no longer an ancestor of `HEAD`
+(UAT-INSTANCE-002). Attached `UATInstance` commands never call `gh api` to check delivered PR proof.
+When every container, volume, network, mount, port, environment and volume-user check passes and the
+40-hex commit still exists in this worktree's `HEAD` or branch reflog, `make uat-instance-status`
+marks it `launched HEAD: <sha> (stale: not in current history)` and prints the next step,
+`make uat-instance-stop` stops the proven containers, `make uat-instance-up` rebuilds and relabels
+them from `HEAD` (keeping `require_upgradeable` migration safety and pointing to guarded reset if
+the DB is incompatible, never auto-resetting), and guarded `make uat-instance-reset` /
+`make uat-instance-remove` work without manual `docker rm`. `seed` and `validate` refuse until
+`make uat-instance-up` rebuilds from `HEAD`. An unknown SHA not in the local reflog is still refused
+by `status`, `stop`, `up`, `seed` and `validate`; if Git reflog expiry / `git gc` has pruned an old
+commit, confirmed `make uat-instance-reset CONFIRM_RESET_UAT_INSTANCE=<project>` or
+`make uat-instance-remove CONFIRM_REMOVE_UAT_INSTANCE=<project>` recovers once all other identity
+checks pass. Singleton UAT Preview and detached owners keep the unchanged `delivered()` path.
+
 Limits: synthetic WFO/WCVP indexes built during generation are not provisioned for the running app (see the [TEST-DATA-002 decisions](archive/TEST-DATA-002/test-data-002-design.md#next-step-separately-review-and-uat)). Browsers share `localhost` cookies across ports, so signing in to a second instance in the
 same browser profile signs out the first (use separate profiles). An instance whose source worktree
 was deleted cannot be retired by these commands; `make uat-instance-list` marks it as MISSING SOURCE
