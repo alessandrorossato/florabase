@@ -223,4 +223,3 @@ and delegates to initialization in that worktree, without attempting to switch s
    use `--force`, never `rm -rf`, and never remove a worktree that is dirty, still on a branch, owns
    Review/UAT resources, or belongs to another agent.
 3. If anything refuses, report the path and reason to the operator and stop.
-

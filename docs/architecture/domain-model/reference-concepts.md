@@ -349,4 +349,3 @@ managed GEOGRAPHY-002 botanical native-range dataset or MAP-002 external occurre
 Location remains the current physical storage/cultivation place, and Supplier remains who supplied
 the material. The map performs no geocoding, reverse geocoding, browser geolocation, or external
 botanical lookup.
-

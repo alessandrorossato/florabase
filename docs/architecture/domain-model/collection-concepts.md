@@ -293,4 +293,3 @@ links each item to its Plant or PlantGroup Event context. Generic Event creation
 extraction; only the authoritative extraction operation creates one and its resulting-Plant link.
 Structured per-kind payloads beyond movement destination, transfer recipient, the extraction
 result, the measurement value and the phenological stage are deferred.
-

@@ -214,4 +214,3 @@ The current installation supports one enabled owner. Domain and reference record
 installation-wide and do not carry per-user ownership columns. Reads require an authenticated
 session; mutations require owner authorization, exact Origin, and a session-bound CSRF token. Normal
 product workflows preserve historical rows rather than hard-deleting them.
-

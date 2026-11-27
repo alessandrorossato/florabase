@@ -290,4 +290,3 @@ and retains the worktree with the exact refusal reason, follow-up command, and f
 without attempting retirement; provider-managed worktrees are always retained for the tool that
 created them. A dirty/staged primary or unexpected primary branch receives an actionable refusal
 with feature source retained. Single-checkout manual finish still switches to updated `main`.
-

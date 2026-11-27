@@ -67,4 +67,3 @@ or `FINISHED <branch> at <tip>; RETAINED <path> (<reason>)`); retention does not
 and `KEEP_WORKTREE=1` opts out. Retained managed worktrees can still use the explicit
 `make feature-retire` confirmation later. Provider-managed worktrees remain with their provider and
 any Preview/UAT owner remains subject to its existing lifecycle rules.
-

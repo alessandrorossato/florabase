@@ -191,4 +191,3 @@ Existing installations previously using the baseline's legacy `florabase` name m
 migrate their paired data deliberately before adopting `florabase-prod`; this helper does not silently
 attach production to DEV volumes. Published releases offer one self-initializing
 [`compose.yaml`](../../operate/installation.md) with its own storage layout (ADR 0008).
-
