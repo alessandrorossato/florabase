@@ -76,6 +76,16 @@ test("requires explicit privacy approval then automatically renders an external 
   const fetch = vi
     .spyOn(globalThis, "fetch")
     .mockResolvedValueOnce(json(null))
+    .mockResolvedValueOnce(
+      json({
+        public_qr_base_url: null,
+        default_label_preset: "medium",
+        media_save_local_copy_default: true,
+        media_default_attribution: "Photo: Owner",
+        media_default_licence_label: null,
+        media_default_licence_url: null,
+      }),
+    )
     .mockResolvedValueOnce(json(external));
   const user = userEvent.setup();
   renderCover();
@@ -134,14 +144,15 @@ test("requires explicit privacy approval then automatically renders an external 
   expect(
     screen.getByRole("link", { name: "Licence: CC BY 4.0" }),
   ).toHaveAttribute("href", external.licence_url);
-  const rawBody = fetch.mock.calls[1]?.[1]?.body;
+  // Call 1 reads the Settings → Media default for the local-copy choice.
+  const rawBody = fetch.mock.calls[2]?.[1]?.body;
   if (typeof rawBody !== "string")
     throw new Error("External cover request body was not JSON");
   const requestBody = JSON.parse(rawBody) as {
     privacy_acknowledged: boolean;
   };
   expect(requestBody.privacy_acknowledged).toBe(true);
-  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(fetch).toHaveBeenCalledTimes(3);
 
   fireEvent.error(image);
   expect(

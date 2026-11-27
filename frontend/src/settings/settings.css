@@ -4,7 +4,11 @@
 .settings-content {
   display: grid;
   gap: var(--space-4);
-  width: min(100%, 58rem);
+  width: 100%;
+}
+/* Cards span the page; forms keep a readable line length inside them. */
+.settings-panel form {
+  max-inline-size: 44rem;
 }
 .settings-panel {
   display: grid;
@@ -18,7 +22,8 @@
 .settings-panel p {
   margin: 0;
 }
-.settings-panel input:not([type="radio"]) {
+.settings-panel input:not([type="radio"], [type="checkbox"]),
+.settings-panel textarea {
   width: 100%;
   min-width: 0;
 }
@@ -158,11 +163,23 @@
   margin: 0;
   color: var(--text-muted);
 }
-.help-links {
+.help-sections {
   display: grid;
-  gap: var(--space-1);
+  gap: var(--space-2);
   margin: 0;
-  padding-inline-start: var(--space-4);
+}
+.help-sections > div {
+  display: grid;
+  grid-template-columns: minmax(9rem, 14rem) minmax(0, 1fr);
+  gap: var(--space-1) var(--space-4);
+  align-items: baseline;
+}
+.help-sections dt {
+  font: var(--type-strong);
+}
+.help-sections dd {
+  margin: 0;
+  color: var(--text-muted);
 }
 .data-sources-table {
   overflow-x: auto;
@@ -179,6 +196,7 @@
   border-block-end: 1px solid var(--border);
 }
 @media (max-width: 40rem) {
+  .help-sections > div,
   .help-concepts {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -233,4 +251,52 @@
 .device-sessions-dates {
   color: var(--text-muted);
   font: var(--type-small);
+}
+
+.reference-status-mode {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.reference-status-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+.reference-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+.reference-status-row dt {
+  font: var(--type-strong);
+}
+.reference-status-row dd {
+  margin: 0;
+}
+.reference-status-badge {
+  display: inline-block;
+  padding: 0.125rem var(--space-2);
+  border-radius: var(--radius-small);
+  font: var(--type-small);
+}
+.reference-status-badge--ready {
+  background: var(--primary-subtle);
+  color: var(--primary);
+}
+.reference-status-badge--preparing {
+  background: var(--warning-subtle);
+  color: var(--warning-text);
+}
+.reference-status-badge--failed {
+  background: var(--danger-subtle);
+  color: var(--danger);
+}
+.reference-status-badge--muted {
+  background: var(--surface-subtle);
+  color: var(--text-muted);
 }

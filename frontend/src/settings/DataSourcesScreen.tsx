@@ -1,5 +1,14 @@
+import { useEffect, useState } from "react";
+
+import { isExpectedAuthCancellation } from "../auth/api";
+import { useOptionalAuth } from "../auth/context";
 import { PageHeader } from "../components/ReferenceUI";
 import { Page } from "../components/WorkspaceUI";
+import {
+  getSystemReferences,
+  type ReferenceSetupIndexStatus,
+  type SystemReferences,
+} from "./api";
 import "./settings.css";
 
 const sources = [
@@ -7,16 +16,21 @@ const sources = [
     name: "World Flora Online (WFO)",
     use: "Taxonomy: accepted names and classification",
     access:
-      "Local reviewed snapshot installed by the operator; never fetched at run time",
+      "Local reviewed snapshot; provisioned automatically in the background when enabled, or mounted manually",
     licence: "CC0",
     where: "#/taxonomy",
+    website: "https://www.worldfloraonline.org/",
+    dataset: "https://doi.org/10.5281/zenodo.20782718",
   },
   {
     name: "Kew WCVP",
     use: "Reviewable native-range proposals",
-    access: "Local sealed index installed by the operator",
+    access:
+      "Local sealed index; provisioned automatically in the background when enabled, or mounted manually",
     licence: "CC BY 3.0",
     where: "#/native-ranges",
+    website: "https://powo.science.kew.org/about-wcvp",
+    dataset: "https://sftp.kew.org/pub/data-repositories/WCVP/",
   },
   {
     name: "GBIF",
@@ -25,6 +39,8 @@ const sources = [
       "Online, only when you search, confirm or refresh a GBIF link, or press Load on a confirmed link",
     licence: "Per dataset",
     where: "#/species-distribution",
+    website: "https://www.gbif.org/",
+    dataset: "https://techdocs.gbif.org/en/openapi/",
   },
   {
     name: "Natural Earth",
@@ -32,6 +48,9 @@ const sources = [
     access: "Bundled with Florabase, works offline",
     licence: "Public domain",
     where: "#/map",
+    website: "https://www.naturalearthdata.com/",
+    dataset:
+      "https://www.naturalearthdata.com/downloads/110m-cultural-vectors/110m-admin-0-details/",
   },
   {
     name: "OpenStreetMap tiles",
@@ -39,6 +58,8 @@ const sources = [
     access: "Off unless the operator enables it in runtime-config.js",
     licence: "ODbL, provider policy applies",
     where: "#/map",
+    website: "https://www.openstreetmap.org/copyright",
+    dataset: "https://operations.osmfoundation.org/policies/tiles/",
   },
   {
     name: "Your own data (CSV)",
@@ -49,8 +70,43 @@ const sources = [
   },
 ] as const;
 
+function statusTone(index: ReferenceSetupIndexStatus): string {
+  if (index.state === "ready" || (index.state === "manual" && index.available))
+    return "ready";
+  if (index.state === "preparing") return "preparing";
+  if (index.state === "failed") return "failed";
+  return "muted";
+}
+
 /** Settings → Data sources: what external data Florabase uses and the rules for adding more. */
 export function DataSourcesScreen() {
+  const auth = useOptionalAuth();
+  const isAuthenticated = auth?.state.status === "authenticated";
+  const capability = auth?.capability;
+  const [references, setReferences] = useState<SystemReferences | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
+  const loadingStatus =
+    isAuthenticated && references === null && statusError === null;
+
+  useEffect(() => {
+    if (!isAuthenticated || !capability?.isAuthorized()) return;
+    const controller = new AbortController();
+    void getSystemReferences(capability, controller.signal)
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        setReferences(data);
+        setStatusError(null);
+      })
+      .catch((caught: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(caught))
+          return;
+        setStatusError("Could not load reference index status.");
+      });
+    return () => {
+      controller.abort();
+    };
+  }, [isAuthenticated, capability]);
+
   return (
     <Page className="settings-workspace" titleId="data-sources-heading">
       <PageHeader
@@ -60,6 +116,50 @@ export function DataSourcesScreen() {
         description="External references Florabase uses, how they are reached, and how new sources will be added."
       />
       <div className="settings-content">
+        {isAuthenticated && (
+          <section
+            className="settings-panel"
+            aria-labelledby="sources-reference-status"
+          >
+            <h3 id="sources-reference-status">Reference index status</h3>
+            {loadingStatus && (
+              <p role="status">Checking reference index status…</p>
+            )}
+            {statusError && <p role="alert">{statusError}</p>}
+            {references && (
+              <>
+                <p className="reference-status-mode">
+                  Automatic background setup:{" "}
+                  <strong>
+                    {references.mode === "auto" ? "enabled" : "off"}
+                  </strong>
+                </p>
+                <dl className="reference-status-list">
+                  <div className="reference-status-row">
+                    <dt>World Flora Online (WFO 2026-06)</dt>
+                    <dd>
+                      <span
+                        className={`reference-status-badge reference-status-badge--${statusTone(references.wfo)}`}
+                      >
+                        {references.wfo.status}
+                      </span>
+                    </dd>
+                  </div>
+                  <div className="reference-status-row">
+                    <dt>Kew WCVP v16</dt>
+                    <dd>
+                      <span
+                        className={`reference-status-badge reference-status-badge--${statusTone(references.wcvp_v16)}`}
+                      >
+                        {references.wcvp_v16.status}
+                      </span>
+                    </dd>
+                  </div>
+                </dl>
+              </>
+            )}
+          </section>
+        )}
         <section className="settings-panel" aria-labelledby="sources-current">
           <h3 id="sources-current">Sources in use</h3>
           <div className="data-sources-table">
@@ -70,6 +170,7 @@ export function DataSourcesScreen() {
                   <th scope="col">Used for</th>
                   <th scope="col">How it is reached</th>
                   <th scope="col">Licence</th>
+                  <th scope="col">Links</th>
                 </tr>
               </thead>
               <tbody>
@@ -81,6 +182,31 @@ export function DataSourcesScreen() {
                     <td>{source.use}</td>
                     <td>{source.access}</td>
                     <td>{source.licence}</td>
+                    <td>
+                      {"website" in source && (
+                        <a
+                          href={source.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${source.name} website`}
+                        >
+                          Website
+                        </a>
+                      )}
+                      {"dataset" in source && (
+                        <>
+                          {" · "}
+                          <a
+                            href={source.dataset}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`${source.name} data source`}
+                          >
+                            Data source
+                          </a>
+                        </>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

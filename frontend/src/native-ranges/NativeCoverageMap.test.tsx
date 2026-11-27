@@ -308,3 +308,65 @@ test("map/inspector controls keep both panels mounted, focus and chosen territor
     "true",
   );
 });
+
+test("Photos on hover adds the hovered territory's identity covers to the preview, only when switched on", async () => {
+  const user = userEvent.setup();
+  const view = show();
+  const map = screen.getByRole("group", { name: /coverage map/ });
+  await user.hover(within(map).getByRole("button", { name: /Brazil/ }));
+  expect(screen.getByRole("tooltip").querySelector(".hover-photos")).toBeNull();
+  view.unmount();
+  render(
+    <AuthContext.Provider value={auth}>
+      <div className="native-ranges">
+        <NativeCoverageMap
+          hoverPhotos
+          territories={territories}
+          geometry={{ status: "ready", data: geometry }}
+          retry={vi.fn()}
+          identities={identities.slice(0, 3)}
+        />
+      </div>
+    </AuthContext.Provider>,
+  );
+  await user.hover(
+    within(screen.getByRole("group", { name: /coverage map/ })).getByRole(
+      "button",
+      { name: /Argentina/ },
+    ),
+  );
+  const preview = screen.getByRole("tooltip");
+  expect(preview).toHaveTextContent("Species 1, Species 2");
+  expect(preview).not.toHaveTextContent("Species 3");
+  expect(preview.querySelectorAll(".hover-photos__thumb")).toHaveLength(2);
+});
+
+test("territories without identity lists ask the page for their photos", async () => {
+  const user = userEvent.setup();
+  const territoryPhotos = vi.fn((code: string) => (
+    <span>Photos of {code}</span>
+  ));
+  render(
+    <AuthContext.Provider value={auth}>
+      <div className="native-ranges">
+        <NativeCoverageMap
+          hoverPhotos
+          territoryPhotos={territoryPhotos}
+          territories={territories.map((unit) => ({
+            ...unit,
+            identity_ids: undefined,
+          }))}
+          geometry={{ status: "ready", data: geometry }}
+          retry={vi.fn()}
+        />
+      </div>
+    </AuthContext.Provider>,
+  );
+  await user.hover(
+    within(screen.getByRole("group", { name: /coverage map/ })).getByRole(
+      "button",
+      { name: /Brazil/ },
+    ),
+  );
+  expect(screen.getByRole("tooltip")).toHaveTextContent("Photos of BR");
+});

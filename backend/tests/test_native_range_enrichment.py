@@ -281,7 +281,7 @@ def test_fixed_download_failure_preserves_previous_index(
     if failure == "oversize":
         monkeypatch.setattr(snapshot, "MAX_ARCHIVE_BYTES", 1)
     if failure == "elapsed":
-        times = iter([0.0, 241.0])
+        times = iter([0.0, 1801.0])
         monkeypatch.setattr(time, "monotonic", lambda: next(times))
     with pytest.raises((httpx.HTTPError, ValueError)):
         snapshot.download(destination)
@@ -376,16 +376,19 @@ def test_snapshot_cli_defaults_to_v16_and_supports_explicit_v15(
 
     from florabase.native_range_enrichment import snapshot
 
-    seen: list[tuple[Path, WcvpVersion]] = []
-    monkeypatch.setattr(
-        snapshot, "download", lambda destination, version="16": seen.append((destination, version))
-    )
+    seen: list[tuple[Path, WcvpVersion, float]] = []
+
+    def fake_download(destination: Path, version: WcvpVersion, *, max_seconds: float) -> None:
+        seen.append((destination, version, max_seconds))
+
+    monkeypatch.setattr(snapshot, "download", fake_download)
     target = tmp_path / "index.sqlite"
     monkeypatch.setattr(sys, "argv", ["snapshot", str(target)])
     snapshot.main()
     monkeypatch.setattr(sys, "argv", ["snapshot", str(target), "--version", "15"])
     snapshot.main()
-    assert seen == [(target, "16"), (target, "15")]
+    # The DEV CLI keeps its historical 240 s download bound.
+    assert seen == [(target, "16", 240), (target, "15", 240)]
 
 
 def test_historical_v15_metadata_defaults_remain_valid() -> None:

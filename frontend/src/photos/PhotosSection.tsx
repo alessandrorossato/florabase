@@ -21,6 +21,7 @@ import {
 import { OverflowMenu } from "../components/ReferenceUI";
 import { saveLocalCopy } from "../media/api";
 import { ExternalCopyChoice } from "../media/ExternalCopyChoice";
+import { useMediaDefaults } from "../media/useMediaDefaults";
 import { MediaPicker } from "../media/MediaPicker";
 import { useAuth } from "../auth/context";
 import { useProtectedImage } from "./useProtectedImage";
@@ -297,6 +298,8 @@ export function PhotosSection({
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
   const [editor, setEditor] = useState<Editor>(null);
+  // Only an open upload form needs the Settings → Media defaults.
+  const mediaDefaults = useMediaDefaults(editor === "local");
   const [removing, setRemoving] = useState<CollectionPhoto | null>(null);
   const [pending, setPending] = useState(false);
   const [linking, setLinking] = useState(false);
@@ -410,8 +413,12 @@ export function PhotosSection({
           target,
           targetId,
           file,
-          caption,
-          attribution,
+          {
+            caption,
+            attribution,
+            licence_label: field("licence_label"),
+            licence_url: field("licence_url"),
+          },
           csrfToken,
           capability,
         );
@@ -1020,12 +1027,46 @@ export function PhotosSection({
                 Attribution (shared media)
               </FieldLabel>
               <textarea
+                key={`${externalEditor ? "external" : "local"}:${mediaDefaults ? "configured" : "built-in"}`}
                 name="attribution"
                 maxLength={2000}
-                defaultValue={editing?.attribution ?? ""}
+                defaultValue={
+                  editing?.attribution ??
+                  (editor === "local"
+                    ? mediaDefaults?.media_default_attribution
+                    : null) ??
+                  ""
+                }
                 required={externalEditor}
               />
             </label>
+            {editor === "local" && (
+              <>
+                <label>
+                  Licence label
+                  <input
+                    key={mediaDefaults ? "configured" : "built-in"}
+                    name="licence_label"
+                    maxLength={2000}
+                    defaultValue={
+                      mediaDefaults?.media_default_licence_label ?? ""
+                    }
+                  />
+                </label>
+                <label>
+                  Licence URL
+                  <input
+                    key={mediaDefaults ? "configured" : "built-in"}
+                    name="licence_url"
+                    type="url"
+                    maxLength={2048}
+                    defaultValue={
+                      mediaDefaults?.media_default_licence_url ?? ""
+                    }
+                  />
+                </label>
+              </>
+            )}
             {editor === "external" && <ExternalCopyChoice disabled={pending} />}
             {editing && (
               <label>

@@ -15,6 +15,7 @@ import {
   LoadingState,
   Page,
 } from "../components/WorkspaceUI";
+import { isNativeShell } from "../mobile/runtime";
 import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import {
   getApplicationSettings,
@@ -246,6 +247,19 @@ export function LabelsScreen({
             disabled={!canPrint}
             onClick={() => {
               if (!canPrint) return;
+              if (isNativeShell()) {
+                setError("");
+                void import("../mobile/fileActions")
+                  .then(({ printNativePage }) =>
+                    printNativePage("Florabase Labels"),
+                  )
+                  .catch(() => {
+                    setError(
+                      "Could not open Android printing. Open Florabase in a browser to print labels.",
+                    );
+                  });
+                return;
+              }
               try {
                 window.print();
               } catch {

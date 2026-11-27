@@ -207,6 +207,11 @@ beforeEach(async () => {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  try {
+    window.localStorage.clear();
+  } catch {
+    // Storage may be unavailable; nothing to reset.
+  }
 });
 
 test("overview exposes distinct coverage, exact places, meaning and local-only scope/search/filter", async () => {
@@ -266,9 +271,10 @@ test("selected species preserves broad plus precise records and has existing edi
   const user = userEvent.setup();
   show();
   await chooseSpecies(user, /^Synthetic species/);
-  expect(
-    screen.getByRole("button", { name: /Compare species/ }),
-  ).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByRole("button", { name: /By species/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
   expect(
     await screen.findByRole("heading", { name: identity.display_label }),
   ).toBeVisible();
@@ -289,7 +295,7 @@ test("selected species preserves broad plus precise records and has existing edi
   expect(getOccurrenceMapSummary).not.toHaveBeenCalled();
   await user.click(screen.getByRole("button", { name: "Done" }));
   await user.click(screen.getByRole("button", { name: "Clear selection" }));
-  expect(screen.getByRole("button", { name: /Compare species/ })).toHaveFocus();
+  expect(screen.getByRole("button", { name: /By species/ })).toHaveFocus();
 });
 
 test("represented no-range identity stays visible and has actionable selected empty state", async () => {
@@ -610,7 +616,7 @@ test("explicit multiple selection shows contributors, filter exclusions, removal
     await screen.findByRole("heading", { name: "Selected species comparison" }),
   ).toBeVisible();
   expect(
-    screen.getByRole("button", { name: "Compare species (2)" }),
+    screen.getByRole("button", { name: "By species (2)" }),
   ).toHaveAttribute("aria-pressed", "true");
   await openDisclosure(user, /Territory map coverage/);
   await openDisclosure(user, /Selected species · 2/);
@@ -641,9 +647,7 @@ test("explicit multiple selection shows contributors, filter exclusions, removal
     await screen.findByRole("heading", { name: identity.display_label }),
   ).toBeVisible();
   await chooseSpecies(user, /^Synthetic species/);
-  expect(
-    screen.getByRole("button", { name: "Compare species (0)" }),
-  ).toBeVisible();
+  expect(screen.getByRole("button", { name: "By species (0)" })).toBeVisible();
   expect(
     screen.getByRole("heading", { name: "Select a species" }),
   ).toBeVisible();
@@ -688,9 +692,7 @@ test("20 selection limit keeps deselection available and invalid URL never trunc
   expect(screen.getByRole("alert")).toHaveTextContent(
     "Selection could not be restored",
   );
-  expect(
-    screen.getByRole("button", { name: "Compare species (0)" }),
-  ).toBeVisible();
+  expect(screen.getByRole("button", { name: "By species (0)" })).toBeVisible();
 });
 
 test("comparison keeps stale UUIDs explicit and restorable from repeated URL parameters", async () => {
@@ -716,9 +718,7 @@ test("comparison keeps stale UUIDs explicit and restorable from repeated URL par
     auth.capability,
     expect.any(AbortSignal),
   );
-  expect(
-    screen.getByRole("button", { name: "Compare species (2)" }),
-  ).toBeVisible();
+  expect(screen.getByRole("button", { name: "By species (2)" })).toBeVisible();
 });
 
 test("opening a multi-species Saved View restores its exact set and category filters", async () => {
@@ -759,7 +759,7 @@ test("opening a multi-species Saved View restores its exact set and category fil
     await screen.findByRole("heading", { name: "Selected species comparison" }),
   ).toBeVisible();
   expect(
-    screen.getByRole("button", { name: "Compare species (2)" }),
+    screen.getByRole("button", { name: "By species (2)" }),
   ).toHaveAttribute("aria-pressed", "true");
   await openFilters(user);
   expect(screen.getByLabelText("Plants")).toBeChecked();
@@ -953,7 +953,7 @@ test("chooser returns focus, preserves inspection, and keeps selected IDs throug
     expect(trigger).toHaveFocus();
   });
   expect(
-    screen.getByRole("button", { name: "Compare species (1)" }),
+    screen.getByRole("button", { name: "By species (1)" }),
   ).toHaveAttribute("aria-pressed", "true");
   expect(window.location.hash).toContain(`identity=${id}`);
   expect(window.location.hash).toContain("q=cultivar");
@@ -1042,9 +1042,7 @@ test("five-species comparison disables a sixth choice, preserves colors, and kee
   expect(
     await screen.findByText(/All are preserved in count-based coverage/),
   ).toBeVisible();
-  expect(
-    screen.getByRole("button", { name: "Compare species (6)" }),
-  ).toBeVisible();
+  expect(screen.getByRole("button", { name: "By species (6)" })).toBeVisible();
   expect(window.location.hash.match(/identity=/g)).toHaveLength(6);
   expect(document.querySelector("pattern")).not.toBeInTheDocument();
 });
@@ -1249,4 +1247,17 @@ test("logout-failed keeps loaded native-range workspace mounted without issuing 
   expect(
     screen.getByRole("group", { name: /Collection recorded/ }),
   ).toBeInTheDocument();
+});
+
+test("Photos on hover starts off and reads no territory photos until switched on", async () => {
+  const user = userEvent.setup();
+  show();
+  const toggle = await screen.findByRole("switch", { name: "Photos on hover" });
+  expect(toggle).not.toBeChecked();
+  const calls = vi.mocked(listTerritoryIdentities).mock.calls.length;
+  await user.click(toggle);
+  expect(toggle).toBeChecked();
+  expect(vi.mocked(listTerritoryIdentities).mock.calls.length).toBe(calls);
+  await user.click(toggle);
+  expect(toggle).not.toBeChecked();
 });

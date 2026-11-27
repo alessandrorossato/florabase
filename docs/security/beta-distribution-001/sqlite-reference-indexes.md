@@ -100,8 +100,19 @@ are unchanged: metadata, release, the WFO format version and the WFO seal.
   this is ordinary base maintenance.
 - A file with the exact expected schema but crafted B-tree contents still reaches SQLite's core
   parser. That is SQLite's documented corrupt-database threat model, mitigated by defensive mode
-  and `cell_size_check`. Building the index yourself (provenance) remains the primary control; see
-  the [installation guide](../../installation.md#optional-botanical-reference-datasets).
-- A writer that ignores SQLite locking and rewrites the file in place while it is open would need
-  write access to the root-owned, read-only-mounted `reference/` directory, which is host-root
-  level.
+  and `cell_size_check`. Provenance remains the primary control: either building the index yourself
+  or letting `FLORABASE_REFERENCES_SETUP=auto` (`REF-SETUP-001`) build it in-container with
+  Florabase's own builders from pinned official archives whose SHA-256 checksums, member lists and
+  sizes are verified before any parsing; see the
+  [installation guide](../../installation.md#optional-botanical-reference-datasets).
+- **Managed directory trade-off (`REF-SETUP-001`):** Under `FLORABASE_REFERENCES_SETUP=auto`, the
+  managed directory `/var/lib/florabase/data/state/reference/` is owned by the backend container
+  user (`10001:10001`, mode `0700`, writable) rather than a root-owned read-only mount. A
+  compromised backend process could therefore modify files inside `state/reference/` (which
+  previously required host-root write access). The mandatory `.sha256` seal for both WFO and
+  managed WCVP v16 (`require_seal=True` unconditionally for managed paths) detects corruption and
+  partial writes only; it is not a control against a compromised backend, which can rewrite the
+  seal together with the index. What still bounds such an index is the exact `sqlite_schema`
+  contract and the hardened read-only connection checks on every open. Operators who need strict
+  read-only separation keep using manual root-owned `:ro` mounts (`FLORABASE_WFO_SNAPSHOT_PATH` /
+  `FLORABASE_WCVP_V16_SNAPSHOT_PATH`).

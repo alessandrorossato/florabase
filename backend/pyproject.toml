@@ -13,6 +13,7 @@ dependencies = [
   "alembic==1.20.1",
   "fastapi==0.163.2",
   "httpx==0.28.1",
+  "openpyxl==3.1.5",
   "pillow==13.0.0",
   "psycopg[binary]==3.3.9",
   "pwdlib[argon2]==0.4.2",
@@ -65,5 +66,5 @@ files = ["src", "tests", "scripts/check_api_routes.py"]
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["alembic.*"]
+module = ["alembic.*", "openpyxl.*"]
 ignore_missing_imports = true

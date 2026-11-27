@@ -1,0 +1,52 @@
+/* "Photos on hover" (UI-POLISH-003 B1): a switch in the map toolbar and a strip of
+   botanical identity covers inside the map's hover preview. Fixed thumbnail sizes keep the
+   preview from moving while images load. */
+.hover-photos-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-block-size: var(--control-height-compact);
+  font: var(--type-small);
+  white-space: nowrap;
+}
+.hover-photos {
+  display: grid;
+  gap: var(--space-1);
+  min-inline-size: 0;
+}
+.hover-photos__thumbs {
+  display: grid;
+  grid-template-columns: repeat(4, 3rem);
+  gap: var(--space-1);
+}
+.hover-photos .record-visual.hover-photos__thumb,
+.hover-photos__more {
+  inline-size: 3rem;
+  block-size: 3rem;
+  border-radius: var(--radius-small);
+}
+.hover-photos__more {
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  font: var(--type-small);
+  font-variant-numeric: tabular-nums;
+}
+.hover-photos__names {
+  max-inline-size: 13rem;
+  color: var(--text-muted);
+  font: var(--type-label);
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 48rem) {
+  .hover-photos__thumbs {
+    grid-template-columns: repeat(4, 2.25rem);
+  }
+  .hover-photos .record-visual.hover-photos__thumb,
+  .hover-photos__more {
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+  }
+}

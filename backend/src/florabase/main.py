@@ -12,14 +12,22 @@ from florabase.auth.http_safety import AuthSafetyMiddleware
 from florabase.core.config import Environment, get_settings
 from florabase.core.cors import NativeAppCorsMiddleware
 from florabase.core.logging import configure_logging
+from florabase.reference_setup.runner import ReferenceSetupCoordinator
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    settings = get_settings()
+async def lifespan(application: FastAPI) -> AsyncIterator[None]:
+    settings_provider = application.dependency_overrides.get(get_settings, get_settings)
+    settings = settings_provider()
     configure_logging(settings)
     AttachmentStorage.from_settings(settings)
-    yield
+    coordinator = ReferenceSetupCoordinator(settings)
+    application.state.reference_setup = coordinator
+    coordinator.start()
+    try:
+        yield
+    finally:
+        await coordinator.stop()
 
 
 def create_app() -> FastAPI:

@@ -28,12 +28,50 @@ export interface CapacitorHttpBridge {
   }): Promise<CapacitorHttpResponse>;
 }
 
+export interface CapacitorFilesystemBridge {
+  writeFile(options: {
+    path: string;
+    data: string;
+    directory?: string;
+    encoding?: string;
+    recursive?: boolean;
+  }): Promise<{ uri: string }>;
+  getUri(options: {
+    path: string;
+    directory?: string;
+  }): Promise<{ uri: string }>;
+  deleteFile(options: { path: string; directory?: string }): Promise<void>;
+  rmdir(options: {
+    path: string;
+    directory?: string;
+    recursive?: boolean;
+  }): Promise<void>;
+}
+
+export interface CapacitorShareBridge {
+  canShare?: () => Promise<{ value: boolean }>;
+  share(options: {
+    title?: string;
+    text?: string;
+    url?: string;
+    files?: string[];
+    dialogTitle?: string;
+  }): Promise<{ activityType?: string } | undefined>;
+}
+
+export interface CapacitorWebPrintBridge {
+  print(options?: { jobName?: string }): Promise<void>;
+}
+
 export interface CapacitorGlobal {
   isNativePlatform?: () => boolean;
   getPlatform?: () => string;
   Plugins?: {
     Preferences?: CapacitorPreferencesBridge;
     CapacitorHttp?: CapacitorHttpBridge;
+    Filesystem?: CapacitorFilesystemBridge;
+    Share?: CapacitorShareBridge;
+    WebPrint?: CapacitorWebPrintBridge;
   };
   nativePromise?: <T = unknown>(
     pluginName: string,

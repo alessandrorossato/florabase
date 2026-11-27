@@ -33,7 +33,7 @@ Search = Annotated[str, Query(max_length=200)]
 
 
 def source_dependency(settings: Annotated[Settings, Depends(get_settings)]) -> WfoSource:
-    return WfoSource(settings.wfo_snapshot_path)
+    return WfoSource.from_settings(settings)
 
 
 Source = Annotated[WfoSource, Depends(source_dependency)]

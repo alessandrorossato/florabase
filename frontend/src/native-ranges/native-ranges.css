@@ -659,3 +659,181 @@
     content: none;
   }
 }
+
+/* UI-POLISH-003 C1 / UI-POLISH-004: the coverage figures use the Collection origins cards
+   (maps.css): label and context above, the count below, each card a target. Matching
+   identities are cards with their cover. */
+.native-ranges .native-statistics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.app-content .native-ranges .native-metric {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: var(--space-1);
+  grid-column: auto;
+  min-width: 0;
+  min-block-size: 0;
+  padding: var(--space-3);
+  color: var(--text);
+  text-align: start;
+  white-space: normal;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+  font: var(--type-small);
+}
+.native-ranges .native-metric .native-metric-label-full {
+  display: block;
+  order: 1;
+  font: var(--type-small);
+}
+.native-ranges .native-metric .native-metric-label-short {
+  display: none;
+}
+.native-ranges .native-metric .ui-metric__context {
+  display: block;
+  order: 2;
+  color: var(--text-muted);
+  font: var(--type-label);
+  font-weight: 400;
+}
+.native-ranges .native-metric .ui-metric__value {
+  order: 3;
+  font: var(--type-metric);
+  font-variant-numeric: tabular-nums;
+}
+.native-ranges button.native-metric .ui-metric__label::after {
+  content: none;
+}
+.native-ranges .native-inspector-identities li {
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  column-gap: var(--space-3);
+  align-items: start;
+}
+.native-ranges .native-inspector-identities li > :not(.record-visual) {
+  grid-column: 2;
+}
+.native-ranges .native-inspector-identities .native-inspector-identity__photo {
+  grid-row: 1 / span 4;
+  border-radius: var(--radius-small);
+}
+.native-ranges .native-inspector-identities li:only-child:not(:has(a)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.native-ranges .native-map-preview:has(.hover-photos) {
+  max-width: min(15rem, calc(100% - 2rem));
+}
+
+/* UI-POLISH-004: the map sits in a rounded, clipped frame like the other maps. */
+.native-ranges .native-map-canvas {
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-normal);
+  background: var(--surface);
+}
+.native-ranges .native-map-canvas svg {
+  border: 0;
+  border-radius: 0;
+}
+/* One inspector mask for both modes: a fixed, scrolling Places list, then plants or species. */
+.native-ranges .native-territory-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.native-ranges .native-inspector-section {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  padding-block-start: var(--space-2);
+  border-block-start: 1px solid var(--border);
+}
+.native-ranges .native-inspector-section > h4 {
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--type-label);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.native-ranges .native-inspector-section .native-territory-options {
+  max-block-size: 12.5rem;
+  margin: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.native-ranges .native-inspector-section .native-territory-search {
+  margin: 0;
+}
+.native-ranges .native-inspector-section .native-comparison-legend {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+}
+.native-ranges .native-inspector-section .native-comparison-legend li {
+  flex: none;
+  padding: var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+.native-ranges .native-map-canvas > .fullscreen-toggle {
+  position: absolute;
+  inset-block-end: var(--space-2);
+  inset-inline-end: var(--space-2);
+  z-index: 2;
+}
+/* Full screen keeps the map and its inspector side by side and lets the map grow. */
+.native-ranges .native-spatial-workspace.is-fullscreen {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(16rem, 3fr);
+  align-items: start;
+}
+.native-ranges
+  .native-spatial-workspace.is-fullscreen
+  .native-territory-inspector {
+  max-height: calc(100dvh - 2 * var(--space-3));
+}
+.native-ranges .native-spatial-workspace.is-fullscreen .native-map svg {
+  max-height: calc(100dvh - 12rem);
+}
+@media (max-width: 64rem) {
+  .native-ranges .native-spatial-workspace.is-fullscreen {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* The map rules above style every svg in the figure; the toggle's icon stays an icon. */
+.native-ranges .native-map .fullscreen-toggle svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  max-height: none;
+}
+
+/* UI-POLISH-005 review: phones keep the compact cards (short label, no context, two per row)
+   so the map stays near the top; these follow the desktop card rules above to win. */
+@media (max-width: 48rem) {
+  .native-ranges .native-statistics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .app-content .native-ranges .native-metric {
+    padding: var(--space-2);
+  }
+  .native-ranges .native-metric .native-metric-label-full,
+  .native-ranges .native-metric .ui-metric__context {
+    display: none;
+  }
+  .native-ranges .native-metric .native-metric-label-short {
+    display: inline;
+  }
+  .native-ranges .native-metric .ui-metric__value {
+    font: var(--type-h3);
+  }
+}

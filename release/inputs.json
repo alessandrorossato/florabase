@@ -5,10 +5,10 @@
   ],
   "postgresql": {
     "repository": "ghcr.io/alessandrorossato/florabase-postgres",
-    "version": "18.6-alpine-florabase.5",
-    "reference": "ghcr.io/alessandrorossato/florabase-postgres:18.6-alpine-florabase.5@sha256:8397c577a71bd78dc3240a0b34f7d90e05039d474b438c0f46d9cf646df329ad",
-    "index_digest": "sha256:8397c577a71bd78dc3240a0b34f7d90e05039d474b438c0f46d9cf646df329ad",
-    "platform_digest": "sha256:8b9e11085ae6949e9020958704ca478e7c6e5309bc016814ffb77acdc46adfe4",
+    "version": "18.6-alpine-florabase.6",
+    "reference": "ghcr.io/alessandrorossato/florabase-postgres:18.6-alpine-florabase.6@sha256:fa3d79573aca9e4558876fd82337d6892ebaa8ce3219444c793f481ddf88de9b",
+    "index_digest": "sha256:fa3d79573aca9e4558876fd82337d6892ebaa8ce3219444c793f481ddf88de9b",
+    "platform_digest": "sha256:b61292b44712e5d8c695486d62c17cf58af99939535721d7be9e710fc65f1a3d",
     "platform": "linux/amd64",
     "source_date_epoch": 1762387200,
     "upstream": {

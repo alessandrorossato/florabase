@@ -1,0 +1,193 @@
+import { cleanup, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+
+import { AuthContext, type AuthContextValue } from "../auth/context";
+import type { DashboardResponse } from "../collection/api";
+import { emptyOverview } from "../collection/dashboardFixtures";
+import { acquireTestAuth } from "../test/auth";
+import { WorkspaceHome } from "./WorkspaceHome";
+
+const get = vi.hoisted(() => vi.fn());
+vi.mock("../collection/api", () => ({ getDashboard: get }));
+const native = vi.hoisted(() => vi.fn());
+const origins = vi.hoisted(() => vi.fn());
+const suppliers = vi.hoisted(() => vi.fn());
+const orders = vi.hoisted(() => vi.fn());
+vi.mock("../native-ranges/api", () => ({ getNativeOverview: native }));
+vi.mock("../provenance-map/api", () => ({
+  getCollectionProvenanceMap: origins,
+}));
+vi.mock("../suppliers/api", () => ({ listSuppliers: suppliers }));
+vi.mock("../orders/api", () => ({ listOrders: orders }));
+let auth: AuthContextValue;
+beforeEach(async () => {
+  auth = (await acquireTestAuth()).auth;
+  for (const read of [native, origins, suppliers, orders])
+    read.mockRejectedValue(new Error("not under test"));
+});
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+const summary: DashboardResponse = {
+  counts: {
+    active_plants: 17,
+    active_plant_groups: 1,
+    active_seed_lots: 40,
+    active_sowings: 12,
+    botanical_identities: 9,
+    events: 230,
+  },
+  recent_events: [],
+  overview: {
+    ...emptyOverview,
+    sowings_unknown_germination: 5,
+    purchase_packets_without_order: 0,
+    current_identities: 8,
+    identities_with_wfo: 3,
+    due_today: 2,
+    overdue: 1,
+    next_seven_days: 4,
+  },
+};
+function show(id: Parameters<typeof WorkspaceHome>[0]["id"]) {
+  return render(
+    <AuthContext.Provider value={auth}>
+      <WorkspaceHome id={id} />
+    </AuthContext.Provider>,
+  );
+}
+const tile = (name: string) =>
+  screen.getByRole("link", { name }).closest("li") as HTMLElement;
+
+test("Collection lists every sub-section once with grounded counts, views and first actions", async () => {
+  get.mockResolvedValue(summary);
+  show("collection");
+  expect(
+    screen.getByRole("heading", { level: 2, name: "Collection" }),
+  ).toBeVisible();
+  const list = screen.getByRole("list", { name: "Collection sections" });
+  expect(
+    within(list)
+      .getAllByRole("heading", { level: 3 })
+      .map((heading) => heading.textContent),
+  ).toEqual([
+    "Seeds",
+    "Sowings",
+    "Cuttings",
+    "Plants",
+    "Harvests",
+    "Locations",
+  ]);
+  expect(await screen.findByText("40")).toBeVisible();
+  expect(within(tile("Seeds")).getByText(/active seed lots/)).toBeVisible();
+  // A zero derived count is not shown as a warning line.
+  expect(within(tile("Seeds")).queryByText(/without an Order/)).toBeNull();
+  expect(
+    within(tile("Sowings")).getByText("5 sowings without a germination count"),
+  ).toBeVisible();
+  expect(within(tile("Plants")).getByText("1 Plant group")).toBeVisible();
+  expect(
+    within(tile("Plants")).getByRole("link", { name: "Plant groups" }),
+  ).toHaveAttribute("href", "#/plants?type=group");
+  expect(
+    within(tile("Harvests")).getByRole("link", { name: "Stored material" }),
+  ).toHaveAttribute("href", "#/harvests?tab=stored-material");
+  expect(
+    within(tile("Seeds")).getByRole("link", { name: "New seed lot" }),
+  ).toHaveAttribute("href", "#/seeds?action=create");
+  // Sections without a count in the summary never show an invented one.
+  expect(within(tile("Cuttings")).queryByText(/\d/)).toBeNull();
+  expect(screen.getByRole("link", { name: "Seeds" })).toHaveAttribute(
+    "href",
+    "#/seeds",
+  );
+});
+
+test("Activity and Explore read their counts from the same summary", async () => {
+  get.mockResolvedValue(summary);
+  native.mockRejectedValue(new Error("offline"));
+  origins.mockRejectedValue(new Error("offline"));
+  const view = show("activity");
+  expect(
+    await within(await screen.findByRole("list")).findByText("230"),
+  ).toBeVisible();
+  expect(
+    within(tile("Schedule")).getByText("1 overdue · 4 in the next 7 days"),
+  ).toBeVisible();
+  expect(within(tile("Schedule")).getByText(/due today/)).toBeVisible();
+  view.unmount();
+  show("explore");
+  expect(
+    await within(await screen.findByRole("list")).findByText(
+      "3 with a confirmed WFO link",
+    ),
+  ).toBeVisible();
+  expect(
+    within(tile("Geography")).getByRole("link", { name: "Native ranges" }),
+  ).toHaveAttribute("href", "#/native-ranges");
+});
+
+test("each home leads with indicators that combine its sections", async () => {
+  get.mockResolvedValue({
+    ...summary,
+    overview: {
+      ...summary.overview,
+      sowings_with_germination: 15,
+      identities_with_profile: 2,
+      purchase_packets_without_order: 3,
+    },
+  });
+  native.mockResolvedValue({
+    represented: 8,
+    with_range: 6,
+    without_range: 2,
+    territories: [{}, {}, {}],
+    places: [],
+    places_total: 0,
+    offset: 0,
+    limit: 50,
+  });
+  origins.mockRejectedValue(new Error("offline"));
+  suppliers.mockResolvedValue([{}, {}]);
+  orders.mockResolvedValue({ items: [], total: 7, offset: 0, limit: 1 });
+  const glance = async (name: string) =>
+    screen.findByRole("region", { name: `Across ${name}` });
+  let view = show("collection");
+  let region = await glance("Collection");
+  expect(region).toHaveTextContent("Active records70");
+  expect(region).toHaveTextContent("Germination recorded75%");
+  expect(native).not.toHaveBeenCalled();
+  view.unmount();
+  view = show("explore");
+  region = await glance("Explore");
+  expect(region).toHaveTextContent("WFO confirmed38%");
+  expect(await within(region).findByText("75%")).toBeVisible();
+  expect(
+    within(region).getByRole("link", { name: "Native range recorded" }),
+  ).toHaveAttribute("href", "#/native-ranges");
+  // A failed optional read leaves its indicator out.
+  expect(within(region).queryByText("Origin sites mapped")).toBeNull();
+  view.unmount();
+  show("sourcing");
+  region = await glance("Sourcing");
+  expect(await within(region).findByText("7")).toBeVisible();
+  expect(region).toHaveTextContent("Suppliers2");
+  expect(region).toHaveTextContent("Lots without an order3");
+});
+
+test("a failed summary keeps every section usable and can be retried", async () => {
+  get.mockRejectedValueOnce(new Error("offline")).mockResolvedValue(summary);
+  const user = userEvent.setup();
+  show("sourcing");
+  expect(await screen.findByText(/Counts could not be loaded/)).toBeVisible();
+  expect(screen.getByRole("link", { name: "Suppliers" })).toBeVisible();
+  expect(screen.getByRole("link", { name: "New order" })).toHaveAttribute(
+    "href",
+    "#/orders?action=create",
+  );
+  await user.click(screen.getByRole("button", { name: "Retry counts" }));
+  expect(screen.queryByText(/Counts could not be loaded/)).toBeNull();
+  expect(get).toHaveBeenCalledTimes(2);
+});

@@ -23,6 +23,7 @@ class WcvpLinkResponse(BaseModel):
 
 class SourceStatus(BaseModel):
     available: bool
+    preparing: bool = False
     source: SourceMetadata | None = None
     message: str | None = None
     link: WcvpLinkResponse | None = None

@@ -25,6 +25,7 @@ import {
   getNativeComparison,
   getNativeSelection,
   listNativeIdentities,
+  listTerritoryIdentities,
   type Overview,
   type SelectedRanges,
   type Filters,
@@ -40,6 +41,8 @@ import {
 } from "./NativeCoverageMap";
 import { reconcileColors } from "./comparison";
 import { MapWorkspace } from "../maps/MapWorkspace";
+import { HoverPhotoStrip, HoverPhotosToggle } from "../maps/HoverPhotos";
+import { useHoverPhotos } from "../maps/useHoverPhotos";
 import "./native-ranges.css";
 
 const scopes = [
@@ -337,6 +340,36 @@ interface MapProps {
   territorySelection?: TerritorySelection;
   geometry: GeometryState;
   retryGeometry: () => void;
+  hoverPhotos?: boolean;
+}
+
+/** Covers of the identities native to one hovered territory (first page, debounced). */
+function TerritoryPhotos({
+  code,
+  filters,
+}: {
+  code: string;
+  filters: Filters;
+}) {
+  const read = useCallback(
+    (signal: AbortSignal, capability: ProtectedRequestCapability) =>
+      listTerritoryIdentities(
+        filters,
+        [code],
+        "any",
+        undefined,
+        0,
+        capability,
+        signal,
+      ),
+    [code, filters],
+  );
+  const query = useLocalRead(read);
+  if (query.error) return null;
+  if (!query.data) return <small>Loading photos…</small>;
+  return (
+    <HoverPhotoStrip identities={query.data.items} total={query.data.total} />
+  );
 }
 function revealDetails(element: HTMLElement | null) {
   if (!element) return;
@@ -449,6 +482,7 @@ function OverviewPanel({
   geometry,
   retryGeometry,
   choose,
+  hoverPhotos = false,
 }: MapProps & {
   filters: Filters;
   choose: (withRange?: boolean) => void;
@@ -552,6 +586,10 @@ function OverviewPanel({
       ) : (
         <>
           <NativeCoverageMap
+            hoverPhotos={hoverPhotos}
+            territoryPhotos={(code) => (
+              <TerritoryPhotos code={code} filters={filters} />
+            )}
             territorySelection={territorySelection}
             territories={overview.territories}
             geometry={geometry}
@@ -578,6 +616,7 @@ function SelectedPanel({
   colors,
   remove,
   evidenceOnly = false,
+  hoverPhotos = false,
 }: MapProps & {
   id: string;
   filters: Filters;
@@ -648,6 +687,7 @@ function SelectedPanel({
       ) : (
         <>
           <NativeCoverageMap
+            hoverPhotos={hoverPhotos}
             territorySelection={territorySelection}
             territories={territories}
             geometry={geometry}
@@ -688,6 +728,7 @@ function ComparisonPanel({
   remove,
   only,
   colors,
+  hoverPhotos = false,
 }: MapProps & {
   ids: string[];
   filters: Filters;
@@ -729,6 +770,7 @@ function ComparisonPanel({
         </p>
       )}
       <NativeCoverageMap
+        hoverPhotos={hoverPhotos}
         territorySelection={territorySelection}
         territories={territories}
         contributors={contributors}
@@ -913,6 +955,7 @@ export function NativeRangesScreen() {
   const resetFilters = () => {
     view.replace({ ...view.state, scope: "all", record: [], withRange: false });
   };
+  const [hoverPhotos, setHoverPhotos] = useHoverPhotos("native-ranges");
   return (
     <section
       className="workspace native-ranges"
@@ -1087,7 +1130,7 @@ export function NativeRangesScreen() {
               view.update("mode", "overview");
             }}
           >
-            Explore all
+            By place
           </button>
           <button
             ref={speciesMode}
@@ -1098,7 +1141,7 @@ export function NativeRangesScreen() {
               view.update("mode", "species");
             }}
           >
-            Compare species ({selectedIds.length})
+            By species ({selectedIds.length})
           </button>
         </div>
         {selectedIds.length > 0 && (
@@ -1114,6 +1157,7 @@ export function NativeRangesScreen() {
             Clear selection
           </ActionButton>
         )}
+        <HoverPhotosToggle checked={hoverPhotos} onChange={setHoverPhotos} />
       </div>
       <MapWorkspace>
         <section
@@ -1126,6 +1170,7 @@ export function NativeRangesScreen() {
         >
           {mode === "overview" ? (
             <OverviewPanel
+              hoverPhotos={hoverPhotos}
               key={queryKey}
               filters={filters}
               geometry={geometry}
@@ -1135,6 +1180,7 @@ export function NativeRangesScreen() {
             />
           ) : selectedIds.length === 1 ? (
             <SelectedPanel
+              hoverPhotos={hoverPhotos}
               key={`${queryKey}:${selectedIds[0]}`}
               id={selectedIds[0]}
               filters={filters}
@@ -1146,6 +1192,7 @@ export function NativeRangesScreen() {
             />
           ) : selectedIds.length > 1 ? (
             <ComparisonPanel
+              hoverPhotos={hoverPhotos}
               key={`${queryKey}:${selectedIds.join(",")}`}
               ids={selectedIds}
               filters={filters}

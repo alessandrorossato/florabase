@@ -1,3 +1,5 @@
+import { FullscreenButton } from "../components/FullscreenButton";
+import { useFullscreen } from "../components/useFullscreen";
 import {
   map as createMap,
   polygon,
@@ -153,8 +155,19 @@ export function OccurrenceDensityMap({
       setBasemapErrors(0);
     };
   }, [online, identityId]);
+  const {
+    active: fullscreenActive,
+    toggle: toggleFullscreen,
+    setFrame,
+    frameClass,
+  } = useFullscreen<HTMLDivElement>();
   return (
-    <>
+    <div ref={setFrame} className={`occurrence-map-frame${frameClass}`}>
+      <FullscreenButton
+        active={fullscreenActive}
+        toggle={toggleFullscreen}
+        label="occurrence density map"
+      />
       <div className="occurrence-layer-status" aria-live="polite">
         {(status.failed > 0 || status.missing > 0) && (
           <div role="status" className="notice">
@@ -228,6 +241,6 @@ export function OccurrenceDensityMap({
           </span>
         </label>
       )}
-    </>
+    </div>
   );
 }

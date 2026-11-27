@@ -87,7 +87,9 @@ export function isPresentationRetainedState(
 
 /** Returns the active CSRF token only when the session is authenticated. */
 export function activeCsrfToken(state: AuthState): string {
-  return state.status === "authenticated" ? state.csrfToken : "";
+  if (state.status !== "authenticated") return "";
+  if (state.csrfToken !== "") return state.csrfToken;
+  return isNativeBearerTransport() ? "bearer" : "";
 }
 
 export class ApiError extends Error {
@@ -128,10 +130,10 @@ export class ProtectedTabBlockedError extends Error {
 }
 
 export class NativeFileActionUnavailableError extends Error {
-  constructor() {
-    super(
-      "Opening/downloading files is not yet available in the app — coming soon.",
-    );
+  constructor(
+    message = "Opening or downloading files is not available in this app build.",
+  ) {
+    super(message);
     this.name = "NativeFileActionUnavailableError";
   }
 }
@@ -809,7 +811,23 @@ export async function downloadProtectedFile({
   signal?: AbortSignal;
 }): Promise<string> {
   if (isNativeBearerTransport()) {
-    throw new NativeFileActionUnavailableError();
+    const { blob, contentDisposition, contentType } =
+      await requestProtectedBlob(path, {
+        capability,
+        signal,
+        headers: accept ? { Accept: accept } : undefined,
+      });
+    validateCapability(capability);
+    const filename = parseContentDispositionFilename(
+      contentDisposition,
+      fallbackFilename,
+    );
+    const { shareNativeBlob } = await import("../mobile/fileActions");
+    return await shareNativeBlob({
+      blob,
+      filename,
+      contentType: contentType ?? blob.type,
+    });
   }
   const { blob, contentDisposition } = await requestProtectedBlob(path, {
     capability,
@@ -865,7 +883,25 @@ export async function openProtectedTab({
   accept?: string;
 }): Promise<void> {
   if (isNativeBearerTransport()) {
-    throw new NativeFileActionUnavailableError();
+    validateCapability(capability);
+    const { blob, contentDisposition, contentType } =
+      await requestProtectedBlob(path, {
+        capability,
+        headers: accept ? { Accept: accept } : undefined,
+      });
+    validateCapability(capability);
+    const filename = parseContentDispositionFilename(
+      contentDisposition,
+      "attachment",
+    );
+    const { openNativeProtectedBlob } = await import("../mobile/fileActions");
+    await openNativeProtectedBlob({
+      blob,
+      filename,
+      contentType: contentType ?? blob.type,
+      capability,
+    });
+    return;
   }
   validateCapability(capability);
   // Open synchronously on user click without "noopener" feature token so we keep

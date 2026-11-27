@@ -50,10 +50,11 @@ gates and its exclusions.
   reviewed WCVP enrichment
 - **Sourcing → Suppliers & Orders**: supplier directory and purchase orders linking received
   material
-- **Settings → Account, Theme, Labels, Import / Export, Data sources & Help**: local owner
-  authentication with server-side sessions and CSRF protection, multi-theme light/dark appearances,
-  printable labels with authenticated QR lookup, guided CSV import/export, transparent data-source
-  attribution and layered contextual help
+- **Settings → Account, Theme, Media, Labels, Import / Export, Data sources, Help & About**: local
+  owner authentication with server-side sessions and CSRF protection, multi-theme light/dark
+  appearances, installation-wide media defaults, printable labels with authenticated QR lookup,
+  guided CSV import/export, transparent data-source attribution with links to each official
+  source, layered contextual help, and the running release with its changelog and licence
 - **Installable web app ([PWA](docs/pwa.md))**: installable as a progressive web app (installation
   on physical phones is not yet verified)
 
@@ -144,6 +145,7 @@ configuration and secrets still need a separate protected backup.
 
 - [Documentation index](docs/README.md)
 - [v1.0.0 release scope](docs/release/scope-v1.md)
+- [End-user guide](docs/user-guide/README.md)
 - [Installation, upgrade, backup and restore](docs/installation.md)
 - [Source-build deployment and upgrades](docs/deployment.md) (development)
 - [Development guide](docs/development.md)

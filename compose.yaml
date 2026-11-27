@@ -33,7 +33,7 @@ services:
       # Optional one-time first owner (remove after first sign-in):
       # - FLORABASE_OWNER_LOGIN=owner
       # - FLORABASE_OWNER_PASSWORD=change-me-at-least-12-chars
-      # Optional WFO/WCVP reference indexes: see docs/installation.md
+      - FLORABASE_REFERENCES_SETUP=auto          # download WFO/WCVP indexes in the background; set off to disable
     volumes:
       - /volume1/docker/florabase/data:/var/lib/florabase/data      # same data folder as db
       - /volume1/docker/florabase/backup:/var/lib/florabase/backup  # separate backup folder

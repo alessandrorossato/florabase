@@ -75,6 +75,7 @@
     "backend/src/florabase/db/",
     "backend/src/florabase/api/",
     "backend/src/florabase/main.py",
+    "backend/src/florabase/reference_setup/",
     "backend/scripts/check_api_routes.py",
     "backend/scripts/test_check_api_routes.py",
     "backend/tests/product/",
@@ -101,6 +102,7 @@
     "frontend/src/ui-pages/",
     "frontend/src/ui-lab/",
     "frontend/src/shell/",
+    "frontend/src/workspaces/",
     "frontend/src/timeline/",
     "frontend/src/settings/",
     "frontend/src/focusModality.ts"
@@ -110,6 +112,7 @@
     "backend/tests/integration/test_application_settings_migration.py",
     "backend/tests/integration/test_cuttings_api.py",
     "backend/tests/integration/test_performance_responses.py",
+    "backend/tests/integration/test_reference_setup.py",
     "backend/tests/integration/test_transaction_lifecycle.py",
     "backend/tests/test_application_settings.py",
     "backend/tests/test_auth_bootstrap.py",
@@ -119,6 +122,7 @@
     "backend/tests/test_infrastructure.py",
     "backend/tests/test_readiness.py",
     "backend/tests/test_reference_index.py",
+    "backend/tests/test_reference_setup.py",
     "backend/tests/test_system_info.py"
   ],
   "product_frontend_tests": [
@@ -854,10 +858,12 @@
       ],
       "backend": [
         "backend/tests/test_import_export.py",
-        "backend/tests/test_import_export_api.py"
+        "backend/tests/test_import_export_api.py",
+        "backend/tests/test_import_wizard.py"
       ],
       "integration": [
-        "backend/tests/integration/test_import_export_api.py"
+        "backend/tests/integration/test_import_export_api.py",
+        "backend/tests/integration/test_import_wizard_api.py"
       ],
       "frontend": [],
       "affects": [
@@ -1380,6 +1386,16 @@
     },
     {
       "prefix": "backend/src/florabase/import_export/",
+      "scope": "import-export",
+      "layer": "backend"
+    },
+    {
+      "prefix": "backend/src/florabase/import_wizard/",
+      "scope": "import-export",
+      "layer": "backend"
+    },
+    {
+      "prefix": "backend/tests/fixtures/sheet/",
       "scope": "import-export",
       "layer": "backend"
     },

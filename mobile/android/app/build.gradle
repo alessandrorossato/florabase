@@ -1,4 +1,60 @@
+import groovy.json.JsonSlurper
+
 apply plugin: 'com.android.application'
+
+def resolveMobileVersion() {
+    def scriptFile = new File(rootProject.projectDir, '../../scripts/mobile_version.py').canonicalFile
+    if (!scriptFile.isFile()) {
+        throw new GradleException("Missing version helper script: ${scriptFile}")
+    }
+    def process = new ProcessBuilder('python3', scriptFile.absolutePath, '--json')
+        .directory(scriptFile.parentFile.parentFile)
+        .redirectErrorStream(true)
+        .start()
+    def output = process.inputStream.getText('UTF-8').trim()
+    def exitCode = process.waitFor()
+    if (exitCode != 0) {
+        throw new GradleException("mobile_version.py failed (exit ${exitCode}): ${output}")
+    }
+    def parsed = new JsonSlurper().parseText(output)
+    if (!(parsed instanceof Map) || !parsed.versionName || !parsed.versionCode) {
+        throw new GradleException("Unexpected output from mobile_version.py: ${output}")
+    }
+    return parsed
+}
+
+def readSigningValue(String name) {
+    def envVal = System.getenv(name)
+    if (envVal != null && !envVal.trim().isEmpty()) {
+        return envVal.trim()
+    }
+    if (project.hasProperty(name)) {
+        def propVal = project.property(name)?.toString()
+        if (propVal != null && !propVal.trim().isEmpty()) {
+            return propVal.trim()
+        }
+    }
+    return null
+}
+
+def mobileVersion = resolveMobileVersion()
+
+def signingVarNames = [
+    'FLORABASE_ANDROID_KEYSTORE',
+    'FLORABASE_ANDROID_STORE_PASSWORD',
+    'FLORABASE_ANDROID_KEY_ALIAS',
+    'FLORABASE_ANDROID_KEY_PASSWORD',
+]
+def signingValues = signingVarNames.collectEntries { name -> [(name): readSigningValue(name)] }
+def missingSigningVars = signingVarNames.findAll { name -> signingValues[name] == null }
+def hasAnySigningVar = missingSigningVars.size() < signingVarNames.size()
+def hasAllSigningVars = missingSigningVars.isEmpty()
+
+if (hasAnySigningVar && !hasAllSigningVars) {
+    throw new GradleException(
+        "Incomplete Android release signing configuration; missing: ${missingSigningVars.join(', ')}"
+    )
+}
 
 android {
     namespace = "io.github.alessandrorossato.florabase"
@@ -10,8 +66,8 @@ android {
         applicationId "io.github.alessandrorossato.florabase"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode (mobileVersion.versionCode as Integer)
+        versionName (mobileVersion.versionName as String)
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -19,10 +75,27 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    if (hasAllSigningVars) {
+        def keystoreFile = file(signingValues['FLORABASE_ANDROID_KEYSTORE'])
+        if (!keystoreFile.isFile()) {
+            throw new GradleException("Android signing keystore file not found: ${keystoreFile}")
+        }
+        signingConfigs {
+            release {
+                storeFile keystoreFile
+                storePassword signingValues['FLORABASE_ANDROID_STORE_PASSWORD']
+                keyAlias signingValues['FLORABASE_ANDROID_KEY_ALIAS']
+                keyPassword signingValues['FLORABASE_ANDROID_KEY_PASSWORD']
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (hasAllSigningVars) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }

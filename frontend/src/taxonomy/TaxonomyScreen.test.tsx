@@ -105,6 +105,7 @@ const unresolved = {
 const tree: Tree = {
   source,
   source_available: true,
+  source_preparing: false,
   message: null,
   identities: [linked, unresolved],
   nodes: [root, genus, species].map((taxon) => ({
@@ -148,6 +149,7 @@ beforeEach(async () => {
   });
   vi.mocked(getIdentityTaxonomy).mockResolvedValue({
     source_available: true,
+    source_preparing: false,
     source,
     link: null,
     related: [],
@@ -301,6 +303,7 @@ test("scope and category OR filters, search, URL restoration and unavailable sel
 test("optional source absence and empty filter results stay explicit", async () => {
   vi.mocked(getIdentityTaxonomy).mockResolvedValue({
     source_available: false,
+    source_preparing: false,
     source: null,
     link: null,
     related: [],
@@ -352,6 +355,7 @@ test("Retry source refreshes the selected identity editor when the configured so
   vi.mocked(getIdentityTaxonomy)
     .mockResolvedValueOnce({
       source_available: false,
+      source_preparing: false,
       source: null,
       link: null,
       related: [],
@@ -359,6 +363,7 @@ test("Retry source refreshes the selected identity editor when the configured so
     })
     .mockResolvedValue({
       source_available: true,
+      source_preparing: false,
       source,
       link: null,
       related: [],
@@ -489,6 +494,7 @@ test("confirming the default review identity preserves its inspector while the q
 test("breadcrumb and Related in my collection remain read-only", async () => {
   vi.mocked(getIdentityTaxonomy).mockResolvedValue({
     source_available: true,
+    source_preparing: false,
     source,
     link,
     related: [
@@ -552,6 +558,7 @@ test("reloading an unavailable source discards previously inspected candidates",
   ).toBeEnabled();
   vi.mocked(getIdentityTaxonomy).mockResolvedValue({
     source_available: false,
+    source_preparing: false,
     source: null,
     link: null,
     message: "Not installed",
@@ -757,6 +764,7 @@ test("Tree Explorer mode preserves filters/selection, restores URL state and kee
   });
   vi.mocked(getIdentityTaxonomy).mockResolvedValue({
     source_available: false,
+    source_preparing: false,
     source: null,
     link: null,
     related: [],
@@ -948,5 +956,28 @@ test("logout-failed retains loaded taxonomy tree without issuing new protected r
   expect(vi.mocked(getTree).mock.calls.length).toBe(callsBeforeLock);
   expect(
     screen.getByRole("navigation", { name: "Source classification" }),
+  ).toBeVisible();
+});
+
+test("displays preparing message when WFO reference data is being prepared in the background", async () => {
+  vi.mocked(getTree).mockResolvedValue({
+    ...tree,
+    source_available: false,
+    source_preparing: true,
+    source: null,
+    nodes: [],
+    message: "Reference data is being prepared in the background.",
+  });
+  render(<TaxonomyScreen />);
+  expect(await screen.findByText("WFO source preparing…")).toBeVisible();
+  expect(screen.getByText("Reference data is being prepared…")).toBeVisible();
+  // The structured flag drives the notice; the server sentence is not repeated next to it.
+  expect(
+    screen.queryByText(/prepared in the background/),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByText(
+      "Retry checks whether background preparation has finished.",
+    ),
   ).toBeVisible();
 });

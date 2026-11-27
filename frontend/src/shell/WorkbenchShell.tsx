@@ -19,6 +19,7 @@ import {
   createActions,
   currentLink,
   destinationOfHash,
+  isWorkspaceHome,
   primaryWorkspaces,
   sectionOfHash,
   workspaceOf,
@@ -453,13 +454,24 @@ export function WorkbenchShell({
     onNavigate(href);
   }
 
+  /**
+   * Today opens the Today page itself. Another workspace's tab opens its panel and, when the
+   * current page belongs elsewhere, that workspace's home; a second click on an open panel
+   * still collapses it.
+   */
   function selectTab(id: WorkspaceId) {
+    if (id === "today" && section !== "dashboard") {
+      setCollapsed(false);
+      onNavigate("#/dashboard");
+      return;
+    }
     if (id === panelId && !collapsed) {
       setCollapsed(true);
       return;
     }
     setPanelId(id);
     setCollapsed(false);
+    if (id !== routeWorkspace.id && isWorkspaceHome(id)) onNavigate(`#/${id}`);
   }
 
   function tabKeys(event: KeyboardEvent<HTMLButtonElement>, index: number) {
@@ -513,17 +525,6 @@ export function WorkbenchShell({
           </h1>
           <button
             type="button"
-            ref={railSearch}
-            className="wb-rail__search"
-            aria-label="Search and commands"
-            onClick={() => {
-              openPalette(railSearch.current);
-            }}
-          >
-            <Icon name="search" shell />
-          </button>
-          <button
-            type="button"
             className="wb-rail__record"
             aria-haspopup="dialog"
             onClick={(event) => {
@@ -573,6 +574,18 @@ export function WorkbenchShell({
               );
             })}
           </div>
+          {/* After the tabs in reading order; drawn just above Settings (workbench.css). */}
+          <button
+            type="button"
+            ref={railSearch}
+            className="wb-rail__search"
+            aria-label="Search and commands"
+            onClick={() => {
+              openPalette(railSearch.current);
+            }}
+          >
+            <Icon name="search" shell />
+          </button>
           <div className="wb-mobilebar">
             <button
               type="button"
@@ -713,7 +726,8 @@ export function WorkbenchShell({
               workspace.id === routeWorkspace.id ? "true" : undefined
             }
             onClick={() => {
-              setSheet(workspace.id);
+              if (workspace.id === "today") onNavigate("#/dashboard");
+              else setSheet(workspace.id);
             }}
           >
             <Icon name={workspace.icon} shell />

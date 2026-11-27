@@ -28,6 +28,7 @@ from florabase.auth.dependencies import (
     require_owner,
 )
 from florabase.collection_photos.service import TARGET_MODELS
+from florabase.db.ordering import DirectorySort
 from florabase.db.session import get_database_session
 from florabase.media import service
 from florabase.media.schemas import (
@@ -77,6 +78,7 @@ def list_media(
     target: MediaTargetFilter | None = None,
     limit: int = Query(default=24, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    sort: DirectorySort | None = None,
 ) -> AssetPageResponse:
     return service.list_assets(
         database,
@@ -84,6 +86,7 @@ def list_media(
         kind=kind,
         association=association,
         target=target,
+        sort=sort,
         limit=limit,
         offset=offset,
     )
@@ -128,10 +131,17 @@ async def upload_media(
     file: Annotated[UploadFile, File()],
     title: Annotated[str | None, Form(max_length=2000)] = None,
     attribution: Annotated[str | None, Form(max_length=2000)] = None,
+    licence_label: Annotated[str | None, Form(max_length=2000)] = None,
+    licence_url: Annotated[str | None, Form(max_length=2048)] = None,
 ) -> AssetResponse:
     require_owner(actor)
     try:
-        metadata = AssetMetadataWrite(title=title, attribution=attribution)
+        metadata = AssetMetadataWrite(
+            title=title,
+            attribution=attribution,
+            licence_label=licence_label,
+            licence_url=licence_url,
+        )
         asset = await service.upload_asset(database, storage, file, metadata)
         return service.read_asset(database, asset.id)
     except ValidationError as error:
@@ -139,7 +149,7 @@ async def upload_media(
             status_code=422,
             detail={
                 "code": "invalid_media_metadata",
-                "message": "Check the media title and attribution.",
+                "message": "Check the media title, attribution and licence.",
             },
         ) from error
     except AttachmentStorageError as error:

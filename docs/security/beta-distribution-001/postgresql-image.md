@@ -1,5 +1,20 @@
 # Florabase PostgreSQL image (`florabase-postgres`)
 
+## `18.6-alpine-florabase.6` (2026-11-26, BETA-SECURITY-001)
+
+`18.6-alpine-florabase.6` changes only the `libxml2` pin from `2.13.9-r3` to `2.13.9-r5`: the
+Alpine 3.24 `main` repository no longer offers `r3`, so the `.5` Dockerfile stopped building
+(`libxml2-2.13.9-r2 breaks world[libxml2=2.13.9-r3]`). Upstream base digest, the other Alpine pins
+(`zlib=1.4-r0`, `krb5-libs=1.22.3-r0`, `libxslt=1.1.43-r4`), `gosu` removal, `USER 70:70`, `ENV`,
+`HEALTHCHECK`, `CMD`, entrypoint guards and `source_date_epoch` are unchanged. See the
+[libxml2 r5 evidence](../beta-security-001/postgres-libxml2-2.13.9-r5/README.md).
+
+- Reproducible identity (`beta_release.py postgres-identity`, pinned `moby/buildkit:v0.34.2`,
+  `--no-cache`):
+  - index digest: `sha256:fa3d79573aca9e4558876fd82337d6892ebaa8ce3219444c793f481ddf88de9b`
+  - platform digest: `sha256:b61292b44712e5d8c695486d62c17cf58af99939535721d7be9e710fc65f1a3d`
+- Cluster data compatibility: identical PostgreSQL 18.6 binary and `postgres/18/docker` layout.
+
 ## `18.6-alpine-florabase.5` (2026-11-23, RUNTIME-IDLE-001)
 
 `18.6-alpine-florabase.5` keeps the exact same upstream `postgres:18.6-alpine` base digest, Alpine

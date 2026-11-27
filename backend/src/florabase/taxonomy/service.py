@@ -27,6 +27,7 @@ from florabase.taxonomy.schemas import (
 )
 from florabase.taxonomy.source import (
     ROOT,
+    SourcePreparingError,
     SourceUnavailableError,
     WfoMetadata,
     WfoSource,
@@ -212,6 +213,7 @@ def tree(
     metadata: WfoMetadata | None = None
     nodes: dict[str, WfoTaxon] = {}
     message: str | None = None
+    preparing = False
     try:
         metadata = source.metadata()
         nodes = source.hierarchy([link.external_id for link in links.values()])
@@ -251,6 +253,7 @@ def tree(
                     identity.synonym_of = classification[-1].scientific_name
     except SourceUnavailableError as error:
         metadata, nodes, message = None, {}, str(error)
+        preparing = isinstance(error, SourcePreparingError)
         for identity in identities:
             identity.classification_ids = []
             identity.unresolved_reason = (
@@ -259,6 +262,7 @@ def tree(
                 else "Not linked to taxonomy source"
             )
     result = project(identities, nodes, metadata, message, q)
+    result.source_preparing = preparing
     if include_covers and result.identities:
         add_covers(database, result.identities)
     return result
@@ -343,7 +347,12 @@ def identity_taxonomy(
     try:
         metadata = source.metadata()
     except SourceUnavailableError as error:
-        return IdentityTaxonomy(source_available=False, message=str(error), link=saved)
+        return IdentityTaxonomy(
+            source_available=False,
+            source_preparing=isinstance(error, SourcePreparingError),
+            message=str(error),
+            link=saved,
+        )
     related: list[TaxonomyRelated] = []
     if (
         saved

@@ -27,7 +27,7 @@ and defines three non-root services. No container runs as root:
 
 | Service | Container | Role |
 | --- | --- | --- |
-| `db` | `florabase-db` (`70:70`) | PostgreSQL 18 (`florabase-postgres:latest`, currently `18.6-alpine-florabase.5`). Refuses the `change-me` placeholder password, validates folder owners, modes, empty-folder rules, marker and cluster identity before PostgreSQL starts; pins session `timezone` to `UTC`. |
+| `db` | `florabase-db` (`70:70`) | PostgreSQL 18 (`florabase-postgres:latest`, currently `18.6-alpine-florabase.6`). Refuses the `change-me` placeholder password, validates folder owners, modes, empty-folder rules, marker and cluster identity before PostgreSQL starts; pins session `timezone` to `UTC`. |
 | `backend` | `florabase-backend` (`10001:10001`) | Runs `florabase-start`: refuses `change-me`, waits for `db`, runs the guarded deploy step (mount separation via `stat` and `/proc/self/mountinfo`, backup checks, advisory lock, init/keep/verified pre-upgrade dump and upgrade, atomic marker, one-time first owner), scrubs owner variables, then `exec`s the exact-head API server (`release_schema serve`). |
 | `frontend` | `florabase-frontend` (`101:101`) | The web app and the only published port, bound to `127.0.0.1:8080`. |
 
@@ -373,12 +373,59 @@ from a protected pipe; keep the password out of arguments, environment variables
 
 ## Optional botanical reference datasets
 
-Florabase runs without them: WFO and WCVP v16 index lookups then report themselves unavailable.
-Only indexes built by Florabase's own builders from the pinned official archives are ever supported
-([SQLite reference indexes](security/beta-distribution-001/sqlite-reference-indexes.md)).
+Florabase uses two local SQLite reference indexes built by Florabase's own builders from pinned
+official archives ([SQLite reference indexes](security/beta-distribution-001/sqlite-reference-indexes.md)):
+**WFO 2026-06** (taxonomy) and **Kew WCVP v16** (native-range proposals). WCVP v15 stays
+manual-only.
 
-To enable them, put the built files in a separate host folder, for example
-`/volume1/docker/florabase/reference/`, keeping each index next to its `.sha256` seal:
+### Automatic background setup (default in `compose.yaml`)
+
+The shipped `compose.yaml` sets:
+
+```yaml
+    environment:
+      - FLORABASE_REFERENCES_SETUP=auto
+```
+
+Start-up never waits for indexes: the stack becomes healthy and usable immediately while WFO and
+WCVP v16 lookups report that reference data is being prepared. Once `backend` is serving, a
+low-priority background worker downloads each pinned official archive in turn (WFO first, then
+WCVP v16), verifies its exact SHA-256 checksum before parsing, builds and seals the SQLite index
+in a temporary directory inside `/var/lib/florabase/data/state/reference/` (mode `0700`, owned by
+the backend user `10001:10001`), atomically moves the sealed index into place, and deletes the
+downloaded archive. No extra host folder or mount is required.
+
+- **Disk and time:** Allow at least **3 GiB** free on the data volume (`~1.27 GiB` steady state:
+  `394 MiB` WFO + `909 MiB` WCVP v16; `~1.7 GiB` fresh build peak). On a low-power NAS (for example
+  a Synology DS224+), expect roughly **15–30 minutes** on first start. If free space is below the
+  pre-check threshold, download is skipped and the index reports `failed: disk`.
+- **Offline or transient errors:** The app stays healthy, logs one summary line per failure
+  (`network`, `checksum`, `size`, `build`, or `disk`), leaves no partial files, and retries on the
+  next restart or at most once every 6 hours while running.
+- **`failed: checksum`:** The downloaded archive is not the pinned release Florabase was reviewed
+  against, which usually means upstream no longer serves that release. Florabase does not retry it
+  while running (only on the next restart); a newer Florabase release that pins the new archive is
+  needed, or provide the index in [manual read-only mode](#manual-read-only-mode). Once both indexes are `ready`, no
+  background task keeps running and no outbound reference requests are made.
+- **Status:** Open **Settings → Data sources** to view the read-only status of each index (`off`,
+  `preparing`, `ready`, `ready (setup off)`, `failed: <reason>`, or `manual`).
+- **Backups and upgrades:** `state/reference/` is excluded from pre-upgrade database dumps and from
+  paired media backups (indexes can always be rebuilt from the pinned official archives).
+
+**Upgrading an existing `compose.yaml`:** Existing stacks without `FLORABASE_REFERENCES_SETUP=auto`
+stay in `off` mode (no outbound reference requests) until you add
+`- FLORABASE_REFERENCES_SETUP=auto` to `backend`'s `environment:` and redeploy. No new host folders
+or commands are needed.
+
+**Turning automatic setup off:** Set `- FLORABASE_REFERENCES_SETUP=off` (or remove the line) and
+redeploy. Florabase makes zero outbound requests for reference indexes. If sealed managed indexes
+were already built earlier under `auto`, Florabase keeps using them and reports `ready (setup off)`;
+if they are absent, lookups stay unavailable and report `off`.
+
+### Manual read-only mode
+
+To keep reference indexes on a separate read-only host folder (for example
+`/volume1/docker/florabase/reference/`), keep each index next to its `.sha256` seal:
 
 ```text
 reference/wfo-2026-06.sqlite
@@ -387,7 +434,7 @@ reference/wcvp-v16/index.sqlite
 reference/wcvp-v16/index.sha256
 ```
 
-The files must be readable by the backend container user. In `compose.yaml`, add the two
+The files must be readable by the backend container user (`10001`). In `compose.yaml`, add the two
 `environment` lines and the `volumes` line to the existing lists of the `backend` service (do not
 add a second `environment:` or `volumes:` key), then redeploy:
 
@@ -403,7 +450,10 @@ add a second `environment:` or `volumes:` key), then redeploy:
       - /volume1/docker/florabase/reference:/var/lib/florabase/reference:ro
 ```
 
-Leave out the line for any index you do not have. A missing or unreadable file never stops the
+Automatic setup skips any index whose configured path differs from its managed path under
+`/var/lib/florabase/data/state/reference/` (a path equal to the managed path is treated as
+managed), never writes to manual paths, and reports that index as `manual`. Leave out the line for any index
+you want provisioned automatically (or do not want). A missing or unreadable file never stops the
 stack: the matching lookups stay unavailable.
 
 ## Troubleshooting

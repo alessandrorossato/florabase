@@ -1,0 +1,209 @@
+# DOC-04 Handoff — End-user guide and unassisted trial template
+
+## 1. Branch, commits, and release scope
+
+- **Feature ID**: `DOC-04` (`in_progress` in [`docs/features.json`](../../features.json); becomes
+  `implemented` / `verified` after the unassisted non-developer trial runs on the release
+  candidate).
+- **Proposed release class in [`docs/release/scope-v1.json`](../../release/scope-v1.json)**:
+  `"DOC-04": "release-work"` (added next to `DOC-01`, `DOC-03`, `DOC-05`).
+- **Dependencies in `docs/features.json`**: `["RELEASE-SCOPE-001"]`.
+- **Branch**: `docs/doc-04-user-guide`
+- **Base commit (`origin/main`)**: `ddf5a1431453df6c6644fb1f2e9feeec6b120e16`
+- **Initial guide commit**: `bb7723966d2504073428241672b22b5059b569ef`
+- **Follow-up review-fix commit**: recorded in the delivery report and git log on
+  `docs/doc-04-user-guide` (no pages were merged or split from the 10-page structure proposed in
+  [`docs/release/scope-v1-handoff.md`](../../release/scope-v1-handoff.md) § DOC-04).
+- **Verification tier**: `docs` (`make verification-plan FORMAT=json` and `make feature-verify`).
+
+## 2. G-CORE coverage map
+
+Every step of `G-CORE` 1–9 (plus step 12 Cuttings, and user-level parts of steps 10–11) in
+[`docs/release/scope-v1.md`](../../release/scope-v1.md) § Core acceptance script is covered by the
+user guide as follows:
+
+| G-CORE step | Acceptance script summary | User guide page | Section heading(s) |
+| --- | --- | --- | --- |
+| **1** | Sign in on an empty database; see an intelligible zero-state `Today` and a clear path to the first record | [`docs/user-guide/README.md`](../../user-guide/README.md)<br>[`docs/user-guide/first-hour.md`](../../user-guide/first-hour.md) | `## Signing in`, `## How the app is laid out`<br>`## 1. Sign in and tour the empty Today screen` |
+| **2** | Create a botanical identity, add a profile and a manual native range | [`docs/user-guide/first-hour.md`](../../user-guide/first-hour.md) | `## 2. Create a botanical identity, profile, and manual native range` (`### Create the botanical identity`, `### Add a botanical profile`, `### Record a manual native range`) |
+| **3** | Create a supplier, an order, and a seed lot with partial and unknown values | [`docs/user-guide/concepts.md`](../../user-guide/concepts.md)<br>[`docs/user-guide/first-hour.md`](../../user-guide/first-hour.md) | `## Partial and unknown dates, and approximate quantities`<br>`## 3. Create a supplier, an order, and a seed lot` (`### Create a supplier`, `### Create an order`, `### Create a seed lot with partial or unknown values`) |
+| **4** | Create a sowing from the seed lot, record a germination observation, create a plant and a plant group, extract a plant from the group, and perform a supported reversal | [`docs/user-guide/first-hour.md`](../../user-guide/first-hour.md) | `## 4. Sow the seeds, record germination, create plants, extract, and reverse` (`### Start a sowing from the seed lot`, `### Record a germination observation`, `### Create an individual Plant and a Plant group from the sowing`, `### Extract an individual Plant from the Plant group`, `### Perform a supported reversal`) |
+| **5** | Record three journal entries on the plant or group: one keeping `Today` preselected, one with `Another date`, one with `Date unknown`; upload a photo and choose a primary photo | [`docs/user-guide/daily-use.md`](../../user-guide/daily-use.md) | `## Recording Journal entries on a Plant or Plant group` (`### Open the Journal and choose when it happened`)<br>`## Photos and choosing a primary photo` (`### Upload a photo to a Journal entry`, `### Upload photos to a record and set the primary photo`) |
+| **6** | Move records in bulk to a location; prepare a label print preview and look up a record from its QR URL | [`docs/user-guide/daily-use.md`](../../user-guide/daily-use.md)<br>[`docs/user-guide/finding-things-and-labels.md`](../../user-guide/finding-things-and-labels.md) | `## Locations and moving records in bulk` (`### Create a Location (if you do not have one yet)`, `### Move records in bulk`)<br>`## 3. Prepare and print physical labels`, `## 4. Look up a record from a label QR code` |
+| **7** | Schedule an activity, see `Today` reflect it, complete it, and see `Today` reflect the completion | [`docs/user-guide/daily-use.md`](../../user-guide/daily-use.md) | `## Scheduling and completing activities` (`### Schedule an activity`, `### See the scheduled activity on Today`, `### Complete the activity and check Today again`) |
+| **8** | Record a harvest, track stored material, convert it to a new seed lot, and see the full chain (`Seed lot → Sowing → Plant/Plant group → harvested Seed lot`) in the lineage view | [`docs/user-guide/harvest-and-seed-saving.md`](../../user-guide/harvest-and-seed-saving.md) | `## 1. Record a harvest`<br>`## 2. Track collected material as Stored material`<br>`## 3. Convert stored seeds into a new Seed lot`<br>`## 4. Read the lineage chain` |
+| **9** | Find the created records through global search, filters and a saved view; export CSV and run a CSV import preview | [`docs/user-guide/finding-things-and-labels.md`](../../user-guide/finding-things-and-labels.md)<br>[`docs/user-guide/your-data.md`](../../user-guide/your-data.md) | `## 1. Global search and filters`, `## 2. Save and reopen custom views (Saved views)`<br>`## 1. Export collection records to CSV`, `## 2. Validate and preview a CSV import` |
+| **10–11** (user-level reference) | Session expiry during an edit (`Session expired — sign in again`) and server error during a save | [`docs/user-guide/troubleshooting.md`](../../user-guide/troubleshooting.md) | `## Signed out while editing a form`<br>`## "Nothing saved" or a server / connection error appears` |
+| **12** | Cuttings: create a vegetative material lot, start a rooting attempt, log a rooting observation, establish a plant or plant group, and record a failed and an unknown-count attempt | [`docs/user-guide/cuttings.md`](../../user-guide/cuttings.md) | `## 1. Take or add a cuttings material lot`<br>`## 2. Start a rooting attempt from a material lot`<br>`## 3. Log rooting observations (including unknown or zero counts)`<br>`## 4. Establish a Plant or Plant group from a rooting attempt`<br>`## 5. Record failed or still-unknown attempts`<br>`## 6. Undo a cutting operation` |
+
+Trial record template:
+[`docs/release/evidence/doc-04-trial-template.md`](../../release/evidence/doc-04-trial-template.md).
+
+## 3. Marker inventory (`TODO(DOC-04 ...)`)
+
+Line numbers in this section refer to `408bad0`; run `git grep -n "TODO(DOC-04" -- docs/user-guide`
+for the current positions.
+
+### `TODO(DOC-04 verify)` markers (10)
+
+Every bold or `code` UI label in the 10 user-guide pages was mechanically checked against
+`frontend/src` (non-test `.ts`/`.tsx` files) on `ddf5a1431453`. Where a UI label is assembled
+dynamically via template strings or JSX interpolation in the frontend code rather than appearing as
+a single literal string, a `<!-- TODO(DOC-04 verify): ... -->` marker was placed at that point:
+
+| File:line | Dynamically assembled UI label | Source file:line |
+| --- | --- | --- |
+| `docs/user-guide/first-hour.md:261` | Dialog title & confirm button `Undo plant creation`, `Undo plant group creation`, `Undo sowing creation` (`Undo ${labels[kind]} creation`) | `frontend/src/propagation/CreationReversal.tsx:33,204,211,348` |
+| `docs/user-guide/daily-use.md:42` | Journal date radio label `Today, YYYY-MM-DD` (`Today, ${today}`) | `frontend/src/events/OccurrenceDateChoice.tsx:52` |
+| `docs/user-guide/daily-use.md:200` | Bulk move confirm button `Apply move (N)` (`Apply move (${String(willMove)})`) | `frontend/src/bulk/BulkLocation.tsx:314` |
+| `docs/user-guide/harvest-and-seed-saving.md:53` | Stored material quantity sub-labels `${label} precision`, `${label} dimension`, `${label} amount`, `${label} unit` for `label="Remaining now"` / `label="Seed lot quantity"` | `frontend/src/harvests/InventoryDialog.tsx:67-128` |
+| `docs/user-guide/harvest-and-seed-saving.md:115` | Conversion history toggle `{open ? "Hide" : "Show"} Seed lot conversions` | `frontend/src/harvests/ConversionHistory.tsx:126` |
+| `docs/user-guide/harvest-and-seed-saving.md:140` | Ancestry explorer generation headings `Generation 1`, `Generation 2` (`Generation ${String(generation.depth)}`) | `frontend/src/lineage/AncestryExplorer.tsx:480` |
+| `docs/user-guide/cuttings.md:59` | Attempt temperature labels `{key === "temperature_min_c" ? "Minimum" : "Maximum"} temperature (°C)` | `frontend/src/ui-pages/Cuttings/CuttingForm.tsx:337-338` |
+| `docs/user-guide/finding-things-and-labels.md:74` | Navigation panel saved-view overflow link `Show all ${String(itemSavedViews.length)} saved views` | `frontend/src/shell/WorkbenchShell.tsx:582` |
+| `docs/user-guide/your-data.md:53` | CSV import preview heading `Preview: ${preview.filename}` | `frontend/src/import-export/ImportExportScreen.tsx:664` |
+| `docs/user-guide/troubleshooting.md:67` | Active directory filter chip `{filter.label}: {filter.value}` | `frontend/src/components/DirectoryTools.tsx:88` |
+
+### `TODO(DOC-04 after batch 12)` markers (0, all resolved)
+
+The four markers (WFO name suggestions, Plants card layout, identity Media tab and Explore Media,
+reference-data operator setup) were resolved after merging `v0.1.0-beta.9`; see § 7.
+
+### `TODO(DOC-04 screenshot)` markers (27)
+
+| File:line | Marker text |
+| --- | --- |
+| `docs/user-guide/README.md:24` | `<!-- TODO(DOC-04 screenshot): Sign-in screen, empty form, highlight Login name, Password and Sign in button -->` |
+| `docs/user-guide/README.md:77` | `<!-- TODO(DOC-04 screenshot): Workbench on Today, desktop layout, highlight left workspace rail, section panel with + New, Record button, and Search -->` |
+| `docs/user-guide/first-hour.md:30` | `<!-- TODO(DOC-04 screenshot): Today screen on a fresh database, zero state, highlight Collection snapshot, To review and + New menu -->` |
+| `docs/user-guide/first-hour.md:50` | `<!-- TODO(DOC-04 screenshot): Create a botanical identity dialog, filled in, highlight Scientific name, Cultivar, Common name, and Create botanical identity button -->` |
+| `docs/user-guide/first-hour.md:83` | `<!-- TODO(DOC-04 screenshot): Botanical identity Maps or Native range dialog, with a native range place added, highlight Manage native range and Add place -->` |
+| `docs/user-guide/first-hour.md:149` | `<!-- TODO(DOC-04 screenshot): Add seed lot dialog on Inventory or Acquisition tab, showing Approximately quantity and partial Acquisition date -->` |
+| `docs/user-guide/first-hour.md:180` | `<!-- TODO(DOC-04 screenshot): Start sowing wizard on Step 2 Seed usage, highlight What happens to the source seed lot options and Start sowing button -->` |
+| `docs/user-guide/first-hour.md:235` | `<!-- TODO(DOC-04 screenshot): Extracted Plant Overview page, highlight Original Plant group panel and Reintegrate into group button -->` |
+| `docs/user-guide/daily-use.md:55` | `<!-- TODO(DOC-04 screenshot): Add entry dialog on a Plant Journal tab, highlight Entry type, When did it happen radio buttons with Today preselected, Another date, and Date unknown -->` |
+| `docs/user-guide/daily-use.md:102` | `<!-- TODO(DOC-04 screenshot): Plant Photos tab with uploaded photos, highlight Primary badge and Set as primary action in the photo card menu -->` |
+| `docs/user-guide/daily-use.md:130` | `<!-- TODO(DOC-04 screenshot): Schedule activity dialog, filled in with Title, Activity kind, Due date and a target Plant, highlight Save activity -->` |
+| `docs/user-guide/daily-use.md:163` | `<!-- TODO(DOC-04 screenshot): Complete activity dialog showing Complete without a Journal Event and Record what happened in Journal options -->` |
+| `docs/user-guide/daily-use.md:206` | `<!-- TODO(DOC-04 screenshot): Move to location dialog at Preview move step, highlight Target Location, Will move summary, and Apply move button -->` |
+| `docs/user-guide/harvest-and-seed-saving.md:40` | `<!-- TODO(DOC-04 screenshot): Record harvest dialog on Materials collected tab, showing a Seeds material line with Quantity and Precision, highlight Add material line and Record Harvest -->` |
+| `docs/user-guide/harvest-and-seed-saving.md:66` | `<!-- TODO(DOC-04 screenshot): Harvest detail page Stored material section with an active tracked Seeds line, highlight Track stored material / Edit stored material and Create Seed lot buttons -->` |
+| `docs/user-guide/harvest-and-seed-saving.md:107` | `<!-- TODO(DOC-04 screenshot): Create Seed lot from stored seeds dialog, highlight Material leaving stock, Resulting Seed lot label, Seed lot quantity, and Create Seed lot button -->` |
+| `docs/user-guide/harvest-and-seed-saving.md:143` | `<!-- TODO(DOC-04 screenshot): Seed lot Lineage tab or Explore Lineage view showing the multi-step chain from original Seed lot through Sowing and Plant/Plant group to the converted Seed lot -->` |
+| `docs/user-guide/cuttings.md:64` | `<!-- TODO(DOC-04 screenshot): Take or add cuttings form, highlight Source and material fields and Start rooting attempt immediately checkbox -->` |
+| `docs/user-guide/cuttings.md:111` | `<!-- TODO(DOC-04 screenshot): Rooting attempt detail page with Rooting observations and Log rooting observation dialog -->` |
+| `docs/user-guide/cuttings.md:142` | `<!-- TODO(DOC-04 screenshot): Establish Plant or Plant group dialog on a Rooting attempt, highlight Result (Individual Plant / Plant group) and Attempt after establishment -->` |
+| `docs/user-guide/finding-things-and-labels.md:30` | `<!-- TODO(DOC-04 screenshot): Today screen with active search query and Filters drawer or active filter chips, highlight Search your collection, Filters button, and matching results -->` |
+| `docs/user-guide/finding-things-and-labels.md:65` | `<!-- TODO(DOC-04 screenshot): Saved views dialog showing Save view form and a list of saved views with Open, Rename, Update with current view, and Delete -->` |
+| `docs/user-guide/finding-things-and-labels.md:124` | `<!-- TODO(DOC-04 screenshot): Settings Labels screen showing QR destination configured, Label size options, Selected material, and Print preview with QR codes -->` |
+| `docs/user-guide/finding-things-and-labels.md:141` | `<!-- TODO(DOC-04 screenshot): Record sheet open, highlight Open a label section with Label link input, Open button, and Scan with camera -->` |
+| `docs/user-guide/your-data.md:64` | `<!-- TODO(DOC-04 screenshot): Settings Import / Export screen showing Download CSV, Blank template, Example CSV, Validate and preview, and the Preview table with Ready rows and Confirm import / Cancel preview buttons -->` |
+| `docs/user-guide/reference-data.md:47` | `<!-- TODO(DOC-04 screenshot): Settings Data sources screen showing the Sources in use table -->` |
+| `docs/user-guide/troubleshooting.md:23` | `<!-- TODO(DOC-04 screenshot): Session expired — sign in again dialog over an open form, highlight Login name, Password, Sign in, and Discard unsaved changes and sign out -->` |
+
+## 4. Review fixes (`bb77239` → follow-up commit)
+
+All defects and nits found in the independent review (`/mnt/project-files/docs/doc-04-review.md`)
+were fixed against the source on `ddf5a1431453`:
+
+| Guide page | Old label / text in `bb77239` | New label / text from source | Source file:line |
+| --- | --- | --- | --- |
+| `docs/user-guide/cuttings.md` & `concepts.md` | Section **Material lot**; concept **Vegetative material lot** | Section **Source and material**; record title **Vegetative lot** / view **Material lots** | `frontend/src/ui-pages/Cuttings/CuttingForm.tsx:558`<br>`frontend/src/ui-pages/Cuttings/CuttingDetails.tsx:277`<br>`frontend/src/ui-pages/Cuttings/Cuttings.tsx:261` |
+| `docs/user-guide/cuttings.md` | **Material type** options `Cutting`, `Division`, `Scion`, `Offset / pup`, `Layer`, `Other vegetative` | **Material type** options `Stem cutting`, `Leaf cutting`, `Root cutting` | `frontend/src/ui-pages/Cuttings/api.ts:108-112` |
+| `docs/user-guide/cuttings.md` | **Origin** (`Mother Plant`, `Mother Plant group`, `External / acquired`) | **Source** (`From the collection`, `Purchased`, `Gift or exchange`, `Self-collected`, `Other`, `Unknown`), **Mother record type** (`Plant`, `Plant group`), **Mother specimen**, **Source detail**, **Purchase order** | `frontend/src/ui-pages/Cuttings/api.ts:114-121`<br>`frontend/src/ui-pages/Cuttings/CuttingForm.tsx:377-401,568-598` |
+| `docs/user-guide/cuttings.md` | **Label** (on lot), **Collected or acquired on**, **Quantity** (on lot) | **Material lot label**, **Taken or acquired on**, **Initial lot quantity** | `frontend/src/ui-pages/Cuttings/CuttingForm.tsx:623,631,749` |
+| `docs/user-guide/cuttings.md` | Section **Rooting attempt** (in create form); **Attempt notes** | Section **Rooting setup**; checkboxes **Start rooting attempt immediately**, **Use all cuttings in this attempt**, **Use the taken or acquired date**, field **Confirmed remaining quantity**, **Minimum** / **Maximum** `temperature (°C)` | `frontend/src/ui-pages/Cuttings/CuttingForm.tsx:337-338,756-795` |
+| `docs/user-guide/cuttings.md` | **Start rooting attempt** dialog: **Essentials**, **What happens to the source material lot?** (`Keep lot quantity unchanged`, `Use part of the lot`, `Use the whole lot (mark exhausted)`), **Remaining lot quantity** | **Material use** (`Use all cuttings`, `Use part of the lot`, `Leave stock unchanged`), **Confirmed remaining quantity**, section **Rooting setup** | `frontend/src/ui-pages/Cuttings/CuttingDetails.tsx:571-595` |
+| `docs/user-guide/cuttings.md` | **Log rooting observation** dialog: **Rooted count** | Section **Rooting check**, field **Observed rooted count** | `frontend/src/ui-pages/Cuttings/CuttingDetails.tsx:637,662` |
+| `docs/user-guide/cuttings.md` | **Establish Plant or Plant group** dialog: **Resulting record**, **Create** (`Plant`, `Plant group`), **Collection-entry date**, section **Attempt outcome**, **Attempt after establishment** (`Keep active`, `Complete attempt`, `Abandon remaining`) | Section **Established specimen**, **Result** (`Individual Plant`, `Plant group`), **Label**, **Group quantity**, **Collection entry date**, **Location**, **Attempt after establishment** (`Keep attempt active`, `Mark completed`, `Mark abandoned`), **Notes** | `frontend/src/ui-pages/Cuttings/CuttingDetails.tsx:709-769` |
+| `docs/user-guide/cuttings.md` | Display strings `Rooted count unknown` / `0 rooted`; **Edit attempt** dialog | **Rooting outcome** displays `Rooting pending` (active) or `Rooted count unrecorded` (ended); dialog **Edit rooting attempt**, section **Outcome** (**Status**: `Active`, `Completed`, `Failed`, `Abandoned`; **Rooted count**; **Ended on**) | `frontend/src/ui-pages/Cuttings/api.ts:129-134`<br>`frontend/src/ui-pages/Cuttings/CuttingDetails.tsx:806,824-844` |
+| `docs/user-guide/first-hour.md` | **Add botanical profile** dialog | Clicking **Add profile** on the **Reference** tab opens the **Edit botanical identity** editor on the **Reference** tab showing the **Add profile** form (and **Close editor**) | `frontend/src/botanical-identities/BotanicalIdentityScreen.tsx:582-593,1088-1091`<br>`frontend/src/botanical-profiles/BotanicalProfilePanel.tsx:257,310` |
+| `docs/user-guide/first-hour.md` | **Create Plant from Sowing** / **Create Plant group from Sowing** dialog; **Original Sowing** link | **Create Plant** / **Create Plant group** page (with `From <sowing>` under the heading); **Source sowing** link in the specimen header summary | `frontend/src/propagation/SowingDescendantWizard.tsx:322,328-333`<br>`frontend/src/plants/PlantScreen.tsx:476` |
+| `docs/user-guide/harvest-and-seed-saving.md` | **Remaining now precision**, **Quantity dimension**, `Unassigned`, **Inventory notes** | **Remaining now** (`Exact`, `Approximate`, `Unknown`, `Item count`, `Weight`; with `TODO(DOC-04 verify)` for dynamic `${label} precision`/`dimension`/`amount`/`unit`), **Storage Location** (`Not recorded` under **Storage** when blank); removed non-existent **Inventory notes** | `frontend/src/harvests/InventoryDialog.tsx:67-128,425-444`<br>`frontend/src/harvests/StoredMaterial.tsx:326` |
+| `docs/user-guide/harvest-and-seed-saving.md` | **Record disposition**: **Kind** (`Consumed / used`, `Given away / shared`, `Discarded`, `Lost / spoiled`, `Other`), `Disposed` state | **Disposition** (`Consumed`, `Processed`, `Discarded`, `Gifted`, `Used for propagation`), **Material leaving stock** (`Partial amount` keeping it `Active`, or `Use all remaining` marking it `Depleted`), **Amount used**, **Confirmed remaining now**, **Disposition date**, **Notes** | `frontend/src/harvests/inventoryApi.ts:12-21`<br>`frontend/src/harvests/InventoryDialog.tsx:313-391` |
+| `docs/user-guide/harvest-and-seed-saving.md` | **Conversion quantities**: `Seed count`; **Harvested seed origin**: links to **Stored material line** | **Conversion quantities**: `Item count` or `Weight`; **Harvested seed origin**: shows transferred quantity and **Open originating Harvest and stored material** | `frontend/src/harvests/InventoryDialog.tsx:105`<br>`frontend/src/harvests/ConversionHistory.tsx:129,159-166` |
+| `docs/user-guide/troubleshooting.md` | "Nothing is half-saved or silently duplicated" | Replaced with exact error texts (`Florabase could not save or refresh this record. Check the connection and try again.`, `Florabase could not save or refresh this seed lot. Check the connection and try again.`, `Florabase could not save or refresh this entry. Check the connection and try again.`) and that the form stays open keeping the user's draft input | `frontend/src/plants/PlantScreen.tsx:2148`<br>`frontend/src/seed-lots/SeedLotScreen.tsx:1327`<br>`frontend/src/events/EventJournal.tsx:450` |
+| `docs/user-guide/troubleshooting.md` | Filter chips `Lifecycle: Active`, `State: Active`, button **Reset** | Active filter chips rendered as `<Filter>: <Value>` (where **Lifecycle** or **State** is the filter label and `Active` is the value, with `TODO(DOC-04 verify)`), **Lifecycle** options `History` / `All`, **State** options `Depleted material` / `All states`, button **Reset filters** | `frontend/src/components/DirectoryTools.tsx:88,129`<br>`frontend/src/plants/PlantScreen.tsx:2876-2878`<br>`frontend/src/harvests/StoredMaterial.tsx:736-738` |
+| `docs/user-guide/finding-things-and-labels.md` | "weather-resistant pot stakes, packet labels, and storage tags" | "pot stakes, packet labels and storage tags" | `docs/user-guide/finding-things-and-labels.md:84` |
+
+## 5. Disagreements found between existing feature docs and the code
+
+Per the prompt rule (*"check claims against the code when the two disagree, and report any
+disagreement in the handoff instead of fixing the other doc"*), the user guide follows the code on
+`ddf5a1431453`, and the following differences in existing `docs/*.md` files were identified:
+
+| Existing feature doc | What the existing doc says | What the code on `main` (`ddf5a1431453`) actually does |
+| --- | --- | --- |
+| `docs/schedule.md` (§ Dates and statuses, § Targets and retention) | Lists **eight** activity kinds (`Repot`, `Water`, `Fertilize`, `Move / relocate`, `Check germination`, `Inspect`, `Harvest`, `General follow-up`) and **six** target types (`BotanicalIdentity`, `SeedLot`, `Sowing`, `Plant`, `PlantGroup`, `Location`). | `frontend/src/schedule/state.ts` defines **nine** activity kinds (adding `Check rooting` / `check_rooting`) and **eight** target types (adding `Vegetative lot` / `vegetative_lot` and `Rooting attempt` / `propagation_attempt`). |
+| `docs/schedule.md` (§ Agenda / Month UX candidate) | States that the view switcher names the views `Agenda` and `Month`. | `frontend/src/schedule/ScheduleScreen.tsx` (line 796) renders a single toggle button labelled `Calendar` when in list view and `Agenda` when in calendar view (matching the navigation sub-item `Calendar` in `frontend/src/shell/navigation.ts`). |
+| `docs/saved-views.md` (§ Supported surfaces, § API and operator flows) | Lists **16** supported surfaces and describes separate `Save view` and `Saved views` controls in a dedicated row below directory filters. | `frontend/src/saved-views/state.ts` lists **17** surfaces (including `cuttings`). After `UI-REVIEW-001`, directories use `<SavedViews presentation="dialog" />` inside `DirectoryTools`, so the toolbar exposes a single `Saved views` button opening a dialog that contains the `Save view` action; moreover, `frontend/src/shell/WorkbenchShell.tsx` surfaces up to 5 saved views per section directly in the left navigation panel. |
+| `docs/bulk-operations.md` (§ Explicit transient selection, § Navigation and later work) | States that directories expose a `Select` button, that the active bar has `Move to location`, `Select visible`, `Clear selection`, and `Done`, and lists legacy macroareas (`Overview (Dashboard)`, `Collection`, `Activity`, `Places`, `Reference`, `Tools`). | `frontend/src/bulk/BulkLocation.tsx` labels the entry button `Select records`, and the active selection bar has `Select visible`, `Clear`, `Actions ▾` → `Move to location`, and `Exit selection`. `frontend/src/shell/navigation.ts` defines the six workspaces `Today`, `Collection`, `Activity`, `Explore`, `Sourcing`, and `Settings`. |
+| `docs/labels.md` (§ User workflow, § QR links and base URL setting) | Refers to `Settings → Tools → Labels`, `Settings → General` for **Public / QR base URL**, and `QR destination → Edit`. | `frontend/src/shell/navigation.ts` places `Labels` directly under `Settings` (`Settings` → `Labels`). There is no `Settings → General` page (`#/settings?tab=general` redirects to `#/labels?qr=edit`), and `frontend/src/labels/LabelsScreen.tsx` labels the button `Edit QR destination` (opening `QrDestinationDialog.tsx` with field `Public / QR base URL` and button `Save`). |
+| `docs/import-export.md` (§ Guided operator flow) | Refers to `Tools → Import / Export`. | `frontend/src/shell/navigation.ts` places `Import / Export` under `Settings` (`Settings` → `Import / Export`). |
+| `docs/search.md` (§ Using global search) | Refers to `Dashboard` and `Dashboard Quick actions` (`Add seed lot`, `Add plant`, `Add plant group`, `Import / Export`). | `frontend/src/collection/DashboardScreen.tsx` titles the page `Today`. Its `Record` panel (`frontend/src/events/recordWorkflows.ts`) lists `Add Journal entry`, `Record harvest`, `Record sowing`, `Take or add cuttings`, `Move plants / groups`, `Complete scheduled work`, and `Schedule activity`, while creation actions live in the shell's `+ New` (`New record`) menu (`frontend/src/shell/navigation.ts`). |
+
+## 6. Source provenance of UI labels (Navigation and G-CORE 1–4 & 12 forms)
+
+Every UI label used in the guide was taken verbatim from the read-only frontend source files below:
+
+### Main navigation & shell controls
+
+| UI area / flow | Exact labels used in the guide | Source file(s) |
+| --- | --- | --- |
+| Sign-in & session expiry | `Login name`, `Password`, `Sign in`, `Session expired — sign in again`, `Discard unsaved changes and sign out` | `frontend/src/auth/LoginForm.tsx`<br>`frontend/src/App.tsx` |
+| Workspaces & sections | **Today**: `Today`<br>**Collection**: `Seeds`, `Sowings`, `Cuttings`, `Plants` (sub-item `Plant groups`), `Harvests` (sub-item `Stored material`), `Locations`<br>**Activity**: `Journal`, `History`, `Schedule` (sub-item `Calendar`)<br>**Explore**: `Botanical identities`, `Taxonomy`, `Lineage`, `Media`, `Geography` (sub-items `Collection origins`, `Species distribution`, `Native ranges`)<br>**Sourcing**: `Suppliers`, `Orders`<br>**Settings**: `Account`, `Theme`, `Labels`, `Import / Export`, `Data sources`, `Help` | `frontend/src/shell/navigation.ts`<br>`frontend/src/shell/WorkbenchShell.tsx` |
+| Shell quick actions | `+ New` (`New record`: `New seed lot`, `New sowing`, `New plant`, `New plant group`, `Record harvest`, `New botanical identity`, `New supplier`, `New location`, `New local place`), `Record`, `Search` (`Search and commands`, `Search records, sections and actions`), `Account and settings`, `Hide panel`, `Sign out` | `frontend/src/shell/navigation.ts`<br>`frontend/src/shell/WorkbenchShell.tsx`<br>`frontend/src/shell/RecordSheet.tsx`<br>`frontend/src/shell/CommandPalette.tsx` |
+| Today zero-state & panels (G-CORE 1) | `Today`, `Search your collection…`, `Filters`, `Saved views`, `Next work` (`Open Schedule`, `Overdue`, `Due today`, `Next 7 days`, `No planned activities. Schedule work when your collection needs it.`), `Recent activity` (`Open Journal`, `Open History`, `No recent activity. Journal observations and recorded operations will appear here.`), `Record` (`Add Journal entry`, `Record harvest`, `Record sowing`, `Take or add cuttings`, `Move plants / groups`, `Complete scheduled work`, `Schedule activity`), `Collection snapshot` (`Individual Plants`, `Plant groups`, `Seed lots`, `Sowings`, `Botanical identities`), `To review` | `frontend/src/collection/DashboardScreen.tsx`<br>`frontend/src/collection/DashboardSearch.tsx`<br>`frontend/src/events/recordWorkflows.ts` |
+
+### Create forms and action flows for G-CORE 2–4 (and 5–9, 12)
+
+| G-CORE step & workflow | Exact labels used in the guide | Source file(s) |
+| --- | --- | --- |
+| **G-CORE 2**: Create botanical identity | `New botanical identity`, dialog `Create a botanical identity`, section `Botanical name`, fields `Scientific name`, `Cultivar`, `Common name`, buttons `Cancel`, `Create botanical identity`, detail tabs `Overview`, `Reference`, `Taxonomy`, `Maps`, `Media`, `History`, button `Edit botanical identity`, `Close editor` | `frontend/src/botanical-identities/BotanicalIdentityScreen.tsx`<br>`frontend/src/botanical-identities/identitySections.ts` |
+| **G-CORE 2**: Add botanical profile | `Reference` tab → `Add profile`, heading `Add profile`, tabs `Description & origin` (`Description`, `Origin & distribution`), `Cultivation` (`Cultivation`), `Uses & warnings` (`Uses`, `Warnings`), button `Save profile` | `frontend/src/botanical-profiles/BotanicalProfilePanel.tsx`<br>`frontend/src/botanical-identities/BotanicalIdentityScreen.tsx` |
+| **G-CORE 2**: Record manual native range | `Maps` tab → `Edit native range` (or `Edit botanical identity` → `Native range` tab), `Manage native range`, `Geographic place` (`Choose an exact named area`), `Add place`, `Done` (plus `Explore` → `Geography` → `Places` → `New local place`) | `frontend/src/botanical-identities/IdentityMaps.tsx`<br>`frontend/src/botanical-profiles/BotanicalNativeRangeManager.tsx`<br>`frontend/src/geography/GeographyOverview.tsx`<br>`frontend/src/geographic-places/GeographyScreen.tsx` |
+| **G-CORE 3**: Create supplier | `Sourcing` → `Suppliers` → `New supplier`, dialog `Add supplier`, tabs `Essentials` (`Name`, `Kind`: `Seller`, `Nursery`, `Supermarket`, `Person`, `Exchange`, `Other`) and `Contact and notes` (`Website`, `Email`, `Phone`, `Notes`), button `Add supplier` | `frontend/src/suppliers/SupplierScreen.tsx` |
+| **G-CORE 3**: Create order | `Sourcing` → `Orders` → `New Order`, sections `Order context` (`Supplier`, `Order date`, `Order reference`) and `Transaction and notes` (`Total price`, `Currency`, `Notes`), button `Create Order`, detail action `Add seed lot` | `frontend/src/orders/OrderScreen.tsx` |
+| **G-CORE 3**: Partial dates & Create seed lot | `Precision` (`Unknown`, `Year`, `Year and month`, `Complete date`, plus `Year`, `Month`, `Day`); `Collection` → `Seeds` → `New seed lot`, dialog `Add seed lot`, tabs `Identity` (`Botanical identity`, `Lot label`), `Inventory` (`Quantity`, `Quantity value`, `Quantity unit`: `seeds`, `g`, `mg`, `Approximately`, `Lifecycle`: `Active`, `Storage location`, `Create location`), `Acquisition` (`Source`: `Purchased`, `Purchase order`, `Review purchase context / use Order date`, `Apply purchase context`, `Supplier`, `Acquisition date`), `Origin` (`Material provenance`, `Precise provenance site`), `Seed details` (`Harvest date`, `Expected viability until`, `Notes`), button `Add seed lot` | `frontend/src/seed-lots/PartialDateField.tsx`<br>`frontend/src/seed-lots/SeedLotScreen.tsx`<br>`frontend/src/orders/PurchaseContext.tsx` |
+| **G-CORE 4**: Start sowing from seed lot | `Start sowing`, Step 1 `Sowing details` with tabs `Essentials` (`Source SeedLot`, `Sowing label`, `Sowing date`), `Material & location` (`Quantity sown`: `Unknown`, `Seed count`, `Weight`, `Amount`, `Approximate`, `Current location`), `Cultivation` (`Substrate`, `Method / container`, `Pretreatment`, `Minimum °C`, `Maximum °C`, `Environment / conditions`), `Notes`, button `Review seed usage`; Step 2 `Seed usage` (`What happens to the source seed lot?`: `Keep inventory unchanged`, `Use part of the lot`, `Record partial use; quantity stays unknown`, `Use the whole lot`), button `Start sowing` | `frontend/src/seed-lots/SeedLotScreen.tsx`<br>`frontend/src/propagation/SeedLotSowingWizard.tsx`<br>`frontend/src/sowings/SowingFormFields.tsx` |
+| **G-CORE 4**: Germination observation | `Record germination` (or `Germination` tab → `Add observation`), dialog `Add germination observation`, fields `Date`, `Newly germinated`, button `Save observation` | `frontend/src/sowings/SowingScreen.tsx`<br>`frontend/src/sowings/GerminationSection.tsx` |
+| **G-CORE 4**: Create Plant and Plant group from Sowing | `Create Plant`, `Create Plant group`, tabs `Essentials` (`Botanical identity`, `Label`, `Quantity`: `Unknown`, `Exact count`, `Approximate count`, `Count`, `Current location`), `Origin` (`Collection-entry date`), `Lifecycle & notes` (`Notes`), `Sowing after creation` (`Keep active`, `Complete Sowing`, `Mark failed`, `Abandon Sowing`), buttons `Create Plant`, `Create Plant group`, specimen fact `Source sowing` | `frontend/src/sowings/SowingScreen.tsx`<br>`frontend/src/propagation/SowingDescendantWizard.tsx`<br>`frontend/src/plants/PlantFormFields.tsx`<br>`frontend/src/plants/PlantScreen.tsx` |
+| **G-CORE 4**: Extract Plant & Supported reversals | `Extract plant`; `Original Plant group` → `Reintegrate into group` → `Reintegrate into original group?` → `Reintegrate Plant` / `Confirm and reintegrate`; `⋯` (`More record actions`) → `Undo creation` → `Undo ${labels[kind]} creation` | `frontend/src/plants/PlantScreen.tsx`<br>`frontend/src/propagation/CreationReversal.tsx` |
+| **G-CORE 12**: Cuttings lots, attempts, observations, establishment, outcome, undo | `Take or add cuttings`, `Take cuttings`, section `Source and material` (`Material type`: `Stem cutting`, `Leaf cutting`, `Root cutting`; `Source`: `From the collection`, `Purchased`, `Gift or exchange`, `Self-collected`, `Other`, `Unknown`; `Mother record type`: `Plant`, `Plant group`; `Mother specimen`; `Source detail`; `Botanical identity`; `Material lot label`; `Taken or acquired on`; `Initial lot quantity`; `Location`; `Notes`), section `Rooting setup` (`Start rooting attempt immediately`, `Use all cuttings in this attempt`, `Use the taken or acquired date`, `Confirmed remaining quantity`, `Attempt label`, `Started on`, `Starting quantity`, `Location`, `Substrate`, `Hormone treatment`, `Container`, `Environment`, `Minimum` / `Maximum` `temperature (°C)`), button `Save cuttings`; `Start rooting attempt` (`Material use`: `Use all cuttings`, `Use part of the lot`, `Leave stock unchanged`, button `Start attempt`); `Log rooting observation` → `Rooting check` (`Stage`: `Inspection`, `Callus`, `Root initials`, `Rooted`, `Loss`; `Observed on`; `Observed rooted count`; `Notes`; `Save observation`; `Correct observation`); `Establish Plant or group` → `Establish Plant or Plant group` → `Established specimen` (`Result`: `Individual Plant`, `Plant group`; `Label`; `Group quantity`; `Collection entry date`; `Location`; `Attempt after establishment`: `Keep attempt active`, `Mark completed`, `Mark abandoned`; `Notes`; `Establish`); `Edit attempt` → `Edit rooting attempt` → `Outcome` (`Status`: `Active`, `Completed`, `Failed`, `Abandoned`; `Rooted count`; `Ended on`; `Save attempt`); `Rooting outcome` (`Rooting pending`, `Rooted count unrecorded`); `Undo starting attempt`, `Undo establishment` → `Undo cutting operation` → `Confirm undo` | `frontend/src/ui-pages/Cuttings/CuttingForm.tsx`<br>`frontend/src/ui-pages/Cuttings/CuttingDetails.tsx`<br>`frontend/src/ui-pages/Cuttings/Cuttings.tsx`<br>`frontend/src/ui-pages/Cuttings/api.ts` |
+
+## 7. Update for `v0.1.0-beta.9` (writer `claude-doc-04`, 2026-11-25)
+
+Argon's writer claim `b08d09581cf1` was taken over by the operator (claim `058a9bc3273b`). The
+review-fix prompt was already applied in `408bad0` (re-review PASS), so nothing of it was redone.
+`origin/main` `b632c5c` (beta.9 and MOBILE-002) was merged with a merge commit; conflicts in
+`CHANGELOG.md` (the guide line moved to a new `Unreleased` section), `docs/progress.md` and
+`docs/features.json` kept both sides.
+
+Guide changes, each label checked with `git grep -F` in `frontend/src` (non-test):
+
+| Change | Page | Source |
+| --- | --- | --- |
+| WFO name suggestions replace the batch-12 marker | `first-hour.md` | `botanical-identities/WfoNameInput.tsx` (datalist after 2 characters, free text stays valid) |
+| **Save and add another** tip (seed lot keeps identity, sowing keeps SeedLot, plant/group keeps identity) | `first-hour.md` | `seed-lots/SeedLotScreen.tsx`, `sowings/SowingScreen.tsx`, `plants/PlantScreen.tsx` |
+| Searchable reference fields | `README.md` | `seed-lots/ReferencePicker.tsx` (typing, arrows, Enter, Escape) |
+| Sort list for Seeds, Sowings, Plants; kept across pages and in Saved views | `finding-things-and-labels.md` | `components/DirectorySort.tsx`, `directorySort.ts`, `saved-views/state.ts` |
+| Identity cover dialog and **Collection record photos** | `daily-use.md` | `photos/BotanicalIdentityCover.tsx`, `botanical-identities/IdentityMedia.tsx`, `media/ExternalCopyChoice.tsx` |
+| Explore → Media: search, filters, **Add new media**, **Open media details**, **Link to another record**, **Delete media asset** | `daily-use.md` | `media/MediaScreen.tsx`, `MediaEditor.tsx`, `MediaQuickPreview.tsx` |
+| Plants card-height marker removed (layout fix shipped, no user note needed) | `daily-use.md` | `UI-REVIEW-002` |
+| Operator setup links `installation.md#optional-botanical-reference-datasets` | `reference-data.md` | `docs/installation.md` |
+
+New markers: one `TODO(DOC-04 verify)` for the dynamically built date sort options
+(`Newest ${dateLabel} first`, `components/DirectorySort.tsx:31-32`) and one
+`TODO(DOC-04 screenshot)` for the identity Media tab. The visually hidden **Sort by** label is
+described as such.
+
+Not documented on purpose: **Connected devices** in Settings → Account (MOBILE-002) serves the
+Android app, which is not part of the user guide yet.
+
+### Follow-up after batches 13 and 14 merge
+
+Not on `main` at `b632c5c`, so not documented: tray pot-on, bulk watering/feeding, Sort by for
+more directories and the Wikipedia image fix (batch 13); the import wizard, automatic WFO/WCVP
+setup, Settings → Media and the About page (batch 14). Update `daily-use.md`, `your-data.md`,
+`reference-data.md`, `finding-things-and-labels.md` and the Settings list in `README.md` when they
+land.

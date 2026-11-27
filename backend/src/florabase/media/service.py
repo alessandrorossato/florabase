@@ -26,6 +26,7 @@ from florabase.collection_photos.model import (
 )
 from florabase.collection_photos.service import TARGET_MODELS, CollectionPhotoError
 from florabase.cuttings.model import PropagationAttempt, VegetativeLot
+from florabase.db.ordering import DirectorySort, directory_order
 from florabase.media.schemas import (
     AssetDetailResponse,
     AssetMetadataWrite,
@@ -156,6 +157,7 @@ def list_assets(
     kind: Literal["local", "external"] | None = None,
     association: Literal["all", "linked", "unlinked"] = "all",
     target: MediaTargetFilter | None = None,
+    sort: DirectorySort | None = None,
     limit: int = 24,
     offset: int = 0,
 ) -> AssetPageResponse:
@@ -224,7 +226,17 @@ def list_assets(
         .outerjoin(link_counts, link_counts.c.asset_id == MediaAsset.id)
         .outerjoin(cover_counts, cover_counts.c.asset_id == MediaAsset.id)
         .where(*filters)
-        .order_by(MediaAsset.created_at.desc(), MediaAsset.id.desc())
+        .order_by(
+            *directory_order(
+                sort or "newest",
+                # Mirrors the Media directory's displayed title.
+                name=func.coalesce(
+                    MediaAsset.title, Attachment.original_filename, MediaAsset.attribution
+                ),
+                date=(MediaAsset.created_at,),
+                record_id=MediaAsset.id,
+            )
+        )
         .limit(limit)
         .offset(offset)
     ).all()

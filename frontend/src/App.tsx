@@ -43,6 +43,7 @@ import { loadWorkspaceChunk } from "./components/workspaceChunk";
 import { isFreshDirectoryNavigation } from "./components/recordNavigation";
 import { WorkbenchShell } from "./shell/WorkbenchShell";
 import type { Section } from "./shell/navigation";
+import { isWorkspaceHome, workspaceHomes } from "./shell/navigation";
 
 const DemoExperience = lazy(() =>
   loadWorkspaceChunk(async () => {
@@ -100,6 +101,12 @@ const DashboardScreen = lazy(() =>
     return { default: module.DashboardScreen };
   }),
 );
+const WorkspaceHome = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./workspaces/WorkspaceHome");
+    return { default: module.WorkspaceHome };
+  }),
+);
 
 const ScheduleScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
@@ -149,6 +156,13 @@ const SettingsScreen = lazy(() =>
   }),
 );
 
+const MediaSettingsScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./settings/MediaSettingsScreen");
+    return { default: module.MediaSettingsScreen };
+  }),
+);
+
 const HelpScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./settings/HelpScreen");
@@ -160,6 +174,13 @@ const DataSourcesScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./settings/DataSourcesScreen");
     return { default: module.DataSourcesScreen };
+  }),
+);
+
+const AboutScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./settings/AboutScreen");
+    return { default: module.AboutScreen };
   }),
 );
 
@@ -365,6 +386,7 @@ function currentRoute(): Route {
   }
   const valid: Section[] = [
     "dashboard",
+    ...workspaceHomes,
     "seeds",
     "sowings",
     "harvests",
@@ -380,8 +402,10 @@ function currentRoute(): Route {
     "import-export",
     "labels",
     "settings",
+    "media-settings",
     "help",
     "data-sources",
+    "about",
     "account",
     "media",
   ];
@@ -611,7 +635,9 @@ function ApplicationShell({
             route.section === "events" ||
             route.section === "sowings" ||
             route.section === "cuttings" ||
-            route.section === "harvests"
+            route.section === "harvests" ||
+            // Map photos and native-range results show identity covers.
+            route.section === "geography"
           }
         >
           <WorkspaceBoundary
@@ -647,6 +673,8 @@ function ApplicationShell({
                 />
               ) : route.section === "dashboard" ? (
                 <DashboardScreen />
+              ) : isWorkspaceHome(route.section) ? (
+                <WorkspaceHome id={route.section} />
               ) : route.section === "harvests" ? (
                 <HarvestScreen
                   initialId={route.recordId}
@@ -732,10 +760,14 @@ function ApplicationShell({
                 />
               ) : route.section === "settings" ? (
                 <SettingsScreen />
+              ) : route.section === "media-settings" ? (
+                <MediaSettingsScreen />
               ) : route.section === "help" ? (
                 <HelpScreen />
               ) : route.section === "data-sources" ? (
                 <DataSourcesScreen />
+              ) : route.section === "about" ? (
+                <AboutScreen />
               ) : route.section === "labels" ? (
                 <LabelsScreen
                   key={`${route.labelKind ?? ""}:${route.labelRecord ?? ""}`}

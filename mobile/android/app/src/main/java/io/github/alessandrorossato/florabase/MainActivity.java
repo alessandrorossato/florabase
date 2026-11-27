@@ -3,12 +3,31 @@ package io.github.alessandrorossato.florabase;
 import android.os.Bundle;
 import android.webkit.WebSettings;
 import com.getcapacitor.BridgeActivity;
+import java.io.File;
 
 public class MainActivity extends BridgeActivity {
 
+    private static void deleteRecursively(File target) {
+        if (target == null || !target.exists()) {
+            return;
+        }
+        File[] children = target.listFiles();
+        if (children != null) {
+            for (File child : children) {
+                deleteRecursively(child);
+            }
+        }
+        // Best-effort cleanup of ephemeral shared cache files.
+        target.delete();
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Delete any previously exported/shared files in cache/shared/ on app start.
+        deleteRecursively(new File(getCacheDir(), "shared"));
+
         registerPlugin(SecureTokenPlugin.class);
+        registerPlugin(WebPrintPlugin.class);
         super.onCreate(savedInstanceState);
 
         // Debug builds only: permit mixed-content fetch() from the bundled https://localhost
