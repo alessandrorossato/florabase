@@ -1,5 +1,7 @@
 # Controlled BotanicalProfile text enrichment — approved, blocked
 
+> Summary: Controlled BotanicalProfile text enrichment contract — approved, blocked on source gate (BOTANY-003).
+
 BOTANY-003 remains **planned**. The [2026-10-09 source decisions](botanical-profile-enrichment-sources.md)
 confirm WCVP geographic text eligibility, reproduce the WFO / Flora of China TLS blocker, and approve
 only three exact Kew SEPASAL / Flora Zambesiaca descriptions. Those three records are insufficient
@@ -11,7 +13,7 @@ cultivation, uses and warnings. Source evidence must remain separate from those 
 ENRICHMENT-001 owns structured native ranges; BOTANY-003 must never derive them from prose or
 create distribution prose from source assertions or drawing geometry.
 
-The complete [approved contract](botany-003-audit.md#31-approved-productsource-decision) remains:
+The complete [approved contract](../../archive/BOTANY-003/botany-003-audit.md#31-approved-productsource-decision) remains:
 
 - Only the three source records explicitly allowlisted in the [source decision](botanical-profile-enrichment-sources.md)
   currently have description source GO. WFO / Flora of China still requires secure acquisition and
@@ -50,4 +52,4 @@ The complete [approved contract](botany-003-audit.md#31-approved-productsource-d
 
 Cultivation, uses and warnings remain manual pending the [separate source audit](botanical-knowledge-source-audit.md)
 and a future reviewed increment. Automatic refresh, taxonomy, phylogeny and broad visual redesign
-remain outside BOTANY-003. The [blocked handoff](botany-003-handoff.md) records what actually ran.
+remain outside BOTANY-003. The [blocked handoff](../../archive/BOTANY-003/botany-003-handoff.md) records what actually ran.

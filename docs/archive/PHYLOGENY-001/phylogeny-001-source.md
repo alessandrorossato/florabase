@@ -221,5 +221,5 @@ must remain healthy without them. This audit adds no table, migration, setting, 
   had not yet run. This source decision remains unchanged by the subsequent independently reviewed
   documentation delivery; see the progress milestone for final verification evidence.
 
-The [planned workspace contract](collection-phylogeny.md) and
+The [planned workspace contract](../../features/explore/collection-phylogeny.md) and
 [blocked implementation handoff](phylogeny-001-handoff.md) describe the preserved boundaries.

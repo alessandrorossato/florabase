@@ -79,7 +79,7 @@ Date: 2026-11-22. Branch: `ci/verify-speed-001` (from `origin/main` `16ccf4b`).
      fail-closed as unclassified).
    - Added manual `make smoke-beta-lifecycle` for `scripts/test-beta-lifecycle.py` and documented it
      as a manual real-Docker probe in
-     [`docs/beta-image-001-final-reliability.md`](../../beta-image-001-final-reliability.md).
+     [`docs/beta-image-001-final-reliability.md`](../BETA-IMAGE-001/beta-image-001-final-reliability.md).
    - Profiled `scripts/test-stage-evidence.py` (22 tests, `110.26 s` total):
 
 | Test | Elapsed | Notes |

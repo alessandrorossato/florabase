@@ -15,7 +15,7 @@ uncommitted at the stated implementation base.
 ## Domain support and side effects
 
 The complete audited matrix, including reasons and authoritative paths, is in
-[bulk-operations.md](../../bulk-operations.md#audited-domain-matrix).
+[bulk-operations.md](../../features/collection/bulk-operations.md#audited-domain-matrix).
 
 | Kind                                                                                       | Supported                     | Owning move path / reason                                                                                                                                           |
 | ------------------------------------------------------------------------------------------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

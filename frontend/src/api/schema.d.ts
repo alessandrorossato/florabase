@@ -6398,7 +6398,7 @@ export interface components {
         };
         /**
          * Phenology
-         * @description A controlled phenological stage; see docs/phenology.md.
+         * @description A controlled phenological stage; see docs/features/activity/phenology.md.
          */
         Phenology: {
             /**

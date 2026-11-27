@@ -1,6 +1,6 @@
 # BETA-RUNTIME-001 — image-only beta runtime and recovery runbook
 
-> Superseded by [ADR 0008](decisions/0008-self-initializing-single-compose.md): the controller bundle described here was withdrawn with INSTALL-001. This page is a historical record.
+> Superseded by [ADR 0008](../../decisions/0008-self-initializing-single-compose.md): the controller bundle described here was withdrawn with INSTALL-001. This page is a historical record.
 
 This increment delivers the versioned distribution stack, a host controller and disposable proof
 that install, persistence, recovery and upgrade work on the Synology DSM 7.2 Container Manager software
@@ -8,7 +8,7 @@ baseline (Engine 24.0.2, Compose 2.20.1, Python 3.8). It
 does **not** deploy to Synology or any persistent host, approve a host, publish images or admit real
 collection use. Real-host installation stays an explicit operator action (see
 [Outstanding operator evidence](#outstanding-operator-evidence)). The contract it implements is the
-[foundation runtime contract](archive/BETA-FOUNDATION-001/beta-foundation-001.md#smallest-beta-deployment-architecture).
+[foundation runtime contract](../BETA-FOUNDATION-001/beta-foundation-001.md#smallest-beta-deployment-architecture).
 
 ## What ships
 
@@ -68,7 +68,7 @@ artifacts an operator copies to the host; no checkout, Git or package installati
   directory. Only indexes built by Florabase's builders from the pinned archives are supported:
   `reference set --sha256` proves the copy is intact, not where it came from, and the backend
   refuses any index whose schema is not the builder's exact layout
-  ([installation guide](installation.md#optional-botanical-reference-datasets)).
+  ([installation guide](../../operate/installation.md#optional-botanical-reference-datasets)).
 
 ## Host layout
 
@@ -102,10 +102,10 @@ Run everything as root on the host (`sudo -i` on DSM). Replace the example paths
    Python ≥ 3.8, linux/amd64 and memory/PID cgroups are mandatory. Capacity thresholds (2 GiB
    available memory, 20 GiB free) are screening budgets. The raw `preflight.json` describes your host
    (kernel, capacity, filesystem, uptime): keep it on the host. Only the sanitized fields required by the
-   [image runbook](beta-image-001.md#platform-policy-and-publication-prerequisite) belong in Git.
+   [image runbook](../BETA-IMAGE-001/beta-image-001.md#platform-policy-and-publication-prerequisite) belong in Git.
 2. **Authorize the release.** Obtain `release-manifest.json` and its SHA-256 from the authorized
    release record. Verify its attestation exactly as in the
-   [manifest consumption](beta-image-001.md#manifest-contract-and-consumption) section. The
+   [manifest consumption](../BETA-IMAGE-001/beta-image-001.md#manifest-contract-and-consumption) section. The
    controller requires `--manifest-sha256` and re-validates the manifest, OCI labels, platform
    digests and Alembic head after pulling. It never uses tags.
 3. **Initialize.** Run
@@ -321,7 +321,7 @@ BETA-ACCEPTANCE-001:
 
 - BETA-RUNTIME-001 left `release/inputs.json` and security-owned image files unchanged;
   BETA-DISTRIBUTION-001 later moved only the PostgreSQL pin to the upstream same-version rebuild
-  (see [installation guide](installation.md) and `docs/security/beta-distribution-001/`). The controller's default
+  (see [installation guide](../../operate/installation.md) and `docs/security/beta-distribution-001/`). The controller's default
   restic image (`restic/restic:0.17.3@sha256:8f5a62b4…`) is a **new runtime-owned pin** that
   BETA-SECURITY-001 should scan before real use.
 - Restore depends on registry availability of the recorded image digests (GHCR versions are

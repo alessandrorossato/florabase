@@ -1,5 +1,7 @@
 # Unified operational history — HISTORY-001
 
+> Summary: Unified operational history timeline, source/deduplication matrix, and navigation (HISTORY-001).
+
 History is a read-only projection of authoritative past facts from collection records.
 Journal is the recording hub and operator notebook at `#/events`; its fallback entries use the
 existing Plant/PlantGroup Event journal. Structured choices open delivered canonical workflows.
@@ -119,7 +121,7 @@ this terminal planning fact does not establish the actual work date. Its source 
 and a bounded related link recovers the target when present. Planned/overdue/cancelled work is excluded.
 An explicitly created compatible Event remains a separate Journal occurrence at its chosen actual date.
 Schedule shows whether that occurrence is linked and recovers its Journal context.
-See [Schedule](schedule.md) and the [product-pass handoff](archive/ACTIVITY-001/journal-history-product-pass-handoff.md).
+See [Schedule](schedule.md) and the [product-pass handoff](../../archive/ACTIVITY-001/journal-history-product-pass-handoff.md).
 
 An ordinary Journal Event visible on both surfaces is one owning record, not two facts. Structured
 Harvest backing Events and operation-owned Events stay visible in the contextual record Journal

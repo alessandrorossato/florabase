@@ -2,7 +2,7 @@
 
 ## Current refinement — operator feedback, 2026-10-18
 
-The same candidate now includes the requested follow-up. [Third-pass evidence](../../review/collection-visual-002/third-pass/README.md)
+The same candidate now includes the requested follow-up. [Third-pass evidence](../review/collection-visual-002/third-pass/README.md)
 supersedes the earlier directory, New Harvest and Location parent-menu images.
 
 - Harvest/Stored material rows match Plants' text roles: normal serif titles, lighter italic scientific
@@ -43,7 +43,7 @@ login `owner`; the existing Review-only password was supplied in chat. No creden
 - Review: candidate-owned `florabase-feature-review`, revision `20261013_0042`, fixture v4/80.
 - No reset, removal, reseed, persistent-UAT operation, staging, commit, push or delivery in this pass.
 - Feature remains `implemented`. Canonical `make feature-verify` was explicitly not run.
-- [Second-pass evidence](../../review/collection-visual-002/second-pass/README.md) supersedes earlier images
+- [Second-pass evidence](../review/collection-visual-002/second-pass/README.md) supersedes earlier images
   for the refined surfaces. Earlier evidence remains available for full-page creation and media.
 
 ## HARVEST SELECTED STATE
@@ -166,7 +166,7 @@ Lifecycle/State chip. Harvest has no copied Location and no Location filter.
 
 ## RESPONSIVE
 
-[31 second-pass captures](../../review/collection-visual-002/second-pass/README.md) cover all requested desktop
+[31 second-pass captures](../review/collection-visual-002/second-pass/README.md) cover all requested desktop
 states, representative 1024×844/390×844 directories, details, editing, conversion and nested Locations.
 No measured document is wider than its viewport. Stored text remains readable at all three widths.
 1152×675 and 960×563 are explicitly labelled 125%/150% viewport proxies, not actual browser zoom.

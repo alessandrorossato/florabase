@@ -9774,7 +9774,7 @@
       },
       "Phenology": {
         "additionalProperties": false,
-        "description": "A controlled phenological stage; see docs/phenology.md.",
+        "description": "A controlled phenological stage; see docs/features/activity/phenology.md.",
         "properties": {
           "date_is_approximate": {
             "default": false,

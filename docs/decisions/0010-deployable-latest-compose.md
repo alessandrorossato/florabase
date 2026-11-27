@@ -41,7 +41,7 @@ directly usable as-is: edit the host folder paths, password and origin in place 
      `backup/pre-upgrade`, so no empty cluster is ever silently initialized.
    - Both `florabase-postgres-entrypoint` and `release_schema` (`wait-db`, `deploy`, `serve`)
      refuse to start if `FLORABASE_DB_PASSWORD` (or `POSTGRES_PASSWORD`/`PGPASSWORD`) is still the
-     placeholder `change-me`, pointing to [docs/installation.md](../installation.md).
+     placeholder `change-me`, pointing to [docs/installation.md](../operate/installation.md).
    - `FLORABASE_DATA_DIR` and `FLORABASE_BACKUP_DIR` are removed from `compose.yaml`. `backend`
      detects identical or nested data/backup bind mounts in-container via `(st_dev, st_ino)` and
      `/proc/self/mountinfo` (including btrfs subvolumes on the same device), warning and continuing
@@ -49,7 +49,7 @@ directly usable as-is: edit the host folder paths, password and origin in place 
 5. **Default network in `compose.yaml`; custom networks in the optional hardened override.**
    Custom `networks:` (`internal`, `app`) are dropped from `compose.yaml` (`db` and `backend`
    still publish no ports; `frontend` stays loopback-only) and documented in the optional hardened
-   override snippet in [docs/security.md](../security.md#optional-container-hardening).
+   override snippet in [docs/security.md](../operate/security.md#optional-container-hardening).
 6. **Release provenance without a duplicate rendered `compose.yaml` asset.** Releases no longer
    attach or attest a rendered `compose.yaml`. Protected publication attests the three immutable
    OCI image indexes (`backend`, `frontend`, `postgresql`) and `release-manifest.json` (which
@@ -64,4 +64,4 @@ directly usable as-is: edit the host folder paths, password and origin in place 
   manager pulls updates; major upgrades remain explicit and guarded.
 - Operators opting into defense-in-depth (`internal: true` database isolation, `read_only`,
   `cap_drop: [ALL]`, `no-new-privileges`) layer the single documented override in
-  [docs/security.md](../security.md#optional-container-hardening).
+  [docs/security.md](../operate/security.md#optional-container-hardening).

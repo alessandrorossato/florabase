@@ -125,7 +125,7 @@ identity search and category exclusions produce truthful zero-result states with
 
 Each image was inspected on its individual Commons description page on 2026-10-22. Derivatives are
 max 640px JPEG, recompressed, with EXIF removed. The checked-in machine-readable
-[manifest](../../scripts/fixtures/botanical-v5/media-manifest.json) records source/preview URL, creator,
+[manifest](../../../scripts/fixtures/botanical-v5/media-manifest.json) records source/preview URL, creator,
 licence URL, dimensions, modification notice, byte size and SHA-256. Its adjacent NOTICE retains reuse
 terms. These independent photo licences are not replaced by the application's licence.
 

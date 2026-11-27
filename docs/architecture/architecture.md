@@ -1,5 +1,7 @@
 # Architecture
 
+> Summary: Modular monolith boundaries across React/TypeScript frontend, FastAPI backend, PostgreSQL, and Docker Compose.
+
 ## System boundary
 
 Florabase is a self-hosted modular monolith. A React browser application calls a versioned FastAPI
@@ -22,12 +24,12 @@ responsibilities.
   load on navigation through React lazy/Suspense; optional maps and Labels/QR remain lazy. Failed
   workspace downloads retain the authenticated shell with a reload action. Public static assets
   use nginx compression; authenticated API/media responses retain their existing behavior.
-  See [PERF-001 measurements](performance/PERF-001.md).
+  See [PERF-001 measurements](../performance/PERF-001.md).
   LABEL-001's temporary browser composer derives SeedLot, Plant, and PlantGroup labels from existing
   protected APIs, generates SVG QRs locally, and prints through CSS physical units. Lookup uses the
   application's existing hash detail routes and configured canonical origin; no public endpoint,
   new URL setting, persistence, worker, external image request, or PDF service is added. See
-  [labels.md](labels.md).
+  [labels.md](../features/collection/labels.md).
 - PostgreSQL is the source of truth for accounts, sessions, reference data, collection data,
   constraints, timestamps, and migration state.
 - The production frontend nginx serves built assets and proxies `/api/`; it is not the public TLS
@@ -47,7 +49,7 @@ canonical origin, secure cookies, and empty CORS configuration for the same-orig
 The authenticated session returns that configured canonical origin to UI features that need to
 construct stable public links; request Host and forwarded headers do not select it.
 Development explicitly uses `http://localhost:5173` and a loopback-only cookie mode. See
-[deployment.md](deployment.md).
+[deployment.md](../operate/deployment.md).
 
 ## Persistence and migrations
 
@@ -56,11 +58,11 @@ volume mounted only by the backend at `/var/lib/florabase/attachments`. The imag
 mount point for the existing non-root UID/GID 10001 runtime account. Server-generated storage keys
 remain beneath one centrally configured trusted root, and neither uploaded filenames nor URL values
 select filesystem paths. Nginx does not mount or expose the volume. Container layers hold no durable
-state. See [ADR 0006](decisions/0006-local-attachment-storage.md).
+state. See [ADR 0006](../decisions/0006-local-attachment-storage.md).
 
 Alembic is the only schema-change path, and migrations run explicitly rather than at application
 startup. Application-generated UUIDv7 identifiers and UTC timestamps follow
-[ADR 0004](decisions/0004-identifier-strategy.md).
+[ADR 0004](../decisions/0004-identifier-strategy.md).
 
 Each HTTP request owns one SQLAlchemy Session from `get_database_session`, always declared as
 `Depends(get_database_session, scope="function")` with FastAPI's default dependency caching.
@@ -102,7 +104,7 @@ event-sourced; operation receipts support the deliberately bounded reintegration
 reversals. Shared MediaAsset stores reusable local/external media; RecordMediaLink uses the existing
 six concrete collection-target foreign keys for caption/order. Collection primary and identity cover
 remain distinct references. Guarded binary storage, shared thumbnails, retained unlinked assets and
-reference-aware deletion are described in [the media contract](media-library.md). This remains a
+reference-aware deletion are described in [the media contract](../features/explore/media-library.md). This remains a
 bounded capability, without a generic graph, polymorphic collection item or generic event framework.
 The [lineage integrity audit](lineage-integrity.md) documents the concrete edge contract, isolated
 reference relationships, guarded corrections and retained compensated results. Revision 0030 adds
@@ -124,15 +126,15 @@ queries are separate. Individual Location reads use the same batched strategy pl
 single-record lookup. No Location row issues its own recursive or record-table query. Existing indexes
 on `locations.parent_id` and canonical `location_id` columns remain available; planner evidence
 and bounded integration query-count checks are recorded in
-[location-descendant-aggregation.md](location-descendant-aggregation.md).
+[location-descendant-aggregation.md](../features/collection/location-descendant-aggregation.md).
 
 Later capabilities each have their own router in `backend/src/florabase/api/router.py` and their own
-contract: purchase [Orders](orders.md), [Schedule](schedule.md), [Saved Views](saved-views.md),
-[bulk operations](bulk-operations.md), the classification [Taxonomy tree](collection-taxonomy.md),
-[Explore native ranges](native-ranges-explore.md), [Cuttings](cuttings.md) and CSV
-[Import/Export](import-export.md). Accepted-name correction and synonyms
-([ADR 0007](decisions/0007-accepted-name-reconciliation.md)) are served by the BotanicalIdentity
-router. Plant height [Measurements](measurements.md) are Events and use the Events routers.
+contract: purchase [Orders](../features/sourcing/orders.md), [Schedule](../features/activity/schedule.md), [Saved Views](../features/tools/saved-views.md),
+[bulk operations](../features/collection/bulk-operations.md), the classification [Taxonomy tree](../features/explore/collection-taxonomy.md),
+[Explore native ranges](../features/explore/native-ranges-explore.md), [Cuttings](../features/collection/cuttings.md) and CSV
+[Import/Export](../features/tools/import-export.md). Accepted-name correction and synonyms
+([ADR 0007](../decisions/0007-accepted-name-reconciliation.md)) are served by the BotanicalIdentity
+router. Plant height [Measurements](../features/activity/measurements.md) are Events and use the Events routers.
 
 See [domain-model.md](domain-model.md) for semantics and current limitations.
 
@@ -141,7 +143,7 @@ See [domain-model.md](domain-model.md) for semantics and current limitations.
 FastAPI owns local accounts and opaque PostgreSQL-backed sessions. Production uses a Secure,
 HttpOnly, SameSite=Strict cookie; state changes additionally require exact-Origin and session-bound
 CSRF validation. Reverse-proxy headers never assert identity. See
-[ADR 0005](decisions/0005-authentication-and-sessions.md) and [security.md](security.md).
+[ADR 0005](../decisions/0005-authentication-and-sessions.md) and [security.md](../operate/security.md).
 
 Application logs go to stdout. Production defaults to JSON. At container start,
 `release_schema wait-db` prints a plain-ASCII startup banner (version, image revision, scheme and
@@ -155,7 +157,7 @@ Loopback 2xx `GET` probes to `/api/v1/health` and `/api/v1/ready` are filtered f
 
 ## Deliberately deferred
 
-Supplier media, saved views, bulk operations, [PWA installability](pwa.md) and operator-reviewed
+Supplier media, saved views, bulk operations, [PWA installability](../operate/pwa.md) and operator-reviewed
 accepted-name reconciliation are delivered. Richer Event payloads, analytical dashboards,
 multi-user collaboration, provider-backed profile enrichment, and additional external integrations
 remain backlog items. Their storage and service infrastructure will be designed only when a
@@ -164,14 +166,14 @@ concrete feature requires it.
 ATTACHMENT-005 external snapshots remain external-reference assets. Explicit copy endpoints perform
 bounded SSRF-protected fetches with validated socket destinations and hostname-verified TLS, then use
 the ordinary Attachment store and shared thumbnails. Reads never fetch remotely; snapshot pointer
-swaps and retryable pending cleanup serialize under the asset lock. See [media library](media-library.md).
+swaps and retryable pending cleanup serialize under the asset lock. See [media library](../features/explore/media-library.md).
 
 HARVEST-001 adds the `harvests` capability as an atomic historical aggregate. Concrete source FKs,
 ordered material lines and a unique owned Event relationship are protected by checks and deferred
 PostgreSQL integrity triggers. No event replay or source-state mutation is involved. Harvest extends
 shared record-media/primary infrastructure and batched presentation projections, deriving identity
 through its source. Revision 0029 preserves ordinary Events/media and guards populated downgrade.
-See [structured Harvests](harvests.md) for correction, deletion, precision and future inventory scope.
+See [structured Harvests](../features/collection/harvests.md) for correction, deletion, precision and future inventory scope.
 
 HARVEST-002 extends only the Harvest capability with one optional current inventory per item and
 typed disposition facts. Current writes serialize on Harvest → inventory → storage Location, refreshing
@@ -181,13 +183,13 @@ Directory reads join inventory/item and use a correlated history-existence flag,
 projection and one Location hierarchy read. They never fetch dispositions per directory row. History
 loads only in requested detail. Location adds a grouped inventory arm to its existing single recursive
 aggregation. Revision 0031 creates no inventory and guards populated downgrade. Inventory adds no
-lineage edge, Event effect or media target. See [inventory contract](harvest-inventory.md).
+lineage edge, Event effect or media target. See [inventory contract](../features/collection/harvest-inventory.md).
 
 ENRICHMENT-001 keeps the optional pinned WCVP SQLite index outside canonical PostgreSQL state and
 application startup. Only an explicit standalone provisioning command accesses the fixed official
 archive. Authenticated APIs read bounded local source data; reviewed Apply atomically writes the
 existing profile-range relation and immutable source evidence. Missing source data cannot affect
-app health or operator-authored knowledge. See [the contract](native-range-enrichment.md).
+app health or operator-authored knowledge. See [the contract](../features/explore/native-range-enrichment.md).
 
 ## Local workflow ownership and verification
 
@@ -198,4 +200,4 @@ Persistent operator environments retain their existing independent ownership/sta
 The repository-owned impact map selects bounded local regression suites or escalates full for high
 risk/unknown paths. Exact-tree receipts additionally prove the selected completed gate; protected
 remote PR quality/integration/build stay exhaustive. Shared builder cache and ambiguous images remain
-reported, without global cleanup. See [the workflow contract](development-workflow.md).
+reported, without global cleanup. See [the workflow contract](../develop/development-workflow.md).

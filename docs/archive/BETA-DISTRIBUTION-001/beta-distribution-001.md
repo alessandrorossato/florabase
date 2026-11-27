@@ -33,7 +33,7 @@ Gaps closed here:
 | No reverse-proxy or failure-mode acceptance | Smoke drills: pending migration refused, missing secret, PostgreSQL stopped, HTTP origin, TLS nginx proxy with hostile `X-Forwarded-Host`/`Forwarded` |
 | PostgreSQL 2 CRITICAL / 26 HIGH blocker | Pin moved to the upstream same-version rebuild; remaining gosu findings stay a blocker (below) |
 | Frontend base newly flagged (3 HIGH, fixes available, no upstream rebuild) | Exact Alpine package pins in the runtime stage |
-| No end-user guide | [installation.md](installation.md), linked from README and deployment.md |
+| No end-user guide | [installation.md](../../operate/installation.md), linked from README and deployment.md |
 
 ## Changed files
 
@@ -67,7 +67,7 @@ The merged main commit (#149) touched only verification-workflow files.
   differs only in `docs/` (reduced scan reports, docs) and main's verification-workflow files.
 - PostgreSQL rebuild: data directory initialized by the old pin opened under the new image with
   its rows intact. All smoke backup/restore/upgrade drills ran on the new pin.
-- Scans with the pinned Trivy through `scan_images`: [security evidence](security/beta-distribution-001/README.md).
+- Scans with the pinned Trivy through `scan_images`: [security evidence](../../security/beta-distribution-001/README.md).
 
 Acceptance-test mapping (brief items 1–10): 1 bundle-only controller, registry pull by digest
 (`preflight`, `install`); 2 `install`/`acceptance` health; 3 `bootstrap-owner` + owner login;
@@ -81,7 +81,7 @@ with an explicit migration, plus failed/interrupted upgrades; 8 `backup`, `resto
 
 1. **Resolved (7 November 2026): PostgreSQL gosu.** Superseded by the Florabase PostgreSQL image
    (see the update below and
-   [postgresql-image.md](security/beta-distribution-001/postgresql-image.md)). The official
+   [postgresql-image.md](../../security/beta-distribution-001/postgresql-image.md)). The official
    `postgres:18.6-alpine@sha256:123b1799…` reports 1 CRITICAL / 25 HIGH in gosu's Go 1.24.6 stdlib;
    the derived image's filesystem has no gosu, while its original bytes remain in an upstream layer.
 2. **Approved (development and isolated verification only): PostgreSQL pin change** to
@@ -94,7 +94,7 @@ with an explicit migration, plus failed/interrupted upgrades; 8 `backup`, `resto
    3.0 s. Stopped database: 503 in about 5 s (resolver timeout), unchanged.
 5. Limitations: no owner password reset; HTTPS origin fixed at `init`; amd64 only (arm64 neither
    built nor tested); Dockhand workflow documented but not recorded on a real Dockhand, so no
-   screenshots; real-host items in [beta-runtime-001.md](beta-runtime-001.md#outstanding-operator-evidence)
+   screenshots; real-host items in [beta-runtime-001.md](../BETA-RUNTIME-001/beta-runtime-001.md#outstanding-operator-evidence)
    remain.
 
 ## Mandatory for v0.1.0-beta.1 versus later
@@ -108,7 +108,7 @@ and map tiles, request-path database timeouts, PostgreSQL major-upgrade tooling.
 ## Update, 7 November 2026: Florabase PostgreSQL image integrated
 
 The operator approved integrating the gosu-free derived image for implementation and verification
-(not publication). Full record: [postgresql-image.md](security/beta-distribution-001/postgresql-image.md).
+(not publication). Full record: [postgresql-image.md](../../security/beta-distribution-001/postgresql-image.md).
 
 - `postgres/` (Dockerfile, root guard, license) builds
   `ghcr.io/alessandrorossato/florabase-postgres:18.6-alpine-florabase.1` from the approved base
@@ -155,7 +155,7 @@ all addressed:
 Final QA of `4329381` passed both release-identity checks and agreed that all four `sqlite-libs`
 findings are nonblocking. It also showed that a crafted reference index reaches CVE-2026-119373's
 FTS5 code through the WCVP search. The operator approved hardening before public publication.
-Record: [sqlite-reference-indexes.md](security/beta-distribution-001/sqlite-reference-indexes.md).
+Record: [sqlite-reference-indexes.md](../../security/beta-distribution-001/sqlite-reference-indexes.md).
 
 - Changed: `backend/src/florabase/core/reference_index.py` (new), the WFO and WCVP `source.py`
   (contract and opener) and `snapshot.py` (self-check before publishing),

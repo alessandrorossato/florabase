@@ -11,7 +11,7 @@ progress milestone once complete.
 
 ## Final product and domain contract
 
-[Native ranges contract](../../native-ranges-explore.md) records the pre-implementation domain and
+[Native ranges contract](../../features/explore/native-ranges-explore.md) records the pre-implementation domain and
 geometry audit plus the bounded UAT refinement. Only existing GEOGRAPHY-002 structured
 BotanicalProfileNativeRange relationships supply native-range facts. Distribution prose,
 GBIF occurrences and material provenance remain independent. The existing identity Reference
@@ -157,7 +157,7 @@ The complete feature graph was audited; existing **ENRICHMENT-001** is refined, 
 for consideration immediately after successful EXPLORE-002 delivery before SCHEDULE-001 unless
 reprioritised. BOTANY-003's blocked text enrichment contract is unchanged.
 
-The [roadmap](../../product-roadmap.md) preserves the later broad cross-application product review after
+The [roadmap](../../product/product-roadmap.md) preserves the later broad cross-application product review after
 this feature wave and before release hardening. No remote enrichment, crosswalk/provenance schema,
 second native-range table, scheduling, Maps landing page, BOTANY-003 workaround or mega-review
 was implemented in this refinement.

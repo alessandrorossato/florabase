@@ -11,7 +11,7 @@ The operator expressly requested durable reuse of explicitly loaded aggregate ev
 viewed raster tiles. It does not introduce a local dataset of individual occurrence records.
 The architecture audit preceded cache implementation; see
 [cache design, rights and storage](maps-distribution-001-cache-design.md) and the updated
-[workspace contract](../../species-distribution.md).
+[workspace contract](../../features/explore/species-distribution.md).
 
 ## Chooser and layout
 
@@ -157,7 +157,7 @@ uncertainty, historical/cultivated/introduced records and sampling effort remain
   reopening the summary retained the same generation. This required two counts and only
   two actual upstream tiles. Provider-offline/error cases use injected tests, not a real
   provider outage or traffic storm.
-- [Initial browser captures](../../review/maps-distribution-001/README.md) cover 1440×844,
+- [Initial browser captures](../review/maps-distribution-001/README.md) cover 1440×844,
   1024×844 and 390×844 before this functional refinement. A live 670×872 browser review of the
   current code verified the local-only saved summary/map, explicit missing-tile message, inspector
   counts and expanded Data details. No refresh or clear action was invoked. This is not a fresh

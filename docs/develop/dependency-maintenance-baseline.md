@@ -1,5 +1,7 @@
 # Dependency-maintenance baseline — 2026-10-11
 
+> Summary: Dependency deferral and reopening criteria referenced by .github/dependabot.yml.
+
 This closes the maintenance sweep before DASHBOARD-001. The sweep started from
 `bc84fa403d09d2ac1f0012ecc43b8ddb0f32d7e7` after PR #86; this final isolated
 pip-tools increment starts from `d31d6681bc7bf2f050608786ed6d75f6d22e9e52`
@@ -115,7 +117,7 @@ Node 26 types remain inappropriate for the Node 24 runtime contract.
 
 ## Dependabot defer policy
 
-[`.github/dependabot.yml`](../.github/dependabot.yml) now encodes the approved deferrals per
+[`.github/dependabot.yml`](../../.github/dependabot.yml) now encodes the approved deferrals per
 dependency. SQLAlchemy `>=2.1,<2.2` waits for the dedicated ORM typing/application migration review;
 2.0.x remains eligible. React/DOM and their matching declarations ignore `>=19.3.0 <20.0.0` until
 repository-supported real-browser acceptance covers the flows above; 19.2.x maintenance remains

@@ -55,7 +55,7 @@
   links for the `archive/` depth and redacting one legacy personal home path at line 7553 flagged by
   `scripts/test-beta-runtime.py`).
 - Updated [`AGENTS.md`](../../../AGENTS.md) and
-  [`docs/development-workflow.md`](../../development-workflow.md) with ongoing documentation
+  [`docs/development-workflow.md`](../../develop/development-workflow.md) with ongoing documentation
   placement and no-committed-review-screenshot rules.
 - Wired `doc-links` (`python3 ./scripts/check-doc-links.py`) into `make check` in
   [`Makefile`](../../../Makefile).

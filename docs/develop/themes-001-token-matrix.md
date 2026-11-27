@@ -1,7 +1,9 @@
 # THEMES-001 — Proposed six-variant token matrix
 
+> Summary: Authoritative six-variant theme token matrix (Botanical, Herbarium, Mineral × Light/Dark) referenced by tokens.css.
+
 Status: proposed values, 22 October 2026. Source of reproducible proposal data:
-[palette-proposal.json](design/themes-controls/palette-proposal.json). No production tokens changed.
+[palette-proposal.json](../design/themes-controls/palette-proposal.json). No production tokens changed.
 
 ## Semantic UI values
 
@@ -57,7 +59,7 @@ accuracy never change. Provider density ramps, basemaps and photographs keep the
 ## Calculated evidence and permitted use
 
 Run `python3 docs/design/themes-controls/check-contrast.py` to regenerate
-[72 contrast cases](design/themes-controls/contrast-evidence.md). Every proposed case passes the
+[72 contrast cases](../design/themes-controls/contrast-evidence.md). Every proposed case passes the
 unrounded threshold. The calculator uses the WCAG sRGB transfer function (`c/12.92` up to 0.04045,
 otherwise `((c+0.055)/1.055)^2.4`), luminance weights 0.2126/0.7152/0.0722 and
 `(lighter + 0.05)/(darker + 0.05)`. Ratios displayed to two decimals are not used for acceptance.
@@ -109,5 +111,5 @@ These are proposed foreground/background computations, not a WCAG conformance cl
 Implementation must verify actual computed styles, alpha compositing, SVG strokes, overlays, native
 widgets, provider backgrounds and disabled overrides. Color-vision, forced-colors, browser zoom,
 focus visibility, touch, screen readers and paper print remain in the implementation matrix. The
-[visual review sheets](design/themes-controls/review.html) are schematic design artifacts, not
+[visual review sheets](../design/themes-controls/review.html) are schematic design artifacts, not
 production screenshots. No theme is enabled by adding these documents.

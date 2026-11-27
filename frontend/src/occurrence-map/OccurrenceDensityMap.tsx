@@ -225,7 +225,7 @@ export function OccurrenceDensityMap({
         role="region"
         tabIndex={0}
       />
-      {/* Offered only when the operator enabled a tile provider (docs/deployment.md). */}
+      {/* Offered only when the operator enabled a tile provider (docs/operate/deployment.md). */}
       {mapRuntimeConfig.onlineConfigured && (
         <label className="occurrence-online-basemap">
           <input

@@ -2,7 +2,7 @@
 
 These captures precede the final refinement and do not demonstrate its persistent cache or
 expanded Data details layout. The old unloaded-restoration behavior described below is
-superseded by local-only restoration. See [current handoff](../../archive/MAPS-DISTRIBUTION-001/maps-distribution-001-handoff.md)
+superseded by local-only restoration. See [current handoff](../../MAPS-DISTRIBUTION-001/maps-distribution-001-handoff.md)
 for current behavior, live HTTP cache replay and remaining browser checks.
 
 Captured 2026-10-21 from the candidate-owned `florabase-feature-review` at
@@ -45,4 +45,4 @@ verification. No shared header/Native ranges stylesheet was changed.
 
 Actual browser zoom, an actual screen reader and physical-touch validation were not
 performed. Viewport emulation and DOM snapshots do not certify those behaviors.
-See [the handoff](../../archive/MAPS-DISTRIBUTION-001/maps-distribution-001-handoff.md) for final checks and ownership.
+See [the handoff](../../MAPS-DISTRIBUTION-001/maps-distribution-001-handoff.md) for final checks and ownership.

@@ -1,5 +1,7 @@
 # HARVEST-003 — Create Seed lots from stored seeds
 
+> Summary: Explicit conversion of stored harvested seeds into tracked SeedLots (HARVEST-003).
+
 The approved product decision is guarded reversal with retained history. This is a narrow
 conversion aggregate, not a new OperationReceipt kind or generic disposition undo system.
 
@@ -86,11 +88,11 @@ Revision `20261004_0032` follows `20261003_0031`. It creates zero conversion row
 adds the source correction counter and SeedLot reversed lifecycle, and installs origin/history guards.
 Empty downgrade/re-upgrade works. Populated conversion or reversed SeedLot history blocks downgrade
 before destructive changes under table locks. Focused checks and implementation smoke are recorded
-in [progress](progress.md). Operator UAT/visual acceptance is accepted; independent review found no
+in [progress](../../progress.md). Operator UAT/visual acceptance is accepted; independent review found no
 production defect and added unit coverage for creation, eligibility, reversal, history projection and
 API paths. HARVEST-003 is `verified` pending the final canonical receipt and local commit.
 
-HISTORY-001 also exposes these recorded facts through the read-only [operational History](operational-history.md).
+HISTORY-001 also exposes these recorded facts through the read-only [operational History](../activity/operational-history.md).
 Structured Harvests supersede their owned Events there; seed conversions supersede their linked
 dispositions. Current inventory corrections and Location assignments do not fabricate occurrences.
 The existing domain details and action controls remain authoritative.

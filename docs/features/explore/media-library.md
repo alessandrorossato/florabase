@@ -1,5 +1,7 @@
 # Shared media library — ATTACHMENT-005
 
+> Summary: Shared media library, local/external attachments, fetch safety, and primary imagery (ATTACHMENT-005).
+
 Implementation on `feat/shared-media-library`; handoff boundary: **READY_FOR_VISUAL_REVIEW**.
 This document supersedes the ownership/removal portions of the historical ATTACHMENT-003/004
 contracts. Supplier imagery is added by SUPPLIER-003; Harvest remains an explicit shared target.
@@ -180,7 +182,7 @@ backend's private `.thumbnails` directory, keyed by asset ID/digest/transform ve
 serializes first generation across workers and all three Gallery/photo/cover thumbnail routes.
 ETags are private, vary by Cookie, and validate active content before conditional responses.
 Uploaded originals, persistent external snapshots and PostgreSQL remain the paired backup; derivatives are disposable and regenerate after
-restore. See [backup and restore](backup-restore.md).
+restore. See [backup and restore](../../operate/backup-restore.md).
 
 Gallery uses two SELECTs independent of page size: total and paginated assets with grouped link/cover
 counts. It returns counts rather than a linked-record graph. Detail uses batched target reads, at
@@ -357,7 +359,7 @@ HARVEST-001 extends supported record targets with Harvest and its independent ex
 Harvest unlink/deletion retains MediaAssets; owned journal Events resolve Harvest imagery through
 the aggregate relationship without duplicate media links. SUPPLIER-003 subsequently adds Supplier
 as a separate explicit target, described below.
-See [Harvest media contract](harvests.md).
+See [Harvest media contract](../collection/harvests.md).
 
 ## Supplier media — SUPPLIER-003
 
@@ -391,4 +393,4 @@ duplicate-link/primary uniqueness and exact link/primary composite FKs. It updat
 guard for current targets; no assets, files or pre-existing links change and there is no backfill.
 Downgrade checks both Supplier links and designations before any DDL and refuses populated history.
 Explicit unlink retains MediaAssets; after Supplier state is empty downgrade/re-upgrade preserves
-existing collection links. See [handoff and acceptance evidence](archive/SUPPLIER-003/supplier-003-handoff.md).
+existing collection links. See [handoff and acceptance evidence](../../archive/SUPPLIER-003/supplier-003-handoff.md).

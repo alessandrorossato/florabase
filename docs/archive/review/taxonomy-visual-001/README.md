@@ -104,5 +104,5 @@ browser Back/Forward/reload, Needs review, source absence and conflict recovery.
 Living + Seeds is empty; multiple record categories use OR; no category means all.
 Counts are distinct eligible identities, not physical plant quantities.
 
-See [the implementation handoff](../../archive/TAXONOMY-VISUAL-001/taxonomy-visual-001-handoff.md) and
+See [the implementation handoff](../../TAXONOMY-VISUAL-001/taxonomy-visual-001-handoff.md) and
 [capture gallery](gallery.html) for evidence and remaining limits.

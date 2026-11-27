@@ -1,16 +1,18 @@
 # Florabase product roadmap
 
-The scope of v1.0.0 is defined only in the [v1.0.0 release scope](release/scope-v1.md): the
+> Summary: Post-v1.0.0 product themes, priorities, and scope boundaries.
+
+The scope of v1.0.0 is defined only in the [v1.0.0 release scope](../release/scope-v1.md): the
 approved decisions, the release gates, the work required before the release and the exclusions.
 This page does not repeat that contract. It keeps the product themes that come after 1.0.
 
-[`features.json`](features.json) remains the machine-readable source for bounded increments and
+[`features.json`](../features.json) remains the machine-readable source for bounded increments and
 their statuses; its reconciliation against the release scope is in the
-[feature reconciliation](release/feature-reconciliation-v1.md). A roadmap entry is not evidence of
+[feature reconciliation](../release/feature-reconciliation-v1.md). A roadmap entry is not evidence of
 implementation or verification.
 
 The earlier roadmap, with the PRE-0.1 freeze path, the v0.1.0 release gates and the beta framing,
-is preserved at [release/history/product-roadmap-2026-11-11.md](release/history/product-roadmap-2026-11-11.md).
+is preserved at [release/history/product-roadmap-2026-11-11.md](../release/history/product-roadmap-2026-11-11.md).
 
 ## Version strategy
 
@@ -146,13 +148,13 @@ dataset. It needs its own bounded contract; it does not waive PHYLOGENY-001's so
 ## Source-blocked and deliberately deferred work
 
 **PHYLOGENY-001 = SOURCE_BLOCKED.** The repository's
-[exact source audit](phylogeny-001-source.md) and [blocked handoff](phylogeny-001-handoff.md) retain
+[exact source audit](../archive/PHYLOGENY-001/phylogeny-001-source.md) and [blocked handoff](../archive/PHYLOGENY-001/phylogeny-001-handoff.md) retain
 the Open Tree synthetic/annotation rights boundary and reopening criterion. No production phylogeny
 implementation is claimed. A taxonomic tree is not a phylogenetic tree; neither is material ancestry.
 This blocker does not prevent v1.0.0. Continue source
 research separately if desired, or select the user-provided-tree path after its own review.
 
-**BOTANY-003** remains `planned`: [source decisions](botanical-profile-enrichment-sources.md) record
+**BOTANY-003** remains `planned`: [source decisions](../features/explore/botanical-profile-enrichment-sources.md) record
 SOURCE_BLOCKED secure acquisition for the approved general-description path. WCVP geographic-area
 source approval and three individually approved alternative description records do not implement
 broad text enrichment or resolve its coverage gate. Manual profiles and delivered ENRICHMENT-001

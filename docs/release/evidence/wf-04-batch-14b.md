@@ -17,9 +17,9 @@ independently before integration:
 | ABOUT-001 | `feat/about-001` | `02008ae1b7ec15b0114afaba30689fef46e7d51a` | `claude-about-001` | `claude-batch-14-source-qa` | [`about-001.md`](about-001.md) |
 | UX-SORT-002 | `feat/ux-sort-002` | `af617fc0749bf39e6746df2f53196ce3aa1cfeac` | `claude-ux-sort-002` | `claude-batch-14-source-qa` | [`ux-sort-002.md`](ux-sort-002.md) |
 | MEDIA-SETTINGS-001 | `feat/media-settings-001` | `77f96009a638660c9919ca72dcde2c240096fdae` | `claude-media-settings` | `claude-batch-14-source-qa` | [`media-settings-001.md`](media-settings-001.md) |
-| MOBILE-003 | `feat/mobile-003-usable-app` | `b4fed54857219d251046e0d7593b7b64bbfbab04` | `neon-mobile-003` | `claude-batch-14-source-qa` | [`mobile.md`](../../mobile.md), [`progress.md`](../../progress.md) (no dedicated evidence file) |
+| MOBILE-003 | `feat/mobile-003-usable-app` | `b4fed54857219d251046e0d7593b7b64bbfbab04` | `neon-mobile-003` | `claude-batch-14-source-qa` | [`mobile.md`](../../operate/mobile.md), [`progress.md`](../../progress.md) (no dedicated evidence file) |
 | DOC-04 | `docs/doc-04-user-guide` | `7e19d2f6014c10887bd49b6ba7655586dafc65c2` | `claude-doc-04` | `claude-batch-14-source-qa` | [`doc-04.md`](doc-04.md), [`doc-04-trial-template.md`](doc-04-trial-template.md) |
-| UI-POLISH-003 (with UI-POLISH-002, UI-POLISH-004 and UI-POLISH-005) | `fix/ui-polish-beta10` | `31ef52a9c94a60c22f7a8720b8178da8e35a60c5` | `claude-ui-polish` | `claude-batch-14-source-qa` | [`progress.md`](../../progress.md), [`native-ranges-explore.md`](../../native-ranges-explore.md) (no dedicated evidence file) |
+| UI-POLISH-003 (with UI-POLISH-002, UI-POLISH-004 and UI-POLISH-005) | `fix/ui-polish-beta10` | `31ef52a9c94a60c22f7a8720b8178da8e35a60c5` | `claude-ui-polish` | `claude-batch-14-source-qa` | [`progress.md`](../../progress.md), [`native-ranges-explore.md`](../../features/explore/native-ranges-explore.md) (no dedicated evidence file) |
 | BETA-SECURITY-001 | `fix/postgres-libxml2-r5` | `b8122d15b70f8d4735845fbeda846d44feb10e8e` | `claude-pg-pin` | `claude-batch-14-source-qa` | [`postgres-libxml2-2.13.9-r5/README.md`](../../security/beta-security-001/postgres-libxml2-2.13.9-r5/README.md) |
 
 IMPORT-002 is based on the older `main` `b632c5c`; the planner accepted it without a rebase and its

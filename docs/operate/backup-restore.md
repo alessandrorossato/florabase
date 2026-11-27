@@ -1,10 +1,12 @@
 # Backup and restore
 
+> Summary: Paired PostgreSQL and attachment-volume backup, verification, and destructive restore procedures.
+
 This page covers the source-build installation (`make backup`/`make restore`). A release
 installation uses the [paired backup and isolated restore](installation.md#paired-backup) of the
 installation guide (run over SSH in the folder holding the stack's `compose.yaml`), and its
 `compose.yaml` also writes a verified dump before every schema upgrade when the database revision
-changes ([ADR 0008](decisions/0008-self-initializing-single-compose.md); image-only updates at the
+changes ([ADR 0008](../decisions/0008-self-initializing-single-compose.md); image-only updates at the
 same Alembic head write none, so the paired backup remains the required recovery point).
 
 ## Coordinated database and attachment backup
@@ -119,9 +121,9 @@ restore.
 ## Isolated restore drill
 
 This existing example validates only the database portion. It does **not** prove complete collection
-recovery. The [beta runtime acceptance contract](archive/BETA-FOUNDATION-001/beta-foundation-001.md) requires a separate isolated
+recovery. The [beta runtime acceptance contract](../archive/BETA-FOUNDATION-001/beta-foundation-001.md) requires a separate isolated
 restore of both DB and original media, digest/relationship checks and authenticated application use;
-the [image-only beta smoke](beta-runtime-001.md#disposable-verification) exercises that separate runtime.
+the [image-only beta smoke](../archive/BETA-RUNTIME-001/beta-runtime-001.md#disposable-verification) exercises that separate runtime.
 
 The following smoke test uses a network-isolated, tmpfs-backed PostgreSQL container. It does not connect to or replace the Compose database. Set `dump_file` to the custom-format dump being tested:
 

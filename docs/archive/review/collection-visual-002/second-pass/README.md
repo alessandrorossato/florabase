@@ -3,7 +3,7 @@
 Same candidate, HEAD `a36c6cffb938c5ed20f93942e1eac1070897962c`, branch `feat/collection-visual-002`.
 [Review](http://localhost:15174) remains candidate-owned, fixture v4/80, revision `20261013_0042`.
 No reset/reseed or domain write was submitted in this pass. See the
-[handoff](../../../archive/COLLECTION-VISUAL-002/collection-visual-002-handoff.md) for semantics, filter audit and acceptance limits.
+[handoff](../../../COLLECTION-VISUAL-002/collection-visual-002-handoff.md) for semantics, filter audit and acceptance limits.
 
 ## Visual evidence
 

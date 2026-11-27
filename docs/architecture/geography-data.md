@@ -1,5 +1,7 @@
 # Canonical geography data
 
+> Summary: Unicode CLDR canonical territory seed data, mapping, and licensing contract.
+
 Florabase's canonical GeographicPlace hierarchy is a normalized extract of Unicode Common Locale
 Data Repository (CLDR) JSON 48.2.1. Unicode published that stable package release on 2026-07-08.
 The source files are maintained by the Unicode Consortium and CLDR's territory containment is based
@@ -57,7 +59,7 @@ internet access; startup and API requests never fetch geography data.
 
 ## Native-range presentation geometry
 
-[EXPLORE-002](native-ranges-explore.md) reads the existing hierarchy and native-range relationships.
+[EXPLORE-002](../features/explore/native-ranges-explore.md) reads the existing hierarchy and native-range relationships.
 Its separately reviewed Natural Earth 1:110m geometry is bundled frontend presentation data.
 ISO alpha-2 codes map to drawing units; M49 areas use canonical descendant territories only for
 rendering. Eight CLDR-only codes remain explicitly unsupported rather than relabelled ISO/M49.

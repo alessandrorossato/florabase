@@ -4,7 +4,7 @@ Candidate: `feat/collection-visual-002`, base `a36c6cffb938c5ed20f93942e1eac1070
 worktree `/home/alessandro/.codex/worktrees/fb05/florabase`.
 [Feature Review](http://localhost:15174), owner login `owner`, known credentials supplied in chat.
 DB `20261013_0042`, deterministic v4 fixture, 80 managed records. See the
-[handoff](../../archive/COLLECTION-VISUAL-002/collection-visual-002-handoff.md) for scope and limits.
+[handoff](../../COLLECTION-VISUAL-002/collection-visual-002-handoff.md) for scope and limits.
 
 ## Current operator follow-up
 

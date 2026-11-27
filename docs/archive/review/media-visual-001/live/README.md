@@ -85,8 +85,8 @@ are generated directly by the fixture under recorded CC0 terms; no existing phot
 recoloured, relabelled or multiplied to inflate photographic coverage.
 
 The eight licensed botanical files, creator/source URLs, licence and modification notices come from
-the existing [v5 manifest](../../../../scripts/fixtures/botanical-v5/media-manifest.json) and
-[NOTICE](../../../../scripts/fixtures/botanical-v5/NOTICE.md). Cover reuse copies retain those same
+the existing [v5 manifest](../../../../../scripts/fixtures/botanical-v5/media-manifest.json) and
+[NOTICE](../../../../../scripts/fixtures/botanical-v5/NOTICE.md). Cover reuse copies retain those same
 credits and licences. Fixture ingestion uses existing decoder/storage validation and no network
 download. External-only references remain unloaded until an explicit supported operation.
 

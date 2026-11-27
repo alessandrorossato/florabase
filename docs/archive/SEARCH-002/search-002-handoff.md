@@ -123,7 +123,7 @@ individually removes `florabase-uat-preview_postgres_data`,
 It performs no rebuild/seed, generic `down -v`, source/Git mutation or change to other environments.
 Detached/behind-main owners can retire without branch initialization. Wrong/missing confirmation,
 non-owners, unrelated repositories, ambiguous identities, changed resources and restarted writers
-refuse. See [canonical transition instructions](../../development-workflow.md#uat-preview-and-operator-acceptance).
+refuse. See [canonical transition instructions](../../develop/development-workflow.md#uat-preview-and-operator-acceptance).
 
 Actual authorized transition on 2026-10-06:
 

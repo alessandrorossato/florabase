@@ -1,5 +1,7 @@
 # Guided CSV import and operator export
 
+> Summary: Guided CSV/XLSX import wizard, per-type CSV import, and operator export (IMPORT-001/002).
+
 Import one file and one record type at a time in **Tools → Import / Export**. The workspace provides a
 blank template, a valid example, and a field guide for each type. Fill the template with UTF-8 CSV,
 validate, review every row and choice, then confirm.
@@ -203,7 +205,7 @@ headers are intentionally different from import templates. Export does not inclu
 binaries or secret material.
 
 For source mapping, batch reconciliation and the manual workflows needed for
-first collection entry, see the [onboarding runbook](beta-data-001.md).
+first collection entry, see the [onboarding runbook](../../archive/BETA-DATA-001/beta-data-001.md).
 
 ## Spreadsheet wizard (single-sheet CSV and XLSX)
 

@@ -1,12 +1,14 @@
 # Collection taxonomy — TAXONOMY-003
 
+> Summary: Collection taxonomy tree backed by operator-installed local WFO snapshots (TAXONOMY-003).
+
 `#/taxonomy` explores classification of represented BotanicalIdentities. **Taxonomy is classification**;
 collection **Lineage** remains explicit recorded material ancestry. Classification does not establish
 phylogeny, genetic distance, evolutionary branch lengths or divergence ages.
 
 ## Source and explicit association
 
-[Source GO and schema](archive/TAXONOMY-003/taxonomy-003-source.md) pin official World Flora Online Plant List **2026-06**,
+[Source GO and schema](../../archive/TAXONOMY-003/taxonomy-003-source.md) pin official World Flora Online Plant List **2026-06**,
 CC0, its archive SHA-256 and an independently reviewed biological-root boundary. Provision explicitly:
 
 ```bash
@@ -29,7 +31,7 @@ archive. Every connection also requires the exact schema the builder writes (tab
 `taxa`, the `taxa` primary-key index and `search_taxa`; metadata `format_version` 1) and refuses
 views, triggers, virtual tables or any other object before a query runs. It is read-only, with
 SQLite defensive mode on and views, triggers, extension loading and untrusted schema functions
-off ([SQLite reference-index hardening](security/beta-distribution-001/sqlite-reference-indexes.md)).
+off ([SQLite reference-index hardening](../../security/beta-distribution-001/sqlite-reference-indexes.md)).
 
 BotanicalIdentity Reference → Taxonomy searches at most 25 literal source-name prefix candidates.
 Inspect scientific name, authorship, rank, accepted/synonym/unplaced status and complete classification;
@@ -38,7 +40,7 @@ explicit confirmation. No GBIF/WCVP ID conversion, crosswalk, fuzzy matching or 
 Unplaced bare names have no classification and cannot be confirmed. A source synonym remains the exact
 linked name; WFO's accepted concept provides its advisory classification. Assisted accepted-name
 reconciliation, historical-name retention (`botanical_identity_names`), and explicit survivor
-duplicate-identity merge are governed by [ADR 0007](decisions/0007-accepted-name-reconciliation.md)
+duplicate-identity merge are governed by [ADR 0007](../../decisions/0007-accepted-name-reconciliation.md)
 (`TAXONOMY-001`) and never trigger automatically during WFO link confirmation.
 
 The canonical `wfo_links` table stores one current relationship per identity, opaque WFO ID, UUIDv7
@@ -121,6 +123,6 @@ Migration `20261009_0040` follows `0039`, adds only `wfo_links`. Empty downgrade
 other domain state. Downgrade takes an exclusive writer lock and refuses if confirmed links exist,
 preventing loss of operator review evidence. No migration occurs at app startup.
 
-[Implementation and UAT evidence](archive/TAXONOMY-003/taxonomy-003-handoff.md). Broad cross-application product/visual
+[Implementation and UAT evidence](../../archive/TAXONOMY-003/taxonomy-003-handoff.md). Broad cross-application product/visual
 review remains a future operator checkpoint. TAXONOMY-001/002, PHYLOGENY-001, BOTANY-003/004 and
 ENRICHMENT-002 keep their separate planned ownership.

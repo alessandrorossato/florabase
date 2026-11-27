@@ -1,5 +1,7 @@
 # Botanical Reference Matching — Slice 1A Foundation
 
+> Summary: Botanical reference name normalization and matching foundation.
+
 `BOTANICAL-MATCH-001 / Slice 1A` provides the deterministic, strictly read-only local candidate
 discovery and classification engine for **WFO `2026-06`** and **WCVP `v16`** (while preserving
 optional historical **WCVP `v15`** inspection).
@@ -10,7 +12,7 @@ existing `WfoSource` or `WcvpSource` SQLite index schemas or seal checks.
 
 ## Module Overview
 
-- [`normalizer.py`](../backend/src/florabase/botanical_matching/normalizer.py):
+- [`normalizer.py`](../../backend/src/florabase/botanical_matching/normalizer.py):
   - Pure string normalization (`NFKC`, unicode whitespace collapsing).
   - Separates cultivars (`cultivar_name` and inline `'Cultivar'` / `cv. Cultivar` detection).
   - Extracts inline authorship conservatively as **advisory only** (`extracted_authorship`).
@@ -18,15 +20,15 @@ existing `WfoSource` or `WcvpSource` SQLite index schemas or seal checks.
     `nvar.` → `nothovar.`, etc.) and hybrid markers/spacing (`x`, `X`, `×`, `×Genus`, `×epithet`).
   - Emits ordered exact-lookup query variants plus bounded 4-character fuzzy prefixes (never empty
     strings) for fallback advisory suggestions only.
-- [`taxonomy/source.py`](../backend/src/florabase/taxonomy/source.py) and
-  [`native_range_enrichment/source.py`](../backend/src/florabase/native_range_enrichment/source.py):
+- [`taxonomy/source.py`](../../backend/src/florabase/taxonomy/source.py) and
+  [`native_range_enrichment/source.py`](../../backend/src/florabase/native_range_enrichment/source.py):
   - Add `exact_matches_with_context`, `exact_matches`, and `prefix_candidates` using a **single
     read-only SQLite connection** per batch, chunked `IN (...)` queries (`100` keys/chunk;
     WCVP accepted-target fetches `200` IDs/chunk), bounded per-key results (`ROW_NUMBER()` in
     WFO/WCVP), and explicit `truncated_keys` / `path_errors`.
   - Keep `SCHEMA`, SHA-256 seal checks (`require_seal`), `search()`, `hierarchy()`, `taxon()`,
     `distribution()`, and WCVP `v15` historical support unchanged.
-- [`classifier.py`](../backend/src/florabase/botanical_matching/classifier.py):
+- [`classifier.py`](../../backend/src/florabase/botanical_matching/classifier.py):
   - Classifies per-provider outcomes (`auto_eligible`, `review_required`, `ambiguous`, `ineligible`,
     `no_match`, `already_linked`, `source_unavailable`) with confidence tiers (`exact`, `high`,
     `medium`, `low`, `none`) and explicit reason codes.
@@ -45,7 +47,7 @@ existing `WfoSource` or `WcvpSource` SQLite index schemas or seal checks.
     - Cross-source disagreements (`wfo` vs `wcvp_v16`), WCVP `v15` vs `v16` disagreements, and
       conflicts with local GBIF `ExternalTaxonLink` records downgrade any `auto_eligible` outcome to
       `review_required` and elevate `overall_status` to `conflict`.
-- [`discovery.py`](../backend/src/florabase/botanical_matching/discovery.py):
+- [`discovery.py`](../../backend/src/florabase/botanical_matching/discovery.py):
   - `discover_and_classify(...)`: executes bounded batched local discovery and cross-source classification.
   - `load_collection_match_inputs(...)` / `match_collection_identities(...)`: loads active
     (non-merged tombstone) `BotanicalIdentity` rows, collection representation flags (`SeedLot` /
@@ -56,7 +58,7 @@ existing `WfoSource` or `WcvpSource` SQLite index schemas or seal checks.
 
 ## Read-Only Qualification Command
 
-[`backend/scripts/botanical_match_qualify.py`](../backend/scripts/botanical_match_qualify.py) runs
+[`backend/scripts/botanical_match_qualify.py`](../../backend/scripts/botanical_match_qualify.py) runs
 this pipeline read-only against JSON inputs (`--input-json`) or a configured PostgreSQL database
 (`--database-url`, executing inside `SET TRANSACTION READ ONLY`) using local official SQLite
 indexes without copying reference files or mutating database state.

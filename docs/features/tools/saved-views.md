@@ -1,5 +1,7 @@
 # Saved operator views — VIEW-001
 
+> Summary: Saved operator filter and sort views across directories (VIEW-001).
+
 Saved Views are private named shortcuts to existing operator search/filter state. PostgreSQL stores
 that state, never result rows or counts. Reopening uses the normal application URL and queries the
 current collection. Operator UAT and independent verification passed. The feature is verified.
@@ -130,7 +132,7 @@ notifications, materialized results, browser-local persistence and BOTANY-003 wo
 
 ## BULK-001 interaction
 
-BULK-001 selection mode, typed selected IDs, target and move preview are transient local interaction state. They never enter a Saved View or URL. Opening any Saved View, including the identical current view, clears selection; changing filters, rendered membership or navigating also clears it. See [bulk operations](bulk-operations.md).
+BULK-001 selection mode, typed selected IDs, target and move preview are transient local interaction state. They never enter a Saved View or URL. Opening any Saved View, including the identical current view, clears selection; changing filters, rendered membership or navigating also clears it. See [bulk operations](../collection/bulk-operations.md).
 
 ## History extension — HISTORY-001
 
@@ -143,7 +145,7 @@ unknown keys and transient pagination/selection are rejected. Opening resets to 
 reopening the identical view. Normal rename/update/delete and owner/CSRF protections are reused.
 The original thirteen adapters are unchanged. Migration `20261007_0035` extends only the surface
 check; downgrade preserves other views and refuses until History views are explicitly deleted.
-See [History contract](operational-history.md).
+See [History contract](../activity/operational-history.md).
 
 The global `events` surface is displayed as **Journal** and continues to open `#/events` with the
 same category values. Sidebar collapsed groups are a separate browser presentation preference,
@@ -159,7 +161,7 @@ scope shows an explicit mismatch and no map Load until the operator changes scop
 Search may exclude the selected row without substituting it. View management remains usable.
 Migration `20261008_0037` extends only the surface constraint; downgrade locks writers and safely
 refuses while distribution views exist, preserving other surfaces on compatible downgrade/re-upgrade.
-See [Species distribution](species-distribution.md).
+See [Species distribution](../explore/species-distribution.md).
 
 EXPLORE-002 adds the private `native_ranges` v1 adapter with `q`, `scope`, `mode`, selected UUID set
 `identity` (maximum 20), OR category set `record` and strict boolean `withRange`. UUIDs are sorted,

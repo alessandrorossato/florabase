@@ -54,4 +54,4 @@ The same-version upstream PostgreSQL descriptor still equals the selected immuta
 PostgreSQL image/library/gosu refresh is a separate explicit maintenance decision, with compatibility
 and paired recovery evidence. These application updates do not alter that contract or its identity.
 
-[Operator requirements and QA handoff](../../beta-security-001.md) lists every remaining approval.
+[Operator requirements and QA handoff](../../archive/BETA-SECURITY-001/beta-security-001.md) lists every remaining approval.

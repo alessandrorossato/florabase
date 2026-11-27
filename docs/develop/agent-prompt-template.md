@@ -1,8 +1,10 @@
 # Agent prompt template — post-delivery cleanup
 
+> Summary: Reusable prompt snippet for safe post-delivery agent worktree cleanup.
+
 Copy this block into feature briefs for agents working in provider-managed worktrees (see
-[AGENTS.md](../AGENTS.md#after-delivery-remove-your-worktree) and
-[docs/development-workflow.md](development-workflow.md#worktrees-provided-by-an-agent-tool)).
+[AGENTS.md](../../AGENTS.md#after-delivery-remove-your-worktree) and
+[docs/development-workflow.md](workflow/worktrees-and-agents.md#worktrees-provided-by-an-agent-tool)).
 
 ## Final step (after delivery and finish)
 

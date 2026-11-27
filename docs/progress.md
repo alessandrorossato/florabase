@@ -429,7 +429,7 @@
   contained the wrong wording) and left historic manifests under `docs/release/evidence/batches/`
   untouched.
 - Rewrote the optional botanical reference datasets snippet and intro sentence in
-  [docs/installation.md](installation.md) so operators add the two `environment` list items and the
+  [docs/installation.md](operate/installation.md) so operators add the two `environment` list items and the
   `volumes` list item to the existing `backend` service lists without duplicating `environment:` or
   `volumes:` keys, keeping exact paths and environment variable names.
 - Registered `DOCS-004` (`implemented`, proposed release class `best-effort`) next to `DOCS-003`
@@ -604,7 +604,7 @@
   gzip (`301,721 B -> 302,954 B`, `91,795 B -> 92,134 B`), `index-*.css` `+0 B`, zero `@capacitor/*`
   dependencies in `frontend/package.json`.
 - Documented [ADR 0011](decisions/0011-mobile-device-sessions.md) (amending
-  [ADR 0005](decisions/0005-authentication-and-sessions.md)), updated [docs/mobile.md](mobile.md),
+  [ADR 0005](decisions/0005-authentication-and-sessions.md)), updated [docs/mobile.md](operate/mobile.md),
   added `MobileReleaseContract` to `scripts/test-beta-runtime.py`, and registered `MOBILE-002`
   (`implemented`, proposed class `post-1.0`) in `docs/features.json` and `docs/release/scope-v1.json`.
 - Verified `make mobile-android-debug` (`app-debug.apk`, 6.5 MB) and full 13-step live Android 16
@@ -655,7 +655,7 @@
 ## 2026-11-23 — DOCS-003 installation guide accuracy fixes and v0.1.0-beta.8 publication record
 
 - On `docs/docs-003-install-guide` from `origin/main` `ddf5a14` (writer `antigravity-docs-003`).
-- Updated [docs/installation.md](installation.md), [docs/backup-restore.md](backup-restore.md),
+- Updated [docs/installation.md](operate/installation.md), [docs/backup-restore.md](operate/backup-restore.md),
   [README.md](../README.md) and [CHANGELOG.md](../CHANGELOG.md) (`Unreleased`) from the 2026-11-23
   operator rehearsal findings against the 40-line production `compose.yaml`:
   - Added a "Before you start" callout at the top of `docs/installation.md` and a bold sentence in
@@ -757,8 +757,8 @@
 - Classified `mobile/` and `frontend/src/mobile/` under non-FULL, non-golden `mobile` scope in
   `scripts/verification-impact.json` with regressions in `scripts/test-verification-impact.py`,
   permitted the standard `10.0.2.2` emulator loopback alias in `scripts/test-beta-runtime.py`,
-  documented setup and architecture in [docs/mobile.md](mobile.md) and
-  [docs/mobile-001-adr.md](mobile-001-adr.md), and registered `MOBILE-001` (`implemented`,
+  documented setup and architecture in [docs/mobile.md](operate/mobile.md) and
+  [docs/mobile-001-adr.md](archive/MOBILE-001/mobile-001-adr.md), and registered `MOBILE-001` (`implemented`,
   proposed release class `post-1.0`) in `docs/features.json` and `docs/release/scope-v1.json`.
 - Verified `make mobile-android-debug` (`app-debug.apk`, 6.5 MB) and live Android 16 AOSP emulator
   (`florabase_api36`): zero service-worker registrations, distinct invalid/unreachable/non-Florabase
@@ -806,7 +806,7 @@
   and `scripts/test-workflow-helpers.sh`.
 - **Agent post-delivery guidance:** Documented the 3-step post-delivery worktree removal rule for
   provider-managed worktrees in `AGENTS.md`, `docs/development-workflow.md`, and
-  [agent-prompt-template.md](agent-prompt-template.md).
+  [agent-prompt-template.md](develop/agent-prompt-template.md).
 - **Verification impact & Golden closure:** Added `backend/alembic.ini`, `backend/scripts/` and
   `postgres/` to `golden_prefixes` and classified `backend/scripts/check_api_routes.py` and
   `backend/scripts/test_check_api_routes.py` under `product_backend_prefixes` (product tier backend
@@ -926,7 +926,7 @@
   (`ghcr.io/alessandrorossato/florabase-{postgres,backend,frontend}:latest`), plain short bind
   mounts with Synology-style absolute host path examples, plain environment literals (no `.env` or
   Compose interpolation), header folder-setup instructions, and no custom networks (`internal: true`
-  and `app` moved to the optional hardened override in [docs/security.md](security.md)).
+  and `app` moved to the optional hardened override in [docs/security.md](operate/security.md)).
 - Added `change-me` placeholder password refusal in both
   `postgres/florabase-postgres-entrypoint.sh` (reproduced `18.6-alpine-florabase.4` at
   `index_digest` `sha256:2d843bd2ac7e9cebc4b4aaed2d24bb6f7717261fa27e798fe1f28583e853d625`,

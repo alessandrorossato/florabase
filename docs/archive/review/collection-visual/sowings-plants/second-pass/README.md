@@ -1,7 +1,7 @@
 # COLLECTION-VISUAL-001 — second-pass evidence
 
 This is historical second-pass evidence, superseded by the [third-pass index](../third-pass/README.md).
-The operator did not accept this pass. Its checks and hashes do not verify the current source. See the [current handoff](../../../../archive/COLLECTION-VISUAL-001/collection-visual-001-handoff.md).
+The operator did not accept this pass. Its checks and hashes do not verify the current source. See the [current handoff](../../../../COLLECTION-VISUAL-001/collection-visual-001-handoff.md).
 
 Candidate: `ef73`, `feat/collection-visual-001`, base `1e3df6a` plus unstaged source.
 Review: [localhost:15174](http://localhost:15174), existing fixture v4/66, revision 20261013_0042.

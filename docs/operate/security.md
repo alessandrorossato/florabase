@@ -1,5 +1,7 @@
 # Security baseline
 
+> Summary: Authentication, session cookies, CSRF, network isolation, and the optional hardened container override.
+
 - Secrets live outside version control. `.env` is ignored; `.env.example` contains replaceable
   examples and a valid representative production HTTPS origin, while the development Compose
   override supplies the loopback origin.
@@ -27,7 +29,7 @@
   remote host. A failed refresh preserves the previous copy. The **Settings → Media** default only
   pre-selects the "Save a local copy" choice in the form; each fetch still requires the owner to save
   that image, and Florabase never fetches remote images automatically.
-  [Media-library fetch safety](media-library.md#fetch-safety-and-snapshot-concurrency)
+  [Media-library fetch safety](../features/explore/media-library.md#fetch-safety-and-snapshot-concurrency)
 - Saving an external BotanicalIdentity cover requires a separate privacy acknowledgement. For a
   cover without a saved local copy, that acknowledgement permits later automatic browser display
   on the identity detail page. The browser sends no referrer, and Florabase adds no record or
@@ -44,7 +46,7 @@ Local owner authentication is implemented under `/api/v1/auth`. Health and readi
 application and administrative operations use the authenticated-actor dependency and an explicit
 authorization dependency.
 
-[ADR 0005](decisions/0005-authentication-and-sessions.md) defines the accepted boundary: FastAPI owns local accounts and opaque PostgreSQL-backed sessions; the browser receives a secure, HTTP-only, same-site cookie; state-changing requests require a session-bound CSRF token; and reverse-proxy headers never assert identity. The first release permits one owner but uses real user and session records so later multi-user authorization remains possible. JWTs, proxy authentication, OAuth/OIDC, Redis, and external identity providers are deliberately outside the initial design.
+[ADR 0005](../decisions/0005-authentication-and-sessions.md) defines the accepted boundary: FastAPI owns local accounts and opaque PostgreSQL-backed sessions; the browser receives a secure, HTTP-only, same-site cookie; state-changing requests require a session-bound CSRF token; and reverse-proxy headers never assert identity. The first release permits one owner but uses real user and session records so later multi-user authorization remains possible. JWTs, proxy authentication, OAuth/OIDC, Redis, and external identity providers are deliberately outside the initial design.
 
 The bundled production nginx sends `X-Content-Type-Options: nosniff`,
 `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY` and an enforcing
@@ -63,8 +65,8 @@ requires tests and release-note review.
 ## Local owner bootstrap
 
 The release `compose.yaml` creates the first owner once from `FLORABASE_OWNER_LOGIN` and
-`FLORABASE_OWNER_PASSWORD` ([ADR 0008](decisions/0008-self-initializing-single-compose.md),
-[ADR 0009](decisions/0009-minimal-production-compose.md)). The backend container's guarded
+`FLORABASE_OWNER_PASSWORD` ([ADR 0008](../decisions/0008-self-initializing-single-compose.md),
+[ADR 0009](../decisions/0009-minimal-production-compose.md)). The backend container's guarded
 `florabase-start` entrypoint runs `release_schema deploy` before starting `uvicorn`: it validates
 both variables before any change, refuses one without the other or a password outside the policy,
 creates the owner only while no user exists under the same advisory lock as the command below, and

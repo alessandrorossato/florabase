@@ -63,7 +63,7 @@ confirmed acquisition fields. Multiple packets stay independent records.
 Order total/currency are read-only transaction context, never copied or divided as a SeedLot price.
 No new migration, stored reconciliation history, OrderLine or allocation mechanism was added for UAT.
 
-[Full domain and API contract](../../orders.md).
+[Full domain and API contract](../../features/sourcing/orders.md).
 
 ## API, directory, search and views
 

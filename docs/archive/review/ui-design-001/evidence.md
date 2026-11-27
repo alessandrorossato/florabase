@@ -13,12 +13,12 @@ names.
 
 | Capture | Shows | Used for |
 | --- | --- | --- |
-| [final-interaction-correction/evidence/plants-390.png](../../design/ui-system-v1/consolidation/final-interaction-correction/evidence/plants-390.png) | Plants Gallery, 390×900 | F-01, F-02 re-check |
-| [final-interaction-correction/evidence/plants-1024.png](../../design/ui-system-v1/consolidation/final-interaction-correction/evidence/plants-1024.png) | Plants Gallery, 1024×900 | F-15, D1 |
-| [final-interaction-correction/evidence/sowings-germination-details.png](../../design/ui-system-v1/consolidation/final-interaction-correction/evidence/sowings-germination-details.png) | Sowing Details, Germination tab, 1440×900 | F-03, F-12, F-14 |
-| [details-cover/evidence/supplier-1440.png](../../design/ui-system-v1/consolidation/details-cover/evidence/supplier-1440.png) | Supplier Details, 1440×900 | Reference for the flat Details pattern |
-| [final-interaction-correction/evidence/seeds-dedicated-details.png](../../design/ui-system-v1/consolidation/final-interaction-correction/evidence/seeds-dedicated-details.png) | Seed lot Details with the pre-Gate B panel | F-04 (historical only) |
-| [final-interaction-correction/evidence/plants-directory-1440.png](../../design/ui-system-v1/consolidation/final-interaction-correction/evidence/plants-directory-1440.png) | Desktop Plants capture, caught "Loading workspace…" | F-17 |
+| [final-interaction-correction/evidence/plants-390.png](../../../design/ui-system-v1/consolidation/final-interaction-correction/evidence/plants-390.png) | Plants Gallery, 390×900 | F-01, F-02 re-check |
+| [final-interaction-correction/evidence/plants-1024.png](../../../design/ui-system-v1/consolidation/final-interaction-correction/evidence/plants-1024.png) | Plants Gallery, 1024×900 | F-15, D1 |
+| [final-interaction-correction/evidence/sowings-germination-details.png](../../../design/ui-system-v1/consolidation/final-interaction-correction/evidence/sowings-germination-details.png) | Sowing Details, Germination tab, 1440×900 | F-03, F-12, F-14 |
+| [details-cover/evidence/supplier-1440.png](../../../design/ui-system-v1/consolidation/details-cover/evidence/supplier-1440.png) | Supplier Details, 1440×900 | Reference for the flat Details pattern |
+| [final-interaction-correction/evidence/seeds-dedicated-details.png](../../../design/ui-system-v1/consolidation/final-interaction-correction/evidence/seeds-dedicated-details.png) | Seed lot Details with the pre-Gate B panel | F-04 (historical only) |
+| [final-interaction-correction/evidence/plants-directory-1440.png](../../../design/ui-system-v1/consolidation/final-interaction-correction/evidence/plants-directory-1440.png) | Desktop Plants capture, caught "Loading workspace…" | F-17 |
 
 The paths are relative to `docs/design/ui-system-v1/consolidation/`. The same six images are
 uploaded to the design artifact's Evidence group for its BeforeAfter card.

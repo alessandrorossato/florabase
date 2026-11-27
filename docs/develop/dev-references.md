@@ -1,5 +1,7 @@
 # DEV reference indexes
 
+> Summary: Provisioning and verifying local WFO and WCVP reference SQLite indexes for DEV.
+
 DEV discovers the following files in the primary checkout's ignored `backend/src/.source-cache/`.
 The existing source bind exposes that directory as `/app/src/.source-cache/`. Reference files
 are kept outside Git, the backend image, and the PostgreSQL and media volumes.
@@ -73,7 +75,7 @@ counts and an accepted-name search before publishing the index and seal together
 reuses a valid sealed bundle. A pre-existing directory with an absent or invalid index is
 preserved for inspection. Status only reports file presence. Verify checks both required
 sources and also validates the optional v15 file if installed. Use the v15 builder described in
-[WCVP-VERSION-001](archive/WCVP-VERSION-001/wcvp-version-001.md) if historical source lookup is needed.
+[WCVP-VERSION-001](../archive/WCVP-VERSION-001/wcvp-version-001.md) if historical source lookup is needed.
 
 These commands run one-shot in the worktree's Quality project with no database dependency.
 They operate on the source cache only. DEV restarts, Golden reset and normal updates to

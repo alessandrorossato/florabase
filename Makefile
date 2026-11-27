@@ -152,7 +152,7 @@ migration: ## Create a migration: make migration MESSAGE="describe change"
 backup: ## Create coordinated PostgreSQL and attachment-volume backup artifacts
 	BACKUP_DIR="$(BACKUP_DIR)" ./scripts/backup.sh
 
-restore: ## Restore database and attachments; see docs/backup-restore.md
+restore: ## Restore database and attachments; see docs/operate/backup-restore.md
 	@test -n "$(FILE)" || { echo 'FILE is required'; exit 2; }
 	@test -n "$(ATTACHMENTS_FILE)" || { echo 'ATTACHMENTS_FILE is required'; exit 2; }
 	FILE="$(FILE)" ATTACHMENTS_FILE="$(ATTACHMENTS_FILE)" CONFIRM_REPLACE="$(CONFIRM_REPLACE)" CONFIRM_DATABASE="$(CONFIRM_DATABASE)" ./scripts/restore.sh
@@ -631,7 +631,7 @@ mobile-android-debug: ## Build a debug Android APK into mobile/android/app/build
 	@set -euo pipefail; \
 	sdk="$${ANDROID_HOME:-$${ANDROID_SDK_ROOT:-$$HOME/Android/Sdk}}"; \
 	if [ ! -d "$$sdk" ]; then \
-		echo "Android SDK not found (set ANDROID_HOME; see docs/mobile.md)" >&2; \
+		echo "Android SDK not found (set ANDROID_HOME; see docs/operate/mobile.md)" >&2; \
 		exit 1; \
 	fi; \
 	export ANDROID_HOME="$$sdk"; \
@@ -639,5 +639,5 @@ mobile-android-debug: ## Build a debug Android APK into mobile/android/app/build
 	cd mobile/android && ./gradlew assembleDebug; \
 	echo "Debug APK: mobile/android/app/build/outputs/apk/debug/app-debug.apk"
 
-mobile-android-release: ## Build, sign, and verify the release Android APK (requires signing env vars; see docs/mobile.md)
+mobile-android-release: ## Build, sign, and verify the release Android APK (requires signing env vars; see docs/operate/mobile.md)
 	@./scripts/mobile-android-release.sh

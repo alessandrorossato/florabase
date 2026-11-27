@@ -59,7 +59,7 @@ WFO flora archive (FTEA) uses the same failing file host and has no fresh conten
 
 ## Flora of China re-audit / remaining specific blocker
 
-[Exact decisions and probe evidence](botanical-profile-enrichment-sources.md) record the official
+[Exact decisions and probe evidence](../../features/explore/botanical-profile-enrichment-sources.md) record the official
 WFO download/provider investigation. Host curl, existing development and production HTTPX, and
 freshly built current-worktree HTTPX all reject the exact Flora of China archive with
 CERTIFICATE_VERIFY_FAILED / unable to get local issuer certificate, before HTTP headers/body.
@@ -91,7 +91,7 @@ Native assertions or map geometry. Source-field GO does not make BOTANY-003 impl
 
 ## Proposal semantics / field provenance
 
-[Approved complete text contract](botanical-profile-enrichment.md) records retrieval-only proposals,
+[Approved complete text contract](../../features/explore/botanical-profile-enrichment.md) records retrieval-only proposals,
 Current/Proposed/source comparison, explicit empty-field Apply, conservative populated-field Keep
 and concrete Replace confirmation. Immutable typed field applications and explicit current field
 associations must preserve history through manual edits, source replacement/unavailability and
@@ -116,7 +116,7 @@ for text. Source updates must create new review evidence, never reinterpret an e
 
 ## Cultivation / uses / warnings audit
 
-[Separate audit](botanical-knowledge-source-audit.md) independently identifies official Kew SEPASAL,
+[Separate audit](../../features/explore/botanical-knowledge-source-audit.md) independently identifies official Kew SEPASAL,
 CC BY 4.0, local TaxKey, exact note/use fields and bibliographic references. Three complete verified
 CSV inspections cover taxa (17,853 rows), major-use references (3,080) and note references (94,084).
 Cultivation and toxicity categories exist; use categories distinguish food, medicines, materials,
@@ -174,7 +174,7 @@ then start/seed/status from `857e` and perform the requested synthetic UAT scena
 
 The graph already owns TAXONOMY-001 reconciliation and TAXONOMY-002 name history. The new
 **planned TAXONOMY-003** represents the collection-aware taxonomy tree without repurposing them.
-[Future contract](archive/TAXONOMY-003/collection-taxonomy-plan.md) records collection scopes, family/genus/identity
+[Future contract](../TAXONOMY-003/collection-taxonomy-plan.md) records collection scopes, family/genus/identity
 navigation, distinct counts, WFO static-source candidate and unresolved parent/rank/synonym/link/
 version/index questions. Use Taxonomy; collection Lineage retains its existing meaning.
 

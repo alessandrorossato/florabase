@@ -1,5 +1,7 @@
 # Scheduled collection activities — SCHEDULE-001
 
+> Summary: Concrete scheduled collection activities in List and Month Calendar views (SCHEDULE-001/002).
+
 Schedule (`#/schedule`, under Activity) stores explicit **future intention**. Journal stores
 operator-recorded occurrences. History projects recorded facts. A due day passing is not an
 occurrence, and completing an intention does not necessarily create an Event.
@@ -122,7 +124,7 @@ Repeating seed preserves operator edits and dates; time passing naturally change
 Operator review should create from Schedule and Plant/Sowing/SeedLot detail, reschedule, complete
 without Event, explicitly record actual repotting or movement, retry the same completion through the
 API, inspect Journal/History boundaries, cancel, reopen terminal evidence and use 390×844 mobile.
-See [handoff](archive/SCHEDULE-001/schedule-001-handoff.md) for checks and visual-review readiness.
+See [handoff](../../archive/SCHEDULE-001/schedule-001-handoff.md) for checks and visual-review readiness.
 
 Recurrence, notifications/reminders, assignees/teams, subtasks, priority matrices, attachments,
 workflow engines, kanban and broad visual redesign remain outside this increment.
@@ -152,7 +154,7 @@ local `today` across pages and the screen refreshes at midnight. PartialDate is 
 
 Explicit synthetic seed adds seven Calendar examples (including five same-day activities, month
 end and next month) once, preserving original Schedule examples and operator edits. The independent
-review handoff and focused evidence are in [SCHEDULE-002 handoff](archive/SCHEDULE-002/schedule-002-handoff.md).
+review handoff and focused evidence are in [SCHEDULE-002 handoff](../../archive/SCHEDULE-002/schedule-002-handoff.md).
 Week, drag/drop, recurrence, reminders, assignments, priorities, external sync/export, Schedule
 Saved Views and global visual migration remain deferred.
 
@@ -172,5 +174,5 @@ before count/page, and All dates clears that date while retaining filters/search
 chronological groups describe the current ordered page. The collection-wide planned-overdue link
 remains available outside the displayed month/day and preserves other active filters.
 Existing dialogs, ownership, terminal transitions and actual Event contracts are unchanged.
-Week remains a development-only prototype. [Operator UAT handoff](design/schedule-ux/README.md)
+Week remains a development-only prototype. [Operator UAT handoff](../../design/schedule-ux/README.md)
 records real persistence checks, isolated Review access, visual evidence and the pending FULL gate.

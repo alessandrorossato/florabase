@@ -50,20 +50,20 @@ From 1.0.0 onward, within the 1.x series:
 - A stable public HTTP API. `/api/v1` is the application's own boundary and may change.
 - Multi-user, offline-capable, or built for architectures other than linux/amd64.
 - A certified source-build or controller-bundle deployment.
-- A commitment to any theme listed as post-1.0 in the [product roadmap](../product-roadmap.md).
+- A commitment to any theme listed as post-1.0 in the [product roadmap](../product/product-roadmap.md).
 
 ## Contracts this scope preserves
 
 Release work must not weaken any of these. A change to one of them is a scope change.
 
 - **Golden DEV.** The persistent Golden collection in primary DEV is initialized, replaced and
-  verified only by the explicit operator actions in [Golden DEV operations](../dev-golden.md). It
+  verified only by the explicit operator actions in [Golden DEV operations](../develop/dev-golden.md). It
   is never a test target.
 - **Provenance.** Explicit lineage, source evidence and the separation of native range, observed
   occurrence and collection origin are kept. Nothing is inferred into a recorded fact.
 - **Verification.** Exact-tree receipts, the fail-closed impact plan, protected `quality`,
   `integration` and `build` checks, and operator-only delivery remain as defined in the
-  [development workflow](../development-workflow.md). Delivery never accepts reused stage evidence.
+  [development workflow](../develop/development-workflow.md). Delivery never accepts reused stage evidence.
 - **Data safety.** Application startup never migrates (narrowed by [ADR 0008](../decisions/0008-self-initializing-single-compose.md) on INSTALL-001 delivery: the backend process never migrates, and only the guarded `migrate` one-shot of `compose.yaml` does). No volume is deleted without exact
   identity proof. No shared-daemon prune is automated. Destructive actions keep their explicit
   confirmations.
@@ -144,7 +144,7 @@ recommendation and await an explicit ruling.
   matching beyond the read-only foundation.
 
 None of these becomes a release dependency without a scope change. The themes stay described in
-the [product roadmap](../product-roadmap.md).
+the [product roadmap](../product/product-roadmap.md).
 
 ### 5. Not release deliverables
 
@@ -169,7 +169,7 @@ says what applies when the task is deferred; a deferred optional task never fail
 | G-SCOPE | In the feature reconciliation regenerated for the candidate: every entry with target "PRE-1.0 certify" is `verified` or has a recorded exception approved by the operator; every "PRE-1.0 release work" entry is closed or has a recorded disposition; no entry with either target is `in_progress`. Entries classed internal foundation, tooling, historical record, best-effort or POST-1.0 do not count. | The reconciliation; `scripts/check-features.py` passes. |
 | G-VERIFY | The candidate commit has a fresh full canonical receipt with no reused stages, and the protected checks are green on that commit. | `env -u REUSE FRESH=1 make verify-full`; `feature-tree-fingerprint.py verify`. |
 | G-MIGRATE | An empty database reaches the candidate head. A database at the schema head of the last published beta, holding data, reaches the candidate head. The application refuses to start on any other revision. | Migration cycle; one recorded upgrade from the upgrade baseline below; `florabase.db.release_schema`. |
-| G-INSTALL | On a host that has never held the source, the published assets are downloaded and verified, and the [installation guide](../installation.md) is followed without any step outside it, ending in a healthy stack, a bootstrapped owner, a sign-in, one created record and one uploaded photo. | Recorded run on one clean Linux host and on the operator's Synology host. |
+| G-INSTALL | On a host that has never held the source, the published assets are downloaded and verified, and the [installation guide](../operate/installation.md) is followed without any step outside it, ending in a healthy stack, a bootstrapped owner, a sign-in, one created record and one uploaded photo. | Recorded run on one clean Linux host and on the operator's Synology host. |
 | G-UPGRADE | From the upgrade baseline with data: paired backup, explicit schema upgrade, healthy stack. Then rollback by restoring the pre-upgrade pair with the previous images into fresh paths. Records and media digests match the source. | Recorded run on a real host. |
 | G-RESTORE | A paired backup restored into an isolated project has the same Alembic revision, per-table row counts and attachment digests as the source, and the owner can sign in and open an original. | Recorded drill; `attachment_artifacts.py verify`. |
 | G-SEC | (1) A recorded review of the candidate's routes lists every route that does not require authentication, and the list is exactly sign-in, health and readiness. *If optional ENG-03 is delivered, its test replaces the review.* (2) The image scan has no high or critical finding without a written disposition. (3) Only the frontend port is published. (4) The owner can change the password and recover from a lost one (ENG-01). (5) A vulnerability reporting channel is published (DOC-05). (6) *If optional ENG-02 is delivered, its headers are present; if it is deferred, the deferral is recorded and the installation guide's proxy example carries the headers.* | The review or test; the release workflow's scan; a port probe from a second host; `SECURITY.md`. |

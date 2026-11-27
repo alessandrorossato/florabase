@@ -7,15 +7,15 @@ combined visual review and one protected PR. THEMES-001 and CONTROLS-001 remain 
 canonical FULL verification and protected delivery are in progress.
 
 [Live authenticated review](http://localhost:15174/#/settings) ·
-[Product screenshot gallery](../../review/controls-001/gallery.html) ·
-[Evidence notes](../../review/controls-001/README.md) · [Themes handoff](../THEMES-001/themes-001-handoff.md).
+[Product screenshot gallery](../review/controls-001/gallery.html) ·
+[Evidence notes](../review/controls-001/README.md) · [Themes handoff](../THEMES-001/themes-001-handoff.md).
 
 ## Origins integration update
 
 The local integration merge reconciles reviewed implementation `564f479ef2c6dc657fc213d2f9636ddac9ccd590`
 (original base `b3f1de4693f50a12396344d251a16a0b4ded4b92`) with delivered main
 `46ade479fb3955b1d020a321c8256211cd2af869` (MAPS-ORIGINS-001, PR #119).
-See [integration evidence and checks](../../review/controls-001/origins-integration/README.md).
+See [integration evidence and checks](../review/controls-001/origins-integration/README.md).
 The original handoff below records the earlier implementation phase; its uncommitted/delivery-boundary
 statements are historical. The integrated candidate is committed locally for renewed independent QA.
 Both Themes and Controls remain implemented; the canonical FULL gate and delivery are pending.
@@ -96,7 +96,7 @@ artifacts are preserved. Remaining-page normalization follows this combined revi
 
 ## Six themes and responsive evidence
 
-[113 authenticated product captures](../../review/controls-001/gallery.html) cover all six approved variants.
+[113 authenticated product captures](../review/controls-001/gallery.html) cover all six approved variants.
 Seeds/Quick Preview and filter-drawer Tooltip each have six variants at actual 1440×844, 1024×844 and
 390×844 layout viewports; mobile navigation has six phone variants. Desktop series cover Dashboard,
 Saved Views, seed detail, botanical identities, Orders, Collection origins, Settings and supplier menu.
@@ -108,7 +108,7 @@ Measured canonical icons are 18/20px with 1.75 strokes; measured migrated action
 Captured roots have no horizontal viewport overflow. All 30 open product Tooltip measurements pass
 text ≥4.5:1 and border ≥3:1 against their actual computed surfaces, and center-point hit tests confirm
 visibility. Shared button, muted/icon and focus color pairs remain covered by the existing six-theme
-production token tests. See [calculated checks](../../review/controls-001/evidence-check.json).
+production token tests. See [calculated checks](../review/controls-001/evidence-check.json).
 
 Measurements describe layout viewports, not necessarily exported image dimensions. The in-app
 browser sometimes scales screenshot exports on scrolling pages; JSON and gallery captions record
@@ -136,7 +136,7 @@ preference store. Browser evidence does not certify a throttled cold first-paint
   This is a frontend production build, not deployment or production-container certification.
 - Feature graph: **110 valid**. `git diff --check` passed; index remains empty. Raw frontend reports
   are under ignored `frontend/coverage/controls-*.json` and `.log`; portable totals are in
-  [test-results.json](../../review/controls-001/test-results.json). No assertions or timeouts were weakened.
+  [test-results.json](../review/controls-001/test-results.json). No assertions or timeouts were weakened.
 - No backend/API/schema changes justify backend/integration reruns in this phase. Canonical
   `make feature-verify` / `make verify-full` were explicitly excluded and were not run. Neither feature
   is marked verified and no exact-tree receipt is claimed. Later authorized QA must gate the final tree.

@@ -1,16 +1,18 @@
 # Install Florabase
 
+> Summary: Self-hosting Florabase with the single compose.yaml, folder setup, upgrades, HTTPS reverse proxy, backup and restore.
+
 Florabase is installed with one directly usable `compose.yaml` file
-([ADR 0008](decisions/0008-self-initializing-single-compose.md),
-[ADR 0009](decisions/0009-minimal-production-compose.md),
-[ADR 0010](decisions/0010-deployable-latest-compose.md)). Take `compose.yaml` from the **latest
+([ADR 0008](../decisions/0008-self-initializing-single-compose.md),
+[ADR 0009](../decisions/0009-minimal-production-compose.md),
+[ADR 0010](../decisions/0010-deployable-latest-compose.md)). Take `compose.yaml` from the **latest
 release tag** (`https://github.com/alessandrorossato/florabase/blob/<latest-tag>/compose.yaml` —
 see [Florabase releases](https://github.com/alessandrorossato/florabase/releases)) rather than
 `main`, because `main` may be ahead of the published `:latest` images. Create the data and backup
 folders with their container owners once, edit the host folder paths, database password and
 canonical origin in `compose.yaml`, and deploy in a Compose manager such as Dockhand or with
 `docker compose up -d`. Building from source is for development only
-([development](development.md)).
+([development](../develop/development.md)).
 
 This guide applies from `v0.1.0-beta.8` (and upgrades `v0.1.0-beta.7` installations in place). Use
 the documentation at the `v0.1.0-beta.6` tag for that release's manual procedure.
@@ -374,7 +376,7 @@ from a protected pipe; keep the password out of arguments, environment variables
 ## Optional botanical reference datasets
 
 Florabase uses two local SQLite reference indexes built by Florabase's own builders from pinned
-official archives ([SQLite reference indexes](security/beta-distribution-001/sqlite-reference-indexes.md)):
+official archives ([SQLite reference indexes](../security/beta-distribution-001/sqlite-reference-indexes.md)):
 **WFO 2026-06** (taxonomy) and **Kew WCVP v16** (native-range proposals). WCVP v15 stays
 manual-only.
 

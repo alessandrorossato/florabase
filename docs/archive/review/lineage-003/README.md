@@ -3,7 +3,7 @@
 Open the root packet in this seeded instance,
 **http://localhost:15176/#/lineage/seed_lot/01a1bcdb-8e91-7710-9466-46603a2fb7b8** (IDs are
 per-seed; elsewhere use any record's **Lineage → Explore material ancestry**). Contract:
-[lineage-explorer.md](../../lineage-explorer.md).
+[lineage-explorer.md](../../../features/explore/lineage-explorer.md).
 
 This Review runs beside Feature Review (15174) without touching it. It follows the precedent of the
 taxonomy-visual-001 and wcvp-version-001 adapters: `review.py` subclasses the canonical

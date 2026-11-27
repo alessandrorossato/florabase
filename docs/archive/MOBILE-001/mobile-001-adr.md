@@ -2,7 +2,7 @@
 
 - **Status:** Proposed (spike implemented in `MOBILE-001`; `MOBILE-002` decisions open for owner sign-off)
 - **Date:** 2026-11-22
-- **Related:** [ADR 0005: Authentication and sessions](decisions/0005-authentication-and-sessions.md), [Android build & emulator guide](mobile.md)
+- **Related:** [ADR 0005: Authentication and sessions](../../decisions/0005-authentication-and-sessions.md), [Android build & emulator guide](../../operate/mobile.md)
 
 ## 1. Context and Owner Decisions
 
@@ -69,7 +69,7 @@ Two candidate transports exist for `MOBILE-002`:
 - **How it works:**
   - Leave the existing browser/PWA cookie + CSRF + `require_origin` path **100% unchanged** (`__Host-florabase-session`, `SameSite=Strict`, `FLORABASE_CANONICAL_ORIGIN`, zero cross-origin credentials).
   - Introduce dedicated device-session endpoints (e.g. `POST /api/v1/auth/device/login`, `POST /api/v1/auth/device/logout`, `GET /api/v1/auth/device/sessions`, `DELETE /api/v1/auth/device/sessions/{id}`) that authenticate with login name + password (sharing the existing Argon2id verification and PostgreSQL login throttling) and return an opaque 256-bit random bearer token.
-  - Store only the **SHA-256 digest** of the bearer token in PostgreSQL (alongside device label, platform, `last_seen_at`, idle/absolute expiry, and `revoked_at`), following the same opaque-session principle as [ADR 0005](decisions/0005-authentication-and-sessions.md) — no JWTs, immediate server-side revocation, automatic revocation on password change or account disablement.
+  - Store only the **SHA-256 digest** of the bearer token in PostgreSQL (alongside device label, platform, `last_seen_at`, idle/absolute expiry, and `revoked_at`), following the same opaque-session principle as [ADR 0005](../../decisions/0005-authentication-and-sessions.md) — no JWTs, immediate server-side revocation, automatic revocation on password change or account disablement.
   - On Android (and later iOS), persist the opaque bearer token in **hardware/OS-backed encrypted storage** (Android Keystore-backed EncryptedSharedPreferences / Capacitor secure storage plugin), never in `localStorage` or plain Preferences.
   - Attach `Authorization: Bearer <token>` on API calls from the native shell.
   - On the backend, update `require_authenticated_actor` / `require_csrf` cleanly:
@@ -93,7 +93,7 @@ Two candidate transports exist for `MOBILE-002`:
   3. **Mismatched session model:** Reusing browser cookies forces mobile devices into the 24-hour browser idle timeout and prevents per-device naming or selective revocation without conflating browser tabs and phones.
   4. **Cookie jar edge cases:** Synchronizing `__Host-` + `SameSite=Strict` cookies across WebView and native `HttpURLConnection` cookie stores across Android WebView updates is brittle.
 
-**Recommendation:** Adopt **Option A (Opaque Bearer Device-Session Token + `allow_credentials=False` CORS for `https://localhost` and `capacitor://localhost`)** in `MOBILE-002`, formally amending [ADR 0005](decisions/0005-authentication-and-sessions.md).
+**Recommendation:** Adopt **Option A (Opaque Bearer Device-Session Token + `allow_credentials=False` CORS for `https://localhost` and `capacitor://localhost`)** in `MOBILE-002`, formally amending [ADR 0005](../../decisions/0005-authentication-and-sessions.md).
 
 ## 6. App / Server Version Compatibility Model
 
@@ -154,7 +154,7 @@ When the offline capture queue is built in a later milestone, it **must not weak
 
 ## 9. Open Decisions for `MOBILE-002` (For Owner Sign-Off)
 
-1. **Confirm Option A (Opaque Bearer Device-Session Token + scoped `allow_credentials=False` CORS)** as an amendment to [ADR 0005](decisions/0005-authentication-and-sessions.md).
+1. **Confirm Option A (Opaque Bearer Device-Session Token + scoped `allow_credentials=False` CORS)** as an amendment to [ADR 0005](../../decisions/0005-authentication-and-sessions.md).
 2. **CORS configuration policy in production:** Should `https://localhost` and `capacitor://localhost` (strictly `allow_credentials=False`, never wildcard) be enabled automatically when mobile device auth is enabled, or gated behind an explicit environment opt-in such as `FLORABASE_ENABLE_MOBILE_AUTH=true`?
 3. **Device session lifetimes & limits:** Proposed defaults: 30-day idle expiry, 180-day absolute expiry (vs 24h / 30d for browser cookies), optional max active devices per user, and mandatory revocation on password change.
 4. **Compatibility endpoint shape:** Extend `GET /api/v1/health` with optional `server_version`, `api_version`, `min_client_version`, and `capabilities` fields, or keep `/api/v1/health` minimal (`{"status": "ok"}`) and add a separate `GET /api/v1/system/info` endpoint?

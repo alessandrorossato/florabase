@@ -1,5 +1,7 @@
 # Dashboard collection search
 
+> Summary: Global dashboard collection search across entities and routes (SEARCH-001/002).
+
 The authenticated Dashboard is Florabase's global search entry point. Its normal view keeps the
 collection snapshot, Quick actions, and recent Events. Query text or any structured filter replaces
 that content with grouped results. The URL stores the query and filters under `#/dashboard?...`;
@@ -97,4 +99,4 @@ matching escapes `%` and `_`; no linked-lot joins or botanical matching multiply
 retains only known date precision, Supplier and optional exact total/currency. Collection-specific
 structured filters keep their existing meaning and exclude Orders. Count/page queries remain two
 per selected kind; all 14 kinds plus shared paths are bounded to 30 SELECTs. Orders directory offers
-its own exact Supplier filter and Saved Views. See [Orders](orders.md).
+its own exact Supplier filter and Saved Views. See [Orders](../sourcing/orders.md).

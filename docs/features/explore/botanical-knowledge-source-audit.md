@@ -1,5 +1,7 @@
 # Cultivation, uses and warnings source discovery — 2026-10-09
 
+> Summary: Source discovery audit for cultivation, uses, and warnings data (2026-10-09).
+
 These fields remain **operator-authored**. This separate discovery does not add a source to the
 approved BOTANY-003 two-field import contract. BOTANY-004 records the future review work.
 

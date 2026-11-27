@@ -1,5 +1,7 @@
 # Lineage integrity audit
 
+> Summary: Canonical concrete-edge lineage contract and propagation reversal invariants.
+
 Audit base: `320865b` (HARVEST-001), `fix/lineage-integrity-audit`. This is a corrective audit of the
 implemented contracts, not a new roadmap capability. Feature IDs/statuses remain unchanged.
 

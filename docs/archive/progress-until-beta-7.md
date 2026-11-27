@@ -221,7 +221,7 @@
 
 ## 2026-11-19 — Golden COMPREHENSIVE crosswalk pin refresh
 
-- Refreshed the [reviewed COMPREHENSIVE baseline](../dev-golden.md#reviewed-baseline-at-20261110_0047)
+- Refreshed the [reviewed COMPREHENSIVE baseline](../develop/dev-golden.md#reviewed-baseline-at-20261110_0047)
   after PR #175 (`51f7884`) moved the WGSRPD crosswalk to v2. Following the
   [pin review procedure](TEST-DATA-002/test-data-002-design.md#baseline-contract-what-changed), removed the
   COMPREHENSIVE `expected` block from a scratch manifest and ran `generate`, `validate` and
@@ -724,7 +724,7 @@
   directory-owned integration test paths under `backend/tests/integration/` (and `*_test.py`) are
   accepted alongside flat `test_*.py` suites, and updated `EvidenceFixture` in
   `scripts/test-stage-evidence.py`, `scripts/test-workflow-resources.py`, and
-  [`docs/development-workflow.md`](../development-workflow.md).
+  [`docs/development-workflow.md`](../develop/development-workflow.md).
 - Expanded `scripts/test-verification-impact.py` (`TestOwnershipInventoryTests` and
   `test_test_ownership_inventory_cannot_silently_drift`) covering owned directory discovery,
   unowned test refusal before Docker, symlinked files/directories, nested `coverage`/`dist`, moved
@@ -1163,7 +1163,7 @@
   `/release.json` on visibility, reconnect, and 15-minute intervals, using `--wb-obscured-bottom` and
   safe-area insets to clear the mobile bottom bar and a pre-mounted `role="status"` live region so
   screen readers announce updates without disturbing unsaved form edits. Documented browser install,
-  update, and removal steps in [pwa.md](../pwa.md) and linked from [installation.md](../installation.md#tailscale-and-https).
+  update, and removal steps in [pwa.md](../operate/pwa.md) and linked from [installation.md](../operate/installation.md#tailscale-and-https).
 - Checks:
   - Focused PWA suites (`src/pwa/`): 5 files passed (65 tests: VM-executed `public/sw.js` behavioral
     suite including `502`/`503`/`504` shell-asset fallback and redirect exclusion, `UpdateNotice`
@@ -1179,12 +1179,12 @@
   - TypeScript strict check, ESLint (`--max-warnings 0`), Prettier, `check-features.py`, and untracked
     whitespace checks passed.
   - Real physical Android Chromium and iOS/iPadOS Safari devices were not available locally (documented as
-    pending real-device verification in [pwa.md](../pwa.md)); `PWA-001` status kept at `implemented`.
+    pending real-device verification in [pwa.md](../operate/pwa.md)); `PWA-001` status kept at `implemented`.
 
 ## 2026-11-10 — WORKFLOW-RETIRE-AUTH-001 operator retirement boundary implemented
 
 - Aligned `scripts/feature_worktree.py`, `scripts/test-agent-workflow.py`, and
-  [docs/development-workflow.md](../development-workflow.md) with the documented operator-only contract
+  [docs/development-workflow.md](../develop/development-workflow.md) with the documented operator-only contract
   for feature retirement (`AGENT_ID` treated strictly as a cooperative convention rather than
   cryptographic authentication): `retire`, `make feature-retire`, `feature_worktree.retire()`,
   `require-operator`, and `mark-finished` refuse declared agent or invalid `AGENT_ID` values before
@@ -1201,7 +1201,7 @@
   under `state.lock` + `verification_lock` with `require_operator(repo)`.
 - Resolved all independent QA findings (blocking `mark_finished` guard/doc gap plus non-blocking
   `AgentState.load()` handoff/version validation and doc wording), documented cooperative concurrency
-  limits in [docs/development-workflow.md](../development-workflow.md), kept `WORKFLOW-RETIRE-AUTH-001`
+  limits in [docs/development-workflow.md](../develop/development-workflow.md), kept `WORKFLOW-RETIRE-AUTH-001`
   as `implemented` in [docs/features.json](../features.json) with zero edits to `VERIFICATION-EVIDENCE-001`
   verification gate/impact/fingerprint files, and preserved canonical FULL for the consolidated
   integration branch.
@@ -1220,7 +1220,7 @@
 
 ## 2026-11-09 — PHENOLOGY-001 phenology observations on Events (migration 20261110_0046)
 
-- Decision and contract in [phenology](../phenology.md): a controlled `phenophase` and
+- Decision and contract in [phenology](../features/activity/phenology.md): a controlled `phenophase` and
   `phenophase_date_is_approximate` on existing observation/flowering/fruiting Events, rejecting new
   kinds or a separate table. 11 stages; `ck_events_phenology` ties each stage to its kind and requires
   a date for the approximate flag. Stage-less flowering/fruiting Events stay valid. No current-state
@@ -1299,7 +1299,7 @@
 - Independent correctness review found five defects (contradictory directly-produced Plant origin,
   non-indexable count query, paging duplicates, dead-end Retry for malformed IDs, collapse losing
   pages); all fixed with regressions. Independent visual review recorded in the
-  [Review README](../review/lineage-003/README.md).
+  [Review README](review/lineage-003/README.md).
 - Review-only fixture `lineage_explorer_extension=1` (47 records, owning services): branching,
   extraction, applied/reversed conversions, reversed Plant, unknown/orphan origins, 27-Plant paging.
 - Feature Review was owned by another worktree, so an isolated adapter (`docs/review/lineage-003`,
@@ -1330,7 +1330,7 @@
   UAT instance (golden SMOKE) at 1280/768/390. Independent integration QA found no defects; two
   TAXONOMY-owned concurrency risks (merge vs concurrent Plant write deadlock abort; create racing an
   uncommitted merge) do not affect lineage edges.
-- [Contract](../lineage-explorer.md). Status `implemented` pending canonical verification.
+- [Contract](../features/explore/lineage-explorer.md). Status `implemented` pending canonical verification.
 
 ## 2026-11-08 — beta publication preflight recovery
 
@@ -1430,8 +1430,8 @@
   The backend guard reports invalid configuration (field names only), unavailable database and
   empty/pending/newer schemas with the exact action and still never migrates. Acceptance checks the
   application shell, its scripts and JSON 404 for unknown API paths. New
-  [installation guide](../installation.md) with Dockhand workflow; record in
-  [beta-distribution-001.md](../beta-distribution-001.md).
+  [installation guide](../operate/installation.md) with Dockhand workflow; record in
+  [beta-distribution-001.md](BETA-DISTRIBUTION-001/beta-distribution-001.md).
 - Security: PostgreSQL pin moved to the upstream same-version `18.6-alpine` rebuild `123b1799…`
   (brotli/libcurl fixed; data-directory compatibility checked) — **needs operator approval**. Frontend
   base newly showed 3 HIGH (musl, zlib) with no upstream rebuild; exact Alpine pins restore 0/0;
@@ -1808,7 +1808,7 @@
 
 ### BETA-DATA-001 — synthetic first-collection rehearsal, 8 November 2026
 
-- Added the [onboarding runbook and Synology checklist](../beta-data-001.md).
+- Added the [onboarding runbook and Synology checklist](BETA-DATA-001/beta-data-001.md).
   It covers the six CSV kinds, manual workflows, source inventory, PartialDate
   and unknown values, reconciliation and admission blockers.
 - The baseline disposable import suite passed 13 tests. The updated example
@@ -1876,7 +1876,7 @@
 ### MEASUREMENT-001 — structured Plant height history, 8 November 2026
 
 - Registered MEASUREMENT-001 after confirming no backlog item covered roadmap theme 4. The
-  [measurement contract](../measurements.md) defines subject, quantity, unit, PartialDate precision,
+  [measurement contract](../features/activity/measurements.md) defines subject, quantity, unit, PartialDate precision,
   correction, uncertainty and retention. A measurement is a `measurement` Event, so Journal,
   History, photos and correction rules are reused; Plant gains no columns.
 - Height slice: individual Plants only; exact positive decimal with preserved resolution; `mm`,
@@ -1904,7 +1904,7 @@
   before integration, where the golden SMOKE baseline had no reviewed pin for 0043. The reviewed
   digest changed only the schema revision, `canonical_sha256` and the `events` table hash (still 20
   rows; the four new columns are NULL), with no completion problems. The pin and
-  [TEST-DATA-001 design](../test-data-001-design.md) now record the new values.
+  [TEST-DATA-001 design](TEST-DATA-001/test-data-001-design.md) now record the new values.
 - Operator domain review approved Event storage, Plant-only subject and a required PartialDate,
   and asked for a correction audit trail. No existing infrastructure keeps durable revisions:
   History is explicitly not an audit log, and OperationReceipts snapshot reversible operations
@@ -1966,7 +1966,7 @@
 
 - Added vegetative lots, rooting attempts and observations, explicit clonal origin, typed receipts
   and guarded reversal. Added Location scopes, Schedule and shared media targets, History facts,
-  and Explore representation. See the [cuttings contract](../cuttings.md).
+  and Explore representation. See the [cuttings contract](../features/collection/cuttings.md).
 - Backend Ruff and mypy passed, and all 17 focused unit tests passed. The focused disposable
   PostgreSQL run passed 86 tests across CUTTING, History, LINEAGE-002,
   propagation reversal, Measurements and CSV. It included rollback, concurrent stock deduction,
@@ -2153,7 +2153,7 @@
   writers stopped. Private owner credentials carry forward.
 - The COMPREHENSIVE pin at `20261110_0047` covers 3,995 domain records and 32 originals.
   Two dedicated copies and separate disposable stacks matched the reviewed digest. The SMOKE
-  plan and pin are unchanged. Counts, timings, commands and recovery are in [the runbook](../dev-golden.md).
+  plan and pin are unchanged. Counts, timings, commands and recovery are in [the runbook](../develop/dev-golden.md).
 - `make golden-dataset-comprehensive-check` passed 29 tests. `make test-environment-workflow`
   passed 42 tests. Focused workflow Ruff, mypy, feature graph and whitespace checks passed.
   `make smoke-dev-golden` covered first init, foreign resource refusal, occupied protection,
@@ -2185,7 +2185,7 @@
   fixture containers, networks and volumes. The per-worktree canonical FULL receipt records
   the final gate for the exact candidate tree.
 - WCVP v15 remains the product default. The original Golden links and ledger are preserved.
-  See the [operator activation and follow-up handoffs](../dev-references.md).
+  See the [operator activation and follow-up handoffs](../develop/dev-references.md).
 
 ### WGSRPD-CROSSWALK-V2 — reviewed native-range mappings, 13 November 2026
 
@@ -2194,7 +2194,7 @@
   remains a split with Kaliningrad explicitly named.
 - Frozen v1 proposals and applications retain their original evidence. Valid frozen selections
   can still apply. A submitted COS-backed Costa Rica choice rejects the entire selection and
-  allows retry without that choice. The [read-only assessment](../native-range-enrichment.md#read-only-review-of-historical-cos-additions)
+  allows retry without that choice. The [read-only assessment](../features/explore/native-range-enrichment.md#read-only-review-of-historical-cos-additions)
   identifies historical COS additions for optional operator review.
 - Focused Ruff, mypy, Prettier, ESLint and TypeScript passed. Passed 79 backend unit tests,
   47 disposable PostgreSQL integration tests and 9 frontend tests. Independent detached QA
@@ -2896,7 +2896,7 @@
 - Added a manifest-driven SMOKE golden dataset (`scripts/golden_plan.py`, `scripts/golden_dataset.py`,
   `scripts/fixtures/golden/`) generating through owning services into isolated `golden_*` databases and
   media roots. `review_dataset_v5.apply_node` was extracted for reuse without behavior change. Design and
-  operator decisions: [design](../test-data-001-design.md); coverage: `scripts/fixtures/golden/COVERAGE.md`.
+  operator decisions: [design](TEST-DATA-001/test-data-001-design.md); coverage: `scripts/fixtures/golden/COVERAGE.md`.
 - Evidence: identical canonical digest across hash seeds, timezones and two separate disposable stacks;
   idempotent repeat; atomic failure with retry; post-commit failure never ready; damage detected only in the
   damaged copy; persistent targets refused; zero residual resources after each run.
@@ -2957,8 +2957,8 @@
   report backend 11 CRITICAL/66 HIGH, frontend 3/61 and PostgreSQL 2/26, with zero secret findings.
   Gates remain fail-closed, without suppression. Registry publication/pulls, hosted protection checks,
   independent QA and canonical FULL are unexecuted. Status stays `in_progress`; this is not beta admission.
-- [Implementation/runbook](../beta-image-001.md), [QA checks/blockers](../beta-image-001-qa.md),
-  [local evidence/report hashes](../beta-image-001-local-evidence.json). No push, PR, merge or feature-finish.
+- [Implementation/runbook](BETA-IMAGE-001/beta-image-001.md), [QA checks/blockers](BETA-IMAGE-001/beta-image-001-qa.md),
+  [local evidence/report hashes](BETA-IMAGE-001/beta-image-001-local-evidence.json). No push, PR, merge or feature-finish.
 ### TEST-DATA-002 comprehensive golden dataset — 2 November 2026
 
 - COMPREHENSIVE is executable: 3,183 plan nodes, 3,973 domain records, 34 media files, generated through owning
@@ -2997,14 +2997,14 @@
 - Reviewed Pillow/certifi batch: 13.0.0/2026.10.18, unchanged verification policy, application setuid/setgid removed. Compatibility 102/102 tests; batch-A artifact smoke passes, scans remain blocked at backend 5 CRITICAL/43 HIGH, frontend 3/61, PostgreSQL 2/26, zero secrets. Original 11/66 backend evidence preserved. Advisory-specific VEX is a conditional unapproved draft only.
 - D4 locally merged origin/main 1e44c3f without rewriting; progress entries from both branches retained. Main contributes TEST-DATA-002 fixtures/planner/tests, not runtime app/Docker/release changes. No foreign environment changed.
 - New maintained Python/nginx base digest batch builds, but PostgreSQL registry inspection hits Docker Hub HTTP 429 unauthenticated pull limit before runtime smoke/scanning. Current-pin runtime/security verdict is unknown; previous-batch scan counts do not certify it. All exact owned resources retired.
-- DS224+ Linux/amd64 selected by operator; measured runtime/capacity acceptance pending. Compose portability to PCs/VPSs retained; no Dockhand dependency added. No canonical FULL, push, PR, remote merge, publication or persistent deployment. [Delta handoff](../beta-image-001-qa-corrections.md) records tests, original/new report hashes and blockers.
+- DS224+ Linux/amd64 selected by operator; measured runtime/capacity acceptance pending. Compose portability to PCs/VPSs retained; no Dockhand dependency added. No canonical FULL, push, PR, remote merge, publication or persistent deployment. [Delta handoff](BETA-IMAGE-001/beta-image-001-qa-corrections.md) records tests, original/new report hashes and blockers.
 
 ### BETA-IMAGE-001 — final reliability correction, 3 November 2026
 
 - Full container IDs and conservative legacy-prefix existence checks prevent false cleanup success on inspect failure; realistic regression detects the old defect. Release Compose process groups quiesce before cleanup, with bounded timeout/refusal/recovery. Real timed SIGTERM plus late owned creation removes 2 containers/network/media, verifies zero residuals and unchanged foreign inventory. Resource suites 19/19.
 - Project-managed no-ensurepip venv, verified pip bootstrap and hash-locked transitive tools replace system pip/PYTHONPATH requirements. make test-beta-images 12/12 passes, including fresh offline cache use; absent offline cache refuses. make workflow-check and actionlint pass. D3 rejects equal index/platform digests and untrusted build inputs.
 - Official smoke passes on current pins without pull shim; scans measure backend 2 CRITICAL/36 HIGH, frontend 1/4, PostgreSQL 2/26, zero secrets. Raw reports, exact index/native/config identities, advisory-by-package inventory and unapproved expiring VEX drafts preserved. Security gate remains blocking. Patched Python/media compatibility 102/102.
-- [Final reliability handoff](../beta-image-001-final-reliability.md). DS224+ amd64 runtime/capacity and publication approvals remain pending; no canonical FULL before delta QA, push, PR, merge, GHCR publication, deployment or feature-finish.
+- [Final reliability handoff](BETA-IMAGE-001/beta-image-001-final-reliability.md). DS224+ amd64 runtime/capacity and publication approvals remain pending; no canonical FULL before delta QA, push, PR, merge, GHCR publication, deployment or feature-finish.
 
 ### BETA-SECURITY-001 — candidate for independent QA, 3 November 2026
 
@@ -3028,7 +3028,7 @@
   screening/runtime/security acceptance. PostgreSQL maintenance or individually accepted/reviewed VEX,
   explicit host approval, protected environment/package configuration and publication authorization remain.
 - No canonical FULL before independent QA authorization, no delivery receipt, push, PR, merge, registry
-  publication or deployment. [Runbook/QA handoff](../beta-security-001.md),
+  publication or deployment. [Runbook/QA handoff](BETA-SECURITY-001/beta-security-001.md),
   [retained evidence](../security/beta-security-001/README.md). Feature remains in_progress.
 
 ### BETA-SECURITY-001 — draft lookup P1 correction, 3 November 2026
@@ -3041,7 +3041,7 @@
 - Baseline 21/21; old implementation fails two new regressions, and actual old snippet reproduces
   tag-404 against mocked GitHub behavior. Corrected suite 25/25; workflow-check and actionlint pass.
 - PostgreSQL 2 CRITICAL/26 HIGH still blocks publication. Separate maintenance proposal requires
-  explicit operator approval and BETA-RUNTIME-001 coordination. [Delta QA handoff](../beta-security-001-lookup-correction.md).
+  explicit operator approval and BETA-RUNTIME-001 coordination. [Delta QA handoff](BETA-SECURITY-001/beta-security-001-lookup-correction.md).
   No canonical FULL, push, PR, merge or publication. Targeted independent delta QA is next.
 
 ### BETA-RUNTIME-001 — image-only beta runtime candidate for independent QA, 3 November 2026
@@ -3051,7 +3051,7 @@
 - The controller covers preflight evidence, init, install, owner bootstrap and acceptance (local and HTTPS, with owner login). Recovery sets carry checksums, metadata and exact table counts; it also does verify, retention, encrypted restic export/import, isolated and replacement restore, and a serialized journaled promote/resume/abort with forward fix. Plus drift and volume-adoption refusal, reference datasets, status alerting and check-release.
 - Smoke-found controller defects were fixed: Compose's unbounded dependency wait would hang on a crash-looping backend; child processes consumed a stdin password; Docker copy-up made the host `postgres/` directory 1777; plain or foreign `florabase-prod_*` volumes from the source-build stack were not refused; an interrupted replacement restore did not block other mutations.
 - Checks: `make test-beta-runtime` (34 tests under Python 3.14.4 with host Compose, 26 controller tests under Python 3.8.20). The offline suite also passed with checksum-verified Compose 2.20.1. ruff (py38 target), ruff format and mypy --strict are clean on all new files. `make smoke-beta-runtime` passed on docker:24.0.2-dind with Compose 2.20.1 and the controller under Python 3.8.20 from a copied bundle. It covered install, persistence across recreation and daemon restart, backup/tamper detection, isolated restore (33.5 s), restic export/import, a compatible upgrade with unchanged PostgreSQL container/image/volumes, refusal of an ahead schema, the failed-migration abort, the failed-application refused abort plus forward fix, replacement restore (41.8 s) with sessions invalidated and failed data preserved, SIGKILL-after-migrate resume, and WFO dataset provisioning (read-only, cleared). Owned resources were retired with zero residuals; the unrelated workload and host `florabase-prod` resources were unchanged.
-- Not done: no real-host access, deployment, Dockhand pin or Tailscale Serve verification, real reboot, off-host destination or RPO/RTO acceptance; no independent QA, canonical FULL, push or PR. The restic image is a new runtime-owned pin for BETA-SECURITY-001 scanning. [Runbook](../beta-runtime-001.md).
+- Not done: no real-host access, deployment, Dockhand pin or Tailscale Serve verification, real reboot, off-host destination or RPO/RTO acceptance; no independent QA, canonical FULL, push or PR. The restic image is a new runtime-owned pin for BETA-SECURITY-001 scanning. [Runbook](BETA-RUNTIME-001/beta-runtime-001.md).
 
 ### BETA-RUNTIME-001 — independent QA corrections R1–R4, 3 November 2026
 
@@ -3385,7 +3385,7 @@
   Docker default subnet pools were exhausted; only this task's isolated networks use checked-free
   explicit subnets. Existing resources were preserved; disposable ownership/cleanup guards retained.
 - [Contract, compatibility and provisioning](WCVP-VERSION-001/wcvp-version-001.md),
-  [Review/checklist](../review/wcvp-version-001/README.md). Feature is implemented, awaiting operator
+  [Review/checklist](review/wcvp-version-001/README.md). Feature is implemented, awaiting operator
   review; all changes unstaged/uncommitted. No push, merge or delivery.
 
 ## 2026-10-29 — UI System v1 Wave 2 ready for operator UAT
@@ -3899,7 +3899,7 @@
   c902 Review, Media, DEV/UAT/Preview/Sourcing/production and primary main were preserved.
   Media coordination was explicitly operator-authorized; localhost cookie collisions required
   sequential login-dependent capture batches, with invalid acquisitions excluded and repeated.
-- [Review package](../review/release-visual-audit-001/README.md) and
+- [Review package](review/release-visual-audit-001/README.md) and
   [live gallery](http://localhost:15282/gallery.html): **270 selected screenshots**, including
   **162/162** primary combinations (27 states × three measured CSS viewports × Botanical Light/Dark),
   six-theme shared/difficult-workspace samples, real forms/inspectors/menus/filters/validation,
@@ -3963,7 +3963,7 @@
   coordinated as global audit F09/Wave A0; **P1** destructive initial focus in Media confirmation;
   **P1** breadcrumb filter loss and missing invoking-card focus on mobile Back. No production fix yet.
   [Updated audit/plan](MEDIA-VISUAL-001/media-visual-001-design-review.md) defines shared/component ownership and risks.
-- [Updated comparison gallery](../review/media-visual-001/gallery.html): **42 new captures** (30 owned
+- [Updated comparison gallery](review/media-visual-001/gallery.html): **42 new captures** (30 owned
   actual-application, 8 current-data proposal, 4 attributed audit supplements) plus the original 30
   historical captures. Current/proposed are explicitly distinguished; same eight photographs, current
   order/counts/association labels are used. Long metadata prompted reachable preview-header actions.
@@ -3987,7 +3987,7 @@
   focus return in the existing two-photo Taxonomy Review. c902 Review ownership refused correctly;
   its frontend/backend were absent. Available runtimes became unavailable during inspection; no
   populated Media-owned Review URL, live mobile or complete product theme acceptance is claimed.
-- [Visual study and evidence gallery](../review/media-visual-001/gallery.html) proposes a full-width 4:3
+- [Visual study and evidence gallery](review/media-visual-001/gallery.html) proposes a full-width 4:3
   photo grid, on-demand uncropped preview and larger detail image using actual v5 data. Study-only
   checks: 18 captures across 1440/1024/390×844 and six token themes, 4/3/2 columns, eight loaded photos,
   no horizontal overflow; filters, keyboard activation/Escape/focus and detail return exercised.
@@ -4118,7 +4118,7 @@
   builds, Review guard checks, feature graph (113) and whitespace passed. Disposable
   integration/build cleanup verified. Existing Starlette deprecation warning noted.
 - [Handoff and exact limitations](TAXONOMY-VISUAL-001/taxonomy-visual-001-handoff.md),
-  [gallery](../review/taxonomy-visual-001/gallery.html). Geography remains independently
+  [gallery](review/taxonomy-visual-001/gallery.html). Geography remains independently
   owned/unmerged; shared documentation/App test additions need normal integration
   QA. AT, physical touch, zoom and full-dataset performance remain pending. Feature
   is implemented, not verified. No canonical FULL gate, staging, commit, push, PR,
@@ -4478,7 +4478,7 @@ Status remains implemented pending canonical verification.
 - Actual authenticated browser: six palettes/modes retain 12 markers, selected origin 02, identical
   camera transform and zero online tile elements. Drawer/Tooltip layered Escape, focus return,
   Saved Views and phone/tablet inspector behavior checked. Existing split runtime preserved; no
-  DEV/Review/UAT data or foreign source mutation. See [integration handoff and evidence](../review/controls-001/origins-integration/README.md).
+  DEV/Review/UAT data or foreign source mutation. See [integration handoff and evidence](review/controls-001/origins-integration/README.md).
 - Themes and Controls remain implemented, pending independent QA/canonical verification and delivery.
   Actual AT/zoom/touch, provider raster, first-paint filmstrip and physical print acceptance remain
   explicitly pending. Integration is committed locally; no push, PR, delivery or finish.
@@ -4510,7 +4510,7 @@ Status remains implemented pending canonical verification.
   is retained. Shared directories, search, Saved Views, menus, details, forms, shell/mobile and
   representative capability actions reuse the same system; essential/domain actions keep text.
 - Preserved the six approved THEMES palettes and original 143 PNGs. Added
-  [Controls handoff](CONTROLS-001/controls-001-handoff.md) and [gallery](../review/controls-001/gallery.html):
+  [Controls handoff](CONTROLS-001/controls-001-handoff.md) and [gallery](review/controls-001/gallery.html):
   **113 product captures + 3 component-fixture images**, six variants, real desktop/tablet/phone
   layout sizes, separate export dimensions, no measured root overflow, 44px action targets and
   30 passing Tooltip contrast/hit measurements. Browser System/reload behavior and labelled
@@ -4587,7 +4587,7 @@ Status remains implemented pending canonical verification.
   cross-tab synchronization and authentication persistence. Settings native radios and both existing
   footer controls apply immediately; footer cycles System → Light → Dark → System. Settings gear and
   CONTROLS-001 implementation remain untouched.
-- Prepared [handoff](THEMES-001/themes-001-handoff.md) and [actual browser gallery](../review/themes-001/gallery.html):
+- Prepared [handoff](THEMES-001/themes-001-handoff.md) and [actual browser gallery](review/themes-001/gallery.html):
   126 six-theme captures at approved real viewport sizes where recorded, 16 supplementary page-family
   checks and one Dark label preview. All 2,520 measured root colors match approved values; no captured
   root horizontal overflow. Plants/group evidence was recaptured populated. No actual zoom claim.
@@ -4608,7 +4608,7 @@ Status remains implemented pending canonical verification.
 
 - Audited the accepted UI Foundation, semantic/legacy color rules, shared controls, Theme preview,
   Settings, auth/media/print and the three map renderers at `b3f1de4`. Added the
-  [theme proposal](THEMES-001/themes-001-design-proposal.md), [six-variant token matrix](../themes-001-token-matrix.md),
+  [theme proposal](THEMES-001/themes-001-design-proposal.md), [six-variant token matrix](../develop/themes-001-token-matrix.md),
   [controls contract](CONTROLS-001/controls-001-design-contract.md) and [implementation plan](THEMES-001/themes-001-implementation-plan.md).
   The controls contract specifies one local SVG vocabulary, three action patterns, accessible
   Tooltip/overlay behavior, labelled essential actions and responsive migration/testing boundaries.
@@ -4655,7 +4655,7 @@ Status remains implemented pending canonical verification.
   an initial unchanged lazy Geography timeout are not claimed passed; completed
   scoped reruns supersede them without weakening checks.
 - [Handoff](MAPS-ORIGINS-001/maps-origins-001-handoff.md) and labelled
-  [synthetic evidence](../review/maps-origins-001/README.md) record 1440×844, 1024×844,
+  [synthetic evidence](review/maps-origins-001/README.md) record 1440×844, 1024×844,
   390×844 measurements, real Leaflet keyboard, pane retention, Back/Forward, Saved
   View reopening, API Retry and provider-failure fallback. No horizontal overflow.
   Headless zoom did not change viewport/ratio; true zoom, actual screen reader,
@@ -4683,7 +4683,7 @@ Status remains implemented pending canonical verification.
   has one mapped site/direct SeedLot/identity and unknown accuracy; richer states
   retain the earlier labelled synthetic and test evidence, without collection edits.
 - Review remains running at <http://localhost:15174/#/map>.
-  [Live evidence/status](../review/maps-origins-001/live/README.md) supersede the previous
+  [Live evidence/status](review/maps-origins-001/live/README.md) supersede the previous
   slot limitation. True zoom, screen reader, physical touch, independent QA and
   operator visual acceptance remain pending. No canonical verification, staging,
   commit, delivery or DEV upgrade. **ORIGINS_LIVE_REVIEW_READY**.
@@ -4927,7 +4927,7 @@ Status remains implemented pending canonical verification.
   strict TypeScript/production Vite build, **108-feature** graph and whitespace checks passed.
 - Authenticated 1440×844, 1024×844 and 390×844 review covered layout, pane persistence, cultivar
   search, keyboard previews/focus, actual Back/Forward and Saved View save/reopen with evidence
-  unloaded. Fixed reproduced tablet header gaps. [Browser evidence](../review/maps-distribution-001/README.md)
+  unloaded. Fixed reproduced tablet header gaps. [Browser evidence](review/maps-distribution-001/README.md)
   records live partial-tile failures and positive aggregate counts, not fabricated occurrence data.
 - Operator explicitly approved guarded replacement of the delivered Maps Review. The fresh
   candidate-owned `florabase-feature-review` at <http://localhost:15174/#/species-distribution>
@@ -5036,7 +5036,7 @@ Status remains implemented pending canonical verification.
   **10 isolated PostgreSQL integration**, scoped zero-warning lint/format, strict TypeScript/Vite,
   Ruff/mypy, API drift, **107-feature** graph and whitespace/empty-index checks pass. An earlier host
   combined test run ended 143 without a result; completed scoped container runs supersede it.
-- [Spatial evidence](../review/maps-foundation-001/spatial/README.md) distinguishes authenticated five-ID
+- [Spatial evidence](review/maps-foundation-001/spatial/README.md) distinguishes authenticated five-ID
   and real two-way overlap from labelled renderer-only 1/2/3/5-way polygon fixtures. No fixture rows
   were changed. True browser zoom, actual screen reader, physical touch and operator product acceptance
   remain pending in the [handoff](MAPS-FOUNDATION-001/maps-foundation-001-handoff.md).
@@ -5059,7 +5059,7 @@ Status remains implemented pending canonical verification.
   territory inspection and focus. A comparison Saved View remains for the operator.
 - Live mobile evidence justified local control compaction and moving supporting explanation/metadata
   below the map. Final overview/comparison/single maps fit usefully in the first mobile viewport,
-  with no measured horizontal overflow. [Live evidence](../review/maps-foundation-001/live/README.md)
+  with no measured horizontal overflow. [Live evidence](review/maps-foundation-001/live/README.md)
   distinguishes actual viewports from zoom proxies; no real zoom, screen-reader, physical touch or
   live API/asset failure injection certification is claimed.
 - Final **121 tests / 13 files**, scoped zero-warning ESLint/Prettier, strict TypeScript/Vite build,
@@ -5086,7 +5086,7 @@ Status remains implemented pending canonical verification.
 - Authenticated desktop/tablet/mobile review confirms map prominence, no horizontal overflow,
   modal focus/persistence, scientific/common/cultivar search, one/two/three species, exact/broad/custom/
   no-range evidence, Saved View restoration, URL reload and actual Back/Forward.
-  [Refinement evidence](../review/maps-foundation-001/refinement/README.md) supersedes the first live layout.
+  [Refinement evidence](review/maps-foundation-001/refinement/README.md) supersedes the first live layout.
 - Baseline **25 tests / 4 files**; affected regressions **131 / 15**; final Native/maps rerun **30 / 4**
   after correcting the mapped-KPI asset-failure state. Scoped zero-warning ESLint/Prettier, strict
   TypeScript/Vite build, **107-feature** graph and whitespace pass. Final JS **29.61/8.44 kB gzip**,
@@ -5130,7 +5130,7 @@ Status remains implemented pending canonical verification.
   actual jsdom Back/Forward, reset preservation, polygon keyboard/clear, map/list inspection and bins.
   Native ranges JS **24.27/7.15 kB gzip**, CSS **7.67/1.60 kB gzip**; lazy geometry remains
   **150.83/60.46 kB gzip**. No backend, schema, API, dependencies or shared UI implementation changed.
-- [Seven synthetic offline snapshots](../review/maps-foundation-001/README.md) cover 1440×844, 1024×844,
+- [Seven synthetic offline snapshots](review/maps-foundation-001/README.md) cover 1440×844, 1024×844,
   390×844 and tall content inspection without measured horizontal page overflow. They use real
   components/CSS/geometry with mocked local responses and a labelled static shell; they are not live
   Review evidence. Real browser zoom, screen reader, device touch and mobile navigation clearance
@@ -5185,7 +5185,7 @@ Status remains implemented pending canonical verification.
   125%/150% remain honest viewport proxies. Large aggregates scroll and a first hidden-browser native
   confirmation attempt stalled; component dirty-dismissal evidence and later live pristine navigation
   are distinguished. See the [handoff](COLLECTION-VISUAL-002/collection-visual-002-handoff.md) and
-  [evidence](../review/collection-visual-002/README.md).
+  [evidence](review/collection-visual-002/README.md).
 - `COLLECTION-VISUAL-002` remains `implemented`, pending operator acceptance and independent canonical
   verification. Canonical feature-verify, staging, commit, push and delivery were not run. Candidate
   remains dirty, unstaged and uncommitted, with Feature Review running: `READY_FOR_VISUAL_REVIEW`.
@@ -5229,7 +5229,7 @@ Status remains implemented pending canonical verification.
   no timeout, domain assertion or validation weakened. Strict TypeScript/production build, targeted
   zero-warning ESLint/Prettier, **105-feature** graph and whitespace checks pass. Nine domain/payload/
   reversal-submit helpers match HEAD. No backend/API/schema/migration/dependency edits or full gates.
-- [Fourth-pass evidence](../review/collection-visual/sowings-plants/fourth-pass/README.md) records **30**
+- [Fourth-pass evidence](review/collection-visual/sowings-plants/fourth-pass/README.md) records **30**
   form/viewport checks with continuous static footers, matching edges and no horizontal overflow;
   mobile footers clear navigation. At real 1440×844, New Plant/group/Sowing and guided Plant fit; guided
   group is 846px high with its footer visible. Three desktop Origin editors have no internal scroll.
@@ -5284,7 +5284,7 @@ Status remains implemented pending canonical verification.
 - Focused/shared frontend checks pass **270 unique tests in 17 suites**; media backend checks pass
   **69 unit + 15 PostgreSQL tests**, with disposable cleanup verified. Intermediate cold Sowing import
   timeouts were resolved in interaction setup without weaker assertions/timeouts; the loading test passes.
-- [Final SeedLot evidence](../review/global-visual/final-seedlot/README.md) retains 57 responsive observations
+- [Final SeedLot evidence](review/global-visual/final-seedlot/README.md) retains 57 responsive observations
   without horizontal overflow, additional Order Day evidence and exact validation summaries. Reduced
   viewport zoom proxies are labelled; actual zoom and native dirty-prompt handling remain operator checks.
   Browser automation stalled during an unsaved Order cancellation; it is not claimed as a passed check.
@@ -5315,7 +5315,7 @@ Status remains implemented pending canonical verification.
   Notes query ambiguities were resolved by selecting the intended textarea/region, without weaker
   product assertions. Coverage includes conditional states, unchanged payloads, accessible names,
   keyboard/focus behavior, lightweight empties and the Photos exception.
-- [Labels/empty-state evidence](../review/global-visual/labels-empty/README.md) records **29 observations**
+- [Labels/empty-state evidence](review/global-visual/labels-empty/README.md) records **29 observations**
   across 1440x844, 1024x844 and 390x844 at 100%, with no horizontal document overflow: empty Details
   tabs, full-page Create, Edit Essentials/Acquisition and selected Month precision. No product records
   were saved. The operator resolved one browser stall while discarding an unsaved inspection draft;
@@ -5348,7 +5348,7 @@ Status remains implemented pending canonical verification.
   assertions check semantic terms/values rather than layout whitespace. Strict TypeScript,
   zero-warning targeted ESLint, eight-file Prettier, production build and whitespace checks pass.
   SeedLot JS: 45.38 kB / 12.42 kB gzip; main: 228.15 kB / 70.91 kB gzip.
-- [Dashboard/picker evidence](../review/global-visual/seed-dashboard/README.md) retains **30 observations**:
+- [Dashboard/picker evidence](review/global-visual/seed-dashboard/README.md) retains **30 observations**:
   all requested views at 1440x844, 1024x844 and 390x844 at 100%, representative shared/native consumers
   and one additional short-viewport menu fit. No horizontal overflow; all measured menus match input
   width and 4px separation. No records/media were saved, linked, removed or fetched remotely.
@@ -5419,7 +5419,7 @@ Status remains implemented pending canonical verification.
   preceded candidate up/bootstrap/seed. After interruption, supported up restored the same candidate
   DB/media. Review stays healthy at `http://localhost:15174`, login `owner`, DB/code **0042**, source
   `ef73` + live unstaged changes. See [handoff](COLLECTION-VISUAL-001/collection-visual-001-handoff.md) and
-  [evidence](../review/collection-visual/sowings-plants/README.md). Feature is **implemented**, awaiting
+  [evidence](review/collection-visual/sowings-plants/README.md). Feature is **implemented**, awaiting
   operator visual acceptance and later independent canonical QA. No staging, commit, push or delivery.
 
 ## 2026-10-16 — COLLECTION-VISUAL-001 second operator pass
@@ -5438,7 +5438,7 @@ Status remains implemented pending canonical verification.
   updated while preserving business assertions; no timeout, backend test or validation was weakened.
   Strict TypeScript/production build, targeted ESLint/Prettier, feature graph **105 valid** and
   whitespace checks pass. Payload/validation/germination/reversal-submit helpers match HEAD.
-- Current [second-pass evidence](../review/collection-visual/sowings-plants/second-pass/README.md) records
+- Current [second-pass evidence](review/collection-visual/sowings-plants/second-pass/README.md) records
   **90 unique state/viewport checks** without measured horizontal overflow. Representative desktop
   Origin editors fit without internal scrolling; Sowing/Plant Overviews fit, PlantGroup nearly fits.
   Actual browser zoom remains outstanding: 125%/150% checks are clearly labelled viewport proxies.
@@ -5466,7 +5466,7 @@ Status remains implemented pending canonical verification.
   Targeted Prettier/zero-warning ESLint, strict TypeScript/production build, **105-feature** graph and
   whitespace checks pass. Nine domain/payload/reversal-submit helpers match HEAD after whitespace
   normalization; backend/API/schema/migration/dependencies remain unchanged.
-- Current [third-pass evidence](../review/collection-visual/sowings-plants/third-pass/README.md) records
+- Current [third-pass evidence](review/collection-visual/sowings-plants/third-pass/README.md) records
   **67 unique state/viewport checks** without measured horizontal overflow, navigation/focus observations
   and desktop/mobile captures. Actual browser zoom remains outstanding; enlarged-view checks are
   labelled viewport proxies. The preserved fixture has no extracted individual, so that four-node path
@@ -5511,7 +5511,7 @@ Status remains implemented pending canonical verification.
   UAT/DEV/Stable/production action, canonical gate, stage/commit/push/delivery. All work stays dirty.
 
 - Final code validation passes **202 tests in 14 suites**, TypeScript, zero-warning targeted ESLint,
-  formatting, production build and whitespace. [Third-family evidence index](../review/global-visual/third-family/README.md)
+  formatting, production build and whitespace. [Third-family evidence index](review/global-visual/third-family/README.md)
   records exact scopes and pending fresh browser review; no new visual acceptance is claimed.
 
 ## 2026-10-15 — GLOBAL-VISUAL-001 consolidated live review completion
@@ -5668,7 +5668,7 @@ Status remains implemented pending canonical verification.
 
 - Audited all **22 primary route states** on the preserved delivered UAT before production edits;
   inspected important Collection detail/edit flows and creation forms. Classified blockers,
-  normalization and polish in [the visual inventory](../review/global-visual/audit.md).
+  normalization and polish in [the visual inventory](review/global-visual/audit.md).
 - Shared PageHeader/DirectoryTools align search, supported Saved Views, live filter drawers, native
   single-select choices and removable summaries. Collection, Explore and Sourcing now use grouped
   operational rows, bounded forms, consistent controls, action hierarchy and botanical typography.
@@ -5759,7 +5759,7 @@ Status remains implemented pending canonical verification.
 - Following an interruption, Review frontend/backend were stopped with its DB healthy. Supported
   `feature-review-up` recovered candidate-owned Review, preserving owner/session, DB **0042** and
   fixture **v4/66 ready**. No seed/reset/remove or UAT operation ran in this refinement.
-  [Handoff](GLOBAL-VISUAL-001/global-visual-001-handoff.md) and [evidence index](../review/global-visual/first-family/README.md)
+  [Handoff](GLOBAL-VISUAL-001/global-visual-001-handoff.md) and [evidence index](review/global-visual/first-family/README.md)
   distinguish initial normalization evidence from this refinement. Feature remains **in_progress**;
   no canonical gate, stage, commit or delivery.
 
@@ -6120,7 +6120,7 @@ Status remains implemented pending canonical verification.
 ## 2026-10-12 — UI Foundation v0.1 and DASHBOARD-001 implementation handoff
 
 - Established semantic tokens, self-hosted Source Sans 3 / Source Serif 4, shared workspace
-  primitives, safe base/shell styling and authoritative [UI contract](../ui-contract.md).
+  primitives, safe base/shell styling and authoritative [UI contract](../develop/ui-contract.md).
 - Dashboard now provides explicit active-record metrics, current identity coverage, planned
   attention, distinguishable Journal/History rows, propagation counts and optional sourcing review
   through one bounded authenticated aggregate. No schema migration or inferred rates.
@@ -6280,7 +6280,7 @@ Status remains implemented pending canonical verification.
   Only the uncommitted React dependency candidate was discarded; React stays 19.2.8.
 - Old grouped bot proposals were re-read for compatible, superseded or deferred decisions, never
   merged. Node/Python/PostgreSQL contracts, protected environments and product scope are preserved.
-  The [consolidated baseline](../dependency-maintenance-baseline.md) records versions, prior delivery
+  The [consolidated baseline](../develop/dependency-maintenance-baseline.md) records versions, prior delivery
   identities, focused evidence and reconsideration conditions without reopening completed groups.
 - No schema migration or Dashboard work is included. DASHBOARD-001 is the next product increment.
 
@@ -6454,7 +6454,7 @@ Status remains implemented pending canonical verification.
   create/context across all four detail types, no-Event completion, independent November due/October
   linked occurrence, cancellation, terminal evidence, Back, focus containment/Escape and mobile More.
   Synthetic operator review records remain explicit; no personal collection data was used.
-- [Schedule contract](../schedule.md) and [implementation handoff](SCHEDULE-001/schedule-001-handoff.md) record scope,
+- [Schedule contract](../features/activity/schedule.md) and [implementation handoff](SCHEDULE-001/schedule-001-handoff.md) record scope,
   date/target/completion policy, checks and UAT readiness. SCHEDULE-001 is **implemented**, pending
   Luna visual review/canonical verification. PHYLOGENY-001 remains planned/SOURCE_BLOCKED,
   TAXONOMY-003 verified, BOTANY-003/004 and ENRICHMENT-002 planned. Primary remains clean; no DEV,
@@ -6502,8 +6502,8 @@ Status remains implemented pending canonical verification.
   synthetic result with required annotations. The producer's positive **2017 synthetic/OTT CC0
   declaration** is explicitly retained, not ignored; no prohibition on synthetic reuse is claimed.
   Recorded a precise reopening criterion and minimal derived-content boundary in the
-  [source decision](../phylogeny-001-source.md), [planned contract](../collection-phylogeny.md) and
-  [blocked handoff](../phylogeny-001-handoff.md). No product implementation follows a failed source GO.
+  [source decision](PHYLOGENY-001/phylogeny-001-source.md), [planned contract](../features/explore/collection-phylogeny.md) and
+  [blocked handoff](PHYLOGENY-001/phylogeny-001-handoff.md). No product implementation follows a failed source GO.
 - Focused existing offline baseline: **54 passed**, `--no-cov`, taxonomy source/service/API and
   Species distribution/Native ranges Explore. Reused installed UAT development image with current
   source read-only, network disabled and no application/database volumes; no new build under host
@@ -6595,8 +6595,8 @@ Status remains implemented pending canonical verification.
   BOTANY-003 remains **planned**. Its exact Flora of China source is **SOURCE_BLOCKED**; the three
   reviewed SEPASAL records are a narrow `DESCRIPTION_SOURCE_GO`, insufficient for general
   BOTANY-003 implementation. This is not READY_FOR_VISUAL_REVIEW.
-  [Current sources](../botanical-profile-enrichment-sources.md), [separate discovery](../botanical-knowledge-source-audit.md),
-  [future taxonomy](TAXONOMY-003/collection-taxonomy-plan.md), [blocked handoff](../botany-003-handoff.md).
+  [Current sources](../features/explore/botanical-profile-enrichment-sources.md), [separate discovery](../features/explore/botanical-knowledge-source-audit.md),
+  [future taxonomy](TAXONOMY-003/collection-taxonomy-plan.md), [blocked handoff](BOTANY-003/botany-003-handoff.md).
 
 ## 2026-10-09 — ENRICHMENT-001 independent verification
 
@@ -6666,7 +6666,7 @@ Status remains implemented pending canonical verification.
   BOTANY-003's blocked text contract is unchanged; ENRICHMENT-002 automation, SCHEDULE-001 and broad
   cross-application product/visual review remain future. Tree stays **unstaged/uncommitted**;
   no canonical feature gate/receipt, commit, push, delivery, merge or finish was performed.
-  [Source audit](ENRICHMENT-001/native-range-enrichment-source-v15.md), [contract](../native-range-enrichment.md)
+  [Source audit](ENRICHMENT-001/native-range-enrichment-source-v15.md), [contract](../features/explore/native-range-enrichment.md)
   and [handoff](ENRICHMENT-001/enrichment-001-handoff.md) retain exact evidence and review scenarios.
 
 ## 2026-10-09 — TAXONOMY-003 independent verification
@@ -6829,7 +6829,7 @@ Status remains implemented pending canonical verification.
   **http://localhost:15174/#/species-distribution**, **preview / preview**.
 - EXPLORE-001 was `implemented` pending the independent review recorded above. EXPLORE-002 Native ranges is the preferred next separate increment;
   SCHEDULE-001 remains future and BOTANY-003 blocked/unchanged. See [handoff](EXPLORE-001/explore-001-handoff.md)
-  and [contract/lifecycle matrix](../species-distribution.md). Primary checkout is clean at the base SHA.
+  and [contract/lifecycle matrix](../features/explore/species-distribution.md). Primary checkout is clean at the base SHA.
 
 ## 2026-10-08 — ORDER-001 independent final verification
 
@@ -6921,7 +6921,7 @@ Status remains implemented pending canonical verification.
   visual/product acceptance remains pending.
 - ORDER-001 is `implemented`. All work remains unstaged/uncommitted; no canonical feature gate,
   push, delivery, merge or finish. Luna owns independent review, verification and reviewed commit
-  after operator UAT. See [implementation handoff](ORDER-001/order-001-handoff.md) and [Order contract](../orders.md).
+  after operator UAT. See [implementation handoff](ORDER-001/order-001-handoff.md) and [Order contract](../features/sourcing/orders.md).
 
 ## 2026-10-08 — HISTORY-001 independently verified
 
@@ -7378,7 +7378,7 @@ Status remains implemented pending canonical verification.
   Reconciled the roadmap's current direction and actual landed graph statuses, retaining historical
   0.1.0/RELEASE-001 planning. Recorded the approved forward sequence through 1.0.0 and BOTANY-003's
   parallel approved-WFO incomplete-TLS-chain blocker without workaround or reselection. See
-  [contract](../harvest-seed-conversion.md) and [full Sol handoff](HARVEST-003/harvest-003-handoff.md).
+  [contract](../features/collection/harvest-seed-conversion.md) and [full Sol handoff](HARVEST-003/harvest-003-handoff.md).
 - Focused QUALITY backend pytest `--no-cov`: **129 passed** across Harvest, inventory, conversion,
   SeedLot model/schema, lineage and import/export service files; SeedLot service/API **6 passed**;
   ordinary Sowing service **4 passed**. Focused Vitest Conversion/SeedLotScreen/SowingScreen:
@@ -7561,7 +7561,7 @@ Status remains implemented pending canonical verification.
   Positive finite NUMERIC exact/approximate count or mg/g/kg weight and unknown quantity stay
   independent of collected quantity. Active/depleted, storage Location, current correction,
   controlled consumed/processed/discarded/gifted/used_for_propagation, partial/use-all and typed
-  immutable before/after snapshots follow [the inventory contract](../harvest-inventory.md).
+  immutable before/after snapshots follow [the inventory contract](../features/collection/harvest-inventory.md).
   Exact partial arithmetic preserves precision beyond 28 digits; approximate remainder requires
   confirmation; unknown stays unknown; use-all preserves precision and depletes.
 - Harvest → inventory → Location locks refresh current state and serialize competing requests.
@@ -7857,7 +7857,7 @@ Status remains implemented pending canonical verification.
   previous `8a70` worktree, with healthy services, temporary media root and DB revision 0030; selected
   primary code is also 0030. The command reports that source mismatch and refuses takeover. This
   legacy environment is deliberately left running and unchanged for operator reconciliation.
-- [Canonical workflow](../development-workflow.md), AGENTS, CONTRIBUTING, development/deployment guidance
+- [Canonical workflow](../develop/development-workflow.md), AGENTS, CONTRIBUTING, development/deployment guidance
   and the CI-003 graph entry are updated. CI-003 remains `implemented` pending independent infrastructure
   review. The frozen-tree canonical `make feature-verify` result and matching per-worktree receipt are
   reported in the handoff; no product graphical review is required. Public images/GHCR, release
@@ -7869,7 +7869,7 @@ Status remains implemented pending canonical verification.
   explicit SeedLot/Sowing/Plant/PlantGroup foreign keys, including collection-produced SeedLot
   producers and immutable immediate extraction origins. Receipts, Events, Harvest, shared media,
   Location, geographic provenance/native ranges and botanical identity remain distinct. The
-  [audit and invariant matrix](../lineage-integrity.md) records corrections, historical retention,
+  [audit and invariant matrix](../architecture/lineage-integrity.md) records corrections, historical retention,
   end-to-end representations, concurrency, query evidence and deferred capabilities.
 - Reproduced three correction API cycles returning 200. All mutable source corrections now use
   the existing typed walker. Revision `20261002_0030` adds serialized acyclic graph writes and
@@ -7932,7 +7932,7 @@ Status remains implemented pending canonical verification.
   directory/preview, one/multiple-item creation, correction, detail/media, Plant/PlantGroup contextual
   creation, activity/journal links, long names and partial/unknown dates/quantities. Keyboard material
   add/remove focus and dialog focus restoration were checked; no horizontal overflow was found.
-  The [Harvest handoff](../harvests.md) records the contract, review matrix and exact changed files.
+  The [Harvest handoff](../features/collection/harvests.md) records the contract, review matrix and exact changed files.
 - HARVEST-001 remains `implemented` pending operator acceptance. The tree stays unstaged and
   uncommitted on the same branch. Harvested-material inventory/disposition and explicit SeedLot
   conversion remain separate pre-1.0 candidates; all established roadmap milestones are preserved.
@@ -7986,7 +7986,7 @@ Status remains implemented pending canonical verification.
   Gallery/pagination/filters, landscape/portrait/square previews, detail, record Photos and both
   pickers; primary set/clear, link reuse, last-unlink retention, cover-only deletion guard, external
   opt-in/failure, empty search and keyboard Escape/focus restoration. Reviewed views have no
-  horizontal overflow. The [media handoff](../media-library.md) records contracts, resource/query
+  horizontal overflow. The [media handoff](../features/explore/media-library.md) records contracts, resource/query
   evidence, migration/compatibility notes, review matrix and exact changed files.
 - ATTACHMENT-005 is `implemented`, awaiting operator visual acceptance. Architecture/domain/storage/
   backup/deployment docs were updated, and the requested eight pre-1.0 roadmap milestones remain
@@ -8019,7 +8019,7 @@ Status remains implemented pending canonical verification.
   including parent-only descendant content, mixed and leaf counts, empty Quick Preview, long paths
   and the expanded twelve-level mobile tree. Review found and fixed indentation collapse from
   26 px to a readable 211 px row. Final reviewed frames have no horizontal overflow; compact
-  counts are included in the accessible row names. The [audit](../location-descendant-aggregation.md)
+  counts are included in the accessible row names. The [audit](../features/collection/location-descendant-aggregation.md)
   records contracts, query-plan evidence, visual matrix, screenshots and changed files.
 - Operator visual acceptance and independent final review are complete. The review confirmed the
   direct/inclusive contract, all four canonical assignment types, unchanged legacy usage, recursive
@@ -8526,7 +8526,7 @@ implementation detail.
   including three new protected lookup/error cases; production frontend image; feature graph (81),
   diff whitespace, and same-origin health/readiness. The unchanged 89.75% coverage summary/rounded
   exit-status discrepancy documented for ATTACHMENT-004, Alembic warnings, and Vite chunk advisory
-  remain. See [implementation review](LABEL-001/label-001-review.md) and [operator guide](../labels.md).
+  remain. See [implementation review](LABEL-001/label-001-review.md) and [operator guide](../features/collection/labels.md).
 - LABEL-001 is `implemented`, not `verified`. All changes remain unstaged and uncommitted;
   independent `make feature-verify`, final commit, and delivery were intentionally reserved.
 
@@ -9757,7 +9757,7 @@ As of 2026-10-13, delivered main is `f54648f` (PR #106); Alembic head is
 `20261009_0041`. Historical handoff entries below and above describe their own candidate phase,
 not the current delivery state.
 
-- The [canonical product/release roadmap](../product-roadmap.md) owns the agreed v0.1.0 → v1.0.0
+- The [canonical product/release roadmap](../product/product-roadmap.md) owns the agreed v0.1.0 → v1.0.0
   sequence. Immediate work: Journal/History product pass → Labels audit → functional/IA freeze →
   page-by-page visual review → UI Foundation normalization → release-readiness audit → public
   documentation/presentation → v0.1.0. No public release or release-gate completion is claimed.

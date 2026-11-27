@@ -151,14 +151,14 @@ combinations (neither, cultivar only, common only, both) and long scientific/cul
 stress use read-only intercepted fixtures, never domain writes. Independent decoder samples come
 from actual print-media A4 PDF rasterization with complete quiet zones and full physical labels.
 
-- [Current browser evidence](../../review/labels-navigation/final-browser-evidence.json)
-- [Current Labels](../../review/labels-navigation/final-workspace.png)
-- [Narrow QR dialog](../../review/labels-navigation/final-qr-dialog-390-100.png)
-- [Theme monitor](../../review/labels-navigation/final-theme-1440-100-system.png),
-  [sun](../../review/labels-navigation/final-theme-1440-100-light.png),
-  [moon](../../review/labels-navigation/final-theme-1440-100-dark.png)
-- [Current decoder evidence](../../review/labels-navigation/final-qr-decode.json)
-- [Review evidence guide](../../review/labels-navigation/README.md)
+- [Current browser evidence](../review/labels-navigation/final-browser-evidence.json)
+- [Current Labels](../review/labels-navigation/final-workspace.png)
+- [Narrow QR dialog](../review/labels-navigation/final-qr-dialog-390-100.png)
+- [Theme monitor](../review/labels-navigation/final-theme-1440-100-system.png),
+  [sun](../review/labels-navigation/final-theme-1440-100-light.png),
+  [moon](../review/labels-navigation/final-theme-1440-100-dark.png)
+- [Current decoder evidence](../review/labels-navigation/final-qr-decode.json)
+- [Review evidence guide](../review/labels-navigation/README.md)
 
 `cleanup-*`, `refinement-*` and unprefixed UI images are historical and do not prove this final
 printed-content/dialog/theme contract. Headless regression uses DOM activation and a private
@@ -188,7 +188,7 @@ reconcile unrelated schema.
 Browser/decoder review uses uniquely owned **florabase-uat-preview-smoke-bff8e2a5be73**, seeded
 from existing v4 fixtures. Repeated seed preserves fixture state. Only its application preferences
 are changed; name stress alters browser responses. Final exact retirement and before/after
-protected snapshots are recorded in [current preservation](../../review/labels-navigation/final-preservation.json).
+protected snapshots are recorded in [current preservation](../review/labels-navigation/final-preservation.json).
 Exact retirement removed **4 containers, 2 images, 1 network and 3 volumes**, with **zero owned
 residual resources**. Disposable domain rows, fixture manifest and media match after review;
 repeated seeding also matched. Shared cache, Quality, unknown and protected resources are retained.

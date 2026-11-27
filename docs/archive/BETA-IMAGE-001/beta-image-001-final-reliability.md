@@ -80,7 +80,7 @@ Independent focused delta QA must clear correctness before canonical FULL.
 
 ## Exact-artifact security and remaining acceptance
 
-[Preserved raw reports, exact identities and individual advisory inventory](security/beta-image-001-reliability/README.md)
+[Preserved raw reports, exact identities and individual advisory inventory](../../security/beta-image-001-reliability/README.md)
 record fresh measurements matching the reviewer's reported counts:
 
 | Image | CRITICAL | HIGH | Secret findings |

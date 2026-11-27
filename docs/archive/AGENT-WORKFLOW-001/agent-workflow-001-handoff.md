@@ -1,7 +1,7 @@
 # AGENT-WORKFLOW-001 handoff
 
 The operator runbook and contract are in
-[development-workflow.md](../../development-workflow.md#feature-worktrees-and-agents).
+[development-workflow.md](../../develop/development-workflow.md#feature-worktrees-and-agents).
 
 ## Design decisions
 

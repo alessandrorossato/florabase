@@ -2,7 +2,7 @@
 
 Branch `feat/import-002-sheet-wizard`: backend pass `220821e` and review fixes `e421fc6` (M1, M2)
 and `7dcbfd8` (L1, L2) by `neon`; frontend pass, `main` merge (`b632c5c`) and the first-sheet fix
-below by `claude-import-002`. User guide: [import-export.md](../../import-export.md#spreadsheet-wizard-single-sheet-csv-and-xlsx).
+below by `claude-import-002`. User guide: [import-export.md](../../features/tools/import-export.md#spreadsheet-wizard-single-sheet-csv-and-xlsx).
 
 ## Acceptance criteria (`docs/features.json` IMPORT-002)
 

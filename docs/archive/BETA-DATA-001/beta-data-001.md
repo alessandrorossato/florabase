@@ -1,6 +1,6 @@
 # BETA-DATA-001 — first collection onboarding
 
-Use the [CSV format guide](import-export.md) and the [private inventory and
+Use the [CSV format guide](../../features/tools/import-export.md) and the [private inventory and
 reconciliation templates](beta-data-001-templates.md) to prepare a pilot. Rehearse
 with synthetic records in this worktree's isolated UAT instance or disposable
 PostgreSQL. Production entry requires separate operator authorization after the
@@ -15,10 +15,10 @@ in source, a tag or a rehearsal artifact does not establish publication.
 
 | Path | Installation and maintenance authority |
 | --- | --- |
-| [Release `compose.yaml`](installation.md) | Verify the published `compose.yaml` and manifest against the approved source commit. Create the empty data folder and the separate backup folder and deploy the file as-is with the stack's exact name and private configuration; it initializes the installation and creates the owner once. For upgrades, take the paired backup, check that the PostgreSQL digest is unchanged, and deploy the new file; the backend's guarded deploy step writes a verified dump before migrating. Restore into a new data folder and a distinct stack, port and private HTTPS origin. Keep the existing data until recovery is validated. |
+| [Release `compose.yaml`](../../operate/installation.md) | Verify the published `compose.yaml` and manifest against the approved source commit. Create the empty data folder and the separate backup folder and deploy the file as-is with the stack's exact name and private configuration; it initializes the installation and creates the owner once. For upgrades, take the paired backup, check that the PostgreSQL digest is unchanged, and deploy the new file; the backend's guarded deploy step writes a verified dump before migrating. Restore into a new data folder and a distinct stack, port and private HTTPS origin. Keep the existing data until recovery is validated. |
 
 The controller bundle and the `v0.1.0-beta.6` manual portable procedure are withdrawn
-([ADR 0008](decisions/0008-self-initializing-single-compose.md)). Keep manager updates, Git sync
+([ADR 0008](../../decisions/0008-self-initializing-single-compose.md)). Keep manager updates, Git sync
 and unattended redeploys disabled. Serialize operator maintenance with Dockhand actions. An
 installation of an earlier release moves through a verified paired logical dump and media archive
 and a validated isolated restore before switching traffic. Keep the original folders separate from
@@ -66,7 +66,7 @@ and media require the manual workflows above.
 
 ## First-use sequence and rehearsal
 
-For local browser rehearsal, use [Multi-Branch UAT](development-workflow.md#uat-instances-parallel-per-worktree).
+For local browser rehearsal, use [Multi-Branch UAT](../../develop/development-workflow.md#uat-instances-parallel-per-worktree).
 Run `make uat-instance-list`, then `make uat-instance-up PROFILE=smoke`,
 `make uat-instance-seed` and `make uat-instance-status` in the owning worktree.
 Use the reported loopback port and a separate browser profile. The seeded data
@@ -160,7 +160,7 @@ synthetic installation for write and failure drills.
   separate LAN device on the same segment verify the loopback-published port
   is unreachable, particularly on Engine versions before 28. Verify that the
   backend and PostgreSQL have no published ports
-  ([HTTPS and readiness](installation.md#5-put-florabase-behind-https-and-check-readiness)).
+  ([HTTPS and readiness](../../operate/installation.md#5-put-florabase-behind-https-and-check-readiness)).
 - [ ] **Dockhand exclusions.** Record the pinned version and behavior. Verify
   environment automatic updates are disabled and no per-container or stack
   override permits updates. The release `compose.yaml` references images only

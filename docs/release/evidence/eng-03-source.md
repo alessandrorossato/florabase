@@ -73,7 +73,7 @@ ENG-03 PASS: 234 operations (3 public, 231 authenticated, 0 owner-restricted)
 
 ## Independent reproduction without Docker
 
-Use an existing Python 3.14 interpreter and the repository's [local backend setup](../../development.md).
+Use an existing Python 3.14 interpreter and the repository's [local backend setup](../../develop/development.md).
 From the repository root, create a temporary virtual environment. The two lockfile installs need
 access to the configured package index or a wheel cache for the reviewer's platform.
 

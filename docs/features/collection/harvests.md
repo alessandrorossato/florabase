@@ -1,5 +1,7 @@
 # Structured Harvests — HARVEST-001
 
+> Summary: Structured Harvests (HARVEST-001) recording, quantities, and parent-material linking.
+
 Harvest records material collected on one occurrence from exactly one Plant or PlantGroup.
 It is historical information, not harvested-material stock. A retained inactive, dead, transferred,
 reintegrated or reversed source is valid for recording past collection. BotanicalIdentity is derived
@@ -215,7 +217,7 @@ protects Harvest source reassignment after any retained conversion, including re
 Safe descriptive/date/collected-quantity corrections still do not replay stock. Conversion creates
 no extra source Event or media link. See [conversion contract](harvest-seed-conversion.md).
 
-HISTORY-001 also exposes these recorded facts through the read-only [operational History](operational-history.md).
+HISTORY-001 also exposes these recorded facts through the read-only [operational History](../activity/operational-history.md).
 Structured Harvests supersede their owned Events there; seed conversions supersede their linked
 dispositions. Current inventory corrections and Location assignments do not fabricate occurrences.
 The existing domain details and action controls remain authoritative.
@@ -229,7 +231,7 @@ Creation uses the full-page Collection canvas and source/category history parent
 retains the complete aggregate in guarded Details/Materials/Notes tabs; direct Edit URLs use the page fallback.
 The one-page full-width detail separates Materials collected, Stored material, Notes, related history
 and the shared Photos mini-gallery. Conversion is explicit and retains its atomic endpoint and guards.
-See the [candidate handoff](archive/COLLECTION-VISUAL-002/collection-visual-002-handoff.md) for evidence and acceptance limits.
+See the [candidate handoff](../../archive/COLLECTION-VISUAL-002/collection-visual-002-handoff.md) for evidence and acceptance limits.
 
 The second refinement keeps compact collected rows distinct from stored remainder, state and storage
 facts. Eligible seed conversion has an intrinsic-width important action, disposition is secondary, and

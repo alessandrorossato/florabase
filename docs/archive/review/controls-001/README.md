@@ -1,7 +1,7 @@
 # Controls review evidence
 
 Combined THEMES + CONTROLS candidate on `feat/themes-001`, base `b3f1de4`.
-See [handoff](../../archive/CONTROLS-001/controls-001-handoff.md) for source inventory, validation and pending acceptance.
+See [handoff](../../CONTROLS-001/controls-001-handoff.md) for source inventory, validation and pending acceptance.
 [Gallery](gallery.html) links original exports. [DOM measurements](browser-evidence.json) and
 [checks](evidence-check.json) record exact layout viewport, resolved theme, icon/action geometry,
 open-tooltip computed colors and visible hit tests.

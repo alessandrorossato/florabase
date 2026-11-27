@@ -2782,7 +2782,13 @@ class AgentWorkflowTests(unittest.TestCase):
             self.assertIn(phrase, text)
         self.assertNotIn("Codex-managed", text)
         self.assertNotIn("detached Codex", text)
-        workflow = (ROOT / "docs/development-workflow.md").read_text()
+        workflow = "\n".join(
+            p.read_text()
+            for p in [
+                ROOT / "docs/develop/development-workflow.md",
+                *sorted((ROOT / "docs/develop/workflow").glob("*.md")),
+            ]
+        )
         for stale in ("Codex manages its own worktrees", "Codex owns archiving", "(Sol)", "(Luna)"):
             self.assertNotIn(stale, workflow)
 

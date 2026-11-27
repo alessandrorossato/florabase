@@ -31,7 +31,7 @@ Feature status is `verified`. Delivery and worktree finish follow the protected 
 
 ## Foundation
 
-[UI contract](../../ui-contract.md) is authoritative and linked from AGENTS.md. It records all final
+[UI contract](../../develop/ui-contract.md) is authoritative and linked from AGENTS.md. It records all final
 palette values, type scale, spacing/radii, page archetypes, interaction surfaces, accessibility,
 responsive rules and do/don't examples. The sole token source is `frontend/src/styles/tokens.css`;
 legacy variable names are aliases, not a second palette. Base typography/focus, controls and the

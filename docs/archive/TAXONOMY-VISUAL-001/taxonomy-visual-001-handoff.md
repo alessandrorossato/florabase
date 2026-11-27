@@ -1,9 +1,9 @@
 # TAXONOMY-VISUAL-001 — final UX refinement ready for review
 
 Review: **http://localhost:15278/#/taxonomy?view=tree&taxon=wfo-9000000008&branch=wfo-9000000007**.
-[Current gallery: 38 captures](../../review/taxonomy-visual-001/final-ux/gallery.html) ·
-[Measured browser evidence](../../review/taxonomy-visual-001/final-ux/browser-evidence.json) ·
-[Raster dimensions/hashes](../../review/taxonomy-visual-001/final-ux/image-dimensions.json).
+[Current gallery: 38 captures](../review/taxonomy-visual-001/final-ux/gallery.html) ·
+[Measured browser evidence](../review/taxonomy-visual-001/final-ux/browser-evidence.json) ·
+[Raster dimensions/hashes](../review/taxonomy-visual-001/final-ux/image-dimensions.json).
 Earlier implementation milestones below are historical; this section is current.
 
 ## Implemented refinements
@@ -115,7 +115,7 @@ Credentials remain only in ignored owner-readable `.taxonomy-review/credentials.
 
 ## Remaining boundary
 
-The [impact plan](../../review/taxonomy-visual-001/final-ux/verification-impact.json) selects
+The [impact plan](../review/taxonomy-visual-001/final-ux/verification-impact.json) selects
 **FULL** for `.gitignore` and shared UI primitives. A canonical FULL run passed before
 the final registry status update; one exact-tree receipt is being regenerated for the
 new `verified` status. No DEV/UAT/production or foreign Review action occurred.
@@ -157,9 +157,9 @@ unverified. The owned synthetic Review was used; no protected environment was ch
 # Tree Explorer extension — implementation ready for independent review
 
 Review: **http://localhost:15278/#/taxonomy?view=tree&taxon=wfo-9000000008&branch=wfo-9000000007**.
-[Current Tree gallery](../../review/taxonomy-visual-001/tree/gallery.html) ·
-[Browser evidence](../../review/taxonomy-visual-001/tree/browser-evidence.json) ·
-[Performance](../../review/taxonomy-visual-001/tree/performance.json).
+[Current Tree gallery](../review/taxonomy-visual-001/tree/gallery.html) ·
+[Browser evidence](../review/taxonomy-visual-001/tree/browser-evidence.json) ·
+[Performance](../review/taxonomy-visual-001/tree/performance.json).
 The original Classification handoff follows below as historical evidence.
 
 ## Candidate and concurrency boundary
@@ -254,7 +254,7 @@ links were preserved. `enhance.py` added four explicitly synthetic identities,
 including two unresolved identities, instead of undoing operator confirmations.
 Current totals are **12 represented / 10 placed / 2 unresolved; Living 5, Current 9,
 Historical 3**. Three Basil identities share one species; three cover references
-share two credited small local assets. [Photo sources](../../review/taxonomy-visual-001/media/README.md).
+share two credited small local assets. [Photo sources](../review/taxonomy-visual-001/media/README.md).
 All source IDs/version/citation remain explicitly synthetic.
 
 The actual Review source was disabled and re-enabled through its guarded helper.
@@ -285,9 +285,9 @@ width by 15px. JPEG raster files are preserved directly from the browser.
 Physical touch, assistive technology and prolonged real collection usage remain
 independent QA. Pinch/drag/wheel are additionally exercised in component tests.
 
-The [candidate-base impact plan](../../review/taxonomy-visual-001/tree/verification-impact-candidate-base.json)
+The [candidate-base impact plan](../review/taxonomy-visual-001/tree/verification-impact-candidate-base.json)
 selects **FULL** because `.gitignore` is a high-risk path. The
-[latest-main comparison](../../review/taxonomy-visual-001/tree/verification-impact.json)
+[latest-main comparison](../review/taxonomy-visual-001/tree/verification-impact.json)
 also selects FULL and includes Geography/shared-shell differences because this
 candidate has not incorporated PR #122. These are plans only: **canonical FULL was
 not run**, as explicitly requested. Luna must reconcile current main, review the
@@ -315,11 +315,11 @@ environment upgrades have not run.
 - **Credentials:** the ignored, owner-readable
   `/home/alessandro/.codex/worktrees/taxonomy-visual-001/florabase/.taxonomy-review/credentials.json`.
   Account display: **Taxonomy Review (synthetic)**. No password is published here.
-- **Gallery:** [32 actual browser captures](../../review/taxonomy-visual-001/gallery.html).
-- **Scenario guide:** [Review tools and reproduction](../../review/taxonomy-visual-001/README.md).
-- **Evidence:** [capture dimensions](../../review/taxonomy-visual-001/capture-manifest.json),
-  [responsive measurements](../../review/taxonomy-visual-001/browser-evidence.json),
-  [live browser checks](../../review/taxonomy-visual-001/browser-interactions.json).
+- **Gallery:** [32 actual browser captures](../review/taxonomy-visual-001/gallery.html).
+- **Scenario guide:** [Review tools and reproduction](../review/taxonomy-visual-001/README.md).
+- **Evidence:** [capture dimensions](../review/taxonomy-visual-001/capture-manifest.json),
+  [responsive measurements](../review/taxonomy-visual-001/browser-evidence.json),
+  [live browser checks](../review/taxonomy-visual-001/browser-interactions.json).
 
 This Review has its own project `florabase-taxonomy-review-02b45056`, network,
 PostgreSQL, media and frontend dependencies. Frontend and backend both bind this

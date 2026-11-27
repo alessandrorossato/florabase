@@ -104,7 +104,7 @@ The focused corrective checks are recorded separately at the end.
   in both optimized modes and rejected by the corrected code in all three modes. Earlier smoke
   assertions for service identity, schema checks, credentials and logs, and persistence and
   restore also disappear under optimization. Those earlier assertions were outside this change.
-- The [security baseline](../../security.md) now distinguishes metadata, browser Preview once,
+- The [security baseline](../../operate/security.md) now distinguishes metadata, browser Preview once,
   owner-requested guarded Save/Refresh, acknowledged botanical covers and online tile opt-in.
 - The pinned nginx 1.30.6 passed `nginx -t`. A production-runtime HTTP probe compared the
   historical and corrected nginx configurations against the same live backend. The authenticated

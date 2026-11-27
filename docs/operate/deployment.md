@@ -1,5 +1,7 @@
 # Source-build deployment and upgrades
 
+> Summary: Development-only source-build Docker Compose deployment, upgrades, and optional basemap configuration.
+
 **Status: development only.** Building from source is not a supported installation; the official
 installation is the single self-initializing [`compose.yaml`](installation.md) of each release.
 This guide builds Florabase's production targets from a repository checkout: the `prod` workflow
@@ -25,7 +27,7 @@ The `prod` stack builds the production targets in the explicit `florabase-prod` 
 its separate legacy `florabase` project; Review and Preview use their own resources. Existing baseline
 installations previously using `florabase` must preserve and deliberately migrate coordinated DB/media
 before adopting the new production project name. No helper silently attaches those volumes.
-See [environment boundaries](development-workflow.md).
+See [environment boundaries](../develop/development-workflow.md).
 
 The `prod` stack builds the production targets. PostgreSQL and FastAPI remain on the internal Compose
 network; only the nginx frontend proxy publishes `${APP_BIND_ADDRESS}:${APP_PORT}`. The frontend
@@ -33,7 +35,7 @@ serves the React application and forwards `/api/` to FastAPI.
 
 ## Resource expectations
 
-See the [PERF-001 measured environment and resource report](performance/PERF-001.md) for the
+See the [PERF-001 measured environment and resource report](../performance/PERF-001.md) for the
 representative personal-collection workload, production image sizes, runtime memory, known costs and
 reproduction commands. Its measurements describe one host and a disposable tmpfs database, not a
 minimum-hardware guarantee. Build/test memory differs from steady runtime use; run heavy verification
@@ -126,8 +128,8 @@ make up
 
 The backend process never runs migrations. A source build applies them with `make migrate`; the
 release `compose.yaml` applies them through its guarded `florabase-start` step before `exec`ing
-the exact-head server ([ADR 0008](decisions/0008-self-initializing-single-compose.md),
-[ADR 0009](decisions/0009-minimal-production-compose.md)). For optional container-level hardening
+the exact-head server ([ADR 0008](../decisions/0008-self-initializing-single-compose.md),
+[ADR 0009](../decisions/0009-minimal-production-compose.md)). For optional container-level hardening
 on the release `compose.yaml`, see [optional container hardening](security.md#optional-container-hardening).
 Create the first and only initial owner after migration:
 
@@ -233,7 +235,7 @@ mount must grant that runtime account compatible ownership and permissions.
 
 ATTACHMENT-005 adds explicit revisions `20261001_0027` and `20261001_0028`; startup does not apply it. Back up the
 database and original attachment volume before the operator upgrade. No file moves or re-uploads
-are needed. Populated downgrade requires that paired backup. See [shared media](media-library.md)
+are needed. Populated downgrade requires that paired backup. See [shared media](../features/explore/media-library.md)
 for Gallery workflows, removal semantics and regenerable thumbnail storage.
 
 Explicit external Save/Refresh needs outbound public HTTP/HTTPS and DNS access. The backend rejects

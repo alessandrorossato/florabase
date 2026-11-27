@@ -1,5 +1,7 @@
 # Phenology observations (PHENOLOGY-001)
 
+> Summary: Controlled phenological stages attached to Journal events and year-by-year phenology history (PHENOLOGY-001).
+
 Roadmap theme 5, "Phenology". Operators record real phenological observations (bud break,
 flowering, fruiting, leaf change, dormancy) on a Plant or PlantGroup and compare them year by year.
 Only recorded observations are shown; Florabase never infers that an unrecorded stage did not occur.

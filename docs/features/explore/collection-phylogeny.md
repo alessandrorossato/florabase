@@ -1,8 +1,10 @@
 # Collection phylogeny — PHYLOGENY-001
 
+> Summary: Collection phylogeny design and source gate (PHYLOGENY-001, planned).
+
 **Planned; source gate blocked on 2026-10-09.** There is no implemented Phylogeny workspace,
 OTT relationship, API, migration or provisioned Florabase source in this increment. The
-[source audit](phylogeny-001-source.md) verifies Open Tree's actual release/artifact and records
+[source audit](../../archive/PHYLOGENY-001/phylogeny-001-source.md) verifies Open Tree's actual release/artifact and records
 the unmet exact data-rights boundary. This document preserves the requested product contract for
 implementation after source GO; it must not be read as documentation of delivered behavior.
 

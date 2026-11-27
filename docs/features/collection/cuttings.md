@@ -1,6 +1,8 @@
 # Cuttings
 
-CUTTING-001 uses Architecture 1 from the [recovered architecture decision](archive/CUTTING-001/cutting-001-design.md). A `VegetativeLot` owns
+> Summary: Vegetative propagation (VegetativeLot and PropagationAttempt) data model, transitions, and UI workflows.
+
+CUTTING-001 uses Architecture 1 from the [recovered architecture decision](../../archive/CUTTING-001/cutting-001-design.md). A `VegetativeLot` owns
 the material and source facts. A `PropagationAttempt` owns one rooting setup and its outcome.
 A `RootingObservation` records a check of that setup. Stem, leaf and root cuttings use these
 records. Seed inventory and germination retain their existing meanings.

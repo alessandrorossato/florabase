@@ -1,6 +1,6 @@
 # UI Foundation v0.1 release consolidation — proposed
 
-The delivered [UI Foundation](../../ui-contract.md) remains authoritative. This document requires
+The delivered [UI Foundation](../../../develop/ui-contract.md) remains authoritative. This document requires
 operator acceptance before production work. Keep its semantic tokens, typography, scales, six theme
 sets and compatible aliases. No new UI dependency, token hierarchy or universal overlay is justified.
 

@@ -7,10 +7,10 @@ Reviewed SMOKE baseline: `7398e0dc2235679a8edf121528cbfc39fe395970a446a26ecf2ae9
 ## Result of this increment
 
 The SMOKE profile generates, validates and retires isolated synthetic copies from source. STRESS is
-declared in the manifest and refuses until reviewed. [TEST-DATA-002](archive/TEST-DATA-002/test-data-002-design.md) later made
+declared in the manifest and refuses until reviewed. [TEST-DATA-002](../TEST-DATA-002/test-data-002-design.md) later made
 COMPREHENSIVE executable and resolved some gaps listed below. No environment lifecycle or restore
 workflow changed, and no Review, UAT, Sourcing, Preview, DEV or production command can reach this code.
-Later, [MULTIBRANCH-UAT-001](development-workflow.md#uat-instances-parallel-per-worktree) added exactly one
+Later, [MULTIBRANCH-UAT-001](../../develop/development-workflow.md#uat-instances-parallel-per-worktree) added exactly one
 persistent target, per-worktree UAT instances (`golden_uat`, workflow mode `uat-instance`); the copy
 lifecycle and every other environment remain refused. That guard reads the workflow mode and project
 from the environment; the host helper proves Docker identity first, and any other container would also
@@ -31,7 +31,7 @@ python /review/golden_dataset.py digest --copy golden_a            # Diagnostic:
 python /review/golden_dataset.py retire-copy --copy golden_a   # Drops the DB and removes its media
 ```
 
-The coverage matrix is generated from the manifest: [COVERAGE.md](../scripts/fixtures/golden/COVERAGE.md).
+The coverage matrix is generated from the manifest: [COVERAGE.md](../../../scripts/fixtures/golden/COVERAGE.md).
 It shows each scenario's runnable and still-planned profiles separately.
 
 ## Architecture

@@ -9,12 +9,12 @@ delivery remains pending those results. The original HTML proposal and earlier s
 historical evidence, separately labelled.
 
 **Media-owned live Review:** http://localhost:15280/#/media. See the
-[ownership, reproduction and fixture guide](../../review/media-visual-001/live/README.md) and
-[actual current dataset](../../review/media-visual-001/live/dataset.json).
+[ownership, reproduction and fixture guide](../review/media-visual-001/live/README.md) and
+[actual current dataset](../review/media-visual-001/live/dataset.json).
 
-[Visual study](../../review/media-visual-001/proposal.html) ·
-[Browsable evidence](../../review/media-visual-001/gallery.html) ·
-[Read-only dataset snapshot](../../review/media-visual-001/dataset-snapshot.json)
+[Visual study](../review/media-visual-001/proposal.html) ·
+[Browsable evidence](../review/media-visual-001/gallery.html) ·
+[Read-only dataset snapshot](../review/media-visual-001/dataset-snapshot.json)
 
 ## Implementation scope and current validation
 
@@ -404,11 +404,11 @@ verification and protected delivery remain separate phases.
 
 ## Completed implementation acceptance evidence
 
-[Updated before/after gallery](../../review/media-visual-001/gallery.html) contains **31 inspected actual
+[Updated before/after gallery](../review/media-visual-001/gallery.html) contains **31 inspected actual
 implementation captures**, alongside the preserved 42 previous live/proposal captures and original
 30-capture gallery. Product captures are distinct from the original HTML proposal. Saved pixels were
 inspected; early-paint and mismatched viewport captures were replaced rather than treated as proof.
-[Capture manifest](../../review/media-visual-001/implementation/capture-manifest.json) records actual raster
+[Capture manifest](../review/media-visual-001/implementation/capture-manifest.json) records actual raster
 sizes and exact DOM viewport/geometry sidecars. Browser capture rasters can omit scrollbars or be
 proportionally scaled; these are not real browser-zoom measurements.
 
@@ -460,7 +460,7 @@ new private access file is referenced in the ownership guide and is outside the 
 A final read-only check compares **every asset-detail field** to the earlier snapshot: all 35 assets,
 20 links, two covers, titles/licences/attribution, captions/order and explicit primary flags are
 unchanged. All six foreign-runtime refusals still pass. See
-[dataset-check.json](../../review/media-visual-001/implementation/dataset-check.json).
+[dataset-check.json](../review/media-visual-001/implementation/dataset-check.json).
 
 ### Final checks and remaining release work
 
@@ -475,10 +475,10 @@ unchanged. All six foreign-runtime refusals still pass. See
 - Feature graph:116 valid entries. `git diff --check` passes; staged diff is empty. Backend/API/schema
   are unchanged, so no generated API or migration drift check was needed. No canonical FULL ran.
 
-[Validation/source hashes](../../review/media-visual-001/implementation/validation.json),
-[focused test log](../../review/media-visual-001/implementation/focused-regression.txt),
-[final affected tests](../../review/media-visual-001/implementation/final-navigation-tests.txt) and
-[build log](../../review/media-visual-001/implementation/frontend-build.txt) are retained.
+[Validation/source hashes](../review/media-visual-001/implementation/validation.json),
+[focused test log](../review/media-visual-001/implementation/focused-regression.txt),
+[final affected tests](../review/media-visual-001/implementation/final-navigation-tests.txt) and
+[build log](../review/media-visual-001/implementation/frontend-build.txt) are retained.
 
 Operator visual acceptance is next, then independent QA and one separately authorized policy-selected
 canonical gate. Physical-device touch, assistive technology and real 125%/150% browser zoom remain

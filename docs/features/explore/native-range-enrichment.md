@@ -1,9 +1,11 @@
 # Reviewable structured native-range enrichment (ENRICHMENT-001)
 
+> Summary: Reviewable structured native-range proposals from local WCVP snapshots (ENRICHMENT-001).
+
 The optional trusted-source panel in BotanicalIdentity → Native ranges uses the reviewed
 **Kew WCVP version 16** archive by default (updated from v15 by `WCVP-DEFAULT-001`), while retaining
 explicit **version 15** support, historical links, proposals, and applications.
-[WCVP-VERSION-001](archive/WCVP-VERSION-001/wcvp-version-001.md) documents both pinned releases and crosswalks. [Exact source approval](archive/ENRICHMENT-001/native-range-enrichment-source-v15.md)
+[WCVP-VERSION-001](../../archive/WCVP-VERSION-001/wcvp-version-001.md) documents both pinned releases and crosswalks. [Exact source approval](../../archive/ENRICHMENT-001/native-range-enrichment-source-v15.md)
 records its schema, licence, attribution, complete inspection and checksum. Only explicit Apply
 writes canonical `BotanicalProfileNativeRange` relationships. Opening, searching, confirming a
 source link and retrieving proposals never create a profile or change recorded ranges or text.
@@ -30,7 +32,7 @@ same 20 reviewed literal pairs. The review checked level-3 membership, reverse I
 entries and the gazetteer in Brummitt's WGSRPD second edition (2001), Tables 3–6,
 against modern ISO assignments and the CLDR seed. An `OO` child alone is insufficient.
 Destinations resolve by the exact tuple `unicode_cldr / 48.2.1 / iso_3166_1_alpha_2 / <code>`.
-[Official TDWG standard](https://www.tdwg.org/standards/wgsrpd/) · [CLDR seed evidence](geography-data.md)
+[Official TDWG standard](https://www.tdwg.org/standards/wgsrpd/) · [CLDR seed evidence](../../architecture/geography-data.md)
 
 | Decision | WCVP level-3 → ISO alpha-2 |
 | --- | --- |
@@ -280,7 +282,7 @@ untrusted input to SQLite. Every connection requires the exact layout the builde
 reviewed releases (`metadata`, `taxa`, `distributions`, their primary-key indexes, `taxa_search`
 and `distribution_taxon`) and refuses views, triggers, virtual tables or any other object before
 a query runs, read-only with SQLite defensive hardening
-([record](security/beta-distribution-001/sqlite-reference-indexes.md)). A builder also refuses to
+([record](../../security/beta-distribution-001/sqlite-reference-indexes.md)). A builder also refuses to
 publish an index that would fail that check.
 The index is replaceable reference data, not collection backup authority. PostgreSQL provenance
 belongs in normal database backups; optional source indexes can be rebuilt from the pinned archive.
@@ -295,6 +297,6 @@ The default setting is absent. No production/DEV/Stable Preview source cache was
 For the original ENRICHMENT-001 synthetic UAT, the existing source bind contains the ignored
 `backend/src/.source-cache/wcvp-v15.sqlite`; `compose.uat.yaml` selects that optional path.
 `.gitignore` and the backend Docker exclusion keep it out of Git and images. The official audit
-archive remains outside the repository. The [handoff](archive/ENRICHMENT-001/enrichment-001-handoff.md) records validation
+archive remains outside the repository. The [handoff](../../archive/ENRICHMENT-001/enrichment-001-handoff.md) records validation
 and operator scenarios. ENRICHMENT-002 automatic refresh remains planned; BOTANY-003 text enrichment
 and the deferred broad product/visual review retain their independent ownership.

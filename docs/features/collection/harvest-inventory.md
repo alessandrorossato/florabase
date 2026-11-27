@@ -1,5 +1,7 @@
 # HARVEST-002 — Stored harvested material
 
+> Summary: Stored harvested material (HARVEST-002) inventory tracking and usage.
+
 HARVEST-002 adds optional current stored material to the historical Harvest capability.
 A Harvest records a collected occurrence and owns its HarvestItem lines. Tracking is an
 explicit action on one existing line; recording or correcting a Harvest never creates stock.
@@ -120,7 +122,7 @@ Native task dialogs retain existing keyboard/focus behavior and expose validatio
 Feature Review uses only synthetic data in `florabase-feature-review`, with source binds from this
 worktree, at `http://localhost:15174`. It is separate from DEV and Preview. Migration head in Review
 is `20261003_0031`. Earlier desktop, tablet and mobile Review observations are recorded in
-[engineering progress](progress.md); final-QA browser smoke was unavailable because Review was
+[engineering progress](../../progress.md); final-QA browser smoke was unavailable because Review was
 stopped.
 
 ## Migration and handoff
@@ -133,7 +135,7 @@ Downgrade refuses any inventory/disposition data, and also refuses a Location wh
 scope would disappear. The guard runs before destructive changes under table locks.
 
 HARVEST-002 is verified. Independent final QA and canonical verification are recorded in
-[engineering progress](progress.md). Browser smoke for this final QA was unavailable because the
+[engineering progress](../../progress.md). Browser smoke for this final QA was unavailable because the
 Review frontend/backend were stopped; no browser result is claimed for this phase.
 
 ## HARVEST-003 boundary
@@ -148,7 +150,7 @@ intervening stock corrections. See [conversion contract](harvest-seed-conversion
 
 BULK-001 supports active managed Stored material in its directory only. Location-only moves reuse the correction assignment primitive and owner-first locks, preserve balance/state/dispositions and correction_version, and never change the source Harvest or Plant. Depleted stock and historical Harvest occurrences are excluded. See [bulk operations](bulk-operations.md).
 
-HISTORY-001 also exposes these recorded facts through the read-only [operational History](operational-history.md).
+HISTORY-001 also exposes these recorded facts through the read-only [operational History](../activity/operational-history.md).
 Structured Harvests supersede their owned Events there; seed conversions supersede their linked
 dispositions. Current inventory corrections and Location assignments do not fabricate occurrences.
 The existing domain details and action controls remain authoritative.

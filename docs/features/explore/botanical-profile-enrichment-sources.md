@@ -1,9 +1,11 @@
 # BOTANY-003 source decisions — 2026-10-09
 
+> Summary: Source evaluation and licensing decisions for BOTANY-003 profile enrichment.
+
 The existing two-field content contract is approved. These decisions distinguish content eligibility
 from secure acquisition and from implemented product behavior. BOTANY-003 remains **planned**.
 The exact WFO / Flora of China description source remains blocked. A later bounded alternative-source
-review approved only three Kew SEPASAL / Flora Zambesiaca records; see the [current bounded decision](botany-003-audit.md#35-final-bounded-official-source-fallback--2026-10-09).
+review approved only three Kew SEPASAL / Flora Zambesiaca records; see the [current bounded decision](../../archive/BOTANY-003/botany-003-audit.md#35-final-bounded-official-source-fallback--2026-10-09).
 
 ## Flora of China description: SOURCE_BLOCKED
 
@@ -29,7 +31,7 @@ review approved only three Kew SEPASAL / Flora Zambesiaca records; see the [curr
 - Required update policy: explicit provisioning, retained immutable dated snapshot plus checksum;
   reinspection before accepting changed bytes, then bounded local lookup. Startup stays independent.
 
-[The earlier complete content/license audit](botany-003-audit.md#23-wfo-capability-access-and-licensing-evidence)
+[The earlier complete content/license audit](../../archive/BOTANY-003/botany-003-audit.md#23-wfo-capability-access-and-licensing-evidence)
 remains historical evidence. It cannot substitute for the failed current secure acquisition check.
 
 ### Fresh secure access evidence
@@ -90,7 +92,7 @@ published/extracted **6 January 2026**. Fixed official archive:
   wcvp_distribution.csv (141,066,449 bytes). No filesystem extraction.
 - Names schema: strict UTF-8, pipe-delimited, no quoting, 31 exact columns. A fresh complete scan
   checked row widths for all **1,441,152** names records. Prior complete uniqueness and distribution
-  validation belongs to [the exact v15 audit](archive/ENRICHMENT-001/native-range-enrichment-source-v15.md).
+  validation belongs to [the exact v15 audit](../../archive/ENRICHMENT-001/native-range-enrichment-source-v15.md).
 - Exact field: **wcvp_names.csv.geographic_area**, a separate provider distribution statement.
   Never fabricate it by joining structured ranges, geography names or EXPLORE geometry.
 - Exact source taxon identifier: opaque **plant_name_id**, separately confirmed by the operator.
@@ -130,7 +132,7 @@ Last-Modified **2020-09-23 16:12:04 GMT**, retrieved **2026-10-09T13:07:03.61002
 `5c900968f31382f6afb283aa0dfbb01234f9695576565d4c109a3fadee2a905c`. It has UTF-8 CSV fields
 TaxKey, NoteCatKey/NoteCatText, NoteKey, NoteText, BiblKey and bibliography; category 9 is
 BOTANICAL DESCRIPTION. The complete source schema, three exact record/text hashes, full four-file
-snapshot manifest, joins, language and content exclusions are in [audit section 35](botany-003-audit.md#35-final-bounded-official-source-fallback--2026-10-09).
+snapshot manifest, joins, language and content exclusions are in [audit section 35](../../archive/BOTANY-003/botany-003-audit.md#35-final-bounded-official-source-fallback--2026-10-09).
 
 Kew's README explicitly releases SEPASAL data under **CC BY 4.0**. Preserve Kew's SEPASAL citation,
 access time, license link, exact snapshot/record identifiers, and Flora Zambesiaca bibliography

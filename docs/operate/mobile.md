@@ -1,8 +1,10 @@
 # Florabase Android Mobile Shell (`mobile/`)
 
+> Summary: Capacitor Android shell setup, emulator/device testing, release signing, Obtainium distribution, and troubleshooting.
+
 Florabase's Progressive Web App (PWA) remains a first-class channel. The Android app under `mobile/` wraps the **same** React/TypeScript production bundle from `frontend/` using Capacitor — there is no forked UI codebase.
 
-> **Status (`MOBILE-003`):** The Android app ships with Florabase branding (launcher, adaptive icon, splash), native file export/sharing via `@capacitor/filesystem` + `@capacitor/share` (scoped `FileProvider` cache), a full-screen original-photo viewer with share/save, Android `PrintManager` label printing, server-driven map runtime configuration (`GET /api/v1/system/info`), a native update banner pointing to Obtainium / GitHub Releases, deterministic SemVer-derived `versionCode`, and signed release APK builds (`make mobile-android-release` + opt-in GitHub Release workflow). See [ADR 0011](decisions/0011-mobile-device-sessions.md) for the device-session transport and security design.
+> **Status (`MOBILE-003`):** The Android app ships with Florabase branding (launcher, adaptive icon, splash), native file export/sharing via `@capacitor/filesystem` + `@capacitor/share` (scoped `FileProvider` cache), a full-screen original-photo viewer with share/save, Android `PrintManager` label printing, server-driven map runtime configuration (`GET /api/v1/system/info`), a native update banner pointing to Obtainium / GitHub Releases, deterministic SemVer-derived `versionCode`, and signed release APK builds (`make mobile-android-release` + opt-in GitHub Release workflow). See [ADR 0011](../decisions/0011-mobile-device-sessions.md) for the device-session transport and security design.
 
 ## Prerequisites
 
@@ -169,7 +171,7 @@ And optionally under **Variables**:
 | --- | --- |
 | `FLORABASE_ANDROID_CERT_SHA256` | Expected Signer #1 certificate SHA-256 fingerprint |
 
-The opt-in workflow [`.github/workflows/mobile-android-release.yml`](../.github/workflows/mobile-android-release.yml) runs automatically after **Protected Florabase release** (`beta-images.yml`) succeeds (checking out `workflow_run.head_sha`, asserting that tag `v<version>` points at that exact commit and has a published GitHub Release), or manually via `workflow_dispatch` with an existing `tag` input. It never runs on pull requests and never modifies the container image release pipeline.
+The opt-in workflow [`.github/workflows/mobile-android-release.yml`](../../.github/workflows/mobile-android-release.yml) runs automatically after **Protected Florabase release** (`beta-images.yml`) succeeds (checking out `workflow_run.head_sha`, asserting that tag `v<version>` points at that exact commit and has a published GitHub Release), or manually via `workflow_dispatch` with an existing `tag` input. It never runs on pull requests and never modifies the container image release pipeline.
 
 ## Installing and updating with Obtainium
 
@@ -280,7 +282,7 @@ If the CA is missing or the leaf cert does not match the hostname, onboarding su
 
 ## Related documents
 
-- [ADR 0011: Mobile device sessions](decisions/0011-mobile-device-sessions.md)
-- [MOBILE-001 Architecture Decision Record](mobile-001-adr.md)
-- [ADR 0005: Authentication and sessions](decisions/0005-authentication-and-sessions.md)
+- [ADR 0011: Mobile device sessions](../decisions/0011-mobile-device-sessions.md)
+- [MOBILE-001 Architecture Decision Record](../archive/MOBILE-001/mobile-001-adr.md)
+- [ADR 0005: Authentication and sessions](../decisions/0005-authentication-and-sessions.md)
 - [PWA and deployment guide](deployment.md)

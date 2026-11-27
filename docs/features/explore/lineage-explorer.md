@@ -1,5 +1,7 @@
 # LINEAGE-003 — Material ancestry explorer
 
+> Summary: Material ancestry and descendant graph explorer (LINEAGE-003).
+
 A first-class, read-only view of recorded **material** ancestry centred on one record:
 
 ```text
@@ -8,7 +10,7 @@ SeedLot → Sowing → Plant / PlantGroup → (Harvest conversion) → new SeedL
 ```
 
 It is not taxonomy (`#/taxonomy`) and not phylogeny. No schema, migration or material semantics
-changed; the explorer reads the concrete edges established in [lineage integrity](lineage-integrity.md).
+changed; the explorer reads the concrete edges established in [lineage integrity](../../architecture/lineage-integrity.md).
 
 ## Edges and evidence
 

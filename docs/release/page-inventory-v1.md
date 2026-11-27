@@ -84,7 +84,7 @@ and their dismissal.
 
 ## What is evaluated for each entry
 
-- Viewports 390×844, 1024×844 and 1440×844, as in the [UI contract](../ui-contract.md).
+- Viewports 390×844, 1024×844 and 1440×844, as in the [UI contract](../develop/ui-contract.md).
 - One light and one dark appearance of each shipped theme for contrast; one light and one dark
   appearance for the other checks.
 - States: populated, and empty where the page has a list.

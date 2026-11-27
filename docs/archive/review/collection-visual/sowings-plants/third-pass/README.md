@@ -4,7 +4,7 @@
 
 Current candidate: `ef73`, branch `feat/collection-visual-001`, base/HEAD `1e3df6a` plus unstaged source.
 The first and second passes are historical and were not operator-accepted. This index supersedes
-those visual conclusions. See the [handoff](../../../../archive/COLLECTION-VISUAL-001/collection-visual-001-handoff.md).
+those visual conclusions. See the [handoff](../../../../COLLECTION-VISUAL-001/collection-visual-001-handoff.md).
 
 [Feature Review](http://localhost:15174) remains healthy, owned by this candidate, with its existing
 v4 / ready / 66-record fixture and DB/code revision `20261013_0042`.

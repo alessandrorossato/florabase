@@ -30,7 +30,7 @@ Docker PCs/VPSs remain supported; application/images have no Synology-specific a
 
 ## Remediation outcome and artifact boundaries
 
-[Complete retained evidence](security/beta-security-001/README.md) includes original report hashes,
+[Complete retained evidence](../../security/beta-security-001/README.md) includes original report hashes,
 every trial/new raw report, individual advisory/package inventories, exact final index/native/config
 identities, build inputs, compatibility fixture/tool hashes and structured verification evidence. Counts are scanner records:
 
@@ -86,7 +86,7 @@ The exact binary SHA-256 matches the official gosu 1.19 release. Reviewed main/s
 local account parsing, privilege change and exec; negative symbol-prefix inspection supports absence
 of affected TLS/X509, HTTP/URL/mail, MIME, ASN1/XML/template and os.Root code. The Windows-only
 Dial/LookupPort advisory also conflicts with the pinned Linux platform. The
-[per-advisory assessments](security/beta-security-001/postgresql-applicability.json) retain each
+[per-advisory assessments](../../security/beta-security-001/postgresql-applicability.json) retain each
 exploit prerequisite, fixed versions, target and exact image identity. These support **draft** narrowly
 scoped not-affected VEX proposals, expiring 2026-12-03T00:00:00Z or any artifact/platform change.
 Negative strings alone are not proof; independent review must check the combined binary/source

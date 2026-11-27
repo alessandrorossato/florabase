@@ -629,7 +629,7 @@ class MobileReleaseContract(unittest.TestCase):
         )
         self.assertNotEqual(proc.returncode, 0)
         self.assertIn("FLORABASE_ANDROID_KEYSTORE", proc.stderr)
-        self.assertIn("docs/mobile.md", proc.stderr)
+        self.assertIn("docs/operate/mobile.md", proc.stderr)
 
     def test_mobile_version_code_helper_examples_and_bounds(self) -> None:
         sys.path.insert(0, str(ROOT / "scripts"))

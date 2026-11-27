@@ -1,5 +1,7 @@
 # Florabase UI Foundation v0.1
 
+> Summary: UI Foundation v0.1 design contract, semantic tokens, page archetypes, normalization rules, and UI System v1 Wave 1–3 guidance.
+
 Authoritative contract for Florabase UI. Dashboard and Activity establish the reference grammar;
 GLOBAL-VISUAL-001 extends it to the frozen v0.1 directories and task surfaces. Implementation: `frontend/src/styles/tokens.css` (single token source),
 `foundation.css` (base/shell/primitives), `normalization.css` (shared screen grammar), `ReferenceUI.tsx` and `WorkspaceUI.tsx`.
@@ -53,7 +55,7 @@ Font licenses are also shipped under `/licenses/`. The package release-age polic
 Florabase Next (experimental branch `feat/ui-redesign-exploration-001` only) adds the Field Ledger
 system with Instrument Sans, Newsreader and IBM Plex Mono, all exact-pinned Fontsource 5.3.0 OFL-1.1
 packages bundled the same way, with licences under `/licenses/`. The six themes in this contract
-are unchanged; see [Florabase Next](design/florabase-next/README.md).
+are unchanged; see [Florabase Next](../design/florabase-next/README.md).
 See [Fontsource Sans](https://fontsource.org/fonts/source-sans-3/about) and
 [Serif delivery](https://fontsource.org/fonts/source-serif-4/use).
 
@@ -163,7 +165,7 @@ prefers-reduced-motion. Long labels wrap, numbers never clip, content remains av
 Review at 1440×844, 1024×844 and 390×844. Dashboard uses four metrics on desktop, two at ≤64rem;
 attention/recent columns become one at ≤48rem. Supporting sections reflow to one at ≤64rem.
 UX-TODAY-001 supersedes that Today arrangement and every later photo-bench statement in this
-document: see [Today, work first](archive/DASHBOARD-001/dashboard-001-handoff.md#layout-reversal--ux-today-001).
+document: see [Today, work first](../archive/DASHBOARD-001/dashboard-001-handoff.md#layout-reversal--ux-today-001).
 Dashboard uses document scrolling and the available workspace width; no independently trapped
 content panels. Its sidebar remains sticky on desktop. The toolbar orders flexible Search,
 Filters, Saved views, Quick add and wraps on mobile. Quick add reuses OverflowMenu; SavedViews
@@ -239,7 +241,7 @@ and compact previews. One browser-local store synchronizes both footer controls,
 authentication transitions, operating-system changes and other tabs. There is no backend write.
 CONTROLS-001 supplies one local SVG vocabulary, shared action adapters and accessible Tooltip.
 Settings uses horizontal sliders, distinct from the funnel Filters and monitor/sun/moon Appearance.
-See [THEMES handoff](archive/THEMES-001/themes-001-handoff.md) and [Controls handoff](archive/CONTROLS-001/controls-001-handoff.md).
+See [THEMES handoff](../archive/THEMES-001/themes-001-handoff.md) and [Controls handoff](../archive/CONTROLS-001/controls-001-handoff.md).
 
 Secondary icon buttons keep explicit accessible names and concise hover/focus descriptions. Labels
 return at phone/tablet widths and on coarse/no-hover devices; mobile Appearance is always labelled.
@@ -253,7 +255,7 @@ pointer transfer, and dismisses on activation, blur/leave or Escape without movi
 the trigger name through `aria-describedby`; it is not a menu or essential-only help. Manual popovers
 and dialog-local fixed hosts avoid clipping; placement flips/shifts within the visual viewport.
 Escape dismisses Tooltip, then menu, then dialog. No motion or additional keyboard stop is introduced.
-See [Controls contract](archive/CONTROLS-001/controls-001-design-contract.md) for the canonical action matrix and exclusions.
+See [Controls contract](../archive/CONTROLS-001/controls-001-design-contract.md) for the canonical action matrix and exclusions.
 
 ## Directory and task normalization
 
@@ -495,7 +497,7 @@ an unbounded native options menu; full paths wrap inside the control width and r
 
 The operator selected Proposal B with selectable List/Gallery, distinct semantic navigation icons,
 a prominent factual Dashboard strip and eight distinct botanical photographs at the desktop baseline.
-The [Gate B contract](design/ui-system-v1/gate-b/implementation.md) defines reusable DirectoryPage,
+The [Gate B contract](../design/ui-system-v1/gate-b/implementation.md) defines reusable DirectoryPage,
 DirectoryViewSwitcher, DirectoryRow/Card, optional DirectoryInspector and ActivityPage compositions,
 plus `make ui-page` and the development-only React lab. Reuse existing PageHeader, DirectoryTools,
 semantic tokens, typed Icon, controls, photo behavior and TaskDialog rather than another framework.
@@ -509,18 +511,18 @@ uses the current presentation preference and existing page-one behavior. The lab
 never establish ownership, primary-photo or cover assignments. Production photo integration retains
 protected local thumbnails, explicit external opt-in and truthful unavailable states.
 
-Gate B is approved. [Production Wave 1](design/ui-system-v1/wave1/README.md) applies these compositions
+Gate B is approved. [Production Wave 1](../design/ui-system-v1/wave1/README.md) applies these compositions
 to the real Dashboard, Seeds and Plants; other capabilities remain separate migration increments.
 Compact directory headings use existing type-h2; Dashboard uses type-h1/type-metric with the existing
 small/label scale. Native disclosure preserves recent activity without clipping the desktop baseline.
 Presentation-only Back/Forward preserves safe selection, while canonical scope/fresh navigation resets
-it. The [approved prototype](design/ui-system-v1/gate-b/README.md) remains historical evidence.
+it. The [approved prototype](../design/ui-system-v1/gate-b/README.md) remains historical evidence.
 No canonical verification receipt or delivery approval is implied. Preserve the Gate A alternatives as history. Structural page
 changes require desktop/tablet/mobile, long-content, state and keyboard evidence; delivery follows CI-004.
 
 ### Wave 1 final operator refinements — 29 October 2026
 
-The [final refinements](design/ui-system-v1/wave1/refinements/README.md) supersede the earlier
+The [final refinements](../design/ui-system-v1/wave1/refinements/README.md) supersede the earlier
 Wave 1 inspector and MediaAsset-based Dashboard photo presentation. Seeds/Plants use bounded
 identity, quantity where meaningful, lifecycle and three always-visible icon actions with tooltips:
 Quick Preview, Details and Edit. Location/source/provenance stay in Preview/Details.
@@ -537,7 +539,7 @@ record relationship. Future bulk operations and Settings widget customization re
 
 ### UI System v1 Wave 2 candidate — Activity and Sourcing
 
-[Wave 2](design/ui-system-v1/wave2/README.md) applies ActivityPage/DirectoryTools to Journal,
+[Wave 2](../design/ui-system-v1/wave2/README.md) applies ActivityPage/DirectoryTools to Journal,
 History and Schedule, and the approved DirectoryPage List/Gallery/explicit actions/overlay preview
 compositions to Suppliers and Orders. Canonical capability filters, Saved Views support, paging,
 date/source semantics, forms and domain actions retain their owners. Calendar keeps its own
@@ -609,7 +611,7 @@ would leave an unusable results region.
 
 ### Same-family consolidation — current contract (2026-10-31)
 
-The [consolidation specification](design/ui-system-v1/consolidation/README.md) supersedes
+The [consolidation specification](../design/ui-system-v1/consolidation/README.md) supersedes
 page-specific layout refinements above. Family A uses DirectoryWorkspace and typed
 DirectoryRecordContent slots across Collection, Sourcing and Botanical identities. Legacy
 master/detail geometry classes are reserved for full editor/detail compositions. Tools
@@ -624,7 +626,7 @@ pending; paired visual coverage and manual device/AT/actual-zoom limits are docu
 
 ### Final directory interaction correction (2026-11-01)
 
-The operator-confirmed [final interaction contract](design/ui-system-v1/consolidation/final-interaction-correction/README.md)
+The operator-confirmed [final interaction contract](../design/ui-system-v1/consolidation/final-interaction-correction/README.md)
 supersedes the Quick Preview and action-menu directions in earlier directory sections and
 in the historical interaction-cleanup evidence. It applies to Seeds, Sowings, Plants/groups,
 Harvests, Stored material, Suppliers, Orders, Botanical identities, Locations and Geography Places.

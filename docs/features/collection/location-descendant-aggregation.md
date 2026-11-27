@@ -1,5 +1,7 @@
 # LOCATION-003 — Derived hierarchical collection usage
 
+> Summary: Derived hierarchical collection counts and usage across descendant Locations (LOCATION-003).
+
 ## Contract and scope
 
 Implemented on `feat/location-descendant-aggregation`, based on `c1fc7c5`. The canonical sequence
@@ -133,7 +135,7 @@ Edit beside Open details and Create child. Small native create/edit dialogs reta
 scope/parent contract. Details uses the full Collection width with a compact physical-space summary,
 explicit enabled scopes and the existing navigable hierarchy. Its usage table now labels each total
 explicitly before the active count. These remain record counts, and browse links remain general.
-See the [candidate handoff](archive/COLLECTION-VISUAL-002/collection-visual-002-handoff.md) for review evidence and limits.
+See the [candidate handoff](../../archive/COLLECTION-VISUAL-002/collection-visual-002-handoff.md) for review evidence and limits.
 
 Second-pass row metrics use short nonzero category/count pairs with `incl.` whenever inclusive totals
 exceed direct assignments. Their accessible names retain both counts; Quick Preview and Details keep

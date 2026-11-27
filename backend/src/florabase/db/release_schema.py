@@ -212,14 +212,14 @@ def reject_placeholder_config(environ: Mapping[str, str]) -> None:
     ):
         raise SchemaError(
             "FLORABASE_DB_PASSWORD is still the placeholder 'change-me'; "
-            "set a strong password (see docs/installation.md)"
+            "set a strong password (see docs/operate/installation.md)"
         )
     origin = environ.get("FLORABASE_CANONICAL_ORIGIN", "").strip().rstrip("/")
     if origin == PLACEHOLDER_CANONICAL_ORIGIN:
         raise SchemaError(
             "FLORABASE_CANONICAL_ORIGIN is still the placeholder "
             f"{PLACEHOLDER_CANONICAL_ORIGIN!r}; "
-            "set your real HTTPS origin (see docs/installation.md)"
+            "set your real HTTPS origin (see docs/operate/installation.md)"
         )
 
 
@@ -323,14 +323,14 @@ def _require_writable_dir(path: Path, label: str, *, require_private_owner: bool
     if path.is_symlink() or not path.is_dir() or not os.access(path, os.R_OK | os.W_OK | os.X_OK):
         raise SchemaError(
             f"{label} {path} is missing or not writable; "
-            "run the folder setup commands in docs/installation.md"
+            "run the folder setup commands in docs/operate/installation.md"
         )
     if require_private_owner:
         info = path.stat()
         if info.st_uid != os.geteuid() or (stat.S_IMODE(info.st_mode) & 0o077) != 0:
             raise SchemaError(
                 f"{label} {path} has unsafe owner or mode; "
-                "run the folder setup commands in docs/installation.md"
+                "run the folder setup commands in docs/operate/installation.md"
             )
 
 

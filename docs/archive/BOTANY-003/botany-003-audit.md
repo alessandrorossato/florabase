@@ -5,7 +5,7 @@ Latest bounded fallback decision: **2026-10-09**, section 35 below:
 general-description records. Flora of China remains `SOURCE_TLS_PROVIDER_BLOCKED`.
 The two-field product/content contract remains approved; BOTANY-003 remains `planned`,
 with implementation stopped as requested. See [the current handoff](botany-003-handoff.md).
-The [earlier source decision](botanical-profile-enrichment-sources.md) and sections 1–34
+The [earlier source decision](../../features/explore/botanical-profile-enrichment-sources.md) and sections 1–34
 record the preceding investigations; section 35 supersedes their overall description-source blocker
 only for its exact scoped alternative. No other profile field is approved by this fallback review.
 
@@ -744,12 +744,12 @@ the combined BOTANY-003 feature is implemented or substitute fabricated descript
 Separate cultivation/uses/warnings discovery found the official static Kew SEPASAL CSV export,
 with dataset-specific CC BY 4.0, source-local TaxKey and bibliographic joins. It is a useful future
 candidate; exact field selection, historical-context semantics and full import validation remain
-unapproved. See [the separate audit](botanical-knowledge-source-audit.md). These fields remain manual.
+unapproved. See [the separate audit](../../features/explore/botanical-knowledge-source-audit.md). These fields remain manual.
 
 The full 95-record graph already assigns TAXONOMY-001 to identity reconciliation and TAXONOMY-002
 to synonyms/name history; neither owns collection taxonomy browsing. The new planned collection
 tree therefore uses **TAXONOMY-003**, preserving both existing IDs. PHYLOGENY-001 and BOTANY-004
-record separate future discovery, with no implementation. See [future contract](archive/TAXONOMY-003/collection-taxonomy-plan.md).
+record separate future discovery, with no implementation. See [future contract](../TAXONOMY-003/collection-taxonomy-plan.md).
 
 Focused existing-behavior baseline: **72 backend unit tests passed**. Documentation/graph/whitespace
 checks are recorded in the handoff. No text parser, migration, API, UI, PostgreSQL text-enrichment

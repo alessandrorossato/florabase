@@ -171,7 +171,7 @@ runtime files are outside the delivered implementation; no environment/workflow 
 ## Verification and visual evidence
 
 Current verification, screenshots and interaction evidence are indexed in
-[the final UX review gallery](../final-ux/README.md).
+[the final UX review gallery](README.md).
 The [initial handoff](../initial-handoff.md), [unified-navigation handoff](../refinement/unified-handoff.md) and both earlier galleries are retained
 as historical evidence; their old grouped navigation/sidebar descriptions are superseded here.
 Final UX evidence covers the requested viewports and all three palettes in Light/Dark, the compact

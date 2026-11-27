@@ -1,5 +1,7 @@
 # Purchase Orders — ORDER-001
 
+> Summary: Purchase Orders, multi-lot acquisition links, and reconciliation (ORDER-001).
+
 An Order records one real purchase transaction. A Supplier is the reusable source party, and a
 SeedLot is one physical lot. An Order can group zero or many SeedLots, including several separate
 packets of the same BotanicalIdentity. Linking never combines lots or changes inventory.

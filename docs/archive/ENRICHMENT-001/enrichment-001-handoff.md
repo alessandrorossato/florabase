@@ -39,7 +39,7 @@ archive into a replaceable SQLite index. The complete UAT index is ignored at
 The plain archive, companion archive and extracted audit README remain outside Git. No provider
 fetch runs at startup, migration, page navigation, Apply or ordinary API request time. Production
 starts without the optional index; provisioning, read-only mount/environment configuration, disk
-bounds and recovery are documented in [the contract](../../native-range-enrichment.md).
+bounds and recovery are documented in [the contract](../../features/explore/native-range-enrichment.md).
 
 [Exact source audit](native-range-enrichment-source-v15.md) records source GO before implementation,
 version/licence evidence, all source fields and qualifiers. Backend Docker exclusions prevent the

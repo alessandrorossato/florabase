@@ -30,7 +30,7 @@ commands such as `make feature-verify`. Hand over only with
 at a terminal after confirming the previous session is gone; agents never use it. Each live session
 uses its own `AGENT_ID`. This is a cooperative protocol, not authenticated security: follow it even
 where nothing would stop you. Mutating or unknown Compose passthrough is guarded or refused. Read-only reviewers use their own detached checkout.
-Follow [docs/development-workflow.md](docs/development-workflow.md) for source,
+Follow [docs/development-workflow.md](docs/develop/development-workflow.md) for source,
 environment and review-profile boundaries. Implement the smallest coherent change, run focused checks while developing,
 then complete one policy-selected canonical gate before marking a feature `verified`.
 Infrastructure, security, dependencies, migrations, unknown changes and releases require FULL.
@@ -62,7 +62,7 @@ VERIFY → OPERATOR DELIVERY → FINISH.
 
 ## Engineering conventions
 
-- New UI follows [UI Foundation v0.1](docs/ui-contract.md); reuse semantic tokens and shared primitives.
+- New UI follows [UI Foundation v0.1](docs/develop/ui-contract.md); reuse semantic tokens and shared primitives.
   Start new page compositions from the approved archetype guidance and `make ui-page`
   ([UI System v1 candidate](docs/design/ui-system-v1/gate-b/implementation.md)). Reuse PageHeader,
   DirectoryTools and house dialogs; domain code retains API, URL/filter, validation and save ownership.
@@ -128,7 +128,7 @@ and retirement only removes finished worktrees under `florabase-worktrees/`.
    Review/UAT resources, or belongs to another agent.
 3. If anything refuses, report the path and reason to the operator and stop.
 
-See [docs/agent-prompt-template.md](docs/agent-prompt-template.md) for the reusable prompt snippet.
+See [docs/agent-prompt-template.md](docs/develop/agent-prompt-template.md) for the reusable prompt snippet.
 
 Before finishing, run relevant formatting, lint, typing, tests, integration, API drift, migration,
 build, and health checks proportional to the change. Report environmental limits exactly and never

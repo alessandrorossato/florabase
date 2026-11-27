@@ -1,5 +1,7 @@
 # Structured Plant measurements (MEASUREMENT-001)
 
+> Summary: Structured Plant measurements recorded on Journal events (MEASUREMENT-001).
+
 Roadmap theme 4, "Measurements / growth history". This increment records and browses real
 longitudinal **height** measurements for individual Plants. Other quantities are proposed below and
 are not implemented.
@@ -8,7 +10,7 @@ are not implemented.
 
 A measurement is a Journal Event of kind `measurement` with one typed payload. It is not a separate
 event system, table or timeline: it shares the Event identity, PartialDate occurrence date, notes,
-photos, ordering, correction and deletion rules from [domain model § Event](domain-model.md#event),
+photos, ordering, correction and deletion rules from [domain model § Event](../../architecture/domain-model/collection-concepts.md#event),
 and History projects it like every other Event.
 
 | Concern | Decision |

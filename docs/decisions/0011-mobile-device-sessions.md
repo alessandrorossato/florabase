@@ -1,14 +1,14 @@
 # ADR 0011: Mobile device sessions (Bearer transport) and native compatibility contract
 
 Status: accepted. Amends [ADR 0005](0005-authentication-and-sessions.md) for the Capacitor Android
-client introduced in [`MOBILE-001`](../mobile-001-adr.md). Browser/PWA authentication remains
+client introduced in [`MOBILE-001`](../archive/MOBILE-001/mobile-001-adr.md). Browser/PWA authentication remains
 unchanged.
 
 ## Context
 
 The Capacitor Android app bundles the React frontend locally and serves it from the WebView origin
 `https://localhost` (and `capacitor://localhost` on future iOS builds). As verified in
-[`MOBILE-001`](../mobile-001-adr.md), the browser authentication model in
+[`MOBILE-001`](../archive/MOBILE-001/mobile-001-adr.md), the browser authentication model in
 [ADR 0005](0005-authentication-and-sessions.md) (`__Host-florabase-session` cookie with
 `SameSite=Strict`, synchronizer `X-CSRF-Token`, and `Origin == FLORABASE_CANONICAL_ORIGIN`)
 intentionally prevents cross-origin cookie transmission and cannot authenticate a locally bundled

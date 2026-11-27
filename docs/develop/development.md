@@ -1,10 +1,12 @@
 # Development
 
+> Summary: Local development setup, focused test/lint/typecheck commands, Alembic migrations, OpenAPI generation, and Git practices.
+
 The [development workflow](development-workflow.md) is canonical for DEV, agent-provided worktrees,
 Feature Review, Stable Preview, integration/CI, production, review order and verification receipts.
 
 Use Docker Compose 2.24.4 or newer for repository overlays. For a new primary checkout, follow
-[the development quick start](../README.md#quick-start-for-development) to configure, start,
+[the development quick start](../../README.md#quick-start-for-development) to configure, start,
 migrate and bootstrap DEV. DEV always selects the primary checkout. Use `make feature-init`
 and `make uat-preview-up`, then explicit `make uat-preview-seed`, inside a feature
 worktree to inspect dirty source with synthetic UAT-only `preview / preview` at
@@ -14,7 +16,7 @@ at `http://localhost:15173`. No copied or symlinked `.env` is required.
 
 ## Resource measurements
 
-The [PERF-001 protocol/report](performance/PERF-001.md) documents the guarded `florabase-perf`
+The [PERF-001 protocol/report](../performance/PERF-001.md) documents the guarded `florabase-perf`
 project, production runtime builds, deterministic disposable dataset, API/SQL/browser collectors,
 comparison evidence and serial reproduction commands. It reuses the production topology with tmpfs
 PostgreSQL/media and a single loopback frontend port; it never imports operator data or loads the
@@ -63,7 +65,7 @@ and independent production builds are selected by the versioned fail-closed impa
 workflow, foundational, dependency and migration changes escalate full. Remote product suites and
 both builds remain exhaustive. Docs-only PRs run graph/whitespace checks in every required job;
 affected product PRs omit workflow helpers. Main stays exhaustive. See
-[CI-004 evidence and recovery](archive/CI-004/ci-004-verification-efficiency-handoff.md).
+[CI-004 evidence and recovery](../archive/CI-004/ci-004-verification-efficiency-handoff.md).
 Version 3 receipts prove both the exact source tree and selected completed checks; focused iteration
 never writes delivery evidence. See [the canonical contract](development-workflow.md#review-profiles-and-verification-timing).
 
@@ -164,4 +166,4 @@ current-SHA protected checks and exact PR identity. It pushes normally, reuses/c
 for protected squash auto-merge. Reruns can recognize a proven completed delivery without another push.
 After merge, `make feature-finish` updates clean primary `main` and retains the linked feature worktree
 as detached; it refuses staged/dirty primary state. If delivery reports a migration, run
-`make dev-upgrade` only after finish. See [CONTRIBUTING.md](../CONTRIBUTING.md).
+`make dev-upgrade` only after finish. See [CONTRIBUTING.md](../../CONTRIBUTING.md).

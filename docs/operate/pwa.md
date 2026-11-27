@@ -1,5 +1,7 @@
 # Install Florabase as an app (PWA-001)
 
+> Summary: Installable Progressive Web App (PWA) manifest, service worker scope, and offline/update behavior.
+
 Florabase can be installed on phones, tablets and desktops as a standalone app that opens in its
 own window with its icon. It stays an **online-only client for your own server**: it does not
 store collection records on the device, works without push notifications or background sync, and
@@ -97,5 +99,5 @@ upgrade, reload the app.
 Automated checks (`frontend/src/pwa/`) validate the manifest and icon files, HTML metadata, Nginx
 headers, release-update notice, registration, and run the shipped `sw.js` against synthetic
 install, activate and fetch events. Real-browser checks of the production image are recorded in
-[progress](progress.md). Real Android and iOS device installation has **not** been verified yet;
+[progress](../progress.md). Real Android and iOS device installation has **not** been verified yet;
 iOS behavior above follows Apple's documented Home Screen web app model.

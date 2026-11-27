@@ -7,7 +7,7 @@ The [handoff for this phase](unified-handoff.md) is preserved alongside the evid
 Current candidate: `/home/alessandro/.codex/worktrees/5430/florabase`, branch
 `feat/geography-visual-001`, base `e7ade78559803a35b738a669085799f55eb76258`.
 [Open review](http://localhost:15276/#/geography/overview).
-[Current handoff](../../../archive/GEOGRAPHY-VISUAL-001/geography-visual-001-handoff.md).
+[Current handoff](../../../GEOGRAPHY-VISUAL-001/geography-visual-001-handoff.md).
 [Preserved initial evidence](../README.md) and [initial handoff](../initial-handoff.md).
 
 The operator explicitly authorized removing the global Maps subgroup and its three children.

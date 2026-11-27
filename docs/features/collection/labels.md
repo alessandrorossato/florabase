@@ -1,5 +1,7 @@
 # Physical collection labels
 
+> Summary: Printable physical collection labels with authenticated QR lookup routes (LABEL-001).
+
 Labels supports SeedLot, Plant, PlantGroup and managed Stored material. Contextual **Print label**
 and **Settings → Tools → Labels** open the same temporary composer. Routes remain `#/labels` and
 `#/labels?kind=<kind>&record=<uuid>`; contextual entry selects one exact record and one copy.
@@ -100,5 +102,5 @@ There is no prominent printed material-type line. Unsafe insets fall back to an 
 A module pitch below **0.22 mm** blocks printing and asks for a larger preset/shorter public URL.
 An unconfigured/loading/failed setting blocks Print; browser-menu output shows a blocked explanation.
 
-See [the current handoff](archive/IA-FREEZE-001/labels-navigation-ia-handoff.md) for focused tests, final resized-QR decoder
+See [the current handoff](../../archive/IA-FREEZE-001/labels-navigation-ia-handoff.md) for focused tests, final resized-QR decoder
 results, seven-boundary zoom review, dialog and footer evidence, and freeze readiness.

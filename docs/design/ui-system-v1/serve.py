@@ -16,7 +16,7 @@ OLD = ASSETS.parent / "release-visual-audit-001"
 CAPS = {
     c["id"]: c["file"]
     for c in json.loads(
-        (ROOT / "docs/review/release-visual-audit-001/capture-index.json").read_text()
+        (ROOT / "docs/archive/review/release-visual-audit-001/capture-index.json").read_text()
     )
 }
 

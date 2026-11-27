@@ -65,7 +65,7 @@ class Phenophase(StrEnum):
     FRUIT_RIPE = "fruit_ripe"
 
 
-# Each stage belongs to exactly one existing Event kind; see docs/phenology.md.
+# Each stage belongs to exactly one existing Event kind; see docs/features/activity/phenology.md.
 PHENOPHASE_KINDS: dict[str, tuple[Phenophase, ...]] = {
     "observation": (
         Phenophase.BUD_BREAK,

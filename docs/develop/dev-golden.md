@@ -1,5 +1,7 @@
 # Persistent Golden DEV
 
+> Summary: Deterministic Golden dataset initialization, verification, reset, and recovery for persistent DEV.
+
 DEV at `http://localhost:5173` runs the primary `main` checkout. Its PostgreSQL and original media
 volumes persist across app restarts and main updates. COMPREHENSIVE generation stays explicit.
 Ordinary CI and canonical FULL use SMOKE. Normal UAT continues to use small fixtures unless an
