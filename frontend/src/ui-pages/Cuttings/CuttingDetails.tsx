@@ -113,9 +113,7 @@ function CuttingPlate({
   onAddPhoto: () => void;
 }) {
   return (
-    <SpecimenPlate
-      addPhoto={{ href: photosHref, onSelect: onAddPhoto }}
-    >
+    <SpecimenPlate addPhoto={{ href: photosHref, onSelect: onAddPhoto }}>
       <RecordVisual
         photo={photos.own}
         fallbackPhotos={photos.inherited}
