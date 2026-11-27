@@ -146,6 +146,13 @@ jobs:
             printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$keystore_path"
           )
           export FLORABASE_ANDROID_KEYSTORE="$keystore_path"
+          # The release script (taken from the tag) uses the newest build-tools apksigner; drop build-tools
+          # newer than the declared 36.0.0 on this ephemeral runner so newer output formats cannot break it
+          # (older ones stay for AGP's default build-tools).
+          sdk_dir="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          find "$sdk_dir/build-tools" -mindepth 1 -maxdepth 1 -type d \( -name '3[7-9]*' -o -name '[4-9][0-9]*' \) -exec rm -rf {} +
+          newest="$(find "$sdk_dir/build-tools" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -V | tail -n 1)"
+          test "$newest" = "36.0.0" && test -x "$sdk_dir/build-tools/36.0.0/apksigner"
           ./scripts/mobile-android-release.sh --skip-sync
 
       - name: Attach signed APK and SHA-256 checksum to GitHub Release

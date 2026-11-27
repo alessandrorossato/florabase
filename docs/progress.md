@@ -1,5 +1,14 @@
 # Engineering progress
 
+## 2026-11-27 — Android release APK: apksigner output format (MOBILE-003)
+
+- Second `v0.1.0-beta.10` APK run (45981312380) built and signed the APK but
+  `scripts/mobile-android-release.sh` picked the runner's preinstalled build-tools 37.0.0 apksigner,
+  which prints `V2 Signer: certificate SHA-256 digest:` instead of `Signer #1 certificate ...`, so the
+  certificate check aborted. The workflow now removes build-tools newer than the declared 36.0.0 on
+  the ephemeral runner before running the tag's script, and the script parses both formats for future
+  tags. Contract tests cover both.
+
 ## 2026-11-27 — Android release APK: Corepack pnpm version (MOBILE-003)
 
 - `mobile-android-release.yml` failed for `v0.1.0-beta.10` (run 45965802666) with
