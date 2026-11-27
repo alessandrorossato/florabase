@@ -23,7 +23,7 @@ import uat_instance
 from uat_instance import PREFIX, UATInstance
 from uat_preview import UATPreview
 from workflow_environment import MEDIA_ROOT, UAT_PROJECT, Repository, WorkflowError, run
-from workflow_resources import machine_lock
+from workflow_resources import ResourceError, machine_lock
 
 ROOT = Path(__file__).resolve().parents[1]
 OTHER = "/elsewhere/florabase-other"
@@ -822,10 +822,113 @@ class StaleLaunchTests(unittest.TestCase):
                     self.instance.reset("")
                 with self.assertRaisesRegex(WorkflowError, "CONFIRM_REMOVE_UAT_INSTANCE"):
                     self.instance.remove("")
-                # Confirmed reset/remove fallback accepts expired 40-hex SHA only when all other
-                # identity checks pass (allow_expired_sha=True).
-                self.instance.require_identity(stale_ok=True, allow_expired_sha=True)
                 gh_run.assert_not_called()
+
+        # End-to-end expired-reflog fallback: confirmed reset/remove reach volume removal/recreate
+        # when all other identity checks pass; empty/wrong confirm removes nothing.
+        unknown_running = self.containers_for("f" * 40, running=True)
+        unknown_stopped = self.containers_for("f" * 40, running=False)
+        for bad_token in ("", "wrong"):
+            with (
+                self.identity_patches(unknown_running),
+                patch.object(self.instance, "compose") as compose_mock,
+                patch("uat_preview.run") as preview_run,
+                patch("uat_instance.run") as inst_run,
+                patch("uat_source.run") as gh_run,
+            ):
+                with self.assertRaisesRegex(WorkflowError, "CONFIRM_RESET_UAT_INSTANCE"):
+                    self.instance.reset(bad_token)
+                with self.assertRaisesRegex(WorkflowError, "CONFIRM_REMOVE_UAT_INSTANCE"):
+                    self.instance.remove(bad_token)
+                compose_mock.assert_not_called()
+                preview_run.assert_not_called()
+                inst_run.assert_not_called()
+                gh_run.assert_not_called()
+
+        reset_state = {"items": unknown_running}
+
+        def reset_compose(*args: str, **_: Any) -> str:
+            if args[:1] == ("down",):
+                reset_state["items"] = []
+            return ""
+
+        with (
+            patch.object(self.instance, "remove_oneoffs"),
+            patch.object(self.instance, "validate"),
+            patch.object(self.instance, "require_owner"),
+            patch.object(self.instance, "resource_volumes", return_value=self.vols),
+            patch.object(self.instance, "containers", side_effect=lambda: reset_state["items"]),
+            patch.object(self.instance, "require_resource_users"),
+            patch.object(self.instance, "compose", side_effect=reset_compose) as compose_mock,
+            patch.object(self.instance, "up") as up_mock,
+            patch.object(self.instance, "seed") as seed_mock,
+            patch.object(self.instance, "status"),
+            patch("uat_preview.run") as preview_run,
+            patch("uat_source.run") as gh_run,
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            self.instance.reset(self.instance.project)
+            gh_run.assert_not_called()
+        compose_mock.assert_called_once_with("down", "--remove-orphans")
+        up_mock.assert_called_once()
+        seed_mock.assert_called_once()
+        self.assertEqual(
+            [call.args[0] for call in preview_run.call_args_list],
+            [["docker", "volume", "rm", item["Name"]] for item in self.vols],
+        )
+
+        rem_state: dict[str, Any] = {
+            "containers": unknown_running,
+            "volumes": self.vols,
+            "networks": [
+                {
+                    "Id": "net-expired",
+                    "Name": f"{self.instance.project}_internal",
+                    "Labels": {
+                        "com.docker.compose.project": self.instance.project,
+                        "com.docker.compose.network": "internal",
+                    },
+                    "Containers": {},
+                }
+            ],
+        }
+        removed_volumes: list[str] = []
+
+        def remove_docker(command: list[str], **_: Any) -> str:
+            if command[:3] == ["docker", "network", "ls"]:
+                return "\n".join(item["Id"] for item in rem_state["networks"])
+            if command[:3] == ["docker", "network", "inspect"]:
+                return json.dumps(rem_state["networks"])
+            if command[:2] == ["docker", "ps"]:
+                return ""
+            if command[:3] == ["docker", "container", "stop"]:
+                rem_state["containers"] = unknown_stopped
+            elif command[:3] == ["docker", "container", "rm"]:
+                rem_state["containers"] = []
+            elif command[:3] == ["docker", "network", "rm"]:
+                rem_state["networks"] = []
+            elif command[:3] == ["docker", "volume", "rm"]:
+                removed_volumes.append(command[-1])
+            return ""
+
+        with (
+            patch.object(self.instance, "remove_oneoffs"),
+            patch.object(self.instance, "validate"),
+            patch.object(self.instance, "require_owner"),
+            patch.object(
+                self.instance, "resource_volumes", side_effect=lambda: rem_state["volumes"]
+            ),
+            patch.object(self.instance, "containers", side_effect=lambda: rem_state["containers"]),
+            patch.object(self.instance, "require_resource_users"),
+            patch("uat_preview.run", side_effect=remove_docker),
+            patch("uat_instance.run", return_value=""),
+            patch("uat_source.run") as gh_run,
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            self.instance.remove(self.instance.project)
+            gh_run.assert_not_called()
+        self.assertEqual(removed_volumes, sorted(item["Name"] for item in self.vols))
+
         # Malformed (non-40-hex) io.florabase.sha is ALWAYS refused, even with allow_expired_sha.
         bad_sha = self.containers_for("foreign", running=True)
         with self.identity_patches(bad_sha), patch("uat_source.run") as gh_run:
@@ -835,25 +938,36 @@ class StaleLaunchTests(unittest.TestCase):
 
     def test_foreign_identity_with_stale_sha_is_always_refused(self) -> None:
         base_containers = self.containers_for(self.old_tip, running=True)
-        mutations: list[tuple[str, Any]] = [
-            ("role", lambda c: c[0]["Config"]["Labels"].__setitem__("io.florabase.role", "dev")),
+        mutations: list[tuple[str, str, Any]] = [
+            (
+                "role",
+                "ambiguous UAT container identity",
+                lambda c: c[0]["Config"]["Labels"].__setitem__("io.florabase.role", "dev"),
+            ),
             (
                 "source",
+                "ambiguous UAT container identity",
                 lambda c: c[0]["Config"]["Labels"].__setitem__("io.florabase.source", OTHER),
             ),
             (
                 "project",
+                "ambiguous UAT container identity",
                 lambda c: c[0]["Config"]["Labels"].__setitem__(
                     "com.docker.compose.project", "florabase-uat-branch-other"
                 ),
             ),
-            ("mount", lambda c: c[1]["Mounts"][1].__setitem__("Source", OTHER + "/backend/src")),
+            (
+                "mount",
+                "wrong running UAT source mount",
+                lambda c: c[1]["Mounts"][1].__setitem__("Source", OTHER + "/backend/src"),
+            ),
             (
                 "network",
+                "ambiguous UAT network identity",
                 lambda c: c[0]["NetworkSettings"].__setitem__("Networks", {"foreign_net": {}}),
             ),
         ]
-        for label, mutate in mutations:
+        for label, pattern, mutate in mutations:
             damaged = copy.deepcopy(base_containers)
             mutate(damaged)
             with (
@@ -861,7 +975,7 @@ class StaleLaunchTests(unittest.TestCase):
                 self.identity_patches(damaged),
                 patch("uat_source.run") as gh_run,
             ):
-                with self.assertRaises(WorkflowError):
+                with self.assertRaisesRegex(WorkflowError, pattern):
                     self.instance.require_identity(stale_ok=True, allow_expired_sha=True)
                 gh_run.assert_not_called()
         # Foreign volume user is also refused even with a valid stale SHA and allow_expired_sha.
@@ -891,8 +1005,13 @@ class StaleLaunchTests(unittest.TestCase):
                 "uat_source.run", side_effect=WorkflowError("command failed: gh api 422")
             ) as gh_run,
         ):
-            with self.assertRaisesRegex(WorkflowError, f"launched SHA {self.old_tip[:12]}"):
+            with self.assertRaises(WorkflowError) as ctx:
                 self.instance.require_identity(retiring=True, stale_ok=True, allow_expired_sha=True)
+            message = str(ctx.exception)
+            self.assertIn(f"launched SHA {self.old_tip[:12]}", message)
+            self.assertIn("make uat-instance-status", message)
+            self.assertIn("make uat-instance-remove", message)
+            self.assertNotIn("make uat-preview-", message)
             gh_run.assert_called_once()
 
     def test_feature_batch_prepare_hints_when_worktree_owns_uat_instance(self) -> None:
@@ -948,7 +1067,38 @@ class StaleLaunchTests(unittest.TestCase):
             state_cls.return_value.load.return_value = {"writer": {"agent": "integrator"}}
             feature_batch.prepare(batch_repo, plan)
         self.assertIn(f"owns UAT instance {PREFIX}ci-batch-hint", out.getvalue())
-        self.assertIn("make uat-instance-up", out.getvalue())
+        self.assertIn(
+            "its running launch predates these merges; run make uat-instance-up to rebuild from HEAD",
+            out.getvalue(),
+        )
+
+        # When Docker is unavailable (ResourceError), prepare still succeeds with no hint.
+        batch_wt_nodocker = Path(self.temp.name) / "batch-nodocker"
+        git(
+            self.primary,
+            "worktree",
+            "add",
+            "-b",
+            "ci/batch-nodocker",
+            str(batch_wt_nodocker),
+            "origin/main",
+        )
+        nodocker_plan = {**plan, "branch": "ci/batch-nodocker"}
+        with (
+            patch("feature_batch.agent_id", return_value="integrator"),
+            patch("feature_batch.require_writer"),
+            patch("feature_batch.AgentState") as state_cls,
+            patch("feature_batch.proposal", return_value=nodocker_plan),
+            patch(
+                "feature_batch.owned_resources",
+                side_effect=ResourceError("Docker daemon unavailable"),
+            ),
+            contextlib.redirect_stdout(io.StringIO()) as out_nodocker,
+        ):
+            state_cls.return_value.load.return_value = {"writer": {"agent": "integrator"}}
+            feature_batch.prepare(Repository(batch_wt_nodocker), nodocker_plan)
+        self.assertIn("Prepared ci/batch-nodocker", out_nodocker.getvalue())
+        self.assertNotIn("owns UAT instance", out_nodocker.getvalue())
 
 
 if __name__ == "__main__":

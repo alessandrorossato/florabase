@@ -560,12 +560,12 @@ def prepare(repo: Repository, plan: dict[str, Any]) -> None:
             for project in owned_resources(repo)
             if project.startswith("florabase-uat-branch-")
         )
-    except WorkflowError:
+    except WorkflowError, ResourceError:
         instances = []
     if instances:
         print(
             f"Note: this worktree owns UAT instance {', '.join(instances)}; "
-            "its launch will be stale — run make uat-instance-up"
+            "its running launch predates these merges; run make uat-instance-up to rebuild from HEAD"
         )
 
 

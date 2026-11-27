@@ -91,6 +91,7 @@ class UATInstance(UATPreview):
     ROLE_LABEL = "uat-instance"
     WORKFLOW_MODE = "uat-instance"
     LABEL = "UAT instance"
+    MAKE_PREFIX = "uat-instance"
     CONFIRM_RESET = "CONFIRM_RESET_UAT_INSTANCE"
     CONFIRM_REMOVE = "CONFIRM_REMOVE_UAT_INSTANCE"
     PORTS: range | tuple[int, ...] = PORTS

@@ -35,8 +35,8 @@ Next: make uat-instance-up to rebuild from HEAD, or make uat-instance-reset CONF
 ## Design summary
 
 - **`scripts/uat_source.py`**:
-  - Added `in_worktree_reflog(repo, sha, branch)`: validates `sha` matches `[0-9a-f]{40}`, confirms `git cat-file -e <sha>^{commit}` succeeds in the local repository, and checks that `sha` appears in this worktree's `HEAD` reflog or its current branch's `refs/heads/<branch>` reflog (`git reflog show --format=%H`). Commits from other branches/worktrees or unknown SHAs fail.
-  - Hardened `delivered(repo, sha=None)`: catches `(WorkflowError, json.JSONDecodeError)` and non-list responses from `gh api ...`, raising a single clear `WorkflowError` with the 12-char SHA and next command instead of a raw `command failed: gh api ...` / 422 error.
+  - Added `in_worktree_reflog(repo, sha, branch)`: validates `sha` matches `[0-9a-f]{40}`, confirms `git cat-file -e <sha>^{commit}` succeeds in the local repository, and checks that `sha` appears in this worktree's `HEAD` reflog or its current branch's `refs/heads/<branch>` reflog (`git reflog show --format=%H`). Commits from other branches/worktrees or unknown SHAs fail. Note on reflog scope: `refs/heads/<branch>` reflog is shared across worktrees in the common `.git` directory and a worktree's `HEAD` reflog includes other branches that worktree previously had checked out; this is acceptable because all container and volume `io.florabase.source` and `com.docker.compose.project.working_dir` labels (plus project, role, mounts, network, ports and foreign volume users) must still match this exact worktree before `verify_launched_sha()` is evaluated.
+  - Hardened `delivered(repo, sha=None, *, make_prefix="uat-preview")`: catches `(WorkflowError, json.JSONDecodeError)` and non-list responses from `gh api ...`, raising a single clear `WorkflowError` with the 12-char SHA and caller-scoped next command (`uat-preview` vs `uat-instance`) instead of a raw `command failed: gh api ...` / 422 error.
 - **`scripts/uat_preview.py`**:
   - Extracted `verify_launched_sha(launched, *, stale_ok=False, allow_expired_sha=False)` and `check_upgradeable(current, graph)` hooks. `UATPreview` keeps the exact existing `ancestor()` / `delivered()` rule regardless of `stale_ok` or `allow_expired_sha`, preserving singleton UAT Preview and detached-owner semantics unchanged.
   - Deferred `verify_launched_sha` in `require_identity()` until after every volume, container, state, network, port, mount, environment, and `require_resource_users()` check passes (while keeping the 40-hex format check in the container loop), so foreign containers are always refused first.
@@ -45,7 +45,7 @@ Next: make uat-instance-up to rebuild from HEAD, or make uat-instance-reset CONF
   - Overrides `check_upgradeable`: keeps `require_upgradeable` intact and appends the exact guarded `make uat-instance-reset CONFIRM_RESET_UAT_INSTANCE=<project>` command on incompatibility, without auto-resetting or deleting data.
   - Updates `status()` to mark non-ancestor launched SHAs as `launched HEAD: <sha> (stale: not in current history)` and print the rebuild/reset next step.
 - **`scripts/feature_batch.py`**:
-  - Prints a one-line note at the end of `prepare()` when `owned_resources(repo)` reports a `florabase-uat-branch-*` instance on the batch worktree (`its launch will be stale — run make uat-instance-up`).
+  - Prints a one-line note at the end of `prepare()` when `owned_resources(repo)` reports a `florabase-uat-branch-*` instance on the batch worktree (`its running launch predates these merges; run make uat-instance-up to rebuild from HEAD`), catching `(WorkflowError, ResourceError)` when Docker is unavailable.
 
 ## Open checks answered
 

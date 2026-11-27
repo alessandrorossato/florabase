@@ -482,12 +482,26 @@ class SourceTests(unittest.TestCase):
             self.assertIn(unpushed[:12], message)
             self.assertIn("no delivered PR proof", message)
             self.assertIn("make uat-preview-status", message)
+            self.assertIn("make uat-preview-sync", message)
+            self.assertIn("make uat-preview-remove", message)
             self.assertNotIn("command failed", message)
+            with self.assertRaises(WorkflowError) as ctx_inst:
+                delivered(self.repo, unpushed, make_prefix="uat-instance")
+            inst_message = str(ctx_inst.exception)
+            self.assertIn(unpushed[:12], inst_message)
+            self.assertIn("make uat-instance-status", inst_message)
+            self.assertIn("make uat-instance-remove", inst_message)
+            self.assertNotIn("make uat-preview-", inst_message)
+            self.assertNotIn("uat-instance-sync", inst_message)
             with self.assertRaises(WorkflowError) as ctx_head:
                 delivered(self.repo)
             self.assertIn(unpushed[:12], str(ctx_head.exception))
             self.assertIn("GitHub PR proof lookup failed", str(ctx_head.exception))
             self.assertNotIn("command failed", str(ctx_head.exception))
+            with self.assertRaises(WorkflowError) as ctx_head_inst:
+                delivered(self.repo, make_prefix="uat-instance")
+            self.assertIn("make uat-instance-status", str(ctx_head_inst.exception))
+            self.assertNotIn("make uat-preview-", str(ctx_head_inst.exception))
         with patch("uat_source.run", return_value="not-json"):
             with self.assertRaisesRegex(WorkflowError, "no delivered PR proof"):
                 delivered(self.repo, unpushed)

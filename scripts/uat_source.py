@@ -45,7 +45,7 @@ def in_worktree_reflog(repo: Repository, sha: str, branch: str = "") -> bool:
     return False
 
 
-def delivered(repo: Repository, sha: str | None = None) -> str:
+def delivered(repo: Repository, sha: str | None = None, *, make_prefix: str = "uat-preview") -> str:
     """Return delivered main identity; squash delivery requires the exact merged PR head."""
     identity = repo.identity()
     if identity["dirty"] != "no":
@@ -59,21 +59,26 @@ def delivered(repo: Repository, sha: str | None = None) -> str:
         )
     except (WorkflowError, json.JSONDecodeError) as error:
         if sha is not None:
+            sync_hint = (
+                f", make {make_prefix}-sync (delivered owner),"
+                if make_prefix == "uat-preview"
+                else ""
+            )
             raise WorkflowError(
                 f"launched SHA {target[:12]} is not in this history and has no delivered PR proof "
-                "(GitHub lookup failed); run make uat-preview-status, make uat-preview-sync "
-                "(delivered owner), or guarded make uat-preview-remove"
+                f"(GitHub lookup failed); run make {make_prefix}-status{sync_hint} or guarded "
+                f"make {make_prefix}-remove"
             ) from error
         raise WorkflowError(
             f"detached source {target[:12]} is not in origin/main and GitHub PR proof lookup "
             "failed; check gh authentication/network or fetch origin/main before running "
-            "make uat-preview-status"
+            f"make {make_prefix}-status"
         ) from error
     if not isinstance(proposals, list):
         label = "launched SHA" if sha is not None else "detached source"
         raise WorkflowError(
             f"{label} {target[:12]} has an invalid GitHub PR proof response; "
-            "run make uat-preview-status or guarded make uat-preview-remove"
+            f"run make {make_prefix}-status or guarded make {make_prefix}-remove"
         )
     matches = []
     for pr in proposals:

@@ -36,6 +36,7 @@ class UATPreview(Environment):
     ROLE_LABEL = "uat"
     WORKFLOW_MODE = "uat"
     LABEL = "UAT Preview"
+    MAKE_PREFIX = "uat-preview"
     CONFIRM_RESET = "CONFIRM_RESET_UAT_PREVIEW"
     CONFIRM_REMOVE = "CONFIRM_REMOVE_UAT_PREVIEW"
 
@@ -64,7 +65,7 @@ class UATPreview(Environment):
             raise WorkflowError("origin is not the expected Florabase repository")
         if not retiring:
             if self.repository.identity()["branch"] == "detached":
-                delivered(self.repository)
+                delivered(self.repository, make_prefix=self.MAKE_PREFIX)
                 volumes = self.resource_volumes()
                 if {item["Name"] for item in volumes} != {
                     f"{self.project}_{key}" for key in VOLUMES
@@ -94,7 +95,7 @@ class UATPreview(Environment):
         allow_expired_sha: bool = False,
     ) -> None:
         if not ancestor(self.repository, launched, "HEAD"):
-            delivered(self.repository, launched)
+            delivered(self.repository, launched, make_prefix=self.MAKE_PREFIX)
 
     def check_upgradeable(self, current: list[str], graph: dict[str, list[str]]) -> None:
         require_upgradeable(current, graph)
