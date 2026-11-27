@@ -139,7 +139,7 @@ docker run --detach \
   --tmpfs /var/lib/postgresql:rw \
   --env POSTGRES_DB=restore_smoke \
   --env POSTGRES_USER=restore_smoke \
-  --env POSTGRES_PASSWORD=restore-smoke-only \
+  --env POSTGRES_PASSWORD=<restore-smoke-only> \
   postgres:18.6-alpine
 trap 'docker rm --force "$restore_container" >/dev/null 2>&1 || true' EXIT
 
