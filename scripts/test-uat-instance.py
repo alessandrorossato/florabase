@@ -324,11 +324,19 @@ class InstanceTests(unittest.TestCase):
     def test_host_run_modules_parse_on_the_ci_python(self) -> None:
         # CI runs these with Python 3.12; the formatter targets 3.14 and may rewrite `except (A, B)`.
         for name in (
-            "uat_source.py",
-            "uat_preview.py",
-            "uat_instance.py",
-            "test-uat-instance.py",
+            "ci-verify.py",
+            "compose_stacks.py",
+            "feature_batch.py",
+            "feature_worktree.py",
             "smoke-uat-instance.py",
+            "test-uat-instance.py",
+            "uat_instance.py",
+            "uat_preview.py",
+            "uat_source.py",
+            "verification_gate.py",
+            "verification_impact.py",
+            "workflow_environment.py",
+            "workflow_resources.py",
         ):
             with self.subTest(name=name):
                 source = (ROOT / "scripts" / name).read_text()

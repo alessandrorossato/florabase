@@ -560,7 +560,9 @@ def prepare(repo: Repository, plan: dict[str, Any]) -> None:
             for project in owned_resources(repo)
             if project.startswith("florabase-uat-branch-")
         )
-    except WorkflowError, ResourceError:
+    except WorkflowError:
+        instances = []
+    except ResourceError:
         instances = []
     if instances:
         print(

@@ -45,7 +45,7 @@ Next: make uat-instance-up to rebuild from HEAD, or make uat-instance-reset CONF
   - Overrides `check_upgradeable`: keeps `require_upgradeable` intact and appends the exact guarded `make uat-instance-reset CONFIRM_RESET_UAT_INSTANCE=<project>` command on incompatibility, without auto-resetting or deleting data.
   - Updates `status()` to mark non-ancestor launched SHAs as `launched HEAD: <sha> (stale: not in current history)` and print the rebuild/reset next step.
 - **`scripts/feature_batch.py`**:
-  - Prints a one-line note at the end of `prepare()` when `owned_resources(repo)` reports a `florabase-uat-branch-*` instance on the batch worktree (`its running launch predates these merges; run make uat-instance-up to rebuild from HEAD`), catching `(WorkflowError, ResourceError)` when Docker is unavailable.
+  - Prints a one-line note at the end of `prepare()` when `owned_resources(repo)` reports a `florabase-uat-branch-*` instance on the batch worktree (`its running launch predates these merges; run make uat-instance-up to rebuild from HEAD`), catching `WorkflowError` and `ResourceError` in separate clauses so `ruff format` (targeting Python 3.14) cannot strip parentheses into PEP 758 syntax incompatible with CI's Python 3.12 runner. The Python 3.12 AST parse regression in `scripts/test-uat-instance.py` now covers `feature_batch.py` and the `scripts/ci-verify.py` host-run import graph. Known pre-existing follow-up (left untouched, as both run inside Python 3.14 containers): `scripts/license_check.py:96` and `scripts/golden_dataset.py:1151` carry the same parentheseless PEP 758 `except` form.
 
 ## Open checks answered
 
