@@ -7,7 +7,8 @@ export interface DemoTourStep {
   readonly hint: string;
 }
 
-export const DEMO_INSTALL_URL = "https://florabase.eu/docs/installation/";
+export const DEMO_INSTALL_URL =
+  "https://github.com/alessandrorossato/florabase/blob/main/docs/installation.md";
 export const DEMO_TOUR_DISMISSED_KEY = "florabase.demo.tour-dismissed.v1";
 
 export const DEMO_TOUR_STEPS: readonly DemoTourStep[] = [

@@ -1,35 +1,40 @@
 # Engineering progress
 
-## 2026-11-26 — Opt-in public read-only demo mode & guided tour (`DEMO-001`)
+## 2026-11-27 — Opt-in public read-only demo mode & guided tour (`DEMO-001`, realigned on `7b667a4` + review fixes)
 
-- On `feat/demo-001-readonly-tour` from `origin/main` `08ff2f9` (writer `antigravity-demo-001`).
-  No database migration and zero impact on standard production authentication (`FLORABASE_DEMO_READONLY`
-  defaults to `false`, `G-SEC`/`ENG-03` public allowlist untouched).
-- Backend: added `demo_readonly: bool = False` (`FLORABASE_DEMO_READONLY`) and `workers: int` (`1..8`,
-  default `1`, `FLORABASE_WORKERS`) in `core/config.py`; added `auth/demo_readonly.py`
-  (`DemoReadOnlyMiddleware` rejecting all non-`GET`/`HEAD`/`OPTIONS` HTTP requests with `403`
-  `demo_read_only` + `Cache-Control: no-store`, and `resolve_demo_actor` reading the single enabled
-  owner without creating `auth_sessions` rows); wired defense-in-depth checks in
-  `auth/dependencies.py` (`require_authenticated_actor`, `require_csrf`), mounted
-  `DemoReadOnlyMiddleware` conditionally in `main.py`, advertised `"demo-readonly"` on
-  `GET /api/v1/system/info` when enabled, exposed `demo_readonly` on `SessionResponse` in
-  `auth/api.py`, and wired `uvicorn_workers_from_environment` into `db/release_schema.py` (`serve`).
-  Regenerated `backend/openapi.json` and `frontend/src/api/schema.d.ts`.
+- On `feat/demo-001-readonly-tour` realigned on `origin/main` `7b667a4` (post Batch 14b, writer
+  `antigravity-demo-001`). No database migration and zero impact on standard production
+  authentication (`FLORABASE_DEMO_READONLY` defaults to `false`, `G-SEC`/`ENG-03` public allowlist
+  and `MOBILE-003` `runtime_config` preserved).
+- Backend: added `demo_readonly: bool = False` (`FLORABASE_DEMO_READONLY`) in `core/config.py` and
+  single-source `uvicorn_workers_from_environment` (`FLORABASE_WORKERS` `1..8`, default `1`) in
+  `db/release_schema.py`; added `auth/demo_readonly.py` with explicit non-symlink startup marker
+  verification (`verify_demo_marker` requiring `.florabase-demo-readonly.marker` in both
+  `release_schema serve` and FastAPI `lifespan`, logging `PUBLIC READ-ONLY DEMO: no login required`),
+  `DemoReadOnlyMiddleware` rejecting all non-`GET`/`HEAD`/`OPTIONS` HTTP requests with `403`
+  `demo_read_only` (`Cache-Control: no-store`), transient in-memory `resolve_demo_actor` (zero
+  `auth_sessions` DB writes), neutral `Demo visitor` session response (`owner: false`,
+  `login_name: ""`), empty `GET /api/v1/auth/device-sessions`, cache-only `external_botany` GETs
+  (`external-taxa/search`, `occurrence-map/summary`, `occurrence-map/tiles` making zero outbound
+  GBIF calls and zero cache writes on miss), public demo thumbnail cache headers without
+  `Vary: Cookie`, and `"demo-readonly"` capability in `GET /api/v1/system/info`. Regenerated
+  `backend/openapi.json` and `frontend/src/api/schema.d.ts`.
 - Frontend: skipped `POST /api/v1/auth/csrf` in `auth/AuthProvider.tsx` when `session.demo_readonly`
-  is `true` and surfaced `403` `demo_read_only` responses via `shell/demo/readonlyNotice.ts`; disabled
-  Sign out and lazy-loaded `shell/demo/DemoExperience.tsx` in `App.tsx` only when `demo_readonly` is
-  active, rendering a slim semantic-token `Read-only demo` banner, polite read-only mutation notices,
-  and a 7-step interactive guided tour (`shell/demo/tourSteps.ts`, `shell/demo/demo.css`) navigating
-  across Today, Botanical identities, Seeds, Plants, Lineage, Geography and Schedule with
-  `Escape`/Skip/Restart and `?tour=1` support.
-- Docs & manifests: added [docs/demo-mode.md](demo-mode.md), linked it in `docs/README.md`,
-  registered `DEMO-001` (`implemented`, proposed release class `best-effort`) in `docs/features.json`
-  and `docs/release/scope-v1.json`, and recorded evidence in
+  is `true` and surfaced `403` `demo_read_only` responses via `shell/demo/readonlyNotice.ts`; updated
+  `shell/WorkbenchShell.tsx` to display `Demo visitor (read-only)` and hide Sign out, `Record`,
+  `+ New`, saved-view removal and owner-only Settings links (`Account`, `Media`, `Import / Export`);
+  lazy-loaded `shell/demo/DemoExperience.tsx` in `App.tsx` only in demo mode, rendering the
+  semantic-token `Read-only demo` banner, polite read-only mutation notices, and a 7-step interactive
+  guided tour (`shell/demo/tourSteps.ts`, `shell/demo/demo.css`) linking to GitHub
+  `docs/installation.md` with `Escape`/Skip/Restart, `?tour=1`, and resilient `sessionStorage`.
+- Docs & manifests: added [docs/demo-mode.md](demo-mode.md) (with full GET route side-effect audit
+  and caching/rate-limit notes), documented `FLORABASE_WORKERS` in [docs/installation.md](installation.md),
+  linked in `docs/README.md`, registered `DEMO-001` (`implemented`, proposed class `best-effort`) in
+  `docs/features.json` and `docs/release/scope-v1.json`, and recorded evidence in
   [evidence.md](archive/DEMO-001/evidence.md).
-- Checks: focused backend `ruff`, `mypy` (210 files), `pytest` (145 passed incl. `test_demo_readonly.py`
-  and `test_check_api_routes.py`), PostgreSQL integration `test_demo_readonly_api.py`, frontend
-  `vitest`, `tsc`, `eslint`, `prettier`, `check-features.py`, `check-doc-links.py`, `make api-check`,
-  and canonical `make feature-verify AGENT_ID=antigravity-demo-001`.
+- Checks: `make api-generate` / `make api-check`, `scripts/check-features.py`, `scripts/check-doc-links.py`,
+  focused unit & PostgreSQL integration suites (`test_demo_readonly.py`, `test_demo_readonly_api.py`,
+  `DemoExperience.test.tsx`), and canonical FULL gate (`make verify-full AGENT_ID=antigravity-demo-001`).
 
 ## 2026-11-26 — Batch 14b integration (IMPORT-002, REF-SETUP-001, ABOUT-001, UX-SORT-002, MEDIA-SETTINGS-001, MOBILE-003, DOC-04, UI-POLISH-002/003/004/005, BETA-SECURITY-001)
 

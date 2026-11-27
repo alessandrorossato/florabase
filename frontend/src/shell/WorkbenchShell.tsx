@@ -70,6 +70,24 @@ const shortcutLabel =
     : "Ctrl K";
 
 const savedViewLimit = 5;
+const demoHiddenSettingsSections: ReadonlySet<Section> = new Set<Section>([
+  "account",
+  "media-settings",
+  "import-export",
+]);
+
+function filterWorkspaceForDemo(
+  workspace: Workspace,
+  demoReadOnly: boolean,
+): Workspace {
+  if (!demoReadOnly || workspace.id !== "settings") return workspace;
+  return {
+    ...workspace,
+    destinations: workspace.destinations.filter(
+      (item) => !demoHiddenSettingsSections.has(item.section),
+    ),
+  };
+}
 
 /** The sections of one workspace, with sub-destinations, as a list of links. */
 function WorkspaceLinks({
@@ -269,6 +287,7 @@ export function WorkbenchShell({
   signedInAs,
   signingOut,
   signOutDisabled = false,
+  demoReadOnly = false,
   onSignOut,
   onNavigate,
   children,
@@ -278,6 +297,7 @@ export function WorkbenchShell({
   signedInAs: string;
   signingOut: boolean;
   signOutDisabled?: boolean;
+  demoReadOnly?: boolean;
   onSignOut: () => void;
   onNavigate: (href: string) => void;
   children: ReactNode;
@@ -494,7 +514,16 @@ export function WorkbenchShell({
     sheet && sheet !== "account"
       ? workspaces.find((item) => item.id === sheet)
       : undefined;
-  const settingsWorkspace = workspaces.find((item) => item.id === "settings");
+  const rawSettingsWorkspace = workspaces.find(
+    (item) => item.id === "settings",
+  );
+  const settingsWorkspace = rawSettingsWorkspace
+    ? filterWorkspaceForDemo(rawSettingsWorkspace, demoReadOnly)
+    : undefined;
+  const visiblePanel = filterWorkspaceForDemo(panel, demoReadOnly);
+  const accountLabel = demoReadOnly
+    ? `${signedInAs} (read-only)`
+    : `Signed in as ${signedInAs}`;
 
   return (
     <div
@@ -523,17 +552,19 @@ export function WorkbenchShell({
               <span className="wb-brand__name">Florabase</span>
             </a>
           </h1>
-          <button
-            type="button"
-            className="wb-rail__record"
-            aria-haspopup="dialog"
-            onClick={(event) => {
-              openRecord(event.currentTarget);
-            }}
-          >
-            <Icon name="journal" shell />
-            Record
-          </button>
+          {!demoReadOnly && (
+            <button
+              type="button"
+              className="wb-rail__record"
+              aria-haspopup="dialog"
+              onClick={(event) => {
+                openRecord(event.currentTarget);
+              }}
+            >
+              <Icon name="journal" shell />
+              Record
+            </button>
+          )}
           <div
             className="wb-rail__tabs"
             role="tablist"
@@ -632,27 +663,29 @@ export function WorkbenchShell({
               <span>Search</span>
               <kbd aria-hidden="true">{shortcutLabel}</kbd>
             </button>
-            <OverflowMenu
-              label="+ New"
-              ariaLabel="New record"
-              popoverClassName="wb-create-popover"
-              triggerContent={<Icon name="add" />}
-            >
-              <nav className="wb-create" aria-label="Create">
-                {createActions.map(([label, href, icon]) => (
-                  <a
-                    key={href}
-                    href={href}
-                    onClick={(event) => {
-                      follow(event, href);
-                    }}
-                  >
-                    <Icon name={icon} />
-                    {label}
-                  </a>
-                ))}
-              </nav>
-            </OverflowMenu>
+            {!demoReadOnly && (
+              <OverflowMenu
+                label="+ New"
+                ariaLabel="New record"
+                popoverClassName="wb-create-popover"
+                triggerContent={<Icon name="add" />}
+              >
+                <nav className="wb-create" aria-label="Create">
+                  {createActions.map(([label, href, icon]) => (
+                    <a
+                      key={href}
+                      href={href}
+                      onClick={(event) => {
+                        follow(event, href);
+                      }}
+                    >
+                      <Icon name={icon} />
+                      {label}
+                    </a>
+                  ))}
+                </nav>
+              </OverflowMenu>
+            )}
           </div>
           <header className="wb-panel__header">
             <p className="wb-panel__eyebrow">
@@ -663,17 +696,17 @@ export function WorkbenchShell({
           </header>
           <nav className="wb-sections" aria-label="Primary navigation">
             <WorkspaceLinks
-              workspace={panel}
+              workspace={visiblePanel}
               section={section}
               hash={hash}
               follow={follow}
               savedViews={savedViews}
-              onRemoveView={requestRemoval}
+              onRemoveView={demoReadOnly ? undefined : requestRemoval}
             />
           </nav>
           <LinkGroup label="Recent" items={recent} follow={follow} />
           <footer className="wb-panel__footer">
-            <p className="wb-account">{`Signed in as ${signedInAs}`}</p>
+            <p className="wb-account">{accountLabel}</p>
             <div className="wb-panel__footer-actions">
               <ThemeControl />
               <button
@@ -687,14 +720,16 @@ export function WorkbenchShell({
                 Hide panel
               </button>
             </div>
-            <button
-              type="button"
-              className="button--secondary wb-sign-out"
-              disabled={signingOut || signOutDisabled}
-              onClick={onSignOut}
-            >
-              {signingOut ? "Signing out…" : "Sign out"}
-            </button>
+            {!demoReadOnly && (
+              <button
+                type="button"
+                className="button--secondary wb-sign-out"
+                disabled={signingOut || signOutDisabled}
+                onClick={onSignOut}
+              >
+                {signingOut ? "Signing out…" : "Sign out"}
+              </button>
+            )}
           </footer>
         </div>
       </aside>
@@ -706,17 +741,19 @@ export function WorkbenchShell({
         aria-label="Mobile primary navigation"
         className="wb-bottombar"
       >
-        <button
-          type="button"
-          className="wb-bottombar__record"
-          aria-haspopup="dialog"
-          onClick={(event) => {
-            openRecord(event.currentTarget);
-          }}
-        >
-          <Icon name="journal" shell />
-          Record
-        </button>
+        {!demoReadOnly && (
+          <button
+            type="button"
+            className="wb-bottombar__record"
+            aria-haspopup="dialog"
+            onClick={(event) => {
+              openRecord(event.currentTarget);
+            }}
+          >
+            <Icon name="journal" shell />
+            Record
+          </button>
+        )}
         {primaryWorkspaces.map((workspace) => (
           <button
             key={workspace.id}
@@ -803,7 +840,7 @@ export function WorkbenchShell({
               Close
             </button>
           </div>
-          <p className="wb-account">{`Signed in as ${signedInAs}`}</p>
+          <p className="wb-account">{accountLabel}</p>
           <nav aria-label="Settings sections">
             <WorkspaceLinks
               workspace={settingsWorkspace}
@@ -814,14 +851,16 @@ export function WorkbenchShell({
           </nav>
           <div className="wb-panel__footer-actions">
             <ThemeControl />
-            <button
-              type="button"
-              className="button--secondary wb-sign-out"
-              disabled={signingOut || signOutDisabled}
-              onClick={onSignOut}
-            >
-              {signingOut ? "Signing out…" : "Sign out"}
-            </button>
+            {!demoReadOnly && (
+              <button
+                type="button"
+                className="button--secondary wb-sign-out"
+                disabled={signingOut || signOutDisabled}
+                onClick={onSignOut}
+              >
+                {signingOut ? "Signing out…" : "Sign out"}
+              </button>
+            )}
           </div>
         </TaskDialog>
       )}

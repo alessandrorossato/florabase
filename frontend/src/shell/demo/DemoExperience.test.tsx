@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AuthProvider, requestJson } from "../../auth/AuthProvider";
 import { useAuth } from "../../auth/context";
+import { WorkbenchShell } from "../WorkbenchShell";
 import { DemoExperience } from "./DemoExperience";
 import {
   extractDemoReadOnlyMessage,
@@ -95,6 +96,9 @@ describe("DemoExperience", () => {
     });
     expect(installLinks.length).toBeGreaterThanOrEqual(2);
     expect(installLinks[0]).toHaveAttribute("href", DEMO_INSTALL_URL);
+    expect(DEMO_INSTALL_URL).toContain(
+      "github.com/alessandrorossato/florabase",
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
     expect(
@@ -129,6 +133,26 @@ describe("DemoExperience", () => {
       screen.getByRole("region", { name: "Interactive guided tour" }),
     ).toBeInTheDocument();
     expect(window.sessionStorage.getItem(DEMO_TOUR_DISMISSED_KEY)).toBeNull();
+  });
+
+  it("handles private-mode sessionStorage errors gracefully", () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new DOMException("Access denied", "SecurityError");
+    });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("Access denied", "SecurityError");
+    });
+
+    const onNavigate = vi.fn();
+    render(<DemoExperience onNavigate={onNavigate} />);
+
+    expect(
+      screen.getByRole("region", { name: "Interactive guided tour" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Skip tour" }));
+    expect(
+      screen.queryByRole("region", { name: "Interactive guided tour" }),
+    ).not.toBeInTheDocument();
   });
 
   it("opens the tour when ?tour=1 is present even after prior dismissal", () => {
@@ -170,6 +194,46 @@ describe("DemoExperience", () => {
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
+  it("hides sign-out, create actions and owner-only settings in WorkbenchShell demo mode", () => {
+    render(
+      <WorkbenchShell
+        section="settings"
+        hash="#/settings"
+        signedInAs="Demo visitor"
+        signingOut={false}
+        signOutDisabled
+        demoReadOnly
+        onSignOut={vi.fn()}
+        onNavigate={vi.fn()}
+      >
+        <main>Demo body</main>
+      </WorkbenchShell>,
+    );
+
+    expect(screen.getByText("Demo visitor (read-only)")).toBeInTheDocument();
+    expect(screen.queryByText(/Signed in as/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Sign out/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Record/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /New record/i }),
+    ).not.toBeInTheDocument();
+
+    // Owner-only settings links are hidden while safe links remain visible.
+    expect(
+      screen.queryByRole("link", { name: "Account" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Import / Export" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Theme" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Labels" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Help" })).toBeInTheDocument();
+  });
+
   it("authenticates demo_readonly sessions without POST /api/v1/auth/csrf and surfaces 403 demo notices", async () => {
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
       const url = requestUrl(input);
@@ -177,11 +241,11 @@ describe("DemoExperience", () => {
         return Promise.resolve(
           new Response(
             JSON.stringify({
-              user_id: "00000000-0000-0000-0000-000000000001",
-              login_name: "demo",
-              display_name: "Florabase Demo",
-              owner: true,
-              canonical_origin: "https://demo.florabase.eu",
+              user_id: "00000000-0000-0000-0000-000000000000",
+              login_name: "",
+              display_name: "Demo visitor",
+              owner: false,
+              canonical_origin: "https://demo.example.org",
               demo_readonly: true,
             }),
             { status: 200, headers: { "Content-Type": "application/json" } },

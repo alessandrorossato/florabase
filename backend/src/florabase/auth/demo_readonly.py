@@ -1,8 +1,9 @@
-"""Opt-in public read-only demo guards and ephemeral read-only actor resolution."""
+"""Opt-in public read-only demo guards, startup marker check, and ephemeral actor resolution."""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -21,8 +22,20 @@ DEMO_READONLY_CODE = "demo_read_only"
 DEMO_READONLY_MESSAGE = (
     "This public demo is read-only. Install Florabase to create or edit records."
 )
+DEMO_EXTERNAL_LOOKUP_DISABLED_CODE = "demo_external_lookup_disabled"
+DEMO_EXTERNAL_LOOKUP_DISABLED_MESSAGE = (
+    "Live external botanical lookups are disabled in the public read-only demo."
+)
+DEMO_VISITOR_DISPLAY_NAME = "Demo visitor"
+DEMO_MARKER_FILENAME = ".florabase-demo-readonly.marker"
+DEMO_MARKER_TOKEN = "florabase-public-read-only-demo-v1"
+DEMO_STARTUP_WARNING = "PUBLIC READ-ONLY DEMO: no login required"
 SAFE_HTTP_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 EPHEMERAL_DEMO_SESSION_ID = UUID(int=0)
+
+
+class DemoMarkerError(RuntimeError):
+    """Raised when FLORABASE_DEMO_READONLY=true is requested without an explicit demo marker."""
 
 
 def demo_readonly_error_detail() -> dict[str, str]:
@@ -42,6 +55,53 @@ def raise_demo_readonly() -> None:
         status_code=status.HTTP_403_FORBIDDEN,
         detail=demo_readonly_error_detail(),
     )
+
+
+def demo_external_lookup_disabled_error() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail={
+            "code": DEMO_EXTERNAL_LOOKUP_DISABLED_CODE,
+            "message": DEMO_EXTERNAL_LOOKUP_DISABLED_MESSAGE,
+        },
+    )
+
+
+def demo_thumbnail_headers(etag: str, *, demo_readonly: bool) -> dict[str, str]:
+    if demo_readonly:
+        return {
+            "Cache-Control": "public, max-age=86400",
+            "ETag": etag,
+            "X-Content-Type-Options": "nosniff",
+        }
+    return {
+        "Cache-Control": "private, max-age=86400, must-revalidate",
+        "ETag": etag,
+        "Vary": "Cookie",
+        "X-Content-Type-Options": "nosniff",
+    }
+
+
+def verify_demo_marker(storage_root: Path) -> Path:
+    """Refuse demo startup unless an explicit, non-symlink demo marker file is present."""
+    marker = storage_root / DEMO_MARKER_FILENAME
+    if marker.is_symlink() or not marker.exists() or not marker.is_file():
+        raise DemoMarkerError(
+            f"FLORABASE_DEMO_READONLY=true refused: missing demo marker at {marker}. "
+            "A private collection cannot start in public demo mode unless demo provisioning "
+            f"writes '{DEMO_MARKER_TOKEN}' to {DEMO_MARKER_FILENAME} inside attachment storage."
+        )
+    try:
+        content = marker.read_text(encoding="ascii").strip()
+    except (OSError, UnicodeDecodeError) as error:
+        raise DemoMarkerError(
+            f"FLORABASE_DEMO_READONLY=true refused: unreadable demo marker at {marker}."
+        ) from error
+    if content != DEMO_MARKER_TOKEN:
+        raise DemoMarkerError(
+            f"FLORABASE_DEMO_READONLY=true refused: invalid demo marker content at {marker}."
+        )
+    return marker
 
 
 class DemoReadOnlyMiddleware:
@@ -73,6 +133,7 @@ def resolve_demo_actor(database: Session) -> AuthenticatedActor:
             detail="Demo collection is not initialized",
         )
     now = datetime.now(UTC)
+    # Transient placeholder session only: NEVER add this instance to the SQLAlchemy Session.
     ephemeral_session = AuthSession(
         id=EPHEMERAL_DEMO_SESSION_ID,
         user_id=owner.id,

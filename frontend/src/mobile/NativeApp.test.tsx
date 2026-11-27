@@ -74,6 +74,7 @@ const ownerSession = {
   owner: true,
   display_name: "Owner",
   canonical_origin: "https://nas.example.com",
+  demo_readonly: false,
 };
 
 describe("NativeApp device sign-in and Keystore lifecycle", () => {

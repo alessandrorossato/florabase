@@ -552,7 +552,11 @@ function ApplicationShell({
     : state.session;
   const demoReadOnly =
     !isReauthenticationState(state) && state.session.demo_readonly;
-  const signedInAs = ownerIdentity.display_name ?? ownerIdentity.login_name;
+  const signedInAs =
+    ownerIdentity.display_name ??
+    (ownerIdentity.login_name !== ""
+      ? ownerIdentity.login_name
+      : "Demo visitor");
 
   return (
     <WorkbenchShell
@@ -561,6 +565,7 @@ function ApplicationShell({
       signedInAs={signedInAs}
       signingOut={state.status === "logging-out"}
       signOutDisabled={Boolean(passwordChange?.pending) || demoReadOnly}
+      demoReadOnly={demoReadOnly}
       onSignOut={() => {
         if (demoReadOnly) return;
         if (route.section === "account" && formDeparture.current?.() === false)
