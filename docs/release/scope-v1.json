@@ -6,6 +6,7 @@
     "FOUNDATION-001": "baseline",
     "OPS-001": "baseline",
     "DOCS-001": "baseline",
+    "DOCS-005": "best-effort",
     "CI-001": "baseline",
     "CI-002": "baseline",
     "CI-003": "baseline",

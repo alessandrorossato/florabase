@@ -372,5 +372,66 @@ class CheckFeaturesTest(unittest.TestCase):
                 )
 
 
+class FeatureShowTest(unittest.TestCase):
+    LOOKUP = Path(__file__).resolve().with_name("feature-show.py")
+
+    def run_lookup(
+        self, document: dict[str, object], manifest: dict[str, object], *arguments: str
+    ) -> subprocess.CompletedProcess[str]:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "docs/release").mkdir(parents=True)
+            (root / "docs/features.json").write_text(json.dumps(document), encoding="utf-8")
+            (root / "docs/release/scope-v1.json").write_text(
+                json.dumps(manifest), encoding="utf-8"
+            )
+            return subprocess.run(
+                [sys.executable, str(self.LOOKUP), *arguments],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+    def test_show_exact_and_prefix_and_missing(self) -> None:
+        doc = graph(
+            feature("MOBILE-001", category="mobile", status="implemented"),
+            feature("MOBILE-002", category="mobile", status="in_progress", dependencies=["MOBILE-001"]),
+            feature("DOCS-001", category="documentation", status="verified"),
+        )
+        doc["allowed_statuses"] = ["planned", "in_progress", "implemented", "verified"]
+        man = scope(doc, **{"MOBILE-001": "post-1.0", "MOBILE-002": "post-1.0", "DOCS-001": "baseline"})
+
+        exact = self.run_lookup(doc, man, "--show", "MOBILE-002")
+        self.assertEqual(exact.returncode, 0, exact.stderr)
+        self.assertIn("MOBILE-002 [in_progress | post-1.0 | P1 | mobile]", exact.stdout)
+        self.assertIn("deps: MOBILE-001", exact.stdout)
+        self.assertNotIn("MOBILE-001 [", exact.stdout)
+
+        prefix = self.run_lookup(doc, man, "--show", "MOBILE-")
+        self.assertEqual(prefix.returncode, 0, prefix.stderr)
+        self.assertIn("MOBILE-001 [implemented | post-1.0 | P1 | mobile]", prefix.stdout)
+        self.assertIn("MOBILE-002 [in_progress | post-1.0 | P1 | mobile]", prefix.stdout)
+        self.assertNotIn("DOCS-001", prefix.stdout)
+
+        missing = self.run_lookup(doc, man, "--show", "NOPE-999")
+        self.assertEqual(missing.returncode, 1)
+        self.assertIn("no feature matching 'NOPE-999'", missing.stderr)
+
+    def test_list_all_and_by_status(self) -> None:
+        doc = graph(
+            feature("A-001", status="in_progress"),
+            feature("B-001", status="verified"),
+        )
+        doc["allowed_statuses"] = ["planned", "in_progress", "implemented", "verified"]
+        man = scope(doc, **{"A-001": "best-effort", "B-001": "baseline"})
+
+        listed = self.run_lookup(doc, man, "--list", "--status", "in_progress")
+        self.assertEqual(listed.returncode, 0, listed.stderr)
+        self.assertIn("A-001", listed.stdout)
+        self.assertIn("best-effort", listed.stdout)
+        self.assertNotIn("B-001", listed.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()

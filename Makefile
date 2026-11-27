@@ -122,9 +122,16 @@ api-generate: ## Regenerate OpenAPI and TypeScript API declarations
 api-check: ## Verify generated API artifacts are current
 	./scripts/check-api-generated.sh
 
-.PHONY: doc-links license-check
-doc-links: ## Verify relative Markdown links across the repository
+.PHONY: doc-links license-check feature-show feature-list
+doc-links: ## Verify relative Markdown links and docs structure across the repository
 	@python3 ./scripts/check-doc-links.py
+
+feature-show: ## Show one feature (or prefix family) from docs/features.json and scope-v1.json: make feature-show ID=MOBILE-003
+	@test -n "$(ID)" || { echo 'ID is required, e.g. make feature-show ID=MOBILE-003 or ID=MOBILE-' >&2; exit 2; }
+	@python3 ./scripts/feature-show.py --show "$(ID)"
+
+feature-list: ## List features from docs/features.json (optional STATUS=in_progress)
+	@python3 ./scripts/feature-show.py --list $(if $(STATUS),--status "$(STATUS)",)
 
 license-check: ## List installed PyPI/npm dependency licences and fail on AGPL-incompatible terms
 	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts/license_check.py:/tmp/license_check.py:ro" backend python3 /tmp/license_check.py --pypi

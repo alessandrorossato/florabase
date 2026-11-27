@@ -140,7 +140,12 @@ class SelectionTests(unittest.TestCase):
 
     def test_docs_only_never_selects_product_or_docker_stages(self) -> None:
         plan = self.plan(
-            "docs/schedule.md",
+            "docs/features/activity/schedule.md",
+            "docs/operate/installation.md",
+            "docs/develop/workflow/batches.md",
+            "docs/architecture/domain-model/reference-concepts.md",
+            "docs/product/product-roadmap.md",
+            "docs/agent-map.md",
             "README.md",
             "CONTRIBUTING.md",
             "SECURITY.md",
@@ -148,7 +153,7 @@ class SelectionTests(unittest.TestCase):
             "THIRD-PARTY-NOTICES.md",
             "LICENSE",
             "docs/features.json",
-            "docs/review/new/evidence.PNG",
+            "docs/archive/review/new/evidence.PNG",
             "docs/design/new/prototype.css",
         )
         self.assertTrue(plan["docs_only"])
@@ -169,6 +174,10 @@ class SelectionTests(unittest.TestCase):
 
     def test_executable_and_unclassified_documentation_paths_escalate(self) -> None:
         for path in (
+            "docs/archive/review/taxonomy-visual-001/compose.yaml",
+            "docs/archive/review/wcvp-version-001/compose.yaml",
+            "docs/archive/review/wcvp-version-001/live-review.py",
+            "docs/archive/review/maps-origins-001/capture.cjs",
             "docs/review/taxonomy-visual-001/compose.yaml",
             "docs/review/wcvp-version-001/compose.yaml",
             "docs/review/wcvp-version-001/live-review.py",
@@ -687,6 +696,10 @@ class SelectionTests(unittest.TestCase):
     def test_remote_policy_matrix(self) -> None:
         for path in (
             "docs/example.md",
+            "docs/archive/review/taxonomy-visual-001/compose.yaml",
+            "docs/archive/review/wcvp-version-001/compose.yaml",
+            "docs/archive/review/wcvp-version-001/live-review.py",
+            "docs/archive/review/maps-origins-001/capture.cjs",
             "docs/review/taxonomy-visual-001/compose.yaml",
             "frontend/src/plants/PlantList.tsx",
             "frontend/src/taxonomy/taxonomy.css",

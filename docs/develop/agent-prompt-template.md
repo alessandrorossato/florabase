@@ -4,7 +4,7 @@
 
 Copy this block into feature briefs for agents working in provider-managed worktrees (see
 [AGENTS.md](../../AGENTS.md#after-delivery-remove-your-worktree) and
-[docs/development-workflow.md](workflow/worktrees-and-agents.md#worktrees-provided-by-an-agent-tool)).
+[docs/develop/development-workflow.md](workflow/worktrees-and-agents.md#worktrees-provided-by-an-agent-tool)).
 
 ## Final step (after delivery and finish)
 

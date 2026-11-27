@@ -1,5 +1,13 @@
 # Engineering progress
 
+> Earlier milestones through `v0.1.0-beta.6` are archived in [archive/progress-until-beta-7.md](archive/progress-until-beta-7.md). Per-beta rotation starts at `v0.1.0-beta.11` release prep (see [workflow/verification-and-gates.md](develop/workflow/verification-and-gates.md#documentation-and-review-artifact-placement)).
+
+## 2026-11-27 — Docs subfolder reorganization, agent reading path, and drift checks (`DOCS-005`)
+
+- Reorganized `docs/` on `docs/docs-005-structure` (base `c83d816`, writer `antigravity-docs-005`) with a pure `git mv` first commit (`0390c760`) moving 67 top-level files into `operate/`, `develop/`, `architecture/`, `product/`, `features/{collection,activity,explore,sourcing,tools}/`, and `archive/<FEATURE-ID>/` (plus `git mv docs/review docs/archive/review`). Kept 7 top-level tombstones (`installation.md`, `security.md`, `backup-restore.md`, `deployment.md`, `mobile.md`, `versioning.md`, and existing `portable-installation.md`) preserving released `CHANGELOG.md` anchors and leaving `compose.yaml` and `postgres/florabase-postgres-entrypoint.sh` untouched.
+- Split `development-workflow.md` (80.8 KB) into `develop/workflow/` (6 files) + anchor-preserving index, and `domain-model.md` (75.6 KB) into `architecture/domain-model/` (4 files) + index; kept `develop/ui-contract.md` (48.2 KB) whole per Phase 1 ruling. Added `> Summary:` lines and folder `README.md` indexes, `docs/agent-map.md`, `make feature-show` / `make feature-list` (`scripts/feature-show.py`), updated `AGENTS.md` step 4, and extended `scripts/check-doc-links.py` + `scripts/test-doc-links.py` with structure drift checks.
+- Updated hard-coded `docs/` paths across backend (`release_schema.py`, `events/{model,schemas}.py` + regenerated `openapi.json`/`schema.d.ts`), frontend, scripts, tests, CI, `Makefile`, `release/platform.json`, and `docs/design/ui-system-v1/*.py`. Registered `DOCS-005` next to `DOCS-001` (`best-effort`). Evidence: [docs/archive/DOCS-005/evidence.md](archive/DOCS-005/evidence.md).
+
 ## 2026-11-27 — Android release APK: apksigner output format (MOBILE-003)
 
 - Second `v0.1.0-beta.10` APK run (45981312380) built and signed the APK but

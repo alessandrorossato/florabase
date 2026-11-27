@@ -56,6 +56,22 @@
       "status": "verified"
     },
     {
+      "id": "DOCS-005",
+      "category": "documentation",
+      "description": "Reorganize docs/ into topic subfolders and archive/review/, add task-oriented agent reading path (agent-map.md, AGENTS.md start path, make feature-show, split workflow and domain-model guides), and enforce docs structure drift checks",
+      "acceptance_criteria": [
+        "Top level of docs/ holds only the allowed files (README.md, agent-map.md, progress.md, features.json, and the seven explicit tombstones); every living guide is indexed from its folder README.md with a one-line summary; make doc-links passes",
+        "All hard-coded docs/ paths in code, scripts, tests, CI, and release metadata are updated; shipped compose.yaml and postgres/florabase-postgres-entrypoint.sh remain untouched and covered by the docs/installation.md tombstone; backend OpenAPI and frontend schema.d.ts are regenerated with zero drift",
+        "AGENTS.md start path uses docs/agent-map.md, the latest milestone of docs/progress.md, and make feature-show / make feature-list; before/after byte savings are measured and recorded in docs/archive/DOCS-005/evidence.md",
+        "Drift checks in scripts/check-doc-links.py (allowed top-level list, orphan living docs, summary line, >40 KB size warning, tombstone targets) and verification-impact coverage for new subfolders and docs/archive/review/ are tested and green"
+      ],
+      "dependencies": [
+        "DOCS-002"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "CI-001",
       "category": "testing",
       "description": "Run Florabase verification automatically on pull requests",
