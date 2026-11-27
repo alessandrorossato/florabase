@@ -1,13 +1,17 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { components } from "../../api/schema";
 import {
   Breadcrumbs,
   DetailHeader,
   DetailPage,
   DetailTabs,
+  RecordChildCard,
+  RecordDescendants,
+  RecordOverview,
   SpecimenLabel,
   SpecimenPlate,
 } from "../../components/CollectionUI";
+import { RecordAlmanac } from "../../timeline/RecordAlmanac";
 import { setRecordRoute } from "../../components/recordNavigation";
 import {
   FormActions,
@@ -132,16 +136,39 @@ function lifecycleLabel(state: string) {
   );
 }
 
-/** Pages within a cutting record, kept in the route like the other collection details. */
-function useRecordTab<T extends string>(base: string, tabs: readonly T[]) {
-  const initial = new URLSearchParams(
+/** Pages within a cutting record, kept in the route and synced on later route changes. */
+function readRouteTab<T extends string>(tabs: readonly T[]): T {
+  const param = new URLSearchParams(
     window.location.hash.split("?", 2)[1] ?? "",
   ).get("tab");
-  const [tab, setTab] = useState<T>(
-    tabs.find((item) => item === initial) ?? tabs[0],
-  );
+  return tabs.find((item) => item === param) ?? tabs[0];
+}
+
+function useRecordTab<T extends string>(base: string, tabs: readonly T[]) {
+  const routeTab = readRouteTab(tabs);
+  const routeKey = `${base}:${routeTab}`;
+  const [tab, setTab] = useState<T>(routeTab);
+  const [lastRouteKey, setLastRouteKey] = useState(routeKey);
+  if (lastRouteKey !== routeKey) {
+    setLastRouteKey(routeKey);
+    setTab(routeTab);
+  }
+  useEffect(() => {
+    const sync = () => {
+      const next = readRouteTab(tabs);
+      setLastRouteKey(`${base}:${next}`);
+      setTab(next);
+    };
+    window.addEventListener("hashchange", sync);
+    window.addEventListener("popstate", sync);
+    return () => {
+      window.removeEventListener("hashchange", sync);
+      window.removeEventListener("popstate", sync);
+    };
+  }, [base, tabs]);
   function select(next: T) {
     setTab(next);
+    setLastRouteKey(`${base}:${next}`);
     window.history.replaceState(
       window.history.state,
       "",
@@ -394,11 +421,8 @@ function LotRecord({
             id={id}
             current="This Vegetative lot"
             currentKind="vegetative_lot"
-            fullHref={
-              tab === "lineage"
-                ? undefined
-                : `#/cuttings/lots/${id}?tab=lineage`
-            }
+            fullHref={`#/cuttings/lots/${id}?tab=lineage`}
+            onLineageTab={tab === "lineage"}
             onFull={(event) => {
               event.preventDefault();
               setTab("lineage");
@@ -439,10 +463,57 @@ function LotRecord({
           aria-labelledby="tab-overview"
           className="detail-tab-panel"
         >
-          <section aria-labelledby="cutting-lot-facts">
-            <h3 id="cutting-lot-facts">Material and source</h3>
-            <LotFacts lot={lot} />
-          </section>
+          <RecordOverview
+            facts={
+              <>
+                <section aria-labelledby="cutting-lot-facts">
+                  <h3 id="cutting-lot-facts">Material and source</h3>
+                  <LotFacts lot={lot} />
+                </section>
+                <RecordDescendants
+                  headingId="cutting-lot-descendants"
+                  items={[
+                    {
+                      label: `${String(lot.attempts.length)} ${lot.attempts.length === 1 ? "rooting attempt" : "rooting attempts"}`,
+                      href: `#/cuttings/lots/${id}?tab=attempts`,
+                      onClick: (event) => {
+                        event.preventDefault();
+                        setTab("attempts");
+                      },
+                    },
+                  ]}
+                  lineageHref={`#/cuttings/lots/${id}?tab=lineage`}
+                  onOpenLineage={(event) => {
+                    event.preventDefault();
+                    setTab("lineage");
+                  }}
+                />
+              </>
+            }
+            almanac={
+              <RecordAlmanac
+                kind="vegetative_lot"
+                id={id}
+                current={lot.lifecycle === "active"}
+                recordedElsewhere={
+                  <>
+                    {lot.attempts.length > 0
+                      ? `${String(lot.attempts.length)} ${lot.attempts.length === 1 ? "rooting attempt" : "rooting attempts"} recorded. `
+                      : "No rooting attempts recorded yet. "}
+                    <a
+                      href={`#/cuttings/lots/${id}?tab=attempts`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setTab("attempts");
+                      }}
+                    >
+                      Open Rooting attempts
+                    </a>
+                  </>
+                }
+              />
+            }
+          />
         </div>
       )}
       {tab === "attempts" && (
@@ -455,19 +526,19 @@ function LotRecord({
           <section aria-labelledby="cutting-lot-attempts">
             <h3 id="cutting-lot-attempts">Rooting attempts</h3>
             {lot.attempts.length ? (
-              <ul className="lineage-list">
+              <div className="record-child-grid">
                 {lot.attempts.map((attempt) => (
-                  <li key={attempt.id}>
-                    <a href={`#/cuttings/attempts/${attempt.id}`}>
-                      {displayAttempt(attempt)}
-                    </a>{" "}
-                    <LifecycleStatus state={attempt.lifecycle}>
-                      {lifecycleLabel(attempt.lifecycle)}
-                    </LifecycleStatus>{" "}
-                    {rootingLabel(attempt)}
-                  </li>
+                  <RecordChildCard
+                    key={attempt.id}
+                    kind="Rooting attempt"
+                    href={`#/cuttings/attempts/${attempt.id}`}
+                    title={displayAttempt(attempt)}
+                    status={attempt.lifecycle}
+                    statusLabel={lifecycleLabel(attempt.lifecycle)}
+                    meta={<p>{rootingLabel(attempt)}</p>}
+                  />
                 ))}
-              </ul>
+              </div>
             ) : (
               <EmptyState>
                 No attempts have been started for this lot.
@@ -499,10 +570,7 @@ function LotRecord({
           aria-labelledby="tab-lineage"
           className="detail-tab-panel"
         >
-          <section aria-labelledby="cutting-lot-lineage">
-            <h3 id="cutting-lot-lineage">Maternal lineage</h3>
-            <LineagePanel kind="vegetative-lots" id={id} />
-          </section>
+          <LineagePanel kind="vegetative-lots" id={id} />
         </div>
       )}
     </DetailPage>
@@ -1200,11 +1268,8 @@ function AttemptRecord({
             id={id}
             current="This Rooting attempt"
             currentKind="propagation_attempt"
-            fullHref={
-              tab === "lineage"
-                ? undefined
-                : `#/cuttings/attempts/${id}?tab=lineage`
-            }
+            fullHref={`#/cuttings/attempts/${id}?tab=lineage`}
+            onLineageTab={tab === "lineage"}
             onFull={(event) => {
               event.preventDefault();
               setTab("lineage");
@@ -1252,10 +1317,7 @@ function AttemptRecord({
           aria-labelledby="tab-lineage"
           className="detail-tab-panel"
         >
-          <section aria-labelledby="rooting-lineage">
-            <h3 id="rooting-lineage">Maternal lineage</h3>
-            <LineagePanel kind="propagation-attempts" id={id} />
-          </section>
+          <LineagePanel kind="propagation-attempts" id={id} />
         </div>
       )}
     </DetailPage>
@@ -1363,74 +1425,129 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
               aria-labelledby="tab-overview"
               className="detail-tab-panel"
             >
-              <section aria-labelledby="rooting-overview">
-                <h3 id="rooting-overview" ref={overview} tabIndex={-1}>
-                  Rooting overview
-                </h3>
-                <dl className="record-facts">
-                  {attempt.ended_on && (
-                    <div>
-                      <dt>Ended on</dt>
-                      <dd>{formatPartialDate(attempt.ended_on)}</dd>
-                    </div>
-                  )}
-                  {attempt.substrate && (
-                    <div>
-                      <dt>Substrate</dt>
-                      <dd>{attempt.substrate}</dd>
-                    </div>
-                  )}
-                  {attempt.hormone_treatment && (
-                    <div>
-                      <dt>Hormone treatment</dt>
-                      <dd>{attempt.hormone_treatment}</dd>
-                    </div>
-                  )}
-                  {attempt.container && (
-                    <div>
-                      <dt>Container</dt>
-                      <dd>{attempt.container}</dd>
-                    </div>
-                  )}
-                  {attempt.environment && (
-                    <div>
-                      <dt>Environment</dt>
-                      <dd>{attempt.environment}</dd>
-                    </div>
-                  )}
-                  {attempt.location_id && (
-                    <div>
-                      <dt>Location</dt>
-                      <dd>
-                        <a href={`#/locations/${attempt.location_id}`}>
-                          Open rooting location
+              <RecordOverview
+                facts={
+                  <>
+                    <section aria-labelledby="rooting-overview">
+                      <h3 id="rooting-overview" ref={overview} tabIndex={-1}>
+                        Rooting overview
+                      </h3>
+                      <dl className="record-facts">
+                        {attempt.ended_on && (
+                          <div>
+                            <dt>Ended on</dt>
+                            <dd>{formatPartialDate(attempt.ended_on)}</dd>
+                          </div>
+                        )}
+                        {attempt.substrate && (
+                          <div>
+                            <dt>Substrate</dt>
+                            <dd>{attempt.substrate}</dd>
+                          </div>
+                        )}
+                        {attempt.hormone_treatment && (
+                          <div>
+                            <dt>Hormone treatment</dt>
+                            <dd>{attempt.hormone_treatment}</dd>
+                          </div>
+                        )}
+                        {attempt.container && (
+                          <div>
+                            <dt>Container</dt>
+                            <dd>{attempt.container}</dd>
+                          </div>
+                        )}
+                        {attempt.environment && (
+                          <div>
+                            <dt>Environment</dt>
+                            <dd>{attempt.environment}</dd>
+                          </div>
+                        )}
+                        {attempt.location_id && (
+                          <div>
+                            <dt>Location</dt>
+                            <dd>
+                              <a href={`#/locations/${attempt.location_id}`}>
+                                Open rooting location
+                              </a>
+                            </dd>
+                          </div>
+                        )}
+                        {attempt.notes && (
+                          <div>
+                            <dt>Notes</dt>
+                            <dd>{attempt.notes}</dd>
+                          </div>
+                        )}
+                      </dl>
+                      {editable && attempt.operation_receipt_id && (
+                        <p>
+                          <button
+                            type="button"
+                            className="button--secondary"
+                            onClick={() => {
+                              if (attempt.operation_receipt_id)
+                                setDialog({
+                                  type: "undo",
+                                  receipt: attempt.operation_receipt_id,
+                                });
+                            }}
+                          >
+                            Undo starting attempt
+                          </button>
+                        </p>
+                      )}
+                    </section>
+                    <RecordDescendants
+                      headingId="rooting-descendants"
+                      loading={summary.state === "loading"}
+                      error={summary.state === "error"}
+                      items={
+                        summary.state === "ready"
+                          ? [
+                              {
+                                label: `${String(summary.value.offspring.length)} established offspring`,
+                                href: `#/cuttings/attempts/${id}?tab=offspring`,
+                                onClick: (event) => {
+                                  event.preventDefault();
+                                  setTab("offspring");
+                                },
+                              },
+                            ]
+                          : []
+                      }
+                      lineageHref={`#/cuttings/attempts/${id}?tab=lineage`}
+                      onOpenLineage={(event) => {
+                        event.preventDefault();
+                        setTab("lineage");
+                      }}
+                    />
+                  </>
+                }
+                almanac={
+                  <RecordAlmanac
+                    kind="propagation_attempt"
+                    id={id}
+                    current={active}
+                    recordedElsewhere={
+                      <>
+                        {attempt.observations.length > 0
+                          ? `${String(attempt.observations.length)} rooting ${attempt.observations.length === 1 ? "observation" : "observations"} recorded. `
+                          : "No rooting observations recorded yet. "}
+                        <a
+                          href={`#/cuttings/attempts/${id}?tab=observations`}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            setTab("observations");
+                          }}
+                        >
+                          Open Observations
                         </a>
-                      </dd>
-                    </div>
-                  )}
-                  {attempt.notes && (
-                    <div>
-                      <dt>Notes</dt>
-                      <dd>{attempt.notes}</dd>
-                    </div>
-                  )}
-                </dl>
-                {editable && attempt.operation_receipt_id && (
-                  <button
-                    type="button"
-                    className="button--secondary"
-                    onClick={() => {
-                      if (attempt.operation_receipt_id)
-                        setDialog({
-                          type: "undo",
-                          receipt: attempt.operation_receipt_id,
-                        });
-                    }}
-                  >
-                    Undo starting attempt
-                  </button>
-                )}
-              </section>
+                      </>
+                    }
+                  />
+                }
+              />
             </div>
           )}
           {tab === "observations" && (
@@ -1491,18 +1608,21 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
                 )}
                 {summary.state === "ready" &&
                   (summary.value.offspring.length ? (
-                    <ul className="lineage-list">
+                    <div className="record-child-grid">
                       {summary.value.offspring.map((item) => (
-                        <li key={item.id}>
-                          <a
-                            href={`#/${item.kind === "plant" ? "plants" : "plant-groups"}/${item.id}`}
-                          >
-                            {item.label ??
-                              (item.kind === "plant" ? "Plant" : "Plant group")}
-                          </a>{" "}
-                          <span className="record-state">{item.lifecycle}</span>{" "}
-                          {item.lifecycle !== "reversed" &&
-                            item.operation_receipt_id && (
+                        <RecordChildCard
+                          key={item.id}
+                          kind={item.kind === "plant" ? "Plant" : "Plant group"}
+                          href={`#/${item.kind === "plant" ? "plants" : "plant-groups"}/${item.id}`}
+                          title={
+                            item.label ??
+                            (item.kind === "plant" ? "Plant" : "Plant group")
+                          }
+                          status={item.lifecycle}
+                          statusLabel={lifecycleLabel(item.lifecycle)}
+                          actions={
+                            item.lifecycle !== "reversed" &&
+                            item.operation_receipt_id ? (
                               <button
                                 type="button"
                                 className="button--secondary"
@@ -1516,10 +1636,11 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
                               >
                                 Undo establishment
                               </button>
-                            )}
-                        </li>
+                            ) : undefined
+                          }
+                        />
                       ))}
-                    </ul>
+                    </div>
                   ) : (
                     <EmptyState>No established offspring.</EmptyState>
                   ))}

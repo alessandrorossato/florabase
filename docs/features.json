@@ -3170,6 +3170,25 @@
       "status": "implemented"
     },
     {
+      "id": "UI-POLISH-006",
+      "category": "ux",
+      "description": "Collection detail consistency round (batch 15 / beta.11): remove the hidden Back/New bar from Plant and Sowing details in code, unify LineageStrip, LineagePanel, DetailTabs, RecordOverview + RecordAlmanac, RecordDescendants, DetailHeader action bar, SpecimenLabel formatting, child-record cards, Sowing germination layout, Harvest compact table/status/lineage, Location tabs/header, and close UI-POLISH-005 review leftovers",
+      "acceptance_criteria": [
+        "Plant and Sowing details no longer render the context Back/New bar in the DOM (no CSS hiding rule remains in detail-page.css); list views keep New and creationTriggerRef/data-collection-return; clicking the Plants/Sowings breadcrumb returns focus to the collection list",
+        "LineageStrip keeps Full lineage pinned right at constant height on every tab, wraps long chains without clipping, carries harvested as on Harvest's last arrow, and appends a compact descendants summary linking to the Lineage tab",
+        "LineagePanel is used on every Collection detail (including Sowing and Harvest) with one Ancestors horizontal chain plus Recorded from this record elbow tree and one empty-state wording per case",
+        "All Collection details share DetailTabs order Overview · <work tabs> · Photos · Lineage (Location: Overview · Contents) with one underline active tab style, two-column RecordOverview (facts left, RecordAlmanac right), one-line RecordDescendants in Overview, uniform RecordChildCard cards, and consistent SpecimenLabel typography (monospace only for dates/quantities/codes)",
+        "Header action bars follow at most one primary (first) + two secondary + Edit + More (Sowing moves Create Plant group into More; Harvest shows status chip and Record disposition primary when held; Location puts Create child before Log care and removes duplicate root subtitle and scope chips)",
+        "Sowing Germination tab places Observation history full-width below the metrics row and Sowing Overview replaces filler text with real germination summary; Harvest Overview uses one compact Materials & storage table with inline links for Seed lot conversions and disposition history",
+        "Cuttings useRecordTab follows later ?tab= route changes, Species distribution shows represented/ready counts once in the overview, and dead Media :not(.page-header--directory) CSS rules are removed"
+      ],
+      "dependencies": [
+        "UI-POLISH-005"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "FN-02",
       "category": "ux",
       "description": "Sort the Seeds, Sowings and Plants directories by name and by their own date",

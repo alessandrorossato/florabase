@@ -2,12 +2,16 @@ import { useId, useState } from "react";
 import type { MouseEventHandler } from "react";
 
 import {
+  ancestryKinds,
+  descendantSummaryLabel,
   lineageFallbackLabels,
   lineageHref,
   lineageKindLabels,
   lineageVerbs,
   upstreamPath,
+  useDirectDescendants,
   useRecordedLineage,
+  type AncestryKind,
   type LineageEndpoint,
   type LineageNode,
 } from "./useRecordedLineage";
@@ -17,17 +21,17 @@ function Verb({
   from,
   to,
 }: {
-  from?: LineageNode["kind"];
-  to?: LineageNode["kind"];
+  from?: LineageNode["kind"] | "harvest";
+  to?: LineageNode["kind"] | "harvest";
 }) {
   const verb = from && to ? lineageVerbs[`${from}>${to}`] : undefined;
   return verb ? <span className="lineage-strip__verb">{verb}</span> : null;
 }
 
 /**
- * The record header's compact upstream path: only explicitly recorded sources, oldest
- * first, ending at this record. A shared Botanical identity never implies lineage, and
- * descendants are not shown here (they are summarised by their own records).
+ * The record header's compact lineage summary: explicitly recorded sources oldest first,
+ * ending at this record, plus a compact descendants summary linking to the Lineage tab.
+ * A shared Botanical identity never implies lineage.
  */
 export function LineageStrip({
   kind,
@@ -37,6 +41,10 @@ export function LineageStrip({
   currentKind,
   fullHref,
   onFull,
+  onLineageTab = false,
+  descendantsKind,
+  descendantsId,
+  descendantsSummary,
 }: {
   /** The endpoint whose recorded path is read. */
   kind: LineageEndpoint;
@@ -49,11 +57,38 @@ export function LineageStrip({
    */
   includeSubject?: boolean;
   /** This record's kind, so the last step can name its recorded relationship. */
-  currentKind?: LineageNode["kind"];
+  currentKind?: LineageNode["kind"] | "harvest";
   fullHref?: string;
   onFull?: MouseEventHandler<HTMLAnchorElement>;
+  /** True when the Lineage tab is already active; keeps "Full lineage" in place without jump. */
+  onLineageTab?: boolean;
+  /** Optional explicit record kind/id for direct descendants (used by Sowing). */
+  descendantsKind?: AncestryKind;
+  descendantsId?: string;
+  /** Optional pre-computed compact descendants text (used by Harvest conversions). */
+  descendantsSummary?: string | null;
 }) {
   const [state, retry] = useRecordedLineage(kind, id);
+  const resolvedDescKind: AncestryKind | null =
+    descendantsSummary !== undefined
+      ? null
+      : descendantsKind && descendantsId
+        ? descendantsKind
+        : fullHref && !includeSubject
+          ? ancestryKinds[kind]
+          : null;
+  const resolvedDescId =
+    resolvedDescKind === null
+      ? null
+      : (descendantsId ?? (!includeSubject ? id : null));
+  const [descendants] = useDirectDescendants(resolvedDescKind, resolvedDescId);
+  const descendantText =
+    descendantsSummary !== undefined
+      ? descendantsSummary
+      : descendants.status === "ready"
+        ? descendantSummaryLabel(descendants.value)
+        : null;
+
   // Phones fold the path into one row (M8); wider layouts hide the toggle and always show it.
   const [expanded, setExpanded] = useState(false);
   const pathId = useId();
@@ -95,6 +130,7 @@ export function LineageStrip({
             {[
               ...nodes.map((node) => lineageKindLabels[node.kind]),
               current,
+              ...(descendantText ? [descendantText] : []),
             ].join(" → ")}
           </span>
         </button>
@@ -119,9 +155,35 @@ export function LineageStrip({
           <Verb from={nodes.at(-1)?.kind} to={currentKind} />
           <span className="lineage-strip__kind">{current}</span>
         </li>
+        {descendantText && (
+          <li className="lineage-strip__descendants">
+            {fullHref ? (
+              <a href={fullHref} onClick={onFull}>
+                {descendantText}
+              </a>
+            ) : (
+              <span>{descendantText}</span>
+            )}
+          </li>
+        )}
       </ol>
     ) : (
-      <p className="lineage-strip__note">No recorded source material.</p>
+      <p className="lineage-strip__note">
+        No recorded source material.
+        {descendantText && (
+          <span className="lineage-strip__descendants-inline">
+            {" "}
+            <span aria-hidden="true">→</span>{" "}
+            {fullHref ? (
+              <a href={fullHref} onClick={onFull}>
+                {descendantText}
+              </a>
+            ) : (
+              descendantText
+            )}
+          </span>
+        )}
+      </p>
     );
   }
   return (
@@ -130,16 +192,23 @@ export function LineageStrip({
       aria-label="Recorded lineage"
       data-expanded={expanded || undefined}
     >
-      <p className="lineage-strip__label" aria-hidden="true">
-        Recorded lineage
-      </p>
+      <div className="lineage-strip__header">
+        <p className="lineage-strip__label" aria-hidden="true">
+          Recorded lineage
+        </p>
+        {fullHref && (
+          <a
+            className="lineage-strip__full"
+            href={fullHref}
+            aria-current={onLineageTab ? "page" : undefined}
+            onClick={onFull}
+          >
+            Full lineage
+          </a>
+        )}
+      </div>
       {toggle}
       {body}
-      {fullHref && (
-        <a className="lineage-strip__full" href={fullHref} onClick={onFull}>
-          Full lineage
-        </a>
-      )}
     </nav>
   );
 }

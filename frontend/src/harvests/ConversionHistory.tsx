@@ -20,11 +20,13 @@ export function ConversionHistory({
   id,
   onChanged,
   refreshKey,
+  triggerClassName = "button--secondary",
 }: {
   kind: "inventory_id" | "seed_lot_id";
   id: string;
   onChanged?: () => void;
   refreshKey?: string;
+  triggerClassName?: string;
 }) {
   const auth = useAuth();
   const { capability, sessionExpired } = auth;
@@ -117,7 +119,7 @@ export function ConversionHistory({
       {kind === "inventory_id" ? (
         <button
           type="button"
-          className="button--secondary"
+          className={triggerClassName}
           aria-expanded={open}
           onClick={() => {
             setOpen((v) => !v);

@@ -24,7 +24,13 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
                 index === path.length - 1 && !href ? "page" : undefined
               }
             >
-              {href ? <a href={href}>{item.label}</a> : item.label}
+              {href ? (
+                <a href={href} onClick={item.onClick}>
+                  {item.label}
+                </a>
+              ) : (
+                item.label
+              )}
             </li>
           );
         })}

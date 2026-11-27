@@ -16,7 +16,6 @@ import { ActionButton, ActionLink } from "../components/Action";
 import "../components/collection-directory.css";
 import "../components/collection-page.css";
 import "../components/collection-visual.css";
-import { DetailEmptyState } from "../components/DetailEmptyState";
 import {
   DirectoryCard,
   DirectoryRecordActions,
@@ -54,9 +53,9 @@ import { CreationReversal } from "../propagation/CreationReversal";
 import { PotOnLauncher } from "../propagation/PotOnDialog";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
-import { RecordTimeline } from "../timeline/RecordTimeline";
+import { RecordAlmanac } from "../timeline/RecordAlmanac";
+import { LineagePanel } from "../lineage/LineagePanel";
 import { LineageStrip } from "../lineage/LineageStrip";
-import { ancestryHref } from "../lineage/useRecordedLineage";
 import { sowingFormPanels } from "./SowingFormFields";
 
 import {
@@ -71,6 +70,8 @@ import {
   DetailContext,
   DetailHeader,
   DetailTabs,
+  RecordDescendants,
+  RecordOverview,
   WorkspaceIntro,
   DetailLoading,
   DetailPage,
@@ -86,7 +87,6 @@ import { DirectorySearch } from "../components/ReferenceUI";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import { listLocations, type LocationResponse } from "../locations/api";
 import { PhotosSection } from "../photos/PhotosSection";
-import { PropagationPath } from "../propagation/PropagationPath";
 import { listSeedLots, type SeedLotResponse } from "../seed-lots/api";
 import {
   hasDateDraft,
@@ -96,6 +96,7 @@ import {
 import {
   createSowing,
   getSowing,
+  getSowingGermination,
   getSowingPropagationSummary,
   listSowings,
   sowingConflictMessage,
@@ -103,6 +104,7 @@ import {
   updateSowing,
   type PartialDate,
   type SowingCreate,
+  type SowingGerminationDetail,
   type SowingLifecycle,
   type SowingPropagationSummary,
   type SowingResponse,
@@ -315,6 +317,7 @@ function Detail({
   sowing,
   headingRef,
   onEdit,
+  onReturnToList,
   initialTab,
   reversalAction,
   potOnAction,
@@ -322,6 +325,7 @@ function Detail({
   sowing: SowingResponse;
   headingRef: RefObject<HTMLHeadingElement | null>;
   onEdit: (trigger: HTMLButtonElement) => void;
+  onReturnToList?: () => void;
   initialTab?: string;
   reversalAction?: ReactNode;
   potOnAction?: ReactNode;
@@ -337,6 +341,8 @@ function Detail({
     | { status: "ready"; value: SowingPropagationSummary }
     | { status: "error" }
   >({ status: "loading" });
+  const [germination, setGermination] =
+    useState<SowingGerminationDetail | null>(null);
   useEffect(() => {
     if (!authorized) return;
     const controller = new AbortController();
@@ -351,6 +357,22 @@ function Detail({
           return;
         if (error instanceof ApiError && error.status === 401) sessionExpired();
         else setSummary({ status: "error" });
+      });
+    void getSowingGermination(sowing.id, capability, controller.signal)
+      .then((value) => {
+        if (
+          !controller.signal.aborted &&
+          typeof value === "object" &&
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+          value !== null &&
+          "summary" in value
+        )
+          setGermination(value);
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
       });
     return () => {
       controller.abort();
@@ -400,12 +422,36 @@ function Detail({
         : sowing.temperature_max_c
           ? `Maximum ${sowing.temperature_max_c} °C`
           : null;
+  const germSummary = germination?.summary ?? null;
+  const germinatedTotalLabel =
+    sowing.germinated_count !== null
+      ? `${String(sowing.germinated_count)} germinated`
+      : germSummary && germSummary.observed_cumulative_count > 0
+        ? `${String(germSummary.observed_cumulative_count)} observed`
+        : "Not recorded";
   return (
     <DetailPage className="sowing-detail">
       <Breadcrumbs
         items={[
           { label: "Collection", href: "#/dashboard" },
-          { label: "Sowings", href: "#/sowings" },
+          {
+            label: "Sowings",
+            href: "#/sowings",
+            onClick: onReturnToList
+              ? (event) => {
+                  if (
+                    !event.metaKey &&
+                    !event.ctrlKey &&
+                    !event.shiftKey &&
+                    !event.altKey &&
+                    event.button === 0
+                  ) {
+                    event.preventDefault();
+                    onReturnToList();
+                  }
+                }
+              : undefined,
+          },
           { label: recordName(sowing, "Unlabelled sowing") },
         ]}
       />
@@ -419,6 +465,8 @@ function Detail({
               {
                 label: "Germination",
                 wide: true,
+                unknown: sowing.germinated_count === null,
+                mono: sowing.germinated_count !== null,
                 value: <GerminationProgress sowing={sowing} />,
               },
               {
@@ -471,11 +519,10 @@ function Detail({
             id={sowing.seed_lot.id}
             includeSubject
             current="This Sowing"
-            fullHref={
-              tab === "lineage"
-                ? undefined
-                : `#/sowings/${sowing.id}?tab=lineage`
-            }
+            descendantsKind="sowing"
+            descendantsId={sowing.id}
+            fullHref={`#/sowings/${sowing.id}?tab=lineage`}
+            onLineageTab={tab === "lineage"}
             onFull={() => {
               setTab("lineage");
             }}
@@ -483,35 +530,29 @@ function Detail({
         }
         primaryActions={
           sowing.lifecycle !== "reversed" ? (
-            <>
-              <a
-                className="button-link"
-                href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=plant`}
-              >
-                Create Plant
-              </a>
-              {potOnAction}
-              <a
-                className="button-link button--secondary"
-                href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=group`}
-              >
-                Create Plant group
-              </a>
-            </>
+            <a
+              className="button-link"
+              href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=plant`}
+            >
+              Create Plant
+            </a>
           ) : undefined
         }
         secondaryActions={
-          sowing.lifecycle !== "reversed" && (
-            <a
-              className="button-link button--secondary"
-              href={`#/sowings/${sowing.id}?tab=germination`}
-              onClick={() => {
-                setTab("germination");
-              }}
-            >
-              Record germination
-            </a>
-          )
+          sowing.lifecycle !== "reversed" ? (
+            <>
+              <a
+                className="button-link button--secondary"
+                href={`#/sowings/${sowing.id}?tab=germination`}
+                onClick={() => {
+                  setTab("germination");
+                }}
+              >
+                Record germination
+              </a>
+              {potOnAction}
+            </>
+          ) : undefined
         }
         overflow={reversalAction}
         editLabel="Edit Sowing"
@@ -539,166 +580,162 @@ function Detail({
       {tab === "overview" && (
         <div
           id="panel-overview"
-          className="detail-tab-panel overview-grid collection-overview"
+          className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <section
-            aria-labelledby="sowing-origin-title"
-            className="sowing-fact-group"
-          >
-            <h4 id="sowing-origin-title">Source</h4>
-            <dl>
-              <div>
-                <dt>Seed lot</dt>
-                <dd>
-                  <a href={`#/seeds/${sowing.seed_lot.id}`}>
-                    {recordName(sowing.seed_lot, "Unlabelled lot")}
-                  </a>{" "}
-                  · {sowing.seed_lot.lifecycle}
-                </dd>
-              </div>
-              <div>
-                <dt>Quantity sown</dt>
-                <dd>{quantityLabel(sowing)}</dd>
-              </div>
-            </dl>
-          </section>
-          <section
-            aria-labelledby="sowing-germination-overview-title"
-            className="sowing-fact-group"
-          >
-            <h4 id="sowing-germination-overview-title">Germination</h4>
-            <p className="field-help">
-              Dated observations and timing are in the Germination tab.
-            </p>
-          </section>
-          {hasCultivation && (
-            <section aria-labelledby="sowing-cultivation-title">
-              <h4 id="sowing-cultivation-title">Cultivation</h4>
-              <dl>
-                {sowing.substrate && (
-                  <div>
-                    <dt>Substrate</dt>
-                    <dd>{sowing.substrate}</dd>
-                  </div>
-                )}
-                {sowing.method_container && (
-                  <div>
-                    <dt>Method / container</dt>
-                    <dd>{sowing.method_container}</dd>
-                  </div>
-                )}
-                {sowing.pretreatment && (
-                  <div>
-                    <dt>Pretreatment</dt>
-                    <dd>{sowing.pretreatment}</dd>
-                  </div>
-                )}
-                {temperature && (
-                  <div>
-                    <dt>Temperature</dt>
-                    <dd>{temperature}</dd>
-                  </div>
-                )}
-                {sowing.environment && (
-                  <div>
-                    <dt>Environment</dt>
-                    <dd>{sowing.environment}</dd>
-                  </div>
-                )}
-              </dl>
-            </section>
-          )}
-          <RecordTimeline
-            kind="sowing"
-            id={sowing.id}
-            current={sowing.lifecycle === "active"}
-            recordedElsewhere={
+          <RecordOverview
+            facts={
               <>
-                Germination counts and dates are recorded in{" "}
-                <a
-                  href={`#/sowings/${sowing.id}?tab=germination`}
-                  onClick={() => {
-                    setTab("germination");
-                  }}
+                <section
+                  aria-labelledby="sowing-origin-title"
+                  className="sowing-fact-group"
                 >
-                  Germination
-                </a>
-                .
+                  <h4 id="sowing-origin-title">Source</h4>
+                  <dl>
+                    <div>
+                      <dt>Seed lot</dt>
+                      <dd>
+                        <a href={`#/seeds/${sowing.seed_lot.id}`}>
+                          {recordName(sowing.seed_lot, "Unlabelled lot")}
+                        </a>{" "}
+                        · {sowing.seed_lot.lifecycle}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Quantity sown</dt>
+                      <dd>{quantityLabel(sowing)}</dd>
+                    </div>
+                  </dl>
+                </section>
+                <section
+                  aria-labelledby="sowing-germination-overview-title"
+                  className="sowing-fact-group"
+                >
+                  <h4 id="sowing-germination-overview-title">Germination</h4>
+                  <dl>
+                    <div>
+                      <dt>Germinated total</dt>
+                      <dd>{germinatedTotalLabel}</dd>
+                    </div>
+                    {germSummary?.last_observation_on && (
+                      <div>
+                        <dt>Last observation</dt>
+                        <dd>{germSummary.last_observation_on}</dd>
+                      </div>
+                    )}
+                    {germSummary?.days_to_first_germination != null && (
+                      <div>
+                        <dt>Days to first</dt>
+                        <dd>
+                          {String(germSummary.days_to_first_germination)} days
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                  <p>
+                    <a
+                      href={`#/sowings/${sowing.id}?tab=germination`}
+                      onClick={() => {
+                        setTab("germination");
+                      }}
+                    >
+                      Open Germination
+                    </a>
+                  </p>
+                </section>
+                {hasCultivation && (
+                  <section
+                    aria-labelledby="sowing-cultivation-title"
+                    className="sowing-fact-group"
+                  >
+                    <h4 id="sowing-cultivation-title">Cultivation</h4>
+                    <dl>
+                      {sowing.substrate && (
+                        <div>
+                          <dt>Substrate</dt>
+                          <dd>{sowing.substrate}</dd>
+                        </div>
+                      )}
+                      {sowing.method_container && (
+                        <div>
+                          <dt>Method / container</dt>
+                          <dd>{sowing.method_container}</dd>
+                        </div>
+                      )}
+                      {sowing.pretreatment && (
+                        <div>
+                          <dt>Pretreatment</dt>
+                          <dd>{sowing.pretreatment}</dd>
+                        </div>
+                      )}
+                      {temperature && (
+                        <div>
+                          <dt>Temperature</dt>
+                          <dd>{temperature}</dd>
+                        </div>
+                      )}
+                      {sowing.environment && (
+                        <div>
+                          <dt>Environment</dt>
+                          <dd>{sowing.environment}</dd>
+                        </div>
+                      )}
+                    </dl>
+                  </section>
+                )}
+                <RecordDescendants
+                  headingId="descendants-title"
+                  loading={summary.status === "loading"}
+                  error={summary.status === "error"}
+                  items={
+                    summary.status === "ready"
+                      ? [
+                          {
+                            label: `${String(summary.value.plants.length)} ${summary.value.plants.length === 1 ? "plant" : "plants"}`,
+                          },
+                          {
+                            label: `${String(summary.value.plant_groups.length)} ${summary.value.plant_groups.length === 1 ? "plant group" : "plant groups"}`,
+                          },
+                        ]
+                      : []
+                  }
+                  lineageHref={`#/sowings/${sowing.id}?tab=lineage`}
+                  onOpenLineage={() => {
+                    setTab("lineage");
+                  }}
+                />
+                {sowing.notes && (
+                  <section aria-labelledby="sowing-notes-title">
+                    <h4 id="sowing-notes-title">Notes</h4>
+                    <p className="preserve-lines">{sowing.notes}</p>
+                  </section>
+                )}
               </>
             }
+            almanac={
+              <RecordAlmanac
+                kind="sowing"
+                id={sowing.id}
+                current={sowing.lifecycle === "active"}
+                recordedElsewhere={
+                  <>
+                    {germSummary?.last_observation_on
+                      ? `Last germination check ${germSummary.last_observation_on} (${String(germSummary.observed_cumulative_count)} observed). `
+                      : `${germinatedTotalLabel}. `}
+                    <a
+                      href={`#/sowings/${sowing.id}?tab=germination`}
+                      onClick={() => {
+                        setTab("germination");
+                      }}
+                    >
+                      Open Germination
+                    </a>
+                  </>
+                }
+              />
+            }
           />
-          <section
-            className="sowing-fact-group"
-            aria-labelledby="descendants-title"
-          >
-            <h4 id="descendants-title">Descendants</h4>
-            {summary.status === "loading" && (
-              <p role="status">Loading propagation summary…</p>
-            )}
-            {summary.status === "error" && (
-              <p className="notice notice--error">
-                Florabase could not load the propagation summary.
-              </p>
-            )}
-            {summary.status === "ready" && (
-              <>
-                <p>
-                  {summary.value.plants.length} Plant records ·{" "}
-                  {summary.value.plant_groups.length} Plant groups
-                </p>
-                <p className="descendant-total">
-                  <strong>
-                    {summary.value.exact_descendant_count} exact{" "}
-                    {summary.value.exact_descendant_count === 1
-                      ? "individual"
-                      : "individuals"}
-                  </strong>
-                </p>
-                {summary.value.approximate_plant_group_count > 0 && (
-                  <p>
-                    + {summary.value.approximate_plant_group_count} approximate
-                    Plant{" "}
-                    {summary.value.approximate_plant_group_count === 1
-                      ? "group"
-                      : "groups"}
-                  </p>
-                )}
-                {summary.value.unknown_plant_group_count > 0 && (
-                  <p>
-                    + {summary.value.unknown_plant_group_count} Plant{" "}
-                    {summary.value.unknown_plant_group_count === 1
-                      ? "group"
-                      : "groups"}{" "}
-                    with unknown quantity
-                  </p>
-                )}
-                {summary.value.plants.length +
-                  summary.value.plant_groups.length ===
-                  0 && <p>No descendants yet.</p>}
-                <p>
-                  <a
-                    href={`#/sowings/${sowing.id}?tab=lineage`}
-                    onClick={() => {
-                      setTab("lineage");
-                    }}
-                  >
-                    View lineage →
-                  </a>
-                </p>
-              </>
-            )}
-          </section>
-          {sowing.notes && (
-            <section
-              className="collection-overview-wide"
-              aria-labelledby="sowing-notes-title"
-            >
-              <h4 id="sowing-notes-title">Notes</h4>
-              <p className="preserve-lines">{sowing.notes}</p>
-            </section>
-          )}
         </div>
       )}
       {tab === "lineage" && (
@@ -708,71 +745,20 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-lineage"
         >
-          <p className="lineage-explore">
-            <a href={ancestryHref("sowing", sowing.id)}>
-              Explore material ancestry
-            </a>
-          </p>
-          {summary.status === "loading" && (
-            <p role="status">Loading propagation summary…</p>
-          )}
-          {summary.status === "error" && (
-            <p className="notice notice--error">
-              Florabase could not load the propagation summary.
-            </p>
-          )}
-          {summary.status === "ready" && (
-            <>
-              {summary.value.plants.length +
-                summary.value.plant_groups.length ===
-                0 && (
-                <DetailEmptyState>
-                  No additional recorded lineage.
-                </DetailEmptyState>
-              )}
-              <PropagationPath
-                title="Recorded lineage"
-                stages={[
-                  [
-                    {
-                      type: "Seed lot",
-                      label: recordName(sowing.seed_lot, "Unlabelled SeedLot"),
-                      href: `#/seeds/${sowing.seed_lot.id}`,
-                      state: sowing.seed_lot.lifecycle,
-                    },
-                  ],
-                  [
-                    {
-                      type: "This sowing",
-                      current: true,
-                      label: recordName(sowing, "Unlabelled Sowing"),
-                      href: `#/sowings/${sowing.id}`,
-                      state: sowing.lifecycle,
-                    },
-                  ],
-                  [
-                    ...summary.value.plants
-                      .filter((plant) => !plant.originating_plant_group_id)
-                      .map((plant) => ({
-                        type: "Plant",
-                        label: recordName(plant, "Unlabelled Plant"),
-                        href: `#/plants/${plant.id}`,
-                        state: plant.lifecycle,
-                      })),
-                    ...summary.value.plant_groups.map((group) => ({
-                      type: "Plant group",
-                      label: recordName(group, "Unlabelled Plant group"),
-                      href: `#/plant-groups/${group.id}`,
-                      state: group.quantity
-                        ? `${group.quantity.is_approximate ? "~" : ""}${String(group.quantity.value)} · ${group.lifecycle}`
-                        : `quantity unknown · ${group.lifecycle}`,
-                    })),
-                  ],
-                  ...extractedStages(summary.value, recordName),
-                ]}
-              />
-            </>
-          )}
+          <LineagePanel
+            key={sowing.updated_at}
+            kind="seed-lots"
+            id={sowing.seed_lot.id}
+            includeSubject
+            subject={{
+              kind: "sowing",
+              id: sowing.id,
+              label: recordName(sowing, "Unlabelled sowing"),
+              lifecycle: sowing.lifecycle,
+            }}
+            descendantsKind="sowing"
+            descendantsId={sowing.id}
+          />
         </div>
       )}
       {tab === "germination" && (
@@ -802,29 +788,6 @@ function Detail({
       )}
     </DetailPage>
   );
-}
-
-function extractedStages(
-  summary: SowingPropagationSummary,
-  recordName: ReturnType<typeof useRecordName>,
-) {
-  const extracted = summary.plants.filter(
-    (plant) => plant.originating_plant_group_id,
-  );
-  if (extracted.length === 0) return [];
-  return [
-    extracted.map((plant) => {
-      const group = summary.plant_groups.find(
-        (item) => item.id === plant.originating_plant_group_id,
-      );
-      return {
-        type: `Plant extracted from ${recordName(group, "recorded Plant group")}`,
-        label: recordName(plant, "Unlabelled Plant"),
-        href: `#/plants/${plant.id}`,
-        state: plant.lifecycle,
-      };
-    }),
-  ];
 }
 
 const sowingPage = {
@@ -1653,41 +1616,8 @@ export function SowingScreen({
         aria-hidden={edit.modal || undefined}
       >
         <WorkspaceIntro
-          contextActions={
-            mobileDetail &&
-            !editing && (
-              <button
-                type="button"
-                className="sowing-back button--secondary"
-                onClick={returnToList}
-              >
-                ← Back to Sowings
-              </button>
-            )
-          }
           contextOnly={mobileDetail || (editing && !edit.modal)}
           {...sowingPage}
-          actions={
-            mobileDetail
-              ? !editing && (
-                  <ActionButton
-                    icon="add"
-                    type="button"
-                    ref={creationTriggerRef}
-                    data-collection-return="create"
-                    aria-expanded={creationExpanded}
-                    aria-controls="new-sowing-panel"
-                    disabled={references.seedLots.length === 0}
-                    onClick={() => {
-                      if (creationExpanded) focusCreation();
-                      else startCreate();
-                    }}
-                  >
-                    New sowing
-                  </ActionButton>
-                )
-              : undefined
-          }
           tools={
             !(mobileDetail || (editing && !edit.modal)) && (
               <DirectoryTools
@@ -2070,6 +2000,7 @@ export function SowingScreen({
                       key={selected.id}
                       sowing={selected}
                       headingRef={detailHeading}
+                      onReturnToList={returnToList}
                       potOnAction={
                         <PotOnLauncher
                           source={{ kind: "sowing", sowing: selected }}
@@ -2093,6 +2024,16 @@ export function SowingScreen({
                       reversalAction={
                         <CreationReversal
                           inMoreMenu
+                          moreActions={
+                            selected.lifecycle !== "reversed" ? (
+                              <a
+                                className="button-link button--secondary"
+                                href={`#/plants?action=from-sowing&sowing=${selected.id}&kind=group`}
+                              >
+                                Create Plant group
+                              </a>
+                            ) : undefined
+                          }
                           key={`reversal:${selected.id}`}
                           kind="sowing"
                           id={selected.id}

@@ -316,11 +316,6 @@ export function SpeciesDistributionScreen() {
     >
       <div className="distribution-browser__heading">
         <h3 id="represented-title">Species</h3>
-        {page && (
-          <p className="directory-results" role="status">
-            {page.total} represented · {page.occurrence_ready} occurrence-ready
-          </p>
-        )}
       </div>
       {failed ? (
         <p className="field-help">

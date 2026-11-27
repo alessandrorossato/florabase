@@ -152,9 +152,11 @@ export function RecordTimeline({
     target_id: id,
   });
   const history =
-    kind === "botanical_identity" || kind === "location"
+    kind === "botanical_identity"
       ? null
-      : historyHash({ q: "", category: [], subject_kind: [kind], year: "" });
+      : kind === "location"
+        ? "#/history"
+        : historyHash({ q: "", category: [], subject_kind: [kind], year: "" });
 
   const events = recorded.status === "ready" ? recorded.value : [];
   const shown = events.slice(0, 3);

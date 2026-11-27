@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { ActionButton } from "./Action";
 import type {
   CSSProperties,
@@ -8,6 +9,7 @@ import type {
 } from "react";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { PageHeader } from "./ReferenceUI";
+import { LifecycleStatus } from "./WorkspaceUI";
 import "./detail-page.css";
 import "./specimen.css";
 
@@ -16,6 +18,8 @@ export interface SpecimenRow {
   label: string;
   value: ReactNode;
   unknown?: boolean;
+  /** Use the monospace data face (dates, quantities, codes). Inferred for dates/numbers. */
+  mono?: boolean;
   /** Accepted so DetailSummary metrics move into the label unchanged; not used here. */
   wide?: boolean;
   emphasis?: boolean;
@@ -29,7 +33,21 @@ const unknownWords = new Set([
   "Unknown quantity",
   "Not applicable",
   "None recorded",
+  "Germination not recorded",
+  "Not linked",
+  "No observations",
+  "Location not recorded",
 ]);
+
+const DATA_VALUE_PATTERN =
+  /^(?:~|About\s+)?\d+(?:[.,–-]\d+)*(?:\s|$)|^\d{4}(?:-\d{2}(?:-\d{2})?)?$/;
+
+function isDataValue(value: ReactNode): boolean {
+  if (typeof value === "number") return true;
+  if (typeof value !== "string") return false;
+  const trimmed = value.trim();
+  return trimmed.length > 0 && DATA_VALUE_PATTERN.test(trimmed);
+}
 
 /**
  * The record's ruled fact block (the herbarium label of the Specimen Sheet). It replaces the
@@ -58,21 +76,29 @@ export function SpecimenLabel({
         Florabase · {kind}
       </p>
       <dl aria-label={name}>
-        {shown.map((row) => (
-          <div key={row.label}>
-            <dt>{row.label}</dt>
-            <dd
-              className={
-                (row.unknown ??
-                (typeof row.value === "string" && unknownWords.has(row.value)))
-                  ? "specimen-label__unknown"
-                  : undefined
-              }
-            >
-              {row.value}
-            </dd>
-          </div>
-        ))}
+        {shown.map((row) => {
+          const isUnknown =
+            row.unknown ??
+            (typeof row.value === "string" &&
+              unknownWords.has(row.value.trim()));
+          const isData = !isUnknown && (row.mono ?? isDataValue(row.value));
+          return (
+            <div key={row.label}>
+              <dt>{row.label}</dt>
+              <dd
+                className={
+                  isUnknown
+                    ? "specimen-label__unknown"
+                    : isData
+                      ? "specimen-label__data"
+                      : undefined
+                }
+              >
+                {row.value}
+              </dd>
+            </div>
+          );
+        })}
       </dl>
       {note && <div className="specimen-label__note">{note}</div>}
     </section>
@@ -111,7 +137,6 @@ export function WorkspaceIntro({
   actions,
   tools,
   contextOnly = false,
-  contextActions,
   directory = false,
 }: {
   eyebrow: string;
@@ -121,7 +146,6 @@ export function WorkspaceIntro({
   actions?: ReactNode;
   tools?: ReactNode;
   contextOnly?: boolean;
-  contextActions?: ReactNode;
   directory?: boolean;
 }) {
   if (contextOnly)
@@ -130,11 +154,8 @@ export function WorkspaceIntro({
         <h2 className="sr-only" id={titleId}>
           {title}
         </h2>
-        {(Boolean(actions) || Boolean(contextActions)) && (
-          <div className="workspace-context-actions">
-            {contextActions}
-            {actions}
-          </div>
+        {Boolean(actions) && (
+          <div className="workspace-context-actions">{actions}</div>
         )}
       </>
     );
@@ -153,6 +174,13 @@ export function WorkspaceIntro({
 
 export { Breadcrumbs };
 
+/**
+ * Shared record header. Action bar contract (UI-POLISH-006):
+ *   - `primaryActions`: at most one primary action (rendered first)
+ *   - `secondaryActions`: at most two secondary actions
+ *   - `onEdit`: Edit button
+ *   - `overflow`: `⋯` OverflowMenu holding any additional actions
+ */
 export function DetailHeader({
   eyebrow,
   title,
@@ -429,6 +457,143 @@ export function CollectionCard({
       {eyebrow && <p className="card-type">{eyebrow}</p>}
       <h3>{href ? <a href={href}>{title}</a> : title}</h3>
       {children}
+    </article>
+  );
+}
+
+/**
+ * Shared two-column Overview layout for every Collection record: left column holds the
+ * record type's facts sections, right column holds RecordAlmanac, collapsing to one column
+ * below the container breakpoint.
+ */
+export function RecordOverview({
+  facts,
+  almanac,
+  className = "",
+}: {
+  facts: ReactNode;
+  almanac: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`record-overview ${className}`.trim()}>
+      <div className="record-overview__facts">{facts}</div>
+      <div className="record-overview__almanac">{almanac}</div>
+    </div>
+  );
+}
+
+export interface DescendantLinkItem {
+  label: string;
+  href?: string;
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
+}
+
+/**
+ * One-line Descendants summary for record Overview tabs: compact counts with links to the
+ * type's work tab and to the Lineage tab. Full descendant trees live in the work tab and
+ * in LineagePanel.
+ */
+export function RecordDescendants({
+  title = "Descendants",
+  headingId,
+  items,
+  lineageHref,
+  onOpenLineage,
+  loading = false,
+  error = false,
+}: {
+  title?: string;
+  headingId?: string;
+  items: DescendantLinkItem[];
+  lineageHref?: string;
+  onOpenLineage?: MouseEventHandler<HTMLAnchorElement>;
+  loading?: boolean;
+  error?: boolean;
+}) {
+  return (
+    <section
+      className="record-descendants"
+      aria-labelledby={headingId}
+      aria-label={headingId ? undefined : title}
+    >
+      <h4 id={headingId}>{title}</h4>
+      {loading ? (
+        <p className="record-descendants__line" role="status">
+          Loading descendants…
+        </p>
+      ) : error ? (
+        <p className="record-descendants__line">
+          Could not load descendants summary.
+        </p>
+      ) : (
+        <p className="record-descendants__line">
+          {items.map((item, index) => (
+            <Fragment key={`${item.label}:${String(index)}`}>
+              {index > 0 && (
+                <span className="record-descendants__sep" aria-hidden="true">
+                  {" · "}
+                </span>
+              )}
+              {item.href ? (
+                <a href={item.href} onClick={item.onClick}>
+                  {item.label}
+                </a>
+              ) : (
+                <span>{item.label}</span>
+              )}
+            </Fragment>
+          ))}
+          {lineageHref && (
+            <>
+              {items.length > 0 && (
+                <span className="record-descendants__sep" aria-hidden="true">
+                  {" · "}
+                </span>
+              )}
+              <a href={lineageHref} onClick={onOpenLineage}>
+                View lineage
+              </a>
+            </>
+          )}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/**
+ * Shared child-record card matching LineagePanel's card grammar: compact kind eyebrow,
+ * strong title link, LifecycleStatus chip and concise metadata lines.
+ */
+export function RecordChildCard({
+  kind,
+  title,
+  href,
+  status,
+  statusLabel,
+  meta,
+  actions,
+}: {
+  kind: string;
+  title: string;
+  href: string;
+  status: string;
+  statusLabel?: string;
+  meta?: ReactNode;
+  actions?: ReactNode;
+}) {
+  return (
+    <article className="record-child-card">
+      <div className="record-child-card__header">
+        <span className="record-child-card__kind">{kind}</span>
+        <LifecycleStatus state={status}>{statusLabel}</LifecycleStatus>
+      </div>
+      <a className="record-child-card__title" href={href}>
+        {title}
+      </a>
+      {meta && <div className="record-child-card__meta">{meta}</div>}
+      {actions && <div className="record-child-card__actions">{actions}</div>}
     </article>
   );
 }

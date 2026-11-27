@@ -327,6 +327,22 @@ test("LocationScreen detail launches Log care for everything here", async () => 
   const launcher = await screen.findByRole("button", {
     name: "Log care for everything here…",
   });
+  // UI-POLISH-006: primary Create child before secondary Log care, no repeated root subtitle,
+  // no duplicate header scope chips, Overview · Contents tabs, and Almanac in Overview.
+  const actionBar = screen.getByRole("group", { name: "Record actions" });
+  const barButtons = within(actionBar).getAllByRole("button");
+  expect(barButtons[0]).toHaveAccessibleName("Create child");
+  expect(barButtons[1]).toHaveAccessibleName("Log care for everything here…");
+  expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
+    "Overview",
+    "Contents",
+  ]);
+  expect(screen.getByRole("region", { name: "Almanac" })).toBeVisible();
+  expect(screen.queryByLabelText("Usage scopes")).not.toBeInTheDocument();
+  await user.click(screen.getByRole("tab", { name: "Contents" }));
+  expect(
+    screen.getByRole("region", { name: "Collection usage" }),
+  ).toBeVisible();
   await user.click(launcher);
   expect(
     await screen.findByRole("dialog", { name: "Log care in Bench 2" }),

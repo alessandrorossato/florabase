@@ -1,5 +1,18 @@
 # Engineering progress
 
+## 2026-11-27 — Collection detail consistency round & Back/New bar removal (`UI-POLISH-006`)
+
+- On `fix/ui-polish-006-collection` from `origin/main` `c83d8163` (writer `antigravity-neon`); frontend-only (no migrations, no API changes; B2 proposals remained approval-pending and were not implemented).
+- **Part A (Back/New bar removal):** Removed `contextActions` and detail-only `actions` from `WorkspaceIntro` on Plant and Sowing details (`PlantScreen.tsx`, `SowingScreen.tsx`, `CollectionUI.tsx`), deleted the CSS hiding rule in `detail-page.css` and dead `.workspace-context-actions`/`.plant-back`/`.sowing-back` detail rules in `specimen.css` and `styles.css` (keeping reachable loading-state back links), wired breadcrumb focus-return to the list via `BreadcrumbItem.onClick`, confirmed no other Collection details hid a Back/New bar, and updated Plant/Sowing tests.
+- **Part B1 (items 1–19):** Built shared `RecordAlmanac`, `RecordOverview` (two-column facts-left / Almanac-right), `RecordDescendants` (one-line counts), and `RecordChildCard`, then migrated Seed lot, Sowing, Vegetative lot, Rooting attempt, Plant, Plant group, Harvest, and Location details:
+  - `LineageStrip`: pinned `Full lineage` right at constant height across all tabs, wrapped long Cuttings chains without clipping, added `harvested as` verb for Harvest, and appended compact descendants summaries linking to the Lineage tab.
+  - `LineagePanel`: unified across every record type (including Sowing and Harvest) with `Ancestors` horizontal cards and `Recorded from this record` elbow tree plus consistent empty-state wording.
+  - `DetailTabs` & `DetailHeader`: unified tab skeleton (`Overview · <work tab(s)> · Photos · Lineage`; Location `Overview · Contents`) with one underline active tab style, enforced ≤ 1 primary + ≤ 2 secondary + Edit + `⋯ More` (Sowing `Create Plant group` and Plant group `Take cuttings` in `More`; Harvest status chip + `Record disposition` primary when held; Location `Create child` primary before `Log care…`, no repeated root subtitle, no duplicate header scope chips).
+  - `SpecimenLabel` & tab bodies: monospace only for dates/quantities/codes with one muted `Not recorded` style, fixed Harvest photo-label spacing and mobile 390px label width, stacked Sowing Germination `Observation history` full-width below the metrics row, replaced Sowing/Seed lot filler text with real data, adopted `RecordChildCard` on Seed lot Sowings and Cuttings child tabs, and consolidated Harvest's collected/stored inventory into one compact table with inline conversion/disposition links.
+- **Part C (UI-POLISH-005 leftovers):** Synced Cuttings `useRecordTab` to later `?tab=` route changes, removed duplicate counts from the Species distribution `Species` chooser heading, and removed dead `:not(.page-header--directory)` rules in `media.css`.
+- Registered `UI-POLISH-006` (`implemented`, `best-effort`) in `docs/features.json` and `docs/release/scope-v1.json`. Evidence: [evidence.md](archive/UI-POLISH-006/evidence.md).
+- Checks: `check-features.py` (205 valid), `check-doc-links.py` (399 docs), `tsc -b`, ESLint, Prettier, focused Vitest across 11 affected directories (42 files / 518 passed), before/after visual verification at `1440×900` and `390×844` on a disposable golden `COMPREHENSIVE` UAT instance (retired afterward), and canonical `make feature-verify AGENT_ID=antigravity-neon`.
+
 ## 2026-11-27 — Android release APK: apksigner output format (MOBILE-003)
 
 - Second `v0.1.0-beta.10` APK run (45981312380) built and signed the APK but

@@ -6,6 +6,8 @@ import { useAuth } from "../auth/context";
 
 export type LineageResponse = components["schemas"]["LineageResponse"];
 export type LineageNode = LineageResponse["subject"];
+export type AncestryChildren = components["schemas"]["AncestryChildren"];
+export type AncestryKind = LineageNode["kind"];
 /** Collection resources with a recorded-lineage endpoint. */
 export type LineageEndpoint =
   | "seed-lots"
@@ -14,27 +16,79 @@ export type LineageEndpoint =
   | "vegetative-lots"
   | "propagation-attempts";
 
+export const ancestryKinds: Record<LineageEndpoint, AncestryKind> = {
+  "seed-lots": "seed_lot",
+  plants: "plant",
+  "plant-groups": "plant_group",
+  "vegetative-lots": "vegetative_lot",
+  "propagation-attempts": "propagation_attempt",
+};
+
+export type DirectDescendants =
+  | { status: "loading" }
+  | { status: "ready"; value: AncestryChildren }
+  | { status: "error" };
+
+export const DESCENDANT_PAGE = 25;
+
 export type RecordedLineage =
   | { status: "loading" }
   | { status: "ready"; value: LineageResponse }
   | { status: "error" };
 
-export const lineageKindLabels: Record<LineageNode["kind"], string> = {
+export const lineageKindLabels: Record<
+  LineageNode["kind"] | "harvest",
+  string
+> = {
   seed_lot: "Seed lot",
   sowing: "Sowing",
   plant: "Plant",
   plant_group: "Plant group",
   vegetative_lot: "Vegetative lot",
   propagation_attempt: "Rooting attempt",
+  harvest: "Harvest",
 };
-export const lineageFallbackLabels: Record<LineageNode["kind"], string> = {
+export const lineageFallbackLabels: Record<
+  LineageNode["kind"] | "harvest",
+  string
+> = {
   seed_lot: "Unlabelled seed lot",
   sowing: "Unlabelled sowing",
   plant: "Unlabelled plant",
   plant_group: "Unlabelled plant group",
   vegetative_lot: "Unlabelled vegetative lot",
   propagation_attempt: "Unlabelled rooting attempt",
+  harvest: "Unlabelled harvest",
 };
+
+const pluralKindLabels: Record<LineageNode["kind"], [string, string]> = {
+  seed_lot: ["seed lot", "seed lots"],
+  sowing: ["sowing", "sowings"],
+  plant: ["plant", "plants"],
+  plant_group: ["plant group", "plant groups"],
+  vegetative_lot: ["vegetative lot", "vegetative lots"],
+  propagation_attempt: ["attempt", "attempts"],
+};
+
+/** Compact summary for LineageStrip, e.g. "2 sowings" or "1 plant, 1 plant group". */
+export function descendantSummaryLabel(
+  children: AncestryChildren,
+): string | null {
+  if (!children.total) return null;
+  if (children.items.length < children.total) {
+    return `${String(children.total)} recorded from this`;
+  }
+  const counts = new Map<LineageNode["kind"], number>();
+  for (const item of children.items) {
+    counts.set(item.record.kind, (counts.get(item.record.kind) ?? 0) + 1);
+  }
+  const parts: string[] = [];
+  for (const [kind, count] of counts) {
+    const [singular, plural] = pluralKindLabels[kind];
+    parts.push(`${String(count)} ${count === 1 ? singular : plural}`);
+  }
+  return parts.length ? parts.join(", ") : null;
+}
 
 /** The record's own detail page. */
 export function recordHref(kind: LineageNode["kind"], id: string) {
@@ -77,6 +131,9 @@ export const lineageVerbs: Partial<Record<string, string>> = {
   "plant_group>plant": "extracted",
   "plant>seed_lot": "produced",
   "plant_group>seed_lot": "produced",
+  "plant>harvest": "harvested as",
+  "plant_group>harvest": "harvested as",
+  "harvest>seed_lot": "converted to",
   "plant>vegetative_lot": "provided cuttings for",
   "plant_group>vegetative_lot": "provided cuttings for",
   "vegetative_lot>propagation_attempt": "struck in",
@@ -139,6 +196,79 @@ export function useRecordedLineage(
   const retry = useCallback(() => {
     setAttempt((value) => value + 1);
   }, []);
+  if (state.key !== key || state.attempt !== attempt)
+    return [{ status: "loading" }, retry];
+  return [state, retry];
+}
+
+/**
+ * Direct recorded descendants of one record (first page), read from the ancestry explorer's
+ * children endpoint (no upstream walk); stale responses for another record are ignored.
+ */
+export function useDirectDescendants(
+  kind: AncestryKind | null,
+  id: string | null,
+): [DirectDescendants, () => void] {
+  const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
+  const enabled = Boolean(kind && id);
+  const key = enabled ? `${String(kind)}:${String(id)}` : "disabled";
+  const [attempt, setAttempt] = useState(0);
+  const [state, setState] = useState<
+    { key: string; attempt: number } & DirectDescendants
+  >({ status: "loading", key, attempt });
+  useEffect(() => {
+    if (!authorized || !kind || !id) return;
+    const controller = new AbortController();
+    void requestJson<AncestryChildren>(
+      `/api/v1/lineage/${kind}/${id}/children?offset=0&limit=${String(DESCENDANT_PAGE)}`,
+      { capability, signal: controller.signal },
+    )
+      .then((value) => {
+        if (!controller.signal.aborted) {
+          if (
+            typeof value === "object" &&
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            value !== null &&
+            Array.isArray(value.items) &&
+            typeof value.total === "number"
+          )
+            setState({ status: "ready", key, attempt, value });
+          else
+            setState({
+              status: "ready",
+              key,
+              attempt,
+              value: { items: [], total: 0, offset: 0, limit: DESCENDANT_PAGE },
+            });
+        }
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) {
+          sessionExpired();
+          return;
+        }
+        setState({ status: "error", key, attempt });
+      });
+    return () => {
+      controller.abort();
+    };
+  }, [attempt, authorized, capability, id, key, kind, sessionExpired]);
+  const retry = useCallback(() => {
+    setAttempt((value) => value + 1);
+  }, []);
+  if (!enabled)
+    return [
+      {
+        status: "ready",
+        value: { items: [], total: 0, offset: 0, limit: DESCENDANT_PAGE },
+      },
+      retry,
+    ];
   if (state.key !== key || state.attempt !== attempt)
     return [{ status: "loading" }, retry];
   return [state, retry];

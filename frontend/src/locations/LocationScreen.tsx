@@ -32,8 +32,11 @@ import {
   DetailHeader,
   DetailPage,
   DetailLoading,
+  DetailTabs,
+  RecordOverview,
   SpecimenLabel,
 } from "../components/CollectionUI";
+import { RecordAlmanac } from "../timeline/RecordAlmanac";
 import {
   DirectorySearch,
   OverflowMenu,
@@ -490,6 +493,32 @@ export function LocationScreen({
     locationId: string;
     response: BulkCareApplyResponse;
   } | null>(null);
+  const readLocationTab = (): "overview" | "contents" =>
+    new URLSearchParams(window.location.hash.split("?", 2)[1] ?? "").get(
+      "tab",
+    ) === "contents"
+      ? "contents"
+      : "overview";
+  const [detailTab, setDetailTab] = useState<"overview" | "contents">(
+    readLocationTab,
+  );
+  const locationTabKey = `${initialId ?? ""}:${readLocationTab()}`;
+  const [lastLocationTabKey, setLastLocationTabKey] = useState(locationTabKey);
+  if (lastLocationTabKey !== locationTabKey) {
+    setLastLocationTabKey(locationTabKey);
+    setDetailTab(readLocationTab());
+  }
+  useEffect(() => {
+    const sync = () => {
+      const next = readLocationTab();
+      setDetailTab(next);
+      setLastLocationTabKey(`${initialId ?? ""}:${next}`);
+    };
+    window.addEventListener("hashchange", sync);
+    return () => {
+      window.removeEventListener("hashchange", sync);
+    };
+  }, [initialId]);
   const view = useDirectoryView("locations", () => {
     setSelectedId(null);
   });
@@ -1020,54 +1049,48 @@ export function LocationScreen({
                   eyebrow="Location"
                   title={selected.name}
                   secondary={
-                    <span className="record-path">{selected.display_path}</span>
+                    selected.display_path !== selected.name ? (
+                      <span className="record-path">
+                        {selected.display_path}
+                      </span>
+                    ) : undefined
                   }
                   status={
-                    <div className="record-badges">
-                      <LifecycleStatus
-                        state={selected.retired_at ? "retired" : "active"}
-                      >
-                        {selected.retired_at ? "Retired" : "Active"}
-                      </LifecycleStatus>
-                      <span
-                        aria-label="Usage scopes"
-                        className="record-scope-badges"
-                      >
-                        {selected.usage_scopes.map((scope) => (
-                          <span className="location-scope" key={scope}>
-                            {scopeLabels[scope]}
-                          </span>
-                        ))}
-                      </span>
-                    </div>
+                    <LifecycleStatus
+                      state={selected.retired_at ? "retired" : "active"}
+                    >
+                      {selected.retired_at ? "Retired" : "Active"}
+                    </LifecycleStatus>
                   }
                   primaryActions={
                     !selected.retired_at ? (
-                      <>
-                        <button
-                          type="button"
-                          className="button--secondary"
-                          disabled={pending}
-                          onClick={() => {
-                            setCareResult(null);
-                            setCareDialogForId(selected.id);
-                          }}
-                        >
-                          Log care for everything here…
-                        </button>
-                        <button
-                          type="button"
-                          disabled={pending}
-                          onClick={() => {
-                            setCreateParentId(selected.id);
-                            setSave({ status: "idle" });
-                            if (creationExpanded) createName.current?.focus();
-                            else openCreation();
-                          }}
-                        >
-                          Create child
-                        </button>
-                      </>
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => {
+                          setCreateParentId(selected.id);
+                          setSave({ status: "idle" });
+                          if (creationExpanded) createName.current?.focus();
+                          else openCreation();
+                        }}
+                      >
+                        Create child
+                      </button>
+                    ) : undefined
+                  }
+                  secondaryActions={
+                    !selected.retired_at ? (
+                      <button
+                        type="button"
+                        className="button--secondary"
+                        disabled={pending}
+                        onClick={() => {
+                          setCareResult(null);
+                          setCareDialogForId(selected.id);
+                        }}
+                      >
+                        Log care for everything here…
+                      </button>
                     ) : undefined
                   }
                   editLabel="Edit location"
@@ -1126,82 +1149,152 @@ export function LocationScreen({
                     }}
                   />
                 )}
-                <div className="record-detail-grid location-overview-grid">
-                  <section
-                    className="record-section"
-                    aria-labelledby="location-hierarchy-title"
+                <DetailTabs
+                  tabs={[
+                    { id: "overview", label: "Overview" },
+                    { id: "contents", label: "Contents" },
+                  ]}
+                  selected={detailTab}
+                  onSelect={(next) => {
+                    setDetailTab(next);
+                    window.history.replaceState(
+                      null,
+                      "",
+                      `#/locations/${selected.id}${next === "overview" ? "" : `?tab=${next}`}`,
+                    );
+                  }}
+                />
+                {detailTab === "overview" && (
+                  <div
+                    id="panel-overview"
+                    role="tabpanel"
+                    aria-labelledby="tab-overview"
+                    className="detail-tab-panel"
                   >
-                    <h4 id="location-hierarchy-title">Hierarchy</h4>
-                    <dl className="record-facts">
-                      <div>
-                        <dt>Parent</dt>
-                        <dd>
-                          {selected.parent_id ? (
-                            <a href={`#/locations/${selected.parent_id}`}>
-                              {locations.find(
-                                (location) =>
-                                  location.id === selected.parent_id,
-                              )?.name ?? "Parent location"}
-                            </a>
-                          ) : (
-                            "Root location"
-                          )}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Full path</dt>
-                        <dd>{selected.display_path}</dd>
-                      </div>
-                    </dl>
-                    <h5>
-                      Child locations (
-                      {
-                        locations.filter(
-                          (location) => location.parent_id === selected.id,
-                        ).length
+                    <RecordOverview
+                      facts={
+                        <>
+                          <section
+                            className="record-section"
+                            aria-labelledby="location-hierarchy-title"
+                          >
+                            <h4 id="location-hierarchy-title">Hierarchy</h4>
+                            <dl className="record-facts">
+                              <div>
+                                <dt>Parent</dt>
+                                <dd>
+                                  {selected.parent_id ? (
+                                    <a
+                                      href={`#/locations/${selected.parent_id}`}
+                                    >
+                                      {locations.find(
+                                        (location) =>
+                                          location.id === selected.parent_id,
+                                      )?.name ?? "Parent location"}
+                                    </a>
+                                  ) : (
+                                    "Root location"
+                                  )}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt>Full path</dt>
+                                <dd>{selected.display_path}</dd>
+                              </div>
+                            </dl>
+                            <h5>
+                              Child locations (
+                              {
+                                locations.filter(
+                                  (location) =>
+                                    location.parent_id === selected.id,
+                                ).length
+                              }
+                              )
+                            </h5>
+                            {locations.some(
+                              (location) => location.parent_id === selected.id,
+                            ) ? (
+                              <ul className="record-link-list">
+                                {locations
+                                  .filter(
+                                    (location) =>
+                                      location.parent_id === selected.id,
+                                  )
+                                  .map((child) => (
+                                    <li key={child.id}>
+                                      <a href={`#/locations/${child.id}`}>
+                                        {child.name}
+                                      </a>
+                                      <span className="record-list-meta">
+                                        {child.usage_scopes
+                                          .map((scope) => scopeLabels[scope])
+                                          .join(" · ")}
+                                        {child.retired_at ? " · Retired" : ""}
+                                      </span>
+                                    </li>
+                                  ))}
+                              </ul>
+                            ) : (
+                              <p className="record-empty">
+                                No child locations.
+                              </p>
+                            )}
+                          </section>
+                          <section className="record-section location-enabled-scopes">
+                            <h4>Enabled scopes</h4>
+                            <p>
+                              {selected.usage_scopes
+                                .map((scope) => scopeLabels[scope])
+                                .join(" · ")}
+                            </p>
+                            <p className="field-help">
+                              Explicit assignment scopes. Scopes do not inherit
+                              from parent locations.
+                            </p>
+                          </section>
+                        </>
                       }
-                      )
-                    </h5>
-                    {locations.some(
-                      (location) => location.parent_id === selected.id,
-                    ) ? (
-                      <ul className="record-link-list">
-                        {locations
-                          .filter(
-                            (location) => location.parent_id === selected.id,
-                          )
-                          .map((child) => (
-                            <li key={child.id}>
-                              <a href={`#/locations/${child.id}`}>
-                                {child.name}
+                      almanac={
+                        <RecordAlmanac
+                          kind="location"
+                          id={selected.id}
+                          current={!selected.retired_at}
+                          recordedElsewhere={
+                            <>
+                              Collection records placed here are listed under{" "}
+                              <a
+                                href={`#/locations/${selected.id}?tab=contents`}
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  setDetailTab("contents");
+                                  window.history.replaceState(
+                                    null,
+                                    "",
+                                    `#/locations/${selected.id}?tab=contents`,
+                                  );
+                                }}
+                              >
+                                Contents
                               </a>
-                              <span className="record-list-meta">
-                                {child.usage_scopes
-                                  .map((scope) => scopeLabels[scope])
-                                  .join(" · ")}
-                                {child.retired_at ? " · Retired" : ""}
-                              </span>
-                            </li>
-                          ))}
-                      </ul>
-                    ) : (
-                      <p className="record-empty">No child locations.</p>
-                    )}
-                  </section>
-                  <CollectionUsage location={selected} />
-                  <section className="record-section location-enabled-scopes">
-                    <h4>Enabled scopes</h4>
-                    <p>
-                      {selected.usage_scopes
-                        .map((scope) => scopeLabels[scope])
-                        .join(" · ")}
-                    </p>
-                    <p className="field-help">
-                      Explicit assignment scopes. Scopes do not inherit from
-                      parent locations.
-                    </p>
-                  </section>
-                </div>
+                              .
+                            </>
+                          }
+                        />
+                      }
+                    />
+                  </div>
+                )}
+                {detailTab === "contents" && (
+                  <div
+                    id="panel-contents"
+                    role="tabpanel"
+                    aria-labelledby="tab-contents"
+                    className="detail-tab-panel"
+                  >
+                    <CollectionUsage location={selected} />
+                  </div>
+                )}
               </DetailPage>
             ) : directory.status === "loading" ? (
               <DetailLoading
