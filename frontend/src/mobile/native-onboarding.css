@@ -167,6 +167,35 @@
   object-fit: contain;
 }
 
+.mobile-reminders__controls {
+  display: grid;
+  gap: var(--space-3, 0.75rem);
+  max-inline-size: 28rem;
+}
+
+.mobile-reminders__checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  cursor: pointer;
+}
+
+.mobile-reminders__checkbox input[type="checkbox"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.mobile-reminders__time {
+  max-inline-size: 14rem;
+}
+
+.mobile-reminders__meta {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+
 @media print {
   .native-update-notice,
   .native-update-live,

@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -592,7 +593,105 @@ class MobileReleaseContract(unittest.TestCase):
         mobile_pkg = json.loads((ROOT / "mobile/package.json").read_text())
         mobile_deps = mobile_pkg.get("dependencies", {})
         self.assertIn("@capacitor/filesystem", mobile_deps)
+        self.assertIn("@capacitor/local-notifications", mobile_deps)
         self.assertIn("@capacitor/share", mobile_deps)
+
+    def test_mobile_local_notifications_contract(self) -> None:
+        capacitor_config = (ROOT / "mobile/capacitor.config.ts").read_text()
+        self.assertIn('smallIcon: "ic_stat_florabase"', capacitor_config)
+        self.assertIn('iconColor: "#153A2C"', capacitor_config)
+        self.assertIn('loggingBehavior: "none"', capacitor_config)
+
+        android_ns = "{http://schemas.android.com/apk/res/android}"
+        tools_ns = "{http://schemas.android.com/tools}"
+        manifest_path = ROOT / "mobile/android/app/src/main/AndroidManifest.xml"
+        tree = ET.parse(manifest_path)
+        root = tree.getroot()
+
+        active_permissions: set[str] = set()
+        removed_permissions: set[str] = set()
+        for elem in root.findall("uses-permission"):
+            name = elem.attrib.get(f"{android_ns}name", "")
+            node_action = elem.attrib.get(f"{tools_ns}node", "")
+            if node_action == "remove":
+                removed_permissions.add(name)
+            else:
+                active_permissions.add(name)
+
+        self.assertEqual(active_permissions, {"android.permission.INTERNET"})
+        self.assertIn("android.permission.SCHEDULE_EXACT_ALARM", removed_permissions)
+        self.assertNotIn("android.permission.USE_EXACT_ALARM", active_permissions)
+
+        app_elem = root.find("application")
+        self.assertIsNotNone(app_elem)
+        assert app_elem is not None
+        self.assertEqual(app_elem.attrib.get(f"{android_ns}allowBackup"), "false")
+
+        receivers = app_elem.findall("receiver")
+        self.assertEqual(len(receivers), 1)
+        receiver = receivers[0]
+        self.assertEqual(
+            receiver.attrib.get(f"{android_ns}name"),
+            "com.capacitorjs.plugins.localnotifications.LocalNotificationRestoreReceiver",
+        )
+        self.assertEqual(receiver.attrib.get(f"{android_ns}exported"), "false")
+        actions = [
+            action.attrib.get(f"{android_ns}name", "")
+            for action in receiver.findall("intent-filter/action")
+        ]
+        self.assertEqual(actions, ["android.intent.action.MY_PACKAGE_REPLACED"])
+
+        # Monochrome notification small icon assets exist for every density.
+        res_dir = ROOT / "mobile/android/app/src/main/res"
+        for density in ("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"):
+            icon_path = res_dir / f"drawable-{density}" / "ic_stat_florabase.png"
+            self.assertTrue(icon_path.is_file(), f"missing notification icon {icon_path}")
+
+        # Zero Google/Firebase/FCM/MLKit dependencies across mobile manifests and Gradle wiring.
+        for rel in (
+            "mobile/package.json",
+            "mobile/pnpm-lock.yaml",
+            "mobile/android/app/build.gradle",
+            "mobile/android/app/capacitor.build.gradle",
+            "mobile/android/capacitor.settings.gradle",
+        ):
+            content = (ROOT / rel).read_text().lower()
+            for forbidden in (
+                "com.google.gms",
+                "com.google.firebase",
+                "play-services",
+                "firebase",
+                "mlkit",
+            ):
+                self.assertNotIn(forbidden, content, f"forbidden {forbidden!r} found in {rel}")
+
+        # If Gradle has already produced a merged manifest locally, verify its permission allowlist.
+        merged_manifests = list(
+            (ROOT / "mobile/android/app/build/intermediates").rglob("AndroidManifest.xml")
+            if (ROOT / "mobile/android/app/build/intermediates").is_dir()
+            else []
+        )
+        allowed_merged_permissions = {
+            "android.permission.INTERNET",
+            "android.permission.POST_NOTIFICATIONS",
+            "android.permission.RECEIVE_BOOT_COMPLETED",
+            "android.permission.WAKE_LOCK",
+            "io.github.alessandrorossato.florabase.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+        }
+        for merged in merged_manifests:
+            merged_root = ET.parse(merged).getroot()
+            merged_perms = {
+                elem.attrib.get(f"{android_ns}name", "")
+                for elem in merged_root.findall("uses-permission")
+            }
+            self.assertLessEqual(
+                merged_perms,
+                allowed_merged_permissions,
+                f"unexpected permissions in merged manifest {merged}: "
+                f"{merged_perms - allowed_merged_permissions}",
+            )
+            self.assertNotIn("android.permission.SCHEDULE_EXACT_ALARM", merged_perms)
+            self.assertNotIn("android.permission.USE_EXACT_ALARM", merged_perms)
 
     def test_release_signing_gradle_has_no_hardcoded_secrets_and_uses_version_helper(self) -> None:
         gradle = (ROOT / "mobile/android/app/build.gradle").read_text()

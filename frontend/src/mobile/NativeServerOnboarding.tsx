@@ -26,6 +26,7 @@ export interface NativeServerOnboardingProps {
   initialServerUrl?: string | null;
   initialError?: OnboardingError | null;
   onConnected?: (serverUrl: string, info: SystemInfo) => void;
+  onForgetServer?: () => void;
 }
 
 export function NativeServerOnboarding({
@@ -36,6 +37,7 @@ export function NativeServerOnboarding({
   initialServerUrl = null,
   initialError = null,
   onConnected,
+  onForgetServer,
 }: NativeServerOnboardingProps) {
   const storeRef = useRef<ServerUrlStore>(store ?? createServerUrlStore());
   const errorRef = useRef<HTMLDivElement>(null);
@@ -122,6 +124,7 @@ export function NativeServerOnboarding({
 
   async function handleForgetSaved() {
     await storeRef.current.clear();
+    onForgetServer?.();
     setSavedUrl(null);
     setConnected(null);
     setError(null);

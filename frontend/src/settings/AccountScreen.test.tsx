@@ -350,3 +350,41 @@ test("Account shows Connected devices for a non-owner user without showing Chang
     await screen.findByText("No mobile devices are currently signed in."),
   ).toBeVisible();
 });
+
+test("Web/PWA Account omits the native-only Reminders section and never touches LocalNotifications", async () => {
+  window.history.replaceState(null, "", "#/account");
+  const checkPermissions = vi.fn();
+  const requestPermissions = vi.fn();
+  (globalThis as { Capacitor?: unknown }).Capacitor = {
+    isNativePlatform: () => false,
+    Plugins: {
+      LocalNotifications: {
+        checkPermissions,
+        requestPermissions,
+      },
+    },
+  };
+  try {
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const path = pathname(input);
+      if (path.endsWith("/session")) return Promise.resolve(json(session));
+      if (path.endsWith("/csrf"))
+        return Promise.resolve(json({ csrf_token: "csrf-web" }));
+      if (path.endsWith("/device-sessions"))
+        return Promise.resolve(json({ items: [] }));
+      return Promise.resolve(json([]));
+    });
+
+    render(<App />);
+    expect(
+      await screen.findByRole("heading", { name: "Connected devices" }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("heading", { name: "Reminders" }),
+    ).not.toBeInTheDocument();
+    expect(checkPermissions).not.toHaveBeenCalled();
+    expect(requestPermissions).not.toHaveBeenCalled();
+  } finally {
+    delete (globalThis as { Capacitor?: unknown }).Capacitor;
+  }
+});

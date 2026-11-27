@@ -3622,6 +3622,25 @@
       ],
       "priority": "P2",
       "status": "implemented"
+    },
+    {
+      "id": "MOBILE-004",
+      "category": "mobile",
+      "description": "Opt-in local Schedule reminder digests in the Capacitor Android app via @capacitor/local-notifications (F-Droid clean, zero push/Google Play Services, zero DB migration or backend changes) while keeping the PWA unchanged",
+      "acceptance_criteria": [
+        "PWA remains unchanged (web build, sw.js, manifest.webmanifest, CSP, auth, and Account screen without Reminders section; zero @capacitor/* in frontend/package.json; measured web bundle delta reported)",
+        "Native-only Reminders panel in Settings -> Account (below Connected devices) defaults off with 08:00 local time and include-overdue on, persists per device in Capacitor Preferences, requests POST_NOTIFICATIONS only on opt-in, and handles denied or later-revoked permission without re-prompting",
+        "Deterministic serialized plan builder schedules at most one inexact allowWhileIdle daily digest per active day over the next 14 local calendar days using GET /api/v1/schedule (handling DST transitions, nonexistent/ambiguous times, overdue-only today, single-activity deep links, overflow pages, and owned ID range 41000..41099)",
+        "Lock-screen privacy uses VISIBILITY_PRIVATE channel with count-only collapsed text and <=5 sanitized <=60-char titles in expanded inboxList only (no targets, locations, notes, server URL, or tokens; Preferences plan summary stores counts only), and cancels pending + delivered owned notifications on switch-off, logout, 401/revocation, server change/forget, and min_client_version failure",
+        "Tapping a notification deep-links into Schedule on cold start, warm start, and across expired-session login; alarms survive reboot and APK update (MY_PACKAGE_REPLACED on LocalNotificationRestoreReceiver, exported=false); MobileReleaseContract enforces permission allowlist (SCHEDULE_EXACT_ALARM removed), zero Google/Firebase deps, and monochrome ic_stat_florabase asset determinism; debug and signed release APKs build and emulator evidence is recorded"
+      ],
+      "dependencies": [
+        "MOBILE-003",
+        "MOBILE-002",
+        "MOBILE-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
     }
   ]
 }
