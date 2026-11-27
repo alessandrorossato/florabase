@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,7 @@ from typing import Any
 from workflow_environment import Repository, WorkflowError, migration_graph, run
 
 REPOSITORY = "alessandrorossato/florabase"
+SHA_PATTERN = re.compile(r"[0-9a-f]{40}")
 
 
 def ancestor(repo: Repository, before: str, after: str) -> bool:
@@ -22,24 +24,64 @@ def ancestor(repo: Repository, before: str, after: str) -> bool:
     return True
 
 
+def in_worktree_reflog(repo: Repository, sha: str, branch: str = "") -> bool:
+    """Prove `sha` is a local commit this worktree or its attached branch once pointed to."""
+    if not SHA_PATTERN.fullmatch(sha):
+        return False
+    try:
+        repo.git("cat-file", "-e", f"{sha}^{{commit}}")
+    except WorkflowError:
+        return False
+    refs = ["HEAD"]
+    if branch and branch != "detached":
+        refs.append(f"refs/heads/{branch}")
+    for ref in refs:
+        try:
+            entries = repo.git("reflog", "show", "--format=%H", ref).splitlines()
+        except WorkflowError:
+            continue
+        if sha in entries:
+            return True
+    return False
+
+
 def delivered(repo: Repository, sha: str | None = None) -> str:
     """Return delivered main identity; squash delivery requires the exact merged PR head."""
     identity = repo.identity()
     if identity["dirty"] != "no":
         raise WorkflowError("delivered UAT source must be clean; preserve/resolve owner edits")
-    sha = sha or identity["sha"]
-    if ancestor(repo, sha, "origin/main"):
-        return sha
-    proposals = json.loads(
-        run(["gh", "api", f"repos/{REPOSITORY}/commits/{sha}/pulls"], capture=True)
-    )
+    target = sha or identity["sha"]
+    if ancestor(repo, target, "origin/main"):
+        return target
+    try:
+        proposals = json.loads(
+            run(["gh", "api", f"repos/{REPOSITORY}/commits/{target}/pulls"], capture=True)
+        )
+    except (WorkflowError, json.JSONDecodeError) as error:
+        if sha is not None:
+            raise WorkflowError(
+                f"launched SHA {target[:12]} is not in this history and has no delivered PR proof "
+                "(GitHub lookup failed); run make uat-preview-status, make uat-preview-sync "
+                "(delivered owner), or guarded make uat-preview-remove"
+            ) from error
+        raise WorkflowError(
+            f"detached source {target[:12]} is not in origin/main and GitHub PR proof lookup "
+            "failed; check gh authentication/network or fetch origin/main before running "
+            "make uat-preview-status"
+        ) from error
+    if not isinstance(proposals, list):
+        label = "launched SHA" if sha is not None else "detached source"
+        raise WorkflowError(
+            f"{label} {target[:12]} has an invalid GitHub PR proof response; "
+            "run make uat-preview-status or guarded make uat-preview-remove"
+        )
     matches = []
     for pr in proposals:
         merge = pr.get("merge_commit_sha")
         if (
             pr.get("state") == "closed"
             and pr.get("merged_at")
-            and pr.get("head", {}).get("sha") == sha
+            and pr.get("head", {}).get("sha") == target
             and pr.get("base", {}).get("ref") == "main"
             and pr.get("base", {}).get("repo", {}).get("full_name") == REPOSITORY
             and isinstance(merge, str)

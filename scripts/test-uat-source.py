@@ -13,7 +13,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from uat_preview import VOLUMES, UATPreview
-from uat_source import delivered, read_transition, write_transition
+from uat_source import delivered, in_worktree_reflog, read_transition, write_transition
 from workflow_environment import MEDIA_ROOT, Repository, WorkflowError, run
 
 
@@ -467,6 +467,80 @@ class SourceTests(unittest.TestCase):
             with self.assertRaisesRegex(WorkflowError, "DB at code head"):
                 self.preview.seed()
             compose.assert_not_called()
+
+    def test_delivered_wraps_gh_failure_into_clear_workflow_error(self) -> None:
+        git(self.source, "switch", "-c", "feat/unpushed")
+        (self.source / "unpushed").write_text("unpushed\n")
+        git(self.source, "add", ".")
+        git(self.source, "commit", "-m", "unpushed commit")
+        unpushed = git(self.source, "rev-parse", "HEAD")
+        git(self.source, "switch", "--detach")
+        with patch("uat_source.run", side_effect=WorkflowError("command failed: gh api ... (422)")):
+            with self.assertRaises(WorkflowError) as ctx:
+                delivered(self.repo, unpushed)
+            message = str(ctx.exception)
+            self.assertIn(unpushed[:12], message)
+            self.assertIn("no delivered PR proof", message)
+            self.assertIn("make uat-preview-status", message)
+            self.assertNotIn("command failed", message)
+            with self.assertRaises(WorkflowError) as ctx_head:
+                delivered(self.repo)
+            self.assertIn(unpushed[:12], str(ctx_head.exception))
+            self.assertIn("GitHub PR proof lookup failed", str(ctx_head.exception))
+            self.assertNotIn("command failed", str(ctx_head.exception))
+        with patch("uat_source.run", return_value="not-json"):
+            with self.assertRaisesRegex(WorkflowError, "no delivered PR proof"):
+                delivered(self.repo, unpushed)
+        with patch("uat_source.run", return_value='{"message": "Unprocessable Entity"}'):
+            with self.assertRaisesRegex(WorkflowError, "invalid GitHub PR proof response"):
+                delivered(self.repo, unpushed)
+
+    def test_detached_singleton_preview_still_uses_delivered_for_non_ancestor_sha(self) -> None:
+        git(self.source, "switch", "-c", "feat/old-preview")
+        (self.source / "old").write_text("old\n")
+        git(self.source, "add", ".")
+        git(self.source, "commit", "-m", "old preview tip")
+        old_sha = git(self.source, "rev-parse", "HEAD")
+        git(self.source, "switch", "--detach", self.before)
+        container = self.valid_container()
+        container["Config"]["Labels"]["io.florabase.sha"] = old_sha
+        with (
+            patch.object(self.preview, "validate"),
+            patch.object(self.preview, "require_owner"),
+            patch.object(self.preview, "resource_volumes", return_value=self.volumes),
+            patch.object(self.preview, "containers", return_value=[container]),
+            patch.object(self.preview, "require_resource_users"),
+            patch.object(self.preview, "marker_state", return_value=self.marker),
+            patch(
+                "uat_source.run", side_effect=WorkflowError("command failed: gh api 422")
+            ) as gh_run,
+        ):
+            with self.assertRaisesRegex(WorkflowError, f"launched SHA {old_sha[:12]}"):
+                self.preview.require_identity(stale_ok=True, allow_expired_sha=True)
+            gh_run.assert_called_once()
+
+    def test_in_worktree_reflog_proves_only_this_worktree_and_branch_commits(self) -> None:
+        git(self.source, "switch", "-c", "ci/batch-reflog")
+        (self.source / "old").write_text("old\n")
+        git(self.source, "add", ".")
+        git(self.source, "commit", "-m", "old batch tip")
+        old_tip = git(self.source, "rev-parse", "HEAD")
+        other = Path(self.temp.name) / "other"
+        git(self.primary, "worktree", "add", "-b", "feat/sibling", str(other), self.before)
+        (other / "sibling").write_text("sibling\n")
+        git(other, "add", ".")
+        git(other, "commit", "-m", "sibling commit")
+        sibling_sha = git(other, "rev-parse", "HEAD")
+        git(self.source, "reset", "--hard", self.before)
+        (self.source / "new").write_text("new\n")
+        git(self.source, "add", ".")
+        git(self.source, "commit", "-m", "rebuilt batch tip")
+        self.assertTrue(in_worktree_reflog(self.repo, old_tip, "ci/batch-reflog"))
+        self.assertFalse(in_worktree_reflog(self.repo, sibling_sha, "ci/batch-reflog"))
+        self.assertFalse(in_worktree_reflog(self.repo, "f" * 40, "ci/batch-reflog"))
+        self.assertFalse(in_worktree_reflog(self.repo, "not-a-sha", "ci/batch-reflog"))
+        git(self.source, "reflog", "expire", "--expire=now", "--expire-unreachable=now", "--all")
+        self.assertFalse(in_worktree_reflog(self.repo, old_tip, "ci/batch-reflog"))
 
 
 if __name__ == "__main__":

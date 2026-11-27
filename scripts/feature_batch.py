@@ -554,6 +554,19 @@ def prepare(repo: Repository, plan: dict[str, Any]) -> None:
             },
         )
     print(f"Prepared {branch}; commit {path} with the reviewed reconciliation")
+    try:
+        instances = sorted(
+            project
+            for project in owned_resources(repo)
+            if project.startswith("florabase-uat-branch-")
+        )
+    except WorkflowError:
+        instances = []
+    if instances:
+        print(
+            f"Note: this worktree owns UAT instance {', '.join(instances)}; "
+            "its launch will be stale — run make uat-instance-up"
+        )
 
 
 def title_body(value: dict[str, Any], head: str, migration: bool) -> tuple[str, str]:

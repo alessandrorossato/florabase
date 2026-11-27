@@ -4,6 +4,9 @@
 from __future__ import annotations
 
 import ast
+import contextlib
+import copy
+import io
 import json
 import os
 import re
@@ -15,10 +18,11 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
+import feature_batch
 import uat_instance
 from uat_instance import PREFIX, UATInstance
 from uat_preview import UATPreview
-from workflow_environment import UAT_PROJECT, Repository, WorkflowError
+from workflow_environment import MEDIA_ROOT, UAT_PROJECT, Repository, WorkflowError, run
 from workflow_resources import machine_lock
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -319,7 +323,13 @@ class InstanceTests(unittest.TestCase):
 
     def test_host_run_modules_parse_on_the_ci_python(self) -> None:
         # CI runs these with Python 3.12; the formatter targets 3.14 and may rewrite `except (A, B)`.
-        for name in ("uat_instance.py", "test-uat-instance.py", "smoke-uat-instance.py"):
+        for name in (
+            "uat_source.py",
+            "uat_preview.py",
+            "uat_instance.py",
+            "test-uat-instance.py",
+            "smoke-uat-instance.py",
+        ):
             with self.subTest(name=name):
                 source = (ROOT / "scripts" / name).read_text()
                 ast.parse(source, name, feature_version=(3, 12))
@@ -425,6 +435,520 @@ class InstanceTests(unittest.TestCase):
             result.stdout.strip(),
             f'python3 "{ROOT / "scripts/uat_instance.py"}" reset --profile "comprehensive"',
         )
+
+
+def git(path: Path, *args: str) -> str:
+    return run(["git", "-C", str(path), *args], capture=True)
+
+
+class StaleLaunchTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory(prefix="uat-instance-stale-")
+        self.addCleanup(self.temp.cleanup)
+        self.primary = Path(self.temp.name) / "primary"
+        self.primary.mkdir()
+        git(self.primary, "init", "--initial-branch=main")
+        git(self.primary, "config", "user.name", "UAT Test")
+        git(self.primary, "config", "user.email", "uat" + "@" + "example.invalid")
+        git(
+            self.primary,
+            "remote",
+            "add",
+            "origin",
+            "https://github.com/alessandrorossato/florabase.git",
+        )
+        versions = self.primary / "backend/alembic/versions"
+        versions.mkdir(parents=True)
+        (versions / "base.py").write_text("revision='base'\ndown_revision=None\n")
+        git(self.primary, "add", ".")
+        git(self.primary, "commit", "-m", "base")
+        self.base = git(self.primary, "rev-parse", "HEAD")
+        git(self.primary, "update-ref", "refs/remotes/origin/main", "HEAD")
+
+        self.source = Path(self.temp.name) / "batch-14"
+        git(self.primary, "worktree", "add", "-b", "ci/batch-14", str(self.source), "origin/main")
+        (self.source / "old.txt").write_text("old batch tip\n")
+        git(self.source, "add", ".")
+        git(self.source, "commit", "-m", "old batch tip")
+        self.old_tip = git(self.source, "rev-parse", "HEAD")
+
+        # Sibling worktree with its own commit (present in the shared ODB, absent from this reflog).
+        self.other = Path(self.temp.name) / "other"
+        git(self.primary, "worktree", "add", "-b", "feat/sibling", str(self.other), "origin/main")
+        (self.other / "other.txt").write_text("sibling\n")
+        git(self.other, "add", ".")
+        git(self.other, "commit", "-m", "sibling tip")
+        self.sibling_tip = git(self.other, "rev-parse", "HEAD")
+
+        # Rebuild ci/batch-14 from scratch (as feature-batch-prepare does).
+        git(self.source, "reset", "--hard", "origin/main")
+        (self.source / "rebuilt.txt").write_text("rebuilt batch tip\n")
+        git(self.source, "add", ".")
+        git(self.source, "commit", "-m", "rebuilt batch tip")
+        self.new_tip = git(self.source, "rev-parse", "HEAD")
+
+        self.repo = Repository(self.source)
+        self.vols = [
+            {
+                "Name": f"{PREFIX}ci-batch-14_{key}",
+                "Labels": {
+                    "com.docker.compose.project": f"{PREFIX}ci-batch-14",
+                    "com.docker.compose.volume": key,
+                    "io.florabase.source": str(self.source),
+                    "io.florabase.uat.instance": "ci-batch-14",
+                    "io.florabase.uat.port": "15180",
+                    "io.florabase.uat.profile": "smoke",
+                },
+            }
+            for key in ("postgres_data", "attachment_data", "frontend_node_modules")
+        ]
+        with patch("uat_instance.instance_volumes", return_value=self.vols):
+            self.instance = UATInstance(self.repo)
+
+    def containers_for(self, sha: str, *, running: bool = True) -> list[dict[str, Any]]:
+        env = self.instance.environment()
+        port = str(self.instance.port)
+        items: list[dict[str, Any]] = []
+        for service in ("db", "backend", "frontend"):
+            labels = {
+                "com.docker.compose.service": service,
+                "com.docker.compose.project": self.instance.project,
+                "com.docker.compose.oneoff": "False",
+                "io.florabase.role": "uat-instance",
+                "io.florabase.source": str(self.source),
+                "com.docker.compose.project.working_dir": str(self.source),
+                "io.florabase.sha": sha,
+            }
+            settings = dict(env)
+            if service == "backend":
+                settings.update(
+                    {
+                        "FLORABASE_WORKFLOW_MODE": "uat-instance",
+                        "FLORABASE_UAT_PROJECT": self.instance.project,
+                        "FLORABASE_UAT_SOURCE": str(self.source),
+                        "FLORABASE_CANONICAL_ORIGIN": self.instance.url,
+                        "FLORABASE_ENVIRONMENT": "development",
+                        "FLORABASE_COOKIE_MODE": "loopback-development",
+                        "FLORABASE_ATTACHMENT_STORAGE_ROOT": MEDIA_ROOT,
+                    }
+                )
+            if service == "db":
+                mounts = [
+                    {
+                        "Destination": "/var/lib/postgresql",
+                        "Type": "volume",
+                        "Name": f"{self.instance.project}_postgres_data",
+                    }
+                ]
+            elif service == "backend":
+                mounts = [
+                    {
+                        "Destination": MEDIA_ROOT,
+                        "Type": "volume",
+                        "Name": f"{self.instance.project}_attachment_data",
+                    }
+                ] + [
+                    {
+                        "Destination": f"/app/{name}",
+                        "Type": "bind",
+                        "Source": str(self.source / "backend" / name),
+                    }
+                    for name in (
+                        "src",
+                        "tests",
+                        "alembic",
+                        "scripts",
+                        "openapi.json",
+                        "pyproject.toml",
+                        "requirements.lock",
+                        "requirements-dev.lock",
+                    )
+                ]
+            else:
+                mounts = [
+                    {
+                        "Destination": "/app/node_modules",
+                        "Type": "volume",
+                        "Name": f"{self.instance.project}_frontend_node_modules",
+                    },
+                    {
+                        "Destination": "/app",
+                        "Type": "bind",
+                        "Source": str(self.source / "frontend"),
+                    },
+                    {
+                        "Destination": "/backend/openapi.json",
+                        "Type": "bind",
+                        "Source": str(self.source / "backend/openapi.json"),
+                    },
+                ]
+            bindings = (
+                {"5173/tcp": [{"HostIp": "127.0.0.1", "HostPort": port}]}
+                if service == "frontend"
+                else {}
+            )
+            ports = bindings if (service == "frontend" and running) else {}
+            items.append(
+                {
+                    "Id": f"cid-{service}",
+                    "Config": {
+                        "Labels": labels,
+                        "Env": [f"{key}={value}" for key, value in settings.items()],
+                    },
+                    "HostConfig": {"PortBindings": bindings},
+                    "NetworkSettings": {
+                        "Networks": {f"{self.instance.project}_internal": {}},
+                        "Ports": ports,
+                    },
+                    "Mounts": mounts,
+                    "State": {"Running": running},
+                }
+            )
+        return items
+
+    def identity_patches(self, containers: list[dict[str, Any]]) -> contextlib.ExitStack:
+        stack = contextlib.ExitStack()
+        stack.enter_context(patch.object(self.instance, "validate"))
+        stack.enter_context(patch.object(self.instance, "require_owner"))
+        stack.enter_context(patch.object(self.instance, "resource_volumes", return_value=self.vols))
+        stack.enter_context(patch.object(self.instance, "containers", return_value=containers))
+        stack.enter_context(patch.object(self.instance, "require_resource_users"))
+        return stack
+
+    def test_rebuilt_branch_status_stop_up_reset_remove_allowed_and_seed_validate_refused(
+        self,
+    ) -> None:
+        stale_running = self.containers_for(self.old_tip, running=True)
+        stale_stopped = self.containers_for(self.old_tip, running=False)
+        fresh_running = self.containers_for(self.new_tip, running=True)
+
+        # status reports stale launch + next step, zero gh calls.
+        with (
+            self.identity_patches(stale_running),
+            patch.object(self.instance, "current", return_value=["base"]),
+            patch.object(self.instance, "marker_state", return_value={uat_instance.LEDGER: None}),
+            patch("uat_source.run") as gh_run,
+            contextlib.redirect_stdout(io.StringIO()) as out,
+        ):
+            self.instance.status()
+            gh_run.assert_not_called()
+        text = out.getvalue()
+        self.assertIn(f"launched HEAD: {self.old_tip} (stale: not in current history)", text)
+        self.assertIn("make uat-instance-up", text)
+        self.assertIn(f"CONFIRM_RESET_UAT_INSTANCE={self.instance.project}", text)
+
+        # seed and validate refuse while launch is stale, zero gh calls.
+        with self.identity_patches(stale_running), patch("uat_source.run") as gh_run:
+            with self.assertRaisesRegex(WorkflowError, "run make uat-instance-up first"):
+                self.instance.seed()
+            with self.assertRaisesRegex(WorkflowError, "run make uat-instance-up first"):
+                self.instance.validate_dataset()
+            gh_run.assert_not_called()
+
+        # stop works on proved stale containers, zero gh calls.
+        with (
+            self.identity_patches(stale_running),
+            patch("uat_preview.run") as docker_run,
+            patch("uat_source.run") as gh_run,
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            self.instance.stop()
+            gh_run.assert_not_called()
+        docker_run.assert_called_once_with(
+            ["docker", "container", "stop", "cid-db", "cid-backend", "cid-frontend"]
+        )
+
+        # up rebuilds and relabels from HEAD (pre-rebuild stale_ok, post-up strict HEAD), zero gh.
+        state = {"items": stale_running}
+
+        def fake_compose(*args: str, **_: Any) -> str:
+            if args[:2] == ("up", "-d"):
+                state["items"] = fresh_running
+            return ""
+
+        def fake_preview_run(command: list[str], **_: Any) -> str:
+            if command[:3] == ["docker", "container", "stop"]:
+                state["items"] = stale_stopped
+            return ""
+
+        with (
+            patch.object(self.instance, "allocate"),
+            patch.object(self.instance, "validate"),
+            patch.object(self.instance, "require_owner"),
+            patch.object(self.instance, "resource_volumes", return_value=self.vols),
+            patch.object(self.instance, "containers", side_effect=lambda: state["items"]),
+            patch.object(self.instance, "require_resource_users"),
+            patch.object(self.instance, "compose", side_effect=fake_compose),
+            patch.object(self.instance, "start_database"),
+            patch.object(self.instance, "current", return_value=["base"]),
+            patch.object(self.instance, "upgrade"),
+            patch.object(self.instance, "marker_state", return_value={uat_instance.LEDGER: None}),
+            patch("uat_preview.run", side_effect=fake_preview_run),
+            patch("uat_source.run") as gh_run,
+            contextlib.redirect_stdout(io.StringIO()) as up_out,
+        ):
+            self.instance.up()
+            gh_run.assert_not_called()
+        self.assertIn(f"launched HEAD: {self.new_tip}", up_out.getvalue())
+        self.assertNotIn("stale: not in current history", up_out.getvalue())
+
+        # Guarded reset succeeds on stale launch, zero gh calls.
+        reset_state = {"items": stale_running}
+
+        def reset_compose(*args: str, **_: Any) -> str:
+            if args[:1] == ("down",):
+                reset_state["items"] = []
+            return ""
+
+        with (
+            patch.object(self.instance, "remove_oneoffs"),
+            patch.object(self.instance, "validate"),
+            patch.object(self.instance, "require_owner"),
+            patch.object(self.instance, "resource_volumes", return_value=self.vols),
+            patch.object(self.instance, "containers", side_effect=lambda: reset_state["items"]),
+            patch.object(self.instance, "require_resource_users"),
+            patch.object(self.instance, "compose", side_effect=reset_compose),
+            patch.object(self.instance, "up") as up_mock,
+            patch.object(self.instance, "seed") as seed_mock,
+            patch.object(self.instance, "status"),
+            patch("uat_preview.run") as preview_run,
+            patch("uat_source.run") as gh_run,
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            self.instance.reset(self.instance.project)
+            gh_run.assert_not_called()
+        up_mock.assert_called_once()
+        seed_mock.assert_called_once()
+        self.assertEqual(
+            [call.args[0] for call in preview_run.call_args_list],
+            [["docker", "volume", "rm", item["Name"]] for item in self.vols],
+        )
+
+        # Guarded remove succeeds on stale launch, zero gh calls.
+        rem_state: dict[str, Any] = {
+            "containers": stale_running,
+            "volumes": self.vols,
+            "networks": [
+                {
+                    "Id": "net-1",
+                    "Name": f"{self.instance.project}_internal",
+                    "Labels": {
+                        "com.docker.compose.project": self.instance.project,
+                        "com.docker.compose.network": "internal",
+                    },
+                    "Containers": {},
+                }
+            ],
+        }
+
+        def remove_docker(command: list[str], **_: Any) -> str:
+            if command[:3] == ["docker", "network", "ls"]:
+                return "\n".join(item["Id"] for item in rem_state["networks"])
+            if command[:3] == ["docker", "network", "inspect"]:
+                return json.dumps(rem_state["networks"])
+            if command[:2] == ["docker", "ps"]:
+                return ""
+            if command[:3] == ["docker", "container", "stop"]:
+                rem_state["containers"] = stale_stopped
+            elif command[:3] == ["docker", "container", "rm"]:
+                rem_state["containers"] = []
+            elif command[:3] == ["docker", "network", "rm"]:
+                rem_state["networks"] = []
+            return ""
+
+        with (
+            patch.object(self.instance, "remove_oneoffs"),
+            patch.object(self.instance, "validate"),
+            patch.object(self.instance, "require_owner"),
+            patch.object(
+                self.instance, "resource_volumes", side_effect=lambda: rem_state["volumes"]
+            ),
+            patch.object(self.instance, "containers", side_effect=lambda: rem_state["containers"]),
+            patch.object(self.instance, "require_resource_users"),
+            patch("uat_preview.run", side_effect=remove_docker),
+            patch("uat_instance.run", return_value=""),
+            patch("uat_source.run") as gh_run,
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            self.instance.remove(self.instance.project)
+            gh_run.assert_not_called()
+
+    def test_up_refuses_incompatible_db_with_reset_hint_and_no_data_deletion(self) -> None:
+        stale_running = self.containers_for(self.old_tip, running=True)
+        with (
+            self.identity_patches(stale_running),
+            patch.object(self.instance, "allocate"),
+            patch.object(self.instance, "compose") as compose,
+            patch.object(self.instance, "start_database"),
+            patch.object(self.instance, "current", return_value=["dropped_migration_999"]),
+            patch.object(self.instance, "upgrade") as upgrade,
+            patch("uat_preview.run") as docker_run,
+            patch("uat_source.run") as gh_run,
+        ):
+            with self.assertRaises(WorkflowError) as ctx:
+                self.instance.up()
+            gh_run.assert_not_called()
+        message = str(ctx.exception)
+        self.assertIn("AHEAD OF OR INCOMPATIBLE", message)
+        self.assertIn(
+            f"make uat-instance-reset CONFIRM_RESET_UAT_INSTANCE={self.instance.project}", message
+        )
+        upgrade.assert_not_called()
+        docker_run.assert_not_called()
+        self.assertEqual([call.args for call in compose.call_args_list], [("build",)])
+
+    def test_unknown_and_sibling_sha_refused_and_confirmed_reset_remove_fallback(self) -> None:
+        for sha in ("f" * 40, self.sibling_tip):
+            containers = self.containers_for(sha, running=True)
+            with (
+                self.subTest(sha=sha),
+                self.identity_patches(containers),
+                patch.object(self.instance, "allocate"),
+                patch("uat_source.run") as gh_run,
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                for action in (
+                    self.instance.status,
+                    self.instance.stop,
+                    self.instance.up,
+                    self.instance.seed,
+                    self.instance.validate_dataset,
+                ):
+                    with self.assertRaisesRegex(
+                        WorkflowError, "not in this worktree's history or reflog"
+                    ):
+                        action()
+                with self.assertRaisesRegex(WorkflowError, "CONFIRM_RESET_UAT_INSTANCE"):
+                    self.instance.reset("")
+                with self.assertRaisesRegex(WorkflowError, "CONFIRM_REMOVE_UAT_INSTANCE"):
+                    self.instance.remove("")
+                # Confirmed reset/remove fallback accepts expired 40-hex SHA only when all other
+                # identity checks pass (allow_expired_sha=True).
+                self.instance.require_identity(stale_ok=True, allow_expired_sha=True)
+                gh_run.assert_not_called()
+        # Malformed (non-40-hex) io.florabase.sha is ALWAYS refused, even with allow_expired_sha.
+        bad_sha = self.containers_for("foreign", running=True)
+        with self.identity_patches(bad_sha), patch("uat_source.run") as gh_run:
+            with self.assertRaisesRegex(WorkflowError, "missing/unknown UAT launched Git identity"):
+                self.instance.require_identity(stale_ok=True, allow_expired_sha=True)
+            gh_run.assert_not_called()
+
+    def test_foreign_identity_with_stale_sha_is_always_refused(self) -> None:
+        base_containers = self.containers_for(self.old_tip, running=True)
+        mutations: list[tuple[str, Any]] = [
+            ("role", lambda c: c[0]["Config"]["Labels"].__setitem__("io.florabase.role", "dev")),
+            (
+                "source",
+                lambda c: c[0]["Config"]["Labels"].__setitem__("io.florabase.source", OTHER),
+            ),
+            (
+                "project",
+                lambda c: c[0]["Config"]["Labels"].__setitem__(
+                    "com.docker.compose.project", "florabase-uat-branch-other"
+                ),
+            ),
+            ("mount", lambda c: c[1]["Mounts"][1].__setitem__("Source", OTHER + "/backend/src")),
+            (
+                "network",
+                lambda c: c[0]["NetworkSettings"].__setitem__("Networks", {"foreign_net": {}}),
+            ),
+        ]
+        for label, mutate in mutations:
+            damaged = copy.deepcopy(base_containers)
+            mutate(damaged)
+            with (
+                self.subTest(case=label),
+                self.identity_patches(damaged),
+                patch("uat_source.run") as gh_run,
+            ):
+                with self.assertRaises(WorkflowError):
+                    self.instance.require_identity(stale_ok=True, allow_expired_sha=True)
+                gh_run.assert_not_called()
+        # Foreign volume user is also refused even with a valid stale SHA and allow_expired_sha.
+        with (
+            patch.object(self.instance, "validate"),
+            patch.object(self.instance, "require_owner"),
+            patch.object(self.instance, "resource_volumes", return_value=self.vols),
+            patch.object(self.instance, "containers", return_value=base_containers),
+            patch("uat_preview.run", side_effect=["", "foreign-container"]),
+            patch("uat_source.run") as gh_run,
+        ):
+            with self.assertRaisesRegex(WorkflowError, "foreign container user"):
+                self.instance.require_identity(stale_ok=True, allow_expired_sha=True)
+            gh_run.assert_not_called()
+
+    def test_detached_instance_keeps_delivered_proof_path(self) -> None:
+        git(self.source, "switch", "--detach", self.base)
+        containers = self.containers_for(self.old_tip, running=False)
+        with (
+            self.identity_patches(containers),
+            patch.object(
+                self.instance,
+                "marker_state",
+                return_value={uat_instance.LEDGER: {"state": "ready", "profile": "smoke"}},
+            ),
+            patch(
+                "uat_source.run", side_effect=WorkflowError("command failed: gh api 422")
+            ) as gh_run,
+        ):
+            with self.assertRaisesRegex(WorkflowError, f"launched SHA {self.old_tip[:12]}"):
+                self.instance.require_identity(retiring=True, stale_ok=True, allow_expired_sha=True)
+            gh_run.assert_called_once()
+
+    def test_feature_batch_prepare_hints_when_worktree_owns_uat_instance(self) -> None:
+        # Test the post-prepare hint helper behavior via owned_resources patching.
+        source_branch = Path(self.temp.name) / "feat-src"
+        git(
+            self.primary,
+            "worktree",
+            "add",
+            "-b",
+            "feat/sample-1",
+            str(source_branch),
+            "origin/main",
+        )
+        (source_branch / "docs").mkdir(exist_ok=True)
+        (source_branch / "docs/sample.md").write_text("evidence\n")
+        git(source_branch, "add", ".")
+        git(source_branch, "commit", "-m", "sample feature")
+        src_tip = git(source_branch, "rev-parse", "HEAD")
+
+        batch_wt = Path(self.temp.name) / "batch-hint"
+        git(self.primary, "worktree", "add", "-b", "ci/batch-hint", str(batch_wt), "origin/main")
+        batch_repo = Repository(batch_wt)
+        plan = {
+            "version": 1,
+            "branch": "ci/batch-hint",
+            "summary": "Sample batch for UAT instance stale hint test",
+            "base": self.base,
+            "sources": [
+                {
+                    "id": "FN-99",
+                    "branch": "feat/sample-1",
+                    "tip": src_tip,
+                    "reviewer": "independent",
+                    "evidence": ["docs/sample.md"],
+                }
+            ],
+            "blockers": [],
+        }
+        with (
+            patch("feature_batch.agent_id", return_value="integrator"),
+            patch("feature_batch.require_writer"),
+            patch("feature_batch.AgentState") as state_cls,
+            patch("feature_batch.proposal", return_value=plan),
+            patch(
+                "feature_batch.owned_resources",
+                return_value={
+                    f"{PREFIX}ci-batch-hint": {"containers": 3, "running": 3, "volumes": 3}
+                },
+            ),
+            contextlib.redirect_stdout(io.StringIO()) as out,
+        ):
+            state_cls.return_value.load.return_value = {"writer": {"agent": "integrator"}}
+            feature_batch.prepare(batch_repo, plan)
+        self.assertIn(f"owns UAT instance {PREFIX}ci-batch-hint", out.getvalue())
+        self.assertIn("make uat-instance-up", out.getvalue())
 
 
 if __name__ == "__main__":
