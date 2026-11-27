@@ -807,6 +807,19 @@ class MobileReleaseContract(unittest.TestCase):
         self.assertNotIn("pnpm --dir", workflow)
         self.assertIn("(cd frontend && pnpm install --frozen-lockfile", workflow)
         self.assertIn("(cd mobile && pnpm install --frozen-lockfile", workflow)
+        makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
+        mobile_sync_match = re.search(
+            r"(?ms)^mobile-sync:[^\n]*\n((?:\t[^\n]*\n)+)",
+            makefile,
+        )
+        self.assertIsNotNone(mobile_sync_match, "Makefile missing mobile-sync target")
+        assert mobile_sync_match is not None
+        mobile_sync_recipe = mobile_sync_match.group(1)
+        self.assertNotIn("pnpm --dir", mobile_sync_recipe)
+        self.assertIn(
+            "cd mobile && pnpm install --frozen-lockfile && pnpm exec cap sync android",
+            mobile_sync_recipe,
+        )
         # The runner drops build-tools newer than the declared 36.0.0 before the tag's release script.
         self.assertIn('test "$newest" = "36.0.0"', workflow)
 

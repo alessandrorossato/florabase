@@ -2838,6 +2838,23 @@
       "status": "implemented"
     },
     {
+      "id": "UAT-INSTANCE-002",
+      "category": "infrastructure",
+      "description": "Allow attached per-worktree UAT instances to detect and recover safely from stale launches after branch history rewrites without manual container deletion",
+      "acceptance_criteria": [
+        "Only attached UATInstance worktrees treat a non-ancestor io.florabase.sha as a stale launch, proved only when all container, volume, network, mount, port, environment and volume-user identity checks pass and the 40-hex commit exists locally in this worktree's HEAD or branch reflog; singleton UAT Preview and detached owners keep the unchanged delivered() path",
+        "Attached UATInstance identity checks never call gh api; wherever delivered() still runs, gh lookup failures raise a single clear WorkflowError naming the short SHA and next command instead of a raw 422 or traceback",
+        "On a stale launch, status reports 'launched HEAD: <sha> (stale: not in current history)' with the rebuild/reset next step, stop/remove/reset/up succeed without manual docker rm, up preserves migration safety via require_upgradeable with a guarded reset hint and never auto-resets, and seed/validate refuse until up rebuilds from HEAD",
+        "An unknown 40-hex SHA outside this worktree's reflog is refused by status, stop, up, seed and validate, and accepted only by confirm-guarded reset/remove when all other identity checks pass; malformed SHAs and foreign identities remain refused everywhere",
+        "Offline regressions and real disposable Docker smoke (rebuilt branch history through status, seed/validate refusal, stop, up relabeling and guarded reset) plus canonical FULL pass before operator delivery"
+      ],
+      "dependencies": [
+        "MULTIBRANCH-UAT-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "DEV-GOLDEN-001",
       "category": "infrastructure",
       "description": "Persistent comprehensive synthetic Golden collection in primary main DEV",

@@ -163,6 +163,7 @@
     "INSTALL-GUIDE-001": "best-effort",
     "SETUP-SAFETY-001": "tooling",
     "MULTIBRANCH-UAT-001": "tooling",
+    "UAT-INSTANCE-002": "best-effort",
     "DEV-GOLDEN-001": "tooling",
     "DEV-REFERENCES-001": "tooling",
     "GOLDEN-REFERENCE-001": "post-1.0",

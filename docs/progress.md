@@ -42,6 +42,32 @@
   survival, and logout cleanup). Canonical FULL `make feature-verify AGENT_ID=neon-mobile-004` runs
   on the frozen committed HEAD.
 
+## 2026-11-27 — UAT-INSTANCE-002 stale launch handling on rebuilt branches (also: mobile-sync pnpm fix, follow-up of #231)
+
+- On `ci/uat-instance-002` from `origin/main` `c83d8163` (writer `antigravity-neon-uat-instance-002`;
+  registered right after `MULTIBRANCH-UAT-001` in `docs/features.json` as `implemented` and in
+  `docs/release/scope-v1.json` as `best-effort`). Tooling only: no product code, no migration.
+- Added local reflog proof `in_worktree_reflog()` and hardened `delivered()` error handling in
+  `scripts/uat_source.py`; extracted `verify_launched_sha()` and `check_upgradeable()` hooks in
+  `scripts/uat_preview.py` (deferring launched-SHA checks until after all container/volume/network/
+  mount/port/env/foreign-user checks pass, while keeping singleton UAT Preview and detached-owner
+  `delivered()` unchanged); overrode them in `scripts/uat_instance.py` so attached UAT instances
+  never call `gh api`, report stale launches in `status`, allow `stop`/`up`/guarded `reset`/guarded
+  `remove` without manual `docker rm`, keep `require_upgradeable` safety with a guarded reset hint
+  on `up`, refuse `seed`/`validate` while stale, and accept expired 40-hex SHAs only in
+  confirm-guarded `reset`/`remove` when all other identity checks pass. Added a one-line stale-launch
+  hint in `scripts/feature_batch.py` `prepare()` when the batch worktree owns a UAT instance.
+- Documented the rebuilt-branch / stale-launch contract in `docs/development-workflow.md` and
+  archived reproduction, open-check answers and smoke evidence in
+  [uat-instance-002-handoff.md](archive/UAT-INSTANCE-002/uat-instance-002-handoff.md).
+- Checks: `make test-uat-preview` (60 passed: preview 20, source 18, instance 22),
+  `make workflow-check`, `make test-agent-workflow` (81 passed, 3 skipped),
+  `make test-feature-workflow`, `make test-environment-workflow` (51 passed), `make doc-links`
+  (398 docs), `scripts/check-features.py` (205 features valid), real disposable Docker
+  `make smoke-uat-instance` (including branch-rewrite stale launch through `status`/`stop`/`up`/
+  guarded `reset` and before/after `io.florabase.sha` labels) and `make smoke-uat-preview`.
+  Canonical FULL via `make feature-verify` follows tree freeze.
+
 ## 2026-11-27 — Android release APK: apksigner output format (MOBILE-003)
 
 - Second `v0.1.0-beta.10` APK run (45981312380) built and signed the APK but
