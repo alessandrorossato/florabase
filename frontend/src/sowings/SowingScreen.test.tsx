@@ -307,7 +307,12 @@ test("germination tab keeps simple and dated totals distinct and supports correc
   await user.type(screen.getByLabelText("Newly germinated"), "8");
   await user.click(screen.getByRole("button", { name: "Save observation" }));
   expect(await screen.findByText("40%")).toBeInTheDocument();
-  expect(screen.getByText("12")).toBeInTheDocument();
+  // The key facts strip also shows the germinated total; the tab panel keeps its own.
+  expect(
+    within(screen.getByRole("tabpanel", { name: "Germination" })).getByText(
+      "12",
+    ),
+  ).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Edit" }));
   await user.clear(screen.getByLabelText("Newly germinated"));
   await user.type(screen.getByLabelText("Newly germinated"), "0");

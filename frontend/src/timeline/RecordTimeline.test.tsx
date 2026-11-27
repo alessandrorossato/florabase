@@ -232,3 +232,30 @@ test("inside a record view the Almanac and the Journal share one Journal request
   await reader?.read("plant", "p");
   expect(events.listEvents).toHaveBeenCalledTimes(2);
 });
+
+test("UI-POLISH-006 B2: the Almanac opens with the next planned activity, or says nothing is planned", async () => {
+  vi.mocked(events.listEvents).mockResolvedValue([]);
+  const { unmount } = mount(
+    <RecordTimeline kind="sowing" id="s" recordedElsewhere="Elsewhere." />,
+  );
+  const timeline = screen.getByRole("region", { name: "Almanac" });
+  await within(timeline).findByRole("link", { name: "Repot basil" });
+  const next = timeline.querySelector(".record-timeline__next");
+  expect(next).toHaveTextContent(/Next up\s*Repot basil · \d+ days? overdue/);
+  unmount();
+
+  vi.mocked(schedule.listSchedule).mockResolvedValue({
+    items: [],
+    total: 0,
+    offset: 0,
+    limit: 3,
+    today: localDay(),
+    overdue_count: 0,
+    today_count: 0,
+  });
+  mount(<RecordTimeline kind="sowing" id="s" recordedElsewhere="Elsewhere." />);
+  const empty = await screen.findByText("Nothing planned", { exact: false });
+  expect(empty.closest(".record-timeline__next")).toHaveTextContent(
+    "Next up Nothing planned · Schedule activity",
+  );
+});

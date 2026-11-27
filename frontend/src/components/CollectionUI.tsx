@@ -106,8 +106,61 @@ export function SpecimenLabel({
 }
 
 /** The record's plate: its own photo, else its identity reference, else a quiet fallback. */
-export function SpecimenPlate({ children }: { children: ReactNode }) {
-  return <figure className="specimen-plate">{children}</figure>;
+/**
+ * The record's image plate. With no image (the RecordVisual inside is `data-empty`), the
+ * plate shrinks to a short placeholder and offers `addPhoto`, which opens the Photos tab.
+ */
+export function SpecimenPlate({
+  children,
+  addPhoto,
+}: {
+  children: ReactNode;
+  addPhoto?: { href: string; onClick?: MouseEventHandler<HTMLAnchorElement> };
+}) {
+  return (
+    <figure className="specimen-plate">
+      {children}
+      {addPhoto && (
+        <a
+          className="button-link button--secondary specimen-plate__add"
+          href={addPhoto.href}
+          onClick={addPhoto.onClick}
+        >
+          Add photo
+        </a>
+      )}
+    </figure>
+  );
+}
+
+export interface KeyFact {
+  label: string;
+  value: ReactNode;
+}
+
+/**
+ * The record's key facts under the action bar: three or four big numbers or dates, the
+ * same component for every Collection record type.
+ */
+export function KeyFacts({ facts }: { facts: KeyFact[] }) {
+  if (!facts.length) return null;
+  return (
+    <dl className="detail-key-facts" aria-label="Key facts">
+      {facts.map((fact) => {
+        const unknown =
+          typeof fact.value === "string" &&
+          (unknownWords.has(fact.value) || /not recorded$/i.test(fact.value));
+        return (
+          <div key={fact.label}>
+            <dd className={unknown ? "detail-key-facts__unknown" : undefined}>
+              {fact.value}
+            </dd>
+            <dt>{fact.label}</dt>
+          </div>
+        );
+      })}
+    </dl>
+  );
 }
 
 /** Shared record presentation; routes, tabs, permissions and content remain domain-owned. */
@@ -127,6 +180,8 @@ export function DetailPage({
 export interface TabItem<TabId extends string = string> {
   id: TabId;
   label: string;
+  /** Shown as a badge so the count is visible before opening the tab; null while loading. */
+  count?: number | null;
 }
 
 export function WorkspaceIntro({
@@ -191,6 +246,7 @@ export function DetailHeader({
   onEdit,
   editLabel = "Edit",
   overflow,
+  keyFacts,
   headingRef,
   visual,
   headingLevel = 3,
@@ -208,6 +264,8 @@ export function DetailHeader({
   onEdit?: MouseEventHandler<HTMLButtonElement>;
   editLabel?: string;
   overflow?: ReactNode;
+  /** Key facts strip under the action bar (UI-POLISH-006 B2). */
+  keyFacts?: KeyFact[];
   headingRef?: RefObject<HTMLHeadingElement | null>;
   visual?: ReactNode;
   headingLevel?: 2 | 3;
@@ -259,6 +317,7 @@ export function DetailHeader({
           {overflow}
         </div>
       )}
+      {keyFacts && <KeyFacts facts={keyFacts} />}
       {lineage && <div className="detail-lineage">{lineage}</div>}
     </>
   );
@@ -435,6 +494,12 @@ export function DetailTabs<TabId extends string>({
           }}
         >
           {tab.label}
+          {typeof tab.count === "number" && (
+            // The tab keeps its plain name for assistive technology; the panel states the count.
+            <span className="detail-tab__count" aria-hidden="true">
+              {tab.count}
+            </span>
+          )}
         </button>
       ))}
     </div>

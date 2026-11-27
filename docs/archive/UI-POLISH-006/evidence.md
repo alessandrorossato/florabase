@@ -3,7 +3,7 @@
 - **Feature ID:** `UI-POLISH-006` (proposed release class: `best-effort` in `docs/release/scope-v1.json`)
 - **Branch:** `fix/ui-polish-006-collection`
 - **Base:** `origin/main` `c83d8163` (fast-forwarded cleanly from Batch 14b `7b667a47` over `v0.1.0-beta.10` release commits)
-- **Scope:** Frontend only (no DB migration, no backend/API changes). Part B2 remained `Approval pending` and was intentionally not implemented.
+- **Scope:** Frontend only (no DB migration, no backend/API changes). Part B2 (approved by Alessandro on 26/11) was added after the B1 review; see "Part B2" below.
 
 ## Part A: Remove Back/New Bar from Plant & Sowing Details (in code, not CSS)
 
@@ -43,6 +43,15 @@
 - **Item 17:** Removed the 2-column split on `.collection-detail .germination-section` in `styles.css` so Sowing's Germination tab shows metrics in a horizontal row and `Observation history` full width below.
 - **Item 18:** Added shared `RecordChildCard` (matching `LineagePanel`'s compact card + `LifecycleStatus` chip grammar) and adopted it in Seed lot's Sowings tab and Cuttings' Rooting attempts and Offspring tabs.
 - **Item 19:** Replaced Harvest's separate "Materials collected" and "Stored material" lists with one compact table (`Material · Quantity · Remaining · State · Storage · Actions` with one `⋯` menu per row) and compact inline link triggers (`Show Seed lot conversions`, `Show disposition history`) opening the existing panels.
+
+## Part B2: Clearer Record Pages (approved 26/11)
+
+- **Key facts strip:** `KeyFacts` / `DetailHeader keyFacts` renders three or four big values under the action bar, the same component on every type: Seed lot (remaining · sowings · viable until), Sowing (sown · germinated · days since sowing), Plant (days in collection · journal entries · harvests), Plant group (plants · extracted · journal entries · harvests), Harvest (held · materials collected · seed lots converted), Vegetative lot (taken · remaining · rooting attempts), Rooting attempt (struck · rooted · established), Location (active plants here · active sowings here · child locations). Unknown values use the muted style. The specimen label keeps its rows (it is the printable label), so a few values appear in both places.
+- **Photo slot that invites a photo:** `RecordVisual` sets `data-empty` when it has no image source; `SpecimenPlate` then shrinks to a 2:1 placeholder and shows `Add photo`, which opens the record's Photos tab. With an image the plate is unchanged. Location has no plate (no location photos on `main`).
+- **Next up:** the Almanac's first line shows the first planned Schedule activity and when it is due (`today`, `tomorrow`, `in N days`, `N days overdue`), or `Nothing planned · Schedule activity`. Harvest (no Schedule target) offers `Plan on the source in Schedule`.
+- **Tab counts:** `TabItem.count` renders an `aria-hidden` badge (the tab's accessible name stays `Photos`, `Journal`, …). Counts: Photos (all record types with photos, via `usePhotoCount`, refreshed on tab change), Seed lot Sowings, Sowing Germination observations, Plant/Plant group Journal (shared JournalScope read), Vegetative lot Rooting attempts, Rooting attempt Observations and Offspring, Location Contents (records directly here).
+- **Review fixes on B1:** Plant/Plant group Overview descendants use the lineage children endpoint (same counts and words as the strip; group extracted Plants still come from recorded extractions); no harvest link when a Plant has none; Harvest counts exclude reversed conversions.
+- **Tests:** `CollectionUI.test.tsx` (key facts order/unknown style, tab badges keep names, empty plate Add photo), `RecordTimeline.test.tsx` (Next up with an overdue plan and with nothing planned), `almanac.test.ts` (`dueLabel`), `keyFactValues.test.ts` (`daysSince`); Sowing and BulkCare tests scoped where the key facts now repeat a value.
 
 ## Part C: UI-POLISH-005 Review Leftovers
 

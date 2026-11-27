@@ -31,6 +31,7 @@ import { formatPartialDate } from "../../events/eventData";
 import { LineagePanel } from "../../lineage/LineagePanel";
 import { RecordVisual } from "../../photos/RecordVisual";
 import { PhotosSection } from "../../photos/PhotosSection";
+import { usePhotoCount } from "../../photos/usePhotoCount";
 import type { PrimaryPhoto } from "../../photos/api";
 import { PartialDateField } from "../../seed-lots/PartialDateField";
 import {
@@ -102,13 +103,25 @@ function CuttingPlate({
   photos,
   label,
   lot,
+  photosHref,
+  onAddPhoto,
 }: {
   photos: ReturnType<typeof useCuttingPhotos>;
   label: string;
   lot: Lot;
+  photosHref: string;
+  onAddPhoto: () => void;
 }) {
   return (
-    <SpecimenPlate>
+    <SpecimenPlate
+      addPhoto={{
+        href: photosHref,
+        onClick: (event) => {
+          event.preventDefault();
+          onAddPhoto();
+        },
+      }}
+    >
       <RecordVisual
         photo={photos.own}
         fallbackPhotos={photos.inherited}
@@ -364,6 +377,7 @@ function LotRecord({
   const [tab, setTab] = useRecordTab(`#/cuttings/lots/${id}`, lotTabs);
   const label = lot.label ?? "Unlabelled vegetative lot";
   const photos = useCuttingPhotos("vegetative_lot", id, lot);
+  const photoCount = usePhotoCount("vegetative_lot", id, tab);
   return (
     <DetailPage as="div" className="cutting-detail">
       <Breadcrumbs
@@ -378,7 +392,28 @@ function LotRecord({
         titleId="cutting-lot-title"
         eyebrow="Vegetative lot"
         title={label}
-        plate={<CuttingPlate photos={photos} label={label} lot={lot} />}
+        keyFacts={[
+          { label: "taken", value: countLabel(lot.initial_quantity) },
+          { label: "remaining", value: countLabel(lot.quantity) },
+          {
+            label:
+              lot.attempts.length === 1
+                ? "rooting attempt"
+                : "rooting attempts",
+            value: String(lot.attempts.length),
+          },
+        ]}
+        plate={
+          <CuttingPlate
+            photos={photos}
+            label={label}
+            lot={lot}
+            photosHref={`#/cuttings/lots/${id}?tab=photos`}
+            onAddPhoto={() => {
+              setTab("photos");
+            }}
+          />
+        }
         label={
           <SpecimenLabel
             kind="Cuttings"
@@ -449,8 +484,12 @@ function LotRecord({
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
-          { id: "attempts", label: "Rooting attempts" },
-          { id: "photos", label: "Photos" },
+          {
+            id: "attempts",
+            label: "Rooting attempts",
+            count: lot.attempts.length,
+          },
+          { id: "photos", label: "Photos", count: photoCount },
           { id: "lineage", label: "Lineage" },
         ]}
         selected={tab}
@@ -1198,6 +1237,7 @@ function AttemptRecord({
   secondaryActions,
   onEdit,
   overflow,
+  offspringCount = null,
   children,
 }: {
   attempt: AttemptDetail;
@@ -1209,10 +1249,13 @@ function AttemptRecord({
   secondaryActions?: ReactNode;
   onEdit?: () => void;
   overflow?: ReactNode;
+  /** Established offspring, once the attempt summary has loaded. */
+  offspringCount?: number | null;
   children: ReactNode;
 }) {
   const lot = attempt.vegetative_lot;
   const photos = useCuttingPhotos("propagation_attempt", id, lot);
+  const photoCount = usePhotoCount("propagation_attempt", id, tab);
   return (
     <DetailPage as="div" className="cutting-detail">
       <Breadcrumbs
@@ -1227,7 +1270,31 @@ function AttemptRecord({
         titleId="cutting-attempt-title"
         eyebrow="Rooting attempt"
         title={label}
-        plate={<CuttingPlate photos={photos} label={label} lot={lot} />}
+        keyFacts={[
+          { label: "struck", value: countLabel(attempt.quantity) },
+          {
+            label: "rooted",
+            value:
+              attempt.rooted_count == null
+                ? "Not recorded"
+                : String(attempt.rooted_count),
+          },
+          {
+            label: "established",
+            value: offspringCount === null ? "…" : String(offspringCount),
+          },
+        ]}
+        plate={
+          <CuttingPlate
+            photos={photos}
+            label={label}
+            lot={lot}
+            photosHref={`#/cuttings/attempts/${id}?tab=photos`}
+            onAddPhoto={() => {
+              setTab("photos");
+            }}
+          />
+        }
         label={
           <SpecimenLabel
             kind="Rooting attempt"
@@ -1285,9 +1352,13 @@ function AttemptRecord({
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
-          { id: "observations", label: "Observations" },
-          { id: "offspring", label: "Offspring" },
-          { id: "photos", label: "Photos" },
+          {
+            id: "observations",
+            label: "Observations",
+            count: attempt.observations.length,
+          },
+          { id: "offspring", label: "Offspring", count: offspringCount },
+          { id: "photos", label: "Photos", count: photoCount },
           { id: "lineage", label: "Lineage" },
         ]}
         selected={tab}
@@ -1376,6 +1447,9 @@ export function AttemptPage({ id, token }: { id: string; token: string }) {
           attempt={attempt}
           id={id}
           label={label}
+          offspringCount={
+            summary.state === "ready" ? summary.value.offspring.length : null
+          }
           tab={tab}
           setTab={setTab}
           primaryActions={

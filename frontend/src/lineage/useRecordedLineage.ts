@@ -70,6 +70,24 @@ const pluralKindLabels: Record<LineageNode["kind"], [string, string]> = {
   propagation_attempt: ["attempt", "attempts"],
 };
 
+/** Direct recorded descendants grouped by kind, in first-seen order: "2 sowings". */
+export function descendantCounts(
+  children: AncestryChildren,
+): { kind: LineageNode["kind"]; count: number; label: string }[] {
+  const counts = new Map<LineageNode["kind"], number>();
+  for (const item of children.items) {
+    counts.set(item.record.kind, (counts.get(item.record.kind) ?? 0) + 1);
+  }
+  return [...counts].map(([kind, count]) => {
+    const [singular, plural] = pluralKindLabels[kind];
+    return {
+      kind,
+      count,
+      label: `${String(count)} ${count === 1 ? singular : plural}`,
+    };
+  });
+}
+
 /** Compact summary for LineageStrip, e.g. "2 sowings" or "1 plant, 1 plant group". */
 export function descendantSummaryLabel(
   children: AncestryChildren,
@@ -78,15 +96,7 @@ export function descendantSummaryLabel(
   if (children.items.length < children.total) {
     return `${String(children.total)} recorded from this`;
   }
-  const counts = new Map<LineageNode["kind"], number>();
-  for (const item of children.items) {
-    counts.set(item.record.kind, (counts.get(item.record.kind) ?? 0) + 1);
-  }
-  const parts: string[] = [];
-  for (const [kind, count] of counts) {
-    const [singular, plural] = pluralKindLabels[kind];
-    parts.push(`${String(count)} ${count === 1 ? singular : plural}`);
-  }
+  const parts = descendantCounts(children).map(({ label }) => label);
   return parts.length ? parts.join(", ") : null;
 }
 

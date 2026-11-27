@@ -230,3 +230,25 @@
     background: CanvasText;
   }
 }
+
+/* UI-POLISH-006 B2: the Almanac opens with what comes next. */
+.record-timeline__next {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text);
+  background: var(--surface-subtle);
+  border-inline-start: 3px solid var(--primary);
+  font: var(--type-body);
+}
+.record-timeline__next-label {
+  margin-inline-end: var(--space-2);
+  font: var(--type-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.record-timeline__next-due {
+  color: var(--text-muted);
+}
+.record-timeline__next-due--overdue {
+  color: var(--danger);
+}

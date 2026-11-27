@@ -57,6 +57,7 @@ import {
 } from "../lineage/useRecordedLineage";
 import { PhotosSection } from "../photos/PhotosSection";
 import { RecordVisual } from "../photos/RecordVisual";
+import { usePhotoCount } from "../photos/usePhotoCount";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { defaultState, scheduleHash } from "../schedule/state";
@@ -80,7 +81,12 @@ import {
 import { listConversions, type Conversion } from "./conversionApi";
 import "./collection-visual.css";
 import "./directory.css";
-import { inventoryError, inventoryList, type Inventory } from "./inventoryApi";
+import {
+  inventoryError,
+  inventoryList,
+  remainingLabel,
+  type Inventory,
+} from "./inventoryApi";
 
 function directoryMaterialSummary(harvest: Harvest): string {
   const labels = materialSummary(harvest).split(" · ");
@@ -375,9 +381,16 @@ export function HarvestScreen({
       descendant_count: 0,
     })),
   };
-  const harvestDescendantsSummary = harvestConversions.length
-    ? `${String(harvestConversions.length)} ${harvestConversions.length === 1 ? "seed lot" : "seed lots"}`
+  // Reversed conversions stay visible in the Lineage tab but are not counted as descendants.
+  const activeConversions = harvestConversions.filter(
+    (conv) => conv.status !== "reversed",
+  );
+  const harvestDescendantsSummary = activeConversions.length
+    ? `${String(activeConversions.length)} ${activeConversions.length === 1 ? "seed lot" : "seed lots"}`
     : null;
+  const activeInventories =
+    harvestInventories?.filter((inv) => inv.state === "active") ?? null;
+  const harvestPhotoCount = usePhotoCount("harvest", detailId, detailTab);
   const firstActiveInventory =
     harvestInventories?.find((inv) => inv.state === "active") ?? null;
   const harvestStatus = firstActiveInventory
@@ -704,8 +717,50 @@ export function HarvestScreen({
               headingRef={detailHeading}
               eyebrow="Harvest"
               title={detail.display_title}
+              keyFacts={[
+                {
+                  label: "held",
+                  value:
+                    activeInventories === null
+                      ? "…"
+                      : activeInventories.length === 1
+                        ? remainingLabel(activeInventories[0])
+                        : activeInventories.length === 0
+                          ? "Nothing held"
+                          : `${String(activeInventories.length)} materials`,
+                },
+                {
+                  label:
+                    detail.items.length === 1
+                      ? "material collected"
+                      : "materials collected",
+                  value: String(detail.items.length),
+                },
+                {
+                  label:
+                    activeConversions.length === 1
+                      ? "seed lot converted"
+                      : "seed lots converted",
+                  value: harvestInventories
+                    ? String(activeConversions.length)
+                    : "…",
+                },
+              ]}
               plate={
-                <SpecimenPlate>
+                <SpecimenPlate
+                  addPhoto={{
+                    href: `#/harvests/${detail.id}?tab=photos`,
+                    onClick: (event) => {
+                      event.preventDefault();
+                      setDetailTab("photos");
+                      window.history.replaceState(
+                        null,
+                        "",
+                        `#/harvests/${detail.id}?tab=photos`,
+                      );
+                    },
+                  }}
+                >
                   <Visual harvest={detail} />
                 </SpecimenPlate>
               }
@@ -791,7 +846,7 @@ export function HarvestScreen({
             <DetailTabs
               tabs={[
                 { id: "overview", label: "Overview" },
-                { id: "photos", label: "Photos" },
+                { id: "photos", label: "Photos", count: harvestPhotoCount },
                 { id: "lineage", label: "Lineage" },
               ]}
               selected={detailTab}
@@ -825,7 +880,7 @@ export function HarvestScreen({
                         headingId="harvest-descendants-title"
                         items={[
                           {
-                            label: `${String(harvestConversions.length)} ${harvestConversions.length === 1 ? "seed lot" : "seed lots"}`,
+                            label: `${String(activeConversions.length)} ${activeConversions.length === 1 ? "seed lot" : "seed lots"}`,
                             href: `#/harvests/${detail.id}?tab=lineage`,
                             onClick: (event) => {
                               event.preventDefault();

@@ -5,7 +5,7 @@ import { formatPartialDate } from "../events/eventData";
 import { historyHash } from "../history/state";
 import type { EventTargetKind } from "../events/api";
 import type { TargetKind } from "../schedule/state";
-import { RecordTimeline } from "./RecordTimeline";
+import { NextUp, RecordTimeline } from "./RecordTimeline";
 import "./record-timeline.css";
 
 type PartialDate = components["schemas"]["PartialDate"];
@@ -60,6 +60,10 @@ export function RecordAlmanac(props: RecordAlmanacProps) {
       aria-labelledby={titleId}
     >
       <h4 id={titleId}>Almanac</h4>
+      <NextUp
+        scheduleHref={props.sourceScheduleHref ?? "#/schedule"}
+        scheduleLabel="Plan on the source in Schedule"
+      />
       <div className="record-timeline__lanes">
         <section
           className="record-timeline__lane record-timeline__lane--planned"

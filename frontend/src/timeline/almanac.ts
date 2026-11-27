@@ -140,3 +140,17 @@ export function precisionGroups<T extends { occurred_on: PartialDate | null }>(
   }
   return groups;
 }
+
+function dayNumber(isoDay: string): number {
+  const [year, month, day] = isoDay.split("-").map(Number);
+  return Date.UTC(year, month - 1, day) / 86_400_000;
+}
+
+/** "today", "tomorrow", "in 3 days", "2 days overdue" relative to the server's today. */
+export function dueLabel(due: string, today: string): string {
+  const days = Math.round(dayNumber(due) - dayNumber(today));
+  if (days === 0) return "today";
+  if (days === 1) return "tomorrow";
+  if (days > 1) return `in ${String(days)} days`;
+  return days === -1 ? "1 day overdue" : `${String(-days)} days overdue`;
+}

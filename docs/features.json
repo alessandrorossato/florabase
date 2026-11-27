@@ -3180,7 +3180,8 @@
         "All Collection details share DetailTabs order Overview · <work tabs> · Photos · Lineage (Location: Overview · Contents) with one underline active tab style, two-column RecordOverview (facts left, RecordAlmanac right), one-line RecordDescendants in Overview, uniform RecordChildCard cards, and consistent SpecimenLabel typography (monospace only for dates/quantities/codes)",
         "Header action bars follow at most one primary (first) + two secondary + Edit + More (Sowing moves Create Plant group into More; Harvest shows status chip and Record disposition primary when held; Location puts Create child before Log care and removes duplicate root subtitle and scope chips)",
         "Sowing Germination tab places Observation history full-width below the metrics row and Sowing Overview replaces filler text with real germination summary; Harvest Overview uses one compact Materials & storage table with inline links for Seed lot conversions and disposition history",
-        "Cuttings useRecordTab follows later ?tab= route changes, Species distribution shows represented/ready counts once in the overview, and dead Media :not(.page-header--directory) CSS rules are removed"
+        "Cuttings useRecordTab follows later ?tab= route changes, Species distribution shows represented/ready counts once in the overview, and dead Media :not(.page-header--directory) CSS rules are removed",
+        "Every Collection record shows a shared key facts strip under the action bar, a short Add photo placeholder when it has no image, a Next up line opening the Almanac, and count badges on its tabs that keep the tabs' accessible names"
       ],
       "dependencies": [
         "UI-POLISH-005"

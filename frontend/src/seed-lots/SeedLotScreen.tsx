@@ -119,6 +119,7 @@ import {
 } from "../locations/api";
 import { PhotosSection } from "../photos/PhotosSection";
 import { RecordVisual } from "../photos/RecordVisual";
+import { usePhotoCount } from "../photos/usePhotoCount";
 import type { PrimaryPhoto } from "../photos/api";
 import {
   listProvenanceSites,
@@ -444,6 +445,7 @@ function Detail({
       ? value
       : "overview";
   const [tab, setTab] = useState(() => tabOf(initialTab));
+  const photoCount = usePhotoCount("seed_lot", lot.id, tab);
   // Follow later route changes on the same mounted record (a link or Record sheet action to
   // ?tab=lineage while this record is open); useState only reads the first value. Edit
   // routes are handled by the edit workspace and leave the selected section alone.
@@ -492,7 +494,14 @@ function Detail({
         }
         headingRef={headingRef}
         plate={
-          <SpecimenPlate>
+          <SpecimenPlate
+            addPhoto={{
+              href: `#/seeds/${lot.id}?tab=photos`,
+              onClick: () => {
+                setTab("photos");
+              },
+            }}
+          >
             <RecordVisual
               photo={lot.primary_photo}
               showSource
@@ -504,6 +513,22 @@ function Detail({
         }
         eyebrow="Seed lot"
         title={recordName(lot, "Unlabelled seed lot")}
+        keyFacts={[
+          {
+            label: inventoryLabel(lot).toLowerCase(),
+            value: quantityLabel(lot),
+          },
+          {
+            label: sowingsForLot?.length === 1 ? "sowing" : "sowings",
+            value: sowingsForLot ? String(sowingsForLot.length) : "…",
+          },
+          {
+            label: "viable until",
+            value: lot.expected_viability_until
+              ? dateLabel(lot.expected_viability_until)
+              : "Not recorded",
+          },
+        ]}
         secondary={
           <a href={`#/identities/${lot.botanical_identity.id}`}>
             <BotanicalName
@@ -564,8 +589,12 @@ function Detail({
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
-          { id: "sowings", label: "Sowings" },
-          { id: "photos", label: "Photos" },
+          {
+            id: "sowings",
+            label: "Sowings",
+            count: sowingsForLot?.length ?? null,
+          },
+          { id: "photos", label: "Photos", count: photoCount },
           { id: "lineage", label: "Lineage" },
         ]}
         selected={tab}

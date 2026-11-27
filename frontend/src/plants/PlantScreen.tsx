@@ -56,7 +56,16 @@ import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { RecordAlmanac } from "../timeline/RecordAlmanac";
 import { JournalScope } from "../events/JournalScope";
+import { JournalEntryCount } from "../events/JournalEntryCount";
+import { useJournalEntryCount } from "../events/useJournalEntryCount";
+import { usePhotoCount } from "../photos/usePhotoCount";
+import { daysLabel, daysSince } from "../components/keyFactValues";
 import { LineageStrip } from "../lineage/LineageStrip";
+import {
+  ancestryKinds,
+  descendantCounts,
+  useDirectDescendants,
+} from "../lineage/useRecordedLineage";
 import {
   PlantEntryDateField,
   PlantEssentialsFields,
@@ -366,6 +375,35 @@ function sowingChoice(sowing: SowingResponse): string {
   return `${sowing.seed_lot.botanical_identity_display_label}${label}${lot} · ${sowing.lifecycle}`;
 }
 
+/** Plant record tabs; inside JournalScope so the Journal count shares the Journal request. */
+function PlantDetailTabs({
+  target,
+  id,
+  photoCount,
+  selected,
+  onSelect,
+}: {
+  target: "plant" | "group";
+  id: string;
+  photoCount: number | null;
+  selected: string;
+  onSelect: (next: string) => void;
+}) {
+  const journalCount = useJournalEntryCount(target, id);
+  return (
+    <DetailTabs
+      tabs={[
+        { id: "overview", label: "Overview" },
+        { id: "events", label: "Journal", count: journalCount },
+        { id: "photos", label: "Photos", count: photoCount },
+        { id: "lineage", label: "Lineage" },
+      ]}
+      selected={selected}
+      onSelect={onSelect}
+    />
+  );
+}
+
 function Detail({
   record,
   locations,
@@ -404,9 +442,8 @@ function Detail({
     auth.state.status === "authenticated" && capability.isAuthorized();
 
   const value = record.value;
-  const [offspringCounts, setOffspringCounts] = useState<{
+  const [harvestCounts, setHarvestCounts] = useState<{
     key: string;
-    cuttings: number;
     harvests: number;
     singleHarvestId: string | null;
   } | null>(null);
@@ -414,39 +451,29 @@ function Detail({
   useEffect(() => {
     if (!authorized) return;
     const controller = new AbortController();
-    const cuttingParam =
-      record.kind === "plant" ? "mother_plant_id" : "mother_plant_group_id";
     const harvestParam =
       record.kind === "plant" ? "plant_id" : "plant_group_id";
-    void Promise.all([
-      requestJson<unknown[]>(
-        `/api/v1/vegetative-lots?${cuttingParam}=${encodeURIComponent(value.id)}`,
-        { capability, signal: controller.signal },
-      ).catch((error: unknown) => {
+    void requestJson<{ id?: string }[]>(
+      `/api/v1/harvests?${harvestParam}=${encodeURIComponent(value.id)}`,
+      { capability, signal: controller.signal },
+    )
+      .then((harvestsData) => {
+        if (controller.signal.aborted) return;
+        const harvestList = Array.isArray(harvestsData) ? harvestsData : [];
+        setHarvestCounts({
+          key: offspringKey,
+          harvests: harvestList.length,
+          singleHarvestId:
+            harvestList.length === 1 && typeof harvestList[0]?.id === "string"
+              ? harvestList[0].id
+              : null,
+        });
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
         if (error instanceof ApiError && error.status === 401) sessionExpired();
-        return null;
-      }),
-      requestJson<{ id?: string }[]>(
-        `/api/v1/harvests?${harvestParam}=${encodeURIComponent(value.id)}`,
-        { capability, signal: controller.signal },
-      ).catch((error: unknown) => {
-        if (error instanceof ApiError && error.status === 401) sessionExpired();
-        return null;
-      }),
-    ]).then(([cuttingsData, harvestsData]) => {
-      if (controller.signal.aborted) return;
-      const cuttings = Array.isArray(cuttingsData) ? cuttingsData.length : 0;
-      const harvestList = Array.isArray(harvestsData) ? harvestsData : [];
-      setOffspringCounts({
-        key: offspringKey,
-        cuttings,
-        harvests: harvestList.length,
-        singleHarvestId:
-          harvestList.length === 1 && typeof harvestList[0]?.id === "string"
-            ? harvestList[0].id
-            : null,
       });
-    });
     return () => {
       controller.abort();
     };
@@ -458,13 +485,24 @@ function Detail({
     sessionExpired,
     value.id,
   ]);
-  const counts = offspringCounts?.key === offspringKey ? offspringCounts : null;
+  // Recorded descendants come from the same children endpoint as the lineage strip, so the
+  // Overview line and the strip always count the same records.
+  const [descendants] = useDirectDescendants(
+    ancestryKinds[record.kind === "plant" ? "plants" : "plant-groups"],
+    value.id,
+  );
+  const counts = harvestCounts?.key === offspringKey ? harvestCounts : null;
   const originatingGroup =
     record.kind === "plant" ? record.value.originating_plant_group : null;
   const allowedTabs = ["overview", "events", "photos", "lineage"];
   const tabOf = (value?: string) =>
     value && allowedTabs.includes(value) ? value : "overview";
   const [tab, setTab] = useState(() => tabOf(initialTab));
+  const photoCount = usePhotoCount(
+    record.kind === "plant" ? "plant" : "plant_group",
+    value.id,
+    tab,
+  );
   // Follow later route changes on the same mounted record (a link or Record sheet action to
   // ?tab=lineage while this record is open); useState only reads the first value. Edit
   // routes are handled by the edit workspace and leave the selected section alone.
@@ -635,8 +673,56 @@ function Detail({
         />
         <DetailHeader
           headingRef={headingRef}
+          keyFacts={
+            record.kind === "plant"
+              ? [
+                  {
+                    label: "in collection",
+                    value: (() => {
+                      const days = daysSince(value.collection_entry_date);
+                      if (days !== null) return daysLabel(days);
+                      return value.collection_entry_date
+                        ? `since ${dateLabel(value.collection_entry_date)}`
+                        : "Date not recorded";
+                    })(),
+                  },
+                  {
+                    label: "journal entries",
+                    value: <JournalEntryCount target="plant" id={value.id} />,
+                  },
+                  {
+                    label: "harvests",
+                    value: counts ? String(counts.harvests) : "…",
+                  },
+                ]
+              : [
+                  {
+                    label: "plants",
+                    value: quantityLabel(record) ?? "Quantity unknown",
+                  },
+                  {
+                    label: "extracted",
+                    value: String(extractedPlants.length),
+                  },
+                  {
+                    label: "journal entries",
+                    value: <JournalEntryCount target="group" id={value.id} />,
+                  },
+                  {
+                    label: "harvests",
+                    value: counts ? String(counts.harvests) : "…",
+                  },
+                ]
+          }
           plate={
-            <SpecimenPlate>
+            <SpecimenPlate
+              addPhoto={{
+                href: `#/${route}/${value.id}?tab=photos`,
+                onClick: () => {
+                  setTab("photos");
+                },
+              }}
+            >
               <RecordVisual
                 photo={value.primary_photo}
                 showSource
@@ -739,13 +825,10 @@ function Detail({
             )
           }
         />
-        <DetailTabs
-          tabs={[
-            { id: "overview", label: "Overview" },
-            { id: "events", label: "Journal" },
-            { id: "photos", label: "Photos" },
-            { id: "lineage", label: "Lineage" },
-          ]}
+        <PlantDetailTabs
+          target={record.kind}
+          id={value.id}
+          photoCount={photoCount}
           selected={tab}
           onSelect={(next) => {
             setTab(next);
@@ -768,7 +851,13 @@ function Detail({
                 <>
                   <RecordDescendants
                     headingId="plant-descendants-title"
+                    // A failed children read only drops those counts; the Lineage
+                    // tab reports the failure and offers a retry.
+                    loading={descendants.status === "loading" && !counts}
                     items={[
+                      // A group's extracted Plants come from its recorded extractions
+                      // (retained and reintegrated ones included), not only the first
+                      // page of children.
                       ...(record.kind === "group"
                         ? [
                             {
@@ -780,20 +869,40 @@ function Detail({
                             },
                           ]
                         : []),
-                      {
-                        label: counts
-                          ? `${String(counts.cuttings)} ${counts.cuttings === 1 ? "cutting lot" : "cutting lots"}`
-                          : "Cuttings",
-                        href: `#/cuttings?sourceType=${record.kind === "plant" ? "plant" : "plant_group"}&source=${value.id}`,
-                      },
-                      {
-                        label: counts
-                          ? `${String(counts.harvests)} ${counts.harvests === 1 ? "harvest" : "harvests"}`
-                          : "Harvests",
-                        href: counts?.singleHarvestId
-                          ? `#/harvests/${counts.singleHarvestId}`
-                          : `#/identities/${value.botanical_identity_id}?tab=harvests`,
-                      },
+                      ...(descendants.status === "ready"
+                        ? descendantCounts(descendants.value)
+                            .filter(
+                              ({ kind }) =>
+                                record.kind !== "group" || kind !== "plant",
+                            )
+                            .map(({ kind, label }) => ({
+                              label,
+                              href:
+                                kind === "vegetative_lot"
+                                  ? `#/cuttings?sourceType=${record.kind === "plant" ? "plant" : "plant_group"}&source=${value.id}`
+                                  : `#/${route}/${value.id}?tab=lineage`,
+                              onClick:
+                                kind === "vegetative_lot"
+                                  ? undefined
+                                  : () => {
+                                      setTab("lineage");
+                                    },
+                            }))
+                        : []),
+                      ...(counts
+                        ? [
+                            {
+                              label: `${String(counts.harvests)} ${counts.harvests === 1 ? "harvest" : "harvests"}`,
+                              // No filtered Harvest list exists: one harvest opens directly,
+                              // several open the identity's Harvests, none is plain text.
+                              href: counts.singleHarvestId
+                                ? `#/harvests/${counts.singleHarvestId}`
+                                : counts.harvests > 1
+                                  ? `#/identities/${value.botanical_identity_id}?tab=harvests`
+                                  : undefined,
+                            },
+                          ]
+                        : []),
                     ]}
                     lineageHref={`#/${route}/${value.id}?tab=lineage`}
                     onOpenLineage={() => {

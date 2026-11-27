@@ -333,10 +333,9 @@ test("LocationScreen detail launches Log care for everything here", async () => 
   const barButtons = within(actionBar).getAllByRole("button");
   expect(barButtons[0]).toHaveAccessibleName("Create child");
   expect(barButtons[1]).toHaveAccessibleName("Log care for everything here…");
-  expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
-    "Overview",
-    "Contents",
-  ]);
+  expect(
+    screen.getAllByRole("tab").map((tab) => tab.firstChild?.textContent),
+  ).toEqual(["Overview", "Contents"]);
   expect(screen.getByRole("region", { name: "Almanac" })).toBeVisible();
   expect(screen.queryByLabelText("Usage scopes")).not.toBeInTheDocument();
   await user.click(screen.getByRole("tab", { name: "Contents" }));

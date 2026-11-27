@@ -1047,6 +1047,27 @@ export function LocationScreen({
                     />
                   }
                   eyebrow="Location"
+                  keyFacts={[
+                    {
+                      label: "active plants here",
+                      value: String(
+                        (selected.direct_usage.plants?.active ?? 0) +
+                          (selected.direct_usage.plant_groups?.active ?? 0),
+                      ),
+                    },
+                    {
+                      label: "active sowings here",
+                      value: String(selected.direct_usage.sowings?.active ?? 0),
+                    },
+                    {
+                      label: "child locations",
+                      value: String(
+                        locations.filter(
+                          (location) => location.parent_id === selected.id,
+                        ).length,
+                      ),
+                    },
+                  ]}
                   title={selected.name}
                   secondary={
                     selected.display_path !== selected.name ? (
@@ -1152,7 +1173,15 @@ export function LocationScreen({
                 <DetailTabs
                   tabs={[
                     { id: "overview", label: "Overview" },
-                    { id: "contents", label: "Contents" },
+                    {
+                      id: "contents",
+                      label: "Contents",
+                      count: recordKinds.reduce(
+                        (sum, kind) =>
+                          sum + (selected.direct_usage[kind]?.total ?? 0),
+                        0,
+                      ),
+                    },
                   ]}
                   selected={detailTab}
                   onSelect={(next) => {

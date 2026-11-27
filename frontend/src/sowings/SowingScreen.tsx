@@ -87,6 +87,8 @@ import { DirectorySearch } from "../components/ReferenceUI";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import { listLocations, type LocationResponse } from "../locations/api";
 import { PhotosSection } from "../photos/PhotosSection";
+import { usePhotoCount } from "../photos/usePhotoCount";
+import { daysLabel, daysSince } from "../components/keyFactValues";
 import { listSeedLots, type SeedLotResponse } from "../seed-lots/api";
 import {
   hasDateDraft,
@@ -386,6 +388,7 @@ function Detail({
         ? value
         : "overview";
   const [tab, setTab] = useState(() => tabOf(initialTab));
+  const photoCount = usePhotoCount("sowing", sowing.id, tab);
   // Follow later route changes on the same mounted record (a link or Record sheet action to
   // ?tab=lineage while this record is open); useState only reads the first value. Edit
   // routes are handled by the edit workspace and leave the selected section alone.
@@ -485,8 +488,35 @@ function Detail({
         }
         headingRef={headingRef}
         eyebrow="Sowing"
+        keyFacts={[
+          { label: "sown", value: quantityLabel(sowing) },
+          {
+            label: "germinated",
+            value:
+              sowing.germinated_count !== null
+                ? String(sowing.germinated_count)
+                : germination &&
+                    germination.summary.observed_cumulative_count > 0
+                  ? String(germination.summary.observed_cumulative_count)
+                  : "Not recorded",
+          },
+          {
+            label: "since sowing",
+            value: (() => {
+              const days = daysSince(sowing.sowing_date);
+              return days === null ? "Date not recorded" : daysLabel(days);
+            })(),
+          },
+        ]}
         plate={
-          <SpecimenPlate>
+          <SpecimenPlate
+            addPhoto={{
+              href: `#/sowings/${sowing.id}?tab=photos`,
+              onClick: () => {
+                setTab("photos");
+              },
+            }}
+          >
             <RecordVisual
               kind="sowing"
               label={recordName(sowing, "Sowing")}
@@ -563,8 +593,12 @@ function Detail({
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
-          { id: "germination", label: "Germination" },
-          { id: "photos", label: "Photos" },
+          {
+            id: "germination",
+            label: "Germination",
+            count: germination ? germination.observations.length : null,
+          },
+          { id: "photos", label: "Photos", count: photoCount },
           { id: "lineage", label: "Lineage" },
         ]}
         selected={tab}
