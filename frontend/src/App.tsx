@@ -177,6 +177,13 @@ const AboutScreen = lazy(() =>
   }),
 );
 
+const QuickAddScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./quick-add/QuickAddScreen");
+    return { default: module.QuickAddScreen };
+  }),
+);
+
 const LabelsScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./labels/LabelsScreen");
@@ -401,6 +408,7 @@ function currentRoute(): Route {
     "about",
     "account",
     "media",
+    "quick-add",
   ];
   return {
     section: valid.includes(first as Section)
@@ -753,6 +761,8 @@ function ApplicationShell({
                 <DataSourcesScreen />
               ) : route.section === "about" ? (
                 <AboutScreen />
+              ) : route.section === "quick-add" ? (
+                <QuickAddScreen />
               ) : route.section === "labels" ? (
                 <LabelsScreen
                   key={`${route.labelKind ?? ""}:${route.labelRecord ?? ""}`}

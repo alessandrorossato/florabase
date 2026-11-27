@@ -1,5 +1,22 @@
 # Engineering progress
 
+## 2026-11-27 — Market Phase 1: QUICK-ADD-001, UX-ENTRY-002, BULK-002
+
+- On `claude/project-thread-sg3uco` from `origin/main` `c83d816`. Audit of roadmap Phase 1 against
+  main: O-08/O-09/O-10 and default WFO provisioning already shipped in beta.10, so this slice adds
+  only the missing quick-add path and dated bulk moves; arm64 images and QR quick actions are
+  deferred. No migration. Evidence: [`market-phase1.md`](release/evidence/market-phase1.md).
+- `QUICK-ADD-001`: `POST /api/v1/quick-add/plant` creates or reuses the identity, confirms a picked
+  WFO taxon through the TAXONOMY-001 link only while the name matches, and creates a Plant or
+  PlantGroup in one transaction; `#/quick-add` page linked from Today, **+ New** and **Record**.
+- `UX-ENTRY-002`: Create identity from the Plant form, Sowing descendant wizard and pot-on pickers
+  through a shared portalled dialog that reuses an exact duplicate.
+- `BULK-002`: optional `occurred_on` on bulk location apply dates Plant/PlantGroup Movement Events;
+  the Move dialog asks the date (Today by default) only for Plant/PlantGroup selections.
+- Registered all three in `docs/features.json` (`implemented`) and `docs/release/scope-v1.json`
+  (`best-effort`). Checks: backend ruff/format/mypy, focused pytest on PostgreSQL, frontend tsc,
+  eslint and full vitest (1535 tests) pass; canonical `make feature-verify` pending.
+
 ## 2026-11-27 — Android release APK: apksigner output format (MOBILE-003)
 
 - Second `v0.1.0-beta.10` APK run (45981312380) built and signed the APK but

@@ -19,6 +19,30 @@ collection:
 - **To review** highlights active sowings waiting for germination counts, purchased seed lots without
   an order link, and botanical identities you can enrich.
 
+## Quick add a plant you just bought
+
+**Quick add plant** (on **Today**, in **+ New** and in **Record**) adds a plant or a group in one
+short form, even when its botanical identity does not exist yet.
+
+1. Type the **Scientific name**. After two letters Florabase suggests the identities you already
+   have (**In your collection**) and names from the local WFO index (**WFO · accepted** or
+   **synonym**, with the family).
+2. Pick a suggestion or keep what you typed. The line under the field says what will happen:
+   **Uses your identity …**, **New identity linked to WFO …**, or **New identity saved as typed,
+   without a WFO link**. Typing after picking a WFO name drops the link, so the name and the link
+   always match. Without the WFO index you can still save the name as typed.
+3. Choose **One plant** or **A group of plants** (with **How many** and, if you estimated it,
+   **Approximate count**), then optionally a **Label**, **Location**, **Supplier** (which sets
+   **Origin** to **Purchased**), **In the collection since** (today by default) and **Notes**.
+4. Click **Add and open** to go to the new record, or **Add and add another** to keep the place,
+   supplier, origin and date for the next plant.
+
+Everything is saved together: if anything fails, nothing is created. If the identity already
+exists, Florabase reuses it and leaves its WFO link as it is.
+
+The identity pickers in **New plant or group**, **Create Plant** from a Sowing and **Pot on
+seedlings…** also offer **Create identity “…”** for a name that is not in the list yet.
+
 ## Recording Journal entries on a Plant or Plant group
 
 The **Journal** records observations and care events on an individual **Plant** or a **Plant group**.
@@ -227,6 +251,8 @@ individual plants and plant groups), and **Harvests** → **Stored material**.
 5. In the **Move to location** dialog:
    - Under **Target Location**, choose the destination location (only active locations that have the
      matching **Used for** scope enabled are offered).
+   - When the selection includes Plants or Plant groups, **When did it happen?** starts on
+     **Today**; choose **Another date** for an earlier move or **Date unknown** to leave it undated.
    - Click **Preview move**.
 6. Review the preview table:
    - Florabase shows how many records **Will move** and whether any are **Already at this
@@ -234,8 +260,8 @@ individual plants and plant groups), and **Harvests** → **Stored material**.
 7. Click **Apply move** to confirm. <!-- TODO(DOC-04 verify): BulkLocation builds the confirm button label dynamically as `Apply move (${String(willMove)})` (`frontend/src/bulk/BulkLocation.tsx:314`). -->
 
 Every moved record now shows the new **Location** on its overview and directory card. When you move
-**Plants** or **Plant groups**, Florabase also records a `Movement` entry in each moved specimen's
-**Journal**.
+**Plants** or **Plant groups**, Florabase also records a `Movement` entry, on the date you chose, in
+each moved specimen's **Journal**.
 
 <!-- TODO(DOC-04 screenshot): Move to location dialog at Preview move step, highlight Target Location, Will move summary, and Apply move button -->
 
