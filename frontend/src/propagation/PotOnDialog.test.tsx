@@ -559,4 +559,81 @@ describe("PotOnDialog", () => {
       screen.getByText(/approximate quantity \(~10\)/i),
     ).toBeInTheDocument();
   });
+
+  test("creates a new botanical identity from the picker and pots on into it", async () => {
+    const user = userEvent.setup();
+    const created: BotanicalIdentityResponse = {
+      ...identity,
+      id: "identity-new",
+      scientific_name: "Hoya kerrii",
+      display_label: "Hoya kerrii",
+    };
+    const posts: { path: string; body: Record<string, unknown> }[] = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+      const path = requestPath(input);
+      if (path.startsWith("/api/v1/explore/taxonomy/candidates"))
+        return Promise.resolve(
+          new Response("[]", {
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      if (init?.method === "POST")
+        posts.push({ path, body: requestBody(init) });
+      if (init?.method === "POST" && path === "/api/v1/botanical-identities")
+        return Promise.resolve(
+          new Response(JSON.stringify(created), {
+            status: 201,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      if (init?.method === "POST" && path === "/api/v1/sowings/sowing-1/pot-on")
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              sowing: baseSowing,
+              plants: [makePlant("p", "P")],
+            }),
+            { status: 201, headers: { "Content-Type": "application/json" } },
+          ),
+        );
+      throw new Error(`Unexpected fetch: ${path}`);
+    });
+    renderWithAuth(
+      <PotOnLauncher
+        source={{ kind: "sowing", sowing: baseSowing }}
+        identities={[identity]}
+        locations={[plantLocation, sowingOnlyLocation]}
+        onSowingUpdated={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Pot on seedlings…" }));
+    const picker = screen.getByRole("combobox", { name: /Botanical identity/ });
+    await user.clear(picker);
+    await user.type(picker, "Hoya kerrii");
+    await user.click(
+      screen.getByRole("button", { name: "Create identity “Hoya kerrii”" }),
+    );
+    const dialog = screen.getByRole("dialog", {
+      name: "Create botanical identity",
+    });
+    expect(dialog).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Create identity" }));
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("dialog", { name: "Create botanical identity" }),
+      ).not.toBeInTheDocument();
+    });
+    expect(posts[0]).toMatchObject({
+      path: "/api/v1/botanical-identities",
+      body: { scientific_name: "Hoya kerrii" },
+    });
+    await user.click(screen.getByRole("button", { name: "Review & confirm" }));
+    await user.click(screen.getByRole("button", { name: "Confirm pot-on" }));
+    await waitFor(() => {
+      expect(posts).toHaveLength(2);
+    });
+    expect(posts[1]?.body).toMatchObject({
+      botanical_identity_id: "identity-new",
+    });
+  });
 });
