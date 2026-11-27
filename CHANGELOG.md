@@ -5,15 +5,39 @@ Notable changes to Florabase, newest first. Versions follow the
 [docs/progress.md](docs/progress.md); this file lists what an operator of an installation needs
 to know.
 
-## Unreleased
+## v0.1.0-beta.10 — 2026-11-27
 
-**Upgrading from `v0.1.0-beta.9`:** existing `compose.yaml` files without
+Prerelease of the private beta series: changes since `v0.1.0-beta.9`. Three database migrations
+(Alembic head `20261125_0050`: device sessions, Watering/Feeding Journal kinds with care batches,
+and media defaults); PostgreSQL moves to `18.6-alpine-florabase.6` (`libxml2` `2.13.9-r5`, same
+PostgreSQL 18.6 cluster layout), and `compose.yaml` enables `FLORABASE_REFERENCES_SETUP=auto`.
+Take `compose.yaml` from the `v0.1.0-beta.10` tag, not from `main`.
+
+**Upgrading from `v0.1.0-beta.9`:** take a paired backup, then run an update (pull and redeploy)
+in your Compose manager; it pulls the new `:latest` `backend`, `frontend` and `florabase-postgres`
+images. Because the Alembic revision changes, the deploy step writes and verifies an automatic
+pre-upgrade dump before migrating. Going back to beta.9 means restoring that backup with the
+beta.9 images; the Journal-kinds migration refuses to downgrade once Watering or Feeding events
+exist. Your existing `compose.yaml` keeps working unchanged, but files without
 `FLORABASE_REFERENCES_SETUP=auto` keep automatic reference provisioning **off** (zero outbound
 reference requests) until you add `- FLORABASE_REFERENCES_SETUP=auto` to `backend.environment` and
 redeploy. No new host folders or volume mounts are required.
 
 ### Added
 
+- **Spreadsheet import wizard (`IMPORT-002`):** Import / Export gains a six-step wizard for one
+  CSV or XLSX sheet (choose sheet and header row, row type, column mapping remembered in the
+  browser, grouped review of species, locations and suppliers, rows with an "Only problems"
+  filter, then one atomic import with links to the created records). Uploads are limited to
+  2 MiB, 2,000 rows and 60 columns; formulas are read only from cached values. The per-type CSV
+  import stays available as Advanced.
+- **Pot on and split (`PROPAGATION-BATCH-001`):** "Pot on seedlings…" on a sowing creates up to 200
+  plants (or one plant group) with a numbered label pattern in one step; "Split into plants…" on a
+  plant group extracts several plants at once. Both stay reversible newest-first.
+- **Bulk care logging (`CARE-BULK-001`, `FN-03`):** the Journal gains Watering and Feeding kinds and
+  a Care filter; "Log care…" on a plant selection and "Log care for everything here…" on a location
+  record one care event per plant with a preview and an **Undo** for the whole batch (edited events
+  are kept).
 - **Automatic botanical reference provisioning (`REF-SETUP-001`):** fresh installs using the
   shipped `compose.yaml` (`FLORABASE_REFERENCES_SETUP=auto`) download the pinned official WFO
   2026-06 and Kew WCVP v16 archives in a low-priority background worker after start-up, verify
@@ -25,7 +49,47 @@ redeploy. No new host folders or volume mounts are required.
   read-only **Reference index status** section in **Settings → Data sources** report each index as
   `off`, `preparing`, `ready`, `ready (setup off)`, `failed: <reason>`, or `manual`. Taxonomy and
   native-range screens indicate when reference data is being prepared in the background.
-- End-user guide (`docs/user-guide/`).
+- **Settings → About (`ABOUT-001`):** shows the running version and image revision, with links to
+  the project, this tag's changelog and release notes, the licence and third-party notices.
+  Settings → Data sources links each source's official site and data page.
+- **Settings → Media (`MEDIA-SETTINGS-001`):** installation-wide defaults that pre-select "Save a
+  local copy" (nothing is fetched until you save) and prefill attribution and licence for your own
+  uploads; local uploads now accept a licence label and URL.
+- **Workspace overview pages (`UI-POLISH-003`, `UI-POLISH-004`):** Collection, Activity, Explore and
+  Sourcing open on an overview of their sections with counts and first actions; Native ranges opens
+  By place / By species with photo result cards, and maps can show photos on hover (off by default).
+- **Android app preview (`MOBILE-002`, `MOBILE-003`):** an Android app signs in with per-device
+  sessions, listed and revocable under **Settings → Account → Connected devices**; changing the
+  password revokes them. The backend answers the app's fixed origins (`https://localhost`,
+  `capacitor://localhost`) without changing `FLORABASE_CORS_ORIGINS`. Unauthenticated
+  `GET /api/v1/system/info` reports version and compatibility. Optional `FLORABASE_MAP_*` settings
+  enable an online basemap for the app (off by default). See [docs/mobile.md](docs/mobile.md); the
+  web app and PWA are unchanged.
+- End-user guide (`docs/user-guide/`, `DOC-04`).
+
+### Changed
+
+- **Sort by everywhere it fits (`UX-SORT-001`, `UX-SORT-002`):** Harvests, Botanical identities,
+  Stored material and Suppliers gain `Sort by`; Orders, Media and Cuttings sort on the server before
+  pagination. The choice is kept in the URL and saved views; the toolbar control is aligned.
+- **One record layout (`UI-POLISH-002`, `UI-POLISH-005`):** Sowing, Plant, Plant group, Harvest and
+  Cuttings details share the Seed lot header, lineage strip and tabs; Media, Geography, Taxonomy and
+  Lineage lists share the directory header; the Cuttings directory opens records on click. The
+  Lineage tab adds "Recorded from this record", Today drops the photo strip, and maps gain an
+  in-page full-screen view.
+- Installation guide: the optional reference-index snippet adds list items to the existing
+  `backend` service instead of repeating `environment:` or `volumes:` (`DOCS-004`).
+
+### Fixed
+
+- **Wikipedia and Wikimedia images (`MEDIA-FETCH-001`):** saving a local copy from a `/wiki/File:`
+  page now fetches the image itself (with a Florabase User-Agent), and a web-page address explains
+  that a direct image address is needed.
+
+### Security
+
+- PostgreSQL image `18.6-alpine-florabase.6` rebuilds with `libxml2` `2.13.9-r5` after Alpine
+  withdrew `2.13.9-r3` (`BETA-SECURITY-001`).
 
 ## v0.1.0-beta.9 — 2026-11-24
 
